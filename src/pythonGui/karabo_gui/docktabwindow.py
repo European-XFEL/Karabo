@@ -52,7 +52,7 @@ class DockTabWindow(QTabWidget):
     def addDockableTab(self, dockWidget, label, mainWindow=None, icon=None):
         """
         This function gets a DockTabWindow, a label and optionally an icon,
-        adds a new widget to the tab and returns its index.
+        adds a new widget to the tab and returns it.
         """
         divWidget = DivWidget(self, dockWidget, label, mainWindow, icon)
 
@@ -61,6 +61,7 @@ class DockTabWindow(QTabWidget):
 
         # Store divWidget in list to keep it alive for un/dock event!!!
         self.divWidgetList.add(divWidget)
+        return divWidget
 
     def removeDockableTab(self, widget):
         divWidget = widget.parent()

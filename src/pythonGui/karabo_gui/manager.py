@@ -607,3 +607,7 @@ class _Manager(QObject):
         # Create KaraboBroadcastEvent
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.AlarmUpdate, data))
+        # Second broadcast to show associated alarm panel in focus
+        data = {'instanceIds': [instanceId]}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.ShowAlarmServices, data))

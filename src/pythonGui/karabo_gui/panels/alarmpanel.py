@@ -102,29 +102,33 @@ class AlarmPanel(Dockable, QWidget):
         pass
 
     def _initAlarms(self, instanceId, rows):
-        self.twAlarm.model().initAlarms(instanceId, rows)
+        self.alarm_model.initAlarms(instanceId, rows)
 
     def _updateAlarms(self, instanceId, rows):
-        self.twAlarm.model().updateAlarms(instanceId, rows)
+        self.alarm_model.updateAlarms(instanceId, rows)
 
     def _enableCustomFilter(self, enable):
         self.cbFilterType.setEnabled(enable)
         self.leFilterText.setEnabled(enable)
+
+    @property
+    def alarm_model(self):
+        return self.twAlarm.model()
 
     @pyqtSlot(object)
     def filterToggled(self, button):
         """ The filter ``button`` was activated. Update filtering needed."""
         if button is self.pbDefaultView:
             self._enableCustomFilter(False)
-            self.twAlarm.model().updateFilter(filterType=None)
+            self.alarm_model.updateFilter(filterType=None)
         elif button is self.pbAcknowledgeOnly:
             self._enableCustomFilter(False)
-            self.twAlarm.model().updateFilter(filterType=ACKNOWLEDGE)
+            self.alarm_model.updateFilter(filterType=ACKNOWLEDGE)
         elif button is self.pbCustomFilter:
             self._enableCustomFilter(True)
             data = self.cbFilterType.itemData(self.cbFilterType.currentIndex())
             filterText = self.leFilterText.text()
-            self.twAlarm.model().updateFilter(filterType=data, text=filterText)
+            self.alarm_model.updateFilter(filterType=data, text=filterText)
 
 
 class ButtonDelegate(QStyledItemDelegate):
