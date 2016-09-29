@@ -554,8 +554,8 @@ class lock:
     def __enter__(self):
         myId = get_instance().deviceId
         if self.device.lockedBy == myId:
-            raise KaraboError('recursive lock of "{}" detected!'.
-                              format(self.device.deviceId))
+            raise RuntimeError('recursive lock of "{}" detected!'.
+                               format(self.device.deviceId))
         self.device.lockedBy = myId
         while self.device.lockedBy != myId:
             yield from waitUntilNew(self.device.lockedBy)
