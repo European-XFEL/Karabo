@@ -62,8 +62,6 @@ namespace karabo {
 
         class KARABO_DECLSPEC Hash {
 
-#define KARABO_HASH_CLASS_ID "__classId"
-
         public:
 
             KARABO_CLASSINFO(Hash, "Hash", "2.0")
