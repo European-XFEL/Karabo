@@ -544,7 +544,7 @@ class lock:
 
     This allows to lock another devices for exclusive use::
 
-        with locked(device):
+        with lock(device):
             # do something on device
     """
     def __init__(self, device):
