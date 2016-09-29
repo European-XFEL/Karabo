@@ -463,6 +463,7 @@ class Slot(Descriptor):
                 self.key, instance.state)
             device._ss.reply(message, msg)
             device.logger.warn(msg)
+            return
 
         coro = get_event_loop().run_coroutine_or_thread(func)
 
