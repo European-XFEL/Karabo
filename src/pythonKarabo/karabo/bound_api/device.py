@@ -470,7 +470,7 @@ class PythonDevice(NoFsm):
             raise SyntaxError("Number of parameters is wrong: only 2 to 3 arguments are allowed.")
         if len(args) == 3:
             channelName, key, value = args
-            if isinstance(value, ImageData):
+            if isinstance(value, (ImageData, Hash)):
                 dataval = value
             elif isinstance(value, Image.Image):
                 dataval = ImageData(np.array(value))
@@ -479,16 +479,17 @@ class PythonDevice(NoFsm):
             data = Hash(key, dataval)
         elif len(args) == 2:
             channelName, data = args
-            if isinstance(data, Image.Image):
-                data = ImageData(np.array(data))
-            else:
+            if not isinstance(data, Hash):
                 raise ValueError('Unsupported type of value: {}'.format(type(data)))
 
-        data.attachTimestamp(self._getActualTimestamp())
+        timeStamp = self._getActualTimestamp()
+        for node in data:
+            timeStamp.toHashAttributes(node.getAttributes())
+
         channel = self._ss.getOutputChannel(channelName)
         channel.write(data)
         channel.update()
-        
+
     def signalEndOfStream(self, channelName):
         self._ss.getOutputChannel(channelName).signalEndOfStream()
         
