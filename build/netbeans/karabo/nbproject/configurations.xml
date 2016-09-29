@@ -301,8 +301,8 @@
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
         <itemPath>../../../src/karabo/util/RollingWindowStatistics.cc</itemPath>
         <itemPath>../../../src/karabo/util/RollingWindowStatistics.hh</itemPath>
-        <itemPath>../../../src/karabo/util/SignalHandler.cc</itemPath>
-        <itemPath>../../../src/karabo/util/SignalHandler.hh</itemPath>
+        <itemPath>../../../src/karabo/util/StackTrace.cc</itemPath>
+        <itemPath>../../../src/karabo/util/StackTrace.hh</itemPath>
         <itemPath>../../../src/karabo/util/State.cc</itemPath>
         <itemPath>../../../src/karabo/util/State.hh</itemPath>
         <itemPath>../../../src/karabo/util/StateSignifier.cc</itemPath>
@@ -1894,6 +1894,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/xms/Memory_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/Memory_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/xms/SignalSlotable_Test.cc"
             ex="false"
             tool="1"
@@ -2165,17 +2175,17 @@
       </item>
       <item path="../../../src/karabo/util/Schema.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/SignalHandler.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/SignalHandler.hh"
+      <item path="../../../src/karabo/util/SimpleElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/SimpleElement.hh"
+      <item path="../../../src/karabo/util/StackTrace.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StackTrace.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2451,16 +2461,6 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xms/Memory_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xms/Memory_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>
@@ -4014,6 +4014,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/xms/Memory_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/Memory_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/xms/SignalSlotable_Test.cc"
             ex="false"
             tool="1"
@@ -4285,17 +4295,17 @@
       </item>
       <item path="../../../src/karabo/util/Schema.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/SignalHandler.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/SignalHandler.hh"
+      <item path="../../../src/karabo/util/SimpleElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/SimpleElement.hh"
+      <item path="../../../src/karabo/util/StackTrace.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StackTrace.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4572,16 +4582,6 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xms/Memory_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/xms/Memory_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>
