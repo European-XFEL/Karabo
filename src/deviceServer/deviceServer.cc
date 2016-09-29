@@ -12,27 +12,32 @@ using namespace karabo::log;
 using namespace karabo::net;
 using namespace karabo::core;
 
+
 int main(int argc, char** argv) {
 
     try {
-        // Register system signals we want to deal with
-        boost::asio::signal_set signals(EventLoop::getIOService(), SIGINT, SIGTERM, SIGSEGV);
+
 
         // Instantiate device server
         DeviceServer::Pointer deviceServer = Runner<DeviceServer>::instantiate(argc, argv);
         if (deviceServer) {
 
+            // TODO: Re-factor later to use central event-loop
             boost::thread t(boost::bind(&DeviceServer::run, deviceServer));
-            boost::asio::io_service::work work(EventLoop::getIOService());
+
+            // Register system signals we want to deal with
+            boost::asio::signal_set signals(EventLoop::getIOService(), SIGINT, SIGTERM, SIGSEGV);
 
             // Handle signals using the event-loop
             signals.async_wait(
                                [deviceServer](boost::system::error_code /*ec*/, int signo) {
                                    deviceServer->call(deviceServer->getInstanceId(), "slotKillServer");
-                                   if (signo == SIGSEGV) {
-                                       std::cout << StackTrace() << std::endl;
+                               if (signo == SIGSEGV) {
+                               std::cout << StackTrace() << std::endl;
                                    }
                                });
+
+            boost::asio::io_service::work work(EventLoop::getIOService());
 
             EventLoop::run(); // Block central event loop
             t.join();
@@ -41,9 +46,9 @@ int main(int argc, char** argv) {
         return EXIT_SUCCESS;
 
     } catch (const Exception& e) {
-        cout << e;
+        cerr << e;
     } catch (...) {
-        cout << "Encountered unknown exception" << endl;
+        cerr << "Encountered unknown exception" << endl;
     }
     return EXIT_FAILURE;
 }
