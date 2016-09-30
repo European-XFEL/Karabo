@@ -1,29 +1,78 @@
-from xml.etree.ElementTree import Element
+from io import BytesIO
 import os
 import os.path as op
+from xml.etree.ElementTree import Element
 
 from nose.tools import assert_raises
 
 # Import via the API module so that all the readers/writers get registered
 from ..api import (SceneModel, FixedLayoutModel, LabelModel, LineModel,
                    RectangleModel, UnknownXMLDataModel, SceneWriterException,
-                   read_scene, write_scene, write_single_model, NS_KARABO)
+                   read_scene, write_scene, write_single_model, NS_KARABO,
+                   SCENE_FILE_VERSION)
 from ..io_utils import set_numbers
 from .utils import temp_cwd, temp_file, xml_is_equal
 
 DATA_DIR = op.join(op.abspath(op.dirname(__file__)), 'data')
 INKSCAPE_DIR = op.join(DATA_DIR, 'inkscape')
 LEGACY_DIR = op.join(DATA_DIR, 'legacy')
-SCENE_SVG = (
-"""<svg xmlns:krb="http://karabo.eu/scene" xmlns:svg="http://www.w3.org/2000/svg" height="768" krb:version="1" width="1024" krb:random="golly" >"""  # noqa
-"""<svg:g krb:class="FixedLayout" krb:height="323" krb:width="384" krb:x="106" krb:y="74">"""  # noqa
-"""<svg:rect height="60" width="309" x="175" y="125" krb:class="Label" krb:font="Ubuntu,48,-1,5,63,0,0,0,0,0" krb:foreground="#4c4c4c" krb:frameWidth="0" krb:text="Some text" />"""  # noqa
-"""<svg:rect fill="none" height="143" stroke="#000000" stroke-dasharray="" stroke-dashoffset="0.0" stroke-linecap="square" stroke-linejoin="bevel" stroke-miterlimit="2.0" stroke-opacity="1.0" stroke-style="1" stroke-width="1.0" width="151" x="106" y="74" />"""  # noqa
-"""<svg:line fill="none" stroke="#000000" stroke-dasharray="" stroke-dashoffset="0.0" stroke-linecap="square" stroke-linejoin="bevel" stroke-miterlimit="2.0" stroke-opacity="1.0" stroke-style="1" stroke-width="1.0" x1="397" x2="489" y1="84" y2="396" />"""  # noqa
-"""</svg:g>"""
-"""<metadata id="some-extra-data"><foo>bar</foo></metadata>"""
-"""</svg>"""
-)
+SCENE_SVG = """
+<svg
+    xmlns:krb="http://karabo.eu/scene"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    height="768"
+    krb:version="2"
+    width="1024"
+    krb:random="golly" >
+    <svg:g
+        krb:class="FixedLayout"
+        krb:height="323"
+        krb:width="384"
+        krb:x="106"
+        krb:y="74">
+        <svg:rect
+            height="60"
+            width="309"
+            x="175" y="125"
+            krb:class="Label"
+            krb:font="Ubuntu,48,-1,5,63,0,0,0,0,0"
+            krb:foreground="#4c4c4c"
+            krb:frameWidth="0"
+            krb:text="Some text" />
+        <svg:rect
+            fill="none"
+            height="143"
+            stroke="#000000"
+            stroke-dasharray=""
+            stroke-dashoffset="0.0"
+            stroke-linecap="square"
+            stroke-linejoin="bevel"
+            stroke-miterlimit="2.0"
+            stroke-opacity="1.0"
+            stroke-style="1"
+            stroke-width="1.0"
+            width="151"
+            x="106"
+            y="74" />
+        <svg:line
+            fill="none"
+            stroke="#000000"
+            stroke-dasharray=""
+            stroke-dashoffset="0.0"
+            stroke-linecap="square"
+            stroke-linejoin="bevel"
+            stroke-miterlimit="2.0"
+            stroke-opacity="1.0"
+            stroke-style="1"
+            stroke-width="1.0"
+            x1="397"
+            x2="489"
+            y1="84"
+            y2="396" />
+    </svg:g>
+<metadata id="some-extra-data"><foo>bar</foo></metadata>
+</svg>
+"""
 
 
 def _get_file_data(filename):
@@ -114,6 +163,13 @@ def test_writing():
 
     xml = write_scene(scene)
     assert xml_is_equal(SCENE_SVG, xml)
+
+
+def test_scene_version():
+    scene = SceneModel()
+    xml = write_scene(scene)
+    scene = read_scene(BytesIO(xml))
+    assert scene.version == SCENE_FILE_VERSION
 
 
 def test_single_model_writing():

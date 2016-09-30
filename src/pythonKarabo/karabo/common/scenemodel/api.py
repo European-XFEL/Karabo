@@ -1,7 +1,8 @@
 # flake8: noqa
 from .bases import (BaseLayoutData, BaseLayoutModel, BaseSceneObjectData,
                     BaseShapeObjectData,  BaseWidgetObjectData)
-from .const import NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT
+from .const import (NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT,
+                    SCENE_FILE_VERSION)
 from .exceptions import SceneReaderException, SceneWriterException
 from .io import read_scene, write_scene, write_single_model
 from .layouts import (BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
