@@ -89,7 +89,8 @@ namespace karabo {
 
 
         InputChannel::InputChannel(const karabo::util::Hash& config)
-            : m_deadline(karabo::net::EventLoop::getIOService())
+            : m_ioService(karabo::net::EventLoop::getIOService())
+            , m_deadline(m_ioService)
             , m_isEndOfStream(false)
             , m_respondToEndOfStream(true) {
             parseOutputChannelConfiguration(config);
@@ -110,13 +111,6 @@ namespace karabo {
 
         InputChannel::~InputChannel() {
             closeChannelsAndStopConnections();
-            if (m_tcpIoService) {
-                m_tcpIoService->stop();
-                if (m_tcpIoServiceThread.get_id() == boost::this_thread::get_id()) {
-                    KARABO_LOG_FRAMEWORK_WARN << BOOST_CURRENT_FUNCTION << ":" << __LINE__ << " : attempt to join itself";
-                } else
-                    m_tcpIoServiceThread.join();
-            }
             Memory::unregisterChannel(m_channelId);
             KARABO_LOG_FRAMEWORK_DEBUG << "*** InputChannel::~InputChannel DTOR for channelId = " << m_channelId;
         }
@@ -405,12 +399,12 @@ namespace karabo {
                         if (this->getMinimumNumberOfData() <= 0) {
                             KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering another compute";
                             this->swapBuffers();
-                            m_tcpIoService->post(boost::bind(&InputChannel::triggerIOEvent, this));
+                            m_ioService.post(boost::bind(&InputChannel::triggerIOEvent, this));
                         }
                         if (m_eosChannels.size() == m_openConnections.size()) {
                             if (m_respondToEndOfStream) {
                                 KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering EOS function after reception of " << m_eosChannels.size() << " EOS tokens";
-                                m_tcpIoService->post(boost::bind(&InputChannel::triggerEndOfStreamEvent, this));
+                                m_ioService.post(boost::bind(&InputChannel::triggerEndOfStreamEvent, this));
                             }
                             // Reset eos tracker
                             m_eosChannels.clear();
@@ -449,12 +443,12 @@ namespace karabo {
 
                         // No mutex under callback
                         KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering IOEvent";
-                        m_tcpIoService->post(boost::bind(&InputChannel::triggerIOEvent, this));
+                        m_ioService.post(boost::bind(&InputChannel::triggerIOEvent, this));
                     } else { // Data complete on both pots now
                         if (m_keepDataUntilNew) { // Is false per default
                             m_keepDataUntilNew = false;
                             KARABO_LOG_FRAMEWORK_TRACE << debugId << "Updating";
-                            m_tcpIoService->post(boost::bind(&InputChannel::update, this));
+                            m_ioService.post(boost::bind(&InputChannel::update, this));
                             m_keepDataUntilNew = true;
                         }
                     }
@@ -492,10 +486,7 @@ namespace karabo {
                     for (size_t i = 0; i < this->size(); ++i) {
                         m_dataHandler(this->read(i));
                     }
-                    if (m_tcpIoService)
-                        m_tcpIoService->post(boost::bind(&InputChannel::update, this));
-                    else
-                        update();
+                    m_ioService.post(boost::bind(&InputChannel::update, this));
                 }
 
                 if (m_inputHandler) {
