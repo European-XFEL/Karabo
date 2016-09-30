@@ -13,6 +13,25 @@ from karabo_gui.util import getOpenFileName, temp_file
 from karabo_gui.widget import DisplayWidget
 
 
+DEFAULT_PIXMAP = icons.no.icon.pixmap(100)
+
+
+def create_temp_url(item_obj, image_data):
+    """ Create temporary URL from given ``image_data``."""
+    ba = QByteArray()
+    try:
+        buffer = QBuffer(ba)
+        buffer.open(QBuffer.WriteOnly)
+        image_data.save(buffer, 'PNG')
+        data = buffer.data()
+        with temp_file() as tmp_path:
+            with open(tmp_path, "wb") as out:
+                out.write(data)
+            item_obj.setURL(tmp_path)
+    finally:
+        buffer.close()
+
+
 class IconError(Exception):
     pass
 
@@ -33,7 +52,7 @@ class Label(QLabel):
 
     def setPixmap(self, pixmap):
         if pixmap is None:
-            QLabel.setPixmap(self, icons.no.pixmap(100))
+            QLabel.setPixmap(self, DEFAULT_PIXMAP)
         else:
             QLabel.setPixmap(self, pixmap)
 
@@ -50,6 +69,8 @@ class Item(object):
         self.getPixmap()
 
     def setURL(self, url):
+        if not url.startswith("file:"):
+            url = "file://" + urllib.request.pathname2url(url)
         self.url = url
         self.data = urllib.request.urlopen(url).read()
 
@@ -58,7 +79,9 @@ class Item(object):
             is available as byte string.
         """
         if self.data is None:
-            return
+            self.pixmap = DEFAULT_PIXMAP
+            create_temp_url(self, self.pixmap)
+            return True
 
         pixmap = QPixmap()
         try:
@@ -84,42 +107,27 @@ class Dialog(QDialog):
     def on_valueList_currentRowChanged(self, row):
         self.image.setPixmap(self.items[row].pixmap)
 
-    def setURL(self, url):
-        item = self.items[self.valueList.currentRow()]
-        if not url.startswith("file:"):
-            url = "file://" + urllib.request.pathname2url(url)
-        item.setURL(url)
-        if not item.getPixmap():
-            return
-        self.image.setPixmap(item.pixmap)
-
     def on_image_newMime(self, mime):
+        item = self.items[self.valueList.currentRow()]
         if mime.hasImage():
-            ba = QByteArray()
-            try:
-                buffer = QBuffer(ba)
-                buffer.open(QBuffer.WriteOnly)
-                mime.imageData().save(buffer, 'PNG')
-                data = buffer.data()
-                with temp_file() as tmp_path:
-                    with open(tmp_path, "wb") as out:
-                        out.write(data)
-                    self.setURL(tmp_path)
-            finally:
-                buffer.close()
+            create_temp_url(item, mime.imageData())
         else:
             try:
                 filename = mime.text().split()[0].strip()
             except Exception as e:
                 e.message = "Could not open URL or Image"
                 raise
-            self.setURL(filename)
+            item.setURL(filename)
+
+        if not item.getPixmap():
+            return
+        self.image.setPixmap(item.pixmap)
 
     @pyqtSlot()
     def on_open_clicked(self):
         filename = getOpenFileName(
                         parent=self,
-                        caption="Open Icon", 
+                        caption="Open Icon",
                         filter="Images (*.png *.xpm *.jpg *.jpeg *.svg "
                                "*.gif *.ico *.tif *.tiff *.bmp)")
         if filename:
@@ -180,7 +188,7 @@ class Icons(DisplayWidget):
 
     def setPixmap(self, p):
         if p is None:
-            self.widget.setPixmap(icons.no.pixmap(100))
+            self.widget.setPixmap(DEFAULT_PIXMAP)
         else:
             self.widget.setPixmap(p)
 
@@ -285,9 +293,9 @@ class SelectionIcons(Icons):
 
     def typeChanged(self, box):
         items = list(self.items)
-        for o in box.descriptor.options:
-            if not any(o == item.value for item in self.items):
-                newItem = Item(o)
+        for opt in box.descriptor.options:
+            if not any(opt == item.value for item in self.items):
+                newItem = Item(opt)
                 items.append(newItem)
         self._setItems(items)
 
