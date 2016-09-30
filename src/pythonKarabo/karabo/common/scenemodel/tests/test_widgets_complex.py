@@ -1,4 +1,4 @@
-from ..widgets.complex import (
+from ..api import (
     DisplayStateColorModel, EvaluatorModel, FloatSpinBoxModel, MonitorModel,
     SingleBitModel, TableElementModel,
 )

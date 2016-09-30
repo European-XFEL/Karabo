@@ -98,7 +98,6 @@ class MainWindow(QMainWindow):
                 return True
         return super(MainWindow, self).eventFilter(obj, event)
 
-### initializations ###
     def _setupActions(self):
         text = "Change access level"
         self.tbAccessLevel = QToolButton(self)
@@ -295,26 +294,33 @@ class MainWindow(QMainWindow):
 
     def _readIconDataFromProject(self, sceneModel, project):
         """ Go through the model tree to find existing icon models like
-            `DigitIconsModel`, `SelectionIconsModel`, `TextIconsModel` or
-            `DisplayIconsetModel` and use their `url` to load the actual image
-            data which is currently stored in the projects resources and put
-            them to the model data.
+        `DigitIconsModel`, `SelectionIconsModel`, `TextIconsModel` or
+        `DisplayIconsetModel` and use their `url` to load the actual image
+        data which is currently stored in the projects resources and put
+        them to the model data.
+
+        NOTE: This is only necessary for version 1 scene files. In newer
+        scene files, the `data` trait will already be initialized.
         """
-        def update_icon_model(parent_model):
+        def _get_image_data(model):
+            if model.data:
+                return  # data trait is already set!
+            url = model.image
+            model.data = project.getURL(url)
+
+        def _update_icon_model(parent_model):
             for child in parent_model.children:
                 if isinstance(child, BaseIconsModel):
                     for icon_data in child.values:
-                        url = icon_data.image
-                        icon_data.data = project.getURL(url)
+                        _get_image_data(icon_data)
                 elif isinstance(child, DisplayIconsetModel):
-                    url = child.image
-                    child.data = project.getURL(url)
+                    _get_image_data(child)
                 else:
                     if hasattr(child, "children"):
-                        update_icon_model(child)
+                        _update_icon_model(child)
 
         # Recursively set all icon model data
-        update_icon_model(sceneModel)
+        _update_icon_model(sceneModel)
 
     def checkAndRemovePlaceholderMiddlePanel(self):
         """ Remove placeholder from middle panel in case it makes sense.
@@ -403,7 +409,8 @@ class MainWindow(QMainWindow):
     def showAlarmServicePanels(self, instanceIds):
         """ Show alarm panels for the given ``instanceIds``."""
         for instId in instanceIds:
-            # Check whether there is already alarm panel for this ``instanceId``
+            # Check whether there is already an alarm panel for
+            # this ``instanceId``
             if instId not in self.alarmPanels:
                 panel = AlarmPanel(instId)
                 title = "Alarms for {}".format(instId)
@@ -418,7 +425,6 @@ class MainWindow(QMainWindow):
         for instId in instanceIds:
             self._removeAlarmPanel(instId)
 
-### virtual functions ###
     def closeEvent(self, event):
         if not self._quit():
             event.ignore()
@@ -459,7 +465,7 @@ class MainWindow(QMainWindow):
     def addMacro(self, macroModel, project):
         if self.focusExistingMiddlePanel('macro_model', macroModel):
             return
-    
+
         # Add the project name to the macro model because it is only needed
         # at instantiation time of the macro
         macroModel.project_name = project.name
