@@ -1,14 +1,14 @@
 from nose.tools import assert_raises
 
-from ..exceptions import SceneWriterException
-from ..widgets.simple import (
+from ..api import (
     BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
     DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
     DisplayImageModel, DisplayImageElementModel, DisplayLabelModel,
     DisplayPlotModel, DoubleLineEditModel, EditableListModel,
     EditableListElementModel, EditableSpinBoxModel, FileInModel, FileOutModel,
     HexadecimalModel, IntLineEditModel, KnobModel, LabelModel, LineEditModel,
-    SceneLinkModel, SliderModel, WorkflowItemModel, XYPlotModel
+    SceneLinkModel, SceneWriterException, SliderModel, WorkflowItemModel,
+    XYPlotModel
 )
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)

@@ -25,6 +25,14 @@ def base_widget_traits(parent=None):
     return traits
 
 
+def single_model_from_data(svg_data):
+    """ Given some SVG data, read a scene model from it an return the first
+    child.
+    """
+    with temp_file(svg_data) as fn:
+        return read_scene(fn).children[0]
+
+
 def single_model_round_trip(model):
     """ Given a scene model object, write it to XML and read it back to examine
     the round trip reader/writer behavior.
