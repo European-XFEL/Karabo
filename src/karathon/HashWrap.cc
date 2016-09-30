@@ -700,19 +700,17 @@ namespace karathon {
         if (bp::extract<Hash::Node&>(obj).check()) {
             Hash::Node& node = bp::extract<Hash::Node&>(obj);
             if (node.getType() == Types::HASH) {
-                karabo::util::Hash::Pointer hash = karabo::util::Hash::Pointer(&node.getValue<karabo::util::Hash>(), null_deleter());
-                return Wrapper::toCustomObject(node, hash);
+                return Wrapper::toCustomObject(node);
             }
             return Wrapper::toObject(node.getValueAsAny(), HashWrap::try_to_use_numpy);
         } else if (bp::extract<std::string>(obj).check()) {
             std::string path = bp::extract<std::string>(obj);
             Hash::Node& node = self.getNode(path, sep.at(0));
             if (node.getType() == karabo::util::Types::HASH) {
-                karabo::util::Hash::Pointer hash = karabo::util::Hash::Pointer(&node.getValue<karabo::util::Hash>(), null_deleter());
-                return Wrapper::toCustomObject(node, hash);
+                return Wrapper::toCustomObject(node);
             }
             if (node.getType() == Types::VECTOR_HASH) {
-                std::vector<Hash>* vhp = &self.get<std::vector<Hash> >(path, sep.at(0));
+                std::vector<Hash>* vhp = &node.getValue<std::vector<Hash> >();
                 boost::shared_ptr<std::vector<Hash> > vhash = boost::shared_ptr<std::vector<Hash> >(vhp, null_deleter());
                 return bp::object(vhash);
             }

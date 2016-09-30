@@ -279,6 +279,12 @@ namespace karathon {
 
     struct Wrapper {
 
+        struct null_deleter {
+
+            void operator()(void const *) const {
+            }
+        };
+
         static bool hasattr(bp::object obj, const std::string& attrName) {
             // NOTE: There seems to be different implementations of the Python C-API around
             // Some use a char* some other a const char* -> char* is the always compiling alternative
@@ -390,7 +396,7 @@ namespace karathon {
 
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);
 
-        static bp::object toCustomObject(const karabo::util::Hash::Node& node, const karabo::util::Hash::Pointer& hash);
+        static bp::object toCustomObject(karabo::util::Hash::Node& node);
 
         static karabo::util::Types::ReferenceType toAny(const bp::object& operand, boost::any& any);
 
