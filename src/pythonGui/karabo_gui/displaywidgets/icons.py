@@ -67,7 +67,6 @@ class Item(object):
         self.getPixmap()
 
     def setURL(self, url):
-        print("url", url)
         if not url.startswith("file:"):
             url = "file://" + urllib.request.pathname2url(url)
         self.url = url
