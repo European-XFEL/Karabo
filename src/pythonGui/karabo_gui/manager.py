@@ -198,14 +198,14 @@ class _Manager(QObject):
     def _triggerStateChange(self, box, value, timestamp):
         configuration = box.configuration
         # Update GUI due to state changes
-        if value == "Changing...":
+        if value.endswith('ING'):
             self.signalChangingState.emit(configuration, True)
         else:
-            if ("Error" in value) or ("error" in value):
+            if value == 'ERROR':
                 self.signalErrorState.emit(configuration, True)
             else:
                 self.signalErrorState.emit(configuration, False)
-            
+
             self.signalChangingState.emit(configuration, False)
 
 
