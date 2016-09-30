@@ -85,11 +85,11 @@ class AlarmPanel(Dockable, QWidget):
             if event.sender is KaraboEventSender.AlarmInitReply:
                 data = event.data
                 self._initAlarms(data.get('instanceId'), data.get('rows'))
-                return True
+                return False
             elif event.sender is KaraboEventSender.AlarmUpdate:
                 data = event.data
                 self._updateAlarms(data.get('instanceId'), data.get('rows'))
-                return True
+                return False
         return super(AlarmPanel, self).eventFilter(obj, event)
 
     def closeEvent(self, event):

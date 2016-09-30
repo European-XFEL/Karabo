@@ -59,7 +59,7 @@ class MacroPanel(Dockable, QSplitter):
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Tab:
                 self.teEditor.textCursor().insertText(" "*4)
-                return True
+                return False
         elif isinstance(event, KaraboBroadcastEvent):
             sender = event.sender
             if sender is KaraboEventSender.ConnectMacroInstance:
@@ -67,13 +67,13 @@ class MacroPanel(Dockable, QSplitter):
                 macro_model = data.get('model')
                 if macro_model is self.macro_model:
                     self.connect(data.get('instance'))
-                    return True
+                    return False
             elif sender is KaraboEventSender.DeviceInitReply:
                 data = event.data
                 macro_instance = data.get('device')
                 if macro_instance.id in self.macro_model.instance_id:
                     self.initReply(data.get('success'), data.get('message'))
-                    return True
+                    return False
         return False
 
     def closeEvent(self, event):

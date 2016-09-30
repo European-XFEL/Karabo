@@ -70,7 +70,7 @@ class ProjectModel(QStandardItemModel):
             if event.sender is KaraboEventSender.OpenSceneLink:
                 data = event.data
                 self.openSceneLink(data.get("target"), data.get('project'))
-                return True
+                return False
         return super(ProjectModel, self).eventFilter(obj, event)
 
     def flags(self, index):
