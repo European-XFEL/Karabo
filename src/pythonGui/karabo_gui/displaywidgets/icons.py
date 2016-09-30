@@ -1,17 +1,17 @@
-from os import path
 import re
 import urllib.request
+from contextlib import closing
+from os import path
 
 from PyQt4 import uic
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer
+from PyQt4.QtCore import QBuffer, QByteArray, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QAction, QApplication, QDialog, QLabel, QPixmap
 
-from karabo.middlelayer import Integer, Number, String
 import karabo_gui.icons as icons
+from karabo.middlelayer import Integer, Number, String
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.util import getOpenFileName, temp_file
 from karabo_gui.widget import DisplayWidget
-
 
 DEFAULT_PIXMAP = icons.no.icon.pixmap(100)
 
@@ -19,17 +19,15 @@ DEFAULT_PIXMAP = icons.no.icon.pixmap(100)
 def create_temp_url(item_obj, image_data):
     """ Create temporary URL from given ``image_data``."""
     ba = QByteArray()
-    try:
-        buffer = QBuffer(ba)
-        buffer.open(QBuffer.WriteOnly)
+    buffer = QBuffer(ba)
+    buffer.open(QBuffer.WriteOnly)
+    with closing(buffer):
         image_data.save(buffer, 'PNG')
         data = buffer.data()
         with temp_file() as tmp_path:
             with open(tmp_path, "wb") as out:
                 out.write(data)
             item_obj.setURL(tmp_path)
-    finally:
-        buffer.close()
 
 
 class IconError(Exception):
@@ -69,6 +67,7 @@ class Item(object):
         self.getPixmap()
 
     def setURL(self, url):
+        print("url", url)
         if not url.startswith("file:"):
             url = "file://" + urllib.request.pathname2url(url)
         self.url = url
