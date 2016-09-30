@@ -487,9 +487,15 @@ class Schema(hashmod.Descriptor):
             NodeType.ChoiceOfNodes: ChoiceOfNodes.parse,
             NodeType.ListOfNodes: ListOfNodes.parse
         }
-        #print(attrs.get('displayType'))
-        self = dict(NDArray=ImageNode, ImageData=ImageNode, Image=ImageNode, Slot=SlotNode, OutputChannel=OutputNode, Table=TableNode).get(
-                attrs.get('displayType', None), cls)(key)
+        displaytype_map = {
+            'ImageData': ImageNode,
+            'Image': ImageNode,
+            'Slot': SlotNode,
+            'OutputChannel': OutputNode,
+            'Table': TableNode,
+        }
+        klass = displaytype_map.get(attrs.get('displayType', None), cls)
+        self = klass(key)
         self.displayedName = key
         self.parseAttrs(self, attrs, parent)
         for k, h, a in hash.iterall():
