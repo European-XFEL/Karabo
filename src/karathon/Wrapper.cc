@@ -242,7 +242,8 @@ namespace karathon {
     }
 
 
-    bp::object Wrapper::toCustomObject(const karabo::util::Hash::Node& node, const karabo::util::Hash::Pointer& hash) {
+    bp::object Wrapper::toCustomObject(karabo::util::Hash::Node& node) {
+        karabo::util::Hash::Pointer hash = karabo::util::Hash::Pointer(&node.getValue<karabo::util::Hash>(), null_deleter());
         if (node.hasAttribute(KARABO_HASH_CLASS_ID)) { // Hash actually holds data for a custom class
             const std::string& classId = node.getAttribute<string>(KARABO_HASH_CLASS_ID);
             if (classId == "NDArray") {
