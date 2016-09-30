@@ -247,15 +247,15 @@ class Hash_TestCase(unittest.TestCase):
     def test_ndarray(self):
         bh = BoundHash()
         arr = numpy.arange(12).reshape((3, 4))
-        bh.set("vector", arr)
+        bh.set("array", arr)
         ser = BinarySerializerHash.create("Bin")
         h = Hash.decode(ser.save(bh), "Bin")
-        self.assertEqual(h["vector"]["__classId"], "NDArray")
-        assert_equal(h["vector"]["shape"], [3, 4])
-        self.assertEqual(h["vector"]["type"], Int64.number)
-        self.assertEqual(len(h["vector"]["data"]), arr.nbytes)
+        self.assertEqual(h["array", "__classId"], "NDArray")
+        assert_equal(h["array"]["shape"], [3, 4])
+        self.assertEqual(h["array"]["type"], Int64.number)
+        self.assertEqual(len(h["array"]["data"]), arr.nbytes)
         bh = ser.load(h.encode("Bin"))
-        assert_equal(bh["vector"], arr)
+        assert_equal(bh["array"], arr)
 
 
 if __name__ == '__main__':
