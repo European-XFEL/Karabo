@@ -67,35 +67,40 @@ class MainWindow(QMainWindow):
             if sender is KaraboEventSender.OpenSceneView:
                 data = event.data
                 self.addSceneView(data.get('model'), data.get('project'))
-                return True
+                return False
             elif sender is KaraboEventSender.RemoveSceneView:
                 data = event.data
                 self.removeMiddlePanel('scene_model', data.get('model'))
-                return True
+                return False
             elif sender is KaraboEventSender.RenameSceneView:
                 data = event.data
                 self.renameMiddlePanel('scene_model', data.get('model'))
-                return True
+                return False
             elif sender is KaraboEventSender.OpenMacro:
                 data = event.data
                 self.addMacro(data.get('model'), data.get('project'))
-                return True
+                return False
             elif sender is KaraboEventSender.RemoveMacro:
                 data = event.data
                 self.removeMiddlePanel('macro_model', data.get('model'))
-                return True
+                return False
             elif sender is KaraboEventSender.RenameMacro:
                 data = event.data
                 self.renameMiddlePanel('macro_model', data.get('model'))
-                return True
+                return False
             elif sender is KaraboEventSender.ShowAlarmServices:
                 data = event.data
                 self.showAlarmServicePanels(data.get('instanceIds'))
-                return True
+                return False
+            elif sender in (KaraboEventSender.AlarmInitReply,
+                            KaraboEventSender.AlarmUpdate):
+                data = event.data
+                self.showAlarmServicePanels([data.get('instanceId')])
+                return False
             elif sender is KaraboEventSender.RemoveAlarmServices:
                 data = event.data
                 self.removeAlarmServicePanels(data.get('instanceIds'))
-                return True
+                return False
         return super(MainWindow, self).eventFilter(obj, event)
 
     def _setupActions(self):
