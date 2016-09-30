@@ -13,7 +13,6 @@ from karabo_gui.widget import DisplayWidget
 import numpy as np
 from guiqwt.plot import ImageDialog
 from guiqwt.builder import make
-from karabo.middlelayer import Type
 
 from PyQt4.QtGui import (QSlider, QWidget, QHBoxLayout, QVBoxLayout,
                          QCheckBox, QComboBox, QSpinBox, QLabel)
@@ -116,9 +115,8 @@ class DisplayImage(DisplayWidget):
         self.cellWidget.setVisible(False)
 
     def valueChanged(self, box, value, timestamp=None):
-        if value is None or value.dataType == '0':
-            return
-
+        print()
+        print("DisplayImage", value)
         if self.value is not None or value is self.value:
             return
 
@@ -130,20 +128,19 @@ class DisplayImage(DisplayWidget):
 
             # Format: Grayscale
             format = 'QImage.Format_Indexed8'
-            
+
             if self.cellWidget.isVisible():
                 self.unsetSlider()
 
         elif len(value.dims) == 3:
             # Shape
-            dimX = value.dims[2]
-            dimY = value.dims[1]
-            dimZ = value.dims[0]
+            dimX = value.dims[1]
+            dimY = value.dims[0]
+            dimZ = value.dims[2]
 
             if dimZ == 3:
                 # Format: RGB
                 format = 'QImage.Format_RGB888'
-
             else:
                 if self.axis == 0:
                     self.setSlider(dimX)
@@ -151,21 +148,17 @@ class DisplayImage(DisplayWidget):
                     self.setSlider(dimY)
                 if self.axis == 2:
                     self.setSlider(dimZ)
-                
         else:
             return
 
-        # Data type information
-        type = value.dataType
-        try:
-            type = Type.fromname[type].numpy
-        except KeyError as e:
-            e.message = 'Image element has improper type "{}"'.format(type)
-            raise
-
         # Data itself
-        data = value.data
-        npy = np.frombuffer(data, type)
+        pixels = value.pixels
+        print("pixels.data", pixels.data)
+        print("pixels.type", pixels.type)
+        print("pixels.shape", pixels.shape)
+        if not pixels.shape:
+            return
+        npy = np.frombuffer(pixels.data, pixels.type)
         self.npy = npy
         if format == 'QImage.Format_Indexed8':
             try:
@@ -175,7 +168,6 @@ class DisplayImage(DisplayWidget):
                 e.message = 'Image has improper shape ({}, {}) for size {}'. \
                     format(dimX, dimY, len(npy))
                 raise
-
         elif format == 'QImage.Format_RGB888':
             try:
                 npy.shape = dimY, dimX, dimZ
@@ -184,7 +176,6 @@ class DisplayImage(DisplayWidget):
                 e.message = 'Image has improper shape ({}, {}, {}) for size\
                     {}'.format(dimX, dimY, dimZ, len(npy))
                 raise
-        
         else:
             try:
                 npy.shape = dimY, dimX, dimZ
