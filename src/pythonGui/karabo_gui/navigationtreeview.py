@@ -47,7 +47,7 @@ class NavigationTreeView(QTreeView):
             if event.sender is KaraboEventSender.ShowDevice:
                 data = event.data
                 self.selectItem(data.get('deviceId'))
-                return True
+                return False
         return super(NavigationTreeView, self).eventFilter(obj, event)
 
     def _setupContextMenu(self):
