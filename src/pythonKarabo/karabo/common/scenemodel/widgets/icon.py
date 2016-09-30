@@ -59,7 +59,7 @@ class TextIconsModel(BaseIconsModel):
 @register_scene_reader('DisplayIconset', version=2)
 def _display_iconset_reader(read_func, element):
     traits = read_base_widget_data(element)
-    traits['data'] = base64.b64decode(element.get('data'))
+    traits['data'] = base64.b64decode(element.get('data', b''))
     return DisplayIconsetModel(**traits)
 
 
@@ -67,7 +67,7 @@ def _display_iconset_reader(read_func, element):
 def _display_iconset_writer(write_func, model, parent):
     element = SubElement(parent, NS_SVG + 'rect')
     write_base_widget_data(model, element, 'DisplayIconset')
-    if len(model.data) == 0:
+    if model.data is None or len(model.data) == 0:
         msg = 'Attempting to write a DisplayIconsetModel with empty data'
         raise SceneWriterException(msg)
     element.set('data', base64.b64encode(model.data).decode("ascii"))
@@ -83,7 +83,7 @@ def _read_icon_elements(parent, tag):
             continue
         traits = {
             'value': sub.text or '',
-            'data': base64.b64decode(sub.get('data')),
+            'data': base64.b64decode(sub.get('data', b'')),
         }
         if sub.get('equal') is not None:
             traits['equal'] = True if sub.get('equal') == 'true' else False
@@ -96,7 +96,7 @@ def _write_icon_elements(icons, parent, tag):
     """
     for ic in icons:
         sub = SubElement(parent, tag)
-        if len(ic.data) == 0:
+        if ic.data is None or len(ic.data) == 0:
             msg = 'Attempting to write an IconData object with empty data'
             raise SceneWriterException(msg)
         uuencoded_data = base64.b64encode(ic.data).decode('ascii')
