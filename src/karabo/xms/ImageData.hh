@@ -78,6 +78,8 @@ namespace karabo {
                       const EncodingType encoding = Encoding::GRAY,
                       const int bitsPerPixel = 8);
 
+            ImageData(const ImageData& other) = default;
+
             virtual ~ImageData() {
             }
 

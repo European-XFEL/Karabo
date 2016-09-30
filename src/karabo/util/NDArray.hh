@@ -148,8 +148,6 @@ namespace karabo {
 
         private:
 
-            void setClassId();
-
             template <typename T>
             void setType() {
                 set("type", static_cast<int> (karabo::util::Types::from<T>()));
@@ -190,7 +188,6 @@ namespace karabo {
         NDArray::NDArray(const Dims& shape,
                          const T& fill,
                          const bool isBigEndian) {
-            setClassId();
             const size_t itemSize = sizeof (T);
             const size_t byteSize = shape.size() * itemSize;
             T* buffer = new T[shape.size()];
@@ -208,7 +205,6 @@ namespace karabo {
                          const size_t numElems,
                          const Dims& shape,
                          const bool isBigEndian) {
-            setClassId();
             setData(dataPtr, numElems);
             setType<T>();
             setShape(shape);
@@ -221,7 +217,6 @@ namespace karabo {
                          const D& deleter,
                          const Dims& shape,
                          const bool isBigEndian) {
-            setClassId();
             setData(dataPtr, numElems, deleter);
             setType<T>();
             setShape(shape);

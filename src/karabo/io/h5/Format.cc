@@ -202,8 +202,8 @@ namespace karabo {
 
             void Format::discoverFromHashElement(const Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy, vector<Hash>& config, const string& path, const string& keyPath) {
 
-                if(el.hasAttribute("__classId")){ //sub-classed hash
-                    const std::string& classId = el.getAttribute<string>("__classId");
+                if(el.hasAttribute(KARABO_HASH_CLASS_ID)){ //sub-classed hash
+                    const std::string& classId = el.getAttribute<string>(KARABO_HASH_CLASS_ID);
                     if (classId == karabo::util::NDArray::classInfo().getClassId()) {
                         discoverFromNDArray(el, policy, config, path, keyPath);
                     } else {

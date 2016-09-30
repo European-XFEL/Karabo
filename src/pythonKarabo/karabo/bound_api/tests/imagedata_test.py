@@ -2,7 +2,7 @@ import weakref
 
 import numpy as np
 
-from karabo.bound import Encoding, ImageData
+from karabo.bound import Encoding, Hash, ImageData
 from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
@@ -91,3 +91,12 @@ def test_imagedata_set_and_get():
     assert imageData.getDimensions() == (200, 100)
     assert imageData.getEncoding() == Encoding.GRAY
     assert imageData.getROIOffsets() == (20, 10)
+
+
+def test_imagedata_in_hash():
+    arr = np.arange(20000, dtype='uint8').reshape(100, 200)
+    imageData = ImageData(arr)
+    h = Hash("img", imageData)
+
+    assert isinstance(h["img"], ImageData)
+    assert compare_ndarray_data_ptrs(h["img"].getData(), arr)

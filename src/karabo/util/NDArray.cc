@@ -43,7 +43,6 @@ namespace karabo {
         NDArray::NDArray(const Dims& shape,
                          const karabo::util::Types::ReferenceType& type,
                          const bool isBigEndian) {
-            setClassId();
             const size_t byteSize = shape.size() * Types::to<ToSize>(type);
             char* buffer = new char[byteSize];
             set("data", std::make_pair(DataPointer(buffer, &NDArray::deallocator), byteSize));
@@ -57,7 +56,6 @@ namespace karabo {
                          const karabo::util::Types::ReferenceType& type,
                          const size_t& numElems, const Dims& shape,
                          const bool isBigEndian) {
-            setClassId();
             const size_t itemSize = Types::to<ToSize>(type);
             const size_t byteSize = numElems * itemSize;          
             set("data", std::make_pair(ptr, byteSize));
@@ -144,11 +142,6 @@ namespace karabo {
                 swapEndianess();
                 setBigEndian(true);
             }
-        }
-
-
-        void NDArray::setClassId() {
-            set(KARABO_HASH_CLASS_ID, getClassInfo().getClassId());
         }
 
 
