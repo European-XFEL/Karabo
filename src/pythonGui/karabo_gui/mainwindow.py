@@ -67,35 +67,40 @@ class MainWindow(QMainWindow):
             if sender is KaraboEventSender.OpenSceneView:
                 data = event.data
                 self.addSceneView(data.get('model'), data.get('project'))
-                return True
+                return False
             elif sender is KaraboEventSender.RemoveSceneView:
                 data = event.data
                 self.removeMiddlePanel('scene_model', data.get('model'))
-                return True
+                return False
             elif sender is KaraboEventSender.RenameSceneView:
                 data = event.data
                 self.renameMiddlePanel('scene_model', data.get('model'))
-                return True
+                return False
             elif sender is KaraboEventSender.OpenMacro:
                 data = event.data
                 self.addMacro(data.get('model'), data.get('project'))
-                return True
+                return False
             elif sender is KaraboEventSender.RemoveMacro:
                 data = event.data
                 self.removeMiddlePanel('macro_model', data.get('model'))
-                return True
+                return False
             elif sender is KaraboEventSender.RenameMacro:
                 data = event.data
                 self.renameMiddlePanel('macro_model', data.get('model'))
-                return True
+                return False
             elif sender is KaraboEventSender.ShowAlarmServices:
                 data = event.data
                 self.showAlarmServicePanels(data.get('instanceIds'))
-                return True
+                return False
+            elif sender in (KaraboEventSender.AlarmInitReply,
+                            KaraboEventSender.AlarmUpdate):
+                data = event.data
+                self.showAlarmServicePanels([data.get('instanceId')])
+                return False
             elif sender is KaraboEventSender.RemoveAlarmServices:
                 data = event.data
                 self.removeAlarmServicePanels(data.get('instanceIds'))
-                return True
+                return False
         return super(MainWindow, self).eventFilter(obj, event)
 
     def _setupActions(self):
@@ -334,31 +339,32 @@ class MainWindow(QMainWindow):
         self.middleTab.addDockableTab(self.placeholderPanel,
                                       "Start Page", self)
 
-    def _getDivWidget(self, child_type, model):
-        """ The associated divWidget for the given ``model`` is returned,
-            if available. ``child_type`` can be 'macro_model' or 'scene_model'.
+    def _getDivWidget(self, tabWindow, child_type, model):
+        """ The associated divWidget of the given ``tabWindow`` for the given
+            ``model`` is returned, if available.
+            ``child_type`` can be 'macro_model' or 'scene_model' or
+            'alarm_model'.
         """
-        for divWidget in self.middleTab.divWidgetList:
+        for divWidget in tabWindow.divWidgetList:
             panel_model = getattr(divWidget.dockableWidget, child_type, None)
             if panel_model is model:
                 return divWidget
 
-    def focusExistingMiddlePanel(self, child_type, model):
-        """ This method checks whether a middle panel for the given ``model``
-            already exists.
-            ``child_type`` can be either 'macro_model' or ''scene_model'.
+    def focusExistingTabWindow(self, tabWindow, child_type, model):
+        """ This method checks whether a given ``tabWindow`` for the given
+            ``model`` already exists.
+            ``child_type`` can be either 'macro_model' or ''scene_model' or
+            'alarm_model'.
 
             The method returns ``True``, if panel already open else ``False``.
             Note that in case the panel is already there, it is pushed to the
             top of the focus stack.
         """
-        self.checkAndRemovePlaceholderMiddlePanel()
-
-        divWidget = self._getDivWidget(child_type, model)
+        divWidget = self._getDivWidget(tabWindow, child_type, model)
         if divWidget is not None:
-            index = self.middleTab.indexOf(divWidget)
+            index = tabWindow.indexOf(divWidget)
             if index > -1:
-                self.middleTab.setCurrentIndex(index)
+                tabWindow.setCurrentIndex(index)
             else:
                 divWidget.activateWindow()
                 divWidget.raise_()
@@ -373,7 +379,7 @@ class MainWindow(QMainWindow):
             The title of the panel was already changed in the project panel
             and needs to be updated.
         """
-        divWidget = self._getDivWidget(child_type, model)
+        divWidget = self._getDivWidget(self.middleTab, child_type, model)
         if divWidget is not None:
             index = self.middleTab.indexOf(divWidget)
             # Update title - important for undocked widgets
@@ -385,7 +391,7 @@ class MainWindow(QMainWindow):
         """ The middle panel for the given ``model`` is removed.
             ``child_type`` can be either 'macro_model' or scene_model'.
         """
-        divWidget = self._getDivWidget(child_type, model)
+        divWidget = self._getDivWidget(self.middleTab, child_type, model)
         if divWidget is not None:
             self.middleTab.removeDockableTab(divWidget.dockableWidget)
 
@@ -393,10 +399,10 @@ class MainWindow(QMainWindow):
         if self.middleTab.count() < 1:
             self._createPlaceholderMiddlePanel()
 
-    def selectLastMiddlePanel(self):
-        if self.middleTab.count() > 1:
-            self.middleTab.updateTabsClosable()
-        self.middleTab.setCurrentIndex(self.middleTab.count() - 1)
+    def selectTabWindow(self, tabWindow, divWidget):
+        if tabWindow.count() > 1:
+            tabWindow.updateTabsClosable()
+        tabWindow.setCurrentWidget(divWidget)
 
     def _removeAlarmPanel(self, instanceId):
         if instanceId in self.alarmPanels:
@@ -414,11 +420,16 @@ class MainWindow(QMainWindow):
             if instId not in self.alarmPanels:
                 panel = AlarmPanel(instId)
                 title = "Alarms for {}".format(instId)
-                self.outputTab.addDockableTab(panel, title, self)
+                divWidget = self.outputTab.addDockableTab(panel, title, self)
+                self.selectTabWindow(self.outputTab, divWidget)
                 tabBar = self.outputTab.tabBar()
                 tabBar.setTabTextColor(
                     self.outputTab.count()-1, QColor(*ALARM_COLOR))
                 self.alarmPanels[instId] = panel
+            else:
+                panel = self.alarmPanels[instId]
+                self.focusExistingTabWindow(self.outputTab, 'alarm_model',
+                                            panel.alarm_model)
 
     def removeAlarmServicePanels(self, instanceIds):
         """ Remove alarm panels for the given ``instanceIds``."""
@@ -448,7 +459,9 @@ class MainWindow(QMainWindow):
         """ Add a scene view to show the content of the given `sceneModel in
             the GUI.
         """
-        if self.focusExistingMiddlePanel('scene_model', sceneModel):
+        self.checkAndRemovePlaceholderMiddlePanel()
+        if self.focusExistingTabWindow(
+                self.middleTab, 'scene_model', sceneModel):
             return
 
         # XXX: Set icon data to model, if existent (temporary solution)
@@ -457,22 +470,26 @@ class MainWindow(QMainWindow):
 
         # Add scene view to tab widget
         scenePanel = ScenePanel(sceneView, self.acServerConnect.isChecked())
-        self.middleTab.addDockableTab(scenePanel,
-                                      sceneModel.title,
-                                      self)
-        self.selectLastMiddlePanel()
+        divWidget = self.middleTab.addDockableTab(
+            scenePanel, sceneModel.title, self)
+        self.selectTabWindow(self.middleTab, divWidget)
 
     def addMacro(self, macroModel, project):
-        if self.focusExistingMiddlePanel('macro_model', macroModel):
+        """ Add a macro pane to show the content of the given `macroModel in
+            the GUI.
+        """
+        self.checkAndRemovePlaceholderMiddlePanel()
+        if self.focusExistingTabWindow(
+                self.middleTab, 'macro_model', macroModel):
             return
 
         # Add the project name to the macro model because it is only needed
         # at instantiation time of the macro
         macroModel.project_name = project.name
         macroPanel = MacroPanel(macroModel)
-        self.middleTab.addDockableTab(macroPanel, macroModel.title, self)
-
-        self.selectLastMiddlePanel()
+        divWidget = self.middleTab.addDockableTab(
+            macroPanel, macroModel.title, self)
+        self.selectTabWindow(self.middleTab, divWidget)
 
     @pyqtSlot(object)
     def onChangeAccessLevel(self, action):
