@@ -275,9 +275,9 @@ class Tests(DeviceTest):
         """test that errors are properly logged and error functions called"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"), \
-                (yield from getDevice("local")) as d:
+                (yield from getDevice("local")) as d,\
+                self.assertRaises(KaraboError):
             yield from d.error()
-            yield from sleep(0.1)
         self.assertTrue(self.remote.done)
         self.assertIs(self.local.exc_slot, Local.error)
         self.assertIsInstance(self.local.exception, RuntimeError)
@@ -291,9 +291,9 @@ class Tests(DeviceTest):
         """test that errors in error handlers are properly logged"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR") as logs, \
-                (yield from getDevice("local")) as d:
+                (yield from getDevice("local")) as d, \
+                self.assertRaises(KaraboError):
             yield from d.error_in_error()
-            yield from sleep(0.1)
         self.assertFalse(self.remote.done)
         self.assertEqual(logs.records[-1].msg, "error in error handler")
         self.assertIs(self.local.exc_slot, Local.error_in_error)
