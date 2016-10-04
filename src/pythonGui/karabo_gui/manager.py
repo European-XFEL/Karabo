@@ -22,6 +22,7 @@ from karabo.middlelayer import (
 from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import QDialog, QMessageBox
 
+from karabo.common.states import State
 from karabo_gui.configuration import BulkNotifications
 from karabo_gui.dialogs.configurationdialog import (
     SelectProjectDialog, SelectProjectConfigurationDialog)
@@ -198,10 +199,10 @@ class _Manager(QObject):
     def _triggerStateChange(self, box, value, timestamp):
         configuration = box.configuration
         # Update GUI due to state changes
-        if value.endswith('ING'):
+        if State(value).isDerivedFrom(State.CHANGING):
             self.signalChangingState.emit(configuration, True)
         else:
-            if value == 'ERROR':
+            if State(value) is State.ERROR:
                 self.signalErrorState.emit(configuration, True)
             else:
                 self.signalErrorState.emit(configuration, False)

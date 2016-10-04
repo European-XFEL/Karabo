@@ -7,6 +7,7 @@
    and is created by the factory class VacuumWidget.
 """
 
+from karabo.common.states import State
 from karabo_gui.widget import VacuumWidget
 
 
@@ -14,13 +15,13 @@ class PressureSwitchWidget(VacuumWidget):
     alias = "Pressure switch"
 
     def valueChanged(self, box, value, timestamp=None):
-        if value.endswith('ING'):
+        if State(value).isDerivedFrom(State.CHANGING):
             self._setPixmap("pressure-switch-orange")
-        elif value == 'ON':
+        elif State(value).isDerivedFrom(State.ACTIVE):
             self._setPixmap("pressure-switch-green")
-        elif value == 'OFF':
+        elif State(value).isDerivedFrom(State.PASSIVE):
             self._setPixmap("pressure-switch-yellow")
-        elif value == 'ERROR':
+        elif State(value) is State.ERROR:
             self._setPixmap("pressure-switch-red")
         else:
             self._setPixmap("pressure-switch")
