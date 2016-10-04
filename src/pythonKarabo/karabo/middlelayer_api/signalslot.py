@@ -34,18 +34,21 @@ def slot(f):
     return f
 
 
-def coslot(f):
+def coslot(f, passMessage=False):
     f = coroutine(f)
 
-    @coroutine
-    def inner(func, device, message, args):
-        try:
-            device._ss.reply(message, (yield from func(*args)))
-        except Exception:
-            _log_exception(func, device)
-
     def outer(func, device, message, args):
-        async(inner(func, device, message, args))
+        broker = device._ss
+
+        @coroutine
+        def inner():
+            try:
+                broker.reply(message, (yield from func(*args)))
+            except Exception:
+                _log_exception(func, device)
+        if passMessage:
+            args.append(message)
+        async(inner())
 
     f.slot = outer
     return f
