@@ -95,9 +95,13 @@ class BaseWidgetContainer(QWidget):
         if visible:
             for box in self.boxes:
                 box.addVisible()
+                device = box.configuration
+                device.addVisible()
         else:
             for box in self.boxes:
                 box.removeVisible()
+                device = box.configuration
+                device.removeVisible()
 
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
