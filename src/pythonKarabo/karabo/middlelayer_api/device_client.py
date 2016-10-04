@@ -564,7 +564,7 @@ class lock:
         return self.device
 
     @synchronize
-    def __exit__(self, a, b, c):
+    def __exit__(self, exc_type, exc_value, traceback):
         self.device.lockedBy = ""
         myId = get_instance().deviceId
         while self.device.lockedBy == myId:
