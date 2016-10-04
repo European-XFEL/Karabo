@@ -228,6 +228,7 @@
         <itemPath>../../../src/karabo/util/Hash.cc</itemPath>
         <itemPath>../../../src/karabo/util/Hash.hh</itemPath>
         <itemPath>../../../src/karabo/util/OrderedMap.hh</itemPath>
+        <itemPath>../../../src/karabo/util/PackParameters.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f7"
                      displayName="Factory / Introspection"
@@ -2142,6 +2143,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/OverwriteElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/PackParameters.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4262,6 +4268,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/OverwriteElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/PackParameters.hh"
             ex="false"
             tool="3"
             flavor2="0">
