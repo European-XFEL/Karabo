@@ -9,8 +9,9 @@ from karabo.common.states import State
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     waitUntilNew, waitUntil, setWait, setNoWait, getDevice, executeNoWait,
-    updateDevice, Queue, connectDevice)
+    updateDevice, Queue, connectDevice, lock)
 from karabo.middlelayer_api.device_server import KaraboStream
+from karabo.middlelayer_api.exceptions import KaraboError
 from karabo.middlelayer_api.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro
 from karabo.middlelayer_api.synchronization import sleep
@@ -359,6 +360,29 @@ class Tests(DeviceTest):
             weak = weakref.ref(d)
             del d
             self.assertIsNone(weak())
+
+    @sync_tst
+    def test_locked(self):
+        with getDevice("remote") as d:
+            d.value = 22
+            d.lockedBy = "whoever"
+            try:
+                with self.assertRaisesRegex(KaraboError, "lock"):
+                    d.value = 7
+                self.assertEqual(d.value, 22)
+            finally:
+                self.remote.lockedBy = ""
+            d.value = 3
+            self.assertEqual(d.value, 3)
+
+    @sync_tst
+    def test_lock(self):
+        with getDevice("remote") as d:
+            with lock(d):
+                self.assertEqual(d.lockedBy, "local")
+                d.value = 33
+                self.assertEqual(d.value, 33)
+            self.assertEqual(d.lockedBy, "")
 
 
 if __name__ == "__main__":

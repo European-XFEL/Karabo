@@ -539,6 +539,38 @@ def disconnectDevice(device):
     device.__exit__(None, None, None)
 
 
+class lock:
+    """A context manager to lock a device
+
+    This allows to lock another devices for exclusive use::
+
+        with lock(device):
+            # do something on device
+    """
+    def __init__(self, device):
+        self.device = device
+
+    @synchronize
+    def __enter__(self):
+        myId = get_instance().deviceId
+        if self.device.lockedBy == myId:
+            raise RuntimeError('recursive lock of "{}" detected!'.
+                               format(self.device.deviceId))
+        self.device.lockedBy = myId
+        while self.device.lockedBy != myId:
+            yield from waitUntilNew(self.device.lockedBy)
+            if self.device.lockedBy == "":
+                self.device.lockedBy = myId
+        return self.device
+
+    @synchronize
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.device.lockedBy = ""
+        myId = get_instance().deviceId
+        while self.device.lockedBy == myId:
+            yield from waitUntilNew(self.device.lockedBy)
+
+
 def getDevices(serverId=None):
     """Return a list of currently running devices
 
