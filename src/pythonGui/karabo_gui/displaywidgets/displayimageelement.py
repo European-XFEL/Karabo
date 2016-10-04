@@ -3,8 +3,6 @@
 # Created on August 9, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
 """This module contains a class which represents a widget plugin for attributes
    and is created by the factory class DisplayWidget.
    
@@ -18,15 +16,13 @@
             return Attribute*(**params)
 """
 
-__all__ = ["DisplayImageElement"]
-
 import numpy as np
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
 
-#from karabo.middlelayer import Type
+from karabo_gui.const import ERROR_COLOR_ALPHA, OK_COLOR
+from karabo_gui.images import get_image_data, get_dimensions_and_format
 from karabo_gui.schema import ImageNode
-from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 
@@ -68,49 +64,27 @@ class DisplayImageElement(DisplayWidget):
         if self.value is not None or value is self.value:
             return
 
-        if len(value.dims) == 2:
-            # Shape
-            dimX = value.dims[1]
-            dimY = value.dims[0]
-
-            # Format: Grayscale
-            format = QImage.Format_Indexed8
-        elif len(value.dims) == 3:
-            # Shape
-            dimX = value.dims[1]
-            dimY = value.dims[0]
-            dimZ = value.dims[2]
-            if dimZ == 3:
-                # Format: RGB
-                format = QImage.Format_RGB888
-            else:
-                return
-        else:
+        dimX, dimY, dimZ, format = get_dimensions_and_format(value)
+        if dimX is None or dimY is None or (dimZ is not None and dimZ != 3):
             return
 
-        # Data itself
-        pixels = value.pixels
-        print("pixels.data", pixels.data)
-        print("pixels.type", pixels.type)
-        print("pixels.shape", pixels.shape)
-        if not pixels.shape:
+        npy = get_image_data(value)
+        if npy is None:
             return
-        npy = np.frombuffer(pixels.data, pixels.type)
-
         # Normalize
         npy = npy - npy.min()
-        npy *= (255.0 / npy.max())
+        np.multiply(npy, 255.0 / npy.max())
 
         # Cast
         npy = npy.astype(np.uint8)
-        if format == QImage.Format_Indexed8:
+        if format is QImage.Format_Indexed8:
             try:
                 npy.shape = dimY, dimX
             except ValueError as e:
                 e.message = 'Image has improper shape ({}, {}) for size {}'. \
                     format(dimX, dimY, len(npy))
                 raise
-        elif format == QImage.Format_RGB888:
+        elif format is QImage.Format_RGB888:
             try:
                 npy.shape = dimY, dimX, dimZ
             except ValueError as e:
@@ -124,10 +98,10 @@ class DisplayImageElement(DisplayWidget):
         if dimX < 1 or dimY < 1:
             raise RuntimeError('Image has less than two dimensions')
 
-        if format == QImage.Format_Indexed8:
+        if format is QImage.Format_Indexed8:
             image = QImage(npy.data, dimX, dimY, dimX, format)
             image.setColorTable(self.colorTable)
-        elif format == QImage.Format_RGB888:
+        elif format is QImage.Format_RGB888:
             image = QImage(npy.data, dimX, dimY, dimX*dimZ, format)
         else:
             return
