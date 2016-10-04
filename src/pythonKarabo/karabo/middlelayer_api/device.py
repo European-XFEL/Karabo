@@ -60,6 +60,13 @@ class Device(AlarmMixin, SignalSlotable):
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
         defaultValue=State.UNKNOWN)
 
+    lockedBy = String(
+        displayedName="Locked By",
+        description="The name of the device holding a lock on this one "
+                    "(empty if not locked)",
+        accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
+        requiredAccessLevel=AccessLevel.EXPERT, defaultValue="")
+
     archive = Bool(
         displayedName="Archive",
         description="Decides whether the properties of this device "
@@ -127,8 +134,11 @@ class Device(AlarmMixin, SignalSlotable):
                 r[k, ...].update(attrs)
         return r
 
-    @coslot
-    def slotReconfigure(self, reconfiguration):
+    def slotReconfigure(self, reconfiguration, message):
+        """This can only be called as a slot"""
+        if (self.lockedBy and self.lockedBy !=
+                message.properties["signalInstanceId"].decode("ascii")):
+            return False, 'Device locked by "{}"'.format(self.lockedBy)
         try:
             yield from super(Device, self).slotReconfigure(reconfiguration)
         except KaraboError as e:
@@ -136,6 +146,8 @@ class Device(AlarmMixin, SignalSlotable):
             return False, e.args[0]
         self.signalChanged(self.configurationAsHash(), self.deviceId)
         return True, ""
+
+    slotReconfigure = coslot(slotReconfigure, passMessage=True)
 
     @slot
     def slotGetSchema(self, onlyCurrentState):
