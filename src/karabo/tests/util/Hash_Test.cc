@@ -14,6 +14,7 @@
 #include "Factory_Test.hh"
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/Exception.hh>
+#include <karabo/util/PackParameters.hh>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Hash_Test);
 
@@ -1902,5 +1903,23 @@ void Hash_Test::testTableValidation() {
 }
 
 
+void Hash_Test::testPack() {
+    Hash h;
+    pack(h);
+    CPPUNIT_ASSERT(h.size() == 0);
+    pack(h, 3);
+    CPPUNIT_ASSERT(h.size() == 1);
+    CPPUNIT_ASSERT(h.get<int>("a1") == 3);
+    pack(h, 3, 2);
+    pack(h, string("bla"), 2.5);
+    CPPUNIT_ASSERT(h.size() == 2);
+    CPPUNIT_ASSERT(h.get<string>("a1") == "bla");
+    CPPUNIT_ASSERT(h.get<double>("a2") == 2.5);
 
+    string s;
+    double x;
 
+    unpack(h, s, x);
+    CPPUNIT_ASSERT(s == "bla");
+    CPPUNIT_ASSERT(x == 2.5);
+}

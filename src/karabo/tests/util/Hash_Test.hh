@@ -30,6 +30,7 @@ class Hash_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testIs);
     CPPUNIT_TEST(testHelper);
     CPPUNIT_TEST(testTableValidation);
+    CPPUNIT_TEST(testPack);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -54,6 +55,7 @@ private:
     void testHas();
     void testIs();
     void testTableValidation();
+    void testPack();
 };
 
 #endif
