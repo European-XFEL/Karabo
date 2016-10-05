@@ -384,6 +384,31 @@ class Tests(DeviceTest):
                 self.assertEqual(d.value, 33)
             self.assertEqual(d.lockedBy, "")
 
+    @sync_tst
+    def test_lock_recursive(self):
+        with getDevice("remote") as d:
+            with lock(d):
+                self.assertEqual(d.lockedBy, "local")
+                with lock(d, recursive=True):
+                    self.assertEqual(d.lockedBy, "local")
+                    d.value = 33
+                    self.assertEqual(d.value, 33)
+                self.assertEqual(d.lockedBy, "local")
+                with self.assertRaises(RuntimeError):
+                    with lock(d):
+                        pass
+            self.assertEqual(d.lockedBy, "")
+
+    @sync_tst
+    def test_lock_nowait(self):
+        with getDevice("remote") as d:
+            with lock(d, wait_for_release=False):
+                self.assertEqual(d.lockedBy, "local")
+                d.value = 33
+                self.assertEqual(d.value, 33)
+            self.assertEqual(d.lockedBy, "local")
+            waitUntil(lambda: d.lockedBy == "")
+
 
 if __name__ == "__main__":
     main()
