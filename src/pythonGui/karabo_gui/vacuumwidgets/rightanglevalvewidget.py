@@ -12,7 +12,7 @@ from karabo_gui.widget import VacuumWidget
 
 
 class RightAngleValveWidget(VacuumWidget):
-    alias = "Right "
+    alias = "Right angle valve"
     statePixmapName = {
         State.CHANGING: 'rightangle-valve-orange',
         State.ACTIVE: 'rightangle-valve-green',
