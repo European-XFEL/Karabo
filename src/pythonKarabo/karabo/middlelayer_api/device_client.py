@@ -548,9 +548,8 @@ class lock:
         with lock(device):
             # do something on device
     """
-    def __init__(self, device, recursive=False, wait_for_release=None):
+    def __init__(self, device, wait_for_release=None):
         self.device = device
-        self.recursive = recursive
         self.wait_for_release = wait_for_release
         self.release = True
 
@@ -558,11 +557,7 @@ class lock:
     def __enter__(self):
         myId = get_instance().deviceId
         if self.device.lockedBy == myId:
-            if self.recursive:
-                self.release = False
-            else:
-                raise RuntimeError('recursive lock of "{}" detected!'.
-                                   format(self.device.deviceId))
+            self.release = False
         self.device.lockedBy = myId
         while self.device.lockedBy != myId:
             yield from waitUntilNew(self.device.lockedBy)
@@ -574,7 +569,7 @@ class lock:
     def __exit__(self, exc_type, exc_value, traceback):
         if self.release:
             self.device.lockedBy = ""
-            if self.wait_for_release:
+            if self.wait_for_release or self.wait_for_release is None:
                 myId = get_instance().deviceId
                 while self.device.lockedBy == myId:
                     yield from waitUntilNew(self.device.lockedBy)
@@ -588,7 +583,7 @@ class lock:
                 if self.release:
                     self.device.lockedBy = ""
 
-        if self.wait_for_release is not None:
+        if self.wait_for_release is not None and self.wait_for_release:
             raise RuntimeError("cannot wait for release before Python 3.5!")
         yield from self.__enter__()
         return unlock()
