@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux-x86
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux-x86
-CND_ARTIFACT_NAME_Debug=integrationtests
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/integrationtests
+CND_ARTIFACT_NAME_Debug=libintegrationTests.so
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/libintegrationTests.so
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Debug=integrationtests.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/integrationtests.tar
+CND_PACKAGE_NAME_Debug=libintegrationTests.so.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/libintegrationTests.so.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux-x86
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86
-CND_ARTIFACT_NAME_Release=integrationtests
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/integrationtests
+CND_ARTIFACT_NAME_Release=libintegrationTests.so
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/libintegrationTests.so
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Release=integrationtests.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/integrationtests.tar
+CND_PACKAGE_NAME_Release=libintegrationTests.so.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/libintegrationTests.so.tar
 #
 # include compiler specific variables
 #

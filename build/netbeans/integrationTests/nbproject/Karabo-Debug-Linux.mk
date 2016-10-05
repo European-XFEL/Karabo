@@ -34,8 +34,7 @@ include Makefile
 OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
-OBJECTFILES= \
-	${OBJECTDIR}/_ext/567603001/dummy.o
+OBJECTFILES=
 
 # Test Directory
 TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
@@ -65,16 +64,11 @@ LDLIBSOPTIONS=-L${KARABO}/extern/lib -L${KARABO}/lib -Wl,-rpath,${KARABO}/lib -W
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/integrationtests
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libintegrationTests.${CND_DLIB_EXT}
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/integrationtests: ${OBJECTFILES}
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libintegrationTests.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/integrationtests ${OBJECTFILES} ${LDLIBSOPTIONS} -Wl,-rpath-link,${KARABO}/extern/lib
-
-${OBJECTDIR}/_ext/567603001/dummy.o: ../../../src/integrationTests/dummy.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/567603001
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/567603001/dummy.o ../../../src/integrationTests/dummy.cc
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libintegrationTests.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -Wl,-rpath-link,${KARABO}/extern/lib -shared -fPIC
 
 # Subprojects
 .build-subprojects:
@@ -176,19 +170,6 @@ ${TESTDIR}/_ext/567603001/integrationRunner_3.o: ../../../src/integrationTests/i
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/integrationRunner_3.o ../../../src/integrationTests/integrationRunner_3.cc
 
 
-${OBJECTDIR}/_ext/567603001/dummy_nomain.o: ${OBJECTDIR}/_ext/567603001/dummy.o ../../../src/integrationTests/dummy.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/567603001
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/567603001/dummy.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/567603001/dummy_nomain.o ../../../src/integrationTests/dummy.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/567603001/dummy.o ${OBJECTDIR}/_ext/567603001/dummy_nomain.o;\
-	fi
-
 # Run Test Targets
 .test-conf:
 	@if [ "${TEST}" = "" ]; \
@@ -204,7 +185,7 @@ ${OBJECTDIR}/_ext/567603001/dummy_nomain.o: ${OBJECTDIR}/_ext/567603001/dummy.o 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/integrationtests
+	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libintegrationTests.${CND_DLIB_EXT}
 
 # Subprojects
 .clean-subprojects:
