@@ -192,7 +192,7 @@ namespace karabo {
 
                 STRING_ELEMENT(expected).key("lastCommand")
                         .displayedName("Last command")
-                        .description("The last slot called from outside.")
+                        .description("The last slot called.")
                         .adminAccess()
                         .readOnly().initialValue("")
                         .commit();
