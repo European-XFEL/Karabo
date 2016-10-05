@@ -11,6 +11,7 @@ proxy. """
 import asyncio
 from asyncio import get_event_loop
 from collections import defaultdict
+from contextlib import contextmanager
 from decimal import Decimal
 import time
 from weakref import WeakSet
@@ -569,6 +570,17 @@ class lock:
         myId = get_instance().deviceId
         while self.device.lockedBy == myId:
             yield from waitUntilNew(self.device.lockedBy)
+
+    def __iter__(self):
+        @contextmanager
+        def unlock():
+            try:
+                yield
+            finally:
+                self.device.lockedBy = ""
+
+        yield from self.__enter__()
+        return unlock()
 
 
 def getDevices(serverId=None):
