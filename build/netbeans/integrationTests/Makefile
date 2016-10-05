@@ -119,6 +119,7 @@ test: .test-post
 
 .test-pre: build-tests
 # Add your pre 'test' code here...
+	@if test ! -d testresults;    then $(MKDIR) -p  testresults; fi
 
 .test-post: .test-impl
 # Add your post 'test' code here...
