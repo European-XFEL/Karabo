@@ -13,15 +13,10 @@ from karabo_gui.widget import VacuumWidget
 
 class TurboPumpWidget(VacuumWidget):
     alias = "Turbo pump"
-
-    def valueChanged(self, box, value, timestamp=None):
-        if State(value).isDerivedFrom(State.CHANGING):
-            self._setPixmap("turbo-pump-orange")
-        elif State(value).isDerivedFrom(State.ACTIVE):
-            self._setPixmap("turbo-pump-green")
-        elif State(value).isDerivedFrom(State.PASSIVE):
-            self._setPixmap("turbo-pump-yellow")
-        elif State(value) is State.ERROR:
-            self._setPixmap("turbo-pump-red")
-        else:
-            self._setPixmap("turbo-pump")
+    statePixmapName = {
+        State.CHANGING: 'turbo-pump-orange',
+        State.ACTIVE: 'turbo-pump-green',
+        State.PASSIVE: 'turbo-pump-yellow',
+        State.ERROR: 'turbo-pump-red',
+        State.UNKNOWN: 'turbo-pump'
+    }

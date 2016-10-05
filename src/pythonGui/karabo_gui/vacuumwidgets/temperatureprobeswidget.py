@@ -13,15 +13,10 @@ from karabo_gui.widget import VacuumWidget
 
 class TemperatureProbeWidget(VacuumWidget):
     alias = "Temperature probe"
-
-    def valueChanged(self, box, value, timestamp=None):
-        if State(value).isDerivedFrom(State.CHANGING):
-            self._setPixmap("thermometer-orange")
-        elif State(value).isDerivedFrom(State.ACTIVE):
-            self._setPixmap("thermometer-green")
-        elif State(value).isDerivedFrom(State.PASSIVE):
-            self._setPixmap("thermometer-yellow")
-        elif State(value) is State.ERROR:
-            self._setPixmap("thermometer-red")
-        else:
-            self._setPixmap("thermometer")
+    statePixmapName = {
+        State.CHANGING: 'thermometer-orange',
+        State.ACTIVE: 'thermometer-green',
+        State.PASSIVE: 'thermometer-yellow',
+        State.ERROR: 'thermometer-red',
+        State.UNKNOWN: 'thermometer'
+    }

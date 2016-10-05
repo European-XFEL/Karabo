@@ -13,15 +13,10 @@ from karabo_gui.widget import VacuumWidget
 
 class HydraulicValveWidget(VacuumWidget):
     alias = "Hydraulic valve"
-
-    def valueChanged(self, box, value, timestamp=None):
-        if State(value).isDerivedFrom(State.CHANGING):
-            self._setPixmap("hydraulic-valve-orange")
-        elif State(value).isDerivedFrom(State.ACTIVE):
-            self._setPixmap("hydraulic-valve-green")
-        elif State(value).isDerivedFrom(State.PASSIVE):
-            self._setPixmap("hydraulic-valve-yellow")
-        elif State(value) is State.ERROR:
-            self._setPixmap("hydraulic-valve-red")
-        else:
-            self._setPixmap("hydraulic-valve")
+    statePixmapName = {
+        State.CHANGING: 'hydraulic-valve-orange',
+        State.ACTIVE: 'hydraulic-valve-green',
+        State.PASSIVE: 'hydraulic-valve-yellow',
+        State.ERROR: 'hydraulic-valve-red',
+        State.UNKNOWN: 'hydraulic-valve'
+    }
