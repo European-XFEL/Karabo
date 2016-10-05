@@ -1361,6 +1361,9 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void registerReply(const karabo::util::Hash& reply);
 
+            virtual void storeLastCommand(const std::string& slotFunction) {
+            }
+
         private: // Functions
 
             /**
