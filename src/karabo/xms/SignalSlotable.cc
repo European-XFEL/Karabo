@@ -123,8 +123,9 @@ namespace karabo {
             try {
                 Hash::Pointer header, body;
                 ss->receiveResponse(header, body);
-                if (header->has("error") and header->get<bool>("error"))
+                if (header->has("error") && header->get<bool>("error")) {
                     throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
+                }
                 inner(body);
             } catch (const karabo::util::TimeoutException&) {
                 KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
