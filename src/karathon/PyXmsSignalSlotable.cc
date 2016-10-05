@@ -323,6 +323,8 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("getBrokerHosts", &SignalSlotableWrap::getBrokerHosts)
             .def("getBrokerTopic", &SignalSlotableWrap::getBrokerTopic)
 
+            .def("registerLastCommandHandler", &SignalSlotableWrap::registerLastCommandHandler
+                 , (bp::arg("handler")))
             ;
 }
 
