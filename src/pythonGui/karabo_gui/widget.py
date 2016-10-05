@@ -23,6 +23,7 @@ import os.path
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QLabel, QPixmap
 
+from karabo.common.states import State
 from karabo.middlelayer import String
 from karabo_gui import background
 from karabo_gui.const import OK_COLOR, ERROR_COLOR
@@ -206,6 +207,18 @@ class VacuumWidget(DisplayWidget):
         color = ERROR_COLOR if isError else OK_COLOR
         ss = self._styleSheet.format(color)
         self.widget.setStyleSheet(ss)
+
+    def valueChanged(self, box, value, timestamp=None):
+        if State(value).isDerivedFrom(State.CHANGING):
+            self._setPixmap(self.statePixmapName[State.CHANGING])
+        elif State(value).isDerivedFrom(State.ACTIVE):
+            self._setPixmap(self.statePixmapName[State.ACTIVE])
+        elif State(value).isDerivedFrom(State.PASSIVE):
+            self._setPixmap(self.statePixmapName[State.PASSIVE])
+        elif State(value) is State.ERROR:
+            self._setPixmap(self.statePixmapName[State.ERROR])
+        else:
+            self._setPixmap(self.statePixmapName[State.UNKNOWN])
 
 
 class EditableWidget(Widget):

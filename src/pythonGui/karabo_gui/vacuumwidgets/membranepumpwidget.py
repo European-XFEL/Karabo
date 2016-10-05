@@ -13,15 +13,10 @@ from karabo_gui.widget import VacuumWidget
 
 class MembranePumpWidget(VacuumWidget):
     alias = "Membrane Pump"
-
-    def valueChanged(self, box, value, timestamp=None):
-        if State(value).isDerivedFrom(State.CHANGING):
-            self._setPixmap("membrane-pump-orange")
-        elif State(value).isDerivedFrom(State.ACTIVE):
-            self._setPixmap("membrane-pump-green")
-        elif State(value).isDerivedFrom(State.PASSIVE):
-            self._setPixmap("membrane-pump-yellow")
-        elif State(value) is State.ERROR:
-            self._setPixmap("membrane-pump-red")
-        else:
-            self._setPixmap("membrane-pump")
+    statePixmapName = {
+        State.CHANGING: 'membrane-pump-orange',
+        State.ACTIVE: 'membrane-pump-green',
+        State.PASSIVE: 'membrane-pump-yellow',
+        State.ERROR: 'membrane-pump-red',
+        State.UNKNOWN: 'membrane-pump'
+    }

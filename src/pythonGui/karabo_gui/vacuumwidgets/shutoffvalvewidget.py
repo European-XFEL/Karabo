@@ -13,15 +13,10 @@ from karabo_gui.widget import VacuumWidget
 
 class ShutOffValveWidget(VacuumWidget):
     alias = "Shut off valve"
-
-    def valueChanged(self, box, value, timestamp=None):
-        if State(value).isDerivedFrom(State.CHANGING):
-            self._setPixmap("shutoff-valve-orange")
-        elif State(value).isDerivedFrom(State.ACTIVE):
-            self._setPixmap("shutoff-valve-green")
-        elif State(value).isDerivedFrom(State.PASSIVE):
-            self._setPixmap("shutoff-valve-yellow")
-        elif State(value) is State.ERROR:
-            self._setPixmap("shutoff-valve-red")
-        else:
-            self._setPixmap("shutoff-valve")
+    statePixmapName = {
+        State.CHANGING: 'shutoff-valve-orange',
+        State.ACTIVE: 'shutoff-valve-green',
+        State.PASSIVE: 'shutoff-valve-yellow',
+        State.ERROR: 'shutoff-valve-red',
+        State.UNKNOWN: 'shutoff-valve'
+    }

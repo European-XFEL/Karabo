@@ -12,16 +12,11 @@ from karabo_gui.widget import VacuumWidget
 
 
 class RightAngleValveWidget(VacuumWidget):
-    alias = "Right angle valve"
-
-    def valueChanged(self, box, value, timestamp=None):
-        if State(value).isDerivedFrom(State.CHANGING):
-            self._setPixmap("rightangle-valve-orange")
-        elif State(value).isDerivedFrom(State.ACTIVE):
-            self._setPixmap("rightangle-valve-green")
-        elif State(value).isDerivedFrom(State.PASSIVE):
-            self._setPixmap("rightangle-valve-yellow")
-        elif State(value) is State.ERROR:
-            self._setPixmap("rightangle-valve-red")
-        else:
-            self._setPixmap("rightangle-valve")
+    alias = "Right "
+    statePixmapName = {
+        State.CHANGING: 'rightangle-valve-orange',
+        State.ACTIVE: 'rightangle-valve-green',
+        State.PASSIVE: 'rightangle-valve-yellow',
+        State.ERROR: 'rightangle-valve-red',
+        State.UNKNOWN: 'rightangle-valve'
+    }

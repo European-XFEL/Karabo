@@ -13,15 +13,10 @@ from karabo_gui.widget import VacuumWidget
 
 class CryoCoolerWidget(VacuumWidget):
     alias = "Cryo-cooler"
-
-    def valueChanged(self, box, value, timestamp=None):
-        if State(value).isDerivedFrom(State.CHANGING):
-            self._setPixmap("cryo-cooler-orange")
-        elif State(value).isDerivedFrom(State.ACTIVE):
-            self._setPixmap("cryo-cooler-green")
-        elif State(value).isDerivedFrom(State.PASSIVE):
-            self._setPixmap("cryo-cooler-yellow")
-        elif State(value) is State.ERROR:
-            self._setPixmap("cryo-cooler-red")
-        else:
-            self._setPixmap("cryo-cooler")
+    statePixmapName = {
+        State.CHANGING: 'cryo-cooler-orange',
+        State.ACTIVE: 'cryo-cooler-green',
+        State.PASSIVE: 'cryo-cooler-yellow',
+        State.ERROR: 'cryo-cooler-red',
+        State.UNKNOWN: 'cryo-cooler-red'
+    }

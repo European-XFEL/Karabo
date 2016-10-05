@@ -13,15 +13,10 @@ from karabo_gui.widget import VacuumWidget
 
 class PressureSwitchWidget(VacuumWidget):
     alias = "Pressure switch"
-
-    def valueChanged(self, box, value, timestamp=None):
-        if State(value).isDerivedFrom(State.CHANGING):
-            self._setPixmap("pressure-switch-orange")
-        elif State(value).isDerivedFrom(State.ACTIVE):
-            self._setPixmap("pressure-switch-green")
-        elif State(value).isDerivedFrom(State.PASSIVE):
-            self._setPixmap("pressure-switch-yellow")
-        elif State(value) is State.ERROR:
-            self._setPixmap("pressure-switch-red")
-        else:
-            self._setPixmap("pressure-switch")
+    statePixmapName = {
+        State.CHANGING: 'pressure-switch-orange',
+        State.ACTIVE: 'pressure-switch-green',
+        State.PASSIVE: 'pressure-switch-yellow',
+        State.ERROR: 'pressure-switch-red',
+        State.UNKNOWN: 'pressure-switch'
+    }
