@@ -548,15 +548,21 @@ class lock:
         with lock(device):
             # do something on device
     """
-    def __init__(self, device):
+    def __init__(self, device, recursive=False, wait_for_release=None):
         self.device = device
+        self.recursive = recursive
+        self.wait_for_release = wait_for_release
+        self.release = True
 
     @synchronize
     def __enter__(self):
         myId = get_instance().deviceId
         if self.device.lockedBy == myId:
-            raise RuntimeError('recursive lock of "{}" detected!'.
-                               format(self.device.deviceId))
+            if self.recursive:
+                self.release = False
+            else:
+                raise RuntimeError('recursive lock of "{}" detected!'.
+                                   format(self.device.deviceId))
         self.device.lockedBy = myId
         while self.device.lockedBy != myId:
             yield from waitUntilNew(self.device.lockedBy)
@@ -566,10 +572,12 @@ class lock:
 
     @synchronize
     def __exit__(self, exc_type, exc_value, traceback):
-        self.device.lockedBy = ""
-        myId = get_instance().deviceId
-        while self.device.lockedBy == myId:
-            yield from waitUntilNew(self.device.lockedBy)
+        if self.release:
+            self.device.lockedBy = ""
+            if self.wait_for_release:
+                myId = get_instance().deviceId
+                while self.device.lockedBy == myId:
+                    yield from waitUntilNew(self.device.lockedBy)
 
     def __iter__(self):
         @contextmanager
@@ -577,8 +585,11 @@ class lock:
             try:
                 yield
             finally:
-                self.device.lockedBy = ""
+                if self.release:
+                    self.device.lockedBy = ""
 
+        if self.wait_for_release is not None:
+            raise RuntimeError("cannot wait for release before Python 3.5!")
         yield from self.__enter__()
         return unlock()
 
