@@ -13,15 +13,10 @@ from karabo_gui.widget import VacuumWidget
 
 class MaxiGaugeWidget(VacuumWidget):
     alias = "Maxi gauge"
-
-    def valueChanged(self, box, value, timestamp=None):
-        if State(value).isDerivedFrom(State.CHANGING):
-            self._setPixmap("maxi-gauge-orange")
-        elif State(value).isDerivedFrom(State.ACTIVE):
-            self._setPixmap("maxi-gauge-green")
-        elif State(value).isDerivedFrom(State.PASSIVE):
-            self._setPixmap("maxi-gauge-yellow")
-        elif State(value) is State.ERROR:
-            self._setPixmap("maxi-gauge-red")
-        else:
-            self._setPixmap("maxi-gauge")
+    statePixmapName = {
+        State.CHANGING: 'maxi-gauge-orange',
+        State.ACTIVE: 'maxi-gauge-green',
+        State.PASSIVE: 'maxi-gauge-yellow',
+        State.ERROR: 'maxi-gauge-red',
+        State.UNKNOWN: 'maxi-gauge'
+    }
