@@ -575,7 +575,8 @@ namespace karathon {
 
         virtual void storeLastCommand(const std::string& slotFunction) {
             ScopedGILAcquire gil;
-            if (m_lastCommandHandler) m_lastCommandHandler(bp::object(slotFunction));
+            if (m_lastCommandHandler != bp::object())
+                m_lastCommandHandler(bp::object(slotFunction));
         }
 
     private: // members
