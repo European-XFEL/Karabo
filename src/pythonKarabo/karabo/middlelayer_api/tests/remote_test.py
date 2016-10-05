@@ -760,16 +760,7 @@ class Tests(DeviceTest):
         with (yield from getDevice("remote")) as d:
             with (yield from lock(d)):
                 self.assertEqual(d.lockedBy, "local")
-                d.value = 33
-                yield from waitUntil(lambda: d.value == 33)
-            yield from waitUntil(lambda: d.lockedBy == "")
-
-    @async_tst
-    def test_lock_recursive(self):
-        with (yield from getDevice("remote")) as d:
-            with (yield from lock(d)):
-                self.assertEqual(d.lockedBy, "local")
-                with (yield from lock(d, recursive=True)):
+                with (yield from lock(d)):
                     self.assertEqual(d.lockedBy, "local")
                     d.value = 33
                     yield from waitUntil(lambda: d.value == 33)
