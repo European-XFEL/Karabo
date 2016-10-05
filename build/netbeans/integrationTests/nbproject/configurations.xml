@@ -54,14 +54,13 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
-    <itemPath>../../../src/integrationTests/dummy.cc</itemPath>
   </logicalFolder>
   <sourceRootList>
     <Elem>../../../src/integrationTests</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
-    <conf name="Debug" type="1">
+    <conf name="Debug" type="2">
       <toolsSet>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>
@@ -188,11 +187,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/integrationTests/dummy.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
       <item path="../../../src/integrationTests/integrationRunner.cc"
             ex="false"
             tool="1"
@@ -295,7 +289,7 @@
         </linkerTool>
       </folder>
     </conf>
-    <conf name="Release" type="1">
+    <conf name="Release" type="2">
       <toolsSet>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>
@@ -430,11 +424,6 @@
       <item path="../../../src/integrationTests/TcpAdapter_3.hh"
             ex="false"
             tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/integrationTests/dummy.cc"
-            ex="false"
-            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/integrationTests/integrationRunner.cc"
