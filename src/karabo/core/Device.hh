@@ -190,6 +190,13 @@ namespace karabo {
                         .initialValue(AlarmCondition::NONE)
                         .commit();
 
+                STRING_ELEMENT(expected).key("lastCommand")
+                        .displayedName("Last command")
+                        .description("The last slot called from outside.")
+                        .adminAccess()
+                        .readOnly().initialValue("")
+                        .commit();
+
                 BOOL_ELEMENT(expected).key("archive")
                         .displayedName("Archive")
                         .description("Decides whether the properties of this device will be logged or not")
@@ -1445,7 +1452,9 @@ namespace karabo {
             }
 
 
-
+            virtual void storeLastCommand(const std::string& slotFunction) {
+                set("lastCommand", slotFunction);
+            }
         };
 
 
