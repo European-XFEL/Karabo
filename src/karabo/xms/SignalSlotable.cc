@@ -124,7 +124,7 @@ namespace karabo {
                 Hash::Pointer header, body;
                 ss->receiveResponse(header, body);
                 if (header->has("error") && header->get<bool>("error")) {
-                    throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
+                    throw KARABO_SIGNALSLOT_EXCEPTION(body->get<std::string>("a1"));
                 }
                 inner(body);
             } catch (const karabo::util::TimeoutException&) {
