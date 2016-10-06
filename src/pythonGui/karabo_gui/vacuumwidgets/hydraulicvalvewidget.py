@@ -3,29 +3,20 @@
 # Created on October 25, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
 """This module contains a class which represents a widget plugin for attributes
    and is created by the factory class VacuumWidget.
 """
 
-__all__ = ["HydraulicValveWidget"]
-
-
+from karabo.common.states import State
 from karabo_gui.widget import VacuumWidget
 
 
 class HydraulicValveWidget(VacuumWidget):
     alias = "Hydraulic valve"
-
-    def valueChanged(self, box, value, timestamp=None):
-        if value == "Changing...":
-            self._setPixmap("hydraulic-valve-orange")
-        elif ("On" in value) or ("on" in value):
-            self._setPixmap("hydraulic-valve-green")
-        elif ("Off" in value) or ("off" in value):
-            self._setPixmap("hydraulic-valve-yellow")
-        elif ("Error" in value) or ("error" in value):
-            self._setPixmap("hydraulic-valve-red")
-        else:
-            self._setPixmap("hydraulic-valve")
+    statePixmapName = {
+        State.CHANGING: 'hydraulic-valve-orange',
+        State.ACTIVE: 'hydraulic-valve-green',
+        State.PASSIVE: 'hydraulic-valve-yellow',
+        State.ERROR: 'hydraulic-valve-red',
+        State.UNKNOWN: 'hydraulic-valve'
+    }
