@@ -178,6 +178,8 @@ class Box(QObject):
 
     def addVisible(self):
         self.visible += 1
+        # This needs to be done to subscribe for output channels
+        self.parent().addVisible()
         self.configuration.addVisible()
         if self.visible == 1:
             self.visibilityChanged.emit(True)
@@ -185,6 +187,8 @@ class Box(QObject):
 
     def removeVisible(self):
         self.visible -= 1
+        # This needs to be done to unsubscribe from output channels
+        self.parent().removeVisible()
         self.configuration.removeVisible()
         if self.visible == 0:
             self.visibilityChanged.emit(False)
