@@ -1848,6 +1848,8 @@ void exportPyUtilSchema() {
         //********* Help function to show all parameters *******
         s.def("help", &schemawrap::help, (bp::arg("classId") = ""));
 
+        s.def("applyRuntimeUpdates", &Schema::applyRuntimeUpdates, bp::arg("updates"));
+
         s.def("getClassInfo"
               , (ClassInfo(Schema::*)() const) (&Schema::getClassInfo)
               , (ClassInfo(SchemaWrapper::*)() const) (&SchemaWrapper::default_getClassInfo));

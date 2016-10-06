@@ -1142,7 +1142,7 @@ namespace karabo {
                         }
 
         #define checkForRunttimeUpdateFixedType(Attr, Func, CppType) if(attribute == Attr) Func(path, it->getAs<CppType>("value"));
-        #define checkForRunttimeUpdateFixedTypeStrict(Attr, Func, CppType) if(attribute == Attr) Func(path, it->get<CppType>("value"));
+        #define checkForRunttimeUpdateFixedTypeEnum(Attr, Func, EnumType) if(attribute == Attr) Func(path, EnumType(it->get<int>("value")));
         
         bool Schema::applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates){
             bool success = true;
@@ -1153,9 +1153,9 @@ namespace karabo {
 
                     Types::ReferenceType type = getValueType(path);
 
-                    checkForRunttimeUpdateFixedTypeStrict(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, setRequiredAccessLevel, AccessLevel);
-                    checkForRunttimeUpdateFixedTypeStrict(KARABO_SCHEMA_UNIT_ENUM, setUnit, UnitType);
-                    checkForRunttimeUpdateFixedTypeStrict(KARABO_SCHEMA_METRIC_PREFIX_ENUM, setMetricPrefix, MetricPrefixType);
+                    checkForRunttimeUpdateFixedTypeEnum(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, setRequiredAccessLevel, AccessLevel);
+                    checkForRunttimeUpdateFixedTypeEnum(KARABO_SCHEMA_UNIT_ENUM, setUnit, UnitType);
+                    checkForRunttimeUpdateFixedTypeEnum(KARABO_SCHEMA_METRIC_PREFIX_ENUM, setMetricPrefix, MetricPrefixType);
                     checkForRunttimeUpdateTemplatedType(type, KARABO_SCHEMA_MIN_INC, setMinInc);
                     checkForRunttimeUpdateTemplatedType(type, KARABO_SCHEMA_MAX_INC, setMaxInc);
                     checkForRunttimeUpdateTemplatedType(type, KARABO_SCHEMA_MIN_EXC, setMinExc);
@@ -1174,12 +1174,12 @@ namespace karabo {
 
                 } catch (...) {
                     success = false;
-                }       
+                }
             }
             return success;
         }
         
-        #undef checkForRunttimeUpdateFixedTypeStrict
+        #undef checkForRunttimeUpdateFixedTypeEnum
         #undef checkForRunttimeUpdateFixedType
         #undef checkForRunttimeUpdateTemplatedType
         #undef applyRuntimeUpdateTypeResolver
