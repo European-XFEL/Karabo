@@ -452,12 +452,18 @@ class Slot(Descriptor):
         if instance is None:
             return
 
+        msg = device._checkLocked(message)
+        if msg is not None:
+            device._ss.reply(message, msg, error=True)
+            return
+
         if (self.allowedStates is not None and
                 instance.state not in self.allowedStates):
             msg = 'Calling slot "{}" not allowed in state "{}"'.format(
                 self.key, instance.state)
-            device._ss.reply(message, msg)
+            device._ss.reply(message, msg, error=True)
             device.logger.warn(msg)
+            return
 
         coro = get_event_loop().run_coroutine_or_thread(func)
 
@@ -469,8 +475,8 @@ class Slot(Descriptor):
                 device._ss.reply(message, ret)
             except Exception as e:
                 _, exc, tb = sys.exc_info()
-                instance._onException(self, exc, tb)
-                device._ss.reply(message, str(e))
+                yield from instance._onException(self, exc, tb)
+                device._ss.replyException(message, e)
         return async(wrapper())
 
     def _initialize(self, instance, value=None):
