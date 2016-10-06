@@ -100,6 +100,13 @@ class PythonDevice(NoFsm):
                         .initialValue(AlarmCondition.NONE)
                         .commit(),
 
+            STRING_ELEMENT(expected).key("lastCommand")
+                    .displayedName("Last command")
+                    .description("The last slot called.")
+                    .adminAccess()
+                    .readOnly().initialValue("")
+                    .commit(),
+
             BOOL_ELEMENT(expected).key("archive")
                         .displayedName("Archive")
                         .description("Decides whether the properties of this device will be logged or not")
@@ -236,6 +243,9 @@ class PythonDevice(NoFsm):
             self._ss = SignalSlotable.create(self.deviceid, "Jms", self.parameters["_connection_.Jms"], autostart = False)
         except RuntimeError as e:
             raise RuntimeError("PythonDevice.__init__: SignalSlotable.create Exception -- {0}".format(str(e)))
+
+        self._ss.registerLastCommandHandler(self.storeLastCommand)
+
         # Setup device logger
         self.loadLogger(configuration)        
         self.log = Logger.getCategory(self.deviceid)
@@ -915,8 +925,10 @@ class PythonDevice(NoFsm):
                 info.set(str(key), thisinfo)
         return info
 
+    def storeLastCommand(self, slotFunction):
+        self.set("lastCommand", slotFunction);
 
-        
+
     '''
     def getCurrentDateTime(self):
         return datetime.datetime(1,1,1).today().isoformat(' ')

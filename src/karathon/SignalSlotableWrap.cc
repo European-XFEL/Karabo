@@ -639,4 +639,17 @@ namespace karathon {
             KARABO_RETHROW
         }
     }
+
+
+    void SignalSlotableWrap::proxyLastCommandHandler(const bp::object& handler, const std::string& slotFunction) {
+        ScopedGILAcquire gil;
+        try {
+            if (handler) handler(bp::object(slotFunction));
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) PyErr_Print();
+            throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
 }
