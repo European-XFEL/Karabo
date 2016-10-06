@@ -124,7 +124,22 @@ namespace karabo {
                 Hash::Pointer header, body;
                 ss->receiveResponse(header, body);
                 if (header->has("error") && header->get<bool>("error")) {
-                    throw KARABO_SIGNALSLOT_EXCEPTION(body->get<std::string>("a1"));
+                    string filename;
+                    string function;
+                    int lineNo = 0;
+                    try {
+                        filename = body->get<std::string>("a2");
+                    } catch (...) {
+                    }
+                    try {
+                        function = body->get<string>("a3");
+                    } catch (...) {
+                    }
+                    try {
+                        lineNo = body->get<int>("a4");
+                    } catch (...) {
+                    }
+                    throw RemoteException(body->get<string>("a1"), header->get<string>("signalInstanceId"), filename, function, lineNo);
                 }
                 inner(body);
             } catch (const karabo::util::TimeoutException&) {
