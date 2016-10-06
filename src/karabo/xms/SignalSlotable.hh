@@ -575,6 +575,8 @@ namespace karabo {
 
             static karabo::net::PointToPoint::Pointer m_pointToPoint;
 
+            boost::function<void(const std::string&)> m_lastCommandHandler;
+
         public:
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
@@ -1305,6 +1307,10 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void disconnectP2P(const std::string& instanceId);
 
+            void registerLastCommandHandler(const boost::function<void(const std::string&)>& handler) {
+                m_lastCommandHandler = handler;
+            }
+
         protected: // Functions
 
             void startEmittingHeartbeats(const int heartbeatInterval);
@@ -1360,9 +1366,6 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             void registerReply(const karabo::util::Hash& reply);
-
-            virtual void storeLastCommand(const std::string& slotFunction) {
-            }
 
         private: // Functions
 
