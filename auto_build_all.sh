@@ -21,8 +21,9 @@ safeRunCommand() {
     fi
 }
 
-checkKaraboTestResults() {
-    for i in $scriptDir/build/netbeans/karabo/testresults/*.xml; do
+checkCppUnitTestResults() {
+    local testDir="$1"
+    for i in $testDir/testresults/*.xml; do
         # xmllint is distributed with Karabo
         local fails=$(xmllint --xpath '/TestRun/Statistics/FailuresTotal/text()' $i)
         if [ $fails != "0" ]; then
@@ -34,20 +35,40 @@ checkKaraboTestResults() {
     done
 }
 
+runIntegrationTests() {
+    if [ -z "$KARABO" ]; then
+        source $scriptDir/karabo/activate
+    fi
+
+    local testDir=$scriptDir/build/netbeans/integrationTests
+
+    echo
+    echo Running Karabo integration tests ...
+    echo
+    cd $testDir
+    safeRunCommand "make CONF=$CONF -j$NUM_JOBS test"
+    cd $scriptDir
+
+    # Parse the XML test outputs
+    checkCppUnitTestResults "$testDir"
+}
+
 runUnitTests() {
     if [ -z "$KARABO" ]; then
         source $scriptDir/karabo/activate
     fi
 
+    local testDir=$scriptDir/build/netbeans/karabo
+
     echo
-    echo Running karabo tests ...
+    echo Running Karabo unit tests ...
     echo
-    cd $scriptDir/build/netbeans/karabo
+    cd $testDir
     safeRunCommand "make CONF=$CONF -j$NUM_JOBS test"
     cd $scriptDir
 
     # Parse the XML test outputs
-    checkKaraboTestResults
+    checkCppUnitTestResults "$testDir"
 
     echo
     echo Running pythonKarabo tests
@@ -131,6 +152,7 @@ shift
 SKIP="y"
 BUNDLE="y"
 RUNTESTS="n"
+RUNINTEGRATIONTESTS="n"
 PYOPT="wheel"
 NUM_JOBS=0
 while [ -n "$1" ]; do
@@ -151,16 +173,20 @@ while [ -n "$1" ]; do
             # Run all the unit tests too
             RUNTESTS="y"
             ;;
-	--numJobs)
-	    # Limit the numbers of jobs for make runs
-	    if [ -n "$2" ]; then
-		NUM_JOBS=$2
-		shift
-	    else
-		echo "Option --numJobs needs a number of jobs"
-		exit 1
-	    fi
-	    ;;
+        --runIntegrationTests)
+            # Run the integration tests
+            RUNINTEGRATIONTESTS="y"
+            ;;
+        --numJobs)
+            # Limit the numbers of jobs for make runs
+            if [ -n "$2" ]; then
+                NUM_JOBS=$2
+                shift
+            else
+                echo "Option --numJobs needs a number of jobs"
+                exit 1
+            fi
+            ;;
         *)
             # Make a little noise
             echo "Unrecognized commandline flag: $1"
@@ -264,6 +290,9 @@ else
 fi
 if [ "$RUNTESTS" = "y" ]; then
     runUnitTests
+fi
+if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
+    runIntegrationTests
 fi
 
 echo "### Successfully finished building and packaging of karaboFramework ###"
