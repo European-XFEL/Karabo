@@ -518,6 +518,19 @@ namespace karabo {
 #define KARABO_SIGNALSLOT_EXCEPTION(msg) karabo::util::SignalSlotException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
+         * The RemoteException represents an exception originating in a different device.
+         * The parameters are refering to the exception on the other end.
+         */
+        class RemoteException : public Exception {
+
+            public:
+
+            RemoteException(const std::string& message, const std::string& device, const std::string& filename, const std::string& function, int lineNumber) :
+                Exception(message, "Remote Exception from " + device, filename, function, lineNumber) {
+            }
+        };
+
+        /**
          * The NetworkException handles exceptions that are caused by network protocol related libraries (BoostAsio, SNMP, OpenMQ,...)
          */
         class NetworkException : public Exception {
