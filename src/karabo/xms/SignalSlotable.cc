@@ -671,7 +671,7 @@ namespace karabo {
                             if (slot) {
                                 // try/catch around user code that might have registered an exception handler:
                                 try {
-                                    storeLastCommand(slotFunction);
+                                    if (m_lastCommandHandler) m_lastCommandHandler(slotFunction);
                                     slot->callRegisteredSlotFunctions(header, body);
                                 } catch (const Exception& e) {
                                     if (m_exceptionHandler) m_exceptionHandler(e);

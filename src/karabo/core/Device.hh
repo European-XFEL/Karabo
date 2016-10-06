@@ -314,7 +314,7 @@ namespace karabo {
                 // Setup device logger
                 m_log = &(karabo::log::Logger::getCategory(m_deviceId)); // TODO use later: "device." + instanceId
 
-
+                registerLastCommandHandler(boost::bind(&Device<FSM>::storeLastCommand, this, _1));
             }
 
             virtual ~Device() {
@@ -1452,7 +1452,7 @@ namespace karabo {
             }
 
 
-            virtual void storeLastCommand(const std::string& slotFunction) {
+            void storeLastCommand(const std::string& slotFunction) {
                 set("lastCommand", slotFunction);
             }
         };

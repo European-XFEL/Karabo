@@ -547,8 +547,8 @@ namespace karathon {
             registerEndOfStreamHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnEndOfStreamEventHandler, this, handler, _1));
         }
 
-        void registerLastCommandHandler(const bp::object& handler) {
-            m_lastCommandHandler = handler;
+        void registerLastCommandHandlerPy(const bp::object& handler) {
+            registerLastCommandHandler(boost::bind(&SignalSlotableWrap::proxyLastCommandHandler, this, handler, _1));
         }
 
     private:
@@ -573,15 +573,10 @@ namespace karathon {
 
         void proxyOnEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
 
-        virtual void storeLastCommand(const std::string& slotFunction) {
-            ScopedGILAcquire gil;
-            if (m_lastCommandHandler != bp::object())
-                m_lastCommandHandler(bp::object(slotFunction));
-        }
+        void proxyLastCommandHandler(const bp::object& handler, const std::string& slotFunction);
 
     private: // members
         boost::thread m_eventLoop;
-        bp::object m_lastCommandHandler;
     };
 }
 
