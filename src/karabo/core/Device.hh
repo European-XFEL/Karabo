@@ -190,6 +190,13 @@ namespace karabo {
                         .initialValue(AlarmCondition::NONE)
                         .commit();
 
+                STRING_ELEMENT(expected).key("lastCommand")
+                        .displayedName("Last command")
+                        .description("The last slot called.")
+                        .adminAccess()
+                        .readOnly().initialValue("")
+                        .commit();
+
                 BOOL_ELEMENT(expected).key("archive")
                         .displayedName("Archive")
                         .description("Decides whether the properties of this device will be logged or not")
@@ -307,7 +314,7 @@ namespace karabo {
                 // Setup device logger
                 m_log = &(karabo::log::Logger::getCategory(m_deviceId)); // TODO use later: "device." + instanceId
 
-
+                registerLastCommandHandler(boost::bind(&Device<FSM>::storeLastCommand, this, _1));
             }
 
             virtual ~Device() {
@@ -1445,7 +1452,9 @@ namespace karabo {
             }
 
 
-
+            void storeLastCommand(const std::string& slotFunction) {
+                set("lastCommand", slotFunction);
+            }
         };
 
 
