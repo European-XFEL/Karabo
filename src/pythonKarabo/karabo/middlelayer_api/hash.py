@@ -1083,8 +1083,6 @@ class VectorHash(Vector):
     number = 31
 
     def __init__(self, rowSchema=None, strict=True, **kwargs):
-        from .schema import Configurable
-
         super(VectorHash, self).__init__(strict=strict, **kwargs)
 
         if rowSchema is None:
@@ -1100,11 +1098,8 @@ class VectorHash(Vector):
             self.cls = None
             return
 
-        namespace = {}
-        for k, v, a in rowSchema.hash.iterall():
-            desc = Type.fromname[a["valueType"]](strict=strict, key=k, **a)
-            namespace[k] = desc
-        self.cls = type(self.key, (Configurable,), namespace)
+        self.dtype = np.dtype([(k, Type.fromname[a["valueType"]].numpy)
+                               for k, v, a in rowSchema.hash.iterall()])
 
     @classmethod
     def read(cls, file):
@@ -1115,11 +1110,22 @@ class VectorHash(Vector):
         return HashList(ht.cast(o) for o in other)
 
     def toKaraboValue(self, data, strict=True):
-        table = [
-            self.cls({k: getattr(self.cls, k).toKaraboValue(v, strict=strict)
-                      for k, v in row.items()})
-            for row in data]
-        return basetypes.TableValue(table, descriptor=self)
+        timestamp = None
+        if strict:
+            if isinstance(data, basetypes.KaraboValue):
+                timestamp = data.timestamp
+                data = data.value
+            table = np.array(data, dtype=self.dtype)
+        else:
+            table = np.array([tuple(row[k] for k in self.dtype.names)
+                              for row in data], dtype=self.dtype)
+        return basetypes.QuantityValue(table, descriptor=self,
+                                       timestamp=timestamp)
+
+    def toDataAndAttrs(self, value):
+        data = [Hash((col, row[col]) for col in self.dtype.names)
+                for row in value.value]
+        return data, {}
 
 
 class HashList(list, Special):

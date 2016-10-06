@@ -5,9 +5,9 @@ from pint import DimensionalityError
 
 from karabo.middlelayer import (
     AccessMode, Assignment, AccessLevel, Bool, Char, ComplexFloat, Double,
-    Float, Hash, Int8, Int16, MetricPrefix, NumpyVector, QuantityValue, State,
-    String, Timestamp, Unit, UInt64, VectorBool, VectorChar,
-    VectorComplexFloat, VectorFloat, VectorInt8, VectorString)
+    Float, Hash, Int8, Int16, MetricPrefix, NumpyVector, QuantityValue,
+    Schema, State, String, Timestamp, Unit, UInt64, VectorBool, VectorChar,
+    VectorComplexFloat, VectorFloat, VectorHash, VectorInt8, VectorString)
 
 
 class Tests(TestCase):
@@ -252,6 +252,27 @@ class Tests(TestCase):
         self.assertEqual(v, ["a", "b", "c"])
         self.assertEqual(v[1], "b")
         self.assertEqual(len(v), 3)
+
+    def test_vector_hash(self):
+        rowSchema = Hash("i", None, "d", None)
+        rowSchema["i", "valueType"] = "INT32"
+        rowSchema["d", "valueType"] = "DOUBLE"
+
+        d = VectorHash(rowSchema=Schema("rs", hash=rowSchema))
+        v = d.toKaraboValue([(3, 4), (2.5, 8.5)])
+        self.assertEqual(len(v), 2)
+        self.assertEqual(v[1]["i"], 2)
+        self.assertEqual(v[1]["d"], 8.5)
+        self.assertEqual(v.dtype.names, ("i", "d"))
+        d.toKaraboValue(v)
+        data, _ = d.toDataAndAttrs(v)
+        self.assertEqual(len(data), 2)
+
+        h = Hash()
+        h["a"] = data
+        self.assertEqual(h["a"][0]["i"], 3)
+        self.assertEqual(h["a"][1]["i"], 2)
+        self.assertEqual(h["a"][1]["d"], 8.5)
 
     def test_general(self):
         d = UInt64(accessMode=AccessMode.READONLY)
