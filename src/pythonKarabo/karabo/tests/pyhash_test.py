@@ -38,6 +38,9 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(h['F.f.f.f.f.x.y.z'], 99)
         self.assertEqual(h['F']['f']['f']['f']['f']['x']['y']['z'], 99)
 
+        h = Hash({"a": 1, "b": 2, "c": 3})
+        self.assertEqual(h["b"], 2)
+        self.assertEqual(len(h), 3)
 
     def test_getSet(self):
         h = Hash()
