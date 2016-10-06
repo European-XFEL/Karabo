@@ -547,6 +547,10 @@ class lock:
 
         with lock(device):
             # do something on device
+
+    Normally, at the end of the block we wait until the lock has been
+    actually released. Set the attribute *wait_for_release* to *True*
+    if speed is an issue.
     """
     def __init__(self, device, wait_for_release=None):
         self.device = device
