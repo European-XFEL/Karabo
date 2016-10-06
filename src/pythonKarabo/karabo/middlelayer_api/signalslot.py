@@ -28,7 +28,8 @@ def slot(f):
     def inner(func, device, message, args):
         try:
             device._ss.reply(message, func(*args))
-        except Exception:
+        except Exception as e:
+            device._ss.replyException(message, e)
             _log_exception(func, device)
     f.slot = inner
     return f
@@ -44,7 +45,8 @@ def coslot(f, passMessage=False):
         def inner():
             try:
                 broker.reply(message, (yield from func(*args)))
-            except Exception:
+            except Exception as e:
+                broker.replyException(message, e)
                 _log_exception(func, device)
         if passMessage:
             args.append(message)
@@ -335,4 +337,4 @@ class SignalSlotable(Configurable):
 
         loop = get_event_loop()
         coro = logException(loop.run_coroutine_or_thread(m, *args))
-        loop.create_task(coro, instance=self)
+        return loop.create_task(coro, instance=self)

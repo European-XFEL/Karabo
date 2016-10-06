@@ -16,9 +16,11 @@ import queue
 import socket
 import time
 import threading
+import traceback
 import weakref
 
 from . import openmq
+from .exceptions import KaraboError
 from .hash import Hash
 
 
@@ -125,7 +127,7 @@ class Broker:
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
 
-    def reply(self, message, reply):
+    def reply(self, message, reply, error=False):
         sender = message.properties['signalInstanceId']
 
         if not isinstance(reply, tuple):
@@ -137,6 +139,7 @@ class Broker:
             p['replyFrom'] = replyTo
             p['signalFunction'] = "__reply__"
             p['slotInstanceIds'] = b'|' + sender + b'|'
+            p['error'] = error
             self.send(p, reply)
 
         replyInstanceIds = message.properties.get('replyInstanceIds')
@@ -145,7 +148,16 @@ class Broker:
             p['signalFunction'] = "__replyNoWait__"
             p['slotInstanceIds'] = replyInstanceIds
             p['slotFunctions'] = message.properties['replyFunctions']
+            p['error'] = error
             self.send(p, reply)
+
+    def replyException(self, message, exception):
+        tb = exception.__traceback__
+        code = tb.tb_frame.f_code
+        self.reply(message, (
+            traceback.format_exception_only(type(exception), exception),
+            code.co_filename, code.co_name, tb.tb_lineno,
+            traceback.format_exc()), error=True)
 
     def connect(self, deviceId, signal, slot):
         self.emit("call", {deviceId: ["slotConnectToSignal"]}, signal,
@@ -281,11 +293,14 @@ class Broker:
         if replyFrom is not None:
             f = self.repliers.get(replyFrom.decode("ascii"))
             if f is not None:
-                if len(params) == 1:
-                    params = params[0]
+                if message.properties.get('error', False):
+                    f.set_exception(KaraboError(params[0]))
                 else:
-                    params = tuple(params)
-                f.set_result(params)
+                    if len(params) == 1:
+                        params = params[0]
+                    else:
+                        params = tuple(params)
+                    f.set_result(params)
             return {}, None
 
         slots = (message.properties['slotFunctions'][1:-1]).decode(

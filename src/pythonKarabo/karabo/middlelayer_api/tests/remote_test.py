@@ -10,9 +10,9 @@ from pint import DimensionalityError
 
 from karabo.middlelayer import (
     AlarmCondition, Configurable, connectDevice, Device, DeviceNode, Float,
-    getDevice, Hash, Int32, MetricPrefix, Node, setNoWait, setWait, Slot, State,
-    String, unit, Unit, VectorChar, VectorInt16, VectorString, VectorFloat,
-    waitUntil, waitUntilNew)
+    getDevice, Hash, Int32, KaraboError, MetricPrefix, Node, setNoWait,
+    setWait, Slot, State, String, unit, Unit, VectorChar, VectorInt16,
+    VectorString, VectorFloat, waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.device_client import Queue
 
@@ -490,7 +490,8 @@ class Tests(DeviceTest):
                 self.assertEqual(d.value, 777)
                 d.value = 4
                 # ... but it cannot be called itself anymore ...
-                with self.assertLogs(logger="remote", level="WARN") as logs:
+                with self.assertLogs(logger="remote", level="WARN") as logs, \
+                        self.assertRaises(KaraboError):
                     yield from d.allow()
                 self.assertEqual(len(logs.records), 1)
                 self.assertEqual(logs.records[0].levelname, "WARNING")
@@ -584,7 +585,8 @@ class Tests(DeviceTest):
         """test error reporting and calling of error methods"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
-            with (yield from getDevice("local")) as d:
+            with (yield from getDevice("local")) as d, \
+                    self.assertRaises(KaraboError):
                 yield from d.error()
             yield from sleep(0.1)
         self.assertTrue(self.remote.done)
@@ -601,7 +603,8 @@ class Tests(DeviceTest):
         """test what happens if an error happens in an error method"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR") as logs:
-            with (yield from getDevice("local")) as d:
+            with (yield from getDevice("local")) as d, \
+                    self.assertRaises(KaraboError):
                 yield from d.error_in_error()
             yield from sleep(0.1)
         self.assertEqual(logs.records[-1].msg, "error in error handler")
