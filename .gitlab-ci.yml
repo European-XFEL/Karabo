@@ -13,7 +13,7 @@
   except:
     - branches
 
-.test_template: &test_build
+.mr_test_template: &mr_test_build
   before_script:
     - locale-gen en_US.UTF-8
     - update-locale LANG=en_US.UTF-8
@@ -32,8 +32,6 @@
   script:
     - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
     - bash ./auto_build_all.sh Debug --noBundle --runIntegrationTests
-  except:
-    - branches
   only:
     - master
 
@@ -50,9 +48,9 @@ deps:centos7:
   image: jwiggins/karabo-containers:centos-7
 
 test:ubuntu14:
-  <<: *test_build
+  <<: *mr_test_build
   image: jwiggins/karabo-containers:ubuntu-14
 
-integration_test:ubuntu14:
+integration:ubuntu14:
   <<: *integration_test_build
   image: jwiggins/karabo-containers:ubuntu-14
