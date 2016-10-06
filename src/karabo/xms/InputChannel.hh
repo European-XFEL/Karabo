@@ -37,8 +37,9 @@ namespace karabo {
             // Maps outputChannelString to the TCP (connection, channel) pair
             typedef std::map<std::string, std::pair<karabo::net::Connection::Pointer, karabo::net::Channel::Pointer> > OpenConnections;
 
+            boost::asio::io_service& m_ioService;
             boost::asio::deadline_timer m_deadline;
-            
+
             /// Callback on available data (per InputChannel)
             boost::function<void (const boost::shared_ptr<InputChannel>&) > m_inputHandler;
 
@@ -62,9 +63,6 @@ namespace karabo {
 
             int m_activeChunk;
             int m_inactiveChunk;
-
-            karabo::net::IOService::Pointer m_tcpIoService;
-            boost::thread m_tcpIoServiceThread;
 
             boost::mutex m_outputChannelsMutex;
             ConnectedOutputChannels m_connectedOutputChannels;
