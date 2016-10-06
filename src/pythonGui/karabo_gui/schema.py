@@ -178,14 +178,14 @@ class Box(QObject):
 
     def addVisible(self):
         self.visible += 1
-        self.parent().addVisible()
+        self.configuration.addVisible()
         if self.visible == 1:
             self.visibilityChanged.emit(True)
 
 
     def removeVisible(self):
         self.visible -= 1
-        self.parent().removeVisible()
+        self.configuration.removeVisible()
         if self.visible == 0:
             self.visibilityChanged.emit(False)
 
