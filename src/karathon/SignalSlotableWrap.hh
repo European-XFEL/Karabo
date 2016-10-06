@@ -547,6 +547,9 @@ namespace karathon {
             registerEndOfStreamHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnEndOfStreamEventHandler, this, handler, _1));
         }
 
+        void registerLastCommandHandlerPy(const bp::object& handler) {
+            registerLastCommandHandler(boost::bind(&SignalSlotableWrap::proxyLastCommandHandler, this, handler, _1));
+        }
 
     private:
 
@@ -569,6 +572,8 @@ namespace karathon {
         void proxyOnDataAvailableHandler(const bp::object& handler, const karabo::util::Hash::Pointer& data);
 
         void proxyOnEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
+
+        void proxyLastCommandHandler(const bp::object& handler, const std::string& slotFunction);
 
     private: // members
         boost::thread m_eventLoop;
