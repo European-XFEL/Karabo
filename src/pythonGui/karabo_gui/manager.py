@@ -35,7 +35,7 @@ from karabo_gui.network import Network
 from karabo_gui.projectmodel import ProjectModel
 from karabo_gui.topology import getClass
 from karabo_gui.util import (
-    getOpenFileName, getSaveFileName, getSchemaModifiedAttrs)
+    getOpenFileName, getSaveFileName, getSchemaAttributeUpdates)
 
 
 class _Manager(QObject):
@@ -149,11 +149,11 @@ class _Manager(QObject):
         # Compute a runtime schema from the configuration and an unmodified
         # copy of the device class schema.
         baseSchema = self._immutableServerClassData[serverId, classId]
-        schemaAttrs = getSchemaModifiedAttrs(baseSchema, config)
+        schemaUpdates = getSchemaAttributeUpdates(baseSchema, config)
 
         # Send signal to network
         Network().onInitDevice(serverId, classId, deviceId, config,
-                               schemaAttrs=schemaAttrs)
+                               updates=schemaUpdates)
 
     def shutdownDevice(self, deviceId, showConfirm=True):
         if showConfirm:
@@ -492,6 +492,10 @@ class _Manager(QObject):
 
         self.projectTopology.updateNeeded()
 
+    def handle_attributesUpdated(self, reply):
+        instanceId = reply["instanceId"]
+        schema = reply["updatedSchema"]
+        self.handle_deviceSchema(instanceId, schema)
 
     def handle_classSchema(self, serverId, classId, schema):
         if (serverId, classId) not in self.serverClassData:

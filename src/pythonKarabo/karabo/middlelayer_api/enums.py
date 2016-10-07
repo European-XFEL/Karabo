@@ -1,8 +1,9 @@
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, unique
 from functools import total_ordering
 
 
 @total_ordering
+@unique
 class AccessLevel(Enum):
     OBSERVER = 0
     USER = 1
@@ -16,18 +17,23 @@ class AccessLevel(Enum):
             return self.value > other.value
         return NotImplemented
 
+
+@unique
 class AccessMode(Enum):
     UNDEFINED = -1
     INITONLY = 1
     READONLY = 2
     RECONFIGURABLE = 4
 
+
+@unique
 class Assignment(Enum):
     OPTIONAL = 0
     MANDATORY = 1
     INTERNAL = 2
 
 
+@unique
 class NodeType(IntEnum):
     Leaf = 0
     Node = 1
@@ -38,6 +44,7 @@ class NodeType(IntEnum):
         return str(self.value)
 
 
+@unique
 class MetricPrefix(Enum):
     """ This are all the defined prefixes in the SI system """
     YOTTA = "Y"
@@ -63,9 +70,10 @@ class MetricPrefix(Enum):
     YOCTO = "y"
 
 
+@unique
 class Unit(Enum):
     """ A fair collections of units from the SI system """
-    NUMBER = "#"
+    NUMBER = "№"
     COUNT = "#"
     METER = "m"
     GRAM = "g"
@@ -105,7 +113,7 @@ class Unit(Enum):
     BAR = "bar"
     PIXEL = "px"
     BYTE = "B"
-    BIT = "B"
+    BIT = "bit"
     METER_PER_SECOND = "m/s"
     VOLT_PER_SECOND = "V/s"
     AMPERE_PER_SECOND = "A/s"

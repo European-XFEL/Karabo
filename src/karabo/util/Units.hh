@@ -183,7 +183,7 @@ namespace karabo {
 #define _KARABO_HELPER_MACRO(unitEnum, symbol) \
          template <> inline std::pair<std::string, std::string> getUnit<Unit::unitEnum>() { std::string name(#unitEnum); boost::to_lower(name); return std::make_pair(name, symbol); }
 
-        _KARABO_HELPER_MACRO(NUMBER, "#")
+        _KARABO_HELPER_MACRO(NUMBER, "№")
         _KARABO_HELPER_MACRO(COUNT, "#")
         _KARABO_HELPER_MACRO(METER, "m")
         _KARABO_HELPER_MACRO(GRAM, "g")
@@ -223,7 +223,7 @@ namespace karabo {
         _KARABO_HELPER_MACRO(BAR, "bar")
         _KARABO_HELPER_MACRO(PIXEL, "px")
         _KARABO_HELPER_MACRO(BYTE, "B")
-        _KARABO_HELPER_MACRO(BIT, "B")
+        _KARABO_HELPER_MACRO(BIT, "bit")
         _KARABO_HELPER_MACRO(METER_PER_SECOND, "m/s")
         _KARABO_HELPER_MACRO(VOLT_PER_SECOND, "V/s")
         _KARABO_HELPER_MACRO(AMPERE_PER_SECOND, "A/s")

@@ -685,18 +685,19 @@ class PythonDevice(NoFsm):
         
     def _initDeviceSlots(self):
         #-------------------------------------------- register intrinsic signals
-        self._ss.registerSignal("signalChanged", Hash, str)                # changeHash, instanceId        
-        self._ss.registerSystemSignal("signalStateChanged", Hash, str)                # changeHash, instanceId        
+        self._ss.registerSignal("signalChanged", Hash, str)                # changeHash, instanceId
+        self._ss.registerSystemSignal("signalStateChanged", Hash, str)                # changeHash, instanceId
 
         self._ss.registerSystemSignal("signalNotification", str, str, str, str)     # type, shortMessage, detailedMessage, deviceId
 
         self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
-                
+
         #---------------------------------------------- register intrinsic slots
-        self._ss.registerSlot(self.slotReconfigure)        
+        self._ss.registerSlot(self.slotReconfigure)
         self._ss.registerSlot(self.slotGetConfiguration)
         self._ss.registerSlot(self.slotGetSchema)
-        self._ss.registerSlot(self.slotKillDevice)        
+        self._ss.registerSlot(self.slotKillDevice)
+        self._ss.registerSlot(self.slotUpdateSchemaAttributes)
         # timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
         self._ss.registerSlot(self.slotLoggerPriority)
@@ -830,7 +831,18 @@ class PythonDevice(NoFsm):
         self.preDestruction()
         self.stopFsm()
         self.stopEventLoop()
-   
+
+    def slotUpdateSchemaAttributes(self, updates):
+        success = self.fullSchema.applyRuntimeUpdates(updates)
+        if success:
+            # Notify everyone
+            self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
+
+        self._ss.reply(Hash("success", success,
+                            "instanceId", self.deviceid,
+                            "updatedSchema", self.fullSchema,
+                            "requestedUpdate", updates))
+
     def slotTimeTick(self, id, sec, frac, period):
         with self._timeLock:
             self._timeId = id
