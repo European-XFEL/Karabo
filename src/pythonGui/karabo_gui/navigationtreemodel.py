@@ -13,6 +13,7 @@ from PyQt4.QtGui import QBrush, QColor, QItemSelection, QItemSelectionModel
 
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
+from karabo.common.states import State
 from karabo.middlelayer import AccessLevel, Hash
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.indicators import get_state_icon
@@ -439,7 +440,7 @@ class NavigationTreeModel(QAbstractItemModel):
         elif column == 1 and role == Qt.DecorationRole:
             hierarchyLevel = self.getHierarchyLevel(index)
             if hierarchyLevel == 3:
-                state = 'ERROR' if node.status == 'error' else 'STATIC'
+                state = State.ERROR if node.status == 'error' else State.STATIC
                 return get_state_icon(state)
 
     def flags(self, index):
