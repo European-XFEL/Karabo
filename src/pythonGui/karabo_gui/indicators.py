@@ -9,7 +9,6 @@ from PyQt4.QtGui import QColor, QIcon, QPixmap
 
 from karabo.common.states import State
 
-
 # State coloring
 UNKNOWN_COLOR = (255, 170, 0)
 KNOWN_NORMAL_COLOR = (200, 200, 200)
@@ -39,9 +38,16 @@ STATE_COLORS = {
 }
 
 
+def create_icon(color):
+    """ An icon from the given ``color`` tuple is returned."""
+    pix = QPixmap(20, 20)
+    pix.fill(QColor(*color))
+    return QIcon(pix)
+
+
 # Map states to colored icons
 STATE_ICONS = {
-    k: QIcon(QPixmap(100, 100).fill(QColor(*v))) for k,v in STATE_COLORS.items()
+    k: create_icon(v) for k, v in STATE_COLORS.items()
     }
 
 
@@ -50,27 +56,28 @@ def get_state_icon(value):
     as a string. A ``NoneType`` is returned in case the given ``value`` state
     could not be found."""
     state = State(value)
-    if state.isDerivedFrom(State.UNKNOWN):
-        return STATE_ICONS[State.UNKNOWN]
-    elif state.isDerivedFrom(State.KNOWN):
-        return STATE_ICONS[State.KNOWN]
-    elif state.isDerivedFrom(State.NORMAL):
-        return STATE_ICONS[State.NORMAL]
-    elif state.isDerivedFrom(State.INIT):
-        return STATE_ICONS[State.INIT]
-    elif state.isDerivedFrom(State.DISABLED):
-        return STATE_ICONS[State.DISABLED]
-    elif state.isDerivedFrom(State.ERROR):
-        return STATE_ICONS[State.ERROR]
-    elif state.isDerivedFrom(State.CHANGING):
-        return STATE_ICONS[State.CHANGING]
+    # Remark: order matters here - tree relation
+    if state.isDerivedFrom(State.PASSIVE):
+        return STATE_ICONS[State.PASSIVE]
+    elif state.isDerivedFrom(State.ACTIVE):
+        return STATE_ICONS[State.ACTIVE]
     elif state.isDerivedFrom(State.DECREASING):
         return STATE_ICONS[State.DECREASING]
     elif state.isDerivedFrom(State.INCREASING):
         return STATE_ICONS[State.INCREASING]
     elif state.isDerivedFrom(State.STATIC):
         return STATE_ICONS[State.STATIC]
-    elif state.isDerivedFrom(State.ACTIVE):
-        return STATE_ICONS[State.ACTIVE]
-    elif state.isDerivedFrom(State.PASSIVE):
-        return STATE_ICONS[State.PASSIVE]
+    elif state.isDerivedFrom(State.CHANGING):
+        return STATE_ICONS[State.CHANGING]
+    elif state.isDerivedFrom(State.DISABLED):
+        return STATE_ICONS[State.DISABLED]
+    elif state.isDerivedFrom(State.ERROR):
+        return STATE_ICONS[State.ERROR]
+    elif state.isDerivedFrom(State.NORMAL):
+        return STATE_ICONS[State.NORMAL]
+    elif state.isDerivedFrom(State.KNOWN):
+        return STATE_ICONS[State.KNOWN]
+    elif state.isDerivedFrom(State.UNKNOWN):
+        return STATE_ICONS[State.UNKNOWN]
+    elif state.isDerivedFrom(State.INIT):
+        return STATE_ICONS[State.INIT]

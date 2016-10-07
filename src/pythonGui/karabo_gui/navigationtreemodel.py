@@ -439,8 +439,8 @@ class NavigationTreeModel(QAbstractItemModel):
         elif column == 1 and role == Qt.DecorationRole:
             hierarchyLevel = self.getHierarchyLevel(index)
             if hierarchyLevel == 3:
-                # TODO: get state from node
-                return get_state_icon('STOPPED')
+                state = 'ERROR' if node.status == 'error' else 'STATIC'
+                return get_state_icon(state)
 
     def flags(self, index):
         """
