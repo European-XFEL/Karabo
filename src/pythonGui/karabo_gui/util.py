@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from PyQt4.QtGui import QDialog, QFileDialog
 
-from karabo.middlelayer import Hash
+from karabo.middlelayer import Hash, MetricPrefix, Unit
 import karabo_gui.globals as globals
 
 
@@ -54,11 +54,17 @@ def getSaveFileName(parent=None, caption="", directory="", filter="",
         return dialog.selectedFiles()[0]
 
 
-def getSchemaModifiedAttrs(schema, config):
+def getSchemaAttributeUpdates(schema, config):
     """ Find all the attributes in a configuration which are different from the
     schema that the configuration is based on.
 
-    Return a Hash containing the differences, or None if there are none.
+    Return list of Hashes containing the differences, or None if there are
+    none.
+
+    NOTE: `remap_name` and `remap_value` are handling conversion of str
+    'Symbol' values to C++ enumeration values (integers). This is because the
+    C++ Schema code only knows how to assign from enumeration values, not from
+    their stringified representations.
     """
     def walk(h, path=None):
         path = path or []
@@ -73,25 +79,35 @@ def getSchemaModifiedAttrs(schema, config):
         special_attrs = ('metricPrefixSymbol', 'unitSymbol')
         return {k: v for k, v in d.items() if k not in special_attrs or v}
 
+    def remap_name(name):
+        name_map = {'metricPrefixSymbol': 'metricPrefixEnum',
+                    'unitSymbol': 'unitEnum'}
+        return name_map.get(name, name)
+
+    def remap_value(name, value):
+        symbol_map = {'metricPrefixSymbol': MetricPrefix,
+                      'unitSymbol': Unit}
+        enum = symbol_map.get(name, None)
+        return list(enum).index(enum(value)) if enum else value
+
     def dictdiff(d0, d1):
         return {k: v for k, v in d0.items() if d1.get(k) != v}
 
-    def addattrs(hsh, path, attrs):
-        hsh[path] = None
-        hsh[path, ...] = attrs
+    def get_updates(path, attrs):
+        # Format is specified by Device::slotUpdateSchemaAttributes
+        return [Hash("path", path, "attribute", k, "value", v)
+                for k, v in attrs.items()]
 
-    modified_attrs_hash = Hash()
+    attr_updates = []
     for path, attrs in walk(config):
         attrs = nonemptyattrdict(attrs)
         if path in schema.hash:
             diff = dictdiff(attrs, schema.hash[path, ...])
-            if diff:
-                addattrs(modified_attrs_hash, path, diff)
-        elif attrs:
-            addattrs(modified_attrs_hash, path, attrs)
+            diff = {remap_name(k): remap_value(k, v) for k, v in diff.items()}
+            attr_updates.extend(get_updates(path, diff))
 
-    if not modified_attrs_hash.empty():
-        return modified_attrs_hash
+    if attr_updates:
+        return attr_updates
 
     return None
 

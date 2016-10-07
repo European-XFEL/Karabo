@@ -47,6 +47,7 @@ namespace karabo {
             mutable boost::mutex m_channelMutex;
             mutable boost::mutex m_monitoredDevicesMutex;
             mutable boost::mutex m_networkMutex;
+            mutable boost::mutex m_pendingAttributesMutex;
 
             karabo::net::BrokerConnection::Pointer m_loggerConnection;
             karabo::net::BrokerChannel::Pointer m_loggerChannel;
@@ -55,6 +56,8 @@ namespace karabo {
 
             karabo::net::BrokerConnection::Pointer m_guiDebugConnection;
             karabo::net::BrokerChannel::Pointer m_guiDebugChannel;
+
+            std::map<std::string, std::vector<karabo::util::Hash> > m_pendingAttributeUpdates;
 
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator ConstChannelIterator;
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::iterator ChannelIterator;
@@ -97,7 +100,7 @@ namespace karabo {
 
             void onInitDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void initReply(karabo::net::Channel::Pointer channel, const std::string& deviceId, bool success, const std::string& message);
+            void initReply(karabo::net::Channel::Pointer channel, const std::string& givenDeviceId, const karabo::util::Hash& givenConfig, bool success, const std::string& message);
 
             void onGetDeviceConfiguration(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
@@ -182,6 +185,14 @@ namespace karabo {
             void onInputChannelConnected(const karabo::xms::InputChannel::Pointer& input, const karabo::net::Channel::Pointer& channel, const std::string& channelName);
 
             void logErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info);
+
+            /**
+             * Called from instanceNewHandler to handle schema attribute updates which
+             * were received at initialization time. The slotUpdateSchemaAttributes slot
+             * is invoked if any updates are pending.
+             * @param deviceId: the instance id of the new device
+             */
+            void updateNewInstanceAttributes(const std::string& deviceId);
 
             /**
              * A slot called by alarm service devices if they want to notify of an alarm update
