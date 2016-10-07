@@ -6,11 +6,13 @@
  */
 
 #include "MetaTools_Test.hh"
+#include "karabo/util/PackParameters.hh"
 #include <boost/shared_ptr.hpp>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(MetaTools_Test);
 
 using namespace karabo::util;
+
 
 MetaTools_Test::MetaTools_Test() {
 }
@@ -31,7 +33,8 @@ void MetaTools_Test::testMethod() {
     CPPUNIT_ASSERT((!karabo::util::is_base_of<Hash, int>::value));
 }
 
-void MetaTools_Test::testWeakBind(){
+
+void MetaTools_Test::testWeakBind() {
     std::vector<std::string> messages;
     Test_DeviceServer* d = new Test_DeviceServer(&messages);
     karabo::net::EventLoop::addThread(4);
@@ -41,65 +44,142 @@ void MetaTools_Test::testWeakBind(){
     CPPUNIT_ASSERT(messages[0] == "Test_Device created");
     CPPUNIT_ASSERT(messages[1] == "Tick 5");
     CPPUNIT_ASSERT(messages[2] == "Tick 6");
-    CPPUNIT_ASSERT(messages[messages.size()-1] == "Test_Device deleted");
+    CPPUNIT_ASSERT(messages[messages.size() - 1] == "Test_Device deleted");
     karabo::net::EventLoop::stop();
     delete d;
 }
 
 
 struct Base : public boost::enable_shared_from_this<Base> {
-    virtual ~Base() {}
+
+
+    virtual ~Base() {
+    }
 };
 
-struct VirtualBase: public boost::enable_shared_from_this<VirtualBase> {
-    virtual void foo(){};
-    virtual ~VirtualBase() {};
+
+struct VirtualBase : public boost::enable_shared_from_this<VirtualBase> {
+
+
+    virtual void foo() {
+    };
+
+
+    virtual ~VirtualBase() {
+    };
 };
 
 
 struct FinalInterim : public Base {
-    virtual ~FinalInterim() {};
+
+
+    virtual ~FinalInterim() {
+    };
 };
+
 
 struct FinalInterimVirtual : public virtual VirtualBase {
-    virtual ~FinalInterimVirtual() {};
+
+
+    virtual ~FinalInterimVirtual() {
+    };
 };
+
 
 struct Final : public boost::enable_shared_from_this<Final> {
-    
+
 };
+
 
 struct FinalVirtual : public boost::enable_shared_from_this<FinalVirtual> {
-    virtual void foo(){};
-    virtual ~FinalVirtual() {};
+
+
+    virtual void foo() {
+    };
+
+
+    virtual ~FinalVirtual() {
+    };
 };
 
-void MetaTools_Test::testCastResolvers(){
+
+void MetaTools_Test::testCastResolvers() {
     // note that we verify compile-time functionality here. This will simply not compile if the cast resolvers
     // do not treat cases appropriately.
     boost::shared_ptr<Final> f(new Final());
     {
         boost::shared_ptr<Final> sf = karabo::util::cond_dyn_cast<std::true_type>::cast(f.get());
     }
-    
-    
-    boost::shared_ptr<FinalVirtual> fv(new FinalVirtual()); 
+
+
+    boost::shared_ptr<FinalVirtual> fv(new FinalVirtual());
     {
         boost::shared_ptr<FinalVirtual> sfv = karabo::util::cond_dyn_cast<std::true_type>::cast(fv.get());
     }
-   
-    
-    boost::shared_ptr<FinalInterim> fi(new FinalInterim()); 
+
+
+    boost::shared_ptr<FinalInterim> fi(new FinalInterim());
     {
         boost::shared_ptr<FinalInterim> sfi = karabo::util::cond_dyn_cast<std::false_type>::cast(fi.get());
     }
-    
-    boost::shared_ptr<FinalInterimVirtual> fiv(new FinalInterimVirtual()); 
-   
+
+    boost::shared_ptr<FinalInterimVirtual> fiv(new FinalInterimVirtual());
+
     {
         boost::shared_ptr<FinalInterimVirtual> sfiv = karabo::util::cond_dyn_cast<std::false_type>::cast(fiv.get());
     }
 
     CPPUNIT_ASSERT(true);
 
+}
+
+
+struct Foo {
+
+
+    Foo() {
+    }
+
+
+    Foo(const Foo&) {
+        nCopies++;
+    }
+
+
+    static int nCopies;
+
+};
+
+int Foo::nCopies = 0;
+
+
+struct Bar {
+
+
+    Bar() : gotCalled(false) {
+    }
+
+
+    void bar(int, const std::string&, const Foo& f) {
+        gotCalled = true;
+    }
+
+    bool gotCalled;
+};
+
+
+void MetaTools_Test::testCallFromTuple() {   
+    
+    int i(42);
+    std::string s("test");
+    Foo f;
+    Bar b;
+
+    Hash h;
+    pack(h, i, s, f); // We will copy f once here!!    
+    auto barFn = boost::bind(&Bar::bar, &b, _1, _2, _3);
+    call(barFn, unpack<int, string, Foo>(h)); // But not here!!
+
+    CPPUNIT_ASSERT(b.gotCalled == true);
+    CPPUNIT_ASSERT(f.nCopies == 1);
 }
