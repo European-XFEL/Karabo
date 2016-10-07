@@ -18,5 +18,5 @@ class CryoCoolerWidget(VacuumWidget):
         State.ACTIVE: 'cryo-cooler-green',
         State.PASSIVE: 'cryo-cooler-yellow',
         State.ERROR: 'cryo-cooler-red',
-        State.UNKNOWN: 'cryo-cooler-red'
+        State.UNKNOWN: 'cryo-cooler'
     }
