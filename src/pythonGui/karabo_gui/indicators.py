@@ -46,9 +46,7 @@ def create_icon(color):
 
 
 # Map states to colored icons
-STATE_ICONS = {
-    k: create_icon(v) for k, v in STATE_COLORS.items()
-    }
+STATE_ICONS = {k: create_icon(v) for k, v in STATE_COLORS.items()}
 
 
 def get_state_icon(state):
