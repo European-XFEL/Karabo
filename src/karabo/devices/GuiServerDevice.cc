@@ -1161,7 +1161,7 @@ namespace karabo {
 
         void GuiServerDevice::updateNewInstanceAttributes(const std::string& deviceId) {
             boost::mutex::scoped_lock(m_pendingAttributesMutex);
-            auto it = m_pendingAttributeUpdates.find(deviceId);
+            const auto it = m_pendingAttributeUpdates.find(deviceId);
 
             if (it != m_pendingAttributeUpdates.end()) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId;
