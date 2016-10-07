@@ -186,6 +186,12 @@ namespace karabo {
 
             void logErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info);
 
+            /**
+             * Called from instanceNewHandler to handle schema attribute updates which
+             * were received at initialization time. The slotUpdateSchemaAttributes slot
+             * is invoked if any updates are pending.
+             * @param deviceId: the instance id of the new device
+             */
             void updateNewInstanceAttributes(const std::string& deviceId);
 
             /**

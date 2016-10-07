@@ -338,14 +338,14 @@ class _Network(QObject):
         self._tcpWriteHash(h)
 
 
-    def onInitDevice(self, serverId, classId, deviceId, config, updates=None):
+    def onInitDevice(self, serverId, classId, deviceId, config, attrUpdates=None):
         h = Hash("type", "initDevice")
         h.set("serverId", serverId)
         h.set("classId", classId)
         h.set("deviceId", deviceId)
         h.set("configuration", config)
-        if updates is not None:
-            h.set("schemaUpdates", updates)
+        if attrUpdates is not None:
+            h.set("schemaUpdates", attrUpdates)
         self._tcpWriteHash(h)
 
 
