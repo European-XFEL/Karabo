@@ -29,7 +29,9 @@ class NavigationTreeView(QTreeView):
 
         self.header().setResizeMode(0, QHeaderView.ResizeToContents)
         self.header().setResizeMode(1, QHeaderView.Fixed)
+        self.header().setResizeMode(2, QHeaderView.Fixed)
         self.setColumnWidth(1, 20)
+        self.setColumnWidth(2, 20)
 
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -51,6 +53,10 @@ class NavigationTreeView(QTreeView):
                 data = event.data
                 self.selectItem(data.get('deviceId'))
                 return False
+            elif event.sender is KaraboEventSender.AlarmDeviceUpdate:
+                data = event.data
+                self.model().updateAlarmIndicators(
+                    data.get('deviceId'), data.get('alarm_type'))
         return super(NavigationTreeView, self).eventFilter(obj, event)
 
     def _setupContextMenu(self):

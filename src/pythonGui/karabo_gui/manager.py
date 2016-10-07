@@ -612,3 +612,12 @@ class _Manager(QObject):
         # Create KaraboBroadcastEvent
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.AlarmUpdate, data))
+
+        for hsh in rows.values():
+            # Get data of hash
+            for aHash in hsh.values():
+                # Fetch only deviceId and type to broadcast this
+                data = {'deviceId': aHash.get('deviceId'),
+                        'alarm_type': aHash.get('type')}
+                broadcast_event(KaraboBroadcastEvent(
+                    KaraboEventSender.AlarmDeviceUpdate, data))

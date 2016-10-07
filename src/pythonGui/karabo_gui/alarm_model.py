@@ -10,6 +10,9 @@ from PyQt4.QtGui import QColor
 
 from karabo.middlelayer import Timestamp
 from karabo_gui.const import ALARM_COLOR, WARN_COLOR
+from karabo_gui.indicators import (ALARM_HIGH, ALARM_LOW, ALARM_VARIANCE_HIGH,
+                                   ALARM_VARIANCE_LOW, WARN_HIGH, WARN_LOW,
+                                   WARN_VARIANCE_HIGH, WARN_VARIANCE_LOW)
 
 ALARM_ID = 'id'
 TIME_OF_FIRST_OCCURENCE = 'timeOfFirstOccurrence'
@@ -63,14 +66,16 @@ class AlarmModel(QAbstractTableModel):
         device to show in a table view. """
     headers = [value for key, value in ALARM_DATA.items()]
 
-    textColor = {'warnLow': QColor(*WARN_COLOR),
-                 'warnHigh': QColor(*WARN_COLOR),
-                 'warnVarianceLow': QColor(*WARN_COLOR),
-                 'warnVarianceHigh': QColor(*WARN_COLOR),
-                 'alarmLow': QColor(*ALARM_COLOR),
-                 'alarmHigh': QColor(*ALARM_COLOR),
-                 'alarmVarianceLow': QColor(*ALARM_COLOR),
-                 'alarmVarianceHigh': QColor(*ALARM_COLOR)}
+    textColor = {
+        WARN_LOW: QColor(*WARN_COLOR),
+        WARN_HIGH: QColor(*WARN_COLOR),
+        WARN_VARIANCE_LOW: QColor(*WARN_COLOR),
+        WARN_VARIANCE_HIGH: QColor(*WARN_COLOR),
+        ALARM_LOW: QColor(*ALARM_COLOR),
+        ALARM_HIGH: QColor(*ALARM_COLOR),
+        ALARM_VARIANCE_LOW: QColor(*ALARM_COLOR),
+        ALARM_VARIANCE_HIGH: QColor(*ALARM_COLOR)
+    }
 
     def __init__(self, instanceId, parent=None):
         super(AlarmModel, self).__init__(parent)

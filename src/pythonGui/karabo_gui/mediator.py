@@ -8,6 +8,7 @@ from PyQt4.QtGui import QApplication
 class KaraboEventSender(Enum):
     AlarmInitReply = "Alarm init reply"
     AlarmUpdate = "Alarm update"
+    AlarmDeviceUpdate = "Alarm device update"
     ConnectMacroInstance = "Connect macro instance"
     DeviceInitReply = "Device instantiate reply"
     OpenMacro = "Open macro"
