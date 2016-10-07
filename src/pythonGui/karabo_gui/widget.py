@@ -26,7 +26,7 @@ from PyQt4.QtGui import QLabel, QPixmap
 from karabo.common.states import State
 from karabo.middlelayer import String
 from karabo_gui import background
-from karabo_gui.const import OK_COLOR, ERROR_COLOR
+from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 from karabo_gui.registry import Registry
 from karabo_gui.util import generateObjectName
 import karabo_gui.gui as gui
@@ -204,7 +204,7 @@ class VacuumWidget(DisplayWidget):
         self.widget.setMaximumHeight(p.height())
 
     def setErrorState(self, isError):
-        color = ERROR_COLOR if isError else OK_COLOR
+        color = ERROR_COLOR_ALPHA if isError else OK_COLOR
         ss = self._styleSheet.format(color)
         self.widget.setStyleSheet(ss)
 
