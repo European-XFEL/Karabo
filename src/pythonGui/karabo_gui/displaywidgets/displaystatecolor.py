@@ -8,7 +8,7 @@ from PyQt4.QtGui import (
     QAction, QColor, QColorDialog, QDialog, QInputDialog, QLabel
 )
 
-from karabo_gui.const import ns_karabo, OK_COLOR, ERROR_COLOR
+from karabo_gui.const import ns_karabo, OK_COLOR, ERROR_COLOR_ALPHA
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 from karabo.middlelayer import String
@@ -71,7 +71,7 @@ class DisplayStateColor(DisplayWidget):
     def __init__(self, box, parent):
         super(DisplayStateColor, self).__init__(box)
 
-        self._stateMap = OrderedDict(error=ERROR_COLOR)
+        self._stateMap = OrderedDict(error=ERROR_COLOR_ALPHA)
         self._staticText = ""
 
         self.widget = QLabel(parent)
@@ -94,7 +94,7 @@ class DisplayStateColor(DisplayWidget):
         self.widget.addAction(textAction)
 
     def setErrorState(self, isError):
-        color = ERROR_COLOR if isError else OK_COLOR
+        color = ERROR_COLOR_ALPHA if isError else OK_COLOR
         self._setColor(color)
 
     def valueChanged(self, box, value, timestamp=None):

@@ -1,32 +1,27 @@
-
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on June 1, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
-"""This module contains a class which represents a model to display a hierarchical
-   navigation in a treeview."""
-
-__all__ = ["NavigationTreeModel"]
-
-
-from karabo_gui.enums import NavigationItemTypes
-import karabo_gui.globals as globals
-from karabo.middlelayer import Hash, AccessLevel
-import karabo_gui.icons as icons
-from karabo_gui.topology import getClass, getDevice
-from karabo_gui.treenode import TreeNode
+""" This module contains a class which represents a model to display a
+hierarchical navigation in a treeview."""
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
                           QModelIndex, Qt, pyqtSignal)
-from PyQt4.QtGui import QItemSelection, QItemSelectionModel
+from PyQt4.QtGui import QBrush, QColor, QItemSelection, QItemSelectionModel
+
+import karabo_gui.globals as globals
+import karabo_gui.icons as icons
+from karabo.common.states import State
+from karabo.middlelayer import AccessLevel, Hash
+from karabo_gui.enums import NavigationItemTypes
+from karabo_gui.indicators import get_state_icon
+from karabo_gui.topology import getClass, getDevice
+from karabo_gui.treenode import TreeNode
 
 
 class NavigationTreeModel(QAbstractItemModel):
     signalItemChanged = pyqtSignal(str, object) # type, configuration
-
 
     def __init__(self, parent=None):
         super(NavigationTreeModel, self).__init__(parent)
@@ -412,7 +407,7 @@ class NavigationTreeModel(QAbstractItemModel):
         """
         Reimplemented function of QAbstractItemModel.
         """
-        return 1
+        return 2
 
 
     def data(self, index, role=Qt.DisplayRole):
@@ -421,11 +416,11 @@ class NavigationTreeModel(QAbstractItemModel):
         """
         row = index.row()
         column = index.column()
+        node = index.internalPointer()
 
-        if role == Qt.DisplayRole:
-            node = index.internalPointer()
+        if column == 0 and role == Qt.DisplayRole:
             return node.displayName
-        elif (role == Qt.DecorationRole) and (column == 0):
+        elif column == 0 and role == Qt.DecorationRole:
             # Find out the hierarchy level of the selected node
             hierarchyLevel = self.getHierarchyLevel(index)
             if hierarchyLevel == 0:
@@ -435,14 +430,17 @@ class NavigationTreeModel(QAbstractItemModel):
             elif hierarchyLevel == 2:
                 return icons.deviceClass
             elif hierarchyLevel == 3:
-                node = index.internalPointer()
                 if node.status == "error":
                     return icons.deviceInstanceError
                 if node.monitoring:
                     return icons.deviceMonitored
                 else:
                     return icons.deviceInstance
-
+        elif column == 1 and role == Qt.DecorationRole:
+            hierarchyLevel = self.getHierarchyLevel(index)
+            if hierarchyLevel == 3:
+                state = State.ERROR if node.status == 'error' else State.STATIC
+                return get_state_icon(state)
 
     def flags(self, index):
         """
@@ -532,4 +530,3 @@ class NavigationTreeModel(QAbstractItemModel):
             type = conf.type
 
         self.signalItemChanged.emit(type, conf)
-

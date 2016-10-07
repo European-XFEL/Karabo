@@ -12,7 +12,6 @@
 from xml.etree import ElementTree
 from PyQt4.QtCore import Qt
 
-
 ns_svg = "{http://www.w3.org/2000/svg}"
 ns_karabo = "{http://karabo.eu/scene}"
 ElementTree.register_namespace("svg", ns_svg[1:-1])
@@ -21,7 +20,8 @@ ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 
 # Commonly used colors
 OK_COLOR = (225, 242, 225, 128)
-ERROR_COLOR = (255, 155, 155, 128)
+ERROR_COLOR_ALPHA = (255, 155, 155, 128)  # semitransparent
+
 WARN_COLOR = (255, 102, 0)  # orange
 ALARM_COLOR = (255, 0, 0)  # red
 
