@@ -51,12 +51,10 @@ STATE_ICONS = {
     }
 
 
-def get_state_icon(value):
-    """ Return a colored icon for the given ``value`` which describes a States
-    as a string. A ``NoneType`` is returned in case the given ``value`` state
-    could not be found."""
-    state = State(value)
-    # Remark: order matters here - tree relation
+def get_state_icon(state):
+    """ Return a colored icon for the given ``state``. A ``NoneType`` is
+    returned in case the given ``state`` could not be found."""
+    # Remark: order matters here - tree relation!
     if state.isDerivedFrom(State.PASSIVE):
         return STATE_ICONS[State.PASSIVE]
     elif state.isDerivedFrom(State.ACTIVE):
