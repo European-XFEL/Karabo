@@ -8,7 +8,8 @@
    class/instance.
 """
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QAbstractItemView, QAction, QCursor, QMenu, QTreeView
+from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QHeaderView,
+                         QMenu, QTreeView)
 
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
@@ -19,20 +20,22 @@ from karabo_gui.treewidgetitems.popupwidget import PopupWidget
 
 
 class NavigationTreeView(QTreeView):
-    
-    
     def __init__(self, parent):
         super(NavigationTreeView, self).__init__(parent)
-        
+
         self.setModel(Manager().systemTopology)
         self.setSelectionModel(self.model().selectionModel)
         self.model().modelReset.connect(self.expandAll)
-        
+
+        self.header().setResizeMode(0, QHeaderView.ResizeToContents)
+        self.header().setResizeMode(1, QHeaderView.Fixed)
+        self.setColumnWidth(1, 20)
+
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         #self.setSortingEnabled(True)
         #self.sortByColumn(0, Qt.AscendingOrder)
-        
+
         self._setupContextMenu()
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
@@ -155,11 +158,9 @@ class NavigationTreeView(QTreeView):
         # Find modelIndex via path
         return self.model().findIndex(path)
 
-
     def selectItem(self, path):
         index = self.findIndex(path)
         self.model().selectIndex(index)
-
 
     def clear(self):
         self.clearSelection()
