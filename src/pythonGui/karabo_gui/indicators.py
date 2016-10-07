@@ -7,6 +7,7 @@
 
 from PyQt4.QtGui import QColor, QIcon, QPixmap
 
+import icons
 from karabo.common.states import State
 
 # State coloring
@@ -35,6 +36,28 @@ STATE_COLORS = {
     State.STATIC: STATIC_COLOR,
     State.ACTIVE: ACTIVE_COLOR,
     State.PASSIVE: PASSIVE_COLOR
+}
+
+
+WARN_LOW = 'warnLow'
+WARN_HIGH = 'warnHigh'
+WARN_VARIANCE_LOW = 'warnVarianceLow'
+WARN_VARIANCE_HIGH = 'warnVarianceHigh'
+ALARM_LOW = 'alarmLow'
+ALARM_HIGH = 'alarmHigh'
+ALARM_VARIANCE_LOW = 'alarmVarianceLow'
+ALARM_VARIANCE_HIGH = 'alarmVarianceHigh'
+
+
+ALARM_ICONS = {
+    WARN_LOW: icons.warnLow,
+    WARN_HIGH: icons.warnHigh,
+    WARN_VARIANCE_LOW: icons.warnVarianceLow,
+    WARN_VARIANCE_HIGH: icons.warnVarianceHigh,
+    ALARM_LOW: icons.alarmLow,
+    ALARM_HIGH: icons.alarmHigh,
+    ALARM_VARIANCE_LOW: icons.alarmVarianceLow,
+    ALARM_VARIANCE_HIGH: icons.alarmVarianceHigh,
 }
 
 

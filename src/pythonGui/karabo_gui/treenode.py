@@ -32,6 +32,7 @@ class TreeNode(object):
         
         # A dict which stores all node associated attributes, e.g. version
         self.attributes = dict()
+        self.alarm_type = None
 
 
     def appendChildNode(self, childNode):

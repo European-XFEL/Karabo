@@ -15,7 +15,7 @@ import karabo_gui.icons as icons
 from karabo.common.states import State
 from karabo.middlelayer import AccessLevel, Hash
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.indicators import get_state_icon
+from karabo_gui.indicators import ALARM_ICONS, get_state_icon
 from karabo_gui.topology import getClass, getDevice
 from karabo_gui.treenode import TreeNode
 
@@ -407,7 +407,7 @@ class NavigationTreeModel(QAbstractItemModel):
         """
         Reimplemented function of QAbstractItemModel.
         """
-        return 2
+        return 3
 
 
     def data(self, index, role=Qt.DisplayRole):
@@ -441,6 +441,11 @@ class NavigationTreeModel(QAbstractItemModel):
             if hierarchyLevel == 3:
                 state = State.ERROR if node.status == 'error' else State.STATIC
                 return get_state_icon(state)
+        elif column == 2 and role == Qt.DecorationRole:
+            hierarchyLevel = self.getHierarchyLevel(index)
+            if hierarchyLevel == 3:
+                if node.alarm_type is not None:
+                    return ALARM_ICONS[node.alarm_type].icon
 
     def flags(self, index):
         """
@@ -530,3 +535,10 @@ class NavigationTreeModel(QAbstractItemModel):
             type = conf.type
 
         self.signalItemChanged.emit(type, conf)
+
+    def updateAlarmIndicators(self, device_id, alarm_type):
+        index = self.findIndex(device_id)
+        node = index.internalPointer()
+        self.beginResetModel()
+        node.alarm_type = alarm_type
+        self.endResetModel()
