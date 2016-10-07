@@ -166,8 +166,34 @@ namespace karabo {
             return boost::bind<void>(wrapped, p...);
         }
 
+        // implementation details, users never invoke these directly
+        namespace detail {
 
+            // The code below was formulated as an answer to StackOverflow and can be read here:
+            // http://stackoverflow.com/questions/10766112/c11-i-can-go-from-multiple-args-to-tuple-but-can-i-go-from-tuple-to-multiple
 
+            template <typename F, typename Tuple, bool Done, int Total, int... N>
+            struct call_impl {
+
+                static void call(F f, Tuple && t) {
+                    call_impl<F, Tuple, Total == 1 + sizeof...(N), Total, N..., sizeof...(N)>::call(f, std::forward<Tuple>(t));
+                }
+            };
+
+            template <typename F, typename Tuple, int Total, int... N>
+            struct call_impl<F, Tuple, true, Total, N...> {
+
+                static void call(F f, Tuple && t) {
+                    f(std::get<N>(std::forward<Tuple>(t))...);
+                }
+            };
+        }
+
+        template <typename F, typename Tuple>
+        void call(F f, Tuple && t) {
+            typedef typename std::decay<Tuple>::type ttype;
+            detail::call_impl<F, Tuple, 0 == std::tuple_size<ttype>::value, std::tuple_size<ttype>::value>::call(f, std::forward<Tuple>(t));
+        }
     }
 }
 
