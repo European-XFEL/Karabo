@@ -464,11 +464,11 @@ namespace karabo {
                     for (size_t i = 0; i < this->size(); ++i) {
                         m_dataHandler(this->read(i));
                     }
-                    m_ioService.post(util::bind_weak(&InputChannel::update, this));
                 } else if (m_inputHandler) {
                     m_inputHandler(shared_from_this());
-                    // FIXME: Move call to this->update() from m_inputHandler to here!
                 }
+                // Whatever handler (even none): we are done with the data.
+                m_ioService.post(util::bind_weak(&InputChannel::update, this));
             } catch (const std::exception& ex) {
                 KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" exception -- " << ex.what();
             }
