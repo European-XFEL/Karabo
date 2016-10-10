@@ -380,9 +380,22 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             with lock(d):
                 self.assertEqual(d.lockedBy, "local")
+                with lock(d):
+                    self.assertEqual(d.lockedBy, "local")
+                    d.value = 33
+                    self.assertEqual(d.value, 33)
+                self.assertEqual(d.lockedBy, "local")
+            self.assertEqual(d.lockedBy, "")
+
+    @sync_tst
+    def test_lock_nowait(self):
+        with getDevice("remote") as d:
+            with lock(d, wait_for_release=False):
+                self.assertEqual(d.lockedBy, "local")
                 d.value = 33
                 self.assertEqual(d.value, 33)
-            self.assertEqual(d.lockedBy, "")
+            self.assertEqual(d.lockedBy, "local")
+            waitUntil(lambda: d.lockedBy == "")
 
 
 if __name__ == "__main__":
