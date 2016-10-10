@@ -1124,20 +1124,22 @@ namespace karabo {
                 m_bypassLockSlots = getBypassLockSlots();
 
                 KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
+                
                 KARABO_SLOT(slotGetConfiguration)
                 m_bypassLockSlots.insert("slotGetConfiguration");
+                
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
                 m_bypassLockSlots.insert("slotGetSchema");
+                
                 KARABO_SLOT(slotKillDevice)
                 m_bypassLockSlots.insert("slotKillDevice");
+                
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
                 m_bypassLockSlots.insert("slotTimeTick");
+                
                 KARABO_SLOT(slotReSubmitAlarms, karabo::util::Hash);
-
-                m_bypassLockSlots.insert("slotTimeTick");
-                KARABO_SLOT(slotUpdateSchemaAttributes, std::vector<karabo::util::Hash>);
-
                 m_bypassLockSlots.insert("slotReSubmitAlarms");
+               
                 KARABO_SLOT(slotUpdateSchemaAttributes, std::vector<karabo::util::Hash>);
                 m_bypassLockSlots.insert("slotUpdateSchemaAttributes");
 
