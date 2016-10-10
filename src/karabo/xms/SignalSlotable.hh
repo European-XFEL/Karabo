@@ -39,7 +39,7 @@ namespace karabo {
 
     namespace xms {
 
-/**
+                /**
          * The SignalSlotable class.
          * This class implements the so-called "Signal-Slot" design pattern orginally termed
          * by the Qt-Gui framework. However, signals and slots are not restricted to a local application
@@ -50,7 +50,7 @@ namespace karabo {
          * Another additional feature is the ability to setup new signals and/or slots at runtime.
          *
          * Furthermore, this class implements functions for the common request/response patterns.
-         * 
+         *
          * For a full documentation of the signal-slot component see the documentation in the software-guide.
          *
          */
@@ -59,7 +59,6 @@ namespace karabo {
             // Performance statistics
 
             struct LatencyStats {
-
 
                 unsigned int sum;
                 unsigned int counts;
@@ -80,7 +79,6 @@ namespace karabo {
         protected:
 
             class Caller {
-
 
                 const SignalSlotable* m_signalSlotable;
 
@@ -126,7 +124,6 @@ namespace karabo {
             };
 
             class Requestor {
-
 
                 SignalSlotable* m_signalSlotable;
                 std::string m_replyId;
@@ -268,7 +265,7 @@ namespace karabo {
 
                 class Receiver {
 
-                    public:
+                public:
                     void receive(Requestor *);
                 protected:
                     virtual void inner(karabo::util::Hash::Pointer) = 0;
@@ -276,7 +273,7 @@ namespace karabo {
 
                 class Receiver0 : public Receiver {
 
-                    public:
+                public:
 
                     Receiver0() {
                     }
@@ -293,7 +290,6 @@ namespace karabo {
 
                 template <class A1>
                 class Receiver1 : public Receiver {
-
 
                     A1 &m_a1;
 
@@ -317,7 +313,6 @@ namespace karabo {
 
                 template <class A1, class A2>
                 class Receiver2 : public Receiver {
-
 
                     A1 &m_a1;
                     A2 &m_a2;
@@ -343,7 +338,6 @@ namespace karabo {
 
                 template <class A1, class A2, class A3>
                 class Receiver3 : public Receiver {
-
 
                     A1 &m_a1;
                     A2 &m_a2;
@@ -371,7 +365,6 @@ namespace karabo {
 
                 template <class A1, class A2, class A3, class A4>
                 class Receiver4 : public Receiver {
-
 
                     A1 &m_a1;
                     A2 &m_a2;
@@ -443,7 +436,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceAvailableAgainHandler;
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Exception& /*exception*/) > ExceptionHandler;
-            typedef boost::function<bool (const std::string& /*slotFunction*/) > SlotCallGuardHandler;
+            typedef boost::function<bool (const std::string& /*slotFunction*/, const std::string& /*callee*/) > SlotCallGuardHandler;
             typedef boost::function<void (float /*avgBrokerLatency*/, unsigned int /*maxBrokerLatency*/,
                                           float /*avgProcessingLatency*/, unsigned int /*maxProcessingLatency*/,
                                           unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
@@ -515,7 +508,6 @@ namespace karabo {
 
             struct BoostMutexCond {
 
-
                 boost::mutex m_mutex;
                 boost::condition_variable m_cond;
 
@@ -574,8 +566,11 @@ namespace karabo {
             static boost::mutex m_connectionStringsMutex;
 
             static karabo::net::PointToPoint::Pointer m_pointToPoint;
+            
+            std::set<std::string> m_byPassLockSlots;
 
-            boost::function<void(const std::string&)> m_lastCommandHandler;
+            boost::function<void(const std::string&) > m_lastCommandHandler;
+
 
         public:
 
@@ -684,7 +679,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             /**
              * Login in order to receive correct access rights
-             * @param username Username 
+             * @param username Username
              * @param password Password
              * @param provider Provider (currently only LOCAL and KERBEROS possible)
              * @return bool indicating success of failure
@@ -1366,6 +1361,14 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             void registerReply(const karabo::util::Hash& reply);
+            
+            /**
+             * Returns a list of slots in SignalSlotable that are allowed to
+             * bypass locks.
+             * @return 
+             */
+            const std::set<std::string>& getBypassLockSlots() const;
+
 
         private: // Functions
 

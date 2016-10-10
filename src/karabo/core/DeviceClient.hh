@@ -7,6 +7,7 @@
  */
 #include <karabo/xms/SignalSlotable.hh>
 #include <karabo/util/Timestamp.hh>
+#include <karabo/core/Lock.hh>
 
 #ifndef KARABO_CORE_DEVICE_CLIENT_HH
 #define	KARABO_CORE_DEVICE_CLIENT_HH
@@ -611,6 +612,16 @@ namespace karabo {
              * @return a Hash containing the output channel's data schema
              */
             karabo::util::Hash getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName);
+
+
+            /**
+             * Request locking of device at deviceId. Throws a karabo::util::LockException in case the lock cannot be acquired in the given timeout
+             * @param deviceId: the device to be locked
+             * @param recursive: if true, recursive locks on this device are allowed
+             * @param timeout: timeout during which we try to acquire the lock. Set to -1 to wait try indefinitely, 0 to only try once
+             * @return a Lock object, holding the lock to deviceId.
+             */
+            karabo::core::Lock lock(const std::string& deviceId, bool recursive = false, int timeout = -1);
 
 
         protected: // functions

@@ -844,7 +844,7 @@ namespace karabo {
                 } catch (const TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Configuration request for device \"" + deviceId + "\" timed out"));
                     return result; // empty Hash
-                }
+                } 
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 result = m_runtimeSystemDescription.set(path, hash).getValue<Hash>();
             }
@@ -1525,6 +1525,27 @@ if (nodeData) {\
             Hash pHash;
             validator.validate(schema, Hash(), pHash);
             return pHash.get<Hash>(outputChannelName+".schema");
+        }
+        
+        karabo::core::Lock DeviceClient::lock(const std::string& deviceId, bool recursive, int timeout) {
+            //non waiting request for lock
+            if(timeout == 0) return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
+            
+            //timeout was given
+            const int waitTime = 1; //second
+            unsigned int nTries = 0;
+            while(true){
+                try{
+                    return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
+                } catch (const karabo::util::LockException& e){
+                    if(nTries > timeout/waitTime && timeout != -1){
+                        //rethrow
+                        KARABO_RETHROW(e);
+                    }
+                    //otherwise pass through and try again
+                    boost::this_thread::sleep(boost::posix_time::seconds(waitTime));
+                }
+            }
         }
         
         
