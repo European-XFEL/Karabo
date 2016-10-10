@@ -138,9 +138,6 @@ namespace karabo {
                            const karabo::util::Hash& outputChannelInfo,
                            karabo::net::Channel::Pointer channel);
 
-            // TODO Keep m_connectedOutputChannels in sync and adapt eos tokens on sudden death
-            void startConnectionAsync(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo);
-
             void onTcpConnectionError(const karabo::net::ErrorCode&, const karabo::net::Connection::Pointer&);
 
             void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
