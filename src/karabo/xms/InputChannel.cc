@@ -588,7 +588,7 @@ namespace karabo {
                 if (m_delayOnInput <= 0) // no delay
                     deferredNotificationOfOutputChannelForPossibleRead(channel);
                 else {
-                    m_deadline.expires_from_now(boost::posix_time::seconds(m_delayOnInput));
+                    m_deadline.expires_from_now(boost::posix_time::milliseconds(m_delayOnInput));
                     m_deadline.async_wait(boost::bind(&InputChannel::deferredNotificationOfOutputChannelForPossibleRead, this, channel));
                 }
             }
@@ -608,7 +608,7 @@ namespace karabo {
             if (m_delayOnInput <= 0) // no delay
                 deferredNotificationsOfOutputChannelsForPossibleRead();
             else { // wait "asynchronously"
-                m_deadline.expires_from_now(boost::posix_time::seconds(m_delayOnInput));
+                m_deadline.expires_from_now(boost::posix_time::milliseconds(m_delayOnInput));
                 m_deadline.async_wait(boost::bind(&InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead, this));
             }
         }
