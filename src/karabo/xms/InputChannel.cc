@@ -439,8 +439,10 @@ namespace karabo {
                     } else if (nActiveData == 0) { // Data complete, second pot still empty
 
                         this->swapBuffers();
+                        // Ask to fill second pot...
                         notifyOutputChannelForPossibleRead(channel);
 
+                        // ...and in parallel process first one.
                         // No mutex under callback
                         KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering IOEvent";
                         m_ioService.post(boost::bind(&InputChannel::triggerIOEvent, this));
@@ -563,8 +565,10 @@ namespace karabo {
                 // Fetch number of data pieces
                 size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
 
-                // Notify all connected output channels for another read
                 if (nActiveData >= this->getMinimumNumberOfData()) {
+                    // After swapping the pots, the new active one is ready...
+                    m_ioService.post(boost::bind(&InputChannel::triggerIOEvent, this));
+                    // ...and the other one can be filled
                     notifyOutputChannelsForPossibleRead();
                 }
             } catch (const boost::bad_weak_ptr& e) {
@@ -588,7 +592,7 @@ namespace karabo {
                 if (m_delayOnInput <= 0) // no delay
                     deferredNotificationOfOutputChannelForPossibleRead(channel);
                 else {
-                    m_deadline.expires_from_now(boost::posix_time::seconds(m_delayOnInput));
+                    m_deadline.expires_from_now(boost::posix_time::milliseconds(m_delayOnInput));
                     m_deadline.async_wait(boost::bind(&InputChannel::deferredNotificationOfOutputChannelForPossibleRead, this, channel));
                 }
             }
@@ -608,7 +612,7 @@ namespace karabo {
             if (m_delayOnInput <= 0) // no delay
                 deferredNotificationsOfOutputChannelsForPossibleRead();
             else { // wait "asynchronously"
-                m_deadline.expires_from_now(boost::posix_time::seconds(m_delayOnInput));
+                m_deadline.expires_from_now(boost::posix_time::milliseconds(m_delayOnInput));
                 m_deadline.async_wait(boost::bind(&InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead, this));
             }
         }
