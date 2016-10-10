@@ -844,7 +844,7 @@ namespace karabo {
                 } catch (const TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Configuration request for device \"" + deviceId + "\" timed out"));
                     return result; // empty Hash
-                } 
+                }
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 result = m_runtimeSystemDescription.set(path, hash).getValue<Hash>();
             }
