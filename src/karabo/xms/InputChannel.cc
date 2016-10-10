@@ -62,14 +62,6 @@ namespace karabo {
                     .init()
                     .commit();
 
-            BOOL_ELEMENT(expected).key("keepDataUntilNew")
-                    .displayedName("Keep data until new")
-                    .description("If true, keeps data until new data from an connected output is provided. "
-                                 "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
-                    .assignmentOptional().defaultValue(false)
-                    .init()
-                    .commit();
-
             BOOL_ELEMENT(expected).key("respondToEndOfStream")
                     .displayedName("Respond to end-of-stream")
                     .description("Determines whether this input should forward a end-of-stream event to its parent device.")
@@ -96,7 +88,6 @@ namespace karabo {
             parseOutputChannelConfiguration(config);
             config.get("dataDistribution", m_dataDistribution);
             config.get("minData", m_minData);
-            config.get("keepDataUntilNew", m_keepDataUntilNew);
             config.get("onSlowness", m_onSlowness);
             config.get("respondToEndOfStream", m_respondToEndOfStream);
             config.get("delayOnInput", m_delayOnInput);
@@ -120,7 +111,6 @@ namespace karabo {
             parseOutputChannelConfiguration(config);
             if (config.has("dataDistribution")) config.get("dataDistribution", m_dataDistribution);
             if (config.has("minData")) config.get("minData", m_minData);
-            if (config.has("keepDataUntilNew")) config.get("keepDataUntilNew", m_keepDataUntilNew);
             if (config.has("onSlowness")) config.get("onSlowness", m_onSlowness);
             if (config.has("respondToEndOfStream")) config.get("respondToEndOfStream", m_respondToEndOfStream);
         }
@@ -447,12 +437,8 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering IOEvent";
                         m_ioService.post(boost::bind(&InputChannel::triggerIOEvent, this));
                     } else { // Data complete on both pots now
-                        if (m_keepDataUntilNew) { // Is false per default
-                            m_keepDataUntilNew = false;
-                            KARABO_LOG_FRAMEWORK_TRACE << debugId << "Updating";
-                            m_ioService.post(boost::bind(&InputChannel::update, this));
-                            m_keepDataUntilNew = true;
-                        }
+                        // triggerIOEvent will be called by the update of the triggerIOEvent
+                        // that is processing the active pot now
                     }
                     channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, _1, channel, _2, _3));
                 }
@@ -553,8 +539,6 @@ namespace karabo {
                 InputChannel::Pointer self = shared_from_this();
 
                 boost::mutex::scoped_lock lock(m_mutex);
-
-                if (m_keepDataUntilNew) return;
 
                 // Clear active chunk
                 Memory::clearChunkData(m_channelId, m_activeChunk);

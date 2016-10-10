@@ -53,7 +53,6 @@ namespace karabo {
 
             std::string m_dataDistribution;
             unsigned int m_minData;
-            bool m_keepDataUntilNew;
             std::string m_onSlowness;
 
             unsigned int m_channelId;
