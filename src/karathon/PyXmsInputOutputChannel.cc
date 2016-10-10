@@ -271,12 +271,6 @@ namespace karathon {
         self->disconnect(outputChannelInfo);
     }
 
-
-    void InputChannelWrap::updatePy(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
-        ScopedGILRelease nogil;
-        self->update();
-    }
-
 }
 
 
@@ -500,8 +494,6 @@ void exportPyXmsInputOutputChannel() {
                     , (bp::arg("outputChannelInfo")))
 
                 .def("canCompute", &karabo::xms::InputChannel::canCompute)
-
-                .def("update", &karathon::InputChannelWrap().updatePy)
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::InputChannel)
                 ;
