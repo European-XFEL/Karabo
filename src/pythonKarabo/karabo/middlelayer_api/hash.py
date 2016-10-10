@@ -1363,6 +1363,8 @@ def _gettype(data):
 
 
 class HashElement(object):
+    __slots__ = ["data", "attrs"]
+
     def __init__(self, data, attrs):
         self.data = data
         self.attrs = attrs
