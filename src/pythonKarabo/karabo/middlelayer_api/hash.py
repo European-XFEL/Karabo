@@ -16,7 +16,9 @@ import numbers
 from struct import pack, unpack, calcsize
 import sys
 import weakref
-from xml.etree import ElementTree
+from xml.sax import make_parser
+from xml.sax.saxutils import escape, quoteattr
+from xml.sax.handler import ContentHandler
 
 import numpy as np
 
@@ -614,6 +616,10 @@ class Type(Descriptor, Registry):
         self.setter = method
         return self
 
+    @classmethod
+    def yieldXML(cls, data):
+        yield escape(cls.toString(data))
+
 
 class Vector(Type):
     """This is the base class for all vectors of data"""
@@ -1110,6 +1116,27 @@ class HashType(Type):
             raise TypeError('cannot cast anything to {} (was {})'.
                             format(type(self).__name__, type(other).__name__))
 
+    @classmethod
+    def hashname(cls):
+        return "HASH"
+
+    @classmethod
+    def yieldXML(cls, data):
+        for key, value, attrs in data.iterall():
+            value_type = _gettype(value)
+            yield '<{key} KRB_Type="{value_type}" '.format(
+                key=key, value_type=value_type.hashname())
+            for k, v in attrs.items():
+                attr_type = _gettype(v)
+                attr = "KRB_{attr_type}:{data}".format(
+                    attr_type=attr_type.hashname(),
+                    data="".join(attr_type.yieldXML(v)))
+                yield '{key}={attr} '.format(
+                    key=k, attr=quoteattr(attr))
+            yield ">"
+            yield from value_type.yieldXML(value)
+            yield "</{}>".format(key)
+
 
 class VectorHash(Vector):
     """A VectorHash is a table
@@ -1173,6 +1200,13 @@ class VectorHash(Vector):
                 for row in value.value]
         return data, {}
 
+    @classmethod
+    def yieldXML(self, data):
+        for d in data:
+            yield "<KRB_Item>"
+            yield from HashType.yieldXML(d)
+            yield "</KRB_Item>"
+
 
 class HashList(list, Special):
     hashtype = VectorHash
@@ -1224,6 +1258,12 @@ class SchemaHashType(HashType):
     @classmethod
     def hashname(cls):
         return 'SCHEMA'
+
+    @classmethod
+    def yieldXML(cls, data):
+        yield data.name
+        yield ":"
+        yield escape("".join(HashType.yieldXML(data.hash)))
 
 
 class Schema(Special):
@@ -1322,142 +1362,10 @@ def _gettype(data):
             raise TypeError('unknown datatype {}'.format(data.__class__))
 
 
-class Element(object):
-    text = property(lambda self: None, lambda self, value: None)
-    tail = text
-
-    def __init__(self, tag, attrs={}):
-        self.tag = tag
-        if "KRB_Artificial" in attrs:
-            self.artificial = True
-        self.type = attrs.get("KRB_Type")
-        def parse(vv):
-            k, v = vv.split(":", 1)
-            return Type.fromname[k[4:]].fromstring(v)
-        self.attrs = {k: parse(v) for k, v in attrs.items()
-                      if k[:4] != "KRB_"}
-
-
-    def items(self):
-        yield "KRB_Type", self.hashname()
-        for k, v in self.attrs.items():
-            t = _gettype(v)
-            yield k, 'KRB_{}:{}'.format(t.hashname(), t.toString(v))
-
-
-class SimpleElement(Element):
-    def __len__(self):
-        return 0
-
-    def append(self, elem):
-        raise RuntimeError("no append to simple element")
-
-    def iter(self, tag=None):
-        if tag == "*":
-            tag = None
-        if tag is None or self.tag == tag:
-            yield self
-
-    def __iter__(self):
-        return
-        yield
-
-    @property
-    def text(self):
-        try:
-            return _gettype(self.data).toString(self.data)
-        except AttributeError:
-            return None
-
-    @text.setter
-    def text(self, value):
-        try:
-            self.data = Type.fromname[self.type].fromstring(value)
-        except:
-            raise
-
-
-    def hashname(self):
-        return _gettype(self.data).hashname()
-
-
-class HashElement(Element):
-    def __init__(self, tag, attrs={}):
-        Element.__init__(self, tag, attrs)
-        self.children = Hash()
-
-    def __len__(self):
-        return len(self.children)
-
-    def append(self, elem):
-        OrderedDict.__setitem__(self.children, elem.tag, elem)
-
-    def __iter__(self):
-        for e in self.children:
-            yield OrderedDict.__getitem__(self.children, e)
-
-    def iter(self, tag=None):
-        if tag == "*":
-            tag = None
-        if tag is None or self.tag == tag:
-            yield self
-        for e in self.children:
-            for e in OrderedDict.__getitem__(self.children, e).iter(tag):
-                yield e
-
-    @property
-    def data(self):
-        return self.children
-
-
-    def hashname(self):
-        return "HASH"
-
-
-class ListElement(Element):
-    def __init__(self, tag, attrs={}):
-        Element.__init__(self, tag, attrs)
-        self.children = [ ]
-
-
-    def __len__(self):
-        return len(self.children)
-
-
-    def append(self, elem):
-        self.children.append(elem)
-
-
-    def __iter__(self):
-        return iter(self.children)
-
-
-    def iter(self, tag=None):
-        if tag == "*":
-            tag = None
-        if tag is None or self.tag == tag:
-            yield self
-        for e in self.children:
-            for ee in e.iter(tag):
-                yield ee
-
-
-    @property
-    def data(self):
-        return HashList(e.data for e in self.children)
-
-
-    @data.setter
-    def data(self, value):
-        self.children = [ ]
-        for c in value:
-            e = HashElement('KRB_Item')
-            e.children = c
-            self.children.append(e)
-
-
-    def hashname(self):
-        return "VECTOR_HASH"
+class HashElement(object):
+    def __init__(self, data, attrs):
+        self.data = data
+        self.attrs = attrs
 
 
 class Hash(OrderedDict):
@@ -1499,7 +1407,7 @@ class Hash(OrderedDict):
         s = self
         for p in path[:-1]:
             if auto and p not in s:
-                OrderedDict.__setitem__(s, p, HashElement(p))
+                OrderedDict.__setitem__(s, p, HashElement(Hash(), {}))
             s = s[p]
         if not isinstance(s, Hash):
             raise KeyError(path)
@@ -1529,18 +1437,7 @@ class Hash(OrderedDict):
                 attrs = s[p, ...]
             else:
                 attrs = { }
-            if isinstance(value, Hash):
-                elem = HashElement(p)
-                elem.children = value
-            elif isinstance(value, HashList) or (isinstance(value, list) and
-                  value and isinstance(value[0], Hash)):
-                elem = ListElement(p)
-                elem.data = value
-            else:
-                elem = SimpleElement(p)
-                elem.data = value
-            elem.attrs = attrs
-            OrderedDict.__setitem__(s, p, elem)
+            OrderedDict.__setitem__(s, p, HashElement(value, attrs))
 
     def __getitem__(self, item):
         if isinstance(item, tuple):
@@ -1656,43 +1553,68 @@ class HashMergePolicy:
     REPLACE_ATTRIBUTES = "replace"
 
 
+class Handler(ContentHandler):
+    def __init__(self):
+        super().__init__()
+        self.ktypes = ["HASH"]
+        self.hashes = [Hash()]
+        self.attrs = []
+
+    def startElement(self, name, attrs):
+        if self.ktypes[-1] == "VECTOR_HASH":
+            assert name == "KRB_Item"
+            self.ktypes.append("ITEM")
+            self.hashes.append(Hash())
+        else:
+            kattrs = {}
+            for key, value in attrs.items():
+                kattrs[key] = value
+                if value.startswith("KRB_") and ":" in value:
+                    dtype, svalue = value.split(":", 1)
+                    dtype = Type.fromname.get(dtype[4:], None)
+                    if dtype is not None:
+                        kattrs[key] = dtype.fromstring(svalue)
+            self.ktypes.append(kattrs.pop("KRB_Type", "HASH"))
+            self.attrs.append(kattrs)
+            if self.ktypes[-1] == "HASH":
+                self.hashes.append(Hash())
+            elif self.ktypes[-1] == "VECTOR_HASH":
+                self.hashes.append(HashList())
+            self.chars = []
+
+    def characters(self, content):
+        self.chars.append(content)
+
+    def endElement(self, name):
+        ktype = self.ktypes.pop()
+        if ktype in {"HASH", "VECTOR_HASH", "ITEM"}:
+            result = self.hashes.pop()
+        else:
+            result = Type.fromname[ktype].fromstring("".join(self.chars))
+        if self.ktypes[-1] in {"HASH", "ITEM"}:
+            assert isinstance(self.hashes[-1], Hash)
+            self.hashes[-1][name] = result
+            self.hashes[-1][name, ...] = self.attrs.pop()
+        elif self.ktypes[-1] == "VECTOR_HASH":
+            assert name == "KRB_Item"
+            assert isinstance(self.hashes[-1], list)
+            self.hashes[-1].append(result)
+
+
 class XMLParser(object):
     last = None
 
-
-    def factory(self, tag, attrs):
-        krb_type = attrs.get("KRB_Type", "")
-        if krb_type == "HASH":
-            return HashElement(tag, attrs)
-        elif krb_type == "VECTOR_HASH":
-            return ListElement(tag, attrs)
-        elif tag == "KRB_Item":
-            return HashElement("", attrs)
-        else:
-            self.closelast()
-            self.last = SimpleElement(tag, attrs)
-            return self.last
-
-
-    def closelast(self):
-        # while parsing ElementTree does not set text if the is none...
-        if self.last is not None and not hasattr(self.last, "data"):
-            self.last.text = ""
-
-
     def read(self, data):
-        """Parse the XML in the buffer data and return the hash"""
-        target = ElementTree.TreeBuilder(element_factory=self.factory)
-        parser = ElementTree.XMLParser(target=target)
+        parser = make_parser()
+        handler = Handler()
+        parser.setContentHandler(handler)
         parser.feed(data)
-        root = target.close()
-        self.closelast()
-        if hasattr(root, "artificial"):
-            return root.children
+        parser.close()
+        result, = handler.hashes
+        if "root" in result and "KRB_Artificial" in result["root", ...]:
+            return result["root"]
         else:
-            ret = Hash()
-            OrderedDict.__setitem__(ret, root.tag, root)
-            return ret
+            return result
 
 
 class Writer(object):
@@ -1708,15 +1630,16 @@ class Writer(object):
 
 class XMLWriter(Writer):
     def writeToFile(self, hash, file):
-        """Write the hash to the file in binary format"""
-        if len(hash) == 1 and isinstance(list(hash.values())[0], Hash):
-            e = OrderedDict.__getitem__(hash, list(hash.keys())[0])
+        for s in self.writer(hash):
+            file.write(s.encode("utf8"))
+
+    def writer(self, hash):
+        if len(hash) == 1 and isinstance(next(iter(hash.values())), Hash):
+            yield from HashType.yieldXML(hash)
         else:
-            e = HashElement("root")
-            e.attrs = dict(KRB_Artificial="")
-            e.children = hash
-        et = ElementTree.ElementTree(e)
-        et.write(file)
+            yield '<root KRB_Artificial="">'
+            yield from HashType.yieldXML(hash)
+            yield '</root>'
 
 
 class BinaryParser(object):
