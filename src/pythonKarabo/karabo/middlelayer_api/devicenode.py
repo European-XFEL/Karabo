@@ -1,4 +1,4 @@
-from asyncio import async, CancelledError, coroutine, Future, Queue
+from asyncio import async, CancelledError, coroutine, Queue
 from collections import OrderedDict
 from itertools import chain
 
@@ -34,7 +34,7 @@ class DeviceNode(String):
 
     Note how the property ``speed`` is renamed to ``velocity`` on the way.
 
-    If the device should be locked by this devices, set the attribute
+    If the other device should be locked by this device, set the attribute
     ``lock=True``.
     """
     def __init__(self, properties=(), commands=(), lock=False, **kwargs):
