@@ -10,7 +10,7 @@ from pint import DimensionalityError
 
 from karabo.middlelayer import (
     AlarmCondition, Configurable, connectDevice, Device, DeviceNode, Float,
-    getDevice, Hash, Int32, KaraboError, MetricPrefix, Node, setNoWait,
+    getDevice, Hash, Int32, KaraboError, lock, MetricPrefix, Node, setNoWait,
     setWait, Slot, State, String, unit, Unit, VectorChar, VectorInt16,
     VectorString, VectorFloat, waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
@@ -754,6 +754,20 @@ class Tests(DeviceTest):
         h = schema.hash
         self.assertIn("allow", h)
         self.assertNotIn("disallowed_int", h)
+
+    @async_tst
+    def test_lock(self):
+        with (yield from getDevice("remote")) as d:
+            with (yield from lock(d)):
+                self.assertEqual(d.lockedBy, "local")
+                with (yield from lock(d)):
+                    self.assertEqual(d.lockedBy, "local")
+                    d.value = 33
+                    yield from waitUntil(lambda: d.value == 33)
+                yield from d
+                self.assertEqual(d.lockedBy, "local")
+            yield from waitUntil(lambda: d.lockedBy == "")
+
 
 if __name__ == "__main__":
     main()

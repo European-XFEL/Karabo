@@ -11,6 +11,7 @@ proxy. """
 import asyncio
 from asyncio import get_event_loop
 from collections import defaultdict
+from contextlib import contextmanager
 from decimal import Decimal
 import time
 from weakref import WeakSet
@@ -546,16 +547,21 @@ class lock:
 
         with lock(device):
             # do something on device
+
+    Normally, at the end of the block we wait until the lock has been
+    actually released. Set the attribute *wait_for_release* to *True*
+    if speed is an issue.
     """
-    def __init__(self, device):
+    def __init__(self, device, wait_for_release=None):
         self.device = device
+        self.wait_for_release = wait_for_release
+        self.release = True
 
     @synchronize
     def __enter__(self):
         myId = get_instance().deviceId
         if self.device.lockedBy == myId:
-            raise RuntimeError('recursive lock of "{}" detected!'.
-                               format(self.device.deviceId))
+            self.release = False
         self.device.lockedBy = myId
         while self.device.lockedBy != myId:
             yield from waitUntilNew(self.device.lockedBy)
@@ -565,10 +571,26 @@ class lock:
 
     @synchronize
     def __exit__(self, exc_type, exc_value, traceback):
-        self.device.lockedBy = ""
-        myId = get_instance().deviceId
-        while self.device.lockedBy == myId:
-            yield from waitUntilNew(self.device.lockedBy)
+        if self.release:
+            self.device.lockedBy = ""
+            if self.wait_for_release or self.wait_for_release is None:
+                myId = get_instance().deviceId
+                while self.device.lockedBy == myId:
+                    yield from waitUntilNew(self.device.lockedBy)
+
+    def __iter__(self):
+        @contextmanager
+        def unlock():
+            try:
+                yield
+            finally:
+                if self.release:
+                    self.device.lockedBy = ""
+
+        if self.wait_for_release is not None and self.wait_for_release:
+            raise RuntimeError("cannot wait for release before Python 3.5!")
+        yield from self.__enter__()
+        return unlock()
 
 
 def getDevices(serverId=None):
