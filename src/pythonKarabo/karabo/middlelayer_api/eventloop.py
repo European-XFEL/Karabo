@@ -567,7 +567,7 @@ class EventLoop(SelectorEventLoop):
         try:
             yield from f
         finally:
-            self.changedFutures.remove(f)
+            self.changedFutures.discard(f)
 
     def sync(self, coro, timeout, wait):
         return coro
