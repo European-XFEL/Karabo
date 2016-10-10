@@ -38,6 +38,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
 	${OBJECTDIR}/_ext/163556830/DeviceServer.o \
 	${OBJECTDIR}/_ext/163556830/FsmBaseState.o \
+	${OBJECTDIR}/_ext/163556830/Lock.o \
 	${OBJECTDIR}/_ext/1423485062/AlarmService.o \
 	${OBJECTDIR}/_ext/1423485062/CentralLogging.o \
 	${OBJECTDIR}/_ext/1423485062/DataLogReader.o \
@@ -207,6 +208,11 @@ ${OBJECTDIR}/_ext/163556830/FsmBaseState.o: ../../../src/karabo/core/FsmBaseStat
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/FsmBaseState.o ../../../src/karabo/core/FsmBaseState.cc
+
+${OBJECTDIR}/_ext/163556830/Lock.o: ../../../src/karabo/core/Lock.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/Lock.o ../../../src/karabo/core/Lock.cc
 
 ${OBJECTDIR}/_ext/1423485062/AlarmService.o: ../../../src/karabo/devices/AlarmService.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
@@ -1135,6 +1141,19 @@ ${OBJECTDIR}/_ext/163556830/FsmBaseState_nomain.o: ${OBJECTDIR}/_ext/163556830/F
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/FsmBaseState_nomain.o ../../../src/karabo/core/FsmBaseState.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163556830/FsmBaseState.o ${OBJECTDIR}/_ext/163556830/FsmBaseState_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163556830/Lock_nomain.o: ${OBJECTDIR}/_ext/163556830/Lock.o ../../../src/karabo/core/Lock.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/Lock.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/Lock_nomain.o ../../../src/karabo/core/Lock.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/Lock.o ${OBJECTDIR}/_ext/163556830/Lock_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1423485062/AlarmService_nomain.o: ${OBJECTDIR}/_ext/1423485062/AlarmService.o ../../../src/karabo/devices/AlarmService.cc 

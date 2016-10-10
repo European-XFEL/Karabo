@@ -3,6 +3,8 @@
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
       <logicalFolder name="f3" displayName="Patterns" projectFiles="true">
+        <itemPath>../../../src/karabo/core/Lock.cc</itemPath>
+        <itemPath>../../../src/karabo/core/Lock.hh</itemPath>
         <itemPath>../../../src/karabo/core/Worker.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="State Machines" projectFiles="true">
@@ -587,6 +589,10 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/Lock.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/Lock.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/MotorInterface.hh"
             ex="false"
@@ -2530,6 +2536,10 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/Lock.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/Lock.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/MotorInterface.hh"
             ex="false"

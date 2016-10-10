@@ -45,6 +45,14 @@ namespace karabo {
             void logHandler(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data);
 
             void logErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info);
+            
+            /**
+             * This device may not be locked
+             * @return false
+             */
+            bool allowLock() const {
+                return false;
+            }
 
         private:
 
