@@ -149,8 +149,6 @@ namespace karabo {
 
             bool canCompute() const;
 
-            void update();
-
             void notifyOutputChannelsForPossibleRead();
 
             void notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel);
@@ -162,6 +160,8 @@ namespace karabo {
             void updateOutputChannelConfiguration(const std::string& outputChannelString, const karabo::util::Hash& config);
 
         private: // functions
+
+            void update();
 
             void deferredNotificationsOfOutputChannelsForPossibleRead();
 
