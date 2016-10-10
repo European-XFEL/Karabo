@@ -1,8 +1,8 @@
-from asyncio import async, CancelledError, coroutine, Future, Queue
+from asyncio import async, CancelledError, coroutine, Queue
 from collections import OrderedDict
 from itertools import chain
 
-from .device_client import getDevice
+from .device_client import getDevice, lock
 from .enums import AccessMode, NodeType
 from .signalslot import coslot
 from .hash import Hash, String
@@ -33,8 +33,11 @@ class DeviceNode(String):
                                commands=["start"])
 
     Note how the property ``speed`` is renamed to ``velocity`` on the way.
+
+    If the other device should be locked by this device, set the attribute
+    ``lock=True``.
     """
-    def __init__(self, properties=(), commands=(), **kwargs):
+    def __init__(self, properties=(), commands=(), lock=False, **kwargs):
         super().__init__(**kwargs)
 
         def recode(names):
@@ -51,6 +54,7 @@ class DeviceNode(String):
 
         self.properties = recode(properties)
         self.commands = recode(commands)
+        self.lock = lock
         if self.properties and "state" not in self.properties:
             self.properties["state"] = "state"
         if self.properties and "alarmCondition" not in self.properties:
@@ -86,17 +90,23 @@ class DeviceNode(String):
     @coroutine
     def _main_loop(self, proxy, instance):
         """relay data coming from *proxy* on behalf of *instance*"""
-        queue = Queue()
-        proxy._queues[None].add(queue)
-        proxy._current = Hash()
-        with proxy:
-            yield from proxy
-            while True:
-                data = yield from queue.get()
-                out = self._copy_properties(data, True)
-                proxy._current.merge(out)
-                instance.signalChanged(Hash(self.key, out),
-                                       instance.deviceId)
+        try:
+            queue = Queue()
+            proxy._queues[None].add(queue)
+            proxy._current = Hash()
+            with proxy:
+                yield from proxy
+                while True:
+                    data = yield from queue.get()
+                    out = self._copy_properties(data, True)
+                    proxy._current.merge(out)
+                    instance.signalChanged(Hash(self.key, out),
+                                           instance.deviceId)
+        except CancelledError:
+            raise
+        except Exception:
+            instance.logger.exception(
+                'device node "{}" failed'.format(self.key))
 
     @coroutine
     def initialize(self, instance, value):
@@ -113,21 +123,11 @@ class DeviceNode(String):
         for theirname, myname in self.commands.items():
             register(theirname, myname)
 
-        @coroutine
-        def run():
-            try:
-                if self.properties:
-                    yield from self._main_loop(proxy, instance)
-                else:
-                    with proxy:
-                        yield from Future()  # wait until we are cancelled
-            except CancelledError:
-                raise
-            except Exception:
-                instance.logger.exception(
-                    'device node "{}" failed'.format(self.key))
-
-        async(run())
+        instance._ss.exitStack.enter_context((yield from proxy))
+        if self.lock:
+            instance._ss.exitStack.enter_context((yield from lock(proxy)))
+        if self.properties:
+            async(self._main_loop(proxy, instance))
 
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super().toSchemaAndAttrs(device, state)

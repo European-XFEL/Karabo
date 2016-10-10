@@ -667,6 +667,7 @@ class Tests(DeviceTest):
             self.assertEqual(self.remote.value, 5)
 
             with (yield from getDevice("devicenode")) as d:
+                self.assertEqual(d.lockedBy, "")
                 self.assertEqual(d.dn.value, 5)
                 self.assertEqual(d.dn.cntr, -1)
                 self.assertEqual(type(d).dn.displayType, "deviceNode")
@@ -694,18 +695,21 @@ class Tests(DeviceTest):
             yield from a.slotKillDevice()
 
     @async_tst
-    def test_devicenode_nocopy(self):
+    def test_devicenode_nocopy_lock(self):
         class A(Device):
-            dn = DeviceNode()
+            dn = DeviceNode(lock=True)
 
         a = A({"_deviceId_": "devicenode", "dn": "remote"})
         yield from a.startInstance()
         try:
+            self.assertEqual(a.dn.lockedBy, "devicenode")
             a.dn.value = 5
             yield from a.dn
             self.assertEqual(self.remote.value, 5)
         finally:
             yield from a.slotKillDevice()
+        with (yield from getDevice("remote")) as proxy:
+            yield from waitUntil(lambda: proxy.lockedBy == "")
 
     @async_tst
     def test_devicenode_novalue(self):
