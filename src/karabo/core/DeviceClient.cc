@@ -1533,7 +1533,7 @@ if (nodeData) {\
             
             //timeout was given
             const int waitTime = 1; //second
-            unsigned int nTries = 0;
+            int nTries = 0;
             while(true){
                 try{
                     return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
@@ -1543,6 +1543,7 @@ if (nodeData) {\
                         KARABO_RETHROW(e);
                     }
                     //otherwise pass through and try again
+                    nTries++;
                     boost::this_thread::sleep(boost::posix_time::seconds(waitTime));
                 }
             }
