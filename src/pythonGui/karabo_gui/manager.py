@@ -149,11 +149,11 @@ class _Manager(QObject):
         # Compute a runtime schema from the configuration and an unmodified
         # copy of the device class schema.
         baseSchema = self._immutableServerClassData[serverId, classId]
-        schemaUpdates = getSchemaAttributeUpdates(baseSchema, config)
+        schemaAttrUpdates = getSchemaAttributeUpdates(baseSchema, config)
 
         # Send signal to network
         Network().onInitDevice(serverId, classId, deviceId, config,
-                               updates=schemaUpdates)
+                               attrUpdates=schemaAttrUpdates)
 
     def shutdownDevice(self, deviceId, showConfirm=True):
         if showConfirm:
