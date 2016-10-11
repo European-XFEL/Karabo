@@ -54,7 +54,7 @@ public:
         } else {
             m_messageCount += 1000; // Invalidate message count will let the test fail!
         }
-        SIGNAL2("signalB", int, karabo::util::Hash);
+        KARABO_SIGNAL("signalB", int, karabo::util::Hash);
         connect("signalB", "slotB");
         emit("signalB", 42, karabo::util::Hash("Was.soll.das.bedeuten", "nix"));
     }
