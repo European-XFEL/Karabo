@@ -77,7 +77,6 @@ namespace karathon {
         static bp::object readPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, size_t idx);
         static void connectPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const karabo::util::Hash& outputChannelInfo);
         static void disconnectPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const karabo::util::Hash& outputChannelInfo);
-        static void updatePy(const boost::shared_ptr<karabo::xms::InputChannel>& self);
     };
 
 }
