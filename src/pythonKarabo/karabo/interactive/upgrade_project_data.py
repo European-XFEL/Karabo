@@ -1,7 +1,9 @@
 import argparse
+import os.path as op
+import sys
 
 from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
-from karabo.middlelayer import Project, XMLWriter
+from karabo.middlelayer import Hash, Project, XMLWriter
 from karabo.middlelayer_api.project import BaseDevice, BaseDeviceGroup
 
 FIXERS = []
@@ -16,12 +18,21 @@ def read_project(path):
     """ Reads a project file.
     """
     class _Device(BaseDevice):
+        def __init__(self, *args, **kw):
+            super(_Device, self).__init__(*args, **kw)
+            self.descriptor = None
+
         def toXml(self):
-            return XMLWriter().write(self.initConfig)
+            return XMLWriter().write(Hash(self.classId, self.initConfig))
 
     class _DeviceGroup(BaseDeviceGroup):
+        def __init__(self, id, serverId, classId, ifexists, **kw):
+            super(_DeviceGroup, self).__init__(
+                serverId, classId, id, ifexists, **kw)
+            self.descriptor = None
+
         def toXml(self):
-            return XMLWriter().write(self.initConfig)
+            return XMLWriter().write(Hash(self.classId, self.initConfig))
 
     factories = {'Device': _Device, 'DeviceGroup': _DeviceGroup}
     project = Project(path)
@@ -82,6 +93,11 @@ def main():
                         help='The destination (new) project file.')
 
     ns = parser.parse_args()
+
+    if op.abspath(ns.input) == op.abspath(ns.output):
+        print("Please give a NEW filename for the output!")
+        sys.exit(1)
+
     upgrade_project(ns.input, ns.output)
 
 if __name__ == '__main__':
