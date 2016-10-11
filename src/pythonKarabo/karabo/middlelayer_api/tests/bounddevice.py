@@ -5,7 +5,7 @@ API cross test
 from karabo.bound import (
     AMPERE, Configurator, Hash, DOUBLE_ELEMENT, Epochstamp, KARABO_CLASSINFO,
     KILO, METER, MILLI, NODE_ELEMENT, PythonDevice, Schema, SLOT_ELEMENT,
-    State, TABLE_ELEMENT, Timestamp, Trainstamp)
+    State, STRING_ELEMENT, TABLE_ELEMENT, Timestamp, Trainstamp)
 
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
@@ -15,6 +15,11 @@ class TestDevice(PythonDevice):
         tableSchema = Schema()
         (
             DOUBLE_ELEMENT(tableSchema).key("d")
+            .assignmentOptional()
+            .noDefaultValue()
+            .commit(),
+
+            STRING_ELEMENT(tableSchema).key("s")
             .assignmentOptional()
             .noDefaultValue()
             .commit()
@@ -53,7 +58,7 @@ class TestDevice(PythonDevice):
             .displayedName("bla")
             .setNodeSchema(tableSchema)
             .assignmentOptional()
-            .defaultValue([Hash("d", 5)])
+            .defaultValue([Hash("d", 5, "s", "hallo")])
             .commit()
         )
 

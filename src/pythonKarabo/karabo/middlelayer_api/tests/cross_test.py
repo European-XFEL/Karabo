@@ -111,11 +111,12 @@ class Tests(DeviceTest):
             self.assertEqual(proxy.a, 22.8 * unit.milliampere,
                              "didn't receive change from bound device")
 
-            proxy.table = [(3,), (7,)]
+            proxy.table = [(3, "african"), (7, "european")]
             self.assertEqual(len(proxy.table), 1)
             yield from waitUntilNew(proxy.table)
             self.assertEqual(len(proxy.table), 2)
             self.assertEqual(proxy.table[1]["d"], 7)
+            self.assertEqual(proxy.table[0]["s"], "african")
 
         yield from proxy.backfire()
         self.assertEqual(self.device.value, 99)
