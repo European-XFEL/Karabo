@@ -302,6 +302,9 @@ class TableValue(KaraboValue):
     def __len__(self):
         return len(self.value)
 
+    def __getattr__(self, attr):
+        return getattr(self.value, attr)
+
 
 # Pint is based on the concept of a unit registry. For each unit registry,
 # a new class (!) is created, and quantities are only compatible if we
