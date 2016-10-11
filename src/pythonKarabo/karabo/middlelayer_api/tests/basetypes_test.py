@@ -5,6 +5,7 @@ from unittest import TestCase, main
 import pint
 import numpy
 
+from karabo.middlelayer import unit
 from karabo.middlelayer_api.enums import Unit, MetricPrefix
 from karabo.middlelayer_api.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
@@ -192,12 +193,27 @@ class Tests(TestCase):
         self.assertEqual(c, l)
 
     def test_table(self):
-        t = TableValue([])
+        dtype = numpy.dtype([("i", "i"), ("o", "O")])
+        units = {"i": (Unit.METER, MetricPrefix.MILLI),
+                 "o": (Unit.GRAM, MetricPrefix.KILO)}
+        t = TableValue(numpy.array([], dtype=dtype), units)
         self.assertEqual(len(t), 0)
 
-        t = TableValue([3, 4, 5], timestamp=self.t2)
-        self.assertEqual(t, [3, 4, 5])
+        t = TableValue(numpy.array([(3, "asdf"), (2, numpy.arange(10))],
+                                   dtype=dtype), units, timestamp=self.t2)
         self.assertEqual(t.timestamp, self.t2)
+        self.assertEqual(t["i"][0], 3 * unit.millimeter)
+        self.assertEqual(t["i"][0].timestamp, self.t2)
+        self.assertEqual(t["o"][0], "asdf")
+        self.assertEqual(t["o"][0].timestamp, self.t2)
+        self.assertEqual(t["o"][1][3], 3 * unit.kilogram)
+        self.assertEqual(t["o"][1].timestamp, self.t2)
+        self.assertEqual(t[0]["i"], 3 * unit.millimeter)
+        self.assertEqual(t[0]["i"].timestamp, self.t2)
+        self.assertEqual(t[0]["o"], "asdf")
+        self.assertEqual(t[0]["o"].timestamp, self.t2)
+        self.assertEqual(t[1]["o"][3], 3 * unit.kilogram)
+        self.assertEqual(t[1]["o"].timestamp, self.t2)
 
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
