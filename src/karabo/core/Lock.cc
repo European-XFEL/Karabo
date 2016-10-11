@@ -72,9 +72,9 @@ namespace karabo{
         }
 
         void Lock::unlock_impl() const {
-            boost::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
-            if(p){
-                if(m_valid){
+            if(m_valid){
+                boost::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
+                if(p){
                     //now we can clear the lock
                     p->call(m_deviceId, "slotClearLock");
                 }
@@ -82,6 +82,8 @@ namespace karabo{
         }
 
         bool Lock::valid() const {
+            if(!m_valid) return false;
+            
             boost::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
             if(p){
                 const std::string& ownInstance = m_sigSlot.lock()->getInstanceId();

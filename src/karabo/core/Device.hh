@@ -191,14 +191,14 @@ namespace karabo {
                                      " property if not set manually.")
                         .initialValue(AlarmCondition::NONE)
                         .commit();
-                
+
                 STRING_ELEMENT(expected).key("lockedBy")
                         .displayedName("Locked by")
                         .reconfigurable()
                         .assignmentOptional().defaultValue("")
                         .expertAccess()
                         .commit();
-                
+
                 SLOT_ELEMENT(expected).key("slotClearLock")
                         .displayedName("Clear Lock")
                         .expertAccess()
@@ -211,19 +211,6 @@ namespace karabo {
                         .adminAccess()
                         .readOnly().initialValue("")
                         .commit();
-
-                STRING_ELEMENT(expected).key("lockedBy")
-                        .displayedName("Locked by")
-                        .reconfigurable()
-                        .assignmentOptional().defaultValue("")
-                        .expertAccess()
-                        .commit();
-
-                SLOT_ELEMENT(expected).key("slotClearLock")
-                        .displayedName("Clear Lock")
-                        .expertAccess()
-                        .commit();
-
 
                 BOOL_ELEMENT(expected).key("archive")
                         .displayedName("Archive")
@@ -984,13 +971,12 @@ namespace karabo {
 
             virtual void preDestruction() {
             }
-            
-            
+
             virtual bool allowLock() const {
                 return true;
             }
 
-          
+
 
         private: // Functions
 
@@ -1124,22 +1110,22 @@ namespace karabo {
                 m_bypassLockSlots = getBypassLockSlots();
 
                 KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
-                
+
                 KARABO_SLOT(slotGetConfiguration)
                 m_bypassLockSlots.insert("slotGetConfiguration");
-                
+
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
                 m_bypassLockSlots.insert("slotGetSchema");
-                
+
                 KARABO_SLOT(slotKillDevice)
                 m_bypassLockSlots.insert("slotKillDevice");
-                
+
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
                 m_bypassLockSlots.insert("slotTimeTick");
-                
+
                 KARABO_SLOT(slotReSubmitAlarms, karabo::util::Hash);
                 m_bypassLockSlots.insert("slotReSubmitAlarms");
-               
+
                 KARABO_SLOT(slotUpdateSchemaAttributes, std::vector<karabo::util::Hash>);
                 m_bypassLockSlots.insert("slotUpdateSchemaAttributes");
 
@@ -1538,11 +1524,11 @@ namespace karabo {
                 }
                 reply(karabo::util::Hash("success", success, "instanceId", getInstanceId(), "updatedSchema", m_fullSchema, "requestedUpdate", updates));
             }
-            
+
             /**
              * Clear any lock on this device
              */
-            void slotClearLock(){
+            void slotClearLock() {
                 set("lockedBy", "");
             }
 
