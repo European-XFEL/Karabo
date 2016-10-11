@@ -14,6 +14,8 @@
 #include <boost/asio.hpp>
 #include <karabo/util/Factory.hh>
 #include <karabo/net/BrokerChannel.hh>
+#include <typeinfo>
+#include <typeindex>
 
 /**
  * The main Karabo namespace
@@ -36,15 +38,20 @@ namespace karabo {
 
         class Signal {
 
-            public:
+        public:
 
             KARABO_CLASSINFO(Signal, "Signal", "1.0")
 
             Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel,
                    const std::string& signalInstanceId, const std::string& signalFunction,
-                   const int priority = KARABO_SYS_PRIO, const int messageTimeToLive = KARABO_SYS_TTL);
+                   const int priority, const int messageTimeToLive);
 
             virtual ~Signal() {
+            }
+
+            template <typename ...Args>
+            void setSignature() {
+                m_argsType = std::type_index(typeid (std::tuple < Args...>));
             }
 
             size_t nRegisteredSlots() const;
@@ -59,42 +66,53 @@ namespace karabo {
              */
             bool unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction = "");
 
-            void emit0() {
-                send(karabo::util::Hash::Pointer(new karabo::util::Hash));
+            // This code is left until we find time to generically solve the char* to std::string problem
+            /*
+            template<typename ...> struct seq {
+
+            };
+
+            template<int N, typename S0, typename ...S> struct gens :
+            gens<N - 1,
+            typename std::conditional<std::is_same<S0, char const *>::value, std::string, S0>::type, S...> {
+
+            };
+
+            template<typename S0, typename ...S> struct gens < 0, S0, S...> {
+
+                typedef seq < S0, S...> type;
+            };
+
+            template<typename ... S>
+            bool comp_types(seq<S...>) {
+                std::clog << m_argsType.name() << std::endl;
+                return std::type_index(typeid (std::tuple < S...>)) == m_argsType;
+            }
+             */
+
+            template <typename ...Args>
+            void emit(const karabo::util::Hash::Pointer& message) {
+
+                doEmit(message);
+                // Remove above line and uncomment this once type issue is solved
+                /*
+                if (comp_types(typename gens<sizeof ... (Args), Args...>::type())) {
+                    doEmit(message);
+                } else {
+                    throw KARABO_PARAMETER_EXCEPTION("Provided arguments do not fit registered signature");
+                }
+                 */
             }
 
-            template <class A1>
-            void emit1(const A1& a1) {
-                karabo::util::Hash::Pointer message(new karabo::util::Hash("a1", a1));
-                send(message);
-            }
-
-            template <class A1, class A2>
-            void emit2(const A1& a1, const A2& a2) {
-                karabo::util::Hash::Pointer message(new karabo::util::Hash("a1", a1, "a2", a2));
-                send(message);
-            }
-
-            template <class A1, class A2, class A3>
-            void emit3(const A1& a1, const A2& a2, const A3& a3) {
-                karabo::util::Hash::Pointer message(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
-                send(message);
-            }
-
-            template <class A1, class A2, class A3, class A4>
-            void emit4(const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
-                karabo::util::Hash::Pointer message(new karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
-                send(message);
-            }
-
-            //private:
         protected:
 
             void updateConnectedSlotsString();
 
-            void send(const karabo::util::Hash::Pointer& message);
-
             karabo::util::Hash::Pointer prepareHeader() const;
+
+        private:
+
+            void doEmit(const karabo::util::Hash::Pointer& message);
 
         protected:
 
@@ -108,8 +126,11 @@ namespace karabo {
             std::map<std::string, std::set<std::string> > m_registeredSlots;
             int m_priority;
             int m_messageTimeToLive;
-        };
 
+        private:
+
+            std::type_index m_argsType;
+        };
     } // namespace xms
 } // namespace karabo
 

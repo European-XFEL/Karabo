@@ -124,9 +124,9 @@ namespace karabo {
             m_lastIndex = determineLastIndex(m_deviceToBeLogged);
 
             // Register slots
-            SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
-            SLOT2(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
-            SLOT2(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
+            KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
+            KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
+            KARABO_SLOT(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
 
             connect(m_deviceToBeLogged, "signalChanged", "", "slotChanged");
             connect(m_deviceToBeLogged, "signalStateChanged", "", "slotChanged");
