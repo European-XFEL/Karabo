@@ -86,7 +86,7 @@ class Tests(DeviceTest):
         self.assertEqual(a_desc.allowedStates, {State.INIT, State.UNKNOWN})
 
         self.assertEqual(len(proxy.table), 1)
-        self.assertEqual(proxy.table[0]["d"], 5)
+        self.assertEqual(proxy.table[0]["d"], 5 * unit.meter)
 
         with proxy:
             yield from proxy.setA()
@@ -115,7 +115,7 @@ class Tests(DeviceTest):
             self.assertEqual(len(proxy.table), 1)
             yield from waitUntilNew(proxy.table)
             self.assertEqual(len(proxy.table), 2)
-            self.assertEqual(proxy.table[1]["d"], 7)
+            self.assertEqual(proxy.table[1]["d"], 7 * unit.meter)
             self.assertEqual(proxy.table[0]["s"], "african")
 
         yield from proxy.backfire()

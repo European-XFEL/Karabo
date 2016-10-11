@@ -15,6 +15,8 @@ class TestDevice(PythonDevice):
         tableSchema = Schema()
         (
             DOUBLE_ELEMENT(tableSchema).key("d")
+            .unit(METER)
+            .metricPrefix(KILO)
             .assignmentOptional()
             .noDefaultValue()
             .commit(),
