@@ -274,7 +274,7 @@ class VectorStringValue(KaraboValue, list):
 
 
 class TableValue(KaraboValue):
-    """This wraps numpy structured arrays. Pint cannot deal with them"""
+    """This wraps numpy structured arrays. Pint cannot deal with them."""
     def __init__(self, value, units, **kwargs):
         super(TableValue, self).__init__(value, **kwargs)
         self.value = value
@@ -282,23 +282,22 @@ class TableValue(KaraboValue):
 
     def __getitem__(self, item):
         val = self.value[item]
+        units = self.units
         if isinstance(item, str):
-            units = self.units[item]
-        else:
-            units = self.units
-            if self.value.dtype.fields is not None:
-                return TableValue(val, units=units, timestamp=self.timestamp)
-
-        if not isinstance(val, numpy.ndarray) or not (
-                val.base is self.value or val.base is self.value.base) or (
-                val.dtype.char != "O"):
-            ret = wrap(val)
-            ret.timestamp = self.timestamp
-            if isinstance(ret, QuantityValue):
-                return QuantityValue(ret, unit=units[0], metricPrefix=units[1])
-            return ret
-        else:
+            units = units[item]
+        elif self.value.dtype.fields is not None:
             return TableValue(val, units, timestamp=self.timestamp)
+
+        if isinstance(val, numpy.ndarray) and (
+                val.base is self.value or val.base is self.value.base) and (
+                val.dtype.char == "O"):
+            return TableValue(val, units, timestamp=self.timestamp)
+
+        ret = wrap(val)
+        ret.timestamp = self.timestamp
+        if isinstance(ret, QuantityValue):
+            return QuantityValue(ret, unit=units[0], metricPrefix=units[1])
+        return ret
 
     def __len__(self):
         return len(self.value)
