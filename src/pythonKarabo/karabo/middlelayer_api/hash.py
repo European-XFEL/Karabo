@@ -607,6 +607,7 @@ class Vector(Type):
 
 class NumpyVector(Vector):
     vstrs = { }
+    numpy = np.object_
 
     @classmethod
     def register(cls, name, dict):
@@ -1101,6 +1102,11 @@ class VectorHash(Vector):
 
         self.dtype = np.dtype([(k, Type.fromname[a["valueType"]].numpy)
                                for k, v, a in rowSchema.hash.iterall()])
+        self.coltypes = {k: Type.fromname[a["valueType"]](strict=False, **a)
+                         for k, v, a in rowSchema.hash.iterall()}
+        self.units = {k: (a.get("unitSymbol", None),
+                          a.get("metricPrefixSymbol", MetricPrefix.NONE))
+                      for k, _, a in rowSchema.hash.iterall()}
 
     @classmethod
     def read(cls, file):
@@ -1118,10 +1124,12 @@ class VectorHash(Vector):
                 data = data.value
             table = np.array(data, dtype=self.dtype)
         else:
-            table = np.array([tuple(row[k] for k in self.dtype.names)
-                              for row in data], dtype=self.dtype)
-        return basetypes.QuantityValue(table, descriptor=self,
-                                       timestamp=timestamp)
+            l = [tuple(self.coltypes[k].toKaraboValue(row[k], strict=False)
+                       for k in self.dtype.names)
+                 for row in data]
+            table = np.array(l, dtype=self.dtype)
+        return basetypes.TableValue(table, descriptor=self, units=self.units,
+                                    timestamp=timestamp)
 
     def toDataAndAttrs(self, value):
         data = [Hash((col, row[col]) for col in self.dtype.names)
