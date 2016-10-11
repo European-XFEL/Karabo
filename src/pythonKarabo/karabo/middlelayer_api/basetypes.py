@@ -296,7 +296,9 @@ class TableValue(KaraboValue):
         ret = wrap(val)
         ret.timestamp = self.timestamp
         if isinstance(ret, QuantityValue):
-            return QuantityValue(ret, unit=units[0], metricPrefix=units[1])
+            return QuantityValue(ret.value, unit=units[0],
+                                 metricPrefix=units[1],
+                                 timestamp=self.timestamp)
         return ret
 
     def __len__(self):

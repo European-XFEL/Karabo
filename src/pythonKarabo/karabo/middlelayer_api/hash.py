@@ -1124,7 +1124,7 @@ class VectorHash(Vector):
                 data = data.value
             table = np.array(data, dtype=self.dtype)
         else:
-            l = [tuple(self.coltypes[k].toKaraboValue(row[k], strict=False)
+            l = [tuple(self.coltypes[k].toKaraboValue(row[k], False).value
                        for k in self.dtype.names)
                  for row in data]
             table = np.array(l, dtype=self.dtype)
