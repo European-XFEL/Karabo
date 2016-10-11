@@ -207,8 +207,8 @@ namespace karabo {
                 // Establish connection (and define sub-type of server)
                 // util::weak_bind does not compile here - problem to identify its return type with the
                 // boost::function expected by connection->startAsync(..)
-                // That is a problem if the 'connection' lives longer than 'this' InputChannel in the following line.
-                // But that cannot happen here since 'connection' is not kept alive outside from here.
+                // FIXME: This is a danger in case this InputChannel is already destroyed before the
+                //        connection is established.
                 connection->startAsync(boost::bind(&InputChannel::onConnect, this, _1, connection, outputChannelInfo, _2));
             }
         }
@@ -431,10 +431,11 @@ namespace karabo {
                     // No mutex under callback
                     KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering IOEvent";
                     m_ioService.post(util::bind_weak(&InputChannel::triggerIOEvent, this));
-                } else { // Data complete on both pots now
-                    // triggerIOEvent will be called by the update of the triggerIOEvent
-                    // that is processing the active pot now
                 }
+                //else { // Data complete on both pots now
+                // triggerIOEvent will be called by the update of the triggerIOEvent
+                // that is processing the active pot now
+                //}
                 channel->readAsyncHashVector(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this, _1, channel, _2, _3));
             } catch (const karabo::util::Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onTcpChannelRead " << e;
