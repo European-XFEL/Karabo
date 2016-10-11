@@ -273,26 +273,6 @@ class VectorStringValue(KaraboValue, list):
         return self
 
 
-class ColumnValue(KaraboValue):
-    def __init__(self, value, unit, **kwargs):
-        super(ColumnValue, self).__init__(value, **kwargs)
-        self.value = value
-        self.unit = unit
-
-    def __getitem__(self, item):
-        val = self.value[item]
-        units = self.unit
-        if isinstance(val, numpy.ndarray) and (val.base is self.value or
-                                               val.base is self.value.base):
-            return ColumnValue(val, unit=units, timestamp=self.timestamp)
-        else:
-            ret = wrap(val)
-            ret.timestamp = self.timestamp
-            if isinstance(ret, QuantityValue):
-                return QuantityValue(ret, unit=units[0], metricPrefix=units[1])
-            return ret
-
-
 class TableValue(KaraboValue):
     """This wraps numpy structured arrays. Pint cannot deal with them"""
     def __init__(self, value, units, **kwargs):
@@ -306,19 +286,19 @@ class TableValue(KaraboValue):
             units = self.units[item]
         else:
             units = self.units
-            return TableValue(val, units=units, timestamp=self.timestamp)
+            if self.value.dtype.fields is not None:
+                return TableValue(val, units=units, timestamp=self.timestamp)
 
-        if not isinstance(val, numpy.ndarray):
+        if not isinstance(val, numpy.ndarray) or not (
+                val.base is self.value or val.base is self.value.base) or (
+                val.dtype.char != "O"):
             ret = wrap(val)
             ret.timestamp = self.timestamp
             if isinstance(ret, QuantityValue):
                 return QuantityValue(ret, unit=units[0], metricPrefix=units[1])
             return ret
-        elif val.dtype.char != "O":
-            return QuantityValue(val, unit=units[0], metricPrefix=units[1],
-                                 timestamp=self.timestamp)
         else:
-            return ColumnValue(val, unit=units, timestamp=self.timestamp)
+            return TableValue(val, units, timestamp=self.timestamp)
 
     def __len__(self):
         return len(self.value)
