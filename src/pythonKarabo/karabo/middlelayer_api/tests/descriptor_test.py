@@ -1,6 +1,7 @@
 from enum import Enum
 from unittest import TestCase, main
 
+import numpy
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
@@ -254,16 +255,23 @@ class Tests(TestCase):
         self.assertEqual(len(v), 3)
 
     def test_vector_hash(self):
-        rowSchema = Hash("i", None, "d", None)
+        rowSchema = Hash("i", None, "s", None, "v", None)
         rowSchema["i", "valueType"] = "INT32"
-        rowSchema["d", "valueType"] = "DOUBLE"
+        rowSchema["s", "valueType"] = "STRING"
+        rowSchema["v", "valueType"] = "VECTOR_DOUBLE"
 
         d = VectorHash(rowSchema=Schema("rs", hash=rowSchema))
-        v = d.toKaraboValue([(3, 4), (2.5, 8.5)])
+        v = d.toKaraboValue([(3, "hallo", numpy.arange(5, dtype=float)),
+                             (2.5, "bla", numpy.array([], dtype=float))])
         self.assertEqual(len(v), 2)
         self.assertEqual(v[1]["i"], 2)
-        self.assertEqual(v[1]["d"], 8.5)
-        self.assertEqual(v.dtype.names, ("i", "d"))
+        self.assertEqual(v[1]["s"], "bla")
+        self.assertEqual(len(v[0]["v"]), 5)
+        self.assertEqual(v[0]["v"].dtype, float)
+        self.assertEqual(v[0]["v"][2], 2)
+        self.assertEqual(len(v[1]["v"]), 0)
+        self.assertEqual(v[1]["v"].dtype, float)
+        self.assertEqual(v.dtype.names, ("i", "s", "v"))
         d.toKaraboValue(v)
         data, _ = d.toDataAndAttrs(v)
         self.assertEqual(len(data), 2)
@@ -272,7 +280,20 @@ class Tests(TestCase):
         h["a"] = data
         self.assertEqual(h["a"][0]["i"], 3)
         self.assertEqual(h["a"][1]["i"], 2)
-        self.assertEqual(h["a"][1]["d"], 8.5)
+        self.assertEqual(h["a"][1]["s"], "bla")
+        self.assertEqual(h["a"][0]["v"].dtype, float)
+
+        v = d.toKaraboValue(h["a"], strict=False)
+        self.assertEqual(len(v), 2)
+        self.assertEqual(v[1]["i"], 2)
+        self.assertEqual(v[1]["s"], "bla")
+        self.assertEqual(len(v[0]["v"]), 5)
+        self.assertEqual(v[0]["v"].dtype, float)
+        self.assertEqual(v[0]["v"][2], 2)
+        self.assertEqual(len(v[1]["v"]), 0)
+        self.assertEqual(v[1]["v"].dtype, float)
+        self.assertEqual(v.dtype.names, ("i", "s", "v"))
+        d.toKaraboValue(v)
 
     def test_general(self):
         d = UInt64(accessMode=AccessMode.READONLY)
