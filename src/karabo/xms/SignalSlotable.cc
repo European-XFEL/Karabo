@@ -83,73 +83,18 @@ namespace karabo {
         }
 
 
-        SignalSlotable::Caller::Caller(const SignalSlotable* signalSlotable) : m_signalSlotable(signalSlotable) {
-        }
-
-
-        void SignalSlotable::Caller::sendMessage(const std::string& slotInstanceId,
-                                                 const std::string& slotFunction,
-                                                 const karabo::util::Hash::Pointer& body) const {
-            try {
-                if (!m_signalSlotable)
-                    throw KARABO_PARAMETER_EXCEPTION("Caller::sendMessage: m_signalSlotable = 0");
-                // Empty slotInstanceId means self messaging:
-                const std::string& instanceId = (slotInstanceId.empty() ? m_signalSlotable->getInstanceId() : slotInstanceId);
-                m_signalSlotable->doSendMessage(instanceId, this->prepareHeader(instanceId, slotFunction),
-                                                body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
-            } catch (...) {
-                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(m_signalSlotable->getInstanceId() + " has problems sending "
-                                                           " to '" + slotInstanceId + "' (slotFunction: '" + slotFunction + "')."));
-            }
-        }
-
-
-        karabo::util::Hash::Pointer SignalSlotable::Caller::prepareHeader(const std::string& slotInstanceId,
-                                                                          const std::string& slotFunction) const {
-            karabo::util::Hash::Pointer header(new Hash);
-            header->set("signalInstanceId", m_signalSlotable->getInstanceId());
+        karabo::util::Hash::Pointer SignalSlotable::prepareCallHeader(const std::string& slotInstanceId,
+                                                                      const std::string& slotFunction) const {
+            auto header = boost::make_shared<Hash>();
+            header->set("signalInstanceId", m_instanceId);
             header->set("signalFunction", "__call__");
             header->set("slotInstanceIds", "|" + slotInstanceId + "|");
             header->set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
             header->set("hostName", boost::asio::ip::host_name());
-            header->set("userName", m_signalSlotable->getUserName());
+            header->set("userName", m_username);
             // Timestamp added to be able to measure latencies even if broker is by-passed
-            header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
+            header->set("MQTimestamp", getEpochMillis());
             return header;
-        }
-
-
-        void SignalSlotable::Requestor::Receiver::receive(SignalSlotable::Requestor *ss) {
-            try {
-                Hash::Pointer header, body;
-                ss->receiveResponse(header, body);
-                if (header->has("error") && header->get<bool>("error")) {
-                    string filename;
-                    string function;
-                    int lineNo = 0;
-                    try {
-                        filename = body->get<std::string>("a2");
-                    } catch (...) {
-                    }
-                    try {
-                        function = body->get<string>("a3");
-                    } catch (...) {
-                    }
-                    try {
-                        lineNo = body->get<int>("a4");
-                    } catch (...) {
-                    }
-                    throw RemoteException(body->get<string>("a1"), header->get<string>("signalInstanceId"), filename, function, lineNo);
-                }
-                inner(body);
-            } catch (const karabo::util::TimeoutException&) {
-                KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
-            } catch (const karabo::util::CastException &) {
-                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));
-            } catch (const karabo::util::Exception& e) {
-                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error whilst receiving message on instance \"" + ss->m_signalSlotable->getInstanceId() + "\""));
-            }
-
         }
 
 
@@ -359,7 +304,7 @@ namespace karabo {
                 if (header->has("MQTimestamp")) {
                     boost::mutex::scoped_lock lock(m_latencyMutex);
                     const long long latency = getEpochMillis() - header->get<long long>("MQTimestamp");
-                    const unsigned int posLatency = static_cast<unsigned int>(std::max(latency, 0ll));
+                    const unsigned int posLatency = static_cast<unsigned int> (std::max(latency, 0ll));
                     m_brokerLatency.add(posLatency);
                 }
             }
@@ -629,7 +574,7 @@ namespace karabo {
                         if (header.has("MQTimestamp")) {
                             boost::mutex::scoped_lock lock(m_latencyMutex);
                             const long long latency = getEpochMillis() - header.get<long long>("MQTimestamp");
-                            const unsigned int posLatency = static_cast<unsigned int>(std::max(latency, 0ll));
+                            const unsigned int posLatency = static_cast<unsigned int> (std::max(latency, 0ll));
                             m_processingLatency.add(posLatency);
                         }
                     }
@@ -804,10 +749,10 @@ namespace karabo {
 
             // The heartbeat signal goes through a different topic, so we
             // cannot use the normal registerSignal.
-            SignalInstancePointer heartbeatSignal(new karabo::xms::Signal(this, m_heartbeatProducerChannel, m_instanceId, "signalHeartbeat", 9));
-            storeSignal("signalHeartbeat", heartbeatSignal);
-            boost::function<void (const string&, const int&, const Hash&) > f = boost::bind(&Signal::emit3<string, int, Hash>, heartbeatSignal, _1, _2, _3);
-            m_emitFunctions.set("signalHeartbeat", f);
+            storeSignal("signalHeartbeat", boost::make_shared<Signal>(this, m_heartbeatProducerChannel,
+                                                                      m_instanceId, "signalHeartbeat", KARABO_SYS_PRIO,
+                                                                      KARABO_SYS_TTL));
+
 
             // Listener for heartbeats
             KARABO_SLOT3(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
@@ -1614,6 +1559,14 @@ namespace karabo {
         }
 
 
+        SignalSlotable::SignalInstancePointer SignalSlotable::getSignal(const std::string& signalFunction) const {
+            boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
+            auto it = m_signalInstances.find(signalFunction);
+            if (it != m_signalInstances.end()) return it->second;
+            return SignalInstancePointer();
+        }
+
+
         void SignalSlotable::trackExistenceOfInstance(const std::string & instanceId) {
 
             if (instanceId == "" || instanceId == m_instanceId) return;
@@ -1644,20 +1597,6 @@ namespace karabo {
             std::string instanceId = signalOrSlotId.substr(0, pos);
             std::string functionName = signalOrSlotId.substr(pos);
             return std::make_pair(instanceId, functionName);
-        }
-
-
-        SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction, int priority, int messageTimeToLive) {
-            {
-                boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-                if (m_signalInstances.find(signalFunction) != m_signalInstances.end()) {
-                    SignalInstancePointer s;
-                    return s;
-                }
-            }
-            SignalInstancePointer s(new Signal(this, m_producerChannel, m_instanceId, signalFunction, priority, messageTimeToLive));
-            storeSignal(signalFunction, s);
-            return s;
         }
 
 

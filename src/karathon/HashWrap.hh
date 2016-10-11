@@ -206,6 +206,31 @@ namespace karathon {
     bool
     similarWrap(const bp::object& left, const bp::object& right);
 
+    // implementation details, users never invoke these directly
+    namespace detail {
+
+        inline void packPy_r(karabo::util::Hash& hash, char i) {
+        }
+
+        template <class Tfirst, class ... Trest>
+        inline void packPy_r(karabo::util::Hash& hash, char i, const Tfirst& first, const Trest & ... rest) {
+            char name[4] = "a ";
+            name[1] = i;
+            // Besides this line the code is code is identical to its C++ version
+            HashWrap::set(hash, name, first);
+            detail::packPy_r(hash, i + 1, rest...);
+        }
+    }
+
+    /**
+     * Pack the parameters into a hash for transport over the network.
+     * @param hash Will be filled with keys a1, a2, etc. and associated values
+     * @param args Any type and number of arguments to associated to hash keys
+     */
+    template <class ... Ts>
+    inline void packPy(karabo::util::Hash& hash, const Ts& ... args) {
+        detail::packPy_r(hash, '1', args...);
+    }
 }
 
 // Define 'bp::object' specialization for templated constructors of Hash class

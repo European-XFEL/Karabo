@@ -256,22 +256,22 @@ namespace karathon {
 
         void executeNoWaitPy1(std::string instanceId, const std::string& functionName, const bp::object& a1) const {
             ScopedGILRelease nogil;
-            m_signalSlotableWrap->callPy1(instanceId, functionName, a1);
+            m_signalSlotableWrap->callPy(instanceId, functionName, a1);
         }
 
         void executeNoWaitPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2) const {
             ScopedGILRelease nogil;
-            m_signalSlotableWrap->callPy2(instanceId, functionName, a1, a2);
+            m_signalSlotableWrap->callPy(instanceId, functionName, a1, a2);
         }
 
         void executeNoWaitPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3) const {
             ScopedGILRelease nogil;
-            m_signalSlotableWrap->callPy3(instanceId, functionName, a1, a2, a3);
+            m_signalSlotableWrap->callPy(instanceId, functionName, a1, a2, a3);
         }
 
         void executeNoWaitPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) const {
             ScopedGILRelease nogil;
-            m_signalSlotableWrap->callPy4(instanceId, functionName, a1, a2, a3, a4);
+            m_signalSlotableWrap->callPy(instanceId, functionName, a1, a2, a3, a4);
         }
 
         bp::tuple executePy0(std::string instanceId, const std::string& functionName, int timeout = -1) {
@@ -293,7 +293,7 @@ namespace karathon {
             bp::tuple result;
 
             try {
-                result = m_signalSlotableWrap->requestPy1(instanceId, functionName, a1).waitForReply(timeout * 1000);
+                result = m_signalSlotableWrap->requestPy(instanceId, functionName, a1).waitForReply(timeout * 1000);
             } catch (const karabo::util::Exception& e) {
                 return bp::make_tuple(false, e.userFriendlyMsg());
             }
@@ -306,7 +306,7 @@ namespace karathon {
             bp::tuple result;
 
             try {
-                result = m_signalSlotableWrap->requestPy2(instanceId, functionName, a1, a2).waitForReply(timeout * 1000);
+                result = m_signalSlotableWrap->requestPy(instanceId, functionName, a1, a2).waitForReply(timeout * 1000);
             } catch (const karabo::util::Exception& e) {
                 return bp::make_tuple(false, e.userFriendlyMsg());
             }
@@ -319,7 +319,7 @@ namespace karathon {
             bp::tuple result;
 
             try {
-                result = m_signalSlotableWrap->requestPy3(instanceId, functionName, a1, a2, a3).waitForReply(timeout * 1000);
+                result = m_signalSlotableWrap->requestPy(instanceId, functionName, a1, a2, a3).waitForReply(timeout * 1000);
             } catch (const karabo::util::Exception& e) {
                 return bp::make_tuple(false, e.userFriendlyMsg());
             }
@@ -332,7 +332,7 @@ namespace karathon {
             bp::tuple result;
 
             try {
-                result = m_signalSlotableWrap->requestPy4(instanceId, functionName, a1, a2, a3, a4).waitForReply(timeout * 1000);
+                result = m_signalSlotableWrap->requestPy(instanceId, functionName, a1, a2, a3, a4).waitForReply(timeout * 1000);
             } catch (const karabo::util::Exception& e) {
                 return bp::make_tuple(false, e.userFriendlyMsg());
             }

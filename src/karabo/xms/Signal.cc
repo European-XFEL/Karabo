@@ -17,13 +17,14 @@ namespace karabo {
 
         Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel,
                        const std::string& signalInstanceId, const std::string& signalFunction,
-                       const int priority, const int messageTimeToLive)
-            : m_signalSlotable(const_cast<SignalSlotable*> (signalSlotable))
-            , m_channel(channel)
-            , m_signalInstanceId(signalInstanceId)
-            , m_signalFunction(signalFunction)
-            , m_priority(priority)
-            , m_messageTimeToLive(messageTimeToLive) {
+                       const int priority, const int messageTimeToLive) :
+            m_signalSlotable(const_cast<SignalSlotable*> (signalSlotable)),
+            m_channel(channel),
+            m_signalInstanceId(signalInstanceId),
+            m_signalFunction(signalFunction),
+            m_priority(priority),
+            m_messageTimeToLive(messageTimeToLive),
+            m_argsType(typeid (karabo::util::Types::NONE)) {
             updateConnectedSlotsString();
         }
 
@@ -35,7 +36,7 @@ namespace karabo {
                 m_registeredSlotsString = "__none__";
                 m_registeredSlotInstanceIdsString = "__none__";
             } else {
-                for (std::map<std::string, std::set<std::string> >::const_iterator it = m_registeredSlots.begin(); it != m_registeredSlots.end(); ++it) {
+                for (auto it = m_registeredSlots.begin(); it != m_registeredSlots.end(); ++it) {
                     m_registeredSlotInstanceIdsString += "|" + it->first + "|";
                     m_registeredSlotsString += "|" + it->first + ":" + karabo::util::toString(it->second) + "|";
                 }
@@ -55,7 +56,7 @@ namespace karabo {
 
 
         bool Signal::unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
-            std::map<std::string, std::set<std::string> >::iterator it = m_registeredSlots.find(slotInstanceId);
+            auto it = m_registeredSlots.find(slotInstanceId);
             bool didErase = false;
             if (it != m_registeredSlots.end()) {
                 if (slotFunction.empty()) {
@@ -71,7 +72,7 @@ namespace karabo {
         }
 
 
-        void Signal::send(const karabo::util::Hash::Pointer& message) {
+        void Signal::doEmit(const karabo::util::Hash::Pointer& message) {
             using namespace karabo::util;
             try {
                 karabo::util::Hash::Pointer header = prepareHeader();
