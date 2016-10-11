@@ -204,6 +204,8 @@ class Tests(TestCase):
         self.assertEqual(t.timestamp, self.t2)
         self.assertEqual(t["i"][0], 3 * unit.millimeter)
         self.assertEqual(t["i"][0].timestamp, self.t2)
+        self.assertEqual((2 * t["i"])[1], 4 * unit.millimeter)
+        self.assertEqual((2 * t["i"]).timestamp, self.t2)
         self.assertEqual(t["o"][0], "asdf")
         self.assertEqual(t["o"][0].timestamp, self.t2)
         self.assertEqual(t["o"][1][3], 3 * unit.kilogram)
