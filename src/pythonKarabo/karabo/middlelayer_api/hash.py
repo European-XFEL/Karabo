@@ -554,7 +554,7 @@ class Type(Descriptor, Registry):
             cls._hashname = s.rstrip('_')
             cls.fromname[cls.hashname()] = cls
         if 'numpy' in dict:
-            cls.strs[cls.numpy().dtype.str] = cls
+            cls.strs[np.dtype(cls.numpy).str] = cls
 
     @classmethod
     def toString(cls, data):
@@ -977,6 +977,7 @@ class String(Enumable, Type):
     supposed to be used for all human-readable strings, so for
     everything except binary data."""
     number = 28
+    numpy = np.object_  # strings better be stored as objects in numpy tables
 
     @classmethod
     def read(cls, file):
