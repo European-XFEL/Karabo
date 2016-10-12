@@ -271,9 +271,6 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("getBrokerHost", &SignalSlotableWrap::getBrokerHost)
             .def("getBrokerHosts", &SignalSlotableWrap::getBrokerHosts)
             .def("getBrokerTopic", &SignalSlotableWrap::getBrokerTopic)
-
-            .def("registerLastCommandHandler", &SignalSlotableWrap::registerLastCommandHandlerPy
-                 , (bp::arg("handler") = bp::object()))
             ;
 }
 
