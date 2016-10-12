@@ -83,6 +83,14 @@ namespace karabo {
         private:
 
             void build(const std::string& args);
+            
+            /**
+             * This device may not be locked
+             * @return false
+             */
+            bool allowLock() const {
+                return false;
+            }
 
         };
 
