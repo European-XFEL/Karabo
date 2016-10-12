@@ -45,6 +45,10 @@
       <itemPath>../../../src/karabo/devices/ProjectManager.hh</itemPath>
       <itemPath>../../../src/karabo/devices/PropertyTest.cc</itemPath>
       <itemPath>../../../src/karabo/devices/PropertyTest.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/RunConfigurationGroup.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/RunConfigurationGroup.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/RunConfigurator.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/RunConfigurator.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f2" displayName="io" projectFiles="true">
       <logicalFolder name="f1" displayName="h5" projectFiles="true">
@@ -696,6 +700,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/PropertyTest.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/RunConfigurationGroup.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/RunConfigurationGroup.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/RunConfigurator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/RunConfigurator.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2643,6 +2667,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/PropertyTest.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/RunConfigurationGroup.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/RunConfigurationGroup.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/RunConfigurator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/RunConfigurator.hh"
             ex="false"
             tool="3"
             flavor2="0">
