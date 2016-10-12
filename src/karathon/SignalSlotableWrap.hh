@@ -23,7 +23,7 @@ namespace bp = boost::python;
 namespace karathon {
 
     class SignalSlotableWrap : public karabo::xms::SignalSlotable {
-
+        
     public:
 
         class RequestorWrap : public karabo::xms::SignalSlotable::Requestor {
@@ -318,17 +318,13 @@ namespace karathon {
             registerEndOfStreamHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnEndOfStreamEventHandler, this, handler, _1));
         }
 
-        void registerLastCommandHandlerPy(const bp::object& handler) {
-            registerLastCommandHandler(boost::bind(&SignalSlotableWrap::proxyLastCommandHandler, this, handler, _1));
-        }
-
     private:
 
         void proxyInstanceNotAvailableHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
         void proxyInstanceAvailableAgainHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-        void proxyExceptionHandler(const bp::object& handler, const karabo::util::Exception& e);       
+        void proxyExceptionHandler(const bp::object& handler, const karabo::util::Exception& e);
 
         bool proxySlotCallGuardHandler(const bp::object&, const std::string&);
 
@@ -341,8 +337,6 @@ namespace karathon {
         void proxyOnDataAvailableHandler(const bp::object& handler, const karabo::util::Hash::Pointer& data);
 
         void proxyOnEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
-
-        void proxyLastCommandHandler(const bp::object& handler, const std::string& slotFunction);
 
     private: // members
         boost::thread m_eventLoop;
