@@ -1516,6 +1516,7 @@ if (nodeData) {\
             return cacheAndGetConfiguration(instanceId).hasAttribute(key, attribute, keySep);
         }
         
+        
         karabo::util::Hash DeviceClient::getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName){
             const Schema& schema = cacheAndGetDeviceSchema(deviceId);
             Validator::ValidationRules rules;
@@ -1549,7 +1550,21 @@ if (nodeData) {\
             }
         }
         
-               
+        std::vector<std::string> DeviceClient::getOutputChannelNames(const std::string & deviceId) {
+            // Request vector of names
+            vector<string> names;
+            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(names);
+
+            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+
+            try {
+                p->request(deviceId, "slotGetOutputChannelNames").timeout(m_internalTimeout).receive(names); // Retrieves vector of names
+            } catch (const TimeoutException&) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Output channel names request for instance \"" << deviceId << "\" timed out";
+                Exception::clearTrace();
+            }
+            return names;
+        }
 
 #undef KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN
 

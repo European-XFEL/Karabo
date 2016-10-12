@@ -205,7 +205,10 @@ namespace karabo {
                     std::pair<std::string, Types::ReferenceType> attr = this->readXmlAttribute(std::string(it->value()));
                     Hash::Attributes::Node& attrNode = attrs.set<std::string > (it->name(), attr.first); // Sets as string
                     if (attr.second != Types::UNKNOWN && m_readDataTypes) {
-                        attrNode.setType(attr.second); // Shapes it into correct type
+                        if (attr.second == Types::SCHEMA)
+                            attrNode.setType(Types::STRING);
+                        else
+                            attrNode.setType(attr.second); // Shapes it into correct type
                     }
                 }
             }
