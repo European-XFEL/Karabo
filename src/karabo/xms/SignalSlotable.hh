@@ -752,11 +752,13 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             //TODO: make this function private: it is for internal use
             const OutputChannels& getOutputChannels() const;
+            
+            std::vector<std::string> getOutputChannelNames() const;
 
             const OutputChannel::Pointer& getOutputChannel(const std::string& name);
 
             const InputChannel::Pointer& getInputChannel(const std::string& name);
-
+            
             void registerInputHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&) >& handler);
 
             void registerDataHandler(const std::string& channelName, const boost::function<void (const karabo::util::Hash::Pointer&) >& handler);
@@ -1040,6 +1042,8 @@ KARABO_SLOT0(__VA_ARGS__) \
             bool tryToCallP2P(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body, int prio) const;
 
             void channelErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info);
+            
+            std::vector<std::string> slotGetOutputChannelNames();
         };
 
         template <typename ...Args>
