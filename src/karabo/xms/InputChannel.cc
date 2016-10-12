@@ -205,11 +205,7 @@ namespace karabo {
                 karabo::net::Connection::Pointer connection = karabo::net::Connection::create(config);
 
                 // Establish connection (and define sub-type of server)
-                // util::weak_bind does not compile here - problem to identify its return type with the
-                // boost::function expected by connection->startAsync(..)
-                // FIXME: This is a danger in case this InputChannel is already destroyed before the
-                //        connection is established.
-                connection->startAsync(boost::bind(&InputChannel::onConnect, this, _1, connection, outputChannelInfo, _2));
+                connection->startAsync(karabo::util::bind_weak(&InputChannel::onConnect, this, _1, connection, outputChannelInfo, _2));
             }
         }
 
