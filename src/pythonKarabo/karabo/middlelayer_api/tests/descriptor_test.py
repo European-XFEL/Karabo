@@ -255,14 +255,18 @@ class Tests(TestCase):
         self.assertEqual(len(v), 3)
 
     def test_vector_hash(self):
-        rowSchema = Hash("i", None, "s", None, "v", None)
+        rowSchema = Hash("i", None, "s", None, "v", None, "b", None, "a", None)
         rowSchema["i", "valueType"] = "INT32"
         rowSchema["s", "valueType"] = "STRING"
+        rowSchema["b", "valueType"] = "VECTOR_CHAR"
+        rowSchema["a", "valueType"] = "BYTE_ARRAY"
         rowSchema["v", "valueType"] = "VECTOR_DOUBLE"
 
         d = VectorHash(rowSchema=Schema("rs", hash=rowSchema))
-        v = d.toKaraboValue([(3, "hallo", numpy.arange(5, dtype=float)),
-                             (2.5, "bla", numpy.array([], dtype=float))])
+        v = d.toKaraboValue([(3, "hallo", numpy.arange(5, dtype=float),
+                              b"a", b"b"),
+                             (2.5, "bla", numpy.array([], dtype=float),
+                              b"", b"")])
         self.assertEqual(len(v), 2)
         self.assertEqual(v[1]["i"], 2)
         self.assertEqual(v[1]["s"], "bla")
@@ -271,7 +275,9 @@ class Tests(TestCase):
         self.assertEqual(v[0]["v"][2], 2)
         self.assertEqual(len(v[1]["v"]), 0)
         self.assertEqual(v[1]["v"].dtype, float)
-        self.assertEqual(v.dtype.names, ("i", "s", "v"))
+        self.assertEqual(v[1]["a"], b"")
+        self.assertEqual(v[0]["b"], b"a")
+        self.assertEqual(v.dtype.names, ("i", "s", "v", "b", "a"))
         d.toKaraboValue(v)
         data, _ = d.toDataAndAttrs(v)
         self.assertEqual(len(data), 2)
@@ -292,7 +298,9 @@ class Tests(TestCase):
         self.assertEqual(v[0]["v"][2], 2)
         self.assertEqual(len(v[1]["v"]), 0)
         self.assertEqual(v[1]["v"].dtype, float)
-        self.assertEqual(v.dtype.names, ("i", "s", "v"))
+        self.assertEqual(v[1]["a"], b"")
+        self.assertEqual(v[0]["b"], b"a")
+        self.assertEqual(v.dtype.names, ("i", "s", "v", "b", "a"))
         d.toKaraboValue(v)
 
     def test_general(self):
