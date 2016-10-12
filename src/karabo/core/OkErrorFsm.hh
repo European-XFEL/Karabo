@@ -39,8 +39,8 @@ namespace karabo {
             }
 
             void initFsmSlots() {
-                SLOT0(reset);
-                SLOT2(errorFound, std::string, std::string)
+                KARABO_SLOT(reset);
+                KARABO_SLOT(errorFound, std::string, std::string)
             }
 
         public:
