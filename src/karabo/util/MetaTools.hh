@@ -127,11 +127,11 @@ namespace karabo {
          * @return a wrapped version of f.
          */
         template<typename Ret, typename... Args, typename Obj>
-        std::function<void(Args&...) > exec_weak_impl(Ret(Obj::*f)(Args...), Obj* o) {
+        std::function<void(Args...) > exec_weak_impl(Ret(Obj::*f)(Args...), Obj* o) {
             typedef typename std::is_same < boost::shared_ptr<Obj>, decltype(o->shared_from_this())>::type is_same_type;
             boost::weak_ptr<Obj> wp(cond_dyn_cast<is_same_type>::template cast(o));
             //we need to copy-capture here -> otherwise segfault, because f and wp go out of scope
-            auto wrapped = [f, wp](Args&... fargs) {
+            auto wrapped = [f, wp](Args... fargs) {
 
                 auto ptr = wp.lock();
                 if (ptr) {
@@ -160,7 +160,7 @@ namespace karabo {
          * @return: bound functor, compatible with boost bind.
          */
         template< typename F, typename Obj, typename ...P>
-        auto bind_weak(const F& f, Obj * const o, const P&... p) -> decltype(boost::bind<void>(exec_weak_impl(f, o), p...)) {
+        auto bind_weak(const F& f, Obj * const o, const P... p) -> decltype(boost::bind<void>(exec_weak_impl(f, o), p...)) {
             //note that boost::arg<N>s cannot be forwarded, thus we work with references here.
             auto wrapped = exec_weak_impl(f, o);
             return boost::bind<void>(wrapped, p...);
