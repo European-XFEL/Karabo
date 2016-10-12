@@ -159,11 +159,3 @@ class Device(AlarmMixin, SignalSlotable):
     def slotGetSchema(self, onlyCurrentState):
         return self.getDeviceSchema(
             state=self.state if onlyCurrentState else None), self.deviceId
-
-    @slot
-    def slotInstanceNew(self, instanceId, info):
-        pass
-
-    @slot
-    def slotInstanceUpdated(self, instanceId, info):
-        pass
