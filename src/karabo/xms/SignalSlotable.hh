@@ -603,7 +603,7 @@ KARABO_SLOT0(__VA_ARGS__) \
              */
             template <typename ...Args>
             void emit(const std::string& signalFunction, const Args&... args) const {
-                auto s = getSignal(signalFunction);
+                SignalInstancePointer s = getSignal(signalFunction);
                 if (s) {
                     auto hash = boost::make_shared<karabo::util::Hash>();
                     pack(*hash, args...);
@@ -612,30 +612,32 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             template <typename ...Args>
-            void call(std::string instanceId, const std::string& functionName, const Args&... args) const {
-                if (instanceId.empty()) instanceId = m_instanceId;
+            void call(const std::string& instanceId, const std::string& functionName, const Args&... args) const {
+                const std::string& id = (instanceId.empty() ? m_instanceId : instanceId);
                 auto body = boost::make_shared<karabo::util::Hash>();
                 pack(*body, args...);
-                auto header = prepareCallHeader(instanceId, functionName);
-                doSendMessage(instanceId, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+                karabo::util::Hash::Pointer header = prepareCallHeader(id, functionName);
+                doSendMessage(id, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             }
 
             template <typename ...Args>
-            SignalSlotable::Requestor request(std::string instanceId, const std::string& functionName, const Args&... args) {
-                if (instanceId.empty()) instanceId = m_instanceId;
-                return SignalSlotable::Requestor(this).request(instanceId, functionName, args...);
+            SignalSlotable::Requestor request(const std::string& instanceId, const std::string& functionName,
+                                              const Args&... args) {
+                const std::string& id = (instanceId.empty() ? m_instanceId : instanceId);
+                return SignalSlotable::Requestor(this).request(id, functionName, args...);
             }
 
             template <typename ...Args>
-            SignalSlotable::Requestor requestNoWait(std::string requestInstanceId,
+            SignalSlotable::Requestor requestNoWait(const std::string& requestInstanceId,
                                                     const std::string& requestFunctionName,
-                                                    std::string replyInstanceId,
-                                                    const std::string& replyFunctionName, const Args&... args) {
-                if (requestInstanceId.empty()) requestInstanceId = m_instanceId;
-                if (replyInstanceId.empty()) replyInstanceId = m_instanceId;
-                return SignalSlotable::Requestor(this).requestNoWait(requestInstanceId,
+                                                    const std::string& replyInstanceId,
+                                                    const std::string& replyFunctionName,
+                                                    const Args&... args) {
+                const std::string& reqId = (requestInstanceId.empty() ? m_instanceId : requestInstanceId);
+                const std::string& repId = (replyInstanceId.empty() ? m_instanceId : replyInstanceId);
+                return SignalSlotable::Requestor(this).requestNoWait(reqId,
                                                                      requestFunctionName,
-                                                                     replyInstanceId,
+                                                                     repId,
                                                                      replyFunctionName,
                                                                      args...);
             }
@@ -648,9 +650,7 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             template <typename ...Args>
-            void registerSignal(const std::string& funcName) {
-                // The variadic arguments are kept for downward compatibility
-                // They however aren't used anymore
+            void registerSignal(const std::string& funcName) {                
                 addSignalIfNew < Args...>(funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL);
             }
 
@@ -664,8 +664,10 @@ KARABO_SLOT0(__VA_ARGS__) \
              * if so necessary. It is checked that the signature of the new
              * slot is the same as an already registered one.
              */
-
             void registerSlot(const boost::function<void ()>& slot, const std::string& funcName) {
+                // If the same slot name was registered under a different signature before,
+                // the dynamic_pointer_cast will return a NULL pointer and finally registerNewSlot
+                // will throw an exception.
                 auto s = boost::dynamic_pointer_cast < SlotN<void> >(findSlot(funcName));
                 if (!s) {
                     s = boost::make_shared < SlotN <void> >(funcName);
@@ -676,6 +678,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1>
             void registerSlot(const boost::function<void (const A1&) >& slot, const std::string& funcName) {
+                // About the dynamic_pointer_cast: see non-template version of registerSlot.
                 auto s = boost::dynamic_pointer_cast < SlotN<void, A1> >(findSlot(funcName));
                 if (!s) {
                     s = boost::make_shared < SlotN <void, A1> >(funcName);
@@ -686,6 +689,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2>
             void registerSlot(const boost::function<void (const A1&, const A2&) >& slot, const std::string & funcName) {
+                // About the dynamic_pointer_cast: see non-template version of registerSlot.
                 auto s = boost::dynamic_pointer_cast < SlotN<void, A1, A2> >(findSlot(funcName));
                 if (!s) {
                     s = boost::make_shared < SlotN <void, A1, A2> >(funcName);
@@ -696,6 +700,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2, class A3>
             void registerSlot(const boost::function<void (const A1&, const A2&, const A3&) >& slot, const std::string & funcName) {
+                // About the dynamic_pointer_cast: see non-template version of registerSlot.
                 auto s = boost::dynamic_pointer_cast < SlotN<void, A1, A2, A3> >(findSlot(funcName));
                 if (!s) {
                     s = boost::make_shared < SlotN <void, A1, A2, A3> >(funcName);
@@ -706,6 +711,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             template <class A1, class A2, class A3, class A4>
             void registerSlot(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& slot, const std::string & funcName) {
+                // About the dynamic_pointer_cast: see non-template version of registerSlot.
                 auto s = boost::dynamic_pointer_cast < SlotN<void, A1, A2, A3, A4> >(findSlot(funcName));
                 if (!s) {
                     s = boost::make_shared < SlotN <void, A1, A2, A3, A4> >(funcName);

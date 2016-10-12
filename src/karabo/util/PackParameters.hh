@@ -51,8 +51,7 @@ namespace karabo {
             struct unpack_impl<C> {
 
                 static std::tuple<> unpack(const karabo::util::Hash& h) {
-                    static std::tuple<> t;
-                    return t;
+                    return std::tuple<>();
                 }
             };
         }

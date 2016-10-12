@@ -49,6 +49,10 @@ namespace karabo {
             virtual ~Signal() {
             }
 
+            /**
+             * Use like setSignature<int, util::Hash, std::string>() to ensure that any emitted signal 
+             * has to take arguments of these three types in that order.
+             */
             template <typename ...Args>
             void setSignature() {
                 m_argsType = std::type_index(typeid (std::tuple < Args...>));
