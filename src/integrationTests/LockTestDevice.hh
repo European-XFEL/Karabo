@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   LockTestDevice.hh
  * Author: steffen
  *
@@ -41,13 +41,15 @@ namespace karabo {
          */
         virtual ~LockTestDevice();
 
-   
 
-        
+
+
 
     private:
-        
+
         void lockAndWait();
+        void lockAndWaitLong();
+        void lockAndWaitTimeout();
         void lockAndWaitRecursive();
         void lockAndWaitRecursiveFail();
         void initialize();

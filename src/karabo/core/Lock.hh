@@ -57,7 +57,7 @@ namespace karabo {
              * Unlock this lock
              */
             void unlock() const;
-            
+
             /**
              * Returns if this lock is currently valid. Note that the locked
              * device will be queried through the distributed system when
