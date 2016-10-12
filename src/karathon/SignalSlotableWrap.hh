@@ -59,10 +59,10 @@ namespace karathon {
                     auto body = boost::make_shared<karabo::util::Hash>();
                     packPy(*body, args...);
                     ScopedGILRelease nogil;
-                    auto header = prepareHeaderNoWait(requestSlotInstanceId,
-                                                      requestSlotFunction,
-                                                      replySlotInstanceId,
-                                                      replySlotFunction);
+                    karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId,
+                                                                             requestSlotFunction,
+                                                                             replySlotInstanceId,
+                                                                             replySlotFunction);
                     sendRequest(requestSlotInstanceId, header, body);
                 } catch (...) {
                     KARABO_RETHROW
@@ -180,13 +180,15 @@ namespace karathon {
 
         template<typename ...Args>
         void registerSignalPy(const std::string& funcName, const Args&... args) {
-            // Ignore arguments for the time being
+            // Arguments are ignored, but required to partially deduce the signature of the signal in Python:
+            // All args will always be bp::object, but at least the number of arguments defines the signal signature
             registerSignal < Args...>(funcName);
         }
 
         template<typename ...Args>
         void registerSystemSignalPy(const std::string& funcName, const Args&... args) {
-            // Ignore arguments for the time being
+            // Arguments are ignored, but required to partially deduce the signature of the signal in Python:
+            // All args will always be bp::object, but at least the number of arguments defines the signal signature
             registerSystemSignal < Args...>(funcName);
         }
 

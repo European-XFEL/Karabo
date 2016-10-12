@@ -36,7 +36,7 @@ namespace karabo {
                 m_registeredSlotsString = "__none__";
                 m_registeredSlotInstanceIdsString = "__none__";
             } else {
-                for (auto it = m_registeredSlots.begin(); it != m_registeredSlots.end(); ++it) {
+                for (auto it = m_registeredSlots.cbegin(); it != m_registeredSlots.cend(); ++it) {
                     m_registeredSlotInstanceIdsString += "|" + it->first + "|";
                     m_registeredSlotsString += "|" + it->first + ":" + karabo::util::toString(it->second) + "|";
                 }

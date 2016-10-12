@@ -216,7 +216,7 @@ namespace karathon {
         inline void packPy_r(karabo::util::Hash& hash, char i, const Tfirst& first, const Trest & ... rest) {
             char name[4] = "a ";
             name[1] = i;
-            // Besides this line the code is code is identical to its C++ version
+            // Besides the following line, 'packPy_r' is identical to the C++ version 'karabo::util::pack_r'.
             HashWrap::set(hash, name, first);
             detail::packPy_r(hash, i + 1, rest...);
         }
