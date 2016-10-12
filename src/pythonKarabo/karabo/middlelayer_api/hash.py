@@ -752,6 +752,7 @@ class VectorChar(Vector):
     Python data type is :class:`python:bytes`."""
     basetype = Char
     number = 3
+    numpy = np.object_
 
     @staticmethod
     def read(file):
@@ -787,6 +788,7 @@ class ByteArray(Vector):
     Python data type is :class:`python:bytearray`."""
     basetype = Char
     number = 37
+    numpy = np.object_
 
     @staticmethod
     def read(file):
