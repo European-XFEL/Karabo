@@ -7,7 +7,7 @@
 
 from PyQt4.QtGui import QColor, QIcon, QPixmap
 
-import icons
+from . import icons
 from karabo.common.states import State
 
 # State coloring

@@ -568,6 +568,19 @@ namespace karabo {
             }
         };
 #define KARABO_DOOCS_EXCEPTION(msg) karabo::util::DoocsException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        
+        /**
+         * The LockException handles exceptions that result from not being able to acquire a lock
+         */
+        class LockException : public Exception {
+
+            public:
+
+            LockException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
+                Exception(message, "Lock Exception", filename, function, lineNumber) {
+            }
+        };
+#define KARABO_LOCK_EXCEPTION(msg) karabo::util::LockException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
     } // namespace exception
 

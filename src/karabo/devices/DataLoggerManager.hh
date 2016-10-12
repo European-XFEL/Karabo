@@ -53,6 +53,14 @@ namespace karabo {
             void instantiateReaders(const std::string& serverId);
 
             void restartReadersAndLoggers();
+            
+            /**
+             * This device may not be locked
+             * @return false
+             */
+            bool allowLock() const {
+                return false;
+            }
 
         private: // Data
             std::vector<std::string> m_serverList;
