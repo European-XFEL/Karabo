@@ -244,8 +244,6 @@ class PythonDevice(NoFsm):
         except RuntimeError as e:
             raise RuntimeError("PythonDevice.__init__: SignalSlotable.create Exception -- {0}".format(str(e)))
 
-        self._ss.registerLastCommandHandler(self.storeLastCommand)
-
         # Setup device logger
         self.loadLogger(configuration)        
         self.log = Logger.getCategory(self.deviceid)
@@ -736,11 +734,11 @@ class PythonDevice(NoFsm):
 
     def KARABO_ON_EOS(self, channelName, handler):
         self._ss.registerEndOfStreamHandler(channelName, handler)
-    
+
     def triggerError(self, s, d):
         print("The triggerError() function is deprecated, use execute() instead")
         self.exceptionFound(s, d)
-        
+
     def execute(self, command, *args):
         if len(args) == 0:
             self._ss.call("", command)
@@ -755,9 +753,17 @@ class PythonDevice(NoFsm):
         else:
             raise AttributeError(
                 "Number of command parameters should not exceed 4")
-    
+
     def slotCallGuard(self, slotName):
-        if slotName in self.fullSchema and self.fullSchema.hasAllowedStates(slotName):
+        # Check whether the slot is mentioned in the expectedParameters
+        # as the call guard only works on those and will ignore all others
+        if slotName not in self.fullSchema:
+            return True
+
+        # Log the call of this slot by setting a parameter of the device
+        self.set("lastCommand", slotFunction);
+
+        if self.fullSchema.hasAllowedStates(slotName):
             allowedStates = self.fullSchema.getAllowedStates(slotName)
             if allowedStates:
                 currentState = self["state"]
@@ -767,7 +773,7 @@ class PythonDevice(NoFsm):
                     self._ss.reply(msg)
                     return False
         return True
-    
+
     def slotGetConfiguration(self):
         self._ss.reply(self.parameters, self.deviceid)
         
@@ -936,9 +942,6 @@ class PythonDevice(NoFsm):
                 thisinfo = self.fullSchema.getInfoForAlarm(str(key),condition)
                 info.set(str(key), thisinfo)
         return info
-
-    def storeLastCommand(self, slotFunction):
-        self.set("lastCommand", slotFunction);
 
 
     '''

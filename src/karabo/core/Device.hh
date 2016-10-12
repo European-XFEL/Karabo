@@ -104,9 +104,6 @@ namespace karabo {
             karabo::util::Schema m_fullSchema;
 
             karabo::util::AlarmCondition m_globalAlarmCondition;
-            std::set<std::string> m_bypassLockSlots;
-
-
 
         public:
 
@@ -327,9 +324,7 @@ namespace karabo {
                 m_validatorExtern.setValidationRules(rules);
 
                 // Setup device logger
-                m_log = &(karabo::log::Logger::getCategory(m_deviceId)); // TODO use later: "device." + instanceId
-
-                registerLastCommandHandler(boost::bind(&Device<FSM>::storeLastCommand, this, _1));
+                m_log = &(karabo::log::Logger::getCategory(m_deviceId)); // TODO use later: "device." + instanceId               
             }
 
             virtual ~Device() {
@@ -1106,31 +1101,21 @@ namespace karabo {
 
                 KARABO_SIGNAL2("signalAlarmUpdate", std::string, karabo::util::Hash);
 
-                //get lock by-passing slots from signal-slotable
-                m_bypassLockSlots = getBypassLockSlots();
-
                 KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
 
                 KARABO_SLOT(slotGetConfiguration)
-                m_bypassLockSlots.insert("slotGetConfiguration");
 
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
-                m_bypassLockSlots.insert("slotGetSchema");
 
                 KARABO_SLOT(slotKillDevice)
-                m_bypassLockSlots.insert("slotKillDevice");
 
                 KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
-                m_bypassLockSlots.insert("slotTimeTick");
 
                 KARABO_SLOT(slotReSubmitAlarms, karabo::util::Hash);
-                m_bypassLockSlots.insert("slotReSubmitAlarms");
 
                 KARABO_SLOT(slotUpdateSchemaAttributes, std::vector<karabo::util::Hash>);
-                m_bypassLockSlots.insert("slotUpdateSchemaAttributes");
 
                 KARABO_SLOT(slotClearLock);
-                m_bypassLockSlots.insert("slotClearLock");
             }
 
             /**
@@ -1175,53 +1160,73 @@ namespace karabo {
 
             /**
              * This function is called by SignalSlotable to verify if a slot may
-             * be called from remote.
+             * be called from remote. The function only checks slots that are
+             * mentioned in the expectedParameter section ("DeviceSlots")
              * @param slotName: name of the slot
              * @param callee: the calling remote, can be unknown
              * @return true if calling the slot is okay
              *
              * The following checks are performed:
              *
-
              * 1) Is this device locked by another device? If the lockedBy field
-             * is non-empty and does not match the callee's instance id, nor is
-             * the slotName in the bypass list (m_bypassLocks), the call will
+             * is non-empty and does not match the callee's instance id, the call will
              * be rejected
              *
              * 2) Is the slot callable from the current state, i.e. is the
-             * current state specified as an allowed state for the slot in the
-             * device schema.
+             * current state specified as an allowed state for the slot.
              */
             bool slotCallGuard(const std::string& slotName, const std::string& callee) {
                 using namespace karabo::util;
 
-                // check for lock
-                // important that we always accept calls to the service slots as given in m_bypassLockSlots
-                if (allowLock()) {
-                    const std::string& lockHolder = get<std::string>("lockedBy");
-                    if (lockHolder != "" && m_bypassLockSlots.find(slotName) == m_bypassLockSlots.end()) {
-                        KARABO_LOG_DEBUG << "Device is locked by " << lockHolder << " and called by " << callee;
-                        if (callee != "unknown" && callee != lockHolder) {
-                            std::ostringstream msg;
-                            msg << "Command " << "\"" << slotName << "\"" << " is not allowed as device is locked by "
-                                    << "\"" << lockHolder << ".";
-                            std::string errorMessage = msg.str();
-                            reply(false, errorMessage);
-                            return false;
-                        }
-                    }
-                }
-
-                std::vector<State> allowedStates;
+                // Check whether the slot is mentioned in the expectedParameters
+                // as the call guard only works on those and will ignore all others
+                bool isDeviceSlot = false;
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                    if (m_fullSchema.has(slotName) && m_fullSchema.hasAllowedStates(slotName)) {
+                    isDeviceSlot = m_fullSchema.has(slotName);
+                }
+
+                // Log the call of this slot by setting a parameter of the device
+                if (isDeviceSlot) set("lastCommand", slotName);
+
+                // Check whether the slot can be called given the current locking state
+                if (allowLock() && (isDeviceSlot || slotName == "slotReconfigure") && slotName != "slotClearLock") {
+                    if (!slotIsValidUnderCurrentLock(slotName, callee)) return false;
+                }
+
+                // Check whether the slot can be called given the current device state
+                if (isDeviceSlot) {
+                    if (!slotIsValidUnderCurrentState(slotName)) return false;
+                }
+                return true;
+            }
+
+            bool slotIsValidUnderCurrentLock(const std::string& slotName, const std::string& callee) {
+                const std::string& lockHolder = get<std::string>("lockedBy");
+                if (!lockHolder.empty()) {
+                    KARABO_LOG_DEBUG << "Device is locked by " << lockHolder << " and called by " << callee;
+                    if (callee != "unknown" && callee != lockHolder) {
+                        std::ostringstream msg;
+                        msg << "Command " << "\"" << slotName << "\"" << " is not allowed as device is locked by "
+                                << "\"" << lockHolder << ".";
+                        std::string errorMessage = msg.str();
+                        reply(false, errorMessage);
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            bool slotIsValidUnderCurrentState(const std::string& slotName) {
+                std::vector<karabo::util::State> allowedStates;
+                {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    if (m_fullSchema.hasAllowedStates(slotName)) {
                         allowedStates = m_fullSchema.getAllowedStates(slotName);
                     }
                 }
-
                 if (!allowedStates.empty()) {
-                    const State& currentState = getState();
+                    const karabo::util::State& currentState = getState();
                     if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
                         std::ostringstream msg;
                         msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state "
@@ -1530,10 +1535,6 @@ namespace karabo {
              */
             void slotClearLock() {
                 set("lockedBy", "");
-            }
-
-            void storeLastCommand(const std::string& slotFunction) {
-                set("lastCommand", slotFunction);
             }
         };
 
