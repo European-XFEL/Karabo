@@ -1124,10 +1124,14 @@ class VectorHash(Vector):
                 data = data.value
             table = np.array(data, dtype=self.dtype)
         else:
-            l = [tuple(self.coltypes[k].toKaraboValue(row[k], False).value
-                       for k in self.dtype.names)
-                 for row in data]
-            table = np.array(l, dtype=self.dtype)
+            table = []
+            for datarow in data:
+                tablerow = ()
+                for name in self.dtype.names:
+                    tablerow += (self.coltypes[name].toKaraboValue(
+                        datarow[name], strict=False).value,)
+                table.append(tablerow)
+            table = np.array(table, dtype=self.dtype)
         return basetypes.TableValue(table, descriptor=self, units=self.units,
                                     timestamp=timestamp)
 
