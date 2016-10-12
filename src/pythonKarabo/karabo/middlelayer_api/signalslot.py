@@ -295,6 +295,12 @@ class SignalSlotable(Configurable):
         for f in loop.changedFutures:
             f.set_result(None)
 
+    @slot
+    def slotInstanceGone(self, instanceId, info):
+        device = self._devices.get(instanceId)
+        if device is not None:
+            device._notify_gone()
+
     @coroutine
     def onInitialization(self):
         """This method is called just after everything is initialized"""

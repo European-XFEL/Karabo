@@ -167,7 +167,3 @@ class Device(AlarmMixin, SignalSlotable):
     @slot
     def slotInstanceUpdated(self, instanceId, info):
         pass
-
-    @slot
-    def slotInstanceGone(self, instanceId, info):
-        pass
