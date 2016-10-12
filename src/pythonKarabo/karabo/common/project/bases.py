@@ -1,0 +1,24 @@
+#############################################################################
+# Author: <john.wiggins@xfel.eu>
+# Created on October 12, 2016
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+import uuid
+
+from traits.api import HasStrictTraits, Int, String
+
+
+class BaseProjectObjectModel(HasStrictTraits):
+    """ A base class for all things which can be serialized and sent to
+    a Project server.
+    """
+    # Version and unique id
+    version = Int
+    uuid = String
+
+    # A simple, human-readable name. Doesn't need to be unique
+    simple_name = String
+
+    def _uuid_default(self):
+        # If a uuid isn't supplied, generate one
+        return str(uuid.uuid4())
