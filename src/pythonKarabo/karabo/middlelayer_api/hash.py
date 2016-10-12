@@ -1128,8 +1128,9 @@ class VectorHash(Vector):
             for datarow in data:
                 tablerow = ()
                 for name in self.dtype.names:
-                    tablerow += (self.coltypes[name].toKaraboValue(
-                        datarow[name], strict=False).value,)
+                    desc = self.coltypes[name]
+                    kvalue = desc.toKaraboValue(datarow[name], strict=False)
+                    tablerow += (kvalue.value,)
                 table.append(tablerow)
             table = np.array(table, dtype=self.dtype)
         return basetypes.TableValue(table, descriptor=self, units=self.units,
