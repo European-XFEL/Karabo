@@ -50,7 +50,7 @@ namespace karabo {
          * Another additional feature is the ability to setup new signals and/or slots at runtime.
          *
          * Furthermore, this class implements functions for the common request/response patterns.
-         * 
+         *
          * For a full documentation of the signal-slot component see the documentation in the software-guide.
          *
          */
@@ -224,7 +224,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceAvailableAgainHandler;
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Exception& /*exception*/) > ExceptionHandler;
-            typedef boost::function<bool (const std::string& /*slotFunction*/) > SlotCallGuardHandler;
+            typedef boost::function<bool (const std::string& /*slotFunction*/, const std::string& /*callee*/) > SlotCallGuardHandler;
             typedef boost::function<void (float /*avgBrokerLatency*/, unsigned int /*maxBrokerLatency*/,
                                           float /*avgProcessingLatency*/, unsigned int /*maxProcessingLatency*/,
                                           unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
@@ -354,8 +354,11 @@ namespace karabo {
             static boost::mutex m_connectionStringsMutex;
 
             static karabo::net::PointToPoint::Pointer m_pointToPoint;
+            
+            std::set<std::string> m_byPassLockSlots;
 
             boost::function<void(const std::string&) > m_lastCommandHandler;
+
 
         public:
 
@@ -452,7 +455,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             /**
              * Login in order to receive correct access rights
-             * @param username Username 
+             * @param username Username
              * @param password Password
              * @param provider Provider (currently only LOCAL and KERBEROS possible)
              * @return bool indicating success of failure
@@ -867,6 +870,14 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             void registerReply(const karabo::util::Hash& reply);
+            
+            /**
+             * Returns a list of slots in SignalSlotable that are allowed to
+             * bypass locks.
+             * @return 
+             */
+            const std::set<std::string>& getBypassLockSlots() const;
+
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             SignalInstancePointer getSignal(const std::string& signalFunction) const;

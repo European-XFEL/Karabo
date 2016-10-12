@@ -691,7 +691,6 @@ namespace karabo {
                         safeClientWrite(range.first->second.channel, h, REMOVE_OLDEST);
                     }
                 }
-                input->update();
             } catch (const Exception &e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onNetworkData: " << e.userFriendlyMsg();
             }

@@ -85,12 +85,15 @@ if __name__ == '__main__':
             'karabo.testing': ['resources/*.*'],
             'karabo.project_db': ['config_stubs/*.*'],
         },
-        entry_points={'console_scripts': [
-                      'karabo_device_server=karabo.bound_api.device_server:main',
-                      'karabo-middlelayer-device-server=karabo.middlelayer_api.device_server:main',
-                      'ideviceclient=karabo.interactive.ideviceclient:main',
-                      'ikarabo=karabo.interactive.ikarabo:main',
-                      'convert-karabo-device-project=karabo.interactive.convert_device_project:main',
-                      'generate-karabo-project=karabo.interactive.project_generator:main',
-                      ]},
+        entry_points={
+            'console_scripts': [
+                'karabo_device_server=karabo.bound_api.device_server:main',
+                'karabo-middlelayer-device-server=karabo.middlelayer_api.device_server:main',
+                'ideviceclient=karabo.interactive.ideviceclient:main',
+                'ikarabo=karabo.interactive.ikarabo:main',
+                'convert-karabo-device-project=karabo.interactive.convert_device_project:main',
+                'generate-karabo-project=karabo.interactive.project_generator:main',
+                'upgrade-karabo-project=karabo.interactive.upgrade_project_data:main',
+             ],
+        },
     )
