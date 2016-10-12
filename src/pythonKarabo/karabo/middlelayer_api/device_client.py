@@ -251,22 +251,8 @@ class ProxyNode(Descriptor):
 class SubProxy(object):
     _parent = Weak()
 
-    def setValue(self, desc, value):
-        self._parent.setValue(desc, value)
-
-    def _use(self):
-        self._parent._use()
-
-    def _update(self):
-        self._parent._update()
-
-    @property
-    def _deviceId(self):
-        return self._parent._deviceId
-
-    @property
-    def _device(self):
-        return self._parent._device
+    def __getattr__(self, attr):
+        return getattr(self._parent, attr)
 
 
 class OneShotQueue(asyncio.Future):
