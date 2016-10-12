@@ -82,7 +82,8 @@ class ProxySlot(Slot):
         def method(self):
             self._update()
             self._device._use()
-            return (yield from self._device.call(self._deviceId, key))
+            return (yield from self._kill_once_dead(
+                self._device.call(self._deviceId, key)))
         method.__doc__ = self.description
         return method.__get__(instance, owner)
 
@@ -116,6 +117,8 @@ class Proxy(object):
         self._used = 0
         self._sethash = {}
         self._sync = sync
+        self._alive = True
+        self._running_tasks = set()
 
     @classmethod
     def __dir__(cls):
@@ -151,8 +154,8 @@ class Proxy(object):
         if loop.sync_set:
             h = Hash()
             h[desc.longkey], _ = desc.toDataAndAttrs(value)
-            ok, msg = loop.sync(self._device.call(
-                self.deviceId, "slotReconfigure", h), timeout=-1, wait=True)
+            ok, msg = loop.sync(self._kill_once_dead(self._device.call(
+                self.deviceId, "slotReconfigure", h)), timeout=-1, wait=True)
             if not ok:
                 raise KaraboError(msg)
         else:
@@ -169,6 +172,30 @@ class Proxy(object):
         if hash:
             self._device._ss.emit("call",
                                   {self._deviceId: ["slotReconfigure"]}, hash)
+
+    def _notify_gone(self):
+        """The underlying device has gone"""
+        self._alive = False
+        for task in self._running_tasks:
+            task.cancel()
+
+    @asyncio.coroutine
+    def _kill_once_dead(self, coro):
+        def killer():
+            if not self._alive:
+                raise KaraboError('device "{}" died'.format(self._deviceId))
+            try:
+                return (yield from coro)
+            except asyncio.CancelledError:
+                if self._alive:
+                    raise
+                else:
+                    raise KaraboError(
+                        'device "{}" died'.format(self._deviceId))
+        task = asyncio.async(killer())
+        self._running_tasks.add(task)
+        task.add_done_callback(lambda fut: self._running_tasks.discard(fut))
+        return (yield from task)
 
     def __enter__(self):
         self._used += 1
