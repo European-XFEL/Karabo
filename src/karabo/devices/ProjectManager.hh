@@ -58,6 +58,14 @@ namespace karabo {
 
             void slotCloseProject(const std::string& userName,
                                   const std::string& projectName);
+            
+            /**
+             * This device may not be locked
+             * @return false
+             */
+            bool allowLock() const {
+                return false;
+            }
 
         };
     }

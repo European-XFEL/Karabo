@@ -1527,7 +1527,29 @@ if (nodeData) {\
             return pHash.get<Hash>(outputChannelName+".schema");
         }
         
+        karabo::core::Lock DeviceClient::lock(const std::string& deviceId, bool recursive, int timeout) {
+            //non waiting request for lock
+            if(timeout == 0) return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
+            
+            //timeout was given
+            const int waitTime = 1; //second
+            int nTries = 0;
+            while(true){
+                try{
+                    return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
+                } catch (const karabo::util::LockException& e){
+                    if(nTries++ > timeout/waitTime && timeout != -1){
+                        //rethrow
+                         throw KARABO_LOCK_EXCEPTION(e.userFriendlyMsg());
+                    }
+                    //otherwise pass through and try again
+                    boost::this_thread::sleep(boost::posix_time::seconds(waitTime));
+                }
+                
+            }
+        }
         
+               
 
 #undef KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN
 

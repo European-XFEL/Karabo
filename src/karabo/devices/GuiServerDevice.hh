@@ -289,6 +289,14 @@ namespace karabo {
              * @param instanceId: string which will be filled with the instance id
              */
             void typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type, std::string& instanceId);
+            
+            /**
+             * This device may not be locked
+             * @return false
+             */
+            bool allowLock() const {
+                return false;
+            }
 
         };
     }
