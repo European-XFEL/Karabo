@@ -1538,18 +1538,18 @@ if (nodeData) {\
                 try{
                     return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
                 } catch (const karabo::util::LockException& e){
-                    if(nTries > timeout/waitTime && timeout != -1){
+                    if(++nTries > timeout/waitTime && timeout != -1){
                         //rethrow
-                        KARABO_RETHROW(e);
+                         throw KARABO_LOCK_EXCEPTION(e.userFriendlyMsg());
                     }
                     //otherwise pass through and try again
-                    nTries++;
                     boost::this_thread::sleep(boost::posix_time::seconds(waitTime));
                 }
+                
             }
         }
         
-        
+               
 
 #undef KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN
 

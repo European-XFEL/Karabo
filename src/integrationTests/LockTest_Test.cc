@@ -72,6 +72,27 @@ void LockTest_Test::testLocking() {
     
     CPPUNIT_ASSERT(success.second.find("Could not acquire lock on lockTest3") != std::string::npos);
     std::clog<<"Tested locking.. Ok"<<std::endl;
+    
+    //wait til lock clears
+    while(m_deviceClient->get<std::string>("lockTest3", "lockedBy") != ""){};
+    
+    m_deviceClient->set("lockTest1", "waitTime", 20000);
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    m_deviceClient->executeNoWait("lockTest1", "lockAndWaitLong");
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    success = m_deviceClient->execute("lockTest2", "lockAndWaitTimeout", 10);
+    CPPUNIT_ASSERT(success.first);
+    CPPUNIT_ASSERT(success.second.find("Could not acquire lock on lockTest3") != std::string::npos);
+    std::clog<<"Tested locking with timeout (fail).. Ok"<<std::endl;
+    
+    success = m_deviceClient->execute("lockTest3", "slotClearLock");
+    //wait til lock clears
+    while(m_deviceClient->get<std::string>("lockTest3", "lockedBy") != ""){};
+    m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
+    success = m_deviceClient->execute("lockTest2", "lockAndWaitTimeout", 10);
+    CPPUNIT_ASSERT(success.first);
+    CPPUNIT_ASSERT(success.second.find("Acquired Lock") != std::string::npos);
+    std::clog<<"Tested locking with timeout (success).. Ok"<<std::endl;
 
 }
 
