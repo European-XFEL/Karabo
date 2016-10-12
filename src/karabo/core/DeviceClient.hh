@@ -613,6 +613,8 @@ namespace karabo {
              */
             karabo::util::Hash getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName);
 
+            std::vector<std::string> getOutputChannelNames(const std::string & deviceId);
+            
 
             /**
              * Request locking of device at deviceId. Throws a karabo::util::LockException in case the lock cannot be acquired in the given timeout

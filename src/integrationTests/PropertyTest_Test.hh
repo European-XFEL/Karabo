@@ -25,8 +25,10 @@ public:
     void tearDown();
 
 private:
-
+    
     void allTestRunner();
+
+    void testPropertyTest();
     void testSimpleProperties();
     void testVectorProperties();
     void testTableProperties();
