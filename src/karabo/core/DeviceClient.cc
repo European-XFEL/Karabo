@@ -1538,7 +1538,7 @@ if (nodeData) {\
                 try{
                     return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
                 } catch (const karabo::util::LockException& e){
-                    if(++nTries > timeout/waitTime && timeout != -1){
+                    if(nTries++ > timeout/waitTime && timeout != -1){
                         //rethrow
                          throw KARABO_LOCK_EXCEPTION(e.userFriendlyMsg());
                     }
