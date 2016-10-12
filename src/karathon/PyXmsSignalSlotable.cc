@@ -46,15 +46,6 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("receiveAsync4"
                  , (void(SignalSlotableWrap::RequestorWrap::*)(const bp::object&))(&SignalSlotableWrap::RequestorWrap::receiveAsyncPy4)
                  , (bp::arg("replyCallback")))
-
-            // The following functions are "similar" C++ API. They work but considered not useful: use waitForReply 
-            //.def("timeout", (&SignalSlotableWrap::RequestorWrap::timeoutPy), (bp::arg("milliseconds")))
-            //.def("receive0", (bp::tuple(SignalSlotableWrap::RequestorWrap::*)())(&SignalSlotableWrap::RequestorWrap::receivePy0))
-            //.def("receive1", (bp::tuple(SignalSlotableWrap::RequestorWrap::*)())(&SignalSlotableWrap::RequestorWrap::receivePy1))
-            //.def("receive2", (bp::tuple(SignalSlotableWrap::RequestorWrap::*)())(&SignalSlotableWrap::RequestorWrap::receivePy2))
-            //.def("receive3", (bp::tuple(SignalSlotableWrap::RequestorWrap::*)())(&SignalSlotableWrap::RequestorWrap::receivePy3))
-            //.def("receive4", (bp::tuple(SignalSlotableWrap::RequestorWrap::*)())(&SignalSlotableWrap::RequestorWrap::receivePy4))
-
             ;
 
 
@@ -104,13 +95,6 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("stopEventLoop", &SignalSlotableWrap::stopEventLoop)
 
-            //            .def("setSenderInfo"
-            //                 , (void (SignalSlotable::*)(const karabo::util::Hash&))(&SignalSlotable::setSenderInfo)
-            //                 , (bp::arg("senderInfo")))
-            //            .def("getSenderInfo"
-            //                 , (const karabo::util::Hash & (SignalSlotable::*)() const) (&SignalSlotable::getSenderInfo)
-            //                 , bp::return_value_policy<bp::copy_const_reference>())
-
             .def("getSenderInfo"
                  , (const boost::shared_ptr<karabo::xms::Slot>& (SignalSlotable::*)(const std::string&)) (&SignalSlotable::getSenderInfo)
                  , bp::arg("slotFunction"), bp::return_value_policy<bp::copy_const_reference>())
@@ -137,9 +121,6 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("registerExceptionHandler", &SignalSlotableWrap::registerExceptionHandlerPy
                  , (bp::arg("handler")))
-
-            //.def("registerInstanceNewHandler", &SignalSlotableWrap::registerInstanceNewHandlerPy
-            //     , (bp::arg("handler")))
 
             .def("registerSlotCallGuardHandler", &SignalSlotableWrap::registerSlotCallGuardHandlerPy
                  , (bp::arg("handler")))
@@ -178,123 +159,91 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), (bp::arg("slotFunction")))
 
-            //.def("registerSlot", (&SignalSlotableWrap::registerMemberSlotPy), (bp::arg("slotFunction"), bp::arg("selfObject"), bp::arg("slotType") = SignalSlotable::SPECIFIC))
+            
+            .def("registerSignal", &SignalSlotableWrap::registerSignalPy<>,
+                 (bp::arg("signalFunction")))
+            .def("registerSignal", &SignalSlotableWrap::registerSignalPy<bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1")))
+            .def("registerSignal", &SignalSlotableWrap::registerSignalPy<bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
+            .def("registerSignal", &SignalSlotableWrap::registerSignalPy<bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+            .def("registerSignal", &SignalSlotableWrap::registerSignalPy<bp::object, bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
-            .def("registerSignal", &SignalSlotableWrap::registerSignalPy0, (bp::arg("signalFunction")))
-            .def("registerSignal", &SignalSlotableWrap::registerSignalPy1, (bp::arg("signalFunction"), bp::arg("a1")))
-            .def("registerSignal", &SignalSlotableWrap::registerSignalPy2, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
-            .def("registerSignal", &SignalSlotableWrap::registerSignalPy3, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
-            .def("registerSignal", &SignalSlotableWrap::registerSignalPy4, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
+            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy<>,
+                 (bp::arg("signalFunction")))
+            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy<bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1")))
+            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy<bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
+            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy<bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy<bp::object, bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
-            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy0, (bp::arg("signalFunction")))
-            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy1, (bp::arg("signalFunction"), bp::arg("a1")))
-            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy2, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
-            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy3, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
-            .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy4, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
+            .def("emit", &SignalSlotableWrap::emitPy<>,
+                 (bp::arg("signalFunction")))
+            .def("emit", &SignalSlotableWrap::emitPy<bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1")))
+            .def("emit", &SignalSlotableWrap::emitPy<bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
+            .def("emit", &SignalSlotableWrap::emitPy<bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+            .def("emit", &SignalSlotableWrap::emitPy<bp::object, bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
-            .def("emit", (void (SignalSlotable::*)(string const &) const) (&SignalSlotable::emit)
-                 , (bp::arg("signalFunction")))
-            .def("emit", &SignalSlotableWrap::emitPy1
-                 , (bp::arg("signalFunction"), bp::arg("a1")))
-            .def("emit", &SignalSlotableWrap::emitPy2
-                 , (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
-            .def("emit", &SignalSlotableWrap::emitPy3
-                 , (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
-            .def("emit", &SignalSlotableWrap::emitPy4
-                 , (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
+            .def("call", &SignalSlotableWrap::callPy<>,
+                 (bp::arg("signalFunction")))
+            .def("call", &SignalSlotableWrap::callPy<bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1")))
+            .def("call", &SignalSlotableWrap::callPy<bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
+            .def("call", &SignalSlotableWrap::callPy<bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+            .def("call", &SignalSlotableWrap::callPy<bp::object, bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
-            .def("call", (void (SignalSlotable::*)(string, string const &) const) (&SignalSlotable::call)
-                 , (bp::arg("instanceId"), bp::arg("functionName")))
+            .def("request", &SignalSlotableWrap::requestPy<>,
+                 (bp::arg("signalFunction")))
+            .def("request", &SignalSlotableWrap::requestPy<bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1")))
+            .def("request", &SignalSlotableWrap::requestPy<bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
+            .def("request", &SignalSlotableWrap::requestPy<bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+            .def("request", &SignalSlotableWrap::requestPy<bp::object, bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
-            .def("call", (void (SignalSlotableWrap::*)(string, string const &, const bp::object&) const)
-                 (&SignalSlotableWrap::callPy1)
-                 , (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1")))
+            .def("requestNoWait", &SignalSlotableWrap::requestNoWaitPy<>,
+                 (bp::arg("signalFunction")))
+            .def("requestNoWait", &SignalSlotableWrap::requestNoWaitPy<bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1")))
+            .def("requestNoWait", &SignalSlotableWrap::requestNoWaitPy<bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
+            .def("requestNoWait", &SignalSlotableWrap::requestNoWaitPy<bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+            .def("requestNoWait", &SignalSlotableWrap::requestNoWaitPy<bp::object, bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
-            .def("call", (void (SignalSlotableWrap::*)(string, string const &, const bp::object&, const bp::object&) const)
-                 (&SignalSlotableWrap::callPy2)
-                 , (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2")))
+            .def("reply", &SignalSlotableWrap::replyPy<>,
+                 (bp::arg("signalFunction")))
+            .def("reply", &SignalSlotableWrap::replyPy<bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1")))
+            .def("reply", &SignalSlotableWrap::replyPy<bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
+            .def("reply", &SignalSlotableWrap::replyPy<bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+            .def("reply", &SignalSlotableWrap::replyPy<bp::object, bp::object, bp::object, bp::object>,
+                 (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
-            .def("call", (void (SignalSlotableWrap::*)(string, string const &, const bp::object&, const bp::object&, const bp::object&) const)
-                 (&SignalSlotableWrap::callPy3)
-                 , (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+            .def("createOutputChannel", &SignalSlotableWrap::createOutputChannelPy,
+                 (bp::arg("channelName"), bp::arg("configuration"), bp::arg("handler") = bp::object()))
 
-            .def("call"
-                 , (void (SignalSlotableWrap::*)(string, string const &, const bp::object&, const bp::object&, const bp::object&, const bp::object&) const)
-                 (&SignalSlotableWrap::callPy4)
-                 , (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
-
-            .def("request"
-                 , (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)(string, const string&))
-                 (&SignalSlotableWrap::requestPy0)
-                 , (bp::arg("instanceId"), bp::arg("functionName")))
-
-            .def("request"
-                 , (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)(string, const string&, const bp::object&))
-                 (&SignalSlotableWrap::requestPy1)
-                 , (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1")))
-
-            .def("request", (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)(string, const string&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::requestPy2),
-                 (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2")))
-
-            .def("request", (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)(string, const string&, const bp::object&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::requestPy3),
-                 (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
-
-            .def("request", (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)(string, const string&, const bp::object&, const bp::object&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::requestPy4),
-                 (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
-
-            .def("requestNoWait"
-                 , (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)(string, const string&, string, const string&))(&SignalSlotableWrap::requestNoWaitPy0)
-                 , (bp::arg("requestSlotInstanceId"), bp::arg("requestSlotFunction"), bp::arg("replySlotInstanceId"), bp::arg("replySlotFunction")))
-
-            .def("requestNoWait"
-                 , (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)(string, const string&, string, const string&, const bp::object&))
-                 (&SignalSlotableWrap::requestNoWaitPy1)
-                 , (bp::arg("requestSlotInstanceId"), bp::arg("requestSlotFunction")
-                    , bp::arg("replySlotInstanceId"), bp::arg("replySlotFunction")
-                    , bp::arg("a1")))
-
-            .def("requestNoWait"
-                 , (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)(string, const string&, string, const string&, const bp::object&, const bp::object&))
-                 (&SignalSlotableWrap::requestNoWaitPy2)
-                 , (bp::arg("requestSlotInstanceId"), bp::arg("requestSlotFunction"), bp::arg("replySlotInstanceId"), bp::arg("replySlotFunction")
-                    , bp::arg("a1"), bp::arg("a2")))
-
-            .def("requestNoWait"
-                 , (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)
-                    (string, const string&, string, const string&, const bp::object&, const bp::object&, const bp::object&))
-                 (&SignalSlotableWrap::requestNoWaitPy3)
-                 , (bp::arg("requestSlotInstanceId"), bp::arg("requestSlotFunction"), bp::arg("replySlotInstanceId"), bp::arg("replySlotFunction")
-                    , bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
-
-            .def("requestNoWait"
-                 , (SignalSlotableWrap::RequestorWrap(SignalSlotableWrap::*)
-                    (string, const string&, string, const string&, const bp::object&, const bp::object&, const bp::object&, const bp::object&))
-                 (&SignalSlotableWrap::requestNoWaitPy4)
-                 , (bp::arg("requestSlotInstanceId"), bp::arg("requestSlotFunction"), bp::arg("replySlotInstanceId"), bp::arg("replySlotFunction")
-                    , bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
-
-            .def("reply", (void (SignalSlotableWrap::*)()) (&SignalSlotableWrap::replyPy0))
-
-            .def("reply", (void (SignalSlotableWrap::*)(const bp::object&)) (&SignalSlotableWrap::replyPy1)
-                 , (bp::arg("a1")))
-
-            .def("reply", (void (SignalSlotableWrap::*)(const bp::object&, const bp::object&)) (&SignalSlotableWrap::replyPy2)
-                 , (bp::arg("a1"), bp::arg("a2")))
-
-            .def("reply", (void (SignalSlotableWrap::*)(const bp::object&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::replyPy3)
-                 , (bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
-
-            .def("reply", (void (SignalSlotableWrap::*)(const bp::object&, const bp::object&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::replyPy4)
-                 , (bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
-
-
-            .def("createOutputChannel", &SignalSlotableWrap::createOutputChannelPy
-                 , (bp::arg("channelName"), bp::arg("configuration"), bp::arg("handler") = bp::object()))
-
-            .def("createInputChannel", &SignalSlotableWrap::createInputChannelPy
-                 , (bp::arg("channelName"), bp::arg("configuration")
-                    , bp::arg("onData") = bp::object(), bp::arg("onInput") = bp::object()
-                    , bp::arg("onEndOfStream") = bp::object()))
+            .def("createInputChannel", &SignalSlotableWrap::createInputChannelPy,
+                 (bp::arg("channelName"), bp::arg("configuration"),
+                  bp::arg("onData") = bp::object(), bp::arg("onInput") = bp::object(),
+                  bp::arg("onEndOfStream") = bp::object()))
 
             .def("connectInputChannels", &SignalSlotableWrap::connectInputChannelsPy)
 
@@ -302,22 +251,22 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("getInputChannel", &SignalSlotableWrap::getInputChannelPy, (bp::arg("channelName")))
 
-            .def("registerDataHandler", &SignalSlotableWrap::registerDataHandlerPy
-                 , (bp::arg("channelName"), bp::arg("handlerPerData") = bp::object()))
+            .def("registerDataHandler", &SignalSlotableWrap::registerDataHandlerPy,
+                 (bp::arg("channelName"), bp::arg("handlerPerData") = bp::object()))
 
-            .def("registerInputHandler", &SignalSlotableWrap::registerInputHandlerPy
-                 , (bp::arg("channelName"), bp::arg("handlerPerInput") = bp::object()))
+            .def("registerInputHandler", &SignalSlotableWrap::registerInputHandlerPy,
+                 (bp::arg("channelName"), bp::arg("handlerPerInput") = bp::object()))
 
-            .def("registerEndOfStreamHandler", &SignalSlotableWrap::registerEndOfStreamHandlerPy
-                 , (bp::arg("channelName"), bp::arg("handler") = bp::object()))
+            .def("registerEndOfStreamHandler", &SignalSlotableWrap::registerEndOfStreamHandlerPy,
+                 (bp::arg("channelName"), bp::arg("handler") = bp::object()))
 
-            .def("exists"
-                 , (bp::tuple(SignalSlotableWrap::*)(const std::string&))(&SignalSlotableWrap::existsPy)
-                 , (bp::arg("instanceId")))
+            .def("exists",
+                 (bp::tuple(SignalSlotableWrap::*)(const std::string&))(&SignalSlotableWrap::existsPy),
+                 (bp::arg("instanceId")))
 
-            .def("getAccessLevel"
-                 , (int (SignalSlotable::*)(const std::string&) const) (&SignalSlotable::getAccessLevel)
-                 , (bp::arg("instanceId")))
+            .def("getAccessLevel",
+                 (int (SignalSlotable::*)(const std::string&) const) (&SignalSlotable::getAccessLevel),
+                 (bp::arg("instanceId")))
 
             .def("getBrokerHost", &SignalSlotableWrap::getBrokerHost)
             .def("getBrokerHosts", &SignalSlotableWrap::getBrokerHosts)

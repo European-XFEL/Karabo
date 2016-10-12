@@ -56,11 +56,11 @@ namespace karabo {
             }
 
             void initFsmSlots() {
-                SLOT0(acquire);
-                SLOT0(trigger);
-                SLOT0(stop);
-                SLOT0(reset);
-                SLOT2(errorFound, std::string, std::string);
+                KARABO_SLOT(acquire);
+                KARABO_SLOT(trigger);
+                KARABO_SLOT(stop);
+                KARABO_SLOT(reset);
+                KARABO_SLOT(errorFound, std::string, std::string);
             }
 
 

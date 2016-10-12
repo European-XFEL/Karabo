@@ -4,7 +4,8 @@
 namespace karabo {
     namespace util {
         class Hash;
-        
+
+
         // implementation details, users never invoke these directly
         namespace detail {
 
@@ -45,8 +46,16 @@ namespace karabo {
                     return std::tie(h.get<A>(key));
                 }
             };
+
+            template<char C>
+            struct unpack_impl<C> {
+
+                static std::tuple<> unpack(const karabo::util::Hash& h) {
+                    return std::tuple<>();
+                }
+            };
         }
-        
+
         // implementation details, users never invoke these directly
         namespace detail {
 
@@ -62,7 +71,7 @@ namespace karabo {
             }
         }
 
-        /*
+        /**
          * Unpack the hash (typically coming from the network) into the
          * parameters given by reference.
          */
