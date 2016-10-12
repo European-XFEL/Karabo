@@ -721,6 +721,15 @@ class Tests(DeviceTest):
         self.assertFalse(hasattr(a, "dn"))
 
     @async_tst
+    def test_proxy_dead(self):
+        a = Remote({"_deviceId_": "moriturus"})
+        yield from a.startInstance()
+        proxy = yield from getDevice("moriturus")
+        yield from a.slotKillDevice()
+        with self.assertRaisesRegex(KaraboError, "died"):
+            yield from proxy.count()
+
+    @async_tst
     def test_device_schema(self):
         schema, device = yield from self.local.call(
             "remote", "slotGetSchema", False)
