@@ -98,6 +98,14 @@ namespace karabo {
             void flushActor(const boost::system::error_code& e);
 
             void doFlush();
+            
+            /**
+             * This device may not be locked
+             * @return false
+             */
+            bool allowLock() const {
+                return false;
+            }
         };
     }
 }

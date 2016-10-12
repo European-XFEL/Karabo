@@ -128,6 +128,14 @@ namespace karabo {
              * Request a dump of all alarms currently managed by this alarm service device
              */
             void slotRequestAlarmDump();
+            
+            /**
+             * This device may not be locked
+             * @return false
+             */
+            bool allowLock() const {
+                return false;
+            }
            
            
         private: // members
