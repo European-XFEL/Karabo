@@ -24,7 +24,7 @@ def wrap(data):
         return BoolValue(data)
     elif isinstance(data, str):
         return StringValue(data)
-    elif isinstance(data, bytes):
+    elif isinstance(data, (bytes, bytearray)):
         return VectorCharValue(data)
     elif isinstance(data, list):
         return VectorStringValue(data)

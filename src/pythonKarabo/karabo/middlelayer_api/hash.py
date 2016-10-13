@@ -810,7 +810,7 @@ class ByteArray(Vector):
         file.file.write(data)
 
     def cast(self, other):
-        if isinstance(other, bytes):
+        if isinstance(other, bytearray):
             return other
         else:
             return bytearray(other)
