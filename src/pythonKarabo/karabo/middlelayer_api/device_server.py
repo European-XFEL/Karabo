@@ -183,7 +183,7 @@ class DeviceServer(SignalSlotable):
     def endErrorAction(self):
         pass
 
-    @slot
+    @coslot
     def slotStartDevice(self, hash):
         config = Hash()
 
@@ -196,7 +196,8 @@ class DeviceServer(SignalSlotable):
         try:
             cls = Device.subclasses[classId]
             obj = cls(config)
-            obj.startInstance(self)
+            task = obj.startInstance(self)
+            yield from task
             return True, '"{}" started'.format(deviceId)
         except Exception as e:
             e.logmessage = ('could not start device "%s" of class "%s"',
