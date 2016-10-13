@@ -1243,7 +1243,7 @@ def _gettype(data):
     except AttributeError:
         if hasattr(data, "hashtype"):
             return data.hashtype
-        elif isinstance(data, bool):
+        elif isinstance(data, (bool, basetypes.BoolValue)):
             return Bool
         elif isinstance(data, Enum):
             return Int32
