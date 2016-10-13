@@ -202,7 +202,7 @@ class SignalSlotable(Configurable):
         return Hash("heartbeatInterval", self.heartbeatInterval.value)
 
     @coroutine
-    def _run(self):
+    def _run(self, **kwargs):
         for k in dir(self.__class__):
             v = getattr(self, k, None)
             if callable(v) and hasattr(v, "slot"):
@@ -219,7 +219,7 @@ class SignalSlotable(Configurable):
             pass
         self.__randPing = 0  # Start answering on slotPing with argument rand=0
         self._ss.notify_network(self._initInfo())
-        yield from super(SignalSlotable, self)._run()
+        yield from super(SignalSlotable, self)._run(**kwargs)
         yield from get_event_loop().run_coroutine_or_thread(
             self.onInitialization)
         self.__initialized = True
