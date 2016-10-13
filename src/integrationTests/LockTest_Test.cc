@@ -72,10 +72,8 @@ void LockTest_Test::testLocking() {
     
     CPPUNIT_ASSERT(success.second.find("Could not acquire lock on lockTest3") != std::string::npos);
     std::clog<<"Tested locking.. Ok"<<std::endl;
-    
-    //wait til lock clears
-    while(m_deviceClient->get<std::string>("lockTest3", "lockedBy") != ""){};
-    
+
+    waitUntilLockClears();
     m_deviceClient->set("lockTest1", "waitTime", 20000);
     boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
     m_deviceClient->executeNoWait("lockTest1", "lockAndWaitLong");
@@ -86,8 +84,7 @@ void LockTest_Test::testLocking() {
     std::clog<<"Tested locking with timeout (fail).. Ok"<<std::endl;
     
     success = m_deviceClient->execute("lockTest3", "slotClearLock");
-    //wait til lock clears
-    while(m_deviceClient->get<std::string>("lockTest3", "lockedBy") != ""){};
+    waitUntilLockClears();
     m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
     success = m_deviceClient->execute("lockTest2", "lockAndWaitTimeout", 10);
     CPPUNIT_ASSERT(success.first);
@@ -98,7 +95,7 @@ void LockTest_Test::testLocking() {
 
 void LockTest_Test::testUnlocking() {
     std::pair<bool, std::string> success = m_deviceClient->execute("lockTest3", "slotClearLock");
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    waitUntilLockClears();
     success = m_deviceClient->execute("lockTest2", "lockAndWait", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
     CPPUNIT_ASSERT(success.second == "Acquired Lock");
@@ -148,4 +145,7 @@ void LockTest_Test::testLockStealing(){
     std::clog<<"Tested stolen lock exception.. Ok"<<std::endl;
 }
 
-
+void LockTest_Test::waitUntilLockClears()
+{
+    while(m_deviceClient->get<std::string>("lockTest3", "lockedBy") != "") {}
+}
