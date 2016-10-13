@@ -771,7 +771,7 @@ class PythonDevice(NoFsm):
                     return False
 
         # Log the call of this slot by setting a parameter of the device
-        self.set("lastCommand", slotFunction);
+        self.set("lastCommand", slotName)
 
         return True
 
