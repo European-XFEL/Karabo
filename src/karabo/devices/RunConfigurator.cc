@@ -264,7 +264,7 @@ namespace karabo {
                 if (schemaHash.hasAttribute(path, KARABO_SCHEMA_ACCESS_MODE)) {
                     accessMode = schemaHash.getAttribute<int>(path, KARABO_SCHEMA_ACCESS_MODE);
                 }
-                
+
                 //if (accessMode > requestedMode) {
                 //    KARABO_LOG_FRAMEWORK_DEBUG << "FILTER OUT: PATH='" << path << "', accessMode=" << accessMode << ", requestedMode=" << requestedMode;
                 //    continue;
@@ -274,7 +274,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "FILTER OUT: PATH='" << path << "'  because NO 'valueType' attribute!";
                     continue;
                 }
-                    
+
                 string typeAsString = schemaHash.getAttribute<string > (path, KARABO_SCHEMA_VALUE_TYPE);
                 Types::ReferenceType valueType = Types::from<FromLiteral>(typeAsString);
 
@@ -713,120 +713,67 @@ namespace karabo {
             for (MapGroup::const_iterator it = m_configurations.begin(); it != m_configurations.end(); ++it) {
                 const string& deviceId = it->first;
                 const Hash& group = it->second;
-                const string& groupId = group.get<string>("id");
-                const bool useFlag = group.get<bool>("use");
-                if (!useFlag) continue;
-
-                KARABO_LOG_FRAMEWORK_DEBUG << "buildConfigurationInUse ... use : " << useFlag << ", deviceId : " << deviceId << "\n" << group;
-
-                const vector<Hash>& expert = group.get<vector < Hash >> ("expert");
-                for (vector<Hash>::const_iterator ii = expert.begin(); ii != expert.end(); ++ii) {
-                    bool expertFlag = true;
-                    bool userFlag = false;
-                    const string& dataSourceId = ii->get<string>("source");
-                    const bool pipelineFlag = ii->get<bool>("pipeline");
-                    const string& dataSourceType = ii->get<string>("type");
-                    const string& behavior = ii->get<string>("behavior");
-                    const bool monitorOut = ii->get<bool>("monitored");
-                    if (useFlag) {
-                        Hash properties;
-                        if (!pipelineFlag) {
-                            Schema deviceSchema = remote().getDeviceSchema(dataSourceId);
-                            string deviceClassId = remote().get<string>(dataSourceId, "classId");
-                            string deviceVersion = remote().get<string>(dataSourceId, "classVersion");
-                            properties = filterDataSchema(dataSourceId, deviceSchema);
-                            properties.setAttribute(dataSourceId, "configurationGroupId", groupId);
-                            properties.setAttribute(dataSourceId, "classId", deviceClassId);
-                            properties.setAttribute(dataSourceId, "version", deviceVersion);
-                            properties.setAttribute(dataSourceId, "pipeline", pipelineFlag);
-                            properties.setAttribute(dataSourceId, "expertData", expertFlag);
-                            properties.setAttribute(dataSourceId, "userData", userFlag);
-                            properties.setAttribute(dataSourceId, "behavior", behavior);
-                            properties.setAttribute(dataSourceId, "monitorOut", monitorOut);
-                        } else {
-                            properties.set(dataSourceId, Hash());
-                            Hash& props = properties.get<Hash>(dataSourceId);
-                            
-                            vector<string> v;
-                            boost::split(v, dataSourceId, boost::is_any_of(":"));
-                            if (v.size() == 2) {
-                                Hash channelSchemaHash = remote().getOutputChannelSchema(v[0], v[1]);
-                                convertSchemaHash(channelSchemaHash, props);
-                            }
-                            properties.setAttribute(dataSourceId, "pipeline", pipelineFlag);
-                            properties.setAttribute(dataSourceId, "expertData", expertFlag);
-                            properties.setAttribute(dataSourceId, "userData", userFlag);
-                            properties.setAttribute(dataSourceId, "behavior", behavior);
-                            properties.setAttribute(dataSourceId, "monitorOut", monitorOut);
-                        }
-                        KARABO_LOG_FRAMEWORK_DEBUG << "buildConfigurationInUse() EXPERT ...\n"
-                                << "\tdataSourceId       : " << dataSourceId << "\n"
-                                << "\tpipelineFlag       : " << pipelineFlag << "\n"
-                                << "\tdataSourceType     : " << dataSourceType << "\n"
-                                << "\tdataSourceBehavior : " << behavior << "\n"
-                                << "\tmonitorOut         : " << boolalpha << monitorOut << "\n"
-                                << properties << "\n";
-
-                        result.merge(properties);
-                    }
-                }
-
-                const vector<Hash>& user = group.get<vector < Hash >> ("user");
-                for (vector<Hash>::const_iterator ii = user.begin(); ii != user.end(); ++ii) {
-                    bool expertFlag = false;
-                    bool userFlag = true;
-                    const string& dataSourceId = ii->get<string>("source");
-                    const bool pipelineFlag = ii->get<bool>("pipeline");
-                    const string& dataSourceType = ii->get<string>("type");
-                    const string& behavior = ii->get<string>("behavior");
-                    const bool monitorOut = ii->get<bool>("monitored");
-                    const bool inUse = ii->get<bool>("use");
-                    if (inUse) {
-                        Hash properties;
-                        if (!pipelineFlag) {
-                            Schema deviceSchema = remote().getDeviceSchema(dataSourceId);
-                            string deviceClassId = remote().get<string>(dataSourceId, "classId");
-                            string deviceVersion = remote().get<string>(dataSourceId, "classVersion");
-                            Hash properties = filterDataSchema(dataSourceId, deviceSchema);
-                            properties.setAttribute(dataSourceId, "configurationGroupId", groupId);
-                            properties.setAttribute(dataSourceId, "classId", deviceClassId);
-                            properties.setAttribute(dataSourceId, "version", deviceVersion);
-                            properties.setAttribute(dataSourceId, "pipeline", pipelineFlag);
-                            properties.setAttribute(dataSourceId, "expertData", expertFlag);
-                            properties.setAttribute(dataSourceId, "userData", userFlag);
-                            properties.setAttribute(dataSourceId, "behavior", behavior);
-                            properties.setAttribute(dataSourceId, "monitorOut", monitorOut);
-                        } else {
-                            properties.set(dataSourceId, Hash());
-                            Hash& props = properties.get<Hash>(dataSourceId);
-                            
-                            vector<string> v;
-                            boost::split(v, dataSourceId, boost::is_any_of(":"));
-                            if (v.size() == 2) {
-                                Hash channelSchemaHash = remote().getOutputChannelSchema(v[0], v[1]);
-                                convertSchemaHash(channelSchemaHash, props);
-                            }
-                            properties.setAttribute(dataSourceId, "pipeline", pipelineFlag);
-                            properties.setAttribute(dataSourceId, "expertData", expertFlag);
-                            properties.setAttribute(dataSourceId, "userData", userFlag);
-                            properties.setAttribute(dataSourceId, "behavior", behavior);
-                            properties.setAttribute(dataSourceId, "monitorOut", monitorOut);
-                        }
-                        KARABO_LOG_FRAMEWORK_DEBUG << "buildConfigurationInUse() USER ...\n"
-                                << "\tdataSourceId       : " << dataSourceId << "\n"
-                                << "\tpipelineFlag       : " << pipelineFlag << "\n"
-                                << "\tdataSourceType     : " << dataSourceType << "\n"
-                                << "\tdataSourceBehavior : " << behavior << "\n"
-                                << "\tmonitorOut         : " << boolalpha << monitorOut << "\n"
-                                << properties << "\n";
-                        result.merge(properties);
-                    }
+                const bool useGroupFlag = group.get<bool>("use");
+                if (useGroupFlag) {
+                    const string& id = group.get<string>("id");
+                    buildDataSourceProperties(group.get<vector < Hash >> ("expert"), id, true, false, result);
+                    buildDataSourceProperties(group.get<vector < Hash >> ("user"),   id, false, true, result);
                 }
             }
 
             KARABO_LOG_FRAMEWORK_INFO << "Current Run Configuration is ...\n" << configuration;
 
             emit("signalRunConfiguration", configuration, getInstanceId());
+        }
+
+
+        void RunConfigurator::buildDataSourceProperties(const std::vector<karabo::util::Hash>& table,
+                                                        const std::string& groupId, bool expertFlag, bool userFlag,
+                                                        karabo::util::Hash& result) {
+
+            for (vector<Hash>::const_iterator ii = table.begin(); ii != table.end(); ++ii) {
+                const string& dataSourceId = ii->get<string>("source");
+                const bool pipelineFlag = ii->get<bool>("pipeline");
+                const string& dataSourceType = ii->get<string>("type");
+                const string& behavior = ii->get<string>("behavior");
+                const bool monitorOut = ii->get<bool>("monitored");
+                const bool inUse = ii->get<bool>("use");
+
+                if (inUse) {
+                    Hash properties;
+                    if (!pipelineFlag) {
+                        Schema deviceSchema = remote().getDeviceSchema(dataSourceId);
+                        string deviceClassId = remote().get<string>(dataSourceId, "classId");
+                        string deviceVersion = remote().get<string>(dataSourceId, "classVersion");
+                        properties = filterDataSchema(dataSourceId, deviceSchema);
+                        properties.setAttribute(dataSourceId, "configurationGroupId", groupId);
+                        properties.setAttribute(dataSourceId, "classId", deviceClassId);
+                        properties.setAttribute(dataSourceId, "version", deviceVersion);
+                        properties.setAttribute(dataSourceId, "pipeline", pipelineFlag);
+                        properties.setAttribute(dataSourceId, "expertData", expertFlag);
+                        properties.setAttribute(dataSourceId, "userData", userFlag);
+                        properties.setAttribute(dataSourceId, "behavior", behavior);
+                        properties.setAttribute(dataSourceId, "monitorOut", monitorOut);
+                    } else {
+                        properties.set(dataSourceId, Hash());
+                        Hash& props = properties.get<Hash>(dataSourceId);
+
+                        vector<string> v;
+                        boost::split(v, dataSourceId, boost::is_any_of(":"));
+                        if (v.size() == 2) {
+                            Hash channelSchemaHash = remote().getOutputChannelSchema(v[0], v[1]);
+                            convertSchemaHash(channelSchemaHash, props);
+                        }
+                        properties.setAttribute(dataSourceId, "pipeline", pipelineFlag);
+                        properties.setAttribute(dataSourceId, "expertData", expertFlag);
+                        properties.setAttribute(dataSourceId, "userData", userFlag);
+                        properties.setAttribute(dataSourceId, "behavior", behavior);
+                        properties.setAttribute(dataSourceId, "monitorOut", monitorOut);
+                    }
+                    // TODO: we need "smart" merging where "high-grade" attribute overwrites "low-grade" one.
+                    result.merge(properties);
+                }
+            }
         }
 
 

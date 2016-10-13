@@ -611,6 +611,8 @@ namespace karabo {
              * @param outputChannelName
              * @return a Hash containing the output channel's data schema
              */
+            //karabo::util::Hash getOutputChannelDefaultHash(const std::string & deviceId, const std::string& outputChannelName);
+            
             karabo::util::Hash getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName);
 
             std::vector<std::string> getOutputChannelNames(const std::string & deviceId);
