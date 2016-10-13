@@ -31,6 +31,7 @@ class Tests(TestCase):
 
         b = VectorCharValue(b"ase", descriptor=7, timestamp=2)
         self.assertEqual(b, b"ase")
+        self.assertNotEqual(b, b"ddsa")
         self.assertTrue(b == b"ase")
         self.assertTrue(b"ase" == b)
         self.assertFalse(b == "ase")
@@ -193,29 +194,34 @@ class Tests(TestCase):
         self.assertEqual(c, l)
 
     def test_table(self):
-        dtype = numpy.dtype([("i", "i"), ("o", "O")])
-        units = {"i": (Unit.METER, MetricPrefix.MILLI),
-                 "o": (Unit.GRAM, MetricPrefix.KILO)}
+        dtype = numpy.dtype([("integer", "i"), ("object", "O")])
+        units = {"integer": (Unit.METER, MetricPrefix.MILLI),
+                 "object": (Unit.GRAM, MetricPrefix.KILO)}
         t = TableValue(numpy.array([], dtype=dtype), units)
         self.assertEqual(len(t), 0)
 
-        t = TableValue(numpy.array([(3, "asdf"), (2, numpy.arange(10))],
+        t = TableValue(numpy.array([(3, "asdf"), (2, numpy.arange(10)),
+                                    (4, b"fdas"), (5, bytearray())],
                                    dtype=dtype), units, timestamp=self.t2)
         self.assertEqual(t.timestamp, self.t2)
-        self.assertEqual(t["i"][0], 3 * unit.millimeter)
-        self.assertEqual(t["i"][0].timestamp, self.t2)
-        self.assertEqual((2 * t["i"])[1], 4 * unit.millimeter)
-        self.assertEqual((2 * t["i"]).timestamp, self.t2)
-        self.assertEqual(t["o"][0], "asdf")
-        self.assertEqual(t["o"][0].timestamp, self.t2)
-        self.assertEqual(t["o"][1][3], 3 * unit.kilogram)
-        self.assertEqual(t["o"][1].timestamp, self.t2)
-        self.assertEqual(t[0]["i"], 3 * unit.millimeter)
-        self.assertEqual(t[0]["i"].timestamp, self.t2)
-        self.assertEqual(t[0]["o"], "asdf")
-        self.assertEqual(t[0]["o"].timestamp, self.t2)
-        self.assertEqual(t[1]["o"][3], 3 * unit.kilogram)
-        self.assertEqual(t[1]["o"].timestamp, self.t2)
+        self.assertEqual(t["integer"][0], 3 * unit.millimeter)
+        self.assertEqual(t["integer"][0].timestamp, self.t2)
+        self.assertEqual((2 * t["integer"])[1], 4 * unit.millimeter)
+        self.assertEqual((2 * t["integer"]).timestamp, self.t2)
+        self.assertEqual(t["object"][0], "asdf")
+        self.assertEqual(t["object"][0].timestamp, self.t2)
+        self.assertEqual(t["object"][1][3], 3 * unit.kilogram)
+        self.assertEqual(t["object"][1].timestamp, self.t2)
+        self.assertEqual(t[0]["integer"], 3 * unit.millimeter)
+        self.assertEqual(t[0]["integer"].timestamp, self.t2)
+        self.assertEqual(t[0]["object"], "asdf")
+        self.assertEqual(t[0]["object"].timestamp, self.t2)
+        self.assertEqual(t[1]["object"][3], 3 * unit.kilogram)
+        self.assertEqual(t[1]["object"].timestamp, self.t2)
+        self.assertEqual(t[2]["object"], b"fdas")
+        self.assertEqual(t[2]["object"].timestamp, self.t2)
+        self.assertEqual(t[3]["object"], bytearray())
+        self.assertEqual(t[3]["object"].timestamp, self.t2)
 
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
