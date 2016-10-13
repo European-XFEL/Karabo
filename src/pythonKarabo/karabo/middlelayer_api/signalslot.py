@@ -149,9 +149,7 @@ class SignalSlotable(Configurable):
             loop = get_event_loop()
         self._ss = loop.getBroker(self.deviceId, type(self).__name__)
         self._sethash = {}
-        if server is not None:
-            server.addChild(self.deviceId, self)
-        return loop.create_task(self._run(), self)
+        return loop.create_task(self._run(server=server), self)
 
 
     # slotPing _is_ a slot, but not using the official decorator.
@@ -202,7 +200,7 @@ class SignalSlotable(Configurable):
         return Hash("heartbeatInterval", self.heartbeatInterval.value)
 
     @coroutine
-    def _run(self, **kwargs):
+    def _run(self, server=None, **kwargs):
         try:
             for k in dir(self.__class__):
                 v = getattr(self, k, None)
@@ -219,6 +217,8 @@ class SignalSlotable(Configurable):
                 pass
             self.__randPing = 0  # Answer on slotPing with argument rand=0
             self._ss.notify_network(self._initInfo())
+            if server is not None:
+                server.addChild(self.deviceId, self)
             yield from super(SignalSlotable, self)._run(**kwargs)
             yield from get_event_loop().run_coroutine_or_thread(
                 self.onInitialization)
