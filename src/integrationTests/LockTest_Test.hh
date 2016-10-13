@@ -38,7 +38,9 @@ private:
     void testRecursiveLocking();
     void testSettingOnLocked();
     void testLockStealing();
-    
+
+    void waitUntilLockClears();
+
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_deviceServerThread;
 
