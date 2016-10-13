@@ -635,7 +635,6 @@ namespace karabo {
                             if (slot) {
                                 // try/catch around user code that might have registered an exception handler:
                                 try {
-                                    if (m_lastCommandHandler) m_lastCommandHandler(slotFunction);
                                     slot->callRegisteredSlotFunctions(header, body);
                                 } catch (const Exception& e) {
                                     if (m_exceptionHandler) m_exceptionHandler(e);
@@ -758,7 +757,6 @@ namespace karabo {
 
             // Listener for heartbeats
             KARABO_SLOT3(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
-            m_byPassLockSlots.insert("slotHeartbeat");
 
             KARABO_SYSTEM_SIGNAL("signalInstanceNew", string, Hash);
 
@@ -768,43 +766,33 @@ namespace karabo {
 
             // Global ping listener
             KARABO_SLOT3(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/, bool /*trackPingedInstance*/)
-            m_byPassLockSlots.insert("slotPing");
-            
+
             // Global instance new notification
             KARABO_SLOT2(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/)
-            m_byPassLockSlots.insert("slotInstanceNew");
 
             // Global slot instance gone
             KARABO_SLOT2(slotInstanceGone, string /*instanceId*/, Hash /*instanceInfo*/)
-            m_byPassLockSlots.insert("slotInstanceGone");
 
             // Listener for ping answers
             KARABO_SLOT2(slotPingAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
-            m_byPassLockSlots.insert("slotPingAnswer");
 
             // Connects signal to slot
             KARABO_SLOT3(slotConnectToSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
-            m_byPassLockSlots.insert("slotConnectToSignal");
 
             // Replies whether slot exists on this instance
             KARABO_SLOT1(slotHasSlot, string /*slotFunction*/)
-            m_byPassLockSlots.insert("slotHasSlot");
 
             // Disconnects signal from slot
             KARABO_SLOT3(slotDisconnectFromSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
-            m_byPassLockSlots.insert("slotDisconnectFromSignal");
 
             // Function request
             KARABO_SLOT1(slotGetAvailableFunctions, string /*functionType*/)
-            m_byPassLockSlots.insert("slotGetAvailableFunctions");
 
             // Provides information about p2p connectivity
             KARABO_SLOT2(slotGetOutputChannelInformation, string /*ioChannelId*/, int /*pid*/)
-            m_byPassLockSlots.insert("slotGetOutputChannelInformation");
 
             // Establishes/Releases P2P connections
             KARABO_SLOT3(slotConnectToOutputChannel, string /*inputChannelName*/, karabo::util::Hash /*outputChannelInfo */, bool /*connect/disconnect*/)
-            m_byPassLockSlots.insert("slotConnectToOutputChannel");
         }
 
 
@@ -2194,10 +2182,5 @@ namespace karabo {
         float SignalSlotable::LatencyStats::average() const {
             return counts > 0 ? sum / static_cast<float> (counts) : -1.f;
         }
-        
-        const std::set<std::string>& SignalSlotable::getBypassLockSlots() const {
-            return m_byPassLockSlots;
-        };
-
     }
 }

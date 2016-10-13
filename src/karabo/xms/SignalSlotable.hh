@@ -354,11 +354,6 @@ namespace karabo {
             static boost::mutex m_connectionStringsMutex;
 
             static karabo::net::PointToPoint::Pointer m_pointToPoint;
-            
-            std::set<std::string> m_byPassLockSlots;
-
-            boost::function<void(const std::string&) > m_lastCommandHandler;
-
 
         public:
 
@@ -809,11 +804,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             bool connectP2P(const std::string& instanceId);
 
-            void disconnectP2P(const std::string& instanceId);
-
-            void registerLastCommandHandler(const boost::function<void(const std::string&)>& handler) {
-                m_lastCommandHandler = handler;
-            }
+            void disconnectP2P(const std::string& instanceId);           
 
         protected: // Functions
 
@@ -870,14 +861,6 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             void registerReply(const karabo::util::Hash& reply);
-            
-            /**
-             * Returns a list of slots in SignalSlotable that are allowed to
-             * bypass locks.
-             * @return 
-             */
-            const std::set<std::string>& getBypassLockSlots() const;
-
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             SignalInstancePointer getSignal(const std::string& signalFunction) const;
