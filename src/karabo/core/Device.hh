@@ -324,7 +324,7 @@ namespace karabo {
                 m_validatorExtern.setValidationRules(rules);
 
                 // Setup device logger
-                m_log = &(karabo::log::Logger::getCategory(m_deviceId)); // TODO use later: "device." + instanceId               
+                m_log = &(karabo::log::Logger::getCategory(m_deviceId)); // TODO use later: "device." + instanceId
             }
 
             virtual ~Device() {
@@ -1180,44 +1180,44 @@ namespace karabo {
 
                 // Check whether the slot is mentioned in the expectedParameters
                 // as the call guard only works on those and will ignore all others
-                bool isDeviceSlot = false;
+                bool isSchemaSlot = false;
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                    isDeviceSlot = m_fullSchema.has(slotName);
+                    isSchemaSlot = m_fullSchema.has(slotName);
                 }
 
-                // Log the call of this slot by setting a parameter of the device
-                if (isDeviceSlot) set("lastCommand", slotName);
-
                 // Check whether the slot can be called given the current locking state
-                if (allowLock() && (isDeviceSlot || slotName == "slotReconfigure") && slotName != "slotClearLock") {
-                    if (!slotIsValidUnderCurrentLock(slotName, callee)) return false;
+                if (allowLock() && (isSchemaSlot || slotName == "slotReconfigure") && slotName != "slotClearLock") {
+                    if (!isSlotValidUnderCurrentLock(slotName, callee)) return false;
                 }
 
                 // Check whether the slot can be called given the current device state
-                if (isDeviceSlot) {
-                    if (!slotIsValidUnderCurrentState(slotName)) return false;
+                if (isSchemaSlot) {
+                    if (!isSlotValidUnderCurrentState(slotName)) return false;
                 }
+
+                // Log the call of this slot by setting a parameter of the device
+                if (isSchemaSlot) set("lastCommand", slotName);
+
                 return true;
             }
 
-            bool slotIsValidUnderCurrentLock(const std::string& slotName, const std::string& callee) {
-                const std::string& lockHolder = get<std::string>("lockedBy");
+            bool isSlotValidUnderCurrentLock(const std::string& slotName, const std::string& callee) {
+                const std::string lockHolder = get<std::string>("lockedBy");
                 if (!lockHolder.empty()) {
-                    KARABO_LOG_DEBUG << "Device is locked by " << lockHolder << " and called by " << callee;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Device is locked by " << lockHolder << " and called by " << callee;
                     if (callee != "unknown" && callee != lockHolder) {
                         std::ostringstream msg;
                         msg << "Command " << "\"" << slotName << "\"" << " is not allowed as device is locked by "
                                 << "\"" << lockHolder << ".";
-                        std::string errorMessage = msg.str();
-                        reply(false, errorMessage);
+                        reply(false, msg.str());
                         return false;
                     }
                 }
                 return true;
             }
 
-            bool slotIsValidUnderCurrentState(const std::string& slotName) {
+            bool isSlotValidUnderCurrentState(const std::string& slotName) {
                 std::vector<karabo::util::State> allowedStates;
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
@@ -1226,13 +1226,12 @@ namespace karabo {
                     }
                 }
                 if (!allowedStates.empty()) {
-                    const karabo::util::State& currentState = getState();
+                    const karabo::util::State currentState = getState();
                     if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
                         std::ostringstream msg;
                         msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state "
                                 << "\"" << currentState.name() << "\" of device " << "\"" << m_deviceId << "\".";
-                        std::string errorMessage = msg.str();
-                        reply(errorMessage);
+                        reply(msg.str());
                         return false;
                     }
                 }
