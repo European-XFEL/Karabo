@@ -11,7 +11,7 @@ from .bases import BaseProjectObjectModel
 class DeviceConfigurationModel(BaseProjectObjectModel):
     """ A single device configuration
     """
-    configuration = Instance
+    configuration = Instance(object)
     server_id = String
     class_id = String
     instance_id = String
