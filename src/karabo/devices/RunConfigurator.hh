@@ -65,6 +65,12 @@ namespace karabo {
             
             void buildConfigurationInUse();
             
+            void buildDataSourceProperties(const std::vector<karabo::util::Hash>& table,
+                                           const std::string& groupId,
+                                           bool expertFlag,
+                                           bool userFlag,
+                                           karabo::util::Hash& result);
+            
             void preReconfigure(karabo::util::Hash& incomingReconfiguration);
             
             void postReconfigure();
