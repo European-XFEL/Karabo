@@ -199,9 +199,9 @@ class DeviceServer(SignalSlotable):
             obj.startInstance(self)
             return True, '"{}" started'.format(deviceId)
         except Exception as e:
-            self.logger.exception('could not start device "{}" of class "{}"'.
-                                  format(deviceId, classId))
-            return False, traceback.format_exc()
+            e.logmessage = ('could not start device "%s" of class "%s"',
+                            deviceId, classId)
+            raise
 
     def addChild(self, deviceId, child):
         self.deviceInstanceMap[deviceId] = child

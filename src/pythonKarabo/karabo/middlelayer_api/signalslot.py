@@ -3,6 +3,7 @@ from asyncio import (async, CancelledError, coroutine, get_event_loop,
                      sleep, TimeoutError, wait, wait_for)
 import logging
 import random
+import sys
 import weakref
 import inspect
 
@@ -20,8 +21,13 @@ class Signal(object):
 
 def _log_exception(func, device):
     logger = logging.getLogger(device.deviceId)
-    logger.exception('Exception in slot "%s" of device "%s"',
-                     func.__qualname__, device.deviceId)
+    _, exception, _ = sys.exc_info()
+    if exception is None or not hasattr(exception, "logmessage"):
+        logmessage = ('Exception in slot "%s" of device "%s"',
+                      func.__qualname__, device.deviceId)
+    else:
+        logmessage = exception.logmessage
+    logger.exception(*logmessage)
 
 
 def slot(f):
