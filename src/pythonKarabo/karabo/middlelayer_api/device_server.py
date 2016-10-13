@@ -139,8 +139,8 @@ class DeviceServer(SignalSlotable):
         return info
 
     @coroutine
-    def _run(self):
-        yield from super(DeviceServer, self)._run()
+    def _run(self, **kwargs):
+        yield from super(DeviceServer, self)._run(**kwargs)
 
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger

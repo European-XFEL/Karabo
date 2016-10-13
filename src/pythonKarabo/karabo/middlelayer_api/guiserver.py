@@ -99,9 +99,9 @@ class GuiServer(DeviceClientBase):
         self.subscriptions = WeakValueDictionary()
 
     @coroutine
-    def _run(self):
+    def _run(self, **kwargs):
         async(self.log_handler())
-        yield from super()._run()
+        yield from super()._run(**kwargs)
         async(self.run_server())
 
     @coroutine

@@ -160,12 +160,12 @@ class Macro(Device):
         return info
 
     @coroutine
-    def _run(self):
+    def _run(self, **kwargs):
         """ implement the RemoteDevice functionality, upon
         starting the device the devices are searched and then
         assigned to the object's properties """
 
-        yield from super(Macro, self)._run()
+        yield from super(Macro, self)._run(**kwargs)
 
         holders = []
 
