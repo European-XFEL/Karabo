@@ -760,9 +760,6 @@ class PythonDevice(NoFsm):
         if slotName not in self.fullSchema:
             return True
 
-        # Log the call of this slot by setting a parameter of the device
-        self.set("lastCommand", slotFunction);
-
         if self.fullSchema.hasAllowedStates(slotName):
             allowedStates = self.fullSchema.getAllowedStates(slotName)
             if allowedStates:
@@ -772,6 +769,10 @@ class PythonDevice(NoFsm):
                           "of device \"{}\"".format(slotName, currentState, self.deviceid)
                     self._ss.reply(msg)
                     return False
+
+        # Log the call of this slot by setting a parameter of the device
+        self.set("lastCommand", slotFunction);
+
         return True
 
     def slotGetConfiguration(self):
