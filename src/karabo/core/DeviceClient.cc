@@ -1517,16 +1517,24 @@ if (nodeData) {\
         }
         
         
+//        karabo::util::Hash DeviceClient::getOutputChannelDefaultHash(const std::string & deviceId, const std::string& outputChannelName){
+//            const Schema& schema = cacheAndGetDeviceSchema(deviceId);
+//            Validator::ValidationRules rules;
+//            rules.injectTimestamps = false;
+//            rules.allowAdditionalKeys = false;
+//            Validator validator(rules);
+//            Hash pHash;
+//            validator.validate(schema, Hash(), pHash);
+//            return pHash.get<Hash>(outputChannelName+".schema");
+//        }
+        
+        
         karabo::util::Hash DeviceClient::getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName){
             const Schema& schema = cacheAndGetDeviceSchema(deviceId);
-            Validator::ValidationRules rules;
-            rules.injectTimestamps = false;
-            rules.allowAdditionalKeys = false;
-            Validator validator(rules);
-            Hash pHash;
-            validator.validate(schema, Hash(), pHash);
-            return pHash.get<Hash>(outputChannelName+".schema");
+            const Hash& schemaHash = schema.getParameterHash();
+            return schemaHash.get<Hash>(outputChannelName+".schema");
         }
+        
         
         karabo::core::Lock DeviceClient::lock(const std::string& deviceId, bool recursive, int timeout) {
             //non waiting request for lock
