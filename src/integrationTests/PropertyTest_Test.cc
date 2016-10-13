@@ -16,7 +16,7 @@ PropertyTest_Test::~PropertyTest_Test() {
 
 
 void PropertyTest_Test::setUp() {
-    Hash config("DeviceServer", Hash("serverId", "testDeviceServer_1", "scanPlugins", false, "visibility", 4, "Logger.priority", "INFO"));
+    Hash config("DeviceServer", Hash("serverId", "testDeviceServer_1", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
     m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
     m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
 

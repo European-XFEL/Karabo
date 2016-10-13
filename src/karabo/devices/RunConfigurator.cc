@@ -210,269 +210,6 @@ namespace karabo {
         }
 
 
-        karabo::util::Hash RunConfigurator::filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema) {
-            Hash hash;
-
-            // Find the lastkey of the "Base class" schema
-            string lastkey = "";
-            {
-                vector<string> baseKeys;
-                Schema baseSchema;
-                Device<>::expectedParameters(baseSchema);
-                baseSchema.getParameterHash().getKeys(baseKeys);
-                if (!baseKeys.empty()) lastkey = baseKeys[baseKeys.size() - 1];
-            }
-
-            // Filter out the "Base class" schema's entries as well as "Slots" and "Input/Output" channels
-            Hash fullHash = schema.getParameterHash();
-            vector<string> keys;
-            fullHash.getKeys(keys);
-
-            bool ignore = true;
-            if (lastkey.empty()) ignore = false;
-
-            for (size_t i = 0; i < keys.size(); ++i) {
-                const string& key = keys[i];
-
-                // skip up-to the lastkey inclusive
-                if (ignore) {
-                    if (key == lastkey) ignore = false;
-                    fullHash.erase(key);
-                } else if (fullHash.hasAttribute(key, KARABO_SCHEMA_DISPLAY_TYPE)) {
-                    const std::string& displayType = fullHash.getAttribute<string > (key, KARABO_SCHEMA_DISPLAY_TYPE);
-                    if (displayType == "Slot" || displayType == "InputChannel" || displayType == "OutputChannel") {
-                        fullHash.erase(key);
-                    }
-                }
-            }
-
-            convertSchemaHash(fullHash, hash);
-            return Hash(deviceId, hash);
-        }
-
-
-        void RunConfigurator::convertSchemaHash(const karabo::util::Hash& schemaHash, karabo::util::Hash & hash) {
-
-            vector<string> params;
-            schemaHash.getPaths(params);
-
-            for (vector<string>::const_iterator it = params.begin(); it != params.end(); ++it) {
-                const string& path = *it;
-
-                // Get accessMode
-                int accessMode = INIT;
-                if (schemaHash.hasAttribute(path, KARABO_SCHEMA_ACCESS_MODE)) {
-                    accessMode = schemaHash.getAttribute<int>(path, KARABO_SCHEMA_ACCESS_MODE);
-                }
-
-                //if (accessMode > requestedMode) {
-                //    KARABO_LOG_FRAMEWORK_DEBUG << "FILTER OUT: PATH='" << path << "', accessMode=" << accessMode << ", requestedMode=" << requestedMode;
-                //    continue;
-                //}
-
-                if (!schemaHash.hasAttribute(path, KARABO_SCHEMA_VALUE_TYPE)) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "FILTER OUT: PATH='" << path << "'  because NO 'valueType' attribute!";
-                    continue;
-                }
-
-                string typeAsString = schemaHash.getAttribute<string > (path, KARABO_SCHEMA_VALUE_TYPE);
-                Types::ReferenceType valueType = Types::from<FromLiteral>(typeAsString);
-
-                switch (valueType) {
-                    case Types::BOOL:
-                    {
-                        hash.set(path, false);
-                        break;
-                    }
-                    case Types::VECTOR_BOOL:
-                    {
-                        hash.set(path, vector<bool>());
-                        break;
-                    }
-                    case Types::CHAR:
-                    {
-                        hash.set(path, '\0');
-                        break;
-                    }
-                    case Types::VECTOR_CHAR:
-                    {
-                        hash.set(path, vector<char>());
-                        break;
-                    }
-                    case Types::INT8:
-                    {
-                        hash.set<signed char>(path, 0);
-                        break;
-                    }
-                    case Types::VECTOR_INT8:
-                    {
-                        hash.set(path, vector<signed char>());
-                        break;
-                    }
-                    case Types::UINT8:
-                    {
-                        hash.set<unsigned char>(path, 0);
-                        break;
-                    }
-                    case Types::VECTOR_UINT8:
-                    {
-                        hash.set(path, vector<unsigned char>());
-                        break;
-                    }
-
-                    case Types::INT16:
-                    {
-                        hash.set<short>(path, 0);
-                        break;
-                    }
-                    case Types::VECTOR_INT16:
-                    {
-                        hash.set(path, vector<short>());
-                        break;
-                    }
-                    case Types::UINT16:
-                    {
-                        hash.set<unsigned short>(path, 0);
-                        break;
-                    }
-                    case Types::VECTOR_UINT16:
-                    {
-                        hash.set(path, vector<unsigned short>());
-                        break;
-                    }
-
-                    case Types::INT32:
-                    {
-                        hash.set<int>(path, 0);
-                        break;
-                    }
-                    case Types::VECTOR_INT32:
-                    {
-                        hash.set(path, vector<int>());
-                        break;
-                    }
-                    case Types::UINT32:
-                    {
-                        hash.set<unsigned int>(path, 0);
-                        break;
-                    }
-                    case Types::VECTOR_UINT32:
-                    {
-                        hash.set(path, vector<unsigned int>());
-                        break;
-                    }
-
-                    case Types::INT64:
-                    {
-                        hash.set<long long>(path, 0);
-                        break;
-                    }
-                    case Types::VECTOR_INT64:
-                    {
-                        hash.set(path, vector<long long>());
-                        break;
-                    }
-                    case Types::UINT64:
-                    {
-                        hash.set<unsigned long long>(path, 0);
-                        break;
-                    }
-                    case Types::VECTOR_UINT64:
-                    {
-                        hash.set(path, vector<unsigned long long>());
-                        break;
-                    }
-
-                    case Types::FLOAT:
-                    {
-                        hash.set(path, 0.0F);
-                        break;
-                    }
-                    case Types::VECTOR_FLOAT:
-                    {
-                        hash.set(path, vector<float>());
-                        break;
-                    }
-
-                    case Types::DOUBLE:
-                    {
-                        hash.set<double>(path, 0.0);
-                        break;
-                    }
-                    case Types::VECTOR_DOUBLE:
-                    {
-                        hash.set(path, vector<double>());
-                        break;
-                    }
-
-                    case Types::COMPLEX_FLOAT:
-                    {
-                        hash.set(path, complex<float>());
-                        break;
-                    }
-                    case Types::VECTOR_COMPLEX_FLOAT:
-                    {
-                        hash.set(path, vector<complex<float>>());
-                        break;
-                    }
-
-                    case Types::COMPLEX_DOUBLE:
-                    {
-                        hash.set(path, complex<double>());
-                        break;
-                    }
-                    case Types::VECTOR_COMPLEX_DOUBLE:
-                    {
-                        hash.set(path, vector<complex<double>>());
-                        break;
-                    }
-
-                    case Types::STRING:
-                    {
-                        hash.set(path, std::string());
-                        break;
-                    }
-                    case Types::VECTOR_STRING:
-                    {
-                        hash.set(path, vector<string>());
-                        break;
-                    }
-                    case Types::BYTE_ARRAY:
-                    {
-                        hash.set(path, std::pair<boost::shared_ptr<char>, size_t>());
-                        break;
-                    }
-
-
-                    default:
-                        KARABO_LOG_FRAMEWORK_WARN << "Unsupported property \"" << path
-                                << "\" of type  \"" << Types::to<ToLiteral>(valueType) << "\".  Skip it ...";
-                        //KARABO_PARAMETER_EXCEPTION("Unsupported property type : " + toString(type));
-                        continue;
-                }
-
-                // Filter attributes.   We use only:
-                // displayedName, description, alarm related stuff, unit, metric, pipeline, expert, user flags
-                Hash::Attributes attrs = schemaHash.getAttributes(path);
-                for (Hash::Attributes::const_iterator ii = attrs.begin(); ii != attrs.end(); ++ii) {
-                    const string& attrKey = ii->getKey();
-                    if (attrKey == KARABO_SCHEMA_CLASS_ID
-                        || attrKey == KARABO_SCHEMA_ACCESS_MODE
-                        || attrKey == KARABO_SCHEMA_DISPLAYED_NAME
-                        || attrKey == KARABO_SCHEMA_DESCRIPTION
-                        || attrKey.find("alarm") == 0
-                        || attrKey == KARABO_SCHEMA_UNIT_ENUM
-                        || attrKey == KARABO_SCHEMA_UNIT_NAME
-                        || attrKey == KARABO_SCHEMA_UNIT_SYMBOL
-                        || attrKey == KARABO_SCHEMA_METRIC_PREFIX_ENUM
-                        || attrKey == KARABO_SCHEMA_METRIC_PREFIX_NAME
-                        || attrKey == KARABO_SCHEMA_METRIC_PREFIX_SYMBOL)
-                        hash.setAttribute(path, ii->getKey(), ii->getValueAsAny());
-                }
-            }
-        }
-
-
         void RunConfigurator::initAvailableGroups() {
 
             const Hash runtimeInfo = remote().getSystemInformation();
@@ -739,38 +476,25 @@ namespace karabo {
                 const bool monitorOut = ii->get<bool>("monitored");
                 const bool inUse = ii->get<bool>("use");
 
+                KARABO_LOG_FRAMEWORK_DEBUG << "buildDataSourceProperties dataSourceId : " << dataSourceId << ", pipeline : " << pipelineFlag;
+                
+                int access = 0;
+                if (behavior == "record-all") access = INIT|READ|WRITE;
+                else if (behavior == "read-only") access = INIT|READ;
+                else access = INIT;
+                
                 if (inUse) {
                     Hash properties;
-                    if (!pipelineFlag) {
-                        Schema deviceSchema = remote().getDeviceSchema(dataSourceId);
-                        string deviceClassId = remote().get<string>(dataSourceId, "classId");
-                        string deviceVersion = remote().get<string>(dataSourceId, "classVersion");
-                        properties = filterDataSchema(dataSourceId, deviceSchema);
-                        properties.setAttribute(dataSourceId, "configurationGroupId", groupId);
-                        properties.setAttribute(dataSourceId, "classId", deviceClassId);
-                        properties.setAttribute(dataSourceId, "version", deviceVersion);
-                        properties.setAttribute(dataSourceId, "pipeline", pipelineFlag);
-                        properties.setAttribute(dataSourceId, "expertData", expertFlag);
-                        properties.setAttribute(dataSourceId, "userData", userFlag);
-                        properties.setAttribute(dataSourceId, "behavior", behavior);
-                        properties.setAttribute(dataSourceId, "monitorOut", monitorOut);
-                    } else {
-                        properties.set(dataSourceId, Hash());
-                        Hash& props = properties.get<Hash>(dataSourceId);
+                    remote().getDataSourceSchemaAsHash(dataSourceId, properties, access);
 
-                        vector<string> v;
-                        boost::split(v, dataSourceId, boost::is_any_of(":"));
-                        if (v.size() == 2) {
-                            Hash channelSchemaHash = remote().getOutputChannelSchema(v[0], v[1]);
-                            convertSchemaHash(channelSchemaHash, props);
-                        }
-                        properties.setAttribute(dataSourceId, "pipeline", pipelineFlag);
-                        properties.setAttribute(dataSourceId, "expertData", expertFlag);
-                        properties.setAttribute(dataSourceId, "userData", userFlag);
-                        properties.setAttribute(dataSourceId, "behavior", behavior);
-                        properties.setAttribute(dataSourceId, "monitorOut", monitorOut);
-                    }
+                    properties.setAttribute(dataSourceId, "configurationGroupId", groupId);
+                    properties.setAttribute(dataSourceId, "pipeline", pipelineFlag);
+                    properties.setAttribute(dataSourceId, "expertData", expertFlag);
+                    properties.setAttribute(dataSourceId, "userData", userFlag);
+                    properties.setAttribute(dataSourceId, "behavior", behavior);
+                    properties.setAttribute(dataSourceId, "monitorOut", monitorOut);
                     // TODO: we need "smart" merging where "high-grade" attribute overwrites "low-grade" one.
+                    KARABO_LOG_FRAMEWORK_DEBUG << "buildDataSourceProperties ===> ...\n" << properties;
                     result.merge(properties);
                 }
             }
