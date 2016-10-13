@@ -203,26 +203,29 @@ class SignalSlotable(Configurable):
 
     @coroutine
     def _run(self, **kwargs):
-        for k in dir(self.__class__):
-            v = getattr(self, k, None)
-            if callable(v) and hasattr(v, "slot"):
-                self._ss.register_slot(k, v)
-        async(self._ss.main(self))
         try:
-            yield from wait_for(
-                self.call(self.deviceId, "slotPing", self.deviceId,
-                          self.__randPing, False), timeout=1)
+            for k in dir(self.__class__):
+                v = getattr(self, k, None)
+                if callable(v) and hasattr(v, "slot"):
+                    self._ss.register_slot(k, v)
+            async(self._ss.main(self))
+            try:
+                yield from wait_for(
+                    self.call(self.deviceId, "slotPing", self.deviceId,
+                              self.__randPing, False), timeout=1)
+                raise KaraboError('deviceId "{}" already in use'.
+                                  format(self.deviceId))
+            except TimeoutError:
+                pass
+            self.__randPing = 0  # Answer on slotPing with argument rand=0
+            self._ss.notify_network(self._initInfo())
+            yield from super(SignalSlotable, self)._run(**kwargs)
+            yield from get_event_loop().run_coroutine_or_thread(
+                self.onInitialization)
+            self.__initialized = True
+        except:
             yield from self.slotKillDevice()
-            raise KaraboError('deviceId "{}" already in use'.
-                              format(self.deviceId))
-        except TimeoutError:
-            pass
-        self.__randPing = 0  # Start answering on slotPing with argument rand=0
-        self._ss.notify_network(self._initInfo())
-        yield from super(SignalSlotable, self)._run(**kwargs)
-        yield from get_event_loop().run_coroutine_or_thread(
-            self.onInitialization)
-        self.__initialized = True
+            raise
 
     @coslot
     def slotKillDevice(self):
