@@ -59,9 +59,9 @@ namespace karabo {
             
             std::vector<std::string> getAllSourceNames(const std::string& groupId) const;
             
-            karabo::util::Hash filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema);
+            //karabo::util::Hash filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema);
             
-            void convertSchemaHash(const karabo::util::Hash& fullHash, karabo::util::Hash& hash);
+            //void convertSchemaHash(const karabo::util::Hash& fullHash, karabo::util::Hash& hash);
             
             void buildConfigurationInUse();
             

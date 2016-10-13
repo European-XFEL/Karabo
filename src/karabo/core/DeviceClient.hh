@@ -7,6 +7,7 @@
  */
 #include <karabo/xms/SignalSlotable.hh>
 #include <karabo/util/Timestamp.hh>
+#include <karabo/util/Schema.hh>
 #include <karabo/core/Lock.hh>
 
 #ifndef KARABO_CORE_DEVICE_CLIENT_HH
@@ -628,6 +629,8 @@ namespace karabo {
              */
             karabo::core::Lock lock(const std::string& deviceId, bool recursive = false, int timeout = -1);
 
+            void getDataSourceSchemaAsHash(const std::string& dataSourceId, karabo::util::Hash& properties,
+                                           int accessMode = karabo::util::INIT|karabo::util::READ|karabo::util::WRITE);
 
         protected: // functions
 
@@ -723,6 +726,11 @@ namespace karabo {
             /// Marks 'instanceId' as used.
             /// Returns true if explicit "connect" call should still be done for it.
             bool connectNeeded(const std::string & instanceId);
+            
+            ///
+            void filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema, int accessMode, karabo::util::Hash& hash);
+            
+            void convertSchemaHash(const karabo::util::Hash& schemaHash, int accessMode, karabo::util::Hash & hash);
         };
     }
 }

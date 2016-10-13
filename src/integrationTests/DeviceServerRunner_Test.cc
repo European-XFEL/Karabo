@@ -24,7 +24,7 @@ DeviceServerRunner_Test::~DeviceServerRunner_Test() {
 
 
 void DeviceServerRunner_Test::setUp() {
-    Hash config("DeviceServer", Hash("serverId", "testDeviceServer_0", "scanPlugins", false, "visibility", 4, "Logger.priority", "INFO"));
+    Hash config("DeviceServer", Hash("serverId", "testDeviceServer_0", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
     m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
     m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
 
