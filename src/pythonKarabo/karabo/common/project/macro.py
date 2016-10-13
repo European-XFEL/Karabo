@@ -24,6 +24,7 @@ class MacroModel(BaseProjectObjectModel):
 
     @cached_property
     def _get_instance_id(self):
+        # XXX: Including the project name is dangerous. We should change this.
         return "Macro-{}-{}".format(self.project_name, self.title)
 
 
