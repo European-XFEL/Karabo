@@ -28,6 +28,15 @@ namespace karabo {
 
         virtual ~P2PSenderDevice();
 
+    private:
+        // slot for write command
+        void write();
+
+        /// method for writing thread
+        void writing();
+
+        boost::thread m_writingThread;
+
     };
 }
 
