@@ -16,7 +16,7 @@ from karathon import (
     UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, BrokerConnection,
-    DeviceClient, Epochstamp, Hash, HashFilter, HashMergePolicy,
+    DeviceClient, EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
     ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
     ValidatorValidationRules
@@ -989,7 +989,15 @@ def launchPythonDevice():
         assert deviceClass.__classid__ == classid
 
         device = Configurator(PythonDevice).create(classid, config)
-        device.run()
+
+        # Remove thread later once everything is on central event loop,
+        # i.e. device.run() does not block anymore.
+        t = threading.Thread(target = device.run)
+        t.start()
+        time.sleep(0.01) # some garantie that device.run will have properly started
+
+        EventLoop.work()
+        t.join()
         device.__del__()
     except Exception as e:
         print("Exception caught: " + str(e))
