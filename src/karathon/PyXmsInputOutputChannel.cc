@@ -256,7 +256,13 @@ namespace karathon {
 
     bp::object InputChannelWrap::readPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, size_t idx) {
         ScopedGILRelease nogil;
-        return Wrapper::toObject(self->read(idx));
+        // Not sure whether the following lines would be more efficient - they avoid the 'new' in
+        // InputChannel::read(idx), but I can imagine that behind the scenes of bp::object(Hash())
+        // there is a copy of the Hash, whereas the shared_pointer is probably more gracefully handled.
+        //  karabo::util::Hash data;
+        //  self->read(data, idx);
+        //  return bp::object(data);
+        return bp::object(self->read(idx));
     }
 
 
