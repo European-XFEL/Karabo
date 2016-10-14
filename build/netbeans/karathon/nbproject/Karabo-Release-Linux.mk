@@ -40,6 +40,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/FromNumpy.o \
 	${OBJECTDIR}/_ext/381567218/HashWrap.o \
 	${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o \
+	${OBJECTDIR}/_ext/381567218/PyCoreLockWrap.o \
 	${OBJECTDIR}/_ext/381567218/PyH5Tools.o \
 	${OBJECTDIR}/_ext/381567218/PyIoFileTools.o \
 	${OBJECTDIR}/_ext/381567218/PyLogLogger.o \
@@ -126,6 +127,11 @@ ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o: ../../../src/karathon/PyCoreDe
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o ../../../src/karathon/PyCoreDeviceClient.cc
+
+${OBJECTDIR}/_ext/381567218/PyCoreLockWrap.o: ../../../src/karathon/PyCoreLockWrap.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyCoreLockWrap.o ../../../src/karathon/PyCoreLockWrap.cc
 
 ${OBJECTDIR}/_ext/381567218/PyH5Tools.o: ../../../src/karathon/PyH5Tools.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -352,6 +358,19 @@ ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient_nomain.o: ${OBJECTDIR}/_ext/38156
 	    $(COMPILE.cc) -O2 -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient_nomain.o ../../../src/karathon/PyCoreDeviceClient.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PyCoreLockWrap_nomain.o: ${OBJECTDIR}/_ext/381567218/PyCoreLockWrap.o ../../../src/karathon/PyCoreLockWrap.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyCoreLockWrap.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyCoreLockWrap_nomain.o ../../../src/karathon/PyCoreLockWrap.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyCoreLockWrap.o ${OBJECTDIR}/_ext/381567218/PyCoreLockWrap_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/PyH5Tools_nomain.o: ${OBJECTDIR}/_ext/381567218/PyH5Tools.o ../../../src/karathon/PyH5Tools.cc 
