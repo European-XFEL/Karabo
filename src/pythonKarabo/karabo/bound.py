@@ -12,6 +12,7 @@ from .bound_api.ok_error_fsm import OkErrorFsm
 from .bound_api.start_stop_fsm import StartStopFsm
 from .bound_api.start_stop_fsm_periodic import StartStopFsmPeriodic
 from .bound_api.device import PythonDevice, launchPythonDevice
+from .bound_api.device_client import DeviceClient
 from .bound_api.device_server import DeviceServer, Launcher
 from .bound_api.motor_interface import MotorInterface
 from .bound_api.plugin_loader import PluginLoader
@@ -47,8 +48,8 @@ from karathon import (
     COMMAND, COULOMB, COUNT, Category, Channel,
     ClassInfo, Connection,
     DAY, DECA, DECI, DEGREE, DEGREE_CELSIUS, DOUBLE_ELEMENT,
-    DateTimeString, DetectorGeometry, DeviceClient, DeviceClientBase,
-    Dims, ELECTRONVOLT, EVERY_100MS, EVERY_10MIN, EVERY_10S, EVERY_1MIN,
+    DateTimeString, DetectorGeometry, Dims,
+    ELECTRONVOLT, EVERY_100MS, EVERY_10MIN, EVERY_10S, EVERY_1MIN,
     EVERY_1S, EVERY_5S, EVERY_EVENT, EXA, EXPERT,
     Encoding, Epochstamp, ErrorCode,
     FARAD, FEMTO, FEMTOSEC, FLOAT_ELEMENT, GIGA, GRAM, GRAY,
