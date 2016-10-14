@@ -41,8 +41,8 @@ namespace karabo {
             STRING_ELEMENT(expected).key("behavior")
                     .displayedName("Behavior")
                     .description("Configure data source's behavior")
-                    .options("ignore,read-only,record-all")
-                    .assignmentOptional().defaultValue("ignore")
+                    .options("init,read-only,record-all")
+                    .assignmentOptional().defaultValue("init")
                     .reconfigurable()
                     .commit();
 
@@ -205,7 +205,7 @@ namespace karabo {
                             table.push_back(Hash("source", deviceId + ":" + ochannels[ch],
                                                  "pipeline", true,
                                                  "type", "control",
-                                                 "behavior", "ignore",
+                                                 "behavior", "init",
                                                  "monitored", false));
                         }
                     } else {
@@ -219,7 +219,7 @@ namespace karabo {
                                 table.push_back(Hash("source", deviceId + ":" + ochannels[ch],
                                                      "pipeline", true,
                                                      "type", "control",
-                                                     "behavior", "ignore",
+                                                     "behavior", "init",
                                                      "monitored", false));
                             }
                         }
