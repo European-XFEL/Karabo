@@ -30,7 +30,7 @@ PipelinedProcessing_Test::~PipelinedProcessing_Test() {
 
 void PipelinedProcessing_Test::setUp() {
 
-    Hash config("DeviceServer", Hash("serverId", "testServerPP", "scanPlugins", false, "visibility", 4, "Logger.priority", "DEBUG"));
+    Hash config("DeviceServer", Hash("serverId", "testServerPP", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
     m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
     m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
