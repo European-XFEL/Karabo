@@ -15,15 +15,6 @@
 namespace karabo {
     namespace devices {
 
-//        enum DataSourceType {
-//
-//            CONTROL, DIAG, SCI, P2P
-//        };
-//
-//        enum DataSourceBehavior {
-//
-//            IGNOREMODE, INITMODE, READONLYMODE, RECORDALLMODE
-//        };
 
         class RunControlDataSource {
 

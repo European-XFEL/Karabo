@@ -472,20 +472,32 @@ namespace karabo {
                 const string& dataSourceId = ii->get<string>("source");
                 const bool pipelineFlag = ii->get<bool>("pipeline");
                 const string& dataSourceType = ii->get<string>("type");
-                const string& behavior = ii->get<string>("behavior");
+                string behavior = ii->get<string>("behavior");
                 const bool monitorOut = ii->get<bool>("monitored");
                 const bool inUse = ii->get<bool>("use");
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "buildDataSourceProperties dataSourceId : " << dataSourceId << ", pipeline : " << pipelineFlag;
-                
-                int access = 0;
-                if (behavior == "record-all") access = INIT|READ|WRITE;
-                else if (behavior == "read-only") access = INIT|READ;
-                else access = INIT;
-                
+
+                // Inclusiveness for "behavior" attribute
+                // "smart" merging where "high-grade" behavior attribute overwrites "low-grade" one.
+                if (result.has(dataSourceId)) {
+                    const string& oldBehavior = result.getAttribute<string>(dataSourceId, "behavior");
+                    if (behavior == "init" || (behavior == "read-only" && oldBehavior == "record-all"))
+                        behavior = oldBehavior;
+                }
+
                 if (inUse) {
                     Hash properties;
+                    // It was decided not to send all properties to the PCLayer.
+                    // The call to 'getDataSourceSchemaAsHash()' will be done by PCLayer
+                    int access = 0;
+                    if (behavior == "record-all") access = INIT|READ|WRITE;
+                    else if (behavior == "read-only") access = INIT|READ;
+                    else access = INIT;
                     remote().getDataSourceSchemaAsHash(dataSourceId, properties, access);
+
+                    // Instead just send a stub
+                    //properties.set(dataSourceId, Hash());
 
                     properties.setAttribute(dataSourceId, "configurationGroupId", groupId);
                     properties.setAttribute(dataSourceId, "pipeline", pipelineFlag);
@@ -493,9 +505,7 @@ namespace karabo {
                     properties.setAttribute(dataSourceId, "userData", userFlag);
                     properties.setAttribute(dataSourceId, "behavior", behavior);
                     properties.setAttribute(dataSourceId, "monitorOut", monitorOut);
-                    // TODO: we need "smart" merging where "high-grade" attribute overwrites "low-grade" one.
-                    KARABO_LOG_FRAMEWORK_DEBUG << "buildDataSourceProperties ===> ...\n" << properties;
-                    result.merge(properties);
+                    result.merge(properties, Hash::REPLACE_ATTRIBUTES);
                 }
             }
         }
