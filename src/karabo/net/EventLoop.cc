@@ -38,6 +38,11 @@ namespace karabo {
         }
 
 
+        void EventLoop::work() {
+            boost::asio::io_service::work work(getIOService());
+            run();
+        }
+
         void EventLoop::run() {
             instance().runProtected();
             instance().m_threadPool.join_all();

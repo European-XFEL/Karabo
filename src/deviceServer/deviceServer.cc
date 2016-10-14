@@ -37,9 +37,7 @@ int main(int argc, char** argv) {
                                    }
                                });
 
-            boost::asio::io_service::work work(EventLoop::getIOService());
-
-            EventLoop::run(); // Block central event loop
+            EventLoop::work(); // Blocking central event loop
             t.join();
         }
 
