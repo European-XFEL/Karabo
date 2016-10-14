@@ -158,7 +158,7 @@ namespace karabo {
 
 
         void RunConfigurationGroup::preReconfigure(karabo::util::Hash& incomingReconfiguration) {
-            KARABO_LOG_FRAMEWORK_INFO << "RunConfigurationGroup::preReconfigure  .... incomingReconfiguration ==> ...\n" << incomingReconfiguration;
+            KARABO_LOG_FRAMEWORK_DEBUG << "RunConfigurationGroup::preReconfigure  .... incomingReconfiguration ==> ...\n" << incomingReconfiguration;
 
             if (!incomingReconfiguration.has("group")) return;
 
@@ -170,24 +170,7 @@ namespace karabo {
 
                 const vector<Hash>& current = currentGroup.get<vector < Hash >> ("expert");
                 const vector<Hash>& input = inputGroup.get<vector < Hash >> ("expert");
-
-                for (size_t i = 0; i < input.size(); i++) {
-                    const string& deviceId = input[i].get<string>("source");
-                    const bool pipeline = input[i].get<bool>("pipeline");
-                    expert.push_back(input[i]);
-                    vector<Hash>::const_iterator it = findDataSource(current, deviceId);
-                    if (it == current.end() && !pipeline) {
-                        // this is a device ... get its output channels
-                        vector<string> ochannels = remote().getOutputChannelNames(deviceId);
-                        for (size_t ch = 0; ch < ochannels.size(); ch++) {
-                            expert.push_back(Hash("source", deviceId + ":" + ochannels[ch],
-                                                  "pipeline", true,
-                                                  "type", "control",
-                                                  "behavior", "ignore",
-                                                  "monitored", false));
-                        }
-                    }
-                }
+                fillTable(current, input, expert);
                 // update expert table
                 inputGroup.set("expert", expert);
             }
@@ -197,26 +180,51 @@ namespace karabo {
 
                 const vector<Hash>& current = currentGroup.get<vector < Hash >> ("user");
                 const vector<Hash>& input = inputGroup.get<vector < Hash >> ("user");
+                fillTable(current, input, user);
+                // set new version of expert table
+                inputGroup.set("user", user);
+            }
+        }
 
-                for (size_t i = 0; i < input.size(); i++) {
-                    const string& deviceId = input[i].get<string>("source");
-                    const bool pipeline = input[i].get<bool>("pipeline");
-                    user.push_back(input[i]);
-                    vector<Hash>::const_iterator it = findDataSource(current, deviceId);
-                    if (it == current.end() && !pipeline) {
-                        // this is a device ... get its output channels
+
+        void RunConfigurationGroup::fillTable(const std::vector<karabo::util::Hash>& current,
+                                              const std::vector<karabo::util::Hash>& input,
+                                              std::vector<karabo::util::Hash>& table) {
+
+            for (size_t i = 0; i < input.size(); i++) {
+                const string& deviceId = input[i].get<string>("source");
+                const bool pipeline = input[i].get<bool>("pipeline");
+                table.push_back(input[i]);
+                vector<Hash>::const_iterator it = findDataSource(current, deviceId);
+                if (!pipeline) {
+                    // Device ....
+                    if (it == current.end()) {
+                        // ... is new one ... get its output channels and add them to the table ...
                         vector<string> ochannels = remote().getOutputChannelNames(deviceId);
                         for (size_t ch = 0; ch < ochannels.size(); ch++) {
-                            user.push_back(Hash("source", deviceId + ":" + ochannels[ch],
-                                                "pipeline", true,
-                                                "type", "control",
-                                                "behavior", "ignore",
-                                                "monitored", false));
+                            table.push_back(Hash("source", deviceId + ":" + ochannels[ch],
+                                                 "pipeline", true,
+                                                 "type", "control",
+                                                 "behavior", "ignore",
+                                                 "monitored", false));
+                        }
+                    } else {
+                        // ... exists. Check if its output channels are in the table and ...
+                        // ... if not, add them to the table ...
+                        vector<string> ochannels = remote().getOutputChannelNames(deviceId);
+                        for (size_t ch = 0; ch < ochannels.size(); ch++) {
+                            vector<Hash>::const_iterator ii = findDataSource(current, deviceId + ":" + ochannels[ch]);
+                            if (ii == current.end()) {
+                                //Existing device has output channel not inserted yet
+                                table.push_back(Hash("source", deviceId + ":" + ochannels[ch],
+                                                     "pipeline", true,
+                                                     "type", "control",
+                                                     "behavior", "ignore",
+                                                     "monitored", false));
+                            }
                         }
                     }
                 }
-                // set new version of expert table
-                inputGroup.set("user", user);
             }
         }
     }
