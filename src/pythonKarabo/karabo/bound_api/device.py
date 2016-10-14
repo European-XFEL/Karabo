@@ -307,7 +307,7 @@ class PythonDevice(NoFsm):
         
         # Run event loop ( in a thread ) with given info
         # TODO Make configurable
-        t = threading.Thread(target = self._ss.runEventLoop, args = (20, info))
+        t = threading.Thread(target=self._ss.runEventLoop, args=(20, info))
         t.start()
         time.sleep(0.01) # for rescheduling, some garantie that runEventLoop will start before FSM
         
@@ -992,7 +992,7 @@ def launchPythonDevice():
 
         # Remove thread later once everything is on central event loop,
         # i.e. device.run() does not block anymore.
-        t = threading.Thread(target = device.run)
+        t = threading.Thread(target=device.run)
         t.start()
         time.sleep(0.01) # some garantie that device.run will have properly started
 
