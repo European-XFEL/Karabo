@@ -66,6 +66,10 @@ namespace karabo {
             void slotGetGroup();
             
             void preReconfigure(karabo::util::Hash& incomingReconfiguration);
+            
+            void fillTable(const std::vector<karabo::util::Hash>& current,
+                           const std::vector<karabo::util::Hash>& input,
+                           std::vector<karabo::util::Hash>& table);
 
         };
     }
