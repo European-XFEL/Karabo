@@ -1653,7 +1653,7 @@ if (nodeData) {\
                     accessMode = schemaHash.getAttribute<int>(path, KARABO_SCHEMA_ACCESS_MODE);
                 }
 
-                if (accessMode > requestedAccessMode) {
+                if (!(accessMode & requestedAccessMode)) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "FILTER OUT: PATH='" << path << "', accessMode=" << accessMode << ", requestedMode=" << requestedAccessMode;
                     continue;
                 }
