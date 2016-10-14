@@ -7,6 +7,7 @@
 
 #include "PipelinedProcessing_Test.hh"
 
+#include "karabo/net/EventLoop.hh"
 
 USING_KARABO_NAMESPACES;
 
@@ -29,7 +30,7 @@ PipelinedProcessing_Test::~PipelinedProcessing_Test() {
 
 void PipelinedProcessing_Test::setUp() {
 
-    Hash config("DeviceServer", Hash("serverId", "testServerPP", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
+    Hash config("DeviceServer", Hash("serverId", "testServerPP", "scanPlugins", false, "visibility", 4, "Logger.priority", "DEBUG"));
     m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
     m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
@@ -54,7 +55,9 @@ void PipelinedProcessing_Test::appTestRunner() {
     CPPUNIT_ASSERT(success.first);
 
     testGetOutputChannelSchema();
-   
+
+    testPipe();
+
 }
 
 
@@ -78,3 +81,25 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema(){
 }
 
 
+void PipelinedProcessing_Test::testPipe() {
+    boost::thread t(boost::bind(&karabo::net::EventLoop::work));
+
+    const Hash cfg("deviceId", "pipeTestReceiver", "processingTime", 100,
+                   "input.connectedOutputChannels", "p2pTestSender:output1");
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerPP", "PipeReceiverDevice",
+                                                                       cfg, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+
+    // Some time to establish connection
+    boost::this_thread::sleep(boost::posix_time::seconds(3)); // No idea yet how long!
+    success = m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+
+    // Some time to process data
+    boost::this_thread::sleep(boost::posix_time::seconds(4)); // No idea yet how long!
+    const unsigned int nReceived = m_deviceClient->get<unsigned int>("pipeTestReceiver", "nTotalData");
+    CPPUNIT_ASSERT_EQUAL(5u, nReceived); // 5 is default
+
+    karabo::net::EventLoop::stop();
+    t.join();
+}
