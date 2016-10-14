@@ -20,5 +20,19 @@ class BaseProjectObjectModel(HasStrictTraits):
     simple_name = String
 
     def _uuid_default(self):
-        # If a uuid isn't supplied, generate one
+        """If a uuid isn't supplied, generate one
+        """
         return str(uuid.uuid4())
+
+    def _uuid_changed(self, old, new):
+        """Validate user-supplied UUIDs.
+
+        `uuid.UUID` will raise an exception if you give it a string which is
+        not a proper UUID hex-string.
+        """
+        try:
+            uuid.UUID(new)
+        except ValueError:
+            # Reset to a safe value
+            self.uuid = old
+            raise
