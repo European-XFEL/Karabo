@@ -34,6 +34,7 @@ namespace karathon {
                 throw KARABO_PARAMETER_EXCEPTION("Broker connection is not valid.");
             }
             m_signalSlotableWrap = boost::static_pointer_cast<SignalSlotableWrap > (p);
+            importStateAndAlarmConditionModules();
         }
 
         DeviceClientWrap(boost::shared_ptr<SignalSlotableWrap>& o)
@@ -44,6 +45,7 @@ namespace karathon {
                 throw KARABO_PARAMETER_EXCEPTION("Broker connection is not valid.");
             }
             m_signalSlotableWrap = boost::static_pointer_cast<SignalSlotableWrap > (p);
+            importStateAndAlarmConditionModules();
         }
 
         ~DeviceClientWrap() {
@@ -118,33 +120,26 @@ namespace karathon {
             return Wrapper::fromStdVectorToPyList(this->getCurrentlyExecutableCommands(instanceId));
         }
 
-        //        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-        //            try {
-        //                ScopedGILRelease nogil;
-        //                return HashWrap::get(this->DeviceClient::cacheAndGetConfiguration(instanceId), key, keySep);
-        //            } catch (const karabo::util::Exception& e) {
-        //                throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
-        //            }
-        //        }
-
-        //        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-        //            karabo::util::Hash hash;
-        //            try {
-        //                ScopedGILRelease nogil;
-        //                this->DeviceClient::get(instanceId, hash);
-        //            } catch(...) {
-        //                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
-        //            }
-        //            if (hash.has(key)) {
-        //                return Wrapper::toObject(hash.getNode(key, keySep.at(0)).getValueAsAny(), HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
-        //            }
-        //            throw KARABO_PARAMETER_EXCEPTION("The key \"" + key + "\" is not found in device \"" + instanceId + "\" configuration:\n" + hash);
-        //        }
-
         bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
             boost::any value;
             try {
+                //getDeviceSchema also does a ScopedGILRelease
+                const karabo::util::Schema schema = getDeviceSchema(instanceId);
                 ScopedGILRelease nogil;
+                const karabo::util::Hash::Attributes attrs = schema.getParameterHash().getNode(key).getAttributes();
+                if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
+                    const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
+                    if (leafType == karabo::util::Schema::STATE) {
+                        const std::string state = boost::any_cast<std::string>(this->DeviceClient::getAsAny(instanceId, key, keySep.at(0)));
+                        ScopedGILAcquire gil; //gil is important here -> we are using the interpreter to generate return object
+                        return bp::object(m_statesModule.attr("State")(state));
+                    }
+                    if (leafType == karabo::util::Schema::ALARM_CONDITION) {
+                        const std::string condition = boost::any_cast<std::string>(this->DeviceClient::getAsAny(instanceId, key, keySep.at(0)));
+                        ScopedGILAcquire gil; //gil is important here -> we are using the interpreter to generate return object
+                        return bp::object(m_alarmConditionModule.attr("AlarmCondition")(condition));
+                    }
+                }
                 value = this->DeviceClient::getAsAny(instanceId, key, keySep.at(0));
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("The key \"" + key + "\" is not found in the device \"" + instanceId + "\""));
@@ -458,12 +453,21 @@ namespace karathon {
             }
         }
 
+        void importStateAndAlarmConditionModules() {
+            Py_Initialize(); //this is a no-op if already done
+            m_alarmConditionModule = bp::import("karabo.common.alarm_conditions");
+            m_statesModule = bp::import("karabo.common.states");
+        }
+
 
     private: // members
 
         bool m_isVerbose;
 
         boost::shared_ptr<SignalSlotableWrap> m_signalSlotableWrap;
+
+        bp::object m_alarmConditionModule;
+        bp::object m_statesModule;
 
     };
 }
