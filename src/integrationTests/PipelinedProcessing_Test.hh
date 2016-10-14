@@ -32,6 +32,7 @@ private:
 
     void appTestRunner();
     void testGetOutputChannelSchema();
+    void testPipe();
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_deviceServerThread;
