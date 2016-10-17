@@ -13,6 +13,8 @@
     <logicalFolder name="f5" displayName="core" projectFiles="true">
       <itemPath>../../../src/karathon/DeviceClientWrap.hh</itemPath>
       <itemPath>../../../src/karathon/PyCoreDeviceClient.cc</itemPath>
+      <itemPath>../../../src/karathon/PyCoreLockWrap.cc</itemPath>
+      <itemPath>../../../src/karathon/PyCoreLockWrap.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f4" displayName="IO Binding" projectFiles="true">
       <itemPath>../../../src/karathon/PyH5Tools.cc</itemPath>
@@ -68,6 +70,8 @@
       <itemPath>../../../src/karathon/PyWebAuthenticator.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
+      <itemPath>../../../src/karathon/FromNumpy.cc</itemPath>
+      <itemPath>../../../src/karathon/FromNumpy.hh</itemPath>
       <itemPath>../../../src/karathon/PyXmsInputOutputChannel.cc</itemPath>
       <itemPath>../../../src/karathon/PyXmsInputOutputChannel.hh</itemPath>
       <itemPath>../../../src/karathon/PyXmsSignalSlotable.cc</itemPath>
@@ -76,8 +80,6 @@
       <itemPath>../../../src/karathon/SignalWrap.hh</itemPath>
       <itemPath>../../../src/karathon/SlotWrap.cc</itemPath>
       <itemPath>../../../src/karathon/SlotWrap.hh</itemPath>
-      <itemPath>../../../src/karathon/FromNumpy.cc</itemPath>
-      <itemPath>../../../src/karathon/FromNumpy.hh</itemPath>
       <itemPath>../../../src/karathon/ToNumpy.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -223,6 +225,16 @@
             <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
           </preprocessorList>
         </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyCoreLockWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyCoreLockWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karathon/PyH5Tools.cc" ex="false" tool="1" flavor2="0">
       </item>
@@ -653,6 +665,16 @@
             <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
           </preprocessorList>
         </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyCoreLockWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyCoreLockWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karathon/PyH5Tools.cc" ex="false" tool="1" flavor2="0">
       </item>
