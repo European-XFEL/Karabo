@@ -1533,7 +1533,7 @@ namespace karabo {
              * Clear any lock on this device
              */
             void slotClearLock() {
-                set("lockedBy", "");
+                set("lockedBy", std::string());
             }
         };
 

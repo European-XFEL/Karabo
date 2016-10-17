@@ -931,3 +931,7 @@ class DeviceClient(object):
             
         """
         self.executeNoWait(deviceId, "slotLoggerPriority", priority)
+
+
+    def lock(self, deviceId, recursive = False):
+        return self.__client.lock(deviceId, recursive)

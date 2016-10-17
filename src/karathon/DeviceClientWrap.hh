@@ -17,6 +17,7 @@
 #include "HashWrap.hh"
 #include "ScopedGILRelease.hh"
 #include "ScopedGILAcquire.hh"
+#include "PyCoreLockWrap.hh"
 
 namespace bp = boost::python;
 
@@ -356,6 +357,34 @@ namespace karathon {
             return this->DeviceClient::getOutputChannelSchema(deviceId, outputChannelName);
         }
 
+        boost::shared_ptr<karathon::LockWrap> lockPy(const std::string& deviceId, bool recursive, int timeout) {
+            //non waiting request for lock
+
+            if (timeout == 0) {
+                return boost::make_shared<karathon::LockWrap>(boost::make_shared<karabo::core::Lock>(m_signalSlotable,
+                                                                                                     deviceId, recursive));
+            }
+
+            //timeout was given
+            const int waitTime = 1; //second
+            int nTries = 0;
+            while (true) {
+                try {
+                    return boost::make_shared<karathon::LockWrap>(boost::make_shared<karabo::core::Lock>(m_signalSlotable,
+                                                                                                         deviceId, recursive));
+
+                } catch (const karabo::util::LockException& e) {
+                    if (nTries++ > timeout / waitTime && timeout != -1) {
+                        //rethrow
+                        throw KARABO_LOCK_EXCEPTION(e.userFriendlyMsg());
+                    }
+                    //otherwise pass through and try again
+                    boost::this_thread::sleep(boost::posix_time::seconds(waitTime));
+                }
+
+            }
+        }
+
 
     private:
 
@@ -395,6 +424,7 @@ namespace karathon {
                         }
                     }
                 } catch (const karabo::util::Exception& e) {
+
                     std::cout << e.userFriendlyMsg();
                 }
             }
@@ -409,6 +439,7 @@ namespace karathon {
                 }
             }
             if (!registeredMonitors.empty()) {
+
                 this->callMonitor(instanceId, registeredMonitors, hash);
             }
         }
