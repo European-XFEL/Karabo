@@ -319,17 +319,51 @@ namespace karabo {
             template<class T>
             T get(const std::string& instanceId, const std::string& key, const char keySep = '.') {
                 try {
+                    const karabo::util::Hash::Attributes& attrs = getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
+                    if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
+                        const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
+                        if (leafType == karabo::util::Schema::STATE) {
+                            if (typeid (T) == typeid (karabo::util::State)) {
+                                return *reinterpret_cast<const T*> (&karabo::util::State::fromString(cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
+                            }
+                            KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
+                        }
+                        if (leafType == karabo::util::Schema::ALARM_CONDITION) {
+                            if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
+                                return *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
+                            }
+                            KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
+                        }
+                    }
                     return cacheAndGetConfiguration(instanceId).get<T > (key, keySep);
                 } catch (const karabo::util::Exception& e) {
 
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
-                    return T();
+                    return *static_cast<T*> (NULL); // never reached. Keep it to make the compiler happy.
                 }
             }
 
             template<class T>
             void get(const std::string& instanceId, const std::string& key, T& value, const char keySep = '.') {
                 try {
+                    const karabo::util::Hash::Attributes& attrs = getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
+                    if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
+                        const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
+                        if (leafType == karabo::util::Schema::STATE) {
+                            if (typeid (T) == typeid (karabo::util::State)) {
+                                value = *reinterpret_cast<const T*> (&karabo::util::State::fromString(cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
+                                return;
+                            }
+                            KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
+                        }
+                        if (leafType == karabo::util::Schema::ALARM_CONDITION) {
+                            if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
+                                value = *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
+                                return;
+                            }
+                            KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
+                        }
+                    }
                     return cacheAndGetConfiguration(instanceId).get(key, value, keySep);
                 } catch (const karabo::util::Exception& e) {
 
@@ -349,35 +383,8 @@ namespace karabo {
 
             boost::any getAsAny(const std::string& instanceId, const std::string& key, const char keySep = '.') {
                 try {
-                    /*if(cacheAndGetConfiguration(instanceId).getNode(key, keySep).getType() != karabo::util::Types::VECTOR_HASH ||
-                            !cacheAndGetConfiguration(instanceId).hasAttribute(key, KARABO_SCHEMA_ROW_SCHEMA, keySep)){*/
                     return cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValueAsAny();
-                    /*} else {
-                         std::vector<karabo::util::Hash> value = cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValue<std::vector<karabo::util::Hash> >();
-                         for(std::vector<karabo::util::Hash>::iterator it = value.begin(); it != value.end(); ++it){
-                             for(karabo::util::Hash::iterator h_it = it->begin(); h_it != it->end(); ++h_it){
-                                 if(h_it->hasAttribute("isAliasing")){
-                                     std::string isAliasing = h_it->getAttribute<std::string>("isAliasing");
-                                     size_t sepPos = isAliasing.find(".");
-                                     std::string deviceId = isAliasing.substr(0, sepPos);
-                                     std::string keyPath = isAliasing.substr(sepPos+1);
-                                     try {
-                                         if(this->hasAttribute(deviceId, keyPath, "isAliasing")){
-                                             throw KARABO_PARAMETER_EXCEPTION("Refusing to get monitor value of "+keyPath+" as it is a monitor itself");
-                                         }
-                                         h_it->setValue(this->getAsAny(deviceId, keyPath));
-                                     } catch(const karabo::util::Exception& e){
-                                         KARABO_LOG_FRAMEWORK_WARN<<"Could not retrieve monitored parameter "<<h_it->getKey()<<" from device "<<deviceId;
-                                         KARABO_LOG_FRAMEWORK_WARN<<"Reason: "<<e.userFriendlyMsg();
-                                     }
-                                 }
-                             }
-                         }
-                         return boost::any(value); //will only be reached if T is actually a vector<Hash>
-
-                     }*/
                 } catch (const karabo::util::Exception& e) {
-
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
                 }
                 return boost::any();
