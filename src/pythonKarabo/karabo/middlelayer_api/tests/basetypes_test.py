@@ -5,11 +5,12 @@ from unittest import TestCase, main
 import pint
 import numpy
 
+from karabo.middlelayer import unit
 from karabo.middlelayer_api.enums import Unit, MetricPrefix
 from karabo.middlelayer_api.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
     TableValue, VectorStringValue, wrap)
-from karabo.middlelayer_api.hash import Int32, Float
+from karabo.middlelayer_api.hash import Hash, Int32, Float
 from karabo.middlelayer_api.timestamp import Timestamp
 
 
@@ -30,6 +31,7 @@ class Tests(TestCase):
 
         b = VectorCharValue(b"ase", descriptor=7, timestamp=2)
         self.assertEqual(b, b"ase")
+        self.assertNotEqual(b, b"ddsa")
         self.assertTrue(b == b"ase")
         self.assertTrue(b"ase" == b)
         self.assertFalse(b == "ase")
@@ -83,6 +85,9 @@ class Tests(TestCase):
         self.assertEqual(f.timestamp, 33)
         self.assertEqual(str(f), "False")
         self.assertEqual(repr(f), "False")
+
+        # BoolValue isn't a bool, assure we can still serialize
+        Hash("t", t, "f", f).encode("Bin")
 
         c = BoolValue(f)
         self.assertFalse(c)
@@ -192,12 +197,34 @@ class Tests(TestCase):
         self.assertEqual(c, l)
 
     def test_table(self):
-        t = TableValue([])
+        dtype = numpy.dtype([("integer", "i"), ("object", "O")])
+        units = {"integer": (Unit.METER, MetricPrefix.MILLI),
+                 "object": (Unit.GRAM, MetricPrefix.KILO)}
+        t = TableValue(numpy.array([], dtype=dtype), units)
         self.assertEqual(len(t), 0)
 
-        t = TableValue([3, 4, 5], timestamp=self.t2)
-        self.assertEqual(t, [3, 4, 5])
+        t = TableValue(numpy.array([(3, "asdf"), (2, numpy.arange(10)),
+                                    (4, b"fdas"), (5, bytearray())],
+                                   dtype=dtype), units, timestamp=self.t2)
         self.assertEqual(t.timestamp, self.t2)
+        self.assertEqual(t["integer"][0], 3 * unit.millimeter)
+        self.assertEqual(t["integer"][0].timestamp, self.t2)
+        self.assertEqual((2 * t["integer"])[1], 4 * unit.millimeter)
+        self.assertEqual((2 * t["integer"]).timestamp, self.t2)
+        self.assertEqual(t["object"][0], "asdf")
+        self.assertEqual(t["object"][0].timestamp, self.t2)
+        self.assertEqual(t["object"][1][3], 3 * unit.kilogram)
+        self.assertEqual(t["object"][1].timestamp, self.t2)
+        self.assertEqual(t[0]["integer"], 3 * unit.millimeter)
+        self.assertEqual(t[0]["integer"].timestamp, self.t2)
+        self.assertEqual(t[0]["object"], "asdf")
+        self.assertEqual(t[0]["object"].timestamp, self.t2)
+        self.assertEqual(t[1]["object"][3], 3 * unit.kilogram)
+        self.assertEqual(t[1]["object"].timestamp, self.t2)
+        self.assertEqual(t[2]["object"], b"fdas")
+        self.assertEqual(t[2]["object"].timestamp, self.t2)
+        self.assertEqual(t[3]["object"], bytearray())
+        self.assertEqual(t[3]["object"].timestamp, self.t2)
 
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
