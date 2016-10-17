@@ -9,7 +9,7 @@ from karabo.middlelayer_api.enums import Unit, MetricPrefix
 from karabo.middlelayer_api.basetypes import (
     QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
     TableValue, VectorStringValue, wrap)
-from karabo.middlelayer_api.hash import Int32, Float
+from karabo.middlelayer_api.hash import Hash, Int32, Float
 from karabo.middlelayer_api.timestamp import Timestamp
 
 
@@ -83,6 +83,9 @@ class Tests(TestCase):
         self.assertEqual(f.timestamp, 33)
         self.assertEqual(str(f), "False")
         self.assertEqual(repr(f), "False")
+
+        # BoolValue isn't a bool, assure we can still serialize
+        Hash("t", t, "f", f).encode("Bin")
 
         c = BoolValue(f)
         self.assertFalse(c)
