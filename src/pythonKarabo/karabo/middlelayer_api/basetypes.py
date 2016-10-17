@@ -24,7 +24,7 @@ def wrap(data):
         return BoolValue(data)
     elif isinstance(data, str):
         return StringValue(data)
-    elif isinstance(data, bytes):
+    elif isinstance(data, (bytes, bytearray)):
         return VectorCharValue(data)
     elif isinstance(data, list):
         return VectorStringValue(data)
@@ -273,16 +273,39 @@ class VectorStringValue(KaraboValue, list):
         return self
 
 
-@wrap_methods
-class TableValue(KaraboValue, list):
-    def __init__(self, value=None, **kwargs):
+class TableValue(KaraboValue):
+    """This wraps numpy structured arrays. Pint cannot deal with them."""
+    def __init__(self, value, units, **kwargs):
         super(TableValue, self).__init__(value, **kwargs)
-        if value is not None:
-            self.extend(value)
+        self.value = value
+        self.units = units
 
-    @property
-    def value(self):
-        return self
+    def __getitem__(self, item):
+        val = self.value[item]
+        units = self.units
+        if isinstance(item, str):
+            units = units[item]
+        elif self.value.dtype.fields is not None:
+            return TableValue(val, units, timestamp=self.timestamp)
+
+        if isinstance(val, numpy.ndarray) and (
+                val.base is self.value or val.base is self.value.base) and (
+                val.dtype.char == "O"):
+            return TableValue(val, units, timestamp=self.timestamp)
+
+        ret = wrap(val)
+        ret.timestamp = self.timestamp
+        if isinstance(ret, QuantityValue):
+            return QuantityValue(ret.value, unit=units[0],
+                                 metricPrefix=units[1],
+                                 timestamp=self.timestamp)
+        return ret
+
+    def __len__(self):
+        return len(self.value)
+
+    def __getattr__(self, attr):
+        return getattr(self.value, attr)
 
 
 # Pint is based on the concept of a unit registry. For each unit registry,

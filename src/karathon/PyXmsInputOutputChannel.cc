@@ -221,7 +221,7 @@ namespace karathon {
     }
 
 
-    void InputChannelWrap::proxyInputHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::InputChannel>& input) {
+    void InputChannelWrap::proxyInputHandler(const bp::object& handler, karabo::xms::InputChannel& input) {
         ScopedGILAcquire gil;
         handler(bp::object(input));
     }
@@ -232,7 +232,7 @@ namespace karathon {
     }
 
 
-    void InputChannelWrap::proxyDataHandler(const bp::object& handler, const karabo::util::Hash::Pointer& data) {
+    void InputChannelWrap::proxyDataHandler(const bp::object& handler, const karabo::util::Hash& data) {
         ScopedGILAcquire gil;
         handler(bp::object(data));
     }
@@ -243,7 +243,7 @@ namespace karathon {
     }
 
 
-    void InputChannelWrap::proxyEndOfStreamEventHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::InputChannel>& input) {
+    void InputChannelWrap::proxyEndOfStreamEventHandler(const bp::object& handler, karabo::xms::InputChannel& input) {
         ScopedGILAcquire gil;
         handler(bp::object(input));
     }
@@ -255,8 +255,13 @@ namespace karathon {
 
 
     bp::object InputChannelWrap::readPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, size_t idx) {
-        ScopedGILRelease nogil;
-        return Wrapper::toObject(self->read(idx));
+        karabo::util::Hash::Pointer hash;
+        {
+            // Release the GIL for the potentially blocking read() call.
+            ScopedGILRelease nogil;
+            hash = self->read(idx);
+        }
+        return bp::object(hash);
     }
 
 

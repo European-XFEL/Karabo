@@ -41,13 +41,13 @@ namespace karabo {
             boost::asio::deadline_timer m_deadline;
 
             /// Callback on available data (per InputChannel)
-            boost::function<void (const boost::shared_ptr<InputChannel>&) > m_inputHandler;
+            boost::function<void (InputChannel&) > m_inputHandler;
 
             /// Callback on available data (per item in InputChannel)
-            boost::function<void (const karabo::util::Hash::Pointer&) > m_dataHandler;
+            boost::function<void (const karabo::util::Hash&) > m_dataHandler;
 
             // Callback on end-of-stream
-            boost::function<void (const boost::shared_ptr<InputChannel>&) > m_endOfStreamHandler;
+            boost::function<void (InputChannel&) > m_endOfStreamHandler;
 
             std::string m_instanceId;
 
@@ -99,11 +99,11 @@ namespace karabo {
 
             const std::string& getInstanceId() const;
 
-            void registerInputHandler(const boost::function<void (const Self::Pointer&)>& ioInputHandler);
+            void registerInputHandler(const boost::function<void (InputChannel&)>& ioInputHandler);
 
-            void registerDataHandler(const boost::function<void (const karabo::util::Hash::Pointer&) >& ioDataHandler);
+            void registerDataHandler(const boost::function<void (const karabo::util::Hash&) >& ioDataHandler);
 
-            void registerEndOfStreamEventHandler(const boost::function<void (const Self::Pointer&)>& endOfStreamEventHandler);
+            void registerEndOfStreamEventHandler(const boost::function<void (InputChannel&)>& endOfStreamEventHandler);
 
             void triggerIOEvent();
 

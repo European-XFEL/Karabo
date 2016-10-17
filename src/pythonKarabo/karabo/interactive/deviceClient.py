@@ -3,11 +3,11 @@
 # Author: <burkhard.heisen@xfel.eu>
 #
 
-from karathon import DeviceClient as CppDeviceClient
 from karathon import Hash
 from karathon import TextSerializerHash
 import karathon as krb
 
+from karabo.bound import DeviceClient as BoundDeviceClient
 from karabo.middlelayer_api.deviceclientproject import DeviceClientProject
 
 import IPython
@@ -216,7 +216,7 @@ class DeviceClient(object):
     def __init__(self, config = Hash(), connectionType = "Jms"):
         global cpp_client
         if cpp_client is None:
-            cpp_client = CppDeviceClient(connectionType, config)
+            cpp_client = BoundDeviceClient(connectionType, config)
         self.__client = cpp_client
 
         # Flags whether we tried to run Qapp
@@ -931,3 +931,7 @@ class DeviceClient(object):
             
         """
         self.executeNoWait(deviceId, "slotLoggerPriority", priority)
+
+
+    def lock(self, deviceId, recursive = False):
+        return self.__client.lock(deviceId, recursive)

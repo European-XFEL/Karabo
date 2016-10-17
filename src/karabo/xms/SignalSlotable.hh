@@ -734,9 +734,9 @@ KARABO_SLOT0(__VA_ARGS__) \
             bool disconnectChannels(std::string outputInstanceId, const std::string& outputName, std::string inputInstanceId, const std::string& inputName, const bool isVerbose = false);
 
             virtual InputChannel::Pointer createInputChannel(const std::string& channelName, const karabo::util::Hash& config,
-                                                             const boost::function<void (const karabo::util::Hash::Pointer&) >& onDataAvailableHandler = boost::function<void (const karabo::util::Hash::Pointer&) >(),
-                                                             const boost::function<void (const InputChannel::Pointer&) >& onInputAvailableHandler = boost::function<void (const InputChannel::Pointer&) >(),
-                                                             const boost::function<void (const InputChannel::Pointer&)>& onEndOfStreamEventHandler = boost::function<void (const InputChannel::Pointer&)>());
+                                                             const boost::function<void (const karabo::util::Hash&) >& onDataAvailableHandler = boost::function<void (const karabo::util::Hash&) >(),
+                                                             const boost::function<void (InputChannel&) >& onInputAvailableHandler = boost::function<void (InputChannel&) >(),
+                                                             const boost::function<void (InputChannel&)>& onEndOfStreamEventHandler = boost::function<void (InputChannel&)>());
 
             virtual OutputChannel::Pointer createOutputChannel(const std::string& channelName, const karabo::util::Hash& config, const boost::function<void (const OutputChannel::Pointer&) >& onOutputPossibleHandler = boost::function<void (const OutputChannel::Pointer&) >());
 
@@ -750,11 +750,11 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             const InputChannel::Pointer& getInputChannel(const std::string& name);
 
-            void registerInputHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&) >& handler);
+            void registerInputHandler(const std::string& channelName, const boost::function<void (karabo::xms::InputChannel&) >& handler);
 
-            void registerDataHandler(const std::string& channelName, const boost::function<void (const karabo::util::Hash::Pointer&) >& handler);
+            void registerDataHandler(const std::string& channelName, const boost::function<void (const karabo::util::Hash&) >& handler);
 
-            void registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&) >& handler);
+            void registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (karabo::xms::InputChannel&) >& handler);
 
             void connectInputChannel(const InputChannel::Pointer& channel, int trails = 8, int sleep = 1);
 
@@ -786,14 +786,14 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             void setDeviceServerPointer(boost::any serverPtr);
 
-            void inputHandlerWrap(const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler,
-                                  const karabo::xms::InputChannel::Pointer& input);
+            void inputHandlerWrap(const boost::function<void (karabo::xms::InputChannel&)>& handler,
+                                  InputChannel& input);
 
-            void dataHandlerWrap(const boost::function<void (const karabo::util::Hash::Pointer&) >& handler,
-                                 const karabo::util::Hash::Pointer& data);
+            void dataHandlerWrap(const boost::function<void (const karabo::util::Hash&) >& handler,
+                                 const karabo::util::Hash& data);
 
-            void endOfStreamHandlerWrap(const boost::function<void (const boost::shared_ptr<InputChannel>&) >& handler,
-                                        const boost::shared_ptr<InputChannel>& input);
+            void endOfStreamHandlerWrap(const boost::function<void (InputChannel&) >& handler,
+                                        InputChannel& input);
 
             bool connectP2P(const std::string& instanceId);
 

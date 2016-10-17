@@ -72,6 +72,7 @@ void exportPyCoreDeviceClient() {
             .def("execute", &DeviceClientWrap::executePy, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("timeoutInSeconds") = -1))
             .def("executeNoWait", &DeviceClientWrap::executeNoWaitPy, (bp::arg("instanceId"), bp::arg("functionName")))
             .def("getOutputChannelSchema", &DeviceClientWrap::getOutputChannelSchema, (bp::arg("deviceId"), bp::arg("outputChannelName")))
+            .def("lock", &DeviceClientWrap::lockPy, (bp::arg("deviceId"), bp::arg("recursive") = false, bp::arg("timeout") = -1))
             ;
 }
 

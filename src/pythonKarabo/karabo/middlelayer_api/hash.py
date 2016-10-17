@@ -554,7 +554,7 @@ class Type(Descriptor, Registry):
             cls._hashname = s.rstrip('_')
             cls.fromname[cls.hashname()] = cls
         if 'numpy' in dict:
-            cls.strs[cls.numpy().dtype.str] = cls
+            cls.strs[np.dtype(cls.numpy).str] = cls
 
     @classmethod
     def toString(cls, data):
@@ -607,6 +607,7 @@ class Vector(Type):
 
 class NumpyVector(Vector):
     vstrs = { }
+    numpy = np.object_
 
     @classmethod
     def register(cls, name, dict):
@@ -751,6 +752,7 @@ class VectorChar(Vector):
     Python data type is :class:`python:bytes`."""
     basetype = Char
     number = 3
+    numpy = np.object_
 
     @staticmethod
     def read(file):
@@ -786,6 +788,7 @@ class ByteArray(Vector):
     Python data type is :class:`python:bytearray`."""
     basetype = Char
     number = 37
+    numpy = np.object_
 
     @staticmethod
     def read(file):
@@ -807,7 +810,7 @@ class ByteArray(Vector):
         file.file.write(data)
 
     def cast(self, other):
-        if isinstance(other, bytes):
+        if isinstance(other, bytearray):
             return other
         else:
             return bytearray(other)
@@ -977,6 +980,7 @@ class String(Enumable, Type):
     supposed to be used for all human-readable strings, so for
     everything except binary data."""
     number = 28
+    numpy = np.object_  # strings better be stored as objects in numpy tables
 
     @classmethod
     def read(cls, file):
@@ -1083,8 +1087,6 @@ class VectorHash(Vector):
     number = 31
 
     def __init__(self, rowSchema=None, strict=True, **kwargs):
-        from .schema import Configurable
-
         super(VectorHash, self).__init__(strict=strict, **kwargs)
 
         if rowSchema is None:
@@ -1100,11 +1102,13 @@ class VectorHash(Vector):
             self.cls = None
             return
 
-        namespace = {}
-        for k, v, a in rowSchema.hash.iterall():
-            desc = Type.fromname[a["valueType"]](strict=strict, key=k, **a)
-            namespace[k] = desc
-        self.cls = type(self.key, (Configurable,), namespace)
+        self.dtype = np.dtype([(k, Type.fromname[a["valueType"]].numpy)
+                               for k, v, a in rowSchema.hash.iterall()])
+        self.coltypes = {k: Type.fromname[a["valueType"]](strict=False, **a)
+                         for k, v, a in rowSchema.hash.iterall()}
+        self.units = {k: (a.get("unitSymbol", None),
+                          a.get("metricPrefixSymbol", MetricPrefix.NONE))
+                      for k, _, a in rowSchema.hash.iterall()}
 
     @classmethod
     def read(cls, file):
@@ -1115,11 +1119,29 @@ class VectorHash(Vector):
         return HashList(ht.cast(o) for o in other)
 
     def toKaraboValue(self, data, strict=True):
-        table = [
-            self.cls({k: getattr(self.cls, k).toKaraboValue(v, strict=strict)
-                      for k, v in row.items()})
-            for row in data]
-        return basetypes.TableValue(table, descriptor=self)
+        timestamp = None
+        if strict:
+            if isinstance(data, basetypes.KaraboValue):
+                timestamp = data.timestamp
+                data = data.value
+            table = np.array(data, dtype=self.dtype)
+        else:
+            table = []
+            for datarow in data:
+                tablerow = ()
+                for name in self.dtype.names:
+                    desc = self.coltypes[name]
+                    kvalue = desc.toKaraboValue(datarow[name], strict=False)
+                    tablerow += (kvalue.value,)
+                table.append(tablerow)
+            table = np.array(table, dtype=self.dtype)
+        return basetypes.TableValue(table, descriptor=self, units=self.units,
+                                    timestamp=timestamp)
+
+    def toDataAndAttrs(self, value):
+        data = [Hash((col, row[col]) for col in self.dtype.names)
+                for row in value.value]
+        return data, {}
 
 
 class HashList(list, Special):
@@ -1243,7 +1265,7 @@ def _gettype(data):
     except AttributeError:
         if hasattr(data, "hashtype"):
             return data.hashtype
-        elif isinstance(data, bool):
+        elif isinstance(data, (bool, basetypes.BoolValue)):
             return Bool
         elif isinstance(data, Enum):
             return Int32
