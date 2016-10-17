@@ -71,9 +71,6 @@ class DisplayImageElement(DisplayWidget):
         npy = get_image_data(value)
         if npy is None:
             return
-        # Normalize
-        npy = npy - npy.min()
-        np.multiply(npy, 255.0 / npy.max())
 
         # Cast
         npy = npy.astype(np.uint8)

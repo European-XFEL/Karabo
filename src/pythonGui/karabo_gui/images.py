@@ -7,6 +7,22 @@ import numpy as np
 
 from PyQt4.QtGui import QImage
 
+# Ensure correct mapping of reference type to numpy dtype.
+_REFERENCE_TYPENUM_TO_DTYPE = {
+    0: 'bool',
+    2: 'char',
+    4: 'int8',
+    6: 'uint8',
+    8: 'int16',
+    10: 'uint16',
+    12: 'int32',
+    14 : 'uint32',
+    16: 'int64',
+    18: 'uint64',
+    20: 'float',
+    22: 'float64'
+}
+
 
 def get_image_data(image_node):
     """ Calculate a numpy array from the given ``image_node`` and return it to
@@ -16,7 +32,8 @@ def get_image_data(image_node):
     pixels = image_node.pixels
     if len(pixels.data) == 0:
         return None
-    return np.frombuffer(pixels.data, pixels.type)
+    arr_type = _REFERENCE_TYPENUM_TO_DTYPE[pixels.type]
+    return np.frombuffer(pixels.data, dtype=arr_type)
 
 
 def get_dimensions_and_format(image_node):
