@@ -57,6 +57,7 @@ void exportPyXmsSlotElement();
 
 // core
 void exportPyCoreDeviceClient();
+void exportPyCoreLock();
 
 // log
 void exportPyLogLogger();
@@ -146,6 +147,7 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyXmsSlotElement();
 
     // core
+    exportPyCoreLock();
     exportPyCoreDeviceClient();
 
     // log
