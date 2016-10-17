@@ -23,13 +23,6 @@ namespace karabo {
                     .reconfigurable()
                     .commit();
 
-            BOOL_ELEMENT(expected).key("pipeline")
-                    .displayedName("Pipeline flag")
-                    .description("Flag indicating the source as P2P output channel")
-                    .assignmentOptional().defaultValue(false)
-                    .reconfigurable()
-                    .commit();
-
             STRING_ELEMENT(expected).key("type")
                     .displayedName("Type")
                     .description("Data source's type")
@@ -169,7 +162,7 @@ namespace karabo {
                 vector<Hash> expert;
 
                 const vector<Hash>& current = currentGroup.get<vector < Hash >> ("expert");
-                const vector<Hash>& input = inputGroup.get<vector < Hash >> ("expert");
+                vector<Hash>& input = inputGroup.get<vector < Hash >> ("expert");
                 fillTable(current, input, expert);
                 // update expert table
                 inputGroup.set("expert", expert);
@@ -179,7 +172,7 @@ namespace karabo {
                 vector<Hash> user;
 
                 const vector<Hash>& current = currentGroup.get<vector < Hash >> ("user");
-                const vector<Hash>& input = inputGroup.get<vector < Hash >> ("user");
+                vector<Hash>& input = inputGroup.get<vector < Hash >> ("user");
                 fillTable(current, input, user);
                 // set new version of expert table
                 inputGroup.set("user", user);
@@ -188,13 +181,21 @@ namespace karabo {
 
 
         void RunConfigurationGroup::fillTable(const std::vector<karabo::util::Hash>& current,
-                                              const std::vector<karabo::util::Hash>& input,
+                                              std::vector<karabo::util::Hash>& input,
                                               std::vector<karabo::util::Hash>& table) {
 
             for (size_t i = 0; i < input.size(); i++) {
-                const string& deviceId = input[i].get<string>("source");
-                const bool pipeline = input[i].get<bool>("pipeline");
-                table.push_back(input[i]);
+                Hash& hash = input[i];
+                
+                const string& deviceId = hash.get<string>("source");
+
+                if (deviceId.find_first_of(":") == std::string::npos)
+                    hash.setAttribute<bool>("source", "pipeline", false);
+                else
+                    hash.setAttribute<bool>("source", "pipeline", true);
+                    
+                const bool pipeline = hash.getAttribute<bool>("source", "pipeline");
+                table.push_back(hash);
                 vector<Hash>::const_iterator it = findDataSource(current, deviceId);
                 if (!pipeline) {
                     // Device ....
@@ -202,11 +203,12 @@ namespace karabo {
                         // ... is new one ... get its output channels and add them to the table ...
                         vector<string> ochannels = remote().getOutputChannelNames(deviceId);
                         for (size_t ch = 0; ch < ochannels.size(); ch++) {
-                            table.push_back(Hash("source", deviceId + ":" + ochannels[ch],
-                                                 "pipeline", true,
-                                                 "type", "control",
-                                                 "behavior", "init",
-                                                 "monitored", false));
+                            Hash row("source", deviceId + ":" + ochannels[ch],
+                                     "type", "control",
+                                     "behavior", "init",
+                                     "monitored", false);
+                            row.setAttribute("source", "pipeline", true);
+                            table.push_back(row);
                         }
                     } else {
                         // ... exists. Check if its output channels are in the table and ...
@@ -216,11 +218,12 @@ namespace karabo {
                             vector<Hash>::const_iterator ii = findDataSource(current, deviceId + ":" + ochannels[ch]);
                             if (ii == current.end()) {
                                 //Existing device has output channel not inserted yet
-                                table.push_back(Hash("source", deviceId + ":" + ochannels[ch],
-                                                     "pipeline", true,
+                                Hash row("source", deviceId + ":" + ochannels[ch],
                                                      "type", "control",
                                                      "behavior", "init",
-                                                     "monitored", false));
+                                                     "monitored", false);
+                                row.setAttribute("source", "pipeline", true);
+                                table.push_back(row);
                             }
                         }
                     }

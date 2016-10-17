@@ -364,16 +364,16 @@ namespace karabo {
             vector<Hash>& expert = g.get<vector<Hash> >("expert");
             for (size_t i = 0; i < expert.size(); i++) {
                 const string& src = expert[i].get<string>("source");
-                const bool pipeline = expert[i].get<bool>("pipeline");
+                const bool pipeline = expert[i].getAttribute<bool>("source", "pipeline");
                 const string& type = expert[i].get<string>("type");
                 const string& behavior = expert[i].get<string>("behavior");
                 const bool monitored = expert[i].get<bool>("monitored");
                 Hash h("source", src
-                       , "pipeline", pipeline
                        , "type", type
                        , "behavior", behavior
                        , "monitored", monitored
                        , "use", use);
+                h.setAttribute("source", "pipeline", pipeline);
                 expert[i].set("use", use);
                 sources.push_back(h);
             }
@@ -381,16 +381,16 @@ namespace karabo {
             vector<Hash>& user = g.get<vector<Hash> >("user");
             for (size_t ii = 0; ii < user.size(); ii++) {
                 const string& src = user[ii].get<string>("source");
-                const bool pipeline = user[ii].get<bool>("pipeline");
+                const bool pipeline = user[ii].getAttribute<bool>("source", "pipeline");
                 const string& type = user[ii].get<string>("type");
                 const string& behavior = user[ii].get<string>("behavior");
                 const bool monitored = user[ii].get<bool>("monitored");
                 Hash h("source", src
-                       , "pipeline", pipeline
                        , "type", type
                        , "behavior", behavior
                        , "monitored", monitored
                        , "use", use);
+                h.setAttribute("source", "pipeline", pipeline);
                 user[ii].set("use", use);
                 sources.push_back(h);
             }
@@ -470,7 +470,7 @@ namespace karabo {
 
             for (vector<Hash>::const_iterator ii = table.begin(); ii != table.end(); ++ii) {
                 const string& dataSourceId = ii->get<string>("source");
-                const bool pipelineFlag = ii->get<bool>("pipeline");
+                const bool pipelineFlag = ii->getAttribute<bool>("source", "pipeline");
                 const string& dataSourceType = ii->get<string>("type");
                 string behavior = ii->get<string>("behavior");
                 const bool monitorOut = ii->get<bool>("monitored");
