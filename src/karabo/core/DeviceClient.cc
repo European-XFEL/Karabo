@@ -92,9 +92,8 @@ namespace karabo {
             m_internalSignalSlotable.reset();
         }
 
-
 #define KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(...) if (m_signalSlotable.expired()) { \
-                    KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed)."; \
+                    KARABO_LOG_FRAMEWORK_ERROR << "SignalSlotable object is not valid (destroyed)."; \
                     return __VA_ARGS__; }
 
 
@@ -289,7 +288,6 @@ namespace karabo {
         }
 
 
-        
         void DeviceClient::setAgeing(bool on) {
             if (on && !m_getOlder) {
                 m_getOlder = true;
@@ -1093,40 +1091,30 @@ namespace karabo {
         }
 
 
-        std::pair<bool, std::string > DeviceClient::set(const std::string& instanceId, const karabo::util::Hash& values, int timeoutInSeconds) {
-            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(std::make_pair<bool, string > (false, "Fail to set"));
-
-            //stayConnected(instanceId);
+        void DeviceClient::set(const std::string& instanceId, const karabo::util::Hash& values,
+                               int timeoutInSeconds) {
+            
+            KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
 
             // If this is the first time we are going to talk to <instanceId>, we should get all configuration,
-            // else only the answer to our set will fill the cache.            
+            // else only the answer to our set will fill the cache.
             cacheAndGetConfiguration(instanceId);
 
             // TODO Do not hardcode the default timeout
             if (timeoutInSeconds == -1) timeoutInSeconds = 3;
-            bool ok = true;
-            std::string errorText = "";
 
-            try {
-                // Validate locally with custom validator
-                Hash validated;
-                Schema schema = cacheAndGetActiveSchema(instanceId);
-                Validator::ValidationRules rules(/*injectDefaults=*/false,
-                                                 /*allowUnrootedConfiguration=*/true,
-                                                 /*allowAdditionalKeys=*/false,
-                                                 /*allowMissingKeys=*/true,
-                                                 /*injectTimestamps*/false);
-                Validator validator(rules);
-                std::pair<bool, std::string> result = validator.validate(schema, values, validated);
-                if (!result.first) return result;
-                // TODO Add error text to response
-                m_signalSlotable.lock()->request(instanceId, "slotReconfigure", validated).timeout(timeoutInSeconds * 1000).receive(ok, errorText);
-            } catch (const karabo::util::Exception& e) {
-                errorText = e.userFriendlyMsg();
-                ok = false;
-            }
-
-            return std::make_pair(ok, errorText);
+            // Validate locally with custom validator
+            Hash validated;
+            Schema schema = cacheAndGetActiveSchema(instanceId);
+            Validator::ValidationRules rules(/*injectDefaults=*/false,
+                                             /*allowUnrootedConfiguration=*/true,
+                                             /*allowAdditionalKeys=*/false,
+                                             /*allowMissingKeys=*/true,
+                                             /*injectTimestamps*/false);
+            Validator validator(rules);
+            std::pair<bool, std::string> result = validator.validate(schema, values, validated);
+            if (!result.first) throw KARABO_PARAMETER_EXCEPTION(result.second);
+            sp->request(instanceId, "slotReconfigure", validated).timeout(timeoutInSeconds * 1000).receive();
         }
 
 
@@ -1515,8 +1503,9 @@ if (nodeData) {\
         bool DeviceClient::hasAttribute(const std::string& instanceId, const std::string& key, const std::string& attribute, const char keySep) {
             return cacheAndGetConfiguration(instanceId).hasAttribute(key, attribute, keySep);
         }
-        
-        karabo::util::Hash DeviceClient::getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName){
+
+
+        karabo::util::Hash DeviceClient::getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName) {
             const Schema& schema = cacheAndGetDeviceSchema(deviceId);
             Validator::ValidationRules rules;
             rules.injectTimestamps = false;
@@ -1524,32 +1513,33 @@ if (nodeData) {\
             Validator validator(rules);
             Hash pHash;
             validator.validate(schema, Hash(), pHash);
-            return pHash.get<Hash>(outputChannelName+".schema");
+            return pHash.get<Hash>(outputChannelName + ".schema");
         }
-        
+
+
         karabo::core::Lock DeviceClient::lock(const std::string& deviceId, bool recursive, int timeout) {
             //non waiting request for lock
-            if(timeout == 0) return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
-            
+            if (timeout == 0) return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
+
             //timeout was given
             const int waitTime = 1; //second
             int nTries = 0;
-            while(true){
-                try{
+            while (true) {
+                try {
                     return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
-                } catch (const karabo::util::LockException& e){
-                    if(nTries++ > timeout/waitTime && timeout != -1){
+                } catch (const karabo::util::LockException& e) {
+                    if (nTries++ > timeout / waitTime && timeout != -1) {
                         //rethrow
-                         throw KARABO_LOCK_EXCEPTION(e.userFriendlyMsg());
+                        throw KARABO_LOCK_EXCEPTION(e.userFriendlyMsg());
                     }
                     //otherwise pass through and try again
                     boost::this_thread::sleep(boost::posix_time::seconds(waitTime));
                 }
-                
+
             }
         }
-        
-               
+
+
 
 #undef KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN
 
