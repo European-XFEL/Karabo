@@ -16,6 +16,7 @@ namespace karathon {
         return *this;
     }
 
+
     void SignalSlotableWrap::RequestorWrap::receiveAsyncPy0(const bp::object& replyCallback) {
         if (!PyCallable_Check(replyCallback.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
@@ -106,67 +107,6 @@ namespace karathon {
     }
 
 
-    bp::tuple SignalSlotableWrap::RequestorWrap::receivePy0() {
-        ScopedGILRelease nogil;
-        receive();
-        return bp::make_tuple();
-    }
-
-
-    bp::tuple SignalSlotableWrap::RequestorWrap::receivePy1() {
-        boost::any a1;
-
-        {
-            ScopedGILRelease nogil;
-            receive(a1);
-        }
-
-        return bp::make_tuple(Wrapper::toObject(a1));
-    }
-
-
-    bp::tuple SignalSlotableWrap::RequestorWrap::receivePy2() {
-        boost::any a1;
-        boost::any a2;
-
-        {
-            ScopedGILRelease nogil;
-            receive(a1, a2);
-        }
-
-        return bp::make_tuple(Wrapper::toObject(a1), Wrapper::toObject(a2));
-    }
-
-
-    bp::tuple SignalSlotableWrap::RequestorWrap::receivePy3() {
-        boost::any a1;
-        boost::any a2;
-        boost::any a3;
-
-        {
-            ScopedGILRelease nogil;
-            receive(a1, a2, a3);
-        }
-
-        return bp::make_tuple(Wrapper::toObject(a1), Wrapper::toObject(a2), Wrapper::toObject(a3));
-    }
-
-
-    bp::tuple SignalSlotableWrap::RequestorWrap::receivePy4() {
-        boost::any a1;
-        boost::any a2;
-        boost::any a3;
-        boost::any a4;
-
-        {
-            ScopedGILRelease nogil;
-            receive(a1, a2, a3, a4);
-        }
-
-        return bp::make_tuple(Wrapper::toObject(a1), Wrapper::toObject(a2), Wrapper::toObject(a3), Wrapper::toObject(a4));
-    }
-
-
     bp::tuple SignalSlotableWrap::RequestorWrap::waitForReply(const int& milliseconds) {
         try {
             timeout(milliseconds);
@@ -175,6 +115,11 @@ namespace karathon {
             {
                 ScopedGILRelease nogil;
                 receiveResponse(header, body);
+                // The header key "error" indicates whether an exception was thrown during the remote call
+                if (header->has("error") && header->get<bool>("error")) {
+                    throw karabo::util::RemoteException(body->get<std::string>("a1"),
+                                                        header->get<std::string>("signalInstanceId"));
+                }
             }
 
             size_t arity = body->size();
@@ -194,7 +139,9 @@ namespace karathon {
                     throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send as response (max 4 are currently supported");
             }
         } catch (const karabo::util::Exception& e) {
-            std::cout << e << std::endl;
+            KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error while receiving message on instance \"" +
+                                                          m_signalSlotable->getInstanceId() + "\""));
+            // For compiler happiness
             return bp::make_tuple();
         }
     }
@@ -355,33 +302,17 @@ namespace karathon {
     }
 
 
-    //void SignalSlotableWrap::proxyInstanceNewCallback(const bp::object& handler,
-    //                                                  const std::string& instanceId,
-    //                                                  const karabo::util::Hash& instanceInfo) {
-    //    ScopedGILAcquire gil;
-    //    try {
-    //        if (handler) handler(bp::object(instanceId), bp::object(instanceInfo));
-    //    } catch (const bp::error_already_set& e) {
-    //        if (PyErr_Occurred()) PyErr_Print();
-    //        throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
-    //    } catch (...) {
-    //        KARABO_RETHROW
-    //    }
-    //}
-
-
-    bool SignalSlotableWrap::proxySlotCallGuardHandler(const bp::object& handler, const std::string& slotFunction) {
+    void SignalSlotableWrap::proxySlotCallGuardHandler(const bp::object& handler, const std::string& slotFunction) {
         ScopedGILAcquire gil;
         try {
             if (handler)
-                return bp::extract<bool> (handler(bp::object(slotFunction)));
+                handler(bp::object(slotFunction));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) PyErr_Print();
             throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
         } catch (...) {
             KARABO_RETHROW
         }
-        return true;
     }
 
 
@@ -457,5 +388,5 @@ namespace karathon {
         } catch (...) {
             KARABO_RETHROW
         }
-    }    
+    }
 }

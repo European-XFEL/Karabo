@@ -16,6 +16,10 @@
 #include <set>
 #include <string>
 
+#define KARABO_GET_SHARED_FROM_WEAK(sp, wp) \
+auto sp = wp.lock(); \
+if (!sp) throw KARABO_LOGIC_EXCEPTION(std::string(#wp) + " object already deleted");
+
 namespace karabo {
 
     namespace core {
@@ -467,11 +471,21 @@ namespace karabo {
             void unregisterDeviceMonitor(const std::string& instanceId);
 
             template <class T>
-            std::pair<bool, std::string> set(const std::string& instanceId, const std::string& key, const T& value, int timeoutInSeconds = -1, const char keySep = '.') {
+            void setAttribute(const std::string& instanceId, const std::string& key,
+                              const std::string& attributeKey, const T& attributeValue, int timeoutInSeconds = -1) {
+                KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
+                if (timeoutInSeconds == -1) timeoutInSeconds = 3;
+                karabo::util::Hash h("path", key, "attribute", attributeKey, "value", attributeValue);
+                std::vector<karabo::util::Hash> v{h};
+                sp->request(instanceId, "slotUpdateSchemaAttributes", v).timeout(timeoutInSeconds * 1000).receive();
+            }
+
+            template <class T>
+            void set(const std::string& instanceId, const std::string& key, const T& value, int timeoutInSeconds = -1, const char keySep = '.') {
 
                 karabo::util::Hash tmp;
                 tmp.set(key, value, keySep);
-                return set(instanceId, tmp, timeoutInSeconds);
+                set(instanceId, tmp, timeoutInSeconds);
             }
 
             template <class T>
@@ -482,127 +496,30 @@ namespace karabo {
                 setNoWait(instanceId, tmp);
             }
 
-            std::pair<bool, std::string> set(const std::string& instanceId, const karabo::util::Hash& values, int timeoutInSeconds = -1);
+            void set(const std::string& instanceId, const karabo::util::Hash& values, int timeoutInSeconds = -1);
 
             void setNoWait(const std::string& instanceId, const karabo::util::Hash& values);
 
-            void executeNoWait(const std::string& instanceId, const std::string& command) {
-                if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command);
-                else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
+            /**
+             * Executes a function on a device (an exposed via its Schema) and immediately returns (fire & forget)
+             * @param deviceId The deviceId
+             * @param command Name of the command
+             */
+            void executeNoWait(const std::string& deviceId, const std::string& command) {
+                KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
+                sp->call(deviceId, command);
             }
 
-            template <class A1>
-            void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1) {
-                if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1);
-                else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
-            }
-
-            template <class A1, class A2>
-            void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2) {
-                if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1, a2);
-                else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
-            }
-
-            template <class A1, class A2, class A3>
-            void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, const A3& a3) {
-                if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1, a2, a3);
-                else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
-            }
-
-            template <class A1, class A2, class A3, class A4>
-            void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
-                if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1, a2, a3, a4);
-                else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
-            }
-
-            std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command, int timeoutInSeconds = -1) {
+            /**
+             * Executed a function on a device synchronously (waits until the function finished)
+             * @param deviceId The devideId
+             * @param command The command
+             * @param timeoutInSeconds Timeout
+             */
+            void execute(const std::string& deviceId, const std::string& command, int timeoutInSeconds = -1) {
+                KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
                 if (timeoutInSeconds == -1) timeoutInSeconds = 3;
-
-                bool ok = true;
-                std::string text = "";
-
-                try {
-                    if (!m_signalSlotable.expired()) m_signalSlotable.lock()->request(instanceId, command).timeout(timeoutInSeconds * 1000).receive(text);
-                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
-                } catch (const karabo::util::Exception& e) {
-
-                    text = e.userFriendlyMsg();
-                    ok = false;
-                }
-                return std::make_pair(ok, text);
-            }
-
-            template <class A1>
-            std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command, const A1& a1, int timeoutInSeconds = -1) {
-                if (timeoutInSeconds == -1) timeoutInSeconds = 3;
-
-                bool ok = true;
-                std::string text = "";
-
-                try {
-                    if (!m_signalSlotable.expired()) m_signalSlotable.lock()->request(instanceId, command, a1).timeout(timeoutInSeconds * 1000).receive(text);
-                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
-                } catch (const karabo::util::Exception& e) {
-
-                    text = e.userFriendlyMsg();
-                    ok = false;
-                }
-                return std::make_pair(ok, text);
-            }
-
-            template <class A1, class A2>
-            std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, int timeoutInSeconds = -1) {
-                if (timeoutInSeconds == -1) timeoutInSeconds = 3;
-
-                bool ok = true;
-                std::string text = "";
-
-                try {
-                    if (!m_signalSlotable.expired()) m_signalSlotable.lock()->request(instanceId, command, a1, a2).timeout(timeoutInSeconds * 1000).receive(text);
-                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
-                } catch (const karabo::util::Exception& e) {
-
-                    text = e.userFriendlyMsg();
-                    ok = false;
-                }
-                return std::make_pair(ok, text);
-            }
-
-            template <class A1, class A2, class A3>
-            std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command,
-                                                 const A1& a1, const A2& a2, const A3& a3, int timeoutInSeconds = -1) {
-                if (timeoutInSeconds == -1) timeoutInSeconds = 3;
-
-                bool ok = true;
-                std::string text = "";
-
-                try {
-                    if (!m_signalSlotable.expired()) m_signalSlotable.lock()->request(instanceId, command, a1, a2, a3).timeout(timeoutInSeconds * 1000).receive(text);
-                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
-                } catch (const karabo::util::Exception& e) {
-
-                    text = e.userFriendlyMsg();
-                    ok = false;
-                }
-                return std::make_pair(ok, text);
-            }
-
-            template <class A1, class A2, class A3, class A4>
-            std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command,
-                                                 const A1& a1, const A2& a2, const A3& a3, const A4& a4, int timeoutInSeconds = -1) {
-                if (timeoutInSeconds == -1) timeoutInSeconds = 3;
-
-                bool ok = true;
-                std::string text = "";
-
-                try {
-                    if (!m_signalSlotable.expired()) m_signalSlotable.lock()->request(instanceId, command, a1, a2, a3, a4).timeout(timeoutInSeconds * 1000).receive(text);
-                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
-                } catch (const karabo::util::Exception& e) {
-                    text = e.userFriendlyMsg();
-                    ok = false;
-                }
-                return std::make_pair(ok, text);
+                sp->request(deviceId, command).timeout(timeoutInSeconds * 1000).receive();
             }
 
             /**
