@@ -225,21 +225,18 @@ namespace karathon {
             }
         }
 
-        bp::tuple setPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".", int timeout = -1) {
+        void setPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".", int timeout = -1) {
             karabo::util::Hash tmp;
-            std::pair<bool, std::string> result;
             HashWrap::set(tmp, key, value, keySep);
             {
                 ScopedGILRelease nogil;
-                result = this->set(instanceId, tmp, timeout);
+                this->set(instanceId, tmp, timeout);
             }
-            return bp::make_tuple(result.first, result.second);
         }
 
-        bp::tuple setPy(const std::string& instanceId, const karabo::util::Hash& value, int timeout = -1) {
+        void setPy(const std::string& instanceId, const karabo::util::Hash& value, int timeout = -1) {
             ScopedGILRelease nogil;
-            std::pair<bool, std::string> result = this->set(instanceId, value, timeout);
-            return bp::make_tuple(result.first, result.second);
+            this->set(instanceId, value, timeout);
         }
 
         void setNoWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".") {
@@ -249,94 +246,14 @@ namespace karathon {
             this->setNoWait(instanceId, tmp);
         }
 
-        void executeNoWaitPy0(std::string instanceId, const std::string& functionName) {
+        void executeNoWaitPy(std::string instanceId, const std::string& functionName) {
             ScopedGILRelease nogil;
             m_signalSlotableWrap->call(instanceId, functionName);
         }
 
-        void executeNoWaitPy1(std::string instanceId, const std::string& functionName, const bp::object& a1) const {
+        void executePy(std::string instanceId, const std::string& functionName, int timeout = -1) {
             ScopedGILRelease nogil;
-            m_signalSlotableWrap->callPy(instanceId, functionName, a1);
-        }
-
-        void executeNoWaitPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2) const {
-            ScopedGILRelease nogil;
-            m_signalSlotableWrap->callPy(instanceId, functionName, a1, a2);
-        }
-
-        void executeNoWaitPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3) const {
-            ScopedGILRelease nogil;
-            m_signalSlotableWrap->callPy(instanceId, functionName, a1, a2, a3);
-        }
-
-        void executeNoWaitPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) const {
-            ScopedGILRelease nogil;
-            m_signalSlotableWrap->callPy(instanceId, functionName, a1, a2, a3, a4);
-        }
-
-        bp::tuple executePy0(std::string instanceId, const std::string& functionName, int timeout = -1) {
-            if (timeout == -1) timeout = 3;
-
-            std::pair<bool, std::string> result;
-            bp::tuple tuple;
-            {
-                ScopedGILRelease nogil;
-                result = this->execute(instanceId, functionName, timeout);
-            }
-            tuple = bp::make_tuple(result.first, result.second);
-            return tuple;
-        }
-
-        bp::tuple executePy1(std::string instanceId, const std::string& functionName, const bp::object& a1, int timeout = -1) const {
-            if (timeout == -1) timeout = 3;
-
-            bp::tuple result;
-
-            try {
-                result = m_signalSlotableWrap->requestPy(instanceId, functionName, a1).waitForReply(timeout * 1000);
-            } catch (const karabo::util::Exception& e) {
-                return bp::make_tuple(false, e.userFriendlyMsg());
-            }
-            return bp::make_tuple(true, result[0]);
-        }
-
-        bp::tuple executePy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, int timeout = -1) const {
-            if (timeout == -1) timeout = 3;
-
-            bp::tuple result;
-
-            try {
-                result = m_signalSlotableWrap->requestPy(instanceId, functionName, a1, a2).waitForReply(timeout * 1000);
-            } catch (const karabo::util::Exception& e) {
-                return bp::make_tuple(false, e.userFriendlyMsg());
-            }
-            return bp::make_tuple(true, result[0]);
-        }
-
-        bp::tuple executePy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, int timeout = -1) const {
-            if (timeout == -1) timeout = 3;
-
-            bp::tuple result;
-
-            try {
-                result = m_signalSlotableWrap->requestPy(instanceId, functionName, a1, a2, a3).waitForReply(timeout * 1000);
-            } catch (const karabo::util::Exception& e) {
-                return bp::make_tuple(false, e.userFriendlyMsg());
-            }
-            return bp::make_tuple(true, result[0]);
-        }
-
-        bp::tuple executePy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4, int timeout = -1) const {
-            if (timeout == -1) timeout = 3;
-
-            bp::tuple result;
-
-            try {
-                result = m_signalSlotableWrap->requestPy(instanceId, functionName, a1, a2, a3, a4).waitForReply(timeout * 1000);
-            } catch (const karabo::util::Exception& e) {
-                return bp::make_tuple(false, e.userFriendlyMsg());
-            }
-            return bp::make_tuple(true, result[0]);
+            execute(instanceId, functionName, timeout);
         }
 
         bp::object getFromPastPy(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", unsigned int maxNumData = 0) {

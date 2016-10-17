@@ -84,7 +84,8 @@ void RunTimeSchemaAttributes_Test::testRuntimeApplication(){
     schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "minInc", "value", -10.0));
     //register a dummy monitor to assure that signals from the device are tracked
     m_deviceClient->registerDeviceMonitor("alarmTesterSchema", boost::bind(&RunTimeSchemaAttributes_Test::dummyMonitor, this, _1, _2));
-    m_deviceClient->execute("alarmTesterSchema", "slotUpdateSchemaAttributes", schemaUpdates, KRB_TEST_MAX_TIMEOUT);
+    m_deviceClient->setAttribute("alarmTesterSchema", "floatProperty", "warnLow", -1000.0);
+    m_deviceClient->setAttribute("alarmTesterSchema", "floatProperty", "minInc", -10.0);
     boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
     const karabo::util::Schema& s = m_deviceClient->getDeviceSchema("alarmTesterSchema");
     
