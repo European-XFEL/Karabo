@@ -15,17 +15,9 @@ CPPUNIT_TEST_SUITE_REGISTRATION(PipelinedProcessing_Test);
 
 #define KRB_TEST_MAX_TIMEOUT 10
 
-
-
 PipelinedProcessing_Test::PipelinedProcessing_Test() {
 
 }
-
-
-PipelinedProcessing_Test::~PipelinedProcessing_Test() {
-  
-}
-
 
 
 void PipelinedProcessing_Test::setUp() {
@@ -38,33 +30,26 @@ void PipelinedProcessing_Test::setUp() {
 }
 
 
-
 void PipelinedProcessing_Test::tearDown() {
     m_deviceClient->killServer("testServerPP", KRB_TEST_MAX_TIMEOUT);
     m_deviceServerThread.join();
     m_deviceClient.reset();
-
 }
 
+
 void PipelinedProcessing_Test::appTestRunner() {
-    //add a few threads to the event loop
-    
-    
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
     std::pair<bool, std::string> success =  m_deviceClient->instantiate("testServerPP", "P2PSenderDevice", Hash("deviceId", "p2pTestSender"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
     testGetOutputChannelSchema();
-
     testPipe();
-
 }
-
 
 
 void PipelinedProcessing_Test::testGetOutputChannelSchema(){
     karabo::util::Hash dataSchema =  m_deviceClient->getOutputChannelSchema("p2pTestSender", "output1");
-    
+
     CPPUNIT_ASSERT(dataSchema.has("dataId"));
     CPPUNIT_ASSERT(dataSchema.getType("dataId") == karabo::util::Types::INT32);
     CPPUNIT_ASSERT(dataSchema.has("sha1"));
@@ -77,29 +62,51 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema(){
     const karabo::util::NDArray& arr = dataSchema.get<karabo::util::NDArray>("array");
     CPPUNIT_ASSERT(arr.getType() == karabo::util::Types::DOUBLE);
     CPPUNIT_ASSERT(arr.getShape() == karabo::util::Dims(100,200,0));
-    CPPUNIT_ASSERT(arr.isBigEndian() == false);            
+    CPPUNIT_ASSERT(arr.isBigEndian() == false);
 }
 
 
 void PipelinedProcessing_Test::testPipe() {
-    boost::thread t(boost::bind(&karabo::net::EventLoop::work));
 
+    boost::thread t(boost::bind(&karabo::net::EventLoop::work));
     const Hash cfg("deviceId", "pipeTestReceiver", "processingTime", 100,
                    "input.connectedOutputChannels", "p2pTestSender:output1");
+
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerPP", "PipeReceiverDevice",
                                                                        cfg, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
-    // Some time to establish connection
-    boost::this_thread::sleep(boost::posix_time::seconds(3)); // No idea yet how long!
+    // Ask for a property of the device to wait until it is available
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("p2pTestSender", "nData", 5, KRB_TEST_MAX_TIMEOUT));
+
+    // Then call its slot
     success = m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
-    // Some time to process data
-    boost::this_thread::sleep(boost::posix_time::seconds(4)); // No idea yet how long!
-    const unsigned int nReceived = m_deviceClient->get<unsigned int>("pipeTestReceiver", "nTotalData");
-    CPPUNIT_ASSERT_EQUAL(5u, nReceived); // 5 is default
+    // And poll for the correct answer
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("pipeTestReceiver", "nTotalData", 5, KRB_TEST_MAX_TIMEOUT));
 
     karabo::net::EventLoop::stop();
     t.join();
+}
+
+
+template <typename T>
+bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId,
+    const std::string& propertyName, const T& expected, const int maxTimeout) const {
+
+    const int pollWaitTime = 1;
+    int pollCounter = 0;
+
+    // Poll the device until it responds with the correct answer or times out.
+    while (pollWaitTime * pollCounter <= maxTimeout) {
+        boost::this_thread::sleep(boost::posix_time::seconds(pollWaitTime));
+        const T nReceived = m_deviceClient->get<T>(deviceId, propertyName);
+        if (nReceived == expected) {
+            return true;
+        }
+        ++pollCounter;
+    }
+
+    return false;
 }
