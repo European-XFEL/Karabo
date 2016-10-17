@@ -319,7 +319,7 @@ namespace karabo {
             template<class T>
             T get(const std::string& instanceId, const std::string& key, const char keySep = '.') {
                 try {
-                    const karabo::util::Hash::Attributes& attrs = getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
+                    const karabo::util::Hash::Attributes attrs = getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
                     if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
                         const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
                         if (leafType == karabo::util::Schema::STATE) {
@@ -346,7 +346,7 @@ namespace karabo {
             template<class T>
             void get(const std::string& instanceId, const std::string& key, T& value, const char keySep = '.') {
                 try {
-                    const karabo::util::Hash::Attributes& attrs = getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
+                    const karabo::util::Hash::Attributes attrs = getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
                     if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
                         const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
                         if (leafType == karabo::util::Schema::STATE) {
