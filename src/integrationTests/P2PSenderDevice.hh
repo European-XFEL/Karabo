@@ -5,8 +5,8 @@
  * Created on September 20, 2016, 3:49 PM
  */
 
-#ifndef P2PSENDERDEVICE_HH
-#define	P2PSENDERDEVICE_HH
+#ifndef P2P_SENDER_DEVICE_HH
+#define P2P_SENDER_DEVICE_HH
 
 #include <karabo/karabo.hpp>
 
@@ -29,6 +29,7 @@ namespace karabo {
         virtual ~P2PSenderDevice();
 
     private:
+
         // slot for write command
         void write();
 
@@ -41,5 +42,5 @@ namespace karabo {
 }
 
 
-#endif	/* P2PSENDERDEVICE_HH */
+#endif /* P2P_SENDER_DEVICE_HH */
 

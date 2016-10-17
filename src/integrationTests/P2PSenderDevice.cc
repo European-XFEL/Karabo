@@ -14,7 +14,7 @@ USING_KARABO_NAMESPACES;
 
 namespace karabo {
 
-    
+
     KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, P2PSenderDevice)
 
     void P2PSenderDevice::expectedParameters(Schema& expected) {
@@ -29,7 +29,7 @@ namespace karabo {
                 .description("Write some data")
                 .allowedStates(State::NORMAL)
                 .commit();
-        
+
         Schema data;
         INT32_ELEMENT(data).key("dataId")
                 .readOnly()
@@ -78,13 +78,14 @@ namespace karabo {
                 .description("Monitors the currently processed data token")
                 .readOnly()
                 .commit();
-        
+
     }
 
 
     P2PSenderDevice::P2PSenderDevice(const Hash& config) : Device<>(config) {
         KARABO_SLOT0(write);
     }
+
 
     P2PSenderDevice::~P2PSenderDevice() {
         if (m_writingThread.joinable()) {
@@ -104,14 +105,14 @@ namespace karabo {
         // start extra thread since write is a slot and must not block
         m_writingThread = boost::thread(boost::bind(&Self::writing, this));
 
-        this->updateState(State::ACTIVE);
+        updateState(State::ACTIVE);
     }
 
 
     void P2PSenderDevice::writing() {
         try {
-            const int nData = this->get<unsigned int>("nData");
-            const unsigned int delayInMs = this->get<unsigned int>("delay");
+            const int nData = get<unsigned int>("nData");
+            const unsigned int delayInMs = get<unsigned int>("delay");
             Hash data;
 
             // Loop all the data to be send
@@ -121,10 +122,10 @@ namespace karabo {
                 data.set("dataId", iData);
 
                 // Write
-                this->writeChannel("output1", data);
+                writeChannel("output1", data);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Written data # " << iData;
-                this->set("currentDataId", iData);
+                set("currentDataId", iData);
 
                 boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
             }
@@ -135,9 +136,9 @@ namespace karabo {
         }
 
         // Done, signal EOS token
-        this->signalEndOfStream("output1");
+        signalEndOfStream("output1");
 
-        this->updateState(State::NORMAL);
+        updateState(State::NORMAL);
     }
 
 

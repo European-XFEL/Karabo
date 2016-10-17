@@ -80,13 +80,9 @@ namespace karabo {
     }
 
 
-    PipeReceiverDevice::~PipeReceiverDevice() {
-    }
-
-
     void PipeReceiverDevice::initialization() {
 
-        if (this->get<bool>("onData")) {
+        if (get<bool>("onData")) {
             KARABO_ON_DATA("input", onData);
         } else {
             KARABO_ON_INPUT("input", onInput);
@@ -101,24 +97,24 @@ namespace karabo {
         util::Hash data;
         for (size_t i = 0; i < input.size(); ++i) {
             input.read(data, i); // clears data before filling
-            this->onData(data);
+            onData(data);
         }
     }
 
 
     void PipeReceiverDevice::onData(const util::Hash& data) {
 
-        this->set("currentDataId", data.get<int>("dataId"));
+        set("currentDataId", data.get<int>("dataId"));
 
         // Sum total number of data
-        this->set("nTotalData", this->get<unsigned int>("nTotalData") + 1);
-        boost::this_thread::sleep(boost::posix_time::milliseconds(this->get<unsigned int>("processingTime")));
+        set("nTotalData", get<unsigned int>("nTotalData") + 1);
+        boost::this_thread::sleep(boost::posix_time::milliseconds(get<unsigned int>("processingTime")));
     }
 
 
     void PipeReceiverDevice::onEndOfStream(xms::InputChannel& input) {
 
-        this->set<unsigned int>("nTotalOnEos", this->get<unsigned int>("nTotalData"));
+        set<unsigned int>("nTotalOnEos", get<unsigned int>("nTotalData"));
     }
 
 }

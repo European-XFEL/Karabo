@@ -5,8 +5,8 @@
  * Created on October 14, 2016, 2:30 PM
  */
 
-#ifndef PIPERECEIVERDEVICE_HH
-#define	PIPERECEIVERDEVICE_HH
+#ifndef PIPE_RECEIVER_DEVICE_HH
+#define PIPE_RECEIVER_DEVICE_HH
 
 #include "karabo/core/Device.hh"
 
@@ -34,7 +34,7 @@ namespace karabo {
         static void expectedParameters(karabo::util::Schema& expected);
 
         PipeReceiverDevice(const karabo::util::Hash& config);
-        virtual ~PipeReceiverDevice();
+        virtual ~PipeReceiverDevice() {}
 
     private:
         void initialization();
@@ -46,5 +46,5 @@ namespace karabo {
         void onEndOfStream(karabo::xms::InputChannel& input);
     };
 }
-#endif	/* PIPERECEIVERDEVICE_HH */
 
+#endif /* PIPE_RECEIVER_DEVICE_HH */
