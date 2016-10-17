@@ -119,29 +119,6 @@ namespace karathon {
             return Wrapper::fromStdVectorToPyList(this->getCurrentlyExecutableCommands(instanceId));
         }
 
-        //        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-        //            try {
-        //                ScopedGILRelease nogil;
-        //                return HashWrap::get(this->DeviceClient::cacheAndGetConfiguration(instanceId), key, keySep);
-        //            } catch (const karabo::util::Exception& e) {
-        //                throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
-        //            }
-        //        }
-
-        //        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-        //            karabo::util::Hash hash;
-        //            try {
-        //                ScopedGILRelease nogil;
-        //                this->DeviceClient::get(instanceId, hash);
-        //            } catch(...) {
-        //                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
-        //            }
-        //            if (hash.has(key)) {
-        //                return Wrapper::toObject(hash.getNode(key, keySep.at(0)).getValueAsAny(), HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
-        //            }
-        //            throw KARABO_PARAMETER_EXCEPTION("The key \"" + key + "\" is not found in device \"" + instanceId + "\" configuration:\n" + hash);
-        //        }
-
         bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
             boost::any value;
             try {
@@ -488,7 +465,6 @@ namespace karathon {
                 if (it->is<karabo::util::Hash>()) callMonitor(instanceId, registered, it->getValue<karabo::util::Hash>(), currentPath);
             }
         }
-
 
     private: // members
 
