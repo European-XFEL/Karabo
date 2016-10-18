@@ -2,10 +2,12 @@
 #include "karabo/util/GenericElement.hh"
 #include "karabo/util/LeafElement.hh"
 #include "karabo/util/ChoiceElement.hh"
+#include "karabo/xms/SlotElement.hh"
 #include "karabo/core/Device.hh"
 
 using namespace std;
 using namespace karabo::util;
+using namespace karabo::xms;
 
 namespace karabo {
     namespace devices {
@@ -35,7 +37,7 @@ namespace karabo {
                     .displayedName("Behavior")
                     .description("Configure data source's behavior")
                     .options("init,read-only,record-all")
-                    .assignmentOptional().defaultValue("init")
+                    .assignmentOptional().defaultValue("record-all")
                     .reconfigurable()
                     .commit();
 
@@ -106,6 +108,11 @@ namespace karabo {
                     .assignmentOptional().noDefaultValue()
                     .reconfigurable()
                     .commit();
+
+            SLOT_ELEMENT(expected).key("group.saveGroupConfiguration")
+                    .displayedName("Save configuration")
+                    .description("Push the button to save configuration in 'run_config_group' folder.")
+                    .commit();
         }
 
 
@@ -115,11 +122,11 @@ namespace karabo {
 
             KARABO_SYSTEM_SIGNAL("signalGetGroup", string, Hash);
             KARABO_SLOT(slotGetGroup);
+            KARABO_SLOT(saveGroupConfiguration);
         }
 
 
         RunConfigurationGroup::~RunConfigurationGroup() {
-            karabo::io::saveToFile<Hash>(get<Hash>("group"), "run_config_groups/" + getInstanceId() + ".xml");
         }
 
 
@@ -139,6 +146,11 @@ namespace karabo {
 
         void RunConfigurationGroup::slotGetGroup() {
             emit("signalGetGroup", getInstanceId(), getGroup());
+        }
+
+
+        void RunConfigurationGroup::saveGroupConfiguration() {
+            karabo::io::saveToFile<Hash>(get<Hash>("group"), "run_config_groups/" + getInstanceId() + ".xml");
         }
 
 
@@ -189,7 +201,7 @@ namespace karabo {
                 
                 const string& deviceId = hash.get<string>("source");
 
-                if (deviceId.find_first_of(":") == std::string::npos)
+                if (deviceId.find_first_of(OUTPUT_CHANNEL_SEPARATOR) == std::string::npos)
                     hash.setAttribute<bool>("source", "pipeline", false);
                 else
                     hash.setAttribute<bool>("source", "pipeline", true);
@@ -203,9 +215,9 @@ namespace karabo {
                         // ... is new one ... get its output channels and add them to the table ...
                         vector<string> ochannels = remote().getOutputChannelNames(deviceId);
                         for (size_t ch = 0; ch < ochannels.size(); ch++) {
-                            Hash row("source", deviceId + ":" + ochannels[ch],
+                            Hash row("source", deviceId + OUTPUT_CHANNEL_SEPARATOR + ochannels[ch],
                                      "type", "control",
-                                     "behavior", "init",
+                                     "behavior", "read-only",
                                      "monitored", false);
                             row.setAttribute("source", "pipeline", true);
                             table.push_back(row);
@@ -215,12 +227,12 @@ namespace karabo {
                         // ... if not, add them to the table ...
                         vector<string> ochannels = remote().getOutputChannelNames(deviceId);
                         for (size_t ch = 0; ch < ochannels.size(); ch++) {
-                            vector<Hash>::const_iterator ii = findDataSource(current, deviceId + ":" + ochannels[ch]);
+                            vector<Hash>::const_iterator ii = findDataSource(current, deviceId + OUTPUT_CHANNEL_SEPARATOR + ochannels[ch]);
                             if (ii == current.end()) {
                                 //Existing device has output channel not inserted yet
-                                Hash row("source", deviceId + ":" + ochannels[ch],
+                                Hash row("source", deviceId + OUTPUT_CHANNEL_SEPARATOR + ochannels[ch],
                                                      "type", "control",
-                                                     "behavior", "init",
+                                                     "behavior", "read-only",
                                                      "monitored", false);
                                 row.setAttribute("source", "pipeline", true);
                                 table.push_back(row);
