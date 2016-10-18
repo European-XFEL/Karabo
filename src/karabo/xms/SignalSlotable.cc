@@ -561,7 +561,7 @@ namespace karabo {
 
                 try {
 
-                    /* Header and body are shared pointers               
+                    /* Header and body are shared pointers
                      * By now the event variable keeps the only reference to them and hence the objects alive
                      * In the next while loop header and body will be destructed
                      * We take const references for convenience here
@@ -579,9 +579,9 @@ namespace karabo {
                         }
                     }
 
-                    /* The header of each event (message) 
+                    /* The header of each event (message)
                      * should contain all slotFunctions that must be a called
-                     * The formatting is like: 
+                     * The formatting is like:
                      * slotFunctions -> [|<instanceId1>:<slotFunction1>[,<slotFunction2>]]
                      * Example:
                      * slotFunctions -> |FooInstance:slotFoo1,slotFoo2|BarInstance:slotBar1,slotBar2|"
@@ -602,6 +602,11 @@ namespace karabo {
                     boost::trim_if(slotFunctions, boost::is_any_of("|"));
                     boost::split(allSlots, slotFunctions, boost::is_any_of("|"), boost::token_compress_on);
 
+                    // Retrieve the signalInstanceId
+                    const std::string& signalInstanceId = (header.has("signalInstanceId") ? // const ref is essential!
+                                                           header.get<std::string>("signalInstanceId") :
+                                                           std::string("unknown"));
+
 
                     BOOST_FOREACH(const string& instanceSlots, allSlots) {
                         //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Processing instanceSlots: " << instanceSlots;
@@ -620,62 +625,67 @@ namespace karabo {
 
 
                         BOOST_FOREACH(const string& slotFunction, slotFunctions) {
-                            if (m_slotCallGuardHandler) {
-                                const std::string& signalInstanceId = (header.has("signalInstanceId") ? // const is essential!
-                                                                       header.get<std::string>("signalInstanceId") : std::string("unknown"));
-                                if (!m_slotCallGuardHandler(slotFunction, signalInstanceId)) {
-                                    KARABO_LOG_FRAMEWORK_INFO << this->getInstanceId()
-                                            << ": Guard rejected slot '" << slotFunction << "'.";
-                                    sendPotentialReply(header, globalCall);
-                                    continue;
+                            try {
+                                // Check whether slot is callable
+                                if (m_slotCallGuardHandler) {
+                                    // This function will throw an exception in case the slot is not callable
+                                    m_slotCallGuardHandler(slotFunction, signalInstanceId);
                                 }
-                            }
 
-                            SlotInstancePointer slot = getSlot(slotFunction);
-                            if (slot) {
-                                // try/catch around user code that might have registered an exception handler:
-                                try {
+                                SlotInstancePointer slot = getSlot(slotFunction);
+                                if (slot) {
                                     slot->callRegisteredSlotFunctions(header, body);
-                                } catch (const Exception& e) {
-                                    if (m_exceptionHandler) m_exceptionHandler(e);
-                                    else {
-                                        KARABO_LOG_FRAMEWORK_ERROR << this->getInstanceId() << ": Exception in slot '"
-                                                << slotFunction << "': " << e;
-                                    }
-                                } catch (const std::exception& se) {
-                                    if (m_exceptionHandler) {
-                                        m_exceptionHandler(KARABO_SIGNALSLOT_EXCEPTION(std::string(se.what()) + " in slot '" + slotFunction + "'"));
-                                    } else {
-                                        KARABO_LOG_FRAMEWORK_ERROR << this->getInstanceId() << ": "
-                                                << se.what() << " in slot '" << slotFunction << "'.";
-                                    }
+                                    sendPotentialReply(header, globalCall);
+                                } else if (!globalCall) {
+                                    // Warn on non-existing slot, but only if directly addressed:
+                                    const std::string& signalInstanceId = (header.has("signalInstanceId") ? // const ref is essential!
+                                                                           header.get<std::string>("signalInstanceId") : std::string("unknown"));
+                                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a message from '"
+                                            << signalInstanceId << "' to non-existing slot \"" << slotFunction << "\"";
+                                } else {
+                                    KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Miss globally called slot " << slotFunction;
                                 }
-                                sendPotentialReply(header, globalCall);
-                            } else if (!globalCall) {
-                                // Warn on non-existing slot, but only if directly addressed:
-                                const std::string& signalInstanceId = (header.has("signalInstanceId") ? // const ref is essential!
-                                                                       header.get<std::string>("signalInstanceId") : std::string("unknown"));
-                                KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a message from '"
-                                        << signalInstanceId << "' to non-existing slot \"" << slotFunction << "\"";
-                            } else {
-                                KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Miss globally called slot " << slotFunction;
+                            } catch (const Exception& e) {
+                                const std::string msg(e.detailedMsg());
+                                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '"
+                                        << slotFunction << "': " << msg;
+                                // TODO Debate whether this is a good idea to keep
+                                if (m_exceptionHandler) m_exceptionHandler(e);
+                                replyException(header, msg);
+                            } catch (...) {
+                                KARABO_LOG_FRAMEWORK_ERROR << this->getInstanceId() << ": Unknown exception in slot '"
+                                        << slotFunction << " happened";
+                                replyException(header, "unknown exception");
                             }
                         }
                     }
                 } catch (const Exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << this->getInstanceId() << ": Exception while running inner event loop occurred: " << e;
+                    KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception while running inner event loop occurred: " << e;
                 } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << this->getInstanceId() << ": Unknown exception while running inner event loop occurred.";
+                    KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Unknown exception while running inner event loop occurred.";
                 }
             }
         }
 
 
-        void SignalSlotable::registerReply(const karabo::util::Hash& reply) {
+        void SignalSlotable::registerReply(const karabo::util::Hash & reply) {
             boost::mutex::scoped_lock lock(m_replyMutex);
             m_replies[boost::this_thread::get_id()] = reply;
         }
 
+
+        void SignalSlotable::replyException(const karabo::util::Hash& header, const std::string& message) {
+            if (header.has("replyTo")) {
+                Hash replyHeader;
+                replyHeader.set("error", true);
+                replyHeader.set("replyFrom", header.get<std::string > ("replyTo"));
+                replyHeader.set("signalInstanceId", m_instanceId);
+                replyHeader.set("signalFunction", "__reply__");
+                replyHeader.set("slotInstanceIds", "|" + header.get<string>("signalInstanceId") + "|");
+                Hash replyBody("a1", message);
+                m_producerChannel->write(replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+            }
+        }
 
         void SignalSlotable::sendPotentialReply(const karabo::util::Hash& header, bool global) {
 
@@ -796,7 +806,7 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::login(const std::string& username, const std::string& password, const std::string& provider) {
+        bool SignalSlotable::login(const std::string& username, const std::string& password, const std::string & provider) {
 
             string brokerHostname = getConnection()->getBrokerHostname();
             int brokerPort = getConnection()->getBrokerPort();
@@ -1037,7 +1047,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+        void SignalSlotable::slotPingAnswer(const std::string& instanceId, const karabo::util::Hash & instanceInfo) {
             if (!hasTrackedInstance(instanceId)) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId " << instanceId;
                 emit("signalInstanceNew", instanceId, instanceInfo);
@@ -1049,7 +1059,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotHeartbeat(const std::string& instanceId, const int& heartbeatInterval, const Hash& instanceInfo) {
+        void SignalSlotable::slotHeartbeat(const std::string& instanceId, const int& heartbeatInterval, const Hash & instanceInfo) {
             if (m_trackAllInstances) {
                 if (!hasTrackedInstance(instanceId)) {
                     // Notify about new instance
@@ -1088,12 +1098,12 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::registerExceptionHandler(const ExceptionHandler& exceptionFoundCallback) {
+        void SignalSlotable::registerExceptionHandler(const ExceptionHandler & exceptionFoundCallback) {
             m_exceptionHandler = exceptionFoundCallback;
         }
 
 
-        void SignalSlotable::registerSlotCallGuardHandler(const SlotCallGuardHandler& slotCallGuardHandler) {
+        void SignalSlotable::registerSlotCallGuardHandler(const SlotCallGuardHandler & slotCallGuardHandler) {
             m_slotCallGuardHandler = slotCallGuardHandler;
         }
 
@@ -1213,7 +1223,7 @@ namespace karabo {
 
 
         bool SignalSlotable::connect(const std::string& signalInstanceIdIn, const std::string& signalFunction,
-                                     const std::string& slotInstanceIdIn, const std::string& slotFunction) {
+                                     const std::string& slotInstanceIdIn, const std::string & slotFunction) {
 
             const std::string& signalInstanceId = (signalInstanceIdIn.empty() ? m_instanceId : signalInstanceIdIn);
             const std::string& slotInstanceId = (slotInstanceIdIn.empty() ? m_instanceId : slotInstanceIdIn);
@@ -1250,7 +1260,7 @@ namespace karabo {
 
 
         bool SignalSlotable::tryToConnectToSignal(const std::string& signalInstanceId, const std::string& signalFunction,
-                                                  const std::string& slotInstanceId, const std::string& slotFunction) {
+                                                  const std::string& slotInstanceId, const std::string & slotFunction) {
 
             bool signalExists = false;
 
@@ -1282,7 +1292,7 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SlotInstancePointer SignalSlotable::findSlot(const std::string &funcName) {
+        SignalSlotable::SlotInstancePointer SignalSlotable::findSlot(const std::string & funcName) {
             SlotInstancePointer ret;
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             SlotInstances::const_iterator it = m_slotInstances.find(funcName);
@@ -1304,7 +1314,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotConnectToSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction) {
+        void SignalSlotable::slotConnectToSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string & slotFunction) {
             bool result = false;
             {
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
@@ -1319,7 +1329,7 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::instanceHasSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
+        bool SignalSlotable::instanceHasSlot(const std::string& slotInstanceId, const std::string & slotFunction) {
 
             if (slotInstanceId == "*") return true; // GLOBAL slots may or may not exist
 
@@ -1351,7 +1361,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotHasSlot(const std::string& slotFunction) {
+        void SignalSlotable::slotHasSlot(const std::string & slotFunction) {
             bool result = false;
             {
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
@@ -1363,14 +1373,14 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::connect(const std::string& signal, const std::string& slot) {
+        bool SignalSlotable::connect(const std::string& signal, const std::string & slot) {
             std::pair<std::string, std::string> signalPair = splitIntoInstanceIdAndFunctionName(signal);
             std::pair<std::string, std::string> slotPair = splitIntoInstanceIdAndFunctionName(slot);
             return connect(signalPair.first, signalPair.second, slotPair.first, slotPair.second);
         }
 
 
-        void SignalSlotable::reconnectSignals(const std::string& newInstanceId) {
+        void SignalSlotable::reconnectSignals(const std::string & newInstanceId) {
 
             std::set<SignalSlotConnection> connections;
             {
@@ -1393,7 +1403,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::addTrackedInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+        void SignalSlotable::addTrackedInstance(const std::string& instanceId, const karabo::util::Hash & instanceInfo) {
             boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
             Hash h;
             h.set("instanceInfo", instanceInfo);
@@ -1403,13 +1413,13 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::hasTrackedInstance(const std::string& instanceId) {
+        bool SignalSlotable::hasTrackedInstance(const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
             return m_trackedInstances.has(instanceId);
         }
 
 
-        void SignalSlotable::eraseTrackedInstance(const std::string& instanceId) {
+        void SignalSlotable::eraseTrackedInstance(const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
             m_trackedInstances.erase(instanceId);
         }
@@ -1433,7 +1443,7 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::disconnect(const std::string& signalInstanceIdIn, const std::string& signalFunction, const std::string& slotInstanceIdIn, const std::string& slotFunction) {
+        bool SignalSlotable::disconnect(const std::string& signalInstanceIdIn, const std::string& signalFunction, const std::string& slotInstanceIdIn, const std::string & slotFunction) {
 
             const std::string& signalInstanceId = (signalInstanceIdIn.empty() ? m_instanceId : signalInstanceIdIn);
             const std::string& slotInstanceId = (slotInstanceIdIn.empty() ? m_instanceId : slotInstanceIdIn);
@@ -1475,7 +1485,7 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction) {
+        bool SignalSlotable::tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string & slotFunction) {
 
             bool disconnected = false;
 
@@ -1540,7 +1550,7 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SlotInstancePointer SignalSlotable::getSlot(const std::string& slotFunction) const {
+        SignalSlotable::SlotInstancePointer SignalSlotable::getSlot(const std::string & slotFunction) const {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             SlotInstances::const_iterator it = m_slotInstances.find(slotFunction);
             if (it != m_slotInstances.end()) return it->second;
@@ -1548,7 +1558,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::removeSlot(const std::string& slotFunction) {
+        void SignalSlotable::removeSlot(const std::string & slotFunction) {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             m_slotInstances.erase(slotFunction);
         }
@@ -1560,7 +1570,7 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SignalInstancePointer SignalSlotable::getSignal(const std::string& signalFunction) const {
+        SignalSlotable::SignalInstancePointer SignalSlotable::getSignal(const std::string & signalFunction) const {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             auto it = m_signalInstances.find(signalFunction);
             if (it != m_signalInstances.end()) return it->second;
@@ -1670,7 +1680,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::cleanSignals(const std::string& instanceId) {
+        void SignalSlotable::cleanSignals(const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
 
             KARABO_LOG_FRAMEWORK_TRACE << m_instanceId << " says : Cleaning all signals for instance \"" << instanceId << "\"";
@@ -1681,14 +1691,14 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::stopTracking(const std::string& instanceId) {
+        void SignalSlotable::stopTracking(const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
             KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" will not be tracked anymore";
             m_trackedInstances.erase(instanceId);
         }
 
 
-        bool SignalSlotable::SignalSlotConnection::operator<(const SignalSlotConnection& other) const {
+        bool SignalSlotable::SignalSlotConnection::operator<(const SignalSlotConnection & other) const {
             // Compare members in sequence. Since arrays of references are not allowed, so use pointers.
             const std::string * const mine[] = {&m_signalInstanceId, &m_signal, &m_slotInstanceId, &m_slot};
             const std::string * const others[] = {&other.m_signalInstanceId, &other.m_signal, &other.m_slotInstanceId, &other.m_slot};
@@ -1750,17 +1760,17 @@ namespace karabo {
         }
 
 
-        const SignalSlotable::InputChannels& SignalSlotable::getInputChannels() const {
+        const SignalSlotable::InputChannels & SignalSlotable::getInputChannels() const {
             return m_inputChannels;
         }
 
 
-        const SignalSlotable::OutputChannels& SignalSlotable::getOutputChannels() const {
+        const SignalSlotable::OutputChannels & SignalSlotable::getOutputChannels() const {
             return m_outputChannels;
         }
 
 
-        const OutputChannel::Pointer& SignalSlotable::getOutputChannel(const std::string& name) {
+        const OutputChannel::Pointer & SignalSlotable::getOutputChannel(const std::string & name) {
 
             OutputChannels::const_iterator it = m_outputChannels.find(name);
             if (it != m_outputChannels.end()) {
@@ -1770,7 +1780,7 @@ namespace karabo {
         }
 
 
-        const InputChannel::Pointer& SignalSlotable::getInputChannel(const std::string& name) {
+        const InputChannel::Pointer & SignalSlotable::getInputChannel(const std::string & name) {
 
             InputChannels::const_iterator it = m_inputChannels.find(name);
             if (it != m_inputChannels.end()) {
@@ -1859,7 +1869,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::reconnectInputChannels(const std::string& instanceId) {
+        void SignalSlotable::reconnectInputChannels(const std::string & instanceId) {
 
             // Loop channels
             for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
@@ -1877,7 +1887,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::disconnectInputChannels(const std::string& instanceId) {
+        void SignalSlotable::disconnectInputChannels(const std::string & instanceId) {
 
         }
 
@@ -1978,7 +1988,7 @@ namespace karabo {
         void SignalSlotable::onInputChannelConnectInfo(const InputChannel::Pointer& channel,
                                                        const boost::function<void() >& handler,
                                                        const std::string& instanceId, const std::string& channelId,
-                                                       bool channelExists, const karabo::util::Hash& info) {
+                                                       bool channelExists, const karabo::util::Hash & info) {
             if (channelExists) {
                 channel->connect(info); // Synchronous
                 handler();
@@ -2028,7 +2038,7 @@ namespace karabo {
         }
 
 
-        const std::string& SignalSlotable::getUserName() const {
+        const std::string & SignalSlotable::getUserName() const {
             return m_username;
         }
 
@@ -2038,13 +2048,13 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::hasReceivedReply(const std::string& replyId) const {
+        bool SignalSlotable::hasReceivedReply(const std::string & replyId) const {
             boost::mutex::scoped_lock lock(m_receivedRepliesMutex);
             return m_receivedReplies.find(replyId) != m_receivedReplies.end();
         }
 
 
-        void SignalSlotable::popReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body) {
+        void SignalSlotable::popReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer & body) {
             boost::mutex::scoped_lock lock(m_receivedRepliesMutex);
             ReceivedReplies::iterator it = m_receivedReplies.find(replyId);
             if (it != m_receivedReplies.end()) {
@@ -2088,12 +2098,12 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::registerPerformanceStatisticsHandler(const UpdatePerformanceStatisticsHandler& updatePerformanceStatisticsHandler) {
+        void SignalSlotable::registerPerformanceStatisticsHandler(const UpdatePerformanceStatisticsHandler & updatePerformanceStatisticsHandler) {
             m_updatePerformanceStatistics = updatePerformanceStatisticsHandler;
         }
 
 
-        bool SignalSlotable::connectP2P(const std::string& signalInstanceId) {
+        bool SignalSlotable::connectP2P(const std::string & signalInstanceId) {
             if (signalInstanceId == m_instanceId) return false;
             string signalConnectionString;
             int attempt = 0;
@@ -2134,13 +2144,13 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::disconnectP2P(const std::string& signalInstanceId) {
+        void SignalSlotable::disconnectP2P(const std::string & signalInstanceId) {
             if (signalInstanceId == m_instanceId) return;
             m_pointToPoint->disconnect(signalInstanceId, m_instanceId);
         }
 
 
-        void SignalSlotable::channelErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info) {
+        void SignalSlotable::channelErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string & info) {
 
             // Find channel that has problems:
             const char* channelName = "unknown";
