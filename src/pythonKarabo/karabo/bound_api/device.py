@@ -425,9 +425,9 @@ class PythonDevice(NoFsm):
 
                 validated = None
 
-                prevParmsInAlarm = Hash()
+                prevAlarmParams = Hash()
                 if self.validatorIntern.hasParametersInWarnOrAlarm():
-                    prevParmsInAlarm = self.validatorIntern \
+                    prevAlarmParams = self.validatorIntern \
                         .getParametersInWarnOrAlarm()
 
                 if validate:
@@ -439,7 +439,7 @@ class PythonDevice(NoFsm):
                         attributes = node.getAttributes()
                         stamp.toHashAttributes(attributes)
 
-                    changedAlarms = self._evaluateAlarmUpdates(prevParmsInAlarm)
+                    changedAlarms = self._evaluateAlarmUpdates(prevAlarmParams)
 
                 if not changedAlarms.get("toClear").empty() or not \
                         changedAlarms.get("toAdd").empty():
@@ -501,53 +501,53 @@ class PythonDevice(NoFsm):
         current = self.validatorIntern.getParametersInWarnOrAlarm()
 
         # check if we need to clear/clean alarms
-        if not previous.empty():
-            for p in previous:
-                pKey = p.getKey()
-                currentEntry = current.find(pKey)
-                # case where alarm still exists, we do not need to clean
-                if currentEntry is not None:
-                    timeStampPrevious = Timestamp.fromHashAttributes(
-                        p.getAttributes())
-                    timeStampCurrent = Timestamp.fromHashAttributes(
-                        currentEntry.getAttributes())
-                    if not forceUpdate and timeStampPrevious == \
-                            timeStampCurrent:
-                        knownAlarms |= pKey
-                    continue
-                # alarm is gone: we should clean
-                desc = p.getValue()
-                existingEntries = []
-                existingEntyNode = toClear.find(pKey)
-                if existingEntyNode is not None:
-                    existingEntries = existingEntyNode.getValue()
+        for p in previous:
+            pKey = p.getKey()
+            currentEntry = current.find(pKey)
+            # case where alarm still exists, we do not need to clean
+            if currentEntry is not None:
+                timeStampPrevious = Timestamp.fromHashAttributes(
+                    p.getAttributes())
+                timeStampCurrent = Timestamp.fromHashAttributes(
+                    currentEntry.getAttributes())
+                if not forceUpdate and timeStampPrevious == \
+                        timeStampCurrent:
+                    knownAlarms |= pKey
+                continue
+            # alarm is gone: we should clean
+            desc = p.getValue()
+            existingEntries = []
+            existingEntyNode = toClear.find(pKey)
+            if existingEntyNode is not None:
+                existingEntries = existingEntyNode.getValue()
 
-                existingEntries.append(desc.get("type"))
-                toClear.set(pKey, existingEntries)
+            existingEntries.append(desc.get("type"))
+            toClear.set(pKey, existingEntries)
 
         # add new alarms
         for c in current:
-            if forceUpdate or c.getKey() not in knownAlarms:
-                cKey = c.getKey()
-                desc = c.getValue()
-                conditionString = desc.get("type")
-                condition = AlarmCondition(conditionString)
-                pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
+            if not forceUpdate and c.getKey() in knownAlarms:
+                continue
 
-                alarmDesc = self.getFullSchema().getInfoForAlarm(pSep,
-                                                                 condition)
-                needAck = self.getFullSchema().doesAlarmNeedAcknowledging(
-                            pSep, condition)
+            cKey = c.getKey()
+            desc = c.getValue()
+            conditionString = desc.get("type")
+            condition = AlarmCondition(conditionString)
+            pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
 
-                entry = Hash("type", condition.asString(),
-                             "description", alarmDesc,
-                             "needsAcknowledging", needAck)
-                occuredAt = Timestamp.fromHashAttributes(c.getAttributes())
+            alarmDesc = self.getFullSchema().getInfoForAlarm(pSep, condition)
+            needAck = self.getFullSchema().doesAlarmNeedAcknowledging(
+                        pSep, condition)
 
-                property = Hash(conditionString, entry)
-                entryNode =property.getNode(conditionString)
-                occuredAt.toHashAttributes(entryNode.getAttributes())
-                toAdd.set(cKey, property)
+            entry = Hash("type", condition.asString(),
+                         "description", alarmDesc,
+                         "needsAcknowledging", needAck)
+            occuredAt = Timestamp.fromHashAttributes(c.getAttributes())
+
+            prop = Hash(conditionString, entry)
+            entryNode =prop.getNode(conditionString)
+            occuredAt.toHashAttributes(entryNode.getAttributes())
+            toAdd.set(cKey, prop)
 
         return Hash("toClear", toClear, "toAdd", toAdd)
 
