@@ -326,7 +326,7 @@ namespace karathon {
 
         void proxyExceptionHandler(const bp::object& handler, const karabo::util::Exception& e);
 
-        bool proxySlotCallGuardHandler(const bp::object&, const std::string&);
+        void proxySlotCallGuardHandler(const bp::object&, const std::string&);
 
         void proxyUpdatePerformanceStatisticsHandler(const bp::object&, float, unsigned int, float, unsigned int, unsigned int);
 
