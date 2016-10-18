@@ -24,7 +24,7 @@ LockTest_Test::~LockTest_Test() {
 
 
 void LockTest_Test::setUp() {
-    
+
     // The test will raise exceptions by purpose, FATAL log level is higher then ERROR (max used in KARABO), so the test will be silent
     Hash config("DeviceServer", Hash("serverId", "testServerLock", "scanPlugins", false, "visibility", 4, "Logger.priority", "FATAL"));
     m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
@@ -76,9 +76,7 @@ void LockTest_Test::testLocking() {
 
     std::clog << "Tested locking.. Ok" << std::endl;
 
-    //wait til lock clears
-    while (m_deviceClient->get<std::string>("lockTest3", "lockedBy") != "") {
-    };
+    waitUntilLockClears();
 
     m_deviceClient->executeNoWait("lockTest1", "lockAndWaitLong");
     // We are waiting here to give the machinery time to really lock "lockTest3"
@@ -89,9 +87,8 @@ void LockTest_Test::testLocking() {
     std::clog << "Tested locking with timeout (fail).. Ok" << std::endl;
 
     m_deviceClient->execute("lockTest3", "slotClearLock");
-    //wait til lock clears
-    while (m_deviceClient->get<std::string>("lockTest3", "lockedBy") != "") {
-    };
+
+    waitUntilLockClears();
 
     m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
 
@@ -103,8 +100,9 @@ void LockTest_Test::testLocking() {
 
 void LockTest_Test::testUnlocking() {
     m_deviceClient->execute("lockTest3", "slotClearLock");
-    while (m_deviceClient->get<std::string>("lockTest3", "lockedBy") != "") {
-    };
+
+    waitUntilLockClears();
+
     m_deviceClient->execute("lockTest2", "lockAndWait", KRB_TEST_MAX_TIMEOUT);
     std::clog << "Tested unlocking.. Ok" << std::endl;
 
@@ -126,7 +124,7 @@ void LockTest_Test::testSettingOnLocked() {
     m_deviceClient->execute("lockTest3", "slotClearLock");
     m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
     // We are waiting here to give the machinery time to really lock "lockTest3"
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));   
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("lockTest3", "intProperty", 100), Exception);
     Exception::clearTrace();
 
@@ -148,4 +146,10 @@ void LockTest_Test::testLockStealing() {
     std::clog << "Tested stolen lock exception.. Ok" << std::endl;
 }
 
+
+void LockTest_Test::waitUntilLockClears() {
+    while (m_deviceClient->get<std::string>("lockTest3", "lockedBy") != "") {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    };
+}
 
