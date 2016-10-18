@@ -758,7 +758,7 @@ class PythonDevice(NoFsm):
         # Check whether the slot is mentioned in the expectedParameters
         # as the call guard only works on those and will ignore all others
         if slotName not in self.fullSchema:
-            return True
+            return
 
         if self.fullSchema.hasAllowedStates(slotName):
             allowedStates = self.fullSchema.getAllowedStates(slotName)
@@ -767,31 +767,23 @@ class PythonDevice(NoFsm):
                 if currentState not in allowedStates:
                     msg = "Command \"{}\" is not allowed in current state \"{}\" " \
                           "of device \"{}\"".format(slotName, currentState, self.deviceid)
-                    self._ss.reply(msg)
-                    return False
+                    raise ValueError(msg)
 
         # Log the call of this slot by setting a parameter of the device
         self.set("lastCommand", slotName)
 
-        return True
-
     def slotGetConfiguration(self):
         self._ss.reply(self.parameters, self.deviceid)
-        
+
     def slotReconfigure(self, newConfiguration):
         if newConfiguration.empty():
             return
         result, error, validated = self._validate(newConfiguration)
         if result:
-            try:
-                self.preReconfigure(validated)
-                self._applyReconfiguration(validated)
-            except Exception as e:
-                print("PythonDevice.slotReconfigure Exception:", str(e))
-                self.exceptionFound("Python Exception happened", str(e))
-                self._ss.reply(False, str(e))
-                return
-        self._ss.reply(result, error)
+            self.preReconfigure(validated)
+            self._applyReconfiguration(validated)
+        else:
+            raise ValueError(error)
     
     def _validate(self, unvalidated):
         currentState = self["state"]

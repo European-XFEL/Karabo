@@ -80,7 +80,6 @@ namespace karabo {
 
             class Requestor {
 
-                SignalSlotable* m_signalSlotable;
                 std::string m_replyId;
                 bool m_isRequested;
                 bool m_isReceived;
@@ -151,27 +150,17 @@ namespace karabo {
                         karabo::util::Hash::Pointer header, body;
                         receiveResponse(header, body);
                         if (header->has("error") && header->get<bool>("error")) {
-                            std::string filename, function;
-                            int lineNo = 0;
-                            try {
-                                filename = body->get<std::string>("a2");
-                            } catch (...) {
-                            }
-                            try {
-                                function = body->get<std::string>("a3");
-                            } catch (...) {
-                            }
-                            try {
-                                lineNo = body->get<int>("a4");
-                            } catch (...) {
-                            }
                             throw karabo::util::RemoteException(body->get<std::string>("a1"),
-                                                                header->get<std::string>("signalInstanceId"),
-                                                                filename,
-                                                                function,
-                                                                lineNo);
+                                                                header->get<std::string>("signalInstanceId"));
                         }
                         karabo::util::unpack(*body, args...);
+
+                        if (sizeof...(Args) != body->size()) {
+                            int nArgs = body->size() - sizeof...(Args);
+                            KARABO_LOG_FRAMEWORK_DEBUG << "Ignoring the last " << nArgs << " arguments of response:\n"
+                                    << *body;
+                        }
+
                     } catch (const karabo::util::TimeoutException&) {
                         KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                     } catch (const karabo::util::CastException &) {
@@ -197,6 +186,10 @@ namespace karabo {
                 void sendRequest(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) const;
 
                 void receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
+
+            protected:
+
+                SignalSlotable* m_signalSlotable;
 
             };
 
@@ -224,7 +217,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceAvailableAgainHandler;
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Exception& /*exception*/) > ExceptionHandler;
-            typedef boost::function<bool (const std::string& /*slotFunction*/, const std::string& /*callee*/) > SlotCallGuardHandler;
+            typedef boost::function<void (const std::string& /*slotFunction*/, const std::string& /*callee*/) > SlotCallGuardHandler;
             typedef boost::function<void (float /*avgBrokerLatency*/, unsigned int /*maxBrokerLatency*/,
                                           float /*avgProcessingLatency*/, unsigned int /*maxProcessingLatency*/,
                                           unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
@@ -648,7 +641,7 @@ KARABO_SLOT0(__VA_ARGS__) \
             }
 
             template <typename ...Args>
-            void registerSignal(const std::string& funcName) {                
+            void registerSignal(const std::string& funcName) {
                 addSignalIfNew < Args...>(funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL);
             }
 
@@ -804,7 +797,7 @@ KARABO_SLOT0(__VA_ARGS__) \
 
             bool connectP2P(const std::string& instanceId);
 
-            void disconnectP2P(const std::string& instanceId);           
+            void disconnectP2P(const std::string& instanceId);
 
         protected: // Functions
 
@@ -908,6 +901,8 @@ KARABO_SLOT0(__VA_ARGS__) \
             void slotPing(const std::string& instanceId, int rand, bool trackPingedInstance);
 
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
+
+            void replyException(const karabo::util::Hash& header, const std::string& message);
 
             void sendPotentialReply(const karabo::util::Hash& header, bool global);
 
