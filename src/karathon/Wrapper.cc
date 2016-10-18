@@ -194,9 +194,9 @@ namespace karathon {
             } else if (operand.type() == typeid (karabo::util::CppNone)) {
                 return bp::object();
             } else if (operand.type() == typeid (karabo::util::Hash)) {
-                // This case is confusing and should be removed in future, will deprecate!
-                std::cout << "WARN: If you read this message, please contact a core karabo developer and show him!!" << std::endl;
                 return bp::object(boost::any_cast<karabo::util::Hash>(operand));
+            } else if (operand.type() == typeid (karabo::util::Hash::Pointer)) {
+                return bp::object(boost::any_cast<karabo::util::Hash::Pointer>(operand));
             } else if (operand.type() == typeid (std::vector<bool>)) {
                 return fromStdVectorToPyArray(boost::any_cast < std::vector<bool> >(operand), numpyFlag);
             } else if (operand.type() == typeid (std::vector<char>)) {

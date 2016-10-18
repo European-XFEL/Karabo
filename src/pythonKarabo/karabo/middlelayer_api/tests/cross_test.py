@@ -12,7 +12,7 @@ from unittest import main
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, Device, DeviceClientBase,
     getDevice, getHistory, Int32, MetricPrefix, shutdown, sleep, Slot, State,
-    unit, Unit, waitUntil)
+    unit, Unit, waitUntil, waitUntilNew)
 
 from .eventloop import DeviceTest, async_tst
 
@@ -86,7 +86,7 @@ class Tests(DeviceTest):
         self.assertEqual(a_desc.allowedStates, {State.INIT, State.UNKNOWN})
 
         self.assertEqual(len(proxy.table), 1)
-        self.assertEqual(proxy.table[0].d, 5)
+        self.assertEqual(proxy.table[0]["d"], 5 * unit.meter)
 
         with proxy:
             yield from proxy.setA()
@@ -110,6 +110,13 @@ class Tests(DeviceTest):
             yield from waitUntil(lambda: proxy.a == 22.8 * unit.milliampere)
             self.assertEqual(proxy.a, 22.8 * unit.milliampere,
                              "didn't receive change from bound device")
+
+            proxy.table = [(3, "african"), (7, "european")]
+            self.assertEqual(len(proxy.table), 1)
+            yield from waitUntilNew(proxy.table)
+            self.assertEqual(len(proxy.table), 2)
+            self.assertEqual(proxy.table[1]["d"], 7 * unit.meter)
+            self.assertEqual(proxy.table[0]["s"], "african")
 
         yield from proxy.backfire()
         self.assertEqual(self.device.value, 99)
