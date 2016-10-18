@@ -122,7 +122,7 @@ namespace karabo {
 
             void onSubscribeNetwork(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onNetworkData(const karabo::xms::InputChannel::Pointer& input);
+            void onNetworkData(karabo::xms::InputChannel& input);
 
             void onGetAvailableProjects(karabo::net::Channel::Pointer channel);
 
