@@ -477,14 +477,22 @@ namespace karabo {
 
             void unregisterDeviceMonitor(const std::string& instanceId);
 
+            /**
+             * Sets an attribute of a device.
+             * @param deviceId The id of the device
+             * @param key The parameter key (can be nested using "." as separator)
+             * @param attributeKey The attribute key
+             * @param attributeValue The attribute value
+             * @param timeoutInSeconds Timeout in seconds, as this call is synchronous
+             */
             template <class T>
-            void setAttribute(const std::string& instanceId, const std::string& key,
+            void setAttribute(const std::string& deviceId, const std::string& key,
                               const std::string& attributeKey, const T& attributeValue, int timeoutInSeconds = -1) {
                 KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
                 if (timeoutInSeconds == -1) timeoutInSeconds = 3;
                 karabo::util::Hash h("path", key, "attribute", attributeKey, "value", attributeValue);
                 std::vector<karabo::util::Hash> v{h};
-                sp->request(instanceId, "slotUpdateSchemaAttributes", v).timeout(timeoutInSeconds * 1000).receive();
+                sp->request(deviceId, "slotUpdateSchemaAttributes", v).timeout(timeoutInSeconds * 1000).receive();
             }
 
             template <class T>
