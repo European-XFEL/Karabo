@@ -11,6 +11,7 @@
 #include <karabo/util.hpp>
 #include <karabo/core.hpp>
 
+#define OUTPUT_CHANNEL_SEPARATOR ":"
 
 namespace karabo {
     namespace devices {
@@ -46,7 +47,7 @@ namespace karabo {
 
             virtual ~RunConfigurationGroup();
 
-            karabo::util::Hash getGroup() {
+            const karabo::util::Hash& getGroup() const {
                 return get<karabo::util::Hash>("group");
             }
 
@@ -56,6 +57,8 @@ namespace karabo {
             
             void slotGetGroup();
             
+            void saveGroupConfiguration();
+
             void preReconfigure(karabo::util::Hash& incomingReconfiguration);
             
             void fillTable(const std::vector<karabo::util::Hash>& current,
