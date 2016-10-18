@@ -17,6 +17,7 @@
 #include "HashWrap.hh"
 #include "ScopedGILRelease.hh"
 #include "ScopedGILAcquire.hh"
+#include "PyCoreLockWrap.hh"
 
 namespace bp = boost::python;
 
@@ -117,29 +118,6 @@ namespace karathon {
             ScopedGILRelease nogil;
             return Wrapper::fromStdVectorToPyList(this->getCurrentlyExecutableCommands(instanceId));
         }
-
-        //        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-        //            try {
-        //                ScopedGILRelease nogil;
-        //                return HashWrap::get(this->DeviceClient::cacheAndGetConfiguration(instanceId), key, keySep);
-        //            } catch (const karabo::util::Exception& e) {
-        //                throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
-        //            }
-        //        }
-
-        //        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-        //            karabo::util::Hash hash;
-        //            try {
-        //                ScopedGILRelease nogil;
-        //                this->DeviceClient::get(instanceId, hash);
-        //            } catch(...) {
-        //                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
-        //            }
-        //            if (hash.has(key)) {
-        //                return Wrapper::toObject(hash.getNode(key, keySep.at(0)).getValueAsAny(), HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
-        //            }
-        //            throw KARABO_PARAMETER_EXCEPTION("The key \"" + key + "\" is not found in device \"" + instanceId + "\" configuration:\n" + hash);
-        //        }
 
         bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
             boost::any value;
@@ -356,6 +334,34 @@ namespace karathon {
             return this->DeviceClient::getOutputChannelSchema(deviceId, outputChannelName);
         }
 
+        boost::shared_ptr<karathon::LockWrap> lockPy(const std::string& deviceId, bool recursive, int timeout) {
+            //non waiting request for lock
+
+            if (timeout == 0) {
+                return boost::make_shared<karathon::LockWrap>(boost::make_shared<karabo::core::Lock>(m_signalSlotable,
+                                                                                                     deviceId, recursive));
+            }
+
+            //timeout was given
+            const int waitTime = 1; //second
+            int nTries = 0;
+            while (true) {
+                try {
+                    return boost::make_shared<karathon::LockWrap>(boost::make_shared<karabo::core::Lock>(m_signalSlotable,
+                                                                                                         deviceId, recursive));
+
+                } catch (const karabo::util::LockException& e) {
+                    if (nTries++ > timeout / waitTime && timeout != -1) {
+                        //rethrow
+                        throw KARABO_LOCK_EXCEPTION(e.userFriendlyMsg());
+                    }
+                    //otherwise pass through and try again
+                    boost::this_thread::sleep(boost::posix_time::seconds(waitTime));
+                }
+
+            }
+        }
+
 
     private:
 
@@ -395,6 +401,7 @@ namespace karathon {
                         }
                     }
                 } catch (const karabo::util::Exception& e) {
+
                     std::cout << e.userFriendlyMsg();
                 }
             }
@@ -409,6 +416,7 @@ namespace karathon {
                 }
             }
             if (!registeredMonitors.empty()) {
+
                 this->callMonitor(instanceId, registeredMonitors, hash);
             }
         }
@@ -457,7 +465,6 @@ namespace karathon {
                 if (it->is<karabo::util::Hash>()) callMonitor(instanceId, registered, it->getValue<karabo::util::Hash>(), currentPath);
             }
         }
-
 
     private: // members
 

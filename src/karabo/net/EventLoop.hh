@@ -35,6 +35,11 @@ namespace karabo {
 
             static boost::asio::io_service& getIOService();
 
+            /// Start the event loop and block until EventLoop::stop() is called.
+            static void work();
+
+            /// Start the event loop and block until all work posted to its io service is
+            /// completed or until EventLoop::stop() is called.
             static void run();
 
             static void stop();

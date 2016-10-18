@@ -107,11 +107,14 @@ void exportp2p() {
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Channel)
                 ;
     }
-    
+
     {
+        void EventLoopWorkWrap();
+        void EventLoopRunWrap();
         bp::class_<EventLoop, boost::noncopyable >("EventLoop", "EventLoop is a singleton class wrapping Boost ASIO functionality.",
                                                    bp::no_init)
-                .def("run", &EventLoop::run).staticmethod("run")
+                .def("work", &EventLoopWorkWrap).staticmethod("work")
+                .def("run", &EventLoopRunWrap).staticmethod("run")
                 .def("stop", &EventLoop::stop).staticmethod("stop")
                 .def("addThread", (void (*)(const int))&EventLoop::addThread, (bp::arg("nThreads") = 1)).staticmethod("addThread")
                 .def("removeThread", (void(*)(const int))&EventLoop::removeThread, (bp::arg("nThreads") = 1)).staticmethod("removeThread")
@@ -119,3 +122,16 @@ void exportp2p() {
                 ;
     }
 }
+
+
+void EventLoopWorkWrap() {
+    ScopedGILRelease nogil;
+    EventLoop::work();
+}
+
+
+void EventLoopRunWrap() {
+    ScopedGILRelease nogil;
+    EventLoop::run();
+}
+
