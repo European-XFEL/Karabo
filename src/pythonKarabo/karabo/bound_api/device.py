@@ -441,10 +441,10 @@ class PythonDevice(NoFsm):
 
                     changedAlarms = self._evaluateAlarmUpdates(prevAlarmParams)
 
-                if not changedAlarms.get("toClear").empty() or not \
-                        changedAlarms.get("toAdd").empty():
-                    self._ss.emit("signalAlarmUpdate", self.getInstanceId(),
-                                  changedAlarms)
+                    if not changedAlarms.get("toClear").empty() or not \
+                            changedAlarms.get("toAdd").empty():
+                        self._ss.emit("signalAlarmUpdate", self.getInstanceId(),
+                                      changedAlarms)
                     
                 else:
                     validated = hash
@@ -545,7 +545,7 @@ class PythonDevice(NoFsm):
             occuredAt = Timestamp.fromHashAttributes(c.getAttributes())
 
             prop = Hash(conditionString, entry)
-            entryNode =prop.getNode(conditionString)
+            entryNode = prop.getNode(conditionString)
             occuredAt.toHashAttributes(entryNode.getAttributes())
             toAdd.set(cKey, prop)
 
