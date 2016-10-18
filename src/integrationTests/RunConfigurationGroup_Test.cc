@@ -20,18 +20,21 @@ void DeviceServerRunner_Test::testRunConfigurationGroup() {
                 "type", "control",
                 "behavior", "read-only",
                 "monitored", false);
+        s1.setAttribute("source", "pipeline", false);
         expert.push_back(s1);
 
         Hash s2("source", "SASE1/SPB/SAMP/INJ_CAM_1",
                 "type", "control",
                 "behavior", "read-only",
                 "monitored", false);
+        s2.setAttribute("source", "pipeline", false);
         expert.push_back(s2);
 
-        Hash s3("source", "SASE1/SPB/SAMP/INJ_CAM_1_ch1",
+        Hash s3("source", "SASE1/SPB/SAMP/INJ_CAM_1:ch1",
                 "type", "control",
-                "behavior", "ignore",
+                "behavior", "init",
                 "monitored", true);
+        s3.setAttribute("source", "pipeline", true);
         expert.push_back(s3);
     }
     
@@ -41,12 +44,14 @@ void DeviceServerRunner_Test::testRunConfigurationGroup() {
                 "type", "control",
                 "behavior", "read-only",
                 "monitored", false);
+        s1.setAttribute("source", "pipeline", false);
         user.push_back(s1);
 
         Hash s2("source", "SASE1/SPB/SAMP/INJ_TEMP_2",
                 "type", "control",
                 "behavior", "read-only",
                 "monitored", false);
+        s2.setAttribute("source", "pipeline", false);
         user.push_back(s2);
     }
     
@@ -79,26 +84,31 @@ void DeviceServerRunner_Test::testGetGroup() {
     CPPUNIT_ASSERT(group.get<string>("expert[0].type") == "control");
     CPPUNIT_ASSERT(group.get<string>("expert[0].behavior") == "read-only");
     CPPUNIT_ASSERT(group.get<bool>("expert[0].monitored") == false);
+    CPPUNIT_ASSERT(group.getAttribute<bool>("expert[0].source", "pipeline") == false);
     
     CPPUNIT_ASSERT(group.get<string>("expert[1].source") == "SASE1/SPB/SAMP/INJ_CAM_1");
     CPPUNIT_ASSERT(group.get<string>("expert[1].type") == "control");
     CPPUNIT_ASSERT(group.get<string>("expert[1].behavior") == "read-only");
     CPPUNIT_ASSERT(group.get<bool>("expert[1].monitored") == false);
+    CPPUNIT_ASSERT(group.getAttribute<bool>("expert[1].source", "pipeline") == false);
     
-    CPPUNIT_ASSERT(group.get<string>("expert[2].source") == "SASE1/SPB/SAMP/INJ_CAM_1_ch1");
+    CPPUNIT_ASSERT(group.get<string>("expert[2].source") == "SASE1/SPB/SAMP/INJ_CAM_1:ch1");
     CPPUNIT_ASSERT(group.get<string>("expert[2].type") == "control");
-    CPPUNIT_ASSERT(group.get<string>("expert[2].behavior") == "ignore");
+    CPPUNIT_ASSERT(group.get<string>("expert[2].behavior") == "init");
     CPPUNIT_ASSERT(group.get<bool>("expert[2].monitored") == true);
+    CPPUNIT_ASSERT(group.getAttribute<bool>("expert[2].source", "pipeline") == true);
     
     CPPUNIT_ASSERT(group.get<string>("user[0].source") == "SASE1/SPB/SAMP/INJ_TEMP_1");
     CPPUNIT_ASSERT(group.get<string>("user[0].type") == "control");
     CPPUNIT_ASSERT(group.get<string>("user[0].behavior") == "read-only");
     CPPUNIT_ASSERT(group.get<bool>("user[0].monitored") == false);
+    CPPUNIT_ASSERT(group.getAttribute<bool>("user[0].source", "pipeline") == false);
     
     CPPUNIT_ASSERT(group.get<string>("user[1].source") == "SASE1/SPB/SAMP/INJ_TEMP_2");
     CPPUNIT_ASSERT(group.get<string>("user[1].type") == "control");
     CPPUNIT_ASSERT(group.get<string>("user[1].behavior") == "read-only");
     CPPUNIT_ASSERT(group.get<bool>("user[1].monitored") == false);
+    CPPUNIT_ASSERT(group.getAttribute<bool>("user[1].source", "pipeline") == false);
     
     clog << "Test getting group structure and check the validity ... OK" << endl;
 }
