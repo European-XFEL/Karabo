@@ -1,3 +1,4 @@
+#include <Python.h>
 #include "SlotWrap.hh"
 
 namespace bp = boost::python;
@@ -42,83 +43,73 @@ namespace karathon {
 
 
     void SlotWrap::doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
-
         ScopedGILAcquire gil;
 
         switch (m_arity) {
             case 4:
-                if (callFunction4(body)) return;
+                callFunction4(body);
                 break;
             case 3:
-                if (callFunction3(body)) return;
+                callFunction3(body);
                 break;
             case 2:
-                if (callFunction2(body)) return;
+                callFunction2(body);
                 break;
             case 1:
-                if (callFunction1(body)) return;
+                callFunction1(body);
                 break;
             case 0:
-                if (callFunction0(body)) return;
+                callFunction0(body);
                 break;
             default:
                 throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send to python slot (max 4 are currently supported");
         }
-        throw KARABO_LOGIC_EXCEPTION("TypeError exception happened \"somewhere\" in Python code");
     }
 
 
-    bool SlotWrap::callFunction0(const karabo::util::Hash& body) {
+    void SlotWrap::callFunction0(const karabo::util::Hash& body) {
         try {
             m_slotFunction();
         } catch (const bp::error_already_set&) {
-            PyErr_Print();
-            return false;
+            rethrowPythonException();
         }
-        return true;
     }
 
 
-    bool SlotWrap::callFunction1(const karabo::util::Hash& body) {
+    void SlotWrap::callFunction1(const karabo::util::Hash& body) {
         bp::object a1 = HashWrap::get(body, "a1");
         try {
             m_slotFunction(a1);
         } catch (const bp::error_already_set&) {
-            tryToPrint();
-            return false;
+            rethrowPythonException();
         }
-        return true;
     }
 
 
-    bool SlotWrap::callFunction2(const karabo::util::Hash& body) {
+    void SlotWrap::callFunction2(const karabo::util::Hash& body) {
         bp::object a1 = HashWrap::get(body, "a1");
         bp::object a2 = HashWrap::get(body, "a2");
         try {
             m_slotFunction(a1, a2);
         } catch (const bp::error_already_set&) {
-            tryToPrint();
-            return false;
+            rethrowPythonException();
         }
-        return true;
     }
 
 
-    bool SlotWrap::callFunction3(const karabo::util::Hash& body) {
+    void SlotWrap::callFunction3(const karabo::util::Hash& body) {
         bp::object a1 = HashWrap::get(body, "a1");
         bp::object a2 = HashWrap::get(body, "a2");
         bp::object a3 = HashWrap::get(body, "a3");
         try {
             m_slotFunction(a1, a2, a3);
         } catch (const bp::error_already_set&) {
-            tryToPrint();
-            return false;
+            rethrowPythonException();
         }
-        return true;
     }
 
 
-    bool SlotWrap::callFunction4(const karabo::util::Hash& body) {
+    void SlotWrap::callFunction4(const karabo::util::Hash& body) {
         bp::object a1 = HashWrap::get(body, "a1");
         bp::object a2 = HashWrap::get(body, "a2");
         bp::object a3 = HashWrap::get(body, "a3");
@@ -126,29 +117,52 @@ namespace karathon {
         try {
             m_slotFunction(a1, a2, a3, a4);
         } catch (const bp::error_already_set&) {
-            tryToPrint();
-            return false;
+            rethrowPythonException();
         }
-        return true;
     }
 
 
-    void SlotWrap::tryToPrint() {
+    void SlotWrap::rethrowPythonException() {
         PyObject *e, *v, *t;
-        bool printing = true;
-
-        // get the error indicators
+         // get the error indicators
         PyErr_Fetch(&e, &v, &t); // ref count incremented
 
-        if (PyErr_GivenExceptionMatches(e, PyExc_TypeError))
-            printing = false;
+        std::string pythonErrorMessage;
+
+        // Try to extract full traceback
+        PyObject* moduleName = PyUnicode_FromString("traceback");
+        PyObject* pythonModule = PyImport_Import(moduleName);
+        Py_DECREF(moduleName);
+        
+        if (pythonModule != 0) {
+            PyObject* pythonFunction = PyObject_GetAttrString(pythonModule, "format_exception");
+            if (pythonFunction && PyCallable_Check(pythonFunction)) {
+                PyObject* pythonValue = PyObject_CallFunctionObjArgs(pythonFunction, e, v, t, 0);
+                if (PyList_Check(pythonValue)) {
+                    pythonErrorMessage.append("Python reports ...\n\n");
+                    Py_ssize_t size = PyList_Size(pythonValue);
+                    for (Py_ssize_t i = 0; i < size; i++) {
+                        PyObject* item = PyList_GetItem(pythonValue, i);  // this "borrowed reference" - no decref!
+                        PyObject* pythonString = PyObject_Str(item);
+                        pythonErrorMessage.append(PyUnicode_AsUTF8(pythonString));
+                        Py_DECREF(pythonString);
+                    }
+                }
+                Py_DECREF(pythonValue);
+                Py_DECREF(pythonFunction);
+            }
+            Py_DECREF(pythonModule);
+        } else {
+            PyObject* pythonRepr = PyObject_Repr(v);   // apply str()
+            pythonErrorMessage.assign(PyUnicode_AsUTF8(pythonRepr));
+            Py_DECREF(pythonRepr);
+        }
 
         // we reset it for later processing
         PyErr_Restore(e, v, t); // ref count decremented
-        if (printing)
-            PyErr_Print();
-        else
-            PyErr_Clear();
+        PyErr_Clear();
+
+        throw KARABO_PYTHON_EXCEPTION(pythonErrorMessage);
     }
 
 }
