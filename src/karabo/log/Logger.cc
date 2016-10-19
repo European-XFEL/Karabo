@@ -34,7 +34,7 @@ namespace karabo {
             STRING_ELEMENT(s).key("priority")
                     .displayedName("Priority")
                     .description("The default log priority")
-                    .options("DEBUG INFO WARN ERROR")
+                    .options("DEBUG INFO WARN ERROR FATAL")
                     .assignmentOptional().defaultValue("INFO")
                     .commit();
 
