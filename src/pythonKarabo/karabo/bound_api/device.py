@@ -259,10 +259,7 @@ class PythonDevice(NoFsm):
         self.errorRegex = re.compile(".*error.*", re.IGNORECASE)
         
         # Register guard for slot calls
-        self._ss.registerSlotCallGuardHandler(self.slotCallGuard)
-        
-        # Register exception handler
-        self._ss.registerExceptionHandler(self.exceptionFound)
+        self._ss.registerSlotCallGuardHandler(self.slotCallGuard)                
 
         # Register updateLatencies handler
         self._ss.registerPerformanceStatisticsHandler(self.updateLatencies)
