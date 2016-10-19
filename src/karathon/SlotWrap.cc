@@ -140,7 +140,7 @@ namespace karathon {
                 PyObject* pythonValue = PyObject_CallFunctionObjArgs(pythonFunction, e, v, t, 0);
                 if (PyList_Check(pythonValue)) {
                     pythonErrorMessage.clear();
-                    pythonErrorMessage.append("\n\n");
+                    pythonErrorMessage.append("Python reports ...\n\n");
                     Py_ssize_t size = PyList_Size(pythonValue);
                     for (Py_ssize_t i = 0; i < size; i++) {
                         PyObject* item = PyList_GetItem(pythonValue, i);  // this "borrowed reference" - no decref!
