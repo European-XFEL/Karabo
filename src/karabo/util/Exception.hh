@@ -34,7 +34,7 @@ namespace karabo {
          */
         class KARABO_DECLSPEC Exception : public std::exception {
 
-            public:
+        public:
 
             typedef boost::function<void (const Exception&) > ExceptionHandler;
 
@@ -180,7 +180,7 @@ namespace karabo {
          */
         class PropagatedException : public Exception {
 
-            public:
+        public:
 
             PropagatedException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Propagated Exception", filename, function, lineNumber) {
@@ -199,7 +199,7 @@ namespace karabo {
          */
         class ParameterException : public Exception {
 
-            public:
+        public:
 
             ParameterException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Parameter Exception", filename, function, lineNumber) {
@@ -212,7 +212,7 @@ namespace karabo {
          */
         class LogicException : public Exception {
 
-            public:
+        public:
 
             LogicException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Logic Exception", filename, function, lineNumber) {
@@ -225,7 +225,7 @@ namespace karabo {
          */
         class NotImplementedException : public Exception {
 
-            public:
+        public:
 
             NotImplementedException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Not implemented", filename, function, lineNumber) {
@@ -238,7 +238,7 @@ namespace karabo {
          */
         class NotSupportedException : public Exception {
 
-            public:
+        public:
 
             NotSupportedException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Call not supported", filename, function, lineNumber) {
@@ -251,7 +251,7 @@ namespace karabo {
          */
         class SchemaException : public Exception {
 
-            public:
+        public:
 
             SchemaException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Bad schema construction", filename, function, lineNumber) {
@@ -264,7 +264,7 @@ namespace karabo {
          */
         class CastException : public Exception {
 
-            public:
+        public:
 
             CastException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Cast Exception", filename, function, lineNumber) {
@@ -279,7 +279,7 @@ namespace karabo {
          */
         class ImageException : public Exception {
 
-            public:
+        public:
 
             ImageException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Image Exception", filename, function, lineNumber) {
@@ -296,7 +296,7 @@ namespace karabo {
          */
         class ImageDimensionException : public ImageException {
 
-            public:
+        public:
 
             ImageDimensionException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 ImageException(message, "Image Dimension Exception", filename, function, lineNumber) {
@@ -309,7 +309,7 @@ namespace karabo {
          */
         class ImageFormatException : public ImageException {
 
-            public:
+        public:
 
             ImageFormatException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 ImageException(message, "Image Format Exception", filename, function, lineNumber) {
@@ -322,7 +322,7 @@ namespace karabo {
          */
         class ImageTypeException : public ImageException {
 
-            public:
+        public:
 
             ImageTypeException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 ImageException(message, "Image Type Exception", filename, function, lineNumber) {
@@ -335,7 +335,7 @@ namespace karabo {
          */
         class InitException : public Exception {
 
-            public:
+        public:
 
             InitException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Initialization failure", filename, function, lineNumber) {
@@ -352,7 +352,7 @@ namespace karabo {
          */
         class MemoryInitException : public InitException {
 
-            public:
+        public:
 
             MemoryInitException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 InitException(message, "Memory init Exception", filename, function, lineNumber) {
@@ -367,7 +367,7 @@ namespace karabo {
          */
         class IOException : public Exception {
 
-            public:
+        public:
 
             IOException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "IO Exception", filename, function, lineNumber) {
@@ -384,7 +384,7 @@ namespace karabo {
          */
         class SystemException : public Exception {
 
-            public:
+        public:
 
             SystemException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "System Exception", filename, function, lineNumber) {
@@ -398,7 +398,7 @@ namespace karabo {
 
         class HdfIOException : public IOException {
 
-            public:
+        public:
 
             HdfIOException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 IOException(message, "HdfIOException", filename, function, lineNumber) {
@@ -418,7 +418,7 @@ namespace karabo {
          */
         class FileNotFoundIOException : public IOException {
 
-            public:
+        public:
 
             FileNotFoundIOException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 IOException(message, "FileNotFound IOException", filename, function, lineNumber) {
@@ -431,7 +431,7 @@ namespace karabo {
          */
         class OpenMqException : public Exception {
 
-            public:
+        public:
 
             OpenMqException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "OpenMq Exception", filename, function, lineNumber) {
@@ -444,7 +444,7 @@ namespace karabo {
          */
         class MessageException : public Exception {
 
-            public:
+        public:
 
             MessageException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Message Exception", filename, function, lineNumber) {
@@ -457,7 +457,7 @@ namespace karabo {
          */
         class PythonException : public Exception {
 
-            public:
+        public:
 
             PythonException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Python Exception", filename, function, lineNumber) {
@@ -470,7 +470,7 @@ namespace karabo {
          */
         class CudaException : public Exception {
 
-            public:
+        public:
 
             CudaException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "GPU (NVIDIA CUDA) Exception", filename, function, lineNumber) {
@@ -483,7 +483,7 @@ namespace karabo {
          */
         class HardwareException : public Exception {
 
-            public:
+        public:
 
             HardwareException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Hardware Exception", filename, function, lineNumber) {
@@ -496,7 +496,7 @@ namespace karabo {
          */
         class ReconfigureException : public Exception {
 
-            public:
+        public:
 
             ReconfigureException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Reconfigure Exception", filename, function, lineNumber) {
@@ -509,7 +509,7 @@ namespace karabo {
          */
         class SignalSlotException : public Exception {
 
-            public:
+        public:
 
             SignalSlotException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "SignalSlot Exception", filename, function, lineNumber) {
@@ -523,9 +523,10 @@ namespace karabo {
          */
         class RemoteException : public Exception {
 
-            public:
+        public:
 
-            RemoteException(const std::string& message, const std::string& device, const std::string& filename, const std::string& function, int lineNumber) :
+            RemoteException(const std::string& message, const std::string& device, const std::string& filename = "",
+                            const std::string& function = "", int lineNumber = -1) :
                 Exception(message, "Remote Exception from " + device, filename, function, lineNumber) {
             }
         };
@@ -535,7 +536,7 @@ namespace karabo {
          */
         class NetworkException : public Exception {
 
-            public:
+        public:
 
             NetworkException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Network Exception", filename, function, lineNumber) {
@@ -548,7 +549,7 @@ namespace karabo {
          */
         class TimeoutException : public Exception {
 
-            public:
+        public:
 
             TimeoutException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Timeout Exception", filename, function, lineNumber) {
@@ -561,20 +562,20 @@ namespace karabo {
          */
         class DoocsException : public Exception {
 
-            public:
+        public:
 
             DoocsException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "DOOCS Exception", filename, function, lineNumber) {
             }
         };
 #define KARABO_DOOCS_EXCEPTION(msg) karabo::util::DoocsException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
-        
+
         /**
          * The LockException handles exceptions that result from not being able to acquire a lock
          */
         class LockException : public Exception {
 
-            public:
+        public:
 
             LockException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
                 Exception(message, "Lock Exception", filename, function, lineNumber) {
