@@ -1,7 +1,9 @@
-from unittest import TestCase
-from karabo.project_db.project_database import ProjectDatabase
-from lxml import etree
 import copy
+from unittest import TestCase
+
+from lxml import etree
+
+from karabo.project_db.project_database import ProjectDatabase
 
 
 class TestProjectDatabase(TestCase):
@@ -72,8 +74,8 @@ class TestProjectDatabase(TestCase):
             self.assertEqual(first_rev['user'], 'admin')
 
     def test__check_for_known_xml_type(self):
-        testTypes = ['projects', 'scenes', 'macros', 'configs',
-                     'device_servers']
+        testTypes = ['projects', 'scenes', 'macros', 'device_configs',
+                     'device_servers', 'monitors', 'device_groups']
         for t in testTypes:
             self.assertTrue(t in ProjectDatabase.known_xml_types)
 
@@ -106,7 +108,7 @@ class TestProjectDatabase(TestCase):
         with ProjectDatabase(self.user, self.password, server='localhost',
                              test_mode=True) as db:
             success, meta = db.save_config('LOCAL', 'testconfig', xml_rep)
-            path = "{}/LOCAL/configs/testconfig".format(db.root)
+            path = "{}/LOCAL/device_configs/testconfig".format(db.root)
             self.assertTrue(db.dbhandle.hasDocument(path))
             self.assertEqual(db.dbhandle.getDoc(path).decode('utf-8'), xml_rep)
             self.assertTrue(success)
@@ -271,7 +273,8 @@ class TestProjectDatabase(TestCase):
             # get version info for what we inserted
             revisions = []
             for i in range(3):
-                path = "{}/LOCAL/configs/testconfig{}".format(db.root, i)
+                path = "{}/LOCAL/device_configs/testconfig{}"\
+                        .format(db.root, i)
                 v = db.get_versioning_info(path)
                 revisions.append(v['revisions'][-1]['id'])
 
