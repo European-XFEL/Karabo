@@ -139,7 +139,6 @@ namespace karathon {
             if (pythonFunction && PyCallable_Check(pythonFunction)) {
                 PyObject* pythonValue = PyObject_CallFunctionObjArgs(pythonFunction, e, v, t, 0);
                 if (PyList_Check(pythonValue)) {
-                    pythonErrorMessage.clear();
                     pythonErrorMessage.append("Python reports ...\n\n");
                     Py_ssize_t size = PyList_Size(pythonValue);
                     for (Py_ssize_t i = 0; i < size; i++) {
