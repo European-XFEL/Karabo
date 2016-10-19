@@ -258,7 +258,7 @@ namespace karathon {
     }
 
 
-    void SignalSlotableWrap::proxyInstanceNotAvailableHandler(const bp::object& handler,
+    void SignalSlotableWrap::proxyInstanceGoneHandler(const bp::object& handler,
                                                               const std::string& instanceId,
                                                               const karabo::util::Hash& instanceInfo) {
         ScopedGILAcquire gil;
@@ -273,7 +273,7 @@ namespace karathon {
     }
 
 
-    void SignalSlotableWrap::proxyInstanceAvailableAgainHandler(const bp::object& handler,
+    void SignalSlotableWrap::proxyInstanceNewHandler(const bp::object& handler,
                                                                 const std::string& instanceId,
                                                                 const karabo::util::Hash& instanceInfo) {
         ScopedGILAcquire gil;

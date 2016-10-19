@@ -145,6 +145,8 @@ namespace karabo {
             std::set<std::string> m_immortals;
             mutable boost::mutex m_immortalsMutex;
 
+            int m_accessLevel = karabo::util::Schema::ADMIN;
+
         public:
 
             KARABO_CLASSINFO(DeviceClient, "DeviceClient", "1.2");
@@ -651,6 +653,8 @@ namespace karabo {
             /// Marks 'instanceId' as used.
             /// Returns true if explicit "connect" call should still be done for it.
             bool connectNeeded(const std::string & instanceId);
+            
+            int getAccessLevel(const std::string& deviceId);
         };
     }
 }

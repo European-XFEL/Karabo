@@ -846,7 +846,7 @@ namespace karabo {
                 KARABO_LOG_ERROR << detailedMessage;
             }
 
-            virtual void exceptionFound(const karabo::util::Exception& e) {
+            KARABO_DEPRECATED virtual void exceptionFound(const karabo::util::Exception& e) {
                 KARABO_LOG_ERROR << e;
             }
 
@@ -998,10 +998,7 @@ namespace karabo {
                 this->initDeviceSlots();
 
                 // Register guard for slot calls
-                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));
-
-                // Register exception handler
-                this->registerExceptionHandler(boost::bind(&karabo::core::Device<FSM>::exceptionFound, this, _1));
+                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));               
 
                 // Register updateLatencies handler
                 this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies,

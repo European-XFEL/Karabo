@@ -72,12 +72,6 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  "Example:\n\tss = SignalSlotable.create('a')\n"
                  ).staticmethod("create")
 
-            .def("login"
-                 , (bool (SignalSlotable::*)(const std::string&, const std::string&, const std::string&)) (&SignalSlotable::login)
-                 , (bp::arg("username"), bp::arg("password"), bp::arg("provider")))
-
-            .def("logout", (bool (SignalSlotable::*)())(&SignalSlotable::logout))
-
             .def("setNumberOfThreads"
                  , (void (SignalSlotable::*)(int))(&SignalSlotable::setNumberOfThreads)
                  , (bp::arg("nthreads"))
@@ -105,22 +99,12 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (bp::arg("update")))
             .def("getInstanceInfo"
                  , (const karabo::util::Hash & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceInfo)
-                 , bp::return_value_policy<bp::copy_const_reference>())
-            .def("trackExistenceOfInstance"
-                 , (void (SignalSlotable::*)(const std::string&))(&SignalSlotable::trackExistenceOfInstance)
-                 , (bp::arg("instanceId")))
-            .def("stopTrackingExistenceOfInstance"
-                 , (void (SignalSlotable::*)(const std::string&))(&SignalSlotable::stopTrackingExistenceOfInstance)
-                 , (bp::arg("instanceId"), bp::arg("instanceInfo")))
+                 , bp::return_value_policy<bp::copy_const_reference>())            
+            .def("registerInstanceNewHandler", &SignalSlotableWrap::registerInstanceNewHandlerPy,
+                 (bp::arg("handler")))
 
-            .def("registerInstanceNotAvailableHandler", &SignalSlotableWrap::registerInstanceNotAvailableHandlerPy
-                 , (bp::arg("handler")))
-
-            .def("registerInstanceAvailableAgainHandler", &SignalSlotableWrap::registerInstanceAvailableAgainHandlerPy
-                 , (bp::arg("handler")))
-
-            .def("registerExceptionHandler", &SignalSlotableWrap::registerExceptionHandlerPy
-                 , (bp::arg("handler")))
+            .def("registerInstanceGoneHandler", &SignalSlotableWrap::registerInstanceGoneHandlerPy,
+                 (bp::arg("handler")))
 
             .def("registerSlotCallGuardHandler", &SignalSlotableWrap::registerSlotCallGuardHandlerPy
                  , (bp::arg("handler")))
@@ -159,7 +143,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), (bp::arg("slotFunction")))
 
-            
+
             .def("registerSignal", &SignalSlotableWrap::registerSignalPy<>,
                  (bp::arg("signalFunction")))
             .def("registerSignal", &SignalSlotableWrap::registerSignalPy<bp::object>,
@@ -262,10 +246,6 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("exists",
                  (bp::tuple(SignalSlotableWrap::*)(const std::string&))(&SignalSlotableWrap::existsPy),
-                 (bp::arg("instanceId")))
-
-            .def("getAccessLevel",
-                 (int (SignalSlotable::*)(const std::string&) const) (&SignalSlotable::getAccessLevel),
                  (bp::arg("instanceId")))
 
             .def("getBrokerHost", &SignalSlotableWrap::getBrokerHost)

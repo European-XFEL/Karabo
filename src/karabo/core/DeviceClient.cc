@@ -376,7 +376,8 @@ namespace karabo {
                 karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
                 for (Hash::const_map_iterator it = tmp.mbegin(); it != tmp.mend(); ++it) {
                     if (it->second.hasAttribute("visibility")) {
-                        if (p->getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility")) continue;
+                        // TODO Implement access level
+                        if (getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility")) continue;
                     }
                     deviceServers.push_back(it->second.getKey());
                 }
@@ -419,7 +420,8 @@ namespace karabo {
                 devices.reserve(tmp.size());
                 for (Hash::const_map_iterator it = tmp.mbegin(); it != tmp.mend(); ++it) {
                     if (it->second.hasAttribute("visibility")) {
-                        if (p->getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility")) continue;
+                        // TODO Re-implement access level
+                        if (getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility")) continue;
                     }
                     devices.push_back(it->second.getKey());
                 }
@@ -443,7 +445,8 @@ namespace karabo {
                 for (Hash::const_map_iterator it = tmp.mbegin(); it != tmp.mend(); ++it) {
                     if (it->second.getAttribute<string>("serverId") == deviceServer) {
                         if (it->second.hasAttribute("visibility")) {
-                            if (p->getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility")) continue;
+                            // TODO re-implement access level
+                            if (getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility")) continue;
                         }
                         devices.push_back(it->second.getKey());
                     }
@@ -643,7 +646,7 @@ namespace karabo {
         std::vector<std::string> DeviceClient::getCurrentlySettableProperties(const std::string& deviceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(vector<string>());
             Schema schema = cacheAndGetActiveSchema(deviceId);
-            int accessLevel = m_signalSlotable.lock()->getAccessLevel(deviceId);
+            int accessLevel = getAccessLevel(deviceId);
             return filterProperties(schema, accessLevel);
         }
 
@@ -651,7 +654,7 @@ namespace karabo {
         std::vector<std::string> DeviceClient::getProperties(const std::string& deviceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(vector<string>());
             Schema schema = cacheAndGetDeviceSchema(deviceId);
-            int accessLevel = m_signalSlotable.lock()->getAccessLevel(deviceId);
+            int accessLevel = getAccessLevel(deviceId);
             return filterProperties(schema, accessLevel);
         }
 
@@ -659,7 +662,7 @@ namespace karabo {
         std::vector<std::string> DeviceClient::getClassProperties(const std::string& serverId, const std::string& classId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(vector<string>());
             Schema schema = cacheAndGetClassSchema(serverId, classId);
-            int accessLevel = m_signalSlotable.lock()->getAccessLevel(classId);
+            int accessLevel = getAccessLevel(classId);
             return filterProperties(schema, accessLevel);
         }
 
@@ -1481,14 +1484,19 @@ if (nodeData) {\
 
 
         bool DeviceClient::login(const std::string& username, const std::string& password, const std::string& provider) {
-            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(false);
-            return m_signalSlotable.lock()->login(username, password, provider);
+            // TODO: Dirty hack for now, proper authentication later
+            if (username == "user") m_accessLevel = karabo::util::Schema::AccessLevel::USER;
+            if (username == "operator") m_accessLevel = karabo::util::Schema::AccessLevel::OPERATOR;
+            if (username == "expert") m_accessLevel = karabo::util::Schema::AccessLevel::EXPERT;
+            if (username == "admin") m_accessLevel = karabo::util::Schema::AccessLevel::ADMIN;
+            if (username == "god") m_accessLevel = 100;
+            return true;
         }
 
 
         bool DeviceClient::logout() {
-            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(false);
-            return m_signalSlotable.lock()->logout();
+            // TODO: Dirty hack for now, proper authentication later
+            return true;
         }
 
 
@@ -1538,7 +1546,10 @@ if (nodeData) {\
 
             }
         }
-
+        
+        int DeviceClient::getAccessLevel(const std::string& deviceId) {
+            return m_accessLevel;
+        }
 
 
 #undef KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN
