@@ -23,7 +23,7 @@ namespace bp = boost::python;
 namespace karathon {
 
     class SignalSlotableWrap : public karabo::xms::SignalSlotable {
-        
+
     public:
 
         class RequestorWrap : public karabo::xms::SignalSlotable::Requestor {
@@ -42,7 +42,7 @@ namespace karathon {
                     auto body = boost::make_shared<karabo::util::Hash>();
                     packPy(*body, args...);
                     ScopedGILRelease nogil;
-                    sendRequest(slotInstanceId, prepareHeader(slotInstanceId, slotFunction), body);
+                    sendRequest(slotInstanceId, prepareRequestHeader(slotInstanceId, slotFunction), body);
                 } catch (...) {
                     KARABO_RETHROW
                 }
@@ -59,10 +59,10 @@ namespace karathon {
                     auto body = boost::make_shared<karabo::util::Hash>();
                     packPy(*body, args...);
                     ScopedGILRelease nogil;
-                    karabo::util::Hash::Pointer header = prepareHeaderNoWait(requestSlotInstanceId,
-                                                                             requestSlotFunction,
-                                                                             replySlotInstanceId,
-                                                                             replySlotFunction);
+                    karabo::util::Hash::Pointer header = prepareRequestNoWaitHeader(requestSlotInstanceId,
+                                                                                    requestSlotFunction,
+                                                                                    replySlotInstanceId,
+                                                                                    replySlotFunction);
                     sendRequest(requestSlotInstanceId, header, body);
                 } catch (...) {
                     KARABO_RETHROW
@@ -220,7 +220,7 @@ namespace karathon {
             if (s) {
                 auto hash = boost::make_shared<karabo::util::Hash>();
                 packPy(*hash, args...);
-                s->emit<Args...>(hash);
+                s->emit < Args...>(hash);
             }
         }
 
@@ -252,19 +252,15 @@ namespace karathon {
             return Wrapper::fromStdVectorToPyList<std::string>(getConnection()->getBrokerHosts());
         }
 
-        void registerInstanceNotAvailableHandlerPy(const bp::object& handler) {
-            registerInstanceNotAvailableHandler(boost::bind(&SignalSlotableWrap::proxyInstanceNotAvailableHandler,
-                                                            this, handler, _1, _2));
+        void registerInstanceNewHandlerPy(const bp::object& handler) {
+            registerInstanceNewHandler(boost::bind(&SignalSlotableWrap::proxyInstanceNewHandler,
+                                                   this, handler, _1, _2));
         }
 
-        void registerInstanceAvailableAgainHandlerPy(const bp::object& handler) {
-            registerInstanceAvailableAgainHandler(boost::bind(&SignalSlotableWrap::proxyInstanceAvailableAgainHandler,
-                                                              this, handler, _1, _2));
+        void registerInstanceGoneHandlerPy(const bp::object& handler) {
+            registerInstanceGoneHandler(boost::bind(&SignalSlotableWrap::proxyInstanceGoneHandler,
+                                                    this, handler, _1, _2));
         }
-
-        void registerExceptionHandlerPy(const bp::object& handler) {
-            registerExceptionHandler(boost::bind(&SignalSlotableWrap::proxyExceptionHandler, this, handler, _1));
-        }    
 
         void registerSlotCallGuardHandlerPy(const bp::object& handler) {
             registerSlotCallGuardHandler(boost::bind(&SignalSlotableWrap::proxySlotCallGuardHandler, this, handler, _1));
@@ -320,9 +316,9 @@ namespace karathon {
 
     private:
 
-        void proxyInstanceNotAvailableHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+        void proxyInstanceNewHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-        void proxyInstanceAvailableAgainHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+        void proxyInstanceGoneHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
         void proxyExceptionHandler(const bp::object& handler, const karabo::util::Exception& e);
 
