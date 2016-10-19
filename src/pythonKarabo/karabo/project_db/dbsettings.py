@@ -14,12 +14,14 @@ class DbSettings:
 
 class ProbeDbSettings(DbSettings):
     def __init__(self, server, port=8080):
-        super().__init__('admin', 'karabo', server, port=port)
+        super(ProbeDbSettings, self).__init__('admin', 'karabo', server,
+                                              port=port)
 
 
 class LocalDbSettings(DbSettings):
     def __init__(self):
-        super().__init__('admin', 'karabo', 'localhost', port=8080)
+        super(LocalDbSettings, self).__init__('admin', 'karabo', 'localhost',
+                                              port=8080)
 
 
 def make_server_uri(server, port):

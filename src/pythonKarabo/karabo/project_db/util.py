@@ -61,7 +61,7 @@ def assure_running(project_db_server=None, project_db_port=None):
             script_path = os.path.join(karabo_install, 'karaboRun', 'bin',
                                        'startConfigDB')
             check_call([script_path])
-            # wait until the database is actally up
+            # wait until the database is actually up
             maxTimeout = 60
             waitBetween = 5
             count = 0
