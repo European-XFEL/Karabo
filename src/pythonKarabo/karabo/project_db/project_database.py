@@ -1,6 +1,7 @@
 import os
 import time
 from contextlib import ContextDecorator
+
 from eulexistdb import db
 from eulexistdb.exceptions import ExistDBException
 from lxml import etree
@@ -11,9 +12,9 @@ from .dbsettings import DbSettings
 
 class ProjectDatabase(ContextDecorator):
 
-    known_xml_types = ['projects', 'scenes', 'macros', 'configs',
-                       'device_servers']
-    known_non_xml_types = ['resources']
+    known_xml_types = ['projects', 'scenes', 'macros', 'device_configs',
+                       'device_servers', 'monitors', 'device_groups']
+    known_non_xml_types = [] #currently none
     vers_namespace = "http://exist-db.org/versioning"
 
     def __init__(self, user, password, server=None, port=None,
@@ -133,9 +134,10 @@ class ProjectDatabase(ContextDecorator):
         if isinstance(xml_rep, str):
             return xml_rep
         if isinstance(xml_rep, etree._Element):
-            return etree.tostring(xml_rep, pretty_print=True,
-                                  encoding='UTF-8', xml_declaration=False)\
-                                  .decode("utf-8")
+            xml_bytes = etree.tostring(xml_rep, pretty_print=True,
+                                  encoding='UTF-8', xml_declaration=False)
+            return  xml_bytes.decode("utf-8")
+
         raise AttributeError("Cannot handle type {}".format(type(xml_rep)))
 
     def get_versioning_info(self, path):
@@ -168,14 +170,14 @@ class ProjectDatabase(ContextDecorator):
                                .format(path, result.hits, result.count))
 
         # process result
-        rdict = dict()
+        rdict = {}
         rxml = result.results[0]
         try:
             rdict["document"] = rxml.find(self._add_vers_ns('document')).text
             rdict["revisions"] = []
-            for revision in rxml.find(self._add_vers_ns('revisions'))\
-                    .getchildren():
-                rentry = dict()
+            revisions = rxml.find(self._add_vers_ns('revisions'))
+            for revision in revisions.getchildren():
+                rentry = {}
                 rentry['id'] = int(revision.attrib['rev'])
                 rentry['date'] = revision.find(self._add_vers_ns('date')).text
                 rentry['user'] = revision.find(self._add_vers_ns('user')).text
@@ -186,15 +188,13 @@ class ProjectDatabase(ContextDecorator):
 
         return rdict
 
-    @classmethod
-    def _add_vers_ns(cls, element):
-        return "{"+cls.vers_namespace+"}"+element
+    def _add_vers_ns(self, element):
+        return "{" + self.vers_namespace + "}" + element
 
-    @classmethod
-    def _check_for_known_xml_type(cls, item_type):
-        if item_type not in cls.known_xml_types:
+    def _check_for_known_xml_type(self, item_type):
+        if item_type not in self.known_xml_types:
             raise AttributeError("Type {} is not of the known xml types: {}"
-                                 .format(item_type, cls.known_xml_types))
+                                 .format(item_type, self.known_xml_types))
 
     def _save_item(self, item_type, domain, item_name, item_xml,
                    overwrite=False):
@@ -209,8 +209,8 @@ class ProjectDatabase(ContextDecorator):
         access rights.
 
         :param item_type: the type of item. Can be any of the following:
-                          'projects', 'scenes', 'macros', 'configuration',
-                          'device_servers'
+                          'projects', 'scenes', 'macros', 'device_configs',
+                          'device_servers', 'monitors', 'device_groups'
         :param domain: the domain under which this item is to be stored
         :param item_name: the items name
         :param item_xml: the xml file containing the item information
@@ -262,15 +262,15 @@ class ProjectDatabase(ContextDecorator):
         if success:
             res_xml = self._make_str_if_needed(item_xml)
         elif self.dbhandle.hasCollection(path):
-                res_xml = self._make_str_if_needed(self.dbhandle.getDoc(path)
-                                                   .decode('utf-8'))
+            res_xml = self.dbhandle.getDoc(path).decode('utf-8')
+            res_xml = self._make_str_if_needed(res_xml)
 
         meta = dict()
         meta["versioning_info"] = self.get_versioning_info(path)
         meta['current_xml'] = res_xml
         return (success, meta)
 
-    def save_project(self, domain, project, xml, overwrite=False):
+    def save_project(self, domain, name, xml, overwrite=False):
         """
         Saves a project xml file into the domain. It will
         create a new entry if the project does not exist yet, or create a new
@@ -282,8 +282,8 @@ class ProjectDatabase(ContextDecorator):
         access rights.
 
         :param domain: the domain under which this project is to be stored
-        :param project: the project's name
-        :param xml: the xml file containing the project information
+        :param name: the project's name
+        :param xml: the xml containing the project information
         :param overwrite: defaults to False. If set to True versioning
                           information is removed prior to database injection,
                           allowing to overwrite in case of versioning
@@ -301,9 +301,9 @@ class ProjectDatabase(ContextDecorator):
             RuntimeError if project saving failed otherwise.
             AttributeError if a non-supported type is passed
         """
-        return self._save_item('projects', domain, project, xml, overwrite)
+        return self._save_item('projects', domain, name, xml, overwrite)
 
-    def save_scene(self, domain, scene, xml, overwrite=False):
+    def save_scene(self, domain, name, xml, overwrite=False):
         """
         Saves a scene xml file into the domain. It will
         create a new entry if the scene does not exist yet, or create a new
@@ -315,8 +315,8 @@ class ProjectDatabase(ContextDecorator):
         access rights.
 
         :param domain: the domain under which this scene is to be stored
-        :param scene: the scene's name
-        :param xml: the xml file containing the scene information
+        :param name: the scene's name
+        :param xml: the xml containing the scene information
         :param overwrite: defaults to False. If set to True versioning
                           information is removed prior to database injection,
                           allowing to overwrite in case of versioning
@@ -334,9 +334,9 @@ class ProjectDatabase(ContextDecorator):
             RuntimeError if scene saving failed otherwise.
             AttributeError if a non-supported type is passed
         """
-        return self._save_item('scenes', domain, scene, xml, overwrite)
+        return self._save_item('scenes', domain, name, xml, overwrite)
 
-    def save_config(self, domain, config, xml, overwrite=False):
+    def save_config(self, domain, name, xml, overwrite=False):
         """
         Saves a config xml file into the domain. It will
         create a new entry if the config does not exist yet, or create a new
@@ -348,8 +348,8 @@ class ProjectDatabase(ContextDecorator):
         access rights.
 
         :param domain: the domain under which this config is to be stored
-        :param config: the config's name
-        :param xml: the xml file containing the config information
+        :param name: the config's name
+        :param xml: the xml containing the config information
         :param overwrite: defaults to False. If set to True versioning
                           information is removed prior to database injection,
                           allowing to overwrite in case of versioning
@@ -367,9 +367,9 @@ class ProjectDatabase(ContextDecorator):
             RuntimeError if scene config failed otherwise.
             AttributeError if a non-supported type is passed
         """
-        return self._save_item('configs', domain, config, xml, overwrite)
+        return self._save_item('device_configs', domain, name, xml, overwrite)
 
-    def save_device_server(self, domain, device_server, xml, overwrite=False):
+    def save_device_server(self, domain, name, xml, overwrite=False):
         """
         Saves a device server xml file into the domain. It will
         create a new entry if the device server does not exist yet, or create a
@@ -381,8 +381,8 @@ class ProjectDatabase(ContextDecorator):
         access rights.
 
         :param domain: the domain under which this config is to be stored
-        :param device_server: the device server's name
-        :param xml: the xml file containing the device server information
+        :param name: the device server's name
+        :param xml: the xml containing the device server information
         :param overwrite: defaults to False. If set to True versioning
                           information is removed prior to database injection,
                           allowing to overwrite in case of versioning
@@ -400,7 +400,7 @@ class ProjectDatabase(ContextDecorator):
             RuntimeError if scene config failed otherwise.
             AttributeError if a non-supported type is passed
         """
-        return self._save_item('device_servers', domain, device_server, xml,
+        return self._save_item('device_servers', domain, name, xml,
                                overwrite)
 
     def _copy_item(self, item_type, domain, target_domain, item, target_item):
@@ -431,14 +431,14 @@ class ProjectDatabase(ContextDecorator):
         # if item names stay the same we can directly copy
         query = None
         if item == target_item:
-            query = ("xmldb:copy(\"{}\", \"{}\", \"{}\")"
+            query = ('xmldb:copy("{}", "{}", "{}")'
                      .format(path, target_path, item))
             return_path = "{}/{}".format(target_item, item)
         # if they don't match we copy to a temporary, assured unique and then
         # rename
         else:
-            query = ("xmldb:copy(\"{0}\", \"{1}\", \"{2}\"),"
-                     "xmldb:rename(\"{1}\", \"{2}\", \"{3}\")"
+            query = ('xmldb:copy("{0}", "{1}", "{2}"),'
+                     'xmldb:rename("{1}", "{2}\", "{3}")'
                      .format(path, target_path, item, target_item))
             return_path = "{}/{}".format(target_path, target_item)
 
@@ -463,7 +463,7 @@ class ProjectDatabase(ContextDecorator):
         path = "{}/{}/{}".format(self.root, domain, item_type)
 
         # perform the rename
-        query = ("xmldb:rename(\"{0}\", \"{1}\", \"{2}\")"
+        query = ('xmldb:rename("{0}", "{1}", "{2}")'
                  .format(path, item, target_item))
 
         return_path = "{}/{}".format(path, target_item)
@@ -495,7 +495,7 @@ class ProjectDatabase(ContextDecorator):
         target_path = "{}/{}/{}".format(self.root, target_domain, item_type)
 
         # perform the move
-        query = ("xmldb:move(\"{0}\", \"{1}\", \"{2}\")"
+        query = ('xmldb:move("{0}", "{1}", "{2}")'
                  .format(path, target_path, item))
 
         return_path = "{}/{}".format(target_path, item)
@@ -506,7 +506,7 @@ class ProjectDatabase(ContextDecorator):
 
     def load_item(self, item_type, domain, item, revision=None):
         """
-        Load an item of item_type from domain
+        Load an item of `item_type` from `domain`
         :param item_type: the type of the item as per the list of types
         :param domain: a domain to load from
         :param item: the name of the item to load
@@ -520,24 +520,25 @@ class ProjectDatabase(ContextDecorator):
         else:
             query = """
             xquery version "3.0";
-            import module namespace v="http://exist-db.org/versioning";
+            import module namespace v="{vnamespace}";
             return v:doc(doc('{path}'), {revision})
-            """.format(path=path, revision=revision)
+            """.format(vnamespace=self.vers_namespace, path=path,
+                       revision=revision)
             item = self.dbhandle.query(query).results[0]
 
         item = self._make_xml_if_needed(item)
         # add versioning info
         v_info = self.get_versioning_info(path)
-        last_rev = v_info["revisions"][-1]['id'] \
-            if len(v_info["revisions"]) > 0 \
-            else 0
+        last_rev = 0
+        if len(v_info["revisions"]) > 0:
+            last_rev = v_info["revisions"][-1]['id']
         # version filter expects also a key, this will also protect from
         # overwriting versions.
         key = hex(int(round(time.time() * 1000)))+hex(last_rev)
-        etree.register_namespace('v', 'http://exist-db.org/versioning')
-        item.attrib['{http://exist-db.org/versioning}revision'] = str(last_rev)
-        item.attrib['{http://exist-db.org/versioning}key'] = key
-        item.attrib['{http://exist-db.org/versioning}path'] = path
+        etree.register_namespace('v', self.vers_namespace)
+        item.attrib[self._add_vers_ns('revision')] = str(last_rev)
+        item.attrib[self._add_vers_ns('key')] = key
+        item.attrib[self._add_vers_ns('path')] = path
         return self._make_str_if_needed(item)
 
     def _load_multi(self, domain, item_xml_str, list_tag):
@@ -565,13 +566,14 @@ class ProjectDatabase(ContextDecorator):
 
         query = """
             xquery version "3.0";
-            import module namespace v="http://exist-db.org/versioning";
+            import module namespace v="{vnamespace}";
             let $revs := {revs}
             let $uids := {uids}
             for $c at $i in collection("{path}/?select=*")
             where $c//@uid = $uids
             return v:doc($c, $revs[index-of($uids, data($c//@uid))-1])
-            """.format(revs=tuple(revisions), uids=tuple(uids), path=path)
+            """.format(vnamespace=self.vers_namespace,revs=tuple(revisions),
+                       uids=tuple(uids), path=path)
 
         res = self.dbhandle.query(query)
         return [self._make_str_if_needed(r) for r in res.results]
