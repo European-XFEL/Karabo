@@ -49,17 +49,17 @@ namespace karathon {
 
         void doCallRegisteredSlotFunctions(const karabo::util::Hash& body);
 
-        bool callFunction0(const karabo::util::Hash& body);
+        void callFunction0(const karabo::util::Hash& body);
 
-        bool callFunction1(const karabo::util::Hash& body);
+        void callFunction1(const karabo::util::Hash& body);
 
-        bool callFunction2(const karabo::util::Hash& body);
+        void callFunction2(const karabo::util::Hash& body);
 
-        bool callFunction3(const karabo::util::Hash& body);
+        void callFunction3(const karabo::util::Hash& body);
 
-        bool callFunction4(const karabo::util::Hash& body);
+        void callFunction4(const karabo::util::Hash& body);
 
-        void tryToPrint();
+        void rethrowPythonException();
     };
 }
 
