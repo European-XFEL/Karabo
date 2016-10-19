@@ -259,10 +259,7 @@ class PythonDevice(NoFsm):
         self.errorRegex = re.compile(".*error.*", re.IGNORECASE)
         
         # Register guard for slot calls
-        self._ss.registerSlotCallGuardHandler(self.slotCallGuard)
-        
-        # Register exception handler
-        self._ss.registerExceptionHandler(self.exceptionFound)
+        self._ss.registerSlotCallGuardHandler(self.slotCallGuard)                
 
         # Register updateLatencies handler
         self._ss.registerPerformanceStatisticsHandler(self.updateLatencies)
@@ -424,6 +421,12 @@ class PythonDevice(NoFsm):
                     value = hash[key]
 
                 validated = None
+
+                prevAlarmParams = Hash()
+                if self.validatorIntern.hasParametersInWarnOrAlarm():
+                    prevAlarmParams = self.validatorIntern \
+                        .getParametersInWarnOrAlarm()
+
                 if validate:
                     validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
                     resultingCondition = self._evaluateAndUpdateAlarmCondition(forceUpdate=hadPreviousParameterAlarm)
@@ -432,6 +435,13 @@ class PythonDevice(NoFsm):
                         node = validated.getNode("alarmCondition")
                         attributes = node.getAttributes()
                         stamp.toHashAttributes(attributes)
+
+                    changedAlarms = self._evaluateAlarmUpdates(prevAlarmParams)
+
+                    if not changedAlarms.get("toClear").empty() or not \
+                            changedAlarms.get("toAdd").empty():
+                        self._ss.emit("signalAlarmUpdate", self.getInstanceId(),
+                                      changedAlarms)
                     
                 else:
                     validated = hash
@@ -469,6 +479,100 @@ class PythonDevice(NoFsm):
             return self.globalAlarmCondition
         else:
             return None
+
+    def _evaluateAlarmUpdates(self, previous, forceUpdate=False):
+        """
+        Evaluates difference between previous and current parameter in alarm
+        conditions and emits a signal with the update
+        :param previous: alarm conditions previously present on the device.
+        :param forceUpdate: force updating alarms even if no change occurred
+               on validator side.
+        :return: a Hash containing the alarm changes
+
+        Calling this method must be protected by a state change lock!
+        """
+        toClear = Hash()
+        toAdd = Hash()
+        knownAlarms = set()
+
+        current = self.validatorIntern.getParametersInWarnOrAlarm()
+
+        # check if we need to clear/clean alarms
+        for p in previous:
+            pKey = p.getKey()
+            currentEntry = current.find(pKey)
+            # case where alarm still exists, we do not need to clean
+            if currentEntry is not None:
+                timeStampPrevious = Timestamp.fromHashAttributes(
+                    p.getAttributes())
+                timeStampCurrent = Timestamp.fromHashAttributes(
+                    currentEntry.getAttributes())
+                if not forceUpdate and timeStampPrevious == \
+                        timeStampCurrent:
+                    knownAlarms |= pKey
+                continue
+            # alarm is gone: we should clean
+            desc = p.getValue()
+            existingEntries = []
+            existingEntyNode = toClear.find(pKey)
+            if existingEntyNode is not None:
+                existingEntries = existingEntyNode.getValue()
+
+            existingEntries.append(desc.get("type"))
+            toClear.set(pKey, existingEntries)
+
+        # add new alarms
+        for c in current:
+            if not forceUpdate and c.getKey() in knownAlarms:
+                continue
+
+            cKey = c.getKey()
+            desc = c.getValue()
+            conditionString = desc.get("type")
+            condition = AlarmCondition(conditionString)
+            pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
+
+            alarmDesc = self.getFullSchema().getInfoForAlarm(pSep, condition)
+            needAck = self.getFullSchema().doesAlarmNeedAcknowledging(
+                        pSep, condition)
+
+            entry = Hash("type", condition.asString(),
+                         "description", alarmDesc,
+                         "needsAcknowledging", needAck)
+            occuredAt = Timestamp.fromHashAttributes(c.getAttributes())
+
+            prop = Hash(conditionString, entry)
+            entryNode = prop.getNode(conditionString)
+            occuredAt.toHashAttributes(entryNode.getAttributes())
+            toAdd.set(cKey, prop)
+
+        return Hash("toClear", toClear, "toAdd", toAdd)
+
+    def slotResubmitAlarms(self, existingAlarms):
+        """
+        This slot is called by the alarm service when it gets  (re-)
+        instantiated. The alarm service will pass any for this instances that
+        it recovered from its persisted data. These should be checked
+        against whether they are still valid and if new ones appeared
+        :param existingAlarms: A hash containing existing alarms pertinent to
+               this device. May be empty
+        """
+        existingRF = Hash()
+
+        for existing in existingAlarms:
+            propertyHash = existing.getValue()
+            property = existing.getKey()
+            for aType in propertyHash:
+                existingRF.set(property.replace(".", Validator.kPathSeparator),
+                               Hash("type", aType.getKey()))
+
+        with self._stateChangeLock:
+            alarmsToUpdate = self._evaluateAlarmUpdates(existingRF,
+                                                        forceUpdate=True)
+
+        self._ss.reply(self.getInstanceId(), alarmsToUpdate)
+
+
     
     def __setitem__(self, key, value):
         self.set(key, value, self._getActualTimestamp())
@@ -690,12 +794,15 @@ class PythonDevice(NoFsm):
 
         self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
 
+        self._ss.registerSystemSignal("signalAlarmUpdate", str, Hash)
+
         #---------------------------------------------- register intrinsic slots
         self._ss.registerSlot(self.slotReconfigure)
         self._ss.registerSlot(self.slotGetConfiguration)
         self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDevice)
         self._ss.registerSlot(self.slotUpdateSchemaAttributes)
+        self._ss.registerSlot(self.slotResubmitAlarms)
         # timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
         self._ss.registerSlot(self.slotLoggerPriority)
@@ -758,7 +865,7 @@ class PythonDevice(NoFsm):
         # Check whether the slot is mentioned in the expectedParameters
         # as the call guard only works on those and will ignore all others
         if slotName not in self.fullSchema:
-            return True
+            return
 
         if self.fullSchema.hasAllowedStates(slotName):
             allowedStates = self.fullSchema.getAllowedStates(slotName)
@@ -767,31 +874,23 @@ class PythonDevice(NoFsm):
                 if currentState not in allowedStates:
                     msg = "Command \"{}\" is not allowed in current state \"{}\" " \
                           "of device \"{}\"".format(slotName, currentState, self.deviceid)
-                    self._ss.reply(msg)
-                    return False
+                    raise ValueError(msg)
 
         # Log the call of this slot by setting a parameter of the device
         self.set("lastCommand", slotName)
 
-        return True
-
     def slotGetConfiguration(self):
         self._ss.reply(self.parameters, self.deviceid)
-        
+
     def slotReconfigure(self, newConfiguration):
         if newConfiguration.empty():
             return
         result, error, validated = self._validate(newConfiguration)
         if result:
-            try:
-                self.preReconfigure(validated)
-                self._applyReconfiguration(validated)
-            except Exception as e:
-                print("PythonDevice.slotReconfigure Exception:", str(e))
-                self.exceptionFound("Python Exception happened", str(e))
-                self._ss.reply(False, str(e))
-                return
-        self._ss.reply(result, error)
+            self.preReconfigure(validated)
+            self._applyReconfiguration(validated)
+        else:
+            raise ValueError(error)
     
     def _validate(self, unvalidated):
         currentState = self["state"]
@@ -943,27 +1042,6 @@ class PythonDevice(NoFsm):
                 thisinfo = self.fullSchema.getInfoForAlarm(str(key),condition)
                 info.set(str(key), thisinfo)
         return info
-
-
-    '''
-    def getCurrentDateTime(self):
-        return datetime.datetime(1,1,1).today().isoformat(' ')
-    
-    def triggerErrorFound(self, shortMessage, detailedMessage):
-        self._ss.emit(
-            "signalErrorFound", self.getCurrentDateTime(), shortMessage,
-            detailedMessage, self.deviceid)
-
-    def triggerWarning(self, warningMessage, priority):
-        self._ss.emit(
-            "signalWarning", self.getCurrentDateTime(), warningMessage,
-            self.deviceid, priority)
-    
-    def triggerAlarm(self, alarmMessage, priority):
-        self._ss.emit(
-            "signalAlarm", self.getCurrentDateTime(), alarmMessage,
-            self.deviceid, priority)
-    '''
     
     @staticmethod
     def loadConfiguration(xmlfile):
