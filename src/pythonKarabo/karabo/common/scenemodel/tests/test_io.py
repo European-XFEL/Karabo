@@ -169,7 +169,7 @@ def test_scene_version():
     scene = SceneModel()
     xml = write_scene(scene)
     scene = read_scene(BytesIO(xml))
-    assert scene.version == SCENE_FILE_VERSION
+    assert scene.file_format_version == SCENE_FILE_VERSION
 
 
 def test_single_model_writing():
