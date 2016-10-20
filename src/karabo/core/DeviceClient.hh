@@ -619,10 +619,13 @@ namespace karabo {
              * @param outputChannelName
              * @return a Hash containing the output channel's data schema
              */
-            //karabo::util::Hash getOutputChannelDefaultHash(const std::string & deviceId, const std::string& outputChannelName);
-            
             karabo::util::Hash getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName);
 
+            /**
+             * Get the list of all output channel names of the remote device.
+             * @param deviceId
+             * @return vector containing output channel names
+             */
             std::vector<std::string> getOutputChannelNames(const std::string & deviceId);
             
 
@@ -636,6 +639,12 @@ namespace karabo {
              */
             karabo::core::Lock lock(const std::string& deviceId, bool recursive = false, int timeout = -1);
 
+            /**
+             * Get all <i>properties</i> with the suitable <i>accessMode</i> exposed by <i>dataSourceId</i>.  
+             * @param dataSourceId   data source containing properties
+             * @param properties     properties that satisfy criteria below (output container)
+             * @param accessMode     criteria used for filtering the data source's properties
+             */
             void getDataSourceSchemaAsHash(const std::string& dataSourceId, karabo::util::Hash& properties,
                                            int accessMode = karabo::util::INIT|karabo::util::READ|karabo::util::WRITE);
 
@@ -691,8 +700,6 @@ namespace karabo {
 
             std::vector<std::string> filterProperties(const karabo::util::Schema& schema, const int accessLevel);
 
-            //void checkMaster();
-
             std::string getInstanceType(const karabo::util::Hash& instanceInfo) const;
 
             virtual void slotMasterPing();
@@ -734,7 +741,6 @@ namespace karabo {
             /// Returns true if explicit "connect" call should still be done for it.
             bool connectNeeded(const std::string & instanceId);
             
-            ///
             void filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema, int accessMode, karabo::util::Hash& hash);
             
             void convertSchemaHash(const karabo::util::Hash& schemaHash, int accessMode, karabo::util::Hash & hash);
