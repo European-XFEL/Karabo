@@ -50,7 +50,7 @@ class BaseShapeObjectData(BaseSceneObjectData):
     stroke_linejoin = Enum('miter', 'round', 'bevel')
     # A floating point number. Default 4
     stroke_miterlimit = Float(4.0)
-    # An HTML color #hex value, or “none”
+    # An HTML color #hex value, or "none"
     fill = String('none')
     # A floating point number between 0 and 1. Default 1
     fill_opacity = Range(low=0.0, high=1.0, value=1.0)

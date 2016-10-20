@@ -3,6 +3,13 @@ import os
 import os.path as op
 
 
+def _get_ast(path):
+    """ Get an ast.AST object for the specified file.
+    """
+    with open(path, 'rb') as fp:
+        return compile(fp.read(), path, "exec", ast.PyCF_ONLY_AST)
+
+
 def _iter_nodes(node):
     """ Iterate over all of the nodes in an AST.
     """
@@ -39,9 +46,7 @@ def check_for_disallowed_module_imports(forbidden_module, path):
         parts = op.dirname(path).split(os.sep)
         return parts[-level]
 
-    with open(path, 'r') as fp:
-        tree = compile(fp.read(), path, "exec", ast.PyCF_ONLY_AST)
-
+    tree = _get_ast(path)
     warning_msg = 'Imports are not allowed from "{}" in this module!'.format(
         forbidden_module
     )
@@ -60,9 +65,7 @@ def check_for_disallowed_module_imports(forbidden_module, path):
 def check_for_star_imports(path):
     """ Check a source file for "import *" usage.
     """
-    with open(path, 'r') as fp:
-        tree = compile(fp.read(), path, "exec", ast.PyCF_ONLY_AST)
-
+    tree = _get_ast(path)
     warning_msg = 'Star imports are not allowed in this module!'
     for node in _iter_nodes(tree):
         if isinstance(node, ast.ImportFrom):

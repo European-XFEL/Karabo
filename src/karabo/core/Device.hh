@@ -854,7 +854,7 @@ namespace karabo {
                 KARABO_LOG_ERROR << detailedMessage;
             }
 
-            virtual void exceptionFound(const karabo::util::Exception& e) {
+            KARABO_DEPRECATED virtual void exceptionFound(const karabo::util::Exception& e) {
                 KARABO_LOG_ERROR << e;
             }
 
@@ -1006,10 +1006,7 @@ namespace karabo {
                 this->initDeviceSlots();
 
                 // Register guard for slot calls
-                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));
-
-                // Register exception handler
-                this->registerExceptionHandler(boost::bind(&karabo::core::Device<FSM>::exceptionFound, this, _1));
+                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));               
 
                 // Register updateLatencies handler
                 this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies,
@@ -1171,8 +1168,7 @@ namespace karabo {
              * be called from remote. The function only checks slots that are
              * mentioned in the expectedParameter section ("DeviceSlots")
              * @param slotName: name of the slot
-             * @param callee: the calling remote, can be unknown
-             * @return true if calling the slot is okay
+             * @param callee: the calling remote, can be unknown             
              *
              * The following checks are performed:
              *
@@ -1183,7 +1179,7 @@ namespace karabo {
              * 2) Is the slot callable from the current state, i.e. is the
              * current state specified as an allowed state for the slot.
              */
-            bool slotCallGuard(const std::string& slotName, const std::string& callee) {
+            void slotCallGuard(const std::string& slotName, const std::string& callee) {
                 using namespace karabo::util;
 
                 // Check whether the slot is mentioned in the expectedParameters
@@ -1196,21 +1192,19 @@ namespace karabo {
 
                 // Check whether the slot can be called given the current locking state
                 if (allowLock() && (isSchemaSlot || slotName == "slotReconfigure") && slotName != "slotClearLock") {
-                    if (!isSlotValidUnderCurrentLock(slotName, callee)) return false;
+                    ensureSlotIsValidUnderCurrentLock(slotName, callee);
                 }
 
                 // Check whether the slot can be called given the current device state
                 if (isSchemaSlot) {
-                    if (!isSlotValidUnderCurrentState(slotName)) return false;
+                    ensureSlotIsValidUnderCurrentState(slotName);
                 }
 
                 // Log the call of this slot by setting a parameter of the device
                 if (isSchemaSlot) set("lastCommand", slotName);
-
-                return true;
             }
 
-            bool isSlotValidUnderCurrentLock(const std::string& slotName, const std::string& callee) {
+            void ensureSlotIsValidUnderCurrentLock(const std::string& slotName, const std::string& callee) {
                 const std::string lockHolder = get<std::string>("lockedBy");
                 if (!lockHolder.empty()) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Device is locked by " << lockHolder << " and called by " << callee;
@@ -1218,14 +1212,12 @@ namespace karabo {
                         std::ostringstream msg;
                         msg << "Command " << "\"" << slotName << "\"" << " is not allowed as device is locked by "
                                 << "\"" << lockHolder << ".";
-                        reply(false, msg.str());
-                        return false;
+                        throw KARABO_LOCK_EXCEPTION(msg.str());
                     }
                 }
-                return true;
             }
 
-            bool isSlotValidUnderCurrentState(const std::string& slotName) {
+            void ensureSlotIsValidUnderCurrentState(const std::string& slotName) {
                 std::vector<karabo::util::State> allowedStates;
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
@@ -1239,11 +1231,9 @@ namespace karabo {
                         std::ostringstream msg;
                         msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state "
                                 << "\"" << currentState.name() << "\" of device " << "\"" << m_deviceId << "\".";
-                        reply(msg.str());
-                        return false;
+                        throw KARABO_LOGIC_EXCEPTION(msg.str());
                     }
                 }
-                return true;
             }
 
             void slotGetConfiguration() {
@@ -1264,34 +1254,28 @@ namespace karabo {
 
             void slotReconfigure(const karabo::util::Hash& newConfiguration) {
                 if (newConfiguration.empty()) return;
-                std::pair<bool, std::string > result;
-                try {
-                    karabo::util::Hash validated;
 
-                    result = validate(newConfiguration, validated);
+                karabo::util::Hash validated;
+                std::pair<bool, std::string > result = validate(newConfiguration, validated);
 
-                    if (result.first == true) { // is a valid reconfiguration
+                if (result.first == true) { // is a valid reconfiguration
 
-                        // Give device-implementer a chance to specifically react on reconfiguration event by polymorphically calling back
-                        preReconfigure(validated);
+                    // Give device-implementer a chance to specifically react on reconfiguration event by polymorphically calling back
+                    preReconfigure(validated);
 
-                        // nothing to do if empty after preReconfigure
-                        if (!validated.empty()) {
+                    // nothing to do if empty after preReconfigure
+                    if (!validated.empty()) {
 
-                            // Merge reconfiguration with current state
-                            applyReconfiguration(validated);
+                        // Merge reconfiguration with current state
+                        applyReconfiguration(validated);
 
-                        }
-
-                        //post reconfigure action
-                        this->postReconfigure();
                     }
-                } catch (const karabo::util::Exception& e) {
-                    this->exceptionFound(e);
-                    reply(false, e.userFriendlyMsg());
-                    return;
+                    //post reconfigure action
+                    this->postReconfigure();
+
+                } else { // not a valid reconfiguration
+                    throw KARABO_PARAMETER_EXCEPTION(result.second);
                 }
-                reply(result.first, result.second);
             }
 
             std::pair<bool, std::string> validate(const karabo::util::Hash& unvalidated, karabo::util::Hash& validated) {

@@ -3,22 +3,18 @@
 # Created on May 8, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import re
 
-__all__ = ["DisplayAlignedImage"]
+import numpy as np
+from PyQt4.QtGui import (QComboBox, QHBoxLayout, QImage, QLabel, QSlider,
+                         QSpinBox, QVBoxLayout, QWidget)
 
-
+from guiqwt.builder import make
+from guiqwt.plot import ImageDialog
+from karabo_gui.images import get_dimensions_and_format, get_image_data
 from karabo_gui.schema import ImageNode
 from karabo_gui.widget import DisplayWidget
 
-import numpy as np
-from guiqwt.plot import ImageDialog
-from guiqwt.builder import make
-from karabo.middlelayer import Type
-
-from PyQt4.QtGui import (QSlider, QWidget, QHBoxLayout, QVBoxLayout,
-                            QComboBox, QSpinBox, QLabel)
-
-import re
 
 class DisplayAlignedImage(DisplayWidget):
     category = ImageNode
@@ -31,16 +27,15 @@ class DisplayAlignedImage(DisplayWidget):
 
         self.widget = QWidget()
         self.layout = QHBoxLayout(self.widget)
-        self.imageWidget = ImageDialog(edit=False, toolbar=True,
-                                  wintitle=".".join(box.path))
+        self.imageWidget = ImageDialog(
+            edit=False, toolbar=True, wintitle=".".join(box.path))
         self.image = None
         self.plot = self.imageWidget.get_plot()
         self.layout.addWidget(self.imageWidget)
-        
 
         self.cellWidget = QWidget()
         self.cellLayout = QVBoxLayout(self.cellWidget)
-              
+
         self.axisLabel = QLabel()
         self.axisLabel.setText("Indexed axis:")
         self.cellLayout.addWidget(self.axisLabel)
@@ -49,7 +44,8 @@ class DisplayAlignedImage(DisplayWidget):
         self.currentAxis.addItem("0")
         self.currentAxis.addItem("1")
         self.currentAxis.addItem("2")
-        self.currentAxis.setToolTip("Sets the axis over which the cell/pulse indexing is performed")
+        self.currentAxis.setToolTip("Sets the axis over which the cell/pulse "
+                                    "indexing is performed")
         self.currentAxis.currentIndexChanged.connect(self.axisChanged)
         self.cellLayout.addWidget(self.currentAxis)
 
@@ -63,7 +59,6 @@ class DisplayAlignedImage(DisplayWidget):
         self.currentCell.setToolTip("Sets the pulse/train ID to display")
         self.cellLayout.addWidget(self.currentCell)
 
-
         self.slider = QSlider()
         self.slider.setMinimum(0)
         self.slider.setSingleStep(1)
@@ -74,7 +69,7 @@ class DisplayAlignedImage(DisplayWidget):
         self.cellLayout.addWidget(self.slider)
 
         self.layout.addWidget(self.cellWidget)
-        
+
         self.selectedCell = 0
         self.axis = 0
         self.npys = {}
@@ -86,14 +81,11 @@ class DisplayAlignedImage(DisplayWidget):
         self.mins = {}
         self.maxs = {}
 
-
     @property
     def boxes(self):
         return list(self.images.keys())
 
-
     value = None
-
 
     def addBox(self, box):
         #image = make.trimage()
@@ -101,18 +93,15 @@ class DisplayAlignedImage(DisplayWidget):
         #self.plot.add_item(image)
         return True
 
-        
-
     def cellChanged(self, value):
         self.selectedCell = int(value)
         self.slider.setSliderPosition(int(value))
 
-   
     def axisChanged(self, value):
         self.axis = int(value)
         self.setSlider((next (iter (self.npys.values()))).shape[self.axis])#2-((self.axis+1) % 3)])
         self.sliderMoved(0)
-     
+
     def sliderMoved(self, value):
         self.selectedCell = value
         self.currentCell.setValue(value)
@@ -146,19 +135,17 @@ class DisplayAlignedImage(DisplayWidget):
             self.plot.replot()
                 # Also update colormap axis for Image
                 #self.plot.update_colormap_axis(self.plot.items[1])
-    
+
     def setSlider(self, dimZ):
         self.slider.setMaximum(dimZ)
         self.currentCell.setMaximum(dimZ)
         if not self.cellWidget.isVisible():
             self.cellWidget.setVisible(True)
-        
+
     def unsetSlider(self):
         self.cellWidget.setVisible(False)
-        
+
     def getAlignmentInformation(self, geometry, leafNodes, tO = [0.,0.,0.], tR = [0.,0.,0.], pixelRegion = None):
-        
-        
         if hasattr(geometry, "pixelRegion"):
             if pixelRegion == None:
                 pixelRegion = geometry.pixelRegion
@@ -185,7 +172,6 @@ class DisplayAlignedImage(DisplayWidget):
                    #tO = [tO[i] + nO[i] for i in range(3)]
                    #tR = [tR[i] + nR[i] for i in range(3)]
 
-       
         if not hasSub:
             leafNodes.append({"offsets": tO, "rotations": tR, "pixelRegion": pixelRegion})
 
@@ -196,13 +182,8 @@ class DisplayAlignedImage(DisplayWidget):
             if box is not None:
                 for p in box:
                     p.set_lut_range([minimum, maximum])
-   
 
     def valueChanged(self, box, value, timestamp=None):
-
-        if value is None or value.dataType == '0':
-            return
-
         if self.value is not None or value is self.value:
             return
 
@@ -210,53 +191,27 @@ class DisplayAlignedImage(DisplayWidget):
 
         if hasattr(value, "stackAxis"):
             self.axis = value.stackAxis
-        
-        if len(value.dims) == 2:
-            # Shape
-            dimX = value.dims[1]
-            dimY = value.dims[0]
 
-            # Format: Grayscale
-            format = 'QImage.Format_Indexed8'
-            
+        dimX, dimY, dimZ, format = get_dimensions_and_format(value)
+        if dimX is not None and dimY is not None:
             if self.cellWidget.isVisible():
                 self.unsetSlider()
-
-        elif len(value.dims) == 3:
-            # Shape
-            dimX = value.dims[2]
-            dimY = value.dims[1]
-            dimZ = value.dims[0]                
-
-            if dimZ == 3:
-                # Format: RGB
-                format = 'QImage.Format_RGB888'
-
-            else:
-                
+        elif dimZ is not None:
+            if dimZ != 3:
                 if self.axis == 0:
                     self.setSlider(dimZ)
                 if self.axis == 1:
                     self.setSlider(dimY)
                 if self.axis == 2:
                     self.setSlider(dimX)
-                
         else:
             return
 
-        # Data type information
-        type = value.dataType
-        try:
-            type = Type.fromname[type].numpy
-        except KeyError as e:
-            e.message = 'Image element has improper type "{}"'.format(type)
-            raise
-
-        # Data itself
-        data = value.data
-        npy = np.frombuffer(data, type)
+        npy = get_image_data(value)
+        if npy is None:
+            return
         self.npys[box] = npy
-        if format == 'QImage.Format_Indexed8':
+        if format is QImage.Format_Indexed8:
             try:
                 npy.shape = dimY, dimX
                 self.npys[box].shape = dimY, dimX
@@ -265,7 +220,7 @@ class DisplayAlignedImage(DisplayWidget):
                     format(dimX, dimY, len(npy))
                 raise
 
-        elif format == 'QImage.Format_RGB888':
+        elif format is QImage.Format_RGB888:
             try:
                 npy.shape = dimY, dimX, dimZ
                 self.npys[box].shape = dimY, dimX, dimZ
@@ -273,7 +228,6 @@ class DisplayAlignedImage(DisplayWidget):
                 e.message = 'Image has improper shape ({}, {}, {}) for size\
                     {}'.format(dimX, dimY, dimZ, len(npy))
                 raise
-        
         else:
             try:
                 npy.shape = dimZ, dimY, dimX
@@ -310,8 +264,6 @@ class DisplayAlignedImage(DisplayWidget):
             self.mins[box] = np.min(npy)
             self.maxs[box] = np.max(npy)
 
-            
-
             leafNodes = []
             self.getAlignmentInformation(value.geometry, leafNodes)
             for i, leaf in enumerate(leafNodes):
@@ -332,8 +284,6 @@ class DisplayAlignedImage(DisplayWidget):
                 self.images[box].append(image)
                 self.plot.add_item_with_z_offset(self.images[box][i], offsets[2])
         else:
-                    
-            
             self.mins[box] = min(self.mins[box], np.min(npy))
             self.maxs[box] = max(self.maxs[box], np.max(npy))
             for i in range(len(self.images[box])):
@@ -344,7 +294,7 @@ class DisplayAlignedImage(DisplayWidget):
                     self.images[box][i].set_data(npy[pixelRegion[1]:pixelRegion[3],
                                              pixelRegion[0]:pixelRegion[2]]
                                              .astype('float'))
-        
+
         #self.plot.update_colormap_axis(self.plot.items[0])
             #self.images[box].set_transform(self.offsets[box][0], self.offsets[box][1], self.rotations[box][0])
         self.updateLutRange()

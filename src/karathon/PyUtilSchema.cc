@@ -1436,6 +1436,15 @@ namespace schemawrap {
         const std::string conditionName = bp::extract<std::string>(condition.attr("value"));
         return schema.getInfoForAlarm(path, karabo::util::AlarmCondition::fromString(conditionName));
     }
+    
+    const bool doesAlarmNeedAcknowledging(Schema& schema, const std::string & path, const bp::object condition) {
+        const std::string className = bp::extract<std::string>(condition.attr("__class__").attr("__name__"));
+        if(className != "AlarmCondition"){
+            throw KARABO_PYTHON_EXCEPTION("Python argument for condition needs to be of type AlarmCondition and not "+className);
+        }
+        const std::string conditionName = bp::extract<std::string>(condition.attr("value"));
+        return schema.doesAlarmNeedAcknowledging(path, karabo::util::AlarmCondition::fromString(conditionName));
+    }
 
     void setAllowedStates(Schema& self, const std::string & path, PyObject* rargs){
         bp::tuple args = bp::extract<bp::tuple>(rargs);
@@ -1887,6 +1896,7 @@ void exportPyUtilSchema() {
         s.def("setAlarmVarianceHigh", &Schema::setAlarmVarianceHigh, (bp::arg("path"), bp::arg("value")));
         s.def("getRollingStatsEvalInterval", &Schema::getRollingStatsEvalInterval, (bp::arg("path"), bp::arg("value")));
         s.def("getInfoForAlarm", &schemawrap::getInfoForAlarm, (bp::arg("path"), bp::arg("condition")));
+        s.def("doesAlarmNeedAcknowledging", &schemawrap::doesAlarmNeedAcknowledging, (bp::arg("path"), bp::arg("condition")));
         s.def("setArchivePolicy", &Schema::setArchivePolicy, (bp::arg("path"), bp::arg("value")));
         s.def("setMin", &Schema::setMin, (bp::arg("path"), bp::arg("value")));
         s.def("setMax", &Schema::setMax, (bp::arg("path"), bp::arg("value")));
@@ -2372,7 +2382,8 @@ void exportPyUtilSchema() {
                 .def("hasParametersInWarnOrAlarm", &ValidatorWrap::hasParametersInWarnOrAlarm)
                 .def("getParametersInWarnOrAlarm", &ValidatorWrap::getParametersInWarnOrAlarm)
                 .def("hasReconfigurableParameter", &ValidatorWrap::hasReconfigurableParameter)
-                .def("getRollingStatistics", &ValidatorWrap::getRollingStatistics, bp::arg("key"), bp::return_internal_reference<>());
+                .def("getRollingStatistics", &ValidatorWrap::getRollingStatistics, bp::arg("key"), bp::return_internal_reference<>())
+                .def_readonly("kAlarmParamPathSeparator", &Validator::kAlarmParamPathSeparator);
 
     }
 
