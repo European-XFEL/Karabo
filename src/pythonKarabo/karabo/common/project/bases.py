@@ -5,19 +5,22 @@
 #############################################################################
 import uuid
 
-from traits.api import HasStrictTraits, Int, String
+from traits.api import HasStrictTraits, Dict, Int, String
 
 
 class BaseProjectObjectModel(HasStrictTraits):
     """ A base class for all things which can be serialized and sent to
     a Project server.
     """
+    # A simple, human-readable name. Doesn't need to be unique
+    simple_name = String
+
     # Version and unique id
     version = Int
     uuid = String
 
-    # A simple, human-readable name. Doesn't need to be unique
-    simple_name = String
+    # Database-provided attributes which need to be preserved
+    db_attrs = Dict
 
     def _uuid_default(self):
         """If a uuid isn't supplied, generate one
