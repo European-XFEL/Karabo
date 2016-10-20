@@ -1,29 +1,46 @@
 from PyQt4.QtCore import QRect
 
-from karabo.common.scenemodel.api import (
-    BaseLayoutModel, BoxLayoutModel, FixedLayoutModel, GridLayoutModel,
-    LabelModel, LineModel, PathModel, RectangleModel, SceneLinkModel,
-    UnknownXMLDataModel, BitfieldModel, DisplayAlignedImageModel,
-    DisplayCommandModel, DisplayIconsetModel, DisplayImageModel,
-    DisplayImageElementModel, DisplayLabelModel, DisplayPlotModel,
-    DoubleLineEditModel, EditableListModel, EditableListElementModel,
-    EditableSpinBoxModel, HexadecimalModel, IntLineEditModel, KnobModel,
-    SliderModel, XYPlotModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
-    DirectoryModel, FileInModel, FileOutModel, LineEditModel,
-    DisplayStateColorModel, DigitIconsModel, EvaluatorModel, FloatSpinBoxModel,
-    LinePlotModel, MonitorModel, SelectionIconsModel, SingleBitModel,
-    TableElementModel, TextIconsModel, VacuumWidgetModel, WorkflowItemModel
-)
+from karabo.common.scenemodel.api import (BaseLayoutModel, BitfieldModel,
+                                          BoxLayoutModel, CheckBoxModel,
+                                          ChoiceElementModel, ComboBoxModel,
+                                          DigitIconsModel, DirectoryModel,
+                                          DisplayAlignedImageModel,
+                                          DisplayCommandModel,
+                                          DisplayIconsetModel,
+                                          DisplayImageElementModel,
+                                          DisplayImageModel, DisplayLabelModel,
+                                          DisplayPlotModel,
+                                          DisplayStateColorModel,
+                                          DoubleLineEditModel,
+                                          EditableListElementModel,
+                                          EditableListModel,
+                                          EditableSpinBoxModel, EvaluatorModel,
+                                          FileInModel, FileOutModel,
+                                          FixedLayoutModel, FloatSpinBoxModel,
+                                          GridLayoutModel, HexadecimalModel,
+                                          IntLineEditModel, KnobModel,
+                                          LabelModel, LineEditModel, LineModel,
+                                          LinePlotModel, MonitorModel,
+                                          PathModel, RectangleModel,
+                                          SceneLinkModel, ScientificImageModel,
+                                          SelectionIconsModel, SingleBitModel,
+                                          SliderModel, TableElementModel,
+                                          TextIconsModel, UnknownXMLDataModel,
+                                          VacuumWidgetModel, WebcamImageModel,
+                                          WorkflowItemModel, XYPlotModel)
+
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape
-from .widget.api import (
-    BaseWidgetContainer, DisplayEditableWidgetContainer,
-    DisplayIconsetContainer, DisplayStateColorContainer, EvaluatorContainer,
-    FloatSpinBoxContainer, GenericWidgetContainer, IconsContainer, LabelWidget,
-    LinePlotContainer, MonitorContainer, SceneLinkWidget, SingleBitContainer,
-    TableElementContainer, UnknownSvgWidget, VacuumWidgetContainer,
-    WorkflowItemWidget)
+from .widget.api import (BaseWidgetContainer, ComplexImageWidgetContainer,
+                         DisplayEditableWidgetContainer,
+                         DisplayIconsetContainer, DisplayStateColorContainer,
+                         EvaluatorContainer, FloatSpinBoxContainer,
+                         GenericWidgetContainer, IconsContainer, LabelWidget,
+                         LinePlotContainer, MonitorContainer, SceneLinkWidget,
+                         SimpleImageWidgetContainer, SingleBitContainer,
+                         TableElementContainer, UnknownSvgWidget,
+                         VacuumWidgetContainer, WorkflowItemWidget)
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
@@ -41,11 +58,13 @@ _SCENE_OBJ_FACTORIES = {
     SceneLinkModel: SceneLinkWidget,
     UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(m, parent=p),
     BitfieldModel: GenericWidgetContainer,
-    DisplayAlignedImageModel: GenericWidgetContainer,
     DisplayCommandModel: GenericWidgetContainer,
     DisplayIconsetModel: DisplayIconsetContainer,
-    DisplayImageModel: GenericWidgetContainer,
-    DisplayImageElementModel: GenericWidgetContainer,
+    DisplayAlignedImageModel: SimpleImageWidgetContainer,
+    DisplayImageModel: SimpleImageWidgetContainer,
+    DisplayImageElementModel: SimpleImageWidgetContainer,
+    ScientificImageModel: ComplexImageWidgetContainer,
+    WebcamImageModel: ComplexImageWidgetContainer,
     DisplayLabelModel: GenericWidgetContainer,
     DisplayPlotModel: GenericWidgetContainer,
     DoubleLineEditModel: GenericWidgetContainer,

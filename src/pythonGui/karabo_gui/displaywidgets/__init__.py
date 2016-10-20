@@ -30,4 +30,5 @@ __all__ = [
     "monitor",
     "xyplot",
     "xyvectors",
+    "imagewidgets",
 ]

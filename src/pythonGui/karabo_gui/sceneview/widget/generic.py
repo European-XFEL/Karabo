@@ -1,22 +1,23 @@
-from karabo.common.scenemodel.api import (
-    BitfieldModel, DisplayAlignedImageModel, DisplayCommandModel,
-    DisplayImageModel, DisplayImageElementModel, DisplayLabelModel,
-    DisplayPlotModel, DoubleLineEditModel, EditableListModel,
-    EditableListElementModel, EditableSpinBoxModel, HexadecimalModel,
-    IntLineEditModel, KnobModel, SliderModel, XYPlotModel, CheckBoxModel,
-    ChoiceElementModel, ComboBoxModel, DirectoryModel, FileInModel,
-    FileOutModel, LineEditModel
-)
 import karabo_gui.gui_registry_loader  # noqa
+from karabo.common.scenemodel.api import (BitfieldModel, CheckBoxModel,
+                                          ChoiceElementModel, ComboBoxModel,
+                                          DirectoryModel, DisplayCommandModel,
+                                          DisplayLabelModel, DisplayPlotModel,
+                                          DoubleLineEditModel,
+                                          EditableListElementModel,
+                                          EditableListModel,
+                                          EditableSpinBoxModel, FileInModel,
+                                          FileOutModel, HexadecimalModel,
+                                          IntLineEditModel, KnobModel,
+                                          LineEditModel, SliderModel,
+                                          XYPlotModel)
 from karabo_gui.widget import Widget
+
 from .base import BaseWidgetContainer
 
 _GENERIC_WIDGET_FACTORIES = {
     BitfieldModel: 'Bitfield',
-    DisplayAlignedImageModel: 'DisplayAlignedImage',
     DisplayCommandModel: 'DisplayCommand',
-    DisplayImageModel: 'DisplayImage',
-    DisplayImageElementModel: 'DisplayImageElement',
     DisplayLabelModel: 'DisplayLabel',
     DisplayPlotModel: 'DisplayPlot',
     DoubleLineEditModel: 'DoubleLineEdit',
