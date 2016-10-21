@@ -1,16 +1,11 @@
 import karabo_gui.gui_registry_loader  # noqa
-from karabo.common.scenemodel.api import (BitfieldModel, CheckBoxModel,
-                                          ChoiceElementModel, ComboBoxModel,
-                                          DirectoryModel, DisplayCommandModel,
-                                          DisplayLabelModel, DisplayPlotModel,
-                                          DoubleLineEditModel,
-                                          EditableListElementModel,
-                                          EditableListModel,
-                                          EditableSpinBoxModel, FileInModel,
-                                          FileOutModel, HexadecimalModel,
-                                          IntLineEditModel, KnobModel,
-                                          LineEditModel, SliderModel,
-                                          XYPlotModel)
+from karabo.common.scenemodel.api import (
+    BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
+    DirectoryModel, DisplayCommandModel, DisplayLabelModel, DisplayPlotModel,
+    DoubleLineEditModel, EditableListElementModel, EditableListModel,
+    EditableSpinBoxModel, FileInModel, FileOutModel, HexadecimalModel,
+    IntLineEditModel, KnobModel, LineEditModel, SliderModel, XYPlotModel
+)
 from karabo_gui.widget import Widget
 
 from .base import BaseWidgetContainer

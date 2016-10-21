@@ -1,26 +1,15 @@
-from karabo.common.scenemodel.api import (BitfieldModel, CheckBoxModel,
-                                          ChoiceElementModel, ComboBoxModel,
-                                          DigitIconsModel, DirectoryModel,
-                                          DisplayAlignedImageModel,
-                                          DisplayCommandModel,
-                                          DisplayIconsetModel,
-                                          DisplayImageElementModel,
-                                          DisplayImageModel, DisplayLabelModel,
-                                          DisplayPlotModel,
-                                          DisplayStateColorModel,
-                                          DoubleLineEditModel,
-                                          EditableListElementModel,
-                                          EditableListModel,
-                                          EditableSpinBoxModel, EvaluatorModel,
-                                          FileInModel, FileOutModel,
-                                          FloatSpinBoxModel, HexadecimalModel,
-                                          IntLineEditModel, KnobModel,
-                                          LineEditModel, LinePlotModel,
-                                          MonitorModel, ScientificImageModel,
-                                          SelectionIconsModel, SingleBitModel,
-                                          SliderModel, TableElementModel,
-                                          TextIconsModel, VacuumWidgetModel,
-                                          WebcamImageModel, XYPlotModel)
+from karabo.common.scenemodel.api import (
+    BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
+    DigitIconsModel, DirectoryModel, DisplayAlignedImageModel,
+    DisplayCommandModel, DisplayIconsetModel, DisplayImageElementModel,
+    DisplayImageModel, DisplayLabelModel, DisplayPlotModel,
+    DisplayStateColorModel, DoubleLineEditModel, EditableListElementModel,
+    EditableListModel, EditableSpinBoxModel, EvaluatorModel, FileInModel,
+    FileOutModel, FloatSpinBoxModel, HexadecimalModel, IntLineEditModel,
+    KnobModel, LineEditModel, LinePlotModel, MonitorModel, ScientificImageModel,
+    SelectionIconsModel, SingleBitModel, SliderModel, TableElementModel,
+    TextIconsModel, VacuumWidgetModel, WebcamImageModel, XYPlotModel
+)
 
 WIDGET_FACTORIES = {
     'Bitfield': BitfieldModel,
