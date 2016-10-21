@@ -24,16 +24,39 @@ _REFERENCE_TYPENUM_TO_DTYPE = {
 }
 
 
-def get_image_data(image_node):
-    """ Calculate a numpy array from the given ``image_node`` and return it to
-    use for image display. In case no data is included, a ``NoneType`` is
-    returned.
+def get_image_data(image_node, dimX, dimY, dimZ, format):
+    """ Calculate a numpy array from the given ``image_node`` depending on the
+    given dimensions and format and return it to use for image display.
+    In case no data is included, a ``NoneType`` is returned.
     """
     pixels = image_node.pixels
     if len(pixels.data) == 0:
         return None
+
     arr_type = _REFERENCE_TYPENUM_TO_DTYPE[pixels.type]
-    return np.frombuffer(pixels.data, dtype=arr_type)
+    npy = np.frombuffer(pixels.data, dtype=arr_type)
+    if format is QImage.Format_Indexed8:
+        try:
+            npy.shape = dimY, dimX
+        except ValueError as e:
+            msg = 'Image has improper shape ({}, {}, {}) for size {}'.format(
+                dimX, dimY, dimZ, len(npy))
+            raise RuntimeError(msg)
+    elif format is QImage.Format_RGB888:
+        try:
+            npy.shape = dimY, dimX, dimZ
+        except ValueError as e:
+            msg = 'Image has improper shape ({}, {}, {}) for size {}'.format(
+                dimX, dimY, dimZ, len(npy))
+            raise RuntimeError(msg)
+    else:
+        try:
+            npy.shape = dimY, dimX, dimZ
+        except ValueError as e:
+            msg = 'Image has improper shape ({}, {}, {}) for size {}'.format(
+                dimX, dimY, dimZ, len(npy))
+            raise RuntimeError(msg)
+    return npy
 
 
 def get_dimensions_and_format(image_node):
