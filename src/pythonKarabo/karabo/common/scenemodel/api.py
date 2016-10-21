@@ -1,8 +1,8 @@
 # flake8: noqa
 from .bases import (BaseLayoutData, BaseLayoutModel, BaseSceneObjectData,
-                    BaseShapeObjectData,  BaseWidgetObjectData)
-from .const import (NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT,
-                    SCENE_FILE_VERSION)
+                    BaseShapeObjectData, BaseWidgetObjectData)
+from .const import (NS_KARABO, NS_SVG, SCENE_FILE_VERSION, SCENE_MIN_HEIGHT,
+                    SCENE_MIN_WIDTH)
 from .exceptions import SceneReaderException, SceneWriterException
 from .io import read_scene, write_scene, write_single_model
 from .layouts import (BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
@@ -16,16 +16,17 @@ from .widgets.complex import (DisplayStateColorModel, EvaluatorModel,
 from .widgets.icon import (BaseIconsModel, DigitIconsModel,
                            DisplayIconsetModel, IconData, SelectionIconsModel,
                            TextIconsModel)
-from .widgets.plot import  PlotCurveModel, LinePlotModel
+from .widgets.image import (DisplayAlignedImageModel, DisplayImageElementModel,
+                            DisplayImageModel, ScientificImageModel,
+                            WebcamImageModel)
+from .widgets.plot import LinePlotModel, PlotCurveModel
 from .widgets.simple import (BitfieldModel, CheckBoxModel, ChoiceElementModel,
-                            ComboBoxModel, DirectoryModel,
-                            DisplayAlignedImageModel, DisplayCommandModel,
-                            DisplayImageModel, DisplayImageElementModel,
-                            DisplayLabelModel, DisplayPlotModel,
-                            DoubleLineEditModel, EditableListModel,
-                            EditableListElementModel, EditableSpinBoxModel,
-                            FileInModel, FileOutModel, HexadecimalModel,
-                            IntLineEditModel, KnobModel, LabelModel,
-                            LineEditModel, SceneLinkModel, SliderModel,
-                            WorkflowItemModel, XYPlotModel)
+                             ComboBoxModel, DirectoryModel,
+                             DisplayCommandModel, DisplayLabelModel,
+                             DisplayPlotModel, DoubleLineEditModel,
+                             EditableListElementModel, EditableListModel,
+                             EditableSpinBoxModel, FileInModel, FileOutModel,
+                             HexadecimalModel, IntLineEditModel, KnobModel,
+                             LabelModel, LineEditModel, SceneLinkModel,
+                             SliderModel, WorkflowItemModel, XYPlotModel)
 from .widgets.vacuum import VacuumWidgetModel
