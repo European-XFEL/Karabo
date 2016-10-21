@@ -109,30 +109,9 @@ class BaseImageDisplay(DisplayWidget):
         if dimX is None and dimY is None:
             return
 
-        npy = get_image_data(value)
+        npy = get_image_data(value, dimX, dimY, dimZ, format)
         if npy is None:
             return
-        if format is QImage.Format_Indexed8:
-            try:
-                npy.shape = dimY, dimX
-            except ValueError as e:
-                e.message = 'Image has improper shape ({}, {}) for size {}'. \
-                    format(dimX, dimY, len(npy))
-                raise
-        elif format is QImage.Format_RGB888:
-            try:
-                npy.shape = dimY, dimX, dimZ
-            except ValueError as e:
-                e.message = 'Image has improper shape ({}, {}, {}) for size\
-                    {}'.format(dimX, dimY, dimZ, len(npy))
-                raise
-        else:
-            try:
-                npy.shape = dimY, dimX, dimZ
-            except ValueError as e:
-                e.message = 'Image has improper shape ({}, {}, {}) for size\
-                    {}'.format(dimX, dimY, dimZ, len(npy))
-                raise
 
         if self.image is None:
             # Some dtypes (eg uint32) are not displayed -> astype('float')
