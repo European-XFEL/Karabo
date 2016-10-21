@@ -25,7 +25,7 @@ def _check_base_image_widget(klass):
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.show_tool_bar is False
-    assert read_model.show_color_bar is False
+    assert read_model.show_color_bar is True
     assert read_model.show_axes is False
 
 
@@ -36,7 +36,7 @@ def _geometry_traits():
 def _base_image_traits():
     traits = _geometry_traits()
     traits['show_tool_bar'] = False
-    traits['show_color_bar'] = False
+    traits['show_color_bar'] = True
     traits['show_axes'] = False
     return traits
 
