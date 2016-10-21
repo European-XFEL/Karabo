@@ -3,13 +3,11 @@
 # Created on October 19, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from karabo.common.scenemodel.api import (DisplayAlignedImageModel,
-                                          DisplayImageElementModel,
-                                          DisplayImageModel,
-                                          ScientificImageModel,
-                                          WebcamImageModel)
-from karabo_gui.displaywidgets.imagewidgets import (ScientificImageDisplay,
-                                                    WebcamImageDisplay)
+from karabo.common.scenemodel.api import (
+    DisplayAlignedImageModel, DisplayImageElementModel, DisplayImageModel,
+    ScientificImageModel, WebcamImageModel)
+from karabo_gui.displaywidgets.imagewidgets import (
+    ScientificImageDisplay, WebcamImageDisplay)
 from karabo_gui.widget import Widget
 
 from .base import BaseWidgetContainer

@@ -5,14 +5,15 @@
 #############################################################################
 from collections import OrderedDict, namedtuple
 
+from guiqwt.builder import make
+from guiqwt.plot import ImageWidget
+
 from PyQt4.QtCore import QSize, Qt, pyqtSlot
 from PyQt4.QtGui import (QAction, QCursor, QHBoxLayout, QImage, QMenu,
                          QToolButton, QVBoxLayout, QWidget)
 from PyQt4.Qwt5.Qwt import QwtPlot
 
 import karabo_gui.icons as icons
-from guiqwt.builder import make
-from guiqwt.plot import ImageWidget
 from karabo_gui.images import get_dimensions_and_format, get_image_data
 from karabo_gui.schema import ImageNode
 from karabo_gui.widget import DisplayWidget
@@ -59,6 +60,7 @@ class BaseImageDisplay(DisplayWidget):
         self.layout.addWidget(self.toolbar_widget)
 
         self.plot = self.image_widget.get_plot()
+        self.image = None  # actual image
 
     def _create_toolbar(self):
         """ Toolbar gets created """
@@ -132,20 +134,22 @@ class BaseImageDisplay(DisplayWidget):
                     {}'.format(dimX, dimY, dimZ, len(npy))
                 raise
 
-        # Some dtypes (eg uint32) are not displayed -> astype('float')
-        image = make.image(npy.astype('float'))
-        self.plot.add_item(image)
+        if self.image is None:
+            # Some dtypes (eg uint32) are not displayed -> astype('float')
+            self.image = make.image(npy.astype('float'))
+            self.plot.add_item(self.image)
+        else:
+            self.image.set_data(npy.astype('float'))
 
         # In case an axis is disabled - the scale needs to be adapted
-        img_rect = image.boundingRect()
+        img_rect = self.image.boundingRect()
         img_width = img_rect.width()
         img_height = img_rect.height()
         DELTA = 0.2
-        if not self._axes_shown():
-            self.plot.setAxisScale(
-                QwtPlot.xBottom, img_rect.x() - DELTA, img_width + DELTA)
-            self.plot.setAxisScale(
-                QwtPlot.yLeft, img_rect.y() - DELTA, img_height + DELTA)
+        self.plot.setAxisScale(
+            QwtPlot.xBottom, img_rect.x() - DELTA, img_width + DELTA)
+        self.plot.setAxisScale(
+            QwtPlot.yLeft, img_rect.y() - DELTA, img_height + DELTA)
 
         self.plot.replot()
 
@@ -182,14 +186,8 @@ class WebcamImageDisplay(BaseImageDisplay):
     priority = 10
     alias = "Webcam image"
 
-    def __init__(self, box, parent):
-        super(WebcamImageDisplay, self).__init__(box, parent)
-
 
 class ScientificImageDisplay(BaseImageDisplay):
     category = ImageNode
     priority = 10
     alias = "Scientific image"
-
-    def __init__(self, box, parent):
-        super(ScientificImageDisplay, self).__init__(box, parent)
