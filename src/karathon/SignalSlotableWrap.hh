@@ -228,8 +228,8 @@ namespace karathon {
         void callPy(const std::string& instanceId, const std::string& functionName, const Args&... args) const {
             auto body = boost::make_shared<karabo::util::Hash>();
             packPy(*body, args...);
-            auto header = prepareCallHeader(instanceId, functionName);
             const std::string& id = (instanceId.empty() ? m_instanceId : instanceId);
+            auto header = prepareCallHeader(id, functionName);
             doSendMessage(id, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
         }
 
