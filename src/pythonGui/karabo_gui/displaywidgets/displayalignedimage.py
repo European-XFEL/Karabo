@@ -187,8 +187,6 @@ class DisplayAlignedImage(DisplayWidget):
         if self.value is not None or value is self.value:
             return
 
-        format = None
-
         if hasattr(value, "stackAxis"):
             self.axis = value.stackAxis
 
@@ -207,41 +205,18 @@ class DisplayAlignedImage(DisplayWidget):
         else:
             return
 
-        npy = get_image_data(value)
+        npy = get_image_data(value, dimX, dimY, dimZ, format)
         if npy is None:
             return
         self.npys[box] = npy
-        if format is QImage.Format_Indexed8:
-            try:
-                npy.shape = dimY, dimX
-                self.npys[box].shape = dimY, dimX
-            except ValueError as e:
-                e.message = 'Image has improper shape ({}, {}) for size {}'. \
-                    format(dimX, dimY, len(npy))
-                raise
 
-        elif format is QImage.Format_RGB888:
-            try:
-                npy.shape = dimY, dimX, dimZ
-                self.npys[box].shape = dimY, dimX, dimZ
-            except ValueError as e:
-                e.message = 'Image has improper shape ({}, {}, {}) for size\
-                    {}'.format(dimX, dimY, dimZ, len(npy))
-                raise
-        else:
-            try:
-                npy.shape = dimZ, dimY, dimX
-                self.npys[box].shape = dimZ, dimY, dimX
-                if self.axis ==1:
-                    npy = self.npys[box][:,self.selectedCell,:]
-                elif self.axis == 0:
-                    npy = self.npys[box][self.selectedCell,:,:]
-                elif self.axis == 2:
-                    npy = self.npys[box][:,:,self.selectedCell]
-            except ValueError as e:
-                e.message = 'Image has improper shape ({}, {}, {}) for size\
-                   TrImageItem {}'.format(dimX, dimY, dimZ, len(npy))
-                raise
+        if format not in (QImage.Format_Indexed8, QImage.Format_RGB888):
+            if self.axis ==1:
+                npy = self.npys[box][:, self.selectedCell, :]
+            elif self.axis == 0:
+                npy = self.npys[box][self.selectedCell, :, :]
+            elif self.axis == 2:
+                npy = self.npys[box][:, :, self.selectedCell]
 
         # Safety
         if dimX < 1 or dimY < 1:
