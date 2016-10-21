@@ -42,22 +42,31 @@ class _ComplexImageWrapperMixin(object):
         self.model = model
 
         # Initialize the widget
-        super(_ComplexImageWrapperMixin, self)._showToolBar(
+        super(_ComplexImageWrapperMixin, self)._show_tool_bar(
             model.show_tool_bar)
-        super(_ComplexImageWrapperMixin, self)._showColorBar(
+        super(_ComplexImageWrapperMixin, self)._show_color_bar(
             model.show_color_bar)
-        super(_ComplexImageWrapperMixin, self)._showAxes(model.show_axes)
+        super(_ComplexImageWrapperMixin, self)._show_axes(model.show_axes)
 
-    def _showToolBar(self, show):
-        super(_ComplexImageWrapperMixin, self)._showToolBar(show)
+    def _tool_bar_shown(self):
+        return self.model.show_tool_bar
+
+    def _color_bar_shown(self):
+        return self.model.show_color_bar
+
+    def _axes_shown(self):
+        return self.model.show_axes
+
+    def _show_tool_bar(self, show):
+        super(_ComplexImageWrapperMixin, self)._show_tool_bar(show)
         self.model.show_tool_bar = show
 
-    def _showColorBar(self, show):
-        super(_ComplexImageWrapperMixin, self)._showColorBar(show)
+    def _show_color_bar(self, show):
+        super(_ComplexImageWrapperMixin, self)._show_color_bar(show)
         self.model.show_color_bar = show
 
-    def _showAxes(self, show):
-        super(_ComplexImageWrapperMixin, self)._showAxes(show)
+    def _show_axes(self, show):
+        super(_ComplexImageWrapperMixin, self)._show_axes(show)
         self.model.show_axes = show
 
 

@@ -5,8 +5,9 @@
 #############################################################################
 from collections import OrderedDict, namedtuple
 
-from PyQt4.QtCore import QSize, pyqtSlot
-from PyQt4.QtGui import QHBoxLayout, QImage, QToolButton, QVBoxLayout, QWidget
+from PyQt4.QtCore import QSize, Qt, pyqtSlot
+from PyQt4.QtGui import (QAction, QCursor, QHBoxLayout, QImage, QMenu,
+                         QToolButton, QVBoxLayout, QWidget)
 from PyQt4.Qwt5.Qwt import QwtPlot
 
 import karabo_gui.icons as icons
@@ -16,17 +17,28 @@ from karabo_gui.images import get_dimensions_and_format, get_image_data
 from karabo_gui.schema import ImageNode
 from karabo_gui.widget import DisplayWidget
 
-ToolButtonInfo = namedtuple('ToolButtonInfo', ('tooltip', 'icon'))
+ToolInfo = namedtuple('ToolInfo', ('text', 'tooltip', 'icon'))
 
 
 _TOOLBUTTON_INFO = OrderedDict()
-_TOOLBUTTON_INFO['mouse_pointer'] = ToolButtonInfo(
-    tooltip='Mouse Pointer', icon=icons.cursorArrow.icon)
-_TOOLBUTTON_INFO['zoom'] = ToolButtonInfo(tooltip='Zoom', icon=icons.zoom.icon)
-_TOOLBUTTON_INFO['reset'] = ToolButtonInfo(
-    tooltip='Reset', icon=icons.maximize.icon)
-_TOOLBUTTON_INFO['roi'] = ToolButtonInfo(
-    tooltip='Region of Interest', icon=icons.crop.icon)
+_TOOLBUTTON_INFO['mouse_pointer'] = ToolInfo(
+    text='Selection', tooltip='Selection Cursor', icon=icons.cursorArrow.icon)
+_TOOLBUTTON_INFO['zoom'] = ToolInfo(
+    text='Zoom', tooltip='Rectangle Zoom', icon=icons.zoom.icon)
+_TOOLBUTTON_INFO['reset'] = ToolInfo(
+    text='Reset', tooltip='Reset', icon=icons.maximize.icon)
+_TOOLBUTTON_INFO['roi'] = ToolInfo(
+    text='Region of Interest', tooltip='Show Region of Interest',
+    icon=icons.crop.icon)
+
+
+_CONTEXT_MENU_INFO = OrderedDict()
+_CONTEXT_MENU_INFO['tool_bar'] = ToolInfo(
+    text='Show tool bar', tooltip='Show tool bar for widget', icon=None)
+_CONTEXT_MENU_INFO['color_bar'] = ToolInfo(
+    text='Show color bar', tooltip='Show color bar for widget', icon=None)
+_CONTEXT_MENU_INFO['axes'] = ToolInfo(
+    text='Show axes', tooltip='Show axes for widget', icon=None)
 
 
 class BaseImageDisplay(DisplayWidget):
@@ -40,6 +52,8 @@ class BaseImageDisplay(DisplayWidget):
         self.toolbar_widget = self._create_toolbar()
 
         self.widget = QWidget()
+        self.widget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.widget.customContextMenuRequested.connect(self.show_context_menu)
         self.layout = QHBoxLayout(self.widget)
         self.layout.addWidget(self.image_widget)
         self.layout.addWidget(self.toolbar_widget)
@@ -61,32 +75,32 @@ class BaseImageDisplay(DisplayWidget):
         return toolbar_widget
 
     def _create_toolbutton(self, btn_info):
+        """ Create tool button from given ``btn_info`` which is of type
+        ``ToolInfo`` """
         btn = QToolButton()
         btn.setToolTip(btn_info.tooltip)
         btn.setIconSize(QSize(24, 24))
         btn.setIcon(btn_info.icon)
         return btn
 
-    def enableAxis(self, axisId, enable):
-        """ Enable or disable the given ``axisId`` """
-        self.plot.enableAxis(axisId, enable)
+    def _create_action(self, action_info):
+        """ Create action from given ``action_info`` which is of type
+        ``ToolInfo`` """
+        q_action = QAction(action_info.text, self)
+        q_action.setCheckable(True)
+        q_action.setStatusTip(action_info.tooltip)
+        q_action.setToolTip(action_info.tooltip)
+        return q_action
 
-    def axisEnabled(self, axisId):
-        # XXX: TODO refer to data model
-        return self.plot.axisEnabled(axisId)
-
-    def _showToolBar(self, show):
-        print("_showToolBar", show)
+    def _show_tool_bar(self, show):
         self.toolbar_widget.setVisible(show)
 
-    def _showColorBar(self, show):
-        print("_showColorBar", show)
+    def _show_color_bar(self, show):
         self.plot.enableAxis(QwtPlot.yRight, show)
 
-    def _showAxes(self, show):
-        print("_showAxes", show)
-        self.enableAxis(QwtPlot.xBottom, show)
-        self.enableAxis(QwtPlot.yLeft, show)
+    def _show_axes(self, show):
+        self.plot.enableAxis(QwtPlot.xBottom, show)
+        self.plot.enableAxis(QwtPlot.yLeft, show)
 
     def valueChanged(self, box, value, timestamp=None):
         dimX, dimY, dimZ, format = get_dimensions_and_format(value)
@@ -127,14 +141,24 @@ class BaseImageDisplay(DisplayWidget):
         img_width = img_rect.width()
         img_height = img_rect.height()
         DELTA = 0.2
-        if not self.axisEnabled(QwtPlot.xBottom):
+        if not self._axes_shown():
             self.plot.setAxisScale(
                 QwtPlot.xBottom, img_rect.x() - DELTA, img_width + DELTA)
-        if not self.axisEnabled(QwtPlot.yLeft):
             self.plot.setAxisScale(
                 QwtPlot.yLeft, img_rect.y() - DELTA, img_height + DELTA)
 
         self.plot.replot()
+
+    @pyqtSlot(object)
+    def show_context_menu(self, pos):
+        """ The context menu is requested """
+        menu = QMenu()
+        for key, info in _CONTEXT_MENU_INFO.items():
+            action = self._create_action(info)
+            action.setChecked(getattr(self, "_{}_shown".format(key))())
+            action.triggered.connect(getattr(self, "_show_{}".format(key)))
+            menu.addAction(action)
+        menu.exec(QCursor.pos())
 
     @pyqtSlot()
     def mouse_pointer_clicked(self):
