@@ -1,3 +1,8 @@
+#############################################################################
+# Author: <john.wiggins@xfel.eu>
+# Created on October 21, 2016
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
 
 PROJECT_DB_TYPE_DEVICE = 'device_config'
 PROJECT_DB_TYPE_DEVICE_GROUP = 'device_group'
