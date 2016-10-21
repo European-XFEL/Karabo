@@ -69,12 +69,14 @@ def _build_simple_image_widget_readers_and_writers():
 def _build_complex_image_widget_readers_and_writers():
     """ Build readers and writers for the empty image widget classes
     """
+    bool_names = ('show_tool_bar', 'show_color_bar', 'show_axes')
+
     def _build_reader_func(klass):
         def reader(read_func, element):
             traits = read_base_widget_data(element)
-            bool_names = ('show_tool_bar', 'show_color_bar', 'show_axes')
             for b_name in bool_names:
-                traits[b_name] = (element.get(NS_KARABO + b_name) == 'true')
+                b_value = element.get(NS_KARABO + b_name)
+                traits[b_name] = (b_value.lower() == 'true')
             return klass(**traits)
         return reader
 
@@ -82,10 +84,9 @@ def _build_complex_image_widget_readers_and_writers():
         def writer(write_func, model, parent):
             element = SubElement(parent, NS_SVG + 'rect')
             write_base_widget_data(model, element, name)
-            bool_names = ('show_tool_bar', 'show_color_bar', 'show_axes')
             for b_name in bool_names:
-                element.set(
-                    NS_KARABO + b_name, str(getattr(model, b_name)).lower())
+                b_value = getattr(model, b_name)
+                element.set(NS_KARABO + b_name, str(b_value).lower())
             return element
         return writer
 
