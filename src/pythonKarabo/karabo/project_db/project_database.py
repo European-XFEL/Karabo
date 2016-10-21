@@ -160,8 +160,8 @@ class ProjectDatabase(ContextDecorator):
                  from the query results.
         """
 
-        query = ("import module namespace v=\"{}\";"
-                 "v:history(doc(\"{}\"))".format(self.vers_namespace, path))
+        query = ('import module namespace v="{}";'
+                 'v:history(doc("{}"))'.format(self.vers_namespace, path))
         result = self.dbhandle.query(query)
         if result.count != 1 or result.hits != 1:
             raise RuntimeError("Expected exactly one result when querying"
@@ -213,7 +213,7 @@ class ProjectDatabase(ContextDecorator):
                           'device_servers', 'monitors', 'device_groups'
         :param domain: the domain under which this item is to be stored
         :param item_name: the items name
-        :param item_xml: the xml file containing the item information
+        :param item_xml: the xml containing the item information
         :param overwrite: defaults to False. If set to True versioning
                           information is removed prior to database injection,
                           allowing to overwrite in case of versioning
@@ -243,7 +243,7 @@ class ProjectDatabase(ContextDecorator):
         if overwrite:
             versioning_attrs = ['key', 'revision', 'path']
             for attr in versioning_attrs:
-                nsattr = '{http://exist-db.org/versioning}'+attr
+                nsattr = self._add_vers_ns(attr)
                 if nsattr in item_xml.attrib:
                     item_xml.attrib.pop(nsattr)
 
@@ -265,14 +265,14 @@ class ProjectDatabase(ContextDecorator):
             res_xml = self.dbhandle.getDoc(path).decode('utf-8')
             res_xml = self._make_str_if_needed(res_xml)
 
-        meta = dict()
+        meta = {}
         meta["versioning_info"] = self.get_versioning_info(path)
         meta['current_xml'] = res_xml
         return (success, meta)
 
     def save_project(self, domain, name, xml, overwrite=False):
         """
-        Saves a project xml file into the domain. It will
+        Saves a project xml into the domain. It will
         create a new entry if the project does not exist yet, or create a new
         version of the project if it does exist. In case of a versioning
         conflict the update will fail and the most current version of the
@@ -305,7 +305,7 @@ class ProjectDatabase(ContextDecorator):
 
     def save_scene(self, domain, name, xml, overwrite=False):
         """
-        Saves a scene xml file into the domain. It will
+        Saves a scene xml into the domain. It will
         create a new entry if the scene does not exist yet, or create a new
         version of the scene if it does exist. In case of a versioning
         conflict the update will fail and the most current version of the
@@ -338,7 +338,7 @@ class ProjectDatabase(ContextDecorator):
 
     def save_config(self, domain, name, xml, overwrite=False):
         """
-        Saves a config xml file into the domain. It will
+        Saves a config file into the domain. It will
         create a new entry if the config does not exist yet, or create a new
         version of the config if it does exist. In case of a versioning
         conflict the update will fail and the most current version of the
@@ -371,7 +371,7 @@ class ProjectDatabase(ContextDecorator):
 
     def save_device_server(self, domain, name, xml, overwrite=False):
         """
-        Saves a device server xml file into the domain. It will
+        Saves a device server xml into the domain. It will
         create a new entry if the device server does not exist yet, or create a
         new version of the device server if it does exist. In case of a
         versioning conflict the update will fail and the most current version
@@ -438,7 +438,7 @@ class ProjectDatabase(ContextDecorator):
         # rename
         else:
             query = ('xmldb:copy("{0}", "{1}", "{2}"),'
-                     'xmldb:rename("{1}", "{2}\", "{3}")'
+                     'xmldb:rename("{1}", "{2}", "{3}")'
                      .format(path, target_path, item, target_item))
             return_path = "{}/{}".format(target_path, target_item)
 

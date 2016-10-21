@@ -192,4 +192,5 @@ def init_local_db():
 
     # in the end we have to restart the database
     stop_database()
+    sleep(10) ##sleep here so database can shut down
     assure_running()
