@@ -5,13 +5,14 @@
 #############################################################################
 from xml.etree.ElementTree import SubElement
 
+from traits.api import Bool
+
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, NS_SVG
 from karabo.common.scenemodel.io_utils import (read_base_widget_data,
                                                write_base_widget_data)
 from karabo.common.scenemodel.registry import (register_scene_reader,
                                                register_scene_writer)
-from traits.api import Bool
 
 
 class DisplayAlignedImageModel(BaseWidgetObjectData):
@@ -71,12 +72,9 @@ def _build_complex_image_widget_readers_and_writers():
     def _build_reader_func(klass):
         def reader(read_func, element):
             traits = read_base_widget_data(element)
-            traits['show_tool_bar'] = True if element.get(
-                NS_KARABO + 'show_tool_bar') == 'true' else False
-            traits['show_color_bar'] = True if element.get(
-                NS_KARABO + 'show_color_bar') == 'true' else False
-            traits['show_axes'] = True if element.get(
-                NS_KARABO + 'show_axes') == 'true' else False
+            bool_names = ('show_tool_bar', 'show_color_bar', 'show_axes')
+            for b_name in bool_names:
+                traits[b_name] = (element.get(NS_KARABO + b_name) == 'true')
             return klass(**traits)
         return reader
 
@@ -84,12 +82,10 @@ def _build_complex_image_widget_readers_and_writers():
         def writer(write_func, model, parent):
             element = SubElement(parent, NS_SVG + 'rect')
             write_base_widget_data(model, element, name)
-            show_tool_bar = str(model.show_tool_bar).lower()
-            element.set(NS_KARABO + 'show_tool_bar', show_tool_bar)
-            show_color_bar = str(model.show_color_bar).lower()
-            element.set(NS_KARABO + 'show_color_bar', show_color_bar)
-            show_axes = str(model.show_axes).lower()
-            element.set(NS_KARABO + 'show_axes', show_axes)
+            bool_names = ('show_tool_bar', 'show_color_bar', 'show_axes')
+            for b_name in bool_names:
+                element.set(
+                    NS_KARABO + b_name, str(getattr(model, b_name)).lower())
             return element
         return writer
 
