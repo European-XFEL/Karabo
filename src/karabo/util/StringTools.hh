@@ -39,9 +39,25 @@ namespace karabo {
 
         class NDArray;
 
+        /**
+         * Create a kas failure message for a Hash key when trying to cast to a differnt value type
+         * @param key the message pertains to
+         * @param src typeinfo of source type, i.e. type of the value in the Hash
+         * @param tgt typeinfo of target type, i.e. type to which the cast failed
+         * @return the failure message
+         */
         std::string createCastFailureMessage(const std::string& key, const std::type_info& src, const std::type_info& tgt);
         std::string createCastFailureMessage(const std::string& key, const Types::ReferenceType& src, const Types::ReferenceType& tgt);
 
+        /**
+         * Return a string representation of a value of type T. Overloads for
+         * common value types exist. In general std::ostream is used for output
+         * so it will work for any type supporting the "<<" operator or supported by 
+         * std::ostream
+         * 
+         * @param value
+         * @return 
+         */
         template <class T>
         inline std::string toString(const T& value) {
             std::ostringstream s;
@@ -49,24 +65,44 @@ namespace karabo {
             return s.str();
         }
 
+        /**
+         * Floats are output to their maximum precision of 7 digits
+         * @param value
+         * @return 
+         */
         inline std::string toString(const float& value) {
             std::ostringstream s;
             s << std::fixed << std::setprecision(7) << value;
             return s.str();
         }
 
+        /**
+         * Doubles are output to their maximum precision of 15 digits
+         * @param value
+         * @return 
+         */
         inline std::string toString(const double& value) {
             std::ostringstream s;
             s << std::fixed << std::setprecision(15) << value;
             return s.str();
         }
 
+         /**
+         * Complex floats are output to their maximum precision of 7 digits
+         * @param value
+         * @return 
+         */
         inline std::string toString(const std::complex<float>& value) {
             std::ostringstream s;
             s << std::fixed << std::setprecision(7) << value;
             return s.str();
         }
 
+        /**
+         * Complex dobules are output to their maximum precision of 15 digits
+         * @param value
+         * @return 
+         */
         inline std::string toString(const std::complex<double>& value) {
             std::ostringstream s;
             s << std::fixed << std::setprecision(15) << value;
@@ -107,6 +143,12 @@ namespace karabo {
             return std::string("None");
         }
 
+        /**
+         * Vector values are output as a comma separated list, where the StringTools::toString
+         * method for their value type T defines the representation of each element
+         * @param value
+         * @return 
+         */
         template <typename T>
         inline std::string toString(const std::vector<T>& value) {
             if (value.empty()) return "";
@@ -120,6 +162,13 @@ namespace karabo {
             return s.str();
         }
 
+        /**
+         * String vector values are output as a comma separated list. The individual strings in the list
+         * may not contain comma (,) separators, e.g. an element "Hello, World" is not allowed as it would
+         * yield a representation ambiguous with two elements "Hello" and "World" -> "Hello, World".
+         * @param value
+         * @return 
+         */
         inline std::string toString(const std::vector<std::string>& value) {
             if (value.empty()) return "";
             std::ostringstream s;
@@ -141,6 +190,12 @@ namespace karabo {
             return karabo::util::base64Encode(reinterpret_cast<const unsigned char*> (&value[0]), value.size());
         }
 
+        /**
+         * Pointers with size information given as a std::pair of pointer and size are output like
+         * vectors (see StringTools::toString(const std::vector<T>&) )
+         * @param value
+         * @return 
+         */
         template <typename T>
         inline std::string toString(const std::pair<const T*, size_t>& value) {
             if (value.second == 0) return "";
@@ -163,6 +218,11 @@ namespace karabo {
             return karabo::util::base64Encode(reinterpret_cast<const unsigned char*> (value.first), value.second);
         }
 
+        /**
+         * An NDArray is output in a flattened representation using StringTools::toString(const std::pair<const T*, size_t>&)
+         * @param value
+         * @return 
+         */
         std::string toString(const karabo::util::NDArray& value);
 
         template <typename T>
@@ -178,6 +238,11 @@ namespace karabo {
             return s.str();
         }
 
+        /**
+         * A std::deque is output as a list of comman (,) separated values
+         * @param value
+         * @return 
+         */
         template <typename T>
         inline std::string toString(const std::deque<T>& value) {
             if (value.empty()) return "";
@@ -191,6 +256,11 @@ namespace karabo {
             return s.str();
         }
 
+        /**
+         * A std::map is output in the form { key1 : value1, key2: value2, ... }
+         * @param value
+         * @return 
+         */
         template <typename KeyType, typename ValueType>
         inline std::string toString(const std::map<KeyType, ValueType>& value) {
             if (value.empty()) return "{}";
@@ -205,15 +275,31 @@ namespace karabo {
             return s.str();
         }
 
+        /**
+         * States are output using their stringified name
+         * @param value
+         * @return 
+         */
         inline std::string toString(const karabo::util::State& value) {
             return value.name();
         }
 
+        /**
+         * The generic fromString method tries to obtain a value of type T using a
+         * boost::lexical_cast of the passed value.
+         * @param value
+         * @return 
+         */
         template <class T>
         inline T fromString(const std::string& value) {
             return boost::lexical_cast<T > (value);
         }
 
+        /**
+         * For integer return values the lowever overhead method strtol is used
+         * @param value
+         * @return 
+         */
         template<>
         inline int fromString(const std::string& value) {
             int val = strtol(value.c_str(), NULL, 0);
@@ -238,6 +324,12 @@ namespace karabo {
             return val;
         }
 
+        /**
+         * A string "None" can be cast to karabo::util::CppNone. Any other
+         * string representation may not!
+         * @param value
+         * @return 
+         */
         template<>
         inline karabo::util::CppNone fromString(const std::string& value) {
             std::string tmp(value);
@@ -247,6 +339,12 @@ namespace karabo {
             return karabo::util::CppNone();
         }
 
+        /**
+         * Bytearrays can be constructed from strings where each character in the string represents
+         * a byte (char) in the array
+         * @param value
+         * @return 
+         */
         template<>
         inline karabo::util::ByteArray fromString(const std::string& value) {
             std::vector<unsigned char> array;
@@ -258,6 +356,18 @@ namespace karabo {
             return karabo::util::ByteArray(data, byteSize);
         }
 
+        /**
+         * Sequence type elements can be constructed from strings of the form
+         * 
+         *  [ value1, value2, ..., valueN ]
+         * 
+         * where the enclosing brackets ([]) are optional and other separators may be specified. 
+         * The sequence elements must have a StringTools:fromString method for their type T 
+         * and each element must be castable to T using this method.
+         * @param value
+         * @param separator if separator other than the comma (,) is used
+         * @return 
+         */
         template<typename T,
         template <typename ELEM, typename = std::allocator<ELEM> > class CONT>
         inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
@@ -284,6 +394,13 @@ namespace karabo {
             }
         }
 
+        /**
+         * Vectors of unsigned char elements can be constructed directly from strings where character of the
+         * string represents a byte of the vector. The second argument should be set to ""
+         * @param value
+         * @param 
+         * @return 
+         */
         template <>
         inline std::vector<unsigned char> fromString(const std::string& value, const std::string&) {
             std::vector<unsigned char> tmp;
@@ -291,6 +408,13 @@ namespace karabo {
             return tmp;
         }
 
+        /**
+         * Vectors of char elements can be constructed directly from strings where character of the
+         * string represents a byte of the vector. The second argument should be set to ""
+         * @param value
+         * @param 
+         * @return 
+         */
         template <>
         inline std::vector<char> fromString(const std::string& value, const std::string&) {
             std::vector<char> tmp;

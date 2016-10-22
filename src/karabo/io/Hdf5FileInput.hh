@@ -26,6 +26,12 @@ namespace karabo {
 
     namespace io {
 
+        /**
+         * @class Hdf5FileInput
+         * @brief The HDF5 file input specializes the Input class to read
+         *        data from a HDF5 files, to which data of type T has been serialized
+         *        to using the Karabo HDF5 interface. 
+         */
         template <class T>
         class Hdf5FileInput : public Input<T> {
 

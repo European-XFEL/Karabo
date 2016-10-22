@@ -19,6 +19,10 @@
 namespace karabo {
     namespace core {
 
+        /**
+         * @class MotorInterface
+         * @brief suggested interface for motor devices.
+         */
         class MotorInterface : public virtual karabo::xms::SignalSlotable {
 
         public:

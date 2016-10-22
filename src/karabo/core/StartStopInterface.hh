@@ -14,6 +14,10 @@
 namespace karabo {
     namespace core {
 
+        /**
+         * @class StartStopInterface
+         * @brief suggested interface to work on top of a karabo::core::StartStopFsm
+         */
         class StartStopInterface : public virtual karabo::xms::SignalSlotable {
 
             public:

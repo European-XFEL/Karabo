@@ -33,6 +33,13 @@ namespace karabo {
      */
     namespace io {
 
+         /**
+         * @class TextFileInput
+         * @brief The text file input specializes the Input class to read
+         *        data from a text file types T have been serialized to. The actual
+         *        serialization format depends on the Serializer selected in this
+         *        class' configuration.
+         */
         template <class T>
         class TextFileInput : public Input<T> {
 
