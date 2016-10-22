@@ -17,15 +17,44 @@
 namespace karabo {
     namespace util {
 
+        /**
+         * @class ClassInfo
+         * @brief ClassInfo holds meta-data to a factorized class
+         */
         class KARABO_DECLSPEC ClassInfo {
 
             public:
 
             ClassInfo(const std::string& classId, const std::string& signature, const std::string& classVersion);
+            /**
+             * Return the C++ class name of this class
+             * @return 
+             */
             const std::string& getClassName() const;
+            
+            /**
+             * Return the C++ name space of this class
+             * @return 
+             */
             const std::string& getNamespace() const;
+            
+            /**
+             * Return the Karabo ClassId of this class
+             * @return 
+             */
             const std::string& getClassId() const;
+            
+            /**
+             * Return the LogCategory for this class
+             * @return 
+             */
             const std::string& getLogCategory() const;
+            
+            /**
+             * Return the version number of this class - currently does not
+             * convey much meaning.
+             * @return 
+             */
             const std::string& getVersion() const;
 
         private: // Functions

@@ -37,6 +37,10 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+             * @class FixedLengthArray
+             * @brief The FixedLengthArray class is an implementation of Dataset for arrays of fixed length
+             */
             template<typename T>
             class FixedLengthArray : public Dataset {
 
@@ -173,15 +177,6 @@ namespace karabo {
                     }
 
                 }
-
-
-
-                //                void readSpecificAttributes(karabo::util::Hash& attributes) {
-                //                    attributes.setFromPath(m_key + ".rank", static_cast<int> (dims().size()));
-                //                    attributes.setFromPath(m_key + ".dims", dims());
-                //                    attributes.setFromPath(m_key + ".typeCategory", "FixedLengthArray");
-                //                }
-                //
 
 
             protected:

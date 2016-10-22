@@ -21,7 +21,8 @@ namespace karabo {
     namespace util {
 
         /**
-         * Describes array dimensions.
+         * @class Dims
+         * @brief A class describing array dimensions
          */
         class Dims {
 
@@ -69,53 +70,87 @@ namespace karabo {
             virtual ~Dims() {
             }
 
+            /**
+             * Return the rank of the dimensions
+             * @return 
+             */
             std::size_t rank() const {
                 return m_rank;
             }
 
-            /*
-             * returns total number of elements
+            /**
+             * Return the total number of elements in the array
+             * @return 
              */
             ull64 size() const {
                 return m_numberOfElements;
             }
 
-            /*
-             * Pre:  idx >= 0 && idx < rank()
+            /**
+             * Return the extend of the array in the dimension identified by idx
+             * @param idx, needs to be >= 0 and , rank
+             * @return 
              */
             ull64 extentIn(size_t idx) const {
                 return m_vec[idx];
             }
 
+            /**
+             * Return a std::vector holding the dimension sizes
+             * @return 
+             */
             const std::vector<ull64>& toVector() const {
                 return m_vec;
             }
 
+            /**
+             * Create a dimension object from a vector
+             * @param vec
+             */
             void fromVector(const std::vector<ull64>& vec) {
                 m_vec = vec;
                 calculate();
             }
 
+            /**
+             * Return size of first dimension
+             * @return 
+             */
             ull64 x1() const {
                 if (m_rank >= 1) return m_vec[0];
                 return 0;
             }
 
+            /**
+             * Return size of second dimension
+             * @return 
+             */
             ull64 x2() const {
                 if (m_rank >= 2) return m_vec[1];
                 return 1;
             }
 
+            /**
+             * Return size of third dimension
+             * @return 
+             */
             ull64 x3() const {
                 if (m_rank >= 3) return m_vec[2];
                 return 1;
             }
 
+            /**
+             * Return size of fourth dimension
+             * @return 
+             */
             ull64 x4() const {
                 if (m_rank >= 4) return m_vec[3];
                 return 1;
             }
 
+            /**
+             * Reverse dimension sizes
+             */
             void reverse() {
                 std::reverse(m_vec.begin(), m_vec.end());
             }

@@ -44,6 +44,12 @@ namespace karabo {
 
 #define KARABO_NO_SERVER "__none__"
 
+        /**
+         * @class BaseDevice
+         * @brief The BaseDevice class provides for methods which are template
+         *        independent in the Device class
+         *
+         */
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
 
         public:
@@ -54,16 +60,42 @@ namespace karabo {
             virtual ~BaseDevice() {
             }
 
+            /**
+             * This method is called to finalize initialization of a device. It is needed to allow user 
+             * code to hook in after the base device constructor, but before the device is fully initialized.
+             */
             virtual void finalizeInternalInitialization() = 0;
 
-            // TODO
-            // Can be removed, if sending current configuration after instantiation by server is deprecated
+            /*
+             * A pure virtual method to be overwritten to return a tag-filtered
+             * configuration of derived classes
+             *
+             * @param tags: tags to filter the return configuration by
+             * @return: a Hash containing the (filtered) documentation
+             */
             virtual karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const = 0;
 
         };
 
         /**
-         * The Device class.
+         * @class Device
+         * @brief all Karabo devices derive from this class
+         *
+         * The Device class is the base class for all Karabo devices.
+         * It provides for a standardized set of basic properties that
+         * all devices share and provides interaction with its configuration
+         * and properties.
+         *
+         * Devices are defined by their expected parameters; a list of properties
+         * and commands that are known to the distributed system at static time.
+         * These parameters describe a devices Schema, which in turn describes
+         * the possible configurations of the device.
+         *
+         * Devices may come in two flavors: one's with a full-fledged, strict
+         * finite state machine (FSM), embedded into the device through templated
+         * inheritance, and those with a simple FSM, the noFSM, where states are
+         * updated within the device logic. The Device class defaults to the latter
+         * if no template parameter is given.
          */
         template <class FSM = NoFsm>
         class Device : public BaseDevice, public FSM {
@@ -107,6 +139,14 @@ namespace karabo {
 
             KARABO_CLASSINFO(Device, "Device", "1.0")
 
+            /**
+             * The expected parameter section of the Device class, known at
+             * static time. The basic parameters described here are available
+             * for all devices, many of them being expert or admin visible only.
+             *
+             * @param expected: a Schema to which these parameters will be
+             *                  appended.
+             */
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::util;
                 using namespace karabo::xms;
@@ -282,6 +322,20 @@ namespace karabo {
                 FSM::expectedParameters(expected);
             }
 
+            /**
+             * Construct a device with a given configuration. The configuration
+             * Hash may contain any of the following entries:
+             *
+             * _serverId_: a string representing the server this device is
+             *             running on. If not given the device assumes to run
+             *             in stand-alone mode.
+             *
+             * _deviceId_: a string representing this device's id, part of the
+             *             unique identifier in the distributed system. If not
+             *             given it defaults to _none_.
+             *
+             * @param configuration
+             */
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
                 m_globalAlarmCondition(karabo::util::AlarmCondition::NONE) {
 
@@ -321,6 +375,9 @@ namespace karabo {
                 m_log = &(karabo::log::Logger::getCategory(m_deviceId)); // TODO use later: "device." + instanceId
             }
 
+            /**
+             * The destructor will reset the DeviceClient attached to this device.
+             */
             virtual ~Device() {
                 KARABO_LOG_FRAMEWORK_TRACE << "Device::~Device() dtor : m_deviceClient.use_count()="
                         << m_deviceClient.use_count() << "\n"
@@ -344,7 +401,7 @@ namespace karabo {
             }
 
             /**
-             * Updates the state of the device. This function automatically notifies any observers in the distributed system.
+             * Updates the state/properties of the device. This function automatically notifies any observers in the distributed system.
              * @param key A valid parameter of the device (must be defined in the expectedParameters function)
              * @param value The corresponding value (of corresponding data-type)
              */
@@ -363,6 +420,13 @@ namespace karabo {
 
             /**
              * Updates the state of the device. This function automatically notifies any observers in the distributed system.
+             *
+             * Any updates are validated against the device schema and rejected if they are not
+             * appropriate for the current device state or are of wrong type. During validation
+             * alarm bounds are evaluated and alarms on properties will be raised if alarm
+             * conditions are met. Additionally, the distributed system is notified of these
+             * alarms.
+             *
              * @param key A valid parameter of the device (must be defined in the expectedParameters function)
              * @param value The corresponding value (of corresponding data-type)
              * @param timestamp The time of the value change
@@ -402,12 +466,24 @@ namespace karabo {
                 channel->update();
             }
 
+            /**
+             * Signals an end-of-stream event (EOS) on the output channel identified
+             * by channelName
+             * @param channelName: the name of the output channel.
+             */
             void signalEndOfStream(const std::string& channelName) {
                 this->getOutputChannel(channelName)->signalEndOfStream();
             }
 
             /**
-             * Updates the state of the device with all key/value pairs given in the hash
+             * Updates the state/properties of the device with all key/value pairs given in the hash.
+             *
+             * Any updates are validated against the device schema and rejected if they are not
+             * appropriate for the current device state or are of wrong type. During validation
+             * alarm bounds are evaluated and alarms on properties will be raised if alarm
+             * conditions are met. Additionally, the distributed system is notified of these
+             * alarms.
+             *
              * NOTE: This function will automatically and efficiently (only one message) inform
              * any observers.
              * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
@@ -418,9 +494,17 @@ namespace karabo {
 
             /**
              * Updates the state of the device with all key/value pairs given in the hash
+             *
+             * Any updates are validated against the device schema and rejected if they are not
+             * appropriate for the current device state or are of wrong type. During validation
+             * alarm bounds are evaluated and alarms on properties will be raised if alarm
+             * conditions are met. Additionally, the distributed system is notified of these
+             * alarms.
+             *
              * NOTE: This function will automatically and efficiently (only one message) inform
              * any observers.
              * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
+             * @param timestamp optional timestamp to indicate when the set occurred
              */
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
@@ -479,21 +563,53 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Updates the state of the device with all key/value pairs given in the hash.
+             * In contrast to the set function, no validation is performed.
+             *
+             * @param key identifying the property to update
+             * @param value: updated value
+             */
             template <class ValueType>
             void setNoValidate(const std::string& key, const ValueType& value) {
                 this->setNoValidate<ValueType>(key, value, getActualTimestamp());
             }
 
+            /**
+             * Updates the state of the device with all key/value pairs given in the hash.
+             * In contrast to the set function, no validation is performed.
+             *
+             * @param key identifying the property to update
+             * @param value: updated value
+             * @param timestamp optional timestamp to indicate when the set occurred.
+             */
             template <class ValueType>
             void setNoValidate(const std::string& key, const ValueType& value, const karabo::util::Timestamp& timestamp) {
                 karabo::util::Hash h(key, value);
                 this->setNoValidate(h, timestamp);
             }
 
+            /**
+             * Updates the state of the device with all key/value pairs given in the hash.
+             * In contrast to the set function, no validation is performed.
+             *
+             * NOTE: This function will automatically and efficiently (only one message) inform
+             * any observers.
+             * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
+             */
             void setNoValidate(const karabo::util::Hash& hash) {
                 this->setNoValidate(hash, getActualTimestamp());
             }
 
+            /**
+             * Updates the state of the device with all key/value pairs given in the hash.
+             * In contrast to the set function, no validation is performed.
+             *
+             * NOTE: This function will automatically and efficiently (only one message) inform
+             * any observers.
+             * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
+             * @param timestamp optional timestamp to indicate when the set occurred.
+             */
             void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
@@ -605,6 +721,13 @@ namespace karabo {
                 return m_fullSchema;
             }
 
+            /**
+             * Append a schema to the existing device schema
+             * @param schema to be appended
+             * @param keepParameters: if true, do not reset the configuration of
+             * the device, for those parameters that validate against the new
+             * schema
+             */
             void appendSchema(const karabo::util::Schema& schema, const bool keepParameters = false) {
                 KARABO_LOG_DEBUG << "Append Schema requested";
                 karabo::util::Hash validated;
@@ -643,7 +766,10 @@ namespace karabo {
             /**
              * Replace existing schema descriptions by static (hard coded in expectedParameters) part and
              * add additional (dynamic) descriptions
-             * @param schema
+             * @param schema replacing the existing schema.
+             * @param keepParameters: if true, do not reset the configuration of
+             * the device, for those parameters that validate against the new
+             * schema
              */
             void updateSchema(const karabo::util::Schema& schema, const bool keepParameters = false) {
 
@@ -689,15 +815,27 @@ namespace karabo {
                 KARABO_LOG_INFO << "Schema updated";
             }
 
+            /**
+             * Set the progress of an operation
+             * @param value
+             */
             void setProgress(const int value, const std::string& associatedText = "") {
                 int v = (m_progressMin + value / float(m_progressMax - m_progressMin)) * 100;
                 set("progress", v);
             }
 
+            /**
+             * Reset progress to the lowest value
+             */
             void resetProgress() {
                 set("progress", m_progressMin);
             }
 
+            /**
+             * Set the range for progress values
+             * @param minimum
+             * @param maximum
+             */
             void setProgressRange(const int minimum, const int maximum) {
                 m_progressMin = minimum;
                 m_progressMax = maximum;
@@ -780,6 +918,13 @@ namespace karabo {
                 return filtered;
             }
 
+            /**
+             * Return a tag filtered version of the input Hash. Tags are as defined
+             * in the device schema
+             * @param hash to filter
+             * @param tags to filter by
+             * @return a filtered version of the input Hash.
+             */
             karabo::util::Hash filterByTags(const karabo::util::Hash& hash, const std::string& tags) const {
                 karabo::util::Hash filtered;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
@@ -787,20 +932,28 @@ namespace karabo {
                 return filtered;
             }
 
+            /**
+             * Return the serverId of the server this device is running on
+             * @return
+             */
             const std::string& getServerId() const {
                 return m_serverId;
             }
 
+            /**
+             * Return a State object holding the current unified state of
+             * the device.
+             * @return
+             */
             const karabo::util::State getState() {
                 return this->get<karabo::util::State>("state");
             }
 
-
-
-
-
-            // This function will polymorphically be called by the FSM template
-
+            /**
+             * Update the state of the device. Will also update the instanceInfo
+             * describing this device instance
+             * @param cs: the state to update to
+             */
             void updateState(const karabo::util::State& cs) {
                 try {
                     const std::string& currentState = cs.name();
@@ -854,39 +1007,86 @@ namespace karabo {
                         << "\" does not allow a transition for event \"" << eventName << "\".";
             }
 
+            /**
+             * A hook which is called if the device receives a time-server update. Can be overwritten
+             * by derived classes
+             *
+             * @param id: train id
+             * @param sec: unix seconds
+             * @param frac: fractional seconds
+             * @param period
+             */
             virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
 
             // TODO:  Implement local call: just post command on local queue
 
+            /**
+             * Execute a command on this device
+             * @param command
+             */
             void execute(const std::string& command) const {
                 call("", command);
             }
 
+            /**
+             * Execute a command with one argument on this device
+             * @param command
+             * @param a1
+             */
             template <class A1>
             void execute(const std::string& command, const A1& a1) const {
                 call("", command, a1);
             }
 
+            /**
+             * Execute a command with two arguments on this device
+             * @param command
+             * @param a1
+             * @param a2
+             */
             template <class A1, class A2>
             void execute(const std::string& command, const A1& a1, const A2& a2) const {
                 call("", command, a1, a2);
             }
 
+            /**
+             * Execute a command with three arguments on this device
+             * @param command
+             * @param a1
+             * @param a2
+             * @param a3
+             */
             template <class A1, class A2, class A3>
             void execute(const std::string& command, const A1& a1, const A2& a2, const A3& a3) const {
                 call("", command, a1, a2, a3);
             }
 
+            /**
+             * Execute a command with four arguments on this device
+             * @param command
+             * @param a1
+             * @param a2
+             * @param a3
+             * @param a4
+             */
             template <class A1, class A2, class A3, class A4>
             void execute(const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) const {
                 call("", command, a1, a2, a3, a4);
             }
 
+            /**
+             * Get the current alarm condition the device is in
+             * @return
+             */
             const karabo::util::AlarmCondition & getAlarmCondition() const {
                 return karabo::util::AlarmCondition::fromString(this->get<std::string>("alarmCondition"));
             }
 
+            /**
+             * Set the device's global alarm condition.
+             * @param condition
+             */
             void setAlarmCondition(const karabo::util::AlarmCondition & condition) {
 
                 using namespace karabo::util;
@@ -905,26 +1105,43 @@ namespace karabo {
 
             }
 
+            /**
+             * Get the alarm condition for a specific property
+             * @param key of the property to get the condition for
+             * @param sep optional separator to use in the key path
+             * @return the alarm condition of the property
+             */
             const karabo::util::AlarmCondition & getAlarmCondition(const std::string & key, const std::string & sep = ".") const {
                 const std::string & propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep);
                 return karabo::util::AlarmCondition::fromString(propertyCondition);
             }
 
+            /**
+             * Query if the property at path has rolling statistics enabled
+             * @param path
+             * @return
+             */
             bool hasRollingStatistics(const std::string & path) const {
                 return this->getFullSchema().hasRollingStatistics(path);
             }
 
+            /**
+             * Get a pointer to the rolling statistics for the property at path
+             * @param path
+             * @return a pointer to the rolling statistics object keeping track
+             * of the statistics for the property identified by path.
+             */
             karabo::util::RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & path) const {
                 return m_validatorIntern.getRollingStatistics(path);
             }
 
+            /**
+             * Returns a hash containing the info field information
+             * for current alarms on the device
+             *
+             * @return a hash with structure key: path to property -> alarm info (string)
+             */
             const karabo::util::Hash getAlarmInfo() const {
-                /**
-                 * Returns a hash containing the info field information
-                 * for current alarms on the device
-                 *
-                 * @return a hash with structure key: path to property -> alarm info (string)
-                 */
                 using namespace karabo::util;
                 Hash info;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
@@ -970,6 +1187,26 @@ namespace karabo {
 
                 using namespace karabo::util;
                 using namespace karabo::net;
+
+                    // Instantiate connection
+                    karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("_connection_", m_parameters);
+
+                    // Initialize the SignalSlotable instance
+                    init(m_deviceId, connection);
+                }
+
+                // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
+                this->initFsmSlots(); // requires template CONCEPT
+
+                // Initialize Device slots
+                this->initDeviceSlots();
+
+                // Register guard for slot calls
+                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));
+
+                // Register updateLatencies handler
+                this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies,
+                                                                       this, _1, _2, _3, _4, _5));
 
                 // This initializations or done here and not in the constructor 
                 // as they involve virtual function calls
@@ -1129,7 +1366,7 @@ namespace karabo {
              * be called from remote. The function only checks slots that are
              * mentioned in the expectedParameter section ("DeviceSlots")
              * @param slotName: name of the slot
-             * @param callee: the calling remote, can be unknown             
+             * @param callee: the calling remote, can be unknown
              *
              * The following checks are performed:
              *

@@ -13,17 +13,25 @@
 namespace karabo {
     namespace util {
 
-        /*************************************************************
-         *
-         * StackTrace prints out the exception stack,
-         * Symbols are, in the best case, C++ demangled.
-         *
-         *-----------------------------------------------------------*/
-
+     
+        /**
+         * @class StackTrace
+         * @brief StackTrace prints out the exception stack, symbols are, in the best case, C++ demangled.
+         */
         class StackTrace {
 
         public:
+            /**
+             * Demangle symbol into a string
+             * @param symbol
+             * @return 
+             */
             static std::string demangle(const char* symbol);
+            
+            /**
+             * Print trace to an output stream
+             * @param os
+             */
             static void print(std::ostream& os);
         };
 

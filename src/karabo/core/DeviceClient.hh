@@ -30,32 +30,18 @@ namespace karabo {
         class Device;
 
         /**
-         * The Karabo Device Client
-         * This class can be used to (remotely) control devices of the distributed system
-         * Synchronous calls (i.e. get()) are in fact asynchronous under the hood
+         * @class DeviceClient
+         * @brief This class can be used to (remotely) control devices of the distributed system
+         *        Synchronous calls (i.e. get()) are in fact asynchronous under the hood\
          *
-         * Following signals and slots are available on the various components:
+         * The Karabo DeviceClient provides a high-level interface for common calls to (remote) devices
+         * in the distributed system. In principle functionality implemented in the DeviceClient can
+         * be fully implemented in the Device using low level SignalSlotable calls alone, but device
+         * developers are discouraged from this approach, especially if synchronous behavior is
+         * acceptable or even desired.
          *
-         * All instances:
-         *
-         * ## SIGNALS ##
-         *   1) signalInstanceUpdated(string, Hash) // instanceId, instanceInfo
-         *      Implemented in SignalSlotable and emitted if new instance is started.
-         *      Re-emitted whenever instanceInfo changes.
-         *
-         *   2) signalInstanceGone(string) // instanceId
-         *      Implemented in SignalSlotable and emitted if instance is going down.
-         *
-         *   NOTE: Both signals are connected to corresponding global slots
-         *
-         * ## SLOTS ##
-         *   1) slotStopEventLoop()
-         *      Calls stop() on the IOService object, will unblock the run() method and stop communicating
-         * Device:
-         *   1) signalChanged(Hash, string) // Changed configuration, deviceId
-         *   2)
-         *
-         *
+         * In the context of a Device the DeviceClient is available using the Device::remote() function;
+         * it then shares the SignalSlotable instance of the device, e.g. there is no instantiation overhead.
          */
         class DeviceClient {
 
@@ -238,8 +224,17 @@ namespace karabo {
              */
             std::vector<std::string> getClasses(const std::string& deviceServer);
 
+            /**
+             * Retrieves all devices (instances) available on a given device server
+             * @param deviceServer device server id
+             * @return array of device instanceIds
+             */
             std::vector<std::string> getDevices(const std::string& deviceServer);
 
+            /**
+             * Retrieves all devices in the distributed system.
+             * @return array of device instanceIds
+             */
             std::vector<std::string> getDevices();
 
             /**
@@ -278,49 +273,186 @@ namespace karabo {
              */
             karabo::util::Schema getClassSchema(const std::string& serverId, const std::string& classId);
 
+            /**
+             * Retrieves a schema from static context of a loaded Device class plug-in.
+             * This schema represents a description of parameters possible to configure for instantiation.
+             * This function can be used to pre-cache a schema for later usage. It returns an empty schema.
+             * @param serverId instanceId of a deviceServer
+             * @param classId name of loaded class on the deviceServer (classId)
+             * @return an empty schem
+             */
             karabo::util::Schema getClassSchemaNoWait(const std::string& serverId, const std::string& classId);
 
+            /**
+             * Retrieve the properties of a device at deviceId.
+             * @param deviceId of the device to request information from
+             * @return a vector containing the property paths of the device
+             */
             std::vector<std::string> getProperties(const std::string& deviceId);
 
+            /**
+             * Retrieve the properties of a class loaded on a server
+             * @param serverId server to request information from
+             * @param classId of the class
+             * @return  vector containing the property paths of the class
+             */
             std::vector<std::string> getClassProperties(const std::string& serverId, const std::string& classId);
 
+            /**
+             * Retrieve a list of commands that may be currently executed on a
+             * device in the distributed system. Available commands are determined
+             * by device state and access rights.
+             * @param instanceId of the device to ask for available commands
+             * @return a vector containing the slot names of the commands that can be executed
+             */
             std::vector<std::string> getCurrentlyExecutableCommands(const std::string& instanceId);
 
+            /**
+             * Retrieve a list of properties that may be currently altered on a
+             * device in the distributed system. Available properties are determined
+             * by device state and access rights.
+             * @param instanceId of the device to ask for settable properties
+             * @return a vector containing the slot names of the properties that can be altered.
+             */
             std::vector<std::string> getCurrentlySettableProperties(const std::string& instanceId);
 
-            //karabo::util::Hash loadConfigurationFromDB(const std::string& configurationId);
-
+            /**
+             * Load a device configuration from a file
+             * @param filename
+             * @return a Hash containing the configuration
+             */
             karabo::util::Hash loadConfigurationFromFile(const std::string& filename);
 
+            /**
+             * Instantiate a device on a remote server
+             * @param serverInstanceId of the server to instantiate the device on. Needs to have the device plugin available
+             * @param classId of the device to be instantiate
+             * @param configuration Hash which contains the initial device configuration
+             * @param timeoutInSeconds by default set to -1, which means block indefinitely, if a positive value an Exception is thrown
+             *        if the device hasn't been instantiated.
+             * @return
+             */
             std::pair<bool, std::string> instantiate(const std::string& serverInstanceId, const std::string& classId,
                                                      const karabo::util::Hash& configuration = karabo::util::Hash(),
                                                      int timeoutInSeconds = -1);
 
+            /**
+             * Instantiate a device on a remote server
+             * @param serverInstanceId of the server to instantiate the device on. Needs to have the device plugin available
+             * @param configuration Hash which contains the initial device configuration. The classId of the device needs to be the top
+             *        level key.
+             * @param timeoutInSeconds by default set to -1, which means block indefinitely, if a positive value an Exception is thrown
+             *        if the device hasn't been instantiated.
+             * @return
+             */
             std::pair<bool, std::string> instantiate(const std::string& serverInstanceId,
                                                      const karabo::util::Hash& configuration,
                                                      int timeoutInSeconds = -1);
 
+            /**
+             * Instantiate a device on a remote server. In contrast to DeviceClient::instantiate, this function returns
+             * immediately.
+             * @param serverInstanceId of the server to instantiate the device on. Needs to have the device plugin available.
+             * @param classId of the device to be instantiate
+             * @param configuration Hash which contains the initial device configuration
+             * @return
+             */
             void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId,
                                    const karabo::util::Hash& configuration = karabo::util::Hash());
 
+            /**
+             * Instantiate a device on a remote server. In contrast to DeviceClient::instantiate, this function returns
+             * immediately.
+             * @param serverInstanceId of the server to instantiate the device on. Needs to have the device plugin available
+             * @param configuration Hash which contains the initial device configuration. The classId of the device needs to be the top
+             *        level key.
+             * @return
+             */
             void instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration);
 
+            /**
+             * Kill a device in the distributed system and wait until it is actually dead
+             * @param deviceId of the device to kill
+             * @param timeoutInSeconds timeoutInSeconds by default set to -1, which means block indefinitely, if a positive value an Exception is thrown
+             *        if the device hasn't been killed.
+             * @return
+             */
             std::pair<bool, std::string> killDevice(const std::string& deviceId, int timeoutInSeconds = -1);
 
+            /**
+             * Kill a device in the distributed system and return immediately
+             * @param deviceId of the device to kill
+             * @return
+             */
             void killDeviceNoWait(const std::string& deviceId);
 
+            /**
+             * Kill a device server in the distributed system and all its associated devices. Waits til the server
+             * is dead.
+             *
+             * @param serverId of the server to kill
+             * @param timeoutInSeconds timeoutInSeconds timeoutInSeconds by default set to -1, which means block indefinitely, if a positive value an Exception is thrown
+             *        if the device server hasn't been killed.
+             * @return
+             */
             std::pair<bool, std::string> killServer(const std::string& serverId, int timeoutInSeconds = -1);
 
+            /**
+             * Kill a device server in the distributed system and all its associated devices. Returns immediately.
+             *
+             * @param serverId of the server to kill
+             * @return
+             */
             void killServerNoWait(const std::string& serverId);
 
+            /**
+             * Return the configuration Hash of an instance. The configuration
+             * is internally cached, so it does not necessarily result in a query to the distributed system if
+             * the device configuration has not changed since the last query.
+             * @param instanceId for which to return the configuration of
+             * @return a Hash holding the instance configuration
+             */
             karabo::util::Hash get(const std::string& instanceId);
 
+            /**
+             * Return the configuration Hash of an instance. The configuration
+             * is internally cached, so it does not necessarily result in a query to the distributed system if
+             * the device configuration has not changed since the last query.
+             *
+             * @param instanceId for which to return the configuration of
+             * @param hash reference to write configuration into
+             */
             void get(const std::string& instanceId, karabo::util::Hash& hash);
 
+            /**
+             * Return the cached configuration if it is still valid, otherwise query an updated version
+             * but return an empty Hash.
+             * @param deviceId for which to return the configuration of
+             * @return a Hash holding the instance configuration
+             */
             karabo::util::Hash getConfigurationNoWait(const std::string& deviceId);
 
+            /**
+             * Check if an attribute exists for a property on a given instance
+             * @param instanceId to check on
+             * @param key path to the property to check if it has a given attribute
+             * @param attribute to check for
+             * @param keySep path separator
+             * @return a boolean indicating if the attribute is present
+             */
             bool hasAttribute(const std::string& instanceId, const std::string& key, const std::string& attribute, const char keySep = '.');
 
+            /**
+             * Return a property from a remote instance. The instance configuration
+             * is internally cached, so it does not necessarily result in a query to the distributed system if
+             * the device configuration has not changed since the last query.
+             *
+             * @param instanceId to retrieve the property from
+             * @param key identifying the property
+             * @param keySep path separator
+             * @return the current property value on the remote device
+             * @raise TypeException if the templated type does not match the property type.
+             */
             template<class T>
             T get(const std::string& instanceId, const std::string& key, const char keySep = '.') {
                 try {
@@ -348,6 +480,17 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Return a property from a remote instance. The instance configuration
+             * is internally cached, so it does not necessarily result in a query to the distributed system if
+             * the device configuration has not changed since the last query.
+             *
+             * @param instanceId to retrieve the property from
+             * @param key identifying the property
+             * @param value reference to write the propety value to
+             * @param keySep path separator
+             * @raise TypeException if the templated type does not match the property type.
+             */
             template<class T>
             void get(const std::string& instanceId, const std::string& key, T& value, const char keySep = '.') {
                 try {
@@ -376,6 +519,17 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Return a property from a remote instance casted to the template type. The instance configuration
+             * is internally cached, so it does not necessarily result in a query to the distributed system if
+             * the device configuration has not changed since the last query.
+             *
+             * @param instanceId to retrieve the property from
+             * @param key identifying the property
+             * @param keySep path separator
+             * @return the current property value on the remote device
+             * @raise TypeException if the property cannot be casted to the template type
+             */
             template<class T>
             T getAs(const std::string& instanceId, const std::string& key, const char keySep = '.') {
                 try {
@@ -386,6 +540,16 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Return a property from a remote instance as a boost::any value. The instance configuration
+             * is internally cached, so it does not necessarily result in a query to the distributed system if
+             * the device configuration has not changed since the last query.
+             *
+             * @param instanceId to retrieve the property from
+             * @param key identifying the property
+             * @param keySep path separator
+             * @return the current property value on the remote device as boost::any type
+             */
             boost::any getAsAny(const std::string& instanceId, const std::string& key, const char keySep = '.') {
                 try {
                     return cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValueAsAny();
@@ -395,30 +559,111 @@ namespace karabo {
                 return boost::any();
             }
 
-            /// Switch on/off to cache an always up-to-date logger map.
-            /// Caching speeds up repeated calls to getPropertyHistory.
-            /// Returns success of action.
+
+            /**
+             * Toggles caching of the DataLogger map on (true) and off (false).
+             * If set to true the logger map is always kept up to date, which
+             * speeds up repeated calls to DeviceClient::getProperyHistory.
+             * @param toggle
+             * @return true if operation was successful
+             */
             bool cacheLoggerMap(bool toggle);
 
-            std::vector<karabo::util::Hash> getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
 
+            /**
+             * Returns the history of a device property for a given period of time
+             *
+             * @param deviceId of the device holding the property
+             * @param key path to the property on the device
+             * @param from karabo::util::Epochstamp in Iso8601 format signifying the start
+             *              of the time interval to get the history from
+             * @param to karabo::util::Epochstamp in Iso8601 format signifying the end
+             *              of the time interval to get the history from. If left empty default
+             *              to now
+             * @param maxNumData maximum number of data points to retrieve, starting from the
+             *                   start of the interval
+             * @return a vector of Hashes holding the property's history. Each entry consists
+             *         of a Hash with a key "v" holding the value of the appropriate type. For
+             *         each entry "v" Karabo train and timestamp attributes are set which can
+             *         be retrieved using the karabo::util::Timestamp::fromHashAttributes method.
+             */
+             std::vector<karabo::util::Hash> getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
+
+
+            /**
+             * Returns the history of a device property for a given period of time
+             *
+             * @param deviceId of the device holding the property
+             * @param key path to the property on the device
+             * @param from karabo::util::Epochstamp in Iso8601 format signifying the start
+             *              of the time interval to get the history from
+             * @param to karabo::util::Epochstamp in Iso8601 format signifying the end
+             *              of the time interval to get the history from. If left empty default
+             *              to now
+             * @param maxNumData maximum number of data points to retrieve, starting from the
+             *                   start of the interval
+             * @return a vector of Hashes holding the property's history. Each entry consists
+             *         of a Hash with a key "v" holding the value of the appropriate type. For
+             *         each entry "v" Karabo train and timestamp attributes are set which can
+             *         be retrieved using the karabo::util::Timestamp::fromHashAttributes method.
+             */
             std::vector<karabo::util::Hash> getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
 
-            /// Returns instanceId of data log reader for data of given device. Could be empty.
+
+            /**
+             * Returns instanceId of data log reader for data of given device. Could be empty.
+             * @param deviceId
+             * @return
+             */
             std::string getDataLogReader(const std::string& deviceId);
 
+            /**
+             * Returns the device configuration and corresponding schema for a given
+             * point in time. Information for the nearest matching logged time is returned.
+             *
+             * @param deviceId of the device to return the configuration for
+             * @param timepoint to return information for. Should be an iso8601 formatted string.
+             * @return a pair of the configuration Hash and corresponding device Schema
+             */
             std::pair<karabo::util::Hash, karabo::util::Schema> getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
+            /**
+             * Register a callback handler to be triggered if a new instance appears in the distributed system.
+             * @param callBackFunction which will receive the instanceInfo Hash
+             */
             void registerInstanceNewMonitor(const InstanceNewHandler& callBackFunction);
 
+            /**
+             * Register a callback handler to be triggered if an instance receives a state update from the distributed system
+             * @param callBackFunction which will receive the instanceInfo Hash
+             */
             void registerInstanceUpdatedMonitor(const InstanceUpdatedHandler& callBackFunction);
 
+            /**
+             * Register a callback handler to be triggered if an instance disappears from the distributed system
+             * @param callBackFunction receiving the instanceId and instanceInfo Hash
+             */
             void registerInstanceGoneMonitor(const InstanceGoneHandler& callBackFunction);
 
+            /**
+             * Register a callback handler to be triggered if an instance receives a schema update from the distributed system
+             * @param callBackFunction receiving the instanceId and updated Schema
+             */
             void registerSchemaUpdatedMonitor(const SchemaUpdatedHandler& callBackFunction);
 
+            /**
+             *  Register a callback handler to be triggered if a new class appears on a device server
+             * @param callBackFunction receiving the server id, class id and new class Schema
+             */
             void registerClassSchemaMonitor(const ClassSchemaHandler& callBackFunction);
 
+            /**
+             * Register a callback function to be triggered when a given property on a device in the distributed system updates
+             * @param instanceId of the device to be monitored
+             * @param key path to the property to be monitored
+             * @param callbackFunction handling the update notification. It receives the device id, path, value and timestamp of the updated property
+             * @return true if the operation was successful
+             */
             template <class ValueType>
             bool registerPropertyMonitor(const std::string& instanceId, const std::string& key,
                                          const boost::function<void (const std::string& /*deviceId*/, const std::string& /*key*/, const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/) >& callbackFunction) {
@@ -436,8 +681,16 @@ namespace karabo {
                 }
             }
 
-            // TODO provide timestamp in callback
-
+            /**
+             * Register a callback function to be triggered when a given property on a device in the distributed system updates.
+             * Additional user data may be passed to the callback
+             * @param instanceId of the device to be monitored
+             * @param key path to the property to be monitored
+             * @param callbackFunction handling the update notification. It receives the device id, path, value and timestamp of the updated property
+             *          as well as boost::any userData.
+             * @param userData to be passed to the callback as boost::any
+             * @return true if the operation was successful
+             */
             template <class ValueType, class UserDataType>
             bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const boost::function<void ( const std::string& /*deviceId*/, const std::string& /*key*/,
                                                                                                                             const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/, const boost::any& /*userData*/) >& callbackFunction, const UserDataType& userData) {
@@ -456,12 +709,28 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Unregister a property monitor
+             * @param instanceId to unregister the monitor from
+             * @param key path to the property to unregister from.
+             */
             void unregisterPropertyMonitor(const std::string& instanceId, const std::string& key);
 
+            /**
+             * Register a callback function to be triggered when a a device in the distributed system updates.
+             * @param instanceId of the device to register to
+             * @param callbackFunction handling the update. It will receive the device instance id and the updated device configuration Hash
+             */
             void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&)>& callbackFunction);
 
-            // TODO Adapt function to above style (i.e. add return value)
-
+            /**
+             * Register a callback function to be triggered when a a device in the distributed system updates.
+             * Additional user data may be passed to the callback
+             *
+             * @param instanceId of the device to register to
+             * @param callbackFunction handling the update. It will receive the device instance id and the updated device configuration Hash as well as boost::any userData.
+             * @param userData to be passed to the callback as boost::any
+             */
             template <class UserDataType>
             void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&, const boost::any&)>& callbackFunction,
                                        const UserDataType& userData) {
@@ -476,6 +745,10 @@ namespace karabo {
                 immortalize(instanceId);
             }
 
+            /**
+             * Unregister a device monitor
+             * @param instanceId to unregister the monitor from
+             */
             void unregisterDeviceMonitor(const std::string& instanceId);
 
             /**
@@ -496,6 +769,14 @@ namespace karabo {
                 sp->request(deviceId, "slotUpdateSchemaAttributes", v).timeout(timeoutInSeconds * 1000).receive();
             }
 
+            /**
+             * Set a remote property in the distributed system
+             * @param instanceId of the device to set the property on
+             * @param key path to the property to set
+             * @param value to set
+             * @param timeoutInSeconds maximum timeout until set operation fails, set to -1 to wait forever
+             * @param keySep path separator
+             */
             template <class T>
             void set(const std::string& instanceId, const std::string& key, const T& value, int timeoutInSeconds = -1, const char keySep = '.') {
 
@@ -504,6 +785,14 @@ namespace karabo {
                 set(instanceId, tmp, timeoutInSeconds);
             }
 
+            /**
+             * Set a remote property in the distributed system as a fire-and-forget operation.
+             * Warning: there is no guarantee and indication if the set succeeded!
+             * @param instanceId of the device to set the property on
+             * @param key path to the property to set
+             * @param value to set
+             * @param keySep path separator
+             */
             template <class T>
             void setNoWait(const std::string& instanceId, const std::string& key, const T& value, const char keySep = '.') {
 
@@ -512,8 +801,20 @@ namespace karabo {
                 setNoWait(instanceId, tmp);
             }
 
+            /**
+             * Bulk-set remote properties in the distributed system
+             * @param instanceId of the device to set the property on
+             * @param values a Hash containing the to be set value in a path structure indicating which properties to set
+             * @param timeoutInSeconds maximum timeout until set operation fails, set to -1 to wait forever
+             */
             void set(const std::string& instanceId, const karabo::util::Hash& values, int timeoutInSeconds = -1);
 
+            /**
+             * Bulk-set remote properties in the distributed system as a fire-and-forget operation.
+             * Warning: there is no guarantee and indication if the set succeeded!
+             * @param instanceId of the device to set the property on
+             * @param values a Hash containing the to be set value in a path structure indicating which properties to set
+             */
             void setNoWait(const std::string& instanceId, const karabo::util::Hash& values);
 
             /**
@@ -664,7 +965,7 @@ namespace karabo {
             /// Marks 'instanceId' as used.
             /// Returns true if explicit "connect" call should still be done for it.
             bool connectNeeded(const std::string & instanceId);
-            
+
             int getAccessLevel(const std::string& deviceId);
 
             void filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema, int accessMode, karabo::util::Hash& hash) const;

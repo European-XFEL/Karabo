@@ -25,6 +25,26 @@ namespace karabo {
      */
     namespace devices {
 
+        /**
+         * @class AlarmService
+         * @brief The AlarmService device keeps track of alarms raised in the distributed system. 
+         * 
+         * The AlarmService device keeps track of alarms raised in the distributed system.
+         * It registers itself to the alarm signals and maintains a list of currently known alarms,
+         * when they were first and last raised, their severity, additional information and whether
+         * they need acknowledging before they disappear.
+         * 
+         * The device provides interfaces for clients to query this information and interact with 
+         * the alarms known to the system. Specifically, clients may send requests to acknowledge 
+         * a pending alarm.
+         * 
+         * Additionally, the alarm service periodically saves alarms it manages to disk. This is done
+         * to allow for quick recovery from system wide errors: if the alarm service for which-ever
+         * reason needs to be restarted, it will query only the differences of the last persisted 
+         * alarms from the distributed system. For this purpose a storagePath and flushIntervall may
+         * be configured in the device's expected parameters.
+         *  
+         */
         class AlarmService : public karabo::core::Device<> {
 
         public:

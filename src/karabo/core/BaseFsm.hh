@@ -15,6 +15,11 @@
 namespace karabo {
     namespace core {
 
+        /**
+         * @class BaseFsm
+         * @brief Karabo's basic statemachine from which all other state machines
+         *        derive.
+         */
         class BaseFsm : public virtual karabo::xms::SignalSlotable {
 
         public:

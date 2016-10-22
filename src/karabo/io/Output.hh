@@ -20,6 +20,16 @@ namespace karabo {
 
     namespace io {
 
+        /**
+         * @class Output
+         * @brief The Output class provides a base for outputs in the Karabo
+         *        system.
+         * 
+         * Outputs act as sinks. Their specific implementation defines what
+         * is done with data written to them. They may e.g. pass it on a network
+         * or in-memory connection or persist it e.g. to a specific file using
+         * a specific format.
+         */
         template <class T>
         class Output {
 
@@ -54,8 +64,18 @@ namespace karabo {
             virtual ~Output() {
             }
 
+            /**
+             * Write an object to the output channel. Output channels may accept
+             * multiple writes before an update leads to processing of the written
+             * data.
+             * @param object
+             */
             virtual void write(const T& object) = 0;
 
+            /**
+             * Calling update tells that the output channel should cycle its 
+             * state to be ready for new data written to it.
+             */
             virtual void update() {
             }
         };

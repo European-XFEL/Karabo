@@ -29,7 +29,11 @@ namespace karabo {
     namespace io {
 
         /**
-         * The BinaryFileOutput class.
+         * @class BinaryFileOutput
+         * @brief The binary file output specializes the Output class to write
+         *        data of type T to a binary file. The actual
+         *        serialization format depends on the Serializer selected in this
+         *        class' configuration.
          */
         template <class T>
         class BinaryFileOutput : public Output<T> {

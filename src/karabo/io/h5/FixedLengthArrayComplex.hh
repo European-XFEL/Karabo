@@ -34,6 +34,10 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+             * @class FixedLengthArrayComplex
+             * @brief The FixedLengthArrayComplex class is an implementation of Dataset for complex data arrays of fixed length
+             */
             template<typename T>
             class FixedLengthArrayComplex : public Dataset {
 

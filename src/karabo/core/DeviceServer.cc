@@ -171,7 +171,6 @@ namespace karabo {
             // What visibility this server should have
             config.get("visibility", m_visibility);
 
-            // Deprecate the isMaster in future
             config.get("debugMode", m_debugMode);
 
             m_connection = Configurator<JmsConnection>::createNode("connection", config);

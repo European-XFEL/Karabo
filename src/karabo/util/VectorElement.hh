@@ -15,6 +15,10 @@
 namespace karabo {
     namespace util {
 
+        /**
+         * @class VectorElement
+         * @brief The VectorElement can be used to hold a sequence of SimpleElements
+         */
         template<typename T,
         template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
         class VectorElement : public LeafElement<VectorElement<T, CONT>, CONT<T> > {
@@ -24,16 +28,33 @@ namespace karabo {
             VectorElement(Schema& expected) : LeafElement<VectorElement, CONT<T> >(expected) {
             }
 
+            /**
+             * Specify a minimum number of entries the vector element needs to have to pass
+             * validation
+             * @param value
+             * @return 
+             */
             VectorElement& minSize(const unsigned int& value) {
                 this->m_node->setAttribute(KARABO_SCHEMA_MIN_SIZE, value);
                 return *this;
             }
 
+            /**
+             * Specify a maximum number of entries the vector element needs to have to pass
+             * validation
+             * @param value
+             * @return 
+             */
             VectorElement& maxSize(const unsigned int& value) {
                 this->m_node->setAttribute(KARABO_SCHEMA_MAX_SIZE, value);
                 return *this;
             }
 
+            /**
+             * The <b>readOnly</b> method serves for setting up an access type property that allows the element
+             * to be included  in monitoring schema only.
+             * @return reference to the Element (to allow method's chaining)
+             */
             virtual ReadOnlySpecific<VectorElement, CONT<T> >& readOnly() {
                 ReadOnlySpecific<VectorElement, CONT<T> >& _readOnlySpecific = LeafElement<VectorElement, CONT<T> >::readOnly();
                 this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, CONT<T>());

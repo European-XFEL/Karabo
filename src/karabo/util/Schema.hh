@@ -155,6 +155,10 @@ namespace karabo {
 
             KARABO_CLASSINFO(Schema, "Schema", "1.0")
 
+            /**
+             * The AssemblyRules specify how the karabo::util::Configurator
+             * assembles the configuration
+             */
             struct AssemblyRules {
 
                 AccessType m_accessMode;
@@ -166,6 +170,10 @@ namespace karabo {
                 }
             };
 
+            /**
+             * An enum specifying the type of Node-like elements (NodeElement,
+             * ChoiceElement, ListElement)
+             */
             enum NodeType {
 
                 LEAF,
@@ -174,6 +182,9 @@ namespace karabo {
                 LIST_OF_NODES
             };
 
+            /**
+             * An enum specifying the type of Leaf-like elements
+             */
             enum LeafType {
 
                 PROPERTY,
@@ -182,6 +193,9 @@ namespace karabo {
                 ALARM_CONDITION
             };
 
+            /**
+             * An enum specifying assignment restrictions for elements
+             */
             enum AssignmentType {
 
                 OPTIONAL_PARAM,
@@ -189,6 +203,10 @@ namespace karabo {
                 INTERNAL_PARAM
             };
 
+            /**
+             * An enum specifying the archiving interval for updates to 
+             * elements
+             */
             enum ArchivePolicy {
 
                 EVERY_EVENT,
@@ -201,6 +219,9 @@ namespace karabo {
                 NO_ARCHIVING
             };
 
+            /**
+             * An enum specifying the access-level needed to view or alter elements.
+             */
             enum AccessLevel {
 
                 OBSERVER = 0,
@@ -223,18 +244,48 @@ namespace karabo {
 
             };
 
+            /**
+             * Set the assembly rules for this schema
+             * @param rules
+             */
             void setAssemblyRules(const Schema::AssemblyRules& rules);
 
+            /**
+             * Get the assembly rules of this schema
+             * @return 
+             */
             Schema::AssemblyRules getAssemblyRules() const;
 
+            /**
+             * Get the schema's root element's name
+             * @return 
+             */
             const std::string& getRootName() const;
 
+            /**
+             * St the schema's root element's name
+             * @param rootName
+             */
             void setRootName(const std::string& rootName);
 
+            /**
+             * Get a Hash representation of this Schema. It will have the same
+             * hierarchical structure as the schema. Each keys attributes map
+             * to the attributes/modifiers of the respective schema element. The
+             * value types to not match up with the schema but are all of type
+             * INT32. If you need a Hash holding empty values of correct data
+             * types use the karabo::DeviceClient::getDataSchema method instead
+             * @return 
+             */
             const karabo::util::Hash& getParameterHash() const;
 
             karabo::util::Hash& getParameterHash();
 
+            /**
+             * Set the parameter hash of the schema. Implicitly alters the schema
+             * as this Hash is its underlying description.
+             * @param parameterDescription
+             */
             void setParameterHash(const karabo::util::Hash& parameterDescription);
 
             /**
@@ -261,6 +312,11 @@ namespace karabo {
             //          General functions on Schema        *
             //**********************************************
 
+            /**
+             * Check if a given path exists in the Schema
+             * @param path
+             * @return 
+             */
             bool has(const std::string& path) const;
 
             /**
@@ -269,124 +325,320 @@ namespace karabo {
              */
             void merge(const Schema& schema);
 
+            /**
+             * Check if the Schema is empty
+             * @return 
+             */
             bool empty() const;
 
             //**********************************************
             //              Node property                  *
             //**********************************************
 
+            /**
+             * Check if the element at path is a command
+             * @param path
+             * @return 
+             */
             bool isCommand(const std::string& path) const;
 
+            /**
+             * Check if the element at path is a property
+             * @param path
+             * @return 
+             */
             bool isProperty(const std::string& path) const;
 
+            /**
+             * Check if the element at path is of Leaf-type
+             * @param path
+             * @return 
+             */
             bool isLeaf(const std::string& path) const;
 
+            /**
+             * Check if the element at path is of Node-Element-type
+             * @param path
+             * @return 
+             */
             bool isNode(const std::string& path) const;
 
+            /**
+             * Check if the element at path is of Choice-of-Nodes type
+             * @param path
+             * @return 
+             */
             bool isChoiceOfNodes(const std::string& path) const;
 
+            /**
+             * Check if the element at path is of List-of-Nodes type
+             * @param path
+             * @return 
+             */
             bool isListOfNodes(const std::string& path) const;
 
+            /**
+             * Check if the element at path has one of the node element types
+             * (NodeElement, ListElement, ChoiceElement)
+             * @param path
+             * @return 
+             */
             bool hasNodeType(const std::string& path) const;
 
+            /**
+             * Get the node type of the element identified by path. You should
+             * check if it is of Node-type first with Schema::hasNodeType()
+             * @param path
+             * @return a value mapping to the Schema::NodeType enum
+             */
             int getNodeType(const std::string& path) const;
 
             //**********************************************
             //                Value Type                  *
             //**********************************************
 
-            //const string& getValueType(const std::string& path) const;
-
+            /**
+             * Get the valuetype of the element at path. You should check that
+             * it is of LeafType first using Schema::isLeaf
+             * @param path
+             * @return 
+             */
             Types::ReferenceType getValueType(const std::string& path) const;
 
             //**********************************************
             //                Access Mode                  *
             //**********************************************
 
+            /**
+             * Set the access mode for the element identified by path
+             * @param path
+             * @param value
+             */
             void setAccessMode(const std::string& path, const AccessType& value);
 
+            /**
+             * Check if the element identified by path has an access mode set
+             * @param path
+             * @return 
+             */
             bool hasAccessMode(const std::string& path) const;
 
+            /**
+             * Check if the element identified by path is init-only
+             * @param path
+             * @return 
+             */
             bool isAccessInitOnly(const std::string& path) const;
 
+            /**
+             * Check if the element identified by path is read-only
+             * @param path
+             * @return 
+             */
             bool isAccessReadOnly(const std::string& path) const;
 
+            /**
+             * Check if the element identified by path is reconfigurable
+             * @param path
+             * @return 
+             */
             bool isAccessReconfigurable(const std::string& path) const;
 
+            /**
+             * Get the access mode for the element identified by path
+             * @param path
+             * @return maps to the Schema::AccessMode enum
+             */
             int getAccessMode(const std::string& path) const;
 
             //**********************************************
             //             DisplayedName                   *
             //**********************************************
 
+            /**
+             * Set the displayed name for the element identified by path
+             * @param path
+             * @param value
+             */
             void setDisplayedName(const std::string& path, const std::string& value);
 
+            /**
+             * Check if the element identified by path has a displayed name set
+             * @param path
+             * @return 
+             */
             bool hasDisplayedName(const std::string& path) const;
 
+            /**
+             * Set the displayed name for the element identified by path
+             * @param path
+             * @return
+             */
             const std::string& getDisplayedName(const std::string& path) const;
 
             //**********************************************
             //               Description                   *
             //**********************************************
 
+            /**
+             * Set the description for the element identified by path
+             * @param path
+             * @param value
+             */
             void setDescription(const std::string& path, const std::string& value);
 
+            /**
+             * Check if the element identified by path has a description set
+             * @param path
+             * @return 
+             */
             bool hasDescription(const std::string& path) const;
 
+            /**
+             * Get the description for the element identified by path
+             * @param path
+             * @return
+             */
             const std::string& getDescription(const std::string& path) const;
 
             //**********************************************
             //                   Tags                      *
             //**********************************************
 
+            /**
+             * Set the tags for the element identified by path
+             * @param path
+             * @param value
+             */
             void setTags(const std::string& path, const std::string& value, const std::string& sep = " ,;");
 
+            /**
+             * Check if the element identified by path has  tags set
+             * @param path
+             * @return 
+             */
             bool hasTags(const std::string& path) const;
 
+            /**
+             * Get the tags for the element identified by path
+             * @param path
+             * @return
+             */
             const std::vector<std::string>& getTags(const std::string& path) const;
 
             //**********************************************
             //               DisplayType                   *
             //**********************************************
 
+            /**
+             * Set the display type for the element identified by path
+             * @param path
+             * @param value
+             */
             void setDisplayType(const std::string& path, const std::string& value);
 
+            /**
+             * Check if the element identified by path has a display type set
+             * @param path
+             * @return 
+             */
             bool hasDisplayType(const std::string& path) const;
 
+            /**
+             * Get the display type for the element identified by path
+             * @param path
+             * @return
+             */
             const std::string& getDisplayType(const std::string& path) const;
 
             //**********************************************
             //               Assignment                    *
             //**********************************************
 
+            /**
+             * Set the assignment type for the element identified by path
+             * @param path
+             * @param value
+             */
             void setAssignment(const std::string& path, const AssignmentType& value);
 
+            /**
+             * Check if the element identified by path has a assignment type set
+             * @param path
+             * @return 
+             */
             bool hasAssignment(const std::string& path) const;
 
+            /**
+             * Check if the element identified by path is assignment mandatory
+             * @param path
+             * @return 
+             */
             bool isAssignmentMandatory(const std::string& path) const;
 
+            /**
+             * Check if the element identified by path is assignment optional
+             * @param path
+             * @return 
+             */
             bool isAssignmentOptional(const std::string& path) const;
 
+            /**
+             * Check if the element identified by path is assignment internal
+             * @param path
+             * @return 
+             */
             bool isAssignmentInternal(const std::string& path) const;
 
+            /**
+             * Get the assignment type for the element identified by path
+             * @param path
+             * @return
+             */
             const int getAssignment(const std::string& path) const;
 
             //**********************************************
             //               Skip Validation               *
             //**********************************************
 
+            /**
+             * Set the element identified by path to skip validation
+             * @param path
+             * @param value
+             */
             void setSkipValidation(const std::string& path, const bool value);
 
+            /**
+             * Check if the element identified by path is set to skip validation
+             * @param path
+             * @return 
+             */
             bool getSkipValidation(const std::string& path);
 
             //**********************************************
             //                  Options                    *
             //**********************************************
 
+            /**
+             * Set options for the element identified by path.
+             * @param path
+             * @param value a stringified list of options, separated by sep
+             * @param sep
+             */
             void setOptions(const std::string& path, const std::string& value, const std::string& sep);
 
+            /**
+             * Check if the element identified by path has options set
+             * @param path
+             * @return 
+             */
             bool hasOptions(const std::string& path) const;
 
+            /**
+             * Get the options set for the element identified by path
+             * @param path
+             * @return 
+             */
             const std::vector<std::string>& getOptions(const std::string& path) const;
 
             //**********************************************
@@ -394,6 +646,11 @@ namespace karabo {
             //**********************************************
 
             //overloads for up to six states
+            /**
+             * Set new allowed states for the element identified by path
+             * @param path
+             * @param s1
+             */
             void setAllowedStates(const std::string& path, const karabo::util::State& s1);
             void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2);
             void setAllowedStates(const std::string& path, const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3);
@@ -406,9 +663,18 @@ namespace karabo {
             void setAllowedStates(const std::string& path, const std::vector<karabo::util::State>& value);
 
 
-
+            /**
+             * Check if the element identified by path has allowed states set
+             * @param path
+             * @return 
+             */
             bool hasAllowedStates(const std::string& path) const;
 
+            /**
+             * Get the allowed states set for the element identified by path
+             * @param path
+             * @return 
+             */
             const std::vector<karabo::util::State> getAllowedStates(const std::string& path) const;
 
 
@@ -416,31 +682,76 @@ namespace karabo {
             //                  RequiredAccessLevel                *
             //**********************************************
 
+            /**
+             * Set the required access level for the element identified by path
+             * @param path
+             * @param value
+             */
             void setRequiredAccessLevel(const std::string& path, const AccessLevel& value);
 
+            /**
+             * Get the required access level for the element identified by path
+             * @param path
+             * @return maps to the Schema::AccessLevel enum
+             */
             const int getRequiredAccessLevel(const std::string& path) const;
 
             //**********************************************
             //                DefaultValue                 *
             //**********************************************
 
+            /**
+             * Set the new default value for the element identified by path
+             * @param path
+             * @param value
+             */
             template <class ValueType>
             void setDefaultValue(const std::string& path, const ValueType& value) {
                 m_hash.setAttribute(path, KARABO_SCHEMA_DEFAULT_VALUE, value);
             }
 
+            /**
+             * Check if the element identified by path has a default value set
+             * @param 
+             * @return 
+             */
             bool hasDefaultValue(const std::string&) const;
 
+            /**
+             * Get the default value set for the element identified by path.
+             * Use Schema::hasDefaultValue first to check if one is set. Will
+             * throw an Exception if ValueType does not match the type of the
+             * default value set (it will be of the Element's value type)
+             * @param path
+             * @return 
+             */
             template <class ValueType>
             const ValueType& getDefaultValue(const std::string& path) const {
                 return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_DEFAULT_VALUE);
             }
 
+            /**
+             * Get the default value set for the element identified by path.
+             * Use Schema::hasDefaultValue first to check if one is set. Will
+             * throw an Exception if the type of the default value set 
+             * (it will be of the Element's value type) cannot be casted to T
+             * @param path
+             * @return 
+             */
             template <class T>
             T getDefaultValueAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_DEFAULT_VALUE);
             }
 
+            /**
+             * Get the default value set for the element identified by path.
+             * Use Schema::hasDefaultValue first to check if one is set. Will
+             * throw an Exception if the type of the default value set 
+             * (it will be of the Element's value type) cannot be casted to T.
+             * Overload for sequence types.
+             * @param path
+             * @return 
+             */
             template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
             Cont<T> getDefaultValueAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T, Cont>(path, KARABO_SCHEMA_DEFAULT_VALUE);
@@ -450,25 +761,58 @@ namespace karabo {
             //                  Alias                      *
             //**********************************************
 
+            /**
+             * Check if an alias has been set for path
+             * @param path
+             * @return 
+             */
             bool keyHasAlias(const std::string& path) const;
 
+            /**
+             * Check if a key with alias exists
+             * @param alias
+             * @return 
+             */
             template <class AliasType>
             bool aliasHasKey(const AliasType& alias) const {
                 return (m_aliasToKey.find(karabo::util::toString(alias)) != m_aliasToKey.end());
             }
 
+            /**
+             * Get the alias mapping to the key at path. Check if an alias has
+             * been set first by using Schema::keyHasAlias
+             * @param path
+             * @return 
+             */
             template <class AliasType>
             const AliasType& getAliasFromKey(const std::string& path) const {
                 return m_hash.getAttribute < AliasType > (path, KARABO_SCHEMA_ALIAS);
             }
 
+            /**
+             * Get the key the alias maps to. Check if the alias maps to a key
+             * first by using Schema::aliasHasKey
+             * @param path
+             * @return 
+             */
             template <class AliasType>
             const std::string& getKeyFromAlias(const AliasType& alias) const {
                 return (m_aliasToKey.find(karabo::util::toString(alias)))->second;
             }
 
+            /**
+             * Get the alias for path as string. Check if an alias has
+             * been set first by using Schema::keyHasAlias
+             * @param path
+             * @return 
+             */
             std::string getAliasAsString(const std::string& path) const;
 
+            /**
+             * Set an alias for path
+             * @param path
+             * @param value
+             */
             template <class AliasType>
             void setAlias(const std::string& path, const AliasType& value) {
                 m_aliasToKey[karabo::util::toString(value)] = path;
@@ -479,28 +823,84 @@ namespace karabo {
             //                  Unit                       *
             //**********************************************
 
+            /**
+             * Set the unit for the element identified by path
+             * @param path
+             * @param value
+             */
             void setUnit(const std::string& path, const UnitType& value);
 
+            /**
+             * Check if the element identified by path has an unit set
+             * @param path
+             * @return 
+             */
             bool hasUnit(const std::string& path) const;
 
+            /**
+             * Get the unit set for the element identified by path. Check if the
+             * element has an unit set first using Schema::hasUnit()
+             * @param path
+             * @return maps to a karabo::util::UnitType enum
+             */
             const int getUnit(const std::string& path) const;
 
+            /**
+             * Get the unit name for the element identified by path. Check if the
+             * element has an unit set first using Schema::hasUnit()
+             * @param path
+             * @return 
+             */
             const std::string& getUnitName(const std::string& path) const;
 
+            /**
+             * Get the unit symbol for the element identified by path. Check if the
+             * element has an unit set first using Schema::hasUnit()
+             * @param path
+             * @return 
+             */
             const std::string& getUnitSymbol(const std::string& path) const;
 
             //**********************************************
             //                  UnitMetricPrefix           *
             //**********************************************
 
+            /**
+             * Set the metric prefix for the element identified by path
+             * @param path
+             * @param value
+             */
             void setMetricPrefix(const std::string& path, const MetricPrefixType& value);
 
+            /**
+             * Check if the element identified by path has an metric prefix set
+             * @param path
+             * @return 
+             */
             bool hasMetricPrefix(const std::string& path) const;
 
+            /**
+             * Get the metric prefix set for the element identified by path. Check if the
+             * element has an metric prefix set first using Schema::hasMetricPrefix()
+             * @param path
+             * @return maps to a karabo::util::UnitType enum
+             */
             const int getMetricPrefix(const std::string& path) const;
 
+            /**
+             * Get the metric prefix name for the element identified by path. Check if the
+             * element has an metric prefix set first using Schema::hasMetricPrefix()
+             * @param path
+             * @return 
+             */
             const std::string& getMetricPrefixName(const std::string& path) const;
 
+            /**
+             * Get the metric prefix symbol for the element identified by path. Check if the
+             * element has an metric prefix set first using Schema::hasMetricPrefix()
+             * @param path
+             * @return 
+             */
             const std::string& getMetricPrefixSymbol(const std::string& path) const;
 
             //******************************************************************
@@ -508,84 +908,184 @@ namespace karabo {
             //    Minimum Inclusive value                                      *
             //******************************************************************
 
+            /**
+             * Set the minimum inclusive restriction for setting values to the
+             * element identified by path
+             * @param path
+             * @param value
+             */
             template <class ValueType>
             void setMinInc(const std::string& path, const ValueType& value) {
                 m_hash.setAttribute(path, KARABO_SCHEMA_MIN_INC, value);
             }
 
+            /**
+             * Get the minimum inclusive restriction for setting values to the
+             * element identified by path. Will throw an exception if ValueType
+             * is not of the type of the bound (usually the Element's data type)
+             * @param path
+             */
             template <class ValueType>
             const ValueType& getMinInc(const std::string& path) const {
                 return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_MIN_INC);
             }
 
+             /**
+             * Get the minimum inclusive restriction for setting values to the
+             * element identified by path. Will throw an exception if T
+             * is not of the type of the bound (usually the Element's data type)
+             * or cannot be casted to T.
+             * @param path
+             */
             template <class T>
             T getMinIncAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_MIN_INC);
             }
 
+            /**
+             * Check if a minimum inclusive restriction for setting values to the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasMinInc(const std::string& path) const;
 
             //******************************************************************
             //    Maximum Inclusive value                                      *
             //******************************************************************
 
+            /**
+             * Set the maximum inclusive restriction for setting values to the
+             * element identified by path
+             * @param path
+             * @param value
+             */
             template <class ValueType>
             void setMaxInc(const std::string& path, const ValueType & value) {
                 m_hash.setAttribute(path, KARABO_SCHEMA_MAX_INC, value);
             }
 
+            /**
+             * Get the maximum inclusive restriction for setting values to the
+             * element identified by path. Will throw an exception if ValueType
+             * is not of the type of the bound (usually the Element's data type)
+             * @param path
+             */
             template <class ValueType>
             const ValueType& getMaxInc(const std::string& path) const {
                 return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_MAX_INC);
             }
 
+            /**
+             * Get the maximum inclusive restriction for setting values to the
+             * element identified by path. Will throw an exception if T
+             * is not of the type of the bound (usually the Element's data type)
+             * or cannot be casted to T.
+             * @param path
+             */
             template <class T>
             T getMaxIncAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_MAX_INC);
             }
 
+            /**
+             * Check if a maximum inclusive restriction for setting values to the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasMaxInc(const std::string& path) const;
 
             //******************************************************************
             //    Minimum Exclusive value                                      *
             //******************************************************************
 
+            /**
+             * Set the minimum exclusive restriction for setting values to the
+             * element identified by path
+             * @param path
+             * @param value
+             */
             template <class ValueType>
             void setMinExc(const std::string& path, const ValueType & value) {
                 m_hash.setAttribute(path, KARABO_SCHEMA_MIN_EXC, value);
             }
 
+            /**
+             * Get the minimum exclusive restriction for setting values to the
+             * element identified by path. Will throw an exception if ValueType
+             * is not of the type of the bound (usually the Element's data type)
+             * @param path
+             */
             template <class ValueType>
             const ValueType& getMinExc(const std::string& path) const {
                 return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_MIN_EXC);
             }
 
+            /**
+             * Get the minimum exclusive restriction for setting values to the
+             * element identified by path. Will throw an exception if T
+             * is not of the type of the bound (usually the Element's data type)
+             * or cannot be casted to T.
+             * @param path
+             */
             template <class T>
             T getMinExcAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_MIN_EXC);
             }
 
+            /**
+             * Check if a minimum exclusive restriction for setting values to the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasMinExc(const std::string& path) const;
 
             //******************************************************************
             //    Maximum Exclusive value                                      *
             //******************************************************************
 
+            /**
+             * Set the maximum exclusive restriction for setting values to the
+             * element identified by path
+             * @param path
+             * @param value
+             */
             template <class ValueType>
             void setMaxExc(const std::string& path, const ValueType & value) {
                 m_hash.setAttribute(path, KARABO_SCHEMA_MAX_EXC, value);
             }
 
+            /**
+             * Get the maximum exclusive restriction for setting values to the
+             * element identified by path. Will throw an exception if ValueType
+             * is not of the type of the bound (usually the Element's data type)
+             * @param path
+             */
             template <class ValueType>
             const ValueType& getMaxExc(const std::string& path) const {
                 return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_MAX_EXC);
             }
 
+            /**
+             * Get the maximum exclusive restriction for setting values to the
+             * element identified by path. Will throw an exception if T
+             * is not of the type of the bound (usually the Element's data type)
+             * or cannot be casted to T.
+             * @param path
+             */
             template <class T>
             T getMaxExcAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_MAX_EXC);
             }
 
+            /**
+             * Check if a maximum exclusive restriction for setting values to the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasMaxExc(const std::string& path) const;
 
             //******************************************************
@@ -593,10 +1093,27 @@ namespace karabo {
             //  Minimum Size of the vector                         *
             //******************************************************
 
+            /**
+             * Set the minimum size restriction for setting sequence values to the
+             * element identified by path
+             * @param path
+             * @param value
+             */
             void setMinSize(const std::string& path, const unsigned int& value);
 
+            /**
+             * Check if a minimum size restriction for setting sequence values to the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasMinSize(const std::string& path) const;
 
+            /**
+             * Get the minimum size restriction for setting sequence values to the
+             * element identified by path. 
+             * @param path
+             */
             const unsigned int& getMinSize(const std::string& path) const;
 
             //******************************************************
@@ -604,31 +1121,72 @@ namespace karabo {
             //  Maximum Size of the vector                         *
             //******************************************************
 
+            /**
+             * Set the maximum size restriction for setting sequence values to the
+             * element identified by path
+             * @param path
+             * @param value
+             */
             void setMaxSize(const std::string& path, const unsigned int& value);
 
+            /**
+             * Check if a maximum size restriction for setting sequence values to the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasMaxSize(const std::string& path) const;
 
+            /**
+             * Get the maximum size restriction for setting sequence values to the
+             * element identified by path. 
+             * @param path
+             */
             const unsigned int& getMaxSize(const std::string& path) const;
 
             //******************************************************
             //                   WarnLow                          *
             //******************************************************
 
+            /**
+             * Set the lower warning limit for the element identified by path
+             * @param path
+             * @param value
+             */
             template <class ValueType>
             void setWarnLow(const std::string& path, const ValueType & value) {
                 m_hash.setAttribute(path, karabo::util::AlarmCondition::WARN_LOW.asString(), value);
             }
 
+            /**
+             * Get the lower warning limit for the
+             * element identified by path. Will throw an exception if ValueType
+             * is not of the type of the bound (usually the Element's data type)
+             * @param path
+             */
             template <class ValueType>
             const ValueType& getWarnLow(const std::string& path) const {
                 return m_hash.getAttribute<ValueType > (path, karabo::util::AlarmCondition::WARN_LOW.asString());
             }
 
+            /**
+             * Get the lower warning limit for the
+             * element identified by path. Will throw an exception if T
+             * is not of the type of the bound (usually the Element's data type)
+             * or cannot be casted to T.
+             * @param path
+             */
             template <class T>
             T getWarnLowAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, karabo::util::AlarmCondition::WARN_LOW.asString());
             }
 
+            /**
+             * Check if a lower warning limit for the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasWarnLow(const std::string& path) const;
 
 
@@ -636,69 +1194,147 @@ namespace karabo {
             //                   WarnHigh                         *
             //******************************************************
 
+            /**
+             * Set the upper warning limit for the element identified by path
+             * @param path
+             * @param value
+             */
             template <class ValueType>
             void setWarnHigh(const std::string& path, const ValueType & value) {
                 m_hash.setAttribute(path, karabo::util::AlarmCondition::WARN_HIGH.asString(), value);
             }
 
+            /**
+             * Get the upper warning limit for the
+             * element identified by path. Will throw an exception if ValueType
+             * is not of the type of the bound (usually the Element's data type)
+             * @param path
+             */
             template <class ValueType>
             const ValueType& getWarnHigh(const std::string& path) const {
                 return m_hash.getAttribute<ValueType > (path, karabo::util::AlarmCondition::WARN_HIGH.asString());
             }
 
+            /**
+             * Get the upper warning limit for the
+             * element identified by path. Will throw an exception if T
+             * is not of the type of the bound (usually the Element's data type)
+             * or cannot be casted to T.
+             * @param path
+             */
             template <class T>
             T getWarnHighAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, karabo::util::AlarmCondition::WARN_HIGH.asString());
             }
 
+            /**
+             * Check if a upper warning limit for the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasWarnHigh(const std::string& path) const;
 
             //******************************************************
             //                   AlarmLow                          *
             //******************************************************
 
+            /**
+             * Set the lower alarm limit for the element identified by path
+             * @param path
+             * @param value
+             */
             template <class ValueType>
             void setAlarmLow(const std::string& path, const ValueType & value) {
                 m_hash.setAttribute(path, karabo::util::AlarmCondition::ALARM_LOW.asString(), value);
             }
 
+            /**
+             * Get the lower alarm limit for the
+             * element identified by path. Will throw an exception if ValueType
+             * is not of the type of the bound (usually the Element's data type)
+             * @param path
+             */
             template <class ValueType>
             const ValueType& getAlarmLow(const std::string& path) const {
                 return m_hash.getAttribute<ValueType > (path, karabo::util::AlarmCondition::ALARM_LOW.asString());
             }
 
+             /**
+             * Get the lower alarm limit for the
+             * element identified by path. Will throw an exception if T
+             * is not of the type of the bound (usually the Element's data type)
+             * or cannot be casted to T.
+             * @param path
+             */
             template <class T>
             T getAlarmLowAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, karabo::util::AlarmCondition::ALARM_LOW.asString());
             }
 
+            
+            /**
+             * Check if a lower alarm limit for the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasAlarmLow(const std::string& path) const;
 
             //******************************************************
             //                   AlarmHigh                          *
             //******************************************************
 
+            /**
+             * Set the upper alarm limit for the element identified by path
+             * @param path
+             * @param value
+             */
             template <class ValueType>
             void setAlarmHigh(const std::string& path, const ValueType & value) {
                 m_hash.setAttribute(path, karabo::util::AlarmCondition::ALARM_HIGH.asString(), value);
             }
 
+            /**
+             * Get the upper alarm limit for the
+             * element identified by path. Will throw an exception if ValueType
+             * is not of the type of the bound (usually the Element's data type)
+             * @param path
+             */
             template <class ValueType>
             const ValueType& getAlarmHigh(const std::string& path) const {
                 return m_hash.getAttribute<ValueType > (path, karabo::util::AlarmCondition::ALARM_HIGH.asString());
             }
 
+            /**
+             * Get the upper alarm limit for the
+             * element identified by path. Will throw an exception if T
+             * is not of the type of the bound (usually the Element's data type)
+             * or cannot be casted to T.
+             * @param path
+             */
             template <class T>
             T getAlarmHighAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, karabo::util::AlarmCondition::ALARM_HIGH.asString());
             }
 
+            /**
+             * Check if a upper alarm limit for the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasAlarmHigh(const std::string& path) const;
 
             //******************************************************
             //                   WarnVarianceLow                          *
             //******************************************************
 
+            /**
+             * Set the lower rolling window variance warning limit for the element identified by path
+             * @param path
+             * @param value
+             */
             void setWarnVarianceLow(const std::string& path, const double value) {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
@@ -706,6 +1342,11 @@ namespace karabo {
                 m_hash.setAttribute(path, karabo::util::AlarmCondition::WARN_VARIANCE_LOW.asString(), value);
             }
 
+            /**
+             * Get the lower rolling window variance warning limit for the
+             * element identified by path. 
+             * @param path
+             */
             double getWarnVarianceLow(const std::string& path) const {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
@@ -713,14 +1354,23 @@ namespace karabo {
                 return m_hash.getAttribute<double> (path, karabo::util::AlarmCondition::WARN_VARIANCE_LOW.asString());
             }
 
-
-
+            /**
+             * Check if a lower rolling window variance warning limit for the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasWarnVarianceLow(const std::string& path) const;
 
             //******************************************************
             //                   WarnVarianceHigh                          *
             //******************************************************
 
+            /**
+             * Set the upper rolling window variance warning limit for the element identified by path
+             * @param path
+             * @param value
+             */
             void setWarnVarianceHigh(const std::string& path, const double value) {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
@@ -728,6 +1378,11 @@ namespace karabo {
                 m_hash.setAttribute(path, karabo::util::AlarmCondition::WARN_VARIANCE_HIGH.asString(), value);
             }
 
+            /**
+             * Get the upper rolling window variance warning limit for the
+             * element identified by path. 
+             * @param path
+             */
             double getWarnVarianceHigh(const std::string& path) const {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
@@ -735,8 +1390,12 @@ namespace karabo {
                 return m_hash.getAttribute<double > (path, karabo::util::AlarmCondition::WARN_VARIANCE_HIGH.asString());
             }
 
-
-
+            /**
+             * Check if a upper rolling window variance warning limit for the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasWarnVarianceHigh(const std::string& path) const;
 
 
@@ -744,6 +1403,11 @@ namespace karabo {
             //                   AlarmVarianceLow                          *
             //******************************************************
 
+            /**
+             * Set the lower rolling window variance alarm limit for the element identified by path
+             * @param path
+             * @param value
+             */
             void setAlarmVarianceLow(const std::string& path, const double value) {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
@@ -751,6 +1415,11 @@ namespace karabo {
                 m_hash.setAttribute(path, karabo::util::AlarmCondition::ALARM_VARIANCE_LOW.asString(), value);
             }
 
+            /**
+             * Get the lower rolling window variance alarm limit for the
+             * element identified by path. 
+             * @param path
+             */
             double getAlarmVarianceLow(const std::string& path) const {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
@@ -758,13 +1427,23 @@ namespace karabo {
                 return m_hash.getAttribute<double > (path, karabo::util::AlarmCondition::ALARM_VARIANCE_LOW.asString());
             }
 
-
+            /**
+             * Check if a lower rolling window variance alarm limit for the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasAlarmVarianceLow(const std::string& path) const;
 
             //******************************************************
             //                   WarnVarianceHigh                          *
             //******************************************************
 
+            /**
+             * Set the upper rolling window variance alarm limit for the element identified by path
+             * @param path
+             * @param value
+             */
             void setAlarmVarianceHigh(const std::string& path, const double value) {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
@@ -772,6 +1451,11 @@ namespace karabo {
                 m_hash.setAttribute(path, karabo::util::AlarmCondition::ALARM_VARIANCE_HIGH.asString(), value);
             }
 
+            /**
+             * Get the upper rolling window variance alarm limit for the
+             * element identified by path. 
+             * @param path
+             */
             double getAlarmVarianceHigh(const std::string& path) const {
                 if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
                     KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
@@ -779,20 +1463,57 @@ namespace karabo {
                 return m_hash.getAttribute<double> (path, karabo::util::AlarmCondition::ALARM_VARIANCE_HIGH.asString());
             }
 
-
-
+            /**
+             * Check if a upper rolling window variance alarm limit for the
+             * element identified by path has been set
+             * @param path
+             * @return 
+             */
             bool hasAlarmVarianceHigh(const std::string& path) const;
 
+            /**
+             * Check if the element identified by path has interlocks defined
+             * @param path
+             * @return 
+             */
             bool hasInterlock(const std::string& path) const;
             
+            /**
+             * Set/enable rolling window statistics for the element identified by path
+             * @param path
+             * @param interval or window size of the rolling window
+             */
             void setRollingStatistics(const std::string& path, unsigned int interval);
 
+            /**
+             * Check if the element identified by path has rolling window statistics enabled
+             * @param path
+             * @return 
+             */
             bool hasRollingStatistics(const std::string& path) const;
 
+            /**
+             * Get the rolling window statistics interval for the element identified by path
+             * @param path
+             * @return 
+             */
             unsigned int getRollingStatsEvalInterval(const std::string& path) const;
 
+            /**
+             * Get additional information for the alarm condition present on the element
+             * identified by path
+             * @param path
+             * @param condition
+             * @return 
+             */
             const std::string getInfoForAlarm(const std::string& path, const karabo::util::AlarmCondition& condition) const;
 
+            /**
+             * Check if alarms of a specified condition need acknowledging for the element identified by path
+             * @param path
+             * @param condition
+             * @return 
+             */
             const bool doesAlarmNeedAcknowledging(const std::string& path, const karabo::util::AlarmCondition& condition) const;
 
 
@@ -800,29 +1521,74 @@ namespace karabo {
             //               archivePolicy                 *
             //**********************************************
 
+            /**
+             * Set the archive policy for the element identified by path
+             * @param path
+             * @param value
+             */
             void setArchivePolicy(const std::string& path, const ArchivePolicy& value);
 
+            /**
+             * Check if the element identified by path has an archive policy set
+             * @param path
+             * @return 
+             */
             bool hasArchivePolicy(const std::string& path) const;
 
+            /**
+             * Get the archive policy for the element identified by path.
+             * @param path
+             * @return maps to the Schema::ArchivePolicy enum
+             */
             const int& getArchivePolicy(const std::string& path) const;
 
             //******************************************************
             //      min/max for number of nodes in ListElement     *
             //******************************************************
 
+            /**
+             * Set the minimum number of nodes needed in a list element
+             * @param path
+             * @param value
+             */
             void setMin(const std::string& path, const int& value);
 
+            /**
+             * Check if the element identified by path has a minimum number of Nodes set
+             * @param path
+             * @return 
+             */
             bool hasMin(const std::string& path) const;
 
+            /**
+             * Get the minimum number of nodes needed for the element identified by path
+             * @param path
+             * @return 
+             */
             const int& getMin(const std::string& path) const;
 
+            /**
+             * Set the maximum number of nodes needed in a list element
+             * @param path
+             * @param value
+             */
             void setMax(const std::string& path, const int& value);
 
+            /**
+             * Check if the element identified by path has a maximum number of Nodes set
+             * @param path
+             * @return 
+             */
             bool hasMax(const std::string& path) const;
 
+            /**
+             * Set the maximum number of nodes needed in a list element
+             * @param path
+             * @param value
+             */
             const int& getMax(const std::string& path) const;
 
-
+            //TODO: check if this is needed. There seems to be no implementation
             template <class T>
             void overwrite(const T& defaultValue);
 

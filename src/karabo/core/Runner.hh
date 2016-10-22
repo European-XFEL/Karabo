@@ -36,7 +36,12 @@ namespace karabo {
     namespace core {
 
         /**
-         * The Runner class.
+         * @class Runner
+         * @brief The Runner class runs instances in the distributed system
+         * 
+         * The Runner classs runs instances in the distributed system. It parses
+         * command line arguments to deduce instance configuration and then instantiates
+         * the instance class with these arguments.
          */
         template <class T>
         class Runner {
@@ -47,6 +52,13 @@ namespace karabo {
 
             KARABO_CONFIGURATION_BASE_CLASS;
 
+            /**
+             * Instantiates and instance of type T configured through the 
+             * command line arguments.
+             * @param argc
+             * @param argv
+             * @return a boost::shared_ptr<T> of the instance
+             */
             static typename T::Pointer instantiate(int argc, char** argv) {
 
                 typename T::Pointer instancePointer;

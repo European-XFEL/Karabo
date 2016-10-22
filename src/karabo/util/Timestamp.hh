@@ -31,14 +31,26 @@ namespace karabo {
 
             Timestamp(const Epochstamp& e, const Trainstamp& t);
 
+            /**
+             * Return the seconds entry of the timestamp
+             * @return 
+             */
             inline const unsigned long long& getSeconds() const {
                 return m_epochstamp.getSeconds();
             }
 
+            /**
+             * Return the fractional seconds entry of the timestamp
+             * @return 
+             */
             inline const unsigned long long& getFractionalSeconds() const {
                 return m_epochstamp.getFractionalSeconds();
             }
 
+            /**
+             * Return the train id entry of the timestamp
+             * @return 
+             */
             inline const unsigned long long& getTrainId() const {
                 return m_trainstamp.getTrainId();
             }
@@ -106,8 +118,18 @@ namespace karabo {
 
             virtual ~Timestamp();
 
+            /**
+             * Compare if the Epochstamp and Trainstamp of this Timestamp are the same as those of other
+             * @param other
+             * @return 
+             */
             bool operator==(const Timestamp& other) const;
 
+            /**
+             * Compare if the Epochstamp and/or Trainstamp of this Timestamp are not the same of other
+             * @param other
+             * @return 
+             */
             inline bool operator!=(const Timestamp& other) const {
                 return !(*this == other);
             }

@@ -29,6 +29,16 @@ namespace karabo {
      */
     namespace devices {
 
+        /**
+         * @class DataLogger
+         * @brief A DataLogger device is created on a 1:1 mapping for each device in the distributed
+         *        system and logs its slow control data.
+         * 
+         * A DataLogger device is created on a 1:1 mapping for each device in the distributed
+         * system and logs its slow control data. DataLoggers are managed by the
+         * karabo::devices::DataLoggerManager. Information is passed to them using a dedicated p2p
+         * channel, thus logging does not result in additional broker load.
+         */
         class DataLogger : public karabo::core::Device<karabo::core::OkErrorFsm> {
 
             std::string m_deviceToBeLogged;

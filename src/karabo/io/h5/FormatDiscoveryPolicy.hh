@@ -20,14 +20,25 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+             * @class FormatDiscoveryPolicy
+             * @brief This class specifies default to be used durng Format discovery
+             */
             class FormatDiscoveryPolicy {
 
-                public:
+            public:
 
                 KARABO_CLASSINFO(FormatDiscoveryPolicy, "Policy", "1.0")
                 KARABO_CONFIGURATION_BASE_CLASS
 
 
+                /**
+                 * FormatDiscoveryPolicy's expected parameters:
+                 *
+                 * - chunkSize: default chunk size to use when chunking data in HDF5 (1)
+                 * - compressionLevel: default compression level to use in HDF5 (0)
+                 * @param expected
+                 */
                 static void expectedParameters(karabo::util::Schema& expected);
 
                 FormatDiscoveryPolicy(const karabo::util::Hash& input);
@@ -38,10 +49,18 @@ namespace karabo {
                 virtual void discover() {
                 }
 
+                /**
+                 * Return the default compression level
+                 * @return
+                 */
                 int getDefaultCompressionLevel() const {
                     return m_defaultCompressionLevel;
                 }
 
+                /**
+                 * Return the default chunk size
+                 * @return
+                 */
                 unsigned long long getDefaultChunkSize() const {
                     return m_defaultChunkSize;
                 }
@@ -57,4 +76,4 @@ namespace karabo {
     }
 }
 
-#endif	
+#endif

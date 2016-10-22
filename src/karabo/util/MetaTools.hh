@@ -25,6 +25,13 @@ namespace karabo {
 
         };
 
+        /**
+         * Conditionally cast a type to Hash, if Hash is a base class, but
+         * disallow this for shared pointers of these types. Will result in 
+         * a compiler error if this is attempted.
+         * 
+         * Any type not derived from Hash is simply returned as is.
+         */
         template<typename is_hash_base>
         struct conditional_hash_cast {
 
@@ -45,6 +52,7 @@ namespace karabo {
             void inserting_derived_hash_classes_as_pointers_is_not_supported();
         };
 
+      
         template<>
         struct conditional_hash_cast<boost::false_type> {
 
@@ -189,6 +197,11 @@ namespace karabo {
             };
         }
 
+        /**
+         * Call a function f with arguments unpacked from a std::tuple
+         * @param f
+         * @param t
+         */
         template <typename F, typename Tuple>
         void call(F f, Tuple && t) {
             typedef typename std::decay<Tuple>::type ttype;
