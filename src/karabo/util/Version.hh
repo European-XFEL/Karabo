@@ -13,6 +13,10 @@ namespace karabo {
 
     namespace util {
 
+        /**
+         * @class Version
+         * @brief A class providing versioning information for the Karabo framework
+         */
         class Version {
 
 

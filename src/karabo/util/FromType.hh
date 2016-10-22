@@ -16,6 +16,13 @@ namespace karabo {
 
     namespace util {
 
+        /**
+         * @class FromType
+         * @brief Returns a karabo::util::Types::ReferenceType from an alternate representation
+         *        as specified by the template parameter, e.g. FromType<Literal>("INT32") will
+         *        return karabo::util::Types::INT32.
+         * 
+         */
         template <class Impl>
         class FromType {
 

@@ -30,6 +30,11 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+             * @class DatasetReader
+             * @brief The DatasetReader provides reading access to HDF5 datasets.
+             *        Specializations for string and Boolean data types exist.
+             */
             template< typename T>
             class DatasetReader {
 
@@ -74,6 +79,11 @@ namespace karabo {
 
                 }
 
+                /**
+                 * Read a dataset specfied by dataSet from a HDF5 data space
+                 * @param dataSet
+                 * @param fileDataSpace
+                 */
                 void read(hid_t dataSet, hid_t fileDataSpace) {
 
                     KARABO_LOG_FRAMEWORK_TRACE << "enter read T1*";
@@ -85,6 +95,12 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
 
+                /**
+                 * Batch read len datasets starting at dataSet from a HDF5 data space
+                 * @param len
+                 * @param dataSet
+                 * @param fileDataSpace
+                 */
                 void read(hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
 
                     KARABO_LOG_FRAMEWORK_TRACE << "enter read T2*";
@@ -101,10 +117,18 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(H5Sclose(mds))
                 }
 
+                /**
+                 * Bind a vector to the dataset in the HDF5, data will be read into this vector
+                 * @param vec
+                 */
                 void bind(std::vector<T>& vec) {
                     m_readData = &vec[0];
                 }
 
+                /**
+                 * Bind a pointer to the dataset in the HDF5, data will be read into this pointer
+                 * @param vec
+                 */
                 void bind(T* ptr) {
                     m_readData = ptr;
                 }

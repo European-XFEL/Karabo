@@ -19,13 +19,16 @@
 
 namespace karabo {
     namespace util {
-
+        
         /**
-         * Base State class
+         * @class State
+         * @brief A class representing unified states accross the Karabo system.
+         * 
+         * This class holds all states known to Karabo as static data members.
+         * States should always be accessed through this class. It's constructors
+         * are fully private, meaning that no additional States can be constructed
+         * outside of this class
          */
-
-
-
         class State {
 
         public:
@@ -36,27 +39,55 @@ namespace karabo {
             ~State() {
             }
 
+            /**
+             * Implicit conversion to strings is allowed
+             * @return 
+             */
             virtual const std::string& operator()() const {
                 return m_stateName;
             }
 
+            /**
+             * Return the name of the state
+             * @return 
+             */
             const std::string& name() const {
                 return m_stateName;
             }
 
+            /**
+             * Return the states parent in the state hierarchy in case it is a 
+             * derived state
+             * @return 
+             */
             const State* parent() const {
                 return m_parent;
             }
 
+            /**
+             * Check if two states are identical
+             * @param state
+             * @return 
+             */
             bool operator==(const State& state) const {
                 // Just compare state names - parents do not matter.
                 return m_stateName == state.m_stateName;
             }
 
+            /**
+             * Check if two states are not identical
+             * @param state
+             * @return 
+             */
             bool operator!=(const State& state) const {
                 return (!this->operator==(state));
             }
 
+            /**
+             * Evaluate if this state is derived from another State s
+             * @param s
+             * @return 
+             */
             bool isDerivedFrom(const State& s) const;
 
             // The base states that have no parent:
@@ -140,6 +171,11 @@ namespace karabo {
             static const State SEARCHING;
 
 
+            /**
+             * Create a state from its string representation
+             * @param state
+             * @return 
+             */
             static const State & fromString(const std::string & state);
 
         private:

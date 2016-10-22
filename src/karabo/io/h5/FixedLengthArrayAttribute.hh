@@ -32,10 +32,14 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+             * @class FixedLengthArrayAttribute
+             * @brief A class to represent vector attributes of fixed length in HDF5
+             */
             template<typename T>
             class FixedLengthArrayAttribute : public Attribute {
 
-                public:
+            public:
 
                 KARABO_CLASSINFO(FixedLengthArrayAttribute, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 
@@ -46,18 +50,36 @@ namespace karabo {
                 virtual ~FixedLengthArrayAttribute() {
                 }
 
+                /**
+                 * Return the dimensions of the attribute, overwrite for consistent interface.
+                 * Will return vector of length one with entry 1
+                 * @return
+                 */
                 static const karabo::util::Dims getSingleValueDimensions() {
                     return karabo::util::Dims();
                 }
 
+                /**
+                 * Return the HDF5 type-id for the templatized type of ScalarAttribute
+                 * @return
+                 */
                 static hid_t getStandardTypeId() {
                     return ScalarTypes::getHdf5StandardType<T>();
                 }
 
+                /**
+                 * Return the system native type-id for the templatized type of ScalarAttribute
+                 * @return
+                 */
                 static hid_t getNativeTypeId() {
                     return ScalarTypes::getHdf5NativeType<T>();
                 }
 
+                /**
+                 * Bind the HDF5 data to an attribute in a Hash::Node
+                 * @param node to bind to
+                 * @return the bound node
+                 */
                 karabo::util::Element<std::string>& bindAttribute(karabo::util::Hash::Node& node) {
 
                     if (!node.hasAttribute(m_key)) {
@@ -70,12 +92,21 @@ namespace karabo {
                     return attrNode;
                 }
 
+                /**
+                 * Has empty expected parameter section
+                 * @param expected
+                 */
                 static void expectedParameters(karabo::util::Schema& expected) {
 
                 }
 
             protected:
 
+                /**
+                 * Write value of an Element into the HDF5 attribute
+                 * @param attributeNode Element holding the value
+                 * @param attribute note evaluate in this context
+                 */
                 void writeNodeAttribute(const karabo::util::Element<std::string>& node, hid_t attribute) {
                     try {
                         hid_t tid = getNativeTypeId();
@@ -86,6 +117,11 @@ namespace karabo {
                     }
                 }
 
+                /**
+                 * Read value from HDF5 into internal represenation
+                 * @param attributeNode not evaluated
+                 * @param attribute note evaluated
+                 */
                 void readNodeAttribute(karabo::util::Element<std::string>& attributeNode, hid_t attribute) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entering readNodeAttribute function";
                     hid_t tid = getNativeTypeId();
@@ -98,10 +134,14 @@ namespace karabo {
                 T* m_attributeData;
             };
 
+            /**
+             * @class FixedLengthArrayAttribute
+             * @brief A class to represent vector attributes of fixed length in HDF5 -specialization for booleans
+             */
             template<>
             class FixedLengthArrayAttribute<bool> : public Attribute {
 
-                public:
+            public:
 
                 KARABO_CLASSINFO(FixedLengthArrayAttribute, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (bool))), "2.0")
 
@@ -173,10 +213,14 @@ namespace karabo {
 
             };
 
+            /**
+             * @class FixedLengthArrayAttribute
+             * @brief A class to represent vector attributes of fixed length in HDF5 - specialization for strings
+             */
             template<>
             class FixedLengthArrayAttribute<std::string> : public Attribute {
 
-                public:
+            public:
 
                 KARABO_CLASSINFO(FixedLengthArrayAttribute, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::string))), "2.0")
 
@@ -272,4 +316,4 @@ namespace karabo {
     }
 }
 
-#endif	
+#endif

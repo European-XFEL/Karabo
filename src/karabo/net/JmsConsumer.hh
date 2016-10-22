@@ -29,6 +29,10 @@ namespace karabo {
      */
     namespace net {
 
+        /**
+         * @class JmsConsumer
+         * @brief A class consuming messages from a JMS broker
+         */
         class JmsConsumer : public boost::enable_shared_from_this<JmsConsumer> {
 
             friend class JmsConnection;
@@ -48,8 +52,18 @@ namespace karabo {
              */
             void readAsync(const MessageHandler handler);
 
+            /**
+             * Set the broker topic to consume messages from
+             * @param topic
+             */
             void setTopic(const std::string& topic);
 
+            /**
+             * Set a selector by which to select messages to consume. See
+             * https://docs.wso2.com/display/MB300/Using+Message+Selectors on how
+             * selectors should be specified.
+             * @param selector
+             */
             void setSelector(const std::string& selector);
 
             virtual ~JmsConsumer();

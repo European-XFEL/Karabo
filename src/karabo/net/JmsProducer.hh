@@ -29,6 +29,10 @@ namespace karabo {
      */
     namespace net {
 
+        /**
+         * @class JmsProducer
+         * @brief A class producing messages to send to a JMS broker
+         */
         class JmsProducer : public boost::enable_shared_from_this<JmsProducer> {
 
             friend class JmsConnection;

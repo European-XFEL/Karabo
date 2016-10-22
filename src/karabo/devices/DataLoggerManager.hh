@@ -28,6 +28,27 @@ namespace karabo {
      */
     namespace devices {
 
+        /**
+         * @class DataLoggerManager
+         * @brief The DataLoggerManager manages device loggers in the distributed system.
+         * 
+         * In the Karabo distributed system two types of data archiving exist:
+         * 
+         * - run associated archival of scientific data through the DAQ system
+         * - constant device state and slow control logging using the data logger services
+         * 
+         * This device manages the data loggers used in the second logging scenario. It is 
+         * the central configuration point to set via its expected parameters the
+         * 
+         * - flushInterval: at which loggers flush their data to disk
+         * - maximumFileSize: of log files after which a new log file chunk is created
+         * - directory: the directory into which loggers should write their data
+         * - serverList: a list of device servers on which the loggers should run. 
+         *               Each device in the distributed system has its own logger, and 
+         *               loggers are added to servers in this list in a round robin fashion,
+         *               allowing for load balancing.
+         * 
+         */
         class DataLoggerManager : public karabo::core::Device<karabo::core::OkErrorFsm> {
 
         public:
@@ -48,6 +69,11 @@ namespace karabo {
 
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
+            /**
+             * Request the current mapping of loggers to servers. The reply
+             * contains a Hash where the the logger id is the key and the server id
+             * the value.
+             */
             void slotGetLoggerMap();
 
             void instantiateReaders(const std::string& serverId);

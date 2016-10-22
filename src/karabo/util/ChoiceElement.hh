@@ -22,6 +22,24 @@
 namespace karabo {
     namespace util {
 
+        /**
+         * @class ChoiceElement
+         * @brief An element allowing choice-access to a list of factorized classes
+         * 
+         * The ChoiceElement can be configured to allow a choice between factorized
+         * class registered with it. Two methods exist for adding classes to the 
+         * list of choices the ChoiceElement knows of:
+         * 
+         * - ChoiceElement::appendNodesOfConfigurationBase is used if another
+         *   class of a type known to the factory system is to be added
+         * 
+         * - ChoiceElement::appendAsNode is used to append the entries of a
+         *   NodeElement defined in the same expectedParameter function as the
+         *   choice element
+         * 
+         * In either case, the user can select from the options during configuration 
+         * 
+         */
         class ChoiceElement : public GenericElement<ChoiceElement> {
 
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
@@ -34,6 +52,12 @@ namespace karabo {
                 m_defaultValue.setElement(this);
             }
 
+            /**
+             * Append the expected parameters of another class of type ConfigurationBase.
+             * The class needs to be known by the factory system. It will be identified
+             * by its Karabo ClassId in the list of options.
+             * @return 
+             */
             template <class ConfigurationBase>
             ChoiceElement& appendNodesOfConfigurationBase() {
                 // Create an empty Hash as value of this choice node if not there yet
@@ -54,6 +78,13 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Append the entries found underneath a NodeElement identified by
+             * key. The node element needs to be defined prior to and in the same expected 
+             * parameter function as the ChoiceElement.
+             * @param nodeName identifying the node, i.e. the key of the node.
+             * @return 
+             */
             template <class T>
             ChoiceElement& appendAsNode(const std::string& nodeName = "") {
                 // Create an empty Hash as value of this choice node if not there yet
@@ -84,6 +115,14 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * The <b>assignmentOptional</b> method is used to indicate that this
+             * element can optionally be configured. It is followed by either 
+             * specifying that noDefaulValue() exists, or the defaultValue() is
+             * a classId or node key registered in the list of choices using either
+             * ChoiceElement::appendAsNode or ChoiceElement::appendNodesOfConfigurationBase.
+             * @return 
+             */
             virtual DefaultValue<ChoiceElement, std::string>& assignmentOptional() {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
                 return m_defaultValue;

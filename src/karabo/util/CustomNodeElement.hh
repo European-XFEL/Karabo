@@ -57,6 +57,19 @@ namespace karabo {
                 m_key = Described::classInfo().getClassId();
             }
 
+            /**
+             * The <b>key</b> method serves for setting up a unique name for the element.
+             * @param name Unique name for the key
+             * @return reference to the Element (to allow method's chaining)
+             *
+             * <b>Example:</b>
+             * @code
+             * SOME_ELEMENT(expected)
+             *         .key("type")
+             *         ...
+             *         .commit();
+             * @endcode
+             */
             Derived& key(const std::string& key) {
                 using namespace karabo::util;
                 m_key = key;
@@ -67,6 +80,21 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * The <b>displayedName</b> method serves for setting up an user friendly name for the element
+             * to be used by GUI
+             * @param name User friendly name for the element
+             * @return reference to the Element (to allow method's chaining)
+             *
+             * <b>Example:</b>
+             * @code
+             * SOME_ELEMENT(expected)
+             *         ...
+             *         .displayedName("Connection Type")
+             *         ...
+             *         .commit();
+             * @endcode
+             */
             Derived& displayedName(const std::string& name) {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key)
@@ -76,6 +104,20 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * The <b>description</b> method serves for setting up a description of the element
+             * @param desc Short description of the element
+             * @return reference to the Element (to allow method's chaining)
+             *
+             * <b>Example:</b>
+             * @code
+             * SOME_ELEMENT(expected)
+             *         ...
+             *         .description("Decide whether the connection is used to implement a TCP Server or TCP Client")
+             *         ...
+             *         .commit();
+             * @endcode
+             */
             Derived& description(const std::string& desc) {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key)
@@ -85,6 +127,11 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * The <b>init</b> method serves for setting up an access type property that allows the element
+             * to be included in initial schema.
+             * @return reference to the Element (to allow method's chaining)
+             */
             Derived& init() {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key)
@@ -94,6 +141,11 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * The <b>reconfigurable</b> method serves for setting up an access type property that allows the element
+             * to be included in initial, reconfiguration and monitoring schemas.
+             * @return reference to the Element (to allow method's chaining)
+             */
             Derived& reconfigurable() {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key)
@@ -103,6 +155,11 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * The <b>readOnly</b> method serves for setting up an access type property that allows the element
+             * to be included  in monitoring schema only.
+             * @return reference to the Element (to allow method's chaining)
+             */
             Derived& readOnly() {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key)
@@ -112,6 +169,10 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * The <b>observerAccess</b> method serves for setting up the <i>required access level</i> attribute to be OBSERVER.
+             * @return reference to the Element (to allow method's chaining)
+             */
             Derived& observerAccess() {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key)
@@ -121,6 +182,10 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * The <b>userAccess</b> method serves for setting up the <i>required access level</i> attribute to be USER.
+             * @return reference to the Element (to allow method's chaining)
+             */
             Derived& userAccess() {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key)
@@ -130,6 +195,10 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be OPERATOR.
+             * @return reference to the Element (to allow method's chaining)
+             */
             Derived& operatorAccess() {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key)
@@ -139,6 +208,10 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * The <b>expertAccess</b> method serves for setting up the <i>required access level</i> attribute to be EXPERT.
+             * @return reference to the Element (to allow method's chaining)
+             */
             Derived& expertAccess() {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key)
@@ -148,6 +221,10 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be ADMIN.
+             * @return reference to the Element (to allow method's chaining)
+             */
             Derived& adminAccess() {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key)
@@ -157,6 +234,10 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * Skip this element during validation of configuration against a Schema
+             * @return 
+             */
             Derived& skipValidation() {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key)
@@ -166,6 +247,12 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * Set the default value for a subkey of the CustomNodeElement
+             * @param subKey
+             * @param defaultValue
+             * @return 
+             */
             template <class T>
             Derived& setDefaultValue(const std::string& subKey, const T& defaultValue) {
                 using namespace karabo::util;
@@ -176,6 +263,9 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            /**
+             * Registers this element into the Schema
+             */
             void commit() {
             }
         };

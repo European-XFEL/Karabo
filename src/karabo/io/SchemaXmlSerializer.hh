@@ -17,6 +17,11 @@ namespace karabo {
 
     namespace io {
 
+        /**
+         * @class SchemaXmlSerializer
+         * @brief The SchemaXmlSerializer provides an implementation of TextSerializer
+         *        for the karabo::util::Hash
+         */
         class SchemaXmlSerializer : public TextSerializer<karabo::util::Schema> {
 
 

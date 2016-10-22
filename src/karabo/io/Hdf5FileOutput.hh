@@ -31,6 +31,11 @@ namespace karabo {
 
     namespace io {
 
+         /**
+         * @class Hdf5FileOutput
+         * @brief The HDF5 file output specializes the Output class to write
+         *        data of type T to a HDF5 file using the karabo::io::h5 interface. 
+         */
         template <class T>
         class Hdf5FileOutput : public Output<T> {
 

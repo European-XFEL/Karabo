@@ -30,7 +30,8 @@ namespace karabo {
     namespace util {
 
         /**
-         * Main Exception class.
+         * @class Exception
+         * @brief Karabo's main exception class. Inherits from std::exception
          */
         class KARABO_DECLSPEC Exception : public std::exception {
 

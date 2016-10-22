@@ -19,6 +19,11 @@
 namespace karabo {
     namespace util {
 
+        /**
+         * @class OverwriteElement
+         * @brief The OverwriteElement allows to overwrite/redefine Element properties
+         * of an existing Element of a base class in a derived class.
+         */
         class OverwriteElement {
 
         public:
@@ -199,10 +204,25 @@ namespace karabo {
              */
             OverwriteElement& key(std::string const& name);
 
+            /**
+             * Set a new displayed name
+             * @param name
+             * @return 
+             */
             OverwriteElement& setNewDisplayedName(const std::string& name);
 
+            /**
+             * Set a new description
+             * @param description
+             * @return 
+             */
             OverwriteElement& setNewDescription(const std::string& description);
 
+            /**
+             * Set a new alias
+             * @param alias
+             * @return 
+             */
             template <class AliasType>
             OverwriteElement& setNewAlias(const AliasType& alias) {
                 checkIfRestrictionApplies(m_restrictions.alias);
@@ -210,6 +230,11 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set a new tag
+             * @param tag
+             * @return 
+             */
             template <class TagType>
             OverwriteElement& setNewTag(const TagType& tag) {
                 checkIfRestrictionApplies(m_restrictions.tag);
@@ -217,22 +242,59 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set to now mandatory assignment
+             * @return 
+             */
             OverwriteElement& setNewAssignmentMandatory();
 
+            /**
+             * Set to now optional assignment
+             * @return 
+             */
             OverwriteElement& setNewAssignmentOptional();
 
+            /**
+             * Set to now internal assignment
+             * @return 
+             */
             OverwriteElement& setNewAssignmentInternal();
 
+            /**
+             * Set to now being configurable only upon init
+             * @return 
+             */
             OverwriteElement& setNowInit();
 
+            /**
+             * Set to now being reconfigurable
+             * @return 
+             */
             OverwriteElement& setNowReconfigurable();
 
+            /**
+             * Set to now being read-only
+             * @return 
+             */
             OverwriteElement& setNowReadOnly();
 
+            /**
+             * Set to now needing validation
+             * @return 
+             */
             OverwriteElement& setNowValidate();
 
+            /**
+             * Set to now needing skipping validation for this element
+             * @return 
+             */
             OverwriteElement& setNowSkipValidation();
 
+            /**
+             * Set a new default value for this element
+             * @param value
+             * @return 
+             */
             template <class ValueType>
             OverwriteElement& setNewDefaultValue(const ValueType& value) {
                 checkIfRestrictionApplies(m_restrictions.defaultValue);
@@ -240,6 +302,11 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set a new minimum inclusive restriction for values set to the element
+             * @param value
+             * @return 
+             */
             template <class ValueType>
             OverwriteElement& setNewMinInc(const ValueType& value) {
                 checkIfRestrictionApplies(m_restrictions.minInc);
@@ -247,6 +314,11 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set a new maximum inclusive restriction for values set to the element
+             * @param value
+             * @return 
+             */
             template <class ValueType>
             OverwriteElement& setNewMaxInc(const ValueType& value) {
                 checkIfRestrictionApplies(m_restrictions.maxInc);
@@ -254,6 +326,11 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set a new minimum exclusive restriction for values set to the element
+             * @param value
+             * @return 
+             */
             template <class ValueType>
             OverwriteElement& setNewMinExc(const ValueType& value) {
                 checkIfRestrictionApplies(m_restrictions.minExc);
@@ -261,6 +338,11 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set a new maximum exclusive restriction for values set to the element
+             * @param value
+             * @return 
+             */
             template <class ValueType>
             OverwriteElement& setNewMaxExc(const ValueType& value) {
                 checkIfRestrictionApplies(m_restrictions.maxExc);
@@ -268,6 +350,11 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set a new minimum restriction for values set to the element
+             * @param value
+             * @return 
+             */
             template <class ValueType>
             OverwriteElement& setNewMin(const ValueType& value) {
                 checkIfRestrictionApplies(m_restrictions.min);
@@ -275,6 +362,11 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set a new maximum restriction for values set to the element
+             * @param value
+             * @return 
+             */
             template <class ValueType>
             OverwriteElement& setNewMax(const ValueType& value) {
                 checkIfRestrictionApplies(m_restrictions.max);
@@ -282,6 +374,11 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set a new minimum size restriction for values set to the element
+             * @param value
+             * @return 
+             */
             template <class ValueType>
             OverwriteElement& setNewMinSize(const ValueType& value) {
                 checkIfRestrictionApplies(m_restrictions.minSize);
@@ -289,6 +386,11 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set a new maximum size restriction for values set to the element
+             * @param value
+             * @return 
+             */
             template <class ValueType>
             OverwriteElement& setNewMaxSize(const ValueType& value) {
                 checkIfRestrictionApplies(m_restrictions.maxSize);
@@ -296,6 +398,12 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set new allowed options for this element
+             * @param opts
+             * @param sep
+             * @return 
+             */
             OverwriteElement& setNewOptions(const std::string& opts, const std::string& sep = " ,;");
             OverwriteElement& setNewOptions(const std::vector<karabo::util::State>& opts);
             OverwriteElement& setNewOptions(const karabo::util::State& s1);
@@ -310,6 +418,12 @@ namespace karabo {
             OverwriteElement& setNewAllowedStates(const std::vector<karabo::util::State>& states);
             //overloads for up to six states
 
+            /**
+             * Set new allowed States for this element
+             * @param s1-6
+             * @param sep
+             * @return 
+             */
             OverwriteElement& setNewAllowedStates(const karabo::util::State& s1);
             OverwriteElement& setNewAllowedStates(const karabo::util::State& s1, const karabo::util::State& s2);
             OverwriteElement& setNewAllowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3);
@@ -318,16 +432,42 @@ namespace karabo {
             OverwriteElement& setNewAllowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6);
             OverwriteElement& setNowObserverAccess();
 
+            /**
+             * Set the element to now have user access
+             * @return 
+             */
             OverwriteElement& setNowUserAccess();
 
+            /**
+             * Set the element to now have operator access
+             * @return 
+             */
             OverwriteElement& setNowOperatorAccess();
 
+            /**
+             * Set the element to now have expert access
+             * @return 
+             */
             OverwriteElement& setNowExpertAccess();
 
+            /**
+             * Set the element to now have admin access
+             * @return 
+             */
             OverwriteElement& setNowAdminAccess();
 
+            /**
+             * Set a new unit to use for values of this element
+             * @param unit
+             * @return 
+             */
             OverwriteElement& setNewUnit(const UnitType& unit);
 
+            /**
+             * Set a new metric prefix to use for values of this element
+             * @param unit
+             * @return 
+             */
             OverwriteElement& setNewMetricPrefix(const MetricPrefixType& metricPrefix);
 
             /**

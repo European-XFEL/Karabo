@@ -36,6 +36,11 @@ namespace karabo {
 
         template <class T> class GenericElement;
 
+        /**
+         * @class Element
+         * @brief Class representing leaf elements in a Hash which may have
+         *        attributes
+         */
         template<typename KeyType, typename AttributesType = bool>
         class Element {
 
@@ -57,7 +62,11 @@ namespace karabo {
              */
             template <typename ValueType, typename isHashTheBase>
             struct SetClassIdAttribute {
-
+                /**
+                 * Set the classId attribute as given by value.getClassInfo()
+                 * @param value of classId to set
+                 * @param e element to set classId to
+                 */
                 SetClassIdAttribute(const ValueType& value, Element& e) {
                     e.setAttribute(KARABO_HASH_CLASS_ID, value.getClassInfo().getClassId());
                 }
@@ -68,7 +77,11 @@ namespace karabo {
              */
             template <typename ValueType>
             struct SetClassIdAttribute<ValueType, boost::false_type> {
-
+                /**
+                 * For a Hash (-derived) type this is a no-op
+                 * @param value
+                 * @param e
+                 */
                 SetClassIdAttribute(const ValueType& value, Element& e) {
                     // Do nothing on purpose!
                 }
@@ -76,10 +89,23 @@ namespace karabo {
 
         public:
 
+            /**
+             * Construct an empty Hash element
+             */
             Element();
 
+            /**
+             * Construct a Hash element from a boost::any value
+             * @param key identifies the element
+             * @param value of the element
+             */
             Element(const KeyType& key, boost::any value);
 
+            /**
+             * Construct a Hash element from an arbitrary value type
+             * @param key identifies the element
+             * @param value of the element
+             */
             template <class ValueType>
             Element(const KeyType& key, const ValueType& value);
 
@@ -87,100 +113,291 @@ namespace karabo {
 
             virtual ~Element();
 
+            /**
+             * Return the key identifying this Element
+             * @return 
+             */
             const KeyType& getKey() const;
 
+            /**
+             * Set a value of arbitrary type to this Element
+             * @param value
+             */
             template<class ValueType>
             inline void setValue(const ValueType& value);
 
+            /**
+             * Set the value to a boost::shared_ptr of ValueType
+             * @param value
+             */
             template<class ValueType>
             inline void setValue(const boost::shared_ptr<ValueType>& value);
 
-            // This overload specializes the behavior for inserting plain Hashes
-            // Objects derived from Hash are treated differently
+            /**
+             * This overload specializes the behavior for inserting plain Hashes
+             * Objects derived from Hash are treated differently
+             */
             void setValue(const Hash& value);
 
-            // Keeping downward compatibility we allow insertion of
-            // shared_ptr<Hash>. In general, we will create a compiler
-            // error for all objects deriving from Hash and wrapped as shared pointer.
+            /**
+             *  For downward compatibility we allow insertion of
+             * shared_ptr<Hash>. In general, we will create a compiler
+             * error for all objects deriving from Hash and wrapped as shared pointer.
+             */
             void setValue(const boost::shared_ptr<Hash>& value);
 
+            /**
+             * Overload for setting char pointers (c-strings). Internally, the
+             * element will hold a std::string.
+             * @param value
+             */
             void setValue(const char* const& value);
 
+            /**
+             * Overload for setting char pointers (c-strings). Internally, the
+             * element will hold a std::string.
+             * @param value
+             */
             void setValue(const wchar_t* const& value);
 
+            /**
+             * Overload for setting char pointers (c-strings). Internally, the
+             * element will hold a std::string.
+             * @param value
+             */
             void setValue(wchar_t* const& value);
 
+            /**
+             * Set a boost::any value to the Element
+             * @param value
+             */
             void setValue(const boost::any& value);
 
+            /**
+             * Set the value and key of another element to this Element
+             * @param value
+             */
             void setValue(const Element<KeyType, AttributesType>& value);
 
+            /**
+             * Return the value cast to ValueType. Strict casting is applied,
+             * i.e. the ValueType needs to be of the exact type of inserted
+             * value (or implicitly castable)
+             * @return 
+             */
             template<class ValueType>
             inline const ValueType& getValue() const;
 
+            /**
+             * Return the value cast to ValueType. Strict casting is applied,
+             * i.e. the ValueType needs to be of the exact type of inserted
+             * value (or implicitly castable)
+             * @return 
+             */
             template<class ValueType>
             inline ValueType& getValue();
 
+            /**
+             * Return the value as boost::any. Does not throw
+             * @return 
+             */
             boost::any& getValueAsAny();
 
+            /**
+             * Return the value as boost::any. Does not throw
+             * @return 
+             */
             const boost::any& getValueAsAny() const;
 
+            /**
+             * Return the value cast to ValueType. Casting is performed via
+             * string literal casts, i.e. less strict.
+             * @return 
+             */
             template <typename ValueType >
             ValueType getValueAs() const;
 
+            /**
+             * Return the value cast to ValueType. Casting is performed via
+             * string literal casts, i.e. less strict. Overload for vector-type
+             * values
+             * @return 
+             */
             template<typename T,
             template <typename Elem, typename = std::allocator<Elem> > class Cont >
             Cont<T> getValueAs() const;
 
+            /**
+             * Set an attribute to this Element, identified by key
+             * @param key
+             * @param value
+             */
             template<class T>
             inline void setAttribute(const std::string& key, const T& value);
 
+            /**
+             * Set an attribute to this Element, identified by key. Overload for
+             * boost::any values
+             * @param key
+             * @param value
+             */
             inline void setAttribute(const std::string& key, const boost::any& value);
 
+            /**
+             * Return the attribute cast to ValueType. Strict casting is applied,
+             * i.e. the T needs to be of the exact type of inserted
+             * vale (or implicitly castable)
+             * @param key identifying the attribute
+             * @return 
+             */
             template<class T>
             inline T& getAttribute(const std::string& key);
 
+            /**
+             * Return the attribute cast to ValueType. Strict casting is applied,
+             * i.e. the T needs to be of the exact type of inserted
+             * vale (or implicitly castable)
+             * @param key identifying the attribute
+             * @param value reference to insert value in
+             * @return 
+             */
             template<class T>
             inline void getAttribute(const std::string& key, T& value) const;
 
+            /**
+             * Return the attribute cast to ValueType. Strict casting is applied,
+             * i.e. the T needs to be of the exact type of inserted
+             * vale (or implicitly castable)
+             * @param key identifying the attribute
+             * @return 
+             */
             template<class T>
             inline const T& getAttribute(const std::string& key) const;
 
+            /**
+             * Return the attribute cast to ValueType. Strict casting is applied,
+             * i.e. the T needs to be of the exact type of inserted
+             * vale (or implicitly castable)
+             * @param key identifying the attribute
+             * @param value reference to insert value in
+             * @return 
+             */
             template<class T>
             inline void getAttribute(const std::string& key, const T& value) const;
 
+            /**
+             * Return the value as boost::any. Does not throw
+             * @param key identifying the attribute
+             * @return 
+             */
             inline const boost::any& getAttributeAsAny(const std::string& key) const;
-
+            
+            /**
+             * Return the value as boost::any. Does not throw
+             * @param key identifying the attribute
+             * @return 
+             */
             inline boost::any& getAttributeAsAny(const std::string& key);
 
+            /**
+             * Return the attribute cast to ValueType. Casting is performed via
+             * string literal casts, i.e. less strict. 
+             * param key identifying the attribute
+             * @return 
+             */
             template <class T>
             inline T getAttributeAs(const std::string& key) const;
 
+            /**
+             * Return the attribute cast to ValueType. Casting is performed via
+             * string literal casts, i.e. less strict. Overload for vector-type
+             * values
+             * param key identifying the attribute
+             * @return 
+             */
             template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
             inline Cont<T> getAttributeAs(const std::string& key) const;
 
+            /**
+             * Return an attribute as a Node, e.g. an Element<T>
+             * @param key
+             * @return 
+             */
             Element<KeyType>& getAttributeNode(const std::string& key);
 
+            /**
+             * Return an attribute as a Node, e.g. an Element<T>
+             * @param key
+             * @return 
+             */
             const Element<KeyType>& getAttributeNode(const std::string& key) const;
 
+            /**
+             * Check if Element has an attribute identified by key
+             * @param key
+             * @return true if the attribute exists, false if not
+             */
             inline bool hasAttribute(const std::string& key) const;
 
+            /**
+             * Batch set attributes to this element
+             * @param attributes
+             */
             inline void setAttributes(const AttributesType& attributes);
 
+            /**
+             * Batch get attributes of this element
+             * @return 
+             */
             inline const AttributesType& getAttributes() const;
 
+            /**
+             * Batch get attributes of this element
+             * @return 
+             */
             inline AttributesType& getAttributes();
 
+            /**
+             * Check if element is of type T
+             * @return true if element is type T
+             */
             template <typename T>
             inline bool is() const;
 
+            /**
+             * Return the type of this element as a Karabo reference type
+             * @return 
+             */
             Types::ReferenceType getType() const;
 
+            /**
+             * Return the std::type_info struct for this element' type
+             * @return 
+             */
             const std::type_info& type() const;
 
+            /**
+             * Set the type of this Element to a different type. Requires that
+             * non-strict casting, as for getValueAs is possible. Otherwise
+             * throws and exception
+             * @param tgtType type to set the element to
+             */
             void setType(const Types::ReferenceType& tgtType);
 
+            /**
+             * Compare two elements for equality: Checks if the elements have 
+             * the same key
+             * @param other
+             * @return 
+             */
             bool operator==(const Element<KeyType, AttributesType>& other) const;
 
+            /**
+             * Compare two elements for inequality: Checks if the elements have 
+             * the same key
+             * @param other
+             * @return 
+             */
             bool operator!=(const Element<KeyType, AttributesType>& other) const;
 
         private:
