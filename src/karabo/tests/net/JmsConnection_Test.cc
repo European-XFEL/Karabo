@@ -100,7 +100,8 @@ void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer
     }
 
     m_messageCount++;
-    consumer->readAsync(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2), "testTopic2");
+    consumer->setTopic("testTopic2");
+    consumer->readAsync(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2));
     producer->write("testTopic2", header, body);
 }
 
@@ -113,10 +114,10 @@ void JmsConnection_Test::testCommunication1() {
 
     m_connection->connect();
 
-    JmsConsumer::Pointer consumer = m_connection->createConsumer();
+    JmsConsumer::Pointer consumer = m_connection->createConsumer("testTopic1");
     JmsProducer::Pointer producer = m_connection->createProducer();
-
-    consumer->readAsync(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2), "testTopic1");
+    
+    consumer->readAsync(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2));
 
     Hash::Pointer header(new Hash("header", "some header"));
 
@@ -151,7 +152,8 @@ void JmsConnection_Test::readHandler4(karabo::net::JmsConsumer::Pointer c,
                                       karabo::util::Hash::Pointer body) {
     incrementMessageCount();
     if (header->get<string>("key") == "bar") return;
-    c->readAsync(boost::bind(&JmsConnection_Test::readHandler4, this, c, _1, _2), "testTopic1");
+    c->setTopic("testTopic1");
+    c->readAsync(boost::bind(&JmsConnection_Test::readHandler4, this, c, _1, _2));
 }
 
 
@@ -166,14 +168,14 @@ void JmsConnection_Test::testCommunication2() {
     Hash::Pointer header2(new Hash("key", "bar"));
     Hash::Pointer body(new Hash("body", 42));
 
-    JmsConsumer::Pointer c1 = m_connection->createConsumer();
-    JmsConsumer::Pointer c2 = m_connection->createConsumer();
-    JmsConsumer::Pointer c3 = m_connection->createConsumer();
+    JmsConsumer::Pointer c1 = m_connection->createConsumer("testTopic1", "key = 'foo'");
+    JmsConsumer::Pointer c2 = m_connection->createConsumer("testTopic1", "key = 'bar'");
+    JmsConsumer::Pointer c3 = m_connection->createConsumer("testTopic1");
     JmsProducer::Pointer p = m_connection->createProducer();
 
-    c1->readAsync(boost::bind(&JmsConnection_Test::readHandler2, this, c1, _1, _2), "testTopic1", "key = 'foo'");
-    c2->readAsync(boost::bind(&JmsConnection_Test::readHandler3, this, c2, _1, _2), "testTopic1", "key = 'bar'");
-    c3->readAsync(boost::bind(&JmsConnection_Test::readHandler4, this, c3, _1, _2), "testTopic1");
+    c1->readAsync(boost::bind(&JmsConnection_Test::readHandler2, this, c1, _1, _2));
+    c2->readAsync(boost::bind(&JmsConnection_Test::readHandler3, this, c2, _1, _2));
+    c3->readAsync(boost::bind(&JmsConnection_Test::readHandler4, this, c3, _1, _2));
 
     p->write("testTopic1", header1, body);
     p->write("testTopic1", header2, body);

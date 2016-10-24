@@ -8,6 +8,7 @@ from karabo.bound import (
     KILO, METER, MILLI, NODE_ELEMENT, PythonDevice, Schema, SLOT_ELEMENT,
     State, STRING_ELEMENT, TABLE_ELEMENT, Timestamp, Trainstamp, EventLoop)
 
+import threading
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
 class TestDevice(PythonDevice):
@@ -86,7 +87,7 @@ class TestDevice(PythonDevice):
         remote.execute("middlelayerDevice", "slot")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":   
     config = Hash("_deviceId_", "boundDevice")
     device = Configurator(PythonDevice).create("TestDevice", config)
     t = threading.Thread(target=EventLoop.work)

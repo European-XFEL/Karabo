@@ -114,7 +114,7 @@ namespace karabo {
              * NOTE: Each call to this function, will open new thread in the central event-loop
              * @return JmsConsumer
              */
-            boost::shared_ptr<JmsConsumer> createConsumer();
+            boost::shared_ptr<JmsConsumer> createConsumer(const std::string& topic, const std::string& selector = "");
 
             /**
              * Creates a new producer channel.

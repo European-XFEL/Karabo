@@ -375,8 +375,6 @@
       <logicalFolder name="f4" displayName="net_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/net/EventLoop_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/net/EventLoop_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/net/JmsBroker_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/net/JmsBroker_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/JmsConnection_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/net/JmsConnection_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/MQTcpNetworking.cc</itemPath>

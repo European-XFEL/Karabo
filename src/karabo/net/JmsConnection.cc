@@ -24,6 +24,7 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(JmsConnection);
 
+
         void JmsConnection::expectedParameters(Schema& s) {
 
             VECTOR_STRING_ELEMENT(s).key("brokers")
@@ -199,8 +200,9 @@ namespace karabo {
         }
 
 
-        boost::shared_ptr<JmsConsumer> JmsConnection::createConsumer() {
-            return boost::shared_ptr<JmsConsumer>(new JmsConsumer(shared_from_this()));
+        boost::shared_ptr<JmsConsumer> JmsConnection::createConsumer(const std::string& topic,
+                                                                     const std::string& selector) {
+            return boost::shared_ptr<JmsConsumer>(new JmsConsumer(shared_from_this(), topic, selector));
         }
 
 

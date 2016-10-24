@@ -71,6 +71,7 @@ namespace karabo {
             bool unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction = "");
 
             // This code is left until we find time to generically solve the char* to std::string problem
+
             /*
             template<typename ...> struct seq {
 
@@ -108,6 +109,15 @@ namespace karabo {
                  */
             }
 
+            /**
+             * This function allows to use a specific topic to which all messages are emitted
+             * If the setter is not called, the topic of SignalSlotable will be used
+             * NOTE: The idea is to keep a door open for a later change where each emit will use a topic
+             * identical to the signal name. In that case the setter can just be removed.
+             * @param topic The topic name
+             */
+            void setTopic(const std::string& topic);
+
         protected:
 
             void updateConnectedSlotsString();
@@ -130,6 +140,7 @@ namespace karabo {
             std::map<std::string, std::set<std::string> > m_registeredSlots;
             int m_priority;
             int m_messageTimeToLive;
+            std::string m_topic;
 
         private:
 
