@@ -6,6 +6,7 @@
  */
 
 #include "PropertyTest_Test.hh"
+#include <karabo/net/EventLoop.hh>
 
 
 USING_KARABO_NAMESPACES;
@@ -41,6 +42,10 @@ void PropertyTest_Test::tearDown() {
 
 
 void PropertyTest_Test::allTestRunner() {
+    
+    // Start central event-loop
+    boost::thread t(boost::bind(&EventLoop::work));
+    
     std::pair<bool, std::string> success = m_deviceClient->instantiate("propertyTestServer_0", "PropertyTest",
                                                                        Hash("deviceId", "testPropertyTest_0"),
                                                                        KRB_TEST_MAX_TIMEOUT);
@@ -51,6 +56,9 @@ void PropertyTest_Test::allTestRunner() {
     testSimpleProperties();
     testVectorProperties();
     testTableProperties();
+    
+    EventLoop::stop();
+    t.join();
 }
 
 

@@ -44,8 +44,6 @@ namespace karabo {
 
             void logHandler(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& data);
 
-            void logErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info);
-            
             /**
              * This device may not be locked
              * @return false
@@ -60,10 +58,7 @@ namespace karabo {
             unsigned int m_lastIndex;
             std::fstream m_logstream;
             boost::mutex m_streamMutex;
-            karabo::net::BrokerConnection::Pointer m_loggerConnection;
-            karabo::net::BrokerIOService::Pointer m_loggerIoService;
-            karabo::net::BrokerChannel::Pointer m_loggerChannel;
-            boost::thread m_logThread;
+            karabo::net::JmsConsumer::Pointer m_loggerConsumer;
             boost::thread m_svcThread;
             boost::shared_ptr<boost::asio::io_service> m_svc;
             boost::asio::deadline_timer m_timer;

@@ -56,7 +56,7 @@ namespace karabo {
             }
         };
 
-        class IndexBuilderService {
+        class IndexBuilderService : public boost::enable_shared_from_this<IndexBuilderService> {
 
         public:
             // Needed for 'Pointer' and KARABO_LOG_FRAMEWORK

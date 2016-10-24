@@ -8,14 +8,17 @@
 #ifndef KARATHON_CONNECTIONWRAP_HH
 #define	KARATHON_CONNECTIONWRAP_HH
 
-#include <boost/python.hpp>
-#include <map>
-#include <karabo/util/Hash.hh>
-//#include <karabo/net/IOService.hh>
-#include <karabo/net/Connection.hh>
-#include <karabo/net/Channel.hh>
 #include "ScopedGILRelease.hh"
 #include "ScopedGILAcquire.hh"
+
+#include "karabo/util/Hash.hh"
+#include "karabo/net/Connection.hh"
+#include "karabo/net/Channel.hh"
+
+#include <boost/python.hpp>
+#include <map>
+
+
 
 namespace bp = boost::python;
 
