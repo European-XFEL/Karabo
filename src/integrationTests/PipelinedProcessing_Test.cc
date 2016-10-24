@@ -85,8 +85,7 @@ void PipelinedProcessing_Test::testPipe() {
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("p2pTestSender", "nData", 5, KRB_TEST_MAX_TIMEOUT));
 
     // Then call its slot
-    success = m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT(success.first);
+    m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
 
     // And poll for the correct answer
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("pipeTestReceiver", "nTotalData", 5, KRB_TEST_MAX_TIMEOUT));

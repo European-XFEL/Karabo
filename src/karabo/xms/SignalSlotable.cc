@@ -37,8 +37,6 @@ namespace karabo {
         std::map<std::string, std::string> SignalSlotable::m_connectionStrings;
         boost::mutex SignalSlotable::m_connectionStringsMutex;
         PointToPoint::Pointer SignalSlotable::m_pointToPoint;
-        std::string SignalSlotable::m_topic;
-
 
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId,
                                                const karabo::util::Hash::Pointer& header,
@@ -95,10 +93,12 @@ namespace karabo {
 
 
         void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
-                                           const karabo::util::Hash::Pointer& body, int prio, int timeToLive) const {
+                                           const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
+                                           const std::string& topic) const {
             if (tryToCallDirectly(instanceId, header, body)) return;
             if (tryToCallP2P(instanceId, header, body, prio)) return;
-            m_producerChannel->write(m_topic, header, body, prio, timeToLive);
+            const std::string& t = topic.empty() ? m_topic : topic;
+            m_producerChannel->write(t, header, body, prio, timeToLive);
         }
 
 
@@ -282,9 +282,11 @@ namespace karabo {
 
             // Create producers and consumers
             m_producerChannel = m_connection->createProducer();
-            m_consumerChannel = m_connection->createConsumer();
+            // This will select messages addressed to me
+            const string selector("slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'");
+            m_consumerChannel = m_connection->createConsumer(m_topic, selector);
             m_heartbeatProducerChannel = m_connection->createProducer();
-            m_heartbeatConsumerChannel = m_connection->createConsumer();
+            m_heartbeatConsumerChannel = m_connection->createConsumer(m_topic, "signalFunction = 'signalHeartbeat'");
 
             registerDefaultSignalsAndSlots();
         }
@@ -347,10 +349,7 @@ namespace karabo {
                 m_hasNewEvent.notify_one();
             }
             // Read next message
-            const string selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'";
-            m_consumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2),
-                                         m_topic,
-                                         selector);
+            m_consumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2));
         }
 
 
@@ -402,9 +401,7 @@ namespace karabo {
             // Synchronously call the slot
             if (slot) slot->callRegisteredSlotFunctions(*header, *body);
             // Re-register
-            m_heartbeatConsumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2),
-                                                  m_topic,
-                                                  "signalFunction = 'signalHeartbeat'");
+            m_heartbeatConsumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2));
         }
 
 
@@ -542,10 +539,7 @@ namespace karabo {
 
 
         void SignalSlotable::startBrokerMessageConsumption() {
-            // Prepare the slot selector
-            const string selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'";
-            m_consumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2),
-                                         m_topic, selector);
+            m_consumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2));
         }
 
 
@@ -823,9 +817,7 @@ namespace karabo {
 
         void SignalSlotable::trackAllInstances() {
             m_trackAllInstances = true;
-            m_heartbeatConsumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2),
-                                                  m_topic,
-                                                  "signalFunction = 'signalHeartbeat'");
+            m_heartbeatConsumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2));
         }
 
 
@@ -903,7 +895,7 @@ namespace karabo {
             boost::this_thread::interruption_requested(); // request interruption = we need both!
             while (m_sendHeartbeats) {
                 {
-                    boost::this_thread::disable_interruption di; // disable interruption in this block                    
+                    boost::this_thread::disable_interruption di; // disable interruption in this block
                     emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, m_instanceInfo);
                 }
                 // here the interruption enabled again

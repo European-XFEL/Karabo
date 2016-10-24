@@ -137,9 +137,8 @@ namespace karabo {
                 m_dataConnection->startAsync(boost::bind(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
 
 
-                m_loggerConsumer = getConnection()->createConsumer();
-                m_loggerConsumer->readAsync(bind_weak(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2),
-                                            m_topic, "target = 'log'");
+                m_loggerConsumer = getConnection()->createConsumer(m_topic, "target = 'log'");
+                m_loggerConsumer->readAsync(bind_weak(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2));
 
                 m_guiDebugProducer = getConnection()->createProducer();
 
@@ -1051,8 +1050,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();
             }
 
-            m_loggerConsumer->readAsync(bind_weak(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2),
-                                        m_topic, "target = 'log'");
+            m_loggerConsumer->readAsync(bind_weak(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2));
         }
 
 
