@@ -8,13 +8,14 @@ from functools import partial
 
 from guiqwt.builder import make
 from guiqwt.plot import ImageWidget
+from guiqwt.tools import InteractiveTool, RectZoomTool, SelectTool
 
-from traits.api import ABCHasStrictTraits, Bool, Callable, Instance, String
+from traits.api import ABCHasStrictTraits, Bool, Instance, String
 
-from PyQt4.QtCore import QPoint, Qt, pyqtSlot
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import (
     QAction, QActionGroup, QCursor, QHBoxLayout, QIcon, QMenu, QToolBar,
-    QVBoxLayout, QWidget)
+    QWidget)
 from PyQt4.Qwt5.Qwt import QwtPlot
 
 import karabo_gui.icons as icons
@@ -31,6 +32,10 @@ class BaseImageDisplay(DisplayWidget):
     def _initUI(self, parent):
         """ Initialize widget """
         self.image_widget = ImageWidget(parent=parent)
+        default_tool = self.image_widget.add_tool(SelectTool)
+        self.image_widget.set_default_tool(default_tool)
+        self.image_widget.add_tool(RectZoomTool)
+        self.set_tool(SelectTool)
         self.toolbar_widget = self._create_toolbar()
 
         self.widget = QWidget()
@@ -50,7 +55,7 @@ class BaseImageDisplay(DisplayWidget):
         toolbar_widget = QToolBar()
         toolbar_widget.setFloatable(False)
         toolbar_widget.setOrientation(Qt.Vertical)
-        
+
         mode_qactions = [self._build_qaction(a)
                          for a in self._create_mode_tool_actions()]
         self._build_qaction_group(mode_qactions)
@@ -66,16 +71,14 @@ class BaseImageDisplay(DisplayWidget):
 
     def _create_mode_tool_actions(self):
         """ Create actions and return list of them"""
-        selection = CreateWidgetToolAction(
-            tool_factory=WidgetSelectionTool,
+        selection = WidgetSelectionAction(
             icon=icons.cursorArrow,
             checkable=True,
-            is_checked=False,
+            is_checked=True,
             text="Selection Mode",
             tooltip="Selection Mode"
         )
-        zoom = CreateWidgetToolAction(
-            tool_factory=WidgetZoomTool,
+        zoom = WidgetZoomAction(
             icon=icons.zoom,
             checkable=True,
             is_checked=False,
@@ -87,20 +90,15 @@ class BaseImageDisplay(DisplayWidget):
 
     def _create_image_actions(self):
         """ Create actions and return list of them"""
-        reset = WidgetResetAction(
-            icon=icons.maximize,
-            checkable=False,
-            text="Reset",
-            tooltip="Reset image"
-        )
         roi = WidgetROIAction(
             icon=icons.crop,
-            checkable=False,
+            checkable=True,
+            is_checked=False,
             text="Region of Interest",
             tooltip="Show Region of Interest"
         )
 
-        return [reset, roi]
+        return [roi]
 
     def _create_context_menu_actions(self):
         actions = []
@@ -154,15 +152,16 @@ class BaseImageDisplay(DisplayWidget):
         self.plot.enableAxis(QwtPlot.xBottom, show)
         self.plot.enableAxis(QwtPlot.yLeft, show)
 
-    def set_tool(self, tool):
+    def set_tool(self, ToolKlass):
         """ Sets the current tool being used by the widget.
+
+        :param ToolKlass: Describes the guiqwt.tools class
         """
-        assert tool is None or isinstance(tool, BaseWidgetTool)
-        self.current_tool = tool
-        if tool is None:
-            #self.set_cursor('none')
-            self.current_tool = WidgetSelectionTool()
-        #self.update()
+        tool_obj = self.image_widget.get_tool(ToolKlass)
+        if tool_obj is not None:
+            # Use guiqwt.tools method
+            tool_obj.activate()
+        self.current_tool_obj = tool_obj
 
     def valueChanged(self, box, value, timestamp=None):
         dimX, dimY, dimZ, format = get_dimensions_and_format(value)
@@ -185,21 +184,28 @@ class BaseImageDisplay(DisplayWidget):
         img_width = img_rect.width()
         img_height = img_rect.height()
         DELTA = 0.2
-        self.plot.setAxisScale(
-            QwtPlot.xBottom, img_rect.x() - DELTA, img_width + DELTA)
-        self.plot.setAxisScale(
-            QwtPlot.yLeft, img_rect.y() - DELTA, img_height + DELTA)
+        # XXX TODO: refer to zoom rectangle once this is set
+        if not isinstance(self.current_tool_obj, RectZoomTool):
+            self.plot.setAxisScale(
+                QwtPlot.xBottom, img_rect.x() - DELTA, img_width + DELTA)
+            self.plot.setAxisScale(
+                QwtPlot.yLeft, img_rect.y() - DELTA, img_height + DELTA)
 
         self.plot.replot()
 
     @pyqtSlot(object)
     def show_context_menu(self, pos):
         """ The context menu is requested """
+        # Deactive current tool first - this needs to be done to avoid some
+        # strange behaviour with the image
+        self.current_tool_obj.deactivate()
         menu = QMenu()
         q_actions = self._create_context_menu_actions()
         for a in q_actions:
             menu.addAction(a)
         menu.exec(QCursor.pos())
+        # Activate current tool again
+        self.current_tool_obj.activate()
 
 
 class WebcamImageDisplay(BaseImageDisplay):
@@ -234,108 +240,16 @@ class BaseWidgetAction(ABCHasStrictTraits):
         """
 
 
-class BaseWidgetTool(ABCHasStrictTraits):
-    """ Base class for tools which within a widget
-    """
-
-    def draw(self, painter):
-        """ The method which is responsible for drawing this tool.
-        The tool for a widget will be drawn after everything else in
-        the widget has been drawn.
-
-        This method is optional.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def mouse_down(self, widget, event):
-        """ A callback which is fired whenever the user clicks in the widget
-        """
-
-    @abstractmethod
-    def mouse_move(self, widget, event):
-        """ A callback which is fired whenever the user moves the mouse
-        in the widget
-        """
-
-    @abstractmethod
-    def mouse_up(self, widget, event):
-        """ A callback which is fired whenever the user ends a mouse click
-        in the widget
-        """
-
-
-class CreateWidgetToolAction(BaseWidgetAction):
-    """ An action which simplifies the creation of actions which only change
-    the currently active tool in the widget.
-    """
-    # A factory for the tool to be added
-    tool_factory = Callable
-
+class WidgetSelectionAction(BaseWidgetAction):
+    """ Selection action"""
     def perform(self, widget):
-        """ Perform the action on a widget instance.
-        """
-        tool = self.tool_factory()
-        widget.set_tool(tool)
+        widget.set_tool(SelectTool)
 
 
-class WidgetSelectionTool(BaseWidgetTool):
-    """ A tool for selection in a widget
-    """
-    def draw(self, painter):
-        """ Draw the tool. """
-        print("draw selection")
-
-    def mouse_down(self, widget, event):
-        """ A callback which is fired whenever the user clicks in the widget
-        """
-        print("mouse_down selection")
-
-    def mouse_move(self, widget, event):
-        """ A callback which is fired whenever the user moves the mouse
-        in the widget
-        """
-        print("mouse_move selection")
-
-    def mouse_up(self, widget, event):
-        """ A callback which is fired whenever the user ends a mouse click
-        in the widget
-        """
-        print("mouse_up selection")
-
-
-class WidgetZoomTool(BaseWidgetTool):
-    """ A tool for zooming in a widget
-    """
-    start_pos = Instance(QPoint)
-    end_pos = Instance(QPoint)
-
-    def draw(self, painter):
-        """ Draw the tool. """
-        print("draw zoom")
-
-    def mouse_down(self, widget, event):
-        """ A callback which is fired whenever the user clicks in the widget
-        """
-        print("mouse_down")
-
-    def mouse_move(self, widget, event):
-        """ A callback which is fired whenever the user moves the mouse
-        in the widget
-        """
-        print("mouse_move")
-
-    def mouse_up(self, widget, event):
-        """ A callback which is fired whenever the user ends a mouse click
-        in the widget
-        """
-        print("mouse_up")
-
-
-class WidgetResetAction(BaseWidgetAction):
-    """ Reset action"""
+class WidgetZoomAction(BaseWidgetAction):
+    """ Selection action"""
     def perform(self, widget):
-        pass
+        widget.set_tool(RectZoomTool)
 
 
 class WidgetROIAction(BaseWidgetAction):
