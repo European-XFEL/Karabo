@@ -8,6 +8,8 @@
 #ifndef KARABO_NET_JMSCONNECTION_HH
 #define	KARABO_NET_JMSCONNECTION_HH
 
+#include "karabo/util/ClassInfo.hh"
+#include "karabo/util/Schema.hh"
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>

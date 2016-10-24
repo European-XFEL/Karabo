@@ -34,14 +34,6 @@ namespace karabo {
                     .assignmentOptional().defaultValue(44444)
                     .commit();
 
-            CHOICE_ELEMENT(expected)
-                    .key("loggerConnection")
-                    .displayedName("Logger Connection")
-                    .description("Configuration of the connection for the distributed logging system")
-                    .appendNodesOfConfigurationBase<BrokerConnection>()
-                    .assignmentOptional().defaultValue("Jms")
-                    .commit();
-
             OVERWRITE_ELEMENT(expected).key("deviceId")
                     .setNewDefaultValue("Karabo_GuiServer_0")
                     .commit();
@@ -108,24 +100,7 @@ namespace karabo {
 
 
         void GuiServerDevice::initialize() {
-            // Inherit from device connection settings
-            string hostname = getConnection()->getBrokerHostname();
-            unsigned int port = getConnection()->getBrokerPort();
-            const vector<string>& brokers = getConnection()->getBrokerHosts();
-            string host = hostname + ":" + toString(port);
 
-
-            m_loggerInput.set("loggerConnection.Jms.hostname", host);
-            m_loggerInput.set("loggerConnection.Jms.port", port);
-            m_loggerInput.set("loggerConnection.Jms.brokerHosts", brokers);
-
-            m_loggerConnection = BrokerConnection::createChoice("loggerConnection", m_loggerInput);
-
-            // This creates a connection in order to forward exceptions happened in the GUI
-            m_guiDebugConnection = BrokerConnection::create("Jms", Hash("destinationName", "karaboGuiDebug",
-                                                                        "hostname", host,
-                                                                        "port", port,
-                                                                        "brokerHosts", brokers));
             try {
 
                 trackAllInstances();
@@ -146,11 +121,11 @@ namespace karabo {
                 requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
 
                 //scan topology to find additional alarm services
-                const Hash& topology =  remote().getSystemTopology();
+                const Hash& topology = remote().getSystemTopology();
                 const boost::optional<const Hash::Node&> devices = topology.find("device");
-                if (devices){
+                if (devices) {
                     const Hash& deviceEntry = devices->getValue<Hash>();
-                    for(Hash::const_iterator it = deviceEntry.begin(); it != deviceEntry.end(); ++it){
+                    for (Hash::const_iterator it = deviceEntry.begin(); it != deviceEntry.end(); ++it) {
                         Hash topologyEntry; // prepare input for connectPotentialAlarmService
                         Hash::Node& hn = topologyEntry.set("device." + it->getKey(), it->getValue<Hash>());
                         hn.setAttributes(it->getAttributes());
@@ -160,18 +135,14 @@ namespace karabo {
 
 
                 m_dataConnection->startAsync(boost::bind(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
-                
-                // Start the logging thread
-                m_loggerConnection->start();
-                m_loggerChannel = m_loggerConnection->createChannel();
-                m_loggerChannel->setFilter("target = 'log'");
-                m_loggerChannel->setErrorHandler(boost::bind(&GuiServerDevice::logErrorHandler, this, m_loggerChannel, _1));
-                m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2));
-                
-                // Start the guiDebugChannel
-                m_guiDebugConnection->start();
-                m_guiDebugChannel = m_guiDebugConnection->createChannel();
-                
+
+
+                m_loggerConsumer = getConnection()->createConsumer();
+                m_loggerConsumer->readAsync(bind_weak(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2),
+                                            m_topic, "target = 'log'");
+
+                m_guiDebugProducer = getConnection()->createProducer();
+
                 // Produce some information
                 KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port");
 
@@ -183,10 +154,10 @@ namespace karabo {
 
         void GuiServerDevice::onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
             if (e) {
-                EventLoop::getIOService().post(boost::bind(&GuiServerDevice::onError, this, e, channel));
+                EventLoop::getIOService().post(bind_weak(&GuiServerDevice::onError, this, e, channel));
                 return;
             }
-            
+
 
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
@@ -200,9 +171,11 @@ namespace karabo {
                 channel->readAsyncHash(boost::bind(&karabo::devices::GuiServerDevice::onRead, this, _1, channel, _2));
 
                 Hash brokerInfo("type", "brokerInformation");
-                brokerInfo.set("host", this->getConnection()->getBrokerHostname());
-                brokerInfo.set("port", this->getConnection()->getBrokerPort());
-                brokerInfo.set("topic", this->getConnection()->getBrokerTopic());
+                // TODO Add to gui code
+                //brokerInfo.set("url", getConnection()->getBrokerUrl());
+                brokerInfo.set("host", "exfl-broker.desy.de"); // TODO Kill once it's clear the GUI does not need that
+                brokerInfo.set("port", 7777); // TODO Kill once it's clear the GUI does not need that
+                brokerInfo.set("topic", m_topic);
                 channel->writeAsync(brokerInfo);
 
                 // Register channel
@@ -227,10 +200,10 @@ namespace karabo {
 
         void GuiServerDevice::onRead(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel, karabo::util::Hash& info) {
             if (e) {
-                EventLoop::getIOService().post(boost::bind(&GuiServerDevice::onError, this, e, channel));
+                EventLoop::getIOService().post(bind_weak(&GuiServerDevice::onError, this, e, channel));
                 return;
             }
-            
+
             try {
                 // GUI communication scenarios
                 if (info.has("type")) {
@@ -273,11 +246,11 @@ namespace karabo {
                         onSaveProject(channel, info);
                     } else if (type == "closeProject") {
                         onCloseProject(channel, info);
-                    } else if (type == "acknowledgeAlarm"){
+                    } else if (type == "acknowledgeAlarm") {
                         onAcknowledgeAlarm(channel, info);
-                    } else if (type == "requestAlarms"){
+                    } else if (type == "requestAlarms") {
                         onRequestAlarms(channel, info);
-                    } else if (type == "updateAttributes"){
+                    } else if (type == "updateAttributes") {
                         onUpdateAttributes(channel, info);
                     }
                 } else {
@@ -294,7 +267,7 @@ namespace karabo {
         void GuiServerDevice::onGuiError(const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGuiError";
-                m_guiDebugChannel->write(Hash()/*empty header*/, hash);
+                m_guiDebugProducer->write("karaboGuiDebug", Hash()/*empty header*/, hash);
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGuiError(): " << e.userFriendlyMsg();
@@ -893,13 +866,13 @@ namespace karabo {
 
                 std::string type, instanceId;
                 typeAndInstanceFromTopology(topologyEntry, type, instanceId);
-                
+
                 KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler --> instanceId: '" << instanceId
-                    << "', type: '" << type << "'";
+                        << "', type: '" << type << "'";
 
                 Hash h("type", "instanceNew", "topologyEntry", topologyEntry);
                 safeAllClientsWrite(h);
-                
+
                 if (type == "device") {
                     // Check whether someone already noted interest in it
                     bool registerMonitor = false;
@@ -933,7 +906,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance updated";
                 Hash h("type", "instanceUpdated", "topologyEntry", topologyEntry);
                 safeAllClientsWrite(h);
-                
+
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceUpdatedHandler(): " << e.userFriendlyMsg();
             }
@@ -983,9 +956,9 @@ namespace karabo {
                         }
                     }
                 }
-                
-                
-                
+
+
+
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceGoneHandler(): " << e.userFriendlyMsg();
             }
@@ -1077,12 +1050,15 @@ namespace karabo {
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();
             }
+
+            m_loggerConsumer->readAsync(bind_weak(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2),
+                                        m_topic, "target = 'log'");
         }
 
 
         void GuiServerDevice::onError(const karabo::net::ErrorCode& errorCode, karabo::net::Channel::Pointer channel) {
             try {
-                
+
                 KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
 
                 // TODO Fork on error message
@@ -1147,17 +1123,6 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::logErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info) {
-
-            const char* source = "log messages via broker, might have missed some";
-            if (channel != m_loggerChannel) {
-                source = "unknown broker channel";
-            }
-
-            // Just log a warning to the Gui - if these still come through...
-            KARABO_LOG_WARN << "Problem listening to " << source << ":\n" << info;
-        }
-
         void GuiServerDevice::updateNewInstanceAttributes(const std::string& deviceId) {
             boost::mutex::scoped_lock(m_pendingAttributesMutex);
             const auto it = m_pendingAttributeUpdates.find(deviceId);
@@ -1170,7 +1135,8 @@ namespace karabo {
             }
         }
 
-        void GuiServerDevice::slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type, const karabo::util::Hash& updateRows){
+
+        void GuiServerDevice::slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type, const karabo::util::Hash& updateRows) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting alarm update";
                 Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
@@ -1180,8 +1146,9 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad casting alarms(): " << e.userFriendlyMsg();
             }
         }
-        
-        void GuiServerDevice::onAcknowledgeAlarm(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info){
+
+
+        void GuiServerDevice::onAcknowledgeAlarm(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onAcknowledgeAlarm : info ...\n" << info;
                 const std::string& alarmServiceId = info.get<std::string>("alarmInstanceId");
@@ -1190,79 +1157,85 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onAcknowledgeAlarm(): " << e.userFriendlyMsg();
             }
         };
-            
-        void GuiServerDevice::onRequestAlarms(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info){
-             try {
+
+
+        void GuiServerDevice::onRequestAlarms(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestAlarms : info ...\n" << info;
-               
+
                 const std::string& requestedInstance = info.get<std::string>("alarmInstanceId");
                 request(requestedInstance, "slotRequestAlarmDump")
-                            .receiveAsync<karabo::util::Hash>(boost::bind(&GuiServerDevice::onRequestedAlarmsReply, this, channel, _1));
-                
+                        .receiveAsync<karabo::util::Hash>(boost::bind(&GuiServerDevice::onRequestedAlarmsReply, this, channel, _1));
+
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestAlarms(): " << e.userFriendlyMsg();
             }
         };
-        
-        void GuiServerDevice::onRequestedAlarmsReply(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply){
+
+
+        void GuiServerDevice::onRequestedAlarmsReply(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestedAlarmsReply : info ...\n" << reply;
                 Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows", reply.get<Hash>("alarms"));
-                if(channel){//write to a single channel
+                if (channel) {//write to a single channel
                     channel->writeAsync(h, LOSSLESS);
                 } else { //write to all
                     safeAllClientsWrite(h);
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAlarmsReply(): " << e.userFriendlyMsg();
-            }  
+            }
         }
-        
-        void GuiServerDevice::onUpdateAttributes(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info){
+
+
+        void GuiServerDevice::onUpdateAttributes(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onUpdateAttributes : info ...\n" << info;
                 const std::string& instanceId = info.get<std::string>("instanceId");
                 const std::vector<Hash>& updates = info.get<std::vector<Hash> >("updates");
                 request(instanceId, "slotUpdateSchemaAttributes", updates)
-                            .receiveAsync<Hash>(boost::bind(&GuiServerDevice::onRequestedAttributeUpdate, this, channel, _1));
+                        .receiveAsync<Hash>(boost::bind(&GuiServerDevice::onRequestedAttributeUpdate, this, channel, _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onUpdateAttributes(): " << e.userFriendlyMsg();
             }
         }
-        
-        void GuiServerDevice::onRequestedAttributeUpdate(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply) {  
+
+
+        void GuiServerDevice::onRequestedAttributeUpdate(karabo::net::Channel::Pointer channel, const karabo::util::Hash& reply) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestedAttributeUpdate : success ...\n" << reply.get<bool>("success");
                 Hash h("type", "attributesUpdated", "reply", reply);
                 channel->writeAsync(h, LOSSLESS);
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAttributeUpdate(): " << e.userFriendlyMsg();
-            }  
+            }
         }
 
-        void GuiServerDevice::connectPotentialAlarmService(const karabo::util::Hash& topologyEntry){
+
+        void GuiServerDevice::connectPotentialAlarmService(const karabo::util::Hash& topologyEntry) {
             std::string type, instanceId;
             typeAndInstanceFromTopology(topologyEntry, type, instanceId);
-            if(topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") && 
-               topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService"){
-                    connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
-                    // actively ask this previously unknown device to submit its alarms as init messages on all channesl
-                    onRequestAlarms(karabo::net::Channel::Pointer(), Hash("alarmInstanceId", instanceId));
+            if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
+                topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService") {
+                connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
+                // actively ask this previously unknown device to submit its alarms as init messages on all channesl
+                onRequestAlarms(karabo::net::Channel::Pointer(), Hash("alarmInstanceId", instanceId));
             }
-            
+
         }
-        
-        void GuiServerDevice::typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type, std::string& instanceId){
-            if  (topologyEntry.empty()) return;
-            
+
+
+        void GuiServerDevice::typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type, std::string& instanceId) {
+            if (topologyEntry.empty()) return;
+
             type = topologyEntry.begin()->getKey(); // fails if empty...
             // TODO let device client return also instanceId as first argument
             // const ref is fine even for temporary std::string
             instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
-                                             topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
-            
+                          topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
+
 
         }
-        
+
     }
 }

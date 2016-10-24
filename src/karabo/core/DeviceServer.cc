@@ -63,13 +63,11 @@ namespace karabo {
                     .reconfigurable()
                     .commit();
 
-            CHOICE_ELEMENT(expected).key("connection")
+            NODE_ELEMENT(expected).key("connection")
                     .displayedName("Connection")
                     .description("The connection to the communication layer of the distributed system")
-                    .appendNodesOfConfigurationBase<BrokerConnection>()
-                    .assignmentOptional().defaultValue("Jms")
+                    .appendParametersOf<JmsConnection>()
                     .expertAccess()
-                    .init()
                     .commit();
 
             BOOL_ELEMENT(expected).key("isMaster")
@@ -171,12 +169,9 @@ namespace karabo {
 
             // Deprecate the isMaster in future
             config.get("debugMode", m_debugMode);
-            
-            m_connectionConfiguration = config.get<Hash>("connection");
-            m_connection = BrokerConnection::createChoice("connection", config);
-            // Real connection parameters were chosen in above call.  Use the same parameters for logger
-            m_connectionConfiguration.set("Jms.hostname", m_connection->getBrokerHostname() + ":" + toString(m_connection->getBrokerPort()));
-            m_connectionConfiguration.set("Jms.port", m_connection->getBrokerPort());
+
+            m_connection = Configurator<JmsConnection>::createNode("connection", config);
+
             m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory")));
             loadLogger(config);
 
@@ -203,20 +198,23 @@ namespace karabo {
 
 
         void DeviceServer::loadLogger(const Hash& input) {
-            
-            const Hash& config = input.get<Hash>("Logger");                       
-            
-            Logger::configure(config);                        
-            
+
+            const Hash& config = input.get<Hash>("Logger");
+
+            Logger::configure(config);
+
             // By default all categories use all three appenders
             Logger::useOstream();
             Logger::useFile();
             Logger::useNetwork();
-            
+
             // All class logs will have karabo as parent category (outermost namespace)
             // Those messages should not go via the broker
             Logger::useOstream("karabo", false); // The false means, that we do not inherit any parent appenders
-            Logger::useFile("karabo", false);                     
+            Logger::useFile("karabo", false);
+
+            // Initialize category
+            m_log = &(karabo::log::Logger::getCategory(m_serverId));
         }
 
 
@@ -227,16 +225,13 @@ namespace karabo {
 
         void DeviceServer::run() {
 
-            m_serverIsRunning = true;
-
-            // Initialize category
-            m_log = &(karabo::log::Logger::getCategory(m_serverId));
+            // Will connect to the broker synchronously
+            m_connection->connect();
 
             const std::string hostName = net::bareHostName();
             KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << hostName
                     << ", serverId: " << m_serverId
-                    << ", Broker (host:port:topic): " << m_connectionConfiguration.get<string>("Jms.hostname") << ":"
-                    << m_connectionConfiguration.get<string>("Jms.destinationName");
+                    << ", Broker: " << m_connection->getBrokerUrl();
 
             // Initialize SignalSlotable instance
             init(m_serverId, m_connection);
@@ -249,21 +244,23 @@ namespace karabo {
             instanceInfo.set("version", karabo::util::Version::getVersion());
             instanceInfo.set("host", hostName);
             instanceInfo.set("visibility", m_visibility);
-            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, m_heartbeatIntervall, instanceInfo));
 
+            // TODO Re-factor this away in a future MR
+            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, m_heartbeatIntervall, instanceInfo));
             boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 
             bool ok = ensureOwnInstanceIdUnique();
             if (!ok) {
-                // There is already an ERROR from ensureOwnInstanceIdUnique, but that is not broadcasted.
-                KARABO_LOG_ERROR << "DeviceServer '" << m_serverId << " could not start since its id already exists.";
+                // TODO Remove this thread later
                 t.join(); // Blocks
-                return;
+                throw KARABO_SIGNALSLOT_EXCEPTION("DeviceServer " + m_serverId +
+                                                  "could not start since its id already exists.");
             }
 
             this->startFsm();
+            m_serverIsRunning = true;
             t.join();
-                
+
             karabo::net::EventLoop::stop();
 
             // TODO That should be the right solution, but we never get here
@@ -418,7 +415,7 @@ namespace karabo {
                 }
 
                 // Inject connection
-                config.set("_connection_", m_connectionConfiguration);
+                config.set("_connection_", m_connection);
 
                 return boost::make_tuple(config.get<std::string>("_deviceId_"), classId, config);
             } else {
@@ -440,7 +437,7 @@ namespace karabo {
                 }
 
                 // Inject connection
-                tmp.set("_connection_", m_connectionConfiguration);
+                tmp.set("_connection_", m_connection);
 
                 const std::pair<std::string, util::Hash>& idCfg
                         = util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
@@ -473,8 +470,6 @@ namespace karabo {
                     m_deviceInstanceMap.erase(deviceId);
                     throw KARABO_PARAMETER_EXCEPTION("Failed to create device of class " + classId + " with configuration...");
                 }
-
-                device->injectConnection(deviceId, m_connection);
 
                 // Create the thread for the device and place it (indirectly) into the device instance map):
                 deviceThread = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));

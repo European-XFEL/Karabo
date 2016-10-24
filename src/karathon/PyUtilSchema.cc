@@ -65,7 +65,6 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 
 class ValidatorWrap {
 
-
 public:
 
 
@@ -129,7 +128,7 @@ struct NodeElementWrap {
         }
         if (!PyObject_HasAttrString(baseobj.ptr(), "getSchema")) {
             throw KARABO_PYTHON_EXCEPTION("Class with classid = '" + classId + "' given in 'appendParametersOfConfigurableClass(base, classid)' of NODE_ELEMENT has no 'getSchema' method.");
-        }        
+        }
         std::string baseClassId;
         if (PyObject_HasAttrString(baseobj.ptr(), "__karabo_cpp_classid__")) {
             // baseobj is object of C++ base class
@@ -156,15 +155,11 @@ struct NodeElementWrap {
         if (!PyType_Check(obj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg' given in 'appendParametersOf(arg)' of NODE_ELEMENT must be a class in Python");
         }
-        // TODO This whole code block repeats over and over!! TERRIBLE!! Cleaning needed.
-        std::string classId;
-        if (PyObject_HasAttrString(obj.ptr(), "__karabo_cpp_classid__")) {
-            classId = bp::extract<std::string>(obj.attr("__karabo_cpp_classid__"));
-        } else {
-            classId = bp::extract<std::string>(obj.attr("__classid__"));
-        }
+
+        std::string classId(bp::extract<std::string>(obj.attr("__name__")));
+
         Schema::Pointer schema(new Schema());
-        obj.attr("expectedParameters")(schema);        
+        obj.attr("expectedParameters")(schema);
         self.getNode().setValue<Hash>(schema->getParameterHash());
         self.getNode().setAttribute(KARABO_SCHEMA_CLASS_ID, classId);
         self.getNode().setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, classId);
@@ -193,6 +188,7 @@ struct ChoiceElementWrap {
         if (!PyObject_HasAttrString(classobj.ptr(), "getSchema")) {
             throw KARABO_PYTHON_EXCEPTION("Class given in 'appendNodesOfConfigurationBase' of CHOICE_ELEMENT must have 'getSchema' function");
         }
+         // TODO This whole code block repeats over and over!! TERRIBLE!! Cleaning needed.
         std::string classid;
         if (PyObject_HasAttrString(classobj.ptr(), "__karabo_cpp_classid__")) {
             classid = bp::extract<std::string>(classobj.attr("__karabo_cpp_classid__"));
@@ -440,7 +436,7 @@ struct OverwriteElementWrap {
 
     static OverwriteElement & setNewDefaultValue(OverwriteElement& self, const bp::object& value) {
         const std::string className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
-        if(className == "State" ){
+        if (className == "State") {
             const std::string state = bp::extract<std::string>(value.attr("name"));
             return self.setNewDefaultValue(karabo::util::State::fromString(state));
         } else {
@@ -477,7 +473,8 @@ struct OverwriteElementWrap {
         karathon::Wrapper::toAny(value, any);
         return self.setNewMaxExc(any);
     }
-    
+
+
     static bp::object setNewAllowedStates(bp::tuple args, bp::dict kwargs) {
         OverwriteElement& self = bp::extract<OverwriteElement&>(args[0]);
         std::vector<karabo::util::State> states;
@@ -488,14 +485,14 @@ struct OverwriteElementWrap {
         self.setNewAllowedStates(states);
         return args[0];
     }
-    
-            
-    static bp::object setNewOptions(bp::tuple args, bp::dict kwargs){
+
+
+    static bp::object setNewOptions(bp::tuple args, bp::dict kwargs) {
         OverwriteElement& self = bp::extract<OverwriteElement&>(args[0]);
         //get type of first arg
-        
+
         bp::extract<const std::string> first_arg(args[1]);
-        if(first_arg.check()){
+        if (first_arg.check()) {
             self.setNewOptions(first_arg(), ",;");
             return args[0];
         } else {
@@ -503,7 +500,7 @@ struct OverwriteElementWrap {
             std::vector<karabo::util::State> states;
             for (unsigned int i = 1; i < bp::len(args); ++i) {
                 const std::string className = bp::extract<std::string>(args[i].attr("__class__").attr("__name__"));
-                if( className == "State"){
+                if (className == "State") {
                     const std::string state = bp::extract<std::string>(args[i].attr("name"));
                     states.push_back(karabo::util::State::fromString(state));
                 } else {
@@ -513,12 +510,14 @@ struct OverwriteElementWrap {
             self.setNewOptions(states);
             return args[0];
         }
-        
+
     }
 
 };
 
- namespace tableElementWrap {
+namespace tableElementWrap {
+
+
     static bp::object allowedStatesPy(bp::tuple args, bp::dict kwargs) {
         TableElement& self = bp::extract<TableElement&>(args[0]);
         std::vector<karabo::util::State> states;
@@ -922,7 +921,8 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmHigh' must be a string");
     }
-    
+
+
     void setWarnVarianceLow(Schema& self, const bp::object& obj, const double value) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -1166,10 +1166,10 @@ namespace schemawrap {
             //now construct python states
             bp::list states;
             bp::object sModule = bp::import("karabo.common.states");
-            for(vector<string>::const_iterator it = v.begin(); it != v.end(); ++it){
+            for (vector<string>::const_iterator it = v.begin(); it != v.end(); ++it) {
                 states.append(sModule.attr("State")(*it));
             }
-            
+
             return states;
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedStates' should be a string");
@@ -1426,12 +1426,12 @@ namespace schemawrap {
     void updateAliasMap(Schema& schema) {
         schema.updateAliasMap();
     }
-    
+
 
     const std::string getInfoForAlarm(Schema& schema, const std::string & path, const bp::object condition) {
         const std::string className = bp::extract<std::string>(condition.attr("__class__").attr("__name__"));
-        if(className != "AlarmCondition"){
-            throw KARABO_PYTHON_EXCEPTION("Python argument for condition needs to be of type AlarmCondition and not "+className);
+        if (className != "AlarmCondition") {
+            throw KARABO_PYTHON_EXCEPTION("Python argument for condition needs to be of type AlarmCondition and not " + className);
         }
         const std::string conditionName = bp::extract<std::string>(condition.attr("value"));
         return schema.getInfoForAlarm(path, karabo::util::AlarmCondition::fromString(conditionName));
@@ -1446,16 +1446,17 @@ namespace schemawrap {
         return schema.doesAlarmNeedAcknowledging(path, karabo::util::AlarmCondition::fromString(conditionName));
     }
 
-    void setAllowedStates(Schema& self, const std::string & path, PyObject* rargs){
+
+    void setAllowedStates(Schema& self, const std::string & path, PyObject* rargs) {
         bp::tuple args = bp::extract<bp::tuple>(rargs);
         std::vector<karabo::util::State> states;
-        for(unsigned int i = 0; i < bp::len(args); ++i){
+        for (unsigned int i = 0; i < bp::len(args); ++i) {
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
             states.push_back(karabo::util::State::fromString(state));
         }
         return self.setAllowedStates(path, states);
     }
-            
+
 
 }
 
@@ -2041,9 +2042,9 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_SIMPLE(string, STRING)
     KARABO_PYTHON_SIMPLE(bool, BOOL)
 
-    //////////////////////////////////////////////////////////////////////
-    // Binding ByteArrayElement
-    // In Python : BYTE_ARRAY
+            //////////////////////////////////////////////////////////////////////
+            // Binding ByteArrayElement
+            // In Python : BYTE_ARRAY
     {
         bp::implicitly_convertible< Schema &, ByteArrayElement >();
         bp::class_<ByteArrayElement> ("BYTEARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
@@ -2077,6 +2078,7 @@ void exportPyUtilSchema() {
     // VECTOR_INT64_ELEMENT, VECTOR_UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT,
     // VECTOR_STRING_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_CHAR_ELEMENT
 
+
     KARABO_PYTHON_VECTOR(int, INT32)
     KARABO_PYTHON_VECTOR(unsigned int, UINT32)
     KARABO_PYTHON_VECTOR(long long, INT64)
@@ -2087,11 +2089,10 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(bool, BOOL)
     KARABO_PYTHON_VECTOR(char, CHAR)
 
-    //////////////////////////////////////////////////////////////////////
-    // Binding NDArrayElement
-    // In Python : NDARRAY_ELEMENT
-
-    {
+            //////////////////////////////////////////////////////////////////////
+            // Binding NDArrayElement
+            // In Python : NDARRAY_ELEMENT
+ {
         bp::implicitly_convertible< Schema &, NDArrayElement >();
         bp::class_<NDArrayElement> ("NDARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
                 .def("dtype"
@@ -2102,35 +2103,35 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
 
                 .def("observerAccess", &NDArrayElement::observerAccess
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("userAccess", &NDArrayElement::userAccess
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("operatorAccess", &NDArrayElement::operatorAccess
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("expertAccess", &NDArrayElement::expertAccess
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("adminAccess", &NDArrayElement::adminAccess
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("description", &NDArrayElement::description
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("displayedName", &NDArrayElement::displayedName
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("init", &NDArrayElement::init
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("key", &NDArrayElement::key
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("readOnly", &NDArrayElement::readOnly
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("reconfigurable", &NDArrayElement::reconfigurable
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("skipValidation", &NDArrayElement::skipValidation
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("commit", &NDArrayElement::commit
-                    , bp::return_internal_reference<> () )
+                     , bp::return_internal_reference<> ())
                 .def("commit"
-                    , (NDArrayElement& (NDArrayElement::*)(karabo::util::Schema &))(&NDArrayElement::commit )
-                    , bp::arg("expected")
-                    , bp::return_internal_reference<> () )
+                     , (NDArrayElement & (NDArrayElement::*)(karabo::util::Schema &))(&NDArrayElement::commit)
+                     , bp::arg("expected")
+                     , bp::return_internal_reference<> ())
                 ;
     }
 
@@ -2185,8 +2186,8 @@ void exportPyUtilSchema() {
     // Binding TableElement
     // In Python : TABLE_ELEMENT
     {
-       
-        
+
+
         bp::implicitly_convertible< Schema &, TableElement >();
         bp::class_<TableElement> ("TABLE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
                 .def("observerAccess", &TableElement::observerAccess
@@ -2199,7 +2200,7 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("adminAccess", &TableElement::adminAccess
                      , bp::return_internal_reference<> ())
-                .def("allowedStates", bp::raw_function(&tableElementWrap::allowedStatesPy,2))
+                .def("allowedStates", bp::raw_function(&tableElementWrap::allowedStatesPy, 2))
                 .def("assignmentInternal", &TableElement::assignmentInternal
                      , bp::return_internal_reference<> ())
                 .def("assignmentMandatory", &TableElement::assignmentMandatory
@@ -2388,9 +2389,9 @@ void exportPyUtilSchema() {
     }
 
     {
-        
-        
-        
+
+
+
         bp::implicitly_convertible< Schema &, OverwriteElement >();
         bp::class_<OverwriteElement> ("OVERWRITE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
                 .def("key"
@@ -2457,8 +2458,8 @@ void exportPyUtilSchema() {
                      , &OverwriteElementWrap().setNewMaxExc
                      , (bp::arg("value"))
                      , bp::return_internal_reference<> ())
-                .def("setNewOptions", bp::raw_function(&OverwriteElementWrap::setNewOptions,2))
-                .def("setNewAllowedStates", bp::raw_function(&OverwriteElementWrap::setNewAllowedStates,2))
+                .def("setNewOptions", bp::raw_function(&OverwriteElementWrap::setNewOptions, 2))
+                .def("setNewAllowedStates", bp::raw_function(&OverwriteElementWrap::setNewAllowedStates, 2))
                 .def("setNowObserverAccess"
                      , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowObserverAccess)
                      , bp::return_internal_reference<> ())
