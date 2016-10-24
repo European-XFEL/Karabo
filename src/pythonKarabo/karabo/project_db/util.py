@@ -62,10 +62,11 @@ def assure_running(project_db_server=None, project_db_port=None):
                                        'startConfigDB')
             check_call([script_path])
             # wait until the database is actually up
-            maxTimeout = 60
+            maxTimeout = 120
             waitBetween = 5
             count = 0
             while True:
+                sleep(waitBetween) #sleep initially because it needs some time
                 last_ex = None
                 try:
                     tSettings = ProbeDbSettings(project_db_server,
@@ -78,7 +79,6 @@ def assure_running(project_db_server=None, project_db_port=None):
                         raise TimeoutError("Starting project database timed"
                                            " out! Last exception: {}"
                                            .format(last_ex))
-                sleep(waitBetween)
                 count += 1
     else:
         try:
@@ -168,6 +168,10 @@ def init_local_db():
                 else:
                     print("Versioning already enabled for {}".format(path))
 
+    # in the end we have to restart the database
+    stop_database()
+    sleep(10) ##sleep here so database can shut down
+
     # now set the appropriate filters in conf.xml
     karabo_install = os.getenv('KARABO', None)
     if karabo_install is None:
@@ -190,7 +194,5 @@ def init_local_db():
     with open(loc_conf, "w") as f:
         f.write(str_rep)
 
-    # in the end we have to restart the database
-    stop_database()
-    sleep(10) ##sleep here so database can shut down
-    assure_running()
+    assure_running(project_db_server="localhost")
+
