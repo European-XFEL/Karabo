@@ -22,10 +22,13 @@ namespace karabo {
     namespace net {
 
 
-        JmsConsumer::JmsConsumer(const JmsConnection::Pointer& connection) :
+        JmsConsumer::JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
+                                 const std::string& selector) :
             m_connection(connection),
             m_mqStrand(EventLoop::getIOService()),
-            m_notifyStrand(EventLoop::getIOService()) {
+            m_notifyStrand(EventLoop::getIOService()),
+            m_topic(topic),
+            m_selector(selector) {
             m_binarySerializer = BinarySerializer<Hash>::create("Bin");
             EventLoop::addThread();
         }
@@ -37,17 +40,18 @@ namespace karabo {
         }
 
 
-        void JmsConsumer::readAsync(const MessageHandler handler, const std::string& topic, const std::string& selector) {
+        void JmsConsumer::readAsync(const MessageHandler handler) {
 
             m_connection->waitForConnectionAvailable();
+
             // If readAsync is scheduled before the event-loop is started, corresponding writes
             // (that are also only scheduled) may be executed first once the event-loop is started.
             // Registering the consumers to the broker BEFORE the event-loop runs protects from message loss.
-            this->ensureConsumerSessionAvailable(topic, selector);
-            this->getConsumer(topic, selector);
+            this->ensureConsumerSessionAvailable(m_topic, m_selector);
+            this->getConsumer(m_topic, m_selector);
 
             // Posting through strand guarantees thread-safety, never will the posted message run concurrently
-            m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this, handler, topic, selector));
+            m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this, handler, m_topic, m_selector));
         }
 
 
@@ -280,5 +284,16 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
+
+
+        void JmsConsumer::setTopic(const std::string& topic) {
+            m_topic = topic;
+        }
+
+
+        void JmsConsumer::setSelector(const std::string& selector) {
+            m_selector = selector;
+        }
+
     }
 }

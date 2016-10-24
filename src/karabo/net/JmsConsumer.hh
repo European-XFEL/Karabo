@@ -46,13 +46,18 @@ namespace karabo {
              * @param topic The topic to consume on
              * @param selector The selector expression (works on header keys only!)
              */
-            void readAsync(const MessageHandler handler, const std::string& topic, const std::string& selector = "");
+            void readAsync(const MessageHandler handler);
+
+            void setTopic(const std::string& topic);
+
+            void setSelector(const std::string& selector);
 
             virtual ~JmsConsumer();
 
         private:
 
-            JmsConsumer(const JmsConnection::Pointer& connection);
+            JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
+                        const std::string& selector);
 
             void asyncConsumeMessage(const MessageHandler handler, const std::string& topic, const std::string& selector);
 
@@ -95,6 +100,10 @@ namespace karabo {
             boost::asio::io_service::strand m_mqStrand;
 
             boost::asio::io_service::strand m_notifyStrand;
+
+            std::string m_topic;
+
+            std::string m_selector;
         };
     }
 }

@@ -587,8 +587,8 @@ namespace karabo {
 
             static karabo::net::PointToPoint::Pointer m_pointToPoint;
 
-            // TODO This is a helper vaiable 
-            static std::string m_topic;
+            // TODO This is a helper variable
+            std::string m_topic;
 
         protected: // Functions
 
@@ -659,9 +659,8 @@ namespace karabo {
                                                           const std::string& slotFunction) const;
 
             void doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
-                               const karabo::util::Hash::Pointer& body,
-                               int prio,
-                               int timeToLive) const;
+                               const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
+                               const std::string& topic = "") const;
 
         private: // Functions
 
@@ -840,7 +839,7 @@ namespace karabo {
                               const karabo::util::Hash::Pointer& body, int prio) const;
 
             // TODO This is a helper function during multi-topic refactoring
-            static void setTopic(const std::string& topic = "");
+            void setTopic(const std::string& topic = "");
 
 
         private: // Members

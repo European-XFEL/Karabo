@@ -75,9 +75,8 @@ namespace karabo {
 
         void CentralLogging::initialize() {
 
-            m_loggerConsumer = getConnection()->createConsumer();
-            m_loggerConsumer->readAsync(bind_weak(&karabo::devices::CentralLogging::logHandler, this, _1, _2),
-                                        m_topic, "target = 'log'");
+            m_loggerConsumer = getConnection()->createConsumer(m_topic, "target = 'log'");
+            m_loggerConsumer->readAsync(bind_weak(&karabo::devices::CentralLogging::logHandler, this, _1, _2));
 
             try {
                 if (!boost::filesystem::exists(get<string>("directory"))) {
@@ -152,9 +151,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();
             }
             // Re-register the log message reading
-            m_loggerConsumer->readAsync(bind_weak(&karabo::devices::CentralLogging::logHandler, this, _1, _2),
-                                        m_topic, "target = 'log'");
-
+            m_loggerConsumer->readAsync(bind_weak(&karabo::devices::CentralLogging::logHandler, this, _1, _2));
         }
 
 
