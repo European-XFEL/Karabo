@@ -6,8 +6,7 @@
  */
 
 #include "PipelinedProcessing_Test.hh"
-
-#include "karabo/net/EventLoop.hh"
+#include <karabo/net/EventLoop.hh>
 
 USING_KARABO_NAMESPACES;
 

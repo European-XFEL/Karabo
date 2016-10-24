@@ -182,7 +182,7 @@ namespace karabo {
                                 // what is provided here is the object already -> copy over and shut-up
                                 Hash::Node& workNode = working.setNode(user.getNode(key));
                                 workNode.setAttribute(KARABO_HASH_CLASS_ID, it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID));
-                                return;
+                                continue;
                             } else {
                                 report << "Parameter \"" << currentScope << "\" has incorrect node type, expecting HASH not " << Types::to<ToLiteral > (user.getType(key)) << endl;
                                 return;

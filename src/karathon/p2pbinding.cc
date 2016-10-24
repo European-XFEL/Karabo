@@ -1,19 +1,18 @@
-/* 
+/*
  * File:   p2pbinding.cc
  * Author: Sergey Esenov <serguei.essenov@xfel.eu>
  *
  * Created on April 4, 2013, 4:04 PM
  */
 
-#include <boost/python.hpp>
-//#include <karabo/net/IOService.hh>
-#include <karabo/net/Connection.hh>
-#include <karabo/net/EventLoop.hh>
-#include <karabo/net/BrokerConnection.hh>
 #include "PythonFactoryMacros.hh"
-#include "IOServiceWrap.hh"
 #include "ConnectionWrap.hh"
 #include "ChannelWrap.hh"
+
+#include "karabo/net/JmsConnection.hh"
+#include "karabo/net/Connection.hh"
+#include "karabo/net/EventLoop.hh"
+#include <boost/python.hpp>
 
 namespace bp = boost::python;
 
@@ -26,22 +25,18 @@ void exportp2p() {
     bp::docstring_options docs(true, true, false);
 
     {
-        bp::class_<BrokerConnection, BrokerConnection::Pointer, boost::noncopyable>("BrokerConnection", bp::no_init)
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(BrokerConnection);
+        bp::class_<JmsConnection, JmsConnection::Pointer, boost::noncopyable>("JmsConnection")
+                .def("expectedParameters",
+                     &JmsConnection::expectedParameters,
+                     (bp::arg("schema"))).staticmethod("expectedParameters")
+                .def("getBrokerUrl", &JmsConnection::getBrokerUrl,
+                     "Reports the url of the currently connected-to broker");
     }
 
     {
         bp::class_<ErrorCode>("ErrorCode", "This class keeps error condition: error code and error message.", bp::init<>())
                 .def("value", &ErrorCode::value, "Returns error code")
                 .def("message", &ErrorCode::message, "Returns error message")
-                ;
-    }
-
-    {
-        bp::class_<IOService, boost::shared_ptr<IOService> >("IOService", bp::no_init)
-                .def("run", &IOServiceWrap().run, "This method blocks until at least one handler is registered in it.")
-                .def("work", &IOServiceWrap().work, "This method blocks forever, event no handlers are registered.  Service can be stopped by 'stop' call.")
-                .def("stop", &IOServiceWrap().stop, "This method stops service operations.")
                 ;
     }
 
@@ -116,9 +111,9 @@ void exportp2p() {
                 .def("work", &EventLoopWorkWrap).staticmethod("work")
                 .def("run", &EventLoopRunWrap).staticmethod("run")
                 .def("stop", &EventLoop::stop).staticmethod("stop")
-                .def("addThread", (void (*)(const int))&EventLoop::addThread, (bp::arg("nThreads") = 1)).staticmethod("addThread")
-                .def("removeThread", (void(*)(const int))&EventLoop::removeThread, (bp::arg("nThreads") = 1)).staticmethod("removeThread")
-                .def("getNumberOfThreads", (size_t(*)())&EventLoop::getNumberOfThreads).staticmethod("getNumberOfThreads")
+                .def("addThread", (void (*)(const int)) & EventLoop::addThread, (bp::arg("nThreads") = 1)).staticmethod("addThread")
+                .def("removeThread", (void(*)(const int)) & EventLoop::removeThread, (bp::arg("nThreads") = 1)).staticmethod("removeThread")
+                .def("getNumberOfThreads", (size_t(*)()) & EventLoop::getNumberOfThreads).staticmethod("getNumberOfThreads")
                 ;
     }
 }

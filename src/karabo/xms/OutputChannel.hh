@@ -34,7 +34,6 @@ namespace karabo {
          */
         class OutputChannel : public boost::enable_shared_from_this<OutputChannel> {
 
-
             typedef boost::shared_ptr<karabo::net::Channel> TcpChannelPointer;
 
             /*
@@ -69,9 +68,6 @@ namespace karabo {
 
             karabo::net::Connection::Pointer m_dataConnection;
             std::set<TcpChannelPointer> m_dataChannels;
-            //TcpChannelPointer m_dataChannel;
-            karabo::net::IOService::Pointer m_dataIOService;
-            boost::thread m_dataThread;
 
             std::string m_onNoSharedInputChannelAvailable;
             std::string m_distributionMode;
@@ -213,7 +209,6 @@ namespace karabo {
         };
 
         class OutputChannelElement {
-
 
             karabo::util::NodeElement m_outputChannel;
             karabo::util::NodeElement m_dataSchema;

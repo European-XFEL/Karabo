@@ -13,9 +13,11 @@
 #ifndef KARABO_NET_JMSCONSUMER_HH
 #define	KARABO_NET_JMSCONSUMER_HH
 
-#include <openmqc/mqcrt.h>
-#include <karabo/io/BinarySerializer.hh>
 #include "JmsConnection.hh"
+#include "karabo/io/BinarySerializer.hh"
+#include <openmqc/mqcrt.h>
+#include <boost/enable_shared_from_this.hpp>
+
 
 /**
  * The main European XFEL namespace
@@ -27,7 +29,7 @@ namespace karabo {
      */
     namespace net {
 
-        class JmsConsumer {
+        class JmsConsumer : public boost::enable_shared_from_this<JmsConsumer> {
 
             friend class JmsConnection;
 

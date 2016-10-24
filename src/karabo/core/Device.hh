@@ -11,25 +11,23 @@
 #ifndef KARABO_CORE_DEVICE_HH
 #define	KARABO_CORE_DEVICE_HH
 
-#include <boost/regex.hpp>
-#include <boost/algorithm/string.hpp>
-#include <string>
-#include <unordered_set>
-#include <karabo/net/utils.hh>
-#include <karabo/util.hpp>
-#include <karabo/xms/SlotElement.hh>
-#include <karabo/util/StackTrace.hh>
-#include <karabo/util/RollingWindowStatistics.hh>
-#include <karabo/xms.hpp>
-#include <karabo/log/Logger.hh>
-
-#include "coredll.hh"
-
-#include <karabo/util/State.hh>
 #include "NoFsm.hh"
 #include "DeviceClient.hh"
 #include "Lock.hh"
 
+#include "karabo/util/State.hh"
+#include "karabo/util.hpp"
+#include "karabo/util/StackTrace.hh"
+#include "karabo/util/RollingWindowStatistics.hh"
+#include "karabo/net/utils.hh"
+#include "karabo/xms/SlotElement.hh"
+#include "karabo/xms.hpp"
+#include "karabo/log/Logger.hh"
+
+#include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
+#include <string>
+#include <unordered_set>
 
 /**
  * The main European XFEL namespace
@@ -129,13 +127,11 @@ namespace karabo {
                         .init()
                         .commit();
 
-                CHOICE_ELEMENT(expected).key("_connection_")
-                        .displayedName("Connection")
-                        .description("The connection to the communication layer of the distributed system")
-                        .appendNodesOfConfigurationBase<karabo::net::BrokerConnection>()
-                        .assignmentOptional().defaultValue("Jms")
-                        .adminAccess()
-                        .init()
+                NODE_ELEMENT(expected).key("_connection_")
+                        .displayedName("_Connection_")
+                        .description("Do not set this property, it will be set by the device-server")
+                        .appendParametersOf<karabo::net::JmsConnection>()
+                        .expertAccess()
                         .commit();
 
                 INT32_ELEMENT(expected).key("visibility")
@@ -297,8 +293,14 @@ namespace karabo {
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
                 m_globalAlarmCondition(karabo::util::AlarmCondition::NONE) {
 
+                m_connection = karabo::util::Configurator<karabo::net::JmsConnection>::createNode("_connection_", configuration);
+
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
+
+		// This is a hack until a better solution is found
+                // Will remove a potential JmsConnection::Pointer instance from the m_parameters
+                m_parameters.set("_connection_", karabo::util::Hash());
 
                 m_timeId = 0;
                 m_timeSec = 0;
@@ -981,15 +983,11 @@ namespace karabo {
              */
             void run() {
 
-                if (!m_connection) {
-                    m_connectionInjected = false;
+                using namespace karabo::util;
+                using namespace karabo::net;
 
-                    // Instantiate connection
-                    karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("_connection_", m_parameters);
-
-                    // Initialize the SignalSlotable instance
-                    init(m_deviceId, connection);
-                }
+                // Initialize the SignalSlotable instance
+                init(m_deviceId, m_connection);
 
                 // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
                 this->initFsmSlots(); // requires template CONCEPT
@@ -998,7 +996,7 @@ namespace karabo {
                 this->initDeviceSlots();
 
                 // Register guard for slot calls
-                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));               
+                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));
 
                 // Register updateLatencies handler
                 this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies,
