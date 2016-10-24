@@ -4,18 +4,18 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from abc import abstractmethod
-from collections import OrderedDict, namedtuple
 from functools import partial
 
 from guiqwt.builder import make
 from guiqwt.plot import ImageWidget
 
-from PyQt4.QtCore import QPoint, QSize, Qt, pyqtSlot
-from PyQt4.QtGui import (QAction, QCursor, QHBoxLayout, QIcon, QMenu,
-                         QToolButton, QVBoxLayout, QWidget)
-from PyQt4.Qwt5.Qwt import QwtPlot
-
 from traits.api import ABCHasStrictTraits, Bool, Callable, Instance, String
+
+from PyQt4.QtCore import QPoint, Qt, pyqtSlot
+from PyQt4.QtGui import (
+    QAction, QActionGroup, QCursor, QHBoxLayout, QIcon, QMenu, QToolBar,
+    QVBoxLayout, QWidget)
+from PyQt4.Qwt5.Qwt import QwtPlot
 
 import karabo_gui.icons as icons
 from karabo_gui.images import get_dimensions_and_format, get_image_data
@@ -45,23 +45,32 @@ class BaseImageDisplay(DisplayWidget):
 
     def _create_toolbar(self):
         """ Toolbar gets created """
-        toolbar_widget = QWidget()
-        toolbar_layout = QVBoxLayout(toolbar_widget)
-        toolbar_layout.setContentsMargins(0, 0, 0, 0)
+        qactions = []
 
-        tool_buttons = self._create_tool_buttons()
-        for tbtn in tool_buttons:
-            toolbar_layout.addWidget(tbtn)
+        toolbar_widget = QToolBar()
+        toolbar_widget.setFloatable(False)
+        toolbar_widget.setOrientation(Qt.Vertical)
+        
+        mode_qactions = [self._build_qaction(a)
+                         for a in self._create_mode_tool_actions()]
+        self._build_qaction_group(mode_qactions)
+        qactions.extend(mode_qactions)
 
-        toolbar_layout.addStretch()
+        qactions.extend(self._build_qaction(a)
+                        for a in self._create_image_actions())
+
+        for qaction in qactions:
+            toolbar_widget.addAction(qaction)
+
         return toolbar_widget
 
-    def _create_tool_buttons(self):
-        """ Create tool buttons and return list of them"""
+    def _create_mode_tool_actions(self):
+        """ Create actions and return list of them"""
         selection = CreateWidgetToolAction(
             tool_factory=WidgetSelectionTool,
             icon=icons.cursorArrow,
             checkable=True,
+            is_checked=False,
             text="Selection Mode",
             tooltip="Selection Mode"
         )
@@ -69,9 +78,15 @@ class BaseImageDisplay(DisplayWidget):
             tool_factory=WidgetZoomTool,
             icon=icons.zoom,
             checkable=True,
+            is_checked=False,
             text="Zoom",
             tooltip="Rectangle Zoom"
         )
+
+        return [selection, zoom]
+
+    def _create_image_actions(self):
+        """ Create actions and return list of them"""
         reset = WidgetResetAction(
             icon=icons.maximize,
             checkable=False,
@@ -85,20 +100,7 @@ class BaseImageDisplay(DisplayWidget):
             tooltip="Show Region of Interest"
         )
 
-        tool_buttons = [self._create_mode_qtoolbutton(t)
-                        for t in [selection, zoom, reset, roi]]
-        return tool_buttons
-
-    def _create_mode_qtoolbutton(self, widget_tool):
-        """ Create tool button from given ``widget_tool`` """
-        btn = QToolButton()
-        btn.setCheckable(widget_tool.checkable)
-        btn.setText(widget_tool.text)
-        btn.setToolTip(widget_tool.tooltip)
-        btn.setIconSize(QSize(24, 24))
-        btn.setIcon(widget_tool.icon)
-        btn.clicked.connect(partial(widget_tool.perform, self))
-        return btn
+        return [reset, roi]
 
     def _create_context_menu_actions(self):
         actions = []
@@ -126,12 +128,21 @@ class BaseImageDisplay(DisplayWidget):
     def _build_qaction(self, widget_action):
         """ Create action from given ``widget_action`` """
         q_action = QAction(widget_action.text, self)
+        if widget_action.icon is not None:
+            q_action.setIcon(widget_action.icon)
         q_action.setCheckable(widget_action.checkable)
-        q_action.setChecked(widget_action.is_checked)
+        if widget_action.checkable:
+            q_action.setChecked(widget_action.is_checked)
         q_action.setStatusTip(widget_action.tooltip)
         q_action.setToolTip(widget_action.tooltip)
         q_action.triggered.connect(partial(widget_action.perform, self))
         return q_action
+
+    def _build_qaction_group(self, actions):
+        group = QActionGroup(self)
+        for ac in actions:
+            group.addAction(ac)
+        actions[0].setChecked(True)  # Mark the first action
 
     def _show_tool_bar(self, show):
         self.toolbar_widget.setVisible(show)
@@ -214,6 +225,8 @@ class BaseWidgetAction(ABCHasStrictTraits):
     tooltip = String
     # Whether or not this action is checkable
     checkable = Bool(False)
+    # Whether or not this action is checked
+    is_checked = Bool(False)
 
     @abstractmethod
     def perform(self, widget):
@@ -269,8 +282,6 @@ class CreateWidgetToolAction(BaseWidgetAction):
 class WidgetSelectionTool(BaseWidgetTool):
     """ A tool for selection in a widget
     """
-    is_checked = Bool(True)
-
     def draw(self, painter):
         """ Draw the tool. """
         print("draw selection")
@@ -296,7 +307,6 @@ class WidgetSelectionTool(BaseWidgetTool):
 class WidgetZoomTool(BaseWidgetTool):
     """ A tool for zooming in a widget
     """
-    is_checked = Bool(False)
     start_pos = Instance(QPoint)
     end_pos = Instance(QPoint)
 
@@ -330,16 +340,12 @@ class WidgetResetAction(BaseWidgetAction):
 
 class WidgetROIAction(BaseWidgetAction):
     """ Region of interest action"""
-    is_checked = Bool(False)
-
     def perform(self, widget):
         pass
 
 
 class ShowToolBarAction(BaseWidgetAction):
     """ Show tool bar action"""
-    is_checked = Bool(False)
-
     def perform(self, widget, is_checked):
         self.is_checked = is_checked
         widget._show_tool_bar(is_checked)
@@ -347,8 +353,6 @@ class ShowToolBarAction(BaseWidgetAction):
 
 class ShowColorBarAction(BaseWidgetAction):
     """ Show color bar action"""
-    is_checked = Bool(False)
-
     def perform(self, widget, is_checked):
         self.is_checked = is_checked
         widget._show_color_bar(is_checked)
@@ -356,8 +360,6 @@ class ShowColorBarAction(BaseWidgetAction):
 
 class ShowAxesAction(BaseWidgetAction):
     """ Show axes action"""
-    is_checked = Bool(False)
-
     def perform(self, widget, is_checked):
         self.is_checked = is_checked
         widget._show_axes(is_checked)
