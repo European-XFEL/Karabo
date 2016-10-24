@@ -8,15 +8,16 @@ from functools import partial
 
 from guiqwt.builder import make
 from guiqwt.plot import ImageWidget
-from guiqwt.tools import InteractiveTool, RectZoomTool, SelectTool
-
-from traits.api import ABCHasStrictTraits, Bool, Instance, String
+from guiqwt.tools import RectZoomTool, SelectTool
 
 from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import (
     QAction, QActionGroup, QCursor, QHBoxLayout, QIcon, QMenu, QToolBar,
-    QWidget)
+    QWidget
+)
 from PyQt4.Qwt5.Qwt import QwtPlot
+
+from traits.api import ABCHasStrictTraits, Bool, Instance, String
 
 import karabo_gui.icons as icons
 from karabo_gui.images import get_dimensions_and_format, get_image_data
