@@ -46,6 +46,9 @@ class LazyProjectModel(BaseProjectObjectModel):
 def read_lazy_object(uuid, revision, db_adapter, reader_func):
     """Read a lazily-loaded object.
 
+    NOTE: Subprojects of ProjectModel objects will not be read recursively.
+    They will remain as LazyProjectModel objects.
+
     :param uuid: The UUID of the object
     :param revision: The desired revision number of the object
     :param db_adapter: An object which gives access to data from the database
