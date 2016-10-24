@@ -286,7 +286,7 @@ namespace karabo {
             const string selector("slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'");
             m_consumerChannel = m_connection->createConsumer(m_topic, selector);
             m_heartbeatProducerChannel = m_connection->createProducer();
-            m_heartbeatConsumerChannel = m_connection->createConsumer(m_topic, "signalFunction = 'signalHeartbeat'");
+            m_heartbeatConsumerChannel = m_connection->createConsumer(m_topic + "_beats", "signalFunction = 'signalHeartbeat'");
 
             registerDefaultSignalsAndSlots();
         }
@@ -771,9 +771,11 @@ namespace karabo {
 
             // The heartbeat signal goes through a different topic, so we
             // cannot use the normal registerSignal.
-            storeSignal("signalHeartbeat", boost::make_shared<Signal>(this, m_heartbeatProducerChannel,
+            Signal::Pointer heartbeatSignal =  boost::make_shared<Signal>(this, m_heartbeatProducerChannel,
                                                                       m_instanceId, "signalHeartbeat", KARABO_SYS_PRIO,
-                                                                      KARABO_SYS_TTL));
+                                                                      KARABO_SYS_TTL);
+            heartbeatSignal->setTopic(m_topic + "_beats");
+            storeSignal("signalHeartbeat", heartbeatSignal);
 
 
             // Listener for heartbeats
