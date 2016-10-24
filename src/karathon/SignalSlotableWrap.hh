@@ -117,7 +117,7 @@ namespace karathon {
     public:
 
         SignalSlotableWrap(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
-                           const std::string& connectionType = "Jms",
+                           const std::string& connectionType = "JmsConnection",
                            const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
                            const bool autostartEventLoop = true,
                            int heartbeatInterval = 10);
@@ -125,7 +125,7 @@ namespace karathon {
         virtual ~SignalSlotableWrap();
 
         static boost::shared_ptr<SignalSlotableWrap> create(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
-                                                            const std::string& connectionType = "Jms",
+                                                            const std::string& connectionType = "JmsConnection",
                                                             const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
                                                             bool autostart = false,
                                                             int heartbeatInterval = 10) {
@@ -238,19 +238,7 @@ namespace karathon {
             karabo::util::Hash reply;
             packPy(reply, args...);
             registerReply(reply);
-        }
-
-        bp::object getBrokerHost() {
-            return bp::object(getConnection()->getBrokerHostname() + ":" + karabo::util::toString(getConnection()->getBrokerPort()));
-        }
-
-        bp::object getBrokerTopic() {
-            return bp::object(getConnection()->getBrokerTopic());
-        }
-
-        bp::object getBrokerHosts() {
-            return Wrapper::fromStdVectorToPyList<std::string>(getConnection()->getBrokerHosts());
-        }
+        }        
 
         void registerInstanceNewHandlerPy(const bp::object& handler) {
             registerInstanceNewHandler(boost::bind(&SignalSlotableWrap::proxyInstanceNewHandler,

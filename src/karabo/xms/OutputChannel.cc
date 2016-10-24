@@ -111,11 +111,6 @@ namespace karabo {
             }
             m_dataChannels.clear();
             if (m_dataConnection) m_dataConnection->stop();
-            if (m_dataIOService) m_dataIOService->stop();
-            if (m_dataThread.get_id() == boost::this_thread::get_id())
-                KARABO_LOG_FRAMEWORK_WARN << BOOST_CURRENT_FUNCTION << ":" << __LINE__ << " : attempt to join itself";
-            else
-                m_dataThread.join();
             Memory::unregisterChannel(m_channelId);
         }
 

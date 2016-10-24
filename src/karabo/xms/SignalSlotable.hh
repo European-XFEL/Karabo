@@ -19,7 +19,6 @@
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/PackParameters.hh"
 #include "karabo/log/Logger.hh"
-#include "karabo/net/BrokerConnection.hh"
 #include "karabo/net/JmsConnection.hh"
 #include "karabo/net/JmsConsumer.hh"
 #include "karabo/net/JmsProducer.hh"
@@ -103,7 +102,7 @@ namespace karabo {
              * @param connection An existing broker connection
              */
             SignalSlotable(const std::string& instanceId,
-                           const karabo::net::BrokerConnection::Pointer& connection);
+                           const karabo::net::JmsConnection::Pointer& connection);
 
             /**
              * Creates a function SignalSlotable object allowing to configure the broker connection.
@@ -113,7 +112,7 @@ namespace karabo {
              * @param brokerConfiguration The sub-configuration for the respective broker type
              */
             SignalSlotable(const std::string& instanceId,
-                           const std::string& brokerType = "Jms",
+                           const std::string& connectionClass = "JmsConnection",
                            const karabo::util::Hash& brokerConfiguration = karabo::util::Hash());
 
             virtual ~SignalSlotable();
@@ -124,14 +123,14 @@ namespace karabo {
              * @param connection An existing broker connection
              */
             void init(const std::string& instanceId,
-                      const karabo::net::BrokerConnection::Pointer& connection);
+                      const karabo::net::JmsConnection::Pointer& connection);
 
 
             /**
              * Single call that leads to a tracking of all instances if called before the event loop is started
              */
             void trackAllInstances();
-            
+
             karabo::util::Hash getAvailableInstances(const bool activateTracking = false);
 
             std::vector<std::string> getAvailableSignals(const std::string& instanceId);
@@ -188,8 +187,8 @@ namespace karabo {
 
             void registerPerformanceStatisticsHandler(const UpdatePerformanceStatisticsHandler& updatePerformanceStatisticsHandler);
 
-            karabo::net::BrokerConnection::Pointer getConnection() const;
-           
+            karabo::net::JmsConnection::Pointer getConnection() const;
+
             /**
              * This function must only be called within a slotFunctions body. It returns the current object handling
              * the callback which provides more information on the sender.
@@ -375,7 +374,7 @@ namespace karabo {
             bool ensureOwnInstanceIdUnique();
 
             void injectConnection(const std::string& instanceId,
-                                  const karabo::net::BrokerConnection::Pointer& connection);
+                                  const karabo::net::JmsConnection::Pointer& connection);
 
             void setDeviceServerPointer(boost::any serverPtr);
 
@@ -514,13 +513,12 @@ namespace karabo {
             SignalSlotConnections m_signalSlotConnections; // keep track of established connections
             boost::mutex m_signalSlotConnectionsMutex;
 
-            karabo::net::BrokerIOService::Pointer m_ioService;
-            karabo::net::BrokerConnection::Pointer m_connection;
             bool m_connectionInjected;
-            karabo::net::BrokerChannel::Pointer m_producerChannel;
-            karabo::net::BrokerChannel::Pointer m_consumerChannel;
-            karabo::net::BrokerChannel::Pointer m_heartbeatProducerChannel;
-            karabo::net::BrokerChannel::Pointer m_heartbeatConsumerChannel;
+            karabo::net::JmsConnection::Pointer m_connection;
+            karabo::net::JmsProducer::Pointer m_producerChannel;
+            karabo::net::JmsConsumer::Pointer m_consumerChannel;
+            karabo::net::JmsProducer::Pointer m_heartbeatProducerChannel;
+            karabo::net::JmsConsumer::Pointer m_heartbeatConsumerChannel;
 
             boost::mutex m_waitMutex;
             boost::condition_variable m_hasNewEvent;
@@ -550,10 +548,7 @@ namespace karabo {
             mutable boost::mutex m_receivedRepliesBMCMutex;
 
             karabo::util::Hash m_emitFunctions;
-            std::vector<boost::any> m_slots;
-
-            typedef std::map<std::string, karabo::net::BrokerChannel::Pointer> SlotChannels;
-            SlotChannels m_slotChannels;
+            std::vector<boost::any> m_slots;            
 
             karabo::util::Hash m_trackedInstances;
             bool m_trackAllInstances;
@@ -591,6 +586,9 @@ namespace karabo {
             static boost::mutex m_connectionStringsMutex;
 
             static karabo::net::PointToPoint::Pointer m_pointToPoint;
+
+            // TODO This is a helper variable
+            std::string m_topic;
 
         protected: // Functions
 
@@ -661,9 +659,8 @@ namespace karabo {
                                                           const std::string& slotFunction) const;
 
             void doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
-                               const karabo::util::Hash::Pointer& body,
-                               int prio,
-                               int timeToLive) const;
+                               const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
+                               const std::string& topic = "") const;
 
         private: // Functions
 
@@ -841,7 +838,8 @@ namespace karabo {
             bool tryToCallP2P(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header,
                               const karabo::util::Hash::Pointer& body, int prio) const;
 
-            void channelErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info);
+            // TODO This is a helper function during multi-topic refactoring
+            void setTopic(const std::string& topic = "");
 
 
         private: // Members

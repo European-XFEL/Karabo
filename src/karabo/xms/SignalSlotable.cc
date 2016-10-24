@@ -38,7 +38,6 @@ namespace karabo {
         boost::mutex SignalSlotable::m_connectionStringsMutex;
         PointToPoint::Pointer SignalSlotable::m_pointToPoint;
 
-
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId,
                                                const karabo::util::Hash::Pointer& header,
                                                const karabo::util::Hash::Pointer& body) const {
@@ -94,10 +93,12 @@ namespace karabo {
 
 
         void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
-                                           const karabo::util::Hash::Pointer& body, int prio, int timeToLive) const {
+                                           const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
+                                           const std::string& topic) const {
             if (tryToCallDirectly(instanceId, header, body)) return;
             if (tryToCallP2P(instanceId, header, body, prio)) return;
-            m_producerChannel->write(*header, *body, prio, timeToLive);
+            const std::string& t = topic.empty() ? m_topic : topic;
+            m_producerChannel->write(t, header, body, prio, timeToLive);
         }
 
 
@@ -211,17 +212,17 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SignalSlotable(const string& instanceId, const BrokerConnection::Pointer& connection)
+        SignalSlotable::SignalSlotable(const string& instanceId, const JmsConnection::Pointer& connection)
             : m_connectionInjected(false), m_randPing(rand() + 2), m_discoverConnectionResourcesMode(false) {
             init(instanceId, connection);
         }
 
 
         SignalSlotable::SignalSlotable(const std::string& instanceId,
-                                       const std::string& brokerType,
+                                       const std::string& connectionClass,
                                        const karabo::util::Hash& brokerConfiguration)
             : m_connectionInjected(false), m_randPing(rand() + 2), m_discoverConnectionResourcesMode(false) {
-            BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
+            JmsConnection::Pointer connection = Configurator<JmsConnection>::create(connectionClass, brokerConfiguration);
             init(instanceId, connection);
         }
 
@@ -262,40 +263,36 @@ namespace karabo {
 
 
         void SignalSlotable::init(const std::string& instanceId,
-                                  const karabo::net::BrokerConnection::Pointer& connection) {
+                                  const karabo::net::JmsConnection::Pointer& connection) {
 
             m_trackAllInstances = false;
             m_connection = connection;
             m_instanceId = instanceId;
             m_nThreads = 2;
 
+            // Set topic (if empty will use default)
+            setTopic();
+
             // Currently only removes dots
             sanifyInstanceId(m_instanceId);
-            if (m_connectionInjected) {
-                m_ioService.reset();
-            } else {
-                // Create the managing ioService object
-                m_ioService = m_connection->getIOService();
 
-                // Start connection (and take the default channel for signals)
-                m_connection->start();
+            if (!m_connection->isConnected()) {
+                m_connection->connect();
             }
-            m_producerChannel = m_connection->createChannel();
-            m_consumerChannel = m_connection->createChannel();
-            m_heartbeatProducerChannel = m_connection->createChannel("beats");
-            m_heartbeatConsumerChannel = m_connection->createChannel("beats");
 
-            // Set error handler for channels. Producers do not seem to make use of them, but that might change.
-            m_consumerChannel->setErrorHandler(boost::bind(&SignalSlotable::channelErrorHandler, this, m_consumerChannel, _1));
-            m_producerChannel->setErrorHandler(boost::bind(&SignalSlotable::channelErrorHandler, this, m_producerChannel, _1));
-            m_heartbeatConsumerChannel->setErrorHandler(boost::bind(&SignalSlotable::channelErrorHandler, this, m_heartbeatConsumerChannel, _1));
-            m_heartbeatProducerChannel->setErrorHandler(boost::bind(&SignalSlotable::channelErrorHandler, this, m_heartbeatProducerChannel, _1));
+            // Create producers and consumers
+            m_producerChannel = m_connection->createProducer();
+            // This will select messages addressed to me
+            const string selector("slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'");
+            m_consumerChannel = m_connection->createConsumer(m_topic, selector);
+            m_heartbeatProducerChannel = m_connection->createProducer();
+            m_heartbeatConsumerChannel = m_connection->createConsumer(m_topic + "_beats", "signalFunction = 'signalHeartbeat'");
 
             registerDefaultSignalsAndSlots();
         }
 
 
-        void SignalSlotable::injectConnection(const std::string& instanceId, const karabo::net::BrokerConnection::Pointer& connection) {
+        void SignalSlotable::injectConnection(const std::string& instanceId, const karabo::net::JmsConnection::Pointer& connection) {
             m_connectionInjected = true;
             init(instanceId, connection);
         }
@@ -351,6 +348,8 @@ namespace karabo {
                 }
                 m_hasNewEvent.notify_one();
             }
+            // Read next message
+            m_consumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2));
         }
 
 
@@ -401,6 +400,8 @@ namespace karabo {
             SlotInstancePointer slot = getSlot("slotHeartbeat");
             // Synchronously call the slot
             if (slot) slot->callRegisteredSlotFunctions(*header, *body);
+            // Re-register
+            m_heartbeatConsumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2));
         }
 
 
@@ -538,29 +539,12 @@ namespace karabo {
 
 
         void SignalSlotable::startBrokerMessageConsumption() {
-
-            if (!m_connectionInjected)
-                m_brokerThread = boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_ioService));
-
-            // Prepare the slot selector
-            const string selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'";
-            m_consumerChannel->setFilter(selector);
-            m_consumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2));
+            m_consumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2));
         }
 
 
         void SignalSlotable::stopBrokerMessageConsumption() {
-            this->deregisterFromShortcutMessaging(); // stop short-cut messaging as well
-            m_consumerChannel->close(); // stop consuming new messages
-            if (!m_connectionInjected) {
-                if (m_ioService) {
-                    m_ioService->stop();
-                    m_brokerThread.join();
-                } else if (m_brokerThread.joinable()) {
-                    // .... anyway try to join ... with timeout....
-                    m_brokerThread.try_join_for(boost::chrono::milliseconds(100));
-                }
-            }
+            this->deregisterFromShortcutMessaging();
         }
 
 
@@ -709,7 +693,7 @@ namespace karabo {
                 replyHeader.set("signalFunction", "__reply__");
                 replyHeader.set("slotInstanceIds", "|" + header.get<string>("signalInstanceId") + "|");
                 Hash replyBody("a1", message);
-                m_producerChannel->write(replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+                m_producerChannel->write(m_topic, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             }
         }
 
@@ -775,7 +759,7 @@ namespace karabo {
             // Inject an empty reply in case that no one was provided in the slot body.
             // (Using a ref that is const is essential to keep the temporary util::Hash() alive.)
             const util::Hash& reply = (it != m_replies.end() ? it->second : util::Hash());
-            m_producerChannel->write(replyHeader, reply, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+            m_producerChannel->write(m_topic, replyHeader, reply, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             // KARABO_LOG_FRAMEWORK_DEBUG << this->getInstanceId() << ": sendPotentialReply: " << reply;
 
             // Finally remove the reply.
@@ -787,9 +771,11 @@ namespace karabo {
 
             // The heartbeat signal goes through a different topic, so we
             // cannot use the normal registerSignal.
-            storeSignal("signalHeartbeat", boost::make_shared<Signal>(this, m_heartbeatProducerChannel,
+            Signal::Pointer heartbeatSignal =  boost::make_shared<Signal>(this, m_heartbeatProducerChannel,
                                                                       m_instanceId, "signalHeartbeat", KARABO_SYS_PRIO,
-                                                                      KARABO_SYS_TTL));
+                                                                      KARABO_SYS_TTL);
+            heartbeatSignal->setTopic(m_topic + "_beats");
+            storeSignal("signalHeartbeat", heartbeatSignal);
 
 
             // Listener for heartbeats
@@ -833,8 +819,7 @@ namespace karabo {
 
         void SignalSlotable::trackAllInstances() {
             m_trackAllInstances = true;
-            m_heartbeatConsumerChannel->setFilter("signalFunction = 'signalHeartbeat'");
-            m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, shared_from_this(), _1, _2));
+            m_heartbeatConsumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2));
         }
 
 
@@ -900,7 +885,7 @@ namespace karabo {
         }
 
 
-        BrokerConnection::Pointer SignalSlotable::getConnection() const {
+        JmsConnection::Pointer SignalSlotable::getConnection() const {
             return m_connection;
         }
 
@@ -912,7 +897,7 @@ namespace karabo {
             boost::this_thread::interruption_requested(); // request interruption = we need both!
             while (m_sendHeartbeats) {
                 {
-                    boost::this_thread::disable_interruption di; // disable interruption in this block                    
+                    boost::this_thread::disable_interruption di; // disable interruption in this block
                     emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, m_instanceInfo);
                 }
                 // here the interruption enabled again
@@ -2082,24 +2067,14 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::channelErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info) {
-
-            // Find channel that has problems:
-            const char* channelName = "unknown";
-            if (channel == m_consumerChannel) {
-                channelName = "consumer";
-            } else if (channel == m_producerChannel) {
-                channelName = "producer";
-            } else if (channel == m_heartbeatConsumerChannel) {
-                channelName = "heartbeat consumer";
-            } else if (channel == m_heartbeatProducerChannel) {
-                channelName = "heartbeat producer";
+        void SignalSlotable::setTopic(const std::string& topic) {
+            if (topic.empty()) {
+                m_topic = "karabo";
+                char* env = getenv("USER");
+                if (env != 0) m_topic = string(env);
+                env = getenv("KARABO_BROKER_TOPIC");
+                if (env != 0) m_topic = string(env);
             }
-
-            // Just log an error. Later we might raise an alarm to make the system aware:
-            // (In contrast to 'KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ...' this seems to
-            //  go to the Gui as well which is desirable here.)
-            KARABO_LOG_FRAMEWORK_ERROR_C(m_instanceId) << "Problem in '" << channelName << "' broker channel:\n" << info;
         }
 
 

@@ -11,7 +11,7 @@
 #define	KARABO_CORE_GUISERVERDEVICE_HH
 
 #include "karabo/devices/ProjectManager.hh"
-#include "karabo/net/Channel.hh"
+#include "karabo/net/JmsProducer.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/xms/InputChannel.hh"
 
@@ -49,13 +49,11 @@ namespace karabo {
             mutable boost::mutex m_networkMutex;
             mutable boost::mutex m_pendingAttributesMutex;
 
-            karabo::net::BrokerConnection::Pointer m_loggerConnection;
-            karabo::net::BrokerChannel::Pointer m_loggerChannel;
+            karabo::net::JmsConsumer::Pointer m_loggerConsumer;
             std::map<std::string, int> m_monitoredDevices;
             NetworkMap m_networkConnections;
 
-            karabo::net::BrokerConnection::Pointer m_guiDebugConnection;
-            karabo::net::BrokerChannel::Pointer m_guiDebugChannel;
+            karabo::net::JmsProducer::Pointer m_guiDebugProducer;
 
             std::map<std::string, std::vector<karabo::util::Hash> > m_pendingAttributeUpdates;
 
@@ -182,9 +180,7 @@ namespace karabo {
 
             void slotLoggerMap(const karabo::util::Hash& loggerMap);
 
-            void onInputChannelConnected(const karabo::xms::InputChannel::Pointer& input, const karabo::net::Channel::Pointer& channel, const std::string& channelName);
-
-            void logErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info);
+            void onInputChannelConnected(const karabo::xms::InputChannel::Pointer& input, const karabo::net::Channel::Pointer& channel, const std::string& channelName);            
 
             /**
              * Called from instanceNewHandler to handle schema attribute updates which
@@ -289,7 +285,7 @@ namespace karabo {
              * @param instanceId: string which will be filled with the instance id
              */
             void typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type, std::string& instanceId);
-            
+
             /**
              * This device may not be locked
              * @return false
