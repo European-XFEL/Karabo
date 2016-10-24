@@ -129,5 +129,8 @@ namespace karabo {
         }
 
 
+        void Signal::setTopic(const std::string& topic) {
+            m_topic = topic;
+        }
     }
 }
