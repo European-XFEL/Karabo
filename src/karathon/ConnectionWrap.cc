@@ -1,5 +1,4 @@
 #include "ConnectionWrap.hh"
-#include <karabo/net/IOService.hh>
 
 using namespace std;
 using namespace karabo::net;

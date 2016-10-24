@@ -50,7 +50,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
 
     bp::class_<SignalSlotable, boost::noncopyable > ("SignalSlotableIntern")
-            .def(bp::init<const std::string&, const karabo::net::BrokerConnection::Pointer&>())
+            .def(bp::init<const std::string&, const karabo::net::JmsConnection::Pointer&>())
             ;
 
     bp::class_<SignalSlotableWrap, boost::shared_ptr<SignalSlotableWrap>, bp::bases< SignalSlotable>, boost::noncopyable > ("SignalSlotable")
@@ -63,7 +63,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("create", &SignalSlotableWrap::create,
                  (bp::arg("instanceId"),
-                  bp::arg("connectionType") = "Jms",
+                  bp::arg("connectionType") = "JmsConnection",
                   bp::arg("connectionParameters") = karabo::util::Hash(),
                   bp::arg("autostart") = false,
                   bp::arg("heartbeatInterval") = 10
@@ -99,7 +99,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (bp::arg("update")))
             .def("getInstanceInfo"
                  , (const karabo::util::Hash & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceInfo)
-                 , bp::return_value_policy<bp::copy_const_reference>())            
+                 , bp::return_value_policy<bp::copy_const_reference>())
             .def("registerInstanceNewHandler", &SignalSlotableWrap::registerInstanceNewHandlerPy,
                  (bp::arg("handler")))
 
@@ -247,10 +247,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("exists",
                  (bp::tuple(SignalSlotableWrap::*)(const std::string&))(&SignalSlotableWrap::existsPy),
                  (bp::arg("instanceId")))
-
-            .def("getBrokerHost", &SignalSlotableWrap::getBrokerHost)
-            .def("getBrokerHosts", &SignalSlotableWrap::getBrokerHosts)
-            .def("getBrokerTopic", &SignalSlotableWrap::getBrokerTopic)
+            .def("getConnection", &SignalSlotable::getConnection)
             ;
 }
 

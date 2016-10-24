@@ -5,8 +5,6 @@
  * Created on Apr 4, 2013, 1:24:22 PM
  */
 
-#include <boost/thread/pthread/thread_data.hpp>
-
 #include "SignalSlotable_Test.hh"
 
 using namespace std;
@@ -14,10 +12,10 @@ using namespace karabo::util;
 using namespace karabo::io;
 using namespace karabo::net;
 using namespace karabo::xms;
+using namespace karabo::log;
 
 
 class SignalSlotDemo : public karabo::xms::SignalSlotable {
-
 
     int m_messageCount;
     bool m_allOk;
@@ -28,7 +26,7 @@ public:
 
     KARABO_CLASSINFO(SignalSlotDemo, "SignalSlotDemo", "1.0")
 
-    SignalSlotDemo(const std::string& instanceId, const karabo::net::BrokerConnection::Pointer connection) :
+    SignalSlotDemo(const std::string& instanceId, const karabo::net::JmsConnection::Pointer connection) :
         karabo::xms::SignalSlotable(instanceId, connection), m_messageCount(0), m_allOk(true) {
 
         KARABO_SIGNAL("signalA", std::string);
@@ -104,6 +102,10 @@ SignalSlotable_Test::~SignalSlotable_Test() {
 
 
 void SignalSlotable_Test::setUp() {
+    // Start the event loop
+    m_work = boost::make_shared<boost::asio::io_service::work>(EventLoop::getIOService());
+    m_eventLoopThread = boost::make_shared<boost::thread>(boost::bind(&EventLoop::run));
+
     std::pair<SignalSlotDemo::Pointer, boost::shared_ptr<boost::thread> > demo = this->createDemo("SignalSlotDemo");
     m_demo = demo.first;
     m_demoThread = demo.second;
@@ -115,14 +117,8 @@ SignalSlotable_Test::createDemo(const std::string& instanceId) const {
 
     std::pair<SignalSlotDemo::Pointer, boost::shared_ptr<boost::thread> > result;
 
-    BrokerConnection::Pointer connection;
-    try {
-        connection = BrokerConnection::create("Jms", Hash("serializationType", "text"));
-    } catch (const Exception& e) {
-        return result;
-    }
-
-    SignalSlotDemo::Pointer demo(new SignalSlotDemo(instanceId, connection));
+    auto connection = Configurator<JmsConnection>::create("JmsConnection");
+    auto demo = boost::make_shared<SignalSlotDemo>(instanceId, connection);
     demo->setNumberOfThreads(2);
     boost::shared_ptr<boost::thread> demoThread(new boost::thread(boost::bind(&SignalSlotable::runEventLoop, demo, 10, Hash())));
 
@@ -142,8 +138,17 @@ SignalSlotable_Test::createDemo(const std::string& instanceId) const {
 
 
 void SignalSlotable_Test::tearDown() {
-    m_demo.reset();
-    m_demoThread.reset();
+    m_demo->stopEventLoop();
+    m_demoThread->join();
+    EventLoop::getIOService().post(boost::bind(&EventLoop::stop));
+    m_eventLoopThread->join();
+}
+
+
+void SignalSlotable_Test::testWrapper() {
+    testMethod();
+    testAutoConnectSignal();
+    testAutoConnectSlot();
 }
 
 
@@ -180,9 +185,10 @@ void SignalSlotable_Test::testMethod() {
     // shortcut address:
     m_demo->call("", "slotC", 1);
 
+    //EventLoop::getIOService().post(boost::bind(&EventLoop::stop));
+
     boost::this_thread::sleep(boost::posix_time::seconds(1));
-    m_demo->stopEventLoop();
-    m_demoThread->join();
+
 
     // Assert after joining the thread - otherwise dangling threads in case of failures...
     CPPUNIT_ASSERT(timeout == false);

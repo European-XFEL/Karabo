@@ -168,22 +168,6 @@
     </logicalFolder>
     <logicalFolder name="f5" displayName="net" projectFiles="true">
       <logicalFolder name="f4" displayName="Broker" projectFiles="true">
-        <logicalFolder name="f2" displayName="Channel" projectFiles="true">
-          <itemPath>../../../src/karabo/net/BrokerChannel.hh</itemPath>
-          <itemPath>../../../src/karabo/net/JmsBrokerChannel.cc</itemPath>
-          <itemPath>../../../src/karabo/net/JmsBrokerChannel.hh</itemPath>
-        </logicalFolder>
-        <logicalFolder name="f3" displayName="Connection" projectFiles="true">
-          <itemPath>../../../src/karabo/net/BrokerConnection.cc</itemPath>
-          <itemPath>../../../src/karabo/net/BrokerConnection.hh</itemPath>
-          <itemPath>../../../src/karabo/net/JmsBrokerConnection.cc</itemPath>
-          <itemPath>../../../src/karabo/net/JmsBrokerConnection.hh</itemPath>
-        </logicalFolder>
-        <logicalFolder name="f1" displayName="IOService" projectFiles="true">
-          <itemPath>../../../src/karabo/net/BrokerIOService.hh</itemPath>
-          <itemPath>../../../src/karabo/net/JmsBrokerIOService.cc</itemPath>
-          <itemPath>../../../src/karabo/net/JmsBrokerIOService.hh</itemPath>
-        </logicalFolder>
         <itemPath>../../../src/karabo/net/JmsConnection.cc</itemPath>
         <itemPath>../../../src/karabo/net/JmsConnection.hh</itemPath>
         <itemPath>../../../src/karabo/net/JmsConsumer.cc</itemPath>
@@ -203,17 +187,11 @@
           <itemPath>../../../src/karabo/net/TcpConnection.cc</itemPath>
           <itemPath>../../../src/karabo/net/TcpConnection.hh</itemPath>
         </logicalFolder>
-        <logicalFolder name="f2" displayName="IOService" projectFiles="true">
-          <itemPath>../../../src/karabo/net/AsioIOService.cc</itemPath>
-          <itemPath>../../../src/karabo/net/AsioIOService.hh</itemPath>
-        </logicalFolder>
         <itemPath>../../../src/karabo/net/PointToPoint.cc</itemPath>
         <itemPath>../../../src/karabo/net/PointToPoint.hh</itemPath>
       </logicalFolder>
-      <itemPath>../../../src/karabo/net/AbstractIOService.hh</itemPath>
       <itemPath>../../../src/karabo/net/EventLoop.cc</itemPath>
       <itemPath>../../../src/karabo/net/EventLoop.hh</itemPath>
-      <itemPath>../../../src/karabo/net/IOService.hh</itemPath>
       <itemPath>../../../src/karabo/net/Queues.hh</itemPath>
       <itemPath>../../../src/karabo/net.hpp</itemPath>
       <itemPath>../../../src/karabo/net/utils.cc</itemPath>
@@ -1168,41 +1146,6 @@
       </item>
       <item path="../../../src/karabo/net.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/net/AbstractIOService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/AsioIOService.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/AsioIOService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/BrokerChannel.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/BrokerConnection.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/BrokerConnection.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/BrokerIOService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/net/Channel.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Connection.cc"
@@ -1221,41 +1164,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/EventLoop.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/IOService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerChannel.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerChannel.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerConnection.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerConnection.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerIOService.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerIOService.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1442,16 +1350,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/net/EventLoop_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/net/JmsBroker_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/net/JmsBroker_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3115,44 +3013,6 @@
       </item>
       <item path="../../../src/karabo/net.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/net/AbstractIOService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/AsioIOService.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/AsioIOService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/BrokerChannel.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/BrokerConnection.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <commandLine>-Wno-unused-variable</commandLine>
-        </ccTool>
-      </item>
-      <item path="../../../src/karabo/net/BrokerConnection.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/BrokerIOService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/net/Channel.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Connection.cc"
@@ -3171,50 +3031,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/EventLoop.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/IOService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerChannel.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <commandLine>-Wno-unused-variable</commandLine>
-        </ccTool>
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerChannel.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerConnection.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <commandLine>-Wno-unused-variable</commandLine>
-        </ccTool>
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerConnection.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerIOService.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <commandLine>-Wno-unused-variable</commandLine>
-        </ccTool>
-      </item>
-      <item path="../../../src/karabo/net/JmsBrokerIOService.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3401,16 +3217,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/net/EventLoop_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/net/JmsBroker_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/net/JmsBroker_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">

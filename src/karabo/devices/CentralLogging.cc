@@ -13,7 +13,7 @@
 namespace karabo {
     namespace devices {
 
- 
+
         using namespace std;
         using namespace karabo::core;
         using namespace karabo::util;
@@ -67,30 +67,17 @@ namespace karabo {
 
 
         CentralLogging::~CentralLogging() {
-            m_loggerIoService->stop();
             m_svc->stop();
-
-            if (m_logThread.get_id() != boost::this_thread::get_id())
-                m_logThread.join();
-
             if (m_svcThread.get_id() != boost::this_thread::get_id())
                 m_svcThread.join();
         }
 
 
         void CentralLogging::initialize() {
-            // Inherit from device connection settings
-            string hostname = getConnection()->getBrokerHostname();
-            unsigned int port = getConnection()->getBrokerPort();
-            const vector<string>& brokers = getConnection()->getBrokerHosts();
-            string host = hostname + ":" + toString(port);
 
-            m_loggerInput.set("loggerConnection.Jms.hostname", host);
-            m_loggerInput.set("loggerConnection.Jms.port", port);
-            m_loggerInput.set("loggerConnection.Jms.brokerHosts", brokers);
-
-            m_loggerConnection = BrokerConnection::createChoice("loggerConnection", m_loggerInput);
-            m_loggerIoService = m_loggerConnection->getIOService();
+            m_loggerConsumer = getConnection()->createConsumer();
+            m_loggerConsumer->readAsync(bind_weak(&karabo::devices::CentralLogging::logHandler, this, _1, _2),
+                                        m_topic, "target = 'log'");
 
             try {
                 if (!boost::filesystem::exists(get<string>("directory"))) {
@@ -98,14 +85,6 @@ namespace karabo {
                 }
 
                 m_lastIndex = determineLastIndex();
-
-                // Start the logging thread
-                m_loggerConnection->start();
-                m_loggerChannel = m_loggerConnection->createChannel();
-                m_loggerChannel->setErrorHandler(boost::bind(&CentralLogging::logErrorHandler, this, m_loggerChannel, _1));
-                m_loggerChannel->setFilter("target = 'log'");
-                m_loggerChannel->readAsyncHashHash(boost::bind(&karabo::devices::CentralLogging::logHandler, this, _1, _2));
-                m_logThread = boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
 
                 m_timer.expires_from_now(boost::posix_time::seconds(get<int>("flushInterval")));
                 m_timer.async_wait(boost::bind(&CentralLogging::flushHandler, this, boost::asio::placeholders::error));
@@ -172,6 +151,10 @@ namespace karabo {
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();
             }
+            // Re-register the log message reading
+            m_loggerConsumer->readAsync(bind_weak(&karabo::devices::CentralLogging::logHandler, this, _1, _2),
+                                        m_topic, "target = 'log'");
+
         }
 
 
@@ -212,18 +195,6 @@ namespace karabo {
             file << idx << "\n";
             file.close();
             return idx;
-        }
-
-
-        void CentralLogging::logErrorHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& info) {
-
-            const char* source = "log messages via broker, might have missed some";
-            if (channel != m_loggerChannel) {
-                source = "unknown broker channel";
-            }
-
-            // Just log a warning to the Gui:
-            KARABO_LOG_WARN << "Problem listening to " << source << ":\n" << info;
         }
     }
 }

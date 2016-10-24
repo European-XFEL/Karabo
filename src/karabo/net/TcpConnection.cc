@@ -9,15 +9,15 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <boost/any.hpp>
-#include <boost/pointer_cast.hpp>
-#include "IOService.hh"
 #include "TcpConnection.hh"
 #include "TcpChannel.hh"
-#include "AsioIOService.hh"
-#include "karabo/log/Logger.hh"
 #include "EventLoop.hh"
-#include <karabo/util/SimpleElement.hh>
+
+#include "karabo/log/Logger.hh"
+#include "karabo/util/SimpleElement.hh"
+
+#include <boost/any.hpp>
+#include <boost/pointer_cast.hpp>
 #include <boost/asio/basic_socket_acceptor.hpp>
 
 using namespace std;

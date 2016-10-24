@@ -7,12 +7,10 @@
 
 #include "JmsConnection_Test.hh"
 #include "karabo/net/EventLoop.hh"
+#include "karabo/net/JmsConnection.hh"
 #include "karabo/net/JmsConsumer.hh"
 #include "karabo/net/JmsProducer.hh"
-#include "karabo/net/IOService.hh"
 #include "karabo/log/Logger.hh"
-#include <karabo/net/JmsConnection.hh>
-#include <boost/parameter/aux_/parameter_requirements.hpp>
 
 using namespace karabo::util;
 using namespace karabo::net;

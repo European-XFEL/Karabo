@@ -213,7 +213,7 @@ class DeviceClient(object):
     If you do not specify the broker connection, defaults will be used (IMPORTANT: default topic is your username).
     
     """
-    def __init__(self, config = Hash(), connectionType = "Jms"):
+    def __init__(self, config = Hash(), connectionType = "JmsConnection"):
         global cpp_client
         if cpp_client is None:
             cpp_client = BoundDeviceClient(connectionType, config)

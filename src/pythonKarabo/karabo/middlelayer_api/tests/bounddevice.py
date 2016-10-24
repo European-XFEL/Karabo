@@ -1,11 +1,12 @@
 """ This is a test device, written in the bound API, for the
 API cross test
 """
+import threading
 
 from karabo.bound import (
     AMPERE, Configurator, Hash, DOUBLE_ELEMENT, Epochstamp, KARABO_CLASSINFO,
     KILO, METER, MILLI, NODE_ELEMENT, PythonDevice, Schema, SLOT_ELEMENT,
-    State, STRING_ELEMENT, TABLE_ELEMENT, Timestamp, Trainstamp)
+    State, STRING_ELEMENT, TABLE_ELEMENT, Timestamp, Trainstamp, EventLoop)
 
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
@@ -88,4 +89,8 @@ class TestDevice(PythonDevice):
 if __name__ == "__main__":
     config = Hash("_deviceId_", "boundDevice")
     device = Configurator(PythonDevice).create("TestDevice", config)
-    device.run()
+    t = threading.Thread(target=EventLoop.work)
+    t.start()
+    device.run() # Blocks
+    EventLoop.stop()
+    t.join()

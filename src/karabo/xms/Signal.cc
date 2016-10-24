@@ -15,7 +15,7 @@ namespace karabo {
     namespace xms {
 
 
-        Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel,
+        Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::JmsProducer::Pointer& channel,
                        const std::string& signalInstanceId, const std::string& signalFunction,
                        const int priority, const int messageTimeToLive) :
             m_signalSlotable(const_cast<SignalSlotable*> (signalSlotable)),
@@ -93,7 +93,7 @@ namespace karabo {
                 // Send heartbeat signal via broker
                 if (m_registeredSlotInstanceIdsString == "__none__") {
                     if (m_signalFunction == "signalHeartbeat")
-                        m_channel->write(*header, *message, m_priority, m_messageTimeToLive);
+                        m_channel->write(m_signalSlotable->m_topic, *header, *message, m_priority, m_messageTimeToLive);
                     return;
                 }
 
@@ -104,7 +104,7 @@ namespace karabo {
                 // publish leftovers via broker
                 if (registeredSlots.size() > 0) {
                     // header contains updated slot leftovers
-                    m_channel->write(*header, *message, m_priority, m_messageTimeToLive);
+                    m_channel->write(m_signalSlotable->m_topic, *header, *message, m_priority, m_messageTimeToLive);
                 }
 
             } catch (const karabo::util::Exception& e) {

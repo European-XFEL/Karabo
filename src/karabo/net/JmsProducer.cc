@@ -51,7 +51,23 @@ namespace karabo {
             m_connection->waitForConnectionAvailable();
 
             // We are posting through a strand, this guarantees sequential processing which is required by openMQ
-            m_mqStrand.post(boost::bind(&karabo::net::JmsProducer::asyncWrite, this, topic, header, body, priority, timeToLive));
+            m_mqStrand.post(bind_weak(&karabo::net::JmsProducer::asyncWrite, this, topic, header, body, priority, timeToLive));
+        }
+
+        // Helper function to transition to this new API
+
+
+        void JmsProducer::write(const std::string& topic, const karabo::util::Hash& header,
+                                const karabo::util::Hash& body, const int priority, const int timeToLive) {
+
+            auto headerPointer = boost::make_shared<Hash>(header);
+            auto bodyPointer = boost::make_shared<Hash>(body);
+
+            // This function will block in case no connection is available and return immediately otherwise
+            m_connection->waitForConnectionAvailable();
+
+            // We are posting through a strand, this guarantees sequential processing which is required by openMQ
+            m_mqStrand.post(bind_weak(&karabo::net::JmsProducer::asyncWrite, this, topic, headerPointer, bodyPointer, priority, timeToLive));
         }
 
 

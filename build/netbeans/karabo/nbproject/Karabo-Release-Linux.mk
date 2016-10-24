@@ -97,13 +97,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103111265/NetworkAppender.o \
 	${OBJECTDIR}/_ext/1103111265/OstreamAppender.o \
 	${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o \
-	${OBJECTDIR}/_ext/1103112890/AsioIOService.o \
-	${OBJECTDIR}/_ext/1103112890/BrokerConnection.o \
 	${OBJECTDIR}/_ext/1103112890/Connection.o \
 	${OBJECTDIR}/_ext/1103112890/EventLoop.o \
-	${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o \
-	${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o \
-	${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o \
 	${OBJECTDIR}/_ext/1103112890/JmsConnection.o \
 	${OBJECTDIR}/_ext/1103112890/JmsConsumer.o \
 	${OBJECTDIR}/_ext/1103112890/JmsProducer.o \
@@ -504,16 +499,6 @@ ${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o: ../../../src/karabo/log/Roll
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o ../../../src/karabo/log/RollingFileAppender.cc
 
-${OBJECTDIR}/_ext/1103112890/AsioIOService.o: ../../../src/karabo/net/AsioIOService.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/AsioIOService.o ../../../src/karabo/net/AsioIOService.cc
-
-${OBJECTDIR}/_ext/1103112890/BrokerConnection.o: ../../../src/karabo/net/BrokerConnection.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -Wno-unused-variable -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o ../../../src/karabo/net/BrokerConnection.cc
-
 ${OBJECTDIR}/_ext/1103112890/Connection.o: ../../../src/karabo/net/Connection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
@@ -523,21 +508,6 @@ ${OBJECTDIR}/_ext/1103112890/EventLoop.o: ../../../src/karabo/net/EventLoop.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/EventLoop.o ../../../src/karabo/net/EventLoop.cc
-
-${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o: ../../../src/karabo/net/JmsBrokerChannel.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -Wno-unused-variable -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o ../../../src/karabo/net/JmsBrokerChannel.cc
-
-${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o: ../../../src/karabo/net/JmsBrokerConnection.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -Wno-unused-variable -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o ../../../src/karabo/net/JmsBrokerConnection.cc
-
-${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o: ../../../src/karabo/net/JmsBrokerIOService.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -Wno-unused-variable -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o ../../../src/karabo/net/JmsBrokerIOService.cc
 
 ${OBJECTDIR}/_ext/1103112890/JmsConnection.o: ../../../src/karabo/net/JmsConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -817,7 +787,7 @@ ${TESTDIR}/TestFiles/f3: ${TESTDIR}/_ext/936496563/Logger_Test.o ${TESTDIR}/_ext
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f3 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/EventLoop_Test.o ${TESTDIR}/_ext/936498188/JmsBroker_Test.o ${TESTDIR}/_ext/936498188/JmsConnection_Test.o ${TESTDIR}/_ext/936498188/MQTcpNetworking.o ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o ${TESTDIR}/_ext/936498188/netTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/EventLoop_Test.o ${TESTDIR}/_ext/936498188/JmsConnection_Test.o ${TESTDIR}/_ext/936498188/MQTcpNetworking.o ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o ${TESTDIR}/_ext/936498188/netTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
@@ -898,12 +868,6 @@ ${TESTDIR}/_ext/936498188/EventLoop_Test.o: ../../../src/karabo/tests/net/EventL
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/EventLoop_Test.o ../../../src/karabo/tests/net/EventLoop_Test.cc
-
-
-${TESTDIR}/_ext/936498188/JmsBroker_Test.o: ../../../src/karabo/tests/net/JmsBroker_Test.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/936498188
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/JmsBroker_Test.o ../../../src/karabo/tests/net/JmsBroker_Test.cc
 
 
 ${TESTDIR}/_ext/936498188/JmsConnection_Test.o: ../../../src/karabo/tests/net/JmsConnection_Test.cc 
@@ -1910,32 +1874,6 @@ ${OBJECTDIR}/_ext/1103111265/RollingFileAppender_nomain.o: ${OBJECTDIR}/_ext/110
 	    ${CP} ${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o ${OBJECTDIR}/_ext/1103111265/RollingFileAppender_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1103112890/AsioIOService_nomain.o: ${OBJECTDIR}/_ext/1103112890/AsioIOService.o ../../../src/karabo/net/AsioIOService.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/AsioIOService.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/AsioIOService_nomain.o ../../../src/karabo/net/AsioIOService.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103112890/AsioIOService.o ${OBJECTDIR}/_ext/1103112890/AsioIOService_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103112890/BrokerConnection_nomain.o: ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o ../../../src/karabo/net/BrokerConnection.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -Wno-unused-variable -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/BrokerConnection_nomain.o ../../../src/karabo/net/BrokerConnection.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o ${OBJECTDIR}/_ext/1103112890/BrokerConnection_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/1103112890/Connection_nomain.o: ${OBJECTDIR}/_ext/1103112890/Connection.o ../../../src/karabo/net/Connection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/Connection.o`; \
@@ -1960,45 +1898,6 @@ ${OBJECTDIR}/_ext/1103112890/EventLoop_nomain.o: ${OBJECTDIR}/_ext/1103112890/Ev
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/EventLoop_nomain.o ../../../src/karabo/net/EventLoop.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/EventLoop.o ${OBJECTDIR}/_ext/1103112890/EventLoop_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o ../../../src/karabo/net/JmsBrokerChannel.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -Wno-unused-variable -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel_nomain.o ../../../src/karabo/net/JmsBrokerChannel.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection_nomain.o: ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o ../../../src/karabo/net/JmsBrokerConnection.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -Wno-unused-variable -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection_nomain.o ../../../src/karabo/net/JmsBrokerConnection.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService_nomain.o: ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o ../../../src/karabo/net/JmsBrokerIOService.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -Wno-unused-variable -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService_nomain.o ../../../src/karabo/net/JmsBrokerIOService.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/JmsConnection_nomain.o: ${OBJECTDIR}/_ext/1103112890/JmsConnection.o ../../../src/karabo/net/JmsConnection.cc 
