@@ -38,12 +38,19 @@ void PipelinedProcessing_Test::tearDown() {
 
 
 void PipelinedProcessing_Test::appTestRunner() {
-    // in order to avoid recurring setup and tear down call all tests are run in a single runner
+
+    // Start central event-loop
+    boost::thread t(boost::bind(&EventLoop::work));
+
+    // in order to avoid recurring setup and tear down calls, all tests are run in a single runner
     std::pair<bool, std::string> success =  m_deviceClient->instantiate("testServerPP", "P2PSenderDevice", Hash("deviceId", "p2pTestSender"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
     testGetOutputChannelSchema();
     testPipe();
+
+    EventLoop::stop();
+    t.join();
 }
 
 
@@ -68,7 +75,6 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema(){
 
 void PipelinedProcessing_Test::testPipe() {
 
-    boost::thread t(boost::bind(&karabo::net::EventLoop::work));
     const Hash cfg("deviceId", "pipeTestReceiver", "processingTime", 100,
                    "input.connectedOutputChannels", "p2pTestSender:output1");
 
@@ -85,9 +91,6 @@ void PipelinedProcessing_Test::testPipe() {
 
     // And poll for the correct answer
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("pipeTestReceiver", "nTotalData", 5, KRB_TEST_MAX_TIMEOUT));
-
-    karabo::net::EventLoop::stop();
-    t.join();
 }
 
 
