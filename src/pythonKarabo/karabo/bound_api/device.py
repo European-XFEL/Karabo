@@ -874,7 +874,7 @@ class PythonDevice(NoFsm):
                 if currentState not in allowedStates:
                     msg = "Command \"{}\" is not allowed in current state \"{}\" " \
                           "of device \"{}\"".format(slotName, currentState, self.deviceid)
-                    raise ValueError(msg)
+                    raise RuntimeError(msg)
 
         # Log the call of this slot by setting a parameter of the device
         self.set("lastCommand", slotName)
