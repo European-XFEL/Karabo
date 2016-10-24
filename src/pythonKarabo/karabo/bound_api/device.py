@@ -15,7 +15,7 @@ from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
     UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
-    AccessLevel, AccessType, AssemblyRules, BrokerConnection,
+    AccessLevel, AccessType, AssemblyRules, JmsConnection,
     DeviceClient, EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
     ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
@@ -49,13 +49,11 @@ class PythonDevice(NoFsm):
                     .expertAccess().assignmentInternal().noDefaultValue().init()
                     .commit(),
 
-            CHOICE_ELEMENT(expected).key("_connection_")
+            NODE_ELEMENT(expected).key("_connection_")
                     .displayedName("Connection")
                     .description("The connection to the communication layer of the distributed system")
-                    .appendNodesOfConfigurationBase(BrokerConnection)
-                    .assignmentOptional().defaultValue("Jms")
+                    .appendParametersOf(JmsConnection)
                     .adminAccess()
-                    .init()
                     .commit(),
 
             INT32_ELEMENT(expected).key("visibility")
@@ -122,11 +120,11 @@ class PythonDevice(NoFsm):
                         .expertAccess()
                         .assignmentOptional().defaultValue(False)
                         .commit(),
-                        
+
             INT32_ELEMENT(expected).key("progress")
                     .displayedName("Progress").description("The progress of the current action")
                     .readOnly().initialValue(0).commit(),
-                    
+
             NODE_ELEMENT(expected).key("performanceStatistics")
                     .displayedName("Performance Statistics")
                     .description("Accumulates some statistics")
@@ -239,8 +237,8 @@ class PythonDevice(NoFsm):
         self.globalAlarmCondition = AlarmCondition.NONE
 
         # Instantiate SignalSlotable object without starting event loop
-        try:
-            self._ss = SignalSlotable.create(self.deviceid, "Jms", self.parameters["_connection_.Jms"], autostart = False)
+        try:           
+            self._ss = SignalSlotable.create(self.deviceid, "JmsConnection", self.parameters["_connection_"], autostart = False)
         except RuntimeError as e:
             raise RuntimeError("PythonDevice.__init__: SignalSlotable.create Exception -- {0}".format(str(e)))
 

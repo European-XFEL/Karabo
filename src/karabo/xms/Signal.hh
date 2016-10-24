@@ -13,7 +13,7 @@
 
 #include <boost/asio.hpp>
 #include <karabo/util/Factory.hh>
-#include <karabo/net/BrokerChannel.hh>
+#include <karabo/net/JmsProducer.hh>
 #include <typeinfo>
 #include <typeindex>
 
@@ -42,7 +42,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(Signal, "Signal", "1.0")
 
-            Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel,
+            Signal(const SignalSlotable* signalSlotable, const karabo::net::JmsProducer::Pointer& channel,
                    const std::string& signalInstanceId, const std::string& signalFunction,
                    const int priority, const int messageTimeToLive);
 
@@ -71,6 +71,7 @@ namespace karabo {
             bool unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction = "");
 
             // This code is left until we find time to generically solve the char* to std::string problem
+
             /*
             template<typename ...> struct seq {
 
@@ -108,6 +109,15 @@ namespace karabo {
                  */
             }
 
+            /**
+             * This function allows to use a specific topic to which all messages are emitted
+             * If the setter is not called, the topic of SignalSlotable will be used
+             * NOTE: The idea is to keep a door open for a later change where each emit will use a topic
+             * identical to the signal name. In that case the setter can just be removed.
+             * @param topic The topic name
+             */
+            void setTopic(const std::string& topic);
+
         protected:
 
             void updateConnectedSlotsString();
@@ -121,7 +131,7 @@ namespace karabo {
         protected:
 
             SignalSlotable* m_signalSlotable;
-            const karabo::net::BrokerChannel::Pointer& m_channel;
+            const karabo::net::JmsProducer::Pointer& m_channel;
             std::string m_signalInstanceId;
             std::string m_signalFunction;
             std::string m_registeredSlotsString;
@@ -130,6 +140,7 @@ namespace karabo {
             std::map<std::string, std::set<std::string> > m_registeredSlots;
             int m_priority;
             int m_messageTimeToLive;
+            std::string m_topic;
 
         private:
 

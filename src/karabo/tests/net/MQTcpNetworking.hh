@@ -8,18 +8,15 @@
 #ifndef MQTCPNETWORKING_HH
 #define	MQTCPNETWORKING_HH
 
-#include <karabo/util/Configurator.hh>
-#include <karabo/log/Logger.hh>
+#include "karabo/util/Configurator.hh"
+#include "karabo/log/Logger.hh"
+#include "karabo/net/Connection.hh"
+#include "karabo/net/Channel.hh"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/net/IOService.hh>
-#include <karabo/net/Connection.hh>
-#include <karabo/net/Channel.hh>
-
 class MQTcpNetworking : public CPPUNIT_NS::TestFixture {
-
 
     int m_numberOfMessages;
 
@@ -61,7 +58,7 @@ private:
     void serverConnectHandler(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel);
 
     void serverErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
-    
+
     void serverReadHashHashHandler(const karabo::net::ErrorCode& ec,
                                    const karabo::net::Channel::Pointer& channel,
                                    karabo::util::Hash& header,
@@ -76,7 +73,7 @@ private:
     void onClientConnected(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
     void clientChannelErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
-    
+
     void clientReadHashHashHandler(const karabo::net::ErrorCode& ec,
                                    const karabo::net::Channel::Pointer& channel,
                                    karabo::util::Hash& header,

@@ -69,8 +69,7 @@ void AlarmService_Test::tearDown() {
 void AlarmService_Test::appTestRunner() {
     //add a few threads to the event loop
     EventLoop::addThread(4);
-    boost::asio::io_service::work work(EventLoop::getIOService());
-    boost::thread t(boost::bind(&EventLoop::run));
+    boost::thread t(boost::bind(&EventLoop::work));
 
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
     // here we start the server and service devices, as well as an alarm test device

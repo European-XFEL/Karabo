@@ -11,11 +11,10 @@
 #ifndef KARATHON_SLOTWRAP_HH
 #define	KARATHON_SLOTWRAP_HH
 
-#include <boost/python.hpp>
-#include <karabo/xms/Slot.hh>
-#include <karabo/net/BrokerChannel.hh>
-#include "ScopedGILAcquire.hh"
 #include "HashWrap.hh"
+#include "karabo/xms/Slot.hh"
+#include "ScopedGILAcquire.hh"
+#include <boost/python.hpp>
 
 namespace bp = boost::python;
 

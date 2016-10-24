@@ -157,7 +157,7 @@ namespace karabo {
              * @param connectionType The communication system transport layer implementation
              * @param connectionParameters Additional connection configuration
              */
-            DeviceClient(const std::string& connectionType = "Jms",
+            DeviceClient(const std::string& connectionType = "JmsConnection",
                          const karabo::util::Hash& connectionParameters = karabo::util::Hash());
 
             /**

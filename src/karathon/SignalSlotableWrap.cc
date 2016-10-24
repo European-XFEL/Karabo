@@ -2,6 +2,8 @@
 
 namespace bp = boost::python;
 using namespace karabo::xms;
+using namespace karabo::util;
+using namespace karabo::net;
 
 namespace karathon {
 
@@ -188,7 +190,7 @@ namespace karathon {
                                            const bool autostartEventLoop,
                                            int heartbeatInterval) : SignalSlotable() {
 
-        karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
+        JmsConnection::Pointer connection = Configurator<JmsConnection>::create(connectionType, connectionParameters);
         this->init(instanceId, connection);
         this->setNumberOfThreads(2);
 

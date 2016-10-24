@@ -14,7 +14,6 @@
 #include "JmsConnection.hh"
 #include "JmsConsumer.hh"
 #include "JmsProducer.hh"
-#include "JmsBrokerConnection.hh"
 #include "EventLoop.hh"
 
 namespace karabo {
@@ -24,6 +23,7 @@ namespace karabo {
         using namespace boost;
 
         KARABO_REGISTER_FOR_CONFIGURATION(JmsConnection);
+
 
         void JmsConnection::expectedParameters(Schema& s) {
 
@@ -138,7 +138,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_ERROR << "Lost TCP connection to broker " << that->m_connectedBrokerUrl;
             that->setFlagDisconnected();
             // Try to reconnect
-            that->m_reconnectStrand.post(boost::bind(&karabo::net::JmsConnection::connect, that));
+            that->m_reconnectStrand.post(bind_weak(&karabo::net::JmsConnection::connect, that));
         }
 
 
@@ -200,8 +200,9 @@ namespace karabo {
         }
 
 
-        boost::shared_ptr<JmsConsumer> JmsConnection::createConsumer() {
-            return boost::shared_ptr<JmsConsumer>(new JmsConsumer(shared_from_this()));
+        boost::shared_ptr<JmsConsumer> JmsConnection::createConsumer(const std::string& topic,
+                                                                     const std::string& selector) {
+            return boost::shared_ptr<JmsConsumer>(new JmsConsumer(shared_from_this(), topic, selector));
         }
 
 
