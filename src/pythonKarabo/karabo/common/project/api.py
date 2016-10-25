@@ -9,6 +9,6 @@ from .device import DeviceConfigurationModel, DeviceGroupModel
 from .lazy import (LazyDeviceGroupModel, LazyDeviceServerModel,
                    LazyProjectModel, ProjectObjectReference, read_lazy_object)
 from .macro import MacroModel, read_macro, write_macro
-from .model import ProjectModel
+from .model import ProjectModel, visit_project_objects
 from .monitor import MonitorModel
 from .server import DeviceServerModel
