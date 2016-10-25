@@ -1055,6 +1055,16 @@ def launchPythonDevice():
     # NOTE: The first argument is '-c'
     _, plugindir, modname, classid, xmlfile = tuple(sys.argv)
     config = PythonDevice.loadConfiguration(xmlfile)
+    # If log filename not specified, make use of device name to avoid
+    # that different processes write to the same file.
+    # TODO:
+    # "karabo.log" is default from RollingFileAppender::expectedParameters.
+    # Unfortunately, GUI sends full config, including defaults.
+    if (not "Logger.file.filename" in config
+        or config["Logger.file.filename"] == "karabo.log"):
+        deviceId = config["_deviceId_"]
+        defaultLog = "device-" + deviceId.replace(os.path.sep, "_") + ".log"
+        config["Logger.file.filename"] = defaultLog
     loader = PluginLoader.create(
         "PythonPluginLoader",
         Hash("pluginNamespace", "karabo.bound_device",

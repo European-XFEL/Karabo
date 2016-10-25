@@ -101,6 +101,9 @@ class DeviceServer(object):
                     .appendParametersOf(Logger)
                     .commit()
                     ,
+            OVERWRITE_ELEMENT(expected).key("Logger.file.filename")
+                    .setNewDefaultValue("device-server.log")
+                    .commit()
         )
 
     def setupFsm(self):
