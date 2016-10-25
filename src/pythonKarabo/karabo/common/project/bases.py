@@ -19,7 +19,7 @@ class BaseProjectObjectModel(HasStrictTraits):
     modified = Bool(False, transient=True)
 
     # Version and unique id
-    version = Int(transient=True)
+    revision = Int(transient=True)
     uuid = String
 
     # Database-provided attributes which need to be preserved

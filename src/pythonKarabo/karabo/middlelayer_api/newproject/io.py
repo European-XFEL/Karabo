@@ -102,7 +102,7 @@ def _db_metadata_reader(metadata):
     """ Read the traits which are common to all BaseProjectObjectModel objects
     """
     attrs = {
-        'version': int(metadata['version']),
+        'revision': int(metadata['revision']),
         'uuid': metadata['uuid'],
         'db_attrs': {k: metadata.get(k, '') for k in ('key', 'path')},
     }
@@ -175,7 +175,7 @@ def _reference_reader(hsh):
     """ Given a Hash object containing an object reference, return
     a new ProjectObjectReference object.
     """
-    return ProjectObjectReference(uuid=hsh['uuid'], version=hsh['version'])
+    return ProjectObjectReference(uuid=hsh['uuid'], revision=hsh['revision'])
 
 
 def _scene_reader(io_obj, metadata):
@@ -194,7 +194,7 @@ def _model_db_metadata(model):
     """
     attrs = model.db_attrs.copy()
     attrs['uuid'] = model.uuid
-    attrs['version'] = str(model.version)
+    attrs['revision'] = str(model.revision)
     return attrs
 
 
@@ -210,7 +210,7 @@ def _device_writer(model):
 def _device_group_writer(model):
     """ A writer for device group models
     """
-    devices = [Hash('uuid', dev.uuid, 'version', dev.version)
+    devices = [Hash('uuid', dev.uuid, 'revision', dev.revision)
                for dev in model.devices]
     hsh = Hash('group', devices)
     return hsh.encode('XML')
@@ -219,7 +219,7 @@ def _device_group_writer(model):
 def _device_server_writer(model):
     """ A writer for device server models
     """
-    devices = [Hash('uuid', dev.uuid, 'version', dev.version)
+    devices = [Hash('uuid', dev.uuid, 'revision', dev.revision)
                for dev in model.devices]
     hsh = Hash('server', devices)
     return hsh.encode('XML')
@@ -246,7 +246,7 @@ def _project_writer(model):
     project = Hash()
     for typename in PROJECT_OBJECT_CATEGORIES:
         objects = getattr(model, typename)
-        project[typename] = [Hash('uuid', obj.uuid, 'version', obj.version)
+        project[typename] = [Hash('uuid', obj.uuid, 'revision', obj.revision)
                              for obj in objects]
 
     hsh = Hash('project', project)

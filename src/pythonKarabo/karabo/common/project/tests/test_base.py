@@ -27,7 +27,7 @@ def test_uuid():
 def test_modified_flag():
     model = BaseProjectObjectModel()
 
-    model.version = 2
+    model.revision = 2
     assert not model.modified
 
     model.uuid = uuid.uuid4().hex
