@@ -18,7 +18,7 @@ from PyQt4.QtGui import (
 )
 from PyQt4.Qwt5.Qwt import QwtPlot
 
-from traits.api import ABCHasStrictTraits, Bool, Instance, String
+from traits.api import ABCHasStrictTraits, Bool, Callable, Instance, String
 
 import karabo_gui.icons as icons
 from karabo_gui.images import get_dimensions_and_format, get_image_data
@@ -242,11 +242,8 @@ class BaseWidgetAction(ABCHasStrictTraits):
     checkable = Bool(False)
     # Whether or not this action is checked
     is_checked = Bool(False)
-
-    @abstractmethod
-    def perform(self, widget):
-        """ Perform the action on a widget instance
-        """
+    # Defines the method which is called whenever the action is triggered
+    triggered = Callable('perform')
 
 
 class WidgetSelectionAction(BaseWidgetAction):
