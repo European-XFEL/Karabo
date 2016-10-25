@@ -65,11 +65,12 @@ def assure_running(project_db_server=None, project_db_port=None):
             maxTimeout = 60
             waitBetween = 5
             count = 0
+            tSettings = ProbeDbSettings(project_db_server,
+                                        port=project_db_port)
             while True:
                 last_ex = None
                 try:
-                    tSettings = ProbeDbSettings(project_db_server,
-                                                port=project_db_port)
+
                     dbhandle = db.ExistDB(tSettings.server_url)
                     if dbhandle.hasCollection('/system'):
                         break
@@ -80,6 +81,9 @@ def assure_running(project_db_server=None, project_db_port=None):
                                            .format(last_ex))
                 sleep(waitBetween)
                 count += 1
+
+            # now init db if needed
+            init_local_db()
     else:
         try:
             tSettings = ProbeDbSettings(project_db_server,
@@ -95,6 +99,7 @@ def assure_running(project_db_server=None, project_db_port=None):
         except ExistDBException as e:
             raise ProjectDBError("Could not contact the database server"
                                  " at {}: {}".format(project_db_server, e))
+
 
 
 def stop_database():
@@ -127,6 +132,7 @@ def init_local_db():
         print("Created root collection at {}".format(krbroot))
     else:
         print("Root collection already exists at {}".format(krbroot))
+        return
     # local domain
     if not dbhandle.hasCollection("{}/LOCAL".format(krbroot)):
         dbhandle.createCollection("{}/LOCAL".format(krbroot))
