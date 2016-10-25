@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from abc import abstractmethod
+from contextlib import contextmanager
 from functools import partial
 
 from guiqwt.builder import make
@@ -197,16 +198,23 @@ class BaseImageDisplay(DisplayWidget):
     @pyqtSlot(object)
     def show_context_menu(self, pos):
         """ The context menu is requested """
-        # Deactive current tool first - this needs to be done to avoid some
-        # strange behaviour with the image
-        self.current_tool_obj.deactivate()
-        menu = QMenu()
-        q_actions = self._create_context_menu_actions()
-        for a in q_actions:
-            menu.addAction(a)
-        menu.exec(QCursor.pos())
-        # Activate current tool again
-        self.current_tool_obj.activate()
+        with self.keep_tool_activated(self.current_tool_obj):
+            menu = QMenu()
+            q_actions = self._create_context_menu_actions()
+            for a in q_actions:
+                menu.addAction(a)
+            menu.exec(QCursor.pos())
+
+    @contextmanager
+    def keep_tool_activated(self, tool_obj):
+        """ Context manager to keep tool activated - needs to be done to avoid
+        some strange behaviour with the ``guiqwt.ImageWidget``
+
+        :param tool_obj: An object of type ``guiqwt.tools``
+        """
+        tool_obj.deactivate()
+        yield
+        tool_obj.activate()
 
 
 class WebcamImageDisplay(BaseImageDisplay):
