@@ -24,7 +24,7 @@ def _compare_projects(proj0, proj1):
         return comparables
 
     assert proj0.uuid == proj1.uuid
-    assert proj0.version == proj1.version
+    assert proj0.revision == proj1.revision
     assert proj0.simple_name == proj1.simple_name
 
     for part in PROJECT_OBJECT_CATEGORIES:
@@ -61,10 +61,10 @@ def _write_project(project, storage):
         children = getattr(project, childname)
         for child in children:
             data = write_project_model(child)
-            storage.store(child.uuid, child.version, data)
+            storage.store(child.uuid, child.revision, data)
 
     data = write_project_model(project)
-    storage.store(project.uuid, project.version, data)
+    storage.store(project.uuid, project.revision, data)
 
 # -----------------------------------------------------------------------------
 
@@ -83,7 +83,7 @@ def test_project_round_trip():
 
     with _project_storage() as storage:
         _write_project(project, storage)
-        rt_project = read_lazy_object(project.uuid, project.version, storage,
+        rt_project = read_lazy_object(project.uuid, project.revision, storage,
                                       read_project_model)
 
     _compare_projects(project, rt_project)
