@@ -3,7 +3,6 @@
 # Created on October 6, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from abc import abstractmethod
 from contextlib import contextmanager
 from functools import partial
 
@@ -18,7 +17,7 @@ from PyQt4.QtGui import (
 )
 from PyQt4.Qwt5.Qwt import QwtPlot
 
-from traits.api import ABCHasStrictTraits, Bool, Callable, Instance, String
+from traits.api import HasStrictTraits, Bool, Callable, Instance, String
 
 import karabo_gui.icons as icons
 from karabo_gui.images import get_dimensions_and_format, get_image_data
@@ -58,13 +57,11 @@ class BaseImageDisplay(DisplayWidget):
         toolbar_widget.setFloatable(False)
         toolbar_widget.setOrientation(Qt.Vertical)
 
-        mode_qactions = [self._build_qaction(a)
-                         for a in self._create_mode_tool_actions()]
+        mode_qactions = self._create_mode_tool_actions()
         self._build_qaction_group(mode_qactions)
         qactions.extend(mode_qactions)
 
-        qactions.extend(self._build_qaction(a)
-                        for a in self._create_image_actions())
+        qactions.extend(self._create_image_actions())
 
         for qaction in qactions:
             toolbar_widget.addAction(qaction)
@@ -73,54 +70,60 @@ class BaseImageDisplay(DisplayWidget):
 
     def _create_mode_tool_actions(self):
         """ Create actions and return list of them"""
-        selection = WidgetSelectionAction(
+        selection = WidgetAction(
             icon=icons.cursorArrow,
             checkable=True,
             is_checked=True,
             text="Selection Mode",
-            tooltip="Selection Mode"
+            tooltip="Selection Mode",
+            triggered=widget_selection_handler,
         )
-        zoom = WidgetZoomAction(
+        zoom = WidgetAction(
             icon=icons.zoom,
             checkable=True,
             is_checked=False,
             text="Zoom",
-            tooltip="Rectangle Zoom"
+            tooltip="Rectangle Zoom",
+            triggered=widget_zoom_handler,
         )
 
-        return [selection, zoom]
+        return [self._build_qaction(a) for a in (selection, zoom)]
 
     def _create_image_actions(self):
         """ Create actions and return list of them"""
-        roi = WidgetROIAction(
+        roi = WidgetAction(
             icon=icons.crop,
             checkable=True,
             is_checked=False,
             text="Region of Interest",
-            tooltip="Show Region of Interest"
+            tooltip="Show Region of Interest",
+            triggered=lambda *a: None,
         )
 
-        return [roi]
+        return [self._build_qaction(a) for a in (roi,)]
 
     def _create_context_menu_actions(self):
         actions = []
-        actions.append(ShowToolBarAction(
+        actions.append(WidgetAction(
             text="Show tool bar",
             tooltip="Show tool bar for widget",
             checkable=True,
-            is_checked=self._tool_bar_shown())
+            is_checked=self._tool_bar_shown(),
+            triggered=show_toolbar_handler)
         )
-        actions.append(ShowColorBarAction(
+        actions.append(WidgetAction(
             text="Show color bar",
             tooltip="Show color bar for widget",
             checkable=True,
-            is_checked=self._color_bar_shown())
+            is_checked=self._color_bar_shown(),
+            triggered=show_colorbar_handler)
         )
-        actions.append(ShowAxesAction(
+        actions.append(WidgetAction(
             text="Show axes",
             tooltip="Show axes for widget",
             checkable=True,
-            is_checked=self._axes_shown())
+            is_checked=self._axes_shown(),
+            triggered=show_axes_handler)
         )
         q_actions = [self._build_qaction(a) for a in actions]
         return q_actions
@@ -135,7 +138,8 @@ class BaseImageDisplay(DisplayWidget):
             q_action.setChecked(widget_action.is_checked)
         q_action.setStatusTip(widget_action.tooltip)
         q_action.setToolTip(widget_action.tooltip)
-        q_action.triggered.connect(partial(widget_action.perform, self))
+        callback = partial(widget_action.triggered, widget_action, self)
+        q_action.triggered.connect(callback)
         return q_action
 
     def _build_qaction_group(self, actions):
@@ -212,9 +216,11 @@ class BaseImageDisplay(DisplayWidget):
 
         :param tool_obj: An object of type ``guiqwt.tools``
         """
-        tool_obj.deactivate()
-        yield
-        tool_obj.activate()
+        try:
+            tool_obj.deactivate()
+            yield
+        finally:
+            tool_obj.activate()
 
 
 class WebcamImageDisplay(BaseImageDisplay):
@@ -229,7 +235,7 @@ class ScientificImageDisplay(BaseImageDisplay):
     alias = "Scientific image"
 
 
-class BaseWidgetAction(ABCHasStrictTraits):
+class WidgetAction(HasStrictTraits):
     """ Base class for actions in a widget
     """
     # The icon for this action
@@ -243,43 +249,27 @@ class BaseWidgetAction(ABCHasStrictTraits):
     # Whether or not this action is checked
     is_checked = Bool(False)
     # Defines the method which is called whenever the action is triggered
-    triggered = Callable('perform')
+    triggered = Callable
 
 
-class WidgetSelectionAction(BaseWidgetAction):
-    """ Selection action"""
-    def perform(self, widget):
-        widget.set_tool(SelectTool)
+def widget_selection_handler(action, widget):
+    widget.set_tool(SelectTool)
 
 
-class WidgetZoomAction(BaseWidgetAction):
-    """ Selection action"""
-    def perform(self, widget):
-        widget.set_tool(RectZoomTool)
+def widget_zoom_handler(action, widget):
+    widget.set_tool(RectZoomTool)
 
 
-class WidgetROIAction(BaseWidgetAction):
-    """ Region of interest action"""
-    def perform(self, widget):
-        pass
+def show_toolbar_handler(action, widget, is_checked):
+    action.is_checked = is_checked
+    widget._show_tool_bar(is_checked)
 
 
-class ShowToolBarAction(BaseWidgetAction):
-    """ Show tool bar action"""
-    def perform(self, widget, is_checked):
-        self.is_checked = is_checked
-        widget._show_tool_bar(is_checked)
+def show_colorbar_handler(action, widget, is_checked):
+    action.is_checked = is_checked
+    widget._show_color_bar(is_checked)
 
 
-class ShowColorBarAction(BaseWidgetAction):
-    """ Show color bar action"""
-    def perform(self, widget, is_checked):
-        self.is_checked = is_checked
-        widget._show_color_bar(is_checked)
-
-
-class ShowAxesAction(BaseWidgetAction):
-    """ Show axes action"""
-    def perform(self, widget, is_checked):
-        self.is_checked = is_checked
-        widget._show_axes(is_checked)
+def show_axes_handler(action, widget, is_checked):
+    action.is_checked = is_checked
+    widget._show_axes(is_checked)
