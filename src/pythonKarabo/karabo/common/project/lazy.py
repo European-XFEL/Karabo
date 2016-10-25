@@ -64,7 +64,7 @@ def read_lazy_object(uuid, revision, db_adapter, reader_func):
         lazy_children = getattr(lazy_object, trait)
         industrious_children = []
         for child in lazy_children:
-            data = db_adapter.retrieve(child.uuid, child.version)
+            data = db_adapter.retrieve(child.uuid, child.revision)
             industrious_children.append(reader_func(BytesIO(data)))
         setattr(industrious_object, trait, industrious_children)
 
@@ -91,4 +91,4 @@ def _get_normal_object(lazy_object):
     klass = klass_map.get(lazy_object.__class__)
     if klass is None:
         return lazy_object
-    return klass(uuid=lazy_object.uuid, version=lazy_object.version)
+    return klass(uuid=lazy_object.uuid, revision=lazy_object.revision)
