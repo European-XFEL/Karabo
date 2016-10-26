@@ -16,14 +16,15 @@ from karathon import (
     UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, JmsConnection,
-    DeviceClient, EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
+    EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
     ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
     ValidatorValidationRules
 )
-
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
+# Use patched DeviceClient, not the one directly from karathon:
+from .device_client import DeviceClient
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .configurator import Configurator
 from .no_fsm import NoFsm
