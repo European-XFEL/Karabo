@@ -85,7 +85,7 @@ ${TESTDIR}/TestFiles/devicelocking_test: ${TESTDIR}/_ext/567603001/LockTestDevic
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/devicelocking_test $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/pipelinedprocessing_test: ${TESTDIR}/_ext/567603001/P2PSenderDevice.o ${TESTDIR}/_ext/567603001/PipelinedProcessing_Test.o ${TESTDIR}/_ext/567603001/integrationRunner_4.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/pipelinedprocessing_test: ${TESTDIR}/_ext/567603001/P2PSenderDevice.o ${TESTDIR}/_ext/567603001/PipeReceiverDevice.o ${TESTDIR}/_ext/567603001/PipelinedProcessing_Test.o ${TESTDIR}/_ext/567603001/integrationRunner_4.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/pipelinedprocessing_test $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
@@ -148,6 +148,12 @@ ${TESTDIR}/_ext/567603001/P2PSenderDevice.o: ../../../src/integrationTests/P2PSe
 	${MKDIR} -p ${TESTDIR}/_ext/567603001
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/P2PSenderDevice.o ../../../src/integrationTests/P2PSenderDevice.cc
+
+
+${TESTDIR}/_ext/567603001/PipeReceiverDevice.o: ../../../src/integrationTests/PipeReceiverDevice.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/567603001
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/PipeReceiverDevice.o ../../../src/integrationTests/PipeReceiverDevice.cc
 
 
 ${TESTDIR}/_ext/567603001/PipelinedProcessing_Test.o: ../../../src/integrationTests/PipelinedProcessing_Test.cc 

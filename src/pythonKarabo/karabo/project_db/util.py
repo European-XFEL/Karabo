@@ -6,14 +6,7 @@ import psutil
 from lxml import etree
 from eulexistdb import db
 from eulexistdb.exceptions import ExistDBException
-from requests.packages.urllib3.exceptions import (NewConnectionError,
-                                                  ConnectTimeoutError,
-                                                  ConnectionError,
-                                                  HTTPError,
-                                                  ResponseError,
-                                                  RequestError,
-                                                  MaxRetryError,
-                                                  ProtocolError)
+from requests.packages.urllib3.exceptions import HTTPError
 
 
 from .dbsettings import ProbeDbSettings, LocalDbSettings
@@ -34,8 +27,8 @@ def check_running():
             continue
         # check if a web app for eXistDB is running. the full command is
         # java -jar existDB/start jetty
-        if 'java' in cmd and '-jar' in cmd and 'jetty' in cmd and \
-           'eXistDB/start' in cmd[2]:
+        if 'java' in cmd and '-jar' in cmd and \
+           True in [True if 'eXistDB' in c else False for c in cmd]:
             return True
 
     return False
@@ -68,24 +61,29 @@ def assure_running(project_db_server=None, project_db_port=None):
             script_path = os.path.join(karabo_install, 'karaboRun', 'bin',
                                        'startConfigDB')
             check_call([script_path])
-            # wait until the database is acutally up
+            # wait until the database is actually up
             maxTimeout = 60
             waitBetween = 5
             count = 0
-            last_ex = None
+            tSettings = ProbeDbSettings(project_db_server,
+                                        port=project_db_port)
             while True:
-                if count > maxTimeout//waitBetween:
-                    raise TimeoutError("Starting project database timed out!"
-                                       "Last exception: {}".format(last_ex))
+                last_ex = None
                 try:
-                    tSettings = ProbeDbSettings(project_db_server,
-                                                port=project_db_port)
+
                     dbhandle = db.ExistDB(tSettings.server_url)
                     if dbhandle.hasCollection('/system'):
                         break
-                except (TimeoutError, HTTPError) as last_ex:
-                    sleep(waitBetween)
+                except (TimeoutError, HTTPError, ExistDBException) as last_ex:
+                    if count > maxTimeout//waitBetween:
+                        raise TimeoutError("Starting project database timed"
+                                           " out! Last exception: {}"
+                                           .format(last_ex))
+                sleep(waitBetween)
                 count += 1
+
+            # now init db if needed
+            init_local_db()
     else:
         try:
             tSettings = ProbeDbSettings(project_db_server,
@@ -101,6 +99,7 @@ def assure_running(project_db_server=None, project_db_port=None):
         except ExistDBException as e:
             raise ProjectDBError("Could not contact the database server"
                                  " at {}: {}".format(project_db_server, e))
+
 
 
 def stop_database():
@@ -122,7 +121,7 @@ def init_local_db():
     :return: None
     """
 
-    assure_running()
+    assure_running(project_db_server='localhost', project_db_port=8080)
     settings = LocalDbSettings()
     dbhandle = db.ExistDB(settings.server_url)
     krbroot = settings.root_collection
@@ -133,6 +132,7 @@ def init_local_db():
         print("Created root collection at {}".format(krbroot))
     else:
         print("Root collection already exists at {}".format(krbroot))
+        return
     # local domain
     if not dbhandle.hasCollection("{}/LOCAL".format(krbroot)):
         dbhandle.createCollection("{}/LOCAL".format(krbroot))
@@ -198,4 +198,5 @@ def init_local_db():
 
     # in the end we have to restart the database
     stop_database()
+    sleep(10) ##sleep here so database can shut down
     assure_running()

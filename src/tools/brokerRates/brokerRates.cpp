@@ -16,11 +16,10 @@
 #include <map>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/split.hpp>
-
-#include <karabo/net/BrokerIOService.hh>
-#include <karabo/net/BrokerConnection.hh>
-#include <karabo/net/BrokerChannel.hh>
-
+#include <karabo/util/Hash.hh>
+#include <karabo/util/Schema.hh>
+#include <karabo/net/JmsConnection.hh>
+#include <karabo/net/JmsConsumer.hh>
 #include <karabo/util/Epochstamp.hh>
 
 using namespace karabo;

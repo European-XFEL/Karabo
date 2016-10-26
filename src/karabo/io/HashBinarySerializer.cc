@@ -379,7 +379,7 @@ namespace karabo {
             const size_t size = readSize(is);
             ByteArray result(boost::shared_ptr<char>(new char[size], &byteArrayDeleter), size);
             is.read(result.first.get(), size);
-            return result; 
+            return result;
         }
 
 

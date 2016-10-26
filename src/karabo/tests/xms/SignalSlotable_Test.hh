@@ -32,6 +32,7 @@ public:
 
 private:
 
+    void testWrapper();
     void testMethod();
     void testAutoConnectSignal();
     void testAutoConnectSlot();
@@ -40,7 +41,8 @@ private:
 
     boost::shared_ptr<SignalSlotDemo> m_demo;
     boost::shared_ptr<boost::thread> m_demoThread;
+    boost::shared_ptr<boost::thread> m_eventLoopThread;
+    boost::shared_ptr<boost::asio::io_service::work> m_work;
 };
 
 #endif	/* SIGNALSLOTABLE_TEST_HH */
-

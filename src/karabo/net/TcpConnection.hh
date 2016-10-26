@@ -13,14 +13,11 @@
 #ifndef KARABO_NET_ATCPCONNECTION_HH
 #define	KARABO_NET_ATCPCONNECTION_HH
 
+#include "Connection.hh"
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
 #include <string>
-
-#include "Connection.hh"
-#include "IOService.hh"
-
 
 /**
  * The main European XFEL namespace

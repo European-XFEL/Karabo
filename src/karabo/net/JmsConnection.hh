@@ -8,6 +8,8 @@
 #ifndef KARABO_NET_JMSCONNECTION_HH
 #define	KARABO_NET_JMSCONNECTION_HH
 
+#include "karabo/util/ClassInfo.hh"
+#include "karabo/util/Schema.hh"
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
@@ -112,7 +114,7 @@ namespace karabo {
              * NOTE: Each call to this function, will open new thread in the central event-loop
              * @return JmsConsumer
              */
-            boost::shared_ptr<JmsConsumer> createConsumer();
+            boost::shared_ptr<JmsConsumer> createConsumer(const std::string& topic, const std::string& selector = "");
 
             /**
              * Creates a new producer channel.

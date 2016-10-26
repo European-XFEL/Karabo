@@ -35,15 +35,6 @@ namespace karabo {
         }
 
 
-        /**
-         * Writes a message containing header and body (expressed as Hashes) to the broker.
-         * This function runs asynchronously, it only blocks in case the connection to the broker is not available.
-         * @param topic The topic to which this message should be sent
-         * @param header The message header, all keys in here qualify for selector statements on the consumer side
-         * @param body The message body
-         * @param priority The message priority from 0 (lowest) - 9 (highest), default: 4
-         * @param timeToLive The life time of the message in ms, default: 0 (lives forever)
-         */
         void JmsProducer::write(const std::string& topic, const karabo::util::Hash::Pointer& header,
                                 const karabo::util::Hash::Pointer& body, const int priority, const int timeToLive) {
 
@@ -51,7 +42,17 @@ namespace karabo {
             m_connection->waitForConnectionAvailable();
 
             // We are posting through a strand, this guarantees sequential processing which is required by openMQ
-            m_mqStrand.post(boost::bind(&karabo::net::JmsProducer::asyncWrite, this, topic, header, body, priority, timeToLive));
+            m_mqStrand.post(bind_weak(&karabo::net::JmsProducer::asyncWrite, this, topic, header, body, priority, timeToLive));
+        }
+
+
+        void JmsProducer::write(const std::string& topic, const karabo::util::Hash& header,
+                                const karabo::util::Hash& body, const int priority, const int timeToLive) {
+
+            auto headerPointer = boost::make_shared<Hash>(header);
+            auto bodyPointer = boost::make_shared<Hash>(body);
+
+            write(topic, headerPointer, bodyPointer, priority, timeToLive);
         }
 
 
