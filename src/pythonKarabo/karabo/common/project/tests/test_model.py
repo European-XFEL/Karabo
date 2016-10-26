@@ -13,11 +13,11 @@ def test_project_model_visitor():
     proj = ProjectModel(subprojects=[inner_proj])
 
     visit_project_objects(proj, visitor)
-    assert visited == [macro, inner_proj, proj]
+    assert visited == [proj, inner_proj, macro]
 
     del visited[:]
     visit_project_objects(inner_proj, visitor)
-    assert visited == [macro, inner_proj]
+    assert visited == [inner_proj, macro]
 
 
 def test_project_modified_obj_check():
