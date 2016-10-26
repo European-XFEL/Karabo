@@ -22,6 +22,7 @@ from traits.api import HasStrictTraits, Bool, Callable, Instance, String
 import karabo_gui.icons as icons
 from karabo_gui.images import get_dimensions_and_format, get_image_data
 from karabo_gui.schema import ImageNode
+from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 
 
@@ -219,24 +220,21 @@ class BaseImageDisplay(DisplayWidget):
             self.image.set_data(npy.astype('float'))
 
         # In case an axis is disabled - the scale needs to be adapted
-        DELTA = 0.3
         if self.zoom_rect.isEmpty():
+            DELTA = 0.2
             img_rect = self.image.boundingRect()
             img_width = img_rect.width()
             img_height = img_rect.height()
-            self.plot.setAxisScale(
-                QwtPlot.xBottom, img_rect.x() - DELTA, img_width + DELTA)
-            self.plot.setAxisScale(
-                QwtPlot.yLeft, img_rect.y() - DELTA, img_height + DELTA)
-        else:
-            zoom_x = self.zoom_rect.x()
-            zoom_y = self.zoom_rect.y()
-            zoom_width = self.zoom_rect.width()
-            zoom_height = self.zoom_rect.height()
-            self.plot.setAxisScale(
-                QwtPlot.xBottom, zoom_x - DELTA, zoom_width + DELTA)
-            self.plot.setAxisScale(
-                QwtPlot.yLeft, zoom_y - DELTA, zoom_height + DELTA)
+            x_axis = self.plot.axisWidget(QwtPlot.xBottom)
+            with SignalBlocker(x_axis):
+                self.plot.setAxisScale(
+                    QwtPlot.xBottom, img_rect.x() - DELTA, img_width + DELTA)
+            y_axis = self.plot.axisWidget(QwtPlot.yLeft)
+            with SignalBlocker(y_axis):
+                # Note: y axis is shown in reverse order
+                # (max - lowerBound, min - upperBound)
+                self.plot.setAxisScale(
+                    QwtPlot.yLeft, img_height + DELTA, img_rect.y() - DELTA)
         self.plot.replot()
 
     @pyqtSlot()
@@ -245,11 +243,13 @@ class BaseImageDisplay(DisplayWidget):
 
     @pyqtSlot()
     def axis_changed(self):
-        x_axis_div = self.plot.axisScaleDiv(QwtPlot.xBottom)
-        x1, y1 = x_axis_div.lowerBound(), x_axis_div.upperBound()
-        y_axis_div = self.plot.axisScaleDiv(QwtPlot.yLeft)
-        x2, y2 = y_axis_div.lowerBound(), y_axis_div.upperBound()
-        self.zoom_rect = QRect(x1, y1, x2, y2)
+        x_axis = self.plot.axisScaleDiv(QwtPlot.xBottom)
+        x1, x2 = x_axis.lowerBound(), x_axis.upperBound()
+        y_axis = self.plot.axisScaleDiv(QwtPlot.yLeft)
+        # Note: y axis is shown in reverse order (max - lowerBound,
+        # min - upperBound)
+        y1, y2 = y_axis.lowerBound(), y_axis.upperBound()
+        self.zoom_rect = QRect(x1, y1, x2 - x1, y1 - y2)
 
     @pyqtSlot(object)
     def show_context_menu(self, pos):
