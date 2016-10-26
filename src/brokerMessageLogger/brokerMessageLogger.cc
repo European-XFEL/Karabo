@@ -7,33 +7,31 @@
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
-
+#include <karabo/util/Hash.hh>
+#include <karabo/net/JmsConnection.hh>
+#include <karabo/net/JmsConsumer.hh>
+#include <karabo/net/EventLoop.hh>
+#include <karabo/log/Logger.hh>
 #include <iostream>
 #include <fstream>
 #include <cassert>
 #include <iosfwd>
 
-#include <karabo/net/BrokerIOService.hh>
-#include <karabo/net/BrokerConnection.hh>
-#include <karabo/net/BrokerChannel.hh>
-
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::net;
+using namespace karabo::log;
 
 
-void readHandler(const Hash::Pointer& header, const char* body, const size_t& bodySize) {
-    string messageBody(body, bodySize);
+void readHandler(const Hash::Pointer& header,
+                 const Hash::Pointer& body,
+                 const JmsConsumer::Pointer& consumer) {
+
     cout << *header << endl;
-    cout << messageBody << endl;
+    cout << *body << endl;
     cout << "-----------------------------------------------------------------------" << endl << endl;
-}
 
-
-void textReadHandler(const Hash::Pointer& header, const std::string& body) {
-    cout << *header << endl;
-    cout << body << endl;
-    cout << "-----------------------------------------------------------------------" << endl << endl;
+    consumer->readAsync(boost::bind(&readHandler, _1, _2, consumer));
 }
 
 
@@ -41,34 +39,49 @@ int main(int argc, char** argv) {
 
     try {
 
-        // Create Jms connection
-        Hash config("Jms");
-        BrokerConnection::Pointer connection = BrokerConnection::create(config);
-
-        // Get a IOService object (for async reading later)
-        BrokerIOService::Pointer ioService = connection->getIOService();
-
-        // Start connection
-        connection->start();
-
-        // Obtain channels
-        BrokerChannel::Pointer channel = connection->createChannel();
-        BrokerChannel::Pointer textChannel = connection->createChannel();
-
-
-        // Register async reader
-        if (argc <= 1) {
-            channel->setFilter("signalFunction <> 'signalHeartbeat'");
-            textChannel->setFilter("signalFunction <> 'signalHeartbeat'");
+        // Parse command line
+        Hash options;
+        for (int i = 1; i + 1 < argc; i+=2) {
+            options.set<string>(argv[i], argv[i + 1]);
         }
-        channel->readAsyncHashRaw(readHandler);
-        textChannel->readAsyncHashString(textReadHandler);
+        string brokerUrl("tcp://exfl-broker.desy.de:7777");
+        if (options.has("-b")) options.get("-b", brokerUrl);
+        string topic("karabo");
+        if (options.has("-t")) options.get("-t", topic);
+        else {
+            char* env = getenv("USER");
+            if (env != 0) topic = string(env);
+            env = getenv("KARABO_BROKER_TOPIC");
+            if (env != 0) topic = string(env);
+        }
+        string selector;
+        if (options.has("-s")) options.get("-s", selector);
 
-        // Block forever
-        ioService->work();
+        // Start Logger
+        Logger::configure(Hash("priority", "ERROR"));
+        Logger::useOstream();
+
+        cout << "# Starting to consume messages..." << std::endl;
+        cout << "# Broker: " << brokerUrl << endl;
+        cout << "# Topic: " << topic << endl;
+        cout << "# Selector: " << selector << endl << endl;
+
+        // Create connection object
+        JmsConnection::Pointer connection = boost::make_shared<JmsConnection>(brokerUrl);
+
+        // Connect
+        connection->connect();
+
+        // Obtain consumer
+        JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector);
+
+        // Read messages
+        consumer->readAsync(boost::bind(&readHandler, _1, _2, consumer));
+
+        EventLoop::work(); // Block forever
 
     } catch (const Exception& e) {
-        cout << e << endl;
+        cerr << e << endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

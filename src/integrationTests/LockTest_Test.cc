@@ -6,6 +6,8 @@
  */
 
 #include "LockTest_Test.hh"
+#include <karabo/net/EventLoop.hh>
+
 using namespace std;
 
 #define KRB_TEST_MAX_TIMEOUT 5
@@ -44,6 +46,7 @@ void LockTest_Test::tearDown() {
 
 void LockTest_Test::appTestRunner() {
 
+    boost::thread t(boost::bind(&EventLoop::work));
 
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerLock", "LockTestDevice", Hash("deviceId", "lockTest3"), KRB_TEST_MAX_TIMEOUT);
@@ -60,6 +63,9 @@ void LockTest_Test::appTestRunner() {
     testRecursiveLocking();
     testSettingOnLocked();
     testLockStealing();
+    
+    EventLoop::stop();
+    t.join();
 }
 
 

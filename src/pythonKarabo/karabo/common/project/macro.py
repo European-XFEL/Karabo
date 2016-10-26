@@ -16,7 +16,7 @@ class MacroModel(BaseProjectObjectModel):
     # The instance ID of the running macro
     instance_id = Property(String, depends_on=['title', 'project_name'])
     # The instance names of all active macros
-    instances = List(String)
+    instances = List(String, transient=True)
     # The actual macro source
     code = String()
     # The name of the project this macro belongs to

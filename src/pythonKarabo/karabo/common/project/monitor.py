@@ -11,4 +11,4 @@ from .bases import BaseProjectObjectModel
 class MonitorModel(BaseProjectObjectModel):
     """ An object representing a monitor
     """
-    config = Instance(object)
+    configuration = Instance(object)

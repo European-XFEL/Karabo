@@ -22,3 +22,16 @@ def test_uuid():
 
     with assert_raises(ValueError):
         model.uuid = 'foo'
+
+
+def test_modified_flag():
+    model = BaseProjectObjectModel()
+
+    model.revision = 2
+    assert not model.modified
+
+    model.uuid = uuid.uuid4().hex
+    assert model.modified
+
+    model.modified = False
+    assert not model.modified

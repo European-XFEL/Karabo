@@ -24,7 +24,8 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
 public:
     PipelinedProcessing_Test();
-    virtual ~PipelinedProcessing_Test();
+    virtual ~PipelinedProcessing_Test() {}
+
     void setUp();
     void tearDown();
 
@@ -32,6 +33,13 @@ private:
 
     void appTestRunner();
     void testGetOutputChannelSchema();
+    void testPipe();
+
+    template <typename T>
+    bool pollDeviceProperty(const std::string& deviceId,
+                            const std::string& propertyName,
+                            const T& expected,
+                            const int maxTimeout) const;
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_deviceServerThread;

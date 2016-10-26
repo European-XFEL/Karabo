@@ -137,3 +137,5 @@ alarmLow = Icon("log-warning-32x32.png")  #  TODO: create proper icons
 alarmHigh = Icon("log-warning-32x32.png")  #  TODO: create proper icons
 alarmVarianceLow = Icon("log-warning-32x32.png")  #  TODO: create proper icons
 alarmVarianceHigh = Icon("log-warning-32x32.png")  #  TODO: create proper icons
+zoom = Icon("zoom.svg")
+crop = Icon("transform-crop.svg")

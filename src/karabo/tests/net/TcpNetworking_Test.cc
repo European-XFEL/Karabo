@@ -6,18 +6,19 @@
  * Created on Oct 30, 2012, 1:33:46 PM
  */
 
+#include "TcpNetworking_Test.hh"
+
+#include "karabo/net/Connection.hh"
+#include "karabo/net/Channel.hh"
+#include "karabo/net/EventLoop.hh"
+
+#include <boost/bind.hpp>
+#include <boost/thread.hpp>
+
 #include <iostream>
 #include <fstream>
 #include <cassert>
 #include <iosfwd>
-#include <boost/bind.hpp>
-#include <boost/thread.hpp>
-
-#include <karabo/net/IOService.hh>
-#include <karabo/net/Connection.hh>
-#include <karabo/net/Channel.hh>
-#include <karabo/net/EventLoop.hh>
-#include "TcpNetworking_Test.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TcpNetworking_Test);
 
