@@ -43,20 +43,8 @@ class DirectoryModel(BaseWidgetObjectData):
     klass = Enum('DisplayDirectory', 'EditableDirectory')
 
 
-class DisplayAlignedImageModel(BaseWidgetObjectData):
-    """ A model for DisplayAlignedImage"""
-
-
 class DisplayCommandModel(BaseWidgetObjectData):
     """ A model for DisplayCommand"""
-
-
-class DisplayImageModel(BaseWidgetObjectData):
-    """ A model for DisplayImage"""
-
-
-class DisplayImageElementModel(BaseWidgetObjectData):
-    """ A model for DisplayImageElement"""
 
 
 class DisplayLabelModel(BaseWidgetObjectData):
@@ -255,9 +243,7 @@ def _build_empty_widget_readers_and_writers():
             return element
         return writer
 
-    names = ('BitfieldModel', 'DisplayAlignedImageModel',
-             'DisplayCommandModel', 'DisplayImageModel',
-             'DisplayImageElementModel', 'DisplayLabelModel',
+    names = ('BitfieldModel', 'DisplayCommandModel', 'DisplayLabelModel',
              'DisplayPlotModel', 'DoubleLineEditModel', 'EditableListModel',
              'EditableListElementModel', 'EditableSpinBoxModel',
              'HexadecimalModel', 'IntLineEditModel', 'KnobModel',

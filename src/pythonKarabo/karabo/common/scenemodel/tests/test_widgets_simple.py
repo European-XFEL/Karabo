@@ -1,15 +1,13 @@
 from nose.tools import assert_raises
 
-from ..api import (
-    BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
-    DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
-    DisplayImageModel, DisplayImageElementModel, DisplayLabelModel,
-    DisplayPlotModel, DoubleLineEditModel, EditableListModel,
-    EditableListElementModel, EditableSpinBoxModel, FileInModel, FileOutModel,
-    HexadecimalModel, IntLineEditModel, KnobModel, LabelModel, LineEditModel,
-    SceneLinkModel, SceneWriterException, SliderModel, WorkflowItemModel,
-    XYPlotModel
-)
+from ..api import (BitfieldModel, CheckBoxModel, ChoiceElementModel,
+                   ComboBoxModel, DirectoryModel, DisplayCommandModel,
+                   DisplayLabelModel, DisplayPlotModel, DoubleLineEditModel,
+                   EditableListElementModel, EditableListModel,
+                   EditableSpinBoxModel, FileInModel, FileOutModel,
+                   HexadecimalModel, IntLineEditModel, KnobModel, LabelModel,
+                   LineEditModel, SceneLinkModel, SceneWriterException,
+                   SliderModel, WorkflowItemModel, XYPlotModel)
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
 
@@ -51,8 +49,7 @@ def _geometry_traits():
 
 def test_all_empty_widgets():
     model_classes = (
-        BitfieldModel, DisplayAlignedImageModel, DisplayCommandModel,
-        DisplayImageModel, DisplayImageElementModel, DisplayLabelModel,
+        BitfieldModel, DisplayCommandModel, DisplayLabelModel,
         DisplayPlotModel, DoubleLineEditModel, EditableListModel,
         EditableListElementModel, EditableSpinBoxModel, HexadecimalModel,
         IntLineEditModel, KnobModel, SliderModel, XYPlotModel

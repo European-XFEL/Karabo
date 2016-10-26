@@ -56,7 +56,7 @@ namespace karabo {
                 // such a request is in the queue
                 return;
             }
-            karabo::net::EventLoop::getIOService().post(boost::bind(&IndexBuilderService::build, this, commandLineArguments));
+            karabo::net::EventLoop::getIOService().post(bind_weak(&IndexBuilderService::build, this, commandLineArguments));
         }
 
 

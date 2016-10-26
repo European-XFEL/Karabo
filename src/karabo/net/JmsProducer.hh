@@ -13,9 +13,11 @@
 #ifndef KARABO_NET_JMSPRODUCER_HH
 #define	KARABO_NET_JMSPRODUCER_HH
 
-#include <openmqc/mqcrt.h>
-#include <karabo/io/BinarySerializer.hh>
 #include "JmsConnection.hh"
+#include "karabo/util/MetaTools.hh"
+#include "karabo/io/BinarySerializer.hh"
+#include <openmqc/mqcrt.h>
+#include <boost/enable_shared_from_this.hpp>
 
 /**
  * The main European XFEL namespace
@@ -27,7 +29,7 @@ namespace karabo {
      */
     namespace net {
 
-        class JmsProducer {
+        class JmsProducer : public boost::enable_shared_from_this<JmsProducer> {
 
             friend class JmsConnection;
 
@@ -35,9 +37,26 @@ namespace karabo {
 
             KARABO_CLASSINFO(JmsProducer, "JmsProducer", "0.1")
 
+            /**
+             * Writes a message containing header and body (expressed as Hashes) to the broker.
+             * This function runs asynchronously, it only blocks in case the connection to the broker is not available.
+             * @param topic The topic to which this message should be sent
+             * @param header The message header, all keys in here qualify for selector statements on the consumer side
+             * @param body The message body
+             * @param priority The message priority from 0 (lowest) - 9 (highest), default: 4
+             * @param timeToLive The life time of the message in ms, default: 0 (lives forever)
+             */
             void write(const std::string& topic,
                        const karabo::util::Hash::Pointer& header,
                        const karabo::util::Hash::Pointer& body,
+                       const int priority = 4,
+                       const int timeToLive = 0);
+
+            // Helper function with old signature (Hash instead of Hash::Pointer)
+            // TODO Remove once refactoring is completed
+            void write(const std::string& topic,
+                       const karabo::util::Hash& header,
+                       const karabo::util::Hash& body,
                        const int priority = 4,
                        const int timeToLive = 0);
 

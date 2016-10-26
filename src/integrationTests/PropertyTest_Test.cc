@@ -1,4 +1,5 @@
 #include "PropertyTest_Test.hh"
+#include <karabo/net/EventLoop.hh>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(PropertyTest_Test);
 
@@ -32,12 +33,11 @@ void PropertyTest_Test::tearDown() {
 
 
 void PropertyTest_Test::allTestRunner() {
-    testPropertyTest();
-}
-
-
-void PropertyTest_Test::testPropertyTest() {
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testDeviceServer_1", "PropertyTest",
+    
+    // Start central event-loop
+    boost::thread t(boost::bind(&EventLoop::work));
+    
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("propertyTestServer_0", "PropertyTest",
                                                                        Hash("deviceId", "testPropertyTest_0"),
                                                                        KRB_TEST_MAX_TIMEOUT);
     clog << "Result of instantiate is '" << success.second << "'" << endl;
@@ -49,12 +49,8 @@ void PropertyTest_Test::testPropertyTest() {
     testVectorProperties();
     testTableProperties();
     
-    //----------- Stop tests for RunConfigurationGroup
-    
-    std::pair<bool, std::string> rc = m_deviceClient->killDevice("testPropertyTest_0", KRB_TEST_MAX_TIMEOUT);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-    CPPUNIT_ASSERT(rc.first);
-    
+    EventLoop::stop();
+    t.join();
 }
 
 

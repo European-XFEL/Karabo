@@ -1,13 +1,15 @@
-from .base import BaseWidgetContainer  # noqa
-from .eval import EvaluatorContainer  # noqa
-from .floatspinbox import FloatSpinBoxContainer  # noqa
-from .generic import DisplayEditableWidgetContainer, GenericWidgetContainer  # noqa
-from .icons import DisplayIconsetContainer, IconsContainer  # noqa
-from .lineplot import LinePlotContainer  # noqa
-from .monitor import MonitorContainer  # noqa
-from .simple import (LabelWidget, SceneLinkWidget, UnknownSvgWidget,  # noqa
-                     WorkflowItemWidget)  # noqa
-from .singlebit import SingleBitContainer  # noqa
-from .statecolor import DisplayStateColorContainer  # noqa
-from .tableelement import TableElementContainer  # noqa
-from .vacuum import VacuumWidgetContainer  # noqa
+# flake8: noqa
+from .base import BaseWidgetContainer
+from .eval import EvaluatorContainer
+from .floatspinbox import FloatSpinBoxContainer
+from .generic import DisplayEditableWidgetContainer, GenericWidgetContainer
+from .icons import DisplayIconsetContainer, IconsContainer
+from .image import ComplexImageWidgetContainer, SimpleImageWidgetContainer
+from .lineplot import LinePlotContainer
+from .monitor import MonitorContainer
+from .simple import (LabelWidget, SceneLinkWidget, UnknownSvgWidget,
+                     WorkflowItemWidget)
+from .singlebit import SingleBitContainer
+from .statecolor import DisplayStateColorContainer
+from .tableelement import TableElementContainer
+from .vacuum import VacuumWidgetContainer

@@ -15,15 +15,16 @@ from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
     UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
-    AccessLevel, AccessType, AssemblyRules, BrokerConnection,
-    DeviceClient, EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
+    AccessLevel, AccessType, AssemblyRules, JmsConnection,
+    EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
     ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
     ValidatorValidationRules
 )
-
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
+# Use patched DeviceClient, not the one directly from karathon:
+from .device_client import DeviceClient
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .configurator import Configurator
 from .no_fsm import NoFsm
@@ -49,13 +50,11 @@ class PythonDevice(NoFsm):
                     .expertAccess().assignmentInternal().noDefaultValue().init()
                     .commit(),
 
-            CHOICE_ELEMENT(expected).key("_connection_")
+            NODE_ELEMENT(expected).key("_connection_")
                     .displayedName("Connection")
                     .description("The connection to the communication layer of the distributed system")
-                    .appendNodesOfConfigurationBase(BrokerConnection)
-                    .assignmentOptional().defaultValue("Jms")
+                    .appendParametersOf(JmsConnection)
                     .adminAccess()
-                    .init()
                     .commit(),
 
             INT32_ELEMENT(expected).key("visibility")
@@ -122,11 +121,11 @@ class PythonDevice(NoFsm):
                         .expertAccess()
                         .assignmentOptional().defaultValue(False)
                         .commit(),
-                        
+
             INT32_ELEMENT(expected).key("progress")
                     .displayedName("Progress").description("The progress of the current action")
                     .readOnly().initialValue(0).commit(),
-                    
+
             NODE_ELEMENT(expected).key("performanceStatistics")
                     .displayedName("Performance Statistics")
                     .description("Accumulates some statistics")
@@ -239,8 +238,8 @@ class PythonDevice(NoFsm):
         self.globalAlarmCondition = AlarmCondition.NONE
 
         # Instantiate SignalSlotable object without starting event loop
-        try:
-            self._ss = SignalSlotable.create(self.deviceid, "Jms", self.parameters["_connection_.Jms"], autostart = False)
+        try:           
+            self._ss = SignalSlotable.create(self.deviceid, "JmsConnection", self.parameters["_connection_"], autostart = False)
         except RuntimeError as e:
             raise RuntimeError("PythonDevice.__init__: SignalSlotable.create Exception -- {0}".format(str(e)))
 
@@ -874,7 +873,7 @@ class PythonDevice(NoFsm):
                 if currentState not in allowedStates:
                     msg = "Command \"{}\" is not allowed in current state \"{}\" " \
                           "of device \"{}\"".format(slotName, currentState, self.deviceid)
-                    raise ValueError(msg)
+                    raise RuntimeError(msg)
 
         # Log the call of this slot by setting a parameter of the device
         self.set("lastCommand", slotName)
@@ -1057,6 +1056,16 @@ def launchPythonDevice():
     # NOTE: The first argument is '-c'
     _, plugindir, modname, classid, xmlfile = tuple(sys.argv)
     config = PythonDevice.loadConfiguration(xmlfile)
+    # If log filename not specified, make use of device name to avoid
+    # that different processes write to the same file.
+    # TODO:
+    # "karabo.log" is default from RollingFileAppender::expectedParameters.
+    # Unfortunately, GUI sends full config, including defaults.
+    if (not "Logger.file.filename" in config
+        or config["Logger.file.filename"] == "karabo.log"):
+        deviceId = config["_deviceId_"]
+        defaultLog = "device-" + deviceId.replace(os.path.sep, "_") + ".log"
+        config["Logger.file.filename"] = defaultLog
     loader = PluginLoader.create(
         "PythonPluginLoader",
         Hash("pluginNamespace", "karabo.bound_device",

@@ -19,9 +19,9 @@ import inspect
 from karathon import (
     CHOICE_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
     PATH_ELEMENT, STRING_ELEMENT,
-    AccessLevel, BrokerConnection,
+    AccessLevel, JmsConnection,
     Hash, Logger, Priority, Schema, SignalSlotable,
-    loadFromFile, saveToFile
+    loadFromFile, saveToFile, EventLoop
 )
 
 from karabo.common.states import State
@@ -66,15 +66,13 @@ class DeviceServer(object):
                     .adminAccess().reconfigurable()
                     .commit()
                     ,
-            CHOICE_ELEMENT(expected).key("connection")
+            NODE_ELEMENT(expected).key("connection")
                     .displayedName("Connection")
                     .description("The connection to the communication layer of the distributed system")
-                    .appendNodesOfConfigurationBase(BrokerConnection)
-                    .assignmentOptional().defaultValue("Jms")
+                    .appendParametersOf(JmsConnection)
                     .expertAccess()
-                    .init()
                     .commit()
-                    ,                    
+                    ,
             PATH_ELEMENT(expected).key("pluginDirectory")
                     .displayedName("Plugin Directory")
                     .description("Directory to search for plugins")
@@ -103,6 +101,9 @@ class DeviceServer(object):
                     .appendParametersOf(Logger)
                     .commit()
                     ,
+            OVERWRITE_ELEMENT(expected).key("Logger.file.filename")
+                    .setNewDefaultValue("device-server.log")
+                    .commit()
         )
 
     def setupFsm(self):
@@ -199,20 +200,11 @@ class DeviceServer(object):
             else:
                 self.serverid = self._generateDefaultServerId()
             saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName, Hash("format.Xml.indentation", 3))
-        
-        # Device configurations for those to automatically start
-        #if "autoStart" in config:
-        #    self.autoStart = config['autoStart']
-            
-        # Whether to scan for additional plug-ins at runtime
-        #if "scanPlugins" in config:
-        #    self.needScanPlugins = config['scanPlugins']
-        
+
         # What visibility this server should have
         self.visibility = config.get("visibility")
-        
-        self.connectionType = next(iter(config['connection'])).getKey()
-        self.connectionParameters = copy.copy(config['connection.' + self.connectionType])
+
+        self.connectionParameters = copy.copy(config['connection'])
         self.pluginLoader = PluginLoader.create(
             "PythonPluginLoader",
             Hash("pluginNamespace", config["pluginNamespace"],
@@ -221,7 +213,7 @@ class DeviceServer(object):
         self.loadLogger(config)
         self.pid = os.getpid()
         self.seqnum = 0
-    
+
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
 
@@ -232,16 +224,15 @@ class DeviceServer(object):
         Logger.useNetwork()
         Logger.useOstream("karabo", False)
         Logger.useFile("karabo", False)
-        
+
     def run(self):
         self.log = Logger.getCategory(self.serverid)
-        self.ss = SignalSlotable.create(self.serverid, self.connectionType, self.connectionParameters)
+        self.ss = SignalSlotable.create(self.serverid, "JmsConnection", self.connectionParameters)
         self._registerAndConnectSignalsAndSlots()
+        brokerUrl = self.ss.getConnection().getBrokerUrl()
+        self.log.INFO("Starting Karabo DeviceServer on host: {}, serverId: {}, broker: {}".format(
+                      self.hostname, self.serverid, brokerUrl))
 
-        self.log.INFO("Starting Karabo DeviceServer on host: {0.hostname}, "
-                      "serverId: {0.serverid}, Broker (host:port:topic): {1}:"
-                      "{2}".format(self, self.ss.getBrokerHost(),
-                                   self.ss.getBrokerTopic()))
 
         info = Hash("type", "server")
         info["serverId"] = self.serverid
@@ -350,7 +341,7 @@ class DeviceServer(object):
         self.log.DEBUG("with the following configuration:\n{}".format(input_config))
 
         # Add connection type and parameters used by device server for connecting to broker
-        config['_connection_.' + self.connectionType] = self.connectionParameters
+        config['_connection_'] = self.connectionParameters
 
         # create temporary instance to check the configuration parameters are valid
         try:
@@ -480,7 +471,11 @@ def main(args=None):
     try:
         server = Runner(DeviceServer).instantiate(args)
         if server:
+            t = threading.Thread(target=EventLoop.work)
+            t.start()
             server.run()
+            EventLoop.stop()
+            t.join()
     except Exception as e:
         print("Exception caught: " + str(e))
 

@@ -1,18 +1,17 @@
 from karabo.common.scenemodel.api import (
     BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
-    DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
-    DisplayIconsetModel, DisplayImageModel, DisplayImageElementModel,
-    DisplayLabelModel, DisplayPlotModel, DisplayStateColorModel,
-    DoubleLineEditModel, EditableListModel, EditableListElementModel,
-    EditableSpinBoxModel, EvaluatorModel, FileInModel, FileOutModel,
-    FloatSpinBoxModel, HexadecimalModel, DigitIconsModel,
-    SelectionIconsModel, TextIconsModel, IntLineEditModel, KnobModel,
-    LineEditModel, LinePlotModel, MonitorModel, SingleBitModel,
-    SliderModel, TableElementModel, VacuumWidgetModel, XYPlotModel
+    DigitIconsModel, DirectoryModel, DisplayAlignedImageModel,
+    DisplayCommandModel, DisplayIconsetModel, DisplayImageElementModel,
+    DisplayImageModel, DisplayLabelModel, DisplayPlotModel,
+    DisplayStateColorModel, DoubleLineEditModel, EditableListElementModel,
+    EditableListModel, EditableSpinBoxModel, EvaluatorModel, FileInModel,
+    FileOutModel, FloatSpinBoxModel, HexadecimalModel, IntLineEditModel,
+    KnobModel, LineEditModel, LinePlotModel, MonitorModel, ScientificImageModel,
+    SelectionIconsModel, SingleBitModel, SliderModel, TableElementModel,
+    TextIconsModel, VacuumWidgetModel, WebcamImageModel, XYPlotModel
 )
 
 WIDGET_FACTORIES = {
-    'DisplayAlignedImage': DisplayAlignedImageModel,
     'Bitfield': BitfieldModel,
     'DisplayCheckBox': CheckBoxModel,
     'EditableCheckBox': CheckBoxModel,
@@ -28,8 +27,11 @@ WIDGET_FACTORIES = {
     'DisplayFileOut': FileOutModel,
     'EditableFileOut': FileOutModel,
     'DisplayIconset': DisplayIconsetModel,
+    'DisplayAlignedImage': DisplayAlignedImageModel,
     'DisplayImage': DisplayImageModel,
     'DisplayImageElement': DisplayImageElementModel,
+    'ScientificImageDisplay': ScientificImageModel,
+    'WebcamImageDisplay': WebcamImageModel,
     'DisplayLabel': DisplayLabelModel,
     'DisplayLineEdit': LineEditModel,
     'EditableLineEdit': LineEditModel,
