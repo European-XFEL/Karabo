@@ -1049,6 +1049,75 @@ class PythonDevice(NoFsm):
         os.remove(xmlfile)
         return hash
 
+    # the following functions expose parts of SignalSlotable to the public
+    # device interface.
+
+    def registerSignal(self, signalName, *args):
+        """
+        Register a signal to be handles in the remote system
+        :param signalName:name of the signal to be registered
+        :param args: signature of the signal, e.g. `str, Hash, str`
+        """
+        self._ss.registerSignal(signalName, *args)
+
+    def connect(self, signalName, slotName):
+        """
+        Connect a signal with a slot on local device
+        :param signalName: name of the signal to connect
+        :param slotName: name of the slot to be executed upon signal reception
+        """
+        self._ss.connect(signalName, slotName)
+
+    def reply(self, *args):
+        """
+        Send a reply upon a slot being called
+        :param args: list of arguments to reply, maximum length is 4
+        """
+        self._ss.reply(*args)
+
+    def emit(self, signalName, *args):
+        """
+        Emit a signal to the remote system
+        :param signalName: name of the signal.
+        :param args: list of arguments signal is emitted with. Maximum 4
+        """
+        self._ss.emit(signalName, *args)
+
+    def call(self, instanceId, slotName, *args):
+        """
+        Call a remote slot with arguments
+        :param instanceId: instance of the remote device to call slot on
+        :param slotName: name of the slot to call on instanceId
+        :param args: list of arguments to call slot with, maximum length is 4
+        """
+        self._ss.call(instanceId, slotName, *args)
+
+    def request(self, instanceId, slotName, *args):
+        """
+        Request a reply from a remote slot
+        :param instanceId: instance of the remote device to request from
+        :param slotName: name of the slot to request from on instanceId
+        :param args: list of arguments to call slot with, maximum length is 4
+        :return: a `SignalSlotable.Requestor` object handling the reply
+        """
+        return self._ss.request(instanceId, slotName, *args)
+
+    def requestNoWait(self, instanceId, slotName, replyInstance,
+                      replySlotName, *args):
+        """
+        Request a reply from a remote slot
+        :param instanceId: instance of the remote device to request from
+        :param slotName: name of the slot to request from on instanceId
+        :param replyInstance: instance on which to handle reply, use "" for
+                              local device.
+        :param replySlotName: slot to call with reply on replyInstance
+        :param args: list of arguments to call slot with, maximum length is 4
+        :return: a `SignalSlotable.Requestor` object handling the reply
+        """
+        return self._ss.requestNoWait(instanceId, slotName, replyInstance,
+                      replySlotName, *args)
+
+
 
 def launchPythonDevice():
     from .plugin_loader import PluginLoader
