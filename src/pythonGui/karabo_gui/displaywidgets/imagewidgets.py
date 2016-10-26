@@ -10,7 +10,7 @@ from guiqwt.builder import make
 from guiqwt.plot import ImageWidget
 from guiqwt.tools import RectZoomTool, SelectTool
 
-from PyQt4.QtCore import pyqtSlot, QRect, Qt
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QRect, Qt
 from PyQt4.QtGui import (
     QAction, QActionGroup, QCursor, QHBoxLayout, QIcon, QMenu, QToolBar,
     QWidget
@@ -25,6 +25,39 @@ from karabo_gui.schema import ImageNode
 from karabo_gui.widget import DisplayWidget
 
 
+class _KaraboImageWidget(ImageWidget):
+    signal_mouse_event = pyqtSignal()
+
+    def __init__(self, **kwargs):
+        """ Possible key arguments:
+            * parent: parent widget
+            * title: plot title (string)
+            * xlabel, ylabel, zlabel: resp. bottom, left and right axis titles
+            (strings)
+            * xunit, yunit, zunit: resp. bottom, left and right axis units
+            (strings)
+            * yreverse: reversing Y-axis (bool)
+            * aspect_ratio: height to width ratio (float)
+            * lock_aspect_ratio: locking aspect ratio (bool)
+            * show_contrast: showing contrast adjustment tool (bool)
+            * show_xsection: showing x-axis cross section plot (bool)
+            * show_ysection: showing y-axis cross section plot (bool)
+            * xsection_pos: x-axis cross section plot position
+            (string: "top", "bottom")
+            * ysection_pos: y-axis cross section plot position
+            (string: "left", "right")
+            * panels (optional): additionnal panels (list, tuple)
+        """
+        super(_KaraboImageWidget, self).__init__(**kwargs)
+
+    def mousePressEvent(self, event):
+        """ Overwrite method to forward middle button press event which
+        resets the image """
+        super(_KaraboImageWidget, self).mousePressEvent(event)
+        if event.button() is Qt.MidButton:
+            self.signal_mouse_event.emit()
+
+
 class BaseImageDisplay(DisplayWidget):
     def __init__(self, box, parent):
         super(BaseImageDisplay, self).__init__(box)
@@ -32,7 +65,9 @@ class BaseImageDisplay(DisplayWidget):
 
     def _initUI(self, parent):
         """ Initialize widget """
-        self.image_widget = ImageWidget(parent=parent)
+        self.image_widget = _KaraboImageWidget(parent=parent)
+        # Make connection to keep zoom_rect in sync
+        self.image_widget.signal_mouse_event.connect(self.zoom_reset)
         self.plot = self.image_widget.get_plot()
         self.image = None  # actual image
 
@@ -184,7 +219,7 @@ class BaseImageDisplay(DisplayWidget):
             self.image.set_data(npy.astype('float'))
 
         # In case an axis is disabled - the scale needs to be adapted
-        DELTA = 0.2
+        DELTA = 0.3
         if self.zoom_rect.isEmpty():
             img_rect = self.image.boundingRect()
             img_width = img_rect.width()
@@ -203,6 +238,10 @@ class BaseImageDisplay(DisplayWidget):
             self.plot.setAxisScale(
                 QwtPlot.yLeft, zoom_y - DELTA, zoom_height + DELTA)
         self.plot.replot()
+
+    @pyqtSlot()
+    def zoom_reset(self):
+        self.zoom_rect = QRect()
 
     @pyqtSlot()
     def axis_changed(self):
