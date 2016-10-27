@@ -198,14 +198,14 @@ namespace karabo {
 
             for (size_t i = 0; i < input.size(); i++) {
                 Hash& hash = input[i];
-                
+
                 const string& deviceId = hash.get<string>("source");
 
                 if (deviceId.find_first_of(OUTPUT_CHANNEL_SEPARATOR) == std::string::npos)
                     hash.setAttribute<bool>("source", "pipeline", false);
                 else
                     hash.setAttribute<bool>("source", "pipeline", true);
-                    
+
                 const bool pipeline = hash.getAttribute<bool>("source", "pipeline");
                 table.push_back(hash);
                 vector<Hash>::const_iterator it = findDataSource(current, deviceId);
