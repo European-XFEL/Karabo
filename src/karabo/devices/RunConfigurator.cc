@@ -461,6 +461,8 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_INFO << "Current Run Configuration is ...\n" << configuration;
 
             emit("signalRunConfiguration", configuration, getInstanceId());
+            
+            karabo::io::saveToFile<Hash>(configuration, "lastRunConfiguration.xml", Hash("format.Xml.indentation", 2, "format.Xml.writeDataTypes", true));
         }
 
 
