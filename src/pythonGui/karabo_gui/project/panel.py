@@ -5,10 +5,10 @@
 #############################################################################
 from PyQt4.QtGui import QStackedLayout, QWidget
 
-from .dialogs import LoadDialog, SaveDialog
+from .dialogs import LoadDialog, NewDialog, SaveDialog
 import karabo_gui.icons as icons
 from karabo_gui.docktabwindow import Dockable
-from karabo_gui.util import build_qaction, KaraboAction
+from karabo_gui.actions import build_qaction, KaraboAction
 
 
 class ProjectPanel(Dockable, QWidget):
@@ -33,7 +33,7 @@ class ProjectPanel(Dockable, QWidget):
             tooltip="Create a New (Sub)project",
             triggered=project_new_handler,
         )
-        open = KaraboAction(
+        load = KaraboAction(
             icon=icons.open,
             text="&Open Project",
             tooltip="Open an Existing Project",
@@ -47,7 +47,7 @@ class ProjectPanel(Dockable, QWidget):
         )
 
         qactions = []
-        for k_action in (new, open, save):
+        for k_action in (new, load, save):
             q_ac = build_qaction(k_action, self)
             q_ac.triggered.connect(k_action.triggered)
             qactions.append(q_ac)
@@ -67,7 +67,7 @@ class ProjectPanel(Dockable, QWidget):
 
 
 def project_new_handler():
-    dialog = LoadDialog()
+    dialog = NewDialog()
     dialog.exec()
 
 
