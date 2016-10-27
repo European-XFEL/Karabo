@@ -336,7 +336,7 @@ namespace karabo {
             const OutputChannel::Pointer& getOutputChannel(const std::string& name);
 
             std::vector<std::string> getOutputChannelNames() const;
-            
+
             const InputChannel::Pointer& getInputChannel(const std::string& name);
 
             void registerInputHandler(const std::string& channelName,

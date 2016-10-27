@@ -25,7 +25,7 @@ public:
     void tearDown();
 
 private:
-    
+
     void allTestRunner();
 
     void testPropertyTest();

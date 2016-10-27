@@ -39,8 +39,6 @@ namespace karabo {
 
             RollingFileAppender(const karabo::util::Hash& input);
 
-            virtual ~RollingFileAppender() {}
-            
             krb_log4cpp::Appender* getAppender();
 
         private:

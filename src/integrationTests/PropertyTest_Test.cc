@@ -1,11 +1,12 @@
 #include "PropertyTest_Test.hh"
 #include <karabo/net/EventLoop.hh>
 
-CPPUNIT_TEST_SUITE_REGISTRATION(PropertyTest_Test);
 
 USING_KARABO_NAMESPACES;
 
 #define KRB_TEST_MAX_TIMEOUT 10
+
+CPPUNIT_TEST_SUITE_REGISTRATION(PropertyTest_Test);
 
 
 PropertyTest_Test::PropertyTest_Test() {
@@ -17,7 +18,7 @@ PropertyTest_Test::~PropertyTest_Test() {
 
 
 void PropertyTest_Test::setUp() {
-    Hash config("DeviceServer", Hash("serverId", "testDeviceServer_1", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
+    Hash config("DeviceServer", Hash("serverId", "propertyTestServer_0", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
     m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
     m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
 
@@ -26,7 +27,7 @@ void PropertyTest_Test::setUp() {
 
 
 void PropertyTest_Test::tearDown() {
-    m_deviceClient->killServer("testDeviceServer_1", KRB_TEST_MAX_TIMEOUT);
+    m_deviceClient->killServer("propertyTestServer_0", KRB_TEST_MAX_TIMEOUT);
     m_deviceServerThread.join();
     m_deviceClient.reset();
 }
@@ -40,7 +41,6 @@ void PropertyTest_Test::allTestRunner() {
     std::pair<bool, std::string> success = m_deviceClient->instantiate("propertyTestServer_0", "PropertyTest",
                                                                        Hash("deviceId", "testPropertyTest_0"),
                                                                        KRB_TEST_MAX_TIMEOUT);
-    clog << "Result of instantiate is '" << success.second << "'" << endl;
     CPPUNIT_ASSERT(success.first);
 
     boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
@@ -55,8 +55,6 @@ void PropertyTest_Test::allTestRunner() {
 
 
 void PropertyTest_Test::testSimpleProperties() {
-    clog << "Testing Simple properties ..." << endl;
-    
     { // bool
         bool value = false;
         m_deviceClient->get("testPropertyTest_0", "boolProperty", value);
@@ -92,7 +90,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "charProperty", value);
         CPPUNIT_ASSERT(value == 'C');
     }
-    
+
     { // int8
         signed char value = 0;
         m_deviceClient->get("testPropertyTest_0", "int8Property", value);
@@ -110,7 +108,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "int8Property", value);
         CPPUNIT_ASSERT(value == -99);
     }
-    
+
     { // uint8
         unsigned char value = 0;
         m_deviceClient->get("testPropertyTest_0", "uint8Property", value);
@@ -128,7 +126,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "uint8Property", value);
         CPPUNIT_ASSERT(value == 199);
     }
-    
+
     { // int16
         short value = 0;
         m_deviceClient->get("testPropertyTest_0", "int16Property", value);
@@ -146,7 +144,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "int16Property", value);
         CPPUNIT_ASSERT(value == -7000);
     }
-    
+
     { // uint16
         unsigned short value = 0;
         m_deviceClient->get("testPropertyTest_0", "uint16Property", value);
@@ -164,7 +162,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "uint16Property", value);
         CPPUNIT_ASSERT(value == 7000);
     }
-    
+
     { // int32
         int value = 0;
         m_deviceClient->get("testPropertyTest_0", "int32Property", value);
@@ -182,7 +180,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "int32Property", value);
         CPPUNIT_ASSERT(value == 799);
     }
-    
+
     { // uint32
         unsigned int value = 0;
         m_deviceClient->get("testPropertyTest_0", "uint32Property", value);
@@ -200,8 +198,8 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "uint32Property", value);
         CPPUNIT_ASSERT(value == 799999);
     }
-    
-   
+
+
     { // int64
         long long value = 0;
         m_deviceClient->get("testPropertyTest_0", "int64Property", value);
@@ -218,7 +216,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "int64Property", value);
         CPPUNIT_ASSERT(value == 7999999LL);
     }
-    
+
     { // uint64
         unsigned long long value = 0;
         m_deviceClient->get("testPropertyTest_0", "uint64Property", value);
@@ -236,7 +234,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "uint64Property", value);
         CPPUNIT_ASSERT(value == 7ULL);
     }
-    
+
     { // float
         float value = 0;
         m_deviceClient->get("testPropertyTest_0", "floatProperty", value);
@@ -254,7 +252,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "floatProperty", value);
         CPPUNIT_ASSERT(value == 76.54321F);
     }
-    
+
     { // double
         double value = 0;
         m_deviceClient->get("testPropertyTest_0", "doubleProperty", value);
@@ -272,14 +270,11 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "doubleProperty", value);
         CPPUNIT_ASSERT(value == 76.543211787654);
     }
-    
-    clog << "Testing Simple properties ...  OK" << endl;
-   
+
 }
 
 
 void PropertyTest_Test::testVectorProperties() {
-    clog << "Testing Vector properties ..." << endl;
 
     { // bool
         vector<bool> value;
@@ -575,13 +570,11 @@ void PropertyTest_Test::testVectorProperties() {
         CPPUNIT_ASSERT(value.size() == 2);
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == "HELLO");
     }
-    
-    clog << "Testing Vector properties ... OK" << endl;
+
 }
 
 
 void PropertyTest_Test::testTableProperties() {
-    clog << "Testing Table properties ..." << endl;
     vector<Hash> value;
     m_deviceClient->get("testPropertyTest_0", "table", value);
 
@@ -627,6 +620,4 @@ void PropertyTest_Test::testTableProperties() {
     CPPUNIT_ASSERT(value[2].get<int>("e3") == 42);    
     CPPUNIT_ASSERT(value[2].get<float>("e4") == 55.5555F);
     CPPUNIT_ASSERT(value[2].get<double>("e5") == 9.99999999);
-    
-    clog << "Testing Table properties ... OK" << endl;
 }

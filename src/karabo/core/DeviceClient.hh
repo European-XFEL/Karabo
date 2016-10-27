@@ -554,7 +554,6 @@ namespace karabo {
              * @return vector containing output channel names
              */
             std::vector<std::string> getOutputChannelNames(const std::string & deviceId);
-            
 
             /**
              * Request locking of device at deviceId. Throws a karabo::util::LockException in case the lock cannot be acquired in the given timeout
@@ -669,9 +668,9 @@ namespace karabo {
             bool connectNeeded(const std::string & instanceId);
             
             int getAccessLevel(const std::string& deviceId);
-            
+
             void filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema, int accessMode, karabo::util::Hash& hash);
-            
+
             void convertSchemaHash(const karabo::util::Hash& schemaHash, int accessMode, karabo::util::Hash & hash);
         };
     }

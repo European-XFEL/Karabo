@@ -1512,15 +1512,15 @@ if (nodeData) {\
         bool DeviceClient::hasAttribute(const std::string& instanceId, const std::string& key, const std::string& attribute, const char keySep) {
             return cacheAndGetConfiguration(instanceId).hasAttribute(key, attribute, keySep);
         }
-        
-        
-        karabo::util::Hash DeviceClient::getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName){
+
+
+        karabo::util::Hash DeviceClient::getOutputChannelSchema(const std::string & deviceId, const std::string& outputChannelName) {
             const Schema& schema = cacheAndGetDeviceSchema(deviceId);
             const Hash& schemaHash = schema.getParameterHash();
             return schemaHash.get<Hash>(outputChannelName+".schema");
         }
-        
-        
+
+
         karabo::core::Lock DeviceClient::lock(const std::string& deviceId, bool recursive, int timeout) {
             //non waiting request for lock
             if (timeout == 0) return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
@@ -1542,13 +1542,13 @@ if (nodeData) {\
 
             }
         }
-        
-        
+
+
         int DeviceClient::getAccessLevel(const std::string& deviceId) {
             return m_accessLevel;
         }
 
-        
+
         std::vector<std::string> DeviceClient::getOutputChannelNames(const std::string & deviceId) {
             // Request vector of names
             vector<string> names;
@@ -1565,7 +1565,7 @@ if (nodeData) {\
             return names;
         }
 
-        
+
         /**
          * Extract data source schema in form of Hash.  Data source is either a device (deviceId) or channel (deviceId:channelName):
          *     SASE1/SPB/SAMP/DATAGEN_07            is a device
@@ -1574,19 +1574,16 @@ if (nodeData) {\
          * @return 
          */
         void DeviceClient::getDataSourceSchemaAsHash(const std::string& dataSourceId, karabo::util::Hash& properties, int accessMode) {
-            
-            
-            
             properties.set(dataSourceId, Hash());
-            
+
             Hash& props = properties.get<Hash>(dataSourceId);
-            
+
             vector<string> vec;
             boost::split(vec, dataSourceId, boost::is_any_of(":"));
-                
+
             string deviceClassId = this->get<string>(vec[0], "classId");
             string deviceVersion = this->get<string>(vec[0], "classVersion");
-            
+
             if (vec.size() == 1) {
                 Schema deviceSchema = this->getDeviceSchema(vec[0]);
                 this->filterDataSchema(vec[0], deviceSchema, accessMode, props);
@@ -1594,12 +1591,12 @@ if (nodeData) {\
                 Hash channelSchemaHash = this->getOutputChannelSchema(vec[0], vec[1]);
                 this->convertSchemaHash(channelSchemaHash, accessMode, props);
             }
-            
+
             properties.setAttribute(dataSourceId, "classId", deviceClassId);
             properties.setAttribute(dataSourceId, "version", deviceVersion);
         }
-        
-        
+
+
         void DeviceClient::filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema, int accessMode, karabo::util::Hash& hash) {
 
             // Find the lastkey of the "Base class" schema
@@ -1649,7 +1646,7 @@ if (nodeData) {\
 
                 // Get accessMode
                 int accessMode = INIT;
-                
+
                 if (schemaHash.hasAttribute(path, KARABO_SCHEMA_ACCESS_MODE)) {
                     accessMode = schemaHash.getAttribute<int>(path, KARABO_SCHEMA_ACCESS_MODE);
                 }
@@ -1859,7 +1856,6 @@ if (nodeData) {\
         }
 
 
-        
 #undef KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN
 
     }

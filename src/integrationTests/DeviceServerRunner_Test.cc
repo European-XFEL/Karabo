@@ -40,5 +40,11 @@ void DeviceServerRunner_Test::tearDown() {
 
 
 void DeviceServerRunner_Test::allTestsOnDeviceServer() {
+    // Start central event-loop
+    boost::thread t(boost::bind(&EventLoop::work));
+
     testRunConfigurationGroup();
+
+    EventLoop::stop();
+    t.join();
 }

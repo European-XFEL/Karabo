@@ -28,9 +28,9 @@ namespace karabo {
             RunControlDataSource(const karabo::util::Hash& input);
 
             virtual ~RunControlDataSource();
-            
+
         private:
-            
+
             void preReconfigure(karabo::util::Hash& incomingReconfiguration);
 
         };
@@ -54,13 +54,13 @@ namespace karabo {
         private:
 
             void initialize();
-            
+
             void slotGetGroup();
-            
+
             void saveGroupConfiguration();
 
             void preReconfigure(karabo::util::Hash& incomingReconfiguration);
-            
+
             void fillTable(const std::vector<karabo::util::Hash>& current,
                            std::vector<karabo::util::Hash>& input,
                            std::vector<karabo::util::Hash>& table);
