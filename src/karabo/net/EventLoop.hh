@@ -12,6 +12,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
+#include <boost/function/function_fwd.hpp>
 
 #include "karabo/util.hpp"
 
@@ -37,6 +38,11 @@ namespace karabo {
             static boost::asio::io_service& getIOService();
 
             /// Start the event loop and block until EventLoop::stop() is called.
+            ///
+            /// The system signals SIGINT, SIGTERM and SIGSEGV will be caught and trigger the following actions:
+            /// - for SIGSEGV, a stack trace is put out to std::cerr,
+            /// - a signal handler set via setSignalHandler is called,
+            /// - and the event loop is stopped.
             static void work();
 
             /// Start the event loop and block until all work posted to its io service is
@@ -46,6 +52,10 @@ namespace karabo {
             static void stop();
 
             static size_t getNumberOfThreads();
+
+            typedef boost::function<void (int /*signal*/) > SignalHandler;
+            /// Set the handler to be called if a system signal (SIGINT, SIGTERM, SIGSEGV) is caught.
+            static void setSignalHandler(const SignalHandler& handler);
 
         private:
 
@@ -69,6 +79,8 @@ namespace karabo {
 
             size_t _getNumberOfThreads() const;
 
+            void _setSignalHandler(const SignalHandler& handler);
+
             boost::asio::io_service m_ioService;
             boost::thread_group m_threadPool;
             mutable boost::mutex m_threadPoolMutex;
@@ -77,6 +89,8 @@ namespace karabo {
             typedef std::map<boost::thread::id, boost::thread*> ThreadMap;
             ThreadMap m_threadMap;
 
+            boost::mutex m_signalHandlerMutex;
+            SignalHandler m_signalHandler;
         };
     }
 }

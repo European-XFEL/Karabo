@@ -5,8 +5,12 @@
  * Created on July 27, 2016, 4:21 PM
  */
 
+#include <csignal>
+#include <iostream>
+
 #include "EventLoop.hh"
 #include "karabo/log/Logger.hh"
+#include "karabo/util/StackTrace.hh"
 
 namespace karabo {
     namespace net {
@@ -35,6 +39,35 @@ namespace karabo {
 
 
         void EventLoop::work() {
+
+            boost::asio::signal_set signals(getIOService(), SIGINT, SIGTERM, SIGSEGV);
+            EventLoop& loop = instance();
+            signals.async_wait([&loop](boost::system::error_code ec, int signo) {
+                if (ec == boost::asio::error::operation_aborted) {
+                    return;
+                }
+                if (signo == SIGSEGV) {
+                    std::cerr << util::StackTrace() << std::endl;
+                }
+                {
+                    boost::mutex::scoped_lock(loop.m_signalHandlerMutex);
+                    if (loop.m_signalHandler) {
+                        loop.m_signalHandler(signo);
+                    }
+                }
+                { // Scope to help NetBeans to indent more or less properly...
+                    // Some time to do all actions possibly triggered by handler.
+                    boost::this_thread::sleep(boost::posix_time::seconds(1));
+                    // Finally go down, i.e. leave work()
+                    EventLoop::stop();
+                    // TODO (check!):
+                    // Once we have no thread running for the DeviceServer, but only the EventLoop,
+                    // we could stop() and then run().
+                    // If the main in deviceServer.cc registers a handler that resets the DeviceServer::Pointer,
+                    // the DeviceServer destructor will stop all re-registrations and thus let run() fade out.
+                }
+            });
+
             boost::asio::io_service::work work(getIOService());
             run();
         }
@@ -63,6 +96,17 @@ namespace karabo {
         size_t EventLoop::_getNumberOfThreads() const {
             boost::mutex::scoped_lock lock(m_threadPoolMutex);
             return m_threadPool.size();
+        }
+
+
+        void EventLoop::setSignalHandler(const SignalHandler& handler) {
+            instance()._setSignalHandler(handler);
+        }
+
+
+        void EventLoop::_setSignalHandler(const SignalHandler& handler) {
+            boost::mutex::scoped_lock(m_signalHandlerMutex);
+            m_signalHandler = handler;
         }
 
 
