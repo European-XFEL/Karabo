@@ -464,7 +464,7 @@ namespace karabo {
                         m_dataHandler(data);
                     }
                 } else if (m_inputHandler) {
-                    m_inputHandler(*this);
+                    m_inputHandler(shared_from_this());
                 }
                 // Whatever handler (even none): we are done with the data.
                 m_ioService.post(util::bind_weak(&InputChannel::update, this));
@@ -477,7 +477,7 @@ namespace karabo {
         void InputChannel::triggerEndOfStreamEvent() {
             try {
                 if (m_endOfStreamHandler) {
-                    m_endOfStreamHandler(*this);
+                    m_endOfStreamHandler(shared_from_this());
                 }
             } catch (const std::exception& ex) {
                 KARABO_LOG_FRAMEWORK_ERROR << "\"triggerEndOfStreamEvent\" call is problematic -- " << ex.what();
