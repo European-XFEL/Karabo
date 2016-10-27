@@ -73,9 +73,9 @@ namespace karabo {
                                           float /*avgProcessingLatency*/, unsigned int /*maxProcessingLatency*/,
                                           unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
 
-            typedef boost::function<void (const karabo::util::Hash&) > DataHandler;
+            typedef InputChannel::DataHandler DataHandler;
 
-            typedef boost::function<void (InputChannel&) > InputHandler;
+            typedef InputChannel::InputHandler InputHandler;
 
             // TODO Check why handlers of input and output are different! One is pointer, the other is reference!
             typedef boost::function<void (const OutputChannel::Pointer&) > OutputHandler;
