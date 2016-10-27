@@ -70,9 +70,9 @@ namespace karathon {
         static void registerDataHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
         static void proxyDataHandler(const bp::object& handler, const karabo::util::Hash& data);
         static void registerInputHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
-        static void proxyInputHandler(const bp::object& handler, karabo::xms::InputChannel& self);
+        static void proxyInputHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& self);
         static void registerEndOfStreamEventHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
-        static void proxyEndOfStreamEventHandler(const bp::object& handler, karabo::xms::InputChannel& self);
+        static void proxyEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& self);
         static bp::object getConnectedOutputChannelsPy(const boost::shared_ptr<karabo::xms::InputChannel>& self);
         static bp::object readPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, size_t idx);
         static void connectPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const karabo::util::Hash& outputChannelInfo);

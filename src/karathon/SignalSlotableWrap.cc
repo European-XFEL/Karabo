@@ -236,11 +236,9 @@ namespace karathon {
                                              const bp::object& onEndOfStreamHandler) {
         // Basically just call createInputChannel from C++, but take care that
         // 'None' callbacks are really empty.
-        typedef boost::function<void (const karabo::util::Hash&) > OnDataFunction;
-        typedef boost::function<void (karabo::xms::InputChannel&) > OnInputFunction;
-        OnDataFunction dataHandler = OnDataFunction();
-        OnInputFunction inputHandler = OnInputFunction();
-        OnInputFunction endOfStreamHandler = OnInputFunction();
+        DataHandler dataHandler = DataHandler();
+        InputHandler inputHandler = InputHandler();
+        InputHandler endOfStreamHandler = InputHandler();
         if (onDataHandler != bp::object()) {
             // or: if (onDataHandler.ptr() != Py_None) {
             dataHandler = boost::bind(&SignalSlotableWrap::proxyOnDataAvailableHandler,
@@ -352,10 +350,10 @@ namespace karathon {
 
 
     void SignalSlotableWrap::proxyOnInputAvailableHandler(const bp::object& handler,
-                                                          karabo::xms::InputChannel& channel) {
+                                                          const karabo::xms::InputChannel::Pointer& channel) {
         ScopedGILAcquire gil;
         try {
-            if (handler) handler(bp::object(channel.shared_from_this()));
+            if (handler) handler(bp::object(channel));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) PyErr_Print();
             throw KARABO_PYTHON_EXCEPTION("Python input handler has thrown an exception.");
@@ -380,10 +378,10 @@ namespace karathon {
 
 
     void SignalSlotableWrap::proxyOnEndOfStreamEventHandler(const bp::object& handler,
-                                                            karabo::xms::InputChannel& channel) {
+                                                            const karabo::xms::InputChannel::Pointer& channel) {
         ScopedGILAcquire gil;
         try {
-            if (handler) handler(bp::object(channel.shared_from_this()));
+            if (handler) handler(bp::object(channel));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) PyErr_Print();
             throw KARABO_PYTHON_EXCEPTION("Python EOS handler has thrown an exception.");
