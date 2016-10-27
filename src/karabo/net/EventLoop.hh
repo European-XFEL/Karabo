@@ -8,11 +8,12 @@
 #ifndef KARABO_NET_EVENTLOOP_HH
 #define	KARABO_NET_EVENTLOOP_HH
 
+#include <map>
 
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 
-#include <karabo/util.hpp>
+#include "karabo/util.hpp"
 
 namespace karabo {
     namespace net {
@@ -50,7 +51,7 @@ namespace karabo {
 
             EventLoop();
 
-            EventLoop(const EventLoop&);
+            EventLoop(const EventLoop&) = delete;
 
             static EventLoop& instance();
 

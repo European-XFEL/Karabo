@@ -14,11 +14,7 @@ namespace karabo {
         boost::mutex karabo::net::EventLoop::m_initMutex;
 
 
-        EventLoop::EventLoop() : m_ioService(){
-        }
-
-
-        EventLoop::EventLoop(const EventLoop&) {
+        EventLoop::EventLoop() : m_ioService() {
         }
 
 
@@ -44,10 +40,13 @@ namespace karabo {
         }
 
         void EventLoop::run() {
+            // First reset io service if e.g. stop() was called before this run()
+            // and after a previous run() had finished since out of work.
+            instance().m_ioService.reset();
+
             instance().runProtected();
             instance().m_threadPool.join_all();
             instance().clearThreadPool();
-            instance().m_ioService.reset();
         }
 
 
