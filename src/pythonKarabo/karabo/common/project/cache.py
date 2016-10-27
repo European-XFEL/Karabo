@@ -44,4 +44,5 @@ def get_user_cache():
     else:
         karabo_dir = op.join(os.environ['HOME'], '.karabo')
     cache_dir = op.join(karabo_dir, 'project_db_cache')
+    os.makedirs(cache_dir, exist_ok=True)
     return ProjectDBCache(cache_dir)
