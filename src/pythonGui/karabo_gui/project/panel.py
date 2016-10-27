@@ -30,6 +30,3 @@ class ProjectPanel(Dockable, QWidget):
 
     def setupToolBars(self, toolbar, widget):
         pass
-
-    def notifyTabVisible(self, visible):
-        pass
