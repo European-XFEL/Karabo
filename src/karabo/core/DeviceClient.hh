@@ -401,9 +401,9 @@ namespace karabo {
             /// Returns success of action.
             bool cacheLoggerMap(bool toggle);
 
-            karabo::util::vector<karabo::util::Hash> getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
+            std::vector<karabo::util::Hash> getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
 
-            karabo::util::vector<karabo::util::Hash> getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
+            std::vector<karabo::util::Hash> getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
 
             /// Returns instanceId of data log reader for data of given device. Could be empty.
             std::string getDataLogReader(const std::string& deviceId);
