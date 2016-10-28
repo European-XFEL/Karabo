@@ -34,9 +34,9 @@ class CommTestDevice(PythonDevice):
         self.registerSlot(self.slotEmitToSlotWithArgs)
         self.registerSlot(self.slotCallSomething)
         self.registerSignal("callSlotWithArgs", str, Hash)
-        self.connect("callSlotWithArgs", "slotWithArguments")
+        self.connect("", "callSlotWithArgs", "", "slotWithArguments")
         self.registerSignal("callSlotWithoutArgs")
-        self.connect("callSlotWithoutArgs", "slotWithoutArguments")
+        self.connect("", "callSlotWithoutArgs", "", "slotWithoutArguments")
         self.registerInitialFunction(self.initialize)
 
     def initialize(self):
