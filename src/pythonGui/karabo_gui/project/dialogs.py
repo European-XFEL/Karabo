@@ -6,8 +6,10 @@
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, QModelIndex, Qt
 from PyQt4.QtGui import QDialog, QDialogButtonBox
+
+from karabo.common.project.api import get_all_user_cache_projects
 
 
 class ProjectHandleDialog(QDialog):
@@ -16,6 +18,10 @@ class ProjectHandleDialog(QDialog):
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'project_handle.ui')
         uic.loadUi(filepath, self)
+
+        cache_objects = get_all_user_cache_projects()
+
+        self.twProjects.setModel(TableModel(self))
 
     def set_dialog_texts(self, title, btn_text):
         """ This method sets the ``title`` and the ``btn_text`` of the ok
@@ -62,3 +68,30 @@ class SaveDialog(ProjectHandleDialog):
     @pyqtSlot()
     def save_clicked(self):
         pass
+
+
+class TableModel(QAbstractTableModel):
+    headers = ['Name', 'Author', 'Version', 'Published', 'Description',
+               'Documentation']
+
+    def __init__(self, parent=None):
+        super(TableModel, self).__init__(parent)
+        self.row_content = []
+
+    def rowCount(self, parent=QModelIndex()):
+        return len(self.row_content)
+
+    def columnCount(self, parent=QModelIndex()):
+        return len(self.headers)
+
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return None
+        entry = self.row_content[index.row()]
+        if role in (Qt.DisplayRole, Qt.ToolTipRole):
+            return entry[index.column()]
+        return None
+
+    def headerData(self, section, orientation, role):
+        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
+            return self.headers[section]
