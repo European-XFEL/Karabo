@@ -64,7 +64,7 @@ class TestDeviceDeviceComm(TestCase):
                 nTries += 1
 
         # we will use two devices communicating with each other.
-        config = Hash("Logger.priority", "DEBUG",
+        config = Hash("Logger.priority", "ERROR",
                       "remote", "testComm2",
                       "deviceId", "testComm1")
 
