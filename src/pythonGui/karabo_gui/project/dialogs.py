@@ -102,10 +102,10 @@ class TableModel(QAbstractTableModel):
                 )
             self.entries.append(entry)
 
-    def rowCount(self, parent=QModelIndex()):
+    def rowCount(self, parent=None):
         return len(self.entries)
 
-    def columnCount(self, parent=QModelIndex()):
+    def columnCount(self, parent=None):
         return len(self.headers)
 
     def data(self, index, role=Qt.DisplayRole):
