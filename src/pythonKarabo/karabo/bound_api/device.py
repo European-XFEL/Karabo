@@ -1060,13 +1060,15 @@ class PythonDevice(NoFsm):
         """
         self._ss.registerSignal(signalName, *args)
 
-    def connect(self, signalName, slotName):
+    def connect(self, signalInstance, signalName, slotInstance, slotName):
         """
-        Connect a signal with a slot on local device
+        Connect a signal with a slot
+        :param signalInstance: instance the signal is on, use "" for local
         :param signalName: name of the signal to connect
+        :param slotInstance: instance the slot is on, use "" for local
         :param slotName: name of the slot to be executed upon signal reception
         """
-        self._ss.connect(signalName, slotName)
+        self._ss.connect(signalInstance, signalName, slotInstance, slotName)
 
     def reply(self, *args):
         """
