@@ -132,6 +132,7 @@ class TestDeviceDeviceComm(TestCase):
         # is async.
         with self.subTest(msg="Test execute slots"):
             self.dc.execute("testComm1", "slotWithoutArguments")
+            sleep(3)
             res = self.dc.get("testComm1", "someString")
             self.assertEqual(res, "slotWithoutArguments was called")
 
