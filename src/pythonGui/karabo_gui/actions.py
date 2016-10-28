@@ -33,6 +33,7 @@ def build_qaction(karabo_action, parent):
     ``connect`` of a QAction should be done after calling this function.
 
     :param karabo_action: An object of type ``KaraboAction``
+    :param parent: The parent of the ``QAction`` of type ``QObject``
     :return: ``QAction`` objects based on given ``karabo_action``
     """
     q_action = QAction(karabo_action.text, parent)
