@@ -87,3 +87,14 @@ def test_project_round_trip():
                                       read_project_model)
 
     _compare_projects(project, rt_project)
+
+
+def test_project_cache():
+    old_project = _get_old_project()
+    project = convert_old_project(old_project)
+
+    with _project_storage() as storage:
+        _write_project(project, storage)
+        project_uuids = storage.get_uuids_of_type('project')
+        assert len(project_uuids) == 1
+        assert project_uuids[0] == project.uuid
