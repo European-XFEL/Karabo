@@ -5,6 +5,8 @@
  * Created on July 29, 2016, 2:06 PM
  */
 
+#include <csignal>
+
 #include "karabo/net/EventLoop.hh"
 #include "karabo/log/Logger.hh"
 #include "EventLoop_Test.hh"
@@ -89,4 +91,26 @@ void EventLoop_Test::testMethod2() {
     
     CPPUNIT_ASSERT(true);
 
+}
+
+
+void EventLoop_Test::testSignalCapture() {
+
+    boost::thread t(boost::bind(&EventLoop::work));
+
+    bool terminateCaught = false;
+    EventLoop::setSignalHandler([&terminateCaught](int signal) {
+        if (signal == SIGTERM) {
+            terminateCaught = true;
+        }
+    });
+
+    // Allow signal handling to be activated (1 ms sleep seems OK, but the test fails without sleep).
+    boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+
+    std::raise(SIGTERM);
+
+    t.join();
+
+    CPPUNIT_ASSERT(terminateCaught);
 }
