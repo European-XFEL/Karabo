@@ -99,7 +99,7 @@ def _fill_macros_menu(menu):
 
 def _fill_scenes_menu(menu):
     add_action = QAction('Add scene', menu)
-    open_action = QAction('Open scene...', menu)
+    open_action = QAction('Load scene...', menu)
     menu.addAction(add_action)
     menu.addAction(open_action)
 
@@ -107,8 +107,10 @@ def _fill_scenes_menu(menu):
 def _fill_servers_menu(menu):
     add_action = QAction('Add server', menu)
     remove_all_action = QAction('Delete all', menu)
+    remove_selected_action = QAction('Delete selected', menu)
     menu.addAction(add_action)
     menu.addAction(remove_all_action)
+    menu.addAction(remove_selected_action)
 
 
 def _fill_subprojects_menu(menu):
