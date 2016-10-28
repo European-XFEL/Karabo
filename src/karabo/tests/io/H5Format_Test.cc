@@ -25,6 +25,7 @@ using namespace karabo::util;
 using namespace karabo::io;
 using namespace karabo::io::h5;
 using namespace boost;
+using std::vector;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(H5Format_Test);
 
@@ -233,7 +234,7 @@ void H5Format_Test::testDiscoverFromHash() {
             data.set("b.b1", 123);
             data.set("b.b2", 123u);
             data.set("b.b3", 123LL);
-            data.set("b.b4", complex<float>(2, 6));
+            data.set("b.b4", std::complex<float>(2, 6));
             data.set("b.b5", true);
             data.set("c.c1", Hash());
             data.set("c.c2", vector<Hash>(4, Hash()));
@@ -251,7 +252,7 @@ void H5Format_Test::testDiscoverFromHash() {
 
             KARABO_LOG_FRAMEWORK_TRACE_CF << "persistent config\n" << pers;
 
-            vector<string> names;
+            vector<std::string> names;
             dataFormat->getElementsNames(names);
             for (size_t i = 0; i < names.size(); ++i) {
                 //  clog << "names[" << i << "] = " << names[i] << endl;
@@ -263,7 +264,7 @@ void H5Format_Test::testDiscoverFromHash() {
             }
 
         } catch (Exception e) {
-            clog << e.detailedMsg() << endl;
+            std::clog << e.detailedMsg() << std::endl;
             KARABO_RETHROW
         }
 

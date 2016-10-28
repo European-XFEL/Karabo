@@ -27,10 +27,10 @@ void MetaTools_Test::testMethod() {
     CPPUNIT_ASSERT(PointerTest::isSharedPointer<boost::shared_ptr<int> >());
     CPPUNIT_ASSERT(!PointerTest::isSharedPointer<int>());
 
-    CPPUNIT_ASSERT((karabo::util::is_base_of<Hash, MyPublicHash>::value));
-    CPPUNIT_ASSERT((karabo::util::is_base_of<Hash, MyProtectedHash>::value));
-    CPPUNIT_ASSERT((karabo::util::is_base_of<Hash, MyPrivateHash>::value));
-    CPPUNIT_ASSERT((!karabo::util::is_base_of<Hash, int>::value));
+    CPPUNIT_ASSERT((std::is_base_of<Hash, MyPublicHash>::value));
+    CPPUNIT_ASSERT((std::is_base_of<Hash, MyProtectedHash>::value));
+    CPPUNIT_ASSERT((std::is_base_of<Hash, MyPrivateHash>::value));
+    CPPUNIT_ASSERT((!std::is_base_of<Hash, int>::value));
 }
 
 
@@ -178,7 +178,7 @@ void MetaTools_Test::testCallFromTuple() {
     Hash h;
     pack(h, i, s, f); // We will copy f once here!!    
     auto barFn = boost::bind(&Bar::bar, &b, _1, _2, _3);
-    call(barFn, unpack<int, string, Foo>(h)); // But not here!!
+    call(barFn, unpack<int, std::string, Foo>(h)); // But not here!!
 
     CPPUNIT_ASSERT(b.gotCalled == true);
     CPPUNIT_ASSERT(f.nCopies == 1);

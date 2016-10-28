@@ -22,7 +22,7 @@
 
 using namespace karabo::io;
 using namespace karabo::util;
-
+using std::vector;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(SchemaSerializer_Test);
 
@@ -160,7 +160,7 @@ struct TestSchemaSerializer {
                 .commit();
 
 
-        vector<string> vecStr;
+        vector<std::string> vecStr;
         vecStr.push_back("first line");
         vecStr.push_back("second line");
         VECTOR_STRING_ELEMENT(expected).key("strVector")
@@ -215,7 +215,7 @@ void SchemaSerializer_Test::testBinarySerializer() {
     CPPUNIT_ASSERT(inputSchema.keyHasAlias("exampleKey5") == true);
     CPPUNIT_ASSERT(inputSchema.aliasHasKey("exampleAlias5") == true);
     CPPUNIT_ASSERT(inputSchema.getKeyFromAlias("exampleAlias5") == "exampleKey5");
-    CPPUNIT_ASSERT(inputSchema.getAliasFromKey<string>("exampleKey5") == "exampleAlias5");
+    CPPUNIT_ASSERT(inputSchema.getAliasFromKey<std::string>("exampleKey5") == "exampleAlias5");
 
 
     std::vector<char> archive2;
