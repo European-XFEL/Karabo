@@ -51,7 +51,7 @@ class ProjectPanel(Dockable, QWidget):
         self.acProjectNew.triggered.connect(self.twProject.projectNew)
 
         text = "Open project"
-        self.acProjectOpen = QAction(icons.open, "&Open project", self)
+        self.acProjectOpen = QAction(icons.load, "&Open project", self)
         self.acProjectOpen.setStatusTip(text)
         self.acProjectOpen.setToolTip(text)
         self.acProjectOpen.setEnabled(False)
