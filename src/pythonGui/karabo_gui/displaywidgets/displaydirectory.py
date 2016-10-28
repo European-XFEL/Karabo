@@ -43,7 +43,7 @@ class DisplayDirectory(DisplayWidget):
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
         self.__tbPath.setToolTip(text)
-        self.__tbPath.setIcon(icons.open)
+        self.__tbPath.setIcon(icons.load)
         self.__tbPath.setEnabled(False)
         self.__tbPath.setMaximumSize(25,25)
         hLayout.addWidget(self.__tbPath)

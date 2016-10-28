@@ -213,13 +213,13 @@ class ConfigurationPanel(Dockable, QWidget):
         manager = Manager()
 
         text = "Open configuration from file (*.xml)"
-        self.acOpenFromFile = QAction(icons.open, text, self)
+        self.acOpenFromFile = QAction(icons.load, text, self)
         self.acOpenFromFile.setStatusTip(text)
         self.acOpenFromFile.setToolTip(text)
         self.acOpenFromFile.triggered.connect(manager.onOpenFromFile)
 
         text = "Open configuration from project"
-        self.acOpenFromProject = QAction(icons.open, text, self)
+        self.acOpenFromProject = QAction(icons.load, text, self)
         self.acOpenFromProject.setStatusTip(text)
         self.acOpenFromProject.setToolTip(text)
         self.acOpenFromProject.triggered.connect(manager.onOpenFromProject)
@@ -229,7 +229,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.openMenu.addAction(self.acOpenFromProject)
         text = "Open configuration"
         self.tbOpenConfig = QToolButton()
-        self.tbOpenConfig.setIcon(icons.open)
+        self.tbOpenConfig.setIcon(icons.load)
         self.tbOpenConfig.setStatusTip(text)
         self.tbOpenConfig.setToolTip(text)
         self.tbOpenConfig.setVisible(False)
