@@ -127,7 +127,7 @@ namespace karabo {
         }
 
 
-        void InputChannel::registerInputHandler(const boost::function<void (InputChannel&)>& ioInputHandler) {
+        void InputChannel::registerInputHandler(const InputHandler& ioInputHandler) {
             if (m_dataHandler) {
                 KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
                         << "data handler per Data since setting one per InputChannel";
@@ -137,7 +137,7 @@ namespace karabo {
         }
 
 
-        void InputChannel::registerDataHandler(const boost::function<void (const karabo::util::Hash&) >& ioDataHandler) {
+        void InputChannel::registerDataHandler(const DataHandler& ioDataHandler) {
             if (m_inputHandler) {
                 KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
                         << "data handler per InputChannel since setting one per Data";
@@ -148,7 +148,7 @@ namespace karabo {
         }
 
 
-        void InputChannel::registerEndOfStreamEventHandler(const boost::function<void (InputChannel&)>& endOfStreamEventHandler) {
+        void InputChannel::registerEndOfStreamEventHandler(const InputHandler& endOfStreamEventHandler) {
             m_endOfStreamHandler = endOfStreamEventHandler;
         }
 
@@ -464,7 +464,7 @@ namespace karabo {
                         m_dataHandler(data);
                     }
                 } else if (m_inputHandler) {
-                    m_inputHandler(*this);
+                    m_inputHandler(shared_from_this());
                 }
                 // Whatever handler (even none): we are done with the data.
                 m_ioService.post(util::bind_weak(&InputChannel::update, this));
@@ -477,7 +477,7 @@ namespace karabo {
         void InputChannel::triggerEndOfStreamEvent() {
             try {
                 if (m_endOfStreamHandler) {
-                    m_endOfStreamHandler(*this);
+                    m_endOfStreamHandler(shared_from_this());
                 }
             } catch (const std::exception& ex) {
                 KARABO_LOG_FRAMEWORK_ERROR << "\"triggerEndOfStreamEvent\" call is problematic -- " << ex.what();
