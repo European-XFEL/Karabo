@@ -29,7 +29,7 @@ class TestDeviceDeviceComm(TestCase):
 
         config = Hash()
         config.set("serverId", "testServer1")
-        config.set("pluginDirectory", str(pluginDir))
+        config.set("pluginDirectory", pluginDir)
         config.set("pluginNames", "")
         config.set("Logger.priority", "ERROR")
         config.set("visibility", 1)
@@ -75,12 +75,12 @@ class TestDeviceDeviceComm(TestCase):
         self.server.instantiateDevice(classConfig)
 
         config2 = Hash("Logger.priority", "ERROR",
-                      "remote", "testComm1",
-                      "deviceId", "testComm2")
+                       "remote", "testComm1",
+                       "deviceId", "testComm2")
 
         classConfig2 = Hash("classId", "CommTestDevice",
-                           "deviceId", "testComm2",
-                           "configuration", config2)
+                            "deviceId", "testComm2",
+                            "configuration", config2)
 
         self.server.instantiateDevice(classConfig2)
 
@@ -114,17 +114,17 @@ class TestDeviceDeviceComm(TestCase):
         # handles both the case where we started as part of integration
         # tests, or as a single test
         dirs = [self._ownDir, os.path.join(self._ownDir, '..')]
-        for dir in dirs:
-            files = os.listdir(dir)
-            for file in files:
-                if 'openMQLib.log' in file:
-                    os.remove(os.path.join(dir,file))
-                if 'device-testComm' in file:
-                    os.remove(os.path.join(dir,file))
-                if 'karabo.log' in file:
-                    os.remove(os.path.join(dir,file))
-                if 'serverId.xml' in file:
-                    os.remove(os.path.join(dir,file))
+        for cdir in dirs:
+            files = os.listdir(cdir)
+            for cfile in files:
+                if 'openMQLib.log' in cfile:
+                    os.remove(os.path.join(cdir, cfile))
+                if 'device-testComm' in cfile:
+                    os.remove(os.path.join(cdir, cfile))
+                if 'karabo.log' in cfile:
+                    os.remove(os.path.join(cdir, cfile))
+                if 'serverId.xml' in cfile:
+                    os.remove(os.path.join(cdir, cfile))
 
     def test_in_sequence(self):
         # tests are run in sequence as sub tests
