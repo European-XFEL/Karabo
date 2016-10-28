@@ -85,6 +85,7 @@ if __name__ == '__main__':
             'karabo.testing': ['resources/*.*'],
             'karabo.project_db': ['config_stubs/*.*'],
             'karabo.integration_tests': ['device_comm_test/CommTestDevice.egg-info/*.*'],
+            'karabo.devices': ['tests/ProjectManager.egg-info/*.*'],
         },
         entry_points={
             'console_scripts': [
@@ -96,5 +97,8 @@ if __name__ == '__main__':
                 'generate-karabo-project=karabo.interactive.project_generator:main',
                 'upgrade-karabo-project=karabo.interactive.upgrade_project_data:main',
              ],
+            'karabo.bound_device': [
+                'ProjectManager=karabo.bound_devices.project_manager:ProjectManager',
+            ],
         },
     )
