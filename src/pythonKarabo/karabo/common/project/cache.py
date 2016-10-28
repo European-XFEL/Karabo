@@ -3,6 +3,7 @@
 # Created on October 21, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from xml.etree.ElementTree import fromstring
 import os
 import os.path as op
 from sys import platform
@@ -35,6 +36,16 @@ class ProjectDBCache(object):
         leafname = '{}_{}'.format(uuid, revision)
         return op.join(self.dirpath, leafname)
 
+    def _uuid_revision_from_filename(self, filename):
+        """ Return tuple of ``UUID`` and ``Revision`` from the given
+        ``filename``
+
+        :param filename: The file name of an cached object
+        :return: A tuple of ``UUID`` and ``Revision`` number
+        """
+        uuid, revision = filename.split('_')
+        return (uuid, revision)
+
 
 def get_user_cache():
     """ Return a cache residing in the user's home directory.
@@ -46,3 +57,18 @@ def get_user_cache():
     cache_dir = op.join(karabo_dir, 'project_db_cache')
     os.makedirs(cache_dir, exist_ok=True)
     return ProjectDBCache(cache_dir)
+
+
+def get_all_user_cache_projects():
+    """ Return all projects in cache
+    """
+    cache_projs = []
+    user_cache = get_user_cache()
+    for fn in os.listdir(user_cache.dirpath):
+        uuid, revision = user_cache._uuid_revision_from_filename(fn)
+        xml = user_cache.retrieve(uuid, revision)
+        root = fromstring(xml)
+        for project in root.findall('project'):
+            # Only append objects of type project
+            cache_projs.append(xml)
+    return cache_projs
