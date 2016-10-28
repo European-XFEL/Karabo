@@ -97,7 +97,7 @@ namespace karabo {
             } else if (index == -1) {
                 return true;
             } else {
-                return hash->m_container.get<vector<Hash> >(key).size() > static_cast<unsigned int> (index);
+                return hash->m_container.get<std::vector<Hash> >(key).size() > static_cast<unsigned int> (index);
             }
         }
 
@@ -123,7 +123,7 @@ namespace karabo {
             if (index == -1) {
                 return hash.m_container.is(key, type);
             } else {
-                const vector<Hash>& hashVec = hash.m_container.get<vector<Hash> >(key);
+                const std::vector<Hash>& hashVec = hash.m_container.get<std::vector<Hash> >(key);
                 if (static_cast<unsigned int> (index) >= hashVec.size()) {
                     throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" + path + "'.");
                 }
@@ -147,7 +147,7 @@ namespace karabo {
                     // Could be 'erase("a[2]")', but there is no "a" at all!
                     return false;
                 }
-                std::vector<Hash>& vect = hash->m_container.get<vector<Hash> >(it);
+                std::vector<Hash>& vect = hash->m_container.get<std::vector<Hash> >(it);
                 if (static_cast<unsigned int> (index) >= vect.size()) {
                     return false;
                 } else {
@@ -158,7 +158,7 @@ namespace karabo {
         }
 
 
-        static std::string concat(const std::vector<string>& vec, size_t len, const std::string& sep) {
+        static std::string concat(const std::vector<std::string>& vec, size_t len, const std::string& sep) {
             std::string result;
             for (size_t i = 0; i < len; i++) {
                 result += vec[i];
@@ -173,7 +173,7 @@ namespace karabo {
             std::vector<std::string> tokens;
             karabo::util::tokenize(path, tokens, separator);
             size_t length = tokens.size();
-            string thePath = path;
+            std::string thePath = path;
             try {
                 while (length > 0 && !thePath.empty()) {
                     std::string key;
@@ -192,7 +192,7 @@ namespace karabo {
                             // Could be 'erasePath("a[2]")', but there is no "a" at all.
                             break;
                         }
-                        std::vector<Hash>& vect = hash->m_container.get<vector<Hash> >(it);
+                        std::vector<Hash>& vect = hash->m_container.get<std::vector<Hash> >(it);
                         if (static_cast<unsigned int> (index) < vect.size()) {
                             vect.erase(vect.begin() + index);
                         }
@@ -206,7 +206,8 @@ namespace karabo {
                         }
                     }
                     if ((this->is<Hash>(thePath, separator) && !this->get<Hash>(thePath, separator).empty()) ||
-                        (this->is<vector<Hash> >(thePath, separator) && !this->get<vector<Hash> >(thePath, separator).empty()))
+                        (this->is<std::vector<Hash> >(thePath, separator)
+                         && !this->get<std::vector<Hash> >(thePath, separator).empty()))
                         break;
                 }
             } catch (const karabo::util::Exception& e) {
@@ -249,8 +250,8 @@ namespace karabo {
                     if (!node.is<Hash>()) return 0;
                     tmp = &node.getValue<Hash>();
                 } else {
-                    if (!node.is<vector<Hash> >()) return 0;
-                    const vector<Hash>& hashVec = node.getValue<vector<Hash> >();
+                    if (!node.is<std::vector<Hash> >()) return 0;
+                    const std::vector<Hash>& hashVec = node.getValue<std::vector<Hash> >();
                     if (static_cast<unsigned int> (index) >= hashVec.size()) {
                         return 0;
                     }
@@ -333,7 +334,7 @@ namespace karabo {
 
         void Hash::getPaths(std::set<std::string>& result, const char separator) const {
             if (this->empty()) return;
-            vector<std::string> vect;
+            std::vector<std::string> vect;
             Hash::getPaths(*this, vect, "", separator);
 
             for (size_t i = 0; i < vect.size(); ++i) {
@@ -425,8 +426,8 @@ namespace karabo {
 
                 // If we have selected paths, check whether to go on
                 if (!selectedPaths.empty()) {
-                    const unsigned int size = (otherNode.is<vector<Hash> >() ?
-                                               otherNode.getValue<vector<Hash> >().size() : 0u);
+                    const unsigned int size = (otherNode.is<std::vector<Hash> >() ?
+                                               otherNode.getValue<std::vector<Hash> >().size() : 0u);
                     if (!Hash::keyIsPrefixOfAnyPath(selectedPaths, key, sep, size)) {
                         continue;
                     }
@@ -490,7 +491,7 @@ namespace karabo {
             BOOST_FOREACH(const std::string& path, paths) {
                 const size_t sepPos = path.find_first_of(separator);
                 // Add what is left after first separator - if that is not empty and if that before separator matches key:
-                if (sepPos != string::npos // Found a separator,
+                if (sepPos != std::string::npos // Found a separator,
                     && path.size() != sepPos + 1 // there is something behind and
                     && path.compare(0, sepPos, key) == 0) { // before the separator we have 'key'.
                     result.insert(std::string(path, sepPos + 1)); // Cut away key and separator.
@@ -578,8 +579,8 @@ namespace karabo {
         void Hash::mergeTableElement(const Hash::Node& source, Hash::Node& target,
                                      const std::set<std::string>& selectedPaths, char separator) {
 
-            std::vector<Hash>& targetVec = target.getValue<vector<Hash> > ();
-            const vector<Hash>& sourceVec = source.getValue<vector<Hash> > ();
+            std::vector<Hash>& targetVec = target.getValue<std::vector<Hash> > ();
+            const std::vector<Hash>& sourceVec = source.getValue<std::vector<Hash> > ();
             const std::set<unsigned int> selectedIndices(Hash::selectIndicesOfKey(sourceVec.size(), selectedPaths,
                                                                                   source.getKey(), separator));
 
@@ -608,8 +609,8 @@ namespace karabo {
         void Hash::mergeVectorHashNodes(const Hash::Node& source, Hash::Node& target, Hash::MergePolicy policy,
                                         const std::set<std::string>& selectedPaths, char separator) {
 
-            std::vector<Hash>& targetVec = target.getValue<vector<Hash> > ();
-            const vector<Hash>& sourceVec = source.getValue<vector<Hash> > ();
+            std::vector<Hash>& targetVec = target.getValue<std::vector<Hash> > ();
+            const std::vector<Hash>& sourceVec = source.getValue<std::vector<Hash> > ();
             const std::set<unsigned int> selectedIndices(Hash::selectIndicesOfKey(sourceVec.size(), selectedPaths,
                                                                                   source.getKey(), separator));
 
@@ -620,7 +621,7 @@ namespace karabo {
             } else {
                 // But only the selected ones:
                 unsigned int hashCounter = 0;
-                for (vector<Hash>::const_iterator it = sourceVec.begin(); it != sourceVec.end(); ++it, ++hashCounter) {
+                for (std::vector<Hash>::const_iterator it = sourceVec.begin(); it != sourceVec.end(); ++it, ++hashCounter) {
                     if (selectedIndices.find(hashCounter) != selectedIndices.end()) {
                         // Extract sub-paths
                         const std::string indexedKey((source.getKey() + '[') += util::toString(hashCounter) += ']');
@@ -641,10 +642,10 @@ namespace karabo {
 
         void Hash::subtract(const Hash& other, const char separator) {
             if (this->empty() || other.empty()) return;
-            vector<string> candidates;
+            std::vector<std::string> candidates;
             getPaths(other, candidates, "", separator); // may be optimized to avoid list creation 
             if (candidates.empty()) return;
-            for (vector<string>::const_iterator it = candidates.begin(); it != candidates.end(); ++it) {
+            for (std::vector<std::string>::const_iterator it = candidates.begin(); it != candidates.end(); ++it) {
                 this->erase(*it, separator);
             }
         }
@@ -761,7 +762,7 @@ namespace karabo {
                 const Hash::Attributes& attrs = hit->getAttributes();
                 if (attrs.size() > 0) {
                     for (Hash::Attributes::const_iterator ait = attrs.begin(); ait != attrs.end(); ++ait) {
-                        os << " " << ait->getKey() << "=\"" << ait->getValueAs<string>() /*<< " " << Types::to<ToLiteral>(ait->getType())*/ << "\"";
+                        os << " " << ait->getKey() << "=\"" << ait->getValueAs<std::string>() /*<< " " << Types::to<ToLiteral>(ait->getType())*/ << "\"";
                     }
                 }
 
@@ -773,15 +774,15 @@ namespace karabo {
                     os << " + (Pointer)" << std::endl;
                     toStream(os, *(hit->getValue<Hash::Pointer>()), depth + 1);
                 } else if (type == Types::VECTOR_HASH) {
-                    const vector<Hash>& hashes = hit->getValue<vector<Hash> >();
-                    os << " @" << endl;
+                    const std::vector<Hash>& hashes = hit->getValue<std::vector<Hash> >();
+                    os << " @" << std::endl;
                     for (size_t i = 0; i < hashes.size(); ++i) {
                         os << fill << "[" << i << "]" << std::endl;
                         toStream(os, hashes[i], depth + 1);
                     }
                 } else if (type == Types::VECTOR_HASH_POINTER) {
-                    const vector<Hash::Pointer>& hashes = hit->getValue<vector<Hash::Pointer> >();
-                    os << " @ (Pointer)" << endl;
+                    const std::vector<Hash::Pointer>& hashes = hit->getValue<std::vector<Hash::Pointer> >();
+                    os << " @ (Pointer)" << std::endl;
                     for (size_t i = 0; i < hashes.size(); ++i) {
                         os << fill << "[" << i << "]" << std::endl;
                         toStream(os, *(hashes[i]), depth + 1);
@@ -793,7 +794,7 @@ namespace karabo {
                 } else if (type == Types::UNKNOWN) {
                     os << " => " << hit->type().name() << " " << Types::to<ToLiteral>(type) << std::endl;
                 } else {
-                    os << " => " << hit->getValueAs<string>() << " " << Types::to<ToLiteral>(type) << std::endl;
+                    os << " => " << hit->getValueAs<std::string>() << " " << Types::to<ToLiteral>(type) << std::endl;
                 }
             }
         }
@@ -886,7 +887,7 @@ namespace karabo {
             return partial_count;
         }
 
-#define COUNTER(ReferenceType, CppType) ReferenceType: return element.getValue < vector <CppType> >().size();
+#define COUNTER(ReferenceType, CppType) ReferenceType: return element.getValue<std::vector <CppType> >().size();
 
 
         size_t counter(const Hash::Node& element) {
