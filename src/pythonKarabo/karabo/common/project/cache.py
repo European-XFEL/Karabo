@@ -3,10 +3,11 @@
 # Created on October 21, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from xml.etree.ElementTree import fromstring
 import os
 import os.path as op
+from io import BytesIO
 from sys import platform
+from xml.etree.ElementTree import fromstring
 
 
 class ProjectDBCache(object):
@@ -60,7 +61,7 @@ def get_user_cache():
 
 
 def get_all_user_cache_projects():
-    """ Return all projects in cache
+    """ Return all projects in cache as a file-like object
     """
     cache_projs = []
     user_cache = get_user_cache()
@@ -69,6 +70,5 @@ def get_all_user_cache_projects():
         xml = user_cache.retrieve(uuid, revision)
         root = fromstring(xml)
         for project in root.findall('project'):
-            # Only append objects of type project
-            cache_projs.append(xml)
+            cache_projs.append(BytesIO(xml))
     return cache_projs
