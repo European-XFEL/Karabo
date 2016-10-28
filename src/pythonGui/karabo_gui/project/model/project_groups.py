@@ -33,6 +33,9 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
 
     def item_handler(self, event):
         """ Called for List-trait events on ``model`` (a ProjectModel)
+
+        This notification handler is connected and disconnected in the
+        create_project_model_shadow and destroy_project_model_shadow functions.
         """
         for model in event.removed:
             item_model = self._child_map[model]
@@ -44,6 +47,9 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
 
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
+
+        This is a static notification handler which is connected automatically
+        by Traits.
         """
         for item_model in event.removed:
             del self._child_map[item_model.model]
