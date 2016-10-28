@@ -32,6 +32,7 @@ class ProjectModelItem(BaseProjectTreeItem):
         item = QStandardItem('Project: {}'.format(self.model.simple_name))
         item.setData(weakref.ref(self), self.MODEL_REF_ITEM_ROLE)
         item.setIcon(icons.folder)
+        item.setEditable(False)
         for child in self.children:
             item.appendRow(child.qt_item)
 
