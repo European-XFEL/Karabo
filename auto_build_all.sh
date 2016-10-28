@@ -323,7 +323,7 @@ if [ "$RUNTESTS" = "y" ]; then
 fi
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
     runIntegrationTests
-    runPythonIntegrationTests
+    # runPythonIntegrationTests
 fi
 
 
