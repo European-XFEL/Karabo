@@ -12,9 +12,6 @@ from .dbsettings import DbSettings
 
 class ProjectDatabase(ContextDecorator):
 
-    known_xml_types = ['projects', 'scenes', 'macros', 'device_configs',
-                       'device_servers', 'monitors', 'device_groups']
-    known_non_xml_types = [] #currently none
     vers_namespace = "http://exist-db.org/versioning"
 
     def __init__(self, user, password, server=None, port=None,
@@ -94,19 +91,6 @@ class ProjectDatabase(ContextDecorator):
         if not success:
             raise RuntimeError("Failed to create domain at {}".format(path))
 
-        # for a new domain we need to create the projects, scenes, macros,
-        # configuration, device_servers, and resources collections
-        sub_colls = self.known_xml_types + self.known_non_xml_types
-
-        success = True
-        for coll in sub_colls:
-            spath = "{}/{}".format(path, coll)
-            success &= self.dbhandle.createCollection(spath)
-
-        if not success:
-            raise RuntimeError("Failed to create sub collections in domain {}"
-                               .format(path))
-
     @staticmethod
     def _make_xml_if_needed(xml_rep):
         """
@@ -139,6 +123,29 @@ class ProjectDatabase(ContextDecorator):
             return  xml_bytes.decode("utf-8")
 
         raise AttributeError("Cannot handle type {}".format(type(xml_rep)))
+
+    def get_versioning_info_item(self, domain, item):
+        """
+        Returns the versioning info for an item identified by its uuid
+        :param domain: domain item is located at
+        :param item: to retrieve versioning info for
+        :return: see :ref:`get_versioning_info`
+        """
+
+        # path to where the possible entries are located
+        path = "{}/{}".format(self.root, domain)
+
+        query = """
+                xquery version "3.0";
+                for $c at $i in collection("{path}?select=*")
+                where $c/*/@uuid = "{uuid}"
+                return document-uri($c)
+                """.format(path=path, uuid=item)
+        try:
+            res = self.dbhandle.query(query)
+            return self.get_versioning_info(res.results[0].text)
+        except ExistDBException:
+            return {}
 
     def get_versioning_info(self, path):
         """
@@ -191,28 +198,24 @@ class ProjectDatabase(ContextDecorator):
     def _add_vers_ns(self, element):
         return "{" + self.vers_namespace + "}" + element
 
-    def _check_for_known_xml_type(self, item_type):
-        if item_type not in self.known_xml_types:
-            raise AttributeError("Type {} is not of the known xml types: {}"
-                                 .format(item_type, self.known_xml_types))
-
-    def _save_item(self, item_type, domain, item_name, item_xml,
-                   overwrite=False):
+    def save_item(self, domain, item, item_xml, overwrite=False):
         """
         Saves a item xml file into the domain. It will
         create a new entry if the item does not exist yet, or create a new
         version of the item if it does exist. In case of a versioning
         conflict the update will fail and the most current version of the
-        item file is returned
+        item file is returned.
+
+        The root node of the xml should contain a `item_type` entry identifying
+        the type of the item as one of the following:
+
+        'projects', 'scenes', 'macros', 'device_configs', 'device_servers'
 
         If domain does not exist it is created given a user has appropriate
         access rights.
 
-        :param item_type: the type of item. Can be any of the following:
-                          'projects', 'scenes', 'macros', 'device_configs',
-                          'device_servers', 'monitors', 'device_groups'
         :param domain: the domain under which this item is to be stored
-        :param item_name: the items name
+        :param item: the items name
         :param item_xml: the xml containing the item information
         :param overwrite: defaults to False. If set to True versioning
                           information is removed prior to database injection,
@@ -231,8 +234,6 @@ class ProjectDatabase(ContextDecorator):
             RuntimeError if item saving failed otherwise.
             AttributeError if a non-supported type is passed
         """
-        # check if type is known to us
-        self._check_for_known_xml_type(item_type)
 
         # create domain if necessary
         if not self.domain_exists(domain):
@@ -241,6 +242,7 @@ class ProjectDatabase(ContextDecorator):
         # try to save the item xml, if overwrite is set to True we remove
         # the versioning specific attributes first.
         if overwrite:
+            item_xml = self._make_xml_if_needed(item_xml)
             versioning_attrs = ['key', 'revision', 'path']
             for attr in versioning_attrs:
                 nsattr = self._add_vers_ns(attr)
@@ -251,7 +253,7 @@ class ProjectDatabase(ContextDecorator):
         # case convert it
         item_xml = self._make_str_if_needed(item_xml)
 
-        path = "{}/{}/{}/{}".format(self.root, domain, item_type, item_name)
+        path = "{}/{}/{}".format(self.root, domain, item)
         success = False
         try:
             success = self.dbhandle.load(item_xml, path)
@@ -270,143 +272,10 @@ class ProjectDatabase(ContextDecorator):
         meta['current_xml'] = res_xml
         return (success, meta)
 
-    def save_project(self, domain, name, xml, overwrite=False):
-        """
-        Saves a project xml into the domain. It will
-        create a new entry if the project does not exist yet, or create a new
-        version of the project if it does exist. In case of a versioning
-        conflict the update will fail and the most current version of the
-        project file is returned
 
-        If domain does not exist it is created given a user has appropriate
-        access rights.
-
-        :param domain: the domain under which this project is to be stored
-        :param name: the project's name
-        :param xml: the xml containing the project information
-        :param overwrite: defaults to False. If set to True versioning
-                          information is removed prior to database injection,
-                          allowing to overwrite in case of versioning
-                          conflicts.
-
-        :return: (True, dict) if successful, (false, dict) with dict
-                 representing the item's versioning information. In case of
-                 version conflict this will contain the information of the
-                 *newest existing* entry in the database. If saving was
-                 successful (no conflict), it will contain the updated
-                 versioning information after saving the project.
-
-
-        :raises: ExistDBException if user is not authorized for this query.
-            RuntimeError if project saving failed otherwise.
-            AttributeError if a non-supported type is passed
-        """
-        return self._save_item('projects', domain, name, xml, overwrite)
-
-    def save_scene(self, domain, name, xml, overwrite=False):
-        """
-        Saves a scene xml into the domain. It will
-        create a new entry if the scene does not exist yet, or create a new
-        version of the scene if it does exist. In case of a versioning
-        conflict the update will fail and the most current version of the
-        scene file is returned
-
-        If domain does not exist it is created given a user has appropriate
-        access rights.
-
-        :param domain: the domain under which this scene is to be stored
-        :param name: the scene's name
-        :param xml: the xml containing the scene information
-        :param overwrite: defaults to False. If set to True versioning
-                          information is removed prior to database injection,
-                          allowing to overwrite in case of versioning
-                          conflicts.
-
-        :return: (True, dict) if successful, (false, dict) with dict
-                 representing the item's versioning information. In case of
-                 version conflict this will contain the information of the
-                 *newest existing* entry in the database. If saving was
-                 successful (no conflict), it will contain the updated
-                 versioning information after saving the scene.
-
-
-        :raises: ExistDBException if user is not authorized for this query.
-            RuntimeError if scene saving failed otherwise.
-            AttributeError if a non-supported type is passed
-        """
-        return self._save_item('scenes', domain, name, xml, overwrite)
-
-    def save_config(self, domain, name, xml, overwrite=False):
-        """
-        Saves a config file into the domain. It will
-        create a new entry if the config does not exist yet, or create a new
-        version of the config if it does exist. In case of a versioning
-        conflict the update will fail and the most current version of the
-        config file is returned
-
-        If domain does not exist it is created given a user has appropriate
-        access rights.
-
-        :param domain: the domain under which this config is to be stored
-        :param name: the config's name
-        :param xml: the xml containing the config information
-        :param overwrite: defaults to False. If set to True versioning
-                          information is removed prior to database injection,
-                          allowing to overwrite in case of versioning
-                          conflicts.
-
-        :return: (True, dict) if successful, (false, dict) with dict
-                 representing the item's versioning information. In case of
-                 version conflict this will contain the information of the
-                 *newest existing* entry in the database. If saving was
-                 successful (no conflict), it will contain the updated
-                 versioning information after saving the config.
-
-
-        :raises: ExistDBException if user is not authorized for this query.
-            RuntimeError if scene config failed otherwise.
-            AttributeError if a non-supported type is passed
-        """
-        return self._save_item('device_configs', domain, name, xml, overwrite)
-
-    def save_device_server(self, domain, name, xml, overwrite=False):
-        """
-        Saves a device server xml into the domain. It will
-        create a new entry if the device server does not exist yet, or create a
-        new version of the device server if it does exist. In case of a
-        versioning conflict the update will fail and the most current version
-        of the config file is returned
-
-        If domain does not exist it is created given a user has appropriate
-        access rights.
-
-        :param domain: the domain under which this config is to be stored
-        :param name: the device server's name
-        :param xml: the xml containing the device server information
-        :param overwrite: defaults to False. If set to True versioning
-                          information is removed prior to database injection,
-                          allowing to overwrite in case of versioning
-                          conflicts.
-
-        :return: (True, dict) if successful, (false, dict) with dict
-                 representing the item's versioning information. In case of
-                 version conflict this will contain the information of the
-                 *newest existing* entry in the database. If saving was
-                 successful (no conflict), it will contain the updated
-                 versioning information after saving the device server.
-
-
-        :raises: ExistDBException if user is not authorized for this query.
-            RuntimeError if scene config failed otherwise.
-            AttributeError if a non-supported type is passed
-        """
-        return self._save_item('device_servers', domain, name, xml,
-                               overwrite)
-
-    def _copy_item(self, item_type, domain, target_domain, item, target_item):
+    def copy_item(self, domain, target_domain, item, target_item):
         """
         Copies item of item_type from domain to target_domain and target_item
-        :param item_type: type of item
         :param domain: the originating domain
         :param target_domain: the target_domain
         :param item: the original item
@@ -416,15 +285,13 @@ class ProjectDatabase(ContextDecorator):
                 RuntimeError if copying failed otherwise.
                 AttributeError if a non-supported type is passed
         """
-        # check if type is known to us
-        self._check_for_known_xml_type(item_type)
 
         # create domain if necessary
         if not self.domain_exists(target_domain):
             self.add_domain(target_domain)
 
-        path = "{}/{}/{}".format(self.root, domain, item_type)
-        target_path = "{}/{}/{}".format(self.root, target_domain, item_type)
+        path = "{}/{}".format(self.root, domain)
+        target_path = "{}/{}".format(self.root, target_domain)
         return_path = None
 
         # perform the copy
@@ -445,10 +312,9 @@ class ProjectDatabase(ContextDecorator):
         self.dbhandle.query(query)
         return self.dbhandle.getDoc(return_path).decode('utf-8')
 
-    def _rename_item(self, item_type, domain, item, target_item):
+    def rename_item(self, domain, item, target_item):
         """
         Renames item of item_type from in domain to target_item
-        :param item_type: type of item
         :param domain: the originating domain
         :param item: the original item
         :param target_item: the target item
@@ -457,10 +323,7 @@ class ProjectDatabase(ContextDecorator):
                 RuntimeError if renaming failed otherwise.
                 AttributeError if a non-supported type is passed
         """
-        # check if type is known to us
-        self._check_for_known_xml_type(item_type)
-
-        path = "{}/{}/{}".format(self.root, domain, item_type)
+        path = "{}/{}".format(self.root, domain)
 
         # perform the rename
         query = ('xmldb:rename("{0}", "{1}", "{2}")'
@@ -472,10 +335,9 @@ class ProjectDatabase(ContextDecorator):
 
         return self.dbhandle.getDoc(return_path).decode('utf-8')
 
-    def _move_item(self, item_type, domain, target_domain, item):
+    def move_item(self, domain, target_domain, item):
         """
         Moves item of item_type from domain to target_domain
-        :param item_type: type of item
         :param domain: the originating domain
         :param target_domain: the target_domain
         :param item: the original item
@@ -484,15 +346,13 @@ class ProjectDatabase(ContextDecorator):
                 RuntimeError if copying failed otherwise.
                 AttributeError if a non-supported type is passed
         """
-        # check if type is known to us
-        self._check_for_known_xml_type(item_type)
 
         # create domain if necessary
         if not self.domain_exists(target_domain):
             self.add_domain(target_domain)
 
-        path = "{}/{}/{}".format(self.root, domain, item_type)
-        target_path = "{}/{}/{}".format(self.root, target_domain, item_type)
+        path = "{}/{}".format(self.root, domain)
+        target_path = "{}/{}".format(self.root, target_domain)
 
         # perform the move
         query = ('xmldb:move("{0}", "{1}", "{2}")'
@@ -504,19 +364,22 @@ class ProjectDatabase(ContextDecorator):
 
         return self.dbhandle.getDoc(return_path).decode('utf-8')
 
-    def load_item(self, item_type, domain, item, revision=None):
+    def load_item(self, domain, item, revision=None):
         """
         Load an item of `item_type` from `domain`
-        :param item_type: the type of the item as per the list of types
         :param domain: a domain to load from
         :param item: the name of the item to load
         :param revision: optional revision number of item, use None if latest.
         :return:
         """
-        path = "{}/{}/{}/{}".format(self.root, domain, item_type, item)
+        path = "{}/{}/{}".format(self.root, domain, item)
         if revision is None:
             # simple interface
-            item = self.dbhandle.getDoc(path).decode('utf-8')
+            try:
+                item = self.dbhandle.getDoc(path).decode('utf-8')
+            except ExistDBException:
+                return ""
+
         else:
             query = """
             xquery version "3.0";
@@ -524,7 +387,10 @@ class ProjectDatabase(ContextDecorator):
             return v:doc(doc('{path}'), {revision})
             """.format(vnamespace=self.vers_namespace, path=path,
                        revision=revision)
-            item = self.dbhandle.query(query).results[0]
+            try:
+                item = self.dbhandle.query(query).results[0]
+            except ExistDBException:
+                return ""
 
         item = self._make_xml_if_needed(item)
         # add versioning info
@@ -541,39 +407,51 @@ class ProjectDatabase(ContextDecorator):
         item.attrib[self._add_vers_ns('path')] = path
         return self._make_str_if_needed(item)
 
-    def _load_multi(self, domain, item_xml_str, list_tag):
+    def load_multi(self, domain, item_xml_str):
         """
-        Loads all items found in item_xml_str under listTag. Here list_tag
-        needs to correspond to one of the known item types
+        Loads all items found in item_xml_str under listTag.
+
         :param domain:the domain to load from
-        :param item_xml_str:the xml of the container item, should contain a tag
-                list_tag which holds the entries to load
-        :param list_tag: the tag name that contains the list
+        :param item_xml_str:the xml of the container item, at it's root
+               should contain an attribute list_tag that identifies under
+               which tag sub_items are located
         :return:xml string of the loaded items
         """
 
         # gather information on revisions and uids
         xml = self._make_xml_if_needed(item_xml_str)
+
+        # if no list_tag is available we don't know what to load
+        if not 'list_tag' in xml.attrib:
+            return {}
+
         revisions = []
-        uids = []
-        configs = xml.find(list_tag)
-        for elem in configs:
+        uuids = []
+        list_tag = xml.attrib['list_tag']
+
+        subs = xml.find(list_tag)
+        for elem in subs:
             revisions.append(elem.attrib['revision'])
-            uids.append(elem.attrib['uid'])
+            uuids.append(elem.attrib['uuid'])
 
         # path to where the possible entries are located
-        path = "{}/{}/{}".format(self.root, domain, list_tag)
+        path = "{}/{}".format(self.root, domain)
 
         query = """
             xquery version "3.0";
             import module namespace v="{vnamespace}";
             let $revs := {revs}
-            let $uids := {uids}
+            let $uuids := {uuids}
             for $c at $i in collection("{path}/?select=*")
-            where $c//@uid = $uids
-            return v:doc($c, $revs[index-of($uids, data($c//@uid))-1])
+            where $c/*/@uuid = $uuids
+            return v:doc($c, $revs[index-of($uuids, data($c/*/@uuid))-1])
             """.format(vnamespace=self.vers_namespace,revs=tuple(revisions),
-                       uids=tuple(uids), path=path)
+                       uuids=tuple(uuids), path=path)
 
-        res = self.dbhandle.query(query)
-        return [self._make_str_if_needed(r) for r in res.results]
+        try:
+            res = self.dbhandle.query(query)
+        except ExistDBException:
+            return {}
+
+        return {r.attrib['uuid']: self._make_str_if_needed(r)
+                for r in res.results}
