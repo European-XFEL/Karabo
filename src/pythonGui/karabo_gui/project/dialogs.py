@@ -3,6 +3,7 @@
 # Created on October 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from collections import namedtuple, OrderedDict
 import os.path as op
 
 from PyQt4 import uic
@@ -10,6 +11,24 @@ from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, QModelIndex, Qt
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
 from karabo.common.project.api import get_all_user_cache_projects
+from karabo.middlelayer_api.newproject.io import read_project_model
+
+UUID = 'uuid'
+AUTHOR = 'author'
+VERSION = 'revision'
+PUBLISHED = 'published'
+DESCRIPTION = 'description'
+DOCUMENTATION = 'documentation'
+
+PROJECT_DATA = OrderedDict()
+PROJECT_DATA[UUID] = 'Name'
+PROJECT_DATA[AUTHOR] = 'Author'
+PROJECT_DATA[VERSION] = 'Version'
+PROJECT_DATA[PUBLISHED] = 'Published'
+PROJECT_DATA[DESCRIPTION] = 'Description'
+PROJECT_DATA[DOCUMENTATION] = 'Documentation'
+
+ProjectEntry = namedtuple('ProjectEntry', [key for key in PROJECT_DATA.keys()])
 
 
 class ProjectHandleDialog(QDialog):
@@ -18,8 +37,6 @@ class ProjectHandleDialog(QDialog):
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'project_handle.ui')
         uic.loadUi(filepath, self)
-
-        cache_objects = get_all_user_cache_projects()
 
         self.twProjects.setModel(TableModel(self))
 
@@ -43,7 +60,7 @@ class NewDialog(ProjectHandleDialog):
 
     @pyqtSlot()
     def new_clicked(self):
-        pass
+        self.accept()
 
 
 class LoadDialog(ProjectHandleDialog):
@@ -55,7 +72,7 @@ class LoadDialog(ProjectHandleDialog):
 
     @pyqtSlot()
     def load_clicked(self):
-        pass
+        self.accept()
 
 
 class SaveDialog(ProjectHandleDialog):
@@ -67,19 +84,33 @@ class SaveDialog(ProjectHandleDialog):
 
     @pyqtSlot()
     def save_clicked(self):
-        pass
+        self.accept()
 
 
 class TableModel(QAbstractTableModel):
-    headers = ['Name', 'Author', 'Version', 'Published', 'Description',
-               'Documentation']
+    headers = [value for value in PROJECT_DATA.values()]
 
     def __init__(self, parent=None):
         super(TableModel, self).__init__(parent)
-        self.row_content = []
+        self.entries = []
+        self._extractData()
+
+    def _extractData(self):
+        xml_projects = get_all_user_cache_projects()
+        for xml in xml_projects:
+            proj = read_project_model(xml)
+            entry = ProjectEntry(
+                uuid=proj.uuid,
+                author='author',
+                revision='revision',
+                published='published',
+                description='description',
+                documentation='documentation',
+                )
+            self.entries.append(entry)
 
     def rowCount(self, parent=QModelIndex()):
-        return len(self.row_content)
+        return len(self.entries)
 
     def columnCount(self, parent=QModelIndex()):
         return len(self.headers)
@@ -87,7 +118,7 @@ class TableModel(QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
             return None
-        entry = self.row_content[index.row()]
+        entry = self.entries[index.row()]
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
             return entry[index.column()]
         return None
