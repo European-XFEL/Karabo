@@ -4,12 +4,10 @@ from io import BytesIO
 from lxml import etree
 
 from karabo.common.project.api import (
-    DeviceConfigurationModel, DeviceGroupModel, DeviceServerModel,
-    LazyDeviceGroupModel, LazyDeviceServerModel, LazyProjectModel,
-    MacroModel, MonitorModel, ProjectModel, ProjectObjectReference,
-    PROJECT_DB_TYPE_DEVICE, PROJECT_DB_TYPE_DEVICE_GROUP,
-    PROJECT_DB_TYPE_DEVICE_SERVER, PROJECT_DB_TYPE_MACRO,
-    PROJECT_DB_TYPE_MONITOR, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
+    DeviceConfigurationModel, DeviceServerModel, LazyDeviceServerModel,
+    LazyProjectModel, MacroModel, ProjectModel, ProjectObjectReference,
+    PROJECT_DB_TYPE_DEVICE, PROJECT_DB_TYPE_DEVICE_SERVER,
+    PROJECT_DB_TYPE_MACRO, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
     PROJECT_OBJECT_CATEGORIES)
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.hash import Hash
@@ -21,10 +19,8 @@ def read_project_model(io_obj):
     """
     factories = {
         PROJECT_DB_TYPE_DEVICE: _device_reader,
-        PROJECT_DB_TYPE_DEVICE_GROUP: _device_group_reader,
         PROJECT_DB_TYPE_DEVICE_SERVER: _device_server_reader,
         PROJECT_DB_TYPE_MACRO: _macro_reader,
-        PROJECT_DB_TYPE_MONITOR: _monitor_reader,
         PROJECT_DB_TYPE_PROJECT: _project_reader,
         PROJECT_DB_TYPE_SCENE: _scene_reader,
     }
@@ -47,19 +43,15 @@ def write_project_model(model):
     """
     typemap = {
         DeviceConfigurationModel: PROJECT_DB_TYPE_DEVICE,
-        DeviceGroupModel: PROJECT_DB_TYPE_DEVICE_GROUP,
         DeviceServerModel: PROJECT_DB_TYPE_DEVICE_SERVER,
         MacroModel: PROJECT_DB_TYPE_MACRO,
-        MonitorModel: PROJECT_DB_TYPE_MONITOR,
         ProjectModel: PROJECT_DB_TYPE_PROJECT,
         SceneModel: PROJECT_DB_TYPE_SCENE
     }
     writers = {
         PROJECT_DB_TYPE_DEVICE: _device_writer,
-        PROJECT_DB_TYPE_DEVICE_GROUP: _device_group_writer,
         PROJECT_DB_TYPE_DEVICE_SERVER: _device_server_writer,
         PROJECT_DB_TYPE_MACRO: _macro_writer,
-        PROJECT_DB_TYPE_MONITOR: _monitor_writer,
         PROJECT_DB_TYPE_PROJECT: _project_writer,
         PROJECT_DB_TYPE_SCENE: write_scene,
     }
@@ -121,15 +113,6 @@ def _device_reader(io_obj, metadata):
             class_id=class_id, configuration=configuration, **kwargs)
 
 
-def _device_group_reader(io_obj, metadata):
-    """ A reader for device group models
-    """
-    kwargs = _db_metadata_reader(metadata)
-    group = Hash.decode(io_obj.read(), 'XML')
-    devices = [_reference_reader(h) for h in group.values()]
-    return LazyDeviceGroupModel(devices=devices, **kwargs)
-
-
 def _device_server_reader(io_obj, metadata):
     """ A reader for device server models
     """
@@ -147,14 +130,6 @@ def _macro_reader(io_obj, metadata):
     root = etree.parse(io_obj).getroot()
     code = base64.b64decode(root.text).decode('utf-8')
     return MacroModel(code=code, **kwargs)
-
-
-def _monitor_reader(io_obj, metadata):
-    """ A reader for monitors
-    """
-    kwargs = _db_metadata_reader(metadata)
-    configuration = Hash.decode(io_obj.read(), 'XML')
-    return MonitorModel(configuration=configuration, **kwargs)
 
 
 def _project_reader(io_obj, metadata):
@@ -207,15 +182,6 @@ def _device_writer(model):
     return hsh.encode('XML')
 
 
-def _device_group_writer(model):
-    """ A writer for device group models
-    """
-    devices = [Hash('uuid', dev.uuid, 'revision', dev.revision)
-               for dev in model.devices]
-    hsh = Hash('group', devices)
-    return hsh.encode('XML')
-
-
 def _device_server_writer(model):
     """ A writer for device server models
     """
@@ -232,12 +198,6 @@ def _macro_writer(model):
     code = model.code.encode('utf-8')
     element.text = base64.b64encode(code)
     return etree.tostring(element)
-
-
-def _monitor_writer(model):
-    """ A writer for monitors
-    """
-    return model.configuration.encode('XML')
 
 
 def _project_writer(model):
