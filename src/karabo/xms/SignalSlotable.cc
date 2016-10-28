@@ -1675,9 +1675,9 @@ namespace karabo {
 
 
         InputChannel::Pointer SignalSlotable::createInputChannel(const std::string& channelName, const karabo::util::Hash& config,
-                                                                 const boost::function<void (const karabo::util::Hash&) >& onDataAvailableHandler,
-                                                                 const boost::function<void (InputChannel&) >& onInputAvailableHandler,
-                                                                 const boost::function<void(InputChannel&)>& onEndOfStreamEventHandler) {
+                                                                 const DataHandler& onDataAvailableHandler,
+                                                                 const InputHandler& onInputAvailableHandler,
+                                                                 const InputHandler& onEndOfStreamEventHandler) {
             if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
             Hash channelConfig = config.get<Hash>(channelName);
             if (channelConfig.has("schema")) channelConfig.erase("schema");
@@ -1744,8 +1744,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::inputHandlerWrap(const boost::function<void (karabo::xms::InputChannel&)>& handler,
-                                              InputChannel& input) {
+        void SignalSlotable::inputHandlerWrap(const InputHandler& handler, const InputChannel::Pointer& input) {
             try {
                 // Make sure that SignalSlotable shared pointer can be built (device still exists)...  otherwise exception is thrown
                 SignalSlotable::Pointer self = shared_from_this();
@@ -1757,14 +1756,12 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::registerInputHandler(const std::string& channelName,
-                                                  const boost::function<void (karabo::xms::InputChannel&)>& handler) {
+        void SignalSlotable::registerInputHandler(const std::string& channelName, const InputHandler& handler) {
             getInputChannel(channelName)->registerInputHandler(boost::bind(&SignalSlotable::inputHandlerWrap, this, handler, _1));
         }
 
 
-        void SignalSlotable::dataHandlerWrap(const boost::function<void (const karabo::util::Hash&) >& handler,
-                                             const karabo::util::Hash& data) {
+        void SignalSlotable::dataHandlerWrap(const DataHandler& handler, const karabo::util::Hash& data) {
             try {
                 // Make sure that SignalSlotable shared pointer can be built...  if not the we get exception
                 SignalSlotable::Pointer self = shared_from_this();
@@ -1776,14 +1773,12 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::registerDataHandler(const std::string& channelName,
-                                                 const boost::function<void (const karabo::util::Hash&) >& handler) {
+        void SignalSlotable::registerDataHandler(const std::string& channelName, const DataHandler& handler) {
             getInputChannel(channelName)->registerDataHandler(boost::bind(&SignalSlotable::dataHandlerWrap, this, handler, _1));
         }
 
 
-        void SignalSlotable::endOfStreamHandlerWrap(const boost::function<void (InputChannel&) >& handler,
-                                                    InputChannel& input) {
+        void SignalSlotable::endOfStreamHandlerWrap(const InputHandler& handler, const InputChannel::Pointer& input) {
             try {
                 // Make sure that SignalSlotable shared pointer can be built (device still exists)...  otherwise exception is thrown
                 SignalSlotable::Pointer self = shared_from_this();
@@ -1795,7 +1790,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (InputChannel&)>& handler) {
+        void SignalSlotable::registerEndOfStreamHandler(const std::string& channelName, const InputHandler& handler) {
             getInputChannel(channelName)->registerEndOfStreamEventHandler(boost::bind(&SignalSlotable::endOfStreamHandlerWrap, this, handler, _1));
         }
 

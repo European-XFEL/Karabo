@@ -92,11 +92,11 @@ namespace karabo {
     }
 
 
-    void PipeReceiverDevice::onInput(xms::InputChannel& input) {
+    void PipeReceiverDevice::onInput(const xms::InputChannel::Pointer& input) {
 
         util::Hash data;
-        for (size_t i = 0; i < input.size(); ++i) {
-            input.read(data, i); // clears data before filling
+        for (size_t i = 0; i < input->size(); ++i) {
+            input->read(data, i); // clears data before filling
             onData(data);
         }
     }
@@ -112,7 +112,7 @@ namespace karabo {
     }
 
 
-    void PipeReceiverDevice::onEndOfStream(xms::InputChannel& input) {
+    void PipeReceiverDevice::onEndOfStream(const xms::InputChannel::Pointer& input) {
 
         set<unsigned int>("nTotalOnEos", get<unsigned int>("nTotalData"));
     }

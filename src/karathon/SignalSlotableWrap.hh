@@ -316,11 +316,11 @@ namespace karathon {
 
         void proxyOnOutputPossibleHandler(const bp::object& handler, const karabo::xms::OutputChannel::Pointer& channel);
 
-        void proxyOnInputAvailableHandler(const bp::object& handler, karabo::xms::InputChannel& channel);
+        void proxyOnInputAvailableHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
 
         void proxyOnDataAvailableHandler(const bp::object& handler, const karabo::util::Hash& data);
 
-        void proxyOnEndOfStreamEventHandler(const bp::object& handler, karabo::xms::InputChannel& channel);
+        void proxyOnEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
 
     private: // members
         boost::thread m_eventLoop;
