@@ -106,8 +106,9 @@ class TestDeviceDeviceComm(TestCase):
         # TODO: properly destroy server
         # right now we let the join time out as the server does not
         # always exit correctly -> related to event loop refactoring
+        self._serverThread.join(5)
         EventLoop.stop()
-
+        self._eventLoopThread.join(5)
         # delete any log files
         # handles both the case where we started as part of integration
         # tests, or as a single test
