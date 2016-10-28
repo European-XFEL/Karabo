@@ -33,4 +33,5 @@ class DeviceConfigurationModelItem(BaseProjectTreeItem):
         item = QStandardItem(self.model.class_id)
         item.setData(weakref.ref(self), self.MODEL_REF_ITEM_ROLE)
         item.setIcon(icons.file)
+        item.setEditable(False)
         return item
