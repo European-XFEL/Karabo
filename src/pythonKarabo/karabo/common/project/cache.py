@@ -33,6 +33,22 @@ class ProjectDBCache(object):
         with open(path, mode='rb') as fp:
             return fp.read()
 
+    def get_uuids_of_type(self, obj_type):
+        """ Return ``UUID`` of all objects of ``obj_type`` in cache
+
+        :param obj_type: A string which describes the object type
+        :return: A list of ``UUID`s for the given ``obj_type``
+        """
+        uuid_list = []
+        for fn in os.listdir(self.dirpath):
+            uuid, revision = self._uuid_revision_from_filename(fn)
+            xml = self.retrieve(uuid, revision)
+            root = fromstring(xml)
+            root_type = root.attrib.get('type')
+            if root_type == obj_type:
+                uuid_list.append(uuid)
+        return uuid_list
+
     def _generate_filepath(self, uuid, revision):
         leafname = '{}_{}'.format(uuid, revision)
         return op.join(self.dirpath, leafname)
@@ -58,17 +74,3 @@ def get_user_cache():
     cache_dir = op.join(karabo_dir, 'project_db_cache')
     os.makedirs(cache_dir, exist_ok=True)
     return ProjectDBCache(cache_dir)
-
-
-def get_all_user_cache_projects():
-    """ Return all projects in cache as a file-like object
-    """
-    cache_projs = []
-    user_cache = get_user_cache()
-    for fn in os.listdir(user_cache.dirpath):
-        uuid, revision = user_cache._uuid_revision_from_filename(fn)
-        xml = user_cache.retrieve(uuid, revision)
-        root = fromstring(xml)
-        for project in root.findall('project'):
-            cache_projs.append(BytesIO(xml))
-    return cache_projs
