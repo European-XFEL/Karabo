@@ -78,6 +78,7 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
         item = QStandardItem(self.group_name)
         item.setData(weakref.ref(self), self.MODEL_REF_ITEM_ROLE)
         item.setIcon(icons.folder)
+        item.setEditable(False)
         for child in self.children:
             item.appendRow(child.qt_item)
         return item

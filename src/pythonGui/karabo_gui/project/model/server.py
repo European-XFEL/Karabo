@@ -33,4 +33,5 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         item = QStandardItem('Server')
         item.setData(weakref.ref(self), self.MODEL_REF_ITEM_ROLE)
         item.setIcon(icons.deviceGroupInstance)
+        item.setEditable(False)
         return item
