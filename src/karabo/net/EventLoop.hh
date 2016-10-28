@@ -37,16 +37,18 @@ namespace karabo {
 
             static boost::asio::io_service& getIOService();
 
-            /// Start the event loop and block until EventLoop::stop() is called.
-            ///
-            /// The system signals SIGINT, SIGTERM and SIGSEGV will be caught and trigger the following actions:
-            /// - for SIGSEGV, a stack trace is put out to std::cerr,
-            /// - a signal handler set via setSignalHandler is called,
-            /// - and the event loop is stopped.
+            /** Start the event loop and block until EventLoop::stop() is called.
+             *
+             *  The system signals SIGINT, SIGTERM and SIGSEGV will be caught and trigger the following actions:
+             *  - for SIGSEGV, a stack trace is put out to std::cerr,
+             *  - a signal handler set via setSignalHandler is called,
+             *  - and the event loop is stopped.
+             */
             static void work();
 
-            /// Start the event loop and block until all work posted to its io service is
-            /// completed or until EventLoop::stop() is called.
+            /** Start the event loop and block until all work posted to its io service is
+             *  completed or until EventLoop::stop() is called.
+             */
             static void run();
 
             static void stop();
@@ -54,14 +56,19 @@ namespace karabo {
             static size_t getNumberOfThreads();
 
             typedef boost::function<void (int /*signal*/) > SignalHandler;
-            /// Set the handler to be called if a system signal (SIGINT, SIGTERM, SIGSEGV) is caught.
+            /** Set the handler to be called if a system signal (SIGINT, SIGTERM, SIGSEGV) is caught.
+             *
+             * @param handler function with signature 'void (int signal)'
+             */
             static void setSignalHandler(const SignalHandler& handler);
 
         private:
 
             EventLoop();
 
+            // Delete copy constructor and assignment operator since EventLoop is a singleton:
             EventLoop(const EventLoop&) = delete;
+            EventLoop& operator=(const EventLoop&) = delete;
 
             static EventLoop& instance();
 
