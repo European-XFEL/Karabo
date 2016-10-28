@@ -32,13 +32,6 @@ unsigned int JmsConnection_Test::incrementMessageCount() {
 }
 
 
-void JmsConnection_Test::testAll() {
-    testConnect();
-    testCommunication1();
-    testCommunication2();
-}
-
-
 void JmsConnection_Test::testConnect() {
 
     {
@@ -127,7 +120,7 @@ void JmsConnection_Test::testCommunication1() {
 
     EventLoop::run();
 
-    CPPUNIT_ASSERT(m_messageCount == 1000);
+    CPPUNIT_ASSERT_EQUAL(1000u, m_messageCount);
 }
 
 
@@ -182,7 +175,7 @@ void JmsConnection_Test::testCommunication2() {
    
     EventLoop::run();
 
-    CPPUNIT_ASSERT(m_messageCount == 4);
+    CPPUNIT_ASSERT_EQUAL(4u, m_messageCount);
 }
 
 
