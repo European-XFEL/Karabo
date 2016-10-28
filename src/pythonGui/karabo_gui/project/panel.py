@@ -34,7 +34,7 @@ class ProjectPanel(Dockable, QWidget):
             triggered=project_new_handler,
         )
         load = KaraboAction(
-            icon=icons.open,
+            icon=icons.load,
             text="&Open Project",
             tooltip="Open an Existing Project",
             triggered=project_open_handler,
