@@ -377,7 +377,7 @@ namespace karabo {
                 } else {
                     size_t pos = token.find_first_of("=");
                     if (pos == std::string::npos) {
-                        string key = token;
+                        std::string key = token;
                         if (!token.empty() && (*token.begin()) == '{' && (*token.rbegin()) == '}') {
                             key = token.substr(1, token.size() - 2);
                         }
@@ -386,7 +386,7 @@ namespace karabo {
                             if (key.empty()) {
                                 throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line \n" + token);
                             }
-                            config.set(key, vector<Hash>(), ';');
+                            config.set(key, std::vector<Hash>(), ';');
                         } else {
                             if (key.empty()) {
                                 throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line \n" + token);
