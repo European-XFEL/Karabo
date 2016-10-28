@@ -3,9 +3,13 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import weakref
+
+from PyQt4.QtGui import QAction, QMenu, QStandardItem
 from traits.api import Callable, Dict, Instance, List, String
 
 from karabo.common.project.api import ProjectModel
+from karabo_gui import icons
 from .base import BaseProjectTreeItem
 
 
@@ -30,6 +34,19 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
     # The child tree items
     children = List(Instance(BaseProjectTreeItem))
     _child_map = Dict
+
+    def context_menu(self, parent):
+        menu_fillers = {
+            'devices': _fill_devices_menu,
+            'macros': _fill_macros_menu,
+            'scenes': _fill_scenes_menu,
+            'servers': _fill_servers_menu,
+            'subprojects': _fill_subprojects_menu,
+        }
+        filler = menu_fillers.get(self.trait_name)
+        menu = QMenu(parent)
+        filler(menu)
+        return menu
 
     def item_handler(self, event):
         """ Called for List-trait events on ``model`` (a ProjectModel)
@@ -56,3 +73,44 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
 
         for item_model in event.added:
             self._child_map[item_model.model] = item_model
+
+    def _get_qt_item(self):
+        item = QStandardItem(self.group_name)
+        item.setData(weakref.ref(self), self.MODEL_REF_ITEM_ROLE)
+        item.setIcon(icons.folder)
+        for child in self.children:
+            item.appendRow(child.qt_item)
+        return item
+
+
+def _fill_devices_menu(menu):
+    add_action = QAction('Add device', menu)
+    remove_all_action = QAction('Delete all', menu)
+    menu.addAction(add_action)
+    menu.addAction(remove_all_action)
+
+
+def _fill_macros_menu(menu):
+    add_action = QAction('Add macro', menu)
+    load_action = QAction('Load macro...', menu)
+    menu.addAction(add_action)
+    menu.addAction(load_action)
+
+
+def _fill_scenes_menu(menu):
+    add_action = QAction('Add scene', menu)
+    open_action = QAction('Open scene...', menu)
+    menu.addAction(add_action)
+    menu.addAction(open_action)
+
+
+def _fill_servers_menu(menu):
+    add_action = QAction('Add server', menu)
+    remove_all_action = QAction('Delete all', menu)
+    menu.addAction(add_action)
+    menu.addAction(remove_all_action)
+
+
+def _fill_subprojects_menu(menu):
+    add_action = QAction('Add project', menu)
+    menu.addAction(add_action)
