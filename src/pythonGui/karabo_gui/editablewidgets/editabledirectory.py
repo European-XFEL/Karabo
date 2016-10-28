@@ -43,7 +43,7 @@ class EditableDirectory(EditableWidget):
         self.tbPath = QToolButton()
         self.tbPath.setStatusTip(text)
         self.tbPath.setToolTip(text)
-        self.tbPath.setIcon(icons.open)
+        self.tbPath.setIcon(icons.load)
         self.tbPath.setMaximumSize(25, 25)
         self.tbPath.clicked.connect(self.onDirectoryClicked)
         hLayout.addWidget(self.tbPath)
