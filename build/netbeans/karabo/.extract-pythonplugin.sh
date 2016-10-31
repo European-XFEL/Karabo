@@ -99,7 +99,7 @@ if [ ! -z $KARABO ]; then
         PIP=$KARABO/extern/bin/pip
     fi
     destPath=$installDir/$WHEELNAME
-    $PIP install -U --no-index --target $installDir $destPath
+    $PIP --disable-pip-version-check install -U --no-index --target $installDir $destPath
 fi
 echo " done."
 echo

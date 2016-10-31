@@ -51,7 +51,7 @@ source $originalPwd/build.config
 # Install the wheel which was created
 WHEELNAME=$(basename $DISTDIR/*.whl)
 WHEELFILE=$DISTDIR/$WHEELNAME
-$PIP install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELFILE
+$PIP --disable-pip-version-check install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELFILE
 
 # Create a self-extracting installation script
 echo -e '#!/bin/bash\n'"VERSION=$VERSION\nDEPNAME=$DEPNAME\nKARABOVERSION=$KARABOVERSION\nWHEELNAME=$WHEELNAME" | cat - $EXTRACT_SCRIPT $WHEELFILE > $INSTALLSCRIPT
