@@ -73,9 +73,9 @@ namespace karabo {
                                           float /*avgProcessingLatency*/, unsigned int /*maxProcessingLatency*/,
                                           unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
 
-            typedef boost::function<void (const karabo::util::Hash&) > DataHandler;
+            typedef InputChannel::DataHandler DataHandler;
 
-            typedef boost::function<void (InputChannel&) > InputHandler;
+            typedef InputChannel::InputHandler InputHandler;
 
             // TODO Check why handlers of input and output are different! One is pointer, the other is reference!
             typedef boost::function<void (const OutputChannel::Pointer&) > OutputHandler;
@@ -339,14 +339,11 @@ namespace karabo {
 
             const InputChannel::Pointer& getInputChannel(const std::string& name);
 
-            void registerInputHandler(const std::string& channelName,
-                                      const boost::function<void (karabo::xms::InputChannel&) >& handler);
+            void registerInputHandler(const std::string& channelName, const InputHandler& handler);
 
-            void registerDataHandler(const std::string& channelName,
-                                     const boost::function<void (const karabo::util::Hash&) >& handler);
+            void registerDataHandler(const std::string& channelName, const DataHandler& handler);
 
-            void registerEndOfStreamHandler(const std::string& channelName,
-                                            const boost::function<void (karabo::xms::InputChannel&) >& handler);
+            void registerEndOfStreamHandler(const std::string& channelName, const InputHandler& handler);
 
             /**
              * Connects and input channel to those as defined on the input channel's configuration.
@@ -380,14 +377,11 @@ namespace karabo {
 
             void setDeviceServerPointer(boost::any serverPtr);
 
-            void inputHandlerWrap(const boost::function<void (karabo::xms::InputChannel&)>& handler,
-                                  InputChannel& input);
+            void inputHandlerWrap(const InputHandler& handler, const InputChannel::Pointer& input);
 
-            void dataHandlerWrap(const boost::function<void (const karabo::util::Hash&) >& handler,
-                                 const karabo::util::Hash& data);
+            void dataHandlerWrap(const DataHandler& handler, const karabo::util::Hash& data);
 
-            void endOfStreamHandlerWrap(const boost::function<void (InputChannel&) >& handler,
-                                        InputChannel& input);
+            void endOfStreamHandlerWrap(const InputHandler& handler, const InputChannel::Pointer& input);
 
             bool connectP2P(const std::string& instanceId);
 

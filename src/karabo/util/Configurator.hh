@@ -107,7 +107,7 @@ namespace karabo {
             }
 
             inline static typename BaseClass::Pointer createDefault(const bool validate = true) {
-                string defaultClassId = Configurator::init().m_default;
+                std::string defaultClassId = Configurator::init().m_default;
                 if (defaultClassId.empty()) throw KARABO_INIT_EXCEPTION("No default was defined");
                 return create(defaultClassId, Hash(), validate);
             }
@@ -209,7 +209,7 @@ namespace karabo {
 
             inline static std::vector<typename BaseClass::Pointer> createList(const std::string& listName, const karabo::util::Hash& input, const bool validate = true) {
                 if (input.has(listName)) {
-                    const vector<Hash>& tmp = input.get<vector<Hash> > (listName);
+                    const std::vector<Hash>& tmp = input.get<std::vector<Hash> > (listName);
                     std::vector<typename BaseClass::Pointer > instances(tmp.size());
                     for (size_t i = 0; i < tmp.size(); ++i) {
                         instances[i] = create(tmp[i], validate);
@@ -264,25 +264,25 @@ namespace karabo {
 
             template <typename A1>
             static std::string ctorKey() {
-                string h(typeid (Hash).name());
-                string a1(typeid (A1).name());
+                std::string h(typeid (Hash).name());
+                std::string a1(typeid (A1).name());
                 return h + a1;
             }
 
             template <typename A1, typename A2>
             static std::string ctorKey() {
-                string h(typeid (Hash).name());
-                string a1(typeid (A1).name());
-                string a2(typeid (A2).name());
+                std::string h(typeid (Hash).name());
+                std::string a1(typeid (A1).name());
+                std::string a2(typeid (A2).name());
                 return h + a1 + a2;
             }
 
             template <typename A1, typename A2, typename A3>
             static std::string ctorKey() {
-                string h(typeid (Hash).name());
-                string a1(typeid (A1).name());
-                string a2(typeid (A2).name());
-                string a3(typeid (A3).name());
+                std::string h(typeid (Hash).name());
+                std::string a1(typeid (A1).name());
+                std::string a2(typeid (A2).name());
+                std::string a3(typeid (A3).name());
                 return h + a1 + a2 + a3;
             }
 

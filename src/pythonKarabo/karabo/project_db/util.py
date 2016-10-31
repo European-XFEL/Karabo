@@ -93,9 +93,6 @@ def assure_running(project_db_server=None, project_db_port=None):
                 raise ProjectDBError("An eXistDB instance with karabo "
                                      "collections was found running on {}."
                                      .format(project_db_server))
-            else:
-                raise ProjectDBError("Could not contact the database server"
-                                     " at {}".format(project_db_server))
         except ExistDBException as e:
             raise ProjectDBError("Could not contact the database server"
                                  " at {}: {}".format(project_db_server, e))
@@ -107,11 +104,18 @@ def stop_database():
     Stops a **locally** running instance of eXistDB
     :return:
     """
+
     karabo_install = os.getenv('KARABO')
+    waitBetween = 5
     if check_running():
         script_path = os.path.join(karabo_install, 'karaboRun', 'bin',
                                    'stopConfigDB')
         check_call([script_path])
+
+    # wait til we are down
+    while check_running():
+        sleep(waitBetween)
+
 
 
 def init_local_db():
@@ -121,7 +125,6 @@ def init_local_db():
     :return: None
     """
 
-    assure_running(project_db_server='localhost', project_db_port=8080)
     settings = LocalDbSettings()
     dbhandle = db.ExistDB(settings.server_url)
     krbroot = settings.root_collection
@@ -199,4 +202,4 @@ def init_local_db():
     # in the end we have to restart the database
     stop_database()
     sleep(10) ##sleep here so database can shut down
-    assure_running()
+    assure_running(project_db_server='localhost')

@@ -79,7 +79,7 @@ namespace karabo {
                 karabo::util::Hash::Pointer header = prepareHeader();
                 // In case we are connected to a single local instance we shortcut the broker
                 if (m_registeredSlots.size() == 1) {
-                    const string& slotInstanceId = m_registeredSlots.begin()->first;
+                    const std::string& slotInstanceId = m_registeredSlots.begin()->first;
                     // Check if slot is on the same instance (device)
                     if (m_signalSlotable->m_instanceId == slotInstanceId) {
                         m_signalSlotable->injectEvent(header, message);

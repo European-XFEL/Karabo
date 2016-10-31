@@ -221,7 +221,7 @@ namespace karathon {
     }
 
 
-    void InputChannelWrap::proxyInputHandler(const bp::object& handler, karabo::xms::InputChannel& input) {
+    void InputChannelWrap::proxyInputHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& input) {
         ScopedGILAcquire gil;
         handler(bp::object(input));
     }
@@ -243,7 +243,7 @@ namespace karathon {
     }
 
 
-    void InputChannelWrap::proxyEndOfStreamEventHandler(const bp::object& handler, karabo::xms::InputChannel& input) {
+    void InputChannelWrap::proxyEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& input) {
         ScopedGILAcquire gil;
         handler(bp::object(input));
     }
