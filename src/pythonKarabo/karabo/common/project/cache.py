@@ -5,7 +5,6 @@
 #############################################################################
 import os
 import os.path as op
-from io import BytesIO
 from sys import platform
 from xml.etree.ElementTree import fromstring
 
@@ -44,7 +43,7 @@ class ProjectDBCache(object):
             uuid, revision = self._uuid_revision_from_filename(fn)
             xml = self.retrieve(uuid, revision)
             root = fromstring(xml)
-            root_type = root.attrib.get('type')
+            root_type = root.attrib.get('item_type')
             if root_type == obj_type:
                 uuid_list.append(uuid)
         return uuid_list

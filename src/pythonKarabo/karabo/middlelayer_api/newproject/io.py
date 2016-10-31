@@ -30,8 +30,8 @@ def read_project_model(io_obj):
     # Grab the metadata from the parent
     parent = etree.parse(BytesIO(parent)).getroot()
     metadata = dict(parent.items())
-    typename = metadata.get('type')
-    factory = factories.get(typename)
+    item_type = metadata.get('item_type')
+    factory = factories.get(item_type)
 
     # Construct from the child data + metadata
     return factory(BytesIO(child), metadata)
@@ -41,7 +41,7 @@ def write_project_model(model):
     """ Given an object based on BaseProjectObjectModel, return an XML
     bytestring containing the serialized object.
     """
-    typemap = {
+    item_types = {
         DeviceConfigurationModel: PROJECT_DB_TYPE_DEVICE,
         DeviceServerModel: PROJECT_DB_TYPE_DEVICE_SERVER,
         MacroModel: PROJECT_DB_TYPE_MACRO,
@@ -55,12 +55,12 @@ def write_project_model(model):
         PROJECT_DB_TYPE_PROJECT: _project_writer,
         PROJECT_DB_TYPE_SCENE: write_scene,
     }
-    typename = typemap.get(model.__class__)
-    writer = writers.get(typename)
+    item_type = item_types.get(model.__class__)
+    writer = writers.get(item_type)
     child_xml = writer(model)
 
     root_metadata = _model_db_metadata(model)
-    root_metadata['type'] = typename
+    root_metadata['item_type'] = item_type
     return _wrap_child_element_xml(child_xml, root_metadata)
 
 # -----------------------------------------------------------------------------
@@ -204,10 +204,10 @@ def _project_writer(model):
     """ A writer for projects
     """
     project = Hash()
-    for typename in PROJECT_OBJECT_CATEGORIES:
-        objects = getattr(model, typename)
-        project[typename] = [Hash('uuid', obj.uuid, 'revision', obj.revision)
-                             for obj in objects]
+    for item_type in PROJECT_OBJECT_CATEGORIES:
+        objects = getattr(model, item_type)
+        project[item_type] = [Hash('uuid', obj.uuid, 'revision', obj.revision)
+                              for obj in objects]
 
     hsh = Hash('project', project)
     return hsh.encode('XML')
