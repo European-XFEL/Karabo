@@ -97,7 +97,8 @@ if __name__ == '__main__':
         metadata['package_dir'] = {'karabo': "../../src/pythonKarabo/karabo"}
         metadata['packages'].extend(
             ["karabo", "karabo.common", "karabo.common.scenemodel",
-             "karabo.interactive", "karabo.middlelayer_api",
+             "karabo.common.project", "karabo.interactive",
+             "karabo.middlelayer_api", "karabo.middlelayer_api.newproject",
              "karabo.middlelayer_api._project", "karabo.packaging",
              "karabo.testing"]
         )
@@ -109,6 +110,7 @@ if __name__ == '__main__':
 
     setup(entry_points={'console_scripts': [
                         'karabo-gui=karabo_gui.main:main',
+                        'project-runner=karabo_gui.project.runner:main',
                         'scene-runner=karabo_gui.sceneview.runner:main',
                         ]},
           # Add an alias for 'build' so we can prepare data for Windows

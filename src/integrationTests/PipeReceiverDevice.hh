@@ -39,11 +39,11 @@ namespace karabo {
     private:
         void initialization();
 
-        void onInput(karabo::xms::InputChannel& input);
+        void onInput(const karabo::xms::InputChannel::Pointer& input);
 
         void onData(const karabo::util::Hash& data);
 
-        void onEndOfStream(karabo::xms::InputChannel& input);
+        void onEndOfStream(const karabo::xms::InputChannel::Pointer& input);
     };
 }
 

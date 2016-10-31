@@ -41,7 +41,7 @@ else
     WHEEL_INSTALL_FLAGS=
 fi
 
-$PIP install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELNAME
+$PIP --disable-pip-version-check install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELNAME
 
 echo " done."
 echo

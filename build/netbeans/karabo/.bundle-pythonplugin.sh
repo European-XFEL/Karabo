@@ -75,8 +75,10 @@ INSTALLSCRIPT=package/${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.s
 
 if [ $OS == "Darwin" ]; then
     PYTHON=/opt/local/bin/python3
+    PIP=/opt/local/bin/pip
 else
     PYTHON=$KARABO/extern/bin/python3
+    PIP=$KARABO/extern/bin/pip
 fi
 
 # Always clean the build artifacts
@@ -91,14 +93,14 @@ if [[ "$developmentMode" == "1" ]]; then
         echo
         echo "Uninstalling development package."
         echo
-        extraArgs="-u"
+        command="uninstall -y $PLUGINNAME"
     else
         echo
         echo "Installing in development mode. Changes to the source will be immediately available without rebuilding."
         echo
-        extraArgs=
+        command="install --user -e ."
     fi
-    $PYTHON setup.py develop --user $extraArgs
+    $PIP --disable-pip-version-check $command
     # We're done
     exit 0
 else

@@ -32,6 +32,14 @@ namespace karabo {
          */
         class InputChannel : public boost::enable_shared_from_this<InputChannel> {
 
+        public:
+
+            KARABO_CLASSINFO(InputChannel, "InputChannel", "1.0")
+
+            typedef boost::function<void (const InputChannel::Pointer&) > InputHandler;
+            typedef boost::function<void (const karabo::util::Hash&) > DataHandler;
+
+        private:
             // Maps outputChannelString to the Hash with connection parameters
             typedef std::map<std::string, karabo::util::Hash> ConnectedOutputChannels;
             // Maps outputChannelString to the TCP (connection, channel) pair
@@ -41,13 +49,13 @@ namespace karabo {
             boost::asio::deadline_timer m_deadline;
 
             /// Callback on available data (per InputChannel)
-            boost::function<void (InputChannel&) > m_inputHandler;
+            InputHandler m_inputHandler;
 
             /// Callback on available data (per item in InputChannel)
-            boost::function<void (const karabo::util::Hash&) > m_dataHandler;
+            DataHandler m_dataHandler;
 
             // Callback on end-of-stream
-            boost::function<void (InputChannel&) > m_endOfStreamHandler;
+            InputHandler m_endOfStreamHandler;
 
             std::string m_instanceId;
 
@@ -77,8 +85,6 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(InputChannel, "InputChannel", "1.0")
-
             /**
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
@@ -99,11 +105,11 @@ namespace karabo {
 
             const std::string& getInstanceId() const;
 
-            void registerInputHandler(const boost::function<void (InputChannel&)>& ioInputHandler);
+            void registerInputHandler(const InputHandler& ioInputHandler);
 
-            void registerDataHandler(const boost::function<void (const karabo::util::Hash&) >& ioDataHandler);
+            void registerDataHandler(const DataHandler& ioDataHandler);
 
-            void registerEndOfStreamEventHandler(const boost::function<void (InputChannel&)>& endOfStreamEventHandler);
+            void registerEndOfStreamEventHandler(const InputHandler& endOfStreamEventHandler);
 
             void triggerIOEvent();
 

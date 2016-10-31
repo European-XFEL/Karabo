@@ -32,13 +32,6 @@ unsigned int JmsConnection_Test::incrementMessageCount() {
 }
 
 
-void JmsConnection_Test::testAll() {
-    testConnect();
-    testCommunication1();
-    testCommunication2();
-}
-
-
 void JmsConnection_Test::testConnect() {
 
     {
@@ -87,7 +80,7 @@ void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer
     if (m_messageCount == 0) {
         m_tick = boost::posix_time::microsec_clock::local_time();
         CPPUNIT_ASSERT(header->has("header"));
-        CPPUNIT_ASSERT(header->get<string>("header") == "some header");
+        CPPUNIT_ASSERT(header->get<std::string>("header") == "some header");
         CPPUNIT_ASSERT(body->has("body"));
         CPPUNIT_ASSERT(body->get<int>("body") == 42);
     }
@@ -127,7 +120,7 @@ void JmsConnection_Test::testCommunication1() {
 
     EventLoop::run();
 
-    CPPUNIT_ASSERT(m_messageCount == 1000);
+    CPPUNIT_ASSERT_EQUAL(1000u, m_messageCount);
 }
 
 
@@ -151,7 +144,7 @@ void JmsConnection_Test::readHandler4(karabo::net::JmsConsumer::Pointer c,
                                       karabo::util::Hash::Pointer header,
                                       karabo::util::Hash::Pointer body) {
     incrementMessageCount();
-    if (header->get<string>("key") == "bar") return;
+    if (header->get<std::string>("key") == "bar") return;
     c->setTopic("testTopic1");
     c->readAsync(boost::bind(&JmsConnection_Test::readHandler4, this, c, _1, _2));
 }
@@ -182,7 +175,7 @@ void JmsConnection_Test::testCommunication2() {
    
     EventLoop::run();
 
-    CPPUNIT_ASSERT(m_messageCount == 4);
+    CPPUNIT_ASSERT_EQUAL(4u, m_messageCount);
 }
 
 

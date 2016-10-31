@@ -647,17 +647,17 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onNetworkData(InputChannel& input) {
+        void GuiServerDevice::onNetworkData(const InputChannel::Pointer& input) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onNetworkData ....";
 
                 Hash h("type", "networkData");
-                for (size_t i = 0; i < input.size(); ++i) {
+                for (size_t i = 0; i < input->size(); ++i) {
                     Hash& data = h.bindReference<Hash>("data"); // overwrites if "data" already there
-                    input.read(data, i);
+                    input->read(data, i);
 
                     boost::mutex::scoped_lock lock(m_networkMutex);
-                    pair<NetworkMap::iterator, NetworkMap::iterator> range = m_networkConnections.equal_range(input.shared_from_this());
+                    pair<NetworkMap::iterator, NetworkMap::iterator> range = m_networkConnections.equal_range(input);
                     for (; range.first != range.second; ++range.first) {
                         h.set("name", range.first->second.name);
                         safeClientWrite(range.first->second.channel, h, REMOVE_OLDEST);

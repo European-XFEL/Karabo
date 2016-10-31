@@ -63,7 +63,7 @@ namespace karabo {
 
                 if (input.has("dims") || input.has("shape")) {
                     const std::string attrName = input.has("dims") ? "dims" : "shape";
-                    vector<unsigned long long> dimsVec = input.getAs<unsigned long long, vector>(attrName);
+                    std::vector<unsigned long long> dimsVec = input.getAs<unsigned long long, std::vector>(attrName);
                     // reverse order as we need to store in hdf5
                     std::reverse(dimsVec.begin(), dimsVec.end());
 
@@ -90,10 +90,10 @@ namespace karabo {
 
             hid_t Dataset::configureFileDataSpace() {
 
-                vector<unsigned long long> dimsVector = m_dims.toVector();
+                std::vector<unsigned long long> dimsVector = m_dims.toVector();
 
-                m_dataSetExtent = vector<hsize_t>(dimsVector.size() + 1, 0);
-                m_dataSetMaxExtent = vector<hsize_t>(dimsVector.size() + 1, 0);
+                m_dataSetExtent = std::vector<hsize_t>(dimsVector.size() + 1, 0);
+                m_dataSetMaxExtent = std::vector<hsize_t>(dimsVector.size() + 1, 0);
 
                 // m_dataSetExtent[0] is zero
                 m_dataSetMaxExtent[0] = H5S_UNLIMITED;

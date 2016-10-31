@@ -165,7 +165,7 @@ namespace karabo {
 
         template<typename To, typename PT1>
         const To Epochstamp::concatDateTimeWithFractional(const PT1 dateTime, const TIME_UNITS precision) const {
-            ostringstream oss;
+            std::ostringstream oss;
             oss << dateTime << karabo::util::DateTimeString::fractionalSecondToString(precision, m_fractionalSeconds);
             return boost::lexical_cast<To>(oss.str());
         }

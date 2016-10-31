@@ -79,7 +79,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "bind vector<Hash>: " << m_key;
                 if (!data.has(m_key, '/')) {
                     if (m_isVectorHash) {
-                        vector<Hash>& vh = data.bindReference<vector<Hash> > (m_key, '/');
+                        std::vector<Hash>& vh = data.bindReference<std::vector<Hash> > (m_key, '/');
                         vh.resize(m_vectorSize);
                     } else {
                         Hash h = data.bindReference<Hash>(m_key, '/');
@@ -92,10 +92,10 @@ namespace karabo {
             void Group::bind(karabo::util::Hash& data, hsize_t len) {
                 if (!data.has(m_key, '/')) {
                     if (m_isVectorHash) {
-                        vector<Hash>& vh = data.bindReference<vector<Hash> > (m_key, '/');
+                        std::vector<Hash>& vh = data.bindReference<std::vector<Hash> > (m_key, '/');
                         vh.resize(m_vectorSize * len);
                     } else {
-                        vector<Hash>& vh = data.bindReference<vector<Hash> > (m_key, '/');
+                        std::vector<Hash>& vh = data.bindReference<std::vector<Hash> > (m_key, '/');
                         vh.resize(len);
                     }
                 }
