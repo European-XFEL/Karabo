@@ -82,7 +82,7 @@ class ProxySlot(Slot):
         def method(self):
             self._update()
             self._device._use()
-            return (yield from self._kill_once_dead(
+            return (yield from self._raise_on_death(
                 self._device.call(self._deviceId, key)))
         method.__doc__ = self.description
         return method.__get__(instance, owner)
@@ -154,7 +154,7 @@ class Proxy(object):
         if loop.sync_set:
             h = Hash()
             h[desc.longkey], _ = desc.toDataAndAttrs(value)
-            ok, msg = loop.sync(self._kill_once_dead(self._device.call(
+            ok, msg = loop.sync(self._raise_on_death(self._device.call(
                 self.deviceId, "slotReconfigure", h)), timeout=-1, wait=True)
             if not ok:
                 raise KaraboError(msg)
@@ -180,8 +180,14 @@ class Proxy(object):
             task.cancel()
 
     @asyncio.coroutine
-    def _kill_once_dead(self, coro):
-        def killer():
+    def _raise_on_death(self, coro):
+        """execute *coro* but raise KaraboError if proxy is orphaned
+
+        This coroutine executes the coroutine *coro*. If the device connected
+        to this proxy dies while the *coro* is executed, a KaraboError is
+        raised.
+        """
+        def raiser():
             if not self._alive:
                 raise KaraboError('device "{}" died'.format(self._deviceId))
             try:
@@ -192,7 +198,7 @@ class Proxy(object):
                 else:
                     raise KaraboError(
                         'device "{}" died'.format(self._deviceId))
-        task = asyncio.async(killer())
+        task = asyncio.async(raiser())
         self._running_tasks.add(task)
         task.add_done_callback(lambda fut: self._running_tasks.discard(fut))
         return (yield from task)
