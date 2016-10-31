@@ -21,6 +21,8 @@ class ProjectItemModel(QStandardItemModel):
         self._traits_model = None
         self._shadow_model = None
 
+        self.setHorizontalHeaderLabels(["Projects"])
+
     def set_traits_model(self, model):
         """ Set the ProjectModel instance that we're presenting to Qt
         """
