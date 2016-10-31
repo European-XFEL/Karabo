@@ -5,6 +5,9 @@
 #############################################################################
 from PyQt4.QtGui import QItemSelectionModel, QStandardItemModel
 
+from .model.shadow import (create_project_model_shadow,
+                           destroy_project_model_shadow)
+
 
 class ProjectItemModel(QStandardItemModel):
     """ A QStandardItemModel which mediates between our Traits-based data model
@@ -15,16 +18,20 @@ class ProjectItemModel(QStandardItemModel):
         super(ProjectItemModel, self).__init__(parent)
         self.q_selection_model = QItemSelectionModel(self)
 
-    def flags(self, index):
-        return super(ProjectItemModel, self).flags(self, index)
+        self._traits_model = None
+        self._shadow_model = None
 
-    def mimeData(self, indexes):
-        """ QAbstractItemModel::mimeData
-        """
-        return super(ProjectItemModel, self).mimeData(indexes)
+        self.setHorizontalHeaderLabels(["Projects"])
 
-    def dropMimeData(self, data, action, row, column, parent):
-        """ QAbstractItemModel::dropMimeData
+    def set_traits_model(self, model):
+        """ Set the ProjectModel instance that we're presenting to Qt
         """
-        return super(ProjectItemModel, self).dropMimeData(data, action, row,
-                                                          column, parent)
+        # Clean up any previously created shadow models
+        if self._shadow_model is not None:
+            destroy_project_model_shadow(self._shadow_model)
+            self.clear()
+
+        self._traits_model = model
+        if model is not None:
+            self._shadow_model = create_project_model_shadow(model)
+            self.invisibleRootItem().appendRow(self._shadow_model.qt_item)
