@@ -49,3 +49,6 @@ ALLOWED_STATE = Qt.UserRole + 15
 UNIT_SYMBOL = Qt.UserRole + 16
 METRIC_PREFIX_SYMBOL = Qt.UserRole + 17
 ENUMERATION = Qt.UserRole + 18
+
+# Project item properties
+PROJECT_ITEM_MODEL_REF = Qt.UserRole

@@ -6,8 +6,8 @@
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QCursor, QTreeView
 
+from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .item_model import ProjectItemModel
-from .model.base import BaseProjectTreeItem
 
 
 class ProjectView(QTreeView):
@@ -46,7 +46,7 @@ class ProjectView(QTreeView):
             return
 
         first_index = indices[0]
-        model_ref = first_index.data(BaseProjectTreeItem.MODEL_REF_ITEM_ROLE)
+        model_ref = first_index.data(PROJECT_ITEM_MODEL_REF)
         model = model_ref()
         if model is not None:
             menu = model.context_menu(self)
