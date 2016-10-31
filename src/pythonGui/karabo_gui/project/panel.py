@@ -3,7 +3,7 @@
 # Created on October 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtGui import QStackedLayout, QWidget
+from PyQt4.QtGui import QDialog, QStackedLayout, QWidget
 
 from .dialogs import LoadDialog, NewDialog, SaveDialog
 import karabo_gui.icons as icons
@@ -31,19 +31,19 @@ class ProjectPanel(Dockable, QWidget):
             icon=icons.new,
             text="&New Project",
             tooltip="Create a New (Sub)project",
-            triggered=project_new_handler,
+            triggered=_project_new_handler,
         )
         load = KaraboAction(
             icon=icons.load,
             text="&Open Project",
             tooltip="Open an Existing Project",
-            triggered=project_open_handler,
+            triggered=self._project_open_handler,
         )
         save = KaraboAction(
             icon=icons.save,
             text="&Save Project",
             tooltip="Save Project Snapshot",
-            triggered=project_save_handler,
+            triggered=_project_save_handler,
         )
 
         qactions = []
@@ -65,17 +65,27 @@ class ProjectPanel(Dockable, QWidget):
     def onUndock(self):
         pass
 
+    def _project_open_handler(self):
+        # XXX: HACK. This is only written this way to get _something_ loaded.
+        # It must change when integrating into the full GUI
+        from karabo.common.project.api import get_user_cache, read_lazy_object
+        from karabo.middlelayer_api.newproject.io import read_project_model
 
-def project_new_handler():
+        dialog = LoadDialog(parent=self)
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            item = dialog.selected_item()
+            if item is not None:
+                cache = get_user_cache()
+                model = read_lazy_object(item, 0, cache, read_project_model)
+                self.project_view.model().set_traits_model(model)
+
+
+def _project_new_handler():
     dialog = NewDialog()
     dialog.exec()
 
 
-def project_open_handler():
-    dialog = LoadDialog()
-    dialog.exec()
-
-
-def project_save_handler():
+def _project_save_handler():
     dialog = SaveDialog()
     dialog.exec()

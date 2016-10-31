@@ -7,7 +7,7 @@ import os.path as op
 from collections import OrderedDict, namedtuple
 
 from PyQt4 import uic
-from PyQt4.QtCore import QAbstractTableModel, QModelIndex, Qt, pyqtSlot
+from PyQt4.QtCore import QAbstractTableModel, Qt, pyqtSlot
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
 from karabo.common.project.api import get_user_cache
@@ -19,7 +19,6 @@ PROJECT_DATA['revision'] = 'Version'
 PROJECT_DATA['published'] = 'Published'
 PROJECT_DATA['description'] = 'Description'
 PROJECT_DATA['documentation'] = 'Documentation'
-
 ProjectEntry = namedtuple('ProjectEntry', [key for key in PROJECT_DATA.keys()])
 
 
@@ -41,6 +40,12 @@ class ProjectHandleDialog(QDialog):
         """
         self.setWindowTitle(title)
         self.buttonBox.button(QDialogButtonBox.Ok).setText(btn_text)
+
+    def selected_item(self):
+        rows = self.twProjects.selectionModel().selectedRows()
+        if rows:
+            return rows[0].data()
+        return None
 
 
 class NewDialog(ProjectHandleDialog):

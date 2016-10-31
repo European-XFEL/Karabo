@@ -10,6 +10,7 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import SceneModel
 from karabo_gui import icons
+from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .base import BaseProjectTreeItem
 
 
@@ -34,6 +35,7 @@ class SceneModelItem(BaseProjectTreeItem):
 
     def _get_qt_item(self):
         item = QStandardItem(self.model.title)
-        item.setData(weakref.ref(self), self.MODEL_REF_ITEM_ROLE)
+        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         item.setIcon(icons.image)
+        item.setEditable(False)
         return item
