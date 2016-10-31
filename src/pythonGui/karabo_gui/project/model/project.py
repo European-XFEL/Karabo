@@ -10,6 +10,7 @@ from traits.api import Instance, List
 
 from karabo.common.project.api import ProjectModel
 from karabo_gui import icons
+from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .base import BaseProjectTreeItem
 from .project_groups import ProjectSubgroupItem
 
@@ -30,8 +31,9 @@ class ProjectModelItem(BaseProjectTreeItem):
 
     def _get_qt_item(self):
         item = QStandardItem('Project: {}'.format(self.model.simple_name))
-        item.setData(weakref.ref(self), self.MODEL_REF_ITEM_ROLE)
+        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         item.setIcon(icons.folder)
+        item.setEditable(False)
         for child in self.children:
             item.appendRow(child.qt_item)
 
