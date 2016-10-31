@@ -3,6 +3,7 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from functools import partial
 import weakref
 
 from PyQt4.QtGui import QAction, QMenu, QStandardItem
@@ -22,17 +23,30 @@ class DeviceConfigurationModelItem(BaseProjectTreeItem):
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
+
         edit_action = QAction('Edit', menu)
         dupe_action = QAction('Duplicate', menu)
         delete_action = QAction('Delete', menu)
+        delete_action.triggered.connect(partial(self._delete_device,
+                                                parent_project))
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
         return menu
 
-    def _get_qt_item(self):
+    def create_qt_item(self):
         item = QStandardItem(self.model.class_id)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         item.setIcon(icons.file)
         item.setEditable(False)
         return item
+
+    # ----------------------------------------------------------------------
+    # action handlers
+
+    def _delete_device(self, project):
+        """ Remove the device associated with this item from its project
+        """
+        device = self.model
+        if device in project.devices:
+            project.devices.remove(device)

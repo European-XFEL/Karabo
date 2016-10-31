@@ -20,6 +20,7 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
 
     # The QStandardItem representing this object
     qt_item = Property(Instance(QStandardItem))
+    _qt_item = Instance(QStandardItem, allow_none=True)
 
     @abstractmethod
     def context_menu(self, parent_project, parent=None):
@@ -32,7 +33,19 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
         """
 
     @abstractmethod
-    def _get_qt_item(self):
-        """ Force subclasses to implement the Traits property getter for
-        ``qt_item``
+    def create_qt_item(self):
+        """ Requests a QStandardItem which represents this object
         """
+
+    def is_ui_initialized(self):
+        """ Returns True if ``create_qt_item()`` has been called.
+        """
+        return self._qt_item is not None
+
+    def _get_qt_item(self):
+        """ Traits Property getter for ``qt_item``. Caches the result of
+        calling ``self.create_qt_item()`` for later access.
+        """
+        if self._qt_item is None:
+            self._qt_item = self.create_qt_item()
+        return self._qt_item
