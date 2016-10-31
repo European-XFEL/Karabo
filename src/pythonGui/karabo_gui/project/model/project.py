@@ -23,7 +23,7 @@ class ProjectModelItem(BaseProjectTreeItem):
     # The subgroups of this project
     children = List(Instance(ProjectSubgroupItem))
 
-    def context_menu(self, parent):
+    def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
         close_action = QAction('Close project', menu)
         menu.addAction(close_action)
