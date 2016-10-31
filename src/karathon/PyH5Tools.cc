@@ -15,7 +15,7 @@
 namespace bp = boost::python;
 using namespace karabo::util;
 using namespace karabo::io;
-
+using std::string;
 
 void exportPyIoH5File() {
 

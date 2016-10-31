@@ -58,9 +58,9 @@ namespace karabo {
 
 
         Log4CppNetApp::Log4CppNetApp(const karabo::util::Hash& config) :
-            LayoutAppender(config.get<string>("name")),
+            LayoutAppender(config.get<std::string>("name")),
             m_connection(Configurator<JmsConnection>::createNode("connection", config)),
-            m_topic(config.get<string>("topic")),
+            m_topic(config.get<std::string>("topic")),
             m_ok(true) {
 
             // If we created the connection ourselves we are still disconnected
