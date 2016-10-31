@@ -29,6 +29,9 @@
 
 namespace bp = boost::python;
 
+using std::string;
+using std::vector;
+
 namespace karabo {
     namespace util {
 

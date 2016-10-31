@@ -58,7 +58,7 @@ namespace karabo {
 
                 size_t singleValueRank = singleValueDims.rank();
                 if (input.has("dims")) {
-                    vector<unsigned long long> dimsVec = input.getAs<unsigned long long, vector>("dims");
+                    std::vector<unsigned long long> dimsVec = input.getAs<unsigned long long, std::vector>("dims");
                     for (size_t i = 0; i < singleValueRank; ++i) {
                         dimsVec.push_back(singleValueDims.extentIn(i));
                     }
@@ -79,7 +79,7 @@ namespace karabo {
 
 
             hid_t Attribute::configureDataSpace() {
-                vector<unsigned long long> dimsVector = m_dims.toVector();
+                std::vector<unsigned long long> dimsVector = m_dims.toVector();
                 return this->createDataspace(dimsVector, dimsVector);
             }
 

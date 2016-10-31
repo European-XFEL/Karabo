@@ -12,6 +12,9 @@
 #include "Epochstamp.hh"
 #include "NDArray.hh"
 
+using std::string;
+using std::endl;
+using std::vector;
 
 namespace karabo {
     namespace util {
@@ -72,7 +75,7 @@ namespace karabo {
             }
 
             // In case of failed validation, report why it failed
-            ostringstream validationFailedReport;
+            std::ostringstream validationFailedReport;
             
           
             if (!m_allowUnrootedConfiguration) {
@@ -308,7 +311,7 @@ namespace karabo {
 
 
                             BOOST_FOREACH(string optionName, optionNames) {
-                                cout << "Silently converting from STRING" << endl;
+                                std::cout << "Silently converting from STRING" << endl;
                                 if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
                                     Hash tmp;
                                     r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), tmp, report, currentScope + "." + optionName);

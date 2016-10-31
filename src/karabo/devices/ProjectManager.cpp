@@ -20,7 +20,9 @@ namespace karabo {
         using namespace karabo::core;
         using namespace karabo::util;
         using namespace karabo::io;
-
+        using std::string;
+        using std::vector;
+        using std::ios;
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, ProjectManager)
 
@@ -94,7 +96,7 @@ namespace karabo {
             KARABO_LOG_DEBUG << "updateProjectFile " << projectName;
 
             string filename = get<string>("directory") + "/" + projectName;
-            ifstream projectFile(filename.c_str(), ios::in | ios::binary);
+            std::ifstream projectFile(filename.c_str(), ios::in | ios::binary);
             if (projectFile.is_open()) {
                 KARABO_LOG_DEBUG << "Opened project file " << projectName;
 
@@ -195,7 +197,7 @@ namespace karabo {
 
                 std::string relativePath = iter->relative_path().string();
                 // Get meta-data from project file
-                ifstream projectFile(relativePath.c_str(), ios::in | ios::binary);
+                std::ifstream projectFile(relativePath.c_str(), ios::in | ios::binary);
                 if (projectFile.is_open()) {
                     std::string path = iter->stem().string();
                     projects.set(path, Hash());

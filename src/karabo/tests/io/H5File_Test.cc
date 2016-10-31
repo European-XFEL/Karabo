@@ -30,6 +30,9 @@ using namespace karabo::util;
 using namespace karabo::io::h5;
 using namespace karabo::io;
 using namespace krb_log4cpp;
+using std::vector;
+using std::string;
+using std::complex;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(H5File_Test);
 
@@ -46,7 +49,7 @@ H5File_Test::~H5File_Test() {
 void H5File_Test::setUp() {
     {
         m_v3Size = 5;
-        ostringstream oss;
+        std::ostringstream oss;
         oss << "vecString";
         m_v3 = vector<string>(m_v3Size, "");
         for (size_t i = 0; i < m_v3.size(); ++i) {
@@ -78,7 +81,7 @@ void H5File_Test::setUp() {
         m_dimsVecA2 = Dims(2, 5);
         m_a2.resize(m_maxRec * m_dimsVecA2.size(), "");
         for (size_t j = 0; j < m_maxRec * m_dimsVec.size(); ++j) {
-            ostringstream oss;
+            std::ostringstream oss;
             oss << "[Hi " << j % 1000000 << "]";
             m_a2[j] = oss.str();
         }
@@ -670,7 +673,7 @@ void H5File_Test::testBufferWrite() {
             mars[i] = true;
             if (i % 2) mars[i] = false;
 
-            ostringstream oss;
+            std::ostringstream oss;
             oss << "Hello " << std::setw(6) << std::setfill('0') << i;
             jupiter[i] = oss.str();
 

@@ -69,16 +69,16 @@ namespace karabo {
 
             Element::Element(const Hash& input) : m_h5obj(-1) {
                 try {
-                    m_h5name = input.get<string > ("h5name");
+                    m_h5name = input.get<std::string > ("h5name");
                     m_h5path = "";
                     if (input.has("h5path")) {
-                        m_h5path = input.get<string > ("h5path");
+                        m_h5path = input.get<std::string > ("h5path");
                     }
                     if (m_h5path != "") m_h5PathName = m_h5path + "/" + m_h5name;
                     else m_h5PathName = m_h5name;
 
                     if (input.has("key")) {
-                        m_key = boost::replace_all_copy(input.get<string > ("key"), ".", "/");
+                        m_key = boost::replace_all_copy(input.get<std::string > ("key"), ".", "/");
                     } else {
                         m_key = m_h5PathName;
                     }
