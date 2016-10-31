@@ -174,13 +174,22 @@ namespace karabo {
             config.get("debugMode", m_debugMode);
 
             m_connection = Configurator<JmsConnection>::createNode("connection", config);
+            m_connection->connect();
 
             m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory")));
             loadLogger(config);
 
-            m_heartbeatIntervall = config.get<int>("heartbeatInterval");
+            karabo::util::Hash instanceInfo;
+            instanceInfo.set("type", "server");
+            instanceInfo.set("serverId", m_serverId);
+            instanceInfo.set("version", karabo::util::Version::getVersion());
+            instanceInfo.set("host", net::bareHostName());
+            instanceInfo.set("visibility", m_visibility);
 
-            setNumberOfThreads(config.get<int>("nThreads"));
+            // Initialize SignalSlotable instance
+            init(m_serverId, m_connection, config.get<int>("heartbeatInterval"), instanceInfo);
+
+            registerSlots();
         }
 
 
@@ -226,48 +235,18 @@ namespace karabo {
         }
 
 
-        void DeviceServer::run() {
+        void DeviceServer::start() {
 
-            // Will connect to the broker synchronously
-            m_connection->connect();
+            // This starts SignalSlotable
+            SignalSlotable::start();
 
-            const std::string hostName = net::bareHostName();
-            KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << hostName
+            startFsm();
+
+            KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << net::bareHostName()
                     << ", serverId: " << m_serverId
                     << ", Broker: " << m_connection->getBrokerUrl();
 
-            // Initialize SignalSlotable instance
-            init(m_serverId, m_connection);
-
-            registerAndConnectSignalsAndSlots();
-
-            karabo::util::Hash instanceInfo;
-            instanceInfo.set("type", "server");
-            instanceInfo.set("serverId", m_serverId);
-            instanceInfo.set("version", karabo::util::Version::getVersion());
-            instanceInfo.set("host", hostName);
-            instanceInfo.set("visibility", m_visibility);
-
-            // TODO Re-factor this away in a future MR
-            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, m_heartbeatIntervall, instanceInfo));
-            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-
-            bool ok = ensureOwnInstanceIdUnique();
-            if (!ok) {
-                // TODO Remove this thread later
-                t.join(); // Blocks
-                throw KARABO_SIGNALSLOT_EXCEPTION("DeviceServer " + m_serverId +
-                                                  "could not start since its id already exists.");
-            }
-
-            this->startFsm();
             m_serverIsRunning = true;
-            t.join();
-
-            karabo::net::EventLoop::stop();
-
-            // TODO That should be the right solution, but we never get here
-            m_serverIsRunning = false;
         }
 
 
@@ -278,12 +257,12 @@ namespace karabo {
         }
 
 
-        void DeviceServer::registerAndConnectSignalsAndSlots() {
-            KARABO_SLOT1(slotStartDevice, Hash /*configuration*/)
-            KARABO_SLOT0(slotKillServer)
-            KARABO_SLOT1(slotDeviceGone, string /*deviceId*/)
-            KARABO_SLOT1(slotGetClassSchema, string /*classId*/)
-            KARABO_SLOT1(slotLoggerPriority, string /*priority*/)
+        void DeviceServer::registerSlots() {
+            KARABO_SLOT(slotStartDevice, Hash /*configuration*/)
+            KARABO_SLOT(slotKillServer)
+            KARABO_SLOT(slotDeviceGone, string /*deviceId*/)
+            KARABO_SLOT(slotGetClassSchema, string /*classId*/)
+            KARABO_SLOT(slotLoggerPriority, string /*priority*/)
         }
 
 
@@ -368,7 +347,6 @@ namespace karabo {
         void DeviceServer::stopDeviceServer() {
             m_doScanPlugins = false;
             if (m_pluginThread.joinable()) m_pluginThread.join();
-            stopEventLoop();
             // TODO Remove from here and use the one from run() method
             m_serverIsRunning = false;
         }
@@ -452,44 +430,33 @@ namespace karabo {
         void DeviceServer::instantiate(const std::string& deviceId, const std::string& classId, const util::Hash& config) {
             try {
 
-                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                BaseDevice::Pointer device = BaseDevice::create(classId, config);
 
-                // Add a place (pointer by ref!) for the device thread in the instance map:
-                boost::thread*& deviceThread = m_deviceInstanceMap[deviceId];
-                if (deviceThread) {
-                    // There is already such a device. If joining works, it's just a "zombie".
-                    if (deviceThread->try_join_for(boost::chrono::milliseconds(100))) {
-                        m_deviceThreads.remove_thread(deviceThread);
-                        delete deviceThread;
-                    } else {
-                        std::string message("Device of class " + classId + " could not be started: ");
-                        reply(false, ((message += "deviceId '") += deviceId) += "' already exists on server.");
-                        KARABO_LOG_ERROR << message;
-                        return;
-                    }
-                }
-                BaseDevice::Pointer device = BaseDevice::create(classId, config); // TODO If constructor blocks, we are lost here!!
-                if (!device) {
-                    m_deviceInstanceMap.erase(deviceId);
-                    throw KARABO_PARAMETER_EXCEPTION("Failed to create device of class " + classId + " with configuration...");
-                }
+                // This will throw an exception if it can't be started (because of duplicated name for example)
+                device->start();
 
-                // Create the thread for the device and place it (indirectly) into the device instance map):
-                deviceThread = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
+                {
+                    // Keep the device instance
+                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                    m_deviceInstanceMap[deviceId] = device;
+                }
 
                 // Answer initiation of device (KARABO_LOG_* is done by device)
                 reply(true, deviceId); // TODO think about
 
             } catch (const Exception& e) {
-                const std::string message("Device of class " + classId + " could not be started because: " + e.userFriendlyMsg());
+                const std::string message("Device of class " + classId +
+                                          " could not be started because: " + e.userFriendlyMsg());
                 KARABO_LOG_ERROR << message;
                 reply(false, message);
             } catch (const std::exception& se) {
-                const std::string message("Device of class " + classId + " could not be started because of standard exception: ");
+                const std::string message("Device of class " + classId +
+                                          " could not be started because of standard exception: ");
                 KARABO_LOG_ERROR << message << se.what();
                 reply(false, message + se.what());
             } catch (...) {
-                const std::string message("Device of class " + classId + " could not be started because of unknown exception");
+                const std::string message("Device of class " + classId +
+                                          " could not be started because of unknown exception");
                 KARABO_LOG_ERROR << message;
                 reply(false, message);
             }
@@ -534,16 +501,9 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
 
-
                 // Notify all devices
-                for (DeviceInstanceMap::const_iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
+                for (auto it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
                     call(it->first, "slotKillDevice");
-                }
-
-                for (DeviceInstanceMap::iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
-                    it->second->join();
-                    m_deviceThreads.remove_thread(it->second);
-                    delete it->second;
                 }
 
                 m_deviceInstanceMap.clear();
@@ -565,15 +525,8 @@ namespace karabo {
                     << "' about its future death.";
 
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-
-            DeviceInstanceMap::iterator it = m_deviceInstanceMap.find(instanceId);
-            if (it != m_deviceInstanceMap.end()) {
-                it->second->join();
-                m_deviceThreads.remove_thread(it->second);
-                delete it->second;
-                m_deviceInstanceMap.erase(it);
-                KARABO_LOG_INFO << "Device '" << instanceId << "' removed from server.";
-            }
+            m_deviceInstanceMap.erase(instanceId);
+            KARABO_LOG_INFO << "Device '" << instanceId << "' removed from server.";
         }
 
 

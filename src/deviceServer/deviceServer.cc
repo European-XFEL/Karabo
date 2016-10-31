@@ -17,19 +17,20 @@ int main(int argc, char** argv) {
 
     try {
 
+        boost::thread t(boost::bind(&EventLoop::work));
+
         // Instantiate device server
         DeviceServer::Pointer deviceServer = Runner<DeviceServer>::instantiate(argc, argv);
-
-        // TODO: Re-factor later to use central event-loop
-        boost::thread t(boost::bind(&DeviceServer::run, deviceServer));
 
         // Handle signals using the event-loop
         EventLoop::setSignalHandler([&deviceServer](int signo) {
             deviceServer->call(deviceServer->getInstanceId(), "slotKillServer");
         });
 
-        EventLoop::work(); // Blocking central event loop
-        t.join();
+        // Start the device server
+        deviceServer->start();
+
+        t.join(); // Blocking central event loop
 
         return EXIT_SUCCESS;
     } catch (const Exception& e) {

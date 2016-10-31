@@ -50,8 +50,7 @@ namespace karabo {
 
             }
 
-            void initFsmSlots() {
-                setNumberOfThreads(2);
+            void initFsmSlots() {               
                 KARABO_SLOT(start);
                 KARABO_SLOT(stop);
                 KARABO_SLOT(reset);

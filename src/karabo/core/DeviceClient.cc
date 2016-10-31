@@ -38,9 +38,6 @@ namespace karabo {
             , m_loggerMapCached(false) {
 
             std::string ownInstanceId = generateOwnInstanceId();
-            m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
-            m_internalSignalSlotable->setNumberOfThreads(2);
-            m_signalSlotable = m_internalSignalSlotable;
             Hash instanceInfo;
             instanceInfo.set("type", "client");
             instanceInfo.set("lang", "c++");
@@ -48,14 +45,13 @@ namespace karabo {
             instanceInfo.set("compatibility", DeviceClient::classInfo().getVersion());
             instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("status", "ok");
+            m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId,
+                                                                                               brokerType,
+                                                                                               brokerConfiguration,
+                                                                                               60, instanceInfo));
+            m_internalSignalSlotable->start();
 
-            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_internalSignalSlotable, 60, instanceInfo));
-            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-            bool ok = m_internalSignalSlotable->ensureOwnInstanceIdUnique();
-            if (!ok) {
-                m_eventThread.join(); // Blocks
-                return;
-            }
+            m_signalSlotable = m_internalSignalSlotable;
 
             this->setAgeing(true);
             this->setupSlots();
@@ -84,12 +80,6 @@ namespace karabo {
             // Stop thread sending the collected signal(State)Changed
             setDeviceMonitorInterval(-1);
 
-            if (!m_isShared) {
-                if (m_internalSignalSlotable) {
-                    m_internalSignalSlotable->stopEventLoop();
-                    m_eventThread.join();
-                }
-            }
             m_internalSignalSlotable.reset();
         }
 
@@ -734,7 +724,7 @@ namespace karabo {
                     nTrials++;
                     boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                     isThere = m_runtimeSystemDescription.has("device." + reply);
-                } while (!isThere && (nTrials < 20));
+                } while (!isThere && (nTrials < 50));
 
                 if (nTrials == 20) {
                     string errorText("Device \"" + reply + "\" got started but is not accessible anymore... ZOMBIE TIME !!!!");
@@ -1097,7 +1087,7 @@ namespace karabo {
 
         void DeviceClient::set(const std::string& instanceId, const karabo::util::Hash& values,
                                int timeoutInSeconds) {
-            
+
             KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
 
             // If this is the first time we are going to talk to <instanceId>, we should get all configuration,
