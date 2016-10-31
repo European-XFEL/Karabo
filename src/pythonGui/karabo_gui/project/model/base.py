@@ -5,7 +5,6 @@
 #############################################################################
 from abc import abstractmethod
 
-from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QStandardItem
 from traits.api import ABCHasStrictTraits, Instance, Property
 
@@ -21,9 +20,6 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
 
     # The QStandardItem representing this object
     qt_item = Property(Instance(QStandardItem))
-
-    # Qt ItemDataRole constants
-    MODEL_REF_ITEM_ROLE = Qt.UserRole + 1
 
     @abstractmethod
     def context_menu(self, parent):

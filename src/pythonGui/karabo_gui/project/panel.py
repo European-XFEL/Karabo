@@ -66,6 +66,8 @@ class ProjectPanel(Dockable, QWidget):
         pass
 
     def _project_open_handler(self):
+        # XXX: HACK. This is only written this way to get _something_ loaded.
+        # It must change when integrating into the full GUI
         from karabo.common.project.api import get_user_cache, read_lazy_object
         from karabo.middlelayer_api.newproject.io import read_project_model
 
