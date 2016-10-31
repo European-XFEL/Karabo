@@ -93,9 +93,6 @@ def assure_running(project_db_server=None, project_db_port=None):
                 raise ProjectDBError("An eXistDB instance with karabo "
                                      "collections was found running on {}."
                                      .format(project_db_server))
-            else:
-                raise ProjectDBError("Could not contact the database server"
-                                     " at {}".format(project_db_server))
         except ExistDBException as e:
             raise ProjectDBError("Could not contact the database server"
                                  " at {}: {}".format(project_db_server, e))
