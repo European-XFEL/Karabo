@@ -36,12 +36,12 @@ namespace karabo {
 
 
         JmsConnection::JmsConnection(const karabo::util::Hash& config) :
-            JmsConnection(config.get<vector<string>>("brokers")) {
+            JmsConnection(config.get<std::vector<std::string>>("brokers")) {
         }
 
 
         JmsConnection::JmsConnection(const std::string& brokerUrls)
-            : JmsConnection(fromString<string, vector>(brokerUrls)) {
+            : JmsConnection(fromString<std::string, std::vector>(brokerUrls)) {
 
         }
 
@@ -55,7 +55,7 @@ namespace karabo {
             // Give precedence to the environment variable (if defined)
             char* env = 0;
             env = getenv("KARABO_BROKER");
-            if (env != 0) m_availableBrokerUrls = fromString<string, vector>(string(env));
+            if (env != 0) m_availableBrokerUrls = fromString<std::string, std::vector>(std::string(env));
             parseBrokerUrl();
 
             // Add one event-loop thread for handling automatic reconnection
@@ -76,7 +76,7 @@ namespace karabo {
 
         void JmsConnection::parseBrokerUrl() {
 
-
+            using std::string;
             BOOST_FOREACH(const string& url, m_availableBrokerUrls) {
                 const boost::tuple<string, string, string, string, string> urlParts = karabo::net::parseUrl(url);
                 m_brokerAddresses.push_back(make_tuple(urlParts.get<0>(), urlParts.get<1>(), urlParts.get<2>()));
@@ -94,7 +94,7 @@ namespace karabo {
                     const std::string scheme = to_upper_copy(adr.get<0>());
                     const std::string host = adr.get<1>();
                     const int port = fromString<int>(adr.get<2>());
-                    const string url = adr.get<0>() + "://" + adr.get<1>() + ":" + adr.get<2>();
+                    const std::string url = adr.get<0>() + "://" + adr.get<1>() + ":" + adr.get<2>();
                     // Retrieve property handle
                     MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle));
                     // Set all properties

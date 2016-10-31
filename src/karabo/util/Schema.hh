@@ -866,15 +866,15 @@ namespace karabo {
             /// exist or is of inappropriate node type.
             bool isOrphaned(const Hash::Node& node) const;
 
-            void processingLeaf(const std::string& key, ostringstream& stream);
+            void processingLeaf(const std::string& key, std::ostringstream& stream);
 
-            void processingNode(const std::string& key, ostringstream& stream);
+            void processingNode(const std::string& key, std::ostringstream& stream);
 
-            void processingChoiceOfNodes(const std::string& key, ostringstream& stream);
+            void processingChoiceOfNodes(const std::string& key, std::ostringstream& stream);
 
-            void processingListOfNodes(const std::string& key, ostringstream& stream);
+            void processingListOfNodes(const std::string& key, std::ostringstream& stream);
 
-            void processingStandardAttributes(const std::string& key, ostringstream & stream);
+            void processingStandardAttributes(const std::string& key, std::ostringstream & stream);
 
             std::string extractKey(const std::string& key);
 

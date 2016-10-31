@@ -143,9 +143,9 @@ namespace karabo {
 
 
             MQ_SAFE_CALL(MQCreateDestination(sessionHandle, topic.c_str(), MQ_TOPIC_DESTINATION, &destinationHandle))
-            m_producerDestinations[topic] = make_pair(sessionHandle, destinationHandle);
+            m_producerDestinations[topic] = std::make_pair(sessionHandle, destinationHandle);
 
-            return make_pair(sessionHandle, destinationHandle);
+            return std::make_pair(sessionHandle, destinationHandle);
         }
 
 
@@ -192,7 +192,7 @@ namespace karabo {
                     Types::ReferenceType type = it->getType();
                     switch (type) {
                         case Types::STRING:
-                            MQ_SAFE_CALL(MQSetStringProperty(propertiesHandle, it->getKey().c_str(), it->getValue<string>().c_str()))
+                            MQ_SAFE_CALL(MQSetStringProperty(propertiesHandle, it->getKey().c_str(), it->getValue<std::string>().c_str()))
                             break;
                         case Types::UINT8:
                             MQ_SAFE_CALL(MQSetInt8Property(propertiesHandle, it->getKey().c_str(), it->getValueAs<signed char>()))

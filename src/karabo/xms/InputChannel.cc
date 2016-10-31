@@ -17,6 +17,8 @@
 using namespace karabo::util;
 using namespace karabo::io;
 
+using std::string;
+
 namespace karabo {
     namespace xms {
 
