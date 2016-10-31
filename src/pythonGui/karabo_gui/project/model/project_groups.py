@@ -36,7 +36,7 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
     children = List(Instance(BaseProjectTreeItem))
     _child_map = Dict
 
-    def context_menu(self, parent):
+    def context_menu(self, parent_project, parent=None):
         menu_fillers = {
             'devices': _fill_devices_menu,
             'macros': _fill_macros_menu,

@@ -60,5 +60,7 @@ def _convert_scenes(project, scenes):
     for model in scenes:
         # Recursively set all icon model data
         _update_icon_model(model)
+        # Move the old filename to the `simple_name` trait
+        model.simple_name = model.title
 
     return scenes

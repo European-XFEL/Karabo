@@ -20,7 +20,7 @@ class DeviceConfigurationModelItem(BaseProjectTreeItem):
     # Redefine model with the correct type
     model = Instance(DeviceConfigurationModel)
 
-    def context_menu(self, parent):
+    def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
         dupe_action = QAction('Duplicate', menu)

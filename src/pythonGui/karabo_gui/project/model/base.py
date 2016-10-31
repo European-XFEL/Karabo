@@ -22,8 +22,13 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
     qt_item = Property(Instance(QStandardItem))
 
     @abstractmethod
-    def context_menu(self, parent):
-        """ Return a QMenu to be used as a context model for this item
+    def context_menu(self, parent_project, parent=None):
+        """ Requests a menu to be used as a context menu for this item.
+
+        :param parent_project: The ProjectModel which is the immediate parent
+                               of the item which was clicked on.
+        :param parent: A QObject which can be passed as a Qt object parent.
+        :return: A QMenu containing contextual actions for the item.
         """
 
     @abstractmethod
