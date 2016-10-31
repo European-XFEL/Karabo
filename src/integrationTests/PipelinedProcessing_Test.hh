@@ -42,7 +42,7 @@ private:
                             const int maxTimeout) const;
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
-    boost::thread m_deviceServerThread;
+    boost::thread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
 
