@@ -34,7 +34,7 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
 
     # The child tree items
     children = List(Instance(BaseProjectTreeItem))
-    _child_map = Dict
+    _child_map = Dict  # dictionary for fast lookups during removal
 
     def context_menu(self, parent_project, parent=None):
         menu_fillers = {
@@ -49,19 +49,33 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
         filler(menu)
         return menu
 
+    def create_qt_item(self):
+        item = QStandardItem(self.group_name)
+        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
+        item.setIcon(icons.folder)
+        item.setEditable(False)
+        for child in self.children:
+            item.appendRow(child.qt_item)
+        return item
+
     def item_handler(self, event):
         """ Called for List-trait events on ``model`` (a ProjectModel)
 
         This notification handler is connected and disconnected in the
         create_project_model_shadow and destroy_project_model_shadow functions.
         """
+        removals = []
         for model in event.removed:
             item_model = self._child_map[model]
             self.children.remove(item_model)
             self.child_destroy(item_model)
+            removals.append(item_model)
 
         additions = [self.child_factory(model=model) for model in event.added]
         self.children.extend(additions)
+
+        # Synchronize the GUI with the Traits model
+        self._update_ui_children(additions, removals)
 
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
@@ -75,14 +89,28 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
         for item_model in event.added:
             self._child_map[item_model.model] = item_model
 
-    def _get_qt_item(self):
-        item = QStandardItem(self.group_name)
-        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
-        item.setIcon(icons.folder)
-        item.setEditable(False)
-        for child in self.children:
-            item.appendRow(child.qt_item)
-        return item
+    def _update_ui_children(self, additions, removals):
+        """ Propagate changes from the Traits model to the Qt item model.
+        """
+        def _find_child_qt_item(item_model):
+            for i in range(self.qt_item.rowCount()):
+                row_child = self.qt_item.child(i)
+                row_model = row_child.data(PROJECT_ITEM_MODEL_REF)()
+                if row_model is item_model:
+                    return i
+            return -1
+
+        # Stop immediately if the UI is not yet initialized
+        if not self.is_ui_initialized():
+            return
+
+        for item in removals:
+            index = _find_child_qt_item(item)
+            if index >= 0:
+                self.qt_item.removeRow(index)
+
+        for item in additions:
+            self.qt_item.appendRow(item.qt_item)
 
 
 def _fill_devices_menu(menu):
