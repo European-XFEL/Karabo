@@ -218,7 +218,7 @@ namespace configurationTest {
         GraphicsRenderer(const karabo::util::Hash & input) {
             //cout << input << endl;
             Shape::Pointer shape = Shape::createChoice("shapes", input);
-            assert(input.get<string>("version") == "1.4.7");
+            assert(input.get<std::string>("version") == "1.4.7");
             if (input.has("shapes.Circle")) assert(shape->draw() == "Circle");
         }
 
@@ -356,7 +356,7 @@ namespace configurationTest {
                     .assignmentInternal().noDefaultValue()
                     .commit();
 
-            vector<int> vecIntAlias;
+            std::vector<int> vecIntAlias;
             {
                 using namespace boost::assign; // bring 'operator+=()' into scope
                 vecIntAlias += 10, 20, 30; // use boost::assign to initialize vector
@@ -460,8 +460,7 @@ namespace configurationTest {
                     .archivePolicy(Schema::EVERY_10MIN)
                     .commit();
 
-
-
+            using std::vector;
 
             vector<int> vecInit;
             {

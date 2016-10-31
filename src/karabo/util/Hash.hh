@@ -719,7 +719,7 @@ namespace karabo {
             if (index == -1) {
                 return hash.m_container.get<Hash > (key);
             } else {
-                const vector<Hash>& hashVec = hash.m_container.get<vector<Hash> >(key);
+                const std::vector<Hash>& hashVec = hash.m_container.get<std::vector<Hash> >(key);
                 if (static_cast<unsigned int> (index) >= hashVec.size()) {
                     throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" + path + "'.");
                 }
@@ -830,7 +830,7 @@ namespace karabo {
             if (index == -1) {
                 return getNode(tmp, separator).is<ValueType > ();
             } else {
-                const vector<Hash>& hashVec = getNode(tmp, separator).getValue<vector<Hash> >();
+                const std::vector<Hash>& hashVec = getNode(tmp, separator).getValue<std::vector<Hash> >();
                 if (index >= hashVec.size()) {
                     throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" + path + "'.");
                 }

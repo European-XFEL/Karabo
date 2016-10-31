@@ -9,7 +9,6 @@ from karabo.common.scenemodel.api import SceneModel
 from .bases import BaseProjectObjectModel
 from .device import DeviceConfigurationModel
 from .macro import MacroModel
-from .monitor import MonitorModel
 from .server import DeviceServerModel
 
 
@@ -19,7 +18,6 @@ class ProjectModel(BaseProjectObjectModel):
     # All the things that can be part of a project...
     devices = List(Instance(DeviceConfigurationModel))
     macros = List(Instance(MacroModel))
-    monitors = List(Instance(MonitorModel))
     scenes = List(Instance(SceneModel))
     servers = List(Instance(DeviceServerModel))
 
@@ -28,7 +26,8 @@ ProjectModel.add_class_trait('subprojects', List(Instance(ProjectModel)))
 
 
 def visit_project_objects(project, visitor_func):
-    """ Recursively visit all children of a project model object.
+    """ Recursively visit all objects in a project model tree using a pre-order
+    traversal.
 
     :param project: A project model instance
     :param visitor_func: A callable which takes a single BaseProjectObjectModel
@@ -46,14 +45,16 @@ def visit_project_objects(project, visitor_func):
                     iterables.append(name)
         return iterables
 
-    def _walk_obj(obj):
+    def _tree_iter(obj):
+        # Yield the root
+        yield obj
+        # Then iteratively yield the children
         iterables = _find_iterables(obj)
         for name in iterables:
             children = getattr(obj, name)
             for child in children:
-                for subchild in _walk_obj(child):
+                for subchild in _tree_iter(child):
                     yield subchild
-        yield obj
 
-    for obj in _walk_obj(project):
-        visitor_func(obj)
+    for model in _tree_iter(project):
+        visitor_func(model)

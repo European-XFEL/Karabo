@@ -1384,6 +1384,7 @@ namespace karabo {
                     v.push_back(m_globalAlarmCondition);
 
                     for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
+                        using std::string;
                         const Hash& desc = it->getValue<Hash>();
                         KARABO_LOG_WARN << desc.get<string>("type") << ": " << desc.get<string>("message");
                         emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_deviceId);

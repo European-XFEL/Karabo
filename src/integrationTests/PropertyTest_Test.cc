@@ -3,6 +3,8 @@
 
 
 USING_KARABO_NAMESPACES;
+using std::vector;
+using std::string;
 
 #define KRB_TEST_MAX_TIMEOUT 10
 

@@ -16,6 +16,9 @@ CPPUNIT_TEST_SUITE_REGISTRATION(HashBinarySerializer_Test);
 
 using namespace karabo::io;
 using namespace karabo::util;
+using std::complex;
+using std::string;
+using std::vector;
 
 
 HashBinarySerializer_Test::HashBinarySerializer_Test() {

@@ -153,9 +153,9 @@ namespace karabo {
             MQDestinationHandle destinationHandle;
 
             MQ_SAFE_CALL(MQCreateDestination(sessionHandle, topic.c_str(), MQ_TOPIC_DESTINATION, &destinationHandle))
-            m_consumerDestinations[topic] = make_pair(sessionHandle, destinationHandle);
+            m_consumerDestinations[topic] = std::make_pair(sessionHandle, destinationHandle);
 
-            return make_pair(sessionHandle, destinationHandle);
+            return std::make_pair(sessionHandle, destinationHandle);
         }
 
 
@@ -214,7 +214,7 @@ namespace karabo {
                 while (MQPropertiesKeyIterationHasNext(propertiesHandle)) {
                     ConstMQString mqKey;
                     MQ_SAFE_CALL(MQPropertiesKeyIterationGetNext(propertiesHandle, &mqKey));
-                    string key(mqKey);
+                    std::string key(mqKey);
                     MQType type;
                     MQ_SAFE_CALL(MQGetPropertyType(propertiesHandle, mqKey, &type))
                     switch (type) {
@@ -222,7 +222,7 @@ namespace karabo {
                         {
                             ConstMQString mqValue;
                             MQ_SAFE_CALL(MQGetStringProperty(propertiesHandle, mqKey, &mqValue))
-                            properties.set<string > (key, string(mqValue));
+                            properties.set<std::string > (key, std::string(mqValue));
                             break;
                         }
                         case MQ_INT8_TYPE:

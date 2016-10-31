@@ -17,7 +17,10 @@ class JmsConnection_Test : public CPPUNIT_NS::TestFixture {
 
 
     CPPUNIT_TEST_SUITE(JmsConnection_Test);
-    CPPUNIT_TEST(testAll);
+    CPPUNIT_TEST(testConnect);
+    CPPUNIT_TEST(testCommunication1);
+    CPPUNIT_TEST(testCommunication2);
+
     CPPUNIT_TEST_SUITE_END();
 
     karabo::net::JmsConnection::Pointer m_connection;
@@ -33,13 +36,6 @@ public:
 private:
 
     unsigned int incrementMessageCount();
-
-    /**
-     * CppUnit creates a new instance for each registered test function
-     * To test the broker business, I need a reliable state and only one instance
-     * Hence, only one function will be registered that calls the other ones
-     */
-    void testAll();
 
     void testConnect();
 

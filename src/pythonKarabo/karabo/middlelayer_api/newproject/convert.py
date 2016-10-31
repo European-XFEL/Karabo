@@ -1,5 +1,4 @@
-from karabo.common.project.api import (DeviceConfigurationModel, MonitorModel,
-                                       ProjectModel)
+from karabo.common.project.api import DeviceConfigurationModel, ProjectModel
 from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
 
 
@@ -9,7 +8,6 @@ def convert_old_project(old_project):
     """
     project = ProjectModel(
         devices=_convert_devices(old_project.devices),
-        monitors=_convert_monitors(old_project.monitors),
         macros=old_project.macros,
         scenes=_convert_scenes(old_project, old_project.scenes),
     )
@@ -37,16 +35,6 @@ def _convert_devices(devices):
         )
         ret_devices.append(model)
     return ret_devices
-
-
-def _convert_monitors(monitors):
-    """ Convert a list of old-style monitor instances to MonitorModel instances
-    """
-    ret_monitors = []
-    for mon in monitors:
-        model = MonitorModel(configuration=mon.config)
-        ret_monitors.append(model)
-    return ret_monitors
 
 
 def _convert_scenes(project, scenes):

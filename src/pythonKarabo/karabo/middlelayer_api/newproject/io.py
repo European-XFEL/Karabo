@@ -4,12 +4,10 @@ from io import BytesIO
 from lxml import etree
 
 from karabo.common.project.api import (
-    DeviceConfigurationModel, DeviceGroupModel, DeviceServerModel,
-    LazyDeviceGroupModel, LazyDeviceServerModel, LazyProjectModel,
-    MacroModel, MonitorModel, ProjectModel, ProjectObjectReference,
-    PROJECT_DB_TYPE_DEVICE, PROJECT_DB_TYPE_DEVICE_GROUP,
-    PROJECT_DB_TYPE_DEVICE_SERVER, PROJECT_DB_TYPE_MACRO,
-    PROJECT_DB_TYPE_MONITOR, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
+    DeviceConfigurationModel, DeviceServerModel, LazyDeviceServerModel,
+    LazyProjectModel, MacroModel, ProjectModel, ProjectObjectReference,
+    PROJECT_DB_TYPE_DEVICE, PROJECT_DB_TYPE_DEVICE_SERVER,
+    PROJECT_DB_TYPE_MACRO, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
     PROJECT_OBJECT_CATEGORIES)
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.hash import Hash
@@ -21,10 +19,8 @@ def read_project_model(io_obj):
     """
     factories = {
         PROJECT_DB_TYPE_DEVICE: _device_reader,
-        PROJECT_DB_TYPE_DEVICE_GROUP: _device_group_reader,
         PROJECT_DB_TYPE_DEVICE_SERVER: _device_server_reader,
         PROJECT_DB_TYPE_MACRO: _macro_reader,
-        PROJECT_DB_TYPE_MONITOR: _monitor_reader,
         PROJECT_DB_TYPE_PROJECT: _project_reader,
         PROJECT_DB_TYPE_SCENE: _scene_reader,
     }
@@ -34,8 +30,8 @@ def read_project_model(io_obj):
     # Grab the metadata from the parent
     parent = etree.parse(BytesIO(parent)).getroot()
     metadata = dict(parent.items())
-    typename = metadata.get('type')
-    factory = factories.get(typename)
+    item_type = metadata.get('item_type')
+    factory = factories.get(item_type)
 
     # Construct from the child data + metadata
     return factory(BytesIO(child), metadata)
@@ -45,30 +41,26 @@ def write_project_model(model):
     """ Given an object based on BaseProjectObjectModel, return an XML
     bytestring containing the serialized object.
     """
-    typemap = {
+    item_types = {
         DeviceConfigurationModel: PROJECT_DB_TYPE_DEVICE,
-        DeviceGroupModel: PROJECT_DB_TYPE_DEVICE_GROUP,
         DeviceServerModel: PROJECT_DB_TYPE_DEVICE_SERVER,
         MacroModel: PROJECT_DB_TYPE_MACRO,
-        MonitorModel: PROJECT_DB_TYPE_MONITOR,
         ProjectModel: PROJECT_DB_TYPE_PROJECT,
         SceneModel: PROJECT_DB_TYPE_SCENE
     }
     writers = {
         PROJECT_DB_TYPE_DEVICE: _device_writer,
-        PROJECT_DB_TYPE_DEVICE_GROUP: _device_group_writer,
         PROJECT_DB_TYPE_DEVICE_SERVER: _device_server_writer,
         PROJECT_DB_TYPE_MACRO: _macro_writer,
-        PROJECT_DB_TYPE_MONITOR: _monitor_writer,
         PROJECT_DB_TYPE_PROJECT: _project_writer,
         PROJECT_DB_TYPE_SCENE: write_scene,
     }
-    typename = typemap.get(model.__class__)
-    writer = writers.get(typename)
+    item_type = item_types.get(model.__class__)
+    writer = writers.get(item_type)
     child_xml = writer(model)
 
     root_metadata = _model_db_metadata(model)
-    root_metadata['type'] = typename
+    root_metadata['item_type'] = item_type
     return _wrap_child_element_xml(child_xml, root_metadata)
 
 # -----------------------------------------------------------------------------
@@ -121,15 +113,6 @@ def _device_reader(io_obj, metadata):
             class_id=class_id, configuration=configuration, **kwargs)
 
 
-def _device_group_reader(io_obj, metadata):
-    """ A reader for device group models
-    """
-    kwargs = _db_metadata_reader(metadata)
-    group = Hash.decode(io_obj.read(), 'XML')
-    devices = [_reference_reader(h) for h in group.values()]
-    return LazyDeviceGroupModel(devices=devices, **kwargs)
-
-
 def _device_server_reader(io_obj, metadata):
     """ A reader for device server models
     """
@@ -147,14 +130,6 @@ def _macro_reader(io_obj, metadata):
     root = etree.parse(io_obj).getroot()
     code = base64.b64decode(root.text).decode('utf-8')
     return MacroModel(code=code, **kwargs)
-
-
-def _monitor_reader(io_obj, metadata):
-    """ A reader for monitors
-    """
-    kwargs = _db_metadata_reader(metadata)
-    configuration = Hash.decode(io_obj.read(), 'XML')
-    return MonitorModel(configuration=configuration, **kwargs)
 
 
 def _project_reader(io_obj, metadata):
@@ -207,15 +182,6 @@ def _device_writer(model):
     return hsh.encode('XML')
 
 
-def _device_group_writer(model):
-    """ A writer for device group models
-    """
-    devices = [Hash('uuid', dev.uuid, 'revision', dev.revision)
-               for dev in model.devices]
-    hsh = Hash('group', devices)
-    return hsh.encode('XML')
-
-
 def _device_server_writer(model):
     """ A writer for device server models
     """
@@ -234,20 +200,14 @@ def _macro_writer(model):
     return etree.tostring(element)
 
 
-def _monitor_writer(model):
-    """ A writer for monitors
-    """
-    return model.configuration.encode('XML')
-
-
 def _project_writer(model):
     """ A writer for projects
     """
     project = Hash()
-    for typename in PROJECT_OBJECT_CATEGORIES:
-        objects = getattr(model, typename)
-        project[typename] = [Hash('uuid', obj.uuid, 'revision', obj.revision)
-                             for obj in objects]
+    for item_type in PROJECT_OBJECT_CATEGORIES:
+        objects = getattr(model, item_type)
+        project[item_type] = [Hash('uuid', obj.uuid, 'revision', obj.revision)
+                              for obj in objects]
 
     hsh = Hash('project', project)
     return hsh.encode('XML')

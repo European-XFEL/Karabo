@@ -39,13 +39,13 @@ namespace karabo {
 
         void Slot::extractSenderInformation(const karabo::util::Hash& header) {
             boost::optional<const Hash::Node&> node = header.find("userId");
-            if (node) m_userIdOfSender = node->getValue<string>();
+            if (node) m_userIdOfSender = node->getValue<std::string>();
             node = header.find("accessLevel");
-            if (node) m_accessLevelOfSender = node->getValue<string>();
+            if (node) m_accessLevelOfSender = node->getValue<std::string>();
             node = header.find("signalInstanceId");
-            if (node) m_instanceIdOfSender = node->getValue<string>();
+            if (node) m_instanceIdOfSender = node->getValue<std::string>();
             node = header.find("sessionToken");
-            if (node) m_sessionTokenOfSender = node->getValue<string>();
+            if (node) m_sessionTokenOfSender = node->getValue<std::string>();
         }
 
 

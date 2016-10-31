@@ -20,7 +20,7 @@ namespace karabo {
         void HashFilter::byTag(const Schema& schema, const Hash& input, Hash& result, const std::string& tags, const std::string& sep) {
 
             const Hash& master = schema.getParameterHash();
-            std::set<std::string> tagSet = fromString<string, set>(tags, sep);
+            std::set<std::string> tagSet = fromString<std::string, std::set>(tags, sep);
             for (Hash::const_iterator it = input.begin(); it != input.end(); ++it) {
                 r_byTag(master, *it, result, it->getKey(), tagSet);
             }
@@ -42,10 +42,10 @@ namespace karabo {
 
                 const Hash& input = inputNode.getValue<Hash>();
                 for (Hash::const_iterator it = input.begin(); it != input.end(); ++it) {
-                    string newPath = path + "." + it->getKey();
+                    std::string newPath = path + "." + it->getKey();
                     r_byTag(master, *it, result, newPath, tags);
                 }
-            } else if (inputNode.is<vector<Hash> >()) {
+            } else if (inputNode.is<std::vector<Hash> >()) {
 
                 // if the tag was found in the vector<HASH> (defined for LIST_ELEMENT) copy complete vector<Hash> and return
                 // otherwise process the Hash further
@@ -57,7 +57,7 @@ namespace karabo {
 
                 // For vector<Hash> the following policy is implemented
                 // The size of the vector is preserved unless all Hashes in the vector are empty
-                const vector<Hash>& inputVector = inputNode.getValue<vector<Hash> >();
+                const std::vector<Hash>& inputVector = inputNode.getValue<std::vector<Hash> >();
 
                 // At the moment we copy the vector<Hash> to the result in all cases except 
                 // if every Hash is empty after running a filter.
@@ -66,7 +66,7 @@ namespace karabo {
                 //vector<Hash>& outputVector = result.bindReference<vector<Hash> > (path);
                 //outputVector.resize(inputVector.size());                
                 //vector<Hash>& outputVector(inputVector.size());
-                vector<Hash> outputVector(inputVector.size());
+                std::vector<Hash> outputVector(inputVector.size());
 
                 for (size_t i = 0; i < inputVector.size(); ++i) {
                     //clog << "index i=" << i << endl;
@@ -96,9 +96,9 @@ namespace karabo {
                                      const std::string& path, const std::set<std::string>& tags) {
 
             if (master.hasAttribute(path, KARABO_SCHEMA_TAGS)) {
-                const vector<string>& t = master.getAttribute< vector<string> >(path, KARABO_SCHEMA_TAGS);
+                const std::vector<std::string>& t = master.getAttribute< std::vector<std::string> >(path, KARABO_SCHEMA_TAGS);
                 for (size_t i = 0; i < t.size(); ++i) {
-                    std::set<string>::const_iterator its = tags.find(t[i]);
+                    std::set<std::string>::const_iterator its = tags.find(t[i]);
                     if (its != tags.end()) {
                         //clog << "take element " << inputNode.getKey() << ", tag found: " << t[i] << endl;
                         result.set(path, inputNode);
@@ -139,10 +139,10 @@ namespace karabo {
 
                 const Hash& input = inputNode.getValue<Hash>();
                 for (Hash::const_iterator it = input.begin(); it != input.end(); ++it) {
-                    string newPath = path + "." + it->getKey();
+                    std::string newPath = path + "." + it->getKey();
                     r_byAccessMode(master, *it, result, newPath, value);
                 }
-            } else if (inputNode.is<vector<Hash> >()) {
+            } else if (inputNode.is<std::vector<Hash> >()) {
 
                 // if the tag was found in the vector<HASH> (defined for LIST_ELEMENT) copy complete vector<Hash> and return
                 // otherwise process the Hash further
@@ -154,7 +154,7 @@ namespace karabo {
 
                 // For vector<Hash> the following policy is implemented
                 // The size of the vector is preserved unless all Hashes in the vector are empty
-                const vector<Hash>& inputVector = inputNode.getValue<vector<Hash> >();
+                const std::vector<Hash>& inputVector = inputNode.getValue<std::vector<Hash> >();
 
                 // At the moment we copy the vector<Hash> to the result in all cases except 
                 // if every Hash is empty after running a filter.
@@ -163,7 +163,7 @@ namespace karabo {
                 //vector<Hash>& outputVector = result.bindReference<vector<Hash> > (path);
                 //outputVector.resize(inputVector.size());                
                 //vector<Hash>& outputVector(inputVector.size());
-                vector<Hash> outputVector(inputVector.size());
+                std::vector<Hash> outputVector(inputVector.size());
 
                 for (size_t i = 0; i < inputVector.size(); ++i) {
                     //clog << "index i=" << i << endl;

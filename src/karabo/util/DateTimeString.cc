@@ -264,7 +264,7 @@ namespace karabo {
 
             if (precision == NOFRACTION) return "";
 
-            ostringstream oss;
+            std::ostringstream oss;
 
             // Be carefully with std::log10 calculation
             // The explicit conversion to "double" is necessary, if used smaller types like:
@@ -280,7 +280,7 @@ namespace karabo {
             unsigned long long multiplier = 1;
             while (zeros-- > 0) multiplier *= 10ULL;
             int numDigits = std::log10(1000000000000000000ULL / multiplier);
-            oss << '.' << setw(numDigits) << setfill('0') << fractionalSeconds / multiplier;
+            oss << '.' << std::setw(numDigits) << std::setfill('0') << fractionalSeconds / multiplier;
 
             return oss.str();
         }

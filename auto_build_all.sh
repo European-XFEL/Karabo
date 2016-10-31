@@ -84,6 +84,21 @@ runUnitTests() {
     echo
 }
 
+runPythonIntegrationTests() {
+    if [ -z "$KARABO" ]; then
+        source $scriptDir/karabo/activate
+    fi
+
+    echo
+    echo Running Karabo Python integration tests ...
+    echo 
+    cd build/netbeans/pythonKarabo
+    safeRunCommand "nosetests -v karabo.integration_tests"
+    echo
+    echo Integration tests complete
+    echo
+}
+
 installProjectDB() {
     echo Installing and initializing Local Project Database
     safeRunCommand "$scriptDir/extern/resources/existDB/doInstall.sh ${scriptDir}/karabo"
@@ -308,6 +323,7 @@ if [ "$RUNTESTS" = "y" ]; then
 fi
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
     runIntegrationTests
+    # runPythonIntegrationTests
 fi
 
 

@@ -187,8 +187,6 @@ namespace karabo {
 
     namespace util {
 
-        using namespace std;
-
         /***********************************************************************
          *
          * Implement the Container class methods

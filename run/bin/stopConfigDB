@@ -1,3 +1,21 @@
 #!/bin/bash
 echo "Stopping eXist database"
-pkill -9 -f jetty
+EXIST_BASE="$KARABO/extern/eXistDB"
+EXIST_HOME="$KARABO/extern/eXistDB/db"
+CURRENT_DIR=`pwd`
+
+#check if java is installed
+if type -p java; then
+    JAVA=java
+elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
+    JAVA="$JAVA_HOME/bin/java"
+else
+    echo "JAVA not found! If it is installed, please set JAVA_HOME to the appropriate location!"
+    exit 
+fi
+
+#finally, stop the db server
+cd $EXIST_HOME
+$JAVA -jar $EXIST_HOME/start.jar shutdown -p karabo
+sleep 5
+pkill -9 -f jetty #force kill as server is pretty reluctant

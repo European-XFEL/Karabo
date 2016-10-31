@@ -13,7 +13,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION(HashXmlSerializer_Test);
 
 using namespace karabo::io;
 using namespace karabo::util;
-
+using std::vector;
+using std::string;
 
 HashXmlSerializer_Test::HashXmlSerializer_Test() {
 }

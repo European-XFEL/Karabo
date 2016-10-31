@@ -233,7 +233,7 @@ namespace karabo{
                 if (m_node) {
                     if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
                         OverwriteElement::Restrictions existing;
-                        existing.assignFromAttrVector(m_node->getAttribute < vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
+                    existing.assignFromAttrVector(m_node->getAttribute < std::vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
                         //now merge
                         restrictions.merge(existing);
                     }
