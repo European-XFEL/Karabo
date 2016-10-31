@@ -4,7 +4,7 @@ from unittest import TestCase, skip
 from lxml import etree
 
 from karabo.project_db.project_database import ProjectDatabase
-from karabo.project_db.util import stop_database
+from karabo.project_db.util import stop_database, assure_running
 
 class TestProjectDatabase(TestCase):
     user = "admin"
@@ -22,12 +22,6 @@ class TestProjectDatabase(TestCase):
         str_rep = ProjectDatabase._make_str_if_needed(element)
         self.assertEqual(str_rep, "<test>foo</test>\n")
 
-    def test__check_for_known_xml_type(self):
-        testTypes = ['projects', 'scenes', 'macros', 'device_configs',
-                     'device_servers', 'monitors', 'device_groups']
-        for t in testTypes:
-            self.assertTrue(t in ProjectDatabase.known_xml_types)
-
     def test_project_interface(self):
         with ProjectDatabase(self.user, self.password, server='localhost',
                                  test_mode=True) as db:
@@ -37,13 +31,14 @@ class TestProjectDatabase(TestCase):
             if db.dbhandle.hasCollection(path):
                 db.dbhandle.removeCollection(path)
 
+            path = "{}/{}".format(db.root, 'LOCAL')
+            if db.dbhandle.hasCollection(path):
+                db.dbhandle.removeCollection(path)
+
             # make sure we have the LOCAL collection and subcollections
             path = "{}/{}".format(db.root, 'LOCAL')
             if not db.dbhandle.hasCollection(path):
                 db.dbhandle.createCollection(path)
-                for p in db.known_xml_types:
-                    ppath = "{}/{}".format(path, p)
-                    db.dbhandle.createCollection(ppath)
 
             with self.subTest(msg = 'test_domain_exists'):
                 self.assertTrue(db.domain_exists("LOCAL"))
@@ -51,24 +46,19 @@ class TestProjectDatabase(TestCase):
             with self.subTest(msg = 'test_add_domain'):
                 db.add_domain("LOCAL_TEST")
                 self.assertTrue(db.domain_exists("LOCAL_TEST"))
-                # we also check that all sub collections have been created
-                path = "{}/{}".format(db.root, 'LOCAL_TEST')
-                for p in db.known_xml_types:
-                        ppath = "{}/{}".format(path, p)
-                        self.assertTrue(db.dbhandle.hasCollection(ppath))
 
             with self.subTest(msg = 'test_get_versioning_info'):
                 xml_rep = "<test>foo</test>"
 
                 # db.save_project('LOCAL', 'testproject', ret)
-                path = "{}/{}".format(db.root, 'LOCAL/projects/testproject')
+                path = "{}/{}".format(db.root, 'LOCAL/testproject')
                 db.dbhandle.load(xml_rep, path)
                 # do twice to assure a version increment
                 db.dbhandle.load(xml_rep, path)
 
                 vers = db.get_versioning_info(path)
                 self.assertEqual(vers['document'],
-                                 '/db/krb_test/LOCAL/projects/testproject')
+                                 '/db/krb_test/LOCAL/testproject')
                 # depends on how often tests were run
                 self.assertGreaterEqual(len(vers['revisions']), 0)
                 first_rev = vers['revisions'][0]
@@ -76,13 +66,11 @@ class TestProjectDatabase(TestCase):
                 self.assertTrue('date' in first_rev)
                 self.assertEqual(first_rev['user'], 'admin')
 
-            with self.subTest(msg = 'test_save_project'):
+            with self.subTest(msg = 'test_save_item'):
                 xml_rep = '<test>foo</test>'
-                success, meta = db.save_project('LOCAL',
-                                                'testproject2',
-                                                xml_rep)
+                success, meta = db.save_item('LOCAL', 'testproject2', xml_rep)
 
-                path = "{}/LOCAL/projects/testproject2".format(db.root)
+                path = "{}/LOCAL/testproject2".format(db.root)
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 decoded = db.dbhandle.getDoc(path).decode('utf-8')
                 self.assertEqual(decoded, xml_rep)
@@ -90,103 +78,62 @@ class TestProjectDatabase(TestCase):
                 self.assertTrue('versioning_info' in meta)
                 self.assertEqual(meta['current_xml'], xml_rep)
 
-            with self.subTest(msg = 'test_save_scene'):
-                xml_rep = '<test>foo</test>'
-                success, meta = db.save_scene('LOCAL', 'testscene', xml_rep)
-                path = "{}/LOCAL/scenes/testscene".format(db.root)
-                self.assertTrue(db.dbhandle.hasDocument(path))
-                decoded = db.dbhandle.getDoc(path).decode('utf-8')
-                self.assertEqual(decoded, xml_rep)
-                self.assertTrue(success)
-                self.assertTrue('versioning_info' in meta)
-                self.assertEqual(meta['current_xml'], xml_rep)
-
-            with self.subTest(msg = 'test_save_config'):
-
-                xml_rep = '<test>foo</test>'
-                success, meta = db.save_config('LOCAL', 'testconfig', xml_rep)
-                path = "{}/LOCAL/device_configs/testconfig".format(db.root)
-                self.assertTrue(db.dbhandle.hasDocument(path))
-                decoded = db.dbhandle.getDoc(path).decode('utf-8')
-                self.assertEqual(decoded, xml_rep)
-                self.assertTrue(success)
-                self.assertTrue('versioning_info' in meta)
-                self.assertEqual(meta['current_xml'], xml_rep)
-
-            with self.subTest(msg = 'test_save_device_server'):
-                xml_rep = '<test>foo</test>'
-                success, meta = db.save_device_server('LOCAL',
-                                                      'testdeviceserver',
-                                                      xml_rep)
-                path = "{}/LOCAL/device_servers/testdeviceserver"\
-                       .format(db.root)
-
-                self.assertTrue(db.dbhandle.hasDocument(path))
-                decoded = db.dbhandle.getDoc(path).decode('utf-8')
-                self.assertEqual(decoded, xml_rep)
-                self.assertTrue(success)
-                self.assertTrue('versioning_info' in meta)
-                self.assertEqual(meta['current_xml'], xml_rep)
-
-            with self.subTest(msg = 'test__copy_item'):
+            with self.subTest(msg = 'test_copy_item'):
 
                 xml_rep = "<test>foo</test>"
-                db.save_project('LOCAL', 'testproject', xml_rep)
+                db.save_item('LOCAL', 'testproject', xml_rep)
 
-                db._copy_item('projects', 'LOCAL', 'REPO', 'testproject',
+                db.copy_item('LOCAL', 'REPO', 'testproject',
                               'testproject_copy')
-                path = "{}/REPO/projects/testproject_copy".format(db.root)
-                origin_path = "{}/LOCAL/projects/testproject".format(db.root)
+                path = "{}/REPO/testproject_copy".format(db.root)
+                origin_path = "{}/LOCAL/testproject".format(db.root)
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 decoded1 = db.dbhandle.getDoc(path).decode('utf-8')
                 decoded2 = db.dbhandle.getDoc(origin_path).decode('utf-8')
                 self.assertEqual(decoded1, decoded2)
 
-            with self.subTest(msg = 'test__rename_item'):
+            with self.subTest(msg = 'test_rename_item'):
 
-                origin_path = "{}/REPO/projects/testproject_copy"\
-                              .format(db.root)
+                origin_path = "{}/REPO/testproject_copy".format(db.root)
                 origin = db.dbhandle.getDoc(origin_path).decode('utf-8')
 
-                db._rename_item('projects', 'REPO', 'testproject_copy',
-                                'testproject_copy2')
-                path = "{}/REPO/projects/testproject_copy2".format(db.root)
+                db.rename_item('REPO', 'testproject_copy', 'testproject_copy2')
+                path = "{}/REPO/testproject_copy2".format(db.root)
 
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 self.assertEqual(db.dbhandle.getDoc(path).decode('utf-8'),
                                  origin)
 
-            with self.subTest(msg = 'test__move_item'):
-                origin_path = "{}/REPO/projects/testproject_copy2"\
-                              .format(db.root)
+            with self.subTest(msg = 'test_move_item'):
+                origin_path = "{}/REPO/testproject_copy2".format(db.root)
 
                 origin = db.dbhandle.getDoc(origin_path).decode('utf-8')
 
-                db._move_item('projects', 'REPO', 'LOCAL',
-                              'testproject_copy2')
-                path = "{}/LOCAL/projects/testproject_copy2".format(db.root)
+                db.move_item('REPO', 'LOCAL', 'testproject_copy2')
+                path = "{}/LOCAL/testproject_copy2".format(db.root)
 
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 self.assertEqual(db.dbhandle.getDoc(path).decode('utf-8'),
                                  origin)
+
             with self.subTest(msg = 'load_item'):
-                item = db.load_item('projects', 'LOCAL', 'testproject_copy2')
+                item = db.load_item('LOCAL', 'testproject_copy2')
                 itemxml = db._make_xml_if_needed(item)
                 self.assertEqual(itemxml.tag, 'test')
                 self.assertEqual(itemxml.text, 'foo')
 
-            with self.subTest(msg = 'test_save_project_conflict'):
+            with self.subTest(msg = 'test_save_item_conflict'):
                 xml_rep_start = '<test>foo</test>'
 
-                success, meta = db.save_project('LOCAL', 'testproject2',
+                success, meta = db.save_item('LOCAL', 'testproject2',
                                                 xml_rep_start)
                 self.assertTrue(success)
 
-                path = "{}/LOCAL/projects/testproject2".format(db.root)
-                doc = db._make_xml_if_needed(db.load_item('projects', 'LOCAL',
+                path = "{}/LOCAL/testproject2".format(db.root)
+                doc = db._make_xml_if_needed(db.load_item('LOCAL',
                                                           'testproject2'))
 
-                success, meta = db.save_project('LOCAL', 'testproject2',
+                success, meta = db.save_item('LOCAL', 'testproject2',
                                                 xml_rep_start)
 
                 doc.text = 'goo'
@@ -197,80 +144,86 @@ class TestProjectDatabase(TestCase):
                 doc2.attrib['{http://exist-db.org/versioning}key'] = "fdsf"
 
 
-                success, meta = db.save_project('LOCAL', 'testproject2', doc)
+                success, meta = db.save_item('LOCAL', 'testproject2', doc)
                 self.assertTrue(success)
-                success, meta = db.save_project('LOCAL', 'testproject2', doc)
+                success, meta = db.save_item('LOCAL', 'testproject2', doc)
                 self.assertTrue(success)
 
 
-                success, meta = db.save_project('LOCAL', 'testproject2', doc2)
+                success, meta = db.save_item('LOCAL', 'testproject2', doc2)
 
                 self.assertTrue(db.dbhandle.hasDocument(path))
-                test = db._make_xml_if_needed(db.load_item('projects', 'LOCAL',
+                test = db._make_xml_if_needed(db.load_item('LOCAL',
                                                            'testproject2'))
                 self.assertEqual(test.text, 'goo')
                 self.assertFalse(success)
                 self.assertTrue('versioning_info' in meta)
 
                 # now overwrite
-                success, meta = db.save_project('LOCAL', 'testproject2', doc2,
-                                                True)
+                success, meta = db.save_item('LOCAL', 'testproject2', doc2,
+                                             True)
 
                 self.assertTrue(db.dbhandle.hasDocument(path))
-                test = db._make_xml_if_needed(db.load_item('projects', 'LOCAL',
+                test = db._make_xml_if_needed(db.load_item('LOCAL',
                                                            'testproject2'))
                 self.assertEqual(test.text, 'hoo')
 
             with self.subTest(msg = 'test_load_multi'):
                 # create a device server and multiple config entries
-                xml_reps = ['<test uid="0">foo</test>',
-                            '<test uid="1">goo</test>',
-                            '<test uid="2">hoo</test>',
-                            '<test uid="3">nope</test>']
+                xml_reps = ['<test uuid="0">foo</test>',
+                            '<test uuid="1">goo</test>',
+                            '<test uuid="2">hoo</test>',
+                            '<test uuid="3">nope</test>']
 
                 for i, rep in enumerate(xml_reps):
-                    success, meta = db.save_config('LOCAL', 'testconfig{}'
-                                                   .format(i), rep)
+                    success, meta = db.save_item('LOCAL', 'testconfig{}'
+                                                   .format(i), rep, True)
                     self.assertTrue(success)
 
-                #we do this twice to have revision info ready
+
+                #twice to initiate versioning
                 for i, rep in enumerate(xml_reps):
-                    success, meta = db.save_config('LOCAL', 'testconfig{}'
-                                                   .format(i), rep)
+                    success, meta = db.save_item('LOCAL', 'testconfig{}'
+                                                   .format(i), rep, True)
                     self.assertTrue(success)
 
-                # one is at a different revision
-                xml_reps[1] = '<test uid="1">boohoo</test>'
-                success, meta = db.save_config('LOCAL', 'testconfig1'
-                                               .format(i), xml_reps[1])
+
                 self.assertTrue(success)
 
                 # get version info for what we inserted
                 revisions = []
                 for i in range(3):
-                    path = "{}/LOCAL/device_configs/testconfig{}"\
+                    path = "{}/LOCAL/testconfig{}"\
                             .format(db.root, i)
                     v = db.get_versioning_info(path)
                     revisions.append(v['revisions'][-1]['id'])
 
-                xml_serv = "<testserver><configs>"
+                xml_serv = "<testserver list_tag='configs'><configs>"
                 for i in range(3):
-                    xml_serv += '<configuration uid="{}" revision="{}"/>'\
+                    xml_serv += '<configuration uuid="{}" revision="{}"/>'\
                                 .format(i, revisions[i])
                 xml_serv += " </configs></testserver>"
 
-                success, meta = db.save_device_server('LOCAL', 'testserver_m',
-                                                      xml_serv)
+                success, meta = db.save_item('LOCAL', 'testserver_m', xml_serv)
                 self.assertTrue(success)
 
                 # now load again
-                res = db._load_multi('LOCAL', xml_serv, 'configs')
-                for i, r in enumerate(res):
-                    test_xml = db._make_xml_if_needed(xml_reps[i])
-                    res_xml = db._make_xml_if_needed(r)
-                    self.assertEqual(test_xml.text, res_xml.text)
+                res = db.load_multi('LOCAL', xml_serv)
+                for i in range(3):
+                    r = db._make_xml_if_needed(res[str(i)])
+                    cFound = False
+                    for j in range(3):
+                        c = db._make_xml_if_needed(xml_reps[j])
+                        if r.text == c.text:
+                            cFound = True
+                            if r.attrib['uuid'] != c.attrib['uuid']:
+                                cFound = False
+                    self.assertTrue(cFound)
 
-                    self.assertEqual(test_xml.attrib['uid'],
-                                     res_xml.attrib['uid'])
+
+            with self.subTest(msg = 'test_versioning_from_item'):
+                vers = db.get_versioning_info_item("LOCAL", "1")
+                self.assertEqual(vers['document'],
+                                 '/db/krb_test/LOCAL/testconfig1')
 
             stop_database()
