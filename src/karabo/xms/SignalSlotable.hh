@@ -69,9 +69,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*slotFunction*/,
                                           const std::string& /*callee*/) > SlotCallGuardHandler;
 
-            typedef boost::function<void (float /*avgBrokerLatency*/, unsigned int /*maxBrokerLatency*/,
-                                          float /*avgProcessingLatency*/, unsigned int /*maxProcessingLatency*/,
-                                          unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
+            typedef boost::function<void (float /*avgProcessingLatency*/, unsigned int /*maxProcessingLatency*/) > UpdatePerformanceStatisticsHandler;
 
             typedef InputChannel::DataHandler DataHandler;
 
@@ -89,7 +87,6 @@ namespace karabo {
             typedef std::map<std::string, OutputChannel::Pointer> OutputChannels;
 
 
-
             /**
              * This constructor does nothing. Call init() afterwards for setting up.
              */
@@ -97,38 +94,59 @@ namespace karabo {
 
             /**
              * Creates a functional SignalSlotable object using an existing connection.
+             * 
              * Don't call init() afterwards.
              * @param instanceId The future instanceId of this object in the distributed system
              * @param connection An existing broker connection
+             * @param heartbeatInterval The interval (in s) in which a heartbeat is emitted
+             * @param instanceInfo A hash containing any important additional information
              */
             SignalSlotable(const std::string& instanceId,
-                           const karabo::net::JmsConnection::Pointer& connection);
+                           const karabo::net::JmsConnection::Pointer& connection,
+                           const int heartbeatInterval = 30,
+                           const karabo::util::Hash& instanceInfo = karabo::util::Hash());
 
             /**
              * Creates a function SignalSlotable object allowing to configure the broker connection.
+             * 
              * Don't call init() afterwards.
              * @param instanceId The future instanceId of this object in the distributed system
              * @param brokerType The broker type (currently only JMS available)
              * @param brokerConfiguration The sub-configuration for the respective broker type
+             * @param heartbeatInterval The interval (in s) in which a heartbeat is emitted
+             * @param instanceInfo A hash containing any important additional information
              */
             SignalSlotable(const std::string& instanceId,
                            const std::string& connectionClass = "JmsConnection",
-                           const karabo::util::Hash& brokerConfiguration = karabo::util::Hash());
+                           const karabo::util::Hash& brokerConfiguration = karabo::util::Hash(),
+                           const int heartbeatInterval = 30,
+                           const karabo::util::Hash& instanceInfo = karabo::util::Hash());
 
             virtual ~SignalSlotable();
 
             /**
-             * Initialized the SignalSlotable object (only use in conjunction with empty constructor)
+             * Initializes the SignalSlotable object (only use in conjunction with empty constructor).
+             * 
              * @param instanceId The future instanceId of this object in the distributed system
              * @param connection An existing broker connection
+             * @param heartbeatInterval The interval (in s) in which a heartbeat is emitted
+             * @param instanceInfo A hash containing any important additional information
              */
             void init(const std::string& instanceId,
-                      const karabo::net::JmsConnection::Pointer& connection);
-
+                      const karabo::net::JmsConnection::Pointer& connection,
+                      const int heartbeatInterval,
+                      const karabo::util::Hash& instanceInfo);
 
             /**
-             * Single call that leads to a tracking of all instances if called before the event loop is started
+             * This function starts the communication.
+             *
+             * After a call to this non-blocking function the object starts
+             * listening to messages. The uniqueness of the instanceId is validated
+             * (throws if not unique) and if successful the object registers with
+             * a call to "slotInstanceNew" to the distributed system.
              */
+            void start();
+
             void trackAllInstances();
 
             karabo::util::Hash getAvailableInstances(const bool activateTracking = false);
@@ -144,25 +162,6 @@ namespace karabo {
              */
             // TODO Check whether it can be removed
             const std::string& getUserName() const;
-
-            /**
-             * Sets number of threads that will work on the registered slots.
-             * Re-entry of the same slot on a different thread will never happen.
-             * Only different slots may run concurrently (if nThreads > 1)
-             * NOTE: This function takes only affect BEFORE the event loop was started
-             * @param nThreads The number of threads that should be used
-             */
-            void setNumberOfThreads(int nThreads);
-
-            /**
-             * This function will block the main-thread.
-             */
-            void runEventLoop(int heartbeatIntervall = 10, const karabo::util::Hash& instanceInfo = karabo::util::Hash());
-
-            /**
-             * This function will stop all consumers and un-block the runEventLoop() function
-             */
-            void stopEventLoop();
 
             /**
              * Access to the identification of the current instance using signals and slots
@@ -370,11 +369,6 @@ namespace karabo {
             template <class T>
             static std::string generateInstanceId();
 
-            bool ensureOwnInstanceIdUnique();
-
-            void injectConnection(const std::string& instanceId,
-                                  const karabo::net::JmsConnection::Pointer& connection);
-
             void setDeviceServerPointer(boost::any serverPtr);
 
             void inputHandlerWrap(const InputHandler& handler, const InputChannel::Pointer& input);
@@ -493,7 +487,6 @@ namespace karabo {
             std::string m_instanceId;
             karabo::util::Hash m_instanceInfo;
             std::string m_username;
-            int m_nThreads;
 
             typedef std::map<std::string, SignalInstancePointer> SignalInstances;
             SignalInstances m_signalInstances;
@@ -509,22 +502,11 @@ namespace karabo {
             SignalSlotConnections m_signalSlotConnections; // keep track of established connections
             boost::mutex m_signalSlotConnectionsMutex;
 
-            bool m_connectionInjected;
             karabo::net::JmsConnection::Pointer m_connection;
             karabo::net::JmsProducer::Pointer m_producerChannel;
             karabo::net::JmsConsumer::Pointer m_consumerChannel;
             karabo::net::JmsProducer::Pointer m_heartbeatProducerChannel;
             karabo::net::JmsConsumer::Pointer m_heartbeatConsumerChannel;
-
-            boost::mutex m_waitMutex;
-            boost::condition_variable m_hasNewEvent;
-
-            typedef std::pair<karabo::util::Hash::Pointer /*header*/, karabo::util::Hash::Pointer /*body*/> Event;
-            std::deque<Event> m_eventQueue;
-            boost::mutex m_eventQueueMutex;
-
-            bool m_runEventLoop;
-            boost::thread_group m_eventLoopThreads;
 
             int m_randPing;
 
@@ -533,32 +515,27 @@ namespace karabo {
             Replies m_replies;
             mutable boost::mutex m_replyMutex;
 
-
+            typedef std::pair<karabo::util::Hash::Pointer /*header*/, karabo::util::Hash::Pointer /*body*/> Event;
             typedef std::map<std::string, Event > ReceivedReplies;
             ReceivedReplies m_receivedReplies;
             mutable boost::mutex m_receivedRepliesMutex;
-
 
             typedef std::map<std::string, boost::shared_ptr<BoostMutexCond> > ReceivedRepliesBMC;
             ReceivedRepliesBMC m_receivedRepliesBMC;
             mutable boost::mutex m_receivedRepliesBMCMutex;
 
             karabo::util::Hash m_emitFunctions;
-            std::vector<boost::any> m_slots;            
+            std::vector<boost::any> m_slots;
 
             karabo::util::Hash m_trackedInstances;
-            bool m_trackAllInstances;
-            int m_heartbeatInterval;
+            bool m_trackAllInstances = false;
+            int m_heartbeatInterval = 10;
 
             mutable boost::mutex m_trackedInstancesMutex;
 
-            boost::thread m_trackingThread;
-            bool m_doTracking;
-
-            boost::thread m_heartbeatThread;
-            bool m_sendHeartbeats;
-
-            boost::thread m_brokerThread;
+            boost::asio::deadline_timer m_trackingTimer;
+            boost::asio::deadline_timer m_heartbeatTimer;
+            boost::asio::deadline_timer m_performanceTimer;
 
             std::vector<std::pair<std::string, karabo::util::Hash> > m_availableInstances;
 
@@ -577,7 +554,7 @@ namespace karabo {
             static std::map<std::string, SignalSlotable*> m_instanceMap;
             static boost::mutex m_instanceMapMutex;
 
-            bool m_discoverConnectionResourcesMode;
+            bool m_discoverConnectionResourcesMode = false;
             static std::map<std::string, std::string> m_connectionStrings;
             static boost::mutex m_connectionStringsMutex;
 
@@ -588,31 +565,17 @@ namespace karabo {
 
         protected: // Functions
 
-            void startEmittingHeartbeats(const int heartbeatInterval);
+            void startEmittingHeartbeats();
 
             void stopEmittingHearbeats();
 
-            void startBrokerMessageConsumption();
+            void onBrokerMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
-            void stopBrokerMessageConsumption();
-
-            void injectEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+            void onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
-            void injectHeartbeat(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
-
-            bool eventQueueIsEmpty();
-
-            bool tryToPopEvent(Event& event);
-
-            void processEvents();
-
-            bool heartbeatQueueIsEmpty();
-
-            bool tryToPopHeartbeat(Event& event);
-
-            void processHeartbeats();
+            void processEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             /**
              * Parses out the instanceId part of signalId or slotId
@@ -678,13 +641,9 @@ namespace karabo {
              */
             void storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance);
 
-            void _runEventLoop();
-
-            void _runHeartbeatLoop();
-
             void sanifyInstanceId(std::string& instanceId) const;
 
-            std::pair<bool, std::string> isValidInstanceId(const std::string& instanceId);
+            void ensureInstanceIdIsValid(const std::string& instanceId);
 
             void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
@@ -700,7 +659,7 @@ namespace karabo {
 
             void sendErrorHappenedReply(const karabo::util::Hash& header, const std::string& errorMesssage);
 
-            void emitHeartbeat();
+            void emitHeartbeat(const boost::system::error_code& e);
 
             void registerDefaultSignalsAndSlots();
 
@@ -721,6 +680,12 @@ namespace karabo {
             void startTrackingSystem();
 
             void stopTrackingSystem();
+
+            void startPerformanceMonitor();
+
+            void stopPerformanceMonitor();
+
+            void updatePerformanceStatistics(const boost::system::error_code& e);
 
             bool tryToConnectToSignal(const std::string& signalInstanceId, const std::string& signalFunction,
                                       const std::string& slotInstanceId, const std::string& slotFunction);
@@ -761,10 +726,9 @@ namespace karabo {
             void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval,
                                const karabo::util::Hash& instanceInfo);
 
-            void letInstanceSlowlyDieWithoutHeartbeat();
+            void letInstanceSlowlyDieWithoutHeartbeat(const boost::system::error_code& e);
 
             void decreaseCountdown(std::vector<std::pair<std::string, karabo::util::Hash> >& deadOnes);
-
 
             // Thread safe
             void addTrackedInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
@@ -787,8 +751,6 @@ namespace karabo {
 
             // IO channel related
             karabo::util::Hash slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
-
-            static int godEncode(const std::string& password);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             bool hasSlot(const std::string& slotFunction) const;
@@ -857,8 +819,7 @@ namespace karabo {
             };
 
             mutable boost::mutex m_latencyMutex;
-            LatencyStats m_brokerLatency; // all in milliseconds
-            LatencyStats m_processingLatency; // dito
+            LatencyStats m_processingLatency; // measurements in milliseconds
 
         };
 

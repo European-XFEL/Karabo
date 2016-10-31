@@ -41,8 +41,6 @@ namespace karabo {
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
 
-            typedef std::map<std::string, boost::thread*> DeviceInstanceMap;
-
             krb_log4cpp::Category* m_log;
             karabo::log::Logger::Pointer m_logger;
 
@@ -57,7 +55,8 @@ namespace karabo {
             bool m_scanPlugins;
 
             karabo::util::Hash m_availableDevices;
-            boost::thread_group m_deviceThreads;
+
+            typedef std::map<std::string, boost::shared_ptr<BaseDevice> > DeviceInstanceMap;
             DeviceInstanceMap m_deviceInstanceMap;
             boost::mutex m_deviceInstanceMutex;
             std::map<std::string, unsigned int> m_deviceInstanceCount;
@@ -66,8 +65,6 @@ namespace karabo {
             karabo::net::JmsConnection::Pointer m_connection;
 
             std::string m_serverId;
-
-            int m_heartbeatIntervall;
 
         public:
 
@@ -80,9 +77,9 @@ namespace karabo {
             DeviceServer(const karabo::util::Hash&);
 
             virtual ~DeviceServer();
-            
-            void run();
-            
+
+            void start();
+
             bool isRunning() const;
 
             bool isDebugMode();
@@ -164,7 +161,7 @@ namespace karabo {
 
             krb_log4cpp::Category& log();
 
-            void registerAndConnectSignalsAndSlots();
+            void registerSlots();
 
             void updateAvailableDevices();
 

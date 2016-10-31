@@ -101,9 +101,7 @@ namespace karabo {
 
             boost::weak_ptr<karabo::xms::SignalSlotable> m_signalSlotable;
 
-            bool m_isShared;
-
-            boost::thread m_eventThread;
+            bool m_isShared;           
 
             InstanceUsage m_instanceUsage;
 
