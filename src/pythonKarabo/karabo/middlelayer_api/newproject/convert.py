@@ -7,8 +7,9 @@ def convert_old_project(old_project):
     object which is equivalent.
     """
     project = ProjectModel(
+        simple_name=old_project.name,
         devices=_convert_devices(old_project.devices),
-        macros=old_project.macros,
+        macros=_convert_macros(old_project.macros),
         scenes=_convert_scenes(old_project, old_project.scenes),
     )
 
@@ -37,6 +38,15 @@ def _convert_devices(devices):
     return ret_devices
 
 
+def _convert_macros(macros):
+    """ Fill in the ``simple_name`` trait of MacroModel instances
+    """
+    for model in macros:
+        model.simple_name = model.title
+
+    return macros
+
+
 def _convert_scenes(project, scenes):
     """ Fill in the icon data for a list of scenes read from an old project.
     """
@@ -60,5 +70,7 @@ def _convert_scenes(project, scenes):
     for model in scenes:
         # Recursively set all icon model data
         _update_icon_model(model)
+        # Move the old filename to the `simple_name` trait
+        model.simple_name = model.title
 
     return scenes
