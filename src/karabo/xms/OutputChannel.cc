@@ -115,8 +115,9 @@ namespace karabo {
         }
 
 
-        void OutputChannel::setInstanceId(const std::string& instanceId) {
+        void OutputChannel::setInstanceIdAndName(const std::string& instanceId, const std::string& name) {
             m_instanceId = instanceId;
+            m_channelName = name;
         }
 
 
@@ -713,5 +714,17 @@ namespace karabo {
             return std::string((("OUTPUT " + util::toString(m_channelId) += " of '") += this->getInstanceId()) += "'");
         }
 
+        void OutputChannel::write(const karabo::util::Hash& data,  const OutputChannel::MetaData& metaData) {
+            if (metaData.isDefaultInitialized()){
+                OutputChannel::MetaData m(/*source*/ m_instanceId+"/"+m_channelName, /*timestamp*/ karabo::util::Timestamp());
+                Memory::write(data, m_channelId, m_chunkId, m);
+            } else {
+                Memory::write(data, m_channelId, m_chunkId, metaData);
+            }
+        }
+
+        void OutputChannel::write(const karabo::util::Hash::Pointer& data,  const OutputChannel::MetaData& metaData) {
+            write(*data, metaData);
+        }
     }
 }

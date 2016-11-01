@@ -1707,7 +1707,7 @@ namespace karabo {
             Hash channelConfig = config.get<Hash>(channelName);
             if (channelConfig.has("schema")) channelConfig.erase("schema");
             OutputChannel::Pointer channel = Configurator<OutputChannel>::create("OutputChannel", channelConfig);
-            channel->setInstanceId(m_instanceId);
+            channel->setInstanceIdAndName(m_instanceId, channelName);
             if (onOutputPossibleHandler) {
                 channel->registerIOEventHandler(onOutputPossibleHandler);
             }
@@ -1776,12 +1776,12 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::dataHandlerWrap(const DataHandler& handler, const karabo::util::Hash& data) {
+        void SignalSlotable::dataHandlerWrap(const DataHandler& handler, const karabo::util::Hash& data, const InputChannel::MetaData& metaData) {
             try {
                 // Make sure that SignalSlotable shared pointer can be built...  if not the we get exception
                 SignalSlotable::Pointer self = shared_from_this();
                 // call user callback
-                handler(data);
+                handler(data, metaData);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_INFO << "\"dataHandlerWrap\" call is too late: Device is destroyed already -- " << e.what();
             }
@@ -1789,7 +1789,7 @@ namespace karabo {
 
 
         void SignalSlotable::registerDataHandler(const std::string& channelName, const DataHandler& handler) {
-            getInputChannel(channelName)->registerDataHandler(boost::bind(&SignalSlotable::dataHandlerWrap, this, handler, _1));
+            getInputChannel(channelName)->registerDataHandler(boost::bind(&SignalSlotable::dataHandlerWrap, this, handler, _1, _2));
         }
 
 
