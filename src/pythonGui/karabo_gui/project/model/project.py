@@ -40,7 +40,7 @@ class ProjectModelItem(BaseProjectTreeItem):
         return menu
 
     def create_qt_item(self):
-        item = QStandardItem('Project: {}'.format(self.model.simple_name))
+        item = QStandardItem(self.model.simple_name)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         item.setIcon(icons.folder)
         item.setEditable(False)
