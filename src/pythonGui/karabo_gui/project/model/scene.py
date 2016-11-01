@@ -37,7 +37,7 @@ class SceneModelItem(BaseProjectTreeItem):
         return menu
 
     def create_qt_item(self):
-        item = QStandardItem(self.model.title)
+        item = QStandardItem(self.model.simple_name)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         item.setIcon(icons.image)
         item.setEditable(False)

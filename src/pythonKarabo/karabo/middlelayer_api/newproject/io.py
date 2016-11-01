@@ -96,6 +96,7 @@ def _db_metadata_reader(metadata):
     attrs = {
         'revision': int(metadata['revision']),
         'uuid': metadata['uuid'],
+        'simple_name': metadata['simple_name'],
         'db_attrs': {k: metadata.get(k, '') for k in ('key', 'path')},
     }
     return attrs
@@ -170,6 +171,7 @@ def _model_db_metadata(model):
     attrs = model.db_attrs.copy()
     attrs['uuid'] = model.uuid
     attrs['revision'] = str(model.revision)
+    attrs['simple_name'] = model.simple_name
     return attrs
 
 

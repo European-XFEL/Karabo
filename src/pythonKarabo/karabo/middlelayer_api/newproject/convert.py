@@ -7,8 +7,9 @@ def convert_old_project(old_project):
     object which is equivalent.
     """
     project = ProjectModel(
+        simple_name=old_project.name,
         devices=_convert_devices(old_project.devices),
-        macros=old_project.macros,
+        macros=_convert_macros(old_project.macros),
         scenes=_convert_scenes(old_project, old_project.scenes),
     )
 
@@ -35,6 +36,15 @@ def _convert_devices(devices):
         )
         ret_devices.append(model)
     return ret_devices
+
+
+def _convert_macros(macros):
+    """ Fill in the ``simple_name`` trait of MacroModel instances
+    """
+    for model in macros:
+        model.simple_name = model.title
+
+    return macros
 
 
 def _convert_scenes(project, scenes):
