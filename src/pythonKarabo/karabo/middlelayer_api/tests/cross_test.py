@@ -161,7 +161,10 @@ class Tests(DeviceTest):
         # This is the first history request ever, so it returns an empty
         # list (see https://in.xfel.eu/redmine/issues/9414).
         yield from getHistory(
-            "middlelayerDevice", before.isoformat(), after.isoformat()).value
+            "middlelayerDevice.value", before.isoformat(), after.isoformat())
+        yield from getHistory(
+            "middlelayerDevice.child.number", before.isoformat(),
+            after.isoformat())
 
         # We have to write another value to close the first archive file :-(...
         self.device.value = 4
