@@ -29,6 +29,9 @@ def test_find_parent_project():
     parent = find_parent_project(parentless, proj)
     assert parent is None
 
+    parent = find_parent_project(proj, proj)
+    assert parent is None
+
 
 def test_find_parent_project_degenerate():
     dev0 = DeviceConfigurationModel()
