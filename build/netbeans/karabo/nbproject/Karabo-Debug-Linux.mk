@@ -47,6 +47,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o \
 	${OBJECTDIR}/_ext/1423485062/ProjectManager.o \
 	${OBJECTDIR}/_ext/1423485062/PropertyTest.o \
+	${OBJECTDIR}/_ext/1423485062/RunConfigurationGroup.o \
+	${OBJECTDIR}/_ext/1423485062/RunConfigurator.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/CppInputHandler.o \
@@ -248,6 +250,16 @@ ${OBJECTDIR}/_ext/1423485062/PropertyTest.o: ../../../src/karabo/devices/Propert
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/PropertyTest.o ../../../src/karabo/devices/PropertyTest.cc
+
+${OBJECTDIR}/_ext/1423485062/RunConfigurationGroup.o: ../../../src/karabo/devices/RunConfigurationGroup.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/RunConfigurationGroup.o ../../../src/karabo/devices/RunConfigurationGroup.cc
+
+${OBJECTDIR}/_ext/1423485062/RunConfigurator.o: ../../../src/karabo/devices/RunConfigurator.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/RunConfigurator.o ../../../src/karabo/devices/RunConfigurator.cc
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o: ../../../src/karabo/io/BinaryFileInput.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -1222,6 +1234,32 @@ ${OBJECTDIR}/_ext/1423485062/PropertyTest_nomain.o: ${OBJECTDIR}/_ext/1423485062
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/PropertyTest_nomain.o ../../../src/karabo/devices/PropertyTest.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/PropertyTest.o ${OBJECTDIR}/_ext/1423485062/PropertyTest_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1423485062/RunConfigurationGroup_nomain.o: ${OBJECTDIR}/_ext/1423485062/RunConfigurationGroup.o ../../../src/karabo/devices/RunConfigurationGroup.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1423485062/RunConfigurationGroup.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/RunConfigurationGroup_nomain.o ../../../src/karabo/devices/RunConfigurationGroup.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1423485062/RunConfigurationGroup.o ${OBJECTDIR}/_ext/1423485062/RunConfigurationGroup_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1423485062/RunConfigurator_nomain.o: ${OBJECTDIR}/_ext/1423485062/RunConfigurator.o ../../../src/karabo/devices/RunConfigurator.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1423485062/RunConfigurator.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/RunConfigurator_nomain.o ../../../src/karabo/devices/RunConfigurator.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1423485062/RunConfigurator.o ${OBJECTDIR}/_ext/1423485062/RunConfigurator_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o ../../../src/karabo/io/BinaryFileInput.cc 

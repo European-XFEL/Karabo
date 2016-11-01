@@ -45,6 +45,7 @@ TESTFILES= \
 	${TESTDIR}/TestFiles/devicelocking_test \
 	${TESTDIR}/TestFiles/pipelinedprocessing_test \
 	${TESTDIR}/TestFiles/property_test \
+	${TESTDIR}/TestFiles/f6 \
 	${TESTDIR}/TestFiles/runtimeschemaattributes_test
 
 # C Compiler Flags
@@ -91,6 +92,10 @@ ${TESTDIR}/TestFiles/pipelinedprocessing_test: ${TESTDIR}/_ext/567603001/P2PSend
 ${TESTDIR}/TestFiles/property_test: ${TESTDIR}/_ext/567603001/PropertyTest_Test.o ${TESTDIR}/_ext/567603001/integrationRunner_2.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/property_test $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
+
+${TESTDIR}/TestFiles/f6: ${TESTDIR}/_ext/567603001/DeviceServerRunner_Test.o ${TESTDIR}/_ext/567603001/RunConfigurationGroup_Test.o ${TESTDIR}/_ext/567603001/integrationRunner_6.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${TESTDIR}/TestFiles
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f6 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
 ${TESTDIR}/TestFiles/runtimeschemaattributes_test: ${TESTDIR}/_ext/567603001/AlarmTesterDevice_3.o ${TESTDIR}/_ext/567603001/RunTimeSchemaAttributes_Test.o ${TESTDIR}/_ext/567603001/TcpAdapter_3.o ${TESTDIR}/_ext/567603001/integrationRunner_3.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
@@ -175,6 +180,24 @@ ${TESTDIR}/_ext/567603001/integrationRunner_2.o: ../../../src/integrationTests/i
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/integrationRunner_2.o ../../../src/integrationTests/integrationRunner_2.cc
 
 
+${TESTDIR}/_ext/567603001/DeviceServerRunner_Test.o: ../../../src/integrationTests/DeviceServerRunner_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/567603001
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/DeviceServerRunner_Test.o ../../../src/integrationTests/DeviceServerRunner_Test.cc
+
+
+${TESTDIR}/_ext/567603001/RunConfigurationGroup_Test.o: ../../../src/integrationTests/RunConfigurationGroup_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/567603001
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/RunConfigurationGroup_Test.o ../../../src/integrationTests/RunConfigurationGroup_Test.cc
+
+
+${TESTDIR}/_ext/567603001/integrationRunner_6.o: ../../../src/integrationTests/integrationRunner_6.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/567603001
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/integrationRunner_6.o ../../../src/integrationTests/integrationRunner_6.cc
+
+
 ${TESTDIR}/_ext/567603001/AlarmTesterDevice_3.o: ../../../src/integrationTests/AlarmTesterDevice_3.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/567603001
 	${RM} "$@.d"
@@ -207,6 +230,7 @@ ${TESTDIR}/_ext/567603001/integrationRunner_3.o: ../../../src/integrationTests/i
 	    ${TESTDIR}/TestFiles/devicelocking_test || true; \
 	    ${TESTDIR}/TestFiles/pipelinedprocessing_test || true; \
 	    ${TESTDIR}/TestFiles/property_test || true; \
+	    ${TESTDIR}/TestFiles/f6 || true; \
 	    ${TESTDIR}/TestFiles/runtimeschemaattributes_test || true; \
 	else  \
 	    ./${TEST} || true; \

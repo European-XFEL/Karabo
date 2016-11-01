@@ -335,6 +335,8 @@ namespace karabo {
 
             const OutputChannel::Pointer& getOutputChannel(const std::string& name);
 
+            std::vector<std::string> getOutputChannelNames() const;
+
             const InputChannel::Pointer& getInputChannel(const std::string& name);
 
             void registerInputHandler(const std::string& channelName, const InputHandler& handler);
@@ -831,6 +833,8 @@ namespace karabo {
 
             bool tryToCallP2P(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header,
                               const karabo::util::Hash::Pointer& body, int prio) const;
+
+            std::vector<std::string> slotGetOutputChannelNames();
 
             // TODO This is a helper function during multi-topic refactoring
             void setTopic(const std::string& topic = "");

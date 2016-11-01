@@ -156,6 +156,14 @@ namespace karabo {
                         .initialValue(Device::classInfo().getClassId())
                         .commit();
 
+                STRING_ELEMENT(expected).key("classVersion")
+                        .displayedName("Class version")
+                        .description("The version of the class of this device defined in KARABO_CLASSINFO")
+                        .expertAccess()
+                        .readOnly()
+                        .initialValue(Device::classInfo().getVersion())
+                        .commit();
+
                 STRING_ELEMENT(expected).key("serverId")
                         .displayedName("ServerID")
                         .description("The device-server on which this device is running on")
