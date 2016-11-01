@@ -11,7 +11,7 @@ from traits.api import Callable, Dict, Instance, List, String
 from karabo.common.project.api import ProjectModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
-from .base import BaseProjectTreeItem
+from .bases import BaseProjectTreeItem
 
 
 class ProjectSubgroupItem(BaseProjectTreeItem):
