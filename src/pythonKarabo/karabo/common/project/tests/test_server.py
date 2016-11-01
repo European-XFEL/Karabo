@@ -1,0 +1,55 @@
+from karabo.common.project.api import (
+    DeviceInstanceModel, DeviceServerModel, ProjectObjectReference,
+    read_device_server, write_device_server)
+from karabo.testing.utils import temp_xml_file, xml_is_equal
+
+UUID = 'c43e5c53-bea4-4e9e-921f-042b52e58f4c'
+SERVER_XML = """
+<device_server server_id='testServer'>
+    <device instance_id='fooDevice' if_exists='ignore'>
+        <config uuid='{uuid}' revision='0'/>
+    </device>
+    <device instance_id='barDevice' if_exists='restart'>
+        <config uuid='{uuid}' revision='1'/>
+        <config uuid='{uuid}' revision='2'/>
+    </device>
+</device_server>
+""".format(uuid=UUID)
+
+
+def test_reading():
+    with temp_xml_file(SERVER_XML) as fn:
+        server = read_device_server(fn)
+
+    assert server.server_id == 'testServer'
+    assert len(server.devices) == 2
+
+    dev0 = server.devices[0]
+    assert dev0.instance_id == 'fooDevice'
+    assert dev0.if_exists == 'ignore'
+    assert len(dev0.config_refs) == 1
+    assert dev0.config_refs[0].revision == 0
+    assert dev0.config_refs[0].uuid == UUID
+
+    dev1 = server.devices[1]
+    assert dev1.instance_id == 'barDevice'
+    assert dev1.if_exists == 'restart'
+    assert len(dev1.config_refs) == 2
+    assert dev1.config_refs[0].revision == 1
+    assert dev1.config_refs[0].uuid == UUID
+    assert dev1.config_refs[1].revision == 2
+    assert dev1.config_refs[1].uuid == UUID
+
+
+def test_writing():
+    ref0 = ProjectObjectReference(uuid=UUID, revision=0)
+    ref1 = ProjectObjectReference(uuid=UUID, revision=1)
+    ref2 = ProjectObjectReference(uuid=UUID, revision=2)
+    foo = DeviceInstanceModel(instance_id='fooDevice', if_exists='ignore',
+                              config_refs=[ref0])
+    bar = DeviceInstanceModel(instance_id='barDevice', if_exists='restart',
+                              config_refs=[ref1, ref2])
+    server = DeviceServerModel(server_id='testServer', devices=[foo, bar])
+
+    xml = write_device_server(server)
+    assert xml_is_equal(SERVER_XML, xml)
