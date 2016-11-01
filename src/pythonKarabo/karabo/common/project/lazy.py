@@ -7,28 +7,14 @@ from io import BytesIO
 
 from traits.api import Instance, List
 
-from .bases import BaseProjectObjectModel
+from .bases import BaseProjectObjectModel, ProjectObjectReference
 from .const import PROJECT_OBJECT_CATEGORIES
 from .model import ProjectModel
-from .server import DeviceServerModel
-
-
-class ProjectObjectReference(BaseProjectObjectModel):
-    """ A project object refence that can be transformed into a proper model
-    object at a later point in time.
-    """
-
-
-class LazyDeviceServerModel(BaseProjectObjectModel):
-    """ A device server with object references which must be later resolved.
-    """
-    devices = List(Instance(ProjectObjectReference))
 
 
 class LazyProjectModel(BaseProjectObjectModel):
     """ A project filled with object references which must be later resolved.
     """
-    devices = List(Instance(ProjectObjectReference))
     macros = List(Instance(ProjectObjectReference))
     scenes = List(Instance(ProjectObjectReference))
     servers = List(Instance(ProjectObjectReference))
@@ -67,7 +53,6 @@ def read_lazy_object(uuid, revision, db_adapter, reader_func):
 
 def _get_lazy_traits(lazy_object):
     klass_map = {
-        LazyDeviceServerModel: ('devices',),
         LazyProjectModel: PROJECT_OBJECT_CATEGORIES,
     }
     return klass_map.get(lazy_object.__class__, ())
@@ -75,7 +60,6 @@ def _get_lazy_traits(lazy_object):
 
 def _get_normal_object(lazy_object):
     klass_map = {
-        LazyDeviceServerModel: DeviceServerModel,
         LazyProjectModel: ProjectModel,
     }
     klass = klass_map.get(lazy_object.__class__)
