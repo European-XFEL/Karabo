@@ -166,16 +166,16 @@ class Tests(DeviceTest):
 
         after = datetime.now()
 
-        history1 = yield from getHistory(
+        old_history = yield from getHistory(
             "middlelayerDevice", before.isoformat(), after.isoformat()).value
-        history2 = yield from getHistory(
+        str_history = yield from getHistory(
             "middlelayerDevice.value", before.isoformat(), after.isoformat())
         device = yield from getDevice("middlelayerDevice")
-        history3 = yield from getHistory(
+        proxy_history = yield from getHistory(
             device.value, before.isoformat(), after.isoformat())
 
 
-        for history in history1, history2, history3:
+        for history in old_history, str_history, proxy_history:
             self.assertEqual([h for _, _, _, h in history[-5:]], list(range(5)))
 
         yield from get_event_loop().instance()._ss.request(
