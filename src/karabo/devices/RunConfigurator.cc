@@ -491,15 +491,18 @@ namespace karabo {
                 if (inUse) {
                     Hash properties;
                     // It was decided not to send all properties to the PCLayer.
-                    // The call to 'getDataSourceSchemaAsHash()' will be done by PCLayer
-                    int access = 0;
-                    if (behavior == "record-all") access = INIT|READ|WRITE;
-                    else if (behavior == "read-only") access = INIT|READ;
-                    else access = INIT;
-                    remote().getDataSourceSchemaAsHash(dataSourceId, properties, access);
+                    // The call to 'getDataSourceSchemaAsHash()' will be done by PCLayer software like ...
+                    //----------------------------------------------------------------------
+                    //int access = 0;
+                    //if (behavior == "record-all") access = INIT|READ|WRITE;
+                    //else if (behavior == "read-only") access = INIT|READ;
+                    //else access = INIT;
+                    //remote().getDataSourceSchemaAsHash(dataSourceId, properties, access);
+                    //----------------------------------------------------------------------
+                    // The PCLayer software may call this many times ...
 
-                    // Instead just send a stub
-                    //properties.set(dataSourceId, Hash());
+                    // Instead here we just send a stub ("data source" granularity level)
+                    properties.set(dataSourceId, Hash());
 
                     properties.setAttribute(dataSourceId, "configurationGroupId", groupId);
                     properties.setAttribute(dataSourceId, "pipeline", pipelineFlag);
