@@ -78,7 +78,7 @@ class ProjectPanel(Dockable, QWidget):
             if item is not None:
                 cache = get_user_cache()
                 model = read_lazy_object(item, 0, cache, read_project_model)
-                self.project_view.model().root_project = model
+                self.project_view.model().traits_data_model = model
 
 
 def _project_new_handler():

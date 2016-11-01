@@ -36,7 +36,7 @@ class ProjectView(QTreeView):
     def destroy(self):
         """ Do some cleanup of the project's objects before death.
         """
-        self.model().root_project = None
+        self.model().traits_data_model = None
 
     # ----------------------------
     # Private methods
@@ -47,7 +47,7 @@ class ProjectView(QTreeView):
         def _parent_project(model):
             if isinstance(model, ProjectItemModel):
                 return model.model
-            root_project = self.model().root_project
+            root_project = self.model().traits_data_model
             return find_parent_project(model.model, root_project)
 
         indices = self.selectionModel().selectedIndexes()

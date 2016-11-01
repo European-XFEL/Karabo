@@ -24,13 +24,13 @@ class ProjectItemModel(QStandardItemModel):
         self.setHorizontalHeaderLabels(["Projects"])
 
     @property
-    def root_project(self):
+    def traits_data_model(self):
         """ Return the project object at the root of the hierarchy
         """
         return self._traits_model
 
-    @root_project.setter
-    def root_project(self, model):
+    @traits_data_model.setter
+    def traits_data_model(self, model):
         """ Set the ProjectModel instance that we're presenting to Qt
         """
         # Clean up any previously created shadow models
