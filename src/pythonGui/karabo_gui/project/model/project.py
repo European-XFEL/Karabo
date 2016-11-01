@@ -12,7 +12,7 @@ from traits.api import Instance, List
 from karabo.common.project.api import ProjectModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
-from .base import BaseProjectTreeItem
+from .bases import BaseProjectTreeItem
 from .project_groups import ProjectSubgroupItem
 
 
