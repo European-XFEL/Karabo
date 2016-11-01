@@ -1597,7 +1597,7 @@ if (nodeData) {\
         }
 
 
-        void DeviceClient::filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema, int accessMode, karabo::util::Hash& hash) {
+        void DeviceClient::filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema, int accessMode, karabo::util::Hash& hash) const {
 
             // Find the lastkey of the "Base class" schema
             string lastkey = "";
@@ -1636,7 +1636,7 @@ if (nodeData) {\
         }
 
 
-        void DeviceClient::convertSchemaHash(const karabo::util::Hash& schemaHash, int requestedAccessMode, karabo::util::Hash & hash) {
+        void DeviceClient::convertSchemaHash(const karabo::util::Hash& schemaHash, int requestedAccessMode, karabo::util::Hash & hash) const {
 
             vector<string> params;
             schemaHash.getPaths(params);
