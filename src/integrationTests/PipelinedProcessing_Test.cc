@@ -20,7 +20,6 @@ PipelinedProcessing_Test::PipelinedProcessing_Test() {
 
 
 void PipelinedProcessing_Test::setUp() {
-
     Hash config("DeviceServer", Hash("serverId", "testServerPP", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
     m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
     m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
@@ -98,8 +97,18 @@ void PipelinedProcessing_Test::testPipe() {
 
     // And poll for the correct answer
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("pipeTestReceiver", "nTotalData", 5, KRB_TEST_MAX_TIMEOUT));
-}
+    
+    // Test if data source was correctly passed
+    std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >("pipeTestReceiver", "dataSources");
+    CPPUNIT_ASSERT(sources[0] == "p2pTestSender/output1");
+    
+    // This only can be tested if we used an input handler and not onData
+    if (!m_deviceClient->get<bool>("pipeTestReceiver", "onData")) {
+        std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >("pipeTestReceiver", "dataSourcesFromIndex");
+        CPPUNIT_ASSERT(sources[0] == "p2pTestSender/output1");
+    }
 
+}
 
 template <typename T>
 bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId,

@@ -228,13 +228,15 @@ namespace karathon {
 
 
     void InputChannelWrap::registerDataHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
-        self->registerDataHandler(boost::bind(InputChannelWrap::proxyDataHandler, handler, _1));
+        self->registerDataHandler(boost::bind(InputChannelWrap::proxyDataHandler, handler, _1, _2));
     }
 
 
-    void InputChannelWrap::proxyDataHandler(const bp::object& handler, const karabo::util::Hash& data) {
+    void InputChannelWrap::proxyDataHandler(const bp::object& handler, const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
+        //write now this only exposes source
+        const karabo::util::Hash mdHash("source", meta.getSource());
         ScopedGILAcquire gil;
-        handler(bp::object(data));
+        handler(bp::object(data), bp::object(mdHash));
     }
 
 
@@ -274,6 +276,18 @@ namespace karathon {
     void InputChannelWrap::disconnectPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const karabo::util::Hash& outputChannelInfo) {
         ScopedGILRelease nogil;
         self->disconnect(outputChannelInfo);
+    }
+    
+    bp::object InputChannelWrap::getMetaData(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
+        auto ret = boost::make_shared<std::vector<karabo::util::Hash> >();
+        {
+            ScopedGILRelease nogil;
+            std::vector<karabo::xms::InputChannel::MetaData> md = self->getMetaData();
+            for(auto it = md.begin(); it != md.end(); ++it){
+                ret->push_back(*reinterpret_cast<karabo::util::Hash*>(&*it));
+            }
+        }
+        return bp::object(ret);
     }
 
 }
@@ -416,7 +430,7 @@ void exportPyXmsInputOutputChannel() {
     {
         bp::class_<karabo::xms::OutputChannel, boost::shared_ptr<karabo::xms::OutputChannel>, boost::noncopyable >("OutputChannel", bp::no_init)
 
-                .def("setInstanceId", &karabo::xms::OutputChannel::setInstanceId, (bp::arg("instanceId")))
+                .def("setInstanceIdAndName", &karabo::xms::OutputChannel::setInstanceIdAndName, (bp::arg("instanceId"), bp::arg("name")))
 
                 .def("getInstanceId", &karabo::xms::OutputChannel::getInstanceId, bp::return_value_policy<bp::copy_const_reference > ())
 
@@ -499,6 +513,8 @@ void exportPyXmsInputOutputChannel() {
                     , (bp::arg("outputChannelInfo")))
 
                 .def("canCompute", &karabo::xms::InputChannel::canCompute)
+        
+                .def("getMetaData", &karathon::InputChannelWrap().getMetaData)
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::InputChannel)
                 ;
