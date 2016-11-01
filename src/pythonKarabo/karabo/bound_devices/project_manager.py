@@ -1,4 +1,4 @@
-from karabo.bound import (BOOL_ELEMENT, Hash, KARABO_CLASSINFO,
+from karabo.bound import (AccessLevel, BOOL_ELEMENT, Hash, KARABO_CLASSINFO,
                           launchPythonDevice, OVERWRITE_ELEMENT, PythonDevice,
                           SLOT_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT)
 from karabo.common.states import State
@@ -10,7 +10,7 @@ def dictToHash(d):
     h = Hash()
     for k, v in d.items():
         if isinstance(v, dict):
-            h.set(k,dictToHash(v))
+            h.set(k, dictToHash(v))
         elif isinstance(v, (list, tuple)):
             if len(v) > 0 and isinstance(v[0], dict):
                 h.set(k, [dictToHash(vv) for vv in v])
@@ -20,17 +20,20 @@ def dictToHash(d):
             h.set(k, v)
     return h
 
+
 @KARABO_CLASSINFO("ProjectManager", "2.0")
 class ProjectManager(PythonDevice):
-
-    db = None
 
     @staticmethod
     def expectedParameters(expected):
 
         (
+            OVERWRITE_ELEMENT(expected).key('deviceId')
+                .setNewDefaultValue("ProjectService")
+                .commit()
+            ,
             OVERWRITE_ELEMENT(expected).key('visibility')
-                .setNewDefaultValue(4)
+                .setNewDefaultValue(AccessLevel.ADMIN)
                 .commit()
             ,
             STRING_ELEMENT(expected).key('host')
@@ -78,7 +81,7 @@ class ProjectManager(PythonDevice):
         self.registerSlot(self.slotLoadItemsAndSubs)
         self.registerSlot(self.slotGetVersionInfo)
         self.registerInitialFunction(self.initialization)
-
+        self.db = None
 
     def initialization(self):
         """
@@ -132,7 +135,7 @@ class ProjectManager(PythonDevice):
         self.db = None
 
         self.log.DEBUG("Ended user session")
-        
+
     def _checkDbInitialized(self):
         if self.db is None:
             raise RuntimeError("You need to init a database session first")
@@ -140,7 +143,7 @@ class ProjectManager(PythonDevice):
     def slotSaveItems(self, items):
         """
         Save items in project database
-        :param items: items to be save.Shoudl be a list(Hash) object were each
+        :param items: items to be save. Should be a list(Hash) object were each
                       entry is of the form:
 
                       - xml: xml of item
@@ -150,11 +153,13 @@ class ProjectManager(PythonDevice):
                       - domain: to write to
 
         :raises: `ProjectDBError` in case of database (connection) problems
-                 `TypeError` in case an no type informationn or an unknown type
+                 `TypeError` in case an no type information or an unknown type
                  is found in the root element.
+                 `RuntimeError` if no database if connected.
         """
 
-        self.log.DEBUG("Saving items:{}".format([i.get("uuid") for i in items]))
+        self.log.DEBUG("Saving items: {}".format([i.get("uuid") for i in
+                                                  items]))
 
         self._checkDbInitialized()
 
@@ -165,9 +170,9 @@ class ProjectManager(PythonDevice):
                 uuid = item.get("uuid")
                 overwrite = item.get("overwrite")
                 domain = item.get("domain")
-                res = self.db.save_item(domain, uuid, xml, overwrite)
-                results.set(uuid, Hash('success', res[0],
-                                       'entry', dictToHash(res[1])))
+                success, meta = self.db.save_item(domain, uuid, xml, overwrite)
+                results.set(uuid, Hash('success', success,
+                                       'entry', dictToHash(meta)))
 
         self.reply(results)
 
@@ -187,9 +192,8 @@ class ProjectManager(PythonDevice):
                  to False
         """
 
-
         self.log.DEBUG("Loading items for domain '{}': {}".format(domain,
-                        [i.get("uuid") for i in items]))
+                       [i.get("uuid") for i in items]))
 
         self._checkDbInitialized()
 
@@ -226,7 +230,7 @@ class ProjectManager(PythonDevice):
         """
 
         self.log.DEBUG("Loading multiple for domain '{}': {}".format(domain,
-                        [i.get("uuid") for i in items]))
+                       [i.get("uuid") for i in items]))
 
         self._checkDbInitialized()
 
@@ -240,14 +244,11 @@ class ProjectManager(PythonDevice):
                 itxml = self.db.load_item(domain, uuid, revision)
                 loadedItems.set(uuid, itxml)
 
-                if itxml != "": #load succeeded check for children
+                if itxml != "":  # load succeeded check for children
                     its = self.db.load_multi(domain, itxml)
                     [loadedItems.set(k, v) for k, v in its.items()]
 
         self.reply(loadedItems)
-
-
-
 
     def slotGetVersionInfo(self, domain, items):
         """
@@ -279,12 +280,7 @@ class ProjectManager(PythonDevice):
             for item in items:
                 uuid = item.get("uuid")
                 vers = self.db.get_versioning_info_item(domain, uuid)
-                #now convert the dict into a Hash
+                # now convert the dict into a Hash
                 versionInfos.set(uuid, dictToHash(vers))
 
         self.reply(versionInfos)
-
-# This entry used by device server
-if __name__ == "__main__":
-    launchPythonDevice()
-

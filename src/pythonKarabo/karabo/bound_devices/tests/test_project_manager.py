@@ -1,25 +1,23 @@
 import os
-import sys
-from unittest import TestCase, skip
+from unittest import TestCase
 from threading import Thread
 from time import sleep
 
-from karabo.bound import EventLoop, Hash, DeviceServer, DeviceClient,\
-     SignalSlotable
+from karabo.bound import EventLoop, Hash, DeviceServer, DeviceClient
 from karabo.common.states import State
 from karabo.project_db.project_database import ProjectDatabase
 
 
 class TestProjectManager(TestCase):
-    _timeout = 60 # seconds
-    _waitTime = 2 # seconds
+    _timeout = 60   # seconds
+    _waitTime = 2   # seconds
     _retries = _timeout//_waitTime
     _user = "admin"
     _password = "karabo"
 
     def _createTestData(self):
         with ProjectDatabase(self._user, self._password, server='localhost',
-                                 test_mode=True) as db:
+                             test_mode=True) as db:
             # create a device server and multiple config entries
             xml_reps = ['<test uuid="0">foo</test>',
                         '<test uuid="1">goo</test>',
@@ -28,15 +26,14 @@ class TestProjectManager(TestCase):
 
             for i, rep in enumerate(xml_reps):
                 success, meta = db.save_item('LOCAL', 'testconfig{}'
-                                               .format(i), rep)
+                                             .format(i), rep)
                 self.assertTrue(success)
 
             # we do this twice to have revision info ready
             for i, rep in enumerate(xml_reps):
                 success, meta = db.save_item('LOCAL', 'testconfig{}'
-                                               .format(i), rep)
+                                             .format(i), rep)
                 self.assertTrue(success)
-
 
             # get version info for what we inserted
             revisions = []
@@ -66,7 +63,7 @@ class TestProjectManager(TestCase):
             # now load again
             res = db.load_multi('LOCAL', xml_serv)
             for i, x in enumerate(xml_reps):
-                if i == 3: #this one should not be in the list
+                if i == 3:   # this one should not be in the list
                     continue
                 test_xml = db._make_xml_if_needed(x)
                 res_xml = db._make_xml_if_needed(res[str(i)])
@@ -77,17 +74,16 @@ class TestProjectManager(TestCase):
 
     def _cleanDataBase(self):
         with ProjectDatabase(self._user, self._password, server='localhost',
-                                 test_mode=True) as db:
+                             test_mode=True) as db:
             path = "{}/{}".format(db.root, 'LOCAL')
             if db.dbhandle.hasCollection(path):
                 db.dbhandle.removeCollection(path)
-
 
     def setUp(self):
         # uncomment if ever needing to use local broker
         # os.environ['KARABO_BROKER'] = 'tcp://localhost:7777'
 
-        #create some test data in the database
+        # create some test data in the database
         self._createTestData()
 
         # set the plugin directory to directory of this file
@@ -95,10 +91,6 @@ class TestProjectManager(TestCase):
         # assures the the pkg_resources plugin loader will indentify
         # the test device as a valid plugin with an entry point
         self._ownDir = os.path.dirname(os.path.abspath(__file__))
-        #pluginDir = str(self._ownDir)
-        pluginDir = os.path.join(os.environ['KARABO'], 'extern',
-                                 'lib', 'python3.4', 'site-packages', 'karabo',
-                                 'bound_devices')
 
         self._eventLoopThread = Thread(target=EventLoop.work)
         self._eventLoopThread.daemon = True
@@ -107,7 +99,7 @@ class TestProjectManager(TestCase):
         config = Hash()
         config.set("serverId", "testServerProject")
 
-        config.set("pluginDirectory", pluginDir)
+        config.set("pluginDirectory", "")
         config.set("pluginNames", "")
         config.set("Logger.priority", "ERROR")
         config.set("visibility", 1)
@@ -150,13 +142,11 @@ class TestProjectManager(TestCase):
         config.set("testMode", True)
         config.set("classId", "ProjectManager")
 
-
         classConfig = Hash("classId", "ProjectManager",
                            "deviceId", "projManTest",
                            "configuration", config)
 
         self.server.instantiateDevice(classConfig)
-
 
         # wait for device to init
         state = None
@@ -174,7 +164,6 @@ class TestProjectManager(TestCase):
                     raise RuntimeError("Waiting for device to init timed out")
                 nTries += 1
 
-
     def tearDown(self):
         # TODO: properly destroy server
         # right now we let the join time out as the server does not
@@ -191,13 +180,13 @@ class TestProjectManager(TestCase):
             files = os.listdir(dir)
             for file in files:
                 if 'openMQLib.log' in file:
-                    os.remove(os.path.join(dir,file))
+                    os.remove(os.path.join(dir, file))
                 if 'device-projManTest' in file:
-                    os.remove(os.path.join(dir,file))
+                    os.remove(os.path.join(dir, file))
                 if 'karabo.log' in file:
-                    os.remove(os.path.join(dir,file))
+                    os.remove(os.path.join(dir, file))
                 if 'serverId.xml' in file:
-                    os.remove(os.path.join(dir,file))
+                    os.remove(os.path.join(dir, file))
 
         self._cleanDataBase()
 
@@ -219,10 +208,10 @@ class TestProjectManager(TestCase):
             item.set("uuid", "testdevice1")
             item.set("overwrite", False)
             item.set("domain", "LOCAL")
-            items = [item,]
+            items = [item, ]
             ret = self.server.ss.request("projManTest", "slotSaveItems",
                                          items).waitForReply(5000)
-            ret = ret[0] #returns tuple
+            ret = ret[0]  # returns tuple
             self.assertTrue(ret.has('testdevice1'))
             self.assertTrue(ret.get('testdevice1').get("success"))
 
@@ -230,7 +219,7 @@ class TestProjectManager(TestCase):
             items = [Hash("uuid", "testconfig0"), Hash("uuid", "testconfig1")]
             ret = self.server.ss.request("projManTest", "slotLoadItems",
                                          "LOCAL", items).waitForReply(5000)
-            ret = ret[0] #returns tuple
+            ret = ret[0]  # returns tuple
             self.assertTrue(ret.has('testconfig0'))
             self.assertTrue(ret.has('testconfig1'))
             cmp = 'v:path="/krb_test/LOCAL/testconfig0">foo</test>'
@@ -239,10 +228,10 @@ class TestProjectManager(TestCase):
             self.assertTrue(cmp in ret.get("testconfig1"))
 
         with self.subTest(msg="Test loading multiple data"):
-            items = [Hash("uuid", "testserver_m"),]
+            items = [Hash("uuid", "testserver_m"), ]
             ret = self.server.ss.request("projManTest", "slotLoadItemsAndSubs",
                                          "LOCAL", items).waitForReply(5000)
-            ret = ret[0] #returns tuple
+            ret = ret[0]  # returns tuple
             self.assertTrue(ret.has('testserver_m'))
             self.assertTrue(ret.has('0'))
             self.assertTrue('foo' in ret.get('0'))
@@ -252,15 +241,12 @@ class TestProjectManager(TestCase):
             self.assertTrue('hoo' in ret.get('2'))
 
         with self.subTest(msg="Test get versioning info"):
-            items = [Hash("uuid", "testserver_m"),]
+            items = [Hash("uuid", "testserver_m"), ]
             ret = self.server.ss.request("projManTest", "slotGetVersionInfo",
                                          "LOCAL", items).waitForReply(5000)
-            ret = ret[0] #returns tuple
+            ret = ret[0]  # returns tuple
             self.assertTrue(ret.has("testserver_m"))
-            document =  ret.get("testserver_m").get("document")
+            document = ret.get("testserver_m").get("document")
             self.assertEqual(document, "/db/krb_test/LOCAL/testserver_m")
             revisions = ret.get("testserver_m").get("revisions")
             self.assertGreater(len(revisions), 0)
-
-
-
