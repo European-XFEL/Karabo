@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt4.QtGui import QDialog, QStackedLayout, QWidget
 
-from .dialogs import LoadDialog, NewDialog, SaveDialog
+from .dialog.project_handle import LoadDialog, NewDialog, SaveDialog
 import karabo_gui.icons as icons
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.actions import build_qaction, KaraboAction
