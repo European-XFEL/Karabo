@@ -20,6 +20,8 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
 
     # The QStandardItem representing this object
     qt_item = Property(Instance(QStandardItem))
+    # This is where the ``qt_item`` is actually stored.
+    # The Traits property caching mechanism is explicitly being avoided here.
     _qt_item = Instance(QStandardItem, allow_none=True)
 
     @abstractmethod
@@ -45,6 +47,9 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
     def _get_qt_item(self):
         """ Traits Property getter for ``qt_item``. Caches the result of
         calling ``self.create_qt_item()`` for later access.
+
+        NOTE: The @cached_property decorator is explicitly avoided here so that
+        we maintain direct access to the cached object!
         """
         if self._qt_item is None:
             self._qt_item = self.create_qt_item()

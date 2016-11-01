@@ -12,7 +12,7 @@ from traits.api import Instance
 from karabo.common.project.api import DeviceConfigurationModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
-from .base import BaseProjectTreeItem
+from .bases import BaseProjectTreeItem
 
 
 class DeviceConfigurationModelItem(BaseProjectTreeItem):
