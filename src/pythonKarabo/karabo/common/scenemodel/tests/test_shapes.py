@@ -1,6 +1,7 @@
+from karabo.testing.utils import temp_xml_file
 from ..io import read_scene
 from ..shapes import LineModel, PathModel, RectangleModel
-from .utils import single_model_round_trip, temp_file
+from .utils import single_model_round_trip
 
 
 def _assert_base_traits(model):
@@ -65,7 +66,7 @@ def test_default_fill():
         """<svg:rect style="stroke:#000000" x="397" y="84" height="10" width="40" />"""  # noqa
         """</svg>"""
     )
-    with temp_file(SCENE_SVG) as fn:
+    with temp_xml_file(SCENE_SVG) as fn:
         scene = read_scene(fn)
     rect_model = scene.children[0]
 
@@ -78,7 +79,7 @@ def test_style_attributes_with_units():
         """<svg:line stroke="#000000" stroke-dashoffset="0.1in" stroke-width="1.0cm" x1="397" x2="489" y1="84" y2="396" />"""  # noqa
         """</svg>"""
     )
-    with temp_file(SCENE_SVG) as fn:
+    with temp_xml_file(SCENE_SVG) as fn:
         scene = read_scene(fn)
     line_model = scene.children[0]
     assert line_model.stroke_width == 35.43307
@@ -91,7 +92,7 @@ def test_alternate_style_def():
         """<svg:line style="stroke:#000000;stroke-dashoffset:0.1;stroke-miterlimit:2.0;stroke-width:1.0" x1="397" x2="489" y1="84" y2="396" />"""  # noqa
         """</svg>"""
     )
-    with temp_file(SCENE_SVG) as fn:
+    with temp_xml_file(SCENE_SVG) as fn:
         scene = read_scene(fn)
     line_model = scene.children[0]
     assert line_model.stroke == '#000000'
