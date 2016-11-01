@@ -6,13 +6,14 @@
 from functools import partial
 import weakref
 
-from PyQt4.QtGui import QAction, QMenu, QStandardItem
+from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance
 
 from karabo.common.project.api import MacroModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
-from .bases import BaseProjectTreeItem
+from ..dialog.macro_handle import MacroHandleDialog
+from .base import BaseProjectTreeItem
 
 
 class MacroModelItem(BaseProjectTreeItem):
@@ -24,6 +25,7 @@ class MacroModelItem(BaseProjectTreeItem):
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
+        edit_action.triggered.connect(self._edit_macro)
         dupe_action = QAction('Duplicate', menu)
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_macro,
@@ -49,3 +51,9 @@ class MacroModelItem(BaseProjectTreeItem):
         macro = self.model
         if macro in project.macros:
             project.macros.remove(macro)
+
+    def _edit_macro(self):
+        dialog = MacroHandleDialog(self.model)
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            self.model.simple_name = dialog.simple_name()
