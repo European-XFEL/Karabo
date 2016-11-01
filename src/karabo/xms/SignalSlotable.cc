@@ -814,6 +814,8 @@ namespace karabo {
 
             // Establishes/Releases P2P connections
             KARABO_SLOT3(slotConnectToOutputChannel, string /*inputChannelName*/, karabo::util::Hash /*outputChannelInfo */, bool /*connect/disconnect*/)
+
+            KARABO_SLOT0(slotGetOutputChannelNames)
         }
 
 
@@ -1721,6 +1723,19 @@ namespace karabo {
 
         const SignalSlotable::OutputChannels& SignalSlotable::getOutputChannels() const {
             return m_outputChannels;
+        }
+
+
+        std::vector<std::string> SignalSlotable::getOutputChannelNames() const {
+            vector<string> names;
+            for (const auto& x : m_outputChannels) names.push_back(x.first);
+            return names;
+        }
+
+
+        std::vector<std::string> SignalSlotable::slotGetOutputChannelNames() {
+            reply(getOutputChannelNames());
+            return getOutputChannelNames();
         }
 
 

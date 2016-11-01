@@ -56,19 +56,28 @@ void PipelinedProcessing_Test::appTestRunner() {
 void PipelinedProcessing_Test::testGetOutputChannelSchema(){
     karabo::util::Hash dataSchema =  m_deviceClient->getOutputChannelSchema("p2pTestSender", "output1");
 
+//    clog << "\nPipelinedProcessing_Test::testGetOutputChannelSchema() : dataSchema => \n" << dataSchema << endl;
+
     CPPUNIT_ASSERT(dataSchema.has("dataId"));
     CPPUNIT_ASSERT(dataSchema.getType("dataId") == karabo::util::Types::INT32);
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("dataId", "valueType") == "INT32");
     CPPUNIT_ASSERT(dataSchema.has("sha1"));
-    CPPUNIT_ASSERT(dataSchema.getType("sha1") == karabo::util::Types::STRING);
+    CPPUNIT_ASSERT(dataSchema.getType("sha1") == karabo::util::Types::INT32);
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("sha1", "valueType") == "STRING");
     CPPUNIT_ASSERT(dataSchema.has("data"));
-    CPPUNIT_ASSERT(dataSchema.getType("data") == karabo::util::Types::VECTOR_INT64);
+    CPPUNIT_ASSERT(dataSchema.getType("data") == karabo::util::Types::INT32);
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("data", "valueType") == "VECTOR_INT64");
     CPPUNIT_ASSERT(dataSchema.has("array"));
     CPPUNIT_ASSERT(dataSchema.hasAttribute("array", KARABO_HASH_CLASS_ID));
-    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array", KARABO_HASH_CLASS_ID) == "NDArray");
-    const karabo::util::NDArray& arr = dataSchema.get<karabo::util::NDArray>("array");
-    CPPUNIT_ASSERT(arr.getType() == karabo::util::Types::DOUBLE);
-    CPPUNIT_ASSERT(arr.getShape() == karabo::util::Dims(100,200,0));
-    CPPUNIT_ASSERT(arr.isBigEndian() == false);
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array", KARABO_HASH_CLASS_ID) == "Hash");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array", "classId") == "NDArray");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.data", "valueType") == "BYTE_ARRAY");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.shape", "valueType") == "VECTOR_UINT64");
+    CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.shape", "defaultValue") == "100,200,0");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.type", "valueType") == "INT32");
+    CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.type", "defaultValue") == "22");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.isBigEndian", "valueType") == "BOOL");
+    CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.isBigEndian", "defaultValue") == "0");
 }
 
 
