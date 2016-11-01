@@ -1,10 +1,3 @@
-/* 
- * File:   PropertyTest_Test.cc
- * Author: Sergey Esenov <serguei.essenov at xfel.eu>
- * 
- * Created on September 6, 2016, 3:05 PM
- */
-
 #include "PropertyTest_Test.hh"
 #include <karabo/net/EventLoop.hh>
 
@@ -27,7 +20,6 @@ PropertyTest_Test::~PropertyTest_Test() {
 
 
 void PropertyTest_Test::setUp() {
-
     Hash config("DeviceServer", Hash("serverId", "propertyTestServer_0", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
     m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
     m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
@@ -65,7 +57,6 @@ void PropertyTest_Test::allTestRunner() {
 
 
 void PropertyTest_Test::testSimpleProperties() {
-
     { // bool
         bool value = false;
         m_deviceClient->get("testPropertyTest_0", "boolProperty", value);
@@ -101,7 +92,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "charProperty", value);
         CPPUNIT_ASSERT(value == 'C');
     }
-    
+
     { // int8
         signed char value = 0;
         m_deviceClient->get("testPropertyTest_0", "int8Property", value);
@@ -119,7 +110,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "int8Property", value);
         CPPUNIT_ASSERT(value == -99);
     }
-    
+
     { // uint8
         unsigned char value = 0;
         m_deviceClient->get("testPropertyTest_0", "uint8Property", value);
@@ -137,7 +128,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "uint8Property", value);
         CPPUNIT_ASSERT(value == 199);
     }
-    
+
     { // int16
         short value = 0;
         m_deviceClient->get("testPropertyTest_0", "int16Property", value);
@@ -155,7 +146,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "int16Property", value);
         CPPUNIT_ASSERT(value == -7000);
     }
-    
+
     { // uint16
         unsigned short value = 0;
         m_deviceClient->get("testPropertyTest_0", "uint16Property", value);
@@ -173,7 +164,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "uint16Property", value);
         CPPUNIT_ASSERT(value == 7000);
     }
-    
+
     { // int32
         int value = 0;
         m_deviceClient->get("testPropertyTest_0", "int32Property", value);
@@ -191,7 +182,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "int32Property", value);
         CPPUNIT_ASSERT(value == 799);
     }
-    
+
     { // uint32
         unsigned int value = 0;
         m_deviceClient->get("testPropertyTest_0", "uint32Property", value);
@@ -209,8 +200,8 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "uint32Property", value);
         CPPUNIT_ASSERT(value == 799999);
     }
-    
-   
+
+
     { // int64
         long long value = 0;
         m_deviceClient->get("testPropertyTest_0", "int64Property", value);
@@ -227,7 +218,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "int64Property", value);
         CPPUNIT_ASSERT(value == 7999999LL);
     }
-    
+
     { // uint64
         unsigned long long value = 0;
         m_deviceClient->get("testPropertyTest_0", "uint64Property", value);
@@ -245,7 +236,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "uint64Property", value);
         CPPUNIT_ASSERT(value == 7ULL);
     }
-    
+
     { // float
         float value = 0;
         m_deviceClient->get("testPropertyTest_0", "floatProperty", value);
@@ -263,7 +254,7 @@ void PropertyTest_Test::testSimpleProperties() {
         m_deviceClient->get("testPropertyTest_0", "floatProperty", value);
         CPPUNIT_ASSERT(value == 76.54321F);
     }
-    
+
     { // double
         double value = 0;
         m_deviceClient->get("testPropertyTest_0", "doubleProperty", value);
@@ -291,7 +282,7 @@ void PropertyTest_Test::testVectorProperties() {
         vector<bool> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.boolProperty", value);
         CPPUNIT_ASSERT(value.size() == 6);
-        for (int i = 0; i < value.size(); ++i) {
+        for (size_t i = 0; i < value.size(); ++i) {
             if (i%2 == 0)
                 CPPUNIT_ASSERT(value[i] == true);
             else
@@ -303,7 +294,7 @@ void PropertyTest_Test::testVectorProperties() {
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.boolProperty", value);
         CPPUNIT_ASSERT(value.size() == 5);
-        for (int i = 0; i < value.size(); ++i) {
+        for (size_t i = 0; i < value.size(); ++i) {
             CPPUNIT_ASSERT(value[i] == true);
         }
         
@@ -312,7 +303,7 @@ void PropertyTest_Test::testVectorProperties() {
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.boolProperty", value);
         CPPUNIT_ASSERT(value.size() == 9);
-        for (int i = 0; i < value.size(); ++i) {
+        for (size_t i = 0; i < value.size(); ++i) {
             CPPUNIT_ASSERT(value[i] == false);
         }
     }
