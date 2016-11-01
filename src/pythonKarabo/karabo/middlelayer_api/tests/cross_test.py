@@ -10,15 +10,21 @@ import sys
 from unittest import main
 
 from karabo.middlelayer import (
-    AccessLevel, AlarmCondition, Assignment, Device, DeviceClientBase,
-    getDevice, getHistory, Int32, MetricPrefix, shutdown, sleep, Slot, State,
-    unit, Unit, waitUntil, waitUntilNew)
+    AccessLevel, AlarmCondition, Assignment, Configurable, Device,
+    DeviceClientBase, getDevice, getHistory, Int32, MetricPrefix, Node,
+    shutdown, sleep, Slot, State, unit, Unit, waitUntil, waitUntilNew)
 
 from .eventloop import DeviceTest, async_tst
 
 
+class Child(Configurable):
+    number = Int32()
+
+
 class MiddlelayerDevice(DeviceClientBase):
     value = Int32()
+
+    child = Node(Child)
 
     @Slot()
     def slot(self):
@@ -147,17 +153,22 @@ class Tests(DeviceTest):
 
         for i in range(4):
             self.device.value = i
+            self.device.child.number = -i
             self.device.update()
 
         after = datetime.now()
 
         # This is the first history request ever, so it returns an empty
         # list (see https://in.xfel.eu/redmine/issues/9414).
-        history = yield from getHistory(
-            "middlelayerDevice", before.isoformat(), after.isoformat()).value
+        yield from getHistory(
+            "middlelayerDevice.value", before.isoformat(), after.isoformat())
+        yield from getHistory(
+            "middlelayerDevice.child.number", before.isoformat(),
+            after.isoformat())
 
         # We have to write another value to close the first archive file :-(...
         self.device.value = 4
+        self.device.child.number = -4
         self.device.update()
 
         # ... and finally need to wait until the new archive and index files
@@ -166,10 +177,25 @@ class Tests(DeviceTest):
 
         after = datetime.now()
 
-        history = yield from getHistory(
+        old_history = yield from getHistory(
             "middlelayerDevice", before.isoformat(), after.isoformat()).value
+        str_history = yield from getHistory(
+            "middlelayerDevice.value", before.isoformat(), after.isoformat())
+        device = yield from getDevice("middlelayerDevice")
+        proxy_history = yield from getHistory(
+            device.value, before.isoformat(), after.isoformat())
 
-        self.assertEqual([h for _, _, _, h in history[-5:]], list(range(5)))
+        for hist in old_history, str_history, proxy_history:
+            self.assertEqual([h for _, _, _, h in hist[-5:]], list(range(5)))
+
+        node_history = yield from getHistory(
+            "middlelayerDevice.child.number", before.isoformat(),
+            after.isoformat())
+        node_proxy_history = yield from getHistory(
+            device.child.number, before.isoformat(), after.isoformat())
+
+        for hist in node_history, node_proxy_history:
+            self.assertEqual([-h for _, _, _, h in hist[-5:]], list(range(5)))
 
         yield from get_event_loop().instance()._ss.request(
             "Karabo_DLManagerServer", "slotKillServer")
