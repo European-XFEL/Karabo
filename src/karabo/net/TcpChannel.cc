@@ -5,6 +5,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 #include <karabo/util/Hash.hh>
+#include <karabo/util/MetaTools.hh>
 #include <boost/pointer_cast.hpp>
 #include <snappy.h>
 #include "Channel.hh"
@@ -197,8 +198,8 @@ namespace karabo {
             if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
             m_inboundMessagePrefix.resize(sizeofLength);
             boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
-                                    m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::onSizeInBytesAvailable,
-                                                                  this, boost::asio::placeholders::error, handler)));
+                                    m_readStrand.wrap(util::bind_weak(&karabo::net::TcpChannel::onSizeInBytesAvailable,
+                                                                      this, boost::asio::placeholders::error, handler)));
         }
 
 
@@ -216,6 +217,9 @@ namespace karabo {
 
 
         void TcpChannel::byteSizeAvailableHandler(const size_t byteSize) {
+            // byteSizeAvailableHandler is only used as handler argument of readAsyncSizeInBytes
+            // and readAsyncSizeInBytes binds it to another handler which is protected by a bind_weak
+            // so we do not have to bind_weak here again.
             m_inboundData->resize(byteSize);
             this->readAsyncRaw(&(*m_inboundData)[0], byteSize,
                                m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1)));
@@ -224,8 +228,8 @@ namespace karabo {
 
         void TcpChannel::readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
             boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
-                                    m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::onBytesAvailable, this,
-                                                                  boost::asio::placeholders::error, handler)));
+                                    m_readStrand.wrap(util::bind_weak(&karabo::net::TcpChannel::onBytesAvailable, this,
+                                                                      boost::asio::placeholders::error, handler)));
         }
 
 
@@ -238,6 +242,7 @@ namespace karabo {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::VECTOR;
             m_readHandler = handler;
+            // util::bind_weak not necessary since readAsyncSizeInBytes will wrap its argument using bind_weak
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
         }
 
@@ -246,6 +251,7 @@ namespace karabo {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::VECTOR_POINTER;
             m_readHandler = handler;
+            // util::bind_weak not necessary since readAsyncSizeInBytes will wrap its argument using bind_weak
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
         }
 
@@ -254,6 +260,7 @@ namespace karabo {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::STRING;
             m_readHandler = handler;
+            // util::bind_weak not necessary since readAsyncSizeInBytes will wrap its argument using bind_weak
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
         }
 
@@ -262,6 +269,7 @@ namespace karabo {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH;
             m_readHandler = handler;
+            // util::bind_weak not necessary since readAsyncSizeInBytes will wrap its argument using bind_weak
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
         }
 
@@ -270,6 +278,7 @@ namespace karabo {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH_POINTER;
             m_readHandler = handler;
+            // util::bind_weak not necessary since readAsyncSizeInBytes will wrap its argument using bind_weak
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
         }
 
@@ -279,6 +288,7 @@ namespace karabo {
             m_activeHandler = TcpChannel::HASH_VECTOR;
             m_readHeaderFirst = true;
             m_readHandler = handler;
+            // util::bind_weak not necessary since readAsyncSizeInBytes will wrap its argument using bind_weak
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
         }
 
@@ -288,6 +298,7 @@ namespace karabo {
             m_activeHandler = TcpChannel::HASH_VECTOR_POINTER;
             m_readHeaderFirst = true;
             m_readHandler = handler;
+            // util::bind_weak not necessary since readAsyncSizeInBytes will wrap its argument using bind_weak
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
         }
 
@@ -297,6 +308,7 @@ namespace karabo {
             m_activeHandler = TcpChannel::HASH_STRING;
             m_readHeaderFirst = true;
             m_readHandler = handler;
+            // util::bind_weak not necessary since readAsyncSizeInBytes will wrap its argument using bind_weak
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
         }
 
@@ -306,6 +318,7 @@ namespace karabo {
             m_activeHandler = TcpChannel::HASH_HASH;
             m_readHeaderFirst = true;
             m_readHandler = handler;
+            // util::bind_weak not necessary since readAsyncSizeInBytes will wrap its argument using bind_weak
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
         }
 
@@ -315,6 +328,7 @@ namespace karabo {
             m_activeHandler = TcpChannel::HASH_POINTER_HASH_POINTER;
             m_readHeaderFirst = true;
             m_readHandler = handler;
+            // util::bind_weak not necessary since readAsyncSizeInBytes will wrap its argument using bind_weak
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
         }
 
@@ -325,6 +339,7 @@ namespace karabo {
                 if (m_readHeaderFirst) {
                     m_readHeaderFirst = false;
                     m_inboundData.swap(m_inboundHeader);
+                    // util::bind_weak not necessary since readAsyncSizeInBytes will wrap its argument using bind_weak
                     this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
                     return;
                 }
@@ -698,8 +713,8 @@ namespace karabo {
                 }
                 buf.push_back(buffer(*m_outboundData));
                 boost::asio::async_write(m_socket, buf,
-                                         m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler, this,
-                                                                        boost::asio::placeholders::error, handler)));
+                                         m_writeStrand.wrap(util::bind_weak(&TcpChannel::asyncWriteHandler, this,
+                                                                            boost::asio::placeholders::error, handler)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -718,8 +733,8 @@ namespace karabo {
                 buf.push_back(buffer(m_outboundMessagePrefix));
                 buf.push_back(buffer(*m_outboundData));
                 boost::asio::async_write(m_socket, buf,
-                                         m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler, this,
-                                                                        boost::asio::placeholders::error, handler)));
+                                         m_writeStrand.wrap(util::bind_weak(&TcpChannel::asyncWriteHandler, this,
+                                                                            boost::asio::placeholders::error, handler)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -736,8 +751,8 @@ namespace karabo {
                 }
                 buf.push_back(buffer(data, size));
                 boost::asio::async_write(m_socket, buf,
-                                         m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler, this,
-                                                                        boost::asio::placeholders::error, handler)));
+                                         m_writeStrand.wrap(util::bind_weak(&TcpChannel::asyncWriteHandler, this,
+                                                                            boost::asio::placeholders::error, handler)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -756,8 +771,8 @@ namespace karabo {
                 buf.push_back(buffer(m_outboundMessagePrefix));
                 buf.push_back(buffer(data, size));
                 boost::asio::async_write(m_socket, buf,
-                                         m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler, this,
-                                                                        boost::asio::placeholders::error, handler)));
+                                         m_writeStrand.wrap(util::bind_weak(&TcpChannel::asyncWriteHandler, this,
+                                                                            boost::asio::placeholders::error, handler)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -853,10 +868,9 @@ namespace karabo {
                 }
                 buf.push_back(buffer(*dataPtr));
                 boost::asio::async_write(m_socket, buf,
-                                         m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler,
-                                                                        this, boost::asio::placeholders::error,
-                                                                        handler, dataPtr
-                                                                        )));
+                                         m_writeStrand.wrap(util::bind_weak(&TcpChannel::asyncWriteHandlerBody, this,
+                                                                            boost::asio::placeholders::error,
+                                                                            handler, dataPtr)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -929,10 +943,9 @@ namespace karabo {
                 buf.push_back(buffer(m_outboundMessagePrefix));
                 buf.push_back(buffer(*body));
                 boost::asio::async_write(m_socket, buf,
-                                         m_writeStrand.wrap(boost::bind(&TcpChannel::asyncWriteHandler,
-                                                                        this, boost::asio::placeholders::error,
-                                                                        handler, header, body
-                                                                        )));
+                                         m_writeStrand.wrap(util::bind_weak(&TcpChannel::asyncWriteHandlerHeaderBody,
+                                                                            this, boost::asio::placeholders::error,
+                                                                            handler, header, body)));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -982,7 +995,7 @@ namespace karabo {
         }
 
 
-        void TcpChannel::asyncWriteHandler(const ErrorCode& e,
+        void TcpChannel::asyncWriteHandlerBody(const ErrorCode& e,
                                            const Channel::WriteCompleteHandler& handler,
                                            const boost::shared_ptr<std::vector<char> >& body) {
             try {
@@ -993,7 +1006,7 @@ namespace karabo {
         }
 
 
-        void TcpChannel::asyncWriteHandler(const ErrorCode& e,
+        void TcpChannel::asyncWriteHandlerHeaderBody(const ErrorCode& e,
                                            const Channel::WriteCompleteHandler& handler,
                                            const boost::shared_ptr<std::vector<char> >& header,
                                            const boost::shared_ptr<std::vector<char> >& body) {
@@ -1112,9 +1125,9 @@ namespace karabo {
             buf.push_back(buffer(*data));
 
             boost::asio::async_write(m_socket, buf,
-                                     m_writeStrand.wrap(boost::bind(&TcpChannel::doWriteHandler, this,
-                                                                    mp, boost::asio::placeholders::error,
-                                                                    boost::asio::placeholders::bytes_transferred())));
+                                     m_writeStrand.wrap(util::bind_weak(&TcpChannel::doWriteHandler, this,
+                                                                        mp, boost::asio::placeholders::error,
+                                                                        boost::asio::placeholders::bytes_transferred())));
         }
 
 
