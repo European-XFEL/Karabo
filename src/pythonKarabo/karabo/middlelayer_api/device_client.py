@@ -323,44 +323,20 @@ def waitUntilNew(prop, **kwargs):
     else:
         return _waitUntilNew_new(prop, **kwargs)
 
+def _parse_date(date):
+    d = dateutil.parser.parse(date)
+    if d.tzinfo is None:
+        d = d.replace(tzinfo=dateutil.tz.tzlocal())
+    return d.astimezone(dateutil.tz.tzutc()).replace(tzinfo=None).isoformat()
 
-class getHistory:
-    """get the history of device properties
 
-    with this function one can get all values of a property in a given
-    timespan::
-
-        getHistory(device, "2009-09-01", "2009-09-02").someProperty
-
-    returns a list of tuples, which contain all changes of *someProperty*
-    between the two given dates. The tuple contains four fields, the
-    seconds since 1970-01-01 UTC, the train ID, a flag whether this is
-    the last row in a set (typically, the device has been switched off
-    afterwards), and the value of the property at that time.
-
-    The dates of the timespan are parsed using
-    :func:`dateutil.parser.parse`, allowing many ways to write the date.
-    The most precise way is to write "2009-09-01T15:32:12 UTC", but you may
-    omit any part, like "10:32", only giving the time, where we assume
-    the current day.  Unless specified otherwise, your local timezone is
-    assumed.
-
-    Another parameter, *maxNumData*, may be given, which gives the maximum
-    number of data points to be returned. It defaults to 10000. The returned
-    data will be reduced appropriately to still span the full timespan."""
-    def __init__(self, proxy, begin, end, maxNumData=10000, *, timeout=5):
+class _getHistory_old:
+    def __init__(self, proxy, begin, end, maxNumData, timeout):
         self.proxy = proxy
-        self.begin = self._parse(begin)
-        self.end = self._parse(end)
+        self.begin = _parse_date(begin)
+        self.end = _parse_date(end)
         self.maxNumData = maxNumData
         self.timeout = timeout
-
-    def _parse(self, date):
-        d = dateutil.parser.parse(date)
-        if d.tzinfo is None:
-            d = d.replace(tzinfo=dateutil.tz.tzlocal())
-        return d.astimezone(dateutil.tz.tzutc()).replace(
-            tzinfo=None).isoformat()
 
     def __dir__(self):
         return dir(self.proxy)
@@ -396,6 +372,75 @@ class getHistory:
         return [(Decimal(int(d["v", "frac"])) / 10 ** 18 +
                  Decimal(int(d["v", "sec"])), d["v", "tid"],
                  "isLast" in d["v", ...], d["v"]) for d in data]
+
+
+@synchronize
+def _getHistory_new(prop, begin, end, maxNumData):
+    try:
+        attr = prop.descriptor.longkey
+        deviceId = prop._parent._deviceId
+    except AttributeError:
+        deviceId, attr = str(prop).split(".", 1)
+
+    begin = _parse_date(begin)
+    end = _parse_date(end)
+
+    instance = get_instance()
+    did = "DataLogger-{}".format(deviceId)
+    if did not in instance.loggerMap:
+        instance.loggerMap = yield from instance.call(
+            "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
+        if did not in instance.loggerMap:
+            raise KaraboError('no logger for device "{}"'.
+                              format(deviceId))
+    reader = "DataLogReader0-{}".format(instance.loggerMap[did])
+    r_deviceId, r_attr, data = yield from get_instance().call(
+        reader, "slotGetPropertyHistory", deviceId, attr,
+        Hash("from", begin, "to", end, "maxNumData", maxNumData))
+    assert r_deviceId == deviceId and r_attr == attr
+    return [(float(d["v", "frac"]) / 10 ** 18 + float(d["v", "sec"]),
+             d["v", "tid"], "isLast" in d["v", ...], d["v"]) for d in data]
+
+
+def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
+    """get the history of device properties
+
+    with this function one can get all values of a property in a given
+    timespan::
+
+        getHistory(device.someProperty, "2009-09-01", "2009-09-02")
+
+    returns a list of tuples, which contain all changes of *someProperty*
+    between the two given dates. The tuple contains four fields, the
+    seconds since 1970-01-01 UTC, the train ID, a flag whether this is
+    the last row in a set (typically, the device has been switched off
+    afterwards), and the value of the property at that time.
+
+    Given that a device may not be on line by the time one is trying to
+    get the history, the property name may also be given as a string::
+
+        getHistory("device.someProperty", "2009-09-01", "2009-09-02")
+
+    The dates of the timespan are parsed using
+    :func:`dateutil.parser.parse`, allowing many ways to write the date.
+    The most precise way is to write "2009-09-01T15:32:12 UTC", but you may
+    omit any part, like "10:32", only giving the time, where we assume
+    the current day.  Unless specified otherwise, your local timezone is
+    assumed.
+
+    Another parameter, *maxNumData*, may be given, which gives the maximum
+    number of data points to be returned. It defaults to 10000. The returned
+    data will be reduced appropriately to still span the full timespan."""
+    # this method contains a lot of hard-coded strings. It follows
+    # GuiServerDevice::onGetPropertyHistory. One day we should
+    # de-hard-code both.
+
+    if isinstance(prop, Proxy) or isinstance(prop, str) and "." not in prop:
+        assert wait
+        return _getHistory_old(prop, begin, end, maxNumData, timeout)
+    else:
+        return _getHistory_new(prop, begin, end, maxNumData,
+                               timeout=timeout, wait=wait)
 
 
 class Queue:
