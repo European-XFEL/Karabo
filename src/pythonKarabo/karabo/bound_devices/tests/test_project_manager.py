@@ -6,7 +6,7 @@ from time import sleep
 from karabo.bound import EventLoop, Hash, DeviceServer, DeviceClient
 from karabo.common.states import State
 from karabo.project_db.project_database import ProjectDatabase
-
+from karabo.project_db.tests.test_projectDatabase import create_hierarchy
 
 class TestProjectManager(TestCase):
     _timeout = 60   # seconds
@@ -44,7 +44,7 @@ class TestProjectManager(TestCase):
                 revisions.append(v['revisions'][-1]['id'])
 
             xml_serv = """
-                      <testserver uuid='testserver_m' list_tag='configs'>
+                      <testserver uuid='testserver_m'>
                       <configs>
                       """
 
@@ -59,18 +59,8 @@ class TestProjectManager(TestCase):
             # again twice to have a revision number
             success, meta = db.save_item('LOCAL', 'testserver_m', xml_serv)
             self.assertTrue(success)
+            create_hierarchy(db, "hierarchy_test", 0, 0)
 
-            # now load again
-            res = db.load_multi('LOCAL', xml_serv)
-            for i, x in enumerate(xml_reps):
-                if i == 3:   # this one should not be in the list
-                    continue
-                test_xml = db._make_xml_if_needed(x)
-                res_xml = db._make_xml_if_needed(res[str(i)])
-                self.assertEqual(test_xml.text, res_xml.text)
-
-                self.assertEqual(test_xml.attrib['uuid'],
-                                 res_xml.attrib['uuid'])
 
     def _cleanDataBase(self):
         with ProjectDatabase(self._user, self._password, server='localhost',
@@ -229,8 +219,12 @@ class TestProjectManager(TestCase):
 
         with self.subTest(msg="Test loading multiple data"):
             items = [Hash("uuid", "testserver_m"), ]
-            ret = self.server.ss.request("projManTest", "slotLoadItemsAndSubs",
-                                         "LOCAL", items).waitForReply(5000)
+            ret = self.server.ss.request("projManTest",
+                                         "slotLoadItemsAndSubs",
+                                         "LOCAL",
+                                         items,
+                                         ['configs']).waitForReply(5000)
+
             ret = ret[0]  # returns tuple
             self.assertTrue(ret.has('testserver_m'))
             self.assertTrue(ret.has('0'))
@@ -250,3 +244,17 @@ class TestProjectManager(TestCase):
             self.assertEqual(document, "/db/krb_test/LOCAL/testserver_m")
             revisions = ret.get("testserver_m").get("revisions")
             self.assertGreater(len(revisions), 0)
+
+        with self.subTest(msg="Test list items"):
+            queryItems = ['project', 'scene']
+            items = self.server.ss.request("projManTest",
+                                         "slotListItems",
+                                         "LOCAL",
+                                         queryItems).waitForReply(5000)
+            items = items[0]
+            self.assertEqual(len(items), 10)
+            scenecnt = 0
+            for i in items:
+                if i.get("item_type") == "scene":
+                    scenecnt += 1
+            self.assertEqual(scenecnt, 8)

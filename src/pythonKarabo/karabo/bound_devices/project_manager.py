@@ -1,5 +1,5 @@
 from karabo.bound import (AccessLevel, BOOL_ELEMENT, Hash, KARABO_CLASSINFO,
-                          launchPythonDevice, OVERWRITE_ELEMENT, PythonDevice,
+                          OVERWRITE_ELEMENT, PythonDevice,
                           SLOT_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT)
 from karabo.common.states import State
 from karabo.project_db.project_database import ProjectDatabase
@@ -80,6 +80,7 @@ class ProjectManager(PythonDevice):
         self.registerSlot(self.slotLoadItems)
         self.registerSlot(self.slotLoadItemsAndSubs)
         self.registerSlot(self.slotGetVersionInfo)
+        self.registerSlot(self.slotListItems)
         self.registerInitialFunction(self.initialization)
         self.db = None
 
@@ -209,7 +210,7 @@ class ProjectManager(PythonDevice):
 
         self.reply(loadedItems)
 
-    def slotLoadItemsAndSubs(self, domain, items):
+    def slotLoadItemsAndSubs(self, domain, items, list_tags):
         """
         Loads items from the database - including any sub items. For this
         the root element of each item is expected to have an attribute
@@ -245,7 +246,7 @@ class ProjectManager(PythonDevice):
                 loadedItems.set(uuid, itxml)
 
                 if itxml != "":  # load succeeded check for children
-                    its = self.db.load_multi(domain, itxml)
+                    its = self.db.load_multi(domain, itxml, list_tags)
                     [loadedItems.set(k, v) for k, v in its.items()]
 
         self.reply(loadedItems)
@@ -284,3 +285,22 @@ class ProjectManager(PythonDevice):
                 versionInfos.set(uuid, dictToHash(vers))
 
         self.reply(versionInfos)
+
+    def slotListItems(self, domain, item_types=None):
+        """
+        List items in domain which match item_types if given, or all items
+        if not given
+        :param domain: domain to list items from
+        :param item_types: list or tuple of item_types to list
+        :return: a list of Hashes where each entry has keys: uuid, item_type
+                 and simple_name
+        """
+        resHashed = []
+        with self.db:
+            res = self.db.list_items(domain, item_types)
+            for r in res:
+                h = Hash('uuid', r['uuid'],
+                         'item_type', r['item_type'],
+                         'simple_name', r['simple_name'])
+                resHashed.append(h)
+        self.reply(resHashed)
