@@ -1,6 +1,6 @@
 #include "DeviceServerRunner_Test.hh"
 
-
+using namespace std;
 USING_KARABO_NAMESPACES;
 
 #define KRB_TEST_MAX_TIMEOUT 10
