@@ -85,7 +85,6 @@ if __name__ == '__main__':
             'karabo.testing': ['resources/*.*'],
             'karabo.project_db': ['config_stubs/*.*'],
             'karabo.integration_tests': ['device_comm_test/CommTestDevice.egg-info/*.*'],
-            'karabo.devices': ['tests/ProjectManager.egg-info/*.*'],
         },
         entry_points={
             'console_scripts': [
