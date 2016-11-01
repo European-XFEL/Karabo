@@ -81,4 +81,6 @@ def _get_normal_object(lazy_object):
     klass = klass_map.get(lazy_object.__class__)
     if klass is None:
         return lazy_object
-    return klass(uuid=lazy_object.uuid, revision=lazy_object.revision)
+    copy_names = ('uuid', 'revision', 'simple_name', 'db_attrs')
+    traits = {n: getattr(lazy_object, n) for n in copy_names}
+    return klass(**traits)
