@@ -41,7 +41,7 @@ namespace karabo {
 
         void onInput(const karabo::xms::InputChannel::Pointer& input);
 
-        void onData(const karabo::util::Hash& data);
+        void onData(const karabo::util::Hash& data, const xms::InputChannel::MetaData& metaData);
 
         void onEndOfStream(const karabo::xms::InputChannel::Pointer& input);
     };

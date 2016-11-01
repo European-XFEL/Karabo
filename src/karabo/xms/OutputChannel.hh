@@ -20,6 +20,7 @@
 
 #include "Statics.hh"
 #include "Memory.hh"
+#include "InputChannel.hh"
 
 
 /**
@@ -29,8 +30,48 @@ namespace karabo {
 
     namespace xms {
 
+#define KARABO_P2P_SOURCE_INFO "__sourceInfo"
+
         /**
-         * The DeviceOutput class.
+         * @class OutputChannel
+         * @brief An OutputChannel for passing data to pipelined processing
+         * 
+         * The OutputChannel class is used for writing data to pipelined processing
+         * inputs. It supports tracking of meta data for each data token written to it.
+         * Specifically, it e.g. allows for keeping track of data producers, here called
+         * sources, and timing and train information.
+         * Meta data information enables aggregation of multiple data source into one
+         * output channel interaction with a remote host, as well as aggregation of
+         * multiple train-related data of the same source. A mixture of both scenarios
+         * is possible.
+         * 
+         * An example of these use cases
+         * 
+         * @code
+         * 
+         * OutputChannel::Pointer output = ... // 
+         * 
+         * Hash data1;
+         * ....
+         * OutputChannel::MetaData meta1("THIS/IS/SOURCE/A/channel1", karabo::util::Timestamp());
+         * output->write(data1, meta1)
+         * 
+         * Hash data2_10;
+         * ....
+         * OutputChannel::MetaData meta2_10("THIS/IS/SOURCE/B/channel2", timestampForTrain10);
+         * output->write(data2_10, meta2)
+         * OutputChannel::MetaData meta2_11("THIS/IS/SOURCE/B/channel2", timestampForTrain11);
+         * output->write(data2_11, meta2_11)
+         *
+         * Hash data_this_source;
+         * ...
+         * // not passing any meta data to write will default the source to [deviceId]/[channelName]
+         * // and the timestamp to the current timestamp
+         * output->write(data_this_source);
+         * 
+         * // now actually send over the network
+         * output->update();
+         * @endcode
          */
         class OutputChannel : public boost::enable_shared_from_this<OutputChannel> {
 
@@ -38,7 +79,7 @@ namespace karabo {
 
             /*
              * InputChannelInfo (karabo::util::Hash)
-             * 
+             *
              *     instanceId (std::string)
              *     memoryLocation (std::string) [local/remote]
              *     tcpChannel (TcpChannelPointer)
@@ -60,6 +101,7 @@ namespace karabo {
             boost::function<void (const boost::shared_ptr<OutputChannel>&) > m_ioEventHandler;
 
             std::string m_instanceId;
+            std::string m_channelName;
 
             // Server related
             std::string m_hostname;
@@ -98,6 +140,9 @@ namespace karabo {
             std::map<int, int> m_writersOnChunk;
 
         public:
+            typedef Memory::MetaData MetaData;
+
+        public:
 
             KARABO_CLASSINFO(OutputChannel, "OutputChannel", "1.0");
 
@@ -115,7 +160,7 @@ namespace karabo {
 
             virtual ~OutputChannel();
 
-            void setInstanceId(const std::string& instanceId);
+            void setInstanceIdAndName(const std::string& instanceId, const std::string& name);
 
             const std::string& getInstanceId() const;
 
@@ -127,18 +172,18 @@ namespace karabo {
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * @param data
+             * @source optional string indicating the data source. If not set, the instanceId of the device the
+             *         channel is on will be set.
              */
-            void write(const karabo::util::Hash& data) {
-                Memory::write(data, m_channelId, m_chunkId);
-            }
+            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData = Memory::MetaData());
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * @param data
+             * @source optional string indicating the data source. If not set, the instanceId of the device the
+             *         channel is on will be set.
              */
-            void write(const karabo::util::Hash::Pointer& data) {
-                Memory::write(*data, m_channelId, m_chunkId);
-            }
+            KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData = Memory::MetaData());
 
             void update();
 
@@ -206,6 +251,9 @@ namespace karabo {
 
             /// Provide a string identifying this output channel (useful in DEBUG logging)
             std::string debugId() const;
+
+
+
         };
 
         class OutputChannelElement {

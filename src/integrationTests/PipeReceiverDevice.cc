@@ -20,6 +20,7 @@ namespace karabo {
     using util::BOOL_ELEMENT;
     using util::INT32_ELEMENT;
     using util::UINT32_ELEMENT;
+    using util::VECTOR_STRING_ELEMENT;
     using xms::INPUT_CHANNEL_ELEMENT;
 
     KARABO_REGISTER_FOR_CONFIGURATION(core::BaseDevice, core::Device<>, PipeReceiverDevice)
@@ -40,7 +41,7 @@ namespace karabo {
         BOOL_ELEMENT(expected).key("onData")
                 .displayedName("Use callback interface onData")
                 .description("If false, use callback per InputChannel, not per Data")
-                .assignmentOptional().defaultValue(true)
+                .assignmentOptional().defaultValue(false)
                 .commit();
 
 
@@ -70,6 +71,16 @@ namespace karabo {
                 .description("The total number of data received when End of Stream was received")
                 .readOnly()
                 .commit();
+        
+        VECTOR_STRING_ELEMENT(expected).key("dataSources")
+                .displayedName("Data sources on input")
+                .readOnly()
+                .commit();
+        
+        VECTOR_STRING_ELEMENT(expected).key("dataSourcesFromIndex")
+                .displayedName("Data sources on input from index resolve")
+                .readOnly()
+                .commit();
 
     }
 
@@ -93,17 +104,21 @@ namespace karabo {
 
 
     void PipeReceiverDevice::onInput(const xms::InputChannel::Pointer& input) {
-
+        set("dataSources", input->getMetaData()[0].getSource());
+        std::vector<std::string> sources;
         util::Hash data;
         for (size_t i = 0; i < input->size(); ++i) {
             input->read(data, i); // clears data before filling
-            onData(data);
+            sources.push_back(input->indexToMetaData(i).getSource());
+            onData(data, input->indexToMetaData(i));
         }
+        set("dataSourcesFromIndex", sources);
     }
 
 
-    void PipeReceiverDevice::onData(const util::Hash& data) {
+    void PipeReceiverDevice::onData(const util::Hash& data, const xms::InputChannel::MetaData& metaData) {
 
+        set("dataSources", std::vector<std::string>(1, metaData.getSource()));
         set("currentDataId", data.get<int>("dataId"));
 
         // Sum total number of data
