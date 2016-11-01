@@ -1,10 +1,67 @@
 import copy
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from lxml import etree
 
 from karabo.project_db.project_database import ProjectDatabase
-from karabo.project_db.util import stop_database, assure_running
+from karabo.project_db.util import stop_database
+
+
+def create_hierarchy(db, prefix, uuid_suf, level=0):
+    uuid = "{}_{}".format(prefix, uuid_suf)
+    xml = '<project item_type="{type}" uuid="{uuid}"'\
+          ' simple_name="{name}">'.format(uuid=uuid, type='project',
+                                          name=uuid)
+
+    xml += "<children>"
+    counter = 0
+    # create some subprojects
+    if level < 2:
+        for i in range(4):
+            sub_uuid = create_hierarchy(db, uuid, counter, level + 1)
+            xml += '<project item_type="{type}" uuid="{uuid}"'\
+                   ' simple_name="{name}" />'.format(uuid=sub_uuid,
+                                                    type='project',
+                                                    name=sub_uuid)
+            counter += 1
+
+    # create some scenes
+    for i in range(4):
+        sub_uuid = '{}_{}'.format(uuid, counter)
+        xml += '<scene item_type="{type}" uuid="{uuid}"'\
+               ' simple_name="{name}" />'.format(uuid=sub_uuid,
+                                                type='scene',
+                                                name=sub_uuid)
+
+        scene_xml = '<scene item_type="{type}" uuid="{uuid}"'\
+                    ' simple_name="{name}" >foo</scene>'\
+                    .format(uuid=sub_uuid, type='scene', name=sub_uuid)
+
+        db.save_item("LOCAL", sub_uuid, scene_xml)
+
+        counter += 1
+
+    # create some device_servers
+    for i in range(4):
+        sub_uuid = '{}_{}'.format(uuid, counter)
+        xml += '<device_server item_type="{type}" uuid="{uuid}"'\
+               ' simple_name="{name}" />'.format(uuid=sub_uuid,
+                                                type='device_server',
+                                                name=sub_uuid)
+
+        ds_xml = '<device_server item_type="{type}" uuid="{uuid}"'\
+                 ' simple_name="{name}" >foo</device_server>'\
+                 .format(uuid=sub_uuid, type='device_server',
+                         name=sub_uuid)
+
+        db.save_item("LOCAL", sub_uuid, ds_xml)
+
+        counter += 1
+
+    xml += "</children>"
+    xml += "</project>"
+    db.save_item("LOCAL", uuid, xml)
+    return uuid
 
 class TestProjectDatabase(TestCase):
     user = "admin"
@@ -21,6 +78,7 @@ class TestProjectDatabase(TestCase):
         element.text = 'foo'
         str_rep = ProjectDatabase._make_str_if_needed(element)
         self.assertEqual(str_rep, "<test>foo</test>\n")
+
 
     def test_project_interface(self):
         with ProjectDatabase(self.user, self.password, server='localhost',
@@ -208,7 +266,7 @@ class TestProjectDatabase(TestCase):
                 self.assertTrue(success)
 
                 # now load again
-                res = db.load_multi('LOCAL', xml_serv)
+                res = db.load_multi('LOCAL', xml_serv, ['configs'])
                 for i in range(3):
                     r = db._make_xml_if_needed(res[str(i)])
                     cFound = False
@@ -220,10 +278,19 @@ class TestProjectDatabase(TestCase):
                                 cFound = False
                     self.assertTrue(cFound)
 
-
             with self.subTest(msg = 'test_versioning_from_item'):
                 vers = db.get_versioning_info_item("LOCAL", "1")
                 self.assertEqual(vers['document'],
                                  '/db/krb_test/LOCAL/testconfig1')
 
+            create_hierarchy(db, "hierarchy_test", 0, 0)
+
+            with self.subTest(msg = 'test_list_items'):
+                items = db.list_items('LOCAL', ['project', 'scene'])
+                self.assertEqual(len(items), 10)
+                scenecnt = 0
+                for i in items:
+                    if i["item_type"] == "scene":
+                        scenecnt += 1
+                self.assertEqual(scenecnt, 8)
             stop_database()
