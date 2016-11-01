@@ -119,8 +119,8 @@ class ProjectDatabase(ContextDecorator):
             return xml_rep
         if isinstance(xml_rep, etree._Element):
             xml_bytes = etree.tostring(xml_rep, pretty_print=True,
-                                  encoding='UTF-8', xml_declaration=False)
-            return  xml_bytes.decode("utf-8")
+                                       encoding='UTF-8', xml_declaration=False)
+            return xml_bytes.decode("utf-8")
 
         raise AttributeError("Cannot handle type {}".format(type(xml_rep)))
 
@@ -272,7 +272,6 @@ class ProjectDatabase(ContextDecorator):
         meta['current_xml'] = res_xml
         return (success, meta)
 
-
     def copy_item(self, domain, target_domain, item, target_item):
         """
         Copies item of item_type from domain to target_domain and target_item
@@ -407,32 +406,27 @@ class ProjectDatabase(ContextDecorator):
         item.attrib[self._add_vers_ns('path')] = path
         return self._make_str_if_needed(item)
 
-    def load_multi(self, domain, item_xml_str):
+    def load_multi(self, domain, item_xml_str, list_tags):
         """
-        Loads all items found in item_xml_str under listTag.
+        Loads all items found in item_xml_str under children.
 
-        :param domain:the domain to load from
-        :param item_xml_str:the xml of the container item, at it's root
-               should contain an attribute list_tag that identifies under
-               which tag sub_items are located
+        :param domain: the domain to load from
+        :param item_xml_str: the xml of the container item, at it's root
+        :param list_tags: tags which identify children to load
         :return:xml string of the loaded items
         """
 
         # gather information on revisions and uids
         xml = self._make_xml_if_needed(item_xml_str)
 
-        # if no list_tag is available we don't know what to load
-        if not 'list_tag' in xml.attrib:
-            return {}
-
         revisions = []
         uuids = []
-        list_tag = xml.attrib['list_tag']
 
-        subs = xml.find(list_tag)
-        for elem in subs:
-            revisions.append(elem.attrib['revision'])
-            uuids.append(elem.attrib['uuid'])
+        for tag in list_tags:
+            subs = xml.find(tag)
+            for elem in subs:
+                revisions.append(elem.attrib['revision'])
+                uuids.append(elem.attrib['uuid'])
 
         # path to where the possible entries are located
         path = "{}/{}".format(self.root, domain)
@@ -445,7 +439,7 @@ class ProjectDatabase(ContextDecorator):
             for $c at $i in collection("{path}/?select=*")
             where $c/*/@uuid = $uuids
             return v:doc($c, $revs[index-of($uuids, data($c/*/@uuid))-1])
-            """.format(vnamespace=self.vers_namespace,revs=tuple(revisions),
+            """.format(vnamespace=self.vers_namespace, revs=tuple(revisions),
                        uuids=tuple(uuids), path=path)
 
         try:
@@ -455,3 +449,31 @@ class ProjectDatabase(ContextDecorator):
 
         return {r.attrib['uuid']: self._make_str_if_needed(r)
                 for r in res.results}
+
+    def list_items(self, domain, item_types=None):
+        """
+        List items in domain which match item_types if given, or all items
+        if not given
+        :param domain: domain to list items from
+        :param item_types: list or tuple of item_types to list
+        :return: a list of dicts where each entry has keys: uuid, item_type
+                 and simple_name
+        """
+        query = 'xquery version "3.0";\n'
+        if item_types is not None:
+            query += 'let $item_types := {}'.format(tuple(item_types))
+        query += 'for $c at $i in collection("{}/{}/?select=*")\n'\
+                 .format(self.root, domain)
+        if item_types is not None:
+            query += 'where $c/*/@item_type = $item_types\n'
+        query += 'return <item uuid="{$c/*/@uuid}" simple_name="{' \
+                 '$c/*/@simple_name}" item_type="{$c/*/@item_type}"/>\n'
+
+        try:
+            res = self.dbhandle.query(query)
+            return [{'uuid': r.attrib['uuid'],
+                     'item_type': r.attrib['item_type'],
+                     'simple_name': r.attrib['simple_name']}
+                    for r in res.results]
+        except ExistDBException:
+            return []
