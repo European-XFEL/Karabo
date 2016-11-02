@@ -4,11 +4,11 @@ from io import BytesIO
 from lxml import etree
 
 from karabo.common.project.api import (
-    DeviceConfigurationModel, DeviceServerModel, LazyDeviceServerModel,
-    LazyProjectModel, MacroModel, ProjectModel, ProjectObjectReference,
     PROJECT_DB_TYPE_DEVICE, PROJECT_DB_TYPE_DEVICE_SERVER,
     PROJECT_DB_TYPE_MACRO, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
-    PROJECT_OBJECT_CATEGORIES)
+    PROJECT_OBJECT_CATEGORIES, DeviceConfigurationModel, DeviceServerModel,
+    LazyProjectModel, MacroModel, ProjectModel, ProjectObjectReference,
+    read_device_server, write_device_server)
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.hash import Hash
 
@@ -50,7 +50,7 @@ def write_project_model(model):
     }
     writers = {
         PROJECT_DB_TYPE_DEVICE: _device_writer,
-        PROJECT_DB_TYPE_DEVICE_SERVER: _device_server_writer,
+        PROJECT_DB_TYPE_DEVICE_SERVER: write_device_server,
         PROJECT_DB_TYPE_MACRO: _macro_writer,
         PROJECT_DB_TYPE_PROJECT: _project_writer,
         PROJECT_DB_TYPE_SCENE: write_scene,
@@ -107,21 +107,18 @@ def _device_reader(io_obj, metadata):
     """
     kwargs = _db_metadata_reader(metadata)
     hsh = Hash.decode(io_obj.read(), 'XML')
-    for class_id, configuration, attributes in hsh.iterall():
-        kwargs.update({k: attributes[k]
-                       for k in ('server_id', 'instance_id', 'if_exists')})
-        return DeviceConfigurationModel(
-            class_id=class_id, configuration=configuration, **kwargs)
+    for class_id, configuration in hsh.items():
+        return DeviceConfigurationModel(class_id=class_id,
+                                        configuration=configuration, **kwargs)
 
 
 def _device_server_reader(io_obj, metadata):
     """ A reader for device server models
     """
-    # XXX: What is in a device server XML file?
-    kwargs = _db_metadata_reader(metadata)
-    server = Hash.decode(io_obj.read(), 'XML')
-    devices = [_reference_reader(h) for h in server.values()]
-    return LazyDeviceServerModel(devices=devices, **kwargs)
+    traits = _db_metadata_reader(metadata)
+    server = read_device_server(io_obj)
+    server.trait_set(**traits)
+    return server
 
 
 def _macro_reader(io_obj, metadata):
@@ -181,15 +178,6 @@ def _device_writer(model):
     hsh = Hash(model.class_id, model.configuration)
     for name in ('server_id', 'instance_id', 'if_exists'):
         hsh[model.class_id, name] = getattr(model, name)
-    return hsh.encode('XML')
-
-
-def _device_server_writer(model):
-    """ A writer for device server models
-    """
-    devices = [Hash('uuid', dev.uuid, 'revision', dev.revision)
-               for dev in model.devices]
-    hsh = Hash('server', devices)
     return hsh.encode('XML')
 
 
