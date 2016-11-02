@@ -39,7 +39,7 @@ void PropertyTest_Test::setUp() {
 
 
 void PropertyTest_Test::tearDown() {
-    m_deviceClient->killServer("propertyTestServer_0", KRB_TEST_MAX_TIMEOUT);
+    m_deviceServer.reset();
     EventLoop::stop();
     m_eventLoopThread.join();
 }
