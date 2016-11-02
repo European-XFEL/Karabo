@@ -57,8 +57,7 @@ void AlarmService_Test::tearDown() {
         m_tcpAdapter->disconnect();
     }
 
-    m_deviceClient->killServer("testServer", KRB_TEST_MAX_TIMEOUT);
-    boost::this_thread::sleep(boost::posix_time::seconds(2));
+    m_deviceServer.reset();
     EventLoop::stop();
     m_eventLoopThread.join();
 

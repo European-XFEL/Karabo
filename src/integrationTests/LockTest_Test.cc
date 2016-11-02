@@ -40,7 +40,7 @@ void LockTest_Test::setUp() {
 
 
 void LockTest_Test::tearDown() {
-    m_deviceClient->killServer("testServerLock", KRB_TEST_MAX_TIMEOUT);
+    m_deviceServer.reset();
     EventLoop::stop();
     m_eventLoopThread.join();
 }
