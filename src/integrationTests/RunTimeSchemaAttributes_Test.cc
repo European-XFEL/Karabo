@@ -39,7 +39,7 @@ void RunTimeSchemaAttributes_Test::setUp() {
 
 
 void RunTimeSchemaAttributes_Test::tearDown() {
-    m_deviceClient->killServer("testServerSchema", KRB_TEST_MAX_TIMEOUT);
+    m_deviceServer.reset();
     EventLoop::stop();
     m_eventLoopThread.join();
 }
