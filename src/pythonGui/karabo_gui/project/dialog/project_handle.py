@@ -7,7 +7,7 @@ import os.path as op
 from collections import OrderedDict, namedtuple
 
 from PyQt4 import uic
-from PyQt4.QtCore import QAbstractTableModel, Qt, pyqtSlot
+from PyQt4.QtCore import QAbstractTableModel, Qt
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
 from karabo.common.project.api import get_user_cache
@@ -23,13 +23,17 @@ ProjectEntry = namedtuple('ProjectEntry', [key for key in PROJECT_DATA.keys()])
 
 
 class ProjectHandleDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, title, btn_text, parent=None):
         super(ProjectHandleDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'project_handle.ui')
         uic.loadUi(filepath, self)
 
+        self.set_dialog_texts(title, btn_text)
+        self.buttonBox.accepted.connect(self.accept)
+
         self.twProjects.setModel(TableModel(self))
+        self.twProjects.doubleClicked.connect(self.accept)
 
     def set_dialog_texts(self, title, btn_text):
         """ This method sets the ``title`` and the ``btn_text`` of the ok
@@ -50,38 +54,17 @@ class ProjectHandleDialog(QDialog):
 
 class NewDialog(ProjectHandleDialog):
     def __init__(self, title="New Project", btn_text="New", parent=None):
-        super(NewDialog, self).__init__(parent)
-
-        self.set_dialog_texts(title, btn_text)
-        self.buttonBox.accepted.connect(self.new_clicked)
-
-    @pyqtSlot()
-    def new_clicked(self):
-        self.accept()
+        super(NewDialog, self).__init__(title, btn_text, parent)
 
 
 class LoadDialog(ProjectHandleDialog):
     def __init__(self, title="Load Project", btn_text="Load", parent=None):
-        super(LoadDialog, self).__init__(parent)
-
-        self.set_dialog_texts(title, btn_text)
-        self.buttonBox.accepted.connect(self.load_clicked)
-
-    @pyqtSlot()
-    def load_clicked(self):
-        self.accept()
+        super(LoadDialog, self).__init__(title, btn_text, parent)
 
 
 class SaveDialog(ProjectHandleDialog):
     def __init__(self, title="Save Project", btn_text="Save", parent=None):
-        super(SaveDialog, self).__init__(parent)
-
-        self.set_dialog_texts(title, btn_text)
-        self.buttonBox.accepted.connect(self.save_clicked)
-
-    @pyqtSlot()
-    def save_clicked(self):
-        self.accept()
+        super(SaveDialog, self).__init__(title, btn_text, parent)
 
 
 class TableModel(QAbstractTableModel):
