@@ -11,18 +11,16 @@
 #ifndef KARABO_CORE_DEVICESERVER_HH
 #define	KARABO_CORE_DEVICESERVER_HH
 
-#include "boost/tuple/tuple.hpp"
-
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/PluginLoader.hh>
-#include <karabo/xms/SignalSlotable.hh>
-#include <karabo/log/Logger.hh>
-#include <karabo/util/Version.hh>
-#include "coredll.hh"
-
-#include <karabo/util/State.hh>
 #include "FsmMacros.hh"
 
+#include "karabo/log/Logger.hh"
+#include "karabo/util/Configurator.hh"
+#include "karabo/util/PluginLoader.hh"
+#include "karabo/util/Version.hh"
+#include "karabo/util/State.hh"
+#include "karabo/xms/SignalSlotable.hh"
+
+#include "boost/asio/deadline_timer.hpp"
 
 /**
  * The main European XFEL namespace
@@ -45,14 +43,13 @@ namespace karabo {
             karabo::log::Logger::Pointer m_logger;
 
             karabo::util::PluginLoader::Pointer m_pluginLoader;
-            boost::thread m_pluginThread;
-            bool m_doScanPlugins;
+            boost::asio::deadline_timer m_scanPluginsTimer;
+            bool m_scanPlugins;
             bool m_serverIsRunning;
 
             bool m_isMaster;
             bool m_debugMode;
             std::vector<karabo::util::Hash> m_autoStart;
-            bool m_scanPlugins;
 
             karabo::util::Hash m_availableDevices;
 
@@ -165,7 +162,7 @@ namespace karabo {
 
             void updateAvailableDevices();
 
-            void scanPlugins();
+            void scanPlugins(const boost::system::error_code& e);
 
             void sayHello();
 

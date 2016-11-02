@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 
         // Handle signals using the event-loop
         EventLoop::setSignalHandler([&deviceServer](int signo) {
-            deviceServer->call(deviceServer->getInstanceId(), "slotKillServer");
+            deviceServer.reset(); // triggers the destructor
         });
 
         // Start the device server

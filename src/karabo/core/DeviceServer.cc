@@ -26,8 +26,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/thread.hpp>
+#include <boost/tuple/tuple.hpp>
 #include <cstdlib>
+#include <csignal>
 
 namespace karabo {
 
@@ -133,7 +134,7 @@ namespace karabo {
         }
 
 
-        DeviceServer::DeviceServer(const karabo::util::Hash& config) : m_log(0) {
+        DeviceServer::DeviceServer(const karabo::util::Hash& config) : m_log(0), m_scanPluginsTimer(EventLoop::getIOService()) {
 
             string serverIdFileName("serverId.xml");
 
@@ -204,6 +205,7 @@ namespace karabo {
 
 
         DeviceServer::~DeviceServer() {
+            stopDeviceServer();
             KARABO_LOG_FRAMEWORK_TRACE << "DeviceServer::~DeviceServer() dtor : m_logger.use_count()=" << m_logger.use_count();
             m_logger.reset();
         }
@@ -290,9 +292,10 @@ namespace karabo {
                 slotStartDevice(device);
             }
 
+            // Whether to scan for additional plug-ins at runtime
             if (m_scanPlugins) {
                 KARABO_LOG_INFO << "Keep watching directory: " << m_pluginLoader->getPluginDirectory() << " for Device plugins";
-                m_pluginThread = boost::thread(boost::bind(&karabo::core::DeviceServer::scanPlugins, this));
+                EventLoop::getIOService().post(util::bind_weak(&DeviceServer::scanPlugins, this, boost::system::error_code()));
             }
         }
 
@@ -318,35 +321,49 @@ namespace karabo {
         }
 
 
-        void DeviceServer::scanPlugins() {
-            m_doScanPlugins = true;
-            while (m_doScanPlugins) {
-                int delay = 3000;
-                try {
-                    bool hasNewPlugins = m_pluginLoader->update();
-                    if (hasNewPlugins) {
-                        // Update the list of available devices
-                        updateAvailableDevices();
-                        newPluginAvailable();
-                    }
-                } catch (const Exception& e) {
-                    KARABO_LOG_ERROR << "Exception raised in scanPlugins: " << e;
-                    delay = 10000;
-                } catch (const std::exception& se) {
-                    KARABO_LOG_ERROR << "Standard exception raised in scanPlugins: " << se.what();
-                    delay = 10000;
-                } catch (...) {
-                    KARABO_LOG_ERROR << "Unknown exception raised in scanPlugins: ";
-                    delay = 10000;
+        void DeviceServer::scanPlugins(const boost::system::error_code& e) {
+
+            if (e) return;
+
+            int delay = 10; // If there is a problem, do not try too soon...
+            try {
+                const bool hasNewPlugins = m_pluginLoader->update();
+                if (hasNewPlugins) {
+                    // Update the list of available devices
+                    updateAvailableDevices();
+                    newPluginAvailable();
                 }
-                boost::this_thread::sleep(boost::posix_time::milliseconds(delay));
+                delay = 3; // usual delay
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Exception raised in scanPlugins: " << e;
+            } catch (const std::exception& se) {
+                KARABO_LOG_ERROR << "Standard exception raised in scanPlugins: " << se.what();
+            } catch (...) {
+                KARABO_LOG_ERROR << "Unknown exception raised in scanPlugins: ";
             }
+
+            // reload timer
+            m_scanPluginsTimer.expires_from_now(boost::posix_time::seconds(delay));
+            m_scanPluginsTimer.async_wait(bind_weak(&DeviceServer::scanPlugins, this, boost::asio::placeholders::error));
         }
 
 
         void DeviceServer::stopDeviceServer() {
-            m_doScanPlugins = false;
-            if (m_pluginThread.joinable()) m_pluginThread.join();
+            {
+                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+
+                // Notify all devices
+                KARABO_LOG_FRAMEWORK_DEBUG << "stopServer() device map size: " << m_deviceInstanceMap.size();
+                for (auto it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "stopServer() call slotKillDevice for " << it->first;
+                    call(it->first, "slotKillDevice");
+                }
+
+                m_deviceInstanceMap.clear();
+                KARABO_LOG_FRAMEWORK_DEBUG << "stopServer() device map cleared";
+            }
+
+            m_scanPluginsTimer.cancel();
             // TODO Remove from here and use the one from run() method
             m_serverIsRunning = false;
         }
@@ -498,23 +515,11 @@ namespace karabo {
 
             KARABO_LOG_INFO << "Received kill signal";
 
-            {
-                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-
-                // Notify all devices
-                for (auto it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
-                    call(it->first, "slotKillDevice");
-                }
-
-                m_deviceInstanceMap.clear();
-
-            }
-
-            // Reply the same
             reply(m_serverId);
 
-            // Stop device server
-            stopDeviceServer();
+            // Terminate the process which will call our destructor through the signal handling
+            // implemented in main() in deviceServer.cc.
+            std::raise(SIGTERM);
             KARABO_LOG_FRAMEWORK_DEBUG << "slotKillServer DONE";
         }
 
