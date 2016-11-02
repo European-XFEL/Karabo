@@ -14,7 +14,7 @@ from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.exceptions import KaraboError
 from karabo.middlelayer_api.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro
-from karabo.middlelayer_api.synchronization import sleep
+from karabo.middlelayer_api.synchronization import background, sleep
 
 from .eventloop import DeviceTest, sync_tst, async_tst
 
@@ -360,6 +360,21 @@ class Tests(DeviceTest):
             weak = weakref.ref(d)
             del d
             self.assertIsNone(weak())
+
+    @sync_tst
+    def test_proxy_dead(self):
+        @coroutine
+        def starter():
+            a = Remote({"_deviceId_": "moriturus"})
+            yield from a.startInstance()
+            proxy = yield from getDevice("moriturus")
+            yield from a.slotKillDevice()
+            return proxy
+        proxy = background(starter()).wait()
+        with self.assertRaisesRegex(KaraboError, "died"):
+            proxy.count()
+        with self.assertRaisesRegex(KaraboError, "died"):
+            proxy.value = 5
 
     @sync_tst
     def test_locked(self):
