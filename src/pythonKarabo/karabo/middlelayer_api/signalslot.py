@@ -131,6 +131,7 @@ class SignalSlotable(Configurable):
         self._devices = weakref.WeakValueDictionary()
         self.__randPing = random.randint(2, 0x7fffffff)
         self.__initialized = False
+        self._new_device_futures = {}
 
     def startInstance(self, server=None, *, loop=None):
         """Start this (device) instance
@@ -294,6 +295,22 @@ class SignalSlotable(Configurable):
         loop = get_event_loop()
         for f in loop.changedFutures:
             f.set_result(None)
+
+    @slot
+    def slotInstanceNew(self, instanceId, info):
+        future = self._new_device_futures.pop(instanceId, None)
+        if future is not None:
+            future.set_result(None)
+
+    @slot
+    def slotInstanceUpdated(self, instanceId, info):
+        pass
+
+    @slot
+    def slotInstanceGone(self, instanceId, info):
+        device = self._devices.get(instanceId)
+        if device is not None:
+            device._notify_gone()
 
     @coroutine
     def onInitialization(self):

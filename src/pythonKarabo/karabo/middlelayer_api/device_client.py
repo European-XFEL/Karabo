@@ -82,7 +82,8 @@ class ProxySlot(Slot):
         def method(self):
             self._update()
             self._device._use()
-            return (yield from self._device.call(self._deviceId, key))
+            return (yield from self._raise_on_death(
+                self._device.call(self._deviceId, key)))
         method.__doc__ = self.description
         return method.__get__(instance, owner)
 
@@ -116,6 +117,8 @@ class Proxy(object):
         self._used = 0
         self._sethash = {}
         self._sync = sync
+        self._alive = True
+        self._running_tasks = set()
 
     @classmethod
     def __dir__(cls):
@@ -151,8 +154,8 @@ class Proxy(object):
         if loop.sync_set:
             h = Hash()
             h[desc.longkey], _ = desc.toDataAndAttrs(value)
-            ok, msg = loop.sync(self._device.call(
-                self.deviceId, "slotReconfigure", h), timeout=-1, wait=True)
+            ok, msg = loop.sync(self._raise_on_death(self._device.call(
+                self.deviceId, "slotReconfigure", h)), timeout=-1, wait=True)
             if not ok:
                 raise KaraboError(msg)
         else:
@@ -169,6 +172,36 @@ class Proxy(object):
         if hash:
             self._device._ss.emit("call",
                                   {self._deviceId: ["slotReconfigure"]}, hash)
+
+    def _notify_gone(self):
+        """The underlying device has gone"""
+        self._alive = False
+        for task in self._running_tasks:
+            task.cancel()
+
+    @asyncio.coroutine
+    def _raise_on_death(self, coro):
+        """execute *coro* but raise KaraboError if proxy is orphaned
+
+        This coroutine executes the coroutine *coro*. If the device connected
+        to this proxy dies while the *coro* is executed, a KaraboError is
+        raised.
+        """
+        def raiser():
+            if not self._alive:
+                raise KaraboError('device "{}" died'.format(self._deviceId))
+            try:
+                return (yield from coro)
+            except asyncio.CancelledError:
+                if self._alive:
+                    raise
+                else:
+                    raise KaraboError(
+                        'device "{}" died'.format(self._deviceId))
+        task = asyncio.async(raiser())
+        self._running_tasks.add(task)
+        task.add_done_callback(lambda fut: self._running_tasks.discard(fut))
+        return (yield from task)
 
     def __enter__(self):
         self._used += 1
@@ -251,22 +284,8 @@ class ProxyNode(Descriptor):
 class SubProxy(object):
     _parent = Weak()
 
-    def setValue(self, desc, value):
-        self._parent.setValue(desc, value)
-
-    def _use(self):
-        self._parent._use()
-
-    def _update(self):
-        self._parent._update()
-
-    @property
-    def _deviceId(self):
-        return self._parent._deviceId
-
-    @property
-    def _device(self):
-        return self._parent._device
+    def __getattr__(self, attr):
+        return getattr(self._parent, attr)
 
 
 class OneShotQueue(asyncio.Future):
@@ -513,7 +532,20 @@ def _getDevice(deviceId, sync, Proxy=Proxy):
         yield from ret
         return ret
 
-    schema, _ = yield from instance.call(deviceId, "slotGetSchema", False)
+    newdevice = instance._new_device_futures.setdefault(
+        deviceId, asyncio.Future())
+    getschema = asyncio.async(instance.call(deviceId, "slotGetSchema", False))
+    done, pend = yield from asyncio.wait([newdevice, getschema],
+                                         return_when=asyncio.FIRST_COMPLETED)
+    for p in pend:
+        p.cancel()
+    instance._new_device_futures.pop(deviceId, None)
+    if getschema in done:
+        schema, _ = getschema.result()
+    elif newdevice in done:
+        schema, _ = yield from instance.call(deviceId, "slotGetSchema", False)
+    else:
+        raise AssertionError("this should not happen")
 
     dict = _createProxyDict(schema.hash, "")
     Cls = type(schema.name, (Proxy,), dict)
