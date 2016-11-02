@@ -68,7 +68,7 @@ class Tests(DeviceTest):
             line = (yield from self.process.stderr.readline()).decode("ascii")
 
     @async_tst
-    def test_cross(self):
+    def test_cross(self):        
         # it takes typically 2 s for the bound device to start
         self.process = yield from create_subprocess_exec(
              sys.executable, "bounddevice.py", stderr=PIPE)
@@ -127,9 +127,12 @@ class Tests(DeviceTest):
         yield from proxy.backfire()
         self.assertEqual(self.device.value, 99)
         self.assertTrue(self.device.marker)
+        print("Before Shutdown")
         yield from shutdown(proxy)
+        print ("After shutdown")
         # it takes up to 5 s for the bound device to actually shut down
         yield from self.process.wait()
+        print("Process died")
 
     @async_tst
     def test_history(self):

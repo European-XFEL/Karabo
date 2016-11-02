@@ -119,36 +119,28 @@ namespace karathon {
         SignalSlotableWrap(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
                            const std::string& connectionType = "JmsConnection",
                            const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
-                           const bool autostartEventLoop = true,
-                           int heartbeatInterval = 10);
+                           int heartbeatInterval = 10,
+                           const karabo::util::Hash& instanceInfo = karabo::util::Hash());
 
         virtual ~SignalSlotableWrap();
 
-        static boost::shared_ptr<SignalSlotableWrap> create(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
-                                                            const std::string& connectionType = "JmsConnection",
-                                                            const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
-                                                            bool autostart = false,
-                                                            int heartbeatInterval = 10) {
-            return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId, connectionType, connectionParameters, autostart, heartbeatInterval));
+        static boost::shared_ptr<SignalSlotableWrap>
+        create(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
+               const std::string& connectionType = "JmsConnection",
+               const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
+               int heartbeatInterval = 10,
+               const karabo::util::Hash& instanceInfo = karabo::util::Hash()) {
+
+            return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId,
+                                                                                connectionType,
+                                                                                connectionParameters,
+                                                                                heartbeatInterval,
+                                                                                instanceInfo));
         }
 
-        void runEventLoop(int emitHeartbeat = 10, const karabo::util::Hash& info = karabo::util::Hash()) {
+        void start() {
             ScopedGILRelease nogil;
-            karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info);
-        }
-
-        bp::object ensureOwnInstanceIdUnique() {
-            bool result = false;
-            {
-                ScopedGILRelease nogil;
-                result = karabo::xms::SignalSlotable::ensureOwnInstanceIdUnique();
-            }
-            return bp::object(result);
-        }
-
-        void stopEventLoop() {
-            ScopedGILRelease nogil;
-            karabo::xms::SignalSlotable::stopEventLoop();
+            karabo::xms::SignalSlotable::start();
         }
 
         bp::object getInstanceId() {
@@ -238,7 +230,7 @@ namespace karathon {
             karabo::util::Hash reply;
             packPy(reply, args...);
             registerReply(reply);
-        }        
+        }
 
         void registerInstanceNewHandlerPy(const bp::object& handler) {
             registerInstanceNewHandler(boost::bind(&SignalSlotableWrap::proxyInstanceNewHandler,
@@ -256,7 +248,7 @@ namespace karathon {
 
         void registerPerformanceStatisticsHandlerPy(const bp::object& handler) {
             registerPerformanceStatisticsHandler(boost::bind(&SignalSlotableWrap::proxyUpdatePerformanceStatisticsHandler,
-                                                             this, handler, _1, _2, _3, _4, _5));
+                                                             this, handler, _1, _2));
         }
 
         karabo::xms::OutputChannel::Pointer
@@ -312,7 +304,7 @@ namespace karathon {
 
         void proxySlotCallGuardHandler(const bp::object&, const std::string&);
 
-        void proxyUpdatePerformanceStatisticsHandler(const bp::object&, float, unsigned int, float, unsigned int, unsigned int);
+        void proxyUpdatePerformanceStatisticsHandler(const bp::object&, float, unsigned int);
 
         void proxyOnOutputPossibleHandler(const bp::object& handler, const karabo::xms::OutputChannel::Pointer& channel);
 
@@ -322,8 +314,6 @@ namespace karathon {
 
         void proxyOnEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
 
-    private: // members
-        boost::thread m_eventLoop;
     };
 }
 
