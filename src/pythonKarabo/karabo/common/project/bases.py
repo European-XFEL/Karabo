@@ -54,3 +54,9 @@ class BaseProjectObjectModel(HasStrictTraits):
         # data which should be persisted (or copied when making a deep copy).
         if name in self.copyable_trait_names():
             self.modified = True
+
+
+class ProjectObjectReference(BaseProjectObjectModel):
+    """ A project object refence that can be transformed into a proper model
+    object at a later point in time.
+    """

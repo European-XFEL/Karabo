@@ -5,13 +5,13 @@ from xml.etree.ElementTree import Element
 
 from nose.tools import assert_raises
 
+from karabo.testing.utils import temp_cwd, temp_xml_file, xml_is_equal
 # Import via the API module so that all the readers/writers get registered
 from ..api import (SceneModel, FixedLayoutModel, LabelModel, LineModel,
                    RectangleModel, UnknownXMLDataModel, SceneWriterException,
                    read_scene, write_scene, write_single_model, NS_KARABO,
                    SCENE_FILE_VERSION)
 from ..io_utils import set_numbers
-from .utils import temp_cwd, temp_file, xml_is_equal
 
 DATA_DIR = op.join(op.abspath(op.dirname(__file__)), 'data')
 INKSCAPE_DIR = op.join(DATA_DIR, 'inkscape')
@@ -111,7 +111,7 @@ def test_set_numbers_float_conversion():
 
 
 def test_reading():
-    with temp_file(SCENE_SVG) as fn:
+    with temp_xml_file(SCENE_SVG) as fn:
         scene = read_scene(fn)
 
     assert scene.width == 1024
@@ -180,7 +180,7 @@ def test_single_model_writing():
 
 
 def test_simple_round_trip():
-    with temp_file(SCENE_SVG) as fn:
+    with temp_xml_file(SCENE_SVG) as fn:
         scene = read_scene(fn)
 
     xml = write_scene(scene)
