@@ -12,7 +12,7 @@ from traits.api import Instance
 from karabo.common.project.api import MacroModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
-from ..dialog.macro_handle import MacroHandleDialog
+from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
 from .bases import BaseProjectTreeItem
 
 
