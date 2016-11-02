@@ -6,12 +6,13 @@
 from functools import partial
 import weakref
 
-from PyQt4.QtGui import QAction, QMenu, QStandardItem
+from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import SceneModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from .bases import BaseProjectTreeItem
 
 
@@ -24,6 +25,7 @@ class SceneModelItem(BaseProjectTreeItem):
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
+        edit_action.triggered.connect(self._edit_scene)
         dupe_action = QAction('Duplicate', menu)
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_scene,
@@ -52,3 +54,9 @@ class SceneModelItem(BaseProjectTreeItem):
         scene = self.model
         if scene in project.scenes:
             project.scenes.remove(scene)
+
+    def _edit_scene(self):
+        dialog = SceneHandleDialog(self.model)
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            self.model.simple_name = dialog.simple_name()
