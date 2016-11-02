@@ -1,5 +1,5 @@
 from karabo.common.project.api import (
-    DeviceInstanceModel, DeviceServerModel, ProjectObjectReference,
+    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     read_device_server, write_device_server)
 from karabo.testing.utils import temp_xml_file, xml_is_equal
 
@@ -27,28 +27,28 @@ def test_reading():
     dev0 = server.devices[0]
     assert dev0.instance_id == 'fooDevice'
     assert dev0.if_exists == 'ignore'
-    assert len(dev0.config_refs) == 1
-    assert dev0.config_refs[0].revision == 0
-    assert dev0.config_refs[0].uuid == UUID
+    assert len(dev0.configs) == 1
+    assert dev0.configs[0].revision == 0
+    assert dev0.configs[0].uuid == UUID
 
     dev1 = server.devices[1]
     assert dev1.instance_id == 'barDevice'
     assert dev1.if_exists == 'restart'
-    assert len(dev1.config_refs) == 2
-    assert dev1.config_refs[0].revision == 1
-    assert dev1.config_refs[0].uuid == UUID
-    assert dev1.config_refs[1].revision == 2
-    assert dev1.config_refs[1].uuid == UUID
+    assert len(dev1.configs) == 2
+    assert dev1.configs[0].revision == 1
+    assert dev1.configs[0].uuid == UUID
+    assert dev1.configs[1].revision == 2
+    assert dev1.configs[1].uuid == UUID
 
 
 def test_writing():
-    ref0 = ProjectObjectReference(uuid=UUID, revision=0)
-    ref1 = ProjectObjectReference(uuid=UUID, revision=1)
-    ref2 = ProjectObjectReference(uuid=UUID, revision=2)
+    dev0 = DeviceConfigurationModel(uuid=UUID, revision=0)
+    dev1 = DeviceConfigurationModel(uuid=UUID, revision=1)
+    dev2 = DeviceConfigurationModel(uuid=UUID, revision=2)
     foo = DeviceInstanceModel(instance_id='fooDevice', if_exists='ignore',
-                              config_refs=[ref0])
+                              configs=[dev0])
     bar = DeviceInstanceModel(instance_id='barDevice', if_exists='restart',
-                              config_refs=[ref1, ref2])
+                              configs=[dev1, dev2])
     server = DeviceServerModel(server_id='testServer', devices=[foo, bar])
 
     xml = write_device_server(server)

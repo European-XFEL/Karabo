@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
-    ProjectModel, ProjectObjectReference
+    ProjectModel
 )
 from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
 
@@ -38,11 +38,9 @@ def _convert_devices(old_devices):
 
         config_model = DeviceConfigurationModel(class_id=dev.classId,
                                                 configuration=dev.initConfig)
-        config_ref = ProjectObjectReference(uuid=config_model.uuid,
-                                            revision=config_model.revision)
         instance_model = DeviceInstanceModel(instance_id=dev.filename,
                                              if_exists=dev.ifexists,
-                                             config_refs=[config_ref])
+                                             configs=[config_model])
         dev_instances[dev.serverId].append(instance_model)
         devices.append(config_model)
 

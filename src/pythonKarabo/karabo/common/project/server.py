@@ -5,9 +5,11 @@
 #############################################################################
 from xml.etree.ElementTree import Element, SubElement, parse, tostring
 
-from traits.api import HasStrictTraits, Enum, Instance, List, String
+from traits.api import (HasStrictTraits, Enum, Instance, Int, List, String,
+                        Tuple)
 
-from .bases import BaseProjectObjectModel, ProjectObjectReference
+from .bases import BaseProjectObjectModel
+from .device import DeviceConfigurationModel
 
 
 class DeviceInstanceModel(HasStrictTraits):
@@ -15,10 +17,12 @@ class DeviceInstanceModel(HasStrictTraits):
     """
     # The device ID of the instantiated device
     instance_id = String
-    # XXX: What is this?
+    # If the device is already online, should it be ignored or restarted?
     if_exists = Enum('ignore', 'restart')
     # A list of references to possible configurations
-    config_refs = List(Instance(ProjectObjectReference))
+    configs = List(Instance(DeviceConfigurationModel))
+    # UUID/Rev of the currently active configuration
+    active_config_ref = Tuple(String, Int)
 
 
 class DeviceServerModel(BaseProjectObjectModel):
@@ -36,15 +40,15 @@ def read_device_server(io_obj):
     def _read_config_ref(element):
         uuid = element.get('uuid')
         revision = int(element.get('revision'))
-        return ProjectObjectReference(uuid=uuid, revision=revision)
+        return DeviceConfigurationModel(uuid=uuid, revision=revision)
 
     def _read_device_instance(element):
         instance_id = element.get('instance_id')
         if_exists = element.get('if_exists', 'ignore')
-        config_refs = [_read_config_ref(e) for e in element.findall('config')]
+        configs = [_read_config_ref(e) for e in element.findall('config')]
         return DeviceInstanceModel(instance_id=instance_id,
                                    if_exists=if_exists,
-                                   config_refs=config_refs)
+                                   configs=configs)
 
     document = parse(io_obj)
     root = document.getroot()
@@ -65,7 +69,7 @@ def write_device_server(model):
         element = SubElement(parent, 'device')
         element.set('instance_id', obj.instance_id)
         element.set('if_exists', obj.if_exists)
-        for config in obj.config_refs:
+        for config in obj.configs:
             _write_config_ref(config, element)
 
     root = Element('device_server')
