@@ -7,15 +7,34 @@ from karabo.common.project.api import (
     PROJECT_DB_TYPE_DEVICE, PROJECT_DB_TYPE_DEVICE_SERVER,
     PROJECT_DB_TYPE_MACRO, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
     PROJECT_OBJECT_CATEGORIES, DeviceConfigurationModel, DeviceServerModel,
-    LazyProjectModel, MacroModel, ProjectModel, ProjectObjectReference,
-    read_device_server, write_device_server)
+    MacroModel, ProjectModel, read_device_server, write_device_server)
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.hash import Hash
 
+_ITEM_TYPES = {
+    DeviceConfigurationModel: PROJECT_DB_TYPE_DEVICE,
+    DeviceServerModel: PROJECT_DB_TYPE_DEVICE_SERVER,
+    MacroModel: PROJECT_DB_TYPE_MACRO,
+    ProjectModel: PROJECT_DB_TYPE_PROJECT,
+    SceneModel: PROJECT_DB_TYPE_SCENE
+}
+_PROJECT_ITEM_TYPES = {
+    'servers': DeviceServerModel,
+    'macros': MacroModel,
+    'subprojects': ProjectModel,
+    'scenes': SceneModel,
+}
+# Check it
+assert len(_PROJECT_ITEM_TYPES) == len(PROJECT_OBJECT_CATEGORIES)
 
-def read_project_model(io_obj):
-    """ Given a file-like object ``io_obj`` containing XML data, read a project
-    model object.
+
+def read_project_model(io_obj, existing=None):
+    """ Deserialize a project model object.
+
+    :param io_obj: A file-like object that can be read from
+    :param existing: Optional preexisting object which should be filled by
+                     the reader.
+    :return: A project data model object (device config, scene, macro, etc.)
     """
     factories = {
         PROJECT_DB_TYPE_DEVICE: _device_reader,
@@ -34,20 +53,15 @@ def read_project_model(io_obj):
     factory = factories.get(item_type)
 
     # Construct from the child data + metadata
-    return factory(BytesIO(child), metadata)
+    return factory(BytesIO(child), existing, metadata)
 
 
 def write_project_model(model):
-    """ Given an object based on BaseProjectObjectModel, return an XML
-    bytestring containing the serialized object.
+    """ Serialize a project model object.
+
+    :param model: A project data model object (project, scene, macro, etc.)
+    :return: An XML bytestring representation of the object
     """
-    item_types = {
-        DeviceConfigurationModel: PROJECT_DB_TYPE_DEVICE,
-        DeviceServerModel: PROJECT_DB_TYPE_DEVICE_SERVER,
-        MacroModel: PROJECT_DB_TYPE_MACRO,
-        ProjectModel: PROJECT_DB_TYPE_PROJECT,
-        SceneModel: PROJECT_DB_TYPE_SCENE
-    }
     writers = {
         PROJECT_DB_TYPE_DEVICE: _device_writer,
         PROJECT_DB_TYPE_DEVICE_SERVER: write_device_server,
@@ -55,7 +69,12 @@ def write_project_model(model):
         PROJECT_DB_TYPE_PROJECT: _project_writer,
         PROJECT_DB_TYPE_SCENE: write_scene,
     }
-    item_type = item_types.get(model.__class__)
+
+    if not model.initialized:
+        msg = "Attempted to write a project object which is uninitialized!"
+        raise AssertionError(msg)
+
+    item_type = _ITEM_TYPES.get(model.__class__)
     writer = writers.get(item_type)
     child_xml = writer(model)
 
@@ -102,59 +121,86 @@ def _db_metadata_reader(metadata):
     return attrs
 
 
-def _device_reader(io_obj, metadata):
+def _check_preexisting(existing, klass, traits):
+    """ Make sure a preexisting object is in order.
+    """
+    if existing is None:
+        return klass(**traits)
+
+    if not isinstance(existing, klass):
+        msg = ('Incorrect object passed to reader!\n'
+               'Expected: {}, Got: {}').format(klass, type(existing))
+        raise AssertionError(msg)
+
+    if (existing.uuid != traits['uuid'] or
+            existing.revision != traits['revision']):
+        raise AssertionError('Object does not match one read from database!')
+
+    return existing
+
+
+def _device_reader(io_obj, existing, metadata):
     """ A reader for device configurations
     """
-    kwargs = _db_metadata_reader(metadata)
+    traits = _db_metadata_reader(metadata)
+    dev = _check_preexisting(existing, DeviceConfigurationModel, traits)
+
     hsh = Hash.decode(io_obj.read(), 'XML')
     for class_id, configuration in hsh.items():
-        return DeviceConfigurationModel(class_id=class_id,
-                                        configuration=configuration, **kwargs)
+        break
+    dev.trait_set(class_id=class_id, configuration=configuration)
+    return dev
 
 
-def _device_server_reader(io_obj, metadata):
+def _device_server_reader(io_obj, existing, metadata):
     """ A reader for device server models
     """
     traits = _db_metadata_reader(metadata)
+    _check_preexisting(existing, DeviceServerModel, traits)
+
     server = read_device_server(io_obj)
     server.trait_set(**traits)
     return server
 
 
-def _macro_reader(io_obj, metadata):
+def _macro_reader(io_obj, existing, metadata):
     """ A reader for macros
     """
-    kwargs = _db_metadata_reader(metadata)
+    traits = _db_metadata_reader(metadata)
+    macro = _check_preexisting(existing, MacroModel, traits)
+
     root = etree.parse(io_obj).getroot()
-    code = base64.b64decode(root.text).decode('utf-8')
-    return MacroModel(code=code, **kwargs)
+    macro.trait_set(code=base64.b64decode(root.text).decode('utf-8'))
+    return macro
 
 
-def _project_reader(io_obj, metadata):
+def _project_reader(io_obj, existing, metadata):
     """ A reader for projects
     """
-    def _get_references(hsh, key):
-        return [_reference_reader(h) for h in hsh[key]]
+    def _get_items(hsh, type_name):
+        klass = _PROJECT_ITEM_TYPES[type_name]
+        entries = hsh[type_name]
+        return [klass(uuid=h['uuid'], revision=h['revision'],
+                      initialized=False)
+                for h in entries]
 
-    kwargs = _db_metadata_reader(metadata)
+    traits = _db_metadata_reader(metadata)
+    project = _check_preexisting(existing, ProjectModel, traits)
+
     hsh = Hash.decode(io_obj.read(), 'XML')
-    project = hsh['project']
-    kwargs.update({k: _get_references(project, k)
+    project_hash = hsh['project']
+    traits.update({k: _get_items(project_hash, k)
                    for k in PROJECT_OBJECT_CATEGORIES})
-    return LazyProjectModel(**kwargs)
+    project.trait_set(**traits)
+    return project
 
 
-def _reference_reader(hsh):
-    """ Given a Hash object containing an object reference, return
-    a new ProjectObjectReference object.
-    """
-    return ProjectObjectReference(uuid=hsh['uuid'], revision=hsh['revision'])
-
-
-def _scene_reader(io_obj, metadata):
+def _scene_reader(io_obj, existing, metadata):
     """ A reader for scenes
     """
     traits = _db_metadata_reader(metadata)
+    _check_preexisting(existing, SceneModel, traits)
+
     scene = read_scene(io_obj)
     scene.trait_set(**traits)
     return scene
@@ -176,8 +222,6 @@ def _device_writer(model):
     """ A writer for device configurations
     """
     hsh = Hash(model.class_id, model.configuration)
-    for name in ('server_id', 'instance_id', 'if_exists'):
-        hsh[model.class_id, name] = getattr(model, name)
     return hsh.encode('XML')
 
 

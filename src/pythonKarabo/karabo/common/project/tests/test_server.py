@@ -36,6 +36,7 @@ def test_reading():
     assert len(dev0.configs) == 1
     assert dev0.configs[0].revision == 0
     assert dev0.configs[0].uuid == UUID
+    assert not dev0.configs[0].initialized
     assert dev0.active_config_ref == (UUID, 0)
 
     dev1 = server.devices[1]
@@ -44,8 +45,10 @@ def test_reading():
     assert len(dev1.configs) == 2
     assert dev1.configs[0].revision == 1
     assert dev1.configs[0].uuid == UUID
+    assert not dev1.configs[0].initialized
     assert dev1.configs[1].revision == 2
     assert dev1.configs[1].uuid == UUID
+    assert not dev1.configs[1].initialized
     assert dev1.active_config_ref == (UUID, 2)
 
 
