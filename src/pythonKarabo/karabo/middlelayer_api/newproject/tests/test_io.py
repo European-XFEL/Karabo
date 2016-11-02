@@ -56,7 +56,7 @@ def _project_storage():
         yield ProjectDBCache(dirpath)
 
 
-def _write_project(project, storage):
+def _write_project(project, devices, storage):
     for childname in PROJECT_OBJECT_CATEGORIES:
         children = getattr(project, childname)
         for child in children:
@@ -71,18 +71,18 @@ def _write_project(project, storage):
 
 def test_save_project():
     old_project = _get_old_project()
-    project = convert_old_project(old_project)
+    project, devices = convert_old_project(old_project)
 
     with _project_storage() as storage:
-        _write_project(project, storage)
+        _write_project(project, devices, storage)
 
 
 def test_project_round_trip():
     old_project = _get_old_project()
-    project = convert_old_project(old_project)
+    project, devices = convert_old_project(old_project)
 
     with _project_storage() as storage:
-        _write_project(project, storage)
+        _write_project(project, devices, storage)
         rt_project = read_lazy_object(project.uuid, project.revision, storage,
                                       read_project_model)
 
@@ -91,10 +91,10 @@ def test_project_round_trip():
 
 def test_project_cache():
     old_project = _get_old_project()
-    project = convert_old_project(old_project)
+    project, devices = convert_old_project(old_project)
 
     with _project_storage() as storage:
-        _write_project(project, storage)
+        _write_project(project, devices, storage)
         project_uuids = storage.get_uuids_of_type('project')
         assert len(project_uuids) == 1
         assert project_uuids[0] == project.uuid
