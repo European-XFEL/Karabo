@@ -187,30 +187,15 @@ namespace karathon {
     SignalSlotableWrap::SignalSlotableWrap(const std::string& instanceId,
                                            const std::string& connectionType,
                                            const karabo::util::Hash& connectionParameters,
-                                           const bool autostartEventLoop,
-                                           int heartbeatInterval) : SignalSlotable() {
+                                           int heartbeatInterval,
+                                           const karabo::util::Hash& instanceInfo) : SignalSlotable() {
 
         JmsConnection::Pointer connection = Configurator<JmsConnection>::create(connectionType, connectionParameters);
-        this->init(instanceId, connection);
-        this->setNumberOfThreads(2);
-
-        if (autostartEventLoop) {
-            ScopedGILRelease nogil;
-            m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeatInterval, karabo::util::Hash()));
-            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-            bool ok = ensureOwnInstanceIdUnique();
-            if (!ok) {
-                m_eventLoop.join(); // Blocks
-                return;
-            }
-        }
+        this->init(instanceId, connection, heartbeatInterval, instanceInfo);
     }
 
 
     SignalSlotableWrap::~SignalSlotableWrap() {
-        this->stopEventLoop();
-        if (m_eventLoop.joinable())
-            m_eventLoop.join();
     }
 
 
@@ -259,8 +244,8 @@ namespace karathon {
 
 
     void SignalSlotableWrap::proxyInstanceGoneHandler(const bp::object& handler,
-                                                              const std::string& instanceId,
-                                                              const karabo::util::Hash& instanceInfo) {
+                                                      const std::string& instanceId,
+                                                      const karabo::util::Hash& instanceInfo) {
         ScopedGILAcquire gil;
         try {
             if (handler) handler(bp::object(instanceId), bp::object(instanceInfo));
@@ -274,8 +259,8 @@ namespace karathon {
 
 
     void SignalSlotableWrap::proxyInstanceNewHandler(const bp::object& handler,
-                                                                const std::string& instanceId,
-                                                                const karabo::util::Hash& instanceInfo) {
+                                                     const std::string& instanceId,
+                                                     const karabo::util::Hash& instanceInfo) {
         ScopedGILAcquire gil;
         try {
             if (handler) handler(bp::object(instanceId), bp::object(instanceInfo));
@@ -317,15 +302,11 @@ namespace karathon {
 
 
     void SignalSlotableWrap::proxyUpdatePerformanceStatisticsHandler(const bp::object& handler,
-                                                                     float avgBrokerLatency,
-                                                                     unsigned int maxBrokerLatency,
                                                                      float avgProcessingLatency,
-                                                                     unsigned int maxProcessingLatency,
-                                                                     unsigned int queueSize) {
+                                                                     unsigned int maxProcessingLatency) {
         ScopedGILAcquire gil;
         try {
-            if (handler) handler(bp::object(avgBrokerLatency), bp::object(maxBrokerLatency),
-                                 bp::object(avgProcessingLatency), bp::object(maxProcessingLatency), bp::object(queueSize));
+            if (handler) handler(bp::object(avgProcessingLatency), bp::object(maxProcessingLatency));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) PyErr_Print();
             throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");

@@ -15,6 +15,7 @@ from subprocess import Popen
 import threading
 import time
 import inspect
+import traceback
 
 from karathon import (
     CHOICE_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
@@ -50,7 +51,7 @@ class DeviceServer(object):
 
     instanceCountLock = threading.Lock()
     instanceCountPerDeviceServer = dict()
-    
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -113,7 +114,7 @@ class DeviceServer(object):
         # **************************************************************
         # *                        Events                              *
         # **************************************************************
-        
+
         KARABO_FSM_EVENT2(self, 'ErrorFoundEvent', 'errorFound')
         KARABO_FSM_EVENT0(self, 'ResetEvent', 'reset')
 
@@ -141,7 +142,7 @@ class DeviceServer(object):
                                  State.NORMAL)
 
         return KARABO_FSM_CREATE_MACHINE('DeviceServerMachine')
-        
+
     def signal_handler(self, signum, frame):
         self.signal_handled = True
         if signum == signal.SIGINT:
@@ -152,15 +153,13 @@ class DeviceServer(object):
             self.ss.call("", "slotKillServer")
         else:
             self.slotKillServer()
-        self.signalSlotableThread.join()
-        self.signalSlotableThread = None
+        self.scanning = False
         self.pluginThread.join()
         self.pluginThread = None
         self.ss = None
         # time.sleep(3)
-        sys.exit()
-        # os._exit(0)
-    
+        EventLoop.stop()
+
     def __init__(self, config):
         '''Constructor'''
         if config is None:
@@ -178,13 +177,12 @@ class DeviceServer(object):
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
-        #self.autoStart = []
         self.needScanPlugins = True
-        
+
         # set serverId
         serverIdFileName = "serverId.xml"
-        if os.path.isfile(serverIdFileName): 
-            hash = loadFromFile(serverIdFileName) 
+        if os.path.isfile(serverIdFileName):
+            hash = loadFromFile(serverIdFileName)
             if 'serverId' in config:
                 self.serverid = config['serverId'] # Else whatever was configured
                 saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName, Hash("format.Xml.indentation", 3))
@@ -213,6 +211,24 @@ class DeviceServer(object):
         self.loadLogger(config)
         self.pid = os.getpid()
         self.seqnum = 0
+        self.log = Logger.getCategory(self.serverid)
+
+        info = Hash("type", "server")
+        info["serverId"] = self.serverid
+        info["version"] = self.__class__.__version__
+        info["host"] = self.hostname
+        info["visibility"] = self.visibility
+         # Instantiate and start SignalSlotable object
+        self.ss = SignalSlotable(self.serverid, "JmsConnection", self.connectionParameters, 10, info)
+        self.ss.start()
+
+        self._registerAndConnectSignalsAndSlots()
+        brokerUrl = self.ss.getConnection().getBrokerUrl()
+        self.log.INFO("Starting Karabo DeviceServer on host: {}, serverId: {}, broker: {}".format(
+                      self.hostname, self.serverid, brokerUrl))
+
+        self.fsm.start()
+        signal.pause()
 
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
@@ -225,36 +241,7 @@ class DeviceServer(object):
         Logger.useOstream("karabo", False)
         Logger.useFile("karabo", False)
 
-    def run(self):
-        self.log = Logger.getCategory(self.serverid)
-        self.ss = SignalSlotable.create(self.serverid, "JmsConnection", self.connectionParameters)
-        self._registerAndConnectSignalsAndSlots()
-        brokerUrl = self.ss.getConnection().getBrokerUrl()
-        self.log.INFO("Starting Karabo DeviceServer on host: {}, serverId: {}, broker: {}".format(
-                      self.hostname, self.serverid, brokerUrl))
 
-
-        info = Hash("type", "server")
-        info["serverId"] = self.serverid
-        info["version"] = self.__class__.__version__
-        info["host"] = self.hostname
-        info["visibility"] = self.visibility
-        # TODO
-        self.signalSlotableThread = threading.Thread(target=self.ss.runEventLoop, args = (10, info))
-        self.signalSlotableThread.start()
-        time.sleep(0.01)  # for rescheduling, some garantie that runEventLoop will start before FSM
-        
-        # if our own instanceId is used on topic -- exit
-        ok = self.ss.ensureOwnInstanceIdUnique()
-        if not ok:
-            self.log.ERROR("DeviceServer '{0.serverid}' could not start since "
-                           "its id already exists.".format(self))
-            self.signalSlotableThread.join()
-            return
-                
-        self.fsm.start()
-        signal.pause()
-    
     def _registerAndConnectSignalsAndSlots(self):
         self.ss.registerSlot(self.slotStartDevice)
         self.ss.registerSlot(self.slotKillServer)
@@ -265,7 +252,7 @@ class DeviceServer(object):
     def onStateUpdate(self, currentState):
         #self.ss.reply(currentState)
         pass
-        
+
     def okStateOnEntry(self):
         self.log.INFO("DeviceServer with id '{0.serverid}' starts up on host "
                       "'{0.hostname}'".format(self))
@@ -276,7 +263,7 @@ class DeviceServer(object):
             self.pluginThread = threading.Thread(target = self.scanPlugins)
             self.scanning = True
             self.pluginThread.start()
-    
+
     def import_plugin(self, name):
         """ Return the device class defined by an entrypoint.
         """
@@ -307,17 +294,15 @@ class DeviceServer(object):
                     self.log.ERROR("Failure while building schema for class {}, base class {} and bases {} : {}".format(
                         classid, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
             time.sleep(3)
-        self.ss.stopEventLoop()
-    
+
     def stopDeviceServer(self):
-        self.scanning = False
         if not self.signal_handled:
             pid = os.getpid()
             os.kill(pid, signal.SIGTERM)
-    
+
     def errorFoundAction(self, m1, m2):
         self.log.ERROR("{} -- {}".format(m1,m2))
-    
+
     def slotStartDevice(self, configuration):
         self.instantiateDevice(configuration)
 
@@ -361,7 +346,7 @@ class DeviceServer(object):
                 filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
             saveToFile(config, filename, Hash("format.Xml.indentation", 2))
             params = [self.pluginLoader.pluginDirectory, modname, classid, filename]
-            
+
             launcher = Launcher(params)
             launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
@@ -381,10 +366,10 @@ class DeviceServer(object):
         self.log.DEBUG("Sending instance update as new device plugins are available: {}".format(deviceClasses))
         self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities))
 
-    
+
     def noStateTransition(self):
         self.log.WARN("DeviceServer \"{}\" does not allow the transition for this event.".format(self.serverid))
-   
+
     def slotKillServer(self):
         self.log.INFO("Received kill signal")
         threads = []
@@ -397,7 +382,7 @@ class DeviceServer(object):
         self.ss.reply(self.serverid)
         self.stopDeviceServer()
         self.log.DEBUG("slotKillServer DONE")
-        
+
     def slotDeviceGone(self, instanceId):
         # Would prefer a self.log.FRAMEWORK_INFO as in C++ instead of self.log.DEBUG:
         self.log.DEBUG("Device '{0}' notifies '{1.serverid}' about its future "
@@ -415,7 +400,7 @@ class DeviceServer(object):
         except AttributeError as e:
             self.log.WARN("Replied empty schema due to : {}".format(str(e)))
             self.ss.reply(Schema(), classid, self.serverid)
-        
+
     def slotLoggerPriority(self, newprio):
         # In contrast to C++, the new priority will not be "forwarded" to
         # existing devices. The Python devices have their own slotLoggerPriority
@@ -425,11 +410,11 @@ class DeviceServer(object):
         oldprio = Logger.getPriority()
         Logger.setPriority(newprio)
         self.log.INFO("Logger Priority changed : {} ==> {}".format(oldprio, newprio))
-        
+
     def processEvent(self, event):
         with self.processEventLock:
             self.fsm.process_event(event)
-        
+
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cls = self.__class__
         with cls.instanceCountLock:
@@ -461,6 +446,7 @@ class Launcher(object):
 
         self.child = Popen(args)
 
+    # TODO This should be renamed, has nothing to do with threads
     def join(self):
         if self.child.poll() is None:
             self.child.wait()
@@ -469,15 +455,14 @@ class Launcher(object):
 def main(args=None):
     args = args or sys.argv
     try:
+        t = threading.Thread(target=EventLoop.work)
+        t.start()
         server = Runner(DeviceServer).instantiate(args)
-        if server:
-            t = threading.Thread(target=EventLoop.work)
-            t.start()
-            server.run()
-            EventLoop.stop()
-            t.join()
-    except Exception as e:
-        print("Exception caught: " + str(e))
+        t.join()
+    except:
+        traceback.print_exc(file=sys.stdout)
+        EventLoop.stop()
+        t.join()
 
 if __name__ == '__main__':
     main()
