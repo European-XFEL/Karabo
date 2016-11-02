@@ -20,10 +20,10 @@ def create_project_model_shadow(model=None):
     """
     details = (
         # (list name, group label, item create, item destroy)
-        ('devices', 'Devices', DeviceConfigurationModelItem, lambda x: None),
         ('macros', 'Macros', MacroModelItem, lambda x: None),
         ('scenes', 'Scenes', SceneModelItem, lambda x: None),
-        ('servers', 'Device Servers', DeviceServerModelItem, lambda x: None),
+        ('servers', 'Device Servers', create_device_server_model_shadow,
+         destroy_device_server_model_shadow),
         ('subprojects', 'Subprojects', create_project_model_shadow,
          destroy_project_model_shadow),
     )
@@ -59,3 +59,27 @@ def destroy_project_model_shadow(shadow_model):
         if child.child_create is create_project_model_shadow:
             for subchild in child.children:
                 destroy_project_model_shadow(subchild)
+
+
+def create_device_server_model_shadow(model):
+    shadow = DeviceServerModelItem(model=model)
+    for device in model.devices:
+        child = DeviceConfigurationModelItem(model=device)
+        shadow.children.extend(child)
+    return shadow
+
+
+def destroy_device_server_model_shadow(shadow_model):
+    """Destroys a DeviceServerModelItem and its associated children by removing
+    all previously added Traits notification handlers.
+    """
+    model = shadow_model.model
+    for child in shadow_model.children:
+        name = child.trait_name
+        model.on_trait_change(child.item_handler, name + '_items',
+                              remove=True)
+        # Recurse!
+        if child.child_create is create_device_server_model_shadow:
+            for subchild in child.children:
+                destroy_device_server_model_shadow(subchild)
+
