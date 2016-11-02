@@ -11,5 +11,7 @@ from .bases import BaseProjectObjectModel
 class DeviceConfigurationModel(BaseProjectObjectModel):
     """ A single device configuration
     """
+    # The Class ID of the device
     class_id = String
+    # This is the configuration Hash. ``object`` used here to avoid importing.
     configuration = Instance(object)
