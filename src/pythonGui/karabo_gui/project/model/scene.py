@@ -12,7 +12,7 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import SceneModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
-from ..dialog.scene_handle import SceneHandleDialog
+from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from .bases import BaseProjectTreeItem
 
 
