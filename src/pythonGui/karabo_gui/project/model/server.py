@@ -7,9 +7,11 @@ from functools import partial
 import weakref
 
 from PyQt4.QtGui import QAction, QMenu, QStandardItem
-from traits.api import Instance
+from traits.api import Instance, List
 
-from karabo.common.project.api import DeviceServerModel
+from karabo.common.project.api import (
+    DeviceConfigurationModel, DeviceServerModel
+)
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .bases import BaseProjectTreeItem
@@ -20,6 +22,8 @@ class DeviceServerModelItem(BaseProjectTreeItem):
     """
     # Redefine model with the correct type
     model = Instance(DeviceServerModel)
+    # The different device configuration models
+    children = List(Instance(DeviceConfigurationModel))
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
@@ -34,10 +38,13 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         return menu
 
     def create_qt_item(self):
-        item = QStandardItem('Server')
+        item = QStandardItem(self.model.server_id)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         item.setIcon(icons.deviceGroupInstance)
         item.setEditable(False)
+        for child in self.children:
+            item.appendRow(child.qt_item)
+
         return item
 
     # ----------------------------------------------------------------------
