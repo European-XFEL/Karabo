@@ -37,7 +37,7 @@ class DeviceServerModel(BaseProjectObjectModel):
 def read_device_server(io_obj):
     """ A reader for device server models
     """
-    def _read_config_ref(element):
+    def _read_configs(element):
         uuid = element.get('uuid')
         revision = int(element.get('revision'))
         return DeviceConfigurationModel(uuid=uuid, revision=revision)
@@ -45,10 +45,12 @@ def read_device_server(io_obj):
     def _read_device_instance(element):
         instance_id = element.get('instance_id')
         if_exists = element.get('if_exists', 'ignore')
-        configs = [_read_config_ref(e) for e in element.findall('config')]
+        active_uuid = element.get('active_uuid')
+        active_rev = int(element.get('active_rev'))
+        configs = [_read_configs(e) for e in element.findall('config')]
         return DeviceInstanceModel(instance_id=instance_id,
-                                   if_exists=if_exists,
-                                   configs=configs)
+                                   if_exists=if_exists, configs=configs,
+                                   active_config_ref=(active_uuid, active_rev))
 
     document = parse(io_obj)
     root = document.getroot()
@@ -60,17 +62,20 @@ def read_device_server(io_obj):
 def write_device_server(model):
     """ A writer for device server models
     """
-    def _write_config_ref(obj, parent):
+    def _write_configs(obj, parent):
         element = SubElement(parent, 'config')
         element.set('uuid', obj.uuid)
         element.set('revision', str(obj.revision))
 
     def _write_device_instance(obj, parent):
         element = SubElement(parent, 'device')
+        active_uuid, active_rev = obj.active_config_ref
         element.set('instance_id', obj.instance_id)
         element.set('if_exists', obj.if_exists)
+        element.set('active_uuid', active_uuid)
+        element.set('active_rev', str(active_rev))
         for config in obj.configs:
-            _write_config_ref(config, element)
+            _write_configs(config, element)
 
     root = Element('device_server')
     root.set('server_id', model.server_id)
