@@ -10,7 +10,7 @@ import sys
 from unittest import main
 
 from karabo.middlelayer import (
-    AccessLevel, AlarmCondition, Assignment, Configurable, Device,
+    AccessLevel, AlarmCondition, Assignment, background, Configurable, Device,
     DeviceClientBase, getDevice, getHistory, Int32, MetricPrefix, Node,
     shutdown, sleep, Slot, State, unit, Unit, waitUntil, waitUntilNew)
 
@@ -110,9 +110,14 @@ class Tests(DeviceTest):
                 proxy.a = 77
             self.assertEqual(proxy.a, 22.7 * unit.milliampere)
 
+            def setter():
+                proxy.a = 22.3 * unit.milliampere
+                self.assertEqual(proxy.a, 22.3 * unit.milliampere)
+            yield from background(setter)
+
             proxy.a = 0.0228 * unit.ampere
-            self.assertEqual(proxy.a, 22.7 * unit.milliampere,
-                             "proxy should set value on device, not own value")
+            self.assertNotEqual(proxy.a, 22.8 * unit.milliampere,
+                                "proxy should set value on device, not own")
             yield from waitUntil(lambda: proxy.a == 22.8 * unit.milliampere)
             self.assertEqual(proxy.a, 22.8 * unit.milliampere,
                              "didn't receive change from bound device")
