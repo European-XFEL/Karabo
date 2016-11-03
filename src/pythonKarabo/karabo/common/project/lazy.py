@@ -40,7 +40,7 @@ def _read_lazy_object_r(domain, uuid, revision, db_iface, reader, existing,
             if (child.uuid, child.revision) not in requested_objs:
                 collected.append(child)
 
-    data = db_iface.retrieve(domain, uuid, revision)
+    data = db_iface.retrieve(domain, uuid, revision, existing=existing)
     requested_objs.add((uuid, revision))
 
     if data:
