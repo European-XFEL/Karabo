@@ -92,7 +92,11 @@ class Hash_TestCase(unittest.TestCase):
             self.assertEqual(tree['F.f.f.f.f.x.y.z'], 99)
         except Exception as e:
             self.fail("test_constructors exception group 4: " + str(e))
-        
+
+    def test_get(self):
+        h = Hash()
+        self.assertIsNone(h.get("missing"))
+        self.assertEqual(h.get("missing", default="value"), "value")
 
     def test_getSet(self):
         
