@@ -24,7 +24,6 @@ namespace karabo {
 
     TcpAdapter::TcpAdapter(const karabo::util::Hash& config) : 
             m_deadline(karabo::net::EventLoop::getIOService()),
-            m_connected(false),
             m_MessageId(0) {
         
         Hash h;
@@ -51,9 +50,8 @@ namespace karabo {
             }
             return;
         }
-        m_connected = true;
         m_channel = boost::dynamic_pointer_cast<TcpChannel>(channel);
-        channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
+        if (channel->isOpen()) channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
     }
 
     void TcpAdapter::waitHandler(const karabo::net::ErrorCode& ec, int timeout, int repetition) {
@@ -73,7 +71,8 @@ namespace karabo {
     
     void TcpAdapter::onRead(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel, karabo::util::Hash& info) {
         if (e) {
-            EventLoop::getIOService().post(boost::bind(&karabo::TcpAdapter::onError, this, e, channel));
+            onError(e, channel);
+            if (channel) channel->close();
             return;
         }
 
@@ -103,10 +102,10 @@ namespace karabo {
                 
             }
              
-            channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
+            if (channel->isOpen()) channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
         } catch (const Exception& e) {
             std::cerr  << "Problem in onRead(): " << e.userFriendlyMsg() << std::endl;
-            channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
+            if (channel->isOpen()) channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
            
         }
     }
@@ -114,7 +113,7 @@ namespace karabo {
     void TcpAdapter::onError(const karabo::net::ErrorCode& errorCode, karabo::net::Channel::Pointer channel) {
         try {
 
-            if (m_debug) std::clog  << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client" <<std::endl;
+            if (m_debug) std::clog  << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to GuiServerDevice" <<std::endl;
 
         } catch (const Exception& e) {
             std::cerr << "Problem in onError(): " << e.userFriendlyMsg() << std::endl;
@@ -132,11 +131,11 @@ namespace karabo {
     };
     
     bool TcpAdapter::connected() const{
-        return m_connected;
+        return m_channel && m_channel->isOpen();
     };
     
     void TcpAdapter::sendMessage(const karabo::util::Hash & message, bool block){
-        m_channel->socket().cancel(); // cancel pending reads
+        if (!connected()) return;
         m_writeWaitForId = ++m_MessageId;
         m_channel->writeAsyncHash(message, boost::bind(&karabo::TcpAdapter::onWriteComplete, this, _1, m_channel, m_MessageId));
         if(block){
@@ -148,6 +147,7 @@ namespace karabo {
     void TcpAdapter::onWriteComplete(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, size_t id) {
         if (ec) {
             onError(ec, channel);
+            if (channel) channel->close();
             boost::lock_guard<boost::mutex> lock(m_writeConditionMutex);
             m_writeCondition.notify_all();
             return;
@@ -157,10 +157,6 @@ namespace karabo {
             boost::lock_guard<boost::mutex> lock(m_writeConditionMutex);
             m_writeCondition.notify_all();
         }
-        
-        // data was sent successfully! Prepare to read a reply asynchronous from a server: placeholder _1 is a Hash
-        channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
-       
     }
     
     void TcpAdapter::disconnect(){
