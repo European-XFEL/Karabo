@@ -212,10 +212,7 @@ class ProjectManager(PythonDevice):
 
     def slotLoadItemsAndSubs(self, domain, items, list_tags):
         """
-        Loads items from the database - including any sub items. For this
-        the root element of each item is expected to have an attribute
-        list_tag, identifying under which tag to find child items. These
-        will then be loaded.
+        Loads items from the database - including any sub items.
 
         :param domain: domain to load items from
         :param items: list of Hashes containing information on which items
@@ -295,12 +292,10 @@ class ProjectManager(PythonDevice):
         :return: a list of Hashes where each entry has keys: uuid, item_type
                  and simple_name
         """
-        resHashed = []
+
         with self.db:
             res = self.db.list_items(domain, item_types)
-            for r in res:
-                h = Hash('uuid', r['uuid'],
-                         'item_type', r['item_type'],
-                         'simple_name', r['simple_name'])
-                resHashed.append(h)
-        self.reply(resHashed)
+            resHashes = [Hash('uuid', r['uuid'],
+                              'item_type', r['item_type'],
+                              'simple_name', r['simple_name']) for r in res]
+            self.reply(resHashes)
