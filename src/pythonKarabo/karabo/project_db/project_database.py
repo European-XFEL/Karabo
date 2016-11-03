@@ -119,8 +119,8 @@ class ProjectDatabase(ContextDecorator):
             return xml_rep
         if isinstance(xml_rep, etree._Element):
             xml_bytes = etree.tostring(xml_rep, pretty_print=True,
-                                       encoding='UTF-8', xml_declaration=False)
-            return xml_bytes.decode("utf-8")
+                                       encoding="unicode", xml_declaration=False)
+            return xml_bytes
 
         raise AttributeError("Cannot handle type {}".format(type(xml_rep)))
 
@@ -411,7 +411,7 @@ class ProjectDatabase(ContextDecorator):
         Loads all items found in item_xml_str under children.
 
         :param domain: the domain to load from
-        :param item_xml_str: the xml of the container item, at it's root
+        :param item_xml_str: the xml of the container item, at its root
         :param list_tags: tags which identify children to load
         :return:xml string of the loaded items
         """
@@ -459,16 +459,28 @@ class ProjectDatabase(ContextDecorator):
         :return: a list of dicts where each entry has keys: uuid, item_type
                  and simple_name
         """
-        query = 'xquery version "3.0";\n'
+        query = """
+                xquery version "3.0";
+                {maybe_let}
+                for $c at $i in collection("{root}/{domain}/?select=*")
+                {maybe_where}
+                {return_stmnt}
+                """
+        maybe_let, maybe_where = '', ''
         if item_types is not None:
-            query += 'let $item_types := {}'.format(tuple(item_types))
-        query += 'for $c at $i in collection("{}/{}/?select=*")\n'\
-                 .format(self.root, domain)
-        if item_types is not None:
-            query += 'where $c/*/@item_type = $item_types\n'
-        query += 'return <item uuid="{$c/*/@uuid}" simple_name="{' \
-                 '$c/*/@simple_name}" item_type="{$c/*/@item_type}"/>\n'
+            maybe_let = 'let $item_types := {}'.format(tuple(item_types))
+            maybe_where = 'where $c/*/@item_type = $item_types'
 
+        r_names = ('uuid', 'simple_name', 'item_type')
+        r_attrs = ' '.join(['{name}="{{$c/*/@{name}}}"'.format(name=n)
+                          for n in r_names])
+
+        return_stmnt = 'return <item {} />'.format(r_attrs)
+
+        query = query.format(maybe_let=maybe_let,
+                             maybe_where=maybe_where,
+                             root=self.root, domain=domain,
+                             return_stmnt=return_stmnt)
         try:
             res = self.dbhandle.query(query)
             return [{'uuid': r.attrib['uuid'],
