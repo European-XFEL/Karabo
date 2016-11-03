@@ -18,6 +18,9 @@ class BaseProjectObjectModel(HasStrictTraits):
     # When True, the object contains unsaved data
     modified = Bool(False, transient=True)
 
+    # When False, the object is known to be uninitialized
+    initialized = Bool(True, transient=True)
+
     # Version and unique id
     revision = Int(transient=True)
     uuid = String
@@ -54,9 +57,3 @@ class BaseProjectObjectModel(HasStrictTraits):
         # data which should be persisted (or copied when making a deep copy).
         if name in self.copyable_trait_names():
             self.modified = True
-
-
-class ProjectObjectReference(BaseProjectObjectModel):
-    """ A project object refence that can be transformed into a proper model
-    object at a later point in time.
-    """
