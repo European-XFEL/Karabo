@@ -80,7 +80,7 @@ class ProxySlot(Slot):
 
         @synchronize
         def method(self):
-            self._update()
+            yield from self._update()
             self._device._use()
             return (yield from self._raise_on_death(
                 self._device.call(self._deviceId, key)))
@@ -115,7 +115,7 @@ class Proxy(object):
         self._queues = defaultdict(WeakSet)
         self._deviceId = deviceId
         self._used = 0
-        self._sethash = {}
+        self._sethash = Hash()
         self._sync = sync
         self._alive = True
         self._running_tasks = set()
@@ -162,16 +162,14 @@ class Proxy(object):
             update = not self._sethash
             self._sethash[desc.longkey], _ = desc.toDataAndAttrs(value)
             if update:
-                self._device._ss.loop.call_soon_threadsafe(self._update)
+                asyncio.async(self._update())
 
+    @asyncio.coroutine
     def _update(self):
-        hash = Hash()
-        while self._sethash:
-            k, v = self._sethash.popitem()
-            hash[k] = v
-        if hash:
-            self._device._ss.emit("call",
-                                  {self._deviceId: ["slotReconfigure"]}, hash)
+        if self._sethash:
+            sethash, self._sethash = self._sethash, Hash()
+            yield from self._device._ss.request(
+                self._deviceId, "slotReconfigure", sethash)
 
     def _notify_gone(self):
         """The underlying device has gone"""
@@ -226,7 +224,7 @@ class Proxy(object):
             self.__exit__(None, None, None)
 
     def __iter__(self):
-        self._update()
+        yield from self._update()
         conf, _ = yield from self._device.call(self._deviceId,
                                                "slotGetConfiguration")
         self._onChanged(conf)
@@ -770,7 +768,7 @@ def setWait(device, **kwargs):
     the function waits until the device has acknowledged that the values
     have been set."""
     if isinstance(device, Proxy):
-        device._update()
+        yield from device._update()
         device = device._deviceId
     h = Hash()
     for k, v in kwargs.items():
