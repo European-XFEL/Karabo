@@ -101,6 +101,13 @@ class Dialog(QDialog):
         self.valueList.addItems([self.textFromItem(item) for item in items])
         self.valueList.setCurrentRow(0)
 
+    def _update_image(self, item):
+        """ Update the ``self.image`` with the given pixmap of the ``item``.
+        """
+        if not item.getPixmap():
+            return
+        self.image.setPixmap(item.pixmap)
+
     @pyqtSlot(int)
     def on_valueList_currentRowChanged(self, row):
         self.image.setPixmap(self.items[row].pixmap)
@@ -116,10 +123,7 @@ class Dialog(QDialog):
                 e.message = "Could not open URL or Image"
                 raise
             item.setURL(filename)
-
-        if not item.getPixmap():
-            return
-        self.image.setPixmap(item.pixmap)
+        self._update_image(item)
 
     @pyqtSlot()
     def on_open_clicked(self):
@@ -128,8 +132,12 @@ class Dialog(QDialog):
                         caption="Open Icon",
                         filter="Images (*.png *.xpm *.jpg *.jpeg *.svg "
                                "*.gif *.ico *.tif *.tiff *.bmp)")
-        if filename:
-            self.setURL(filename)
+        if not filename:
+            return
+
+        item = self.items[self.valueList.currentRow()]
+        item.setURL(filename)
+        self._update_image(item)
 
     @pyqtSlot()
     def on_paste_clicked(self):
