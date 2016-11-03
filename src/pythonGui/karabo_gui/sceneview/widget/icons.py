@@ -76,7 +76,7 @@ class _DisplayIconsetWrapper(DisplayIconset):
         self.model.image = image
 
     def setData(self, image, data):
-        super(_DisplayIconsetWrapper, self).setData(data)
+        super(_DisplayIconsetWrapper, self).setData(image, data)
         self.model.image = image
         self.model.data = data
 
