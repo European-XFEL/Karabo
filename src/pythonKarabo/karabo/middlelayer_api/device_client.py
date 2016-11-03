@@ -154,10 +154,8 @@ class Proxy(object):
         if loop.sync_set:
             h = Hash()
             h[desc.longkey], _ = desc.toDataAndAttrs(value)
-            ok, msg = loop.sync(self._raise_on_death(self._device.call(
+            loop.sync(self._raise_on_death(self._device.call(
                 self.deviceId, "slotReconfigure", h)), timeout=-1, wait=True)
-            if not ok:
-                raise KaraboError(msg)
         else:
             update = not self._sethash
             self._sethash[desc.longkey], _ = desc.toDataAndAttrs(value)
