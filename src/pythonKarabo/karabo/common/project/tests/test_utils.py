@@ -1,7 +1,25 @@
 from nose.tools import assert_raises
 
-from karabo.common.project.api import (ProjectModel, MacroModel,
-                                       find_parent_project)
+from karabo.common.project.api import (
+    ProjectModel, MacroModel, find_parent_project, visit_project_objects)
+
+
+def test_project_model_visitor():
+    visited = []
+
+    def visitor(obj):
+        visited.append(obj)
+
+    macro = MacroModel(code="print('hello world')")
+    inner_proj = ProjectModel(macros=[macro])
+    proj = ProjectModel(subprojects=[inner_proj])
+
+    visit_project_objects(proj, visitor)
+    assert visited == [proj, inner_proj, macro]
+
+    del visited[:]
+    visit_project_objects(inner_proj, visitor)
+    assert visited == [inner_proj, macro]
 
 
 def test_find_parent_project():

@@ -62,6 +62,9 @@ def _write_project(project, devices, storage):
         for child in children:
             data = write_project_model(child)
             storage.store(child.uuid, child.revision, data)
+    for dev in devices:
+        data = write_project_model(dev)
+        storage.store(dev.uuid, dev.revision, data)
 
     data = write_project_model(project)
     storage.store(project.uuid, project.revision, data)
