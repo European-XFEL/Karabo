@@ -528,8 +528,8 @@ namespace karabo {
             std::vector<boost::any> m_slots;
 
             karabo::util::Hash m_trackedInstances;
-            bool m_trackAllInstances = false;
-            int m_heartbeatInterval = 10;
+            bool m_trackAllInstances;
+            int m_heartbeatInterval;
 
             mutable boost::mutex m_trackedInstancesMutex;
 
@@ -554,7 +554,7 @@ namespace karabo {
             static std::map<std::string, SignalSlotable*> m_instanceMap;
             static boost::mutex m_instanceMapMutex;
 
-            bool m_discoverConnectionResourcesMode = false;
+            bool m_discoverConnectionResourcesMode;
             static std::map<std::string, std::string> m_connectionStrings;
             static boost::mutex m_connectionStringsMutex;
 

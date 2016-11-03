@@ -42,9 +42,10 @@ namespace karabo {
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId,
                                                const karabo::util::Hash::Pointer& header,
                                                const karabo::util::Hash::Pointer& body) const {
-            if (instanceId == "*" || instanceId.empty()) {
-                return false;
-            }
+
+            // Global signals must go via the broker
+            if (instanceId == "*") return false;
+
 
             SignalSlotable* that = 0;
             {
@@ -56,7 +57,7 @@ namespace karabo {
             }
 
             if (that) {
-                that->processEvent(header, body);
+                EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, that, header, body));
                 return true;
             } else {
                 return false;
@@ -96,9 +97,10 @@ namespace karabo {
         void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                            const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
                                            const std::string& topic) const {
-            // // TODO Re-factor and enable short-cut messaging in a future MR!
-            //if (tryToCallDirectly(instanceId, header, body)) return;
-            //if (tryToCallP2P(instanceId, header, body, prio)) return;
+
+            if (tryToCallDirectly(instanceId, header, body)) return;
+            if (tryToCallP2P(instanceId, header, body, prio)) return;
+
             const std::string& t = topic.empty() ? m_topic : topic;
             m_producerChannel->write(t, header, body, prio, timeToLive);
         }
@@ -157,6 +159,7 @@ namespace karabo {
                                                               const std::string& replySlotInstanceId,
                                                               const std::string& replySlotFunction) {
             karabo::util::Hash::Pointer header(new karabo::util::Hash);
+            // TODO Rename replyInstanceIds and replyFunctions to replyInstanceId and replyFunction
             header->set("replyInstanceIds", "|" + replySlotInstanceId + "|");
             header->set("replyFunctions", "|" + replySlotInstanceId + ":" + replySlotFunction + "|");
             header->set("signalInstanceId", m_signalSlotable->getInstanceId());
@@ -211,6 +214,9 @@ namespace karabo {
 
         SignalSlotable::SignalSlotable() :
             m_randPing(rand() + 2),
+            m_trackAllInstances(false),
+            m_heartbeatInterval(10),
+            m_discoverConnectionResourcesMode(false),
             m_heartbeatTimer(EventLoop::getIOService()),
             m_trackingTimer(EventLoop::getIOService()),
             m_performanceTimer(EventLoop::getIOService()) {
@@ -220,10 +226,7 @@ namespace karabo {
 
         SignalSlotable::SignalSlotable(const string& instanceId, const JmsConnection::Pointer& connection,
                                        const int heartbeatInterval, const karabo::util::Hash& instanceInfo) :
-            m_randPing(rand() + 2),
-            m_heartbeatTimer(EventLoop::getIOService()),
-            m_trackingTimer(EventLoop::getIOService()),
-            m_performanceTimer(EventLoop::getIOService()) {
+            SignalSlotable() {
             setTopic();
             init(instanceId, connection, heartbeatInterval, instanceInfo);
         }
@@ -232,10 +235,7 @@ namespace karabo {
         SignalSlotable::SignalSlotable(const std::string& instanceId, const std::string& connectionClass,
                                        const karabo::util::Hash& brokerConfiguration,
                                        const int heartbeatInterval, const karabo::util::Hash& instanceInfo) :
-            m_randPing(rand() + 2),
-            m_heartbeatTimer(EventLoop::getIOService()),
-            m_trackingTimer(EventLoop::getIOService()),
-            m_performanceTimer(EventLoop::getIOService()) {
+            SignalSlotable() {
             setTopic();
             JmsConnection::Pointer connection = Configurator<JmsConnection>::create(connectionClass, brokerConfiguration);
             init(instanceId, connection, heartbeatInterval, instanceInfo);
@@ -269,6 +269,7 @@ namespace karabo {
                 if (it != m_instanceMap.end()) it->second->m_discoverConnectionResourcesMode = true;
                 m_discoverConnectionResourcesMode = false;
             }
+            m_instanceInfo.erase("p2p_connection");
         }
 
 
@@ -278,10 +279,17 @@ namespace karabo {
             if (!instance) {
                 instance = this;
             } else if (instance != this) {
+                // Do not dare to call methods on instance - could already be destructed...?
                 KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Cannot register "
                         << "for short-cut messaging since there is already another instance.";
-                // Do not dare to call methods on instance - could already be destructed...?
             }
+            if (!m_pointToPoint) {
+                m_pointToPoint = boost::make_shared<PointToPoint>();
+                m_discoverConnectionResourcesMode = true;
+                KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint producer connection string is \""
+                        << m_pointToPoint->getConnectionString() << "\"";
+            }
+            m_instanceInfo.set("p2p_connection", m_pointToPoint->getConnectionString());
         }
 
 
@@ -303,24 +311,13 @@ namespace karabo {
 
             // Create producers and consumers
             m_producerChannel = m_connection->createProducer();
-
             // This will select messages addressed to me
             const string selector("slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'");
             m_consumerChannel = m_connection->createConsumer(m_topic, selector);
-
             m_heartbeatProducerChannel = m_connection->createProducer();
 
             registerDefaultSignalsAndSlots();
 
-            registerForShortcutMessaging();
-
-            // Put the P2P producer local port number into instanceInfo for distributing around
-            if (!m_pointToPoint) {
-                m_pointToPoint = PointToPoint::Pointer(new PointToPoint);
-                m_discoverConnectionResourcesMode = true;
-                KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint producer connection string is \"" << m_pointToPoint->getConnectionString() << "\"";
-            }
-            m_instanceInfo.set("p2p_connection", m_pointToPoint->getConnectionString());
             m_instanceInfo.set("heartbeatInterval", m_heartbeatInterval);
             m_instanceInfo.set("karaboVersion", karabo::util::Version::getVersion());
         }
@@ -331,13 +328,23 @@ namespace karabo {
             ensureInstanceIdIsValid(m_instanceId);
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id " << m_instanceId;
             m_randPing = 0; // Allows to answer on slotPing with argument rand = 0.
-            call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
+            registerForShortcutMessaging();
             startEmittingHeartbeats();
             startPerformanceMonitor();
+            call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
         }
 
 
         void SignalSlotable::ensureInstanceIdIsValid(const std::string& instanceId) {
+            {
+                // It is important to check first for local conflicts, else
+                // shortcut messaging (enabled by the conflicting instance) will trick slotPing request
+                boost::mutex::scoped_lock lock(m_instanceMapMutex);
+                if (m_instanceMap.count(instanceId)) {
+                    throw KARABO_SIGNALSLOT_EXCEPTION("Another instance with ID '" + instanceId +
+                                                      "' is already online this process (localhost)");
+                }
+            }
             // Ping any guy with my id. If there is one, he will answer, if not, we timeout.
             // HACK: slotPing takes care that I do not answer myself before timeout...
             Hash instanceInfo;
@@ -599,14 +606,15 @@ namespace karabo {
 
         void SignalSlotable::replyException(const karabo::util::Hash& header, const std::string& message) {
             if (header.has("replyTo")) {
-                Hash replyHeader;
-                replyHeader.set("error", true);
-                replyHeader.set("replyFrom", header.get<std::string > ("replyTo"));
-                replyHeader.set("signalInstanceId", m_instanceId);
-                replyHeader.set("signalFunction", "__reply__");
-                replyHeader.set("slotInstanceIds", "|" + header.get<string>("signalInstanceId") + "|");
-                Hash replyBody("a1", message);
-                m_producerChannel->write(m_topic, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+                const std::string targetInstanceId = header.get<string>("signalInstanceId");
+                Hash::Pointer replyHeader = boost::make_shared<Hash>();
+                replyHeader->set("error", true);
+                replyHeader->set("replyFrom", header.get<std::string > ("replyTo"));
+                replyHeader->set("signalInstanceId", m_instanceId);
+                replyHeader->set("signalFunction", "__reply__");
+                replyHeader->set("slotInstanceIds", "|" + targetInstanceId + "|");
+                Hash::Pointer replyBody = boost::make_shared<Hash>("a1", message);
+                doSendMessage(targetInstanceId, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             }
         }
 
@@ -657,26 +665,33 @@ namespace karabo {
             // We are left with valid requests/requestNoWaits. For requests, we send an empty
             // reply if the slot did not place one. That tells the caller at least that
             // the slot finished - i.e. a synchronous request stops blocking.
-            karabo::util::Hash replyHeader;
+            Hash::Pointer replyHeader = boost::make_shared<Hash>();
+
+            std::string targetInstanceId;
             if (caseRequest) {
-                replyHeader.set("replyFrom", header.get<std::string > ("replyTo"));
-                replyHeader.set("signalInstanceId", m_instanceId);
-                replyHeader.set("signalFunction", "__reply__");
-                replyHeader.set("slotInstanceIds", "|" + header.get<string>("signalInstanceId") + "|");
+                targetInstanceId = header.get<string>("signalInstanceId");
+                replyHeader->set("replyFrom", header.get<std::string > ("replyTo"));
+                replyHeader->set("signalInstanceId", m_instanceId);
+                replyHeader->set("signalFunction", "__reply__");
+                replyHeader->set("slotInstanceIds", "|" + targetInstanceId + "|");
             } else { // i.e. caseRequestNoWait with a reply properly placed
-                replyHeader.set("signalInstanceId", m_instanceId);
-                replyHeader.set("signalFunction", "__replyNoWait__");
-                replyHeader.set("slotInstanceIds", header.get<string>("replyInstanceIds"));
-                replyHeader.set("slotFunctions", header.get<string>("replyFunctions"));
+                targetInstanceId = header.get<string>("replyInstanceIds");
+                replyHeader->set("signalInstanceId", m_instanceId);
+                replyHeader->set("signalFunction", "__replyNoWait__");
+                replyHeader->set("slotInstanceIds", header.get<string>("replyInstanceIds"));
+                replyHeader->set("slotFunctions", header.get<string>("replyFunctions"));
             }
             // Inject an empty reply in case that no one was provided in the slot body.
             // (Using a ref that is const is essential to keep the temporary util::Hash() alive.)
             const util::Hash& reply = (it != m_replies.end() ? it->second : util::Hash());
-            m_producerChannel->write(m_topic, replyHeader, reply, KARABO_SYS_PRIO, KARABO_SYS_TTL);
-            // KARABO_LOG_FRAMEWORK_DEBUG << this->getInstanceId() << ": sendPotentialReply: " << reply;
-
-            // Finally remove the reply.
-            if (it != m_replies.end()) m_replies.erase(it);
+            Hash::Pointer replyBody;
+            if (it != m_replies.end()) {
+                replyBody = boost::make_shared<Hash>(it->second);
+                m_replies.erase(it);
+            } else {
+                replyBody = boost::make_shared<Hash>();
+            }
+            doSendMessage(targetInstanceId, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
         }
 
 
