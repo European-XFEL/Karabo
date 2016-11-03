@@ -82,7 +82,7 @@ namespace karabo {
                 // Three ways to emit: 1) In-process 2) P2P 3) Broker
                 // TODO Improve the code here, to be a bit more disentangled and speedy
 
-                // Connected to no slot
+                // Not connected to any slot
                 if (m_registeredSlots.empty()) {
                     // Heartbeats are an exception, must always be sent
                     if (m_signalFunction == "signalHeartbeat") {
@@ -94,15 +94,18 @@ namespace karabo {
                     }
                 }
 
-                // Connected to a single slot
-                if (m_registeredSlots.size() == 1) {
-                    m_signalSlotable->doSendMessage(m_registeredSlots.begin()->first, header, message,
-                                                    m_priority, m_messageTimeToLive, m_topic);
-                    return;
+                // Copy the registered slots
+                auto registeredSlots = m_registeredSlots;
+
+                // Try all registered slots whether we could send in-process
+                for (auto it = registeredSlots.cbegin(); it != registeredSlots.cend();) {
+                    if (m_signalSlotable->tryToCallDirectly(it->first, header, message)) {
+                        registeredSlots.erase(it++);
+                    } else {
+                        ++it;
+                    }
                 }
 
-                // Connected to more than one slot
-                auto registeredSlots = m_registeredSlots;
                 // publish if P2P connected slots and filter them out. After call, registeredSlots and header are updated
                 SignalSlotable::m_pointToPoint->publishIfConnected(registeredSlots, header, message, m_priority);
 
