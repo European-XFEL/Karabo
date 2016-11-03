@@ -38,19 +38,22 @@ def read_device_server(io_obj):
     """ A reader for device server models
     """
     def _read_configs(element):
-        uuid = element.get('uuid')
-        revision = int(element.get('revision'))
-        return DeviceConfigurationModel(uuid=uuid, revision=revision)
+        traits = {
+            'uuid': element.get('uuid'),
+            'revision': int(element.get('revision')),
+            'initialized': False,
+        }
+        return DeviceConfigurationModel(**traits)
 
     def _read_device_instance(element):
-        instance_id = element.get('instance_id')
-        if_exists = element.get('if_exists', 'ignore')
-        active_uuid = element.get('active_uuid')
-        active_rev = int(element.get('active_rev'))
+        traits = {
+            'instance_id': element.get('instance_id'),
+            'if_exists': element.get('if_exists', 'ignore'),
+            'active_config_ref': (element.get('active_uuid'),
+                                  int(element.get('active_rev'))),
+        }
         configs = [_read_configs(e) for e in element.findall('config')]
-        return DeviceInstanceModel(instance_id=instance_id,
-                                   if_exists=if_exists, configs=configs,
-                                   active_config_ref=(active_uuid, active_rev))
+        return DeviceInstanceModel(configs=configs, **traits)
 
     document = parse(io_obj)
     root = document.getroot()
