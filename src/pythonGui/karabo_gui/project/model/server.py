@@ -33,9 +33,14 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_server,
                                                 parent_project))
+        add_action = QAction('Add device', menu)
+        remove_all_action = QAction('Delete all devices', menu)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
+        menu.addSeparator()
+        menu.addAction(add_action)
+        menu.addAction(remove_all_action)
         return menu
 
     def create_qt_item(self):
