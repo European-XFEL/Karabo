@@ -63,9 +63,12 @@ namespace karabo {
             karabo::util::Hash m_loggerMap;
             karabo::util::Hash m_loggerInput;
 
+            std::set<std::string> m_projectManagers;
+            boost::shared_mutex m_projectManagerMutex;
+
         public:
 
-            KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "1.0")
+            KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "2.0")
 
             static void expectedParameters(karabo::util::Schema& expected);
 
@@ -180,7 +183,7 @@ namespace karabo {
 
             void slotLoggerMap(const karabo::util::Hash& loggerMap);
 
-            void onInputChannelConnected(const karabo::xms::InputChannel::Pointer& input, const karabo::net::Channel::Pointer& channel, const std::string& channelName);            
+            void onInputChannelConnected(const karabo::xms::InputChannel::Pointer& input, const karabo::net::Channel::Pointer& channel, const std::string& channelName);
 
             /**
              * Called from instanceNewHandler to handle schema attribute updates which
@@ -294,6 +297,152 @@ namespace karabo {
                 return false;
             }
 
+            /**
+             * Checks if an instance at instanceId is a ProjectManager. If so, register it to the list of known project
+             * services
+             * @param topologyEntry: the topology Hash, from which the class of instanceId will be deduced
+             */
+            void registerPotentialProjectManager(const karabo::util::Hash& topologyEntry);
+
+            /**
+             * Return a list of project services known to this GUI server
+             * @return
+             */
+            std::vector<std::string> getKnownProjectManagers();
+
+            /**
+             * Initialize a configuration database session for a user. This user should later always be passed to subsequent database
+             * interactions to identify this session.
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *          - projectManager: project manager device to forward request to
+             *          - user: username of the database user
+             *          - password: password for this user
+             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
+             */
+            void onProjectBeginUserSession(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+
+            /**
+             * End a configuration database session for a user.
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *          - projectManager: project manager device to forward request to
+             *          - user: username of the database user
+             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
+             */
+            void onProjectEndUserSession(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+            /**
+             * Save items to the project database
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *          - projectManager: project manager device to forward request to
+             *          - user: username of the database user - identifies the session
+             *          - items: a vector of Hashes where each Hash is of the form:
+             *                   - xml: xml of the item
+             *                   - uuid: uuid of the item
+             *                   - overwrite: Boolean indicating behavior in case of revision conflict
+             *                   - domain: to write this item to.
+             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
+             */
+            void onProjectSaveItems(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+
+            /**
+             * Load items from project database
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *          - projectManager: project manager device to forward request to
+             *          - user: username of the database user - identifies the session
+             *          - items: a vector of Hashes where each Hash is of the form:
+             *                   - uuid: uuid of the item
+             *                   - revision (optional): revision to load. If not given the newest revision will be returned
+             *                   - domain: to load this item from.
+             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
+             */
+            void onProjectLoadItems(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+
+            /**
+             * Load items from project database and also batch load direct descendents
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *          - projectManager: project manager device to forward request to
+             *          - user: username of the database user - identifies the session
+             *          - items: a vector of Hashes where each Hash is of the form:
+             *                   - uuid: uuid of the item
+             *                   - revision (optional): revision to load. If not given the newest revision will be returned
+             *                   - domain: to load this item from.
+             *                   - list_tags: list of enclosing tags under which child items are located, e.g. <projects>...</projects>,
+             *                                where "project" is as list_tag
+             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
+             */
+            void onProjectLoadItemsAndSubs(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+
+            /**
+             * Request version information for items from the database
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *          - projectManager: project manager device to forward request to
+             *          - user: username of the database user - identifies the session
+             *          - items: a vector of Hashes where each Hash is of the form:
+             *                   - uuid: uuid of the item
+             *                   - domain: to load this item from.
+             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
+             */
+            void onProjectGetVersionInfo(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+            /**
+             * Request the list of project manager devices known to the GUI server
+             * @param channel from which the request originates
+             * @param info is given for compatability with all other calls but not further evaluated.
+             *
+             * Will write to the calling channel a Hash where "type" = projectListProjectManagers and "reply" is a vector of strings containing
+             * the project manager device ids.
+             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
+             */
+            void onProjectListProjectManagers(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            
+            /**
+             * Request a list of the items present in a domain. Optionally, an item type filter can be specified
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *          - projectManager: project manager device to forward request to
+             *          - user: username of the database user - identifies the session
+             *          - domain: domain to list items from
+             *          - item_types: a vector of strings indicating the itemtypes to filter for.
+             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
+             */
+            void onProjectListItems(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+            /**
+             * Request a list of the domains in the database.
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *          - projectManager: project manager device to forward request to
+             *          - user: username of the database user - identifies the session
+             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
+             */
+            void onProjectListDomains(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+            /**
+             * Forward a reply from a remote slot call to a requesting GUI channel.
+             * @param channel to forward reply to
+             * @param replyType type of reply
+             * @param reply the reply to forward
+             */
+            void forwardReply(karabo::net::Channel::Pointer channel, const std::string& replyType, const karabo::util::Hash& reply);
+            
+            /**
+             * Check if a given project manager identified by id is known in the distributed system
+             * @param channel to forward a failure message to if not
+             * @param deviceId of the project manager device
+             * @param type of the request
+             * @return true if the project manager id exists in the distributed system
+             */
+            bool checkProjectManagerId(karabo::net::Channel::Pointer channel, const std::string& deviceId, const std::string & type);
         };
     }
 }

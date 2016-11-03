@@ -3,10 +3,13 @@ from unittest import TestCase
 from threading import Thread
 from time import sleep
 
-from karabo.bound import EventLoop, Hash, DeviceServer, DeviceClient
+from karabo.bound import (EventLoop, Hash, DeviceServer, DeviceClient,
+                          SignalSlotable)
 from karabo.common.states import State
 from karabo.project_db.project_database import ProjectDatabase
 from karabo.project_db.tests.test_projectDatabase import create_hierarchy
+
+from multiprocessing import Process
 
 
 class TestProjectManager(TestCase):
@@ -42,7 +45,7 @@ class TestProjectManager(TestCase):
                 path = "{}/LOCAL/testconfig{}"\
                         .format(db.root, i)
                 v = db.get_versioning_info(path)
-                revisions.append(v['revisions'][-1]['id'])
+                revisions.append(v['revisions'][-1]['revision'])
 
             xml_serv = """
                       <testserver uuid='testserver_m'>
@@ -69,6 +72,13 @@ class TestProjectManager(TestCase):
             if db.dbhandle.hasCollection(path):
                 db.dbhandle.removeCollection(path)
 
+    def runServer(self, config):
+        t = Thread(target=EventLoop.work)
+        t.start()
+        server = DeviceServer(config)
+        EventLoop.stop()
+        t.join()
+
     def setUp(self):
         # uncomment if ever needing to use local broker
         # os.environ['KARABO_BROKER'] = 'tcp://localhost:7777'
@@ -83,7 +93,6 @@ class TestProjectManager(TestCase):
         self._ownDir = os.path.dirname(os.path.abspath(__file__))
 
         self._eventLoopThread = Thread(target=EventLoop.work)
-        self._eventLoopThread.daemon = True
         self._eventLoopThread.start()
 
         config = Hash()
@@ -91,16 +100,13 @@ class TestProjectManager(TestCase):
 
         config.set("pluginDirectory", "")
         config.set("pluginNames", "")
-        config.set("Logger.priority", "ERROR")
+        config.set("Logger.priority", "DEBUG")
         config.set("visibility", 1)
         config.set("connection", Hash())
         config.set("pluginNamespace", "karabo.bound_device")
-        self.server = DeviceServer(config)
 
-        self._serverThread = Thread(target=self.server.run)
-        self._serverThread.daemon = True
-        self._serverThread.start()
-
+        self.serverProcess = Process(target=self.runServer, args=(config,))
+        self.serverProcess.start()
         self.dc = DeviceClient()
 
         # wait til the server appears in the system topology
@@ -111,21 +117,10 @@ class TestProjectManager(TestCase):
                 raise RuntimeError("Waiting for server to appear timed out")
             nTries += 1
 
-        # wait for plugins to appear
-        nTries = 0
-        while True:
-            try:
-                self.server.import_plugin("ProjectManager")
-                break
-            except RuntimeError:
-                sleep(2)
-                if nTries > self._retries:
-                    raise RuntimeError("Waiting for plugin to load timed out")
-                nTries += 1
 
         # we will use two devices communicating with each other.
         config = Hash()
-        config.set("Logger.priority", "ERROR")
+        config.set("Logger.priority", "DEBUG")
         config.set("deviceId", "projManTest")
         config.set("host", "localhost")
         config.set("port", 8080)
@@ -136,7 +131,7 @@ class TestProjectManager(TestCase):
                            "deviceId", "projManTest",
                            "configuration", config)
 
-        self.server.instantiateDevice(classConfig)
+        self.dc.instantiate("testServerProject", classConfig)
 
         # wait for device to init
         state = None
@@ -154,11 +149,12 @@ class TestProjectManager(TestCase):
                     raise RuntimeError("Waiting for device to init timed out")
                 nTries += 1
 
+        self.ss = SignalSlotable.create("myTestSigSlot")
+        self.ss.start()
+
     def tearDown(self):
-        # TODO: properly destroy server
-        # right now we let the join time out as the server does not
-        # always exit correctly -> related to event loop refactoring
-        self._serverThread.join(5)
+        self.dc.killServer("testServerProject")
+        self.serverProcess.join(5)
         EventLoop.stop()
         self._eventLoopThread.join(5)
 
@@ -188,8 +184,9 @@ class TestProjectManager(TestCase):
         # Additionally, we borrow the SignalSlotable of the device server
 
         with self.subTest(msg="Test initializing user session"):
-            self.server.ss.call("projManTest", "slotInitUserSession",
-                                "admin", "karabo")
+            ret = self.ss.request("projManTest", "slotBeginUserSession",
+                                "admin", "karabo").waitForReply(5000)
+            self.assertTrue(ret[0].get("success"))
 
         with self.subTest(msg="Test saving data"):
             xml = '<test uuid="5">foobar</test>'
@@ -199,16 +196,17 @@ class TestProjectManager(TestCase):
             item.set("overwrite", False)
             item.set("domain", "LOCAL")
             items = [item, ]
-            ret = self.server.ss.request("projManTest", "slotSaveItems",
-                                         items).waitForReply(5000)
+            ret = self.ss.request("projManTest", "slotSaveItems",
+                                         'admin', items).waitForReply(5000)
             ret = ret[0]  # returns tuple
             self.assertTrue(ret.has('testdevice1'))
             self.assertTrue(ret.get('testdevice1').get("success"))
 
         with self.subTest(msg="Test loading data"):
-            items = [Hash("uuid", "testconfig0"), Hash("uuid", "testconfig1")]
-            ret = self.server.ss.request("projManTest", "slotLoadItems",
-                                         "LOCAL", items).waitForReply(5000)
+            items = [Hash("uuid", "testconfig0", "domain", "LOCAL"),
+                     Hash("uuid", "testconfig1", "domain", "LOCAL")]
+            ret = self.ss.request("projManTest", "slotLoadItems",
+                                         'admin', items).waitForReply(5000)
             ret = ret[0]  # returns tuple
             self.assertTrue(ret.has('testconfig0'))
             self.assertTrue(ret.has('testconfig1'))
@@ -218,13 +216,11 @@ class TestProjectManager(TestCase):
             self.assertTrue(cmp in ret.get("testconfig1"))
 
         with self.subTest(msg="Test loading multiple data"):
-            items = [Hash("uuid", "testserver_m"), ]
-            ret = self.server.ss.request("projManTest",
-                                         "slotLoadItemsAndSubs",
-                                         "LOCAL",
-                                         items,
-                                         ['configs']).waitForReply(5000)
 
+            items = [Hash("uuid", "testserver_m", "domain", "LOCAL",
+                          "list_tags", ["configs"]), ]
+            ret = self.ss.request("projManTest", "slotLoadItemsAndSubs",
+                                         'admin', items).waitForReply(5000)
             ret = ret[0]  # returns tuple
             self.assertTrue(ret.has('testserver_m'))
             self.assertTrue(ret.has('0'))
@@ -235,9 +231,9 @@ class TestProjectManager(TestCase):
             self.assertTrue('hoo' in ret.get('2'))
 
         with self.subTest(msg="Test get versioning info"):
-            items = [Hash("uuid", "testserver_m"), ]
-            ret = self.server.ss.request("projManTest", "slotGetVersionInfo",
-                                         "LOCAL", items).waitForReply(5000)
+            items = [Hash("uuid", "testserver_m", "domain", "LOCAL"), ]
+            ret = self.ss.request("projManTest", "slotGetVersionInfo",
+                                         'admin', items).waitForReply(5000)
             ret = ret[0]  # returns tuple
             self.assertTrue(ret.has("testserver_m"))
             document = ret.get("testserver_m").get("document")
@@ -247,10 +243,10 @@ class TestProjectManager(TestCase):
 
         with self.subTest(msg="Test list items"):
             queryItems = ['project', 'scene']
-            items = self.server.ss.request("projManTest",
-                                           "slotListItems",
-                                           "LOCAL",
-                                           queryItems).waitForReply(5000)
+            items = self.ss.request("projManTest",
+                                    "slotListItems", 'admin',
+                                    "LOCAL",
+                                    queryItems).waitForReply(5000)
             items = items[0]
             self.assertEqual(len(items), 10)
             scenecnt = 0
