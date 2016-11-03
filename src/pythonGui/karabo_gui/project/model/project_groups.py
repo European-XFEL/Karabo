@@ -38,7 +38,6 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
 
     def context_menu(self, parent_project, parent=None):
         menu_fillers = {
-            'devices': _fill_devices_menu,
             'macros': _fill_macros_menu,
             'scenes': _fill_scenes_menu,
             'servers': _fill_servers_menu,
@@ -111,13 +110,6 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
 
         for item in additions:
             self.qt_item.appendRow(item.qt_item)
-
-
-def _fill_devices_menu(menu):
-    add_action = QAction('Add device', menu)
-    remove_all_action = QAction('Delete all', menu)
-    menu.addAction(add_action)
-    menu.addAction(remove_all_action)
 
 
 def _fill_macros_menu(menu):

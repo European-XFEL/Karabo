@@ -10,11 +10,12 @@ from PyQt4.QtGui import QAction, QMenu, QStandardItem
 from traits.api import Instance, List
 
 from karabo.common.project.api import (
-    DeviceConfigurationModel, DeviceServerModel
+    DeviceInstanceModel, DeviceServerModel
 )
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .bases import BaseProjectTreeItem
+from .device import DeviceInstanceModelItem
 
 
 class DeviceServerModelItem(BaseProjectTreeItem):
@@ -22,8 +23,8 @@ class DeviceServerModelItem(BaseProjectTreeItem):
     """
     # Redefine model with the correct type
     model = Instance(DeviceServerModel)
-    # The different device configuration models
-    children = List(Instance(DeviceConfigurationModel))
+    # Different devices for the server
+    children = List(Instance(DeviceInstanceModelItem))
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
@@ -40,12 +41,36 @@ class DeviceServerModelItem(BaseProjectTreeItem):
     def create_qt_item(self):
         item = QStandardItem(self.model.server_id)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
-        item.setIcon(icons.deviceGroupInstance)
+        item.setIcon(icons.yes)
         item.setEditable(False)
         for child in self.children:
             item.appendRow(child.qt_item)
 
         return item
+
+    def item_handler(self, event):
+        """ Called for List-trait events on ``model`` (a DeviceServerModel)
+
+        This notification handler is connected and disconnected in the
+        create_device_server_model_shadow and
+        destroy_device_server_model_shadow functions.
+        """
+        def _find_qt_item_index(device_instance_model):
+            for i in range(self.qt_item.rowCount()):
+                row_child = self.qt_item.child(i)
+                row_model = row_child.data(PROJECT_ITEM_MODEL_REF)()
+                if row_model.model is device_instance_model:
+                    return i
+            return -1
+
+        for device_instance_model in event.removed:
+            index = _find_qt_item_index(device_instance_model)
+            if index >= 0:
+                self.qt_item.removeRow(index)
+
+        for item_model in event.added:
+            # XXX: TODO
+            pass
 
     # ----------------------------------------------------------------------
     # action handlers
