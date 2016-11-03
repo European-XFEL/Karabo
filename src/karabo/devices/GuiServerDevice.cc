@@ -152,11 +152,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
-            if (e) {
-                EventLoop::getIOService().post(bind_weak(&GuiServerDevice::onError, this, e, channel));
-                return;
-            }
-
+            if (e) return;
 
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";

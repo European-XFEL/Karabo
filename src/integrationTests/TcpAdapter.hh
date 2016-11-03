@@ -122,7 +122,6 @@ namespace karabo {
         mutable std::map<std::string, boost::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> > >m_nextMessageQueues;
         boost::asio::deadline_timer m_deadline;
         bool m_debug;
-        bool m_connected;
         size_t m_MessageId;
         mutable boost::mutex m_writeConditionMutex;
         boost::condition_variable m_writeCondition;
