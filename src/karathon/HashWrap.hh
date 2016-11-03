@@ -70,7 +70,8 @@ namespace karathon {
         static bp::object
         get(const karabo::util::Hash& self,
             const std::string& path,
-            const std::string& separator = ".");
+            const std::string& separator = ".",
+            const bp::object& default_return = bp::object());
 
         static karabo::util::Hash copy(const karabo::util::Hash& self) {
             return self;
@@ -193,7 +194,9 @@ namespace karathon {
              const std::string& separator = ".");
 
         static bp::object
-        getRef(karabo::util::Hash& self, const bp::object& obj, const std::string& sep = ".");
+        getRef(karabo::util::Hash& self,
+               const bp::object& obj,
+               const std::string& sep = ".");
 
         static void
         setDefault(const PyTypes::ReferenceType& type);

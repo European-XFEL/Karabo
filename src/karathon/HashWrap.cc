@@ -257,12 +257,18 @@ namespace karathon {
     }
 
 
-    // TODO It seems, this function is not used no-where! Time to kill!
     bp::object
     HashWrap::get(const karabo::util::Hash& self,
                   const std::string& path,
-                  const std::string& separator) {
-        return Wrapper::toObject(self.getNode(path, separator.at(0)).getValueAsAny(), HashWrap::try_to_use_numpy);
+                  const std::string& separator,
+                  const bp::object& default_return) {
+
+        // This implements the standard Python dictionary behavior for get()
+        if (!self.has(path, separator.at(0))) {
+            return default_return;
+        }
+
+        return HashWrap::getRef(const_cast<karabo::util::Hash&>(self), bp::object(path), separator);
     }
 
 
