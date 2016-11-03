@@ -3,7 +3,7 @@
 # Created on October 28, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from .device import DeviceConfigurationModelItem
+from .device import DeviceInstanceModelItem
 from .macro import MacroModelItem
 from .scene import SceneModelItem
 from .server import DeviceServerModelItem
@@ -62,10 +62,20 @@ def destroy_project_model_shadow(shadow_model):
 
 
 def create_device_server_model_shadow(model):
+    """Creates a DeviceServerModelItem and its associated children to shadow a
+    DeviceServerModel instance for the purpose of interfacing with a Qt item
+    model.
+
+    Traits notification handlers are attached to the passed ``model`` object
+    and must be detached later with a call to
+    ``destroy_device_server_model_shadow``
+    """
     shadow = DeviceServerModelItem(model=model)
+    model.on_trait_change(shadow.item_handler, 'devices_items')
     for device in model.devices:
-        child = DeviceConfigurationModelItem(model=device)
-        shadow.children.extend(child)
+        child = DeviceInstanceModelItem(server_model=model,
+                                        model=device)
+        shadow.children.append(child)
     return shadow
 
 
@@ -74,12 +84,5 @@ def destroy_device_server_model_shadow(shadow_model):
     all previously added Traits notification handlers.
     """
     model = shadow_model.model
-    for child in shadow_model.children:
-        name = child.trait_name
-        model.on_trait_change(child.item_handler, name + '_items',
-                              remove=True)
-        # Recurse!
-        if child.child_create is create_device_server_model_shadow:
-            for subchild in child.children:
-                destroy_device_server_model_shadow(subchild)
-
+    model.on_trait_change(
+        shadow_model.item_handler, 'devices_items', remove=True)
