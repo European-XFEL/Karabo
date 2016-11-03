@@ -264,8 +264,10 @@ void exportPyUtilHash() {
     h.def("setAs", &HashWrap().setAs, (bp::arg("path"), bp::arg("value"), bp::arg("type"), bp::arg("sep") = "."),
           "h.setAs(path, value, type)\nUse this method if the C++ value type cannot be deduced properly of python value"
           "\nExample:\n\th = Hash()\n\th.setAs('a.b.c', 1L, Types.UINT64)\n\tprint h");
-    h.def("get", &HashWrap().getRef, (bp::arg("path"), bp::arg("sep") = "."),
+    h.def("get", &HashWrap().get, (bp::arg("path"), bp::arg("sep") = ".", bp::arg("default") = bp::object()),
           "Get the 'value' by 'path'. Optionally, the separator can be defined as second argument.\n"
+          "If you want to emulate the Python dictionary get() method, a default return value can be "
+          "passed using the 'default' keyword argument."
           "Example:\n\th = Hash('a.b.c', 1)\n\tprint h.get('a/b/c','/')");
     h.def("__getitem__", &HashWrap().getRef, (bp::arg("iterator"), bp::arg("sep") = "."),
           "Use this form of getting the 'value' using the 'path' if you need the default separator.\n"
