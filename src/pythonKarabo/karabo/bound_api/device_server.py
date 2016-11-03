@@ -19,7 +19,7 @@ import traceback
 
 from karathon import (
     CHOICE_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    PATH_ELEMENT, STRING_ELEMENT,
+    PATH_ELEMENT, STRING_ELEMENT, LIST_ELEMENT,
     AccessLevel, JmsConnection,
     Hash, Logger, Priority, Schema, SignalSlotable,
     loadFromFile, saveToFile, EventLoop
@@ -105,6 +105,13 @@ class DeviceServer(object):
             OVERWRITE_ELEMENT(expected).key("Logger.file.filename")
                     .setNewDefaultValue("device-server.log")
                     .commit()
+                    ,
+            LIST_ELEMENT(expected).key("autoStart")
+                    .displayedName("Auto start")
+                    .description("Auto starts selected devices")
+                    .appendNodesOfConfigurationBase(PythonDevice)
+                    .assignmentOptional().noDefaultValue()
+                    .commit()
         )
 
     def setupFsm(self):
@@ -178,6 +185,7 @@ class DeviceServer(object):
         self.deviceInstanceMap = dict()
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
         self.needScanPlugins = True
+        self.autoStart = config.get("autoStart")
 
         # set serverId
         serverIdFileName = "serverId.xml"
@@ -362,6 +370,14 @@ class DeviceServer(object):
             deviceClasses.append(classid)
             if d['mustNotify']:
                 d['mustNotify'] = False
+                # if in autostart we start this device
+                if self.autoStart is not None:
+                    for entry in self.autoStart:
+                        if entry.get("PythonDevice.classId") == classid:
+                            config = entry.get("PythonDevice")
+                            self.instantiateDevice(Hash("classId", classid,
+                                                        "configuration",
+                                                         config))
             visibilities.append(d['xsd'].getDefaultValue("visibility"))
         self.log.DEBUG("Sending instance update as new device plugins are available: {}".format(deviceClasses))
         self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities))

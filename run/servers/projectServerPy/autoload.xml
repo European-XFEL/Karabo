@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<DeviceServer>
+  <autoStart>
+    <KRB_Item>
+      <PythonDevice>
+	<classId>ProjectManager</classId>
+	<deviceId>ProjectManager</deviceId>
+      </PythonDevice>
+    </KRB_Item>
+  </autoStart>
+  <serverId KRB_Type="STRING">Karabo_ProjectManager</serverId>
+  <visibility>4</visibility>
+  <Logger><priority>ERROR</priority></Logger>
+</DeviceServer>

@@ -120,7 +120,7 @@ class TestProjectDatabase(TestCase):
                 # depends on how often tests were run
                 self.assertGreaterEqual(len(vers['revisions']), 0)
                 first_rev = vers['revisions'][0]
-                self.assertTrue('id' in first_rev)
+                self.assertTrue('revision' in first_rev)
                 self.assertTrue('date' in first_rev)
                 self.assertEqual(first_rev['user'], 'admin')
 
@@ -250,7 +250,7 @@ class TestProjectDatabase(TestCase):
                     path = "{}/LOCAL/testconfig{}"\
                             .format(db.root, i)
                     v = db.get_versioning_info(path)
-                    revisions.append(v['revisions'][-1]['id'])
+                    revisions.append(v['revisions'][-1]['revision'])
 
                 xml_serv = "<testserver list_tag='configs'><configs>"
                 for i in range(3):
@@ -288,5 +288,12 @@ class TestProjectDatabase(TestCase):
                 for i in items:
                     if i["item_type"] == "scene":
                         scenecnt += 1
-                self.assertEqual(scenecnt, 8)
+                self.assertGreaterEqual(scenecnt, 8)
+
+            with self.subTest(msg='test_list_domains'):
+                items = db.list_domains()
+                for it in items:
+                    self.assertTrue(it in ['LOCAL_TEST', 'REPO', 'LOCAL'])
+
+
             stop_database()
