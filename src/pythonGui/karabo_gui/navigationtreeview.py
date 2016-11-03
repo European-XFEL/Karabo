@@ -32,6 +32,10 @@ class NavigationTreeView(QTreeView):
         self.header().setResizeMode(2, QHeaderView.Fixed)
         self.setColumnWidth(1, 20)
         self.setColumnWidth(2, 20)
+        # NOTE: Since QTreeView always displays the expander in column 0 the
+        # additional columns are moved to the front
+        self.header().moveSection(1, 0)
+        self.header().moveSection(2, 0)
 
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
