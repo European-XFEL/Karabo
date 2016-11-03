@@ -19,23 +19,23 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
     if level < 2:
         for i in range(4):
             sub_uuid = create_hierarchy(db, uuid, counter, level + 1)
-            xml += '<project item_type="{type}" uuid="{uuid}"'\
-                   ' simple_name="{name}" />'.format(uuid=sub_uuid,
-                                                    type='project',
-                                                    name=sub_uuid)
+            xml += ('<project item_type="{type}" uuid="{uuid}"'
+                   ' simple_name="{name}" />').format(uuid=sub_uuid,
+                                                     type='project',
+                                                     name=sub_uuid)
             counter += 1
 
     # create some scenes
     for i in range(4):
         sub_uuid = '{}_{}'.format(uuid, counter)
-        xml += '<scene item_type="{type}" uuid="{uuid}"'\
-               ' simple_name="{name}" />'.format(uuid=sub_uuid,
-                                                type='scene',
-                                                name=sub_uuid)
+        xml += ('<scene item_type="{type}" uuid="{uuid}"'
+               ' simple_name="{name}" />').format(uuid=sub_uuid,
+                                                 type='scene',
+                                                 name=sub_uuid)
 
-        scene_xml = '<scene item_type="{type}" uuid="{uuid}"'\
-                    ' simple_name="{name}" >foo</scene>'\
-                    .format(uuid=sub_uuid, type='scene', name=sub_uuid)
+        scene_xml = ('<scene item_type="{type}" uuid="{uuid}"'
+                    ' simple_name="{name}" >foo</scene>'
+                    .format(uuid=sub_uuid, type='scene', name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, scene_xml)
 
@@ -44,15 +44,15 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
     # create some device_servers
     for i in range(4):
         sub_uuid = '{}_{}'.format(uuid, counter)
-        xml += '<device_server item_type="{type}" uuid="{uuid}"'\
-               ' simple_name="{name}" />'.format(uuid=sub_uuid,
-                                                type='device_server',
-                                                name=sub_uuid)
+        xml += ('<device_server item_type="{type}" uuid="{uuid}"'
+               ' simple_name="{name}" />').format(uuid=sub_uuid,
+                                                 type='device_server',
+                                                 name=sub_uuid)
 
-        ds_xml = '<device_server item_type="{type}" uuid="{uuid}"'\
-                 ' simple_name="{name}" >foo</device_server>'\
+        ds_xml = ('<device_server item_type="{type}" uuid="{uuid}"'
+                 ' simple_name="{name}" >foo</device_server>'
                  .format(uuid=sub_uuid, type='device_server',
-                         name=sub_uuid)
+                         name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, ds_xml)
 
