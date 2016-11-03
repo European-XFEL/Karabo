@@ -5,7 +5,8 @@
 #############################################################################
 """This module contains constants for unified states and alarm indicators."""
 
-from PyQt4.QtGui import QColor, QIcon, QPixmap
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QColor, QIcon, QPainter, QPixmap
 
 from . import icons
 from karabo.common.states import State
@@ -25,7 +26,7 @@ PASSIVE_COLOR = (240, 240, 240)
 # Map states to colors
 STATE_COLORS = {
     State.UNKNOWN: UNKNOWN_COLOR,
-    State.KNOWN : KNOWN_NORMAL_COLOR,
+    State.KNOWN: KNOWN_NORMAL_COLOR,
     State.NORMAL: KNOWN_NORMAL_COLOR,
     State.INIT: INIT_COLOR,
     State.DISABLED: DISABLED_COLOR,
@@ -63,9 +64,18 @@ ALARM_ICONS = {
 
 def create_icon(color):
     """ An icon from the given ``color`` tuple is returned."""
-    pix = QPixmap(20, 20)
+    width = 20
+    height = 20
+    pix = QPixmap(width, height)
     pix.fill(QColor(*color))
-    return QIcon(pix)
+    with QPainter(pix) as painter:
+        pen = painter.pen()
+        pen_width = 1
+        pen.setWidth(pen_width)
+        pen.setColor(Qt.black)
+        painter.setPen(pen)
+        painter.drawRect(0, 0, width-pen_width, height-pen_width)
+        return QIcon(pix)
 
 
 # Map states to colored icons
