@@ -1274,14 +1274,14 @@ namespace karabo {
             void slotKillDevice() {
                 // It is important to know who gave us the kill signal
                 std::string senderId = getSenderInfo("slotKillDevice")->getInstanceIdOfSender();
+                this->preDestruction(); // Give devices a chance to react
+                this->stopFsm();
                 if (senderId == m_serverId) { // Our server killed us
                     KARABO_LOG_INFO << "Device is going down as instructed by server";
                 } else { // Someone else wants to see us dead, we should inform our server
                     KARABO_LOG_INFO << "Device is going down as instructed by \"" << senderId << "\"";
                     call(m_serverId, "slotDeviceGone", m_deviceId);
                 }
-                this->preDestruction(); // Give devices a chance to react
-                this->stopFsm();
             }
 
             karabo::util::Schema getStateDependentSchema(const karabo::util::State& state) {

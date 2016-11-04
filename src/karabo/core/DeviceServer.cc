@@ -530,8 +530,9 @@ namespace karabo {
                     << "' about its future death.";
 
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-            m_deviceInstanceMap.erase(instanceId);
-            KARABO_LOG_INFO << "Device '" << instanceId << "' removed from server.";
+            if (m_deviceInstanceMap.erase(instanceId) > 0) {
+                KARABO_LOG_INFO << "Device '" << instanceId << "' removed from server.";
+            }
         }
 
 
