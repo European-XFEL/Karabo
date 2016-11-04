@@ -160,9 +160,10 @@ namespace karabo {
         }
 
 
-        void InputChannel::read(karabo::util::Hash& data, size_t idx) {
+        const InputChannel::MetaData& InputChannel::read(karabo::util::Hash& data, size_t idx) {
             boost::mutex::scoped_lock lock(m_swapBuffersMutex);
             Memory::read(data, idx, m_channelId, m_activeChunk);
+            return m_metaDataList[idx];
         }
 
 
@@ -170,6 +171,15 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_swapBuffersMutex);
             karabo::util::Hash::Pointer hash(new karabo::util::Hash());
             Memory::read(*hash, idx, m_channelId, m_activeChunk);
+            return hash;
+        }
+
+
+        karabo::util::Hash::Pointer InputChannel::read(size_t idx, InputChannel::MetaData& metaData) {
+            boost::mutex::scoped_lock lock(m_swapBuffersMutex);
+            auto hash = boost::make_shared<karabo::util::Hash>();
+            Memory::read(*hash, idx, m_channelId, m_activeChunk);
+            metaData = m_metaDataList[idx];
             return hash;
         }
 
@@ -402,16 +412,14 @@ namespace karabo {
                     unsigned int chunkId = header.get<unsigned int>("chunkId");
 
                     KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from local memory [" << channelId << "][" << chunkId << "]";
-
-                    Memory::writeChunk(Memory::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk);
+                    Memory::writeChunk(Memory::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk, Memory::getMetaData(channelId, chunkId));
                     Memory::decrementChunkUsage(channelId, chunkId);
-
                 } else { // TCP data
 
                     KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from remote memory (over tcp)";
                     Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
-
                 }
+
 
                 size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
                 size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
@@ -419,8 +427,7 @@ namespace karabo {
                 if ((this->getMinimumNumberOfData()) <= 0 || (nInactiveData < this->getMinimumNumberOfData())) { // Not enough data, yet
                     KARABO_LOG_FRAMEWORK_TRACE << debugId << "Can read more data";
                     notifyOutputChannelForPossibleRead(channel);
-                } else if (nActiveData == 0) { // Data complete, second pot still empty
-
+                } else if (nActiveData == 0) { // Data complete, second pot still empty     
                     this->swapBuffers();
                     // Ask to fill second pot...
                     notifyOutputChannelForPossibleRead(channel);
@@ -446,6 +453,61 @@ namespace karabo {
         }
 
 
+        void InputChannel::prepareMetaData() {
+            {
+                boost::mutex::scoped_lock lock(m_swapBuffersMutex);
+                m_metaDataList = Memory::getMetaData(m_channelId, m_activeChunk);
+            }
+
+            m_sourceMap.clear();
+            m_trainIdMap.clear();
+            m_reverseMetaDataMap.clear();
+            unsigned int i = 0;
+            for (auto it = m_metaDataList.cbegin(); it != m_metaDataList.cend(); ++it) {
+                m_sourceMap.emplace(it->getSource(), i);
+                m_trainIdMap.emplace(it->getTimestamp().getTrainId(), i);
+                m_reverseMetaDataMap.emplace(i, *it);
+                i++;
+            }
+        }
+
+
+        const std::vector<InputChannel::MetaData>& InputChannel::getMetaData() const {
+            return m_metaDataList;
+        }
+
+
+        std::vector<unsigned int> InputChannel::sourceToIndices(const std::string& source) const {
+            const std::pair<std::multimap<std::string, unsigned int>::const_iterator, std::multimap<std::string, unsigned int>::const_iterator> indices = m_sourceMap.equal_range(source);
+            std::vector<unsigned int> ret;
+            for (auto it = std::get<0>(indices); it != std::get<1>(indices); ++it) {
+                ret.push_back(it->second);
+            }
+            return ret;
+        }
+
+
+        std::vector<unsigned int> InputChannel::trainIdToIndices(unsigned long long trainId) const {
+            const std::pair<std::multimap<unsigned long long, unsigned int>::const_iterator, std::multimap<unsigned long long, unsigned int>::const_iterator> indices = m_trainIdMap.equal_range(trainId);
+            std::vector<unsigned int> ret;
+            for (auto it = std::get<0>(indices); it != std::get<1>(indices); ++it) {
+                ret.push_back(it->second);
+            }
+            return ret;
+        }
+
+
+        const InputChannel::MetaData& InputChannel::indexToMetaData(unsigned int index) const {
+            auto it = m_reverseMetaDataMap.find(index);
+            if (it != m_reverseMetaDataMap.end()) {
+                return it->second;
+            } else {
+                throw KARABO_LOGIC_EXCEPTION("No meta data available for given index");
+            }
+            
+        }
+
+
         void InputChannel::triggerIOEvent() {
             try {
                 // There is either m_inputHandler or m_dataHandler
@@ -458,12 +520,12 @@ namespace karabo {
                     // interface (though inputHandler is more general...).
                     m_inputHandler.clear();
                 }
-
+                prepareMetaData();
                 if (m_dataHandler) {
                     Hash data;
                     for (size_t i = 0; i < this->size(); ++i) {
                         read(data, i); // clears data internally before filling
-                        m_dataHandler(data);
+                        m_dataHandler(data, m_metaDataList[i]);
                     }
                 } else if (m_inputHandler) {
                     m_inputHandler(shared_from_this());
@@ -519,7 +581,7 @@ namespace karabo {
                 // Clear active chunk
                 Memory::clearChunkData(m_channelId, m_activeChunk);
 
-                // Swap buffers               
+                // Swap buffers
                 swapBuffers();
 
                 // Fetch number of data pieces

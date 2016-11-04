@@ -13,6 +13,7 @@
 #ifndef KARABO_XMS_INPUTCHANNEL_HH
 #define	KARABO_XMS_INPUTCHANNEL_HH
 
+#include <map>
 #include <boost/asio.hpp>
 #include <karabo/net.hpp>
 #include <karabo/io.hpp>
@@ -28,7 +29,27 @@ namespace karabo {
     namespace xms {
 
         /**
-         * The InputChannel class.
+         * @class InputChannel
+         * @brief The InputChannel class is used to receive data from pipelined
+         *        processing OutputChannels.
+         *
+         * The InputChannel class is used to receive data from pipelined
+         * processing OutputChannels. It additionally supports receiving 
+         * meta data associated with each data token read. Specifically, the 
+         * meta information contains source information, i.e. what produced the
+         * data token, and timing information, e.g. train ids.
+         *
+         * @code
+         * void onInput(const InputChannel::Pointer& input) {
+         *
+         *      for(unsigned int i = 0; i != input->size(); ++i) {
+         *           Hash h;
+         *           const InputChannel::MetaData& meta = input->read(i);
+         *           std::cout<<"Source: <<meta.getSource()<<std::endl;
+         *           std::cout<<"TrainId: <<meta.getTimestamp().getTrainId()<<std::endl;
+         *      }
+         * }
+         * @endcode
          */
         class InputChannel : public boost::enable_shared_from_this<InputChannel> {
 
@@ -36,8 +57,10 @@ namespace karabo {
 
             KARABO_CLASSINFO(InputChannel, "InputChannel", "1.0")
 
+            typedef Memory::MetaData MetaData;
             typedef boost::function<void (const InputChannel::Pointer&) > InputHandler;
-            typedef boost::function<void (const karabo::util::Hash&) > DataHandler;
+            typedef boost::function<void (const karabo::util::Hash&, const MetaData&) > DataHandler;
+
 
         private:
             // Maps outputChannelString to the Hash with connection parameters
@@ -83,6 +106,11 @@ namespace karabo {
 
             int m_delayOnInput;
 
+            std::vector<MetaData> m_metaDataList;
+            std::multimap<std::string, unsigned int> m_sourceMap;
+            std::multimap<unsigned long long, unsigned int> m_trainIdMap;
+            std::map<unsigned int, MetaData> m_reverseMetaDataMap;
+
         public:
 
             /**
@@ -123,9 +151,18 @@ namespace karabo {
              */
             std::map<std::string, karabo::util::Hash> getConnectedOutputChannels();
 
-            void read(karabo::util::Hash& data, size_t idx = 0);
+            /**
+             * Read data from the InputChannel
+             * @param data reference that will hold the data
+             * @param idx of the data token to read from the available data tokens. Use InputChannel::size to request number
+             *        of available tokens
+             * @return meta data associated to the data token. Lifetime of the object corresponds to live time of the InputHandler callback.
+             */
+            const MetaData& read(karabo::util::Hash& data, size_t idx = 0);
 
             karabo::util::Hash::Pointer read(size_t idx = 0);
+
+            karabo::util::Hash::Pointer read(size_t idx, MetaData& source);
 
             size_t size();
 
@@ -165,6 +202,47 @@ namespace karabo {
 
             void updateOutputChannelConfiguration(const std::string& outputChannelString, const karabo::util::Hash& config);
 
+            /**
+             * Get the current meta data for input data available on this input channel. Validity time of the object
+             * corresponds to lifetime of the InputHandler callback. Also the InputHandler this is called in needs
+             * to have been registered using registerInputHandler.
+             * @return
+             */
+            const std::vector<MetaData>& getMetaData() const;
+
+            /**
+             * Return the list of indices of the data tokens (for read(index) ) for a given source identifier.
+             * Multiple indices may be returned if the same source was appended more than once in one batch write.
+             * Indices increase monotonically in insertion order of the write operations. Validity time of the indices
+             * corresponds to lifetime of the InputHandler callback. Also the InputHandler this is called in needs
+             * to have been registered using registerInputHandler.
+             * @param source
+             * @return
+             */
+            std::vector<unsigned int> sourceToIndices(const std::string& source) const;
+
+            /**
+             * Return the list of indices of the data tokens (for read(index) ) for a given train id.
+             * Multiple indices may be returned if the same source was appended more than once in one batch write.
+             * Indices increase monotonically in insertion order of the write operations. Validity time of the indices
+             * corresponds to lifetime of the InputHandler callback. Also the InputHandler this is called in needs
+             * to have been registered using registerInputHandler.
+             * @param source
+             * @return
+             */
+            std::vector<unsigned int> trainIdToIndices(unsigned long long trainId) const;
+
+            /**
+             * Return the data source identifier pertinent to a data token at a given index. Validity time of the object
+             * corresponds to lifetime of the InputHandler callback. Also the InputHandler this is called in needs
+             * to have been registered using registerInputHandler.
+             * @param index
+             * @return
+             * @throw A KARABO_LOGIC_EXCEPTION of there is no meta data available for the given index.
+             */
+            const MetaData& indexToMetaData(unsigned int index) const;
+
+
         private: // functions
 
             void update();
@@ -176,6 +254,8 @@ namespace karabo {
             bool needsDeviceConnection() const;
 
             void closeChannelsAndStopConnections();
+
+            void prepareMetaData();
         };
 
         class InputChannelElement {

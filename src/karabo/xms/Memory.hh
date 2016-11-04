@@ -22,11 +22,76 @@ namespace karabo {
 
         class Memory {
 
+        public:
+
+            /**
+             * @class Memory::MetaData
+             * @brief The MetaData class is s class for transporting
+             *        meta data related to data tokens on pipelined processing
+             *        interfaces. It derives from karabo::util::Hash for
+             *        transparent serialization.
+             */
+            class MetaData : protected karabo::util::Hash {
+
+                // Note that if you extend this class you need to use set/get internally
+                // to assure Hash serializion.
+
+            public:
+
+                /**
+                 * Constructor to directly set meta data entries
+                 * @param source an identifier of the data producer
+                 * @param timestamp a timestamp relevant for this data token.
+                 */
+                MetaData(const std::string& source, const karabo::util::Timestamp& timestamp) {
+                    setSource(source);
+                    setTimestamp(timestamp);
+                }
+
+                /**
+                 * Set data source, i.e. identifier of the data producer
+                 * @param source
+                 */
+                inline void setSource(const std::string& source) {
+                    set("source", source);
+                }
+
+                /**
+                 * Get data source, i.e. identifier of the data producer
+                 * @return
+                 */
+                inline const std::string& getSource() const {
+                    return get<std::string>("source");
+                }
+
+                /**
+                 * Set the timestamp relevant to this data token
+                 * @param timestamp
+                 */
+                inline void setTimestamp(const karabo::util::Timestamp& timestamp) {
+                    karabo::util::Hash::Node& h = set("timestamp", true);
+                    timestamp.toHashAttributes(h.getAttributes());
+                }
+
+                /**
+                 * Get the timestamp relevant to this data token
+                 * @return
+                 */
+                inline const karabo::util::Timestamp getTimestamp() const {
+                    return karabo::util::Timestamp::fromHashAttributes(getAttributes("timestamp"));
+                }
+
+            };
+
             typedef std::vector<char> DataType;
             typedef boost::shared_ptr<DataType> DataPointer;
             typedef std::vector< DataPointer > Data;
             typedef std::vector< Data > Chunks;
             typedef std::vector< Chunks > Channels;
+
+            typedef std::vector<MetaData> MetaDataEntries;
+            typedef std::vector<MetaDataEntries> ChunkMetaDataEntries;
+            typedef std::vector<ChunkMetaDataEntries> ChannelMetaDataEntries;
 
             typedef std::pair<std::vector<char>, karabo::util::Hash> SerializedChunk;
             typedef boost::shared_ptr<SerializedChunk> SerializedChunkPointer;
@@ -51,6 +116,7 @@ namespace karabo {
 
             static Channels m_cache;
             static SerializedChannels m_serializedCache;
+            static ChannelMetaDataEntries m_metaData;
 
             static boost::mutex m_accessMutex;
 
@@ -59,8 +125,8 @@ namespace karabo {
             static const int MAX_N_CHANNELS = 128;
             static const int MAX_N_CHUNKS = 2056;
 
-
-            Memory() {}
+            Memory() {
+            }
 
         public:
 
@@ -94,8 +160,8 @@ namespace karabo {
              * @param channelIdx
              * @param chunkIdx
              */
-            static void write(const karabo::util::Hash& data, const size_t channelIdx, const size_t chunkIdx);
-            static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx);
+            static void write(const karabo::util::Hash& data, const size_t channelIdx, const size_t chunkIdx, const MetaData& metaData);
+            static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx, const std::vector<MetaData>& metaData);
 
             static size_t getChannelIdxFromName(const std::string& name);
 
@@ -127,6 +193,15 @@ namespace karabo {
 
             static size_t size(const size_t channelIdx, const size_t chunkIdx);
 
+            /**
+             * Return a vector of MetaData objects for the data tokens in the bucket identified by channelIdx and chunkIdx.
+             * @param channelIdx
+             * @param chunkIdx
+             * @return
+             */
+            static const std::vector<Memory::MetaData>& getMetaData(const size_t channelIdx, const size_t chunkIdx);
+
+
         private:
 
             static void _ensureSerializer();
@@ -138,5 +213,5 @@ namespace karabo {
 
 
 
-#endif	
+#endif
 
