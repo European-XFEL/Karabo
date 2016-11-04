@@ -93,7 +93,6 @@ if __name__ == '__main__':
                 'ideviceclient=karabo.interactive.ideviceclient:main',
                 'ikarabo=karabo.interactive.ikarabo:main',
                 'convert-karabo-device-project=karabo.interactive.convert_device_project:main',
-                'generate-karabo-project=karabo.interactive.project_generator:main',
                 'upgrade-karabo-project=karabo.interactive.upgrade_project_data:main',
              ],
             'karabo.bound_device': [
