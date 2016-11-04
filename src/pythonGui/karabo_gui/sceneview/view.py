@@ -195,7 +195,6 @@ class SceneView(QWidget):
         """
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
-                obj.set_visible(False)
                 obj.destroy()
         self.workflow_model.destroy()
 

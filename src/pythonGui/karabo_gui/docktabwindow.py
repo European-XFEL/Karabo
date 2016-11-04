@@ -73,6 +73,9 @@ class DockTabWindow(QTabWidget):
         divWidget.setParent(None)
         self.divWidgetList.remove(divWidget)
         self.updateTabsClosable()
+        # trigger this to class closeEvent for panels and destroy connections
+        # properly
+        widget.close()
 
     def addCornerWidget(self, tbNewTab):
         self.setCornerWidget(tbNewTab)
