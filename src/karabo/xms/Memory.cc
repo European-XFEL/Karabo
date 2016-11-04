@@ -186,7 +186,7 @@ namespace karabo {
             header.clear();
             header.set<unsigned int>("nData", data.size());
             header.set<std::vector<unsigned int> >("byteSizes", byteSizes);
-            header.set("sourceInfo", metaData);
+            header.set("sourceInfo", *reinterpret_cast<const std::vector<karabo::util::Hash>*>(&metaData));
         }
 
         void Memory::cacheAsContiguousBlock(const size_t channelIdx, const size_t chunkIdx) {
@@ -205,7 +205,7 @@ namespace karabo {
 
             unsigned int nData = header.get<unsigned int>("nData");
             const std::vector<unsigned int>& byteSizes = header.get<std::vector<unsigned int> >("byteSizes");
-            const MetaDataEntries& metaData = header.get<MetaDataEntries>("sourceInfo");
+            const MetaDataEntries& metaData = *reinterpret_cast<const MetaDataEntries*>(&header.get<std::vector<karabo::util::Hash> >("sourceInfo"));
             m_metaData[channelIdx][chunkIdx] = metaData;
 
             Data& chunkData = m_cache[channelIdx][chunkIdx];
