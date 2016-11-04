@@ -8,6 +8,7 @@ from karabo.common.states import State
 from karabo.project_db.project_database import ProjectDatabase
 from karabo.project_db.tests.test_projectDatabase import create_hierarchy
 
+
 class TestProjectManager(TestCase):
     _timeout = 60   # seconds
     _waitTime = 2   # seconds
@@ -60,7 +61,6 @@ class TestProjectManager(TestCase):
             success, meta = db.save_item('LOCAL', 'testserver_m', xml_serv)
             self.assertTrue(success)
             create_hierarchy(db, "hierarchy_test", 0, 0)
-
 
     def _cleanDataBase(self):
         with ProjectDatabase(self._user, self._password, server='localhost',
@@ -248,9 +248,9 @@ class TestProjectManager(TestCase):
         with self.subTest(msg="Test list items"):
             queryItems = ['project', 'scene']
             items = self.server.ss.request("projManTest",
-                                         "slotListItems",
-                                         "LOCAL",
-                                         queryItems).waitForReply(5000)
+                                           "slotListItems",
+                                           "LOCAL",
+                                           queryItems).waitForReply(5000)
             items = items[0]
             self.assertEqual(len(items), 10)
             scenecnt = 0
