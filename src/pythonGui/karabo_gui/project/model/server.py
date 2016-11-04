@@ -9,9 +9,7 @@ import weakref
 from PyQt4.QtGui import QAction, QMenu, QStandardItem
 from traits.api import Instance, List
 
-from karabo.common.project.api import (
-    DeviceInstanceModel, DeviceServerModel
-)
+from karabo.common.project.api import DeviceInstanceModel, DeviceServerModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .bases import BaseProjectTreeItem
