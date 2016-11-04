@@ -345,16 +345,21 @@ void AlarmService_Test::testRecovery() {
 
     //know we raise an alarm on floatProperty again and ma floatProperty2 acknowledgeable
     m_deviceClient->execute("alarmTester", "triggerNormal2", KRB_TEST_MAX_TIMEOUT);
+    // Wait a bit until our internal cache will be updated
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggeredNormal2");
 
     m_deviceClient->execute("alarmTester", "triggerAlarmHigh", KRB_TEST_MAX_TIMEOUT);
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggeredAlarmHigh");
 
     success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2"), KRB_TEST_MAX_TIMEOUT);
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT(success.first);
 
     //trigger an alarm
     m_deviceClient->execute("alarmTester2", "triggerAlarmLow", KRB_TEST_MAX_TIMEOUT);
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester2", "result") == "triggeredAlarmLow");
 
     //now we bring the alarm service back up
