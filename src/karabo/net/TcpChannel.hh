@@ -200,32 +200,6 @@ namespace karabo {
 
             void readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler);
 
-            /**
-             * This function calls the corresponding handler
-             * @param handler
-             * @param byteSize
-             * @param error
-             */
-            void onSizeInBytesAvailable(const ErrorCode& error, const ReadSizeInBytesHandler& handler);
-
-            /**
-             * Internal default handler
-             * @param channel
-             * @param byteSize
-             */
-            void byteSizeAvailableHandler(const size_t byteSize);
-
-
-
-
-            void onBytesAvailable(const ErrorCode& error, const ReadRawHandler& handler);
-
-            /**
-             * Internal default handler
-             * @param channel
-             */
-            void bytesAvailableHandler(const boost::system::error_code& e);
-
             void readAsyncRaw(char* data, size_t& size, const ReadRawHandler& handler);
 
             void write(const char* data, const size_t& size);
@@ -288,6 +262,27 @@ namespace karabo {
             
         private:
 
+            void onBytesAvailable(const ErrorCode& error, const ReadRawHandler& handler);
+
+            /**
+             * Internal default handler
+             * @param channel
+             */
+            void bytesAvailableHandler(const boost::system::error_code& e);
+
+            /**
+             * This function calls the corresponding handler
+             * @param handler
+             * @param error
+             */
+            void onSizeInBytesAvailable(const ErrorCode& error, const ReadSizeInBytesHandler& handler);
+
+            /**
+             * Internal default handler
+             * @param byteSize
+             */
+            void byteSizeAvailableHandler(const size_t byteSize);
+
             void managedWriteAsync(const WriteCompleteHandler& handler);
 
             void unmanagedWriteAsync(const char* data, const size_t& size, const WriteCompleteHandler& handler);
@@ -325,8 +320,8 @@ namespace karabo {
             void write(const char* header, const size_t& headerSize, const char* body, const size_t& bodySize);
 
             void asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler);
-            void asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& body);
-            void asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& header, const boost::shared_ptr<std::vector<char> >& body);
+            void asyncWriteHandlerBody(const ErrorCode& e, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& body);
+            void asyncWriteHandlerHeaderBody(const ErrorCode& e, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& header, const boost::shared_ptr<std::vector<char> >& body);
 
             // MQ support methods
         private:
