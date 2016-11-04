@@ -45,22 +45,16 @@ namespace karabo {
 
             // Global signals must go via the broker
             if (instanceId == "*") return false;
-
-
-            SignalSlotable* that = 0;
             {
                 boost::mutex::scoped_lock lock(m_instanceMapMutex);
                 std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.find(instanceId);
                 if (it != m_instanceMap.end()) {
-                    that = it->second;
+                    EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent,
+                                                             it->second, header, body));
+                    return true;
+                } else {
+                    return false;
                 }
-            }
-
-            if (that) {
-                EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, that, header, body));
-                return true;
-            } else {
-                return false;
             }
         }
 
