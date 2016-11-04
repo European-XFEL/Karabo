@@ -119,7 +119,8 @@ class ProjectDatabase(ContextDecorator):
             return xml_rep
         if isinstance(xml_rep, etree._Element):
             xml_bytes = etree.tostring(xml_rep, pretty_print=True,
-                                       encoding="unicode", xml_declaration=False)
+                                       encoding="unicode",
+                                       xml_declaration=False)
             return xml_bytes
 
         raise AttributeError("Cannot handle type {}".format(type(xml_rep)))
@@ -473,7 +474,7 @@ class ProjectDatabase(ContextDecorator):
 
         r_names = ('uuid', 'simple_name', 'item_type')
         r_attrs = ' '.join(['{name}="{{$c/*/@{name}}}"'.format(name=n)
-                          for n in r_names])
+                           for n in r_names])
 
         return_stmnt = 'return <item {} />'.format(r_attrs)
 

@@ -20,22 +20,22 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
         for i in range(4):
             sub_uuid = create_hierarchy(db, uuid, counter, level + 1)
             xml += ('<project item_type="{type}" uuid="{uuid}"'
-                   ' simple_name="{name}" />').format(uuid=sub_uuid,
-                                                     type='project',
-                                                     name=sub_uuid)
+                    ' simple_name="{name}" />').format(uuid=sub_uuid,
+                                                       type='project',
+                                                       name=sub_uuid)
             counter += 1
 
     # create some scenes
     for i in range(4):
         sub_uuid = '{}_{}'.format(uuid, counter)
         xml += ('<scene item_type="{type}" uuid="{uuid}"'
-               ' simple_name="{name}" />').format(uuid=sub_uuid,
-                                                 type='scene',
-                                                 name=sub_uuid)
+                ' simple_name="{name}" />').format(uuid=sub_uuid,
+                                                   type='scene',
+                                                   name=sub_uuid)
 
         scene_xml = ('<scene item_type="{type}" uuid="{uuid}"'
-                    ' simple_name="{name}" >foo</scene>'
-                    .format(uuid=sub_uuid, type='scene', name=sub_uuid))
+                     ' simple_name="{name}" >foo</scene>'
+                     .format(uuid=sub_uuid, type='scene', name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, scene_xml)
 
@@ -45,14 +45,14 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
     for i in range(4):
         sub_uuid = '{}_{}'.format(uuid, counter)
         xml += ('<device_server item_type="{type}" uuid="{uuid}"'
-               ' simple_name="{name}" />').format(uuid=sub_uuid,
-                                                 type='device_server',
-                                                 name=sub_uuid)
+                ' simple_name="{name}" />').format(uuid=sub_uuid,
+                                                   type='device_server',
+                                                   name=sub_uuid)
 
         ds_xml = ('<device_server item_type="{type}" uuid="{uuid}"'
-                 ' simple_name="{name}" >foo</device_server>'
-                 .format(uuid=sub_uuid, type='device_server',
-                         name=sub_uuid))
+                  ' simple_name="{name}" >foo</device_server>'
+                  .format(uuid=sub_uuid, type='device_server',
+                          name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, ds_xml)
 
@@ -63,10 +63,11 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
     db.save_item("LOCAL", uuid, xml)
     return uuid
 
+
 class TestProjectDatabase(TestCase):
     user = "admin"
     password = "karabo"
-    
+
     def test__make_xml_if_needed(self):
             xml_rep = "<test>foo</test>"
             ret = ProjectDatabase._make_xml_if_needed(xml_rep)
@@ -79,10 +80,9 @@ class TestProjectDatabase(TestCase):
         str_rep = ProjectDatabase._make_str_if_needed(element)
         self.assertEqual(str_rep, "<test>foo</test>\n")
 
-
     def test_project_interface(self):
         with ProjectDatabase(self.user, self.password, server='localhost',
-                                 test_mode=True) as db:
+                             test_mode=True) as db:
 
             # remove previously existing test collection
             path = "{}/{}".format(db.root, 'LOCAL_TEST')
@@ -98,14 +98,14 @@ class TestProjectDatabase(TestCase):
             if not db.dbhandle.hasCollection(path):
                 db.dbhandle.createCollection(path)
 
-            with self.subTest(msg = 'test_domain_exists'):
+            with self.subTest(msg='test_domain_exists'):
                 self.assertTrue(db.domain_exists("LOCAL"))
 
-            with self.subTest(msg = 'test_add_domain'):
+            with self.subTest(msg='test_add_domain'):
                 db.add_domain("LOCAL_TEST")
                 self.assertTrue(db.domain_exists("LOCAL_TEST"))
 
-            with self.subTest(msg = 'test_get_versioning_info'):
+            with self.subTest(msg='test_get_versioning_info'):
                 xml_rep = "<test>foo</test>"
 
                 # db.save_project('LOCAL', 'testproject', ret)
@@ -124,7 +124,7 @@ class TestProjectDatabase(TestCase):
                 self.assertTrue('date' in first_rev)
                 self.assertEqual(first_rev['user'], 'admin')
 
-            with self.subTest(msg = 'test_save_item'):
+            with self.subTest(msg='test_save_item'):
                 xml_rep = '<test>foo</test>'
                 success, meta = db.save_item('LOCAL', 'testproject2', xml_rep)
 
@@ -136,13 +136,13 @@ class TestProjectDatabase(TestCase):
                 self.assertTrue('versioning_info' in meta)
                 self.assertEqual(meta['current_xml'], xml_rep)
 
-            with self.subTest(msg = 'test_copy_item'):
+            with self.subTest(msg='test_copy_item'):
 
                 xml_rep = "<test>foo</test>"
                 db.save_item('LOCAL', 'testproject', xml_rep)
 
                 db.copy_item('LOCAL', 'REPO', 'testproject',
-                              'testproject_copy')
+                             'testproject_copy')
                 path = "{}/REPO/testproject_copy".format(db.root)
                 origin_path = "{}/LOCAL/testproject".format(db.root)
                 self.assertTrue(db.dbhandle.hasDocument(path))
@@ -150,7 +150,7 @@ class TestProjectDatabase(TestCase):
                 decoded2 = db.dbhandle.getDoc(origin_path).decode('utf-8')
                 self.assertEqual(decoded1, decoded2)
 
-            with self.subTest(msg = 'test_rename_item'):
+            with self.subTest(msg='test_rename_item'):
 
                 origin_path = "{}/REPO/testproject_copy".format(db.root)
                 origin = db.dbhandle.getDoc(origin_path).decode('utf-8')
@@ -162,7 +162,7 @@ class TestProjectDatabase(TestCase):
                 self.assertEqual(db.dbhandle.getDoc(path).decode('utf-8'),
                                  origin)
 
-            with self.subTest(msg = 'test_move_item'):
+            with self.subTest(msg='test_move_item'):
                 origin_path = "{}/REPO/testproject_copy2".format(db.root)
 
                 origin = db.dbhandle.getDoc(origin_path).decode('utf-8')
@@ -174,17 +174,17 @@ class TestProjectDatabase(TestCase):
                 self.assertEqual(db.dbhandle.getDoc(path).decode('utf-8'),
                                  origin)
 
-            with self.subTest(msg = 'load_item'):
+            with self.subTest(msg='load_item'):
                 item = db.load_item('LOCAL', 'testproject_copy2')
                 itemxml = db._make_xml_if_needed(item)
                 self.assertEqual(itemxml.tag, 'test')
                 self.assertEqual(itemxml.text, 'foo')
 
-            with self.subTest(msg = 'test_save_item_conflict'):
+            with self.subTest(msg='test_save_item_conflict'):
                 xml_rep_start = '<test>foo</test>'
 
                 success, meta = db.save_item('LOCAL', 'testproject2',
-                                                xml_rep_start)
+                                             xml_rep_start)
                 self.assertTrue(success)
 
                 path = "{}/LOCAL/testproject2".format(db.root)
@@ -192,7 +192,7 @@ class TestProjectDatabase(TestCase):
                                                           'testproject2'))
 
                 success, meta = db.save_item('LOCAL', 'testproject2',
-                                                xml_rep_start)
+                                             xml_rep_start)
 
                 doc.text = 'goo'
 
@@ -201,12 +201,10 @@ class TestProjectDatabase(TestCase):
                 doc2.attrib['{http://exist-db.org/versioning}revision'] = "-1"
                 doc2.attrib['{http://exist-db.org/versioning}key'] = "fdsf"
 
-
                 success, meta = db.save_item('LOCAL', 'testproject2', doc)
                 self.assertTrue(success)
                 success, meta = db.save_item('LOCAL', 'testproject2', doc)
                 self.assertTrue(success)
-
 
                 success, meta = db.save_item('LOCAL', 'testproject2', doc2)
 
@@ -226,7 +224,7 @@ class TestProjectDatabase(TestCase):
                                                            'testproject2'))
                 self.assertEqual(test.text, 'hoo')
 
-            with self.subTest(msg = 'test_load_multi'):
+            with self.subTest(msg='test_load_multi'):
                 # create a device server and multiple config entries
                 xml_reps = ['<test uuid="0">foo</test>',
                             '<test uuid="1">goo</test>',
@@ -235,16 +233,14 @@ class TestProjectDatabase(TestCase):
 
                 for i, rep in enumerate(xml_reps):
                     success, meta = db.save_item('LOCAL', 'testconfig{}'
-                                                   .format(i), rep, True)
+                                                 .format(i), rep, True)
                     self.assertTrue(success)
 
-
-                #twice to initiate versioning
+                # twice to initiate versioning
                 for i, rep in enumerate(xml_reps):
                     success, meta = db.save_item('LOCAL', 'testconfig{}'
-                                                   .format(i), rep, True)
+                                                 .format(i), rep, True)
                     self.assertTrue(success)
-
 
                 self.assertTrue(success)
 
@@ -278,14 +274,14 @@ class TestProjectDatabase(TestCase):
                                 cFound = False
                     self.assertTrue(cFound)
 
-            with self.subTest(msg = 'test_versioning_from_item'):
+            with self.subTest(msg='test_versioning_from_item'):
                 vers = db.get_versioning_info_item("LOCAL", "1")
                 self.assertEqual(vers['document'],
                                  '/db/krb_test/LOCAL/testconfig1')
 
             create_hierarchy(db, "hierarchy_test", 0, 0)
 
-            with self.subTest(msg = 'test_list_items'):
+            with self.subTest(msg='test_list_items'):
                 items = db.list_items('LOCAL', ['project', 'scene'])
                 self.assertEqual(len(items), 10)
                 scenecnt = 0
