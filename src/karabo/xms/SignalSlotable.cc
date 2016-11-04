@@ -500,8 +500,6 @@ namespace karabo {
 
                 // Check whether this message is a reply
                 if (header->has("replyFrom")) {
-                    // Reply should not be put in queue to avoid deadlocks if all event queue threads
-                    // are synchronously waiting for replies.
                     handleReply(header, body);
                     return;
                 }
@@ -817,7 +815,15 @@ namespace karabo {
 
         void SignalSlotable::emitHeartbeat(const boost::system::error_code& e) {
             if (e) return;
-            emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, m_instanceInfo);
+            try {
+                emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, m_instanceInfo);
+            } catch (Exception &e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "emitHeartbeat triggered an exception: " << e;
+            } catch (std::exception &e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "emitHeartbeat triggered a standard exception: " << e.what();
+            } catch (...) {
+                KARABO_LOG_FRAMEWORK_ERROR << "emitHeartbeat triggered an unknown exception";
+            }
             m_heartbeatTimer.expires_from_now(boost::posix_time::seconds(m_heartbeatInterval));
             m_heartbeatTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::emitHeartbeat, this,
                                                   boost::asio::placeholders::error));

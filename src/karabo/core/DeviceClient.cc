@@ -726,7 +726,7 @@ namespace karabo {
                     isThere = m_runtimeSystemDescription.has("device." + reply);
                 } while (!isThere && (nTrials < 50));
 
-                if (nTrials == 20) {
+                if (nTrials == 50) {
                     string errorText("Device \"" + reply + "\" got started but is not accessible anymore... ZOMBIE TIME !!!!");
                     return std::make_pair(false, errorText);
                 }

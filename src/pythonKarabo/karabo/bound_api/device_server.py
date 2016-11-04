@@ -372,12 +372,12 @@ class DeviceServer(object):
 
     def slotKillServer(self):
         self.log.INFO("Received kill signal")
-        threads = []
+        launchers = []
         for deviceid  in list(self.deviceInstanceMap.keys()):
             self.ss.call(deviceid, "slotKillDevice")
-            threads.append(self.deviceInstanceMap[deviceid])
-        for t  in threads:
-            if t: t.join()
+            launchers.append(self.deviceInstanceMap[deviceid])
+        for l in launchers:
+            if l: t.join()
         self.deviceInstanceMap = {}
         self.ss.reply(self.serverid)
         self.stopDeviceServer()
@@ -458,10 +458,10 @@ def main(args=None):
         t = threading.Thread(target=EventLoop.work)
         t.start()
         server = Runner(DeviceServer).instantiate(args)
-        t.join()
     except:
-        traceback.print_exc(file=sys.stdout)
+        traceback.print_exc(file=sys.stderr)
         EventLoop.stop()
+    finally:
         t.join()
 
 if __name__ == '__main__':
