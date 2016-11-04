@@ -60,8 +60,6 @@ namespace karabo {
                 m_argsType = std::type_index(typeid (std::tuple < Args...>));
             }
 
-            size_t nRegisteredSlots() const;
-
             void registerSlot(const std::string& slotInstanceId, const std::string& slotFunction);
 
             /**

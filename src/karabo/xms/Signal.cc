@@ -32,7 +32,7 @@ namespace karabo {
         std::pair<std::string, std::string> Signal::generateSlotStrings(const SlotMap& slots) const {
             std::string registeredSlotInstanceIdsString;
             std::string registeredSlotsString;
-            if (nRegisteredSlots() == 0) {
+            if (slots.empty()) {
                 registeredSlotsString = "__none__";
                 registeredSlotInstanceIdsString = "__none__";
             } else {
@@ -42,11 +42,6 @@ namespace karabo {
                 }
             }
             return std::make_pair(registeredSlotInstanceIdsString, registeredSlotsString);
-        }
-
-
-        size_t Signal::nRegisteredSlots() const {
-            return m_registeredSlots.size();
         }
 
 
