@@ -26,22 +26,22 @@ namespace karabo {
             m_messageTimeToLive(messageTimeToLive),
             m_argsType(typeid (karabo::util::Types::NONE)),
             m_topic(signalSlotable->m_topic) {
-            updateConnectedSlotsString(SlotRegistry());
         }
 
 
-        void Signal::updateConnectedSlotsString(const SlotRegistry& slots) {
-            m_registeredSlotsString.clear();
-            m_registeredSlotInstanceIdsString.clear();
+        std::pair<std::string, std::string> Signal::generateSlotStrings(const SlotMap& slots) const {
+            std::string registeredSlotInstanceIdsString;
+            std::string registeredSlotsString;
             if (nRegisteredSlots() == 0) {
-                m_registeredSlotsString = "__none__";
-                m_registeredSlotInstanceIdsString = "__none__";
+                registeredSlotsString = "__none__";
+                registeredSlotInstanceIdsString = "__none__";
             } else {
                 for (auto it = slots.cbegin(); it != slots.cend(); ++it) {
-                    m_registeredSlotInstanceIdsString += "|" + it->first + "|";
-                    m_registeredSlotsString += "|" + it->first + ":" + karabo::util::toString(it->second) + "|";
+                    registeredSlotInstanceIdsString += "|" + it->first + "|";
+                    registeredSlotsString += "|" + it->first + ":" + karabo::util::toString(it->second) + "|";
                 }
             }
+            return std::make_pair(registeredSlotInstanceIdsString, registeredSlotsString);
         }
 
 
@@ -52,7 +52,6 @@ namespace karabo {
 
         void Signal::registerSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
             m_registeredSlots[slotInstanceId].insert(slotFunction);
-            updateConnectedSlotsString(m_registeredSlots);
         }
 
 
@@ -67,7 +66,6 @@ namespace karabo {
                     didErase = (it->second.erase(slotFunction) >= 1);
                     if (it->second.empty()) m_registeredSlots.erase(it);
                 }
-                updateConnectedSlotsString(m_registeredSlots);
             }
             return didErase;
         }
@@ -77,7 +75,7 @@ namespace karabo {
             using namespace karabo::util;
             try {
 
-                Hash::Pointer header = prepareHeader();
+                Hash::Pointer header = prepareHeader(m_registeredSlots);
 
                 // Three ways to emit: 1) In-process 2) P2P 3) Broker
                 // TODO Improve the code here, to be a bit more disentangled and speedy
@@ -95,7 +93,7 @@ namespace karabo {
                 }
 
                 // Copy the registered slots
-                SlotRegistry registeredSlots = m_registeredSlots;
+                SlotMap registeredSlots = m_registeredSlots;
 
                 // Try all registered slots whether we could send in-process
                 for (auto it = registeredSlots.cbegin(); it != registeredSlots.cend();) {
@@ -110,8 +108,7 @@ namespace karabo {
                 if (registeredSlots.size() > 0) {
 
                     // Update the header
-                    updateConnectedSlotsString(registeredSlots);
-                    header = prepareHeader();
+                    header = prepareHeader(registeredSlots);
 
                     // publish if P2P connected slots and filter them out. After call, registeredSlots and header are updated
                     SignalSlotable::m_pointToPoint->publishIfConnected(registeredSlots, header, message, m_priority);
@@ -130,12 +127,13 @@ namespace karabo {
         }
 
 
-        karabo::util::Hash::Pointer Signal::prepareHeader() const {
+        karabo::util::Hash::Pointer Signal::prepareHeader(const SlotMap& slots) const {
             karabo::util::Hash::Pointer header(new karabo::util::Hash);
+            std::pair<std::string, std::string> slotStrings = generateSlotStrings(slots);
             header->set("signalInstanceId", m_signalInstanceId);
             header->set("signalFunction", m_signalFunction);
-            header->set("slotInstanceIds", m_registeredSlotInstanceIdsString);
-            header->set("slotFunctions", m_registeredSlotsString);
+            header->set("slotInstanceIds", slotStrings.first);
+            header->set("slotFunctions", slotStrings.second);
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
             // Timestamp added to be able to measure latencies even if broker is by-passed

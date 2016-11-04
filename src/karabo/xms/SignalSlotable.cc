@@ -342,7 +342,7 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_instanceMapMutex);
                 if (m_instanceMap.count(instanceId)) {
                     throw KARABO_SIGNALSLOT_EXCEPTION("Another instance with ID '" + instanceId +
-                                                      "' is already online this process (localhost)");
+                                                      "' is already online in this process (localhost)");
                 }
             }
             // Ping any guy with my id. If there is one, he will answer, if not, we timeout.
@@ -598,7 +598,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::registerReply(const karabo::util::Hash& reply) {
+        void SignalSlotable::registerReply(const karabo::util::Hash::Pointer& reply) {
             boost::mutex::scoped_lock lock(m_replyMutex);
             m_replies[boost::this_thread::get_id()] = reply;
         }
@@ -682,11 +682,9 @@ namespace karabo {
                 replyHeader->set("slotFunctions", header.get<string>("replyFunctions"));
             }
             // Inject an empty reply in case that no one was provided in the slot body.
-            // (Using a ref that is const is essential to keep the temporary util::Hash() alive.)
-            const util::Hash& reply = (it != m_replies.end() ? it->second : util::Hash());
             Hash::Pointer replyBody;
             if (it != m_replies.end()) {
-                replyBody = boost::make_shared<Hash>(it->second);
+                replyBody = it->second;
                 m_replies.erase(it);
             } else {
                 replyBody = boost::make_shared<Hash>();

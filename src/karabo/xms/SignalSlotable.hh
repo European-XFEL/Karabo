@@ -511,7 +511,7 @@ namespace karabo {
             int m_randPing;
 
             // Reply/Request related
-            typedef std::map<boost::thread::id, karabo::util::Hash> Replies;
+            typedef std::map<boost::thread::id, karabo::util::Hash::Pointer> Replies;
             Replies m_replies;
             mutable boost::mutex m_replyMutex;
 
@@ -609,7 +609,7 @@ namespace karabo {
                 }
             }
 
-            void registerReply(const karabo::util::Hash& reply);
+            void registerReply(const karabo::util::Hash::Pointer& reply);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             SignalInstancePointer getSignal(const std::string& signalFunction) const;
@@ -948,8 +948,8 @@ namespace karabo {
 
         template <typename ...Args>
         void SignalSlotable::reply(const Args&... args) {
-            karabo::util::Hash hash;
-            karabo::util::pack(hash, args...);
+            karabo::util::Hash::Pointer hash = boost::make_shared<karabo::util::Hash>();
+            karabo::util::pack(*hash, args...);
             registerReply(hash);
         }
 
