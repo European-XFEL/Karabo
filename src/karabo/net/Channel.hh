@@ -26,7 +26,7 @@ namespace karabo {
      */
     namespace net {
 
-        class Channel {
+        class Channel : public boost::enable_shared_from_this<Channel> {
 
             public:
 
