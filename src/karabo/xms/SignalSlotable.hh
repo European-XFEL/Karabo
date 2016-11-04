@@ -142,7 +142,7 @@ namespace karabo {
              *
              * After a call to this non-blocking function the object starts
              * listening to messages. The uniqueness of the instanceId is validated
-             * (throws if not unique) and if successful the object registers with
+             * (throws SignalSlotException if not unique) and if successful the object registers with
              * a call to "slotInstanceNew" to the distributed system.
              */
             void start();
@@ -643,6 +643,9 @@ namespace karabo {
 
             void sanifyInstanceId(std::string& instanceId) const;
 
+            /**
+             * If instanceId not valid (i.e. not unique in system), throws SignalSlotException.
+             */
             void ensureInstanceIdIsValid(const std::string& instanceId);
 
             void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
