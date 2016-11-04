@@ -172,18 +172,32 @@ namespace karabo {
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * @param data
-             * @source optional string indicating the data source. If not set, the instanceId of the device the
-             *         channel is on will be set.
+             * @metaData a MetaData object containing meta data for this data token.
              */
-            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData = Memory::MetaData());
+            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData);
+            
+            /**
+             * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
+             * Metadata is initialized to default values. Namely the sending devices device id and the output channel's
+             * name are used as data source.
+             * @param data
+             */
+            void write(const karabo::util::Hash& data);
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * @param data
-             * @source optional string indicating the data source. If not set, the instanceId of the device the
-             *         channel is on will be set.
+             * @metaData a MetaData object containing meta data for this data token.
              */
-            KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData = Memory::MetaData());
+            KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData);
+            
+            /**
+             * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
+             * Metadata is initialized to default values. Namely the sending devices device id and the output channel's
+             * name are used as data source.
+             * @param data
+             */
+            KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data);
 
             void update();
 

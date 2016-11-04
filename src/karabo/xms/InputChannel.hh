@@ -151,6 +151,13 @@ namespace karabo {
              */
             std::map<std::string, karabo::util::Hash> getConnectedOutputChannels();
 
+            /**
+             * Read data from the InputChannel
+             * @param data reference that will hold the data
+             * @param idx of the data token to read from the available data tokens. Use InputChannel::size to request number
+             *        of available tokens
+             * @return meta data associated to the data token. Lifetime of the object corresponds to live time of the InputHandler callback.
+             */
             const MetaData& read(karabo::util::Hash& data, size_t idx = 0);
 
             karabo::util::Hash::Pointer read(size_t idx = 0);
@@ -196,7 +203,9 @@ namespace karabo {
             void updateOutputChannelConfiguration(const std::string& outputChannelString, const karabo::util::Hash& config);
 
             /**
-             * Get the current meta data for input data available on this input channel
+             * Get the current meta data for input data available on this input channel. Validity time of the object
+             * corresponds to lifetime of the InputHandler callback. Also the InputHandler this is called in needs
+             * to have been registered using registerInputHandler.
              * @return
              */
             const std::vector<MetaData>& getMetaData() const;
@@ -204,7 +213,9 @@ namespace karabo {
             /**
              * Return the list of indices of the data tokens (for read(index) ) for a given source identifier.
              * Multiple indices may be returned if the same source was appended more than once in one batch write.
-             * Indices increase monotonically in insertion order of the write operations.
+             * Indices increase monotonically in insertion order of the write operations. Validity time of the indices
+             * corresponds to lifetime of the InputHandler callback. Also the InputHandler this is called in needs
+             * to have been registered using registerInputHandler.
              * @param source
              * @return
              */
@@ -213,16 +224,21 @@ namespace karabo {
             /**
              * Return the list of indices of the data tokens (for read(index) ) for a given train id.
              * Multiple indices may be returned if the same source was appended more than once in one batch write.
-             * Indices increase monotonically in insertion order of the write operations.
+             * Indices increase monotonically in insertion order of the write operations. Validity time of the indices
+             * corresponds to lifetime of the InputHandler callback. Also the InputHandler this is called in needs
+             * to have been registered using registerInputHandler.
              * @param source
              * @return
              */
             std::vector<unsigned int> trainIdToIndices(unsigned long long trainId) const;
 
             /**
-             * Return the data source identifier pertinent to a data token at a given index.
+             * Return the data source identifier pertinent to a data token at a given index. Validity time of the object
+             * corresponds to lifetime of the InputHandler callback. Also the InputHandler this is called in needs
+             * to have been registered using registerInputHandler.
              * @param index
              * @return
+             * @throw A KARABO_LOGIC_EXCEPTION of there is no meta data available for the given index.
              */
             const MetaData& indexToMetaData(unsigned int index) const;
 
