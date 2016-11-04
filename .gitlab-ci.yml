@@ -13,6 +13,25 @@
   except:
     - branches
 
+.release_build_template: &release_build
+  before_script:
+    - locale-gen en_US.UTF-8
+    - update-locale LANG=en_US.UTF-8
+  script:
+    - export REL_OS_NAME=$(lsb_release -is)
+    - export REL_OS_VERS_LONG=$(lsb_release -rs)
+    - export REL_TAG=$CI_BUILD_REF_NAME
+    - export REL_ARTIFACT_NAME=karabo-$REL_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh
+    - export REL_ARTIFACT_DEST=karaboFramework/tags/$REL_TAG
+    - bash ./auto_build_all.sh Release --noDbInit
+    - mv package/Release/$REL_OS_NAME/$REL_OS_VERS_LONG/x86_64/karabo-*.sh $REL_ARTIFACT_NAME
+    - sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null xdata@exflserv05 "mkdir -p /var/www/html/karabo/$REL_ARTIFACT_DEST"
+    - sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME xdata@exflserv05:/var/www/html/karabo/$REL_ARTIFACT_DEST
+  only:
+    - /^(\d+\.)(\d+\.)(\d+)$/
+  except:
+    - branches
+
 .mr_test_template: &mr_test_build
   before_script:
     - locale-gen en_US.UTF-8
@@ -45,6 +64,18 @@ deps:ubuntu16:
 
 deps:centos7:
   <<: *deps_build
+  image: jwiggins/karabo-containers:centos-7
+
+release:ubuntu14:
+  <<: *release_build
+  image: jwiggins/karabo-containers:ubuntu-14
+
+release:ubuntu16:
+  <<: *release_build
+  image: jwiggins/karabo-containers:ubuntu-16
+
+release:centos7:
+  <<: *release_build
   image: jwiggins/karabo-containers:centos-7
 
 test:ubuntu14:
