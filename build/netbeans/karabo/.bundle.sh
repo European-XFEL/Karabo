@@ -186,14 +186,6 @@ cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 #safeRunCommand "./build.sh"
 #cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 
-if [ "$BUNDLE_ACTION" = "package" ]; then
-    # Build the docs
-    pushd $BASEDIR/doc
-    safeRunCommand "./build.sh" $PACKAGEDIR $VERSION
-    cp -rf .build/html $PACKAGEDIR/docs
-    popd
-fi
-
 # run (Karabo's run/package development environment)
 cd $BASEDIR
 tar --exclude=run/servers/karaboHistory -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
