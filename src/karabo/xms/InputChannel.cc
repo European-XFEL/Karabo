@@ -499,8 +499,12 @@ namespace karabo {
 
         const InputChannel::MetaData& InputChannel::indexToMetaData(unsigned int index) const {
             auto it = m_reverseMetaDataMap.find(index);
-            if (it != m_reverseMetaDataMap.end()) return it->second;
-            return InputChannel::MetaData();
+            if (it != m_reverseMetaDataMap.end()) {
+                return it->second;
+            } else {
+                throw KARABO_LOGIC_EXCEPTION("No meta data available for given index");
+            }
+            
         }
 
 

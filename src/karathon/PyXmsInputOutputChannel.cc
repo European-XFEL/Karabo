@@ -51,7 +51,7 @@ namespace karathon {
 
             // Dimensions (shape)
             if (_encoding == Encoding::JPEG || _encoding == Encoding::PNG ||
-                    _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
+                _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
                 // JPEG, PNG, BMP, TIFF -> cannot use ndarray dimensions, use therefore input parameter
                 _dimensions = dimensions;
                 if (dimensions.size() == 0) {
@@ -233,7 +233,8 @@ namespace karathon {
 
 
     void InputChannelWrap::proxyDataHandler(const bp::object& handler, const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
-        //write now this only exposes source
+        //TODO: wrap MetaData to expose full interface
+        //right now this only exposes source
         const karabo::util::Hash mdHash("source", meta.getSource());
         ScopedGILAcquire gil;
         handler(bp::object(data), bp::object(mdHash));
@@ -277,14 +278,15 @@ namespace karathon {
         ScopedGILRelease nogil;
         self->disconnect(outputChannelInfo);
     }
-    
+
+
     bp::object InputChannelWrap::getMetaData(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
         auto ret = boost::make_shared<std::vector<karabo::util::Hash> >();
         {
             ScopedGILRelease nogil;
             std::vector<karabo::xms::InputChannel::MetaData> md = self->getMetaData();
-            for(auto it = md.begin(); it != md.end(); ++it){
-                ret->push_back(*reinterpret_cast<karabo::util::Hash*>(&*it));
+            for (auto it = md.begin(); it != md.end(); ++it) {
+                ret->push_back(*reinterpret_cast<karabo::util::Hash*> (&*it));
             }
         }
         return bp::object(ret);
@@ -325,11 +327,11 @@ void exportPyXmsInputOutputChannel() {
         bp::class_<karabo::xms::ImageData, boost::shared_ptr<karabo::xms::ImageData > >("ImageData", bp::init<>())
 
                 .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make5,
-                                                        bp::default_call_policies(),
-                                                        (bp::arg("array"),
-                                                        bp::arg("dims") = karabo::util::Dims(),
-                                                        bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
-                                                        bp::arg("bitsPerPixel") = 8)))
+                                                      bp::default_call_policies(),
+                                                      (bp::arg("array"),
+                                                       bp::arg("dims") = karabo::util::Dims(),
+                                                       bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
+                                                       bp::arg("bitsPerPixel") = 8)))
 
                 .def("getData", &karathon::ImageDataWrap::getDataPy)
 
@@ -371,16 +373,16 @@ void exportPyXmsInputOutputChannel() {
         bp::class_<karabo::xms::ImageDataElement > ("IMAGEDATA_ELEMENT", bp::init<karabo::util::Schema & >((bp::arg("expected"))))
 
                 .def("key", &karabo::xms::ImageDataElement::key
-                    , (bp::arg("key"))
-                    , bp::return_internal_reference<> ())
+                     , (bp::arg("key"))
+                     , bp::return_internal_reference<> ())
 
                 .def("displayedName", &karabo::xms::ImageDataElement::displayedName
-                    , bp::arg("name")
-                    , bp::return_internal_reference<> ())
+                     , bp::arg("name")
+                     , bp::return_internal_reference<> ())
 
                 .def("description", &karabo::xms::ImageDataElement::description
-                    , bp::arg("desc")
-                    , bp::return_internal_reference<> ())
+                     , bp::arg("desc")
+                     , bp::return_internal_reference<> ())
 
                 // .def("setDefaultValue", &karathon::ImageDataElementWrap().setDefaultValue
                 //     , (bp::arg("subKey"), bp::arg("defaultValue"))
@@ -388,41 +390,41 @@ void exportPyXmsInputOutputChannel() {
 
 
                 .def("observerAccess", &karabo::xms::ImageDataElement::observerAccess
-                    , bp::return_internal_reference<> ())
+                     , bp::return_internal_reference<> ())
 
                 .def("userAccess", &karabo::xms::ImageDataElement::userAccess
-                    , bp::return_internal_reference<> ())
+                     , bp::return_internal_reference<> ())
 
                 .def("operatorAccess", &karabo::xms::ImageDataElement::operatorAccess
-                    , bp::return_internal_reference<> ())
+                     , bp::return_internal_reference<> ())
 
                 .def("expertAccess", &karabo::xms::ImageDataElement::expertAccess
-                    , bp::return_internal_reference<> ())
+                     , bp::return_internal_reference<> ())
 
                 .def("adminAccess", &karabo::xms::ImageDataElement::adminAccess
-                    , bp::return_internal_reference<> ())
+                     , bp::return_internal_reference<> ())
 
                 .def("skipValidation", &karabo::xms::ImageDataElement::skipValidation
-                    , bp::return_internal_reference<> ())
+                     , bp::return_internal_reference<> ())
 
                 .def("commit", &karabo::xms::ImageDataElement::commit
-                    , bp::return_internal_reference<> ())
+                     , bp::return_internal_reference<> ())
 
                 .def("setDimensionScales", &karabo::xms::ImageDataElement::setDimensionScales
-                    , (bp::arg("scales"))
-                    , bp::return_internal_reference<> ())
+                     , (bp::arg("scales"))
+                     , bp::return_internal_reference<> ())
 
                 .def("setDimensions", &karabo::xms::ImageDataElement::setDimensions
-                    , (bp::arg("dims"))
-                    , bp::return_internal_reference<> ())
+                     , (bp::arg("dims"))
+                     , bp::return_internal_reference<> ())
 
                 .def("setEncoding", &karabo::xms::ImageDataElement::setEncoding
-                    , (bp::arg("encoding"))
-                    , bp::return_internal_reference<> ())
+                     , (bp::arg("encoding"))
+                     , bp::return_internal_reference<> ())
 
                 .def("setGeometry", &karabo::xms::ImageDataElement::setGeometry
-                    , (bp::arg("geometry"))
-                    , bp::return_internal_reference<>())
+                     , (bp::arg("geometry"))
+                     , bp::return_internal_reference<>())
                 ;
     }
 
@@ -479,13 +481,13 @@ void exportPyXmsInputOutputChannel() {
         bp::class_<karabo::xms::InputChannel, boost::shared_ptr<karabo::xms::InputChannel>, boost::noncopyable >("InputChannel", bp::no_init)
 
                 .def("reconfigure", &karabo::xms::InputChannel::reconfigure
-                    , (bp::arg("configuration")))
+                     , (bp::arg("configuration")))
 
                 .def("setInstanceId", &karabo::xms::InputChannel::setInstanceId
-                    , (bp::arg("instanceId")))
+                     , (bp::arg("instanceId")))
 
                 .def("getInstanceId", &karabo::xms::InputChannel::getInstanceId
-                    , bp::return_value_policy<bp::copy_const_reference > ())
+                     , bp::return_value_policy<bp::copy_const_reference > ())
 
                 .def("registerDataHandler", &karathon::InputChannelWrap().registerDataHandlerPy)
 
@@ -500,20 +502,20 @@ void exportPyXmsInputOutputChannel() {
                 .def("getConnectedOutputChannels", &karathon::InputChannelWrap().getConnectedOutputChannelsPy)
 
                 .def("read", &karathon::InputChannelWrap().readPy
-                    , (bp::arg("idx")))
+                     , (bp::arg("idx")))
 
                 .def("size", &karabo::xms::InputChannel::size)
 
                 .def("getMinimumNumberOfData", &karabo::xms::InputChannel::getMinimumNumberOfData)
 
                 .def("connect", &karathon::InputChannelWrap().connectPy
-                    , (bp::arg("outputChannelInfo")))
+                     , (bp::arg("outputChannelInfo")))
 
                 .def("disconnect", &karathon::InputChannelWrap().disconnectPy
-                    , (bp::arg("outputChannelInfo")))
+                     , (bp::arg("outputChannelInfo")))
 
                 .def("canCompute", &karabo::xms::InputChannel::canCompute)
-        
+
                 .def("getMetaData", &karathon::InputChannelWrap().getMetaData)
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::InputChannel)
