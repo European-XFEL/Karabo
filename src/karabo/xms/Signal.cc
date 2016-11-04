@@ -26,18 +26,18 @@ namespace karabo {
             m_messageTimeToLive(messageTimeToLive),
             m_argsType(typeid (karabo::util::Types::NONE)),
             m_topic(signalSlotable->m_topic) {
-            updateConnectedSlotsString();
+            updateConnectedSlotsString(SlotRegistry());
         }
 
 
-        void Signal::updateConnectedSlotsString() {
+        void Signal::updateConnectedSlotsString(const SlotRegistry& slots) {
             m_registeredSlotsString.clear();
             m_registeredSlotInstanceIdsString.clear();
             if (nRegisteredSlots() == 0) {
                 m_registeredSlotsString = "__none__";
                 m_registeredSlotInstanceIdsString = "__none__";
             } else {
-                for (auto it = m_registeredSlots.cbegin(); it != m_registeredSlots.cend(); ++it) {
+                for (auto it = slots.cbegin(); it != slots.cend(); ++it) {
                     m_registeredSlotInstanceIdsString += "|" + it->first + "|";
                     m_registeredSlotsString += "|" + it->first + ":" + karabo::util::toString(it->second) + "|";
                 }
@@ -52,7 +52,7 @@ namespace karabo {
 
         void Signal::registerSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
             m_registeredSlots[slotInstanceId].insert(slotFunction);
-            updateConnectedSlotsString();
+            updateConnectedSlotsString(m_registeredSlots);
         }
 
 
@@ -67,7 +67,7 @@ namespace karabo {
                     didErase = (it->second.erase(slotFunction) >= 1);
                     if (it->second.empty()) m_registeredSlots.erase(it);
                 }
-                updateConnectedSlotsString();
+                updateConnectedSlotsString(m_registeredSlots);
             }
             return didErase;
         }
@@ -95,7 +95,7 @@ namespace karabo {
                 }
 
                 // Copy the registered slots
-                auto registeredSlots = m_registeredSlots;
+                SlotRegistry registeredSlots = m_registeredSlots;
 
                 // Try all registered slots whether we could send in-process
                 for (auto it = registeredSlots.cbegin(); it != registeredSlots.cend();) {
@@ -106,8 +106,17 @@ namespace karabo {
                     }
                 }
 
-                // publish if P2P connected slots and filter them out. After call, registeredSlots and header are updated
-                SignalSlotable::m_pointToPoint->publishIfConnected(registeredSlots, header, message, m_priority);
+                // Check the leftovers for p2p shortcutting
+                if (registeredSlots.size() > 0) {
+
+                    // Update the header
+                    updateConnectedSlotsString(registeredSlots);
+                    header = prepareHeader();
+
+                    // publish if P2P connected slots and filter them out. After call, registeredSlots and header are updated
+                    SignalSlotable::m_pointToPoint->publishIfConnected(registeredSlots, header, message, m_priority);
+
+                }
 
                 // publish leftovers via broker
                 if (registeredSlots.size() > 0) {

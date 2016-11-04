@@ -30,7 +30,7 @@ void RunTimeSchemaAttributes_Test::setUp() {
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
-    Hash config("serverId", "testServerSchema", "scanPlugins", false, "Logger.priority", "DEBUG");
+    Hash config("serverId", "testServerSchema", "scanPlugins", false, "Logger.priority", "ERROR");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->start();
     // Create client
