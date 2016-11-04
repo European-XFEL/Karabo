@@ -38,7 +38,7 @@ namespace karabo {
 
         class Signal {
 
-            typedef std::map<std::string, std::set<std::string> > SlotRegistry;
+            typedef std::map<std::string, std::set<std::string> > SlotMap;
 
         public:
 
@@ -122,9 +122,9 @@ namespace karabo {
 
         protected:
 
-            void updateConnectedSlotsString(const SlotRegistry& slots);
+            std::pair<std::string, std::string> generateSlotStrings(const SlotMap& slots) const;
 
-            karabo::util::Hash::Pointer prepareHeader() const;
+            karabo::util::Hash::Pointer prepareHeader(const SlotMap& slots) const;
 
         private:
 
@@ -139,7 +139,7 @@ namespace karabo {
             std::string m_registeredSlotsString;
             std::string m_registeredSlotInstanceIdsString;
             size_t m_nRegisteredSlots;
-            SlotRegistry m_registeredSlots;
+            SlotMap m_registeredSlots;
             int m_priority;
             int m_messageTimeToLive;
             std::string m_topic;
