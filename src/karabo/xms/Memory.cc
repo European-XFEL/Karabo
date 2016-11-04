@@ -17,7 +17,7 @@ namespace karabo {
         // Static initializations
         //std::vector< std::vector< std::vector<boost::shared_ptr<std::vector<char> > > > Memory::m_cache = std::vector< std::vector< std::vector< boost::shared_ptr<std::vector<char> > > > >(MAX_N_CHANNELS, std::vector< std::vector< boost::shared_ptr<std::vector<char> > > >(MAX_N_CHUNKS));
         Memory::Channels Memory::m_cache = Memory::Channels(MAX_N_CHANNELS, Memory::Chunks(MAX_N_CHUNKS));
-        Memory::ChannelMetaHash Memory::m_metaData = Memory::ChannelMetaHash(MAX_N_CHANNELS, Memory::ChunkMetaHash(MAX_N_CHUNKS));
+        Memory::ChannelMetaDataEntries Memory::m_metaData = Memory::ChannelMetaDataEntries(MAX_N_CHANNELS, Memory::ChunkMetaDataEntries(MAX_N_CHUNKS));
 
         //std::vector<std::vector<bool> > Memory::m_chunkStatus = std::vector<std::vector<bool> >(MAX_N_CHANNELS, std::vector<bool>(MAX_N_CHUNKS));
         Memory::ChunkStatus Memory::m_chunkStatus = Memory::ChunkStatus(MAX_N_CHANNELS, std::vector<int> (MAX_N_CHUNKS, 0));
@@ -62,9 +62,12 @@ namespace karabo {
         }
 
         void Memory::writeChunk(const Memory::Data& chunk, const size_t channelIdx, const size_t chunkIdx, const std::vector<MetaData>& metaData) {
+            if (chunk.size() != metaData.size()) {
+                throw KARABO_LOGIC_EXCEPTION("Number of data tokens and number of meta data entries must be equal!");
+            }
             Data& src = m_cache[channelIdx][chunkIdx];
             src.insert(src.end(), chunk.begin(), chunk.end());
-            MetaHash& srcInfo =  m_metaData[channelIdx][chunkIdx];
+            MetaDataEntries& srcInfo =  m_metaData[channelIdx][chunkIdx];
             srcInfo.insert(srcInfo.end(), metaData.begin(), metaData.end());
         }
 
@@ -112,7 +115,7 @@ namespace karabo {
             for (size_t i = 0; i < m_cache[channelIdx].size(); ++i) { // Find free chunk
                 if (m_chunkStatus[channelIdx][i] == 0) { // Found a free chunk
                     m_cache[channelIdx][i] = Data();
-                    m_metaData[channelIdx][i] = MetaHash();
+                    m_metaData[channelIdx][i] = MetaDataEntries();
                     m_chunkStatus[channelIdx][i] = 1;
                     return i;
                 }
@@ -162,7 +165,7 @@ namespace karabo {
             Memory::_ensureSerializer();
 
             const Data& data = m_cache[channelIdx][chunkIdx];
-            const MetaHash& metaData = m_metaData[channelIdx][chunkIdx];
+            const MetaDataEntries& metaData = m_metaData[channelIdx][chunkIdx];
             std::vector<unsigned int> byteSizes;
             size_t totalSize = 0;
             byteSizes.reserve(data.size());
@@ -202,7 +205,7 @@ namespace karabo {
 
             unsigned int nData = header.get<unsigned int>("nData");
             const std::vector<unsigned int>& byteSizes = header.get<std::vector<unsigned int> >("byteSizes");
-            const MetaHash& metaData = header.get<MetaHash>("sourceInfo");
+            const MetaDataEntries& metaData = header.get<MetaDataEntries>("sourceInfo");
             m_metaData[channelIdx][chunkIdx] = metaData;
 
             Data& chunkData = m_cache[channelIdx][chunkIdx];

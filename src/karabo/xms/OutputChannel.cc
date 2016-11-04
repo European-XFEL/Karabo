@@ -715,16 +715,20 @@ namespace karabo {
         }
 
         void OutputChannel::write(const karabo::util::Hash& data,  const OutputChannel::MetaData& metaData) {
-            if (metaData.isDefaultInitialized()){
-                OutputChannel::MetaData m(/*source*/ m_instanceId+"/"+m_channelName, /*timestamp*/ karabo::util::Timestamp());
-                Memory::write(data, m_channelId, m_chunkId, m);
-            } else {
-                Memory::write(data, m_channelId, m_chunkId, metaData);
-            }
+             Memory::write(data, m_channelId, m_chunkId, metaData);
+        }
+
+        void OutputChannel::write(const karabo::util::Hash& data) {
+            OutputChannel::MetaData meta(/*source*/ m_instanceId+"/"+m_channelName, /*timestamp*/ karabo::util::Timestamp());
+            Memory::write(data, m_channelId, m_chunkId, meta);
         }
 
         void OutputChannel::write(const karabo::util::Hash::Pointer& data,  const OutputChannel::MetaData& metaData) {
             write(*data, metaData);
+        }
+
+        void OutputChannel::write(const karabo::util::Hash::Pointer& data) {
+            write(*data);
         }
     }
 }
