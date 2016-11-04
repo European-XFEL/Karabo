@@ -23,20 +23,34 @@ def read_lazy_object(uuid, revision, db_adapter, reader_func, existing=None):
                      update with the data which is loaded.
     :return: a project model object
     """
+    requested_objs = set()
+    return _read_lazy_object_r(uuid, revision, db_adapter, reader_func,
+                               existing, requested_objs)
+
+
+def _read_lazy_object_r(uuid, revision, db_adapter, reader_func, existing,
+                        requested_objs):
+    """Recursive version of read_lazy_object
+    """
     collected = []
 
     def visitor(child):
         nonlocal collected
-        if isinstance(child, BaseProjectObjectModel) and not child.initialized:
-            collected.append(child)
+        if isinstance(child, BaseProjectObjectModel):
+            if (child.uuid, child.revision) not in requested_objs:
+                collected.append(child)
 
     data = db_adapter.retrieve(uuid, revision)
-    obj = reader_func(BytesIO(data), existing=existing)
-    obj.initialized = True
+    requested_objs.add((uuid, revision))
 
-    walk_traits_object(obj, visitor)
-    for child in collected:
-        read_lazy_object(child.uuid, child.revision, db_adapter, reader_func,
-                         existing=child)
+    if data:
+        obj = reader_func(BytesIO(data), existing=existing)
 
-    return obj
+        walk_traits_object(obj, visitor)
+        for child in collected:
+            _read_lazy_object_r(child.uuid, child.revision, db_adapter,
+                                reader_func, child, requested_objs)
+
+        return obj
+    else:
+        return existing
