@@ -99,8 +99,7 @@ if __name__ == '__main__':
             ["karabo", "karabo.common", "karabo.common.scenemodel",
              "karabo.common.project", "karabo.interactive",
              "karabo.middlelayer_api", "karabo.middlelayer_api.newproject",
-             "karabo.middlelayer_api._project", "karabo.packaging",
-             "karabo.testing"]
+             "karabo.packaging", "karabo.testing"]
         )
         # Write out useful data
         with open('VERSION', 'w') as fp:
