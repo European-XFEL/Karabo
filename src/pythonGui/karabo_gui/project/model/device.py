@@ -9,7 +9,7 @@ import weakref
 from PyQt4.QtGui import QAction, QMenu, QStandardItem
 from traits.api import Instance
 
-from karabo.common.project.api import DeviceInstanceModel
+from karabo.common.project.api import DeviceInstanceModel, DeviceServerModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .bases import BaseProjectTreeItem
@@ -19,7 +19,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     """ A wrapper for DeviceInstanceModel objects
     """
     # A reference to the DeviceServerModel
-    server_model = Instance('karabo.common.project.server.DeviceServerModel')
+    server_model = Instance(DeviceServerModel)
     # Redefine model with the correct type
     model = Instance(DeviceInstanceModel)
 
