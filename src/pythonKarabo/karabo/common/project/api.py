@@ -10,4 +10,5 @@ from .macro import MacroModel, read_macro, write_macro
 from .model import ProjectModel
 from .server import (DeviceInstanceModel, DeviceServerModel,
                      read_device_server, write_device_server)
-from .utils import find_parent_project, visit_project_objects
+from .utils import (find_parent_project, visit_project_objects,
+                    walk_traits_object)
