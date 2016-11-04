@@ -56,13 +56,10 @@ class DisplayIconset(DisplayWidget):
         # XMLParser object to get associated layer for property value
         self.xml = None
 
-        # Use default icon set for initialization
-        self.setURL("file://" + urllib.request.pathname2url(
-            os.path.join(os.path.dirname(__file__), "empty.svg")))
-
     def _readData(self, url, data=None):
         if data is None:
             data = urllib.request.urlopen(url).read()
+            self.setData(url, data)
         parser = ElementTree.XMLParser(target=ElementTree.TreeBuilder(
             element_factory=Element))
         parser.feed(data)
@@ -76,6 +73,11 @@ class DisplayIconset(DisplayWidget):
 
     def setData(self, url, data):
         """ The `url` and the actual `data` is passed and needs to be set. """
+        if not url and not data:
+            # Use default icon set for initialization
+            self.setURL("file://" + urllib.request.pathname2url(
+                os.path.join(os.path.dirname(__file__), "empty.svg")))
+            return
         self.url = url
         self.xml = self._readData(url, data)
         self.valueChanged(None, self.boxes[0].value if self.boxes[0].hasValue()
