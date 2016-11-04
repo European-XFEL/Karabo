@@ -227,8 +227,8 @@ namespace karathon {
 
         template <typename ...Args>
         void replyPy(const Args&... args) {
-            karabo::util::Hash reply;
-            packPy(reply, args...);
+            auto reply(boost::make_shared<karabo::util::Hash>());
+            packPy(*reply, args...);
             registerReply(reply);
         }
 
