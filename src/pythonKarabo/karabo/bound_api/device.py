@@ -896,6 +896,12 @@ class PythonDevice(NoFsm):
             self._ss.call(self.serverid, "slotDeviceGone", self.deviceid)
         self.preDestruction()
         self.stopFsm()
+        # TODO:
+        # Remove this hack once we know how to get rid of the object cleanly
+        # (slotInstanceGone will be called in _ss destructor again...).
+        self._ss.call("*", "slotInstanceGone", self.deviceid,
+                      self._ss.getInstanceInfo())
+
         # This will trigger the central event-loop to finish
         os.kill(os.getpid(), signal.SIGTERM)
 
