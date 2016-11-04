@@ -24,27 +24,27 @@ DeviceServerRunner_Test::~DeviceServerRunner_Test() {
 
 
 void DeviceServerRunner_Test::setUp() {
-    Hash config("DeviceServer", Hash("serverId", "testDeviceServer_0", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
-    m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
-    m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
 
+    // Start central event-loop
+    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    // Create and start server
+    Hash config("serverId", "testDeviceServer_0", "scanPlugins", false, "Logger.priority", "ERROR");
+    m_deviceServer = DeviceServer::create("DeviceServer", config);
+    m_deviceServer->start();
+    // Create client
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
 }
 
 
 void DeviceServerRunner_Test::tearDown() {
-    m_deviceClient->killServer("testDeviceServer_0", KRB_TEST_MAX_TIMEOUT);
-    m_deviceServerThread.join();
-    m_deviceClient.reset();
+    m_deviceServer.reset();
+    EventLoop::stop();
+    m_eventLoopThread.join();
 }
 
 
 void DeviceServerRunner_Test::allTestsOnDeviceServer() {
-    // Start central event-loop
-    boost::thread t(boost::bind(&EventLoop::work));
 
     testRunConfigurationGroup();
 
-    EventLoop::stop();
-    t.join();
 }
