@@ -280,7 +280,7 @@ class PythonDevice(NoFsm):
             self.log.DEBUG("Connecting to time server")
             self._ss.connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick")
 
-    def start(self):
+    def _finalizeInit(self):
         self.startFsm()
 
         self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
@@ -1121,7 +1121,7 @@ def launchPythonDevice():
         t.start()
 
         device = Configurator(PythonDevice).create(classid, config)
-        device.start()
+        device._finalizeInit()
 
         t.join()
         device.__del__()
