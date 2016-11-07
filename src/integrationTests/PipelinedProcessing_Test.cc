@@ -14,46 +14,45 @@ CPPUNIT_TEST_SUITE_REGISTRATION(PipelinedProcessing_Test);
 
 #define KRB_TEST_MAX_TIMEOUT 10
 
+
 PipelinedProcessing_Test::PipelinedProcessing_Test() {
 
 }
 
 
 void PipelinedProcessing_Test::setUp() {
-    Hash config("DeviceServer", Hash("serverId", "testServerPP", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
-    m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
-    m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
-    m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
 
+    // Start central event-loop
+    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    // Create and start server
+    Hash config("serverId", "testServerPP", "scanPlugins", false, "Logger.priority", "ERROR");
+    m_deviceServer = DeviceServer::create("DeviceServer", config);
+    m_deviceServer->start();
+    // Create client
+    m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
 }
 
 
 void PipelinedProcessing_Test::tearDown() {
-    m_deviceClient->killServer("testServerPP", KRB_TEST_MAX_TIMEOUT);
-    m_deviceServerThread.join();
-    m_deviceClient.reset();
+    m_deviceServer.reset();
+    EventLoop::stop();
+    m_eventLoopThread.join();
 }
 
 
 void PipelinedProcessing_Test::appTestRunner() {
 
-    // Start central event-loop
-    boost::thread t(boost::bind(&EventLoop::work));
-
     // in order to avoid recurring setup and tear down calls, all tests are run in a single runner
-    std::pair<bool, std::string> success =  m_deviceClient->instantiate("testServerPP", "P2PSenderDevice", Hash("deviceId", "p2pTestSender"), KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerPP", "P2PSenderDevice", Hash("deviceId", "p2pTestSender"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
     testGetOutputChannelSchema();
     testPipe();
-
-    EventLoop::stop();
-    t.join();
 }
 
 
-void PipelinedProcessing_Test::testGetOutputChannelSchema(){
-    karabo::util::Hash dataSchema =  m_deviceClient->getOutputChannelSchema("p2pTestSender", "output1");
+void PipelinedProcessing_Test::testGetOutputChannelSchema() {
+    karabo::util::Hash dataSchema = m_deviceClient->getOutputChannelSchema("p2pTestSender", "output1");
 
 //    clog << "\nPipelinedProcessing_Test::testGetOutputChannelSchema() : dataSchema => \n" << dataSchema << endl;
 
@@ -112,7 +111,7 @@ void PipelinedProcessing_Test::testPipe() {
 
 template <typename T>
 bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId,
-    const std::string& propertyName, const T& expected, const int maxTimeout) const {
+                                                  const std::string& propertyName, const T& expected, const int maxTimeout) const {
 
     const int pollWaitTime = 1;
     int pollCounter = 0;
