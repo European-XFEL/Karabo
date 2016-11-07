@@ -18,7 +18,7 @@ BytesTrait = Instance(bytes, args=(b'',))
 class DisplayIconsetModel(BaseWidgetObjectData):
     """ A model for DisplayIconset"""
     # A URL for an icon set (version 1 data only!)
-    image = String
+    image = String(transient=True)
     # The actual icon set data
     data = BytesTrait
 
@@ -31,7 +31,7 @@ class IconData(HasStrictTraits):
     # The value of the property
     value = String
     # A URL for an icon (version 1 data only!)
-    image = String
+    image = String(transient=True)
     # The actual icon data
     # NOTE: This data will only be automatically loaded from version 2+ files
     data = BytesTrait

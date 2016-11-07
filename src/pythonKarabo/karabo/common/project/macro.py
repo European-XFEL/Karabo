@@ -12,7 +12,8 @@ class MacroModel(BaseProjectObjectModel):
     """ An object representing the data for a Karabo Python macro.
     """
     # The title of the macro
-    title = String()  # XXX: Use `super().simple_name` in the future
+    # XXX: Use `super().simple_name` in the future
+    title = String(transient=True)
     # The instance ID of the running macro
     instance_id = Property(String, depends_on=['title', 'project_name'])
     # The instance names of all active macros

@@ -136,6 +136,7 @@ def _check_preexisting(existing, klass, traits):
             existing.revision != traits['revision']):
         raise AssertionError('Object does not match one read from database!')
 
+    existing.trait_set(**traits)
     return existing
 
 
@@ -156,10 +157,15 @@ def _device_server_reader(io_obj, existing, metadata):
     """ A reader for device server models
     """
     traits = _db_metadata_reader(metadata)
-    _check_preexisting(existing, DeviceServerModel, traits)
+    existing = _check_preexisting(existing, DeviceServerModel, traits)
 
     server = read_device_server(io_obj)
     server.trait_set(**traits)
+
+    # Now copy into the existing object
+    existing.server_id = server.server_id
+    existing.devices[:] = server.devices[:]
+
     return server
 
 
@@ -199,10 +205,18 @@ def _scene_reader(io_obj, existing, metadata):
     """ A reader for scenes
     """
     traits = _db_metadata_reader(metadata)
-    _check_preexisting(existing, SceneModel, traits)
+    existing = _check_preexisting(existing, SceneModel, traits)
 
     scene = read_scene(io_obj)
     scene.trait_set(**traits)
+
+    # Then copy into the existing
+    existing.file_format_version = scene.file_format_version
+    existing.extra_attributes = scene.extra_attributes.copy()
+    existing.width = scene.width
+    existing.height = scene.height
+    existing.children[:] = scene.children[:]
+
     return scene
 
 # -----------------------------------------------------------------------------

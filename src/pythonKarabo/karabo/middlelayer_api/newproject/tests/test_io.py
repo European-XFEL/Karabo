@@ -2,43 +2,53 @@ from contextlib import contextmanager
 import os.path as op
 from tempfile import TemporaryDirectory
 
-from traits.api import Dict, Enum, Int, String
+from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 
-from karabo.common.project.api import (ProjectDBCache, read_lazy_object,
-                                       PROJECT_OBJECT_CATEGORIES)
+from karabo.common.project.api import (
+    ProjectDBCache, ProjectModel, read_lazy_object, walk_traits_object,
+    PROJECT_OBJECT_CATEGORIES)
 from karabo.middlelayer import Project
 from ..convert import convert_old_project
 from ..io import read_project_model, write_project_model
 
 
 def _compare_projects(proj0, proj1):
-    COMPARABLE_TRAIT_TYPES = (Dict, Enum, Int, String)
+    COMPARABLE_TRAIT_TYPES = (Bool, Enum, Float, Int, Range, String)
+
+    class _ObjectFlattener(object):
+        def __init__(self):
+            self.instances = []
+
+        def __call__(self, obj):
+            if isinstance(obj, HasTraits):
+                self.instances.append(obj)
 
     def _get_comparable_trait_names(obj):
         comparables = []
-        names = obj.visible_traits()
-        for n in names:
+        for n in obj.copyable_trait_names():
             trait = obj.trait(n)
-            if trait.trait_type in COMPARABLE_TRAIT_TYPES:
+            if isinstance(trait.trait_type, COMPARABLE_TRAIT_TYPES):
                 comparables.append(n)
+        if 'uuid' in comparables:
+            comparables.remove('uuid')
         return comparables
 
-    assert proj0.uuid == proj1.uuid
-    assert proj0.revision == proj1.revision
-    assert proj0.simple_name == proj1.simple_name
+    flattener0 = _ObjectFlattener()
+    flattener1 = _ObjectFlattener()
+    walk_traits_object(proj0, flattener0)
+    walk_traits_object(proj1, flattener1)
+    flat_proj0 = flattener0.instances
+    flat_proj1 = flattener1.instances
 
-    for part in PROJECT_OBJECT_CATEGORIES:
-        proj0_models = getattr(proj0, part)
-        proj1_models = getattr(proj1, part)
+    assert len(flat_proj0) == len(flat_proj1)
 
-        assert len(proj0_models) == len(proj1_models)
-        if len(proj0_models) == 0:
-            continue
-
-        trait_names = _get_comparable_trait_names(proj0_models[0])
-        for model0, model1 in zip(proj0_models, proj1_models):
-            for attrname in trait_names:
-                assert getattr(model0, attrname) == getattr(model1, attrname)
+    for obj0, obj1 in zip(flat_proj0, flat_proj1):
+        assert type(obj0) is type(obj1)
+        trait_names = _get_comparable_trait_names(obj0)
+        for attrname in trait_names:
+            attr0 = getattr(obj0, attrname)
+            attr1 = getattr(obj1, attrname)
+            assert attr0 == attr1
 
 
 def _get_old_project():
@@ -86,8 +96,9 @@ def test_project_round_trip():
 
     with _project_storage() as storage:
         _write_project(project, devices, storage)
+        rt_project = ProjectModel(uuid=project.uuid, revision=project.revision)
         rt_project = read_lazy_object(project.uuid, project.revision, storage,
-                                      read_project_model)
+                                      read_project_model, existing=rt_project)
 
     _compare_projects(project, rt_project)
 
