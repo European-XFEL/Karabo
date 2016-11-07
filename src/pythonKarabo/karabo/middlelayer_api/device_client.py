@@ -40,8 +40,8 @@ class DeviceClientBase(Device):
         super().__init__(configuration)
 
     @asyncio.coroutine
-    def _run(self):
-        yield from super()._run()
+    def _run(self, **kwargs):
+        yield from super()._run(**kwargs)
         self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
 
     @slot

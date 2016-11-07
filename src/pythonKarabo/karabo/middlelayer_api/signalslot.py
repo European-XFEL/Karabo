@@ -3,6 +3,7 @@ from asyncio import (async, CancelledError, coroutine, get_event_loop,
                      sleep, TimeoutError, wait, wait_for)
 import logging
 import random
+import sys
 import weakref
 import inspect
 
@@ -20,8 +21,13 @@ class Signal(object):
 
 def _log_exception(func, device):
     logger = logging.getLogger(device.deviceId)
-    logger.exception('Exception in slot "%s" of device "%s"',
-                     func.__qualname__, device.deviceId)
+    _, exception, _ = sys.exc_info()
+    if exception is None or not hasattr(exception, "logmessage"):
+        logmessage = ('Exception in slot "%s" of device "%s"',
+                      func.__qualname__, device.deviceId)
+    else:
+        logmessage = exception.logmessage
+    logger.exception(*logmessage)
 
 
 def slot(f):
@@ -129,7 +135,6 @@ class SignalSlotable(Configurable):
         super().__init__(configuration)
         self.deviceId = self._deviceId_
         self._devices = weakref.WeakValueDictionary()
-        self.__randPing = random.randint(2, 0x7fffffff)
         self.__initialized = False
         self._new_device_futures = {}
 
@@ -143,21 +148,34 @@ class SignalSlotable(Configurable):
             loop = get_event_loop()
         self._ss = loop.getBroker(self.deviceId, type(self).__name__)
         self._sethash = {}
-        if server is not None:
-            server.addChild(self.deviceId, self)
-        return loop.create_task(self._run(), self)
+        return loop.create_task(self._run(server=server), self)
 
+    @coroutine
+    def _assert_name_unique(self):
+        """check that our device Id is unique
+
+        during startup, we ping possible other instances with our name,
+        no response means that we are alone. To avoid that we respond
+        ourselves, we set self.__randPing to a random value and pass it
+        as the parameter rand, so that we know we pinged ourselves.
+        Once we know we are alone, self.__randPing is set to 0 meaning
+        that we start responding to other pings.
+        """
+        self.__randPing = random.randint(2, 0x7fffffff)
+        try:
+            yield from wait_for(
+                self.call(self.deviceId, "slotPing", self.deviceId,
+                          self.__randPing, False), timeout=1)
+            raise KaraboError('deviceId "{}" already in use'.
+                              format(self.deviceId))
+        except TimeoutError:
+            pass
+        self.__randPing = 0
 
     # slotPing _is_ a slot, but not using the official decorator.
     # See the definition of 'inner' below.
     def slotPing(self, instanceId, rand, track=None):
         """return our info to show that we are here"""
-        # during startup, we ping possible other instances with our name,
-        # no response means that we are alone. To avoid that we respond
-        # ourselves, we set self.__randPing to a random value and pass it
-        # as the parameter rand, so that we know we pinged ourselves.
-        # Once we know we are alone, self.__randPing is set to 0 meaning
-        # that we start responding to other pings.
         if rand:
             if instanceId == self.deviceId and self.__randPing != rand:
                 return self._ss.info
@@ -196,27 +214,24 @@ class SignalSlotable(Configurable):
         return Hash("heartbeatInterval", self.heartbeatInterval.value)
 
     @coroutine
-    def _run(self):
-        for k in dir(self.__class__):
-            v = getattr(self, k, None)
-            if callable(v) and hasattr(v, "slot"):
-                self._ss.register_slot(k, v)
-        async(self._ss.main(self))
+    def _run(self, server=None, **kwargs):
         try:
-            yield from wait_for(
-                self.call(self.deviceId, "slotPing", self.deviceId,
-                          self.__randPing, False), timeout=1)
+            for k in dir(self.__class__):
+                v = getattr(self, k, None)
+                if callable(v) and hasattr(v, "slot"):
+                    self._ss.register_slot(k, v)
+            async(self._ss.main(self))
+            yield from self._assert_name_unique()
+            self._ss.notify_network(self._initInfo())
+            if server is not None:
+                server.addChild(self.deviceId, self)
+            yield from super(SignalSlotable, self)._run(**kwargs)
+            yield from get_event_loop().run_coroutine_or_thread(
+                self.onInitialization)
+            self.__initialized = True
+        except:
             yield from self.slotKillDevice()
-            raise KaraboError('deviceId "{}" already in use'.
-                              format(self.deviceId))
-        except TimeoutError:
-            pass
-        self.__randPing = 0  # Start answering on slotPing with argument rand=0
-        self._ss.notify_network(self._initInfo())
-        yield from super(SignalSlotable, self)._run()
-        yield from get_event_loop().run_coroutine_or_thread(
-            self.onInitialization)
-        self.__initialized = True
+            raise
 
     @coslot
     def slotKillDevice(self):
