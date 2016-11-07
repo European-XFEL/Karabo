@@ -7,7 +7,7 @@ from functools import partial
 import weakref
 
 from PyQt4.QtGui import QAction, QMenu, QStandardItem
-from traits.api import Instance, List
+from traits.api import Callable, Dict, Instance, List
 
 from karabo.common.project.api import DeviceServerModel
 from karabo_gui import icons
@@ -21,8 +21,10 @@ class DeviceServerModelItem(BaseProjectTreeItem):
     """
     # Redefine model with the correct type
     model = Instance(DeviceServerModel)
+
     # Different devices for the server
     children = List(Instance(DeviceInstanceModelItem))
+    _child_map = Dict  # dictionary for fast lookups during removal
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
@@ -69,11 +71,26 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         for device_instance_model in event.removed:
             index = _find_qt_item_index(device_instance_model)
             if index >= 0:
+                item_model = self._child_map[device_instance_model]
+                self.children.remove(item_model)
                 self.qt_item.removeRow(index)
 
         for device_instance_model in event.added:
             item = DeviceInstanceModelItem(model=device_instance_model)
             self.item.appendRow(item.qt_item)
+            self.children.append(item)
+
+    def _children_items_changed(self, event):
+        """ Maintain ``_child_map`` by watching item events on ``children``
+
+        This is a static notification handler which is connected automatically
+        by Traits.
+        """
+        for item_model in event.removed:
+            del self._child_map[item_model.model]
+
+        for item_model in event.added:
+            self._child_map[item_model.model] = item_model
 
     # ----------------------------------------------------------------------
     # action handlers
