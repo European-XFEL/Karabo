@@ -377,7 +377,8 @@ class DeviceServer(object):
             self.ss.call(deviceid, "slotKillDevice")
             launchers.append(self.deviceInstanceMap[deviceid])
         for l in launchers:
-            if l: t.join()
+            if l:
+                l.join()
         self.deviceInstanceMap = {}
         self.ss.reply(self.serverid)
         self.stopDeviceServer()
