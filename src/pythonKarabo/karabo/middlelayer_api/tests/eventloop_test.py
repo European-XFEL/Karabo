@@ -15,8 +15,8 @@ class Barrier(object):
 
     @synchronize
     def block(self):
+        self.state = "unblocked"
         try:
-            self.state = "unblocked"
             yield from self.lock.acquire()
             self.state = "blocked"
             yield from self.lock.acquire()
@@ -28,6 +28,8 @@ class Barrier(object):
         except CancelledError:
             self.state = "cancelled"
             raise
+        finally:
+            self.lock.release()
 
     @synchronize
     def free(self):
@@ -67,6 +69,13 @@ class Tests(DeviceTest):
         barrier.free()
         fut.wait()
         sleep(0.002)
+        self.assertTrue(called)
+
+        called = False
+        fut = barrier.block(wait=False, timeout=0.01)
+        fut.add_done_callback(callback)
+        self.assertFalse(called)
+        sleep(0.02)
         self.assertTrue(called)
 
     @sync_tst
