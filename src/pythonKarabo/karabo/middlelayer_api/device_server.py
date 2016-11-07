@@ -139,8 +139,8 @@ class DeviceServer(SignalSlotable):
         return info
 
     @coroutine
-    def _run(self):
-        yield from super(DeviceServer, self)._run()
+    def _run(self, **kwargs):
+        yield from super(DeviceServer, self)._run(**kwargs)
 
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
@@ -183,7 +183,7 @@ class DeviceServer(SignalSlotable):
     def endErrorAction(self):
         pass
 
-    @slot
+    @coslot
     def slotStartDevice(self, hash):
         config = Hash()
 
@@ -196,12 +196,13 @@ class DeviceServer(SignalSlotable):
         try:
             cls = Device.subclasses[classId]
             obj = cls(config)
-            obj.startInstance(self)
+            task = obj.startInstance(self)
+            yield from task
             return True, '"{}" started'.format(deviceId)
         except Exception as e:
-            self.logger.exception('could not start device "{}" of class "{}"'.
-                                  format(deviceId, classId))
-            return False, traceback.format_exc()
+            e.logmessage = ('could not start device "%s" of class "%s"',
+                            deviceId, classId)
+            raise
 
     def addChild(self, deviceId, child):
         self.deviceInstanceMap[deviceId] = child
