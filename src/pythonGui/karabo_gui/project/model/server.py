@@ -9,7 +9,7 @@ import weakref
 from PyQt4.QtGui import QAction, QMenu, QStandardItem
 from traits.api import Instance, List
 
-from karabo.common.project.api import DeviceInstanceModel, DeviceServerModel
+from karabo.common.project.api import DeviceServerModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .bases import BaseProjectTreeItem
@@ -71,9 +71,9 @@ class DeviceServerModelItem(BaseProjectTreeItem):
             if index >= 0:
                 self.qt_item.removeRow(index)
 
-        for item_model in event.added:
-            # XXX: TODO
-            pass
+        for device_instance_model in event.added:
+            item = DeviceInstanceModelItem(model=device_instance_model)
+            self.item.appendRow(item.qt_item)
 
     # ----------------------------------------------------------------------
     # action handlers
