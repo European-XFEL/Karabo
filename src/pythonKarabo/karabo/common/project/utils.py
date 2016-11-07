@@ -1,6 +1,5 @@
 from traits.api import HasTraits, Instance, List
 
-from .bases import BaseProjectObjectModel
 from .model import ProjectModel
 
 
@@ -29,17 +28,41 @@ def find_parent_project(model, root_project):
     return visitor.parent
 
 
+def find_parent_object(model, project):
+    """ Given a project child object and a project model which is the child's
+    ancestor, find the immediate parent of the child.
+
+    :param model: A project object instance
+    :param root_project: A ProjectModel which is the ancestor of ``model``.
+    """
+    class _Visitor(object):
+        last_object = None
+        parent = None
+
+        def __call__(self, obj):
+            if obj is model:
+                if self.parent is not None:
+                    msg = "Object {} is in the project more than once!"
+                    raise RuntimeError(msg.format(obj))
+                self.parent = self.last_object
+            else:
+                self.last_object = obj
+
+    visitor = _Visitor()
+    visit_project_objects(project, visitor)
+    return visitor.parent
+
+
 def visit_project_objects(project, visitor_func):
     """ Recursively visit all objects in a project model tree using a pre-order
     traversal.
 
     :param project: A project model instance
-    :param visitor_func: A callable which takes a single BaseProjectObjectModel
+    :param visitor_func: A callable which takes a single project object model
                          instance as its only argument.
     """
     def _visitor_wrapper(model):
-        if isinstance(model, BaseProjectObjectModel):
-            visitor_func(model)
+        visitor_func(model)
 
     walk_traits_object(project, _visitor_wrapper)
 

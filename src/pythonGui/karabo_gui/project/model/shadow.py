@@ -73,8 +73,7 @@ def create_device_server_model_shadow(model):
     shadow = DeviceServerModelItem(model=model)
     model.on_trait_change(shadow.item_handler, 'devices_items')
     for device in model.devices:
-        child = DeviceInstanceModelItem(server_model=model,
-                                        model=device)
+        child = DeviceInstanceModelItem(model=device)
         shadow.children.append(child)
     return shadow
 
