@@ -24,7 +24,7 @@ def find_parent_project(model, root_project):
                 self.last_project = obj
 
     visitor = _Visitor()
-    visit_project_objects(root_project, visitor)
+    walk_traits_object(root_project, visitor)
     return visitor.parent
 
 
@@ -49,22 +49,8 @@ def find_parent_object(model, project):
                 self.last_object = obj
 
     visitor = _Visitor()
-    visit_project_objects(project, visitor)
+    walk_traits_object(project, visitor)
     return visitor.parent
-
-
-def visit_project_objects(project, visitor_func):
-    """ Recursively visit all objects in a project model tree using a pre-order
-    traversal.
-
-    :param project: A project model instance
-    :param visitor_func: A callable which takes a single project object model
-                         instance as its only argument.
-    """
-    def _visitor_wrapper(model):
-        visitor_func(model)
-
-    walk_traits_object(project, _visitor_wrapper)
 
 
 def walk_traits_object(traits_obj, visitor_func):
