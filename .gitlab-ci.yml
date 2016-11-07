@@ -14,9 +14,6 @@
     - branches
 
 .release_build_template: &release_build
-  before_script:
-    - locale-gen en_US.UTF-8
-    - update-locale LANG=en_US.UTF-8
   script:
     - export REL_OS_NAME=$(lsb_release -is)
     - export REL_OS_VERS_LONG=$(lsb_release -rs)
@@ -69,14 +66,23 @@ deps:centos7:
 release:ubuntu14:
   <<: *release_build
   image: jwiggins/karabo-containers:ubuntu-14
+  before_script:
+    - locale-gen en_US.UTF-8
+    - update-locale LANG=en_US.UTF-8
 
 release:ubuntu16:
   <<: *release_build
   image: jwiggins/karabo-containers:ubuntu-16
+  before_script:
+    - locale-gen en_US.UTF-8
+    - update-locale LANG=en_US.UTF-8
 
 release:centos7:
   <<: *release_build
   image: jwiggins/karabo-containers:centos-7
+  before_script:
+    - localedef -c -i en_US -f UTF-8 en_US.utf8
+    - export LANG=en_US.UTF-8
 
 test:ubuntu14:
   <<: *mr_test_build
