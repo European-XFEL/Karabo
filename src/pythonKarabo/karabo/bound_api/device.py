@@ -274,11 +274,12 @@ class PythonDevice(NoFsm):
         self.initChannels()
         self._ss.connectInputChannels()
 
-        self.startFsm()
-
         if self.parameters.get("useTimeserver"):
             self.log.DEBUG("Connecting to time server")
             self._ss.connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick")
+
+    def start(self):
+        self.startFsm()
 
         self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
                       "on server '{0.serverid}'.".format(self))
@@ -1118,6 +1119,7 @@ def launchPythonDevice():
         t.start()
 
         device = Configurator(PythonDevice).create(classid, config)
+        device.start()
 
         t.join()
         device.__del__()
