@@ -236,8 +236,17 @@ class PythonDevice(NoFsm):
         info["archive"] = self.get("archive")
 
         # Instantiate and start SignalSlotable object
+        self._ss = SignalSlotable(self.deviceid, "JmsConnection", self.parameters["_connection_"], 20, info)
+        # Initialize FSM slots if defined
+        if hasattr(self, 'initFsmSlots'):
+            self.initFsmSlots(self._ss)
+
+        # Initialize Device slots
+        self._initDeviceSlots()
+
+        # We start after registering slots to avoid that device slots are not available
+        # yet when instanceNew has been signaled.
         try:
-            self._ss = SignalSlotable(self.deviceid, "JmsConnection", self.parameters["_connection_"], 20, info)
             self._ss.start()
         except RuntimeError as e:
             raise RuntimeError("PythonDevice.__init__: SignalSlotable Exception -- {0}".format(str(e)))
@@ -245,13 +254,6 @@ class PythonDevice(NoFsm):
         # Setup device logger
         self.loadLogger(configuration)
         self.log = Logger.getCategory(self.deviceid)
-
-        # Initialize FSM slots if defined
-        if hasattr(self, 'initFsmSlots'):
-            self.initFsmSlots(self._ss)
-
-        # Initialize Device slots
-        self._initDeviceSlots()
 
         # Initialize regular expression object
         self.errorRegex = re.compile(".*error.*", re.IGNORECASE)
