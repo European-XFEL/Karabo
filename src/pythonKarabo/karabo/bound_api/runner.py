@@ -19,16 +19,9 @@ class Runner(object):
         
     def instantiate(self, args):
         instance = None
-        try:
-            configuration = self.parseCommandLine(args)
-            if not configuration.empty():
-                instance = self.theClass.create(configuration)
-        except:
-            print("Exception in user code:")
-            print('-'*60)
-            traceback.print_exc(file=sys.stdout)
-            print('-'*60)
-        
+        configuration = self.parseCommandLine(args)
+        if not configuration.empty():
+            instance = self.theClass.create(configuration)
         return instance
     
     def parseCommandLine(self, args):

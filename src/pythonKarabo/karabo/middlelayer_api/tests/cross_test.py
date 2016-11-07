@@ -68,7 +68,7 @@ class Tests(DeviceTest):
             line = (yield from self.process.stderr.readline()).decode("ascii")
 
     @async_tst
-    def test_cross(self):
+    def test_cross(self):        
         # it takes typically 2 s for the bound device to start
         self.process = yield from create_subprocess_exec(
              sys.executable, "bounddevice.py", stderr=PIPE)

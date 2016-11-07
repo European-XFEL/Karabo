@@ -27,26 +27,26 @@ LockTest_Test::~LockTest_Test() {
 
 void LockTest_Test::setUp() {
 
-    // The test will raise exceptions by purpose, FATAL log level is higher then ERROR (max used in KARABO), so the test will be silent
-    Hash config("DeviceServer", Hash("serverId", "testServerLock", "scanPlugins", false, "visibility", 4, "Logger.priority", "FATAL"));
-    m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
-    m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
+    // Start central event-loop
+    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    // Create and start server
+    Hash config("serverId", "testServerLock", "scanPlugins", false, "Logger.priority", "FATAL");
+    m_deviceServer = DeviceServer::create("DeviceServer", config);
+    m_deviceServer->start();
+    // Create client
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
 
 }
 
 
 void LockTest_Test::tearDown() {
-    m_deviceClient->killServer("testServerLock", KRB_TEST_MAX_TIMEOUT);
-    m_deviceServerThread.join();
-    m_deviceClient.reset();
-
+    m_deviceServer.reset();
+    EventLoop::stop();
+    m_eventLoopThread.join();
 }
 
 
 void LockTest_Test::appTestRunner() {
-
-    boost::thread t(boost::bind(&EventLoop::work));
 
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerLock", "LockTestDevice", Hash("deviceId", "lockTest3"), KRB_TEST_MAX_TIMEOUT);
@@ -63,9 +63,7 @@ void LockTest_Test::appTestRunner() {
     testRecursiveLocking();
     testSettingOnLocked();
     testLockStealing();
-    
-    EventLoop::stop();
-    t.join();
+
 }
 
 

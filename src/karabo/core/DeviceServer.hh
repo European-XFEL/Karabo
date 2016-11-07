@@ -11,18 +11,16 @@
 #ifndef KARABO_CORE_DEVICESERVER_HH
 #define	KARABO_CORE_DEVICESERVER_HH
 
-#include "boost/tuple/tuple.hpp"
-
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/PluginLoader.hh>
-#include <karabo/xms/SignalSlotable.hh>
-#include <karabo/log/Logger.hh>
-#include <karabo/util/Version.hh>
-#include "coredll.hh"
-
-#include <karabo/util/State.hh>
 #include "FsmMacros.hh"
 
+#include "karabo/log/Logger.hh"
+#include "karabo/util/Configurator.hh"
+#include "karabo/util/PluginLoader.hh"
+#include "karabo/util/Version.hh"
+#include "karabo/util/State.hh"
+#include "karabo/xms/SignalSlotable.hh"
+
+#include "boost/asio/deadline_timer.hpp"
 
 /**
  * The main European XFEL namespace
@@ -41,23 +39,21 @@ namespace karabo {
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
 
-            typedef std::map<std::string, boost::thread*> DeviceInstanceMap;
-
             krb_log4cpp::Category* m_log;
             karabo::log::Logger::Pointer m_logger;
 
             karabo::util::PluginLoader::Pointer m_pluginLoader;
-            boost::thread m_pluginThread;
-            bool m_doScanPlugins;
+            boost::asio::deadline_timer m_scanPluginsTimer;
+            bool m_scanPlugins;
             bool m_serverIsRunning;
 
             bool m_isMaster;
             bool m_debugMode;
             std::vector<karabo::util::Hash> m_autoStart;
-            bool m_scanPlugins;
 
             karabo::util::Hash m_availableDevices;
-            boost::thread_group m_deviceThreads;
+
+            typedef std::map<std::string, boost::shared_ptr<BaseDevice> > DeviceInstanceMap;
             DeviceInstanceMap m_deviceInstanceMap;
             boost::mutex m_deviceInstanceMutex;
             std::map<std::string, unsigned int> m_deviceInstanceCount;
@@ -66,8 +62,6 @@ namespace karabo {
             karabo::net::JmsConnection::Pointer m_connection;
 
             std::string m_serverId;
-
-            int m_heartbeatIntervall;
 
         public:
 
@@ -80,9 +74,9 @@ namespace karabo {
             DeviceServer(const karabo::util::Hash&);
 
             virtual ~DeviceServer();
-            
-            void run();
-            
+
+            void start();
+
             bool isRunning() const;
 
             bool isDebugMode();
@@ -164,11 +158,11 @@ namespace karabo {
 
             krb_log4cpp::Category& log();
 
-            void registerAndConnectSignalsAndSlots();
+            void registerSlots();
 
             void updateAvailableDevices();
 
-            void scanPlugins();
+            void scanPlugins(const boost::system::error_code& e);
 
             void sayHello();
 
