@@ -70,7 +70,7 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
             self.child_destroy(item_model)
             removals.append(item_model)
 
-        additions = [self.child_factory(model=model) for model in event.added]
+        additions = [self.child_create(model=model) for model in event.added]
         self.children.extend(additions)
 
         # Synchronize the GUI with the Traits model
