@@ -1,25 +1,28 @@
+from karabo.common.project.api import (
+    DeviceInstanceModel, DeviceServerModel, MacroModel, ProjectModel,
+    find_parent_object, find_parent_project
+)
 from nose.tools import assert_raises
 
-from karabo.common.project.api import (
-    ProjectModel, MacroModel, find_parent_project, visit_project_objects)
 
-
-def test_project_model_visitor():
-    visited = []
-
-    def visitor(obj):
-        visited.append(obj)
-
+def test_find_parent_object():
+    dev0 = DeviceInstanceModel(instance_id='dev0')
+    dev1 = DeviceInstanceModel(instance_id='dev1')
+    serv0 = DeviceServerModel(server_id='serv0', devices=[dev0, dev1])
+    dev2 = DeviceInstanceModel(instance_id='dev2')
+    serv1 = DeviceServerModel(server_id='serv1', devices=[dev2])
     macro = MacroModel(code="print('hello world')")
-    inner_proj = ProjectModel(macros=[macro])
-    proj = ProjectModel(subprojects=[inner_proj])
+    inner_proj = ProjectModel(macros=[macro], servers=[serv0])
+    proj = ProjectModel(subprojects=[inner_proj], servers=[serv1])
 
-    visit_project_objects(proj, visitor)
-    assert visited == [proj, inner_proj, macro]
+    parent = find_parent_object(inner_proj, proj)
+    assert parent is proj
 
-    del visited[:]
-    visit_project_objects(inner_proj, visitor)
-    assert visited == [inner_proj, macro]
+    parent = find_parent_object(macro, proj)
+    assert parent is inner_proj
+
+    parent = find_parent_object(dev0, proj)
+    assert parent is serv0
 
 
 def test_find_parent_project():
