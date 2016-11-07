@@ -55,16 +55,16 @@ class DeviceNode(String):
         self.properties = recode(properties)
         self.commands = recode(commands)
         self.lock = lock
-        if self.properties and "state" not in self.properties:
-            self.properties["state"] = "state"
-        if self.properties and "alarmCondition" not in self.properties:
-            self.properties["alarmCondition"] = "alarmCondition"
+        if self.properties or self.commands:
+            for default in ("deviceId", "state", "alarmCondition"):
+                if default not in self.properties:
+                    self.properties[default] = default
 
     def toDataAndAttrs(self, proxy):
-        if self.properties:
+        if self.properties or self.commands:
             return proxy._current, {}
         else:
-            return Hash(), {}
+            return proxy._deviceId, {}
 
     def _copy_properties(self, data, swapped):
         """return a Hash that contains our properties in Hash data"""
@@ -131,7 +131,7 @@ class DeviceNode(String):
 
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super().toSchemaAndAttrs(device, state)
-        if device is None:
+        if device is None or (not self.properties and not self.commands):
             attrs["accessMode"] = AccessMode.INITONLY.value
             return h, attrs
         attrs["nodeType"] = NodeType.Node
