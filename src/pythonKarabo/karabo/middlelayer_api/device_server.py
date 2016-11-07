@@ -9,11 +9,9 @@ import copy
 import os
 import sys
 import socket
-import traceback
 
 import numpy
 
-from .device import Device
 from .enums import AccessLevel, AccessMode, Assignment
 from .eventloop import EventLoop
 from .hash import Hash, XMLParser, saveToFile, String, Int32
@@ -105,6 +103,7 @@ class DeviceServer(SignalSlotable):
         self.pluginLoader = PluginLoader(
             Hash("pluginNamespace", self.pluginNamespace,
                  "pluginDirectory", self.pluginDirectory))
+        self.plugins = {}
         self.pid = os.getpid()
         self.seqnum = 0
 
@@ -156,23 +155,17 @@ class DeviceServer(SignalSlotable):
 
     @coroutine
     def scanPlugins(self):
-        availableModules = set()
         while True:
             entrypoints = self.pluginLoader.update()
             for ep in entrypoints:
-                if ep.name in availableModules:
+                if ep.name in self.plugins:
                     continue
                 try:
-                    # Call the entrypoint,
-                    # This registers the contained device class
-                    ep.load()
-                except Exception as e:
+                    self.plugins[ep.name] = ep.load()
+                except Exception:
                     self.logger.exception(
-                        "scanPlugins: Cannot load plugin {} -- {}"
-                        .format(ep.name, e))
-                    traceback.print_exc()
+                        'Cannot load plugin "{}"'.format(ep.name))
                 else:
-                    availableModules.add(ep.name)
                     self.updateInstanceInfo(self.deviceClassesHash())
             yield from sleep(3)
 
@@ -194,7 +187,7 @@ class DeviceServer(SignalSlotable):
         config["Logger"] = self.loggerConfiguration
 
         try:
-            cls = Device.subclasses[classId]
+            cls = self.plugins[classId]
             obj = cls(config)
             task = obj.startInstance(self)
             yield from task
@@ -251,9 +244,9 @@ class DeviceServer(SignalSlotable):
         
     def deviceClassesHash(self):
         return Hash(
-            "deviceClasses", [k for k in Device.subclasses.keys()],
+            "deviceClasses", list(self.plugins.keys()),
             "visibilities", numpy.array([c.visibility.defaultValue.value
-                                         for c in Device.subclasses.values()]))
+                                         for c in self.plugins.values()]))
 
     @coslot
     def slotKillServer(self):
@@ -275,7 +268,7 @@ class DeviceServer(SignalSlotable):
 
     @slot
     def slotGetClassSchema(self, classid):
-        cls = Device.subclasses[classid]
+        cls = self.plugins[classid]
         return cls.getClassSchema(), classid, self.serverId
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
