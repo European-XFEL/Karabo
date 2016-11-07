@@ -146,7 +146,9 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         this configurable running is thus done in this method.
 
         This method should only be overridden inside Karabo (thus
-        the underscore). Do not forget to ``yield from super()._run()``.
+        the underscore).
+
+        Do not forget to ``yield from super()._run(**kwargs)``.
         """
         yield from gather(*self._initializers)
         del self._initializers
