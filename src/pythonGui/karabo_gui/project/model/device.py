@@ -9,7 +9,7 @@ import weakref
 from PyQt4.QtGui import QAction, QMenu, QStandardItem
 from traits.api import Instance
 
-from karabo.common.project.api import DeviceInstanceModel, DeviceServerModel
+from karabo.common.project.api import DeviceInstanceModel, find_parent_object
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .bases import BaseProjectTreeItem
@@ -18,8 +18,6 @@ from .bases import BaseProjectTreeItem
 class DeviceInstanceModelItem(BaseProjectTreeItem):
     """ A wrapper for DeviceInstanceModel objects
     """
-    # A reference to the DeviceServerModel
-    server_model = Instance(DeviceServerModel)
     # Redefine model with the correct type
     model = Instance(DeviceInstanceModel)
 
@@ -29,7 +27,8 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         edit_action = QAction('Edit', menu)
         dupe_action = QAction('Duplicate', menu)
         delete_action = QAction('Delete', menu)
-        delete_action.triggered.connect(self._delete_device)
+        delete_action.triggered.connect(partial(self._delete_device,
+                                                parent_project))
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
@@ -45,9 +44,10 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     # ----------------------------------------------------------------------
     # action handlers
 
-    def _delete_device(self):
+    def _delete_device(self, project):
         """ Remove the device associated with this item from its device server
         """
         device = self.model
-        if device in self.server_model.devices:
-            self.server_model.devices.remove(device)
+        server_model = find_parent_object(self.model, project)
+        if device in server_model.devices:
+            server_model.devices.remove(device)

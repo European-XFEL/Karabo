@@ -1,13 +1,14 @@
 from karabo.common.project.api import (
-    DeviceConfigurationModel, DeviceServerModel, MacroModel, ProjectModel,
+    DeviceServerModel, DeviceInstanceModel, MacroModel, ProjectModel,
     PROJECT_OBJECT_CATEGORIES
 )
 from karabo.common.scenemodel.api import SceneModel
-from ..device import DeviceConfigurationModelItem
 from ..macro import MacroModelItem
 from ..scene import SceneModelItem
-from ..server import DeviceServerModelItem
-from ..shadow import create_project_model_shadow, destroy_project_model_shadow
+from ..shadow import (
+    create_device_server_model_shadow, create_project_model_shadow,
+    destroy_project_model_shadow
+)
 
 
 def assert_no_notification_handlers(proj_model):
@@ -34,22 +35,29 @@ def assert_no_notification_handlers(proj_model):
 
 
 def test_project_model_shadowing():
-    devices = [DeviceConfigurationModel()]
     macros = [MacroModel()]
     scenes = [SceneModel()]
-    servers = [DeviceServerModel()]
-    subsubproject = ProjectModel(devices=devices, macros=macros)
-    subprojects = [ProjectModel(devices=devices, macros=macros,
-                                subprojects=[subsubproject])]
-    proj = ProjectModel(devices=devices, macros=macros, scenes=scenes,
-                        servers=servers, subprojects=subprojects)
+    dev0 = DeviceInstanceModel(instance_id='dev0')
+    dev1 = DeviceInstanceModel(instance_id='dev1')
+    servers = [DeviceServerModel(devices=[dev0, dev1])]
+    subsubproject = ProjectModel(macros=macros)
+    subprojects = [ProjectModel(macros=macros, subprojects=[subsubproject])]
+    proj = ProjectModel(macros=macros, scenes=scenes, servers=servers,
+                        subprojects=subprojects)
 
-    creators = (DeviceConfigurationModelItem, MacroModelItem, SceneModelItem,
-                DeviceServerModelItem, create_project_model_shadow)
+    creators = (MacroModelItem, SceneModelItem,
+                create_device_server_model_shadow, create_project_model_shadow)
     item_model = create_project_model_shadow(proj)
     for subgroup, creator in zip(item_model.children, creators):
         assert subgroup.child_create is creator
         assert len(subgroup.children) == 1
+
+    proj_servers = proj.servers
+    assert len(proj_servers) == len(servers) == 1
+    serv = proj_servers[0]
+    assert len(serv.devices) == len(servers[0].devices) == 2
+    assert serv.devices[0].instance_id == 'dev0'
+    assert serv.devices[1].instance_id == 'dev1'
 
     subproj = proj.subprojects.pop()
     assert len(item_model.children[-1].children) == 0
