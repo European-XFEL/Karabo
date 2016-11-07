@@ -54,7 +54,7 @@ namespace karabo {
             virtual ~BaseDevice() {
             }
 
-            virtual void run() = 0;
+            virtual void start() = 0;
 
             // TODO
             // Can be removed, if sending current configuration after instantiation by server is deprecated
@@ -257,14 +257,6 @@ namespace karabo {
                         .assignmentOptional().defaultValue(false)
                         .commit();
 
-                FLOAT_ELEMENT(expected).key("performanceStatistics.brokerLatency")
-                        .displayedName("Broker latency (ms)")
-                        .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
-                        .description("Average time interval between remote message sending and receiving it on this device before queuing.")
-                        .expertAccess()
-                        .readOnly().initialValue(0)
-                        .commit();
-
                 FLOAT_ELEMENT(expected).key("performanceStatistics.processingLatency")
                         .displayedName("Processing latency (ms)")
                         .description("Average time interval between remote message sending and reading it from the queue on this device.")
@@ -287,14 +279,6 @@ namespace karabo {
                         .readOnly().initialValue(0)
                         .commit();
 
-                UINT32_ELEMENT(expected).key("performanceStatistics.messageQueueSize")
-                        .displayedName("Local message queue size")
-                        .description("Current size of the local message queue.")
-                        .expertAccess()
-                        .readOnly().initialValue(0)
-                        //.warnHigh(100)
-                        .commit();
-
                 FSM::expectedParameters(expected);
             }
 
@@ -306,7 +290,7 @@ namespace karabo {
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
 
-		// This is a hack until a better solution is found
+                // This is a hack until a better solution is found
                 // Will remove a potential JmsConnection::Pointer instance from the m_parameters
                 m_parameters.set("_connection_", karabo::util::Hash());
 
@@ -989,13 +973,30 @@ namespace karabo {
              * This function will typically be called by the DeviceServer (or directly within the startDevice application).
              * The call to run is blocking and afterwards communication should happen only via call-backs
              */
-            void run() {
+            void start() {
 
                 using namespace karabo::util;
                 using namespace karabo::net;
 
+                // This initializations or done here and not in the constructor 
+                // as they involve virtual function calls
+                this->initClassId();
+                this->initSchema();
+
+                // Prepare some info further describing this particular instance
+                karabo::util::Hash instanceInfo;
+                instanceInfo.set("type", "device");
+                instanceInfo.set("classId", getClassInfo().getClassId());
+                instanceInfo.set("serverId", m_serverId);
+                instanceInfo.set("visibility", this->get<int >("visibility"));
+                instanceInfo.set("compatibility", classInfo().getVersion());
+                instanceInfo.set("host", net::bareHostName());
+                instanceInfo.set("status", "ok");
+                instanceInfo.set("archive", this->get<bool>("archive"));
+
                 // Initialize the SignalSlotable instance
-                init(m_deviceId, m_connection);
+                init(m_deviceId, m_connection, m_parameters.get<int>("heartbeatInterval"), instanceInfo);
+                SignalSlotable::start();
 
                 // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
                 this->initFsmSlots(); // requires template CONCEPT
@@ -1008,33 +1009,7 @@ namespace karabo {
 
                 // Register updateLatencies handler
                 this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies,
-                                                                       this, _1, _2, _3, _4, _5));
-
-                // This initializations or done here and not in the constructor as they involve virtual function calls
-                this->initClassId();
-                this->initSchema();
-
-                // Prepare some info further describing this particular instance
-                // status, visibility, owner, lang
-                karabo::util::Hash instanceInfo;
-                instanceInfo.set("type", "device");
-                instanceInfo.set("classId", m_classId);
-                instanceInfo.set("serverId", m_serverId);
-                instanceInfo.set("visibility", this->get<int >("visibility"));
-                instanceInfo.set("compatibility", Device::classInfo().getVersion());
-                instanceInfo.set("host", net::bareHostName());
-                instanceInfo.set("status", "ok");
-                instanceInfo.set("archive", this->get<bool>("archive"));
-
-                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo));
-
-                boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-
-                bool ok = ensureOwnInstanceIdUnique();
-                if (!ok) {
-                    t.join(); // Blocks
-                    return;
-                }
+                                                                       this, _1, _2));
 
                 KARABO_LOG_INFO << "'" << m_classId << "' with deviceId: '" << this->getInstanceId() << "' got started"
                         << " on server '" << this->getServerId() << "'.";
@@ -1061,7 +1036,6 @@ namespace karabo {
                 this->initChannels();
                 this->connectInputChannels();
 
-
                 // Start the state machine
                 this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
 
@@ -1069,10 +1043,6 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to time server";
                     connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick");
                 }
-
-
-
-                t.join(); // Blocks
             }
 
             void initClassId() {
@@ -1304,15 +1274,14 @@ namespace karabo {
             void slotKillDevice() {
                 // It is important to know who gave us the kill signal
                 std::string senderId = getSenderInfo("slotKillDevice")->getInstanceIdOfSender();
+                this->preDestruction(); // Give devices a chance to react
+                this->stopFsm();
                 if (senderId == m_serverId) { // Our server killed us
                     KARABO_LOG_INFO << "Device is going down as instructed by server";
                 } else { // Someone else wants to see us dead, we should inform our server
                     KARABO_LOG_INFO << "Device is going down as instructed by \"" << senderId << "\"";
                     call(m_serverId, "slotDeviceGone", m_deviceId);
                 }
-                this->preDestruction(); // Give devices a chance to react
-                this->stopFsm();
-                stopEventLoop();
             }
 
             karabo::util::Schema getStateDependentSchema(const karabo::util::State& state) {
@@ -1332,18 +1301,14 @@ namespace karabo {
                 return it->second;
             }
 
-            void updateLatencies(float avgBrokerLatency, unsigned int /*maxBrokerLatency*/,
-                                 float avgProcessingLatency, unsigned int maxProcessingLatency,
-                                 unsigned int messageQueueSize) {
+            void updateLatencies(float avgProcessingLatency, unsigned int maxProcessingLatency) {
 
                 // updateLatencies
                 if (this->get<bool>("performanceStatistics.enable")) {
 
                     using karabo::util::Hash;
-                    const Hash h("performanceStatistics", Hash("brokerLatency", avgBrokerLatency,
-                                                               "processingLatency", avgProcessingLatency,
-                                                               "maxProcessingLatency", maxProcessingLatency,
-                                                               "messageQueueSize", messageQueueSize));
+                    const Hash h("performanceStatistics", Hash("processingLatency", avgProcessingLatency,
+                                                               "maxProcessingLatency", maxProcessingLatency));
                     this->set(h);
                 }
             }

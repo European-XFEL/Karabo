@@ -7,6 +7,7 @@ import time
 import sys
 import socket
 import re
+import signal
 
 from PIL import Image
 import numpy as np
@@ -36,7 +37,7 @@ class PythonDevice(NoFsm):
 
     instanceCountPerDeviceServer = dict()
     instanceCountLock = threading.Lock()
-    
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -140,14 +141,6 @@ class PythonDevice(NoFsm):
                     .assignmentOptional().defaultValue(False)
                     .commit(),
 
-            FLOAT_ELEMENT(expected).key("performanceStatistics.brokerLatency")
-                    .displayedName("Broker latency (ms)")
-                    .description("Average time interval between remote message sending and receiving it on this device before queuing.")
-                    .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
-                    .expertAccess()
-                    .readOnly().initialValue(0.0)
-                    .commit(),
-
             FLOAT_ELEMENT(expected).key("performanceStatistics.processingLatency")
                     .displayedName("Processing latency (ms)")
                     .description("Average time interval between remote message sending and reading it from the queue on this device.")
@@ -170,14 +163,6 @@ class PythonDevice(NoFsm):
                      .readOnly().initialValue(0)
                      .commit(),
 
-            UINT32_ELEMENT(expected).key("performanceStatistics.messageQueueSize")
-                    .displayedName("Local message queue size")
-                    .description("Current size of the local message queue.")
-                    .expertAccess()
-                    .readOnly().initialValue(0)
-                    #.warnHigh(100)
-                    .commit(),
-
             NODE_ELEMENT(expected).key("Logger")
                     .description("Logging settings")
                     .displayedName("Logger")
@@ -186,44 +171,44 @@ class PythonDevice(NoFsm):
                     .commit(),
 
         )
-        
+
     def __init__(self, configuration):
         if configuration is None:
             raise ValueError("Configuration must be Hash object, not None")
         #print "PythonDevice constructor: Input configuration after being validated is ...\n", configuration
         super(PythonDevice, self).__init__(configuration)
-        
+
         self.parameters = configuration
         if "_serverId_" in self.parameters:
             self.serverid = self.parameters["_serverId_"]
         else:
-            self.serverid = "__none__"    
-        
+            self.serverid = "__none__"
+
         if "_deviceId_" in self.parameters:
             self.deviceid = self.parameters["_deviceId_"]
         else:
             self.deviceid = "__none__"    #TODO: generate uuid
-        
+
         # Initialize threading locks...
         self._lock = threading.Lock()
         self._stateChangeLock = threading.Lock()
         self._stateDependentSchemaLock = threading.Lock()
         self._stateDependentSchema = {}
         self._injectedSchema = Schema()
-        
+
         # Initialize _client to None (important!)
         self._client = None
-        
+
         # host & domain names
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
-        
+
         # timeserver related
         self._timeLock = threading.Lock()
         self._timeId = 0
         self._timeSec = 0
         self._timeFrac = 0
         self._timePeriod = 0
-        
+
         # Setup the validation classes
         self.validatorIntern   = Validator()
         self.validatorExtern   = Validator()
@@ -237,53 +222,9 @@ class PythonDevice(NoFsm):
         self.validatorExtern.setValidationRules(rules)
         self.globalAlarmCondition = AlarmCondition.NONE
 
-        # Instantiate SignalSlotable object without starting event loop
-        try:           
-            self._ss = SignalSlotable.create(self.deviceid, "JmsConnection", self.parameters["_connection_"], autostart = False)
-        except RuntimeError as e:
-            raise RuntimeError("PythonDevice.__init__: SignalSlotable.create Exception -- {0}".format(str(e)))
-
-        # Setup device logger
-        self.loadLogger(configuration)        
-        self.log = Logger.getCategory(self.deviceid)
-
-        # Initialize FSM slots if defined
-        if hasattr(self, 'initFsmSlots'):
-            self.initFsmSlots(self._ss)
-        
-        # Initialize Device slots
-        self._initDeviceSlots()
-        
-        # Initialize regular expression object
-        self.errorRegex = re.compile(".*error.*", re.IGNORECASE)
-        
-        # Register guard for slot calls
-        self._ss.registerSlotCallGuardHandler(self.slotCallGuard)                
-
-        # Register updateLatencies handler
-        self._ss.registerPerformanceStatisticsHandler(self.updateLatencies)
-        
-    
-    @property
-    def signalSlotable(self):
-        '''Get SignalSlotable object embedded in PythonDevice instance.'''
-        return self._ss
-    
-    def setNumberOfThreads(self, nThreads):
-        self._ss.setNumberOfThreads(nThreads)
-    
-    def loadLogger(self, config):
-        Logger.configure(config.get("Logger"))
-        Logger.useOstream();
-        Logger.useFile();
-        Logger.useNetwork();
-        Logger.useOstream("karabo", False)
-        Logger.useFile("karabo", False)
-        
-    def run(self):
         self.initClassId()
         self.initSchema()
-            
+
         # Create 'info' hash
         info = Hash("type", "device")
         info["classId"] = self.classid
@@ -293,29 +234,39 @@ class PythonDevice(NoFsm):
         info["host"] = self.hostname
         info["status"] = "ok"
         info["archive"] = self.get("archive")
-        #... add here more info entries if needed
+
+        # Instantiate and start SignalSlotable object
+        self._ss = SignalSlotable(self.deviceid, "JmsConnection", self.parameters["_connection_"], 20, info)
+        # Initialize FSM slots if defined
+        if hasattr(self, 'initFsmSlots'):
+            self.initFsmSlots(self._ss)
+
+        # Initialize Device slots
+        self._initDeviceSlots()
+
+        # We start after registering slots to avoid that device slots are not available
+        # yet when instanceNew has been signaled.
+        try:
+            self._ss.start()
+        except RuntimeError as e:
+            raise RuntimeError("PythonDevice.__init__: SignalSlotable Exception -- {0}".format(str(e)))
+
+        # Setup device logger
+        self.loadLogger(configuration)
+        self.log = Logger.getCategory(self.deviceid)
+
+        # Initialize regular expression object
+        self.errorRegex = re.compile(".*error.*", re.IGNORECASE)
+
+        # Register guard for slot calls
+        self._ss.registerSlotCallGuardHandler(self.slotCallGuard)
+
+        # Register updateLatencies handler
+        self._ss.registerPerformanceStatisticsHandler(self.updateLatencies)
 
         self.parameters.set("classId", self.classid)
         self.parameters.set("deviceId", self.deviceid)
         self.parameters.set("serverId", self.serverid)
-        
-        # Run event loop ( in a thread ) with given info
-        # TODO Make configurable
-        t = threading.Thread(target=self._ss.runEventLoop, args=(20, info))
-        t.start()
-        time.sleep(0.01) # for rescheduling, some garantie that runEventLoop will start before FSM
-        
-        # if our own instanceId is used on topic -- exit
-        ok = self._ss.ensureOwnInstanceIdUnique()
-        if not ok:
-            self.log.ERROR("Device of class '{0.classid}' could not start on "
-                           "server '{0.serverid}' since id '{0.deviceid}' "
-                           "already exists.".format(self))
-            t.join()
-            return
-
-        self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
-                      "on server '{0.serverid}'.".format(self))
 
         with self._stateChangeLock:
             validated = self.validatorIntern.validate(self.fullSchema, self.parameters, self._getActualTimestamp())
@@ -324,23 +275,38 @@ class PythonDevice(NoFsm):
         # Instantiate all channels
         self.initChannels()
         self._ss.connectInputChannels()
-        
-        self.startFsm()
-        
+
         if self.parameters.get("useTimeserver"):
             self.log.DEBUG("Connecting to time server")
             self._ss.connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick")
 
-        t.join()
-            
-    def stopEventLoop(self):
-        self._ss.stopEventLoop()
-    
+    def start(self):
+        self.startFsm()
+
+        self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
+                      "on server '{0.serverid}'.".format(self))
+
+
+    @property
+    def signalSlotable(self):
+        '''Get SignalSlotable object embedded in PythonDevice instance.'''
+        return self._ss
+
+
+    def loadLogger(self, config):
+        Logger.configure(config.get("Logger"))
+        Logger.useOstream();
+        Logger.useFile();
+        Logger.useNetwork();
+        Logger.useOstream("karabo", False)
+        Logger.useFile("karabo", False)
+
+
     def __del__(self):
         ''' PythonDevice destructor '''
         # Destroying device instance means finishing subprocess runnung a device instancPythonConveyore.
         # Call exit for child processes (os._exit(...)) to shutdown properly a SignalSlotable object
-        os._exit(0)   
+        os._exit(0)
 
     def remote(self):
         if self._client is None:
@@ -676,17 +642,17 @@ class PythonDevice(NoFsm):
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.log.INFO("Schema appended")
-    
+
     def setProgress(self, value, associatedText = ""):
         v = self.progressMin + value / (self.progressMax - self.progressMin)
         self.set("progress", v)
-            
+
     def resetProgress(self):
         set("progress", self.progressMin)
-    
+
     def setProgressRange(self, minimum, maximum):
         self.progressMin, self.progressMax = minimum, maximum
-    
+
     def getAliasFromKey(self, key, aliasReferenceType):
         try:
             return self.fullSchema.getAliasFromKey(key, aliasReferenceType)
@@ -705,53 +671,51 @@ class PythonDevice(NoFsm):
 
     def aliasHasKey(self, alias):
         return self.fullSchema.aliasHasKey(alias)
-    
+
     def keyHasAlias(self, key):
         return self.fullSchema.keyHasAlias(key)
-        
+
     def getValueType(self, key):
         return self.fullSchema.getValueType(key)
-    
+
     def getCurrentConfiguration(self, tags = ""):
         if tags == "":
             return self.parameters
         with self._stateChangeLock:
             return HashFilter.byTag(self.fullSchema, self.parameters, tags, " ,;")
-    
+
     def filterByTags(self, configuration, tags):
         return HashFilter.byTag(self.fullSchema, configuration, tags, " ,;")
-    
+
     def getServerId(self):
         return self.serverid
-    
+
     def getAvailableInstances(self):
         return self._ss.getAvailableInstances()
-    
+
     # In C++: the following functions are protected
-    
     def errorFoundAction(self, shortMessage, detailedMessage):
         self.log.ERROR("{} -- {}".format(shortMessage, detailedMessage))
         self._ss.emit("signalNotification", "ERROR", shortMessage, detailedMessage, self.deviceid)
-    
+
     def preReconfigure(self, incomingReconfiguration):
         pass
-    
+
     def postReconfigure(self):
         pass
-    
+
     def preDestruction(self):
         pass
-    
+
     # In C++: the following functions are private...
-    
     def initClassId(self):
         self.classid = self.__class__.__classid__
-    
+
     def initSchema(self):
         self.staticSchema = PythonDevice.getSchema(self.classid)
         self.fullSchema = Schema(self.classid)
         self.fullSchema.copy(self.staticSchema)
-        
+
     def updateState(self, currentState):
         assert isinstance(currentState, State)
         stateName = currentState.name
@@ -777,13 +741,13 @@ class PythonDevice(NoFsm):
 
     def noStateTransition(self):
         self.log.WARN("Device \"{}\" does not allow the transition for this event.".format(self.deviceid))
-        
+
     def onTimeUpdate(self, id, sec, frac, period):
         pass
-    
+
     def KARABO_SLOT(self, slot):
         self._ss.registerSlot(slot)
-        
+
     def _initDeviceSlots(self):
         #-------------------------------------------- register intrinsic signals
         self._ss.registerSignal("signalChanged", Hash, str)                # changeHash, instanceId
@@ -890,7 +854,7 @@ class PythonDevice(NoFsm):
             self._applyReconfiguration(validated)
         else:
             raise ValueError(error)
-    
+
     def _validate(self, unvalidated):
         currentState = self["state"]
         whiteList = self._getStateDependentSchema(currentState)
@@ -902,7 +866,7 @@ class PythonDevice(NoFsm):
             return (False, errorText, unvalidated)
         self.log.DEBUG("Validated reconfiguration:\n{}".format(validated))
         return (True,"",validated)
-    
+
     def _applyReconfiguration(self, reconfiguration):
         with self._stateChangeLock:
             self.parameters += reconfiguration
@@ -912,7 +876,7 @@ class PythonDevice(NoFsm):
         else:
             self._ss.emit("signalChanged", reconfiguration, self.deviceid)
         self.postReconfigure()
-    
+
     def slotGetSchema(self, onlyCurrentState):
 
         #senderId = self._ss.getSenderInfo("slotGetSchema").getInstanceIdOfSender()
@@ -925,17 +889,24 @@ class PythonDevice(NoFsm):
         else:
             #self._ss.call(senderId, "slotSchemaUpdated", self.fullSchema, self.deviceid)
             self._ss.reply(self.fullSchema, self.deviceid)
-   
-    def slotKillDevice(self):
+
+    def slotKillDevice(self):        
         senderid = self._ss.getSenderInfo("slotKillDevice").getInstanceIdOfSender()
-        if senderid == self.serverid and self.serverid != "__none__": 
+        if senderid == self.serverid and self.serverid != "__none__":
             self.log.INFO("Device is going down as instructed by server")
         else:
             self.log.INFO("Device is going down as instructed by \"{}\"".format(senderid))
             self._ss.call(self.serverid, "slotDeviceGone", self.deviceid)
         self.preDestruction()
         self.stopFsm()
-        self.stopEventLoop()
+        # TODO:
+        # Remove this hack once we know how to get rid of the object cleanly
+        # (slotInstanceGone will be called in _ss destructor again...).
+        self._ss.call("*", "slotInstanceGone", self.deviceid,
+                      self._ss.getInstanceInfo())
+
+        # This will trigger the central event-loop to finish
+        os.kill(os.getpid(), signal.SIGTERM)
 
     def slotUpdateSchemaAttributes(self, updates):
         success = self.fullSchema.applyRuntimeUpdates(updates)
@@ -955,12 +926,12 @@ class PythonDevice(NoFsm):
             self._timeFrac = frac
             self._timePeriod = period
         self.onTimeUpdate(id, sec, frac, period)
-        
+
     def slotLoggerPriority(self, newprio):
         oldprio = Logger.getPriority()
         Logger.setPriority(newprio)
         self.log.INFO("Logger Priority changed : {} ==> {}".format(oldprio, newprio))
-        
+
     def _getActualTimestamp(self):
         epochNow = Epochstamp()
         id = 0
@@ -971,7 +942,7 @@ class PythonDevice(NoFsm):
                 nPeriods = int((duration.getTotalSeconds() * 1000000 + duration.getFractions() / 1000) / self._timePeriod)
                 id = self._timeId + nPeriods
         return Timestamp(epochNow, Trainstamp(int(id)))
-        
+
     def _getStateDependentSchema(self, state):
         with self._stateDependentSchemaLock:
             if state in self._stateDependentSchema:
@@ -982,21 +953,18 @@ class PythonDevice(NoFsm):
             if not self._injectedSchema.empty():
                 self._stateDependentSchema[state] += self._injectedSchema
             return self._stateDependentSchema[state]
-    
+
     def getInstanceId(self):
         return self._ss.getInstanceId()
-   
+
     def registerSlot(self, slotFunc):
         self._ss.registerSlot(slotFunc)
-        
-    def updateLatencies(self, avgBrokerLatency, maxBrokerLatency,
-                        avgProcessingLatency, maxProcessingLatency, messageQueueSize):
+
+    def updateLatencies(self, avgProcessingLatency, maxProcessingLatency):
         if self.get("performanceStatistics.enable"):
             # ignore maxBrokerLatency
-            stats = Hash("brokerLatency", avgBrokerLatency,
-                         "processingLatency", avgProcessingLatency,
-                         "maxProcessingLatency", maxProcessingLatency,
-                         "messageQueueSize", messageQueueSize)
+            stats = Hash("processingLatency", avgProcessingLatency,
+                         "maxProcessingLatency", maxProcessingLatency)
             self.set(Hash("performanceStatistics", stats))
 
 
@@ -1041,7 +1009,7 @@ class PythonDevice(NoFsm):
                 thisinfo = self.fullSchema.getInfoForAlarm(str(key),condition)
                 info.set(str(key), thisinfo)
         return info
-    
+
     @staticmethod
     def loadConfiguration(xmlfile):
         hash = Hash()
@@ -1149,16 +1117,12 @@ def launchPythonDevice():
         entrypoint = loader.getPlugin(modname)
         deviceClass = entrypoint.load()
         assert deviceClass.__classid__ == classid
+        t = threading.Thread(target=EventLoop.work)
+        t.start()
 
         device = Configurator(PythonDevice).create(classid, config)
+        device.start()
 
-        # Remove thread later once everything is on central event loop,
-        # i.e. device.run() does not block anymore.
-        t = threading.Thread(target=device.run)
-        t.start()
-        time.sleep(0.01) # some garantie that device.run will have properly started
-
-        EventLoop.work()
         t.join()
         device.__del__()
     except Exception as e:

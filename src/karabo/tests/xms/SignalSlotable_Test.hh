@@ -15,9 +15,10 @@ class SignalSlotDemo;
 
 class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
 
-
     CPPUNIT_TEST_SUITE(SignalSlotable_Test);
 
+    CPPUNIT_TEST(testUniqueInstanceId);
+    CPPUNIT_TEST(testReceiveAsync);
     CPPUNIT_TEST(testMethod);
     CPPUNIT_TEST(testAutoConnectSignal);
     CPPUNIT_TEST(testAutoConnectSlot);
@@ -32,17 +33,13 @@ public:
 
 private:
 
-    void testWrapper();
+    void testUniqueInstanceId();
+    void testReceiveAsync();
     void testMethod();
     void testAutoConnectSignal();
     void testAutoConnectSlot();
 
-    std::pair<boost::shared_ptr<SignalSlotDemo>, boost::shared_ptr<boost::thread> > createDemo(const std::string& instanceId) const;
-
-    boost::shared_ptr<SignalSlotDemo> m_demo;
-    boost::shared_ptr<boost::thread> m_demoThread;
     boost::shared_ptr<boost::thread> m_eventLoopThread;
-    boost::shared_ptr<boost::asio::io_service::work> m_work;
 };
 
 #endif	/* SIGNALSLOTABLE_TEST_HH */

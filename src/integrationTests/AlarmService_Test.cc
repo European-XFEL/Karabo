@@ -35,10 +35,13 @@ AlarmService_Test::~AlarmService_Test() {
 
 void AlarmService_Test::setUp() {
 
-    Hash config("DeviceServer", Hash("serverId", "testServer", "scanPlugins", false, "visibility", 4, "Logger.priority", "ERROR"));
-    m_deviceServer = boost::shared_ptr<DeviceServer>(DeviceServer::create(config));
-    m_deviceServerThread = boost::thread(&DeviceServer::run, m_deviceServer);
-    Hash configClient();
+    // Start central event-loop
+    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    // Create and start server
+    Hash config("serverId", "testServer", "scanPlugins", false, "Logger.priority", "ERROR");
+    m_deviceServer = DeviceServer::create("DeviceServer", config);
+    m_deviceServer->start();
+    // Create client
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
 
     //unlink persisted alarms if they exist
@@ -49,15 +52,15 @@ void AlarmService_Test::setUp() {
 
 
 void AlarmService_Test::tearDown() {
+    
+    if (m_tcpAdapter->connected()) {
+        m_tcpAdapter->disconnect();
+    }
 
-    m_deviceClient->killDevice("testGuiServer", KRB_TEST_MAX_TIMEOUT);
-    m_deviceClient->killDevice("alarmTester2", KRB_TEST_MAX_TIMEOUT);
-    m_deviceClient->killDevice("alarmTester", KRB_TEST_MAX_TIMEOUT);
-    m_deviceClient->killDevice("testAlarmService", KRB_TEST_MAX_TIMEOUT);
-    m_deviceClient->killServer("testServer", KRB_TEST_MAX_TIMEOUT);
+    m_deviceServer.reset();
+    EventLoop::stop();
+    m_eventLoopThread.join();
 
-    m_deviceServerThread.join();
-    m_deviceClient.reset();
     //unlink persisted alarms if they exist
     if (boost::filesystem::exists(std::string(KARABO_TESTPATH) + "/testAlarmService.xml")) {
         boost::filesystem::remove(std::string(KARABO_TESTPATH) + "/testAlarmService.xml");
@@ -69,7 +72,6 @@ void AlarmService_Test::tearDown() {
 void AlarmService_Test::appTestRunner() {
     //add a few threads to the event loop
     EventLoop::addThread(4);
-    boost::thread t(boost::bind(&EventLoop::work));
 
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
     // here we start the server and service devices, as well as an alarm test device
@@ -92,11 +94,6 @@ void AlarmService_Test::appTestRunner() {
     testRecovery();
     testDeviceKilled();
     testDeviceReappeared();
-    if (m_tcpAdapter->connected()) {
-        m_tcpAdapter->disconnect();
-    }
-    EventLoop::stop();
-    t.join();
 }
 
 
@@ -112,7 +109,7 @@ void AlarmService_Test::testDeviceRegistration() {
 
 
 void AlarmService_Test::testAlarmPassing() {
-    // test if raising an alarm on alarmTester propagates to testAlarmService and updates the alarmTable there     
+    // test if raising an alarm on alarmTester propagates to testAlarmService and updates the alarmTable there
     TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
         m_deviceClient->execute("alarmTester", "triggerAlarmHigh", KRB_TEST_MAX_TIMEOUT);
     });
@@ -191,7 +188,7 @@ void AlarmService_Test::testAcknowledgement() {
     //add another alarm to the table so we have two alarms pending
     //we will work only on the first one afterwards
     TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
-       m_deviceClient->execute("alarmTester", "triggerWarnHigh2", KRB_TEST_MAX_TIMEOUT);
+        m_deviceClient->execute("alarmTester", "triggerWarnHigh2", KRB_TEST_MAX_TIMEOUT);
     });
     Hash lastMessage;
     messageQ->pop(lastMessage);
