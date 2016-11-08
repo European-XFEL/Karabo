@@ -68,6 +68,7 @@ def test_project_model_shadowing():
 
 
 def test_device_server_shadowing():
+    sc0 = SceneModel()
     dev0 = DeviceInstanceModel(instance_id='dev0')
     dev1 = DeviceInstanceModel(instance_id='dev1')
     devServ0 = DeviceServerModel(devices=[dev0, dev1])
@@ -75,17 +76,26 @@ def test_device_server_shadowing():
     subdev1 = DeviceInstanceModel(instance_id='subdev1')
     subDevServ0 = DeviceServerModel(devices=[subdev0, subdev1])
     subprojects = [ProjectModel(servers=[subDevServ0])]
-    proj = ProjectModel(servers=[devServ0], subprojects=subprojects)
+    proj = ProjectModel(scenes=[sc0], servers=[devServ0],
+                        subprojects=subprojects)
 
     proj_item_model = create_project_model_shadow(proj)
     proj_groups = ['macros', 'scenes', 'servers', 'subprojects']
 
     assert len(proj_groups) == len(proj_item_model.children)
     for child in proj_item_model.children:
-        if child.trait_name == proj_groups[2]:
+        if child.trait_name == proj_groups[1]:
+            assert len(child.children) == 1
+            proj.scenes.pop()
+            assert len(child.children) == 0
+            proj.scenes.append(SceneModel())
+        elif child.trait_name == proj_groups[2]:
             assert len(child.children) == 1
             server_items = child.children
             assert server_items[0].model is devServ0
             assert len(server_items[0].children) == 2
             devServ0.devices.pop()
             assert len(server_items[0].children) == 1
+            dev2 = DeviceInstanceModel(instance_id='dev2')
+            devServ0.devices.append(dev2)
+            assert len(server_items[0].children) == 2
