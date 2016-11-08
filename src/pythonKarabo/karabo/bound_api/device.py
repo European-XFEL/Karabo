@@ -9,16 +9,13 @@ import socket
 import re
 import signal
 
-from PIL import Image
-import numpy as np
-
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
     UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, JmsConnection,
     EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
-    ImageData, LeafType, loadFromFile, Logger, MetricPrefix, Priority,
+    LeafType, loadFromFile, Logger, MetricPrefix, Priority,
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
     ValidatorValidationRules
 )
@@ -542,27 +539,19 @@ class PythonDevice(NoFsm):
     def __setitem__(self, key, value):
         self.set(key, value, self._getActualTimestamp())
         
-    def writeChannel(self, *args):
-        if len(args) < 2 or len(args) > 3:
-            raise SyntaxError("Number of parameters is wrong: only 2 to 3 arguments are allowed.")
-        if len(args) == 3:
-            channelName, key, value = args
-            if isinstance(value, (ImageData, Hash)):
-                dataval = value
-            elif isinstance(value, Image.Image):
-                dataval = ImageData(np.array(value))
-            else:
-                raise ValueError('The type of value is neither an Image nor a "Hash"')
-            data = Hash(key, dataval)
-        elif len(args) == 2:
-            channelName, data = args
-            if not isinstance(data, Hash):
-                raise ValueError('Unsupported type of value: {}'.format(type(data)))
+    def writeChannel(self, channelName, data):
+        """
+        Write data to an output channel.
+        :param channelName: name given to an OUTPUT_CHANNEL in expectedParameters
+        :param data: a Hash with keys as described in the Schema of the channel
 
-        timeStamp = self._getActualTimestamp()
-        for node in data:
-            timeStamp.toHashAttributes(node.getAttributes())
+        Example for an output channel sending an image (key: "image") and
+        a frame number (key: "frame"):
 
+        imgArray = numpy.array(...)
+        self.writeChannel("output", Hash("image", ImageData(imgArray),
+                                         "frame", frameNumber))
+        """
         channel = self._ss.getOutputChannel(channelName)
         channel.write(data)
         channel.update()
