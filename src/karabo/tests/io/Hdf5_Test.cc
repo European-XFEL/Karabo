@@ -15,6 +15,7 @@
 #include <karabo/io/Output.hh>
 #include <karabo/io/h5/Table.hh>
 #include <karabo/util/NDArray.hh>
+#include <karabo/xms/ImageData.hh>
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -1308,6 +1309,90 @@ void Hdf5_Test::testKaraboPtr() {
     KARABO_LOG_FRAMEWORK_DEBUG << "open+read+close speed            : " << totalSize / double(openTime + readTime + closeReadTime) << " [MB/s]";
     KARABO_LOG_FRAMEWORK_DEBUG << "assertion                        : " << assertionTime << " [s]";
 
+}
+
+void Hdf5_Test::testKaraboImageData() {
+    #define DET_NX 1024
+    #define DET_NY 1024
+
+
+    string filename = "/dev/shm/karabo.h5"; // in memory file
+    filename = resourcePath("karabo.h5"); // file on disk ($KARABO/src/karabo/tests/io/resources/pure.h5)
+    // end of configure
+
+
+    unsigned int nx = m_extentMultiplier*DET_NX; //number of pixles along x-dimension
+    unsigned int ny = m_extentMultiplier*DET_NY; //number of pixles along y-dimension
+
+
+    //compute the number of points in a single frame
+    unsigned long long imageSize = nx*ny;
+    //compute total data size in MBytes
+    unsigned long long totalSize = imageSize * m_numImages * sizeof (unsigned short) / DET_NX / DET_NY;
+
+
+    TimeProfiler p("writeKarabo");
+    p.open();
+    p.startPeriod("allocate");
+    //allocate memory for one image and set the data value   
+
+    vector<unsigned short> data(imageSize);
+    for (size_t i = 0; i < imageSize; ++i) data[i] = static_cast<unsigned short> (i % 10);
+    
+    karabo::util::NDArray arr(&data[0], imageSize, karabo::util::Dims(nx, ny));
+    karabo::xms::ImageData imd(arr, arr.getShape(), karabo::xms::Encoding::UNDEFINED, 16);
+                    
+    Hash h;
+
+    h.set("detector", imd);
+
+    p.stopPeriod("allocate");
+    
+
+    p.startPeriod("create");
+
+    Format::Pointer dataFormat = Format::discover(h);
+
+    File file(filename);
+    file.open(File::TRUNCATE);
+    Table::Pointer t = file.createTable("/karabo", dataFormat);
+    p.stopPeriod("create");
+
+    p.startPeriod("write");
+    for (unsigned int i = 0; i < m_numImages; ++i)
+        t->write(h, i);
+    p.stopPeriod("write");
+    
+    p.startPeriod("close");
+    file.closeTable(t);
+    file.close();
+    p.stopPeriod("close");
+    
+    p.startPeriod("open");
+
+    
+   
+    
+    Hash h2;
+    File file2(filename);
+    file2.open(File::READONLY);
+    Table::Pointer t2 = file2.getTable("/karabo", dataFormat);
+    p.stopPeriod("open");
+    
+    p.startPeriod("read");
+    t2->bind(h2);
+    for (unsigned int i = 0; i < m_numImages; ++i){
+        t2->read(i);
+    }
+    p.stopPeriod("read");
+    
+    CPPUNIT_ASSERT(h2.has("detector"));
+    CPPUNIT_ASSERT(h2.has("detector.bitsPerPixel"));
+    CPPUNIT_ASSERT(h2.has("detector.dimTypes"));
+    CPPUNIT_ASSERT(h2.has("detector.dims"));
+    CPPUNIT_ASSERT(h2.has("detector.encoding"));
+    CPPUNIT_ASSERT(h2.has("detector.pixels"));
+    CPPUNIT_ASSERT(h2.has("detector.roiOffsets"));
 }
 
 
