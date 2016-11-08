@@ -22,6 +22,7 @@ class Hdf5_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testSerializer);
     CPPUNIT_TEST(testKaraboNDArray);
     CPPUNIT_TEST(testKaraboPtr);
+    CPPUNIT_TEST(testKaraboImageData);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -45,6 +46,7 @@ private:
     void testSerializer();
     void testKaraboNDArray();
     void testKaraboPtr();
+    void testKaraboImageData();
 };
 
 #endif	/* HDF5_TEST_HH */
