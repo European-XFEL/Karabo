@@ -155,31 +155,31 @@ namespace karathon {
 
 
     bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple1(const karabo::util::Hash & body) {
-        bp::object a1 = HashWrap::get(body, "a1");
+        bp::object a1 = Wrapper::deepCopy(HashWrap::get(body, "a1"));
         return bp::make_tuple(a1);
     }
 
 
     bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple2(const karabo::util::Hash & body) {
-        bp::object a1 = HashWrap::get(body, "a1");
-        bp::object a2 = HashWrap::get(body, "a2");
+        bp::object a1 = Wrapper::deepCopy(HashWrap::get(body, "a1"));
+        bp::object a2 = Wrapper::deepCopy(HashWrap::get(body, "a2"));
         return bp::make_tuple(a1, a2);
     }
 
 
     bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple3(const karabo::util::Hash & body) {
-        bp::object a1 = HashWrap::get(body, "a1");
-        bp::object a2 = HashWrap::get(body, "a2");
-        bp::object a3 = HashWrap::get(body, "a3");
+        bp::object a1 = Wrapper::deepCopy(HashWrap::get(body, "a1"));
+        bp::object a2 = Wrapper::deepCopy(HashWrap::get(body, "a2"));
+        bp::object a3 = Wrapper::deepCopy(HashWrap::get(body, "a3"));
         return bp::make_tuple(a1, a2, a3);
     }
 
 
     bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple4(const karabo::util::Hash & body) {
-        bp::object a1 = HashWrap::get(body, "a1");
-        bp::object a2 = HashWrap::get(body, "a2");
-        bp::object a3 = HashWrap::get(body, "a3");
-        bp::object a4 = HashWrap::get(body, "a4");
+        bp::object a1 = Wrapper::deepCopy(HashWrap::get(body, "a1"));
+        bp::object a2 = Wrapper::deepCopy(HashWrap::get(body, "a2"));
+        bp::object a3 = Wrapper::deepCopy(HashWrap::get(body, "a3"));
+        bp::object a4 = Wrapper::deepCopy(HashWrap::get(body, "a4"));
         return bp::make_tuple(a1, a2, a3, a4);
     }
 

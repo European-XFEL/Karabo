@@ -414,6 +414,22 @@ namespace karathon {
         static karabo::util::NDArray fromPyArrayToNDArray(PyArrayObject* arr);
 
         static bp::object fromNDArrayToPyArray(const karabo::util::NDArray& ndarray);
+        
+        /**
+         * Inner recursive copier for deepCopy
+         * @param h
+         * @return 
+         */
+        static karabo::util::Hash deepCopy_r(const karabo::util::Hash& h);
+        
+        /**
+         * A recursively copying function, that guarantees that no references or
+         * pointers remain in a Hash. Use if correct object lifetime management
+         * when passing to python cannot be guaranteed.
+         * @param obj potentially containing Hash reference or pointer as well as vectors thereof to be deep copied
+         * @return a deep copy of obj
+         */
+        static bp::object deepCopy(const bp::object& obj);
     };
 
     // Specializations
