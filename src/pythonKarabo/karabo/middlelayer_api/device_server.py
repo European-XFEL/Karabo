@@ -1,10 +1,5 @@
-# !/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-__author__="Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__ ="$Jul 26, 2012 10:06:25 AM$"
-
-from asyncio import async, coroutine, set_event_loop, sleep, wait
+from asyncio import (async, coroutine, get_event_loop, set_event_loop, sleep,
+                     wait)
 import copy
 import os
 import sys
@@ -152,12 +147,13 @@ class DeviceServer(SignalSlotable):
     @coroutine
     def scanPlugins(self):
         while True:
-            entrypoints = self.pluginLoader.update()
+            entrypoints = yield from self.pluginLoader.update()
             for ep in entrypoints:
                 if ep.name in self.plugins:
                     continue
                 try:
-                    self.plugins[ep.name] = ep.load()
+                    self.plugins[ep.name] = (yield from get_event_loop().
+                                             run_in_executor(None, ep.load))
                 except Exception:
                     self.logger.exception(
                         'Cannot load plugin "{}"'.format(ep.name))
