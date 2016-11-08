@@ -117,7 +117,7 @@ class Tests(DeviceTest):
 
             proxy.a = 0.0228 * unit.ampere
             self.assertNotEqual(proxy.a, 22.8 * unit.milliampere,
-                                "proxy should set value on device, not own")
+                                "proxy should set device's, not own value")
             yield from waitUntil(lambda: proxy.a == 22.8 * unit.milliampere)
             self.assertEqual(proxy.a, 22.8 * unit.milliampere,
                              "didn't receive change from bound device")
