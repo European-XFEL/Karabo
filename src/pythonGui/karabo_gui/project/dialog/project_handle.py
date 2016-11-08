@@ -10,7 +10,7 @@ from PyQt4 import uic
 from PyQt4.QtCore import QAbstractTableModel, Qt
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
-from karabo.common.project.api import get_user_cache
+from karabo.common.project.api import TEST_DOMAIN, get_user_cache
 
 PROJECT_DATA = OrderedDict()
 PROJECT_DATA['uuid'] = 'Name'
@@ -77,7 +77,7 @@ class TableModel(QAbstractTableModel):
 
     def _extractData(self):
         user_cache = get_user_cache()
-        project_uuids = user_cache.get_uuids_of_type('project')
+        project_uuids = user_cache.get_uuids_of_type(TEST_DOMAIN, 'project')
         for uuid in project_uuids:
             # XXX: Fetch the other information via ``uuid``
             entry = ProjectEntry(
