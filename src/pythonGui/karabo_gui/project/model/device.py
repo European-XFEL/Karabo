@@ -49,7 +49,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         """ Remove the device associated with this item from its device server
         """
         device = self.model
-        server_model = find_parent_object(self.model, project,
+        server_model = find_parent_object(device, project,
                                           DeviceServerModel)
         if device in server_model.devices:
             server_model.devices.remove(device)

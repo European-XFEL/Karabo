@@ -1,7 +1,5 @@
 from traits.api import HasTraits, Instance, List
 
-from .model import ProjectModel
-
 
 def find_parent_object(model, ancestor_model, search_klass):
     """ Given a project child object and a project object which is the child's
