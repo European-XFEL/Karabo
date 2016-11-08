@@ -1,9 +1,5 @@
-__author__="Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__ ="$May 8, 2013 12:55:50 PM$"
-
-import sys
-
-from pkg_resources import WorkingSet
+from asyncio import coroutine, get_event_loop
+import pkg_resources
 
 from .enums import Assignment, AccessLevel
 from .hash import String
@@ -24,19 +20,8 @@ class PluginLoader(Configurable):
         defaultValue="karabo.middlelayer_device",
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    def __init__(self, input):
-        super(PluginLoader, self).__init__(input)
-        self._entrypoints = []
-        sys.path.append(self.pluginDirectory)
-
-    def getPlugin(self, name):
-        for ep in self._entrypoints:
-            if ep.name == name:
-                return ep
-        else:
-            raise RuntimeError("Plugin {} not found!".format(name))
-
+    @coroutine
     def update(self):
-        ws = WorkingSet()
-        self._entrypoints = list(ws.iter_entry_points(self.pluginNamespace))
-        return self._entrypoints
+        yield from get_event_loop().run_in_executor(
+            None, pkg_resources.working_set.add_entry, self.pluginDirectory)
+        return list(pkg_resources.iter_entry_points(self.pluginNamespace))
