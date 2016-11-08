@@ -237,7 +237,7 @@ namespace karabo {
         }
 
 
-        void DeviceServer::start() {
+        void DeviceServer::finalizeDeviceConstruction() {
 
             // This starts SignalSlotable
             SignalSlotable::start();
@@ -450,7 +450,7 @@ namespace karabo {
                 BaseDevice::Pointer device = BaseDevice::create(classId, config);
 
                 // This will throw an exception if it can't be started (because of duplicated name for example)
-                device->start();
+                device->finalizeDeviceConstruction();
 
                 {
                     // Keep the device instance
