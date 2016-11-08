@@ -68,7 +68,8 @@ class ProjectPanel(Dockable, QWidget):
     def _project_open_handler(self):
         # XXX: HACK. This is only written this way to get _something_ loaded.
         # It must change when integrating into the full GUI
-        from karabo.common.project.api import get_user_cache, read_lazy_object
+        from karabo.common.project.api import (TEST_DOMAIN, get_user_cache,
+                                               read_lazy_object)
         from karabo.middlelayer_api.newproject.io import read_project_model
 
         dialog = LoadDialog(parent=self)
@@ -77,7 +78,8 @@ class ProjectPanel(Dockable, QWidget):
             item = dialog.selected_item()
             if item is not None:
                 cache = get_user_cache()
-                model = read_lazy_object(item, 0, cache, read_project_model)
+                model = read_lazy_object(TEST_DOMAIN, item, 0, cache,
+                                         read_project_model)
                 self.project_view.model().traits_data_model = model
 
 
