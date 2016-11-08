@@ -92,5 +92,5 @@ if __name__ == "__main__":
     t = threading.Thread(target=EventLoop.work)
     t.start()
     device = Configurator(PythonDevice).create("TestDevice", config)
-    device.start()
+    device._finalizeInternalInitialisation()
     t.join()
