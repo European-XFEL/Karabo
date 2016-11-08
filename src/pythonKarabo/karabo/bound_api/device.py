@@ -566,9 +566,9 @@ class PythonDevice(NoFsm):
                     else self.fullSchema.getParameterHash().getAttribute(key, "leafType")
 
                 if leafType == LeafType.STATE:
-                    return State(self.parameters[key])
+                    return State[self.parameters[key]]
                 elif leafType == LeafType.ALARM_CONDITION:
-                    return AlarmCondition(self.parameters[key])
+                    return AlarmCondition[self.parameters[key]]
                 else:
                     return self.parameters[key]
             except RuntimeError as e:
