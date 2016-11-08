@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
         });
 
         // Start the device server
-        deviceServer->finalizeDeviceConstruction();
+        deviceServer->finalizeInternalInitialization();
 
         t.join(); // Blocking central event loop
 

@@ -32,7 +32,7 @@ void LockTest_Test::setUp() {
     // Create and start server
     Hash config("serverId", "testServerLock", "scanPlugins", false, "Logger.priority", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
-    m_deviceServer->finalizeDeviceConstruction();
+    m_deviceServer->finalizeInternalInitialization();
     // Create client
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
 
