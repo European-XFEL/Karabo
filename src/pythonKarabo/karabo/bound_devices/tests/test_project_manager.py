@@ -154,9 +154,9 @@ class TestProjectManager(TestCase):
 
     def tearDown(self):
         self.dc.killServer("testServerProject")
-        self.serverProcess.join(5)
+        self.serverProcess.join()
         EventLoop.stop()
-        self._eventLoopThread.join(5)
+        self._eventLoopThread.join()
 
         # delete any log files
         # handles both the case where we started as part of integration
