@@ -391,21 +391,14 @@ namespace karabo {
             /**
              * Writes a hash to the specified channel. The hash internally must
              * follow exactly the data schema as defined in the expected parameters.
-             * To avoid copies, but allow addition of a timestamp, the hash is passed as
-             * non-const reference.
              * @param channelName The output channel name
              * @param data Hash with the data
              */
-            void writeChannel(const std::string& channelName, karabo::util::Hash& data) {
+            void writeChannel(const std::string& channelName, const karabo::util::Hash& data) {
                 // TODO think about proper validation and time tagging later
                 karabo::xms::OutputChannel::Pointer channel = this->getOutputChannel(channelName);
-                const karabo::util::Timestamp& ts = getActualTimestamp();
 
-                for (karabo::util::Hash::iterator it = data.begin(); it != data.end(); ++it) {
-                    ts.toHashAttributes(it->getAttributes());
-                }
-                // const_cast to guarantee that the data cannot be changed downstream.
-                channel->write(const_cast<const karabo::util::Hash&> (data));
+                channel->write(data);
                 channel->update();
             }
 
