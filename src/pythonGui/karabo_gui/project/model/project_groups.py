@@ -3,14 +3,18 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from functools import partial
 import weakref
 
-from PyQt4.QtGui import QAction, QMenu, QStandardItem
+from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Callable, Dict, Instance, List, String
 
-from karabo.common.project.api import ProjectModel
+from karabo.common.project.api import MacroModel, ProjectModel
+from karabo.common.scenemodel.api import SceneModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
+from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from .bases import BaseProjectTreeItem
 
 
@@ -38,14 +42,14 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
 
     def context_menu(self, parent_project, parent=None):
         menu_fillers = {
-            'macros': _fill_macros_menu,
-            'scenes': _fill_scenes_menu,
-            'servers': _fill_servers_menu,
-            'subprojects': _fill_subprojects_menu,
+            'macros': self._fill_macros_menu,
+            'scenes': self._fill_scenes_menu,
+            'servers': self._fill_servers_menu,
+            'subprojects': self._fill_subprojects_menu,
         }
         filler = menu_fillers.get(self.trait_name)
         menu = QMenu(parent)
-        filler(menu)
+        filler(menu, parent_project)
         return menu
 
     def create_qt_item(self):
@@ -111,30 +115,49 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
         for item in additions:
             self.qt_item.appendRow(item.qt_item)
 
+    def _fill_macros_menu(self, menu, parent_project):
+        add_action = QAction('Add macro', menu)
+        add_action.triggered.connect(partial(self._add_macro, parent_project))
+        load_action = QAction('Load macro...', menu)
+        menu.addAction(add_action)
+        menu.addAction(load_action)
 
-def _fill_macros_menu(menu):
-    add_action = QAction('Add macro', menu)
-    load_action = QAction('Load macro...', menu)
-    menu.addAction(add_action)
-    menu.addAction(load_action)
+    def _fill_scenes_menu(self, menu, parent_project):
+        add_action = QAction('Add scene', menu)
+        add_action.triggered.connect(partial(self._add_scene, parent_project))
+        open_action = QAction('Load scene...', menu)
+        menu.addAction(add_action)
+        menu.addAction(open_action)
 
+    def _fill_servers_menu(self, menu, parent_project):
+        add_action = QAction('Add server', menu)
+        remove_all_action = QAction('Delete all', menu)
+        remove_selected_action = QAction('Delete selected', menu)
+        menu.addAction(add_action)
+        menu.addAction(remove_all_action)
+        menu.addAction(remove_selected_action)
 
-def _fill_scenes_menu(menu):
-    add_action = QAction('Add scene', menu)
-    open_action = QAction('Load scene...', menu)
-    menu.addAction(add_action)
-    menu.addAction(open_action)
+    def _fill_subprojects_menu(self, menu, parent_project):
+        add_action = QAction('Add project', menu)
+        menu.addAction(add_action)
 
+    # ----------------------------------------------------------------------
+    # action handlers
 
-def _fill_servers_menu(menu):
-    add_action = QAction('Add server', menu)
-    remove_all_action = QAction('Delete all', menu)
-    remove_selected_action = QAction('Delete selected', menu)
-    menu.addAction(add_action)
-    menu.addAction(remove_all_action)
-    menu.addAction(remove_selected_action)
+    def _add_macro(self, project):
+        """ Add a macro to the associated project
+        """
+        dialog = MacroHandleDialog()
+        if dialog.exec() == QDialog.Accepted:
+            # XXX: TODO check for existing
+            macro = MacroModel(simple_name=dialog.simple_name())
+            project.macros.append(macro)
 
-
-def _fill_subprojects_menu(menu):
-    add_action = QAction('Add project', menu)
-    menu.addAction(add_action)
+    def _add_scene(self, project):
+        """ Add a scene to the associated project
+        """
+        dialog = SceneHandleDialog()
+        if dialog.exec() == QDialog.Accepted:
+            # XXX: TODO check for existing
+            scene = SceneModel(simple_name=dialog.simple_name())
+            project.scenes.append(scene)
