@@ -9,6 +9,7 @@ from PyQt4.QtGui import QCursor, QTreeView
 from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .item_model import ProjectItemModel
+from .model.project_groups import ProjectSubgroupItem
 
 
 class ProjectView(QTreeView):
@@ -45,7 +46,8 @@ class ProjectView(QTreeView):
         """ Show a context menu for the currently selected item.
         """
         def _parent_project(model):
-            if isinstance(model, ProjectItemModel):
+            if (isinstance(model, ProjectItemModel) or
+                    isinstance(model, ProjectSubgroupItem)):
                 return model.model
             root_project = self.model().traits_data_model
             return find_parent_object(model.model, root_project, ProjectModel)
