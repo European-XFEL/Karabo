@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals
 from asyncio import (
     AbstractEventLoop, async, CancelledError, coroutine, Future, gather,
     get_event_loop, iscoroutinefunction, Queue, set_event_loop,
-    SelectorEventLoop, sleep, Task, TimeoutError)
+    SelectorEventLoop, sleep, Task, TimeoutError, wait_for)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 from functools import wraps
@@ -334,7 +334,7 @@ class KaraboFuture(object):
     wait for completion, or cancel the operation in question.
     """
     def __init__(self, future):
-        self.future = future
+        self.future = async(future)
 
     @synchronize
     def add_done_callback(self, fn):
@@ -417,7 +417,10 @@ class NoEventLoop(AbstractEventLoop):
                 raise TimeoutError
         else:
             hastask.acquire()
-            return KaraboFuture(self.task)
+            future = wait_for(self.task,
+                              timeout=timeout if timeout != -1 else None)
+            return KaraboFuture(loop.create_task(future,
+                                                 instance=self._instance))
 
     def instance(self):
         return self._instance
