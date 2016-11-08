@@ -70,10 +70,12 @@ def create_device_server_model_shadow(model):
     and must be detached later with a call to
     ``destroy_device_server_model_shadow``
     """
-    shadow = DeviceServerModelItem(model=model)
+    shadow = DeviceServerModelItem(model=model,
+                                   child_create=DeviceInstanceModelItem,
+                                   child_destroy=lambda x: None)
     model.on_trait_change(shadow.item_handler, 'devices_items')
     for device in model.devices:
-        child = DeviceInstanceModelItem(model=device)
+        child = shadow.child_create(model=device)
         shadow.children.append(child)
     return shadow
 
