@@ -3,7 +3,7 @@
 # Created on October 28, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from .device import DeviceConfigurationModelItem
+from .device import DeviceInstanceModelItem
 from .macro import MacroModelItem
 from .scene import SceneModelItem
 from .server import DeviceServerModelItem
@@ -20,10 +20,10 @@ def create_project_model_shadow(model=None):
     """
     details = (
         # (list name, group label, item create, item destroy)
-        ('devices', 'Devices', DeviceConfigurationModelItem, lambda x: None),
         ('macros', 'Macros', MacroModelItem, lambda x: None),
         ('scenes', 'Scenes', SceneModelItem, lambda x: None),
-        ('servers', 'Device Servers', DeviceServerModelItem, lambda x: None),
+        ('servers', 'Device Servers', create_device_server_model_shadow,
+         destroy_device_server_model_shadow),
         ('subprojects', 'Subprojects', create_project_model_shadow,
          destroy_project_model_shadow),
     )
@@ -59,3 +59,31 @@ def destroy_project_model_shadow(shadow_model):
         if child.child_create is create_project_model_shadow:
             for subchild in child.children:
                 destroy_project_model_shadow(subchild)
+
+
+def create_device_server_model_shadow(model):
+    """Creates a DeviceServerModelItem and its associated children to shadow a
+    DeviceServerModel instance for the purpose of interfacing with a Qt item
+    model.
+
+    Traits notification handlers are attached to the passed ``model`` object
+    and must be detached later with a call to
+    ``destroy_device_server_model_shadow``
+    """
+    shadow = DeviceServerModelItem(model=model,
+                                   child_create=DeviceInstanceModelItem,
+                                   child_destroy=lambda x: None)
+    model.on_trait_change(shadow.item_handler, 'devices_items')
+    for device in model.devices:
+        child = shadow.child_create(model=device)
+        shadow.children.append(child)
+    return shadow
+
+
+def destroy_device_server_model_shadow(shadow_model):
+    """Destroys a DeviceServerModelItem and its associated children by removing
+    all previously added Traits notification handlers.
+    """
+    model = shadow_model.model
+    model.on_trait_change(
+        shadow_model.item_handler, 'devices_items', remove=True)

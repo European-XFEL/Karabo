@@ -1,47 +1,32 @@
 from traits.api import HasTraits, Instance, List
 
-from .bases import BaseProjectObjectModel
-from .model import ProjectModel
 
-
-def find_parent_project(model, root_project):
-    """ Given a project child object and a project model which is the child's
+def find_parent_object(model, ancestor_model, search_klass):
+    """ Given a project child object and a project object which is the child's
     ancestor, find the immediate parent of the child.
 
     :param model: A project object instance
-    :param root_project: A ProjectModel which is the ancestor of ``model``.
+    :param ancestor_model: A project object model which is the ancestor of
+                           ``model``.
+    :param search_klass: The type of parent object to look for
+    :return: A parent project object model or None
     """
     class _Visitor(object):
-        last_project = None
+        last_object = None
         parent = None
 
         def __call__(self, obj):
             if obj is model:
                 if self.parent is not None:
-                    msg = "Object {} is in the project more than once!"
+                    msg = "Object {} has more than one parent!"
                     raise RuntimeError(msg.format(obj))
-                self.parent = self.last_project
-            if isinstance(obj, ProjectModel):
-                self.last_project = obj
+                self.parent = self.last_object
+            if isinstance(obj, search_klass):
+                self.last_object = obj
 
     visitor = _Visitor()
-    visit_project_objects(root_project, visitor)
+    walk_traits_object(ancestor_model, visitor)
     return visitor.parent
-
-
-def visit_project_objects(project, visitor_func):
-    """ Recursively visit all objects in a project model tree using a pre-order
-    traversal.
-
-    :param project: A project model instance
-    :param visitor_func: A callable which takes a single BaseProjectObjectModel
-                         instance as its only argument.
-    """
-    def _visitor_wrapper(model):
-        if isinstance(model, BaseProjectObjectModel):
-            visitor_func(model)
-
-    walk_traits_object(project, _visitor_wrapper)
 
 
 def walk_traits_object(traits_obj, visitor_func):
