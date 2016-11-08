@@ -1,6 +1,6 @@
 from karabo.common.project.api import (
     DeviceInstanceModel, DeviceServerModel, MacroModel, ProjectModel,
-    find_parent_object, find_parent_project
+    find_parent_object
 )
 from nose.tools import assert_raises
 
@@ -15,13 +15,13 @@ def test_find_parent_object():
     inner_proj = ProjectModel(macros=[macro], servers=[serv0])
     proj = ProjectModel(subprojects=[inner_proj], servers=[serv1])
 
-    parent = find_parent_object(inner_proj, proj)
+    parent = find_parent_object(inner_proj, proj, ProjectModel)
     assert parent is proj
 
-    parent = find_parent_object(macro, proj)
+    parent = find_parent_object(macro, proj, ProjectModel)
     assert parent is inner_proj
 
-    parent = find_parent_object(dev0, proj)
+    parent = find_parent_object(dev0, proj, DeviceServerModel)
     assert parent is serv0
 
 
@@ -33,19 +33,19 @@ def test_find_parent_project():
     proj = ProjectModel(subprojects=[sub_proj0, sub_proj1])
     parentless = MacroModel()
 
-    parent = find_parent_project(mac0, proj)
+    parent = find_parent_object(mac0, proj, ProjectModel)
     assert parent is sub_proj0
 
-    parent = find_parent_project(mac1, proj)
+    parent = find_parent_object(mac1, proj, ProjectModel)
     assert parent is sub_proj1
 
-    parent = find_parent_project(sub_proj0, proj)
+    parent = find_parent_object(sub_proj0, proj, ProjectModel)
     assert parent is proj
 
-    parent = find_parent_project(parentless, proj)
+    parent = find_parent_object(parentless, proj, ProjectModel)
     assert parent is None
 
-    parent = find_parent_project(proj, proj)
+    parent = find_parent_object(proj, proj, ProjectModel)
     assert parent is None
 
 
@@ -57,4 +57,4 @@ def test_find_parent_project_degenerate():
     proj = ProjectModel(subprojects=[sub_proj0, sub_proj1])
 
     with assert_raises(RuntimeError):
-        find_parent_project(mac, proj)
+        find_parent_object(mac, proj, ProjectModel)
