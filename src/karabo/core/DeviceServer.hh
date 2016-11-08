@@ -75,7 +75,7 @@ namespace karabo {
 
             virtual ~DeviceServer();
 
-            void finalizeDeviceConstruction();
+            void finalizeInternalInitialization();
 
             bool isRunning() const;
 
