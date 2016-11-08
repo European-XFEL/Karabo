@@ -22,6 +22,12 @@ class DeviceServerModelItem(BaseProjectTreeItem):
     # Redefine model with the correct type
     model = Instance(DeviceServerModel)
 
+    # A factory for shadow items wrapping children
+    child_create = Callable
+
+    # A callable which can gracefully destroy a child shadow object
+    child_destroy = Callable
+
     # Different devices for the server
     children = List(Instance(DeviceInstanceModelItem))
     _child_map = Dict  # dictionary for fast lookups during removal
@@ -60,25 +66,18 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         create_device_server_model_shadow and
         destroy_device_server_model_shadow functions.
         """
-        def _find_qt_item_index(device_instance_model):
-            for i in range(self.qt_item.rowCount()):
-                row_child = self.qt_item.child(i)
-                row_model = row_child.data(PROJECT_ITEM_MODEL_REF)()
-                if row_model.model is device_instance_model:
-                    return i
-            return -1
+        removals = []
+        for model in event.removed:
+            item_model = self._child_map[model]
+            self.children.remove(item_model)
+            self.child_destroy(item_model)
+            removals.append(item_model)
 
-        for device_instance_model in event.removed:
-            index = _find_qt_item_index(device_instance_model)
-            if index >= 0:
-                item_model = self._child_map[device_instance_model]
-                self.children.remove(item_model)
-                self.qt_item.removeRow(index)
+        additions = [self.child_create(model=model) for model in event.added]
+        self.children.extend(additions)
 
-        for device_instance_model in event.added:
-            item = DeviceInstanceModelItem(model=device_instance_model)
-            self.item.appendRow(item.qt_item)
-            self.children.append(item)
+        # Synchronize the GUI with the Traits model
+        self._update_ui_children(additions, removals)
 
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
@@ -91,6 +90,29 @@ class DeviceServerModelItem(BaseProjectTreeItem):
 
         for item_model in event.added:
             self._child_map[item_model.model] = item_model
+
+    def _update_ui_children(self, additions, removals):
+        """ Propagate changes from the Traits model to the Qt item model.
+        """
+        def _find_child_qt_item(item_model):
+            for i in range(self.qt_item.rowCount()):
+                row_child = self.qt_item.child(i)
+                row_model = row_child.data(PROJECT_ITEM_MODEL_REF)()
+                if row_model is item_model:
+                    return i
+            return -1
+
+        # Stop immediately if the UI is not yet initialized
+        if not self.is_ui_initialized():
+            return
+
+        for item in removals:
+            index = _find_child_qt_item(item)
+            if index >= 0:
+                self.qt_item.removeRow(index)
+
+        for item in additions:
+            self.qt_item.appendRow(item.qt_item)
 
     # ----------------------------------------------------------------------
     # action handlers
