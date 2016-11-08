@@ -15,16 +15,22 @@ class ProjectDBCache(object):
     def __init__(self, dirpath):
         self.dirpath = dirpath
 
-    def store(self, uuid, revision, data):
+    def store(self, domain, uuid, revision, data):
         """ Add an object to the cache
         """
-        with open(self._generate_filepath(uuid, revision), mode='wb') as fp:
+        path = self._generate_filepath(domain, uuid, revision)
+
+        domain_dir = op.dirname(path)
+        if not op.exists(domain_dir):
+            os.mkdir(domain_dir)
+
+        with open(path, mode='wb') as fp:
             fp.write(data)
 
-    def retrieve(self, uuid, revision):
+    def retrieve(self, domain, uuid, revision):
         """ Read an object from the cache.
         """
-        path = self._generate_filepath(uuid, revision)
+        path = self._generate_filepath(domain, uuid, revision)
         if not op.exists(path):
             msg = 'Cache object for UUID: {} Revision: {} not found'
             raise FileNotFoundError(msg.format(uuid, revision))
@@ -32,25 +38,30 @@ class ProjectDBCache(object):
         with open(path, mode='rb') as fp:
             return fp.read()
 
-    def get_uuids_of_type(self, obj_type):
+    def get_uuids_of_type(self, domain, obj_type):
         """ Return ``UUID`` of all objects of ``obj_type`` in cache
 
+        :param domain: A string which describes the domain to search
         :param obj_type: A string which describes the object type
         :return: A list of ``UUID`s for the given ``obj_type``
         """
+        domain_dir = op.join(self.dirpath, domain)
+        if not op.exists(domain_dir):
+            return []
+
         uuid_list = []
-        for fn in os.listdir(self.dirpath):
+        for fn in os.listdir(domain_dir):
             uuid, revision = self._uuid_revision_from_filename(fn)
-            xml = self.retrieve(uuid, revision)
+            xml = self.retrieve(domain, uuid, revision)
             root = fromstring(xml)
             root_type = root.attrib.get('item_type')
             if root_type == obj_type:
                 uuid_list.append(uuid)
         return uuid_list
 
-    def _generate_filepath(self, uuid, revision):
+    def _generate_filepath(self, domain, uuid, revision):
         leafname = '{}_{}'.format(uuid, revision)
-        return op.join(self.dirpath, leafname)
+        return op.join(self.dirpath, domain, leafname)
 
     def _uuid_revision_from_filename(self, filename):
         """ Return tuple of ``UUID`` and ``Revision`` from the given
