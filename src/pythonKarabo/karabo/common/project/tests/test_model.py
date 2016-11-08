@@ -1,5 +1,6 @@
 from karabo.common.project.api import (
-    ProjectModel, MacroModel, visit_project_objects)
+    MacroModel, ProjectModel, walk_traits_object
+)
 
 
 def test_project_modified_obj_check():
@@ -12,9 +13,9 @@ def test_project_modified_obj_check():
     macro = MacroModel(code="print('hello world')")
     proj = ProjectModel(macros=[macro])
 
-    visit_project_objects(proj, find_modified)
+    walk_traits_object(proj, find_modified)
     assert len(modified) == 0
 
     macro.code = "print('I was modified!')"
-    visit_project_objects(proj, find_modified)
+    walk_traits_object(proj, find_modified)
     assert modified == [macro]
