@@ -54,7 +54,7 @@ namespace karabo {
             virtual ~BaseDevice() {
             }
 
-            virtual void start() = 0;
+            virtual void finalizeInternalInitialization() = 0;
 
             // TODO
             // Can be removed, if sending current configuration after instantiation by server is deprecated
@@ -966,7 +966,7 @@ namespace karabo {
              * This function will typically be called by the DeviceServer (or directly within the startDevice application).
              * The call to run is blocking and afterwards communication should happen only via call-backs
              */
-            void start() {
+            void finalizeInternalInitialization() {
 
                 using namespace karabo::util;
                 using namespace karabo::net;
