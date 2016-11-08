@@ -22,12 +22,11 @@ class Signal(object):
 def _log_exception(func, device):
     logger = logging.getLogger(device.deviceId)
     _, exception, _ = sys.exc_info()
-    if exception is None or not hasattr(exception, "logmessage"):
-        logmessage = ('Exception in slot "%s" of device "%s"',
-                      func.__qualname__, device.deviceId)
-    else:
-        logmessage = exception.logmessage
-    logger.exception(*logmessage)
+    logmessage = getattr(exception, "logmessage",
+                         ('Exception in slot "%s" of device "%s"',
+                          func.__qualname__, device.deviceId))
+    level = getattr(exception, "loglevel", "ERROR")
+    logger.log(level, *logmessage, exc_info=True)
 
 
 def slot(f):

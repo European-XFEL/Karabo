@@ -11,6 +11,7 @@ from collections import OrderedDict
 from enum import Enum
 from functools import partial, wraps
 from io import BytesIO
+import logging
 import numbers
 import pint
 from struct import pack, unpack, calcsize
@@ -382,7 +383,7 @@ class Descriptor(object):
               instance.state not in self.allowedStates):
             msg = 'Setting "{}" is not allowed in state "{}"'.format(
                 self.key, instance.state)
-            raise KaraboError(msg)
+            raise KaraboError(msg, loglevel=logging.WARNING)
         else:
             return self._setter(instance, value)
 

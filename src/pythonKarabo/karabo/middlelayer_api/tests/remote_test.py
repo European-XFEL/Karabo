@@ -63,6 +63,10 @@ class Remote(Device):
         if self.once_value is None:
             self.once_value = value
 
+    @Int32()
+    def error_value(self, value):
+        raise RuntimeError
+
     @Int32(allowedStates=[State.ON])
     def disallowed_int(self, value):
         self.value = value
@@ -468,6 +472,13 @@ class Tests(DeviceTest):
             d.once = 10
         yield from sleep(0.1)
         self.assertEqual(self.remote.once_value, 10)
+
+    @async_tst
+    def test_error_value(self):
+        d = yield from getDevice("remote")
+        d.error_value = 3
+        with self.assertRaises(KaraboError):
+            yield from d.doit()
 
     @async_tst
     def test_disallow(self):
