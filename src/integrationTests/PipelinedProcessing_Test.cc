@@ -27,7 +27,7 @@ void PipelinedProcessing_Test::setUp() {
     // Create and start server
     Hash config("serverId", "testServerPP", "scanPlugins", false, "Logger.priority", "ERROR");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
-    m_deviceServer->start();
+    m_deviceServer->finalizeInternalInitialization();
     // Create client
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
 }
