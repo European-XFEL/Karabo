@@ -6,7 +6,7 @@
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QCursor, QTreeView
 
-from karabo.common.project.api import find_parent_project
+from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .item_model import ProjectItemModel
 
@@ -48,7 +48,7 @@ class ProjectView(QTreeView):
             if isinstance(model, ProjectItemModel):
                 return model.model
             root_project = self.model().traits_data_model
-            return find_parent_project(model.model, root_project)
+            return find_parent_object(model.model, root_project, ProjectModel)
 
         indices = self.selectionModel().selectedIndexes()
         if not indices:
