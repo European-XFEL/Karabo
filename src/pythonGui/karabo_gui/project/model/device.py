@@ -9,7 +9,8 @@ import weakref
 from PyQt4.QtGui import QAction, QMenu, QStandardItem
 from traits.api import Instance
 
-from karabo.common.project.api import DeviceInstanceModel, find_parent_object
+from karabo.common.project.api import (DeviceInstanceModel, DeviceServerModel,
+                                       find_parent_object)
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from .bases import BaseProjectTreeItem
@@ -48,6 +49,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         """ Remove the device associated with this item from its device server
         """
         device = self.model
-        server_model = find_parent_object(self.model, project)
+        server_model = find_parent_object(self.model, project,
+                                          DeviceServerModel)
         if device in server_model.devices:
             server_model.devices.remove(device)
