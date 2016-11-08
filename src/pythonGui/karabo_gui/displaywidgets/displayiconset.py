@@ -8,11 +8,9 @@ from PyQt4.QtGui import QAction, QInputDialog
 from PyQt4.QtSvg import QSvgWidget
 
 from karabo.middlelayer import String
+from karabo_gui.const import ns_inkscape
 from karabo_gui.util import getOpenFileName
 from karabo_gui.widget import DisplayWidget
-
-ns_inkscape = "{http://www.inkscape.org/namespaces/inkscape}"
-ElementTree.register_namespace("inkscape", ns_inkscape[1:-1])
 
 
 class Element(ElementTree.Element):
