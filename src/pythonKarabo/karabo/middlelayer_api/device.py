@@ -144,14 +144,9 @@ class Device(AlarmMixin, SignalSlotable):
         """This can only be called as a slot"""
         msg = self._checkLocked(message)
         if msg is not None:
-            return False, msg
-        try:
-            yield from super(Device, self).slotReconfigure(reconfiguration)
-        except KaraboError as e:
-            self.logger.warn(e.args[0])
-            return False, e.args[0]
+            raise KaraboError(msg)
+        yield from super(Device, self).slotReconfigure(reconfiguration)
         self.signalChanged(self.configurationAsHash(), self.deviceId)
-        return True, ""
 
     slotReconfigure = coslot(slotReconfigure, passMessage=True)
 
