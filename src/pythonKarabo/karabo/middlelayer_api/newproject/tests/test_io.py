@@ -11,6 +11,8 @@ from karabo.middlelayer import Project
 from ..convert import convert_old_project
 from ..io import read_project_model, write_project_model
 
+TEST_DOMAIN = 'TESTES'
+
 
 def _compare_projects(proj0, proj1):
     COMPARABLE_TRAIT_TYPES = (Bool, Enum, Float, Int, Range, String)
@@ -71,13 +73,13 @@ def _write_project(project, devices, storage):
         children = getattr(project, childname)
         for child in children:
             data = write_project_model(child)
-            storage.store(child.uuid, child.revision, data)
+            storage.store(TEST_DOMAIN, child.uuid, child.revision, data)
     for dev in devices:
         data = write_project_model(dev)
-        storage.store(dev.uuid, dev.revision, data)
+        storage.store(TEST_DOMAIN, dev.uuid, dev.revision, data)
 
     data = write_project_model(project)
-    storage.store(project.uuid, project.revision, data)
+    storage.store(TEST_DOMAIN, project.uuid, project.revision, data)
 
 # -----------------------------------------------------------------------------
 
@@ -97,7 +99,8 @@ def test_project_round_trip():
     with _project_storage() as storage:
         _write_project(project, devices, storage)
         rt_project = ProjectModel(uuid=project.uuid, revision=project.revision)
-        rt_project = read_lazy_object(project.uuid, project.revision, storage,
+        rt_project = read_lazy_object(TEST_DOMAIN, project.uuid,
+                                      project.revision, storage,
                                       read_project_model, existing=rt_project)
 
     _compare_projects(project, rt_project)
@@ -109,6 +112,6 @@ def test_project_cache():
 
     with _project_storage() as storage:
         _write_project(project, devices, storage)
-        project_uuids = storage.get_uuids_of_type('project')
+        project_uuids = storage.get_uuids_of_type(TEST_DOMAIN, 'project')
         assert len(project_uuids) == 1
         assert project_uuids[0] == project.uuid
