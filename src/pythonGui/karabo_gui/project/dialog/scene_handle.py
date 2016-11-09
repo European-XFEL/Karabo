@@ -24,5 +24,6 @@ class SceneHandleDialog(QDialog):
         self.setWindowTitle(title)
         self.buttonBox.accepted.connect(self.accept)
 
+    @property
     def simple_name(self):
         return self.leTitle.text()

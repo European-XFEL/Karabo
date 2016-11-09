@@ -66,4 +66,4 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         dialog = DeviceHandleDialog(self.model)
         result = dialog.exec()
         if result == QDialog.Accepted:
-            self.model.instance_id = dialog.instance_id()
+            self.model.instance_id = dialog.instance_id

@@ -24,17 +24,22 @@ class ServerHandleDialog(QDialog):
         self.setWindowTitle(title)
         self.buttonBox.accepted.connect(self.accept)
 
+    @property
     def server_id(self):
         return self.leServerId.text()
 
+    @property
     def host(self):
         return self.leHost.text()
 
+    @property
     def author(self):
         return self.leAuthor.text()
 
+    @property
     def copyOf(self):
         return self.leCopyOf.text()
 
+    @property
     def description(self):
         return self.leDescription.text()
