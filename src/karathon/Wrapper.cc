@@ -565,10 +565,10 @@ namespace karathon {
                 n.setAttributes(it->getAttributes());
             } else if (it->getType() == karabo::util::Types::VECTOR_HASH) {
                 const std::vector<karabo::util::Hash>& v = it->getValue<std::vector<karabo::util::Hash> >();
-                std::vector<karabo::util::Hash> vc(v.size());
-                unsigned int i = 0;
-                for (auto vit = v.cbegin(); vit != v.cend(); ++vit, ++i) {
-                    vc[i] = deepCopy_r(*vit);
+                std::vector<karabo::util::Hash> vc;
+                vc.reserve(v.size());
+                for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                    vc.push_back(deepCopy_r(*vit));
                 }
                 karabo::util::Hash::Node& n = r.set(it->getKey(), vc);
                 n.setAttributes(it->getAttributes());
@@ -577,10 +577,10 @@ namespace karathon {
                 n.setAttributes(it->getAttributes());
             } else if (it->getType() == karabo::util::Types::VECTOR_HASH_POINTER) {
                 const std::vector<karabo::util::Hash::Pointer>& v = it->getValue<std::vector<karabo::util::Hash::Pointer> >();
-                std::vector<karabo::util::Hash> vc(v.size());
-                unsigned int i = 0;
-                for (auto vit = v.cbegin(); vit != v.cend(); ++vit, ++i) {
-                    vc[i] = deepCopy_r(**vit);
+                std::vector<karabo::util::Hash> vc;
+                vc.reserve(v.size());
+                for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                    vc.push_back(deepCopy_r(**vit));
                 }
                 karabo::util::Hash::Node& n = r.set(it->getKey(), vc);
                 n.setAttributes(it->getAttributes());
@@ -604,20 +604,20 @@ namespace karathon {
                 return bp::object(deepCopy_r(node.getValue<karabo::util::Hash>()));
             } else if (node.getType() == karabo::util::Types::VECTOR_HASH) {
                 const std::vector<karabo::util::Hash>& v = node.getValue<std::vector<karabo::util::Hash> >();
-                std::vector<karabo::util::Hash> vc(v.size());
-                unsigned int i = 0;
-                for (auto vit = v.cbegin(); vit != v.cend(); ++vit, ++i) {
-                    vc[i] = deepCopy_r(*vit);
+                std::vector<karabo::util::Hash> vc;
+                vc.reserve(v.size());
+                for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                    vc.push_back(deepCopy_r(*vit));
                 }
                 return bp::object(vc);
             } else if (node.getType() == karabo::util::Types::HASH_POINTER) {
                 return bp::object(deepCopy_r(*node.getValue<karabo::util::Hash::Pointer>()));
             } else if (node.getType() == karabo::util::Types::VECTOR_HASH_POINTER) {
                 const std::vector<karabo::util::Hash::Pointer>& v = node.getValue<std::vector<karabo::util::Hash::Pointer> >();
-                std::vector<karabo::util::Hash> vc(v.size());
-                unsigned int i = 0;
-                for (auto vit = v.cbegin(); vit != v.cend(); ++vit, ++i) {
-                    vc[i] = deepCopy_r(**vit);
+                std::vector<karabo::util::Hash> vc;
+                vc.reserve(v.size());
+                for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                    vc.push_back(deepCopy_r(**vit));
                 }
                 return bp::object(vc);
             } else { // if no Hash like object was found we just return the object
@@ -634,19 +634,19 @@ namespace karathon {
         // obj contains a vector<Hash>
         } else if (bp::extract<std::vector<karabo::util::Hash>&>(obj).check()) {
             const std::vector<karabo::util::Hash>& v = bp::extract<std::vector<karabo::util::Hash>&>(obj);
-            std::vector<karabo::util::Hash> vc(v.size());
-            unsigned int i = 0;
-            for (auto vit = v.cbegin(); vit != v.cend(); ++vit, ++i) {
-                vc[i] = deepCopy_r(*vit);
+            std::vector<karabo::util::Hash> vc;
+            vc.reserve(v.size());
+            for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                vc.push_back(deepCopy_r(*vit));
             }
             return bp::object(vc);
         // final scenario to deep copy: vector<Hash::Pointer>
         } else if (bp::extract<std::vector<karabo::util::Hash::Pointer>&>(obj).check()) {
             const std::vector<karabo::util::Hash::Pointer>& v = bp::extract<std::vector<karabo::util::Hash::Pointer>&>(obj);
             std::vector<karabo::util::Hash> vc(v.size());
-            unsigned int i = 0;
-            for (auto vit = v.cbegin(); vit != v.cend(); ++vit, ++i) {
-                vc[i] = deepCopy_r(**vit);
+            vc.reserve(v.size());
+            for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                vc.push_back(deepCopy_r(**vit));
             }
             return bp::object(vc);
         } else { // nothing to deep-copy
