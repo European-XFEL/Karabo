@@ -158,7 +158,7 @@ class ProjectDatabase(ContextDecorator):
                 document: the path of the document
                 revisions: a list of revisions, where each entry is a dict
                 with:
-                    id: the revision id
+                    revision: the revision number
                     date: the date this revision was added
                     user: the user that added this revision
         :raises: ExistDBException if user is not authorized for this
@@ -186,7 +186,7 @@ class ProjectDatabase(ContextDecorator):
             revisions = rxml.find(self._add_vers_ns('revisions'))
             for revision in revisions.getchildren():
                 rentry = {}
-                rentry['id'] = int(revision.attrib['rev'])
+                rentry['revision'] = int(revision.attrib['rev'])
                 rentry['date'] = revision.find(self._add_vers_ns('date')).text
                 rentry['user'] = revision.find(self._add_vers_ns('user')).text
                 rdict["revisions"].append(rentry)
@@ -397,7 +397,7 @@ class ProjectDatabase(ContextDecorator):
         v_info = self.get_versioning_info(path)
         last_rev = 0
         if len(v_info["revisions"]) > 0:
-            last_rev = v_info["revisions"][-1]['id']
+            last_rev = v_info["revisions"][-1]['revision']
         # version filter expects also a key, this will also protect from
         # overwriting versions.
         key = hex(int(round(time.time() * 1000)))+hex(last_rev)
@@ -488,5 +488,20 @@ class ProjectDatabase(ContextDecorator):
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name']}
                     for r in res.results]
+        except ExistDBException:
+            return []
+
+    def list_domains(self):
+        """
+        List top level domains in database
+        :return:
+        """
+
+        query = """xquery version "3.0";
+                xmldb:get-child-collections("{}")""".format(self.root)
+
+        try:
+            res = self.dbhandle.query(query)
+            return [r.text for r in res.results]
         except ExistDBException:
             return []

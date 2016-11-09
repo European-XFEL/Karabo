@@ -28,7 +28,7 @@ class ProjectManager(PythonDevice):
     def expectedParameters(expected):
 
         (
-            OVERWRITE_ELEMENT(expected).key('deviceId')
+            OVERWRITE_ELEMENT(expected).key('_deviceId_')
                 .setNewDefaultValue("ProjectService")
                 .commit()
             ,
@@ -40,13 +40,6 @@ class ProjectManager(PythonDevice):
                 .displayedName("Database host")
                 .expertAccess()
                 .assignmentOptional().defaultValue('localhost')
-                .reconfigurable()
-                .commit()
-            ,
-            STRING_ELEMENT(expected).key('domain')
-                .displayedName("Karabo domain")
-                .expertAccess()
-                .assignmentOptional().defaultValue('LOCAL')
                 .reconfigurable()
                 .commit()
             ,
@@ -74,7 +67,7 @@ class ProjectManager(PythonDevice):
     def __init__(self, config):
         super(ProjectManager, self).__init__(config)
         self.registerSlot(self.reset)
-        self.registerSlot(self.slotInitUserSession)
+        self.registerSlot(self.slotBeginUserSession)
         self.registerSlot(self.slotEndUserSession)
         self.registerSlot(self.slotSaveItems)
         self.registerSlot(self.slotLoadItems)
@@ -82,7 +75,7 @@ class ProjectManager(PythonDevice):
         self.registerSlot(self.slotGetVersionInfo)
         self.registerSlot(self.slotListItems)
         self.registerInitialFunction(self.initialization)
-        self.db = None
+        self.user_db_sessions = {}
 
     def initialization(self):
         """
@@ -111,45 +104,48 @@ class ProjectManager(PythonDevice):
         """
         Return database relevant configuration from expected parameters
         as tuple
-        :return: at tuple of host, port and domain
+        :return: at tuple of host, port
         """
-        return self.get("host"), self.get("port"), self.get("domain")
+        return self.get("host"), self.get("port")
 
-    def slotInitUserSession(self, user, password):
+    def slotBeginUserSession(self, user, password):
         """
         Initialize a DB connection for a user
-        :param user:
-        :param password:
+        :param user: database user
+        :param password: password of user
         """
-        host, port, domain = self._getCurrentConfig()
-        self.db = ProjectDatabase(user, password,
-                                  server=host,
-                                  port=port,
-                                  test_mode=self.get("testMode"))
+        host, port = self._getCurrentConfig()
+        self.user_db_sessions[user] = ProjectDatabase(user, password,
+                                        server=host,
+                                        port=port,
+                                        test_mode=self.get("testMode"))
 
         self.log.DEBUG("Initialized user session")
+        self.reply(Hash("success", True))
 
-    def slotEndUserSession(self):
+    def slotEndUserSession(self, user):
         """
         End a user session
+        :param user: database user
         """
-        self.db = None
+        del self.user_db_sessions[user]
 
         self.log.DEBUG("Ended user session")
+        self.reply(Hash("success", True))
 
-    def _checkDbInitialized(self):
-        if self.db is None:
+    def _checkDbInitialized(self, user):
+        if user not in self.user_db_sessions:
             raise RuntimeError("You need to init a database session first")
 
-    def slotSaveItems(self, items):
+    def slotSaveItems(self, user, items):
         """
         Save items in project database
+        :param user: database user
         :param items: items to be save. Should be a list(Hash) object were each
                       entry is of the form:
 
                       - xml: xml of item
                       - uuid: uuid of item
-                      - revision: revision of item
                       - overwrite: behavior in case of revision conflict
                       - domain: to write to
 
@@ -161,101 +157,111 @@ class ProjectManager(PythonDevice):
 
         self.log.DEBUG("Saving items: {}".format([i.get("uuid") for i in
                                                   items]))
-
-        self._checkDbInitialized()
+        self._checkDbInitialized(user)
 
         results = Hash()
-        with self.db:
+        with self.user_db_sessions[user] as db_session:
             for item in items:
                 xml = item.get("xml")
                 uuid = item.get("uuid")
                 overwrite = item.get("overwrite")
                 domain = item.get("domain")
-                success, meta = self.db.save_item(domain, uuid, xml, overwrite)
+                success, meta = db_session.save_item(domain, uuid,
+                                                     xml, overwrite)
                 results.set(uuid, Hash('success', success,
                                        'entry', dictToHash(meta)))
 
         self.reply(results)
 
-    def slotLoadItems(self, domain, items):
+    def slotLoadItems(self, user, items):
         """
         Loads items from the database
-        :param domain: domain to load items from
+
+        :param user: database user
         :param items: list of Hashes containing information on which items
                       to load. Each list entry should be a Hash containing
 
                       - uuid: the uuid of the item
                       - revision (optional): the revision to load. Leave empty
                           if the newest is to be loaded
+                      - domain: domain to load item from
 
         :return: a Hash where the keys are the item uuids and values are the
                  item XML. If the load failed the value for this uuid is set
                  to False
         """
 
-        self.log.DEBUG("Loading items for domain '{}': {}".format(domain,
-                       [i.get("uuid") for i in items]))
+        self.log.DEBUG("Loading items: {}"
+                       .format([i.get("uuid") for i in items]))
 
-        self._checkDbInitialized()
+        self._checkDbInitialized(user)
 
         loadedItems = Hash()
-        with self.db:
+        with self.user_db_sessions[user] as db_session:
             for item in items:
+                domain = item.get("domain")
                 uuid = item.get("uuid")
                 revision = None
                 if item.has("revision"):
                     revision = item.get("revision")
-                it = self.db.load_item(domain, uuid, revision)
+                it = db_session.load_item(domain, uuid, revision)
                 loadedItems.set(uuid, it)
 
         self.reply(loadedItems)
 
-    def slotLoadItemsAndSubs(self, domain, items, list_tags):
+    def slotLoadItemsAndSubs(self, user, items):
         """
         Loads items from the database - including any sub items.
 
-        :param domain: domain to load items from
+        :param user: database user
         :param items: list of Hashes containing information on which items
                       to load. Each list entry should be a Hash containing
 
                       - uuid: the uuid of the item
                       - revision (optional): the revision to load. Leave empty
                           if the newest is to be loaded
+                      - domain: domain to load item from
 
         :return: a Hash where the keys are the item uuids and values are the
                  item XML. If the load failed the value for this uuid is set
                  to False
         """
 
-        self.log.DEBUG("Loading multiple for domain '{}': {}".format(domain,
-                       [i.get("uuid") for i in items]))
+        self.log.DEBUG("Loading multiple: {}"
+                       .format([i.get("uuid") for i in items]))
 
-        self._checkDbInitialized()
+        self._checkDbInitialized(user)
 
         loadedItems = Hash()
-        with self.db:
+        with self.user_db_sessions[user] as db_session:
             for item in items:
+                domain = item.get("domain")
                 uuid = item.get("uuid")
                 revision = None
                 if item.has("revision"):
                     revision = item.get("revision")
-                itxml = self.db.load_item(domain, uuid, revision)
+                list_tags = item.get("list_tags")
+                itxml = db_session.load_item(domain, uuid, revision)
                 loadedItems.set(uuid, itxml)
-
-                if itxml != "":  # load succeeded check for children
-                    its = self.db.load_multi(domain, itxml, list_tags)
+                # load succeeded check for children
+                if itxml != "" and list_tags is not None:
+                    its = db_session.load_multi(domain, itxml, list_tags)
                     [loadedItems.set(k, v) for k, v in its.items()]
 
         self.reply(loadedItems)
 
-    def slotGetVersionInfo(self, domain, items):
+    def slotGetVersionInfo(self, user, items):
         """
         Retrieve versioning information from the database for a list of items
+
+        :param user: database user
         :param domain: the item is to be found at
         :param items: list of Hashes containing information on which items
                       to load. Each list entry should be a Hash containing
 
                       - uuid: the uuid of the item
+                      - domain: domain to load item from
+
         :return: A Hash where the keys are the uuid of the item and the values
                  are Hashes holding the versioning information for this item.
                  These Hashes are of the form:
@@ -263,27 +269,28 @@ class ProjectManager(PythonDevice):
                 - document: the path of the document
                 - revisions: a list of revisions, where each entry is a dict
                             with:
-                            * id: the revision id
+                            * revision: the revision number
                             * date: the date this revision was added
                             * user: the user that added this revision
         """
 
-        self.log.DEBUG("Retrieving version info for domain '{}': {}"
-                       .format(domain, [i.get("uuid") for i in items]))
+        self.log.DEBUG("Retrieving version info: {}"
+                       .format([i.get("uuid") for i in items]))
 
-        self._checkDbInitialized()
+        self._checkDbInitialized(user)
 
         versionInfos = Hash()
-        with self.db:
+        with self.user_db_sessions[user] as db_session:
             for item in items:
+                domain = item.get("domain")
                 uuid = item.get("uuid")
-                vers = self.db.get_versioning_info_item(domain, uuid)
+                vers = db_session.get_versioning_info_item(domain, uuid)
                 # now convert the dict into a Hash
                 versionInfos.set(uuid, dictToHash(vers))
 
         self.reply(versionInfos)
 
-    def slotListItems(self, domain, item_types=None):
+    def slotListItems(self, user, domain, item_types=None):
         """
         List items in domain which match item_types if given, or all items
         if not given
@@ -293,9 +300,24 @@ class ProjectManager(PythonDevice):
                  and simple_name
         """
 
-        with self.db:
-            res = self.db.list_items(domain, item_types)
+        self._checkDbInitialized(user)
+
+        with self.user_db_sessions[user] as db_session:
+            res = db_session.list_items(domain, item_types)
             resHashes = [Hash('uuid', r['uuid'],
                               'item_type', r['item_type'],
                               'simple_name', r['simple_name']) for r in res]
             self.reply(resHashes)
+
+    def slotListDomains(self, user):
+        """
+        List domains available on this database
+        :param user:
+        :return:
+        """
+
+        self._checkDbInitialized(user)
+
+        with self.user_db_sessions[user] as db_session:
+            res = db_session.list_domains()
+            self.reply(res)
