@@ -974,7 +974,7 @@ namespace karabo {
                 {
                     boost::upgrade_lock<boost::shared_mutex> lk(m_projectManagerMutex);
                     auto manager = m_projectManagers.find(instanceId);
-                    if(manager != m_projectManagers.end()){
+                    if (manager != m_projectManagers.end()) {
                         boost::upgrade_to_unique_lock<boost::shared_mutex> ulk(lk);
                         m_projectManagers.erase(manager);
                     }
@@ -1272,7 +1272,7 @@ namespace karabo {
         }
 
 
-        std::vector<std::string> GuiServerDevice::getKnownProjectManagers() {
+        std::vector<std::string> GuiServerDevice::getKnownProjectManagers() const {
             boost::shared_lock<boost::shared_mutex> lk(m_projectManagerMutex);
             return std::vector<std::string>(m_projectManagers.begin(), m_projectManagers.end());
         }
@@ -1282,7 +1282,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectBeginUserSession : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if(!checkProjectManagerId(channel, projectManager, "projectBeginUserSession")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectBeginUserSession")) return;
                 const std::string& user = info.get<std::string>("user");
                 const std::string& password = info.get<std::string>("password");
                 request(projectManager, "slotBeginUserSession", user)
@@ -1297,7 +1297,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectEndUserSession : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if(!checkProjectManagerId(channel, projectManager, "projectEndUserSession")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectEndUserSession")) return;
                 const std::string& user = info.get<std::string>("user");
                 request(projectManager, "slotEndUserSession", user)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectEndUserSession", _1));
@@ -1311,7 +1311,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectSaveItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if(!checkProjectManagerId(channel, projectManager, "projectSaveItems")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectSaveItems")) return;
                 const std::string& user = info.get<std::string>("user");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotSaveItems", user)
@@ -1326,7 +1326,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectLoadItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if(!checkProjectManagerId(channel, projectManager, "projectLoadItems")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectLoadItems")) return;
                 const std::string& user = info.get<std::string>("user");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotLoadItems", user)
@@ -1341,7 +1341,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectLoadItemsAndSubs : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if(!checkProjectManagerId(channel, projectManager, "projectLoadItemsAndSubs")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectLoadItemsAndSubs")) return;
                 const std::string& user = info.get<std::string>("user");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotLoadItemsAndSubs", user)
@@ -1356,7 +1356,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectGetVersionInfo : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if(!checkProjectManagerId(channel, projectManager, "projectGetVersionInfo")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectGetVersionInfo")) return;
                 const std::string& user = info.get<std::string>("user");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotGetVersionInfo", user)
@@ -1381,7 +1381,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if(!checkProjectManagerId(channel, projectManager, "projectListItems")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectListItems")) return;
                 const std::string& user = info.get<std::string>("user");
                 const std::string& domain = info.get<std::string>("domain");
                 const std::vector<std::string>& item_types = info.get<std::vector < std::string >> ("item_types");
@@ -1397,7 +1397,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListDomains : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if(!checkProjectManagerId(channel, projectManager, "projectListDomains")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectListDomains")) return;
                 const std::string& user = info.get<std::string>("user");
                 request(projectManager, "slotListDomain", user)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListDomains", _1));

@@ -100,7 +100,7 @@ class TestProjectManager(TestCase):
 
         config.set("pluginDirectory", "")
         config.set("pluginNames", "")
-        config.set("Logger.priority", "DEBUG")
+        config.set("Logger.priority", "ERROR")
         config.set("visibility", 1)
         config.set("connection", Hash())
         config.set("pluginNamespace", "karabo.bound_device")
@@ -120,7 +120,7 @@ class TestProjectManager(TestCase):
 
         # we will use two devices communicating with each other.
         config = Hash()
-        config.set("Logger.priority", "DEBUG")
+        config.set("Logger.priority", "ERROR")
         config.set("deviceId", "projManTest")
         config.set("host", "localhost")
         config.set("port", 8080)
