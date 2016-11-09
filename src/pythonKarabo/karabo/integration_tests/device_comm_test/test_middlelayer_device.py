@@ -57,12 +57,12 @@ class Tests(TestCase):
         the device on the device server is started from within a
         macro `remote`, such that we can test device instantiation
         from macros."""
-        yield from sleep(0.3)
+        yield from sleep(1)
         remote = Remote(_deviceId_="remote")
         yield from remote.startInstance()
         proxy = yield from getDevice("remote")
         yield from proxy.instantiate()
-        yield from sleep(1.1)
+        yield from sleep(2)
         return (yield from getDevice("other"))
 
     @coroutine
@@ -73,7 +73,7 @@ class Tests(TestCase):
         to test device shutdown in macros"""
         proxy = yield from getDevice("remote")
         yield from proxy.shutdown()
-        yield from sleep(0.02)
+        yield from sleep(0.1)
 
     @coroutine
     def check_server_topology(self, dc):
