@@ -298,7 +298,7 @@ class StateMachine(_State):
         self.currentStateObject=None
         self.stt = dict()
         self.initial_state = list()
-        assert isinstance(initial, State), "Initial state should be instance of State class."
+        assert isinstance(initial, State), "Initial state should be an instance of State class."
         self._setup(initial)
         self.initial_state.append(self.stt[initial])
 
@@ -312,14 +312,14 @@ class StateMachine(_State):
             if _source is None:
                 raise AttributeError("None cannot be a source state")
             
-            assert isinstance(_source, State), "Source state should instance of State class"
+            assert isinstance(_source, State), "Source state should be an instance of State class"
             
             if _source in self.stt:
                 pass
             else:
                 self._setup(_source)
                 
-            assert isinstance(_target, (State, type(None))), "Target state should instance of State class or None."
+            assert isinstance(_target, (State, type(None))), "Target state should be an instance of State class or None."
                 
             if _target is None:
                 pass
