@@ -4,7 +4,7 @@
     <KRB_Item>
       <PythonDevice>
 	<classId>ProjectManager</classId>
-	<deviceId>ProjectManager</deviceId>
+	<deviceId>Karabo_ProjectManager_0</deviceId>
       </PythonDevice>
     </KRB_Item>
   </autoStart>
