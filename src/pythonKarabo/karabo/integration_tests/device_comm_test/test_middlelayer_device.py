@@ -6,7 +6,8 @@ import os.path
 from unittest import TestCase
 import weakref
 
-from karabo.middlelayer import getClasses, getDevice, getDevices, getServers, instantiate, Macro, Hash, shutdown, sleep, Slot
+from karabo.middlelayer import (getClasses, getDevice, getDevices, getServers,
+                                instantiate, Macro, shutdown, sleep, Slot)
 from karabo.middlelayer_api.cli import DeviceClient
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.tests.eventloop import setEventLoop
@@ -15,30 +16,8 @@ from karabo.middlelayer_api.tests.eventloop import setEventLoop
 class Remote(Macro):
     @Slot()
     def instantiate(self):
-        conf = Hash(
-            "count", Hash(),
-            "visibility", 0,
-            "log", Hash(),
-            "Logger", Hash(
-                "categories", [
-                    Hash("Category", Hash(
-                        "name", "karabo", "additivity", False,
-                        "appenders", [
-                            Hash("RollingFile", Hash(
-                                "layout", Hash("Pattern", Hash(
-                                    "format", "something")),
-                                "filename", "some.log"))]))],
-                "appenders", [
-                    Hash("Ostream", Hash(
-                        "layout", Hash(
-                            "Pattern", Hash("format", "some format")))),
-                    Hash("RollingFile", Hash(
-                        "layout", Hash("Pattern", Hash(
-                            "format", "other format")),
-                        "filename", "other.log")),
-                    Hash("Network", Hash())]))
         instantiate("testServer", "MiddleLayerTestDevice", "other",
-                    configuration=conf, do_count=Hash())
+                    counter=12345)
 
     @Slot()
     def shutdown(self):
@@ -134,8 +113,12 @@ class Tests(TestCase):
             server.startInstance()
             proxy = loop.run_until_complete(
                 loop.create_task(self.init_server(server), server))
-            # test that onInitialization was run properly
-            self.assertEqual(proxy.something, 222)
+
+            self.assertEqual(proxy.something, 222,
+                             "MiddleLayerTestDevice.onInitialization"
+                             "did not run properly")
+            self.assertEqual(proxy.counter, 12345,
+                             "initialization parameter was not honored")
             loop.run_until_complete(
                 loop.create_task(self.check_server_topology(dc), dc))
             self.assertIn("other", server.deviceInstanceMap)
