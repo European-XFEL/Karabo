@@ -104,6 +104,11 @@ serverId=Karabo_AlarmServer
 ALLINFO[6]="$KARABO_SERVERS/alarmServer/startCppServer:DeviceServer.Logger.priority=$logLevel DeviceServer.serverId=$serverId:0:1000:yes"
 
 
+logLevel=INFO
+serverId=Karabo_ProjectServerDB
+ALLINFO[7]="$KARABO_SERVERS/projectServerPy/startPythonServerApi1:DeviceServer.Logger.priority=$logLevel DeviceServer.serverId=$serverId:0:1000:yes"
+
+
 #####################
 # Device Server C++ #
 #####################
