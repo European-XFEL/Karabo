@@ -18,7 +18,9 @@ class DeviceClient(BoundDeviceClient):
             key = args[0]
             if schema.isLeaf(key):
                 paramHash = schema.getParameterHash()
-                leafType = paramHash.getAttribute(key, "leafType")
+                leafType = None
+                if paramHash.hasAttribute(key, "leafType"):
+                    leafType = paramHash.getAttribute(key, "leafType")
                 if leafType == LeafType.STATE:
                     return State(value)
                 elif leafType == LeafType.ALARM_CONDITION:
