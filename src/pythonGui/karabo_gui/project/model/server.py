@@ -6,12 +6,14 @@
 from functools import partial
 import weakref
 
-from PyQt4.QtGui import QAction, QMenu, QStandardItem
-from traits.api import Callable, Dict, Instance, List
+from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
+from traits.api import Callable, Dict, Instance, List, on_trait_change
 
-from karabo.common.project.api import DeviceServerModel
+from karabo.common.project.api import DeviceInstanceModel, DeviceServerModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
+from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from .bases import BaseProjectTreeItem
 from .device import DeviceInstanceModelItem
 
@@ -35,11 +37,13 @@ class DeviceServerModelItem(BaseProjectTreeItem):
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
+        edit_action.triggered.connect(self._edit_server)
         dupe_action = QAction('Duplicate', menu)
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_server,
                                                 parent_project))
         add_action = QAction('Add device', menu)
+        add_action.triggered.connect(self._add_device)
         remove_all_action = QAction('Delete all devices', menu)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
@@ -114,6 +118,12 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         for item in additions:
             self.qt_item.appendRow(item.qt_item)
 
+    @on_trait_change("model.server_id")
+    def server_id_change(self):
+        if not self.is_ui_initialized():
+            return
+        self.qt_item.setText(self.model.server_id)
+
     # ----------------------------------------------------------------------
     # action handlers
 
@@ -123,3 +133,18 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         server = self.model
         if server in project.servers:
             project.servers.remove(server)
+
+    def _edit_server(self):
+        dialog = ServerHandleDialog(self.model)
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            self.model.server_id = dialog.server_id
+
+    def _add_device(self):
+        """ Add a device to this server
+        """
+        dialog = DeviceHandleDialog()
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            device = DeviceInstanceModel(instance_id=dialog.instance_id)
+            self.model.devices.append(device)

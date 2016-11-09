@@ -9,12 +9,14 @@ import weakref
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Callable, Dict, Instance, List, String
 
-from karabo.common.project.api import MacroModel, ProjectModel
+from karabo.common.project.api import DeviceServerModel, MacroModel, ProjectModel
 from karabo.common.scenemodel.api import SceneModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
+from karabo_gui.project.dialog.project_handle import LoadDialog, NewDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
+from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from .bases import BaseProjectTreeItem
 
 
@@ -134,6 +136,7 @@ def _fill_scenes_menu(menu, parent_project):
 
 def _fill_servers_menu(menu, parent_project):
     add_action = QAction('Add server', menu)
+    add_action.triggered.connect(partial(_add_server, parent_project))
     remove_all_action = QAction('Delete all', menu)
     remove_selected_action = QAction('Delete selected', menu)
     menu.addAction(add_action)
@@ -143,6 +146,8 @@ def _fill_servers_menu(menu, parent_project):
 
 def _fill_subprojects_menu(menu, parent_project):
     add_action = QAction('Add project', menu)
+    add_action.triggered.connect(partial(_add_project,
+                                             parent_project))
     menu.addAction(add_action)
 
 
@@ -156,7 +161,7 @@ def _add_macro(project):
     dialog = MacroHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        macro = MacroModel(simple_name=dialog.simple_name())
+        macro = MacroModel(simple_name=dialog.simple_name)
         project.macros.append(macro)
 
 
@@ -166,5 +171,36 @@ def _add_scene(project):
     dialog = SceneHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        scene = SceneModel(simple_name=dialog.simple_name())
+        scene = SceneModel(simple_name=dialog.simple_name)
         project.scenes.append(scene)
+
+
+def _add_server(project):
+    """ Add a server to the associated project
+    """
+    dialog = ServerHandleDialog()
+    if dialog.exec() == QDialog.Accepted:
+        # XXX: TODO check for existing
+        server = DeviceServerModel(server_id=dialog.server_id)
+        project.servers.append(server)
+
+
+def _add_project(project):
+    """ Add a new subproject to the associated project
+    """
+    # XXX: HACK. This is only written this way to get _something_ loaded.
+    # It must change when integrating into the full GUI
+    from karabo.common.project.api import get_user_cache, read_lazy_object
+    from karabo_gui.project.api import TEST_DOMAIN
+    from karabo.middlelayer_api.newproject.io import read_project_model
+    dialog = NewDialog()
+    if dialog.exec() == QDialog.Accepted:
+        # XXX: TODO check for existing
+        item = dialog.selected_item()
+        if item is not None:
+            cache = get_user_cache()
+            model = read_lazy_object(TEST_DOMAIN, item, 0, cache,
+                                     read_project_model)
+        else:
+            model = ProjectModel(simple_name=dialog.simple_name())
+        project.subprojects.append(model)

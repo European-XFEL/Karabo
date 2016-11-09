@@ -59,4 +59,4 @@ class SceneModelItem(BaseProjectTreeItem):
         dialog = SceneHandleDialog(self.model)
         result = dialog.exec()
         if result == QDialog.Accepted:
-            self.model.simple_name = dialog.simple_name()
+            self.model.simple_name = dialog.simple_name
