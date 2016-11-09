@@ -6,13 +6,14 @@
 from functools import partial
 import weakref
 
-from PyQt4.QtGui import QAction, QMenu, QStandardItem
-from traits.api import Instance
+from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
+from traits.api import Instance, on_trait_change
 
 from karabo.common.project.api import (DeviceInstanceModel, DeviceServerModel,
                                        find_parent_object)
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from .bases import BaseProjectTreeItem
 
 
@@ -26,6 +27,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         menu = QMenu(parent)
 
         edit_action = QAction('Edit', menu)
+        edit_action.triggered.connect(self._edit_device)
         dupe_action = QAction('Duplicate', menu)
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
@@ -42,6 +44,12 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         item.setEditable(False)
         return item
 
+    @on_trait_change("model.instance_id")
+    def instance_id_change(self):
+        if not self.is_ui_initialized():
+            return
+        self.qt_item.setText(self.model.instance_id)
+
     # ----------------------------------------------------------------------
     # action handlers
 
@@ -53,3 +61,9 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
                                           DeviceServerModel)
         if device in server_model.devices:
             server_model.devices.remove(device)
+
+    def _edit_device(self):
+        dialog = DeviceHandleDialog(self.model)
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            self.model.instance_id = dialog.instance_id()
