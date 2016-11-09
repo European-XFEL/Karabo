@@ -138,17 +138,19 @@ namespace karathon {
             PyObject* pythonFunction = PyObject_GetAttrString(pythonModule, "format_exception");
             if (pythonFunction && PyCallable_Check(pythonFunction)) {
                 PyObject* pythonValue = PyObject_CallFunctionObjArgs(pythonFunction, e, v, t, 0);
-                if (PyList_Check(pythonValue)) {
-                    pythonErrorMessage.append("Python reports ...\n\n");
-                    Py_ssize_t size = PyList_Size(pythonValue);
-                    for (Py_ssize_t i = 0; i < size; i++) {
-                        PyObject* item = PyList_GetItem(pythonValue, i);  // this "borrowed reference" - no decref!
-                        PyObject* pythonString = PyObject_Str(item);
-                        pythonErrorMessage.append(PyUnicode_AsUTF8(pythonString));
-                        Py_DECREF(pythonString);
+                if(pythonValue){
+                    if (PyList_Check(pythonValue)) {
+                        pythonErrorMessage.append("Python reports ...\n\n");
+                        Py_ssize_t size = PyList_Size(pythonValue);
+                        for (Py_ssize_t i = 0; i < size; i++) {
+                            PyObject* item = PyList_GetItem(pythonValue, i);  // this "borrowed reference" - no decref!
+                            PyObject* pythonString = PyObject_Str(item);
+                            pythonErrorMessage.append(PyUnicode_AsUTF8(pythonString));
+                            Py_DECREF(pythonString);
+                        }
                     }
+                    Py_DECREF(pythonValue);
                 }
-                Py_DECREF(pythonValue);
                 Py_DECREF(pythonFunction);
             }
             Py_DECREF(pythonModule);
