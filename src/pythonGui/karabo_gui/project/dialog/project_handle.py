@@ -7,11 +7,11 @@ import os.path as op
 from collections import OrderedDict, namedtuple
 
 from PyQt4 import uic
-from PyQt4.QtCore import QAbstractTableModel, Qt
+from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
 from karabo.common.project.api import get_user_cache
-from karabo_gui.project.api import TEST_DOMAIN
+from karabo_gui.util import SignalBlocker
 
 PROJECT_DATA = OrderedDict()
 PROJECT_DATA['uuid'] = 'Name'
@@ -34,7 +34,11 @@ class ProjectHandleDialog(QDialog):
         self.buttonBox.accepted.connect(self.accept)
 
         self.twProjects.setModel(TableModel(self))
+        self.twProjects.selectionModel().selectionChanged.connect(
+            self._selectionChanged)
         self.twProjects.doubleClicked.connect(self.accept)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.leTitle.textChanged.connect(self._titleChanged)
 
     def set_dialog_texts(self, title, btn_text):
         """ This method sets the ``title`` and the ``btn_text`` of the ok
@@ -51,6 +55,27 @@ class ProjectHandleDialog(QDialog):
         if rows:
             return rows[0].data()
         return None
+
+    def simple_name(self):
+        return self.leTitle.text()
+
+    @pyqtSlot(object, object)
+    def _selectionChanged(self, selected, deselected):
+        """ Whenever an item is selected the current title and the button box
+        need to be updated
+        """
+        rows = self.twProjects.selectionModel().selectedRows()
+        if rows:
+            with SignalBlocker(self.leTitle):
+                self.leTitle.setText(rows[0].data())
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(
+            True if rows else False)
+
+    @pyqtSlot(object)
+    def _titleChanged(self, text):
+        if not self.twProjects.model().hasProject(text):
+            with SignalBlocker(self.twProjects):
+                self.twProjects.selectionModel().clearSelection()
 
 
 class NewDialog(ProjectHandleDialog):
@@ -77,6 +102,7 @@ class TableModel(QAbstractTableModel):
         self._extractData()
 
     def _extractData(self):
+        from karabo_gui.project.api import TEST_DOMAIN
         user_cache = get_user_cache()
         project_uuids = user_cache.get_uuids_of_type(TEST_DOMAIN, 'project')
         for uuid in project_uuids:
@@ -90,6 +116,15 @@ class TableModel(QAbstractTableModel):
                 documentation='documentation',
                 )
             self.entries.append(entry)
+
+    def hasProject(self, uuid):
+        """ Check whether the given `uuid exists in the current model.
+        :return: True if it exists, false otherwise
+        """
+        for entry in self.entries:
+            if entry.uuid == uuid:
+                return True
+        return False
 
     def rowCount(self, parent=None):
         return len(self.entries)
