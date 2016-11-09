@@ -56,6 +56,7 @@ class ProjectHandleDialog(QDialog):
             return rows[0].data()
         return None
 
+    @property
     def simple_name(self):
         return self.leTitle.text()
 
@@ -68,14 +69,16 @@ class ProjectHandleDialog(QDialog):
         if rows:
             with SignalBlocker(self.leTitle):
                 self.leTitle.setText(rows[0].data())
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(
-            True if rows else False)
+        enable = True if rows else False
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
     @pyqtSlot(object)
     def _titleChanged(self, text):
         if not self.twProjects.model().hasProject(text):
             with SignalBlocker(self.twProjects):
                 self.twProjects.selectionModel().clearSelection()
+        enable = True if text else False
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
 
 class NewDialog(ProjectHandleDialog):

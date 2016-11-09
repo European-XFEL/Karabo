@@ -138,7 +138,7 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         dialog = ServerHandleDialog(self.model)
         result = dialog.exec()
         if result == QDialog.Accepted:
-            self.model.server_id = dialog.server_id()
+            self.model.server_id = dialog.server_id
 
     def _add_device(self):
         """ Add a device to this server
@@ -146,5 +146,5 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         dialog = DeviceHandleDialog()
         result = dialog.exec()
         if result == QDialog.Accepted:
-            device = DeviceInstanceModel(instance_id=dialog.instance_id())
+            device = DeviceInstanceModel(instance_id=dialog.instance_id)
             self.model.devices.append(device)

@@ -145,14 +145,10 @@ def _fill_servers_menu(menu, parent_project):
 
 
 def _fill_subprojects_menu(menu, parent_project):
-    add_new_action = QAction('Add new project', menu)
-    add_new_action.triggered.connect(partial(_add_new_project,
+    add_action = QAction('Add project', menu)
+    add_action.triggered.connect(partial(_add_project,
                                              parent_project))
-    add_existing_action = QAction('Add existing project', menu)
-    add_existing_action.triggered.connect(partial(_add_existing_project,
-                                                  parent_project))
-    menu.addAction(add_new_action)
-    menu.addAction(add_existing_action)
+    menu.addAction(add_action)
 
 
 # ----------------------------------------------------------------------
@@ -165,7 +161,7 @@ def _add_macro(project):
     dialog = MacroHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        macro = MacroModel(simple_name=dialog.simple_name())
+        macro = MacroModel(simple_name=dialog.simple_name)
         project.macros.append(macro)
 
 
@@ -175,7 +171,7 @@ def _add_scene(project):
     dialog = SceneHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        scene = SceneModel(simple_name=dialog.simple_name())
+        scene = SceneModel(simple_name=dialog.simple_name)
         project.scenes.append(scene)
 
 
@@ -185,29 +181,19 @@ def _add_server(project):
     dialog = ServerHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        server = DeviceServerModel(server_id=dialog.server_id())
+        server = DeviceServerModel(server_id=dialog.server_id)
         project.servers.append(server)
 
 
-def _add_new_project(project):
+def _add_project(project):
     """ Add a new subproject to the associated project
-    """
-    dialog = NewDialog()
-    if dialog.exec() == QDialog.Accepted:
-        # XXX: TODO check for existing
-        subproject = ProjectModel(simple_name=dialog.simple_name())
-        project.subprojects.append(subproject)
-
-
-def _add_existing_project(project):
-    """ Add an existing subproject to the associated project
     """
     # XXX: HACK. This is only written this way to get _something_ loaded.
     # It must change when integrating into the full GUI
     from karabo.common.project.api import get_user_cache, read_lazy_object
     from karabo_gui.project.api import TEST_DOMAIN
     from karabo.middlelayer_api.newproject.io import read_project_model
-    dialog = LoadDialog()
+    dialog = NewDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
         item = dialog.selected_item()
@@ -215,4 +201,6 @@ def _add_existing_project(project):
             cache = get_user_cache()
             model = read_lazy_object(TEST_DOMAIN, item, 0, cache,
                                      read_project_model)
-            project.subprojects.append(model)
+        else:
+            model = ProjectModel(simple_name=dialog.simple_name())
+        project.subprojects.append(model)
