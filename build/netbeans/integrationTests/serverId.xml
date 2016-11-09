@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<DeviceServer KRB_Type="HASH">
+  <serverId KRB_Type="STRING">testServerSchema</serverId>
+</DeviceServer>
