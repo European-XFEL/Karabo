@@ -64,7 +64,7 @@ namespace karabo {
             karabo::util::Hash m_loggerInput;
 
             std::set<std::string> m_projectManagers;
-            boost::shared_mutex m_projectManagerMutex;
+            mutable boost::shared_mutex m_projectManagerMutex;
 
         public:
 
@@ -308,7 +308,7 @@ namespace karabo {
              * Return a list of project services known to this GUI server
              * @return
              */
-            std::vector<std::string> getKnownProjectManagers();
+            std::vector<std::string> getKnownProjectManagers() const;
 
             /**
              * Initialize a configuration database session for a user. This user should later always be passed to subsequent database
@@ -404,7 +404,7 @@ namespace karabo {
              * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
              */
             void onProjectListProjectManagers(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
-            
+
             /**
              * Request a list of the items present in a domain. Optionally, an item type filter can be specified
              * @param channel from which the request originates
@@ -434,7 +434,7 @@ namespace karabo {
              * @param reply the reply to forward
              */
             void forwardReply(karabo::net::Channel::Pointer channel, const std::string& replyType, const karabo::util::Hash& reply);
-            
+
             /**
              * Check if a given project manager identified by id is known in the distributed system
              * @param channel to forward a failure message to if not
