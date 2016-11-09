@@ -114,12 +114,18 @@ def _project_new_handler(item_model):
 def _project_save_handler(item_model):
     """ Save the project model data of the given `item_model`
     """
-    from karabo.common.project.api import get_user_cache
+    from karabo.common.project.api import (get_user_cache,
+                                           PROJECT_OBJECT_CATEGORIES)
     from karabo.middlelayer_api.newproject.io import write_project_model
     from karabo_gui.project.api import TEST_DOMAIN
     dialog = SaveDialog()
     if dialog.exec() == QDialog.Accepted:
-        model = item_model.traits_data_model
-        data = write_project_model(model)
+        proj_model = item_model.traits_data_model
         storage = get_user_cache()
-        storage.store(TEST_DOMAIN, model.uuid, model.revision, data)
+        for childname in PROJECT_OBJECT_CATEGORIES:
+            children = getattr(proj_model, childname)
+            for child in children:
+                data = write_project_model(child)
+                storage.store(TEST_DOMAIN, child.uuid, child.revision, data)
+        data = write_project_model(proj_model)
+        storage.store(TEST_DOMAIN, proj_model.uuid, proj_model.revision, data)
