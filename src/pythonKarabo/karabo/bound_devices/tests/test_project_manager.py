@@ -75,7 +75,7 @@ class TestProjectManager(TestCase):
     def runServer(self, config):
         t = Thread(target=EventLoop.work)
         t.start()
-        server = DeviceServer(config)
+        server = DeviceServer(config)  # noqa
         EventLoop.stop()
         t.join()
 
@@ -116,7 +116,6 @@ class TestProjectManager(TestCase):
             if nTries > self._retries:
                 raise RuntimeError("Waiting for server to appear timed out")
             nTries += 1
-
 
         # we will use two devices communicating with each other.
         config = Hash()
@@ -185,7 +184,7 @@ class TestProjectManager(TestCase):
 
         with self.subTest(msg="Test initializing user session"):
             ret = self.ss.request("projManTest", "slotBeginUserSession",
-                                "admin", "karabo").waitForReply(5000)
+                                  "admin", "karabo").waitForReply(5000)
             self.assertTrue(ret[0].get("success"))
 
         with self.subTest(msg="Test saving data"):
@@ -197,7 +196,7 @@ class TestProjectManager(TestCase):
             item.set("domain", "LOCAL")
             items = [item, ]
             ret = self.ss.request("projManTest", "slotSaveItems",
-                                         'admin', items).waitForReply(5000)
+                                  'admin', items).waitForReply(5000)
             ret = ret[0]  # returns tuple
             self.assertTrue(ret.has('testdevice1'))
             self.assertTrue(ret.get('testdevice1').get("success"))
@@ -206,34 +205,36 @@ class TestProjectManager(TestCase):
             items = [Hash("uuid", "testconfig0", "domain", "LOCAL"),
                      Hash("uuid", "testconfig1", "domain", "LOCAL")]
             ret = self.ss.request("projManTest", "slotLoadItems",
-                                         'admin', items).waitForReply(5000)
+                                  'admin', items).waitForReply(5000)
             ret = ret[0]  # returns tuple
-            self.assertTrue(ret.has('testconfig0'))
-            self.assertTrue(ret.has('testconfig1'))
+            items = {it['uuid']: it for it in ret['items']}
+            self.assertTrue('testconfig0' in items)
+            self.assertTrue('testconfig1' in items)
             cmp = 'v:path="/krb_test/LOCAL/testconfig0">foo</test>'
-            self.assertTrue(cmp in ret.get("testconfig0"))
+            self.assertTrue(cmp in items['testconfig0'].get('xml'))
             cmp = 'v:path="/krb_test/LOCAL/testconfig1">goo</test>'
-            self.assertTrue(cmp in ret.get("testconfig1"))
+            self.assertTrue(cmp in items['testconfig1'].get('xml'))
 
         with self.subTest(msg="Test loading multiple data"):
 
             items = [Hash("uuid", "testserver_m", "domain", "LOCAL",
                           "list_tags", ["configs"]), ]
             ret = self.ss.request("projManTest", "slotLoadItemsAndSubs",
-                                         'admin', items).waitForReply(5000)
+                                  'admin', items).waitForReply(5000)
             ret = ret[0]  # returns tuple
-            self.assertTrue(ret.has('testserver_m'))
-            self.assertTrue(ret.has('0'))
-            self.assertTrue('foo' in ret.get('0'))
-            self.assertTrue(ret.has('1'))
-            self.assertTrue('goo' in ret.get('1'))
-            self.assertTrue(ret.has('2'))
-            self.assertTrue('hoo' in ret.get('2'))
+            items = {it['uuid']: it for it in ret['items']}
+            self.assertTrue('testserver_m' in items)
+            self.assertTrue('0' in items)
+            self.assertTrue('foo' in items['0'].get('xml'))
+            self.assertTrue('1' in items)
+            self.assertTrue('goo' in items['1'].get('xml'))
+            self.assertTrue('2' in items)
+            self.assertTrue('hoo' in items['2'].get('xml'))
 
         with self.subTest(msg="Test get versioning info"):
             items = [Hash("uuid", "testserver_m", "domain", "LOCAL"), ]
             ret = self.ss.request("projManTest", "slotGetVersionInfo",
-                                         'admin', items).waitForReply(5000)
+                                  'admin', items).waitForReply(5000)
             ret = ret[0]  # returns tuple
             self.assertTrue(ret.has("testserver_m"))
             document = ret.get("testserver_m").get("document")
@@ -243,11 +244,11 @@ class TestProjectManager(TestCase):
 
         with self.subTest(msg="Test list items"):
             queryItems = ['project', 'scene']
-            items = self.ss.request("projManTest",
-                                    "slotListItems", 'admin',
-                                    "LOCAL",
-                                    queryItems).waitForReply(5000)
-            items = items[0]
+            ret = self.ss.request("projManTest",
+                                  "slotListItems", 'admin',
+                                  "LOCAL",
+                                  queryItems).waitForReply(5000)
+            items = ret[0].get('items')
             self.assertEqual(len(items), 10)
             scenecnt = 0
             for i in items:
