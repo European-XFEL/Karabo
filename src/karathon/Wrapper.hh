@@ -429,7 +429,7 @@ namespace karathon {
          * @param obj potentially containing Hash reference or pointer as well as vectors thereof to be deep copied
          * @return a deep copy of obj
          */
-        static bp::object deepCopy(const bp::object& obj);
+        static bp::object deepCopyHashLike(const bp::object& obj);
     };
 
     // Specializations

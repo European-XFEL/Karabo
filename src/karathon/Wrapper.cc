@@ -566,7 +566,7 @@ namespace karathon {
             } else if (it->getType() == karabo::util::Types::VECTOR_HASH) {
                 const std::vector<karabo::util::Hash>& v = it->getValue<std::vector<karabo::util::Hash> >();
                 karabo::util::Hash::Node& n = r.set(it->getKey(), std::vector<karabo::util::Hash>());
-                std::vector<karabo::util::Hash> vc = n.getValue<std::vector<karabo::util::Hash> >();
+                std::vector<karabo::util::Hash>& vc = n.getValue<std::vector<karabo::util::Hash> >();
                 vc.reserve(v.size());
                 for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
                     vc.push_back(deepCopy_r(*vit));
@@ -578,7 +578,7 @@ namespace karathon {
             } else if (it->getType() == karabo::util::Types::VECTOR_HASH_POINTER) {
                 const std::vector<karabo::util::Hash::Pointer>& v = it->getValue<std::vector<karabo::util::Hash::Pointer> >();
                 karabo::util::Hash::Node& n = r.set(it->getKey(), std::vector<karabo::util::Hash>());
-                std::vector<karabo::util::Hash> vc = n.getValue<std::vector<karabo::util::Hash> >();
+                std::vector<karabo::util::Hash>& vc = n.getValue<std::vector<karabo::util::Hash> >();
                 vc.reserve(v.size());
                 for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
                     vc.push_back(deepCopy_r(**vit));
@@ -592,7 +592,7 @@ namespace karathon {
         return r;
     }
 
-    bp::object Wrapper::deepCopy(const bp::object& obj) {
+    bp::object Wrapper::deepCopyHashLike(const bp::object& obj) {
         // we only check for Hash typed objects, which basically means obj
         // contains a Hash::Node, a Hash, a vector of Hashes or pointers to Hashes
         if (bp::extract<karabo::util::Hash::Node&>(obj).check()) {
