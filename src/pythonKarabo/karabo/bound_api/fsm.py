@@ -254,7 +254,7 @@ class _State(dict):
         if not gf(*ea[:len(ga)]):           # check guard
             return self
         
-        if _target != None:
+        if _target is not None:
             self.exit_action()              # exit current state
         
         # unpack action
@@ -309,7 +309,7 @@ class StateMachine(_State):
         
         for (_source, _event, _target, _action, _guard) in stt:
 
-            if _source == None:
+            if _source is None:
                 raise AttributeError("None cannot be a source state")
             
             assert isinstance(_source, State)
