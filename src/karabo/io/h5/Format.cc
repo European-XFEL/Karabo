@@ -206,54 +206,53 @@ namespace karabo {
                     const std::string& classId = el.getAttribute<string>(KARABO_HASH_CLASS_ID);
                     if (classId == karabo::util::NDArray::classInfo().getClassId()) {
                         discoverFromNDArray(el, policy, config, path, keyPath);
+                        return;
+                    } 
+                } // if not we treat it like a normal Hash
+               
+                const Hash& h = el.getValue<Hash > ();
+                const std::string& key = el.getKey();
+                std::string newPath;
+                if (path != "") {
+                    newPath = path + m_h5Sep + key;
+                } else {
+                    newPath = key;
+                }
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "1 path: " << path << " key: " << key << " newPath: " << newPath;
+
+                std::string newKeyPath;
+                if (keyPath != "") {
+                    newKeyPath = keyPath + m_h5Sep + key;
+                } else {
+                    newKeyPath = key;
+                }
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "2 keyPath: " << keyPath << " key: " << key << " newKeyPath: " << newKeyPath;
+
+
+                if (!el.getAttributes().empty() || h.size() == 0) {
+                    config.push_back(Hash());
+                    Hash& hcGroup = config.back();
+                    Hash& hc = hcGroup.bindReference<Hash > ("Group");
+                    hc.set("h5name", key);
+                    hc.set("h5path", path);
+                    hc.set("key", newKeyPath);
+                    //hc.set("type", "HASH");
+                    discoverAttributes(el, hc);
+
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "HashElement:\n" << config.back();
+                }
+
+                for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
+                    if (it->is<Hash > ()) {          
+
+                        discoverFromHashElement(*it, policy, config, newPath, newKeyPath);
+                    } else if (it->is<vector<Hash> >()) {
+                        discoverFromVectorOfHashesElement(*it, policy, config, newPath, newKeyPath);
                     } else {
-                        KARABO_LOG_FRAMEWORK_TRACE_CF<<"Refusing to write unknown class "<<classId<<" to hdf5.";
-                    }
-                } else { //non sub-classed hash
-                
-                    const Hash& h = el.getValue<Hash > ();
-                    const std::string& key = el.getKey();
-                    std::string newPath;
-                    if (path != "") {
-                        newPath = path + m_h5Sep + key;
-                    } else {
-                        newPath = key;
-                    }
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "1 path: " << path << " key: " << key << " newPath: " << newPath;
-
-                    std::string newKeyPath;
-                    if (keyPath != "") {
-                        newKeyPath = keyPath + m_h5Sep + key;
-                    } else {
-                        newKeyPath = key;
-                    }
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "2 keyPath: " << keyPath << " key: " << key << " newKeyPath: " << newKeyPath;
-
-
-                    if (!el.getAttributes().empty() || h.size() == 0) {
-                        config.push_back(Hash());
-                        Hash& hcGroup = config.back();
-                        Hash& hc = hcGroup.bindReference<Hash > ("Group");
-                        hc.set("h5name", key);
-                        hc.set("h5path", path);
-                        hc.set("key", newKeyPath);
-                        //hc.set("type", "HASH");
-                        discoverAttributes(el, hc);
-
-                        KARABO_LOG_FRAMEWORK_TRACE_CF << "HashElement:\n" << config.back();
-                    }
-
-                    for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
-                        if (it->is<Hash > ()) {          
-
-                            discoverFromHashElement(*it, policy, config, newPath, newKeyPath);
-                        } else if (it->is<vector<Hash> >()) {
-                            discoverFromVectorOfHashesElement(*it, policy, config, newPath, newKeyPath);
-                        } else {
-                            discoverFromDataElement(*it, policy, config, newPath, newKeyPath);
-                        }
+                        discoverFromDataElement(*it, policy, config, newPath, newKeyPath);
                     }
                 }
+                
             }
 
 
