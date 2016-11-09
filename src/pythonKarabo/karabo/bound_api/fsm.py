@@ -254,7 +254,7 @@ class _State(dict):
         if not gf(*ea[:len(ga)]):           # check guard
             return self
         
-        if _target != "none":
+        if _target != None:
             self.exit_action()              # exit current state
         
         # unpack action
@@ -268,7 +268,7 @@ class _State(dict):
                             "and transition action required parameters")
         af(*ea[:len(aa)])                   # call transition action
         
-        if _target == "none":
+        if _target is None:
             _target_state = self
         else:
             _target_state = self.fsm.stt[_target]
@@ -277,8 +277,11 @@ class _State(dict):
             else:
                 _target_state.entry_action()    # enter target state
             
-        if dict.__contains__(_target_state, 'none'):
-            return _target_state[None]      # anonymous transition
+        # Check for anonymous transition
+        if dict.__contains__(_target_state, 'none'):           # event is 'none'
+            return _target_state['none']      # anonymous transition
+        elif dict.__contains__(_target_state, None):           # event is None
+            return _target_state[None]
         
         return _target_state
         
@@ -305,13 +308,18 @@ class StateMachine(_State):
         self.current_state = list()
         
         for (_source, _event, _target, _action, _guard) in stt:
+
+            if _source == None:
+                raise AttributeError("None cannot be a source state")
             
-            if _source == 'none':
-                raise AttributeError("'none' cannot be a source state")
-            elif _source in self.stt:
+            assert isinstance(_source, State)
+            
+            if _source in self.stt:
                 pass
             else:
                 self._setup(_source)
+                
+            assert isinstance(_target, (State, type(None)))
                 
             if _target is None:
                 pass
