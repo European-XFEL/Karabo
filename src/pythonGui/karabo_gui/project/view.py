@@ -46,8 +46,7 @@ class ProjectView(QTreeView):
         """ Show a context menu for the currently selected item.
         """
         def _parent_project(model):
-            if (isinstance(model, ProjectItemModel) or
-                    isinstance(model, ProjectSubgroupItem)):
+            if isinstance(model, (ProjectItemModel, ProjectSubgroupItem)):
                 return model.model
             root_project = self.model().traits_data_model
             return find_parent_object(model.model, root_project, ProjectModel)
