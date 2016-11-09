@@ -17,3 +17,7 @@ class MiddleLayerTestDevice(Device):
         with self.myself:
             self.myself.something = 111
             yield from sleep(0.02)
+
+
+class SomeDevice(Device):
+    pass
