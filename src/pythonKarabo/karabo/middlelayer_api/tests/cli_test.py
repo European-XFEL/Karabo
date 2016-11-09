@@ -8,6 +8,8 @@ import time
 from unittest import TestCase, main, skip
 import weakref
 
+import pkg_resources
+
 from karabo.middlelayer_api.cli import (connectDevice, DeviceClient,
                                         start_device_client)
 from karabo.middlelayer_api.device import Device
@@ -243,6 +245,29 @@ class Tests(TestCase):
           * kills the device server
         """
         loop = setEventLoop()
+
+        class Entry(object):
+            def __init__(self, cls):
+                self.cls = cls
+                self.name = cls.__name__
+
+            def load(self):
+                return self.cls
+
+        class Dist(object):
+            location = __file__
+            key = "karabo.test"
+
+            def insert_on(self, path, loc):
+                path.insert(0, self.location)
+
+            def activate(self):
+                pass
+
+            def get_entry_map(self, group):
+                return {"Other": Entry(Other), "Remote": Entry(Remote)}
+
+        pkg_resources.working_set.add(Dist())
 
         with closing(loop):
             dc = DeviceClient(dict(_deviceId_="dc"))
