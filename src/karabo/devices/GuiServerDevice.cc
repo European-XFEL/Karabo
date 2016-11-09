@@ -130,6 +130,7 @@ namespace karabo {
                         Hash::Node& hn = topologyEntry.set("device." + it->getKey(), it->getValue<Hash>());
                         hn.setAttributes(it->getAttributes());
                         connectPotentialAlarmService(topologyEntry);
+                        registerPotentialProjectManager(topologyEntry);
                     }
                 }
 
@@ -247,6 +248,24 @@ namespace karabo {
                         onRequestAlarms(channel, info);
                     } else if (type == "updateAttributes") {
                         onUpdateAttributes(channel, info);
+                    } else if (type == "projectBeginUserSession") {
+                        onProjectBeginUserSession(channel, info);
+                    } else if (type == "projectEndUserSession") {
+                        onProjectEndUserSession(channel, info);
+                    } else if (type == "projectSaveItems") {
+                        onProjectSaveItems(channel, info);
+                    } else if (type == "projectLoadItems") {
+                        onProjectLoadItems(channel, info);
+                    } else if (type == "projectLoadItemsAndSubs") {
+                        onProjectLoadItemsAndSubs(channel, info);
+                    } else if (type == "projectGetVersionInfo") {
+                        onProjectGetVersionInfo(channel, info);
+                    } else if (type == "projectListProjectManagers") {
+                        onProjectListProjectManagers(channel, info);
+                    } else if (type == "projectListItems") {
+                        onProjectListItems(channel, info);
+                    } else if (type == "projectListDomains") {
+                        onProjectListDomains(channel, info);
                     }
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << "Ignoring request";
@@ -889,6 +908,7 @@ namespace karabo {
                     updateNewInstanceAttributes(instanceId);
 
                     connectPotentialAlarmService(topologyEntry);
+                    registerPotentialProjectManager(topologyEntry);
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceNewHandler(): " << e.userFriendlyMsg();
@@ -949,6 +969,14 @@ namespace karabo {
                             KARABO_LOG_FRAMEWORK_DEBUG << "instanceId : " << instanceId << ", channelName : " << iter->second.name;
                             m_networkConnections.erase(iter);
                         }
+                    }
+                }
+                {
+                    boost::upgrade_lock<boost::shared_mutex> lk(m_projectManagerMutex);
+                    auto manager = m_projectManagers.find(instanceId);
+                    if (manager != m_projectManagers.end()) {
+                        boost::upgrade_to_unique_lock<boost::shared_mutex> ulk(lk);
+                        m_projectManagers.erase(manager);
                     }
                 }
 
@@ -1219,6 +1247,18 @@ namespace karabo {
         }
 
 
+        void GuiServerDevice::registerPotentialProjectManager(const karabo::util::Hash& topologyEntry) {
+            std::string type, instanceId;
+            typeAndInstanceFromTopology(topologyEntry, type, instanceId);
+            if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
+                topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "ProjectManager") {
+                boost::unique_lock<boost::shared_mutex> lk(m_projectManagerMutex);
+                m_projectManagers.insert(instanceId);
+            }
+
+        }
+
+
         void GuiServerDevice::typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type, std::string& instanceId) {
             if (topologyEntry.empty()) return;
 
@@ -1228,6 +1268,163 @@ namespace karabo {
             instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
                           topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
 
+
+        }
+
+
+        std::vector<std::string> GuiServerDevice::getKnownProjectManagers() const {
+            boost::shared_lock<boost::shared_mutex> lk(m_projectManagerMutex);
+            return std::vector<std::string>(m_projectManagers.begin(), m_projectManagers.end());
+        }
+
+
+        void GuiServerDevice::onProjectBeginUserSession(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectBeginUserSession : info ...\n" << info;
+                const std::string& projectManager = info.get<std::string>("projectManager");
+                if (!checkProjectManagerId(channel, projectManager, "projectBeginUserSession")) return;
+                const std::string& user = info.get<std::string>("user");
+                const std::string& password = info.get<std::string>("password");
+                request(projectManager, "slotBeginUserSession", user)
+                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectBeginUserSession", _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectBeginUserSession(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onProjectEndUserSession(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectEndUserSession : info ...\n" << info;
+                const std::string& projectManager = info.get<std::string>("projectManager");
+                if (!checkProjectManagerId(channel, projectManager, "projectEndUserSession")) return;
+                const std::string& user = info.get<std::string>("user");
+                request(projectManager, "slotEndUserSession", user)
+                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectEndUserSession", _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectEndUserSession(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onProjectSaveItems(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectSaveItems : info ...\n" << info;
+                const std::string& projectManager = info.get<std::string>("projectManager");
+                if (!checkProjectManagerId(channel, projectManager, "projectSaveItems")) return;
+                const std::string& user = info.get<std::string>("user");
+                const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
+                request(projectManager, "slotSaveItems", user)
+                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectSaveItems", _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectSaveItems(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onProjectLoadItems(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectLoadItems : info ...\n" << info;
+                const std::string& projectManager = info.get<std::string>("projectManager");
+                if (!checkProjectManagerId(channel, projectManager, "projectLoadItems")) return;
+                const std::string& user = info.get<std::string>("user");
+                const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
+                request(projectManager, "slotLoadItems", user)
+                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectLoadItems", _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectLoadItems(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onProjectLoadItemsAndSubs(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectLoadItemsAndSubs : info ...\n" << info;
+                const std::string& projectManager = info.get<std::string>("projectManager");
+                if (!checkProjectManagerId(channel, projectManager, "projectLoadItemsAndSubs")) return;
+                const std::string& user = info.get<std::string>("user");
+                const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
+                request(projectManager, "slotLoadItemsAndSubs", user)
+                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectLoadItemsAndSubs", _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectLoadItemsAndSubs(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onProjectGetVersionInfo(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectGetVersionInfo : info ...\n" << info;
+                const std::string& projectManager = info.get<std::string>("projectManager");
+                if (!checkProjectManagerId(channel, projectManager, "projectGetVersionInfo")) return;
+                const std::string& user = info.get<std::string>("user");
+                const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
+                request(projectManager, "slotGetVersionInfo", user)
+                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectGetVersionInfo", _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectGetVersionInfo(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onProjectListProjectManagers(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                Hash h("type", "projectListProjectManagers", "reply", getKnownProjectManagers());
+                channel->writeAsync(h, LOSSLESS);
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListProjectManagers(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onProjectListItems(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListItems : info ...\n" << info;
+                const std::string& projectManager = info.get<std::string>("projectManager");
+                if (!checkProjectManagerId(channel, projectManager, "projectListItems")) return;
+                const std::string& user = info.get<std::string>("user");
+                const std::string& domain = info.get<std::string>("domain");
+                const std::vector<std::string>& item_types = info.get<std::vector < std::string >> ("item_types");
+                request(projectManager, "slotListItems", user)
+                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListItems", _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListItems(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onProjectListDomains(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListDomains : info ...\n" << info;
+                const std::string& projectManager = info.get<std::string>("projectManager");
+                if (!checkProjectManagerId(channel, projectManager, "projectListDomains")) return;
+                const std::string& user = info.get<std::string>("user");
+                request(projectManager, "slotListDomain", user)
+                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListDomains", _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListItems(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::forwardReply(karabo::net::Channel::Pointer channel, const std::string& replyType,
+                                           /*const karabo::net::ErrorCode& e,*/const karabo::util::Hash& reply) {
+            try {
+                Hash h("type", replyType, "reply", reply);
+                channel->writeAsync(h, LOSSLESS);
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in forwarding reply of type '" << replyType << "': " << e;
+            }
+        }
+
+
+        bool GuiServerDevice::checkProjectManagerId(karabo::net::Channel::Pointer channel, const std::string& deviceId, const std::string & type) {
+            boost::shared_lock<boost::shared_mutex> lk(m_projectManagerMutex);
+            if (m_projectManagers.find(deviceId) != m_projectManagers.end()) return true;
+
+            Hash h("type", type, "reply", Hash("success", false, "reason", "Project manager doesn't exist"));
+            channel->writeAsync(h, LOSSLESS);
+            return false;
 
         }
 
