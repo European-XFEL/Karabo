@@ -10,7 +10,8 @@ from PyQt4 import uic
 from PyQt4.QtCore import QAbstractTableModel, Qt
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
-from karabo.common.project.api import TEST_DOMAIN, get_user_cache
+from karabo.common.project.api import get_user_cache
+from karabo_gui.project.api import TEST_DOMAIN
 
 PROJECT_DATA = OrderedDict()
 PROJECT_DATA['uuid'] = 'Name'
