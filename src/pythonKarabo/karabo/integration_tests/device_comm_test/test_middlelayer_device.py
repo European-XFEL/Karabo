@@ -1,13 +1,15 @@
 from asyncio import async, coroutine
-from contextlib import closing
+from contextlib import contextmanager
 import gc
 import os
 import os.path
+from textwrap import dedent
 from unittest import TestCase
 import weakref
 
 from karabo.middlelayer import (getClasses, getDevice, getDevices, getServers,
-                                instantiate, Macro, shutdown, sleep, Slot)
+                                instantiate, KaraboError, Macro, shutdown,
+                                sleep, Slot)
 from karabo.middlelayer_api.cli import DeviceClient
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.tests.eventloop import setEventLoop
@@ -33,13 +35,20 @@ class Tests(TestCase):
         self.__starting_dir = os.curdir
         this_dir = os.path.dirname(os.path.abspath(__file__))
         os.chdir(this_dir)
+        self.loop = setEventLoop()
 
     def tearDown(self):
+        self.loop.close()
         try:
             os.remove("serverId.xml")
         except FileNotFoundError:
             pass
         os.chdir(self.__starting_dir)
+
+    def run_async(self, device, coro):
+        """run *coro* on behalf of *device*"""
+        return self.loop.run_until_complete(
+            self.loop.create_task(coro, device))
 
     @coroutine
     def init_server(self, server):
@@ -90,7 +99,7 @@ class Tests(TestCase):
         self.assertNotIn("SomeBlupp", getClasses("testServer"))
 
     def test_server(self):
-        """test the full lifetime of a python device server
+        """test the full lifetime of a Python device server
 
         this test
           * starts a device client
@@ -101,35 +110,77 @@ class Tests(TestCase):
           * checks everything is cleaned up afterwards
           * kills the device server
         """
-        loop = setEventLoop()
+        dc = DeviceClient(dict(_deviceId_="dc"))
+        dc.startInstance()
 
-        with closing(loop):
-            dc = DeviceClient(dict(_deviceId_="dc"))
-            dc.startInstance()
+        server = DeviceServer(
+            dict(serverId="testServer",
+                 pluginDirectory=os.path.dirname(__file__)))
+        server.startInstance()
+        proxy = self.run_async(server, self.init_server(server))
+        self.assertEqual(proxy.something, 222,
+                         "MiddleLayerTestDevice.onInitialization"
+                         "did not run properly")
+        self.assertEqual(proxy.counter, 12345,
+                         "initialization parameter was not honored")
 
-            server = DeviceServer(
-                dict(serverId="testServer",
-                     pluginDirectory=os.path.dirname(__file__)))
-            server.startInstance()
-            proxy = loop.run_until_complete(
-                loop.create_task(self.init_server(server), server))
+        self.run_async(dc, self.check_server_topology(dc))
+        self.assertIn("other", server.deviceInstanceMap)
+        r = weakref.ref(server.deviceInstanceMap["other"])
+        with proxy:
+            self.run_async(server, self.shutdown_server())
+            self.assertNotIn("other", server.deviceInstanceMap)
+            gc.collect()
+            self.assertIsNone(r())
+            async(dc.slotKillDevice())
+            self.loop.run_until_complete(server.slotKillServer())
+            self.assertEqual(proxy.something, 111)
+        self.loop.run_forever()
 
-            self.assertEqual(proxy.something, 222,
-                             "MiddleLayerTestDevice.onInitialization"
-                             "did not run properly")
-            self.assertEqual(proxy.counter, 12345,
-                             "initialization parameter was not honored")
-            loop.run_until_complete(
-                loop.create_task(self.check_server_topology(dc), dc))
-            self.assertIn("other", server.deviceInstanceMap)
-            r = weakref.ref(server.deviceInstanceMap["other"])
-            with proxy:
-                loop.run_until_complete(
-                    loop.create_task(self.shutdown_server(), server))
-                self.assertNotIn("other", server.deviceInstanceMap)
-                gc.collect()
-                self.assertIsNone(r())
-                async(dc.slotKillDevice())
-                loop.run_until_complete(server.slotKillServer())
-                self.assertEqual(proxy.something, 111)
-            loop.run_forever()
+    @contextmanager
+    def temp_file(self, path, content):
+        f = open(path, "w")
+        f.write(dedent(content))
+        f.close()
+        try:
+            yield
+        finally:
+            os.remove(path)
+
+    def test_appearing_plugin(self):
+        """test that new plugins appear in device server"""
+        dc = DeviceClient(dict(_deviceId_="dc"))
+        dc.startInstance()
+        dirname = os.path.dirname(__file__)
+        server = DeviceServer(
+            dict(serverId="testServer", pluginDirectory=dirname))
+        server.startInstance()
+        self.run_async(dc, sleep(1.1))
+        with self.assertRaises(KaraboError):
+            self.run_async(dc, instantiate("testServer",
+                                           "SomeDevice", "someName"))
+
+        dirname = os.path.join(dirname, "Temporary.egg-info")
+        os.mkdir(dirname)
+        try:
+            entry_points = self.temp_file(
+                os.path.join(dirname, "entry_points.txt"), """
+                    [karabo.middlelayer_device]
+                    SomeDevice = middlelayertestdevice:SomeDevice
+                """)
+            pkg_info = self.temp_file(
+                os.path.join(dirname, "PKG-INFO"), """
+                    Metadata-Version: 1.0
+                    Name: TestDevice
+                    Version: 1.0
+                    Summary: Some Test
+                    Download-URL: https://example.com/whatever
+                    Author-email: nobody@example.com
+                    License: None
+                """)
+            with entry_points, pkg_info:
+                self.run_async(dc, sleep(5))
+                self.run_async(dc, instantiate("testServer",
+                                               "SomeDevice", "someName"))
+        finally:
+            os.rmdir(dirname)
