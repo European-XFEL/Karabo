@@ -25,7 +25,7 @@ def _log_exception(func, device):
     logmessage = getattr(exception, "logmessage",
                          ('Exception in slot "%s" of device "%s"',
                           func.__qualname__, device.deviceId))
-    level = getattr(exception, "loglevel", "ERROR")
+    level = getattr(exception, "loglevel", logging.ERROR)
     logger.log(level, *logmessage, exc_info=True)
 
 
