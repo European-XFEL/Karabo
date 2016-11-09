@@ -992,11 +992,11 @@ class PythonDevice(NoFsm):
         info = Hash()
         with self._stateChangeLock:
             warnings = self.validatorIntern.getParametersInWarnOrAlarm()
-            for key in warnings:
+            for key in warnings.getKeys():
                 desc = warnings.get(key)
                 condition = AlarmCondition.fromString(desc.get("type"))
-                thisinfo = self.fullSchema.getInfoForAlarm(str(key),condition)
-                info.set(str(key), thisinfo)
+                thisinfo = self.fullSchema.getInfoForAlarm(key,condition)
+                info.set(key, thisinfo)
         return info
 
     @staticmethod
