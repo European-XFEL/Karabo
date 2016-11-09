@@ -565,28 +565,27 @@ namespace karathon {
                 n.setAttributes(it->getAttributes());
             } else if (it->getType() == karabo::util::Types::VECTOR_HASH) {
                 const std::vector<karabo::util::Hash>& v = it->getValue<std::vector<karabo::util::Hash> >();
-                std::vector<karabo::util::Hash> vc;
+                karabo::util::Hash::Node& n = r.set(it->getKey(), std::vector<karabo::util::Hash>());
+                std::vector<karabo::util::Hash> vc = n.getValue<std::vector<karabo::util::Hash> >();
                 vc.reserve(v.size());
                 for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
                     vc.push_back(deepCopy_r(*vit));
                 }
-                karabo::util::Hash::Node& n = r.set(it->getKey(), vc);
                 n.setAttributes(it->getAttributes());
             } else if (it->getType() == karabo::util::Types::HASH_POINTER) {
                 karabo::util::Hash::Node& n = r.set(it->getKey(), deepCopy_r(*(it->getValue<karabo::util::Hash::Pointer>())));
                 n.setAttributes(it->getAttributes());
             } else if (it->getType() == karabo::util::Types::VECTOR_HASH_POINTER) {
                 const std::vector<karabo::util::Hash::Pointer>& v = it->getValue<std::vector<karabo::util::Hash::Pointer> >();
-                std::vector<karabo::util::Hash> vc;
+                karabo::util::Hash::Node& n = r.set(it->getKey(), std::vector<karabo::util::Hash>());
+                std::vector<karabo::util::Hash> vc = n.getValue<std::vector<karabo::util::Hash> >();
                 vc.reserve(v.size());
                 for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
                     vc.push_back(deepCopy_r(**vit));
                 }
-                karabo::util::Hash::Node& n = r.set(it->getKey(), vc);
                 n.setAttributes(it->getAttributes());
-            } else { // if no Hash type we do not need to recurse
-                karabo::util::Hash::Node& n = r.set(it->getKey(), it->getValueAsAny());
-                n.setAttributes(it->getAttributes());
+            } else { // if no Hash type we do not need to recurse           
+                r.setNode(it);
             }
             
         }
@@ -643,7 +642,7 @@ namespace karathon {
         // final scenario to deep copy: vector<Hash::Pointer>
         } else if (bp::extract<std::vector<karabo::util::Hash::Pointer>&>(obj).check()) {
             const std::vector<karabo::util::Hash::Pointer>& v = bp::extract<std::vector<karabo::util::Hash::Pointer>&>(obj);
-            std::vector<karabo::util::Hash> vc(v.size());
+            std::vector<karabo::util::Hash> vc;
             vc.reserve(v.size());
             for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
                 vc.push_back(deepCopy_r(**vit));
