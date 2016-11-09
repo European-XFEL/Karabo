@@ -8,10 +8,8 @@
 #ifndef SIGNALSLOTABLE_TEST_HH
 #define	SIGNALSLOTABLE_TEST_HH
 
-#include <karabo/xms.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
-class SignalSlotDemo;
 
 class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
 
@@ -38,8 +36,6 @@ private:
     void testMethod();
     void testAutoConnectSignal();
     void testAutoConnectSlot();
-
-    boost::shared_ptr<boost::thread> m_eventLoopThread;
 };
 
 #endif	/* SIGNALSLOTABLE_TEST_HH */
