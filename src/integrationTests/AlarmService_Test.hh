@@ -43,6 +43,7 @@ private:
     void testRecovery();
     void testDeviceKilled();
     void testDeviceReappeared();
+    void testTriggerGlobal();
 
 
     //alarm service device
