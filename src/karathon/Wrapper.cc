@@ -18,7 +18,6 @@ using namespace std;
 
 namespace karathon {
 
-
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<bool>& v, bool numpyFlag) {
         if (numpyFlag) {
@@ -36,7 +35,6 @@ namespace karathon {
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<short>& v, bool numpyFlag) {
         if (numpyFlag) {
@@ -50,7 +48,6 @@ namespace karathon {
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
-
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned short>& v, bool numpyFlag) {
@@ -66,7 +63,6 @@ namespace karathon {
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<int>& v, bool numpyFlag) {
         if (numpyFlag) {
@@ -80,7 +76,6 @@ namespace karathon {
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
-
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned int>& v, bool numpyFlag) {
@@ -96,7 +91,6 @@ namespace karathon {
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<long long>& v, bool numpyFlag) {
         if (numpyFlag) {
@@ -110,7 +104,6 @@ namespace karathon {
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
-
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned long long>& v, bool numpyFlag) {
@@ -126,7 +119,6 @@ namespace karathon {
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<float>& v, bool numpyFlag) {
         if (numpyFlag) {
@@ -141,7 +133,6 @@ namespace karathon {
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<double>& v, bool numpyFlag) {
         if (numpyFlag) {
@@ -155,7 +146,6 @@ namespace karathon {
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
-
 
     bp::object Wrapper::toObject(const boost::any& operand, bool numpyFlag) {
         try {
@@ -241,7 +231,6 @@ namespace karathon {
         return bp::object(); // make compiler happy -- we never reach this statement
     }
 
-
     bp::object Wrapper::toCustomObject(karabo::util::Hash::Node& node) {
         karabo::util::Hash::Pointer hash = karabo::util::Hash::Pointer(&node.getValue<karabo::util::Hash>(), null_deleter());
         if (node.hasAttribute(KARABO_HASH_CLASS_ID)) { // Hash actually holds data for a custom class
@@ -256,7 +245,6 @@ namespace karathon {
         }
         return bp::object(hash);
     }
-
 
     karabo::util::Types::ReferenceType Wrapper::toAny(const bp::object& obj, boost::any& any) {
         if (obj.ptr() == Py_None) {
@@ -491,7 +479,6 @@ namespace karathon {
         throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
     }
 
-
     bp::object Wrapper::fromNDArrayToPyArray(const karabo::util::NDArray& ndarray) {
         const int typenum = karabo::util::Types::to<ToNumpy>(ndarray.getType());
         const karabo::util::Dims shape = ndarray.getShape();
@@ -512,7 +499,6 @@ namespace karathon {
         return bp::object(bp::handle<>(pyobj));
     }
 
-
     karabo::util::NDArray Wrapper::fromPyArrayToNDArray(PyArrayObject* arr) {
 
         // Convert the array shape to a std::vector
@@ -525,7 +511,7 @@ namespace karathon {
         // Get information about the stored type
         PyArray_Descr* dtype = PyArray_DESCR(arr);
         const int pyType = dtype->type_num;
-        const karabo::util::Types::ReferenceType krbType = karabo::util::Types::from<FromNumpy>(pyType);       
+        const karabo::util::Types::ReferenceType krbType = karabo::util::Types::from<FromNumpy>(pyType);
 
         // Extract number of elements
         const size_t nelems = static_cast<size_t> (PyArray_SIZE(arr));
@@ -555,7 +541,7 @@ namespace karathon {
                 char* data = reinterpret_cast<char*> (PyArray_DATA(carr));
                 const PyArrayRefHandler refHandler(carr); // Steals the reference to carr
                 // Create a new ArrayData<T> which uses PyArrayRefHandler to manage the Python reference count               
-                dataPtr = boost::shared_ptr<char>(data, refHandler);              
+                dataPtr = boost::shared_ptr<char>(data, refHandler);
             }
         }
 
@@ -565,6 +551,106 @@ namespace karathon {
 
         // Construct NDArray
         return karabo::util::NDArray(dataPtr, krbType, nelems, karabo::util::Dims(dims));
+    }
+
+    karabo::util::Hash Wrapper::deepCopy_r(const karabo::util::Hash& h) {
+        karabo::util::Hash r;
+        // iterate through all entries of the Hash. If the value of the Hash::Node at it
+        // is not of a Hash type we insert into our result Hash r, if not we recursivly
+        // call deepCopy_r to copy the internal structure
+        // We make sure to maintain attributes
+        for (karabo::util::Hash::const_iterator it = h.begin(); it != h.end(); ++it) { 
+            if (it->getType() == karabo::util::Types::HASH) {
+                karabo::util::Hash::Node& n = r.set(it->getKey(), deepCopy_r(it->getValue<karabo::util::Hash>()));
+                n.setAttributes(it->getAttributes());
+            } else if (it->getType() == karabo::util::Types::VECTOR_HASH) {
+                const std::vector<karabo::util::Hash>& v = it->getValue<std::vector<karabo::util::Hash> >();
+                karabo::util::Hash::Node& n = r.set(it->getKey(), std::vector<karabo::util::Hash>());
+                std::vector<karabo::util::Hash>& vc = n.getValue<std::vector<karabo::util::Hash> >();
+                vc.reserve(v.size());
+                for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                    vc.push_back(deepCopy_r(*vit));
+                }
+                n.setAttributes(it->getAttributes());
+            } else if (it->getType() == karabo::util::Types::HASH_POINTER) {
+                karabo::util::Hash::Node& n = r.set(it->getKey(), deepCopy_r(*(it->getValue<karabo::util::Hash::Pointer>())));
+                n.setAttributes(it->getAttributes());
+            } else if (it->getType() == karabo::util::Types::VECTOR_HASH_POINTER) {
+                const std::vector<karabo::util::Hash::Pointer>& v = it->getValue<std::vector<karabo::util::Hash::Pointer> >();
+                karabo::util::Hash::Node& n = r.set(it->getKey(), std::vector<karabo::util::Hash>());
+                std::vector<karabo::util::Hash>& vc = n.getValue<std::vector<karabo::util::Hash> >();
+                vc.reserve(v.size());
+                for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                    vc.push_back(deepCopy_r(**vit));
+                }
+                n.setAttributes(it->getAttributes());
+            } else { // if no Hash type we do not need to recurse           
+                r.setNode(it);
+            }
+            
+        }
+        return r;
+    }
+
+    bp::object Wrapper::deepCopyHashLike(const bp::object& obj) {
+        // we only check for Hash typed objects, which basically means obj
+        // contains a Hash::Node, a Hash, a vector of Hashes or pointers to Hashes
+        if (bp::extract<karabo::util::Hash::Node&>(obj).check()) {
+            // Hash::Node case - check type information of the value and deep copy for aforementioned
+            // Hash types
+            const karabo::util::Hash::Node& node = bp::extract<karabo::util::Hash::Node&>(obj);
+            if (node.getType() == karabo::util::Types::HASH) {
+                return bp::object(deepCopy_r(node.getValue<karabo::util::Hash>()));
+            } else if (node.getType() == karabo::util::Types::VECTOR_HASH) {
+                const std::vector<karabo::util::Hash>& v = node.getValue<std::vector<karabo::util::Hash> >();
+                std::vector<karabo::util::Hash> vc;
+                vc.reserve(v.size());
+                for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                    vc.push_back(deepCopy_r(*vit));
+                }
+                return bp::object(vc);
+            } else if (node.getType() == karabo::util::Types::HASH_POINTER) {
+                return bp::object(deepCopy_r(*node.getValue<karabo::util::Hash::Pointer>()));
+            } else if (node.getType() == karabo::util::Types::VECTOR_HASH_POINTER) {
+                const std::vector<karabo::util::Hash::Pointer>& v = node.getValue<std::vector<karabo::util::Hash::Pointer> >();
+                std::vector<karabo::util::Hash> vc;
+                vc.reserve(v.size());
+                for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                    vc.push_back(deepCopy_r(**vit));
+                }
+                return bp::object(vc);
+            } else { // if no Hash like object was found we just return the object
+                return obj;
+            }
+        // obj contains a Hash
+        } else if (bp::extract<karabo::util::Hash&>(obj).check()) {
+            const karabo::util::Hash& hash = bp::extract<karabo::util::Hash&>(obj);
+            return bp::object(deepCopy_r(hash));
+        // obj contains a Hash::Pointer
+        } else if (bp::extract<karabo::util::Hash::Pointer&>(obj).check()) {
+            const karabo::util::Hash::Pointer& hp = bp::extract<karabo::util::Hash::Pointer&>(obj);
+            return bp::object(deepCopy_r(*hp));
+        // obj contains a vector<Hash>
+        } else if (bp::extract<std::vector<karabo::util::Hash>&>(obj).check()) {
+            const std::vector<karabo::util::Hash>& v = bp::extract<std::vector<karabo::util::Hash>&>(obj);
+            std::vector<karabo::util::Hash> vc;
+            vc.reserve(v.size());
+            for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                vc.push_back(deepCopy_r(*vit));
+            }
+            return bp::object(vc);
+        // final scenario to deep copy: vector<Hash::Pointer>
+        } else if (bp::extract<std::vector<karabo::util::Hash::Pointer>&>(obj).check()) {
+            const std::vector<karabo::util::Hash::Pointer>& v = bp::extract<std::vector<karabo::util::Hash::Pointer>&>(obj);
+            std::vector<karabo::util::Hash> vc;
+            vc.reserve(v.size());
+            for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
+                vc.push_back(deepCopy_r(**vit));
+            }
+            return bp::object(vc);
+        } else { // nothing to deep-copy
+            return obj;
+        }
     }
 }
 
