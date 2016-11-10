@@ -462,6 +462,26 @@ void AlarmService_Test::testDeviceReappeared() {
 
 }
 
+void AlarmService_Test::testTriggerGlobal() {
+    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
+        m_deviceClient->execute("alarmTester", "triggerAlarmHigh", KRB_TEST_MAX_TIMEOUT);
+    });
+    Hash lastMessage;
+    messageQ->pop(lastMessage);
+
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerGlobalWarn");
+
+    //get row for first device
+    CPPUNIT_ASSERT(lastMessage.has("rows"));
+    m_rowForDevice0 = lastMessage.get<Hash>("rows").begin()->getKey();
+
+    CPPUNIT_ASSERT(lastMessage.has("rows." + m_rowForDevice0 + ".add"));
+    Hash h = lastMessage.get<Hash>("rows." + m_rowForDevice0 + ".add");
+    //these should be the same as it is the first time the alarm is raised
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
+}
+
 
 #undef KRB_TEST_MAX_TIMEOUT
 
