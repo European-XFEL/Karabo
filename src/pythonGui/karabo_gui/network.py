@@ -396,40 +396,43 @@ class _Network(QObject):
         h.set("user", "admin")
         self._tcpWriteHash(h)
 
-    def onListProjectDomains(self):
+    def onListProjectDomains(self, project_manager):
         h = Hash("type", "projectListDomains")
+        h.set("projectManager", project_manager)
+        h.set("user", "admin")
         self._tcpWriteHash(h)
 
     def onListProjectManagers(self):
         h = Hash("type", "projectListProjectManagers")
+        h.set("user", "admin")
         self._tcpWriteHash(h)
 
     def onProjectGetVersionInfo(self, project_manager, items):
         h = Hash("type", "projectGetVersionInfo")
-        h.set("user", "admin")
         h.set("projectManager", project_manager)
+        h.set("user", "admin")
         h.set("items", items)
         self._tcpWriteHash(h)
 
     def onProjectListItems(self, project_manager, domain, item_type):
         h = Hash("type", "projectListItems")
-        h.set("user", "admin")
         h.set("projectManager", project_manager)
+        h.set("user", "admin")
         h.set("domain", domain)
         h.set("item_types", [item_type])
         self._tcpWriteHash(h)
 
     def onProjectLoadItems(self, project_manager, items):
         h = Hash("type", "projectLoadItems")
-        h.set("user", "admin")
         h.set("projectManager", project_manager)
+        h.set("user", "admin")
         h.set("items", items)
         self._tcpWriteHash(h)
 
     def onProjectSaveItems(self, project_manager, items):
         h = Hash("type", "projectSaveItems")
-        h.set("user", "admin")
         h.set("projectManager", project_manager)
+        h.set("user", "admin")
         h.set("items", items)
         self._tcpWriteHash(h)
 

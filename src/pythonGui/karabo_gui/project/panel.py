@@ -10,7 +10,9 @@ from PyQt4.QtGui import QDialog, QStackedLayout, QWidget
 import karabo_gui.icons as icons
 from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.docktabwindow import Dockable
-from .dialog.project_handle import LoadDialog, NewDialog, SaveDialog
+from .db_connection import get_db_conn
+from .dialog.project_handle import (LoadProjectDialog, NewProjectDialog,
+                                    SaveProjectDialog)
 
 
 class ProjectPanel(Dockable, QWidget):
@@ -79,14 +81,13 @@ def _project_open_handler(item_model):
     from karabo.common.project.api import ProjectModel, read_lazy_object
     from karabo_gui.project.api import TEST_DOMAIN
     from karabo.middlelayer_api.newproject.io import read_project_model
-    from karabo_gui.topology import Manager
 
-    dialog = LoadDialog()
+    dialog = LoadProjectDialog()
     result = dialog.exec()
     if result == QDialog.Accepted:
         item = dialog.selected_item()
         if item is not None:
-            db_conn = Manager().proj_db_conn
+            db_conn = get_db_conn()
             model = ProjectModel(uuid=item, revision=0)
             read_lazy_object(TEST_DOMAIN, item, 0, db_conn,
                              read_project_model, existing=model)
@@ -100,18 +101,18 @@ def _project_new_handler(item_model):
     """
     # XXX: HACK. This is only written this way to get _something_ loaded.
     # It must change when integrating into the full GUI
-    from karabo.common.project.api import (get_user_cache, ProjectModel,
-                                           read_lazy_object)
+    from karabo.common.project.api import ProjectModel, read_lazy_object
     from karabo_gui.project.api import TEST_DOMAIN
     from karabo.middlelayer_api.newproject.io import read_project_model
-    dialog = NewDialog()
+    dialog = NewProjectDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
         item = dialog.selected_item()
         if item is not None:
-            cache = get_user_cache()
-            model = read_lazy_object(TEST_DOMAIN, item, 0, cache,
-                                     read_project_model)
+            db_conn = get_db_conn()
+            model = ProjectModel(uuid=item, revision=0)
+            read_lazy_object(TEST_DOMAIN, item, 0, db_conn,
+                             read_project_model, existing=model)
         else:
             model = ProjectModel(simple_name=dialog.simple_name)
         item_model.traits_data_model = model
@@ -124,18 +125,20 @@ def _project_save_handler(item_model):
     """
     # XXX: HACK. This is only written this way to get _something_ saved.
     # It must change when integrating into the full GUI
-    from karabo.common.project.api import (get_user_cache,
-                                           PROJECT_OBJECT_CATEGORIES)
-    from karabo.middlelayer_api.newproject.io import write_project_model
+    from karabo.common.project.api import PROJECT_OBJECT_CATEGORIES
     from karabo_gui.project.api import TEST_DOMAIN
-    dialog = SaveDialog()
+
+    def store_obj(db_conn, obj):
+        db_conn.store(TEST_DOMAIN, obj.uuid, obj.revision, obj)
+
+    # XXX: This is saving EVERYTHING in the project, regardless of need.
+    # XXX: Don't do this unless explicitly requested! Save objects individually
+    dialog = SaveProjectDialog()
     if dialog.exec() == QDialog.Accepted:
+        db_conn = get_db_conn()
         proj_model = item_model.traits_data_model
-        storage = get_user_cache()
         for childname in PROJECT_OBJECT_CATEGORIES:
             children = getattr(proj_model, childname)
             for child in children:
-                data = write_project_model(child)
-                storage.store(TEST_DOMAIN, child.uuid, child.revision, data)
-        data = write_project_model(proj_model)
-        storage.store(TEST_DOMAIN, proj_model.uuid, proj_model.revision, data)
+                store_obj(db_conn, child)
+        store_obj(db_conn, proj_model)

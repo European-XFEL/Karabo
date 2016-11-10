@@ -4,31 +4,65 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
+from PyQt4.QtCore import QObject
+from PyQt4.QtGui import QApplication
+
 from karabo.common.project.api import get_user_cache, read_lazy_object
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.newproject.io import (read_project_model,
                                                   write_project_model)
 from karabo_gui.network import Network
+from karabo_gui.mediator import (
+    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+
+# global singleton
+__db_conn = None
 
 
-class ProjectDatabaseConnection(object):
+def get_db_conn():
+    """ Get the global database connection object
+    """
+    global __db_conn
+    if __db_conn is None:
+        app = QApplication.instance()
+        __db_conn = ProjectDatabaseConnection(parent=app)
+    return __db_conn
+
+
+class ProjectDatabaseConnection(QObject):
     """ An object which handles requests/replies from the GUI server which
     pertain to project data.
     """
 
-    def __init__(self):
+    def __init__(self, parent=None):
+        super(ProjectDatabaseConnection, self).__init__(parent)
         self.cache = get_user_cache()
         self.network = Network()
 
-        # XXX: Temporary
-        self.project_manager = 'Karabo_ProjectServerDB_ProjectManager_1'
+        # Register for broadcast events
+        register_for_broadcasts(self)
 
         # Dictionaries to hold items which are awaiting network replies
         self._waiting_for_read = {}
         self._waiting_for_write = {}
 
-        # XXX: This is really fucking asinine right now!
+        # XXX: Temporary
+        self.project_manager = 'Karabo_ProjectServerDB_ProjectManager_1'
+
+        # XXX: This is really asinine right now!
         self._have_logged_in = False
+
+    def eventFilter(self, obj, event):
+        """ Router for incoming broadcasts
+        """
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.ProjectItemsLoaded:
+                items = event.data.get('items', [])
+                self._items_loaded(items)
+            elif event.sender is KaraboEventSender.ProjectItemsSaved:
+                items = event.data.get('items', [])
+                self._items_saved(items)
+        return False
 
     # -------------------------------------------------------------------
     # User interface
@@ -36,6 +70,7 @@ class ProjectDatabaseConnection(object):
     def get_uuids_of_type(self, domain, obj_type):
         """ Find out what's available
         """
+        # XXX: Please don't keep this here!
         self._ensure_login()
 
         # Fire and "forget". An event will be broadcast with the reply
@@ -47,6 +82,7 @@ class ProjectDatabaseConnection(object):
     def retrieve(self, domain, uuid, revision, existing=None):
         """Read an object from the database.
         """
+        # XXX: Please don't keep this here!
         self._ensure_login()
 
         obj = self.cache.retrieve(domain, uuid, revision, existing=existing)
@@ -63,6 +99,7 @@ class ProjectDatabaseConnection(object):
     def store(self, domain, uuid, revision, obj):
         """Write an object to the database
         """
+        # XXX: Please don't keep this here!
         self._ensure_login()
 
         key = (uuid, revision)
@@ -76,9 +113,9 @@ class ProjectDatabaseConnection(object):
             self.network.onProjectSaveItems(self.project_manager, items)
 
     # -------------------------------------------------------------------
-    # Manager interface
+    # Broadcast event handlers
 
-    def items_loaded(self, items):
+    def _items_loaded(self, items):
         """ A bunch of data just arrived from the network.
         """
         # Cache everything locally first
@@ -100,7 +137,7 @@ class ProjectDatabaseConnection(object):
                 read_lazy_object(domain, uuid, revision, self,
                                  read_project_model, existing=obj)
 
-    def items_saved(self, items):
+    def _items_saved(self, items):
         """ A bunch of items were just saved
         """
         for item in items:
