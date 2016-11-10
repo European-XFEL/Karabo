@@ -240,15 +240,19 @@ class ProjectDatabase(ContextDecorator):
         if not self.domain_exists(domain):
             self.add_domain(domain)
 
+        # Extraction the revision number as provided
+        item_tree = self._make_xml_if_needed(item_xml)
+        revision = item_tree.get(self._add_vers_ns('revision'))
+
         # try to save the item xml, if overwrite is set to True we remove
         # the versioning specific attributes first.
         if overwrite:
-            item_xml = self._make_xml_if_needed(item_xml)
             versioning_attrs = ['key', 'revision', 'path']
             for attr in versioning_attrs:
                 nsattr = self._add_vers_ns(attr)
-                if nsattr in item_xml.attrib:
-                    item_xml.attrib.pop(nsattr)
+                if nsattr in item_tree.attrib:
+                    item_tree.attrib.pop(nsattr)
+            item_xml = self._make_str_if_needed(item_tree)
 
         # check if the xml we got passed is an etree or a string. In the latter
         # case convert it
@@ -261,16 +265,11 @@ class ProjectDatabase(ContextDecorator):
         except ExistDBException:
             success = False
 
-        res_xml = None
-        if success:
-            res_xml = self._make_str_if_needed(item_xml)
-        elif self.dbhandle.hasCollection(path):
-            res_xml = self.dbhandle.getDoc(path).decode('utf-8')
-            res_xml = self._make_str_if_needed(res_xml)
-
         meta = {}
-        meta["versioning_info"] = self.get_versioning_info(path)
-        meta['current_xml'] = res_xml
+        meta['versioning_info'] = self.get_versioning_info(path)
+        meta['domain'] = domain
+        meta['uuid'] = item
+        meta['revision'] = revision
         return (success, meta)
 
     def copy_item(self, domain, target_domain, item, target_item):
@@ -446,10 +445,12 @@ class ProjectDatabase(ContextDecorator):
         try:
             res = self.dbhandle.query(query)
         except ExistDBException:
-            return {}
+            return []
 
-        return {r.attrib['uuid']: self._make_str_if_needed(r)
-                for r in res.results}
+        return [{'uuid': r.attrib['uuid'],
+                 'revision': r.get('revision', 0),
+                 'domain': domain,
+                 'xml': self._make_str_if_needed(r)} for r in res.results]
 
     def list_items(self, domain, item_types=None):
         """

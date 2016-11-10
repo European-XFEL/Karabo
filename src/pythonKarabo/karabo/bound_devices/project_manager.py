@@ -29,39 +29,33 @@ class ProjectManager(PythonDevice):
 
         (
             OVERWRITE_ELEMENT(expected).key('_deviceId_')
-                .setNewDefaultValue("ProjectService")
-                .commit()
-            ,
+            .setNewDefaultValue("ProjectService")
+            .commit(),
             OVERWRITE_ELEMENT(expected).key('visibility')
-                .setNewDefaultValue(AccessLevel.ADMIN)
-                .commit()
-            ,
+            .setNewDefaultValue(AccessLevel.ADMIN)
+            .commit(),
             STRING_ELEMENT(expected).key('host')
-                .displayedName("Database host")
-                .expertAccess()
-                .assignmentOptional().defaultValue('localhost')
-                .reconfigurable()
-                .commit()
-            ,
+            .displayedName("Database host")
+            .expertAccess()
+            .assignmentOptional().defaultValue('localhost')
+            .reconfigurable()
+            .commit(),
             UINT32_ELEMENT(expected).key('port')
-                .displayedName("Database port")
-                .expertAccess()
-                .assignmentOptional().defaultValue(8080)
-                .reconfigurable()
-                .commit()
-            ,
+            .displayedName("Database port")
+            .expertAccess()
+            .assignmentOptional().defaultValue(8080)
+            .reconfigurable()
+            .commit(),
             SLOT_ELEMENT(expected).key('reset')
-                .displayedName("Reset")
-                .allowedStates(State.ERROR)
-                .expertAccess()
-                .commit()
-            ,
+            .displayedName("Reset")
+            .allowedStates(State.ERROR)
+            .expertAccess()
+            .commit(),
             BOOL_ELEMENT(expected).key('testMode')
-                .displayedName("Test Mode")
-                .assignmentOptional().defaultValue(False)
-                .adminAccess()
-                .commit()
-            ,
+            .displayedName("Test Mode")
+            .assignmentOptional().defaultValue(False)
+            .adminAccess()
+            .commit(),
         )
 
     def __init__(self, config):
@@ -115,10 +109,11 @@ class ProjectManager(PythonDevice):
         :param password: password of user
         """
         host, port = self._getCurrentConfig()
-        self.user_db_sessions[user] = ProjectDatabase(user, password,
-                                        server=host,
-                                        port=port,
-                                        test_mode=self.get("testMode"))
+        db = ProjectDatabase(user, password,
+                             server=host,
+                             port=port,
+                             test_mode=self.get("testMode"))
+        self.user_db_sessions[user] = db
 
         self.log.DEBUG("Initialized user session")
         self.reply(Hash("success", True))
@@ -196,18 +191,18 @@ class ProjectManager(PythonDevice):
 
         self._checkDbInitialized(user)
 
-        loadedItems = Hash()
+        loadedItems = []
         with self.user_db_sessions[user] as db_session:
             for item in items:
                 domain = item.get("domain")
                 uuid = item.get("uuid")
-                revision = None
-                if item.has("revision"):
-                    revision = item.get("revision")
-                it = db_session.load_item(domain, uuid, revision)
-                loadedItems.set(uuid, it)
+                revision = item.get("revision", default=None)
+                xml, revision = db_session.load_item(domain, uuid, revision)
+                item.set("xml", xml)
+                item.set("revision", revision)
+                loadedItems.append(item)
 
-        self.reply(loadedItems)
+        self.reply(Hash('items', loadedItems))
 
     def slotLoadItemsAndSubs(self, user, items):
         """
@@ -232,23 +227,23 @@ class ProjectManager(PythonDevice):
 
         self._checkDbInitialized(user)
 
-        loadedItems = Hash()
+        loadedItems = []
         with self.user_db_sessions[user] as db_session:
             for item in items:
                 domain = item.get("domain")
                 uuid = item.get("uuid")
-                revision = None
-                if item.has("revision"):
-                    revision = item.get("revision")
+                revision = item.get("revision", default=None)
                 list_tags = item.get("list_tags")
-                itxml = db_session.load_item(domain, uuid, revision)
-                loadedItems.set(uuid, itxml)
-                # load succeeded check for children
-                if itxml != "" and list_tags is not None:
-                    its = db_session.load_multi(domain, itxml, list_tags)
-                    [loadedItems.set(k, v) for k, v in its.items()]
+                xml, revision = db_session.load_item(domain, uuid, revision)
+                item.set("xml", xml)
+                item.set("revision", revision)
+                loadedItems.append(item)
+                # load succeeded; check for children
+                if xml != "" and list_tags is not None:
+                    its = db_session.load_multi(domain, xml, list_tags)
+                    loadedItems.extend([dictToHash(it) for it in its])
 
-        self.reply(loadedItems)
+        self.reply(Hash('items', loadedItems))
 
     def slotGetVersionInfo(self, user, items):
         """
@@ -307,7 +302,7 @@ class ProjectManager(PythonDevice):
             resHashes = [Hash('uuid', r['uuid'],
                               'item_type', r['item_type'],
                               'simple_name', r['simple_name']) for r in res]
-            self.reply(resHashes)
+            self.reply(Hash('items', resHashes))
 
     def slotListDomains(self, user):
         """
@@ -320,4 +315,4 @@ class ProjectManager(PythonDevice):
 
         with self.user_db_sessions[user] as db_session:
             res = db_session.list_domains()
-            self.reply(res)
+            self.reply(Hash('domains', res))
