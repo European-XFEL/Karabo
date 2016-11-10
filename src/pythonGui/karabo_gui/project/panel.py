@@ -3,6 +3,8 @@
 # Created on October 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from functools import partial
+
 from PyQt4.QtGui import QDialog, QStackedLayout, QWidget
 
 import karabo_gui.icons as icons
@@ -37,7 +39,7 @@ class ProjectPanel(Dockable, QWidget):
             icon=icons.load,
             text="&Open Project",
             tooltip="Open an Existing Project",
-            triggered=self._project_open_handler,
+            triggered=_project_open_handler,
         )
         save = KaraboAction(
             icon=icons.save,
@@ -49,7 +51,8 @@ class ProjectPanel(Dockable, QWidget):
         qactions = []
         for k_action in (new, load, save):
             q_ac = build_qaction(k_action, self)
-            q_ac.triggered.connect(k_action.triggered)
+            item_model = self.project_view.model()
+            q_ac.triggered.connect(partial(k_action.triggered, item_model))
             qactions.append(q_ac)
         return qactions
 
@@ -65,29 +68,72 @@ class ProjectPanel(Dockable, QWidget):
     def onUndock(self):
         pass
 
-    def _project_open_handler(self):
-        # XXX: HACK. This is only written this way to get _something_ loaded.
-        # It must change when integrating into the full GUI
-        from karabo.common.project.api import get_user_cache, read_lazy_object
-        from karabo_gui.project.api import TEST_DOMAIN
-        from karabo.middlelayer_api.newproject.io import read_project_model
 
-        dialog = LoadDialog(parent=self)
-        result = dialog.exec()
-        if result == QDialog.Accepted:
-            item = dialog.selected_item()
-            if item is not None:
-                cache = get_user_cache()
-                model = read_lazy_object(TEST_DOMAIN, item, 0, cache,
-                                         read_project_model)
-                self.project_view.model().traits_data_model = model
+def _project_open_handler(item_model):
+    """ Load a project model and assign it to the `item_model`
+
+    :param item_model: The `ProjectItemModel` of the `ProjectView`
+    """
+    # XXX: HACK. This is only written this way to get _something_ loaded.
+    # It must change when integrating into the full GUI
+    from karabo.common.project.api import get_user_cache, read_lazy_object
+    from karabo_gui.project.api import TEST_DOMAIN
+    from karabo.middlelayer_api.newproject.io import read_project_model
+
+    dialog = LoadDialog()
+    result = dialog.exec()
+    if result == QDialog.Accepted:
+        item = dialog.selected_item()
+        if item is not None:
+            cache = get_user_cache()
+            model = read_lazy_object(TEST_DOMAIN, item, 0, cache,
+                                     read_project_model)
+            item_model.traits_data_model = model
 
 
-def _project_new_handler():
+def _project_new_handler(item_model):
+    """ Create a new project model and assign it to the given `item_model`
+
+    :param item_model: The `ProjectItemModel` of the `ProjectView`
+    """
+    # XXX: HACK. This is only written this way to get _something_ loaded.
+    # It must change when integrating into the full GUI
+    from karabo.common.project.api import (get_user_cache, ProjectModel,
+                                           read_lazy_object)
+    from karabo_gui.project.api import TEST_DOMAIN
+    from karabo.middlelayer_api.newproject.io import read_project_model
     dialog = NewDialog()
-    dialog.exec()
+    if dialog.exec() == QDialog.Accepted:
+        # XXX: TODO check for existing
+        item = dialog.selected_item()
+        if item is not None:
+            cache = get_user_cache()
+            model = read_lazy_object(TEST_DOMAIN, item, 0, cache,
+                                     read_project_model)
+        else:
+            model = ProjectModel(simple_name=dialog.simple_name)
+        item_model.traits_data_model = model
 
 
-def _project_save_handler():
+def _project_save_handler(item_model):
+    """ Save the project model of the given `item_model`
+
+    :param item_model: The `ProjectItemModel` of the `ProjectView`
+    """
+    # XXX: HACK. This is only written this way to get _something_ saved.
+    # It must change when integrating into the full GUI
+    from karabo.common.project.api import (get_user_cache,
+                                           PROJECT_OBJECT_CATEGORIES)
+    from karabo.middlelayer_api.newproject.io import write_project_model
+    from karabo_gui.project.api import TEST_DOMAIN
     dialog = SaveDialog()
-    dialog.exec()
+    if dialog.exec() == QDialog.Accepted:
+        proj_model = item_model.traits_data_model
+        storage = get_user_cache()
+        for childname in PROJECT_OBJECT_CATEGORIES:
+            children = getattr(proj_model, childname)
+            for child in children:
+                data = write_project_model(child)
+                storage.store(TEST_DOMAIN, child.uuid, child.revision, data)
+        data = write_project_model(proj_model)
+        storage.store(TEST_DOMAIN, proj_model.uuid, proj_model.revision, data)
