@@ -134,7 +134,8 @@ class TestProjectDatabase(TestCase):
                 self.assertEqual(decoded, xml_rep)
                 self.assertTrue(success)
                 self.assertTrue('versioning_info' in meta)
-                self.assertEqual(meta['current_xml'], xml_rep)
+                self.assertTrue('domain' in meta)
+                self.assertTrue('uuid' in meta)
 
             with self.subTest(msg='test_copy_item'):
 
@@ -263,16 +264,12 @@ class TestProjectDatabase(TestCase):
 
                 # now load again
                 res = db.load_multi('LOCAL', xml_serv, ['configs'])
-                for i in range(3):
-                    r = db._make_xml_if_needed(res[str(i)])
-                    cFound = False
-                    for j in range(3):
-                        c = db._make_xml_if_needed(xml_reps[j])
-                        if r.text == c.text:
-                            cFound = True
-                            if r.attrib['uuid'] != c.attrib['uuid']:
-                                cFound = False
-                    self.assertTrue(cFound)
+                for i, item in enumerate(res):
+                    rxml = db._make_xml_if_needed(item['xml'])
+                    rindex = int(rxml.get('uuid'))
+                    gxml = db._make_xml_if_needed(xml_reps[rindex])
+                    self.assertEqual(rxml.text, gxml.text)
+                    self.assertEqual(rxml.attrib['uuid'], gxml.attrib['uuid'])
 
             with self.subTest(msg='test_versioning_from_item'):
                 vers = db.get_versioning_info_item("LOCAL", "1")
