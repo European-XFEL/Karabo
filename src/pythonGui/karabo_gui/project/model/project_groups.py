@@ -146,8 +146,7 @@ def _fill_servers_menu(menu, parent_project):
 
 def _fill_subprojects_menu(menu, parent_project):
     add_action = QAction('Add project', menu)
-    add_action.triggered.connect(partial(_add_project,
-                                             parent_project))
+    add_action.triggered.connect(partial(_add_project, parent_project))
     menu.addAction(add_action)
 
 
@@ -202,5 +201,5 @@ def _add_project(project):
             model = read_lazy_object(TEST_DOMAIN, item, 0, cache,
                                      read_project_model)
         else:
-            model = ProjectModel(simple_name=dialog.simple_name())
+            model = ProjectModel(simple_name=dialog.simple_name)
         project.subprojects.append(model)
