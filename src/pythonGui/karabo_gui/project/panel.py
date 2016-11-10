@@ -70,7 +70,7 @@ class ProjectPanel(Dockable, QWidget):
 
 
 def _project_open_handler(item_model):
-    """ Load a project model and assign it to the item_model
+    """ Load a project model and assign it to the `item_model`
 
     :param item_model: The `ProjectItemModel` of the `ProjectView`
     """
@@ -92,6 +92,10 @@ def _project_open_handler(item_model):
 
 
 def _project_new_handler(item_model):
+    """ Create a new project model and assign it to the given `item_model`
+
+    :param item_model: The `ProjectItemModel` of the `ProjectView`
+    """
     # XXX: HACK. This is only written this way to get _something_ loaded.
     # It must change when integrating into the full GUI
     from karabo.common.project.api import (get_user_cache, ProjectModel,
@@ -112,8 +116,12 @@ def _project_new_handler(item_model):
 
 
 def _project_save_handler(item_model):
-    """ Save the project model data of the given `item_model`
+    """ Save the project model of the given `item_model`
+
+    :param item_model: The `ProjectItemModel` of the `ProjectView`
     """
+    # XXX: HACK. This is only written this way to get _something_ saved.
+    # It must change when integrating into the full GUI
     from karabo.common.project.api import (get_user_cache,
                                            PROJECT_OBJECT_CATEGORIES)
     from karabo.middlelayer_api.newproject.io import write_project_model
