@@ -8,7 +8,7 @@ from PyQt4.QtGui import QItemSelectionModel, QStandardItemModel
 from .model.shadow import (create_project_model_shadow,
                            destroy_project_model_shadow)
 
-HEADER_DATA_LIST = ["Projects"]
+TABLE_HEADER_LABELS = ["Projects"]
 
 
 class ProjectItemModel(QStandardItemModel):
@@ -23,7 +23,7 @@ class ProjectItemModel(QStandardItemModel):
         self._traits_model = None
         self._shadow_model = None
 
-        self.setHorizontalHeaderLabels(HEADER_DATA_LIST)
+        self.setHorizontalHeaderLabels(TABLE_HEADER_LABELS)
 
     @property
     def traits_data_model(self):
@@ -40,7 +40,7 @@ class ProjectItemModel(QStandardItemModel):
             destroy_project_model_shadow(self._shadow_model)
             self.clear()
             # `clear()` removes the header data
-            self.setHorizontalHeaderLabels(HEADER_DATA_LIST)
+            self.setHorizontalHeaderLabels(TABLE_HEADER_LABELS)
 
         self._traits_model = model
         if model is not None:
