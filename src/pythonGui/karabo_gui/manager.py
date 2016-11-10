@@ -8,9 +8,9 @@
 
 """This module contains the manager class which works as a man in the middle of
    the star structure. All relevant signals go over here.
-   
+
    The manager class is a singleton.
-   
+
    All relevant configuration data is stored in a member hash variable.
 """
 
@@ -31,7 +31,6 @@ from karabo_gui.mediator import (
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.navigationtreemodel import NavigationTreeModel
 from karabo_gui.network import Network
-from karabo_gui.project.api import ProjectDatabaseConnection
 from karabo_gui.projectmodel import ProjectModel
 from karabo_gui.topology import getClass
 from karabo_gui.util import (
@@ -63,18 +62,16 @@ class _Manager(QObject):
 
         # Model for navigation views
         self.systemTopology = NavigationTreeModel(self)
-        self.systemTopology.selectionModel.selectionChanged. \
-                        connect(self.onNavigationTreeModelSelectionChanged)
+        self.systemTopology.selectionModel.selectionChanged.connect(
+            self.onNavigationTreeModelSelectionChanged)
         # Model for project views
         self.projectTopology = ProjectModel(self)
-        self.projectTopology.selectionModel.selectionChanged. \
-                        connect(self.onProjectModelSelectionChanged)
+        self.projectTopology.selectionModel.selectionChanged.connect(
+            self.onProjectModelSelectionChanged)
 
         Network().signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
         Network().signalReceivedData.connect(self.onReceivedData)
-
-        self.proj_db_conn = ProjectDatabaseConnection()
 
         # Sets all parameters to start configuration
         self.reset()
@@ -578,14 +575,16 @@ class _Manager(QObject):
         pass
 
     def handle_projectLoadItems(self, reply):
-        # XXX: What is the structure of ``reply``?
-        items = reply['items']
-        self.proj_db_conn.items_loaded(items)
+        # ``reply`` is a Hash containing a list of item hashes
+        d = {'items': reply['items']}  # Hash -> dict
+        event = KaraboBroadcastEvent(KaraboEventSender.ProjectItemsLoaded, d)
+        broadcast_event(event)
 
     def handle_projectSaveItems(self, reply):
-        # XXX: What is the structure of ``reply``?
-        items = reply['items']
-        self.proj_db_conn.items_saved(items)
+        # ``reply`` is a Hash containing a list of item hashes
+        d = {'items': reply['items']}  # Hash -> dict
+        event = KaraboBroadcastEvent(KaraboEventSender.ProjectItemsSaved, d)
+        broadcast_event(event)
 
     # ---------------------------------------------------------------------
     # Legacy Project Interface
