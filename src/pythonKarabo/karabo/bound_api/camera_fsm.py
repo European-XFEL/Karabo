@@ -81,10 +81,10 @@ class CameraFsm(base.BaseFsm):
         #*                       Ok State Machine                     *
         #**************************************************************
         okStt=[
-        # Source-State   Event           Target-State   Action           Guard
-        (State.ACTIVE,       'AcquireEvent', State.ACQUIRING, 'AcquireAction', 'none'),
-        (State.ACQUIRING, 'StopEvent',    State.ACTIVE,       'StopAction',    'none'),
-        (State.ACQUIRING, 'TriggerEvent', 'none',        'TriggerAction', 'none')
+        # Source-State    Event           Target-State     Action           Guard
+        (State.ACTIVE,    'AcquireEvent', State.ACQUIRING, 'AcquireAction', 'none'),
+        (State.ACQUIRING, 'StopEvent',    State.ACTIVE,    'StopAction',    'none'),
+        (State.ACQUIRING, 'TriggerEvent', None,            'TriggerAction', 'none')
         ]
         #                        Name  Transition-Table  Initial-State
         KARABO_FSM_STATE_MACHINE(State.NORMAL, okStt, State.ACTIVE)
@@ -93,10 +93,10 @@ class CameraFsm(base.BaseFsm):
         #*                       Top Machine                          *
         #**************************************************************
         cameraStt=[
-        # Source-State      Event        Target-State   Action              Guard
-        (State.INIT, 'none',            State.NORMAL,    'none',             'none'),
-        ('Ok',             'ErrorFoundEvent', State.ERROR, 'ErrorFoundAction', 'none'),
-        (State.ERROR,          'ResetEvent',      State.NORMAL,    'none',             'none')
+        # Source-State   Event             Target-State   Action              Guard
+        (State.INIT,    'none',            State.NORMAL,  'none',             'none'),
+        (State.NORMAL,  'ErrorFoundEvent', State.ERROR,   'ErrorFoundAction', 'none'),
+        (State.ERROR,   'ResetEvent',      State.NORMAL,  'none',             'none')
         ]
         #                         Name      Transition-Table  Initial-State
         KARABO_FSM_STATE_MACHINE('CameraMachine', cameraStt, State.INIT)
