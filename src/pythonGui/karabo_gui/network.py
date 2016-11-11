@@ -1,26 +1,16 @@
-
 #############################################################################
 # Author: <burkhard.heisen@xfel.eu>
 # Created on February 17, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
-"""This module contains a class which establishes the tcp network connection to
-   the GuiServerDevice.
-   
-   The network class is a singleton.
-"""
-
-__all__ = ["Network"]
-
 from functools import partial
 import socket
 from struct import calcsize, pack, unpack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import (pyqtSignal, pyqtSlot, QByteArray, QCoreApplication,
-                          QCryptographicHash, QObject, QTimer)
+from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
+                          QCryptographicHash, QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.authenticator import Authenticator
@@ -28,6 +18,16 @@ from karabo.middlelayer import Hash, BinaryWriter, AccessLevel
 from karabo_gui import background
 from karabo_gui.dialogs.logindialog import LoginDialog
 from karabo_gui import globals
+
+# This holds the value of this module's singleton
+network = None
+
+
+def Network():
+    global network
+    if network is None:
+        network = _Network()
+    return network
 
 
 class _Network(QObject):
@@ -52,7 +52,7 @@ class _Network(QObject):
         self.sessionToken = ""
 
         self.tcpSocket = None
-        self.requestQueue = [ ]
+        self.requestQueue = []
 
     def connectToServer(self):
         """
@@ -78,7 +78,6 @@ class _Network(QObject):
         # Update MainWindow toolbar
         self.signalServerConnectionChanged.emit(isConnected)
 
-
     def disconnectFromServer(self):
         """
         Disconnect from server.
@@ -86,7 +85,6 @@ class _Network(QObject):
         # All panels need to be reseted and all projects closed
         self.signalServerConnectionChanged.emit(False)
         self.endServerConnection()
-
 
     def startServerConnection(self, username, password, provider, hostname, port):
         """
@@ -107,7 +105,6 @@ class _Network(QObject):
 
         self.tcpSocket.connectToHost(hostname, port)
 
-
     def endServerConnection(self):
         """
         End connection to server and database.
@@ -122,16 +119,15 @@ class _Network(QObject):
         if (self.tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
             self.tcpSocket.waitForDisconnected(5000):
             return
-        
-        print("Disconnect failed:", self.tcpSocket.errorString())
 
+        print("Disconnect failed:", self.tcpSocket.errorString())
 
     def _login(self):
         """
         Authentification login.
         """
         # System variables definition
-        ipAddress = socket.gethostname() # Machine Name
+        ipAddress = socket.gethostname()  # Machine Name
 
         # Easteregg
         if self.username == "god":
@@ -161,7 +157,7 @@ class _Network(QObject):
                 # TODO Fall back to inbuild access level
                 globals.GLOBAL_ACCESS_LEVEL = globals.KARABO_DEFAULT_ACCESS_LEVEL
                 print("Login problem. Please verify, if service is running. " + str(e))
-                
+
                 # Inform the mainwindow to change correspondingly the allowed level-downgrade
                 self.signalUserChanged.emit()
                 self._sendLoginInformation(self.username, self.password, \
@@ -174,14 +170,13 @@ class _Network(QObject):
             else:
                 print("Login failed")
                 self.onSocketError(QAbstractSocket.ConnectionRefusedError)
-                #globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+                # globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
                 return
 
         # Inform the mainwindow to change correspondingly the allowed level-downgrade
         self.signalUserChanged.emit()
         self._sendLoginInformation(self.username, self.password, self.provider, \
                                    self.sessionToken)
-
 
     def _logout(self):
         """
@@ -235,7 +230,8 @@ class _Network(QObject):
         self.disconnectFromServer()
 
         if socketError == QAbstractSocket.ConnectionRefusedError:
-            reply = QMessageBox.question(None, 'Server connection refused',
+            reply = QMessageBox.question(
+                None, 'Server connection refused',
                 "The connection to the server was refused <BR> by the peer "
                 "(or timed out).",
                 QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
@@ -243,21 +239,24 @@ class _Network(QObject):
             if reply == QMessageBox.Cancel:
                 return
         elif socketError == QAbstractSocket.RemoteHostClosedError:
-            reply = QMessageBox.question(None, 'Connection closed',
+            reply = QMessageBox.question(
+                None, 'Connection closed',
                 "The remote host closed the connection.",
                 QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
 
             if reply == QMessageBox.Cancel:
                 return
         elif socketError == QAbstractSocket.HostNotFoundError:
-            reply = QMessageBox.question(None, 'Host address error',
+            reply = QMessageBox.question(
+                None, 'Host address error',
                 "The host address was not found.",
                 QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
 
             if reply == QMessageBox.Cancel:
                 return
         elif socketError == QAbstractSocket.NetworkError:
-            reply = QMessageBox.question(None, 'Network error',
+            reply = QMessageBox.question(
+                None, 'Network error',
                 "An error occurred with the network (e.g., <BR> "
                 "the network cable was accidentally plugged out).",
                 QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
@@ -267,7 +266,6 @@ class _Network(QObject):
 
         self.connectToServer()
 
-
     def onServerConnection(self, connect):
         """ connect states wether we should connect to or disconnect from
         the server. """
@@ -276,18 +274,16 @@ class _Network(QObject):
         else:
             self.disconnectFromServer()
 
-
     def onQuitApplication(self):
         """
         This slot is triggered from the MainWindow.
-        
+
         The user wants to quit the application.
         So the network connection needs to be closed
         and the manager needs to be informed to close
         the database connection as well.
         """
         self.endServerConnection()
-
 
     def onConnected(self):
         # If some requests got piled up, because of no server connection,
@@ -302,21 +298,18 @@ class _Network(QObject):
 
     def onKillDevice(self, deviceId):
         h = Hash("type", "killDevice")
-        h.set("deviceId", deviceId);
+        h.set("deviceId", deviceId)
         self._tcpWriteHash(h)
-
 
     def onKillServer(self, serverId):
         h = Hash("type", "killServer")
         h.set("serverId", serverId)
         self._tcpWriteHash(h)
 
-
     def onGetDeviceConfiguration(self, configuration):
         h = Hash("type", "getDeviceConfiguration")
         h.set("deviceId", configuration.id)
         self._tcpWriteHash(h)
-
 
     def onReconfigure(self, changes):
         """ set values in a device
@@ -325,7 +318,7 @@ class _Network(QObject):
         the same device."""
         if not changes:
             return
-        
+
         h = Hash()
         h["type"] = "reconfigure"
         id = changes[0][0].configuration.id
@@ -337,7 +330,6 @@ class _Network(QObject):
         h["configuration"] = conf
         self._tcpWriteHash(h)
 
-
     def onInitDevice(self, serverId, classId, deviceId, config, attrUpdates=None):
         h = Hash("type", "initDevice")
         h.set("serverId", serverId)
@@ -347,7 +339,6 @@ class _Network(QObject):
         if attrUpdates is not None:
             h.set("schemaUpdates", attrUpdates)
         self._tcpWriteHash(h)
-
 
     def onExecute(self, box, *args):
         h = Hash("type", "execute")
@@ -359,18 +350,15 @@ class _Network(QObject):
 
         self._tcpWriteHash(h)
 
-
     def onStartMonitoringDevice(self, deviceId):
         h = Hash("type", "startMonitoringDevice")
         h.set("deviceId", deviceId)
         self._tcpWriteHash(h)
 
-
     def onStopMonitoringDevice(self, deviceId):
         h = Hash("type", "stopMonitoringDevice")
         h.set("deviceId", deviceId)
         self._tcpWriteHash(h)
-
 
     def onGetClassSchema(self, serverId, classId):
         h = Hash("type", "getClassSchema")
@@ -378,12 +366,10 @@ class _Network(QObject):
         h.set("classId", classId)
         self._tcpWriteHash(h)
 
-
     def onGetDeviceSchema(self, deviceId):
         h = Hash("type", "getDeviceSchema")
         h.set("deviceId", deviceId)
         self._tcpWriteHash(h)
-
 
     def onGetPropertyHistory(self, box, t0, t1, maxNumData):
         h = Hash("type", "getPropertyHistory")
@@ -394,11 +380,76 @@ class _Network(QObject):
         h.set("maxNumData", maxNumData)
         self._tcpWriteHash(h)
 
-    
+    # ---------------------------------------------------------------------
+    # Current Project Interface
+
+    def onProjectBeginSession(self, project_manager):
+        h = Hash("type", "projectBeginUserSession")
+        h.set("projectManager", project_manager)
+        # XXX: Don't leave user/pass hardcoded!
+        h.set("user", "admin")
+        h.set("password", "karabo")
+        self._tcpWriteHash(h)
+
+    def onProjectEndSession(self, project_manager):
+        h = Hash("type", "projectEndUserSession")
+        h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
+        h.set("user", "admin")
+        self._tcpWriteHash(h)
+
+    def onListProjectDomains(self, project_manager):
+        h = Hash("type", "projectListDomains")
+        h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
+        h.set("user", "admin")
+        self._tcpWriteHash(h)
+
+    def onListProjectManagers(self):
+        h = Hash("type", "projectListProjectManagers")
+        # XXX: Don't leave user hardcoded!
+        h.set("user", "admin")
+        self._tcpWriteHash(h)
+
+    def onProjectGetVersionInfo(self, project_manager, items):
+        h = Hash("type", "projectGetVersionInfo")
+        h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
+        h.set("user", "admin")
+        h.set("items", items)
+        self._tcpWriteHash(h)
+
+    def onProjectListItems(self, project_manager, domain, item_type):
+        h = Hash("type", "projectListItems")
+        h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
+        h.set("user", "admin")
+        h.set("domain", domain)
+        h.set("item_types", [item_type])
+        self._tcpWriteHash(h)
+
+    def onProjectLoadItems(self, project_manager, items):
+        h = Hash("type", "projectLoadItems")
+        h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
+        h.set("user", "admin")
+        h.set("items", items)
+        self._tcpWriteHash(h)
+
+    def onProjectSaveItems(self, project_manager, items):
+        h = Hash("type", "projectSaveItems")
+        h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
+        h.set("user", "admin")
+        h.set("items", items)
+        self._tcpWriteHash(h)
+
+    # ---------------------------------------------------------------------
+    # Legacy Project Interface
+
     def onGetAvailableProjects(self):
         h = Hash("type", "getAvailableProjects")
         self._tcpWriteHash(h)
-
 
     def onNewProject(self, fileName, data):
         h = Hash("type", "newProject")
@@ -407,7 +458,6 @@ class _Network(QObject):
         h.set("data", data)
         self._tcpWriteHash(h)
 
-
     def onSaveProject(self, filename, data):
         h = Hash("type", "saveProject")
         h.set("user", self.username)
@@ -415,19 +465,19 @@ class _Network(QObject):
         h.set("data", data)
         self._tcpWriteHash(h)
 
-
     def onLoadProject(self, filename):
         h = Hash("type", "loadProject")
         h.set("user", self.username)
         h.set("name", filename)
         self._tcpWriteHash(h)
 
-
     def onCloseProject(self, filename):
         h = Hash("type", "closeProject")
         h.set("user", self.username)
         h.set("name", filename)
         self._tcpWriteHash(h)
+
+    # ---------------------------------------------------------------------
 
     def onAcknowledgeAlarm(self, instanceId, rowId):
         h = Hash("type", "acknowledgeAlarm")
@@ -442,13 +492,13 @@ class _Network(QObject):
         h["subscribe"] = subscribe
         self._tcpWriteHash(h)
 
-
     def onError(self, error):
         h = Hash("type", "error", "traceback", error)
         self._tcpWriteHash(h)
 
+# --------------------------------------------------------------------------
+# private functions
 
-### private functions ###
     def _tcpWriteHash(self, h):
         # There might be a connect to server in progress, but without success
         if self.tcpSocket is None or \
@@ -465,7 +515,6 @@ class _Network(QObject):
         stream.push_back(dataBytes)
         self.tcpSocket.write(stream)
 
-
     def _sendLoginInformation(self, username, password, provider, sessionToken):
         loginInfo = Hash("type", "login")
         loginInfo.set("username", username)
@@ -477,15 +526,8 @@ class _Network(QObject):
         loginInfo.set("version", globals.GUI_VERSION)
         self._tcpWriteHash(loginInfo)
 
-
     def _handleBrokerInformation(self, host, port, topic):
         self.brokerHost = host
         self.brokerPort = port
         self.brokerTopic = topic
         self._login()
-
-
-network = _Network()
-
-def Network():
-    return network

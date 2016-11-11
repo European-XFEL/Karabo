@@ -27,7 +27,7 @@ class ProjectDBCache(object):
         with open(path, mode='wb') as fp:
             fp.write(data)
 
-    def retrieve(self, domain, uuid, revision):
+    def retrieve(self, domain, uuid, revision, existing=None):
         """ Read an object from the cache.
         """
         path = self._generate_filepath(domain, uuid, revision)

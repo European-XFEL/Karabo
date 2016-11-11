@@ -7,6 +7,8 @@ import sys
 
 from PyQt4.QtGui import QApplication, QFrame, QHBoxLayout, QVBoxLayout
 
+from karabo_gui.network import Network
+from karabo_gui.topology import Manager
 from .api import ProjectView
 from .panel import ProjectPanel
 
@@ -47,4 +49,8 @@ def main():
     widget = load_panel(project_view)
     widget.show()
     widget.resize(300, 500)
+
+    Manager()
+    Network().connectToServer()
+
     app.exec_()
