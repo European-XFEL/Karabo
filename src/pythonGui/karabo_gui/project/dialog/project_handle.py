@@ -10,8 +10,12 @@ from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
-from karabo.common.project.api import get_user_cache
 from karabo_gui.util import SignalBlocker
+from karabo_gui.mediator import (
+    register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
+    KaraboBroadcastEvent
+)
+from karabo_gui.project.db_connection import get_db_conn
 
 PROJECT_DATA = OrderedDict()
 PROJECT_DATA['uuid'] = 'Name'
@@ -33,12 +37,28 @@ class ProjectHandleDialog(QDialog):
         self.set_dialog_texts(title, btn_text)
         self.buttonBox.accepted.connect(self.accept)
 
-        self.twProjects.setModel(TableModel(self))
+        self.twProjects.setModel(TableModel(parent=self))
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
         self.twProjects.doubleClicked.connect(self.accept)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.leTitle.textChanged.connect(self._titleChanged)
+
+        register_for_broadcasts(self)
+
+    def closeEvent(self, event):
+        """Stop listening for broadcast events
+        """
+        unregister_from_broadcasts(self)
+        event.accept()
+
+    def eventFilter(self, obj, event):
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.ProjectItemsList:
+                uuids = event.data.get('items', [])
+                self.twProjects.model().add_project_manager_data(uuids)
+            return False
+        return super(ProjectHandleDialog, self).eventFilter(obj, event)
 
     def set_dialog_texts(self, title, btn_text):
         """ This method sets the ``title`` and the ``btn_text`` of the ok
@@ -81,19 +101,19 @@ class ProjectHandleDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
 
-class NewDialog(ProjectHandleDialog):
+class NewProjectDialog(ProjectHandleDialog):
     def __init__(self, title="New Project", btn_text="New", parent=None):
-        super(NewDialog, self).__init__(title, btn_text, parent)
+        super(NewProjectDialog, self).__init__(title, btn_text, parent)
 
 
-class LoadDialog(ProjectHandleDialog):
+class LoadProjectDialog(ProjectHandleDialog):
     def __init__(self, title="Load Project", btn_text="Load", parent=None):
-        super(LoadDialog, self).__init__(title, btn_text, parent)
+        super(LoadProjectDialog, self).__init__(title, btn_text, parent)
 
 
-class SaveDialog(ProjectHandleDialog):
+class SaveProjectDialog(ProjectHandleDialog):
     def __init__(self, title="Save Project", btn_text="Save", parent=None):
-        super(SaveDialog, self).__init__(title, btn_text, parent)
+        super(SaveProjectDialog, self).__init__(title, btn_text, parent)
 
 
 class TableModel(QAbstractTableModel):
@@ -102,13 +122,17 @@ class TableModel(QAbstractTableModel):
     def __init__(self, parent=None):
         super(TableModel, self).__init__(parent)
         self.entries = []
+        self.db_conn = get_db_conn()
         self._extractData()
 
     def _extractData(self):
         from karabo_gui.project.api import TEST_DOMAIN
-        user_cache = get_user_cache()
-        project_uuids = user_cache.get_uuids_of_type(TEST_DOMAIN, 'project')
-        for uuid in project_uuids:
+
+        project_uuids = self.db_conn.get_uuids_of_type(TEST_DOMAIN, 'project')
+        self.add_project_manager_data(project_uuids)
+
+    def add_project_manager_data(self, uuids):
+        for uuid in uuids:
             # XXX: Fetch the other information via ``uuid``
             entry = ProjectEntry(
                 uuid=uuid,

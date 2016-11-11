@@ -9,12 +9,13 @@ import weakref
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Callable, Dict, Instance, List, String
 
-from karabo.common.project.api import DeviceServerModel, MacroModel, ProjectModel
+from karabo.common.project.api import (DeviceServerModel, MacroModel,
+                                       ProjectModel)
 from karabo.common.scenemodel.api import SceneModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
-from karabo_gui.project.dialog.project_handle import LoadDialog, NewDialog
+from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from .bases import BaseProjectTreeItem
@@ -192,7 +193,7 @@ def _add_project(project):
     from karabo.common.project.api import get_user_cache, read_lazy_object
     from karabo_gui.project.api import TEST_DOMAIN
     from karabo.middlelayer_api.newproject.io import read_project_model
-    dialog = NewDialog()
+    dialog = NewProjectDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
         item = dialog.selected_item()
