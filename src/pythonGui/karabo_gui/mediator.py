@@ -19,6 +19,11 @@ class KaraboEventSender(Enum):
     RemoveSceneView = "Remove scene view"
     RenameSceneView = "Rename scene view"
     RenameMacro = "Rename macro"
+    ProjectDomainsList = "Project domains list"
+    ProjectItemsList = "Project items list"
+    ProjectManagersList = "Project managers list"
+    ProjectItemsLoaded = "Project items loaded"
+    ProjectItemsSaved = "Project items saved"
     ShowAlarmServices = "Show alarm services"
     ShowDevice = "Show device"
 
