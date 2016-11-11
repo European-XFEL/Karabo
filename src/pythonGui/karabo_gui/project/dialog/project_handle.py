@@ -57,7 +57,8 @@ class ProjectHandleDialog(QDialog):
             if event.sender is KaraboEventSender.ProjectItemsList:
                 uuids = event.data.get('items', [])
                 self.twProjects.model().add_project_manager_data(uuids)
-        return False
+            return False
+        return super(ProjectHandleDialog, self).eventFilter(obj, event)
 
     def set_dialog_texts(self, title, btn_text):
         """ This method sets the ``title`` and the ``btn_text`` of the ok
