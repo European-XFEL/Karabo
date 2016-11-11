@@ -62,7 +62,8 @@ class ProjectDatabaseConnection(QObject):
             elif event.sender is KaraboEventSender.ProjectItemsSaved:
                 items = event.data.get('items', [])
                 self._items_saved(items)
-        return False
+            return False
+        return super(ProjectDatabaseConnection, self).eventFilter(obj, event)
 
     # -------------------------------------------------------------------
     # User interface
