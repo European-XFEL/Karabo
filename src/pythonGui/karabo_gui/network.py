@@ -386,6 +386,7 @@ class _Network(QObject):
     def onProjectBeginSession(self, project_manager):
         h = Hash("type", "projectBeginUserSession")
         h.set("projectManager", project_manager)
+        # XXX: Don't leave user/pass hardcoded!
         h.set("user", "admin")
         h.set("password", "karabo")
         self._tcpWriteHash(h)
@@ -393,23 +394,27 @@ class _Network(QObject):
     def onProjectEndSession(self, project_manager):
         h = Hash("type", "projectEndUserSession")
         h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
         h.set("user", "admin")
         self._tcpWriteHash(h)
 
     def onListProjectDomains(self, project_manager):
         h = Hash("type", "projectListDomains")
         h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
         h.set("user", "admin")
         self._tcpWriteHash(h)
 
     def onListProjectManagers(self):
         h = Hash("type", "projectListProjectManagers")
+        # XXX: Don't leave user hardcoded!
         h.set("user", "admin")
         self._tcpWriteHash(h)
 
     def onProjectGetVersionInfo(self, project_manager, items):
         h = Hash("type", "projectGetVersionInfo")
         h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
         h.set("user", "admin")
         h.set("items", items)
         self._tcpWriteHash(h)
@@ -417,6 +422,7 @@ class _Network(QObject):
     def onProjectListItems(self, project_manager, domain, item_type):
         h = Hash("type", "projectListItems")
         h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
         h.set("user", "admin")
         h.set("domain", domain)
         h.set("item_types", [item_type])
@@ -425,6 +431,7 @@ class _Network(QObject):
     def onProjectLoadItems(self, project_manager, items):
         h = Hash("type", "projectLoadItems")
         h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
         h.set("user", "admin")
         h.set("items", items)
         self._tcpWriteHash(h)
@@ -432,6 +439,7 @@ class _Network(QObject):
     def onProjectSaveItems(self, project_manager, items):
         h = Hash("type", "projectSaveItems")
         h.set("projectManager", project_manager)
+        # XXX: Don't leave user hardcoded!
         h.set("user", "admin")
         h.set("items", items)
         self._tcpWriteHash(h)
