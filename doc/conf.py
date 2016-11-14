@@ -275,6 +275,9 @@ intersphinx_mapping = {
 }
 
 # make doxygen output
+doxydir = '.build/html/reference'
+if not os.path.exists(doxydir):
+    os.makedirs(doxydir)
 subprocess.call('doxygen', shell=True)
 
 # we use breathe to include doxygen output into our sphinx documentation
