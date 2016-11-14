@@ -724,7 +724,7 @@ namespace karabo {
                 return f.substr(0, f.find_first_of('-')) + "|";
             }
 
-            bool slotConnectToOutputChannel(const std::string& inputName, const karabo::util::Hash& outputChannelInfo,
+            void slotConnectToOutputChannel(const std::string& inputName, const karabo::util::Hash& outputChannelInfo,
                                             bool connect);
 
             void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval,
@@ -754,7 +754,7 @@ namespace karabo {
             void stopTracking(const std::string& instanceId);
 
             // IO channel related
-            karabo::util::Hash slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
+            void slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             bool hasSlot(const std::string& slotFunction) const;
