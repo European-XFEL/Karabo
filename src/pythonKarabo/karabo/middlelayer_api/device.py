@@ -84,8 +84,6 @@ class Device(AlarmMixin, SignalSlotable):
     signalStateChanged = Signal(HashType(), String())
     signalSchemaUpdated = Signal(SchemaHashType(), String())
 
-    subclasses = {}
-
     def __init__(self, configuration):
         super(Device, self).__init__(configuration)
         if not hasattr(self, "serverId"):
@@ -93,12 +91,6 @@ class Device(AlarmMixin, SignalSlotable):
 
         self.hostname, _, self.domainname = socket.gethostname().partition('.')
         self.classId = type(self).__name__
-
-    @classmethod
-    def register(cls, name, dict):
-        super(Device, cls).register(name, dict)
-        if "abstract" not in dict:
-            Device.subclasses[name] = cls
 
     def _initInfo(self):
         info = super(Device, self)._initInfo()
