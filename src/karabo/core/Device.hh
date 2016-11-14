@@ -1083,15 +1083,20 @@ namespace karabo {
                 return karabo::util::AlarmCondition::fromString(this->get<std::string>("alarmCondition"));
             }
 
+
             /**
-             * Set the device's global alarm condition.
-             * @param condition
+             * Set the global alarm condition
+             * @param condition to set
+             * @param needsAcknowledging if this condition will require acknowledgment on the alarm service
+             * @param description an optional description of the condition. Consider including remarks on how to resolve
              */
-            void setAlarmCondition(const karabo::util::AlarmCondition & condition) {
+            void setAlarmCondition(const karabo::util::AlarmCondition & condition, bool needsAcknowledging = true, const std::string& description = std::string()) {
 
                 using namespace karabo::util;
 
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                // copy on purpose for currentGlobal
+                const std::string currentGlobal = m_globalAlarmCondition.asString();
                 m_globalAlarmCondition = condition;
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
                 if (result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")) {
@@ -1099,10 +1104,29 @@ namespace karabo {
                     Hash h;
                     h.set("alarmCondition", result.second.asString()).setAttribute(KARABO_INDICATE_ALARM_SET, true);
                     //also set the fields attribute to this condition
-                    this->setNoValidate("alarmCondition", h);
+                    this->setNoValidate(h);
                     this->m_parameters.setAttribute("alarmCondition", KARABO_ALARM_ATTR, result.second.asString());
                 }
+                // emit signal to alarm service
+                Hash emitHash;
+                Hash& toClear = emitHash.bindReference<Hash>("toClear");
+                Hash& toAdd = emitHash.bindReference<Hash>("toAdd");
+                const std::string& conditionString = condition.asString();
+                if(condition.asString() == AlarmCondition::NONE.asString() &&  currentGlobal != AlarmCondition::NONE.asString()) {
+                    toClear.set("global", std::vector<std::string>(1, currentGlobal));
+                } else {
+                    Hash::Node& propertyNode = toAdd.set("global", Hash());
+                    Hash::Node& entryNode = propertyNode.getValue<Hash>().set(conditionString, Hash());
+                    Hash& entry = entryNode.getValue<Hash>();
 
+                    entry.set("type", conditionString);
+                    entry.set("description", description);
+                    entry.set("needsAcknowledging", needsAcknowledging);
+                    Timestamp().toHashAttributes(entryNode.getAttributes()); // attach current time stamp
+                }
+                if (!emitHash.get<Hash>("toClear").empty() || !emitHash.get<Hash>("toAdd").empty()) {
+                    emit("signalAlarmUpdate", getInstanceId(), emitHash);
+                }
             }
 
             /**
@@ -1112,7 +1136,7 @@ namespace karabo {
              * @return the alarm condition of the property
              */
             const karabo::util::AlarmCondition & getAlarmCondition(const std::string & key, const std::string & sep = ".") const {
-                const std::string & propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep);
+                const std::string& propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep);
                 return karabo::util::AlarmCondition::fromString(propertyCondition);
             }
 

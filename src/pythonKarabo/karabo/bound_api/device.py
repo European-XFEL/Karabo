@@ -957,11 +957,24 @@ class PythonDevice(NoFsm):
             self.set(Hash("performanceStatistics", stats))
 
 
-    def setAlarmCondition(self, condition):
+
+    def setAlarmCondition(self, condition, needsAcknowledging = True,
+                          description = ""):
+        """
+        Set the global alarm condition
+        :param condition: condition to set
+        :param needsAcknowledging: if this condition will require
+               acknowledgment on the alarm service
+        :param description: an optional description of the condition.
+                Consider including remarks on how to resolve
+        :return:
+        """
         if not isinstance(condition, AlarmCondition):
-            raise TypeError("Stringified alarmconditions are note allowed!")
+            raise TypeError("First argument must be 'AlarmCondition',"
+                            " not '{}'".format(str(type(condition))))
         resultingCondition = None
         currentCondition = None
+        currentGlobal = self.globalAlarmCondition
         with self._stateChangeLock:
             self.globalAlarmCondition = condition
             resultingCondition = \
@@ -972,6 +985,28 @@ class PythonDevice(NoFsm):
            != currentCondition:
             self.set("alarmCondition", resultingCondition,
                      validate=False)
+
+        emitHash = Hash("toClear", Hash(), "toAdd", Hash())
+        conditionString = condition.asString()
+
+        if (condition == AlarmCondition.NONE and currentGlobal is not None
+            and currentGlobal != AlarmCondition.NONE):
+            emitHash.set("toClear.global", [currentGlobal.asString()])
+        else:
+            entry = Hash("type", condition.asString(),
+                         "description", description,
+                         "needsAcknowledging", needsAcknowledging)
+
+            prop = Hash(conditionString, entry)
+            entryNode = prop.getNode(conditionString)
+            # attach current timestamp
+            Timestamp().toHashAttributes(entryNode.getAttributes())
+            emitHash.set("toAdd.global", prop)
+
+        if (not emitHash.get("toClear").empty() or not
+            emitHash.get("toAdd").empty()):
+
+            self._ss.emit("signalAlarmUpdate", self.getInstanceId(), emitHash)
 
 
     def getAlarmCondition(self, key=None, separator="."):
