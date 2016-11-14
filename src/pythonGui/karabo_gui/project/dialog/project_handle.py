@@ -147,7 +147,9 @@ class TableModel(QAbstractTableModel):
         self.add_project_manager_data(project_uuids)
 
     def add_project_manager_data(self, uuids):
+        # XXX: this only works if the sent list of uuids is complete
         self.beginResetModel()
+        self.entries = []
         for uuid in uuids:
             # XXX: Fetch the other information via ``uuid``
             entry = ProjectEntry(
