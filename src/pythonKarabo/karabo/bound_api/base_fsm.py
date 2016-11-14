@@ -15,17 +15,40 @@ from .no_fsm import NoFsm
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("BaseFsm", "1.0")
 class BaseFsm(NoFsm):
+    """
+    The BaseFSM class is the basis of all finite state machines.
+
+    It provides methods for starting and retrieving the derived specific
+    state machines, and for processing events occurring in the state machine.
+    """
     
     @staticmethod
-    def expectedParameters(expected): pass
-    
+    def expectedParameters(expected):
+        """
+        Derived state machines will usually implement slot's in their
+        expected parameters.
+
+        :param expected: schema to insert parameters into
+        """
+
+        pass
+
     def __init__(self, configuration):
+        """
+        Initialize the the state machine according to the configuration Hash.
+        :param configuration:
+        """
         super(BaseFsm, self).__init__(configuration)
         self.fsm = None
         self.processEventLock = threading.RLock()
         KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
     
-    def getFsm(self): return self.fsm
+    def getFsm(self):
+        """
+        Return the FSM
+        :return:
+        """
+        return self.fsm
     
     def startFsm(self):
         """Start state machine"""
@@ -48,8 +71,9 @@ class BaseFsm(NoFsm):
                 try:
                     fsm.process_event(event)
                 except Exception as e:
-                    self.exceptionFound("Exception while processing event = '{0}'".format(event.__class__.__name__), str(e))
+                    self.exceptionFound("Exception while processing event ="
+                                        " '{0}'".format(event.__class__.
+                                                        __name__), str(e))
                     return
                 state = fsm.get_state()
                 self.updateState(state)
-    
