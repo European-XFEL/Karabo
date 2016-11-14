@@ -154,7 +154,7 @@ class ProjectManager(PythonDevice):
                                                   items]))
         self._checkDbInitialized(user)
 
-        results = Hash()
+        savedItems = []
         with self.user_db_sessions[user] as db_session:
             for item in items:
                 xml = item.get("xml")
@@ -163,10 +163,10 @@ class ProjectManager(PythonDevice):
                 domain = item.get("domain")
                 success, meta = db_session.save_item(domain, uuid,
                                                      xml, overwrite)
-                results.set(uuid, Hash('success', success,
-                                       'entry', dictToHash(meta)))
-
-        self.reply(results)
+                item.set("success", success)
+                item.set("entry", dictToHash(meta))
+                savedItems.append(item)
+        self.reply(Hash('items', savedItems))
 
     def slotLoadItems(self, user, items):
         """
