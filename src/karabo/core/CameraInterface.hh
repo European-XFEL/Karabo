@@ -14,6 +14,10 @@
 namespace karabo {
     namespace core {
 
+        /**
+         * @class CameraInterface
+         * @brief suggested interface to work on top of a karabo::core::CameraFsm
+         */
         class CameraInterface : public virtual karabo::xms::SignalSlotable {
 
             public:

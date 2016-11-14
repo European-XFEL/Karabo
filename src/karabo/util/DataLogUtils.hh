@@ -18,6 +18,9 @@ namespace karabo {
         char const * const DATALOGREADER_PREFIX = "DataLogReader";
         unsigned int const DATALOGREADERS_PER_SERVER = 2;
 
+        /**
+         * A structure defining meta data as used by the data loggers
+         */
         struct MetaData {
 
             typedef boost::shared_ptr<MetaData> Pointer;
@@ -43,6 +46,9 @@ namespace karabo {
             }
         };
 
+         /**
+         * A structure defining meta data as used by the data logger's search results
+         */
         struct MetaSearchResult {
 
             size_t fromFileNumber;
@@ -55,8 +61,10 @@ namespace karabo {
             }
         };
 
-        /// Convert an std::string that represents a double of the seconds since Unix epoch
-        /// to an Epochstamp
+        /**
+         * Convert an std::string that represents a double of the seconds since Unix epoch
+         * to an Epochstamp
+         */
         util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble);
 
     }

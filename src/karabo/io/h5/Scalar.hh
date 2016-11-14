@@ -28,6 +28,10 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+            * @class Scalar
+            * @brief The Scalar class is an implementation of Dataset for scalar data types
+            */
             template<class T, class U = karabo::io::h5::Dataset>
             class Scalar : public U/*karabo::io::h5::Dataset*/ {
 

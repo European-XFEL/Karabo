@@ -25,6 +25,10 @@ namespace karabo {
      */
     namespace devices {
 
+        /**
+         * @struct DataLoggerIndex
+         * @brief A compound for representing indexes in logged data
+         */
         struct DataLoggerIndex {
 
             std::string m_event;
@@ -44,6 +48,10 @@ namespace karabo {
             }
         };
 
+        /**
+         * @struct PropFileInfo
+         * @brief A compound structure holding data on an logger archive file
+         */
         struct PropFileInfo {
 
             typedef boost::shared_ptr<PropFileInfo> Pointer;
@@ -56,6 +64,12 @@ namespace karabo {
             }
         };
 
+
+        /**
+         * @class IndexBuilderService
+         * @brief A singleton class for building logger indices from logger files. It calls
+         *    karabo-idxbuild with a list of command line arguments 
+         */
         class IndexBuilderService : public boost::enable_shared_from_this<IndexBuilderService> {
 
         public:
@@ -73,11 +87,20 @@ namespace karabo {
 
         public:
 
+            /**
+             * Return a pointer to a singleton instance of IndexBuilderService.
+             * If no instance exists one is created.
+             * @return 
+             */
             static Pointer getInstance();
 
             // Virtual destructor needed since KARABO_CLASSINFO adds virtual methods:
             virtual ~IndexBuilderService();
 
+            /**
+             * Build an index by calling karabo-idxbuild with the supplied command line arguments 
+             * @param commandLineArguments
+             */
             void buildIndexFor(const std::string& commandLineArguments);
 
         private:
@@ -94,6 +117,17 @@ namespace karabo {
 
         };
 
+        /**
+         * @class DataLogReader
+         * @brief DataLogReader devices read archived information from the Karabo data loggers
+         * 
+         * DataLogReader devices read archived information from the Karabo data loggers. They
+         * are managed by karabo::devices::DataLoggerManager devices. Calls to them should usually
+         * not happen directly, but rather through a karabo::core::DeviceClient and it's 
+         * karabo::core::DeviceClient::getPropertyHistory and karabo::core::DeviceClient::getConfigurationFromPast
+         * methods.
+         * 
+         */
         class DataLogReader : public karabo::core::Device<karabo::core::OkErrorFsm> {
 
         public:
@@ -110,8 +144,30 @@ namespace karabo {
 
             void okStateOnEntry();
 
+            /**
+             * Use this slot to get the history of a given property
+             * @param deviceId for which to get the history for
+             * @param property path to the property for which to get the history from
+             * @param params Hash containing optional limitations for the query:
+             *   - from: iso8601 timestamp indicating the start of the interval to get history from
+             *   - to: iso8601 timestamp indicating the end of the interval to get history from
+             *   - maxNumData: maximum number of data points to retrieve starting from start
+             * 
+             * The slot replies a vector of Hashes where each entry consists of a Hash with a key "v" holding the value
+             * of the property at timepoint signified in "v"'s attributes using a format compatible with
+             * karabo::util::Timestamp::fromHashAttributes
+             */
             void slotGetPropertyHistory(const std::string& deviceId, const std::string& property, const karabo::util::Hash& params);
 
+            /**
+             * Request the configuration Hash and schema of a device at a given point at time. The configuration
+             * closes archived closest to timepoint is returned.
+             * @param deviceId of the device to get the configuration from
+             * @param timepoint in iso8601 format for which to get the information
+             * 
+             * The slot replies a std::pair of Hash and Schema objects containing the configuration Hash and the 
+             * corresponding device schema for timepoint.
+             */
             void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
             DataLoggerIndex findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);

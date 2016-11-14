@@ -45,6 +45,15 @@ namespace karabo {
         class JmsConsumer;
         class JmsProducer;
 
+        /**
+         * @class JmsConnection
+         * @brief A class handling connections to a JMS message broker
+         * 
+         * This class allows to create a single TCP connection to a JMS (openMQ) broker.
+         * One or more broker URLs can be provided. If several URLs are provided they will be tried
+         * in order once a previous connection failed.
+         * NOTE: Automatic reconnection needs a running event-loop
+         */
         class JmsConnection : public boost::enable_shared_from_this<JmsConnection> {
 
             friend class JmsConsumer;
@@ -61,20 +70,14 @@ namespace karabo {
             JmsConnection(const karabo::util::Hash& config);
 
             /**
-             * This class allows to create a single TCP connection to a JMS (openMQ) broker.
-             * One or more broker URLs can be provided. If several URLs are provided they will be tried
-             * in order once a previous connection failed.
-             * NOTE: Automatic reconnection needs a running event-loop
+             * Create a tcp connection to a JMS broker
              * @param brokerUrls A vector of broker URLs (tcp://<host>:<port>)
              */
             JmsConnection(const std::vector<std::string>& brokerUrls =
                           std::vector<std::string>(1, "tcp://exfl-broker.desy.de:7777"));
 
             /**
-             * This class allows to create a single TCP connection to a JMS (openMQ) broker.
-             * One or more broker URLs can be provided. If several URLs are provided they will be tried
-             * in order once a previous connection failed.
-             * NOTE: Automatic reconnection needs a running event-loop
+             * Create a tcp connection to a JMS broker
              * @param brokerUrls A single or a comma separated list of broker URLs (tcp://<host>:<port>)
              */
             JmsConnection(const std::string& brokerUrls);

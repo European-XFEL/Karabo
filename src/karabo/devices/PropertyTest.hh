@@ -28,7 +28,12 @@ namespace karabo {
             virtual ~NestedClass();
         };
         
-        
+        /**
+         * @class PropertyTest
+         * @brief The PropertyTest device includes all types Karabo knows about
+         *        in it's expected parameter section. It is a test device to 
+         *        assure changes to the framework do not result in broken types.
+         */
         class PropertyTest : public karabo::core::Device<> {
         public:
             

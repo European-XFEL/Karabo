@@ -26,14 +26,37 @@ namespace karabo {
     namespace io {
         namespace h5 {
 
+            /**
+             * @class Attribute
+             * @brief This class maps Karabo attributes to HDF5 attributes
+             */
             class Attribute {
 
-                public:
+            public:
                 KARABO_CLASSINFO(Attribute, "Attribute", "1.0");
                 KARABO_CONFIGURATION_BASE_CLASS
 
+                /**
+                 * Expected parameters used for factorized configuration:
+                 *
+                 * - h5name: the name of the attribute in the HDF5 file
+                 * - key: the name of the attribute in the Karabo Hash
+                 * - dims: dimensions of the attribute. Determines if it is a scalar or vector attribute.
+                 *
+                 * @param expected
+                 */
                 static void expectedParameters(karabo::util::Schema& expected);
 
+                /**
+                 * Constructs and Attribute wrapper. The dimensions of a single value of the attribute type are
+                 * inferred from Derived* d.
+                 *
+                 * @param input: configuration Hash as defined by expected parameters, if key is not defined h5name is
+                 *               used instead. If dims is not given the dimensions of a single value of type Derived
+                 *               are used. Otherwise dimensions found in dims up to the rank of the single value
+                 *               dimensions are extracted from dims.
+                 * @param d: type determining the single value dimension, native and standard datatypes
+                 */
                 template <class Derived>
                 Attribute(const karabo::util::Hash& input, Derived* d) {
 
@@ -55,8 +78,16 @@ namespace karabo {
                 }
 
 
+                /**
+                 * Write the attributes in data as defined by configuration to HDF5
+                 * @param data
+                 */
                 void write(const karabo::util::Hash::Node& data);
 
+                /**
+                 * Save the attributes in data as defined by configuration to an HDF5 element.
+                 * @param data
+                 */
                 void save(const karabo::util::Hash::Node& data, hid_t element);
 
             protected:
@@ -66,6 +97,10 @@ namespace karabo {
 
             public:
 
+                /**
+                 * Read attribute from HDF5 as defined by configuration to a Hash::Node
+                 * @param data
+                 */
                 void read(karabo::util::Hash::Node& data);
 
             protected:
@@ -76,22 +111,30 @@ namespace karabo {
             public:
 
                 /**
-                 * Create attribute                 
+                 * Create attribute
                  */
                 virtual void create(hid_t element);
 
-                // to be removed from here
 
+                /**
+                 * Open HDF5 dataset at element
+                 * @param element
+                 */
                 virtual void open(hid_t element);
 
+                /**
+                 * Open HDF5 dataset holding the attribute
+                 */
                 virtual void close() {
                     KARABO_CHECK_HDF5_STATUS(H5Aclose(m_attribute));
                 }
 
+                /**
+                 * Bind HDF5 attribute to a Hash node
+                 * @param
+                 * @return
+                 */
                 virtual karabo::util::Element<std::string>& bindAttribute(karabo::util::Hash::Node&) = 0;
-
-
-
 
 
             protected:
@@ -119,7 +162,7 @@ namespace karabo {
                 }
 
             private:
-                karabo::util::Dims m_dims; // dimension of written/read objects 
+                karabo::util::Dims m_dims; // dimension of written/read objects
                 hid_t m_dataSetProperties;
 
                 hid_t m_nativeTypeId;

@@ -34,6 +34,10 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+            * @class VLArray
+            * @brief The VLArray class is an implementation of Dataset for variable length arrays
+            */
             template<typename T>
             class VLArray : public Dataset {
 

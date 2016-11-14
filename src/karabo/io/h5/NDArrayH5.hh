@@ -34,6 +34,10 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+             * @class NDArrayH5
+             * @brief The NDArrayH5 class is an implementation of Dataset for karabo::util::NDArray type data
+             */
             template<typename T>
             class NDArrayH5 : public Dataset {
 

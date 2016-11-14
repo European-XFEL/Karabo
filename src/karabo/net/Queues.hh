@@ -19,6 +19,10 @@ namespace karabo {
 
         typedef boost::shared_ptr<std::vector<char> > VectorCharPointer;
 
+        /**
+         * @class Message
+         * @brief This class represents a message in the distributed Karabo system
+         */
         class Message {
 
             public:
@@ -40,10 +44,18 @@ namespace karabo {
             virtual ~Message() {
             }
 
+            /**
+             * Return the body of the message
+             * @return 
+             */
             const VectorCharPointer& body() const {
                 return m_body;
             }
 
+            /**
+             * Return the header of the message
+             * @return 
+             */
             const VectorCharPointer& header() const {
                 return m_header;
             }
@@ -55,6 +67,11 @@ namespace karabo {
             VectorCharPointer m_header;
         };
 
+        /**
+         * @class Queue
+         * @brief This class defines the interface for message queues in the Karabo
+         *        distributed system
+         */
         class Queue {
 
             public:
@@ -67,29 +84,75 @@ namespace karabo {
             virtual ~Queue() {
             }
 
+            /**
+             * Return the size of the queue, i.e. the number of messages it holds
+             * @return 
+             */
             virtual size_t size() = 0;
 
+            /**
+             * Return the maximum allowed size of this queue
+             * @return 
+             */
             virtual size_t max_size() = 0;
 
+            /**
+             * Set the capacity in terms of messages this queue can hold
+             * @param capacity
+             */
             virtual void set_capacity(size_t capacity) = 0;
 
+            /**
+             * Return this queues message capacity
+             * @return 
+             */
             virtual size_t capacity() = 0;
 
+            /**
+             * Clear this queue
+             */
             virtual void clear() = 0;
 
+            /**
+             * Check if this queue is empty, i.e. size is 0
+             * @return 
+             */
             virtual bool empty() = 0;
 
+            /**
+             * Check if this queue is full, i.e. if it has reached its maximum capacity
+             * @return 
+             */
             virtual bool full() = 0;
 
+            /**
+             * Resize the queue to a new size
+             * @param new_size
+             */
             virtual void resize(size_t new_size) = 0;
 
+            /**
+             * Return the first element in the queue
+             * @return 
+             */
             virtual const Message::Pointer& front() = 0;
 
+            /**
+             * Add an element to the end of the queue, increases the size by one
+             * @param entry
+             */
             virtual void push_back(const Message::Pointer& entry) = 0;
 
+            /**
+             * Pop the first element from the queue, decreases the size by one
+             */
             virtual void pop_front() = 0;
         };
 
+        /**
+         * @class LosslessQueue
+         * @brief The LosslessQueue implements a queue that guarantees to preserve messages.
+         */
         class LosslessQueue : public Queue {
 
 
@@ -148,6 +211,11 @@ namespace karabo {
 
         };
 
+        /**
+         * @class RejectNewestQueue
+         * @brief The RejectNewestQueue implements a queue that will reject
+         *        new entries when it has reached its maximum capacity
+         */
         class RejectNewestQueue : public LosslessQueue {
 
 
@@ -180,6 +248,12 @@ namespace karabo {
 
         };
 
+        /**
+         * @class RemoveOldestQueue
+         * @brief The RemoveOldestQueue implements a queue that remove the oldest
+         *        element in the queue when it has reached is maximum capacity
+         *        and a new element is pushed to it
+         */
         class RemoveOldestQueue : public Queue {
 
 

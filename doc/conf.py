@@ -14,10 +14,12 @@
 # serve to show the default.
 
 import sys
+import subprocess
 import os
 import os.path
 
 sys.path.append(os.path.abspath('../src/pythonKarabo'))
+sys.path.append(os.path.abspath('/usr/src/app/breath-4.2.0-py3'))
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -35,7 +37,8 @@ sys.path.append(os.path.abspath('../src/pythonKarabo'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
-    'sphinx.ext.intersphinx'
+    'sphinx.ext.intersphinx',
+    'breathe',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -270,3 +273,12 @@ intersphinx_mapping = {
     'pint': ('http://pint.readthedocs.org/en/0.7.2', None),
     'dateutil': ('http://dateutil.readthedocs.org/en/2.3', None)
 }
+
+# make doxygen output
+subprocess.call('doxygen', shell=True)
+
+# we use breathe to include doxygen output into our sphinx documentation
+breathe_projects = { "KARABO": os.path.abspath(".build/html/reference/xml") }
+breathe_default_project = "KARABO"
+
+

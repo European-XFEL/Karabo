@@ -27,9 +27,13 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+             * @class DatasetAttribute
+             * @brief Represents a Karabo Attribute as a HDF5 dataset (useful for complex attributes)
+             */
             class DatasetAttribute : public karabo::io::h5::Dataset {
 
-                public:
+            public:
 
                 KARABO_CLASSINFO(DatasetAttribute, "DatasetAttribute", "1.0")
 
@@ -42,6 +46,10 @@ namespace karabo {
                 virtual ~DatasetAttribute() {
                 }
 
+                /**
+                 * Create a table in the HDF5 file to hold the attributes
+                 * @param tableGroup
+                 */
                 void create(hid_t tableGroup) {
 
                     //OPT1
@@ -78,9 +86,18 @@ namespace karabo {
 
                 }
 
-
+                /**
+                 * Write a data hash to as attribute for a given record
+                 * @param data
+                 * @param recordId
+                 */
                 void write(const karabo::util::Hash& data, hsize_t recordId);
 
+                /**
+                 * Write a data hash to as attribute for a N=len records starting at recordId
+                 * @param data
+                 * @param recordId
+                 */
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len);
 
             protected:
@@ -101,4 +118,4 @@ namespace karabo {
     }
 }
 
-#endif	
+#endif

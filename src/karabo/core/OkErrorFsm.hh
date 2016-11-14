@@ -20,6 +20,13 @@
 namespace karabo {
     namespace core {
 
+        /**
+         * @class OkErrorFsm
+         * @brief A simple finite state machine knowing either NORMAL or ERROR States
+         * 
+         * NORMAL (ErrorFoundEvent) -> (ErrorFoundAction) ERROR
+         * ERROR (ResetEvent) -> (ResetAction) NORMAL 
+         */
         class OkErrorFsm : public BaseFsm {
 
         public:

@@ -51,16 +51,28 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set this element as an input file
+             * @return 
+             */
             PathElement& isInputFile() {
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "fileIn");
                 return *this;
             }
 
+            /**
+             * Set this element as an output file
+             * @return 
+             */
             PathElement& isOutputFile() {
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "fileOut");
                 return *this;
             }
 
+            /**
+             * Set this element as a directory
+             * @return 
+             */
             PathElement& isDirectory() {
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "directory");
                 return *this;

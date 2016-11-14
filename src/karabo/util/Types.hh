@@ -44,6 +44,11 @@ namespace karabo {
 
         };
 
+        /**
+         * @class Types
+         * @brief This class contains the types knonw to the Karabo framework as members
+         *        and conversion tools for these
+         */
         class Types {
 
         public:
@@ -127,16 +132,44 @@ namespace karabo {
                 PTR_STRING
             };
 
+            /**
+             * Convert one type representation to another, e.g. 
+             * 
+             * @code
+             *      size_t size = convert<FromLiteral, ToSize>("INT32");
+             *      # size is 4
+             * @endcode
+             * 
+             * @param type
+             * @return 
+             */
             template <class From, class To>
             static typename To::ReturnType convert(const typename From::ArgumentType& type) {
                 return ToType<To>::to(FromType<From>::from(type));
             }
 
+            /**
+             * Return a Types::ReferenceType from an alternate representation
+             * 
+             * @code
+             *      Types::ReferenceType r = from<FromLiteral>("INT64");
+             * @endcode
+             * 
+             * @param type
+             * @return 
+             */
             template <class From>
             static ReferenceType from(const typename From::ArgumentType& type) {
                 return FromType<From>::from(type);
             }
 
+            /**
+             * Return an alternate representation of a Types::ReferenceType 
+             * 
+             * 
+             * @param type
+             * @return 
+             */
             template <class To>
             static typename To::ReturnType to(const ReferenceType type) {
                 return ToType<To>::to(type);
@@ -217,6 +250,11 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Check if the passed Types::ReferenceType is a pointer
+             * @param type
+             * @return 
+             */
             static bool isPointer(int type) {
                 //                if(type >= Types::PTR_BOOL && type <= Types::PTR_STRING) return true;
                 //                return false;
@@ -244,6 +282,11 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Check if the passed Types::ReferenceType is a vector
+             * @param type
+             * @return 
+             */
             static bool isVector(int type) {
                 switch (type) {
                     case Types::VECTOR_STRING:
@@ -269,6 +312,11 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Check if the passed Types::ReferenceType is numeric plain old data type (POD)
+             * @param type
+             * @return 
+             */
             static bool isNumericPod(int type) {
                 switch (type) {
                     case Types::BOOL:
@@ -288,6 +336,11 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Check if the passed Types::ReferenceType is a type representable by a karabo::util::SimpleElement
+             * @param type
+             * @return 
+             */
             static bool isSimple(int type) {
                 switch (type) {
                     case Types::CHAR:

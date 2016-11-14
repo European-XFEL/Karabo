@@ -4,16 +4,59 @@
  Karabo API - C++
 ******************
 
-.. _cppHash:
+The karabo::core Namespace
+==========================
 
-Hash
-====
+.. doxygennamespace:: karabo::core
+   :project: KARABO
+   :members:
+   :protected-members:
+   :private-members:
 
-TODO
 
-.. _cppSchema:
+The karabo::devices Namespace
+==========================
 
-Schema
-======
+.. doxygennamespace:: karabo::devices
+   :project: KARABO
+   :members:
+   :protected-members:
+   :private-members:
 
-TODO
+
+The karabo::io Namespace
+==========================
+
+.. doxygennamespace:: karabo::io
+   :project: KARABO
+   :members:
+   :protected-members:
+   :private-members:
+
+The karabo::net Namespace
+==========================
+
+.. doxygennamespace:: karabo::net
+   :project: KARABO
+   :members:
+   :protected-members:
+   :private-members:
+
+The karabo::xms Namespace
+==========================
+
+.. doxygennamespace:: karabo::xms
+   :project: KARABO
+   :members:
+   :protected-members:
+   :private-members:
+
+
+The karabo::util Namespace
+==========================
+
+.. doxygennamespace:: karabo::util
+   :project: KARABO
+   :members:
+   :protected-members:
+   :private-members:

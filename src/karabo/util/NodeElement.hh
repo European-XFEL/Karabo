@@ -21,6 +21,44 @@
 namespace karabo {
     namespace util {
 
+        /**
+         * @class NodeElement
+         * @brief The NodeElement groups other elements into a hierarchy
+         * 
+         * The NodeElement can be used to create hierarchies in the expected
+         * parameter section of a device.
+         * 
+         * <b>Example:</b>
+         * @code
+         * NODE_ELEMENT(expected).key("myNode")
+         *          .displayedName("This is a Node")
+         *          .commit();
+         * 
+         * SOME_ELEMENT(expected).key("myNode.myKeyA")
+         *         ...
+         *         .assignmentOptional().defaultValue("client")
+         *         ...
+         *         .commit();
+         * 
+         * SOME_ELEMENT(expected).key("myNode.myKeyB")
+         *         ...
+         *         .assignmentOptional().defaultValue("client")
+         *         ...
+         *         .commit();
+         * @endcode
+         * 
+         * creates the following hierarchy:
+         * 
+         *   MyNode -> myKeyA
+         *          -> myKeyB
+         * 
+         * NodeElements may contain subnodes so that arbitrary compley hierarchies
+         * up to a maximum aggregated key-length of 120 characters are possible
+         * 
+         * NodeElements may further be used to provide options for karabo::util::ChoiceElement
+         * and list entries for karabo::util::ListElement 
+         * 
+         */
         class NodeElement : public GenericElement<NodeElement> {
 
 
@@ -33,6 +71,12 @@ namespace karabo {
                 this->m_node->setValue(Hash()); // A node value always is a Hash
             }
 
+            /**
+             * Insert the expected parameters of another class of type ConfigurationBase.
+             * The class needs to be known by the factory system.
+             * @param classId identifying the clas
+             * @return 
+             */
             template <class ConfigurableClass>
             NodeElement& appendParametersOfConfigurableClass(const std::string& classId) {
                 this->m_node->setAttribute(KARABO_SCHEMA_CLASS_ID, classId);
@@ -45,6 +89,11 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Insert the expected parameters of another class of type ConfigurationBase.
+             * The class needs to be known by the factory system.
+             * @return 
+             */
             template <class T>
             NodeElement& appendParametersOf() {
                 // Simply append the expected parameters of T to current node
@@ -56,6 +105,11 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Append the elements specified in a Schema to the node
+             * @param schema
+             * @return 
+             */
             NodeElement& appendSchema(const Schema& schema) {
                 this->m_node->setValue<Hash >(schema.getParameterHash());
                 return *this;

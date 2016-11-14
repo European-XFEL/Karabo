@@ -23,6 +23,13 @@ namespace karabo {
 
             //hid_t errId = H5Eget_current_stack();
 
+            /**
+             * This function demangles HDF5 errors into a Karabo Exception
+             * @param n
+             * @param err_desc
+             * @param client_data
+             * @return 
+             */
             herr_t karaboH5Errorhandler(unsigned n, const H5E_error2_t *err_desc, void* client_data);
 
 #define KARABO_CHECK_HDF5_STATUS(status)\

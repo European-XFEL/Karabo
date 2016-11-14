@@ -34,6 +34,13 @@ namespace karabo {
      */
     namespace io {
 
+        /**
+         * @class BinaryFileInput
+         * @brief The binary file input specializes the Input class to read
+         *        data from a binary file types T have been serialized to. The actual
+         *        serialization format depends on the Serializer selected in this
+         *        class' configuration.
+         */
         template <class T>
         class BinaryFileInput : public Input<T> {
 

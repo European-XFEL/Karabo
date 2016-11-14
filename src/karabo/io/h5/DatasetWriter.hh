@@ -27,15 +27,20 @@ namespace karabo {
 
         namespace h5 {
 
-
-
-            //         DatasetWriter class is used to support bool type via specialization.
-            //         HDF5 does not support bool and we need to specialize
-            //         this class. bool values are stored as unsigned chars (1byte)
-
-
 #define _LOGGER_CATEGORY "karabo.io.h5.DatasetWriter"
 
+            /**
+             * @class DatasetWriter
+             * @brief The dataset writer is used write Karabo data structures to HDF5 files
+             * 
+             * The dataset writer is used write Karabo data structures to HDF5 files. It
+             * supports bool types via specialization. HDF5 does not support bool and we need to specialize
+             * this class. Bool values are stored as unsigned chars (1byte).
+             * 
+             * Implementations for scalar (pod and complex), vector (pod and complex), pointer (pod and complex) (deprecated) 
+             * and karabo::util::NDArray data types exist for this class. If data does not match one of these categories 
+             * it cannot be written. 
+             */
             template <typename T>
             class DatasetWriter {
 
@@ -59,6 +64,11 @@ namespace karabo {
                             .commit();
                 }
 
+                /**
+                 * Create a Dataset writer for a dataset with specified input diminsions.
+                 * 
+                 * @param input should contain a key dims of std::vector<unsigned long long> type specifying dataset dimension.
+                 */
                 DatasetWriter(const karabo::util::Hash& input) {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
 
@@ -81,13 +91,40 @@ namespace karabo {
                 virtual ~DatasetWriter() {
                     KARABO_CHECK_HDF5_STATUS(H5Sclose(m_memoryDataSpace))
                 }
+                
+                /**
+                 * Write data contained in a hash node to a dataset in an HDf5 data space
+                 * @param node to write
+                 * @param dataSet identifying the data set to write to
+                 * @param fileDataSpace HDF5 data space to write to
+                 */
                 virtual void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) = 0;
 
+                /**
+                 * Batch write data contained in a hash node to a dataset in an HDf5 data space
+                 * @param node to write
+                 * @param len: number of elements to write
+                 * @param dataSet identifying the data set to write to
+                 * @param fileDataSpace HDF5 data space to write to
+                 */
                 virtual void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) = 0;
 
+                /**
+                 * Write data contained in a karabo::util::Element with string keys
+                 * @param node to write
+                 * @param dataSet identifying the data set to write to
+                 * @param fileDataSpace HDF5 data space to write to
+                 */
                 virtual void write(const karabo::util::Element<std::string>& node, hid_t dataSet, hid_t fileDataSpace) {
                 }
 
+                 /**
+                 * Batch write data contained in a karabo::util::Element with string keys
+                 * @param node to write
+                 * @param len: number of elements to write
+                 * @param dataSet identifying the data set to write to
+                 * @param fileDataSpace HDF5 data space to write to
+                 */
                 virtual void write(const karabo::util::Element<std::string>& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
                 }
 
@@ -99,6 +136,10 @@ namespace karabo {
 
             };
 
+            /**
+             * @class DatasetScalarWriter
+             * @brief Implementation of DatasetWriter for writing scalar data types
+             */
             template< typename T >
             class DatasetScalarWriter : public DatasetWriter<T> {
 
@@ -173,6 +214,10 @@ namespace karabo {
 
             };
 
+            /**
+             * @class DatasetVectorWriter
+             * @brief Implementation of DatasetWriter for writing vector data types
+             */
             template< typename T >
             class DatasetVectorWriter : public DatasetWriter<T> {
 
@@ -256,6 +301,12 @@ namespace karabo {
 
             };
 
+            /**
+             * @class DatasetPointerWriter
+             * @brief Implementation of DatasetWriter for writing pointer data types
+             * 
+             * @deprecated This interface is deprecated. Karabo::util::NDArray should be used for multi-dimensional data
+             */
             template< typename T >
             class DatasetPointerWriter : public DatasetWriter<T> {
 
@@ -321,6 +372,12 @@ namespace karabo {
 
             };
 
+             /**
+             * @class DatasetNDArrayH5Writer
+             * @brief Implementation of DatasetWriter for writing karabo::util::NDArray multidimensional data
+             * 
+             * This interface should be used instead of DatasetPointerWriter
+             */
             template< typename T >
             class DatasetNDArrayH5Writer : public DatasetWriter<T> {
 
@@ -393,8 +450,12 @@ namespace karabo {
 
 
 
-            //      bool specializations
-
+            /**
+             * @class DatasetScalarWriter<bool>
+             * @brief Implementation of DatasetWriter for scalar data types - specialization for Boolean value
+             * 
+             * HDF5 does not support Boolean datatypes. For writing to HDF5 they are thus represented as chars
+             */
             template<>
             class DatasetScalarWriter<bool> : public DatasetWriter<bool> {
 
@@ -460,6 +521,12 @@ namespace karabo {
 
             };
 
+            /**
+             * @class DatasetVectorWriter<bool>
+             * @brief Implementation of DatasetWriter for vector data types - specialization for Boolean value
+             * 
+             * HDF5 does not support Boolean datatypes. For writing to HDF5 they are thus represented as chars
+             */
             template<>
             class DatasetVectorWriter<bool> : public DatasetWriter<bool> {
 
@@ -541,6 +608,14 @@ namespace karabo {
 
             };
 
+            /**
+             * @class DatasetPointerWriter<bool>
+             * @brief Implementation of DatasetWriter for pointer data types - specialization for Boolean value
+             * 
+             * HDF5 does not support Boolean datatypes. For writing to HDF5 they are thus represented as chars
+             * 
+             * @deprecated This interface should not be used. karabo::util::NDArray should be used for multidimensional datatypes instead
+             */
             template<>
             class DatasetPointerWriter<bool> : public DatasetWriter<bool> {
 
@@ -617,6 +692,13 @@ namespace karabo {
 
             };
 
+            /**
+             * @class DatasetNDArrayH5Writer<bool>
+             * @brief Implementation of DatasetWriter for karabo::util::NDArray data types - specialization for Boolean value
+             * 
+             * HDF5 does not support Boolean datatypes. For writing to HDF5 they are thus represented as chars
+             * 
+             */
             template<>
             class DatasetNDArrayH5Writer<bool> : public DatasetWriter<bool> {
 

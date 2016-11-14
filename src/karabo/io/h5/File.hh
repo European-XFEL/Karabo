@@ -26,12 +26,11 @@ namespace karabo {
 
             class Format;
 
-/**
-             * Class representing physical Hdf5 file.
-             * Each File may contain any number of Tables.
+            /**
+             * @class File
+             * @brief A class representing a physical HDF5 file, containing any number of tables.
              */
             class File {
-
 
                 static int m_init;
                 static int initErrorHandling();
@@ -46,25 +45,63 @@ namespace karabo {
 
             public:
 
+                /**
+                 * Initialize a File wrapped from a HDF5 file identified by an h5 file handle
+                 * @param h5file
+                 */
                 File(const hid_t & h5file);
 
+                /**
+                 * Initialize a File wrapped as identified by an input configuration. Input should contain
+                 * a key filename, pointing to the file path and name
+                 *
+                 * @param input
+                 */
                 File(const karabo::util::Hash& input);
 
+                /**
+                 * Initialize a File wrapped as identified by a path and name
+                 * @param filename
+                 */
                 File(const boost::filesystem::path& filename);
 
+                /**
+                 * Initialize a File wrapped as identified by a path and name
+                 * @param filename
+                 */
                 File(const std::string& filename);
 
                 virtual ~File();
 
-
+                /**
+                 * The expected parameters of this factorizable class.
+                 *
+                 * - filename: refers to path and name of the wrapped file
+                 *
+                 * @param expected
+                 */
                 static void expectedParameters(karabo::util::Schema& expected);
 
+                /**
+                 * An enum identifying the access mode the file
+                 */
                 enum AccessMode {
 
-
+                    /**
+                     * Truncate file upon opening
+                     */
                     TRUNCATE,
+                    /**
+                     *  Fails to open a file if already exists.
+                     */
                     EXCLUSIVE,
+                    /**
+                     * Append to an existing file
+                     */
                     APPEND,
+                    /**
+                     * Open read-only
+                     */
                     READONLY
                 };
 
@@ -97,7 +134,7 @@ namespace karabo {
                  * Create new table in the file.
                  * @param name Table name. It can be a path with "/" as separator.
                  * @param dataFormat Object describing data format.
-                 * @return Pointer to Table. 
+                 * @return Pointer to Table.
                  *
                  * @see DataFormat::expectedParameters.
                  */
@@ -105,21 +142,21 @@ namespace karabo {
 
                 /**
                  * Open existing table in the file.
-                 * @param name Table name. It can be a path with "/" as separator.       
+                 * @param name Table name. It can be a path with "/" as separator.
                  *
                  * The following rules apply to data format:
-                 * 
-                 * \li If the description is stored in the file as a group attribute it is taken from it.                 
+                 *
+                 * \li If the description is stored in the file as a group attribute it is taken from it.
                  */
                 boost::shared_ptr<Table> getTable(const std::string& name);
 
                 /**
                  * Open existing table in the file.
-                 * @param name Table name. It can be a path with "/" as separator.       
+                 * @param name Table name. It can be a path with "/" as separator.
                  * @param dataFormat Object describing data format.
-                 * 
-                 * 
-                 * This function passes the data format and forces to overwrite any existing definition in the file. 
+                 *
+                 *
+                 * This function passes the data format and forces to overwrite any existing definition in the file.
                  * No attempt is made to discover format from the file content.
                  * This can be useful if one wants to read only certain datasets.
                  * Client is fully responsible to make sure that the supplied format is compatible with stored data.
@@ -140,6 +177,11 @@ namespace karabo {
                     return m_filename.string();
                 }
 
+                /**
+                 * Fills the passed hash with a list of open objects
+                 * @param hash
+                 * @return
+                 */
                 karabo::util::Hash& reportOpenObjects(karabo::util::Hash& hash);
 
 
@@ -171,4 +213,4 @@ namespace karabo {
 }
 
 
-#endif	
+#endif

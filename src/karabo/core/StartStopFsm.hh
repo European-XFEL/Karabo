@@ -20,6 +20,17 @@
 namespace karabo {
     namespace core {
 
+        /**
+         * @class StartStopFsm
+         * @brief A finite state machine designed to be used binary state (start - stop) devices
+         * 
+         * A finite state machine designed to be used for binary state (start - stop)  devices. It uses
+         * an ERROR-NORMAL top state machine (karabo::core::OkErrorFsm type). 
+         * In the NORMAL region the following state transition table is used:
+         * 
+         * STOPPED (StartEvent) -> (StartAction) STARTED
+         * STARTED (StopEvent) -> (StopAction) STOPPED 
+         */
         class StartStopFsm : public BaseFsm {
 
             public:

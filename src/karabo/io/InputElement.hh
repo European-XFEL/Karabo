@@ -22,6 +22,11 @@
 namespace karabo {
     namespace io {
 
+        /**
+         * @class InputElement
+         * @brief The InputElement provides acces to karabo::io::Input in terms of
+         *        a Schema Element, defined in an expected parameter section.
+         */
         class InputElement : public karabo::util::GenericElement<InputElement> {
 
 

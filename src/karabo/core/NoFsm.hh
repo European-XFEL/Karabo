@@ -18,6 +18,11 @@
 namespace karabo {
     namespace core {
 
+        /**
+         * @class NoFsm
+         * @brief Use this class if you do not use an fixed state machine but
+         *        rather a simple state machine with in device state updates.
+         */
         class NoFsm {
 
         public:

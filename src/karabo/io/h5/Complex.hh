@@ -34,10 +34,14 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+             * @class Complex
+             * @brief Maps complex number Karabo datatypes to corresponding HD5 types
+             */
             template<typename T>
             class Complex : public Dataset {
 
-                public:
+            public:
 
                 KARABO_CLASSINFO(Complex, "COMPLEX_" +
                                  karabo::util::ToType<karabo::util::ToLiteral>::
@@ -55,6 +59,11 @@ namespace karabo {
                     m_datasetReader = karabo::util::Configurator<DatasetReader<std::complex<T> > >::create("DatasetReader", config, false);
                 }
 
+                /**
+                 * Return the dimensions of the element, overwrite for consistent interface.
+                 * Will return vector of length two with entries 1
+                 * @return
+                 */
                 static const karabo::util::Dims getSingleValueDimensions() {
                     return karabo::util::Dims(2);
                 }

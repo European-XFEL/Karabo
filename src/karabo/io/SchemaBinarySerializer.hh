@@ -16,6 +16,11 @@ namespace karabo {
 
     namespace io {
 
+        /**
+         * @class SchemaBinarySerializer
+         * @brief The SchemaBinarySerializer provides an implementation of BinarySerializer
+         *        for the karabo::util::Schema
+         */
         class SchemaBinarySerializer : public BinarySerializer<karabo::util::Schema> {
 
 

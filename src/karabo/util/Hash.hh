@@ -36,6 +36,9 @@ namespace karabo {
     namespace util {
 
         /**
+         * @class Hash
+         * @brief A generic key value container that supports ordering and attributes.
+         * 
          * Hash container:
          * - The Hash is a heterogeneous generic key/value container that associates a string key to a value of any type.<br>
          * - The Hash is a core data structure in Karabo software framework, and is widly used in the karabo system.<br>
@@ -59,7 +62,6 @@ namespace karabo {
          * - Insertion of a non-existing key leads to new entry whilst insertion of an existing key will only update (merge) the corresponding value/attributes.<br>
          * - Additional functionality include: list of paths, clear/erase, find, merge, comparison, etc.
          */
-
         class KARABO_DECLSPEC Hash {
 
         public:
@@ -82,6 +84,7 @@ namespace karabo {
 
         public:
 
+           
             typedef Container::iterator iterator;
             typedef Container::const_iterator const_iterator;
 
@@ -598,39 +601,51 @@ namespace karabo {
             template<class Visitor>
             static bool visit2(karabo::util::Hash::Node& node, Visitor& visitor);
         private:
-            /// Out of 'paths' select those that belong to child with 'childKey',
-            /// e.g. out of ["a", "b.c", "b.d.e"] return ["c", "d.e"] if childKey == "b" and separator == '.'.
+            /**
+             *  Out of 'paths' select those that belong to child with 'childKey',
+             * e.g. out of ["a", "b.c", "b.d.e"] return ["c", "d.e"] if childKey == "b" and separator == '.'.
+             */
             static std::set<std::string> selectChildPaths(const std::set<std::string>& paths,
                                                           const std::string& childKey, char separator);
 
-            /// True if the first key (separated by 'separator') of any of 'paths' matches 'key'.
-            /// A first key that contains an index also matches (indirectly) 'key' without index if index < 'size',
-            /// i.e. path "a[0].g" matches key "a" if 'size' >= 1, but not if 'size' == 0.
+            /**
+             * True if the first key (separated by 'separator') of any of 'paths' matches 'key'.
+             * A first key that contains an index also matches (indirectly) 'key' without index if index < 'size',
+             * i.e. path "a[0].g" matches key "a" if 'size' >= 1, but not if 'size' == 0.
+             */
             static bool keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key, char separator,
                                              unsigned int size);
 
-            /// For all 'paths', check whether their first key matches 'key' (as in keyIsPrefixOfAnyPath).
-            /// If it does indirectly (see keyIsPrefixOfAnyPath), append the index specified behind it to the result,
-            /// except if there is also a direct match - then the result is empty:
-            /// Paths = {a[0], b, a[2]} and key = a ==> return [0,2]
-            /// Paths = {a[0], b, a}    and key = a ==> return []
-            /// Indices >= 'targetSize' are ignored.
+            /**
+             * For all 'paths', check whether their first key matches 'key' (as in keyIsPrefixOfAnyPath).
+             * If it does indirectly (see keyIsPrefixOfAnyPath), append the index specified behind it to the result,
+             * except if there is also a direct match - then the result is empty:
+             * Paths = {a[0], b, a[2]} and key = a ==> return [0,2]
+             * Paths = {a[0], b, a}    and key = a ==> return []
+             * Indices >= 'targetSize' are ignored.
+             */
             static std::set<unsigned int> selectIndicesOfKey(unsigned int targetSize, const std::set<std::string>& paths,
                                                              const std::string& key, char separator);
 
-            /// Merge 'attrs' to 'targetNode' according to merge 'policy'.
+            /**
+             *  Merge 'attrs' to 'targetNode' according to merge 'policy'.
+             */
             static void mergeAttributes(Hash::Node& targetNode, const Hash::Attributes& attrs, Hash::MergePolicy policy);
 
-            /// Merge two vector<Hash> nodes that represent table elements, i.e. the content of 'source' replaces
-            /// the content of 'target'. The 'selectedPaths' with their 'separator' are respected.
-            /// Note that the 'selectedPaths' are those that selected 'source' for merging, i.e. begin with
-            /// the key of 'source', possibly suffixed by indices.
+            /** 
+             * Merge two vector<Hash> nodes that represent table elements, i.e. the content of 'source' replaces
+             * the content of 'target'. The 'selectedPaths' with their 'separator' are respected.
+             * Note that the 'selectedPaths' are those that selected 'source' for merging, i.e. begin with
+             * the key of 'source', possibly suffixed by indices.
+             */
             static void mergeTableElement(const Hash::Node& source, Hash::Node& target,
                                           const std::set<std::string>& selectedPaths, char separator);
 
-            /// Merge two ordinary vector<Hash> nodes, respecting the 'selectedPaths' with their 'separator'.
-            /// Note that the 'selectedPaths' are those that selected 'source' node for merging, i.e. begin with
-            /// the key of 'source', possibly suffixed by some indices.
+            /**
+             * Merge two ordinary vector<Hash> nodes, respecting the 'selectedPaths' with their 'separator'.
+             * Note that the 'selectedPaths' are those that selected 'source' node for merging, i.e. begin with
+             * the key of 'source', possibly suffixed by some indices.
+             */
             static void mergeVectorHashNodes(const Hash::Node& source, Hash::Node& target, Hash::MergePolicy policy,
                                              const std::set<std::string>& selectedPaths, char separator);
 
