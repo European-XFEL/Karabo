@@ -55,8 +55,6 @@ namespace karabo {
             bool m_scanPlugins;
             bool m_serverIsRunning;
 
-            bool m_isMaster;
-            bool m_debugMode;
             std::vector<karabo::util::Hash> m_autoStart;
 
             karabo::util::Hash m_availableDevices;
@@ -109,12 +107,6 @@ namespace karabo {
              * @return 
              */
             bool isRunning() const;
-
-            /**
-             * Check if the device server is in debug mode
-             * @return 
-             */
-            bool isDebugMode();
 
 
             /**************************************************************/
@@ -198,8 +190,6 @@ namespace karabo {
             void updateAvailableDevices();
 
             void scanPlugins(const boost::system::error_code& e);
-
-            void sayHello();
 
             void slotDeviceGone(const std::string& instanceId);
 
