@@ -24,7 +24,7 @@ namespace karathon {
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         try {
             ScopedGILRelease nogil;
-            receiveAsync<bp::object>(boost::bind(&SignalSlotableWrap::RequestorWrap::proxyReceiveAsync0, this, replyCallback));
+            receiveAsync<bp::object>(boost::bind(&SignalSlotableWrap::RequestorWrap::proxyReceiveAsync0, this, replyCallback));            
         } catch (...) {
             KARABO_RETHROW
         }
