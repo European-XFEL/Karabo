@@ -108,7 +108,8 @@ class ProjectDatabaseConnection(QObject):
         # Don't ask the GUI server if you're already waiting for this object
         if key not in self._waiting_for_write:
             self._waiting_for_write[key] = obj
-            xml = write_project_model(obj)
+            # Project DB expects xml as string
+            xml = write_project_model(obj).decode('utf-8')
             items = [Hash('domain', domain, 'uuid', uuid, 'revision', revision,
                           'xml', xml, 'overwrite', False)]
             self.network.onProjectSaveItems(self.project_manager, items)
