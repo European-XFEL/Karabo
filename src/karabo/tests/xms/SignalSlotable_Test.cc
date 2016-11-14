@@ -147,8 +147,12 @@ void SignalSlotable_Test::testReceiveAsync() {
         result = answer;
     });
 
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-
+    // Wait maximum 200 ms for message travel
+    int trials = 10;
+    while (--trials >= 0) {
+        if (result == "Hello, world!") break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
+    }
     CPPUNIT_ASSERT(result == "Hello, world!");
 }
 
@@ -159,28 +163,26 @@ void SignalSlotable_Test::testMethod() {
     auto demo = boost::make_shared<SignalSlotDemo>(instanceId, "dummy");
     demo->start();
 
-    CPPUNIT_ASSERT(demo);
-
     demo->connect("signalA", "slotA");
 
     demo->emit("signalA", "Hello World!");
 
-    bool timeout = false;
     int reply = 0;
     try {
         demo->request(instanceId, "slotC", 1).timeout(500).receive(reply);
     } catch (karabo::util::TimeoutException&) {
-        timeout = true;
+        CPPUNIT_ASSERT_MESSAGE(false, "Timeout request/receive slotC");
     }
+    CPPUNIT_ASSERT_EQUAL(2, reply);
 
     // The same, but request to self addressed as shortcut
-    bool timeout2 = false;
-    int reply2 = 0;
+    reply = 0;
     try {
-        demo->request("", "slotC", 1).timeout(500).receive(reply2);
+        demo->request("", "slotC", 1).timeout(500).receive(reply);
     } catch (karabo::util::TimeoutException&) {
-        timeout2 = true;
+        CPPUNIT_ASSERT_MESSAGE(false, "Timeout request/receive slotC via \"\"");
     }
+    CPPUNIT_ASSERT_EQUAL(2, reply);
 
     std::string someData("myPrivateStuff");
     demo->request(instanceId, "slotC", 1).receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, demo, someData, _1));
@@ -191,89 +193,85 @@ void SignalSlotable_Test::testMethod() {
     // shortcut address:
     demo->call("", "slotC", 1);
 
-    boost::this_thread::sleep(boost::posix_time::seconds(1));
-
-    // Assert after joining the thread - otherwise dangling threads in case of failures...
-    CPPUNIT_ASSERT(timeout == false);
-    CPPUNIT_ASSERT(reply == 2);
-    CPPUNIT_ASSERT(timeout2 == false);
-    CPPUNIT_ASSERT(reply2 == 2);
-    CPPUNIT_ASSERT(demo->wasOk(10) == true);
+    waitDemoOk(demo, 10);
+    CPPUNIT_ASSERT(demo->wasOk(10));
 }
 
 
 void SignalSlotable_Test::testAutoConnectSignal() {
 
+    // Give a unique name to exclude interference with other tests
     const std::string instanceId("SignalSlotDemoAutoConnectSignal");
     const std::string instanceId2(instanceId + "2");
     auto demo = boost::make_shared<SignalSlotDemo>(instanceId, instanceId2);
     demo->start();
 
-    CPPUNIT_ASSERT(demo);
-
     // Connect the other's signal to my slot - although the other is not yet there!
     demo->connect(instanceId2, "signalA", "", "slotA");
     demo->emit("signalA", "Hello World!");
     // Allow for some travel time - although nothing should travel...
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-    const bool ok1 = demo->wasOk(0); // m_demo is not interested in its own signals
+    waitDemoOk(demo, 0, 6); // 6 trials: slightly more than 100 ms sleep
+    CPPUNIT_ASSERT(demo->wasOk(0)); // demo is not interested in its own signals
 
     auto demo2 = boost::make_shared<SignalSlotDemo>(instanceId2, instanceId);
     demo2->start();
 
-    const bool demo2Fine = demo2 != 0;
-
-    // Give m_demo some time to auto-connect now that SignalSlotDemo2 is there:
+    // Give demo some time to auto-connect now that demo2 is there:
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 
     demo2->emit("signalA", "Hello World 2!");
 
-    // More time for all signaling (although it is all short-cutting the broker):
+    // Time for all signaling (although it is all short-cutting the broker):
     // -> slotA (of other instance) -> connect slotB to signalB -> signalB -> slotB
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-    const bool ok2 = demo->wasOk(2);
-
-    // Asserts after all threads are joined:
-    CPPUNIT_ASSERT(ok1);
-    CPPUNIT_ASSERT(demo2Fine);
-    CPPUNIT_ASSERT(ok2);
+    waitDemoOk(demo, 2);
+    CPPUNIT_ASSERT(demo->wasOk(2));
 }
 
 
 void SignalSlotable_Test::testAutoConnectSlot() {
 
+    // Same as testAutoConnectSignal, but the other way round:
+    // slot instance comes into game after connect was called.
     const std::string instanceId("SignalSlotDemoAutoConnectSlot");
     const std::string instanceId2(instanceId + "2");
     auto demo = boost::make_shared<SignalSlotDemo>(instanceId, instanceId2);
     demo->start();
 
-    // Same as testAutoConnectSignal, but the other way round:
-    // slot instance comes into game after connect was called.
-    CPPUNIT_ASSERT(demo);
 
     // Connect the other's slot to my signal - although the other is not yet there!
     demo->connect("", "signalA", instanceId2, "slotA");
     demo->emit("signalA", "Hello World 2!");
     // Allow for some travel time - although nothing should travel...
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-    const bool ok1 = demo->wasOk(0); // m_demo is not interested in its own signals
+    waitDemoOk(demo, 0, 6); // 6 trials: slightly more than 100 ms sleep
+    CPPUNIT_ASSERT(demo->wasOk(0)); // demo is not interested in its own signals
+
 
     auto demo2 = boost::make_shared<SignalSlotDemo>(instanceId2, instanceId);
     demo2->start();
 
-    const bool demo2Fine = demo2 != 0;
-
-    // Give m_demo some time to auto-connect now that SignalSlotDemo2 is there:
+    // Give demo some time to auto-connect now that demo2 is there:
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 
     demo->emit("signalA", "Hello World 2!");
-    // More time for all signaling (although it is all short-cutting the broker):
+    // Time for all signaling (although it is all short-cutting the broker):
     // -> slotA (of other instance) -> connect slotB to signalB -> signalB -> slotB
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-    const bool ok2 = demo2->wasOk(2);
+    waitDemoOk(demo2, 2);
+    CPPUNIT_ASSERT(demo2->wasOk(2));
+}
 
-    // Asserts after all threads are joined:
-    CPPUNIT_ASSERT(ok1);
-    CPPUNIT_ASSERT(demo2Fine);
-    CPPUNIT_ASSERT(ok2);
+
+bool SignalSlotable_Test::waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls,
+                                     int trials) {
+    // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
+    unsigned int millisecondsSleep = 2;
+    do {
+        if (demo->wasOk(messageCalls)) {
+            return true;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(millisecondsSleep));
+        millisecondsSleep *= 2;
+    } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
+
+
+    return false;
 }
