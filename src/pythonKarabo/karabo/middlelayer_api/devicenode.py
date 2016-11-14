@@ -113,6 +113,7 @@ class DeviceNode(String):
         proxy = yield from getDevice(value)
         proxy._datahash = Hash()
         instance.__dict__[self.key] = proxy
+        instance._notifyNewSchema()
 
         def register(theirname, myname):
             @coslot
@@ -139,8 +140,9 @@ class DeviceNode(String):
 
         proxy = getattr(device, self.key, None)
         h = Hash()
-        for name, rename in chain(self.properties.items(),
-                                  self.commands.items()):
-            h[rename] = proxy._schema_hash[name]
-            h[rename, ...] = proxy._schema_hash[name, ...]
+        if proxy is not None:
+            for name, rename in chain(self.properties.items(),
+                                      self.commands.items()):
+                h[rename] = proxy._schema_hash[name]
+                h[rename, ...] = proxy._schema_hash[name, ...]
         return h, attrs
