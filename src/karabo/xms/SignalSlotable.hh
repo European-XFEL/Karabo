@@ -449,9 +449,7 @@ namespace karabo {
                 std::string m_replyId;
                 std::string m_slotInstanceId;
                 karabo::util::Hash::Pointer m_header;
-                karabo::util::Hash::Pointer m_body;
-                bool m_isRequested;
-                bool m_isReceived;
+                karabo::util::Hash::Pointer m_body;               
                 int m_timeout;
                 static boost::uuids::random_generator m_uuidGenerator;
 
