@@ -71,31 +71,10 @@ namespace karabo {
                     .expertAccess()
                     .commit();
 
-            BOOL_ELEMENT(expected).key("isMaster")
-                    .displayedName("Is Master Server?")
-                    .description("Decides whether this device-server runs as a master")
-                    .assignmentOptional().defaultValue(false)
-                    .commit();
-
-            BOOL_ELEMENT(expected).key("debugMode")
-                    .displayedName("Is Debug Mode?")
-                    .description("Decides whether this device-server runs in debug or production mode")
-                    .adminAccess()
-                    .assignmentOptional().defaultValue(false)
-                    .commit();
-
             INT32_ELEMENT(expected).key("heartbeatInterval")
                     .displayedName("Heartbeat interval")
                     .description("The heartbeat interval")
                     .assignmentOptional().defaultValue(10)
-                    .adminAccess()
-                    .commit();
-
-            INT32_ELEMENT(expected).key("nThreads")
-                    .displayedName("Number of threads")
-                    .description("Defines the number of threads that can be used to work on incoming events")
-                    .assignmentOptional().defaultValue(2)
-                    .minInc(1)
                     .adminAccess()
                     .commit();
 
@@ -171,8 +150,6 @@ namespace karabo {
             // What visibility this server should have
             config.get("visibility", m_visibility);
 
-            config.get("debugMode", m_debugMode);
-
             m_connection = Configurator<JmsConnection>::createNode("connection", config);
             m_connection->connect();
 
@@ -196,11 +173,6 @@ namespace karabo {
         std::string DeviceServer::generateDefaultServerId() const {
             return net::bareHostName() += "_Server_" + util::toString(getpid());
         }
-
-
-        bool DeviceServer::isDebugMode() {
-            return m_debugMode;
-        };
 
 
         DeviceServer::~DeviceServer() {
