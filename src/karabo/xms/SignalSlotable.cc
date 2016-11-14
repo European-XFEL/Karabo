@@ -117,7 +117,7 @@ namespace karabo {
 
 
         SignalSlotable::Requestor::Requestor(SignalSlotable* signalSlotable) :
-            m_signalSlotable(signalSlotable), m_replyId(generateUUID()), m_isRequested(false), m_isReceived(false) {
+            m_signalSlotable(signalSlotable), m_replyId(generateUUID()) {
         }
 
 
@@ -172,14 +172,9 @@ namespace karabo {
         void SignalSlotable::Requestor::registerRequest(const std::string& slotInstanceId,
                                                         const karabo::util::Hash::Pointer& header,
                                                         const karabo::util::Hash::Pointer& body) {
-            if (m_isRequested) {
-                throw KARABO_SIGNALSLOT_EXCEPTION("You have to receive an answer before you can send a new request");
-            }
             m_slotInstanceId = slotInstanceId;
             m_header = header;
             m_body = body;
-            m_isRequested = true;
-            m_isReceived = false;
         }
 
 
@@ -202,13 +197,8 @@ namespace karabo {
             m_signalSlotable->registerSynchronousReply(m_replyId);
             sendRequest();
             if (!m_signalSlotable->timedWaitAndPopReceivedReply(m_replyId, header, body, m_timeout)) {
-                m_isReceived = true;
-                m_isRequested = false;
                 throw KARABO_TIMEOUT_EXCEPTION("Reply timed out");
             }
-
-            m_isReceived = true;
-            m_isRequested = false;
         }
 
 
