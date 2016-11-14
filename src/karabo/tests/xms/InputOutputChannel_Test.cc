@@ -67,7 +67,11 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     output->write(Hash("key", -43));
     output->update();
 
-    boost::this_thread::sleep(boost::posix_time::milliseconds(20)); // time for callbacks
+    unsigned int trials = 20;
+    while (--trials >= 0) {
+        if (2u == calls) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(2)); // time for callback
+    }
     CPPUNIT_ASSERT_EQUAL(2u, calls);
 
     // Disconnect
