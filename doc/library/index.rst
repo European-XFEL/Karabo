@@ -8,7 +8,9 @@ bindings, the native Python package and the pyQt-based GUI.
 
 .. toctree::
    cppApi
-   pythonApi
+   pythonApiBound
+   pythonApiMiddlelayer
+   serviceDevices
    interfaces
    testing
    reference
