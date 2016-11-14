@@ -39,9 +39,9 @@ class ProjectPanel(Dockable, QWidget):
         )
         load = KaraboAction(
             icon=icons.load,
-            text="&Open Project",
-            tooltip="Open an Existing Project",
-            triggered=_project_open_handler,
+            text="&Load Project",
+            tooltip="Load an Existing Project",
+            triggered=_project_load_handler,
         )
         save = KaraboAction(
             icon=icons.save,
@@ -71,7 +71,7 @@ class ProjectPanel(Dockable, QWidget):
         pass
 
 
-def _project_open_handler(item_model):
+def _project_load_handler(item_model):
     """ Load a project model and assign it to the `item_model`
 
     :param item_model: The `ProjectItemModel` of the `ProjectView`
@@ -101,20 +101,12 @@ def _project_new_handler(item_model):
     """
     # XXX: HACK. This is only written this way to get _something_ loaded.
     # It must change when integrating into the full GUI
-    from karabo.common.project.api import ProjectModel, read_lazy_object
-    from karabo_gui.project.api import TEST_DOMAIN
-    from karabo.middlelayer_api.newproject.io import read_project_model
+    from karabo.common.project.api import ProjectModel
+
     dialog = NewProjectDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        item = dialog.selected_item()
-        if item is not None:
-            db_conn = get_db_conn()
-            model = ProjectModel(uuid=item, revision=0)
-            read_lazy_object(TEST_DOMAIN, item, 0, db_conn,
-                             read_project_model, existing=model)
-        else:
-            model = ProjectModel(simple_name=dialog.simple_name)
+        model = ProjectModel(simple_name=dialog.simple_name)
         item_model.traits_data_model = model
 
 
@@ -133,7 +125,8 @@ def _project_save_handler(item_model):
 
     # XXX: This is saving EVERYTHING in the project, regardless of need.
     # XXX: Don't do this unless explicitly requested! Save objects individually
-    dialog = SaveProjectDialog()
+    simple_name = item_model.traits_data_model.simple_name
+    dialog = SaveProjectDialog(simple_name=simple_name)
     if dialog.exec() == QDialog.Accepted:
         db_conn = get_db_conn()
         proj_model = item_model.traits_data_model

@@ -188,19 +188,8 @@ def _add_server(project):
 def _add_project(project):
     """ Add a new subproject to the associated project
     """
-    # XXX: HACK. This is only written this way to get _something_ loaded.
-    # It must change when integrating into the full GUI
-    from karabo.common.project.api import get_user_cache, read_lazy_object
-    from karabo_gui.project.api import TEST_DOMAIN
-    from karabo.middlelayer_api.newproject.io import read_project_model
     dialog = NewProjectDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        item = dialog.selected_item()
-        if item is not None:
-            cache = get_user_cache()
-            model = read_lazy_object(TEST_DOMAIN, item, 0, cache,
-                                     read_project_model)
-        else:
-            model = ProjectModel(simple_name=dialog.simple_name)
+        model = ProjectModel(simple_name=dialog.simple_name)
         project.subprojects.append(model)

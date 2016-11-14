@@ -28,7 +28,7 @@ ProjectEntry = namedtuple('ProjectEntry', [key for key in PROJECT_DATA.keys()])
 
 
 class ProjectHandleDialog(QDialog):
-    def __init__(self, title, btn_text, parent=None):
+    def __init__(self, simple_name, title, btn_text, parent=None):
         super(ProjectHandleDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'project_handle.ui')
@@ -43,6 +43,7 @@ class ProjectHandleDialog(QDialog):
         self.twProjects.doubleClicked.connect(self.accept)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.leTitle.textChanged.connect(self._titleChanged)
+        self.leTitle.setText(simple_name)
 
         register_for_broadcasts(self)
 
@@ -55,7 +56,7 @@ class ProjectHandleDialog(QDialog):
     def eventFilter(self, obj, event):
         if isinstance(event, KaraboBroadcastEvent):
             if event.sender is KaraboEventSender.ProjectItemsList:
-                uuids = event.data.get('items', [])
+                uuids = event.data.get('uuids', [])
                 self.twProjects.model().add_project_manager_data(uuids)
             return False
         return super(ProjectHandleDialog, self).eventFilter(obj, event)
@@ -101,19 +102,33 @@ class ProjectHandleDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
 
-class NewProjectDialog(ProjectHandleDialog):
-    def __init__(self, title="New Project", btn_text="New", parent=None):
-        super(NewProjectDialog, self).__init__(title, btn_text, parent)
+class NewProjectDialog(QDialog):
+    def __init__(self, title="New project", parent=None):
+        super(NewProjectDialog, self).__init__(parent)
+        filepath = op.join(op.abspath(op.dirname(__file__)),
+                           'project_new.ui')
+        uic.loadUi(filepath, self)
+
+        self.setWindowTitle(title)
+        self.buttonBox.accepted.connect(self.accept)
+
+    @property
+    def simple_name(self):
+        return self.leTitle.text()
 
 
 class LoadProjectDialog(ProjectHandleDialog):
-    def __init__(self, title="Load Project", btn_text="Load", parent=None):
-        super(LoadProjectDialog, self).__init__(title, btn_text, parent)
+    def __init__(self, simple_name='', title="Load Project", btn_text="Load",
+                 parent=None):
+        super(LoadProjectDialog, self).__init__(simple_name, title, btn_text,
+                                                parent)
 
 
 class SaveProjectDialog(ProjectHandleDialog):
-    def __init__(self, title="Save Project", btn_text="Save", parent=None):
-        super(SaveProjectDialog, self).__init__(title, btn_text, parent)
+    def __init__(self, simple_name='', title="Save Project", btn_text="Save",
+                 parent=None):
+        super(SaveProjectDialog, self).__init__(simple_name, title, btn_text,
+                                                parent)
 
 
 class TableModel(QAbstractTableModel):
@@ -132,6 +147,7 @@ class TableModel(QAbstractTableModel):
         self.add_project_manager_data(project_uuids)
 
     def add_project_manager_data(self, uuids):
+        self.beginResetModel()
         for uuid in uuids:
             # XXX: Fetch the other information via ``uuid``
             entry = ProjectEntry(
@@ -143,6 +159,7 @@ class TableModel(QAbstractTableModel):
                 documentation='documentation',
                 )
             self.entries.append(entry)
+        self.endResetModel()
 
     def hasProject(self, uuid):
         """ Check whether the given `uuid exists in the current model.

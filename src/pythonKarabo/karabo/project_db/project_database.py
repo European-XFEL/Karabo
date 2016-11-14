@@ -199,7 +199,7 @@ class ProjectDatabase(ContextDecorator):
     def _add_vers_ns(self, element):
         return "{" + self.vers_namespace + "}" + element
 
-    def save_item(self, domain, item, item_xml, overwrite=False):
+    def save_item(self, domain, uuid, item_xml, overwrite=False):
         """
         Saves a item xml file into the domain. It will
         create a new entry if the item does not exist yet, or create a new
@@ -216,7 +216,7 @@ class ProjectDatabase(ContextDecorator):
         access rights.
 
         :param domain: the domain under which this item is to be stored
-        :param item: the items name
+        :param uuid: the items uuid
         :param item_xml: the xml containing the item information
         :param overwrite: defaults to False. If set to True versioning
                           information is removed prior to database injection,
@@ -258,7 +258,7 @@ class ProjectDatabase(ContextDecorator):
         # case convert it
         item_xml = self._make_str_if_needed(item_xml)
 
-        path = "{}/{}/{}".format(self.root, domain, item)
+        path = "{}/{}/{}".format(self.root, domain, uuid)
         success = False
         try:
             success = self.dbhandle.load(item_xml, path)
@@ -268,7 +268,7 @@ class ProjectDatabase(ContextDecorator):
         meta = {}
         meta['versioning_info'] = self.get_versioning_info(path)
         meta['domain'] = domain
-        meta['uuid'] = item
+        meta['uuid'] = uuid
         meta['revision'] = revision
         return (success, meta)
 
@@ -470,7 +470,7 @@ class ProjectDatabase(ContextDecorator):
                 """
         maybe_let, maybe_where = '', ''
         if item_types is not None:
-            maybe_let = 'let $item_types := {}'.format(tuple(item_types))
+            maybe_let = "let $item_types := ('{}')".format("','".join(item_types))
             maybe_where = 'where $c/*/@item_type = $item_types'
 
         r_names = ('uuid', 'simple_name', 'item_type')
