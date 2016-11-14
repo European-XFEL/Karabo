@@ -46,8 +46,8 @@ namespace karabo {
             /**
              * Construct worker with callback and time and repetition parameters
              * @param callback this function will be called periodically
-             * @param timeout time in milliseconds auxiliary thread is waiting on the <b>request</b> queue; 0 means <i>nowait</i> mode; <0 means <i>waiting forever</i>
-             * @param repetition <0 means <i>cycling forever</i>; 0 makes no sense; >0 means number of cycles.
+             * @param timeout time in milliseconds auxiliary thread is waiting on the <b>request</b> queue; 0 means <i>nowait</i> mode; ,-1 means <i>waiting forever</i>
+             * @param repetition -1 means <i>cycling forever</i>; >0 means number of cycles.
              */
             BaseWorker(const boost::function<void()>& callback, int timeout = -1, int repetition = -1)
                 : m_callback(callback)
@@ -298,6 +298,10 @@ namespace karabo {
             boost::function<void () > m_exit; // this callback defined once in constructor
         };
 
+        /**
+         * A worker that passes any data received in its queue to a callback function
+         * working asynchronously working in a separate thread.
+         */
         struct Worker : public BaseWorker<bool> {
 
             KARABO_CLASSINFO(Worker, "Worker", "1.0")
@@ -305,6 +309,13 @@ namespace karabo {
             Worker() : BaseWorker<bool>() {
             }
 
+            /**
+             * Instantiate a worker with a callback function to work on data. 
+             * See Worker::WorkerBase for options
+             * @param callback
+             * @param delay
+             * @param repetitions
+             */
             Worker(const boost::function<void()>& callback, int delay = -1, int repetitions = -1)
                 : BaseWorker<bool>(callback, delay, repetitions) {
             }
@@ -312,7 +323,7 @@ namespace karabo {
             virtual ~Worker() {
                 abort().join();
             }
-
+      
             bool stopCondition(const bool& data) {
                 return data;
             }

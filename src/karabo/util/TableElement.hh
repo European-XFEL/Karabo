@@ -27,9 +27,9 @@ namespace karabo {
         extern const Validator::ValidationRules tableValidationRules;
 
         /**
-         * The DefaultValue class defines a default value for element.
+         * @class TableDefaultValue
+         * @brief The TableDefaultValue class defines a default value for the TableElement.
          */
-
         template<typename Element>
         class TableDefaultValue {
 
@@ -83,6 +83,19 @@ namespace karabo {
 
         };
 
+        /**
+         * @class TableElement
+         * @brief The TableElement represents a vector<Hash> with fixed entries and types
+         * 
+         * The TableElement represents a vector<Hash> with fixed entries and types. This
+         * means that each entry in the vector is expected to be a Hash with the
+         * same keys and same types, except for those which are set to assignment optional
+         * and have a default value.
+         * 
+         * Tables are defined by assigning a rowSchema to them, hence specifying how the
+         * Hash entries in the vector should look like. The Schema::Validator is aware of
+         * these specifications and will perform validation on these elements. 
+         */
         class TableElement : public GenericElement<TableElement> {
 
             friend class TableDefaultValue<TableElement>;

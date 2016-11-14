@@ -24,7 +24,9 @@ namespace karabo {
     namespace util {
 
         /**
-         * The factory class.
+         * @class Factory
+         * @brief A factory for managing Karabo classes
+         * 
          * The factory uses something like a hidden (private) Singleton-Pattern.
          * This solves the problem of static initialization order but leaves a simple
          * looking API to the user.
@@ -45,29 +47,51 @@ namespace karabo {
 
         public:
 
+            /**
+             * Register a base class identified by a key in the factory system
+             * @param factoryKey
+             */
             template <class ConcreteClass>
             static void registerClass(const std::string& factoryKey) {
                 //std::cout << "Registering class: " << factoryKey << " with constructor: " << factoryKey << "(" << ctorKey() << ")" << std::endl;
                 Factory::init().m_registry[factoryKey][ctorKey()] = static_cast<boost::function < boost::shared_ptr<AbstractClass > () > > (boost::factory<boost::shared_ptr<ConcreteClass> >());
             }
 
+            /**
+             * Register a class A1 derived from ConcreteClass identified by a key in the factory system
+             * @param factoryKey
+             */
             template <class ConcreteClass, typename A1>
             static void registerClass(const std::string& factoryKey) {
                 //std::cout << "Registering class: " << factoryKey << " with constructor: " << factoryKey << "(const " << ctorKey<A1 > () << "&)" << std::endl;
                 Factory::init().m_registry[factoryKey][ctorKey<A1 > ()] = static_cast<boost::function < boost::shared_ptr<AbstractClass > (const A1&) > > (boost::factory<boost::shared_ptr<ConcreteClass> >());
             }
 
+            /**
+             * Create an Object of the class identified by factoryKey
+             * @param factoryKey
+             * @return a shared pointer to the created object
+             */
             static boost::shared_ptr<AbstractClass> create(const std::string& factoryKey) {
                 CtorMap::const_iterator it = Factory::findCtor(factoryKey, ctorKey());
                 return (boost::any_cast < boost::function < boost::shared_ptr<AbstractClass > () > >(it->second))();
             }
 
+            /**
+             * Create an Object of the class identified by factoryKey
+             * @param factoryKey
+             * @return a shared pointer to the created object cast to A1
+             */
             template <typename A1>
             static boost::shared_ptr<AbstractClass> create(const std::string& factoryKey, const A1& a1) {
                 CtorMap::const_iterator it = Factory::findCtor(factoryKey, ctorKey<A1 > ());
                 return (boost::any_cast < boost::function < boost::shared_ptr<AbstractClass > (const A1&) > >(it->second))(a1);
             }
 
+            /**
+             * Return the classIds registered in the factory
+             * @return 
+             */
             static std::vector<std::string> getRegisteredClasses() {
                 std::vector<std::string> registeredClasses;
                 for (Registry::const_iterator it = Factory::init().m_registry.begin(); it != Factory::init().m_registry.end(); ++it) {
@@ -76,6 +100,11 @@ namespace karabo {
                 return registeredClasses;
             }
 
+            /**
+             * Check if a class identified by factoryKey is known to the factory
+             * @param factoryKey
+             * @return 
+             */
             static bool has(const std::string& factoryKey) {
                 return Factory::init().m_registry.find(factoryKey) != Factory::init().m_registry.end();
             }

@@ -24,10 +24,14 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+             * @class ScalarAttribute
+             * @brief A class to represent scalar attributes in HDF5
+             */
             template<class T>
             class ScalarAttribute : public karabo::io::h5::Attribute {
 
-                public:
+            public:
 
                 KARABO_CLASSINFO(ScalarAttribute, karabo::util::ToType<karabo::util::ToLiteral>::
                                  to(
@@ -39,6 +43,11 @@ namespace karabo {
 
                 }
 
+                /**
+                 * Return the dimensions of the attribute, overwrite for consistent interface.
+                 * Will return vector of length one with entry 1
+                 * @return
+                 */
                 static const karabo::util::Dims getSingleValueDimensions() {
                     return karabo::util::Dims();
                 }
@@ -46,29 +55,58 @@ namespace karabo {
                 virtual ~ScalarAttribute() {
                 }
 
+                /**
+                 The HDF5 dataspace the attribute refers to.
+                 */
                 static hid_t m_dspace;
 
+                /**
+                 * Initialize the HDF5 dataspace with a scalar value of 1
+                 * @return
+                 */
                 static hid_t initDataSpace() {
                     hsize_t ex[] = {1};
                     return H5Screate_simple(1, ex, NULL);
                 }
 
+                /**
+                 * Return the HDF5 dataspace
+                 * @param ex not evaluated
+                 * @param maxEx not evaluated
+                 * @return
+                 */
                 hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {
-                    //                    std::clog << "createDataspace: " << m_dspace << std::endl;
                     return this->m_dspace;
                 }
 
+                /**
+                 * A noop for scalar attributes
+                 * @param dataSpace
+                 */
                 virtual void closeDataspace(hid_t dataSpace) {
                 }
 
+                /**
+                 * Return the HDF5 type-id for the templatized type of ScalarAttribute
+                 * @return
+                 */
                 static hid_t getStandardTypeId() {
                     return ScalarTypes::getHdf5StandardType<T>();
                 }
 
+                /**
+                 * Return the system native type-id for the templatized type of ScalarAttribute
+                 * @return
+                 */
                 static hid_t getNativeTypeId() {
                     return ScalarTypes::getHdf5NativeType<T>();
                 }
 
+                /**
+                 * Bind the HDF5 data to an attribute in a Hash::Node
+                 * @param node to bind to
+                 * @return the bound node
+                 */
                 karabo::util::Element<std::string>& bindAttribute(karabo::util::Hash::Node& node) {
                     if (!node.hasAttribute(m_key)) {
                         node.setAttribute(m_key, T());
@@ -88,6 +126,11 @@ namespace karabo {
 
             protected:
 
+                /**
+                 * Write value of an Element into the HDF5 attribute
+                 * @param attributeNode Element holding the value
+                 * @param attribute note evaluate in this context
+                 */
                 void writeNodeAttribute(const karabo::util::Element<std::string>& attributeNode, hid_t attribute) {
                     try {
                         hid_t tid = getNativeTypeId();
@@ -98,6 +141,11 @@ namespace karabo {
                     }
                 }
 
+                /**
+                 * Read value from HDF5 into internal represenation
+                 * @param attributeNode not evaluated
+                 * @param attribute note evaluated
+                 */
                 void readNodeAttribute(karabo::util::Element<std::string>& attributeNode, hid_t attribute) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "reading - template method";
                     hid_t tid = getNativeTypeId();
@@ -110,10 +158,14 @@ namespace karabo {
                 T* m_attributeData;
             };
 
+            /**
+             * @class ScalarAttribute
+             * @brief A class to represent scalar attributes in HDF5 -specialization for strings
+             */
             template<>
             class ScalarAttribute<std::string> : public karabo::io::h5::Attribute {
 
-                public:
+            public:
 
                 KARABO_CLASSINFO(ScalarAttribute, karabo::util::ToType<karabo::util::ToLiteral>::
                                  to(
@@ -188,10 +240,14 @@ namespace karabo {
                 std::string* m_attributeData;
             };
 
+            /**
+             * @class ScalarAttribute
+             * @brief A class to represent scalar attributes in HDF5 -specialization for booleans
+             */
             template<>
             class ScalarAttribute<bool> : public karabo::io::h5::Attribute {
 
-                public:
+            public:
 
                 KARABO_CLASSINFO(ScalarAttribute, karabo::util::ToType<karabo::util::ToLiteral>::
                                  to(

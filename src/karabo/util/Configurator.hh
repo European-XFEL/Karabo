@@ -20,7 +20,10 @@ namespace karabo {
     namespace util {
         namespace confTools {
 
-#define _KARABO_SCHEMA_DESCRIPTION_FUNCTION expectedParameters
+            /**
+             * @define the name of the schema description function in Karabo
+             */
+            #define _KARABO_SCHEMA_DESCRIPTION_FUNCTION expectedParameters
             typedef void(*PointerToSchemaDescriptionFunction)(Schema&);
 
             //**********************************************
@@ -32,16 +35,31 @@ namespace karabo {
 
             };
 
+            /**
+             * Return a pointer to a valid schema description function
+             * @param 
+             * @return 
+             */
             template<class Class>
             inline PointerToSchemaDescriptionFunction getSchemaDescriptionFunction(VoidArg1FunctionExists<Class, Schema, &Class::_KARABO_SCHEMA_DESCRIPTION_FUNCTION>*) {
                 return &Class::_KARABO_SCHEMA_DESCRIPTION_FUNCTION;
             }
 
+            /**
+             * Return a NULL-Pointer if no schema description function exists
+             * @param ...
+             * @return 
+             */
             template<class Class>
             inline PointerToSchemaDescriptionFunction getSchemaDescriptionFunction(...) {
                 return 0;
             }
 
+            /**
+             * Split a configuration into classId and configuration Hash
+             * @param rootedConfiguration
+             * @return a pair of class id and configuration Hash
+             */
             inline std::pair<std::string, karabo::util::Hash> splitIntoClassIdAndConfiguration(const karabo::util::Hash& rootedConfiguration) {
                 if (rootedConfiguration.size() != 1) throw KARABO_LOGIC_EXCEPTION("Expecting exactly one (root-)node identifying the classId in configuration");
                 std::string classId = rootedConfiguration.begin()->getKey();
@@ -50,10 +68,11 @@ namespace karabo {
             }
         }
 
-        //**********************************************
-        //               Configurator                  *
-        //**********************************************
-
+       
+        /**
+         * @class Configurator
+         * @brief The Configurator provides for creating and configuring factorized classes.
+         */
         template <class BaseClass>
         class Configurator {
 
@@ -70,28 +89,50 @@ namespace karabo {
 
             KARABO_CLASSINFO(Configurator<BaseClass>, "Configurator", "1.0");
 
+            /**
+             * Register a base class into the factory
+             * @param classId identifying the class in the factory
+             */
             template <class DerivedClass>
             static void registerClass(const std::string& classId) {
                 //std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey() << ") for configuration" << std::endl;
                 Configurator::init().m_registry[classId][ctorKey()] = static_cast<boost::function < boost::shared_ptr<BaseClass > (const Hash&) > > (boost::factory<boost::shared_ptr<DerivedClass> >());
             }
 
+            /**
+             * Register a class derived from A1 into the factory
+             * @param classId identifying the class in the factory
+             */
             template <class DerivedClass, typename A1>
             static void registerClass(const std::string& classId) {
                 //std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey<A1 > () << ") for configuration" << std::endl;
                 Configurator::init().m_registry[classId][ctorKey<A1 > ()] = static_cast<boost::function < boost::shared_ptr<BaseClass > (const Hash&, const A1&) > > (boost::factory<boost::shared_ptr<DerivedClass> >());
             }
 
+            /**
+             * Register the schema decription function for classId in the factory
+             * @param classId identifying the class in the factory
+             */
             template <class T>
             static void registerSchemaFunction(const std::string& classId) {
                 confTools::PointerToSchemaDescriptionFunction p = confTools::getSchemaDescriptionFunction<T > (0);
                 if (p) Configurator::init().m_schemaFuncRegistry[classId].push_back(p);
             }
 
+            /**
+             * Set the default class id of the factory
+             * @param classId
+             */
             static void setDefault(const std::string& classId) {
                 Configurator::init().m_default = classId;
             }
 
+            /**
+             * Get the schema defining a factorized class
+             * @param classId identifying the class in the factory
+             * @param rules defining how to assembly the returned Schema
+             * @return 
+             */
             static Schema getSchema(const std::string& classId, const Schema::AssemblyRules& rules = Schema::AssemblyRules()) {
                 Schema schema(classId, rules);
                 SchemaFuncRegistry::const_iterator it = Configurator::init().m_schemaFuncRegistry.find(classId);
@@ -106,12 +147,23 @@ namespace karabo {
                 return schema;
             }
 
+            /**
+             * Create an Object of the default class of this factory
+             * @param validate
+             * @return a pointer to the created object
+             */
             inline static typename BaseClass::Pointer createDefault(const bool validate = true) {
                 std::string defaultClassId = Configurator::init().m_default;
                 if (defaultClassId.empty()) throw KARABO_INIT_EXCEPTION("No default was defined");
                 return create(defaultClassId, Hash(), validate);
             }
 
+            /**
+             * Create an object as described by configuration from the factory
+             * @param configuration where the root-nodes key identifies the classId
+             * @param validate if true, validate the configuration against the classes Schema. Raises an exception if validation fails
+             * @return a pointer to the created object
+             */
             inline static typename BaseClass::Pointer create(const karabo::util::Hash& configuration, const bool validate = true) {
                 try {
                     std::pair<std::string, karabo::util::Hash> p = karabo::util::confTools::splitIntoClassIdAndConfiguration(configuration);
@@ -122,6 +174,12 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Create an object of classId from the factory, assign default values as given by the class Schema
+             * @param configuration Hash containing the configuration
+             * @param validate if true, validate the configuration against the classes Schema. Raises an exception if validation fails
+             * @return a pointer to the created object
+             */
             inline static typename BaseClass::Pointer create(const std::string& classId, const karabo::util::Hash& configuration = Hash(), const bool validate = true) {
                 CtorMap::const_iterator it = findCtor(classId, ctorKey());
                 if (validate) {
@@ -133,6 +191,12 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Create an object  as described by configuration from the factory
+             * @param configuration where the root-nodes key identifies the classId
+             * @param validate if true, validate the configuration against the classes Schema. Raises an exception if validation fails
+             * @return a pointer to the base class of created object
+             */
             template <typename A1>
             inline static typename BaseClass::Pointer create(const karabo::util::Hash& configuration, const A1& a1, const bool validate = true) {
                 try {
@@ -144,6 +208,12 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Create an object of classId as described by configuration from the factory
+             * @param configuration Hash containing the configuration
+             * @param validate if true, validate the configuration against the classes Schema. Raises an exception if validation fails
+             * @return a pointer to the base class of created object
+             */
             template <typename A1>
             inline static typename BaseClass::Pointer create(const std::string& classId, const karabo::util::Hash& configuration, const A1& a1, const bool validate = true) {
                 CtorMap::const_iterator it = findCtor(classId, ctorKey());
@@ -199,6 +269,13 @@ namespace karabo {
                 return createNode(nodeName, BaseClass::classInfo().getClassId(), input, validate);
             }
 
+            /**
+             * Create object from a choice of factorized classes as defined by choiceName from input configuration
+             * @param choiceName
+             * @param input
+             * @param validate
+             * @return 
+             */
             inline static typename BaseClass::Pointer createChoice(const std::string& choiceName, const karabo::util::Hash& input, const bool validate = true) {
                 if (input.has(choiceName)) {
                     return create(input.get<Hash > (choiceName), validate);
@@ -207,6 +284,13 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Create a list of factorized classes as defined by input configuration. Classes need to be of the same Base class
+             * @param choiceName
+             * @param input
+             * @param validate
+             * @return 
+             */
             inline static std::vector<typename BaseClass::Pointer> createList(const std::string& listName, const karabo::util::Hash& input, const bool validate = true) {
                 if (input.has(listName)) {
                     const std::vector<Hash>& tmp = input.get<std::vector<Hash> > (listName);
@@ -220,6 +304,10 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Return a vector of classIds registered in this Configurator
+             * @return 
+             */
             static std::vector<std::string> getRegisteredClasses() {
                 std::vector<std::string> registeredClasses;
                 for (Registry::const_iterator it = Configurator::init().m_registry.begin(); it != Configurator::init().m_registry.end(); ++it) {

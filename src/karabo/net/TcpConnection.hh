@@ -36,9 +36,13 @@ namespace karabo {
         typedef boost::function<void () > TimeoutHandler;
         
         /**
-         * The Connection class.
+         * @class TcpConnection
+         * @brief a class for handling tcp connections
+         * 
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
+         * It is a factory class and thus can be configured using its expected
+         * parameters
          */
         class TcpConnection : public Connection {
 

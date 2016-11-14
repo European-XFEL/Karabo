@@ -18,6 +18,12 @@
 namespace karabo {
     namespace io {
 
+        /**
+         * @class Input
+         * @brief The Input class provides a datatype T specific base for inputs in
+         *        the Karabo system. The not type-specific methods are provided by 
+         *        the AbstractInput class.
+         */
         template <class T>
         class Input : public AbstractInput {
 
@@ -32,8 +38,17 @@ namespace karabo {
             virtual ~Input() {
             }
 
+            /**
+             * Read data from the input located at a given index
+             * @param data
+             * @param idx
+             */
             virtual void read(T& data, size_t idx = 0) = 0;
 
+            /**
+             * Total size (in terms of type T entries) of the input's data soruce
+             * @return 
+             */
             virtual size_t size() = 0;
 
         };

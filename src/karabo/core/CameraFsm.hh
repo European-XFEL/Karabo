@@ -19,6 +19,18 @@
 namespace karabo {
     namespace core {
 
+        /**
+         * @class CameraFsm
+         * @brief A finite state machine designed to be used for camera-type devices
+         * 
+         * A finite state machine designed to be used for camera-type devices. It uses
+         * an ERROR-NORMAL top state machine (karabo::core::OkErrorFsm type). 
+         * In the NORMAL region the following state transition table is used:
+         * 
+         * STOPPED (AcquireEvent) -> (AcquireAction) STARTED
+         * STARTED (StopEvent) -> (StopAction) STOPPED 
+         * STARTED (TriggerEvent) -> (TriggerAction) STARTED 
+         */
         class CameraFsm : public BaseFsm {
 
         public:

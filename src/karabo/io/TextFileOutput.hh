@@ -31,7 +31,11 @@ namespace karabo {
     namespace io {
 
         /**
-         * The TextFileOutput class.
+         * @class TextFileOutput
+         * @brief The text file output specializes the Output class to write
+         *        data of type T to a text file. The actual
+         *        serialization format depends on the Serializer selected in this
+         *        class' configuration.
          */
         template <class T>
         class TextFileOutput : public Output<T> {

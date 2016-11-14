@@ -20,7 +20,8 @@ namespace karabo {
     namespace util {
 
         /**
-         * The SimpleElement represents a leaf and can be of any (supported) type
+         * @class SimpleElement
+         * @brief The SimpleElement represents a leaf and can be of any (supported) type
          */
         template<typename ValueType>
         class SimpleElement : public LeafElement<SimpleElement<ValueType>, ValueType > {

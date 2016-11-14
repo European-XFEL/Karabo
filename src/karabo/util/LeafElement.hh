@@ -206,6 +206,10 @@ namespace karabo {
             DefaultValue() : m_genericElement(0) {
             }
 
+            /**
+             * Set the element this DefaultValue refers to
+             * @param el
+             */
             void setElement(Element* el) {
                 m_genericElement = el;
             }
@@ -313,11 +317,9 @@ namespace karabo {
             template< class U, class V, class W> friend class AlarmSpecific;
 
             /**
-             * The <b>needsAcknowledging</b> method serves for setting up whether
-             * an alarm condition needs to be acknowledged to clear from alarm
-             * service devices
-             * @param ack: acknowledgement is needed if true.
-             * @return reference to the Element for proper methods chaining
+             * Set lower warning threshold for rolling window variance
+             * @param value
+             * @return 
              */
             AlarmSpecific<Element, ValueType, Self>& warnVarianceLow(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_WARN_VARIANCE_LOW, value);
@@ -325,24 +327,44 @@ namespace karabo {
                 return m_alarmSpecific;
             }
 
+            /**
+             * Set upper warning threshold for rolling window variance
+             * @param value
+             * @return 
+             */
             AlarmSpecific<Element, ValueType, Self>& warnVarianceHigh(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_WARN_VARIANCE_HIGH, value);
                 m_alarmSpecific.setScope(m_readOnlyElement, this, KARABO_WARN_VARIANCE_HIGH);
                 return m_alarmSpecific;
             }
 
+            /**
+             * Set lower alarm threshold for rolling window variance
+             * @param value
+             * @return 
+             */
             AlarmSpecific<Element, ValueType, Self>& alarmVarianceLow(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_ALARM_VARIANCE_LOW, value);
                 m_alarmSpecific.setScope(m_readOnlyElement, this, KARABO_ALARM_VARIANCE_LOW);
                 return m_alarmSpecific;
             }
 
+            /**
+             * Set upper alarm threshold for rolling window variance
+             * @param value
+             * @return 
+             */
             AlarmSpecific<Element, ValueType, Self>& alarmVarianceHigh(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_ALARM_VARIANCE_HIGH, value);
                 m_alarmSpecific.setScope(m_readOnlyElement, this, KARABO_ALARM_VARIANCE_HIGH);
                 return m_alarmSpecific;
             }
 
+            /**
+             * Set the size/interval for the rolling window the variance is evaluated over.
+             * @param value
+             * @return 
+             */
             ReadOnlySpecific<Element, ValueType>& evaluationInterval(const unsigned int interval) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ROLLING_STATS_EVAL, interval);
                 return *m_readOnlyElement;
@@ -399,65 +421,129 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set lower warning threshold for this value
+             * @param value
+             * @return 
+             */
             AlarmSpecific<Element, ValueType, Self> & warnLow(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_WARN_LOW, value);
                 m_alarmSpecific.setScope(this, this, KARABO_WARN_LOW);
                 return m_alarmSpecific;
             }
 
+            /**
+             * Set upper warning threshold for this value
+             * @param value
+             * @return 
+             */
             AlarmSpecific<Element, ValueType, Self> & warnHigh(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_WARN_HIGH, value);
                 m_alarmSpecific.setScope(this, this, KARABO_WARN_HIGH);
                 return m_alarmSpecific;
             }
 
+            /**
+             * Set lower alarm threshold for this value
+             * @param value
+             * @return 
+             */
             AlarmSpecific<Element, ValueType, Self> & alarmLow(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_ALARM_LOW, value);
                 m_alarmSpecific.setScope(this, this, KARABO_ALARM_LOW);
                 return m_alarmSpecific;
             }
 
+            /**
+             * Set upper alarm threshold for this value
+             * @param value
+             * @return 
+             */
             AlarmSpecific<Element, ValueType, Self> & alarmHigh(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_ALARM_HIGH, value);
                 m_alarmSpecific.setScope(this, this, KARABO_ALARM_HIGH);
                 return m_alarmSpecific;
             }
 
+            /**
+             * Enable rolling window statistics for this element. Allows to set
+             * variance alarms.
+             * @return 
+             */
             RollingStatsSpecific<Element, ValueType> & enableRollingStats() {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS, true);
                 m_rollingStatsSpecific.setElement(this);
                 return m_rollingStatsSpecific;
             }
 
+            /**
+             * Set the archiving policy for this element. Available settings
+             * are:
+             * 
+             *   EVERY_EVENT,
+             *   EVERY_100MS,
+             *   EVERY_1S,
+             *   EVERY_5S,
+             *   EVERY_10S,
+             *   EVERY_1MIN,
+             *   EVERY_10MIN,
+             *   NO_ARCHIVING
+             * 
+             * @param value
+             * @return 
+             */
             ReadOnlySpecific& archivePolicy(const Schema::ArchivePolicy& value) {
                 m_genericElement->getNode().template setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, value);
                 return *this;
             }
 
+            /**
+            * Registers this element into the Schema
+            */
             void commit() {
                 m_genericElement->commit();
             }
 
+            /**
+             * The <b>observerAccess</b> method serves for setting up the <i>required access level</i> attribute to be OBSERVER.
+             * @return reference to the Element (to allow method's chaining)
+             */
             ReadOnlySpecific& observerAccess() {
                 m_genericElement->observerAccess();
                 return *this;
             }
 
+            /**
+             * The <b>userAccess</b> method serves for setting up the <i>required access level</i> attribute to be USER.
+             * @return reference to the Element (to allow method's chaining)
+             */
             ReadOnlySpecific& userAccess() {
                 m_genericElement->userAccess();
                 return *this;
             }
 
+            /**
+             * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be OPERATOR.
+             * @return reference to the Element (to allow method's chaining)
+             */
             ReadOnlySpecific& operatorAccess() {
                 m_genericElement->operatorAccess();
                 return *this;
             }
 
+            /**
+             * The <b>expertAccess</b> method serves for setting up the <i>required access level</i> attribute to be EXPERT.
+             * @return reference to the Element (to allow method's chaining)
+             */
             ReadOnlySpecific& expertAccess() {
                 m_genericElement->expertAccess();
                 return *this;
             }
 
+            /**
+             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be ADMIN.
+             * @return reference to the Element (to allow method's chaining)
+             */
             ReadOnlySpecific& adminAccess() {
                 m_genericElement->adminAccess();
                 return *this;

@@ -19,6 +19,12 @@
 namespace karabo {
     namespace io {
 
+        /*
+         * @class TextSerializer
+         * @brief The TextSerializer implements a text format serialization and
+         *        de-serialization interface for type T. The actual serialization
+         *        is logic is implemented in derived class.
+         */
         template <class T>
         class TextSerializer {
 
@@ -28,54 +34,113 @@ namespace karabo {
 
             KARABO_CONFIGURATION_BASE_CLASS
 
+            /**
+             * Save an object into a text archive
+             * @param object to save
+             * @param archive to save into
+             */
             virtual void save(const T& object, std::string& archive) = 0;
 
+            /**
+             * Save a vector of objects into a text archive
+             * @param objects to save
+             * @param archive to save into
+             */
             virtual void save(const std::vector<T>& objects, std::string& archive) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Saving vectors of objects is not supported by this serializer");
             }
 
+            /**
+             * Load an object from a text archive
+             * @param object to load data into
+             * @param archive to load the object from
+             */
             virtual void load(T& object, const std::string& archive) = 0;
 
+            /**
+             * Load an object from a text archive
+             * @param object to load data into
+             * @param archive to load the object from
+             */
             virtual void load(T& object, const std::stringstream& archive) {
                 this->load(object, archive.str()); // Creates a copy, but may be overridden for more performance
             }
-
+            /**
+             * Load an object from a text archive
+             * @param object to load data into
+             * @param archive to load the object from
+             */
             virtual void load(T& object, const char* archive) {
                 this->load(object, std::string(archive)); // Creates a copy, but may be overridden for more performance
             }
 
+            /**
+             * Load an object from a text archive
+             * @param object to load data into
+             * @param archive to load the object from
+             * @param nBytes size of the archive
+             */
             virtual void load(T& object, const char* archive, const size_t nBytes) {
                 this->load(object, std::string(archive, nBytes));
             }
 
+            /**
+             * Save a vector of objects into a text archive
+             * @param objects to save
+             * @param archive to save into
+             */
             virtual void load(std::vector<T>& objects, const std::string& archive) {
                 std::vector<T> tmp(1);
                 this->load(tmp[0], archive);
                 objects.swap(tmp);
             }
 
+            /**
+             * Save a vector of objects into a text archive
+             * @param objects to save
+             * @param archive to save into
+             */
             virtual void load(std::vector<T>& objects, const std::stringstream& archive) {
                 this->load(objects, archive.str());
             }
 
+            /**
+             * Return the serialized text representation of an object, i.e. save into an empty
+             * archive and return this
+             * @param object
+             * @return 
+             */
             virtual std::string save(const T& object) {
                 std::string archive;
                 this->save(object, archive);
                 return archive;
             }
 
+            /**
+             * Load an object from a text archive.
+             * @param archive binary text containing the data
+             */
             virtual T load(const std::string& archive) {
                 T object;
                 this->load(object, archive);
                 return object;
             }
 
+            /**
+             * Load an object from a text archive.
+             * @param archive binary text containing the data
+             */
             virtual T load(const char* archive) {
                 T object;
                 this->load(object, archive);
                 return object;
             }
 
+            /**
+             * Load an object from a text archive.
+             * @param archive binary text containing the data
+             * @param nBytes size in bytes of the data archive
+             */
             virtual T load(char* archive, const size_t nBytes) {
                 T object;
                 this->load(object, archive, nBytes);

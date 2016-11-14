@@ -35,7 +35,15 @@ namespace karabo {
         class BaseDevice;
 
         /**
-         * The DeviceServer class.
+         * @class DeviceServer
+         * @brief The DeviceServer class hosts device instances
+         * 
+         * The DeviceServer class hosts device instances. It monitors the system
+         * for new class plugins appearing and notifies the distributed system
+         * of these and their static information.
+         * 
+         * The device server uses an ok-error FSM, which knows the ERROR and 
+         * NORMAL karabo::util::State states.
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
 
@@ -69,16 +77,43 @@ namespace karabo {
             KARABO_CONFIGURATION_BASE_CLASS
 
 
+            /**
+             * Static properties of the device server
+             * @param to inject these properties to
+             */
             static void expectedParameters(karabo::util::Schema&);
 
+            /**
+             * The constructor expects a configuration Hash. The following 
+             * configuration options are supported:
+             * 
+             * - serverId: a string giving the server's id
+             * - autostart: a vector of Hashes containing configurations for device that are to be automatically started by the server
+             * - scanPlugins: a boolean indicating if this server should scan for additional plugins
+             * - visibility: an integer indicating device server visibility in the distributed system
+             * - debugMode: a boolean indicating if the server should run in debugMode
+             * - connection: a Hash containing the connection information for a karabo::net::JmsConnection
+             * - pluginDirectory: a path to the plugin directory for this device server
+             * - heartbeatInterval: interval in seconds at which this server sends heartbeats to the distributed system
+             * - nThreads: number of threads to use in this device server
+             * @param 
+             */
             DeviceServer(const karabo::util::Hash&);
 
             virtual ~DeviceServer();
 
             void finalizeInternalInitialization();
 
+            /**
+             * Check if the device server is running
+             * @return 
+             */
             bool isRunning() const;
 
+            /**
+             * Check if the device server is in debug mode
+             * @return 
+             */
             bool isDebugMode();
 
 

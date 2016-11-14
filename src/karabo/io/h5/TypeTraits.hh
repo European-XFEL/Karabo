@@ -18,6 +18,10 @@ namespace karabo {
     namespace io {
         namespace h5 {
 
+            /**
+             * @class ScalarTypes
+             * @brief This class converts C++ types to native HDF5 types
+             */
             class ScalarTypes {
 
                 public:

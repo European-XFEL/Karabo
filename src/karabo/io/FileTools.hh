@@ -21,6 +21,17 @@ namespace karabo {
 
     namespace io {
 
+        /**
+         * Load an object of class T from a file. The configuration determines which 
+         * access and de-serialzation methods to use.
+         * @param object to load data into
+         * @param filename of the file to load from. The input chose depends on the file
+         *        extension:
+         *        - .h5: Hdf5File
+         *        - .bin: BinaryFile
+         *        - .others: TextFile
+         * @param config for the Input class that will be used
+         */
         template <class T>
         inline void loadFromFile(T& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash()) {
             boost::filesystem::path filepath(filename);
@@ -40,6 +51,17 @@ namespace karabo {
             }
         }
 
+        /**
+         * Save an object of class T to a file. The configuration determines which 
+         * access and serialzation methods to use.
+         * @param object to save
+         * @param filename of the file to load from. The input chose depends on the file
+         *        extension:
+         *        - .h5: Hdf5File
+         *        - .bin: BinaryFile
+         *        - .others: TextFile
+         * @param config for the Output class that will be used
+         */
         template <class T>
         inline void saveToFile(const T& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash()) {
             boost::filesystem::path filepath(filename);
@@ -60,18 +82,32 @@ namespace karabo {
             }
         }
 
+        /**
+         * Save a buffer into a file
+         * @param buffer
+         * @param filename
+         */
         inline void saveToFile(const std::vector<char>& buffer, const std::string& filename) {
             std::ofstream file(filename.c_str(), std::ios::binary);
             file.write(const_cast<const char*> (&buffer[0]), buffer.size());
             file.close();
         }
 
+        /**
+         * Load a buffer from a file
+         * @param buffer
+         * @param filename
+         */
         inline void loadFromFile(std::vector<char>& buffer, const std::string& filename) {
             std::ifstream file(filename.c_str(), std::ios::binary);
             //fileContents.reserve(10000);
             buffer.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
         }
 
+        /**
+         * Get the I/O datatype for type T in terms of the Karabo class id
+         * @return 
+         */
         template <class T>
         inline std::string getIODataType() {
             using namespace karabo::util;
