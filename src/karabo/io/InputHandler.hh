@@ -14,15 +14,36 @@
 namespace karabo {
     namespace io {
 
+        /**
+         * @class InputHandler
+         * @brief The InputHandler class is the base class for registering and accessing I/O and end of stream input handlers
+         */
         class InputHandler {
 
             public:
 
             KARABO_CLASSINFO(InputHandler, "InputHandler", "1.0")
 
+            /**
+             * Register an input handler for I/O events. The handler must be of a callable type.
+             * @param eventHandler
+             */
             virtual void registerIOEventHandler(const boost::any& eventHandler) = 0;
+            
+            /**
+             * Register an input handler for end of stream events. The handler must be of a callable type.
+             * @param endOfStreamEventHandler
+             */
             virtual void registerEndOfStreamEventHandler(const boost::any& endOfStreamEventHandler) = 0;
+            
+            /**
+             * Trigger an I/O event on the registered handler
+             */
             virtual void triggerIOEvent() = 0;
+            
+            /**
+             * Trigger an end of stream event on the registered handler
+             */
             virtual void triggerEndOfStreamEvent() = 0;
         };
     }

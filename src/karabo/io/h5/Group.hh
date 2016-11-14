@@ -23,6 +23,11 @@ namespace karabo {
 
         namespace h5 {
 
+            /**
+             * @class Group
+             * @brief An interface for grouping Hash data in HDF5
+             * @deprecated This class seams to not be used. Deprecate it.S
+             */
             class Group : public karabo::io::h5::Element {
 
                 public:

@@ -26,7 +26,16 @@ namespace karabo {
      */
     namespace net {
 
+
+        /**
+         * @class Channel
+         * @brief Represents a communication channel used for p2p messaging on
+         *        a connection to a remote instance. This is only an interface,
+         *        see TcpChannel for a concrete implementation using the tcp protocol
+         *
+         */
         class Channel : public boost::enable_shared_from_this<Channel> {
+
 
             public:
 
@@ -53,7 +62,11 @@ namespace karabo {
             virtual ~Channel() {
             }
 
-            // TODO Check, whether is needed
+            
+            /**
+             * Return a pointer to the connection this channels belongs to
+             * @return 
+             */
             virtual Connection::Pointer getConnection() const = 0;
 
             /**
@@ -298,14 +311,27 @@ namespace karabo {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Synchronous write. The function blocks until all bytes are written.
+             * @param data vector of chars containing the data to be written
+             */
             virtual void write(const std::vector<char>& data) {
                 this->write(&data[0], data.size());
             }
 
+            /**
+             * Synchronous write. The function blocks until all bytes are written.
+             * @param data string, where each character represents on byte of data to be written
+             */
             virtual void write(const std::string& data) {
                 this->write(data.c_str(), data.size());
             }
 
+            /**
+             * Synchronous write. The function blocks until all bytes are written.
+             * @param data is contained in a Hash with no particular structure, but serializable, i.e. containing no
+              *       non-karabo data types or Hash derived types
+             */
             virtual void write(const karabo::util::Hash& data) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
@@ -314,22 +340,49 @@ namespace karabo {
             //*              Synchronous Write - With Header               */
             //**************************************************************/
 
+            /**
+             * Synchronous write. The function blocks until all bytes are written.
+             * @param header containing metadata for the data being written
+             * @param data Pointer to a contiguous block of memory that should be written
+             * @param size This number of bytes will be written
+             */
             virtual void write(const karabo::util::Hash& header, const char* data, const size_t& size) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Synchronous write. The function blocks until all bytes are written.
+             * @param header containing metadata for the data being written
+             * @param data vector of chars containing the data to be written
+             */
             virtual void write(const karabo::util::Hash& header, const std::vector<char>& data) {
                 this->write(header, &data[0], data.size());
             }
-
+            
+            /**
+             * Synchronous write. The function blocks until all bytes are written.
+             * @param header containing metadata for the data being written
+             * @param data vector of chars containing the data to be written, passed as a shared pointer
+             */
             virtual void write(const karabo::util::Hash& header, boost::shared_ptr<const std::vector<char> >& data) {
                 this->write(header, &(*data)[0], data->size());
             }
 
+            /**
+             * Synchronous write. The function blocks until all bytes are written.
+             * @param header containing metadata for the data being written
+             * @param data string, where each character represents on byte of data to be written
+             */
             virtual void write(const karabo::util::Hash& header, const std::string& data) {
                 this->write(header, data.c_str(), data.size());
             }
 
+             /**
+             * Synchronous write. The function blocks until all bytes are written.
+             * @param header containing metadata for the data being written
+             * @param data is contained in a Hash with no particular structure, but serializable, i.e. containing no
+              *       non-karabo data types or Hash derived types
+             */
             virtual void write(const karabo::util::Hash& header, const karabo::util::Hash& body) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
@@ -338,18 +391,44 @@ namespace karabo {
             //*              Asynchronous Write - No Header                */
             //**************************************************************/
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is called 
+             * @param data Pointer to a contiguous block of memory that should be written
+             * @param size This number of bytes will be written
+             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a boost::function
+             *        which takes const boost::system::error_code& as its only argument.
+             */
             virtual void writeAsyncRaw(const char* data, const size_t& size, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is called 
+             * @param data vector of chars containing the data to be written
+             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a boost::function
+             *        which takes const boost::system::error_code& as its only argument.
+             */
             virtual void writeAsyncVector(const std::vector<char>& data, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is called 
+             * @param data vector of chars containing the data to be written, passed as a shared pointer
+             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a boost::function
+             *        which takes const boost::system::error_code& as its only argument.
+             */
             virtual void writeAsyncVectorPointer(const boost::shared_ptr<std::vector<char> >& data, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is called 
+             * @param data is contained in a Hash with no particular structure, but serializable, i.e. containing no
+              *       non-karabo data types or Hash derived types
+             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a boost::function
+             *        which takes const boost::system::error_code& as its only argument.
+             */
             virtual void writeAsyncHash(const karabo::util::Hash& data, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
@@ -358,18 +437,48 @@ namespace karabo {
             //*              Asynchronous Write - With Header              */
             //**************************************************************/
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is called
+             * @param header containing metadata for the data being written
+             * @param data Pointer to a contiguous block of memory that should be written
+             * @param size This number of bytes will be written
+             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a boost::function
+             *        which takes const boost::system::error_code& as its only argument.
+             */
             virtual void writeAsyncHashRaw(const karabo::util::Hash& header, const char* data, const size_t& size, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is called 
+             * @param header containing metadata for the data being written
+             * @param data vector of chars containing the data to be written
+             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a boost::function
+             *        which takes const boost::system::error_code& as its only argument.
+             */
             virtual void writeAsyncHashVector(const karabo::util::Hash& header, const std::vector<char>& data, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is called 
+             * @param header containing metadata for the data being written
+             * @param data vector of chars containing the data to be written, passed as a shared pointer
+             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a boost::function
+             *        which takes const boost::system::error_code& as its only argument.
+             */
             virtual void writeAsyncHashVectorPointer(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& data, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is called 
+             * @param header containing metadata for the data being written
+             * @param data is contained in a Hash with no particular structure, but serializable, i.e. containing no
+              *       non-karabo data types or Hash derived types
+             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a boost::function
+             *        which takes const boost::system::error_code& as its only argument.
+             */
             virtual void writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
@@ -378,55 +487,136 @@ namespace karabo {
             //*                     Misc                                   */ 
             //**************************************************************/
 
+            /**
+             * Set a timeout in when synchronous reads timeout if the haven't been handled
+             * @param milliseconds
+             */
             virtual void setTimeoutSyncRead(int milliseconds) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
+            /**
+             * Close this channel
+             */
             virtual void close() = 0;
 
+            /**
+             * Check if this channel is open
+             * @return 
+             */
             virtual bool isOpen() = 0;
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Fire and forget, no callback called upon completion
+             * @param data Pointer to a contiguous block of memory that should be written
+             * @param size This number of bytes will be written
+             * @param prio the priority of this write operation
+             */
             virtual void writeAsync(const char* data, const size_t& size, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Fire and forget, no callback called upon completion
+             * @param data vector of chars containing the data to be written
+             * @param prio the priority of this write operation
+             */
             virtual void writeAsync(const std::vector<char>& data, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Fire and forget, no callback called upon completion
+             * @param data vector of chars containing the data to be written, passed as a shared pointer
+             * @param prio the priority of this write operation
+             */
             virtual void writeAsync(const boost::shared_ptr<std::vector<char> >& data, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Fire and forget, no callback called upon completion
+             * @param data passed as a string were each character represents one byte of the message
+             * @param prio the priority of this write operation
+             */
             virtual void writeAsync(const std::string& data, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Fire and forget, no callback called upon completion
+             * @param data is contained in a Hash with no particular structure, but serializable, i.e. containing no
+             *        non-karabo data types or Hash derived types
+             * @param prio the priority of this write operation
+             */
             virtual void writeAsync(const karabo::util::Hash& data, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Fire and forget, no callback called upon completion
+             * @param data Pointer to a contiguous block of memory that should be written
+             * @param header containing metadata for the data being written
+             * @param size This number of bytes will be written
+             * @param prio the priority of this write operation
+             */
             virtual void writeAsync(const karabo::util::Hash& header, const char* data, const size_t& size, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Fire and forget, no callback called upon completion
+             * @param header containing metadata for the data being written
+             * @param data vector of chars containing the data to be written
+             * @param prio the priority of this write operation
+             */
             virtual void writeAsync(const karabo::util::Hash& header, const std::vector<char>& data, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Fire and forget, no callback called upon completion
+             * @param header containing metadata for the data being written
+             * @param data vector of chars containing the data to be written, passed as a shared pointer
+             * @param prio the priority of this write operation
+             */
             virtual void writeAsync(const karabo::util::Hash& header,
                                     const boost::shared_ptr<std::vector<char> >& data, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Fire and forget, no callback called upon completion
+             * @param header containing metadata for the data being written
+             * @param data passed as a string were each character represents one byte of the message
+             * @param prio the priority of this write operation
+             */
             virtual void writeAsync(const karabo::util::Hash& header, const std::string& data, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Fire and forget, no callback called upon completion
+             * @param header containing metadata for the data being written
+             * @param data is contained in a Hash with no particular structure, but serializable, i.e. containing no
+             *        non-karabo data types or Hash derived types
+             * @param prio the priority of this write operation
+             */
             virtual void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            /**
+             * Set the policy of how data is queue on this channel for the queue of the given priority.
+             * Policies are:
+             * 
+             * - "LOSSLESS": all data is queue and the queue increases in size within incoming data
+             * - "REJECT_NEWEST": if the queue's fixed capacity is reached new data is rejected
+             * - "REMOVE_OLDEST": if the queue's fixed capacity is the oldest data is rejected
+             * 
+             * @param priority of the queue to set the policy for
+             * @param policy to set for this queue
+             */
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy) {
             }
         };

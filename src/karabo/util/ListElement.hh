@@ -21,6 +21,24 @@
 namespace karabo {
     namespace util {
 
+        /**
+         * @class ListElement
+         * @brief An element allowing choice-access to a list of factorized classes
+         * 
+         * The ListElement can be configured to hold a number of factorized
+         * classes. Two methods exist for adding classes to the 
+         * list of choices the ChoiceElement knows of:
+         * 
+         * - ListElement::appendNodesOfConfigurationBase is used if another
+         *   class of a type known to the factory system is to be added
+         * 
+         * - ListElement::appendAsNode is used to append the entries of a
+         *   NodeElement defined in the same expectedParameter function as the
+         *   choice element
+         * 
+         * In either case, it will add a configuration entry to a Node List
+         * 
+         */
         class ListElement : public GenericElement<ListElement> {
 
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
@@ -33,16 +51,32 @@ namespace karabo {
                 m_defaultValue.setElement(this);
             }
 
+            /**
+             * Minimum number of nodes the list element should hold - inclusive
+             * @param minNumNodes
+             * @return 
+             */
             ListElement& min(const int minNumNodes) {
                 this->m_node->setAttribute(KARABO_SCHEMA_MIN, minNumNodes);
                 return *this;
             }
 
+             /**
+             * Maximum number of nodes the list element should hold - inclusive
+             * @param maxNumNodes
+             * @return 
+             */
             ListElement& max(const int maxNumNodes) {
                 this->m_node->setAttribute(KARABO_SCHEMA_MAX, maxNumNodes);
                 return *this;
             }
 
+            /**
+             * Append the expected parameters of another class of type ConfigurationBase.
+             * The class needs to be known by the factory system. It will be identified
+             * by its Karabo ClassId in the list.
+             * @return 
+             */
             template <class ConfigurationBase>
             ListElement& appendNodesOfConfigurationBase() {
                 // Create an empty Hash as value of this choice node if not there yet
@@ -63,6 +97,13 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Append the entries found underneath a NodeElement identified by
+             * key. The node element needs to be defined prior to and in the same expected 
+             * parameter function as the ListElement.
+             * @param nodeName identifying the node, i.e. the key of the node.
+             * @return 
+             */
             template <class T>
             ListElement& appendAsNode(const std::string& nodeName = "") {
                 // Create an empty Hash as value of this choice node if not there yet
@@ -92,6 +133,15 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * The <b>assignmentOptional</b> method serves for setting up a mode that allows the value of
+             * element be optional, so it can be omitted in configuration. Default value is injected if defined.
+             * If you chain functions for definition of expected parameters the next
+             * function may be only defaultValue or noDefaultValue.
+             * When the default value is not specified (noDefaultValue) you must always check
+             * if the parameter has a value set in delivered User configuration.
+             * @return reference to DefaultValue object allowing proper <b>defaultValue</b> method chaining.
+             */
             virtual DefaultValue<ListElement, std::vector<std::string> >& assignmentOptional() {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
                 return m_defaultValue;

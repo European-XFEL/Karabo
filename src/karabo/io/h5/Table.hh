@@ -17,11 +17,11 @@ namespace karabo {
 
         namespace h5 {
 
-/**
-                                     Table is an entity defined to store set of records...
+            /**
+             * @class Table
+             * @brief Table is an entity defined to store set of records
              */
             class Table {
-
 
                 friend class File;
 
@@ -33,7 +33,7 @@ namespace karabo {
 
                 Table(hid_t h5file, boost::filesystem::path name)
                     : m_h5file(h5file), m_name(name), m_group(-1), m_tableSize(0), m_numberOfRecordsAttribute(-1),
-                      m_bindWasExecuted(false), m_bindLenWasExecuted (false) {
+                    m_bindWasExecuted(false), m_bindLenWasExecuted(false) {
                 }
 
             public:
@@ -84,19 +84,19 @@ namespace karabo {
                 size_t read(size_t recordNumber);
 
                 /**
-                 * Buffered reading                 
+                 * Buffered reading
                  * @param recordNumber Number identifying the first record to be read. Record numbers start from 0.
                  * @param len number of records to be read
                  */
                 size_t read(size_t recordNumber, size_t len);
 
                 /**
-                 * Get table size.                 
+                 * Get table size.
                  * This function returns the index to the first record greater than the last written to the table.
-                 * i.e.                  
+                 * i.e.
                  *  table->write(data, 0, 10);
                  *  table->write(data, 12, 5);
-                 *  table.size() ==> returns 17                 * 
+                 *  table.size() ==> returns 17                 *
                  */
                 size_t size();
 
@@ -189,7 +189,7 @@ namespace karabo {
                 std::string m_id; // table unique id
 
                 static const char* TABLE_SIZE;
-                
+
                 bool m_bindWasExecuted;
                 bool m_bindLenWasExecuted;
 

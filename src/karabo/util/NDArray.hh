@@ -18,6 +18,14 @@
 namespace karabo {
     namespace util {
 
+        /**
+         * @class NDArray
+         * @brief A class representing multi-dimensional data in Karabo that seaminglessy converts to numpy.NDArray
+         * 
+         * The NDArray class is intended to store any multidimensional data occurring in Karabo. Internally it
+         * holds the data in a ByteArray. It is a Hash-derived structure, which means it serializes into a
+         * karabo::util::Hash. Its meta-data is chosen such that it can be seamlessly converted into a numpy.NDArray
+         */
         class NDArray : protected Hash {
 
         public:
@@ -36,10 +44,22 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& s);
 
+            /**
+             * This constructor creates an empty NDArray
+             * @param shape
+             * @param type
+             * @param isBigEndian
+             */
             NDArray(const Dims& shape,
                     const karabo::util::Types::ReferenceType& type = karabo::util::Types::DOUBLE,
                     const bool isBigEndian = karabo::util::isBigEndian());
 
+            /**
+             * This constructor creates an NDArray where all values are initialized with a fill value
+             * @param shape
+             * @param fill
+             * @param isBigEndian
+             */
             template <typename T>
             NDArray(const Dims& shape,
                     const T& fill,
@@ -95,6 +115,10 @@ namespace karabo {
             virtual ~NDArray() {
             }
 
+            /**
+             * Set the schape of the array
+             * @param shape
+             */
             void setShape(const Dims& shape);
 
             karabo::util::Types::ReferenceType getType() const;
@@ -114,6 +138,10 @@ namespace karabo {
              */
             inline size_t itemSize() const;
 
+            /**
+             * Get the data contained in the array as a pointer
+             * @return 
+             */
             template <typename T>
             const T* getData() const {
                 if (get<int>("type") == karabo::util::Types::from<T>()) {
@@ -132,18 +160,40 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Get a shared pointer to the underlying ByteArray data
+             * @return 
+             */
             const DataPointer& getDataPtr() const;
 
+            /**
+             * Return the underlying ByteArray
+             * @return 
+             */
             ByteArray getByteArray();
 
             const ByteArray getByteArray() const;
 
+            /**
+             * Return the shape of the array as a karabo::util::Dins object
+             * @return 
+             */
             Dims getShape() const;
 
+            /**
+             * Evaluate if the data contained in the array is big endian
+             * @return true if big endian, false if little ednian
+             */
             bool isBigEndian() const;
 
+            /**
+             * Convert data to little endian
+             */
             void toLittleEndian();
 
+            /**
+             * Convert data to big endian
+             */
             void toBigEndian();
 
         private:

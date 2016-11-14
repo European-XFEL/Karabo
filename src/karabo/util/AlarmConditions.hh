@@ -40,11 +40,12 @@
 namespace karabo {
     namespace util {
 
+        /**
+         * @class AlarmCondition
+         * @brief A unified alarm condition class, which holds the alarm conditions known to Karabo
+         */
         class AlarmCondition {
 
-            /**
-             A unified alarm condition class, which holds the alarm conditions known to Karabo
-             */
 
         public:
 

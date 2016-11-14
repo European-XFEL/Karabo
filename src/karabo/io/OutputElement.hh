@@ -22,6 +22,11 @@
 namespace karabo {
     namespace io {
 
+         /**
+         * @class OutputElement
+         * @brief The OutputElement provides acces to karabo::io::Output in terms of
+         *        a Schema Element, defined in an expected parameter section.
+         */
         class OutputElement : public karabo::util::GenericElement<OutputElement> {
 
 

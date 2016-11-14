@@ -17,7 +17,8 @@ namespace karabo {
         class State;
 
         /**
-         * The StateElement represents a leaf and needs to be of type State
+         * @class StateElement
+         * @brief The StateElement represents a leaf and needs to be of type State
          */
         class StateElement : public GenericElement<StateElement> {
 

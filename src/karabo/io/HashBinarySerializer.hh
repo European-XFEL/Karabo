@@ -18,7 +18,14 @@ namespace karabo {
     namespace io {
 
         /**
-         * The HashBinarySerializer class.
+         * @class HashBinarySerializer
+         * @brief The HashBinarySerializer provides an implementation of BinarySerializer
+         *        for the karabo::util::Hash
+         * 
+         * While a karabo::util::Hash can in principle hold arbitrary data types, Hash
+         * serialization is limited to data types known to the karabo::util::Types type
+         * system. Hashes containing other data types will lead to exceptions during
+         * serialization.
          */
         class HashBinarySerializer : public BinarySerializer<karabo::util::Hash> {
 

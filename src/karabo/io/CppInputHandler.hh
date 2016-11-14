@@ -14,6 +14,11 @@
 namespace karabo {
     namespace io {
 
+        /**
+         * @class CppInputHandler
+         * @brief The CppInputHandler specializes the InputHandler class for Karabo's C++ interface.
+         *        The handlers used here are boost::function objects
+         */
         template <class InputType>
         class CppInputHandler : public InputHandler {
 
