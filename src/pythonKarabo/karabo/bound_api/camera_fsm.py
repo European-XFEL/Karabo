@@ -18,6 +18,18 @@ from karabo.common.states import State
 
 @KARABO_CLASSINFO("CameraFsm", "1.0")
 class CameraFsm(base.BaseFsm):
+    """
+    The CameraFSM is a state machine suited for camera devices.
+
+    This finite state machine implements actions for acquiring, triggering
+    stopping and resetting camera type devices.
+
+    Here acquire sends the camera into the acquisition state, i.e. it is ready
+    to receive and react on trigger signals. The trigger command will send
+    such a trigger. Stop will stop acquisition, i.e. the camera will not
+    respond to triggers anymore. Finally, reset is used to bring the camera
+    back into an active state after hardware errors have occured.
+    """
     
     @staticmethod
     def expectedParameters(expected):
@@ -113,46 +125,37 @@ class CameraFsm(base.BaseFsm):
         sigslot.registerSlot(self.errorFound)
         
     def initializationStateOnEntry(self):
-        '''Actions executed on entry to 'Initialization' state
-        '''
+        """Actions executed on entry to 'Initialization' state"""
         
     def initializationStateOnExit(self):
-        '''Actions executed on exit from 'Initialization' state
-        '''
+        """Actions executed on exit from 'Initialization' state"""
         
     def errorStateOnEntry(self):
-        '''Actions executed on entry to 'Error' state
-        '''
+        """Actions executed on entry to 'Error' state"""
         
     def errorStateOnExit(self):
-        '''Actions executed on exit from 'Error' state
-        '''
+        """Actions executed on exit from 'Error' state"""
         
     def acquisitionStateOnEntry(self):
-        '''Actions executed on entry to 'Acquisition' state
-        '''
+        """Actions executed on entry to 'Acquisition' state"""
         
     def acquisitionStateOnExit(self):
-        '''Actions executed on exit from 'Acquisition' state
-        '''
+        """Actions executed on exit from 'Acquisition' state"""
         
     def readyStateOnEntry(self):
-        '''Actions executed on entry to 'Ready' state
-        '''
+        """Actions executed on entry to 'Ready' state"""
         
     def readyStateOnExit(self):
-        '''Actions executed on exit from 'Ready' state
-        '''
+        """Actions executed on exit from 'Ready' state"""
         
     def acquireAction(self):
-        '''Actions executed at 'acquire' event'''
+        """Actions executed at 'acquire' event"""
         
     def stopAction(self):
-        '''Actions executed at 'stop' event'''
+        """Actions executed at 'stop' event"""
         
     def triggerAction(self):
-        '''Actions executed at 'trigger' event'''
+        """Actions executed at 'trigger' event"""
 
     def resetAction(self):
-        print("Reset action executed")
-        
+        """Action to execute upon reset event"""
