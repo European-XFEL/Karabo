@@ -10,6 +10,9 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <boost/shared_ptr.hpp>
+
+class SignalSlotDemo;
 
 class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
 
@@ -30,6 +33,7 @@ public:
     void tearDown();
 
 private:
+    bool waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials = 10);
 
     void testUniqueInstanceId();
     void testReceiveAsync();
