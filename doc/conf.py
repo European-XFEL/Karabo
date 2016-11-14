@@ -19,7 +19,7 @@ import os
 import os.path
 
 sys.path.append(os.path.abspath('../src/pythonKarabo'))
-sys.path.append(os.path.abspath('/usr/src/app/breath-4.2.0-py3'))
+sys.path.append(os.path.abspath('/usr/src/app/breath-4.2.0'))
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
