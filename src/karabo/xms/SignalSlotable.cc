@@ -61,6 +61,7 @@ namespace karabo {
 
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void () >& replyCallback) {
             m_signalSlotable->registerSlot(replyCallback, m_replyId);
+            sendRequest();
         }
 
 
@@ -168,10 +169,15 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::Requestor::registerRequest() {
+        void SignalSlotable::Requestor::registerRequest(const std::string& slotInstanceId,
+                                                        const karabo::util::Hash::Pointer& header,
+                                                        const karabo::util::Hash::Pointer& body) {
             if (m_isRequested) {
                 throw KARABO_SIGNALSLOT_EXCEPTION("You have to receive an answer before you can send a new request");
             }
+            m_slotInstanceId = slotInstanceId;
+            m_header = header;
+            m_body = body;
             m_isRequested = true;
             m_isReceived = false;
         }
@@ -182,11 +188,9 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::Requestor::sendRequest(const std::string& instanceId,
-                                                    const karabo::util::Hash::Pointer& header,
-                                                    const karabo::util::Hash::Pointer& body) const {
+        void SignalSlotable::Requestor::sendRequest() const {
             try {
-                m_signalSlotable->doSendMessage(instanceId, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+                m_signalSlotable->doSendMessage(m_slotInstanceId, m_header, m_body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Problems sending request"));
             }
@@ -195,6 +199,8 @@ namespace karabo {
 
         void SignalSlotable::Requestor::receiveResponse(karabo::util::Hash::Pointer& header,
                                                         karabo::util::Hash::Pointer& body) {
+            m_signalSlotable->registerSynchronousReply(m_replyId);
+            sendRequest();
             if (!m_signalSlotable->timedWaitAndPopReceivedReply(m_replyId, header, body, m_timeout)) {
                 m_isReceived = true;
                 m_isRequested = false;
@@ -1891,12 +1897,21 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body, int timeout) {
-            bool result = true;
-            boost::shared_ptr<BoostMutexCond> bmc(new BoostMutexCond);
+        void SignalSlotable::registerSynchronousReply(const std::string& replyId) {
+            boost::shared_ptr<BoostMutexCond> bmc = boost::make_shared<BoostMutexCond>();
             {
                 boost::mutex::scoped_lock lock(m_receivedRepliesBMCMutex);
                 m_receivedRepliesBMC[replyId] = bmc;
+            }
+        }
+
+
+        bool SignalSlotable::timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body, int timeout) {
+            bool result = true;
+            boost::shared_ptr<BoostMutexCond> bmc;
+            {
+                boost::mutex::scoped_lock lock(m_receivedRepliesBMCMutex);
+                bmc = m_receivedRepliesBMC[replyId];
             }
             boost::system_time waitUntil = boost::get_system_time() + boost::posix_time::milliseconds(timeout);
             try {
