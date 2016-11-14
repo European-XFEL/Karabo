@@ -143,14 +143,18 @@ class ProjectDatabaseConnection(QObject):
         """ A bunch of items were just saved
         """
         for item in items:
+            domain = item['domain']
+            uuid = item['uuid']
+            revision = item['revision']
             entry = item['entry']
-            uuid = entry['uuid']
-            domain = entry['domain']
-            revision = entry['revision']
             if item['success']:
                 vers_info = entry['versioning_info']
                 revisions = vers_info['revisions']
-                new_revision = revisions[-1]['revision']
+                if not revisions:
+                    # No revisions available
+                    new_revision = revision
+                else:
+                    new_revision = revisions[-1]['revision']
 
                 key = (uuid, revision)
                 obj = self._waiting_for_write.pop(key)
