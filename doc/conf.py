@@ -275,6 +275,7 @@ intersphinx_mapping = {
 }
 
 # make doxygen output
+print(os.getcwd())
 subprocess.call('doxygen', shell=True)
 
 # we use breathe to include doxygen output into our sphinx documentation
