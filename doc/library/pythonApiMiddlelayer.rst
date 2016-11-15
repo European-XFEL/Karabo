@@ -2,55 +2,55 @@ Python Middlelayer API
 ======================
 
 .. automodule:: karabo.middlelayer_api.alarm
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.basetypes
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.cli
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.device
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.device_client
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.device_server
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.devicenode
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.enums
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.eventloop
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.guiserver
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.hash
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.logger
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.macro
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.registry
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.schema
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.signalslot
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.synchronization
-    :members:
+   :members:
 
 .. automodule:: karabo.middlelayer_api.timestamp
-    :members:
+   :members:
