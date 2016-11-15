@@ -13,9 +13,10 @@ have to be adjusted. To do so
 * right-click ion the package in the project panel,
 * choose the last entry in the appearing menu ("Properties"),
 * in the appearing dialogue,
-** choose "Build -> C++ compiler" in the "Categories" panel on the left,
-** "<All Configurations>" in the for "Configurations" on the top
-** and "C++11" for "C++ Standard" in the options field.
+
+     *choose "Build -> C++ compiler" in the "Categories" panel on the left,
+     *"<All Configurations>" in the for "Configurations" on the top
+     * and "C++11" for "C++ Standard" in the options field.
 
 Compile from NetBeans once in "Release" and once in "Debug" mode and commit the
 following new files in the `nbproject` directory:
@@ -43,11 +44,11 @@ Alarm Conditions
 ================
 
 Alarm conditions are now based on objects. There is a predefined set of
-conditions. In C++ they can be found in
+conditions. In C++ they can be found in::
 
    karabo::util::AlarmCondition
 
-in Python in
+in Python in::
 
    karabo.bound.AlarmCondition
 
@@ -60,9 +61,12 @@ Additionally, a new property `alarmCondition` has been added to the base
 device  classes in both APIs. It holds the defining alarm condition of an
 device:
 
-- it evaluates to the most critical of all the property bound alarmcondtions:
-    `INTERLOCK>ALARM>WARN>NONE`
-- unless a device developer manually set the alarmCondition field via
+
+* it evaluates to the most critical of all the property bound alarm conditions:
+
+  `INTERLOCK>ALARM>WARN>NONE`
+
+* unless a device developer manually set the alarmCondition field via
   `setAlarmCondition(AlarmCondition condition)`. In this case this alarm
   condition is maintained if property conditions evaluate to a lower combined
   condition. This especially means that a manually set alarm condition will
@@ -71,7 +75,7 @@ device:
    property bound conditions.
 
 In addition the expected parameter interface was slightly altered.
-Previously existing attributes
+Previously existing attributes::
 
   .alarmLow, .alarmHigh, .warnLow, .warnHigh
 
@@ -80,14 +84,17 @@ the alarm needs to be acknowledged on the alarm service device. Optionally,
 they may be followed first by `.info(string)`, giving more information
 on an alarm.
 
+
 Additionally, variance base alarms are now supported. They can be enabled for
- readonly parameters via
+readonly parameters via::
 
   .enableRollingStats()
 
-followed by the conditions
+
+followed by the conditions::
 
   .alarmVarianceLow, .alarmVarianceHigh, .warnVarianceLow, .warnVarianceHigh
+
 
 each again optionally followed by `.info` and mandatorily by
 `.needsAcknowledging`.
@@ -97,7 +104,7 @@ The `.enableRollingStats` block is closed of by
 
 Rolling statistics can accessed from device code for those properties they
 have been enabled for via `getRollingStatistics(path)`. This returns a object
-of type RollingWindowStatistics, with methods
+of type RollingWindowStatistics, with methods::
 
   update(val)
   getRollingWindowVariance()
@@ -123,11 +130,11 @@ Defining the List of States for a Specific Device
 
 For both bound Python and C++, the code to define the list of allowed states
 in the `expectedParameters` function looks almost identical, e.g. for bound
-Python it is
+Python it is::
 
     OVERWRITE_ELEMENT(expected).key("state")
         .setNewOptions(State.INIT, State.STOPPED, State.STARTED, State.ERROR)
-        .setNewDefaultValue(State.INIT) # currently (July 22nd) not working for Python?
+        .setNewDefaultValue(State.INIT)
         .commit(),
 
 and in C++ the '.' between `State` and the state name has to be
@@ -137,7 +144,7 @@ Defining Allowed States for Actions
 +++++++++++++++++++++++++++++++++++
 
 Similarly, one defines the list of `allowedStates` for reconfigurable
-configuration parameters and for slots via
+configuration parameters and for slots via::
 
     .allowedStates(State.STOPPED, State.STOPPING)
 
@@ -173,7 +180,7 @@ Vector elements
 
 It is not possible anymore to directly assign a `numpy.array` to a
 `VECTOR_ELEMENT`. Instead, the `numpy.array` has to be converted to a `list`
-or `tuple`, e.g.
+or `tuple`, e.g.::
 
 
     array = numpy.array(...)
@@ -198,7 +205,7 @@ Whereas in the past `ImageData` inherited from `NDArray`, now it has an
 can be found in the API documentation. Here is an example how to declare
 an output channel to send image data and a frame number in Python:
 
-Define output:
+Define output::
 
     def expectedParameters(expected):
        ...
@@ -220,7 +227,7 @@ Define output:
          )
 
 
-Send data in a device slot:
+Send data in a device slot::
 
     imgArray = numpy.array(...)
     self.writeChannel("output", Hash("image", ImageData(imgArray),
