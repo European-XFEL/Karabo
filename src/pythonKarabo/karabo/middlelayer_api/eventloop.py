@@ -292,7 +292,7 @@ class Broker:
         replyFrom = message.properties.get('replyFrom')
         if replyFrom is not None:
             f = self.repliers.get(replyFrom.decode("ascii"))
-            if f is not None:
+            if f is not None and not f.done():
                 if message.properties.get('error', False):
                     f.set_exception(KaraboError(params[0]))
                 else:
