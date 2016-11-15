@@ -10,7 +10,7 @@ Python Middlelayer API
 .. automodule:: karabo.middlelayer_api.cli
    :members:
 
-.. automodule:: karabo.middlelayer_api.device
+.. autoclass:: karabo.middlelayer_api.Device
    :members:
 
 .. automodule:: karabo.middlelayer_api.device_client
