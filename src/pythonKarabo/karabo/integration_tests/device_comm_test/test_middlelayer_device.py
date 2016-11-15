@@ -8,8 +8,8 @@ from unittest import TestCase
 import weakref
 
 from karabo.middlelayer import (getClasses, getDevice, getDevices, getServers,
-                                instantiate, KaraboError, Macro, shutdown,
-                                sleep, Slot)
+                                instantiate, isAlive, KaraboError, Macro,
+                                shutdown, sleep, Slot)
 from karabo.middlelayer_api.cli import DeviceClient
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.tests.eventloop import setEventLoop
@@ -119,7 +119,7 @@ class Tests(TestCase):
         server.startInstance()
         proxy = self.run_async(server, self.init_server(server))
         self.assertEqual(proxy.something, 222,
-                         "MiddleLayerTestDevice.onInitialization"
+                         "MiddleLayerTestDevice.onInitialization "
                          "did not run properly")
         self.assertEqual(proxy.counter, 12345,
                          "initialization parameter was not honored")
@@ -128,8 +128,10 @@ class Tests(TestCase):
         self.assertIn("other", server.deviceInstanceMap)
         r = weakref.ref(server.deviceInstanceMap["other"])
         with proxy:
+            self.assertTrue(isAlive(proxy))
             self.run_async(server, self.shutdown_server())
             self.assertNotIn("other", server.deviceInstanceMap)
+            self.assertFalse(isAlive(proxy))
             gc.collect()
             self.assertIsNone(r())
             async(dc.slotKillDevice())
