@@ -104,7 +104,7 @@ SignalSlotable_Test::~SignalSlotable_Test() {
 
 
 void SignalSlotable_Test::setUp() {
-    //Logger::configure(Hash("priority", "DEBUG"));
+    //Logger::configure(Hash("priority", "ERROR"));
     //Logger::useOstream();
     // Start the event loop
     m_eventLoopThread = boost::make_shared<boost::thread>(boost::bind(&EventLoop::work));
@@ -136,18 +136,41 @@ void SignalSlotable_Test::testReceiveAsync() {
     responder->start();
 
 
-    responder->registerSlot<std::string>([&responder](const std::string& q) {
+    responder->registerSlot<std::string>([&responder](const std::string & q) {
         responder->reply(q + ", world!");
     }, "slotAnswer");
 
     std::string result;
-    greeter->request("responder", "slotAnswer", "Hello").receiveAsync<std::string>([&result](const std::string& answer) {
+    greeter->request("responder", "slotAnswer", "Hello").receiveAsync<std::string>([&result](const std::string & answer) {
         result = answer;
     });
 
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 
     CPPUNIT_ASSERT(result == "Hello, world!");
+}
+
+
+void SignalSlotable_Test::testReceiveAsyncTimeout() {
+    auto greeter = boost::make_shared<SignalSlotable>("greeter");
+    auto responder = boost::make_shared<SignalSlotable>("responder");
+    greeter->start();
+    responder->start();
+
+
+    responder->registerSlot<std::string>([&responder](const std::string & q) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+                                         responder->reply(q + ", world!");
+    }, "slotAnswer");
+
+    std::string result;
+    greeter->request("responder", "slotAnswer", "Hello").timeout(50).receiveAsync<std::string>([&result](const std::string & answer) {
+        result = answer;
+    });
+
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+
+    CPPUNIT_ASSERT(result == "");
 }
 
 
