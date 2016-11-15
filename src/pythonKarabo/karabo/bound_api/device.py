@@ -937,17 +937,59 @@ class PythonDevice(NoFsm):
         self.updateState(currentState)
 
     def exceptionFound(self, shortMessage, detailedMessage):
+        """
+        Hook for when an exception is encounterd. This method is DEPRECATED
+        and will removed. Catch exceptions where they can occur instead, e.g.
+        when calling a slot or requesting a value!
+
+        :param shortMessage: exception message
+        :param detailedMessage: detailed exception message
+        """
+
         self.log.ERROR(shortMessage + " -- " + detailedMessage)
         self._ss.emit("signalNotification", "EXCEPTION", shortMessage,
                       detailedMessage, self.deviceid)
 
     def noStateTransition(self):
+        """
+        This function is called if a requested state transition is not allowed
+        in the current context. Usually, this means you have an error in your
+        state machine.
+        """
+
         self.log.WARN("Device \"{}\" does not allow the transition for this event.".format(self.deviceid))
 
     def onTimeUpdate(self, id, sec, frac, period):
+        """
+        Called by the time server if a time update is received
+        :param id: train id
+        :param sec: seconds
+        :param frac: fractional seconds
+        :param period:
+        :return:
+        """
+
         pass
 
     def KARABO_SLOT(self, slot):
+        """
+        Register a slot in the distributed system. Note that a slot is only
+        connected with a SLOT_ELEMENT if the key of the SLOT_ELEMENT matches
+        the slot name provided to this function.
+
+            SLOT_ELEMENT(expected).key("slotDoSomething")
+
+            ....
+
+            self.KARABO_SLOT(slotDoSomething)
+
+            .....
+
+            def slotDoSomethin(self):
+                pass
+
+        """
+
         self._ss.registerSlot(slot)
 
     def _initDeviceSlots(self):
@@ -999,9 +1041,32 @@ class PythonDevice(NoFsm):
 
 
     def KARABO_ON_DATA(self, channelName, handlerPerData):
+        """
+        Registers a handler function to be called if data is received on an
+        input channel identified by `channelName`. The handler function should
+        have the signature
+
+            def onData(data, metaData):
+                pass
+
+        where `data` and `metaData` are both Hashes
+        """
+
         self._ss.registerDataHandler(channelName, handlerPerData)
 
     def KARABO_ON_INPUT(self, channelName, handlerPerInput):
+        """
+        Registers a handler to be called if data is available on the input
+        channel identified by `channelName`. It is up to the device developer
+        to read data (in contrast to the `KARABO_ON_DATA` registration).
+
+            def onInput(input):
+                for i in range(input.size()):
+                    data, metaDate = input.read(i)
+
+        Here `input` is a reference to the input channel.
+        """
+
         self._ss.registerInputHandler(channelName, handlerPerInput)
 
     def KARABO_ON_EOS(self, channelName, handler):
