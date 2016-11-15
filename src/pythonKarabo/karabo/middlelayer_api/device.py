@@ -146,3 +146,7 @@ class Device(AlarmMixin, SignalSlotable):
     def slotGetSchema(self, onlyCurrentState):
         return self.getDeviceSchema(
             state=self.state if onlyCurrentState else None), self.deviceId
+
+    def _notifyNewSchema(self):
+        """Notfiy the network that our schema has changed"""
+        self.signalSchemaUpdated(self.getDeviceSchema(), self.deviceId)
