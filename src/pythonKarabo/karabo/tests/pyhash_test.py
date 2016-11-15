@@ -172,7 +172,7 @@ class Hash_TestCase(unittest.TestCase):
                 "vector", "emptyvector", "hash", "hashlist", "emptystringlist",
                 "emptyhashlist", "vectorbool", "char", "schema"]
         self.assertEqual(list(h.keys()), keys)
-        self.assertTrue(h["bool"] is True)
+        self.assertIs(h["bool"], True)
         self.assertEqual(h["int"], 4)
         self.assertEqual(h["string"], "bla")
         self.assertTrue(isinstance(h["string"], str))
