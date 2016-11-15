@@ -2010,6 +2010,30 @@ namespace karabo {
         }
 
 
+        void SignalSlotable::receiveAsyncTimeoutHandler(const boost::system::error_code& e, const std::string& replyId) {
+            if (e) return;
+            // Remove the slot with function name replyId, as the message took too long
+            removeSlot(replyId);
+            KARABO_LOG_FRAMEWORK_ERROR << "Asynchronous request with id \"" << replyId << "\" timed out";
+        }
+
+
+        void SignalSlotable::addReceiveAsyncTimer(const std::string& replyId, const boost::shared_ptr<boost::asio::deadline_timer>& timer) {
+            boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
+            m_receiveAsyncTimeoutHandlers[replyId] = timer;
+        }
+
+
+        boost::shared_ptr<boost::asio::deadline_timer> SignalSlotable::getReceiveAsyncTimer(const std::string& replyId) {
+            boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
+            auto it = m_receiveAsyncTimeoutHandlers.find(replyId);
+            if (it != m_receiveAsyncTimeoutHandlers.end()) {
+                return it->second;
+            }
+            return boost::shared_ptr<boost::asio::deadline_timer>();
+        }
+
+
         SignalSlotable::LatencyStats::LatencyStats() : sum(0), counts(0), maximum(0) {
         }
 
