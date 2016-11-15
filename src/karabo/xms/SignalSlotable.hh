@@ -431,12 +431,12 @@ namespace karabo {
                                                                        const std::string& replySlotInstanceId,
                                                                        const std::string& replySlotFunction);
 
-                void registerRequest();
+                void registerRequest(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header,
+                                     const karabo::util::Hash::Pointer& body);
 
                 static std::string generateUUID();
 
-                void sendRequest(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header,
-                                 const karabo::util::Hash::Pointer& body) const;
+                void sendRequest() const;
 
                 void receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
 
@@ -447,8 +447,9 @@ namespace karabo {
             private:
 
                 std::string m_replyId;
-                bool m_isRequested;
-                bool m_isReceived;
+                std::string m_slotInstanceId;
+                karabo::util::Hash::Pointer m_header;
+                karabo::util::Hash::Pointer m_body;               
                 int m_timeout;
                 static boost::uuids::random_generator m_uuidGenerator;
 
@@ -782,6 +783,8 @@ namespace karabo {
             void popReceivedReply(const std::string& replyFromValue, karabo::util::Hash::Pointer& header,
                                   karabo::util::Hash::Pointer& body);
 
+            void registerSynchronousReply(const std::string& replyId);
+
             bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header,
                                               karabo::util::Hash::Pointer& body, int timeout);
 
@@ -835,7 +838,7 @@ namespace karabo {
             karabo::util::Hash::Pointer header = prepareRequestHeader(slotInstanceId, slotFunction);
             auto body = boost::make_shared<karabo::util::Hash>();
             pack(*body, args...);
-            sendRequest(slotInstanceId, header, body);
+            registerRequest(slotInstanceId, header, body);
             return *this;
         }
 
@@ -853,28 +856,32 @@ namespace karabo {
 
             auto body = boost::make_shared<karabo::util::Hash>();
             pack(*body, args...);
-            sendRequest(requestSlotInstanceId, header, body);
+            m_signalSlotable->doSendMessage(requestSlotInstanceId, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             return *this;
         }
 
         template <class A1>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&) >& replyCallback) {
             m_signalSlotable->registerSlot<A1>(replyCallback, m_replyId);
+            sendRequest();
         }
 
         template <class A1, class A2>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&, const A2&) >& replyCallback) {
             m_signalSlotable->registerSlot<A1, A2>(replyCallback, m_replyId);
+            sendRequest();
         }
 
         template <class A1, class A2, class A3>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&, const A2&, const A3&) >& replyCallback) {
             m_signalSlotable->registerSlot<A1, A2, A3>(replyCallback, m_replyId);
+            sendRequest();
         }
 
         template <class A1, class A2, class A3, class A4>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& replyCallback) {
             m_signalSlotable->registerSlot<A1, A2, A3, A4>(replyCallback, m_replyId);
+            sendRequest();
         }
 
         template <typename ...Args>

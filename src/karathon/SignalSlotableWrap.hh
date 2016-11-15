@@ -42,7 +42,7 @@ namespace karathon {
                     auto body = boost::make_shared<karabo::util::Hash>();
                     packPy(*body, args...);
                     ScopedGILRelease nogil;
-                    sendRequest(slotInstanceId, prepareRequestHeader(slotInstanceId, slotFunction), body);
+                    registerRequest(slotInstanceId, prepareRequestHeader(slotInstanceId, slotFunction), body);
                 } catch (...) {
                     KARABO_RETHROW
                 }
@@ -63,7 +63,8 @@ namespace karathon {
                                                                                     requestSlotFunction,
                                                                                     replySlotInstanceId,
                                                                                     replySlotFunction);
-                    sendRequest(requestSlotInstanceId, header, body);
+                    registerRequest(requestSlotInstanceId, header, body);
+                    sendRequest();                  
                 } catch (...) {
                     KARABO_RETHROW
                 }
