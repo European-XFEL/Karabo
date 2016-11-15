@@ -820,3 +820,9 @@ def updateDevice(device):
     way to receive changes on a device while the device is not connected."""
     yield from device
     return device
+
+
+def isAlive(proxy):
+    """Check whether a device represented by a proxy is still running"""
+    assert isinstance(proxy, Proxy)
+    return proxy._alive
