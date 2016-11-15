@@ -10,7 +10,7 @@ from .common.states import State, StateSignifier
 from .middlelayer_api.device_client import (
     connectDevice, DeviceClientBase, disconnectDevice, lock, Proxy, ProxySlot,
     ProxyNode, AutoDisconnectProxy, SubProxy, getHistory, waitUntilNew,
-    waitUntil, setWait, instantiate, instantiateNoWait, shutdown,
+    waitUntil, setWait, instantiate, instantiateNoWait, isAlive, shutdown,
     shutdownNoWait, setNoWait, getClasses, getDevice, getDevices, getServers,
     execute, executeNoWait, updateDevice
 )
