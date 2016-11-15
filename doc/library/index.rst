@@ -10,6 +10,7 @@ bindings, the native Python package and the pyQt-based GUI.
    cppApi
    pythonApiBound
    pythonApiMiddlelayer
+   serviceDevices
    interfaces
    testing
    reference
