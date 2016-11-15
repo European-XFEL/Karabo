@@ -61,7 +61,20 @@ namespace karabo {
 
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void () >& replyCallback) {
             m_signalSlotable->registerSlot(replyCallback, m_replyId);
+            registerDeadlineTimer();
             sendRequest();
+        }
+
+
+        void SignalSlotable::Requestor::registerDeadlineTimer() {
+            if (m_timeout > 0) {
+                // Register a deadline timer into map
+                auto timer = boost::make_shared<boost::asio::deadline_timer>(EventLoop::getIOService());
+                timer->expires_from_now(boost::posix_time::milliseconds(m_timeout));
+                timer->async_wait(bind_weak(&SignalSlotable::receiveAsyncTimeoutHandler, m_signalSlotable,
+                                            boost::asio::placeholders::error, m_replyId));
+                m_signalSlotable->addReceiveAsyncTimer(m_replyId, timer);
+            }
         }
 
 
@@ -386,8 +399,12 @@ namespace karabo {
             const string& replyId = header->get<string>("replyFrom");
             // Check whether a callback (temporary slot) was registered for the reply
             SlotInstancePointer slot = getSlot(replyId);
+            boost::shared_ptr<boost::asio::deadline_timer> timer = getReceiveAsyncTimer(replyId);
             try {
-                if (slot) slot->callRegisteredSlotFunctions(*header, *body);
+                if (slot) {
+                    if (timer) timer->cancel(); // A timer was set, but the message arrived before expiration -> cancel
+                    slot->callRegisteredSlotFunctions(*header, *body);
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": An error happened within a reply callback: \n" << e;
                 // TODO Repair exception handling for std::exception
@@ -1450,6 +1467,8 @@ namespace karabo {
         void SignalSlotable::removeSlot(const std::string& slotFunction) {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             m_slotInstances.erase(slotFunction);
+            // Will clean any associated timers to this slot
+            m_receiveAsyncTimeoutHandlers.erase(slotFunction);
         }
 
 
