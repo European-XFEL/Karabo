@@ -150,6 +150,9 @@ def _device_reader(io_obj, existing, metadata):
     for class_id, configuration in hsh.items():
         break
     dev.trait_set(class_id=class_id, configuration=configuration)
+    # XXX: Check whether `initialized` should be set somewhere else
+    dev.initialized = True
+
     return dev
 
 
@@ -161,10 +164,14 @@ def _device_server_reader(io_obj, existing, metadata):
 
     server = read_device_server(io_obj)
     server.trait_set(**traits)
+    # XXX: Check whether `initialized` should be set somewhere else
+    server.initialized = True
 
     # Now copy into the existing object
     existing.server_id = server.server_id
     existing.devices[:] = server.devices[:]
+    # XXX: Check whether `initialized` should be set somewhere else
+    existing.initialized = server.initialized
 
     return server
 
@@ -176,7 +183,12 @@ def _macro_reader(io_obj, existing, metadata):
     macro = _check_preexisting(existing, MacroModel, traits)
 
     root = etree.parse(io_obj).getroot()
-    macro.trait_set(code=base64.b64decode(root.text).decode('utf-8'))
+    code = root.text
+    if code is not None:
+        macro.trait_set(code=base64.b64decode(code).decode('utf-8'))
+    # XXX: Check whether `initialized` should be set somewhere else
+    macro.initialized = True
+
     return macro
 
 
@@ -198,6 +210,8 @@ def _project_reader(io_obj, existing, metadata):
     traits.update({k: _get_items(project_hash, k)
                    for k in PROJECT_OBJECT_CATEGORIES})
     project.trait_set(**traits)
+    # XXX: Check whether `initialized` should be set somewhere else
+    project.initialized = True
     return project
 
 
@@ -209,6 +223,8 @@ def _scene_reader(io_obj, existing, metadata):
 
     scene = read_scene(io_obj)
     scene.trait_set(**traits)
+    # XXX: Check whether `initialized` should be set somewhere else
+    scene.initialized = True
 
     # Then copy into the existing
     existing.file_format_version = scene.file_format_version
@@ -216,6 +232,8 @@ def _scene_reader(io_obj, existing, metadata):
     existing.width = scene.width
     existing.height = scene.height
     existing.children[:] = scene.children[:]
+    # XXX: Check whether `initialized` should be set somewhere else
+    existing.initialized = scene.initialized
 
     return scene
 

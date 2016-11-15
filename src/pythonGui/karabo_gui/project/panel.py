@@ -99,8 +99,6 @@ def _project_new_handler(item_model):
 
     :param item_model: The `ProjectItemModel` of the `ProjectView`
     """
-    # XXX: HACK. This is only written this way to get _something_ loaded.
-    # It must change when integrating into the full GUI
     from karabo.common.project.api import ProjectModel
 
     dialog = NewProjectDialog()
@@ -115,8 +113,6 @@ def _project_save_handler(item_model):
 
     :param item_model: The `ProjectItemModel` of the `ProjectView`
     """
-    # XXX: HACK. This is only written this way to get _something_ saved.
-    # It must change when integrating into the full GUI
     from karabo.common.project.api import PROJECT_OBJECT_CATEGORIES
     from karabo_gui.project.api import TEST_DOMAIN
 
