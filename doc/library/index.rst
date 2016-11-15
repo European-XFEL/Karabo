@@ -8,7 +8,8 @@ bindings, the native Python package and the pyQt-based GUI.
 
 .. toctree::
    cppApi
-   pythonApi
+   pythonApiBound
+   pythonApiMiddlelayer
    interfaces
    testing
    reference
