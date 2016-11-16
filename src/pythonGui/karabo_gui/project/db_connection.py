@@ -80,6 +80,18 @@ class ProjectDatabaseConnection(QObject):
         cached = self.cache.get_uuids_of_type(domain, obj_type)
         return cached
 
+    def get_available_project_data(self, domain, obj_type):
+        """ Find out what's available
+        """
+        # XXX: Please don't keep this here!
+        self._ensure_login()
+
+        # Fire and "forget". An event will be broadcast with the reply
+        self.network.onProjectListItems(self.project_manager, domain, obj_type)
+        # Call locally as well
+        cached = self.cache.get_available_project_data(domain, obj_type)
+        return cached
+
     def retrieve(self, domain, uuid, revision, existing=None):
         """Read an object from the database.
         """

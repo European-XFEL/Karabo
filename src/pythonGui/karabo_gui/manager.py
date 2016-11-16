@@ -559,8 +559,7 @@ class _Manager(QObject):
 
     def handle_projectListItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
-        items = reply['items']
-        d = {'uuids': [it['uuid'] for it in items]}
+        d = {'items': reply['items']}
         event = KaraboBroadcastEvent(KaraboEventSender.ProjectItemsList, d)
         broadcast_event(event)
 
