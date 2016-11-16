@@ -309,6 +309,7 @@ class SignalSlotable(Configurable):
         loop = get_event_loop()
         for f in loop.changedFutures:
             f.set_result(None)
+        loop.changedFutures = set()
 
     @slot
     def slotInstanceNew(self, instanceId, info):
