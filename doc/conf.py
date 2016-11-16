@@ -12,7 +12,7 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
-
+from rtd_conf import global_conf
 import sys
 import subprocess
 import os
@@ -285,22 +285,6 @@ subprocess.call('doxygen', shell=True)
 # we use breathe to include doxygen output into our sphinx documentation
 breathe_projects = { "KARABO": os.path.abspath(".build/html/reference/xml") }
 breathe_default_project = "KARABO"
-
-# mock karathon so that we don't have to compile it
-from unittest.mock import MagicMock
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return Mock()
-
-MOCK_MODULES = ['karathon', 'IPython', 'eulexistdb', 'eulexistdb.exceptions',
-                'traits']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
-#dot
-graphviz_dot_args = ['-Kdot']
-# circo dot fdp neato nop nop1 nop2 osage patchwork sfdp twopi
 
 #add support for detailed developer configuration:
 def setup(app):
