@@ -152,7 +152,8 @@ to false.
 
 
 
-Setting Alarm Ranges on Propertie==================================
+Setting Alarm Ranges on Properties
+==================================
 
 Alarm ranges for numeric properties can be specified in the expected parameters
 section of a device. These are automatically evaluated upon property updates

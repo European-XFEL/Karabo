@@ -8,8 +8,10 @@ from karathon import Hash, Schema, AssemblyRules, AccessType, READ, WRITE, INIT,
 
 class Configurator(object):
     """
+    Provides factorized configuration
+
     Configurator is the singleton class that keeps methods for registration and
-    creation other classes that] are configurable classes
+    creation other classes that are configurable classes
     """
     _instance = None
     registry = {}
@@ -18,6 +20,7 @@ class Configurator(object):
     def registerAsBaseClass(theClass):
         """
         Register a class as a base class in the configurator
+
         :param theClass: to be registered
         """
         if theClass.__classid__ not in Configurator.registry:
@@ -114,7 +117,7 @@ class Configurator(object):
         Example:
 
                 instance = Configurator(Shape).create("EditableCircle",
-                           Hash("radius", 12.345))
+                                                      Hash("radius", 12.345))
                 
         The factory method to create instance of class that inherits from base
         class given to constructor using input "configuration".
@@ -126,6 +129,13 @@ class Configurator(object):
 
                 configuration = Hash("EditableCircle.radius", 12.345)
                 instance = Configurator(Shape).create(configuration)
+
+        :param args: thus can have an arity of one to three:
+                    - class id string
+                    - config with classId as root key
+                    - class id string, config
+                    - config with classId as root key, validation flag
+                    - class id string, config, validation flag
 
         """
 

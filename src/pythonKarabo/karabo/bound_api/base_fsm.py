@@ -25,7 +25,9 @@ class BaseFsm(NoFsm):
     @staticmethod
     def expectedParameters(expected):
         """
-        Derived state machines will usually implement slot's in their
+        Expected parameters of the FSM.
+
+        Derived state machines will usually implement slots in their
         expected parameters.
 
         :param expected: schema to insert parameters into
@@ -35,7 +37,7 @@ class BaseFsm(NoFsm):
 
     def __init__(self, configuration):
         """
-        Initialize the the state machine according to the configuration Hash.
+        Initialize the state machine according to the configuration Hash.
         :param configuration:
         """
         super(BaseFsm, self).__init__(configuration)
@@ -45,8 +47,7 @@ class BaseFsm(NoFsm):
     
     def getFsm(self):
         """
-        Return the FSM
-        :return:
+        Return the concrete FSM implementation that inherits from BaseFsm
         """
         return self.fsm
     

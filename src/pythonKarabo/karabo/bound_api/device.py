@@ -34,7 +34,7 @@ class PythonDevice(NoFsm):
     """
     The PythonDevice class is the basis for all karabo.bound devices
 
-    Devices in implemented in the karabo.bound API should derive from this
+    Devices implemented in the karabo.bound API should derive from this
     class. It provides an interface to the distributed system and holds
     properties that represent the state of a device. Commands may be exposed
     through it using so-called slots.
@@ -42,7 +42,9 @@ class PythonDevice(NoFsm):
     Devices can optionally either use a full finite state machine, deriving
     from the `FSM` class, or use a simplified approach (`NoFSM`), where state
     updates are explicitly called from the device logic. The latter is the
-    default approach.
+    default if a device class just inherits from this PythonDevice.
+    Otherwise the device class has to also inherit from a concrete FSM
+    implementation that inherits from BaseFsm.
 
     Devices run in a separate process, but internally use an event loop with
     multiple threads to serve requests from the distributed system.
@@ -502,7 +504,9 @@ class PythonDevice(NoFsm):
         """
         Evaluate the device's alarm condition as the most severe alarm condition
         present on its properties or explicitly set via `setAlarmCondition`.
-        :param forceUpdate:
+        :param forceUpdate: if set to true  the global alarm condition will
+                            always be returned, even if no parameter based
+                            alarm conditions are present.
         :return:
         """
         if self.validatorIntern.hasParametersInWarnOrAlarm():
@@ -656,7 +660,7 @@ class PythonDevice(NoFsm):
         
     def get(self, key):
         """
-        Return a property if this device
+        Return a property of this device
         :param key: as defined in the expected parameter section
         :return: the value of the property
         """
@@ -693,8 +697,10 @@ class PythonDevice(NoFsm):
         
     def updateSchema(self, schema):
         """
-        Update/replace the existing device schema with a new one
-        :param schema: to replace existing schema with
+        Update the existing device schema by merging the argument to the static
+        schema defined in expectedParameters.
+
+        :param schema: to be merged with the static schema
         """
 
         rules = ValidatorValidationRules()
@@ -831,8 +837,10 @@ class PythonDevice(NoFsm):
     def getCurrentConfiguration(self, tags = ""):
         """
         Return the current configuration, optionally filtered by tags
-        :param tags: a string list, with entries separated by commas. Set to
-                     an empty string if not filtering is to be applied.
+        
+        :param tags: a string, with several entries separated by commas
+                    spaces or semicolons. Set to an empty string if no
+                    filtering is to be applied.
         :return: a configuration Hash
         """
 
@@ -844,8 +852,10 @@ class PythonDevice(NoFsm):
     def filterByTags(self, configuration, tags):
         """
         Filter a given configuration Hash by tags
+
         :param configuration:
-        :param tags: a string list, with entries separated by commas.
+        :param tags: a string, with several entries separated by commas
+                     spaces or semicolons
         :return: the filtered configuration Hash
         """
 
