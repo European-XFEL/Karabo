@@ -6,8 +6,8 @@ Contents:
 
 .. toctree::
    netbeans
-   redmine
-   jenkins
-   subversion
+   python
    git
+   redmine
+
    

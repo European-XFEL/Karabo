@@ -1,13 +1,13 @@
 Python Bound API
 ================
 
-.. autoclass:: karabo.bound_api.PythonDevice
+.. autoclass:: karabo.bound.PythonDevice
    :members:
 
-.. autoclass:: karabo.bound_api.DeviceServer
+.. autoclass:: karabo.bound.DeviceServer
    :members:
 
-.. autoclass:: karabo.bound_api.DeviceClient
+.. autoclass:: karabo.bound.DeviceClient
    :members:
 
 .. automodule:: karabo.bound_api.worker
@@ -16,5 +16,5 @@ Python Bound API
 .. automodule:: karabo.bound_api.decorators
    :members:
 
-.. autoclass:: karabo.bound_api.Configurator
+.. autoclass:: karabo.bound.Configurator
    :members:

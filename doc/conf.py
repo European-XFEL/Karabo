@@ -19,7 +19,6 @@ import os
 import os.path
 
 sys.path.append(os.path.abspath('../src/pythonKarabo'))
-sys.path.append(os.path.abspath('../src/pythonKarabo/karabo'))
 sys.path.append(os.path.abspath('/usr/src/app/breath-4.2.0'))
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -287,4 +286,51 @@ subprocess.call('doxygen', shell=True)
 breathe_projects = { "KARABO": os.path.abspath(".build/html/reference/xml") }
 breathe_default_project = "KARABO"
 
+# mock karathon so that we don't have to compile it
+from unittest.mock import MagicMock
 
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = ['karathon', 'IPython', 'eulexistdb', 'eulexistdb.exceptions',
+                'traits']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+#dot
+graphviz_dot_args = ['-Kdot']
+# circo dot fdp neato nop nop1 nop2 osage patchwork sfdp twopi
+
+#add support for detailed developer configuration:
+def setup(app):
+    app.add_config_value('includeDevInfo', False, 'env')
+
+    #generate color boxes
+    import os
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
+
+    cwd = os.getcwd()
+    colors = ['grey', 'beige', 'red', 'magenta', 'yellow', 'lightblue', 'lightgreen',
+               'orange', 'darkgreen', 'white']
+
+    if 'concepts' in cwd:
+        if not os.path.isdir('{}/colors'.format(cwd)):
+            os.mkdir('{}/colors'.format(cwd))
+    else:
+        if not os.path.isdir('{}/concepts/colors'.format(cwd)):
+            os.mkdir('{}/concepts/colors'.format(cwd))
+
+    with open("{}/colors.rst".format(cwd) if 'concepts' in cwd else "{}/concepts/colors.rst".format(cwd), "w") as crst:
+        for c in colors:
+            fig = plt.figure(figsize=(0.1, 0.05))
+            ax = fig.add_subplot(111)
+            ax.add_patch(patches.Rectangle((0,0), 1, 1, color=c))
+            ax.axes.get_xaxis().set_visible(False)
+            ax.axes.get_yaxis().set_visible(False)
+            fig.savefig("{}/colors/{}.png".format(cwd, c) if 'concepts' in cwd else "{}/concepts/colors/{}.png".format(cwd, c), dpi=300)
+            crst.write(".. |{}-box| image::  ./colors/{}.png\n".format(c,c))
+            crst.write("\n\n")

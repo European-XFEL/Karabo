@@ -12,10 +12,12 @@ C++ Service Devices
 .. doxygennamespace:: karabo::devices
    :project: KARABO
    :members:
+   :protected-members:
+   :private-members:
 
 
 Python Bound Service Devices
 ============================
 
-.. autoclass:: karabo.bound_devices.ProjectManager
+.. autoclass:: karabo.bound_devices.project_manager.ProjectManager
    :members:
