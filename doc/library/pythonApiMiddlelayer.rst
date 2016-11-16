@@ -1,6 +1,9 @@
 Python Middlelayer API
 ======================
 
+.. autoclass:: karabo.middlelayer.Device
+   :members:
+
 .. automodule:: karabo.middlelayer_api.alarm
    :members:
 
@@ -8,9 +11,6 @@ Python Middlelayer API
    :members:
 
 .. automodule:: karabo.middlelayer_api.cli
-   :members:
-
-.. autoclass:: karabo.middlelayer_api.Device
    :members:
 
 .. automodule:: karabo.middlelayer_api.device_client
