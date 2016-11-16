@@ -971,7 +971,7 @@ class PythonDevice(NoFsm):
 
     def onTimeUpdate(self, id, sec, frac, period):
         """
-        Called by the time server if a time update is received
+        Called when an update from the time server is received
         :param id: train id
         :param sec: seconds
         :param frac: fractional seconds
@@ -1059,7 +1059,11 @@ class PythonDevice(NoFsm):
             def onData(data, metaData):
                 pass
 
-        where `data` and `metaData` are both Hashes
+        where `data` and `metaData` are both Hashes.
+
+         Note that for each channelName one can only use one of
+        `KARABO_ON_DATA` and`KARABO_ON_INPUT`.
+
         """
 
         self._ss.registerDataHandler(channelName, handlerPerData)
@@ -1072,14 +1076,30 @@ class PythonDevice(NoFsm):
 
             def onInput(input):
                 for i in range(input.size()):
-                    data, metaDate = input.read(i)
+                    data, metaData = input.read(i)
 
         Here `input` is a reference to the input channel.
+
+        Note that for each channelName one can only use one of
+        `KARABO_ON_DATA` and`KARABO_ON_INPUT`.
+
         """
 
         self._ss.registerInputHandler(channelName, handlerPerInput)
 
     def KARABO_ON_EOS(self, channelName, handler):
+        """
+        Registers a handler to be called if input channel identified by `channelName`
+        is signaled end-of-stream.
+
+        The handler function should  have the signature
+
+             def onEos(input):
+             pass
+
+        where `input` is a reference to the input channel.
+        
+        """
         self._ss.registerEndOfStreamHandler(channelName, handler)
 
     def triggerError(self, s, d):
