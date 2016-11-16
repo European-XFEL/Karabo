@@ -301,10 +301,6 @@ defined attributes.
 |                  +------------------------------------------------------------------------------------+
 |                  | self.a.alarmVarLow # the minimum variance value                                    |
 +------------------+------------------------------------------------------------------------------------+
-|rate (warning)    | self.a.warnRateHigh # the maximum change rate value                                |
-+------------------+------------------------------------------------------------------------------------+
-|rate (alarm)      | self.a.alarmRateHigh # the maximum change rate value                               |
-+------------------+------------------------------------------------------------------------------------+
 |unit              | self.a.unitSymbol  # a unit enum, e.g. Unit.METER                                  |
 |                  +------------------------------------------------------------------------------------+
 |                  | self.a.metricPrefixSymbol  # a prefix enum, e.g. MetricPrefix.MILLI                |
@@ -558,39 +554,17 @@ Compositing other devices
 +++++++++++++++++++++++++
 
 An additional option is to create a node element holding some of the remote device's
-properties as part of your devices expected parameters definition:
+properties as part of your devices expected parameters definition. The following
+example illustrates this with a device creating a circular movement by coordinating
+the movement of an X- and Y-stage:
 
-.. code-block:: Python
-
-    class MyComposite(Device):
-
-        #the default is to only monitor state
-        remoteDeviceA = DeviceNode(displayedName="remote1")
-        remoteDeviceB = DeviceNode(displayedName="remote2",
-                     properties = ["targetValue", "position",
-                     "hardwareState"],
-                     commands = [("ramp_ch1", "ramp"), "reset"])
-                     #renames slot ramp_ch1 to ramp in the node repr. of this
-                     #device
-
-        def onInitialization(self):
-            self.connectDeviceNode(self.remoteDeviceA, "instance_id_1")
-            self.connectDeviceNode(self.remoteDeviceB, "instance_id_2")
-
-        @Slot()
-        def evaluateGroupState(self):
-            self.state = states.returnMostSignificant(self.remoteDeviceA.state,
-                                                      self.remoteDeviceB.state)
-        @Slot()
-        def checkHardwareState()
-            if self.remoteDeviceB & 0x0001 != 0:
-                self.state = states.ERROR
+.. literalinclude:: examples/circlemotor.py
 
 
 .. note::
 
     Calling ``DeviceNode`` without parameters will only expose the state, alarm
-    condition and deviceId properties of the remote device. A list of parameters
+    condition and status properties of the remote device. A list of parameters
     may be used to define parameters *in addition* to these. Further you may
     define a list of commands, which if an item is given as a tuple will bind
     the particular slot to the given slot, or if only a string is given binds
@@ -602,7 +576,7 @@ names you assign them. This node contains as first entry the remote device's
 instance_id, which you should assign upon initialization.
 
 Optionally, the ``target`` attribute
-can be used to inject the remote devie properties from device node into a specific
+can be used to inject the remote device properties from device node into a specific
 node element in the local device, or at the top of the hierarchy by using
 ``target=root``.
 
@@ -766,7 +740,7 @@ device in terms of a slot for the middle-layer device to call.
 Locking Devices In Use
 ++++++++++++++++++++++
 
-Middle-layer devices controlling hardware via a *bound* devices often need to be assured
+Middle-layer devices controlling hardware via a *driver* devices often need to be assured
 of exclusive access to the hardware. For instance, during a scan one would want to
 prevent accidental overriding of commands issued by the scan device, as would be possible
 by a user accessing the ``driver`` device. To resolve this issue devices support
@@ -914,8 +888,6 @@ is raised:
             # something which should always be done, e.g. move the motor
             # back to its original position
 
-
-
 Sometimes, however, an exception happens unexpectedly, or should be handled in a quite
 generic fashion. In either case it might be advisable to bring the system back into a
 defined, safe state. This can be done by overwriting the following device methods::
@@ -923,12 +895,7 @@ defined, safe state. This can be done by overwriting the following device method
     def onCancelled(self, slot):
         """to be called if a user cancelled the operation"""
 
-    def onException(self, slot, exception, traceback):
-        """to be called if an exception happend in the code"""
-
-The ``slot`` is the slot that had been executed, the ``exception`` and ``traceback``
-are also supplied. If ``slot`` or ``traceback`` cannot be determined, ``None`` is passed
-instead.
+The ``slot`` is the slot that had been executed.
 
 
 Programming Policies
@@ -1009,77 +976,6 @@ either provide a string or table field to add instance ids too, or a slot on whi
 devices composed upon can register themselves, provided they are given the *configurable*
 instance id of the composition device.
 
-The following example illustrates the first scenario.
-
-.. code-block:: Python
-
-   class MyComposite(Device):
-
-       managedDevices = String(displayedName = "Managed Devices", initOnly=True)
-       targetValue = Float(displayedName = "Target Value")
-
-       def __init__(self):
-            super().__init__()
-            self.devices = [connectDevice(d) for d in self.managedDevices]
-
-       def __del__(self):
-            for d in self.devices:
-                d.disconnect()
-
-       @Slot()
-       def moveAll():
-           self.state = states.MOVING
-
-            for d in self.devices:
-                d.targetValue = self.targetValue
-                d.move()
-            try:
-               waitUntil(lambda: all([True if d.state == states.STOPPED
-                                       for d in self.devices]), timeout=50)
-            except TimeoutError as e:
-               self.log.error("Stage movement has not competed in time!)
-               self.state = states.ERROR
-
-            self.state = states.STOPPED
-
-
-The second example shows how the second scenario might be implemented as part of a manager
-device.
-
-..  code-block:: Python
-
-    class MyManager(Device):
-
-        def __init__(self):
-            super().__init__()
-            self.devices = []
-
-        def __del__(self):
-            for d in self.devices:
-                d.disconnect()
-
-        @Slot()
-        def registerDevice(self, deviceId):
-            self.devices.append(connectDevice(deviceId))
-
-        @Slot()
-        def loadCalibrationParameters():
-            for d in self.devices:
-                d.loadConstants()
-
-    class MyCalibrationDevice(Device):
-
-        manager = String(displayedName = "Manager instance")
-
-        def __init__(self):
-             execute(self.manager, "registerDevice", self.instance)
-
-        @Slot()
-        def loadConstants():
-            #do something useful
-            ...
-
-
 .. warning::
 
 	When writing composite devices make yourself aware if the hardware enforces some
@@ -1092,12 +988,6 @@ device.
 	Before implementing a new composite device to check whether a similar task has been
 	taken care of before, and may be adaptable to your needs.
 
-.. todo::
-
-    We should provide a fully generic state composition device, which sets its
-    own state to the most-significant state of its members and its alarmcondition
-    to the most significant alarm condition of its members. The alarm condition
-    should be set to the state attribute so it is indicated in a single field.
 
 Scan Devices
 ++++++++++++
@@ -1121,45 +1011,22 @@ Given the above requirements, a scan device thus
 - Must be able to trigger data acquisition via the run mananagement, which may be done
   using the Karabo-provided *simpleRunAcquistion* device.
 
-An exemplary device scanning a linear stage and taking data at each point might thus be
-implemented as follows:
+An exemplary device scanning is implemented below. In the example ``command()``
+would refere to trigger the DAQ.
 
-..  code-block:: Python
+.. literalinclude:: examples/scan.py
 
-    from karabo.middlelayer import Device, Slot, Int, String
+A PID Controller Device
++++++++++++++++++++++++
 
-    class MyLinearScan(Device):
+A PID controller tries to minimize the difference between the *process
+variable* of a device and a user defined *setpoint* by acting on a *control
+variable*, often on a different device.
 
-       startPosition = Int(displayedName="Start position")
-       stopPosition = Int(displayedName="Stop position")
-       increment = Int(displayedName="Step increment")
-       slaveId = String(displayedName="Slave device id")
-       daqId = String(displayedName="DAQ device id")
-       ...
+The time evolution of this difference, the *error*, is fed back to the
+control variable using the error itself, its integral and its derivative.
 
-       def __init__(self):
-           self.slaveDevice = connectDevice(self.slaveId)
-           self.daqDevice = connectDevice(self.daqId)
-           # update bounds on our properties
-           self.startPosition.setAttribute("minBoundsIncl",
-                        self.slaveDevice.targetValue.bounds('incl'))
-           self.stopPosition.setAttribute("minBoundsIncl",
-                        self.slaveDevice.targetValue.bounds('incl'))
-
-       @Slot(displayedName = "Scan")
-       def scan(self):
-           for val in range(self.startPosition, self.stopPosition, self.increment):
-               self.slaveDevice.targetValue = val
-               self.slaveDevice.move()
-               try:
-                   waitUntil(lambda: self.slaveDevice.state == states.STOPPED,
-                                     timeout = 20)
-               except TimeoutError as e:
-                   self.log.error("Scan stopped, motor didn't reach target!)
-                   return
-               #start acquisition
-               self.daqDevice.start()
-               waitUntil(lambda: self.daqDevice.state == states.STOPPED)
+.. literalinclude:: examples/pid.py
 
 
 
