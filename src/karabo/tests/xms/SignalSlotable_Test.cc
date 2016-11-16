@@ -260,18 +260,15 @@ void SignalSlotable_Test::testAutoConnectSlot() {
 }
 
 
-bool SignalSlotable_Test::waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls,
+void SignalSlotable_Test::waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls,
                                      int trials) {
     // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
     unsigned int millisecondsSleep = 2;
     do {
         if (demo->wasOk(messageCalls)) {
-            return true;
+            break;
         }
         boost::this_thread::sleep(boost::posix_time::milliseconds(millisecondsSleep));
         millisecondsSleep *= 2;
     } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
-
-
-    return false;
 }
