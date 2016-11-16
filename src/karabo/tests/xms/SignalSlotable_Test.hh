@@ -33,7 +33,7 @@ public:
     void tearDown();
 
 private:
-    bool waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials = 10);
+    void waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials = 10);
 
     void testUniqueInstanceId();
     void testReceiveAsync();
