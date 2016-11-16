@@ -85,11 +85,11 @@ def _project_load_handler(item_model):
     dialog = LoadProjectDialog()
     result = dialog.exec()
     if result == QDialog.Accepted:
-        item = dialog.selected_item()
-        if item is not None:
+        uuid, revision = dialog.selected_item()
+        if uuid is not None and revision is not None:
             db_conn = get_db_conn()
-            model = ProjectModel(uuid=item, revision=0)
-            read_lazy_object(TEST_DOMAIN, item, 0, db_conn,
+            model = ProjectModel(uuid=uuid, revision=revision)
+            read_lazy_object(TEST_DOMAIN, uuid, revision, db_conn,
                              read_project_model, existing=model)
             item_model.traits_data_model = model
 
