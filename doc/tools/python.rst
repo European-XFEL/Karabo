@@ -49,12 +49,13 @@ you will see an output similar to this::
     worker.py:8:50: E251 unexpected spaces around keyword / parameter equals
     worker.py:8:65: E251 unexpected spaces around keyword / parameter equals
 
- Here the first number is the line number, the second the character number of
- the problem's location. Simply go through these problems and reformat your code
- as suggested and following the style guide provided here:
- `https://www.python.org/dev/peps/pep-0008/`_. Note that expected parameter
- sections in `python.bound` should be formatted like this, regardless of flake8
- complaints::
+
+Here the first number is the line number, the second the character number of
+the problem's location. Simply go through these problems and reformat your code
+as suggested and following the style guide provided here:
+`https://www.python.org/dev/peps/pep-0008/`_. Note that expected parameter
+sections in `python.bound` should be formatted like this, regardless of flake8
+complaints::
 
     def expectedParameters(expected):
         (
