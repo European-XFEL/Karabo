@@ -13,8 +13,14 @@
 #include <cppunit/TestResultCollector.h>
 #include <cppunit/TestRunner.h>
 
+#include "boost/thread.hpp"
+
+#include "karabo/net/EventLoop.hh"
+
 
 int main() {
+    boost::thread t(karabo::net::EventLoop::work);
+
     // Create the event manager and test controller
     CPPUNIT_NS::TestResult controller;
 
@@ -39,6 +45,9 @@ int main() {
     std::ofstream xmlFileOut("testresults/xmsTest.xml");
     CPPUNIT_NS::XmlOutputter xmlOut(&result, xmlFileOut);
     xmlOut.write();
+
+    karabo::net::EventLoop::stop();
+    t.join();
 
     return result.wasSuccessful() ? 0 : 1;
 }

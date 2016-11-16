@@ -8,8 +8,9 @@
 #ifndef SIGNALSLOTABLE_TEST_HH
 #define	SIGNALSLOTABLE_TEST_HH
 
-#include <karabo/xms.hpp>
 #include <cppunit/extensions/HelperMacros.h>
+
+#include <boost/shared_ptr.hpp>
 
 class SignalSlotDemo;
 
@@ -32,14 +33,13 @@ public:
     void tearDown();
 
 private:
+    void waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials = 10);
 
     void testUniqueInstanceId();
     void testReceiveAsync();
     void testMethod();
     void testAutoConnectSignal();
     void testAutoConnectSlot();
-
-    boost::shared_ptr<boost::thread> m_eventLoopThread;
 };
 
 #endif	/* SIGNALSLOTABLE_TEST_HH */
