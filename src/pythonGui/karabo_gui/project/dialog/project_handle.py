@@ -17,14 +17,31 @@ from karabo_gui.mediator import (
 )
 from karabo_gui.project.db_connection import get_db_conn
 
+SIMPLE_NAME = 'simple_name'
+UUID = 'uuid'
+AUTHOR = 'author'
+REVISIONS = 'revisions'
+PUBLISHED = 'published'
+DESCRIPTION = 'description'
+DOCUMENTATION = 'documentation'
+
 PROJECT_DATA = OrderedDict()
-PROJECT_DATA['uuid'] = 'Name'
-PROJECT_DATA['author'] = 'Author'
-PROJECT_DATA['revision'] = 'Version'
-PROJECT_DATA['published'] = 'Published'
-PROJECT_DATA['description'] = 'Description'
-PROJECT_DATA['documentation'] = 'Documentation'
+PROJECT_DATA[SIMPLE_NAME] = 'Name'
+PROJECT_DATA[UUID] = 'UUID'
+PROJECT_DATA[AUTHOR] = 'Author'
+PROJECT_DATA[REVISIONS] = 'Version'
+PROJECT_DATA[PUBLISHED] = 'Published'
+PROJECT_DATA[DESCRIPTION] = 'Description'
+PROJECT_DATA[DOCUMENTATION] = 'Documentation'
 ProjectEntry = namedtuple('ProjectEntry', [key for key in PROJECT_DATA.keys()])
+
+
+def get_column_index(project_data_key):
+    """ Return ``index`` position in ``PROJECT_DATA`` OrderedDict for the given
+    ``project_data_key``.
+
+    If the ``project_data_key`` is not found, ``None`` is returned."""
+    return list(PROJECT_DATA.keys()).index(project_data_key)
 
 
 class ProjectHandleDialog(QDialog):
@@ -56,8 +73,8 @@ class ProjectHandleDialog(QDialog):
     def eventFilter(self, obj, event):
         if isinstance(event, KaraboBroadcastEvent):
             if event.sender is KaraboEventSender.ProjectItemsList:
-                uuids = event.data.get('uuids', [])
-                self.twProjects.model().add_project_manager_data(uuids)
+                items = event.data.get('items', [])
+                self.twProjects.model().add_project_manager_data(items)
             return False
         return super(ProjectHandleDialog, self).eventFilter(obj, event)
 
@@ -72,7 +89,8 @@ class ProjectHandleDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setText(btn_text)
 
     def selected_item(self):
-        rows = self.twProjects.selectionModel().selectedRows()
+        column = get_column_index(UUID)
+        rows = self.twProjects.selectionModel().selectedRows(column)
         if rows:
             return rows[0].data()
         return None
@@ -143,20 +161,30 @@ class TableModel(QAbstractTableModel):
     def _extractData(self):
         from karabo_gui.project.api import TEST_DOMAIN
 
-        project_uuids = self.db_conn.get_uuids_of_type(TEST_DOMAIN, 'project')
-        self.add_project_manager_data(project_uuids)
+        project_data = self.db_conn.get_available_project_data(
+            TEST_DOMAIN, 'project')
+        self.add_project_manager_data(project_data)
 
-    def add_project_manager_data(self, uuids):
+    def add_project_manager_data(self, data):
+        """ Add the given `data` to the internal data structure
+
+        :param data: A `HashList` with the keys per entry:
+                     - 'uuid' - The unique ID of the Project
+                     - 'revisions' - A list of revisions for the given project
+                     - 'simple_name' - The name for displaying
+                     - 'item_type' - Should be project in that case
+        """
         # XXX: this only works if the sent list of uuids is complete
         self.beginResetModel()
         self.entries = []
-        for uuid in uuids:
-            # XXX: Fetch the other information via ``uuid``
+        for it in data:
+            revisions = it.get('revisions')
             entry = ProjectEntry(
-                uuid=uuid,
-                author='author',
-                revision='revision',
-                published='published',
+                simple_name=it.get('simple_name'),
+                uuid=it.get('uuid'),
+                author=revisions[0].get('user') if revisions else '',
+                revisions=revisions,
+                published=revisions[0].get('date') if revisions else '',
                 description='description',
                 documentation='documentation',
                 )
@@ -164,7 +192,8 @@ class TableModel(QAbstractTableModel):
         self.endResetModel()
 
     def hasProject(self, uuid):
-        """ Check whether the given `uuid exists in the current model.
+        """ Check whether the given ``uuid`` exists in the current model.
+
         :return: True if it exists, false otherwise
         """
         for entry in self.entries:

@@ -182,19 +182,28 @@ class ProjectDatabase(ContextDecorator):
         rxml = result.results[0]
         try:
             rdict["document"] = rxml.find(self._add_vers_ns('document')).text
-            rdict["revisions"] = []
-            revisions = rxml.find(self._add_vers_ns('revisions'))
-            for revision in revisions.getchildren():
-                rentry = {}
-                rentry['revision'] = int(revision.attrib['rev'])
-                rentry['date'] = revision.find(self._add_vers_ns('date')).text
-                rentry['user'] = revision.find(self._add_vers_ns('user')).text
-                rdict["revisions"].append(rentry)
+            rdict["revisions"] = self._revision_xml_to_dict(rxml)
         except AttributeError:
             raise RuntimeError("Could not extract versioning information for"
                                "item at path {}".format(path))
 
         return rdict
+
+    def _revision_xml_to_dict(self, rxml):
+        """ Strip revision data from given ``rxml`` and it return it
+
+        :param rxml: The revision related xml
+        :return: List of dicts containing revision data
+        """
+        rlist = []
+        revisions = rxml.find(self._add_vers_ns('revisions'))
+        for revision in revisions.getchildren():
+            rentry = {}
+            rentry['revision'] = int(revision.attrib['rev'])
+            rentry['date'] = revision.find(self._add_vers_ns('date')).text
+            rentry['user'] = revision.find(self._add_vers_ns('user')).text
+            rlist.append(rentry)
+        return rlist
 
     def _add_vers_ns(self, element):
         return "{" + self.vers_namespace + "}" + element
@@ -463,6 +472,7 @@ class ProjectDatabase(ContextDecorator):
         """
         query = """
                 xquery version "3.0";
+                import module namespace v="{vnamespace}";
                 {maybe_let}
                 for $c at $i in collection("{root}/{domain}/?select=*")
                 {maybe_where}
@@ -474,18 +484,22 @@ class ProjectDatabase(ContextDecorator):
             maybe_where = 'where $c/*/@item_type = $item_types'
 
         r_names = ('uuid', 'simple_name', 'item_type')
-        r_attrs = ' '.join(['{name}="{{$c/*/@{name}}}"'.format(name=n)
+        r_attrs = ''.join(['{{$c/*/@{name}}}'.format(name=n)
                            for n in r_names])
+        revs = '<v:revisions>{v:history($c)//*/v:revision}</v:revisions>'
 
-        return_stmnt = 'return <item {} />'.format(r_attrs)
+        return_stmnt = 'return <item>{attrs}{revs}</item>'.format(attrs=r_attrs,
+                                                                  revs=revs)
 
         query = query.format(maybe_let=maybe_let,
                              maybe_where=maybe_where,
                              root=self.root, domain=domain,
-                             return_stmnt=return_stmnt)
+                             return_stmnt=return_stmnt,
+                             vnamespace=self.vers_namespace)
         try:
             res = self.dbhandle.query(query)
             return [{'uuid': r.attrib['uuid'],
+                     'revisions': self._revision_xml_to_dict(r),
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name']}
                     for r in res.results]
