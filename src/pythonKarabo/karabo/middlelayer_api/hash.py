@@ -16,7 +16,7 @@ import numbers
 from struct import pack, unpack, calcsize
 import sys
 from xml.sax import make_parser
-from xml.sax.saxutils import escape, quoteattr
+from xml.sax.saxutils import escape, quoteattr, unescape
 from xml.sax.handler import ContentHandler
 
 import numpy as np
@@ -1570,6 +1570,7 @@ class Handler(ContentHandler):
         else:
             hashattrs = {}
             for key, value in attrs.items():
+                value = unescape(value)
                 hashattrs[key] = value
                 if value.startswith("KRB_") and ":" in value:
                     dtype, svalue = value.split(":", 1)
