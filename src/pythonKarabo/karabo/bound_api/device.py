@@ -837,7 +837,7 @@ class PythonDevice(NoFsm):
     def getCurrentConfiguration(self, tags = ""):
         """
         Return the current configuration, optionally filtered by tags
-        
+
         :param tags: a string, with several entries separated by commas
                     spaces or semicolons. Set to an empty string if no
                     filtering is to be applied.
