@@ -299,9 +299,14 @@ class ProjectManager(PythonDevice):
 
         with self.user_db_sessions[user] as db_session:
             res = db_session.list_items(domain, item_types)
-            resHashes = [Hash('uuid', r['uuid'],
-                              'item_type', r['item_type'],
-                              'simple_name', r['simple_name']) for r in res]
+            resHashes = []
+            for r in res:
+                revisions = [dictToHash(rev) for rev in r['revisions']]
+                h = Hash('uuid', r['uuid'],
+                         'revisions', revisions,
+                         'item_type', r['item_type'],
+                         'simple_name', r['simple_name'])
+                resHashes.append(h)
             self.reply(Hash('items', resHashes))
 
     def slotListDomains(self, user):
