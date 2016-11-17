@@ -60,6 +60,12 @@ class Device(AlarmMixin, SignalSlotable):
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
         defaultValue=State.UNKNOWN)
 
+    status = String(
+        displayedName="Status",
+        description="A more detailed status description",
+        accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
+        defaultValue="")
+
     lockedBy = String(
         displayedName="Locked By",
         description="The name of the device holding a lock on this one "
