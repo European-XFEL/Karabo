@@ -427,8 +427,6 @@ namespace karabo {
                 
                 void receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
 
-            private:
-
                 karabo::util::Hash::Pointer prepareRequestHeader(const std::string& slotInstanceId,
                                                                  const std::string& slotFunction);
 
@@ -443,6 +441,8 @@ namespace karabo {
                 static std::string generateUUID();
 
                 void sendRequest() const;
+
+            private:
 
                 void registerDeadlineTimer();
 
