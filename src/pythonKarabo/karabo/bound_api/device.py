@@ -122,6 +122,12 @@ class PythonDevice(NoFsm):
                     .initialValue(State.UNKNOWN)
                     .commit(),
 
+            STRING_ELEMENT(expected).key("status")
+                    .displayedName("Status")
+                    .description("A more detailed status description")
+                    .readOnly().initalValue("")
+                    .commit(),
+
             ALARM_ELEMENT(expected).key("alarmCondition")
                         .displayedName("Alarm condition")
                         .description("The current alarm condition of the "
