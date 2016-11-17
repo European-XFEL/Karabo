@@ -53,7 +53,6 @@ class ProjectHandleDialog(QDialog):
         uic.loadUi(filepath, self)
 
         self.set_dialog_texts(title, btn_text)
-        self.buttonBox.accepted.connect(self.accept)
 
         self.twProjects.setModel(TableModel(parent=self))
         rev_delegate = ComboBoxDelegate(self.twProjects)
@@ -78,7 +77,7 @@ class ProjectHandleDialog(QDialog):
         if isinstance(event, KaraboBroadcastEvent):
             if event.sender is KaraboEventSender.ProjectItemsList:
                 items = event.data.get('items', [])
-                self.twProjects.model().add_project_manager_data(items)
+                #self.twProjects.model().add_project_manager_data(items)
             return False
         return super(ProjectHandleDialog, self).eventFilter(obj, event)
 
@@ -184,20 +183,22 @@ class TableModel(QAbstractTableModel):
         """
         # XXX: this only works if the sent list of uuids is complete
         self.beginResetModel()
-        self.entries = []
-        for it in data:
-            rev_hash_list = it.get('revisions')
-            entry = ProjectEntry(
-                simple_name=it.get('simple_name'),
-                uuid=it.get('uuid'),
-                author=rev_hash_list[0].get('user') if rev_hash_list else '',
-                revisions=[r.get('revision', '') for r in rev_hash_list],
-                published=rev_hash_list[0].get('date') if rev_hash_list else '',
-                description='description',
-                documentation='documentation',
-                )
-            self.entries.append(entry)
-        self.endResetModel()
+        try:
+            self.entries = []
+            for it in data:
+                rev_list = it.get('revisions')
+                entry = ProjectEntry(
+                    simple_name=it.get('simple_name'),
+                    uuid=it.get('uuid'),
+                    author=rev_list[0].get('user') if rev_list else '',
+                    revisions=[r.get('revision', '') for r in rev_list],
+                    published=rev_list[0].get('date') if rev_list else '',
+                    description='description',
+                    documentation='documentation',
+                    )
+                self.entries.append(entry)
+        finally:
+            self.endResetModel()
 
     def hasProject(self, uuid):
         """ Check whether the given ``uuid`` exists in the current model.

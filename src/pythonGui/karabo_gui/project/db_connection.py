@@ -89,8 +89,7 @@ class ProjectDatabaseConnection(QObject):
         # Fire and "forget". An event will be broadcast with the reply
         self.network.onProjectListItems(self.project_manager, domain, obj_type)
         # Call locally as well
-        cached = self.cache.get_available_project_data(domain, obj_type)
-        return cached
+        return self.cache.get_available_project_data(domain, obj_type)
 
     def retrieve(self, domain, uuid, revision, existing=None):
         """Read an object from the database.

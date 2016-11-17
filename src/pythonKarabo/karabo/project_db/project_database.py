@@ -225,7 +225,7 @@ class ProjectDatabase(ContextDecorator):
         access rights.
 
         :param domain: the domain under which this item is to be stored
-        :param uuid: the items uuid
+        :param uuid: the item's uuid
         :param item_xml: the xml containing the item information
         :param overwrite: defaults to False. If set to True versioning
                           information is removed prior to database injection,
