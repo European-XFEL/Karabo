@@ -4,42 +4,59 @@
 
 import unittest
 
-from karabo.bound import CameraInterface, Hash, Logger, State, Schema
+from karabo.bound import CameraInterface, Schema, State, STATE_ELEMENT
+
 
 class CameraUser(CameraInterface):
-    config = Hash("priority", "DEBUG")
-    Logger.configure(config)
-    log = Logger.getCategory()
-
     def __init__(self, configuration):
         super(CameraUser, self).__init__(configuration)
 
     def initialize(self):
-        self.log.DEBUG("-- CameraUser.initialize")
+        pass
 
     def acquire(self):
-        self.log.DEBUG("-- CameraUser.acquire")
+        pass
 
     def trigger(self):
-        self.log.DEBUG("-- CameraUser.trigger")
+        pass
 
     def stop(self):
-        self.log.DEBUG("-- CameraUser.stop")
+        pass
 
     def resetHardware(self):
-        self.log.DEBUG("-- CameraUser.resetHardware")
+        pass
 
-class  Camera_interface_TestCase(unittest.TestCase):
+
+class Camera_interface_TestCase(unittest.TestCase):
     def setUp(self):
         self.camera = CameraUser(None)
-    
+
     def tearDown(self):
         self.camera = None
 
     def test_camera_interface_(self):
         expected = Schema()
-        self.camera.log.DEBUG("*** Calling expectedParameters(...)")
+        (
+            STATE_ELEMENT(expected).key("state")
+            .displayedName("State")
+            .initialValue(State.UNKNOWN)
+            .commit(),
+        )
         self.camera.expectedParameters(expected)
+
+        self.assertTrue(expected.has('state'))
+        states = expected.getOptions('state')
+        self.assertTrue('INIT' in states)
+        self.assertTrue('ERROR' in states)
+        self.assertTrue('ACQUIRING' in states)
+        self.assertTrue('ACTIVE' in states)
+        self.assertTrue(expected.has('acquire'))
+        self.assertTrue(expected.has('trigger'))
+        self.assertTrue(expected.has('stop'))
+        self.assertTrue(expected.has('resetHardware'))
+        self.assertTrue(expected.has('output.schema.image'))
+        self.assertTrue(expected.has('exposureTime'))
+        self.assertTrue(expected.has('imageStorage'))
 
 if __name__ == '__main__':
     unittest.main()
