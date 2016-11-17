@@ -997,15 +997,16 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::connectChannels(std::string outputInstanceId, const std::string& outputName, std::string inputInstanceId, const std::string& inputName, const bool isVerbose) {
+        bool SignalSlotable::connectChannels(const std::string& outputInstanceId, const std::string& outputName,
+                                             const std::string& inputInstanceId, const std::string& inputName) {
 
-            if (outputInstanceId.empty()) outputInstanceId = m_instanceId;
-            if (inputInstanceId.empty()) inputInstanceId = m_instanceId;
+            const std::string& outputId = outputInstanceId.empty() ? m_instanceId : outputInstanceId;
+            const std::string& inputId = inputInstanceId.empty() ? m_instanceId : inputInstanceId;
 
             bool outputChannelExists = false;
             karabo::util::Hash outputChannelInfo;
             try {
-                this->request(outputInstanceId, "slotGetOutputChannelInformation", outputName, static_cast<int> (getpid()))
+                this->request(outputId, "slotGetOutputChannelInformation", outputName, static_cast<int> (getpid()))
                         .timeout(1000).receive(outputChannelExists, outputChannelInfo);
             } catch (const karabo::util::TimeoutException&) {
                 karabo::util::Exception::clearTrace();
@@ -1015,7 +1016,7 @@ namespace karabo {
             bool inputChannelExists = false;
             if (outputChannelExists) {
                 try {
-                    this->request(inputInstanceId, "slotConnectToOutputChannel", inputName, outputChannelInfo, true)
+                    this->request(inputId, "slotConnectToOutputChannel", inputName, outputChannelInfo, true)
                             .timeout(1000).receive(inputChannelExists);
                 } catch (const karabo::util::TimeoutException&) {
                     karabo::util::Exception::clearTrace();
@@ -1024,11 +1025,14 @@ namespace karabo {
             }
 
             if (outputChannelExists && inputChannelExists) {
-                if (isVerbose) cout << "INFO   : Channel connection successfully established." << endl;
+                KARABO_LOG_FRAMEWORK_DEBUG << "Successfully connected '" << inputId << '.' << inputName
+                        << "' to '" << outputId << '.' << outputName << '.';
                 return true;
+            } else {
+                KARABO_LOG_FRAMEWORK_WARN << "Failed to connect '" << inputId << '.' << inputName
+                        << "' to '" << outputId << '.' << outputName << '.';
+                return false;
             }
-            if (isVerbose) cout << "ERROR   : Channel connection could not be established." << endl;
-            return false;
         }
 
 
@@ -1045,10 +1049,11 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::disconnectChannels(std::string outputInstanceId, const std::string& outputName, std::string inputInstanceId, const std::string& inputName, const bool isVerbose) {
+        bool SignalSlotable::disconnectChannels(const std::string& outputInstanceId, const std::string& outputName,
+                                                const std::string& inputInstanceId, const std::string& inputName) {
 
-            if (outputInstanceId.empty()) outputInstanceId = m_instanceId;
-            if (inputInstanceId.empty()) inputInstanceId = m_instanceId;
+            const std::string& outputId = outputInstanceId.empty() ? m_instanceId : outputInstanceId;
+            const std::string& inputId = inputInstanceId.empty() ? m_instanceId : inputInstanceId;
 
             bool outputChannelExists = false;
 
@@ -1056,7 +1061,7 @@ namespace karabo {
             karabo::util::Hash outputChannelInfo;
 
             try {
-                this->request(outputInstanceId, "slotGetOutputChannelInformation", outputName, static_cast<int> (getpid()))
+                this->request(outputId, "slotGetOutputChannelInformation", outputName, static_cast<int> (getpid()))
                         .timeout(1000).receive(outputChannelExists, outputChannelInfo);
             } catch (const karabo::util::TimeoutException&) {
                 karabo::util::Exception::clearTrace();
@@ -1066,7 +1071,7 @@ namespace karabo {
             bool inputChannelExists = false;
             if (outputChannelExists) {
                 try {
-                    this->request(inputInstanceId, "slotConnectToOutputChannel", inputName, outputChannelInfo, false)
+                    this->request(inputId, "slotConnectToOutputChannel", inputName, outputChannelInfo, false)
                             .timeout(1000).receive(inputChannelExists);
                 } catch (const karabo::util::TimeoutException&) {
                     karabo::util::Exception::clearTrace();
@@ -1075,11 +1080,14 @@ namespace karabo {
             }
 
             if (outputChannelExists && inputChannelExists) {
-                if (isVerbose) cout << "INFO   : Channel connection successfully released." << endl;
+                KARABO_LOG_FRAMEWORK_DEBUG << "Successfully disconnected '" << inputId << '.' << inputName
+                        << "' from '" << outputId << '.' << outputName << '.';
                 return true;
+            } else {
+                KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect '" << inputId << '.' << inputName
+                        << "' from '" << outputId << '.' << outputName << '.';
+                return false;
             }
-            if (isVerbose) cout << "ERROR   : Channel connection could not be released." << endl;
-            return false;
         }
 
         //************************** Connect **************************//
