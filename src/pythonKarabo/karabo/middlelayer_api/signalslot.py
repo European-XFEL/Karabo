@@ -19,12 +19,13 @@ class Signal(object):
         self.args = args
 
 
-def _log_exception(func, device):
+def _log_exception(func, device, message):
     logger = logging.getLogger(device.deviceId)
     _, exception, _ = sys.exc_info()
-    logmessage = getattr(exception, "logmessage",
-                         ('Exception in slot "%s" of device "%s"',
-                          func.__qualname__, device.deviceId))
+    default = ('Exception in slot "%s" of device "%s" called by "%s"',
+               func.__qualname__, device.deviceId,
+               message.properties['signalInstanceId'])
+    logmessage = getattr(exception, "logmessage", default)
     level = getattr(exception, "loglevel", logging.ERROR)
     logger.log(level, *logmessage, exc_info=True)
 
@@ -35,7 +36,7 @@ def slot(f):
             device._ss.reply(message, func(*args))
         except Exception as e:
             device._ss.replyException(message, e)
-            _log_exception(func, device)
+            _log_exception(func, device, message)
     f.slot = inner
     return f
 
@@ -52,7 +53,7 @@ def coslot(f, passMessage=False):
                 broker.reply(message, (yield from func(*args)))
             except Exception as e:
                 broker.replyException(message, e)
-                _log_exception(func, device)
+                _log_exception(func, device, message)
         if passMessage:
             args.append(message)
         async(inner())
@@ -309,6 +310,7 @@ class SignalSlotable(Configurable):
         loop = get_event_loop()
         for f in loop.changedFutures:
             f.set_result(None)
+        loop.changedFutures = set()
 
     @slot
     def slotInstanceNew(self, instanceId, info):

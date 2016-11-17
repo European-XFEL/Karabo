@@ -60,6 +60,12 @@ class Device(AlarmMixin, SignalSlotable):
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
         defaultValue=State.UNKNOWN)
 
+    status = String(
+        displayedName="Status",
+        description="A more detailed status description",
+        accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
+        defaultValue="")
+
     lockedBy = String(
         displayedName="Locked By",
         description="The name of the device holding a lock on this one "
@@ -80,6 +86,7 @@ class Device(AlarmMixin, SignalSlotable):
                displayedName="Logger",
                requiredAccessLevel=AccessLevel.EXPERT)
 
+    signalAlarmUpdate = Signal(String(), Hash())
     signalChanged = Signal(HashType(), String())
     signalStateChanged = Signal(HashType(), String())
     signalSchemaUpdated = Signal(SchemaHashType(), String())
@@ -150,3 +157,7 @@ class Device(AlarmMixin, SignalSlotable):
     def _notifyNewSchema(self):
         """Notfiy the network that our schema has changed"""
         self.signalSchemaUpdated(self.getDeviceSchema(), self.deviceId)
+
+    @slot
+    def slotReSubmitAlarms(self, existingAlarms):
+        return self.deviceId, Hash()
