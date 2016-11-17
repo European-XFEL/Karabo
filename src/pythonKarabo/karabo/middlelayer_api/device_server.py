@@ -257,6 +257,7 @@ class DeviceServer(SignalSlotable):
     @slot
     def slotInstanceGone(self, id, info):
         self.deviceInstanceMap.pop(id, None)
+        super(DeviceServer, self).slotInstanceGone(id, info)
 
     @slot
     def slotGetClassSchema(self, classid):
