@@ -83,7 +83,7 @@ class ProjectDBCache(object):
             root = fromstring(xml)
             root_type = root.attrib.get('item_type')
             if root_type == obj_type:
-                revHash = Hash(uuid, root.attrib.get('revision'),
+                revHash = Hash(uuid, int(root.attrib.get('revision')),
                                'simple_name', root.attrib.get('simple_name'))
                 uuid_revs.setdefault(uuid, []).append(revHash)
 
