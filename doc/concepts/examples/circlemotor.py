@@ -1,7 +1,7 @@
 from numpy import arctan2, cos, sin, sqrt
 
 from karabo.middlelayer import (AccessMode, background, Device, DeviceNode,
-                                Float, Slot, Unit, wait, waitUntilNew)
+                                Float, Slot, Unit, gather, waitUntilNew)
 
 
 class CircleMotor(Device):
@@ -47,7 +47,7 @@ class CircleMotor(Device):
         self.yaxis.targetValue = self.targetRadius * cos(self.targetAngle)
         xfuture = background(self.xaxis.move)
         yfuture = background(self.yaxis.move)
-        wait(xfuture, yfuture)
+        gather(xfuture, yfuture)
 
     def watch(self, device):
         while True:
