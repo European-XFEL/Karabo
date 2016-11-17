@@ -423,6 +423,12 @@ namespace karabo {
 
                 Requestor& timeout(const int& milliseconds);
 
+            protected:
+                
+                void receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
+
+            private:
+
                 karabo::util::Hash::Pointer prepareRequestHeader(const std::string& slotInstanceId,
                                                                  const std::string& slotFunction);
 
@@ -438,15 +444,11 @@ namespace karabo {
 
                 void sendRequest() const;
 
-                void receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
+                void registerDeadlineTimer();
 
             protected:
 
                 SignalSlotable* m_signalSlotable;
-
-            private:
-
-                void registerDeadlineTimer();
 
             private:
 
@@ -819,7 +821,7 @@ namespace karabo {
             void addReceiveAsyncTimer(const std::string& replyId,
                                       const boost::shared_ptr<boost::asio::deadline_timer>& timer);
 
-            boost::shared_ptr<boost::asio::deadline_timer> getReceiveAsyncTimer(const std::string& replyId);
+            boost::shared_ptr<boost::asio::deadline_timer> getReceiveAsyncTimer(const std::string& replyId) const ;
 
 
         private: // Members
