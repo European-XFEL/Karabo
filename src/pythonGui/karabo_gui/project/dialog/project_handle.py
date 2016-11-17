@@ -77,7 +77,7 @@ class ProjectHandleDialog(QDialog):
         if isinstance(event, KaraboBroadcastEvent):
             if event.sender is KaraboEventSender.ProjectItemsList:
                 items = event.data.get('items', [])
-                #self.twProjects.model().add_project_manager_data(items)
+                self.twProjects.model().add_project_manager_data(items)
             return False
         return super(ProjectHandleDialog, self).eventFilter(obj, event)
 
@@ -260,13 +260,21 @@ class ComboBoxDelegate(QStyledItemDelegate):
 
     def _updateWidget(self, combo, index, revisions):
         """ Put given ``revisions`` in combobox
+
+        :param combo: The `QComboBox` which should be updated
+        :param index: A `QModelIndex` of the view
+        :param revisions: A string list with all available revisions
         """
         column = index.column()
         if column == get_column_index(REVISIONS):
             revisions = index.data()
+            if not revisions:
+                # XXX TODO: Sometimes project db sends empty list - to be fixed
+                return
             with SignalBlocker(combo):
                 combo.clear()
-                combo.addItems(revisions)
+                for rev in revisions:
+                    combo.addItem(str(rev))
 
     def createEditor(self, parent, option, index):
         """ This method is called whenever the delegate is in edit mode."""
