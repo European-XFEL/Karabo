@@ -20,7 +20,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
     def expectedParameters(expected):
         (
         OVERWRITE_ELEMENT(expected).key("state")
-                .setNewOptions(State.INIT, State.ERROR, State.ACQUIRING, State.READY, State.CHANGING, State.ACTIVE)
+                .setNewOptions(State.INIT, State.ERROR, State.ACQUIRING, State.CHANGING, State.ACTIVE)
                 .setNewDefaultValue(State.INIT)
                 .commit(),
 
