@@ -224,6 +224,12 @@ namespace karabo {
                         .description("The current state the device is in")
                         .initialValue(State::UNKNOWN)
                         .commit();
+                
+                STRING_ELEMENT(expected).key("status")
+                        .displayedName("Status")
+                        .description("A more detailed status description")
+                        .readOnly().initialValue("")
+                        .commit();
 
                 ALARM_ELEMENT(expected).key("alarmCondition")
                         .displayedName("Alarm condition")
