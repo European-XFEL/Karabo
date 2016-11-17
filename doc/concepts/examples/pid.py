@@ -1,5 +1,5 @@
 from karabo.middlelayer import (
-    AccessMode, Assignment, background, Device, Float,
+    AccessMode, Assignment, background, Device, DeviceNode, Float,
     getDevice, locked, Slot, State, String, Unit, waitUntilNew)
 
 
@@ -52,27 +52,32 @@ class PID(Device):
         defaultValue=None,
         accessMode=AccessMode.RECONFIGURABLE)
 
-    process = String(
+    process_device = DeviceNode(
+        displayedName="Process Device",
+        description="The device of the process variable")
+
+    process_property = String(
         displayedName="Process Variable",
-        description="The device and property name of the process variable",
+        description="The property of the process variable",
         accessMode=AccessMode.INITONLY,
-        assignment=Assignment.MANDATORY,
-        displayType="property")
+        assignment=Assignment.MANDATORY)
 
-    control = String(
+    control_device = DeviceNode(
+        displayedName="Control Device",
+        description="The device of the control variable")
+
+    control_property = String(
         displayedName="Control Variable",
-        description="The device and property name of the control variable",
+        description="The property name of the control variable",
         accessMode=AccessMode.INITONLY,
-        assignment=Assignment.MANDATORY,
-        displayType="property")
+        assignment=Assignment.MANDATORY)
 
-    command = String(
+    control_command = String(
         displayedName="Control Command",
-        description="The device and property name of the slot to execute on "
+        description="The property name of the slot to execute on "
                     "the control device",
         accessMode=AccessMode.INITONLY,
-        assignment=Assignment.MANDATORY,
-        displayType="remoteSlot")
+        assignment=Assignment.MANDATORY)
 
     @Slot(displayedName="Start Controlling",
           allowedStates=[State.NORMAL])
@@ -104,31 +109,22 @@ class PID(Device):
         self.state = State.NORMAL
 
     def runner(self):
-        try:
-            process_name, process_property = self.process.split(".", 2)
-            control_name, control_property = self.control.split(".", 2)
-            command_name, command_slot = self.command.split(".", 2)
-            assert command_name == control_name
-        except ValueError:
-            self.logger.exception("A remote device property seems to be wrong")
-            raise
+        command = getattr(self.control_device, self.control_command)
+        last_error = (getattr(self.process_device, self.process_property) -
+                      self.setpoint)
+        while True:
+            waitUntilNew(getattr(self.process_device, self.process_property))
 
-        with locked(getDevice(control_name)) as control_device, \
-                locked(getDevice(process_name)) as process_device:
-            command = getattr(control_device, command_slot)
-            last_error = getattr(process_device, process_name) - self.setpoint
-            while True:
-                waitUntilNew(getattr(process_device, process_name))
+            error = (getattr(self.process_device, self.process_property) -
+                     self.setpoint)
+            self.current_integral += error * (error.timestamp -
+                                              last_error.timestamp)
+            derivative = ((last_error - error) /
+                          (last_error.timestamp - error.timestamp))
+            control = (self.proportional * error +
+                       self.integral * self.current_integral +
+                       self.derivative * derivative)
+            setattr(self.control_device, self.control_property, control)
+            command()
 
-                error = getattr(process_device, process_name) - self.setpoint
-                self.current_integral += error * (error.timestamp -
-                                                  last_error.timestamp)
-                derivative = ((last_error - error) /
-                              (last_error.timestamp - error.timestamp))
-                control = (self.proportional * error +
-                           self.integral * self.current_integral +
-                           self.derivative * derivative)
-                setattr(control_device, control_name, control)
-                command()
-
-                last_error = error
+            last_error = error
