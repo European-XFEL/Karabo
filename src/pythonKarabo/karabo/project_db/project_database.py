@@ -252,6 +252,12 @@ class ProjectDatabase(ContextDecorator):
         # Extraction the revision number as provided
         item_tree = self._make_xml_if_needed(item_xml)
         revision = item_tree.get(self._add_vers_ns('revision'))
+        initial_save = False
+        if revision is None:
+            revision = item_tree.get('revision')
+            # XXX check whether uuid already exists in db
+            if revision == 0:
+                initial_save = True
 
         # try to save the item xml, if overwrite is set to True we remove
         # the versioning specific attributes first.
@@ -271,6 +277,12 @@ class ProjectDatabase(ContextDecorator):
         success = False
         try:
             success = self.dbhandle.load(item_xml, path)
+            # The db does not create a versioning history when the project is
+            # saved for the first time. If this is the case we save it again to
+            # enforce the versioning creation
+            if initial_save:
+                # do twice to assure a version increment
+                success = self.dbhandle.load(item_xml, path)
         except ExistDBException:
             success = False
 
