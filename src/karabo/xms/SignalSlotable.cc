@@ -397,12 +397,13 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_TRACE << m_instanceId << ": Injecting reply from: "
                     << header->get<string>("signalInstanceId") << *header << *body;
             const string& replyId = header->get<string>("replyFrom");
+            // Check if the timer was registered for the reply ... and cancel it
+            boost::shared_ptr<boost::asio::deadline_timer> timer = getReceiveAsyncTimer(replyId);
+            if (timer) timer->cancel(); // A timer was set, but the message arrived before expiration -> cancel
             // Check whether a callback (temporary slot) was registered for the reply
             SlotInstancePointer slot = getSlot(replyId);
-            boost::shared_ptr<boost::asio::deadline_timer> timer = getReceiveAsyncTimer(replyId);
             try {
                 if (slot) {
-                    if (timer) timer->cancel(); // A timer was set, but the message arrived before expiration -> cancel
                     slot->callRegisteredSlotFunctions(*header, *body);
                 }
             } catch (const Exception& e) {
@@ -2024,7 +2025,7 @@ namespace karabo {
         }
 
 
-        boost::shared_ptr<boost::asio::deadline_timer> SignalSlotable::getReceiveAsyncTimer(const std::string& replyId) {
+        boost::shared_ptr<boost::asio::deadline_timer> SignalSlotable::getReceiveAsyncTimer(const std::string& replyId) const {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             auto it = m_receiveAsyncTimeoutHandlers.find(replyId);
             if (it != m_receiveAsyncTimeoutHandlers.end()) {
