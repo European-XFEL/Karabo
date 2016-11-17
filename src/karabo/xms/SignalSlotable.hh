@@ -309,14 +309,12 @@ namespace karabo {
                               const std::string & funcName);
 
             // TODO This function is not used anywhere -> decide what to do
-            bool connectChannels(std::string outputInstanceId, const std::string& outputName,
-                                 std::string inputInstanceId, const std::string& inputName,
-                                 const bool isVerbose = false);
+            bool connectChannels(const std::string& outputInstanceId, const std::string& outputName,
+                                 const std::string& inputInstanceId, const std::string& inputName);
 
             // TODO This function is not used anywhere -> decide what to do
-            bool disconnectChannels(std::string outputInstanceId, const std::string& outputName,
-                                    std::string inputInstanceId, const std::string& inputName,
-                                    const bool isVerbose = false);
+            bool disconnectChannels(const std::string& outputInstanceId, const std::string& outputName,
+                                    const std::string& inputInstanceId, const std::string& inputName);
 
             virtual InputChannel::Pointer createInputChannel(const std::string& channelName,
                                                              const karabo::util::Hash& config,
