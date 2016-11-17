@@ -1,8 +1,8 @@
 from numpy import linspace
 
 from karabo.middlelayer import (
-    AccessMode, Assignment, background, Device, Float, getDevice, Integer,
-    locked, Slot, State, String, Unit, waitUntil)
+    AccessMode, Assignment, background, Device, DeviceNode, Float, getDevice,
+    Integer, locked, Slot, State, String, Unit, waitUntil)
 
 
 class Scan(Device):
@@ -28,6 +28,10 @@ class Scan(Device):
         accessMode=AccessMode.RECONFIGURABLE,
         unitSymbol=Unit.COUNT)
 
+    actor_device = DeviceNode(
+        displayedName="Actor device",
+        description="The device that is scanned")
+
     actor_property = String(
         displayedName="Actor's property",
         description="The actor's property that is altered as part of the scan",
@@ -43,7 +47,11 @@ class Scan(Device):
         defaultValue="",
         accessMode=AccessMode.INITONLY)
 
-    sensor = String(
+    actor_device = DeviceNode(
+        displayedName="Sensor device",
+        description="The device that is to be triggered at each scan step")
+
+    sensor_command = String(
         displayedName="Sensor's command",
         description="The sensor triggered at each step in the scan",
         displayType="remoteSlot",
@@ -57,7 +65,7 @@ class Scan(Device):
           allowedStates=[State.STOPPED])
     def start(self):
         """Start a scan"""
-        self.background = background(self.runner, callback=None)
+        self.background = background(self.runner)
 
     @Slot(displayedName="Cancel Scan",
           allowedStates=[State.MOVING])
@@ -66,18 +74,6 @@ class Scan(Device):
         self.background.cancel()
 
     def runner(self):
-        try:
-            actor_name, actor_prop = self.actor_property.split(".", 2)
-            if self.actor_command:
-                command_name, command_slot = self.actor_command.split(".", 2)
-                assert actor_name == command_name
-            else:
-                command_slot = None
-            sensor_name, sensor_slot = self.sensor.split(".", 2)
-        except ValueError:
-            self.logger.exception("A remote device property seems to be wrong")
-            raise
-
         if None in (self.start_pos, self.stop_pos, self.steps):
             self.logger.error(
                 "start, stop and steps must be set before running")
@@ -85,20 +81,17 @@ class Scan(Device):
 
         self.state = State.MOVING
         try:
-            with locked(getDevice(actor_name)) as actor, \
-                    locked(getDevice(sensor_name)) as sensor:
-                if command_slot is None:
-                    command = lambda: None
-                else:
-                    command = getattr(actor, command_slot)
-                sense = getattr(sensor, sensor_slot)
-                for position in linspace(self.start_pos, self.stop_pos,
-                                         self.steps):
-                    setattr(actor, self.actor_property, position)
-                    command()
-                    waitUntil(lambda:
-                              getattr(actor, self.actor_property).onTarget)
-                    sense()
-                    waitUntil(lambda: sensor.state == State.PASSIVE)
+            if self.actor_command is None:
+                command = lambda: None
+            else:
+                command = getattr(self.actor_device, self.actor_command)
+                sense = getattr(self.sensor_device, self.sensor_command)
+            for position in linspace(self.start_pos, self.stop_pos, self.steps):
+                setattr(self.actor_device, self.actor_property, position)
+                command()
+                waitUntil(lambda: getattr(self.actor_device,
+                                          self.actor_property).onTarget)
+                sense()
+                waitUntil(lambda: self.sensor_device.state == State.PASSIVE)
         finally:
             self.state = State.STOPPED
