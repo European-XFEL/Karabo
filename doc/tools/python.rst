@@ -5,6 +5,33 @@ Getting Started - PyCharms
 Simply follow the installation instructions for the community edition at
 `https://www.jetbrains.com/pycharm/`_
 
+Configuring PyCharms
+++++++++++++++++++++
+
+* Wrong margins
+
+By default PyCharms comes with a right margin of 120 character. In
+order to apply pep8 settings go to::
+
+    File -> Settings -> Editor -> Code Style
+
+and set the right margin to 79 characters.
+
+* Trailing white spaces
+
+Trailing white spaces are by default neither visible or removed. You
+have two options to deal with them. You can go either to::
+
+    File -> Settings -> Editor -> General
+
+and look in *Other* to *Strip trailing on save* or you can change your
+IDE appearance::
+
+    File -> Settings -> Editor -> General -> Appearance
+
+and select the *Show white spaces* option.
+
+
 Use Karabo's Python as Interpreter
 ++++++++++++++++++++++++++++++++++
 
