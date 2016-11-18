@@ -69,4 +69,5 @@ WIDGET_FACTORIES = {
     'TemperatureProbeWidget': VacuumWidgetModel,
     'TurboPumpWidget': VacuumWidgetModel,
     'ValveWidget': VacuumWidgetModel,
+    'AgilentIonWidget': VacuumWidgetModel,
 }
