@@ -116,6 +116,7 @@ def _db_metadata_reader(metadata):
         'revision': int(metadata['revision']),
         'uuid': metadata['uuid'],
         'simple_name': metadata['simple_name'],
+        'description': metadata['description'],
         'db_attrs': {k: metadata.get(k, '') for k in ('key', 'path')},
     }
     return attrs
@@ -169,6 +170,7 @@ def _device_server_reader(io_obj, existing, metadata):
 
     # Now copy into the existing object
     existing.server_id = server.server_id
+    existing.host = server.host
     existing.devices[:] = server.devices[:]
     # XXX: Check whether `initialized` should be set somewhere else
     existing.initialized = server.initialized
@@ -247,6 +249,7 @@ def _model_db_metadata(model):
     attrs['uuid'] = model.uuid
     attrs['revision'] = str(model.revision)
     attrs['simple_name'] = model.simple_name
+    attrs['description'] = model.description
     return attrs
 
 
