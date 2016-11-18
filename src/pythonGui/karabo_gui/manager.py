@@ -559,8 +559,11 @@ class _Manager(QObject):
 
     def handle_projectListItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
-        items = reply['items']
-        d = {'uuids': [it['uuid'] for it in items]}
+        success = reply.get('success', True)
+        if not success:
+            MessageBox.showError(reply['reason'])
+            return
+        d = {'items': reply['items']}
         event = KaraboBroadcastEvent(KaraboEventSender.ProjectItemsList, d)
         broadcast_event(event)
 
@@ -576,12 +579,20 @@ class _Manager(QObject):
 
     def handle_projectLoadItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
+        success = reply.get('success', True)
+        if not success:
+            MessageBox.showError(reply['reason'])
+            return
         d = {'items': reply['items']}  # Hash -> dict
         event = KaraboBroadcastEvent(KaraboEventSender.ProjectItemsLoaded, d)
         broadcast_event(event)
 
     def handle_projectSaveItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
+        success = reply.get('success', True)
+        if not success:
+            MessageBox.showError(reply['reason'])
+            return
         d = {'items': reply['items']}  # Hash -> dict
         event = KaraboBroadcastEvent(KaraboEventSender.ProjectItemsSaved, d)
         broadcast_event(event)
