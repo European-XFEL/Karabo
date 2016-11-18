@@ -154,7 +154,7 @@ class ProjectManager(PythonDevice):
                                                   items]))
         self._checkDbInitialized(user)
 
-        results = Hash()
+        savedItems = []
         with self.user_db_sessions[user] as db_session:
             for item in items:
                 xml = item.get("xml")
@@ -163,10 +163,10 @@ class ProjectManager(PythonDevice):
                 domain = item.get("domain")
                 success, meta = db_session.save_item(domain, uuid,
                                                      xml, overwrite)
-                results.set(uuid, Hash('success', success,
-                                       'entry', dictToHash(meta)))
-
-        self.reply(results)
+                item.set("success", success)
+                item.set("entry", dictToHash(meta))
+                savedItems.append(item)
+        self.reply(Hash('items', savedItems))
 
     def slotLoadItems(self, user, items):
         """
@@ -299,9 +299,14 @@ class ProjectManager(PythonDevice):
 
         with self.user_db_sessions[user] as db_session:
             res = db_session.list_items(domain, item_types)
-            resHashes = [Hash('uuid', r['uuid'],
-                              'item_type', r['item_type'],
-                              'simple_name', r['simple_name']) for r in res]
+            resHashes = []
+            for r in res:
+                revisions = [dictToHash(rev) for rev in r['revisions']]
+                h = Hash('uuid', r['uuid'],
+                         'revisions', revisions,
+                         'item_type', r['item_type'],
+                         'simple_name', r['simple_name'])
+                resHashes.append(h)
             self.reply(Hash('items', resHashes))
 
     def slotListDomains(self, user):

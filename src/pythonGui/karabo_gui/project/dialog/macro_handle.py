@@ -22,7 +22,6 @@ class MacroHandleDialog(QDialog):
             title = 'Edit macro'
             self.leTitle.setText(model.simple_name)
         self.setWindowTitle(title)
-        self.buttonBox.accepted.connect(self.accept)
 
     @property
     def simple_name(self):
