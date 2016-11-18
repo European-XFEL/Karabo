@@ -421,6 +421,10 @@ namespace karabo {
 
                 Requestor& timeout(const int& milliseconds);
 
+            protected:
+                
+                void receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
+
                 karabo::util::Hash::Pointer prepareRequestHeader(const std::string& slotInstanceId,
                                                                  const std::string& slotFunction);
 
@@ -436,7 +440,9 @@ namespace karabo {
 
                 void sendRequest() const;
 
-                void receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
+            private:
+
+                void registerDeadlineTimer();
 
             protected:
 
@@ -447,7 +453,7 @@ namespace karabo {
                 std::string m_replyId;
                 std::string m_slotInstanceId;
                 karabo::util::Hash::Pointer m_header;
-                karabo::util::Hash::Pointer m_body;               
+                karabo::util::Hash::Pointer m_body;
                 int m_timeout;
                 static boost::uuids::random_generator m_uuidGenerator;
 
@@ -492,6 +498,9 @@ namespace karabo {
 
             typedef std::map<std::string, SlotInstancePointer> SlotInstances;
             SlotInstances m_slotInstances;
+
+            typedef std::map<std::string, boost::shared_ptr<boost::asio::deadline_timer> > ReceiveAsyncTimeoutHandlers;
+            ReceiveAsyncTimeoutHandlers m_receiveAsyncTimeoutHandlers;
 
             // TODO Split into two mutexes
             mutable boost::mutex m_signalSlotInstancesMutex;
@@ -805,6 +814,13 @@ namespace karabo {
             // TODO This is a helper function during multi-topic refactoring
             void setTopic(const std::string& topic = "");
 
+            void receiveAsyncTimeoutHandler(const boost::system::error_code& e, const std::string& replyId);
+
+            void addReceiveAsyncTimer(const std::string& replyId,
+                                      const boost::shared_ptr<boost::asio::deadline_timer>& timer);
+
+            boost::shared_ptr<boost::asio::deadline_timer> getReceiveAsyncTimer(const std::string& replyId) const ;
+
 
         private: // Members
 
@@ -861,24 +877,28 @@ namespace karabo {
         template <class A1>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&) >& replyCallback) {
             m_signalSlotable->registerSlot<A1>(replyCallback, m_replyId);
+            registerDeadlineTimer();
             sendRequest();
         }
 
         template <class A1, class A2>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&, const A2&) >& replyCallback) {
             m_signalSlotable->registerSlot<A1, A2>(replyCallback, m_replyId);
+            registerDeadlineTimer();
             sendRequest();
         }
 
         template <class A1, class A2, class A3>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&, const A2&, const A3&) >& replyCallback) {
             m_signalSlotable->registerSlot<A1, A2, A3>(replyCallback, m_replyId);
+            registerDeadlineTimer();
             sendRequest();
         }
 
         template <class A1, class A2, class A3, class A4>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& replyCallback) {
             m_signalSlotable->registerSlot<A1, A2, A3, A4>(replyCallback, m_replyId);
+            registerDeadlineTimer();
             sendRequest();
         }
 
