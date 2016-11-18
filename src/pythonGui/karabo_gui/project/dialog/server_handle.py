@@ -22,7 +22,6 @@ class ServerHandleDialog(QDialog):
             title = 'Edit server'
             self.leServerId.setText(model.server_id)
         self.setWindowTitle(title)
-        self.buttonBox.accepted.connect(self.accept)
 
     @property
     def server_id(self):

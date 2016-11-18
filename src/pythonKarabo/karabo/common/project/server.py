@@ -33,6 +33,9 @@ class DeviceServerModel(BaseProjectObjectModel):
     # A list of possible devices for the server
     devices = List(Instance(DeviceInstanceModel))
 
+    def _server_id_changed(self, old, new):
+        self.simple_name = new
+
 
 def read_device_server(io_obj):
     """ A reader for device server models
