@@ -5,14 +5,13 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtGui import QDialog, QStackedLayout, QWidget
+from PyQt4.QtGui import QDialog, QMessageBox, QStackedLayout, QWidget
 
 import karabo_gui.icons as icons
 from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.docktabwindow import Dockable
 from .db_connection import get_db_conn
-from .dialog.project_handle import (LoadProjectDialog, NewProjectDialog,
-                                    SaveProjectDialog)
+from .dialog.project_handle import LoadProjectDialog, NewProjectDialog
 
 
 class ProjectPanel(Dockable, QWidget):
@@ -122,12 +121,20 @@ def _project_save_handler(item_model):
     # XXX: This is saving EVERYTHING in the project, regardless of need.
     # XXX: Don't do this unless explicitly requested! Save objects individually
     simple_name = item_model.traits_data_model.simple_name
-    dialog = SaveProjectDialog(simple_name=simple_name)
-    if dialog.exec() == QDialog.Accepted:
-        db_conn = get_db_conn()
-        proj_model = item_model.traits_data_model
-        for childname in PROJECT_OBJECT_CATEGORIES:
-            children = getattr(proj_model, childname)
-            for child in children:
-                store_obj(db_conn, child)
-        store_obj(db_conn, proj_model)
+    reply = QMessageBox.question(None, 'Save project',
+                                 'Do you really want to save the project '
+                                 '"<b>{}</b>"?'
+                                 .format(simple_name),
+                                 QMessageBox.Yes | QMessageBox.No,
+                                 QMessageBox.Yes)
+
+    if reply == QMessageBox.No:
+        return
+
+    db_conn = get_db_conn()
+    proj_model = item_model.traits_data_model
+    for childname in PROJECT_OBJECT_CATEGORIES:
+        children = getattr(proj_model, childname)
+        for child in children:
+            store_obj(db_conn, child)
+    store_obj(db_conn, proj_model)

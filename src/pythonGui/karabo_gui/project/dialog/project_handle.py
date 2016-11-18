@@ -135,7 +135,6 @@ class NewProjectDialog(QDialog):
         uic.loadUi(filepath, self)
 
         self.setWindowTitle(title)
-        self.buttonBox.accepted.connect(self.accept)
 
     @property
     def simple_name(self):
@@ -143,16 +142,9 @@ class NewProjectDialog(QDialog):
 
 
 class LoadProjectDialog(ProjectHandleDialog):
-    def __init__(self, simple_name='', title="Load Project", btn_text="Load",
+    def __init__(self, simple_name='', title="Load project", btn_text="Load",
                  parent=None):
         super(LoadProjectDialog, self).__init__(simple_name, title, btn_text,
-                                                parent)
-
-
-class SaveProjectDialog(ProjectHandleDialog):
-    def __init__(self, simple_name='', title="Save Project", btn_text="Save",
-                 parent=None):
-        super(SaveProjectDialog, self).__init__(simple_name, title, btn_text,
                                                 parent)
 
 

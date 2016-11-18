@@ -255,8 +255,16 @@ class ProjectDatabase(ContextDecorator):
         initial_save = False
         if revision is None:
             revision = item_tree.get('revision')
-            # XXX check whether uuid already exists in db
-            if revision == 0:
+            # Check whether `uuid` already exists
+            path = "{}/{}".format(self.root, domain)
+            query = """
+                    xquery version "3.0";
+                    for $c at $i in collection("{path}?select=*")
+                    where $c/*/@uuid = "{uuid}"
+                    return $c
+                    """.format(path=path, uuid=uuid)
+            res = self.dbhandle.query(query).results
+            if not res:
                 initial_save = True
 
         # try to save the item xml, if overwrite is set to True we remove
@@ -279,9 +287,8 @@ class ProjectDatabase(ContextDecorator):
             success = self.dbhandle.load(item_xml, path)
             # The db does not create a versioning history when the project is
             # saved for the first time. If this is the case we save it again to
-            # enforce the versioning creation
+            # enforce the versioning increment
             if initial_save:
-                # do twice to assure a version increment
                 success = self.dbhandle.load(item_xml, path)
         except ExistDBException:
             success = False
