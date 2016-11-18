@@ -61,7 +61,20 @@ namespace karabo {
 
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void () >& replyCallback) {
             m_signalSlotable->registerSlot(replyCallback, m_replyId);
+            registerDeadlineTimer();
             sendRequest();
+        }
+
+
+        void SignalSlotable::Requestor::registerDeadlineTimer() {
+            if (m_timeout > 0) {
+                // Register a deadline timer into map
+                auto timer = boost::make_shared<boost::asio::deadline_timer>(EventLoop::getIOService());
+                timer->expires_from_now(boost::posix_time::milliseconds(m_timeout));
+                timer->async_wait(bind_weak(&SignalSlotable::receiveAsyncTimeoutHandler, m_signalSlotable,
+                                            boost::asio::placeholders::error, m_replyId));
+                m_signalSlotable->addReceiveAsyncTimer(m_replyId, timer);
+            }
         }
 
 
@@ -384,10 +397,15 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_TRACE << m_instanceId << ": Injecting reply from: "
                     << header->get<string>("signalInstanceId") << *header << *body;
             const string& replyId = header->get<string>("replyFrom");
+            // Check if the timer was registered for the reply ... and cancel it
+            boost::shared_ptr<boost::asio::deadline_timer> timer = getReceiveAsyncTimer(replyId);
+            if (timer) timer->cancel(); // A timer was set, but the message arrived before expiration -> cancel
             // Check whether a callback (temporary slot) was registered for the reply
             SlotInstancePointer slot = getSlot(replyId);
             try {
-                if (slot) slot->callRegisteredSlotFunctions(*header, *body);
+                if (slot) {
+                    slot->callRegisteredSlotFunctions(*header, *body);
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": An error happened within a reply callback: \n" << e;
                 // TODO Repair exception handling for std::exception
@@ -1432,6 +1450,8 @@ namespace karabo {
         void SignalSlotable::removeSlot(const std::string& slotFunction) {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             m_slotInstances.erase(slotFunction);
+            // Will clean any associated timers to this slot
+            m_receiveAsyncTimeoutHandlers.erase(slotFunction);
         }
 
 
@@ -1968,6 +1988,30 @@ namespace karabo {
                 env = getenv("KARABO_BROKER_TOPIC");
                 if (env != 0) m_topic = string(env);
             }
+        }
+
+
+        void SignalSlotable::receiveAsyncTimeoutHandler(const boost::system::error_code& e, const std::string& replyId) {
+            if (e) return;
+            // Remove the slot with function name replyId, as the message took too long
+            removeSlot(replyId);
+            KARABO_LOG_FRAMEWORK_ERROR << "Asynchronous request with id \"" << replyId << "\" timed out";
+        }
+
+
+        void SignalSlotable::addReceiveAsyncTimer(const std::string& replyId, const boost::shared_ptr<boost::asio::deadline_timer>& timer) {
+            boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
+            m_receiveAsyncTimeoutHandlers[replyId] = timer;
+        }
+
+
+        boost::shared_ptr<boost::asio::deadline_timer> SignalSlotable::getReceiveAsyncTimer(const std::string& replyId) const {
+            boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
+            auto it = m_receiveAsyncTimeoutHandlers.find(replyId);
+            if (it != m_receiveAsyncTimeoutHandlers.end()) {
+                return it->second;
+            }
+            return boost::shared_ptr<boost::asio::deadline_timer>();
         }
 
 
