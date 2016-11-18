@@ -22,7 +22,6 @@ class DeviceHandleDialog(QDialog):
             title = 'Edit device'
             self.leTitle.setText(model.instance_id)
         self.setWindowTitle(title)
-        self.buttonBox.accepted.connect(self.accept)
 
     @property
     def instance_id(self):

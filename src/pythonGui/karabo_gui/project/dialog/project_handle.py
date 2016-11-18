@@ -8,7 +8,8 @@ from collections import OrderedDict, namedtuple
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
-from PyQt4.QtGui import QDialog, QDialogButtonBox
+from PyQt4.QtGui import (QComboBox, QDialog, QDialogButtonBox, QPixmap, QStyle,
+                         QStyledItemDelegate)
 
 from karabo_gui.util import SignalBlocker
 from karabo_gui.mediator import (
@@ -17,32 +18,52 @@ from karabo_gui.mediator import (
 )
 from karabo_gui.project.db_connection import get_db_conn
 
+SIMPLE_NAME = 'simple_name'
+UUID = 'uuid'
+AUTHOR = 'author'
+REVISIONS = 'revisions'
+PUBLISHED = 'published'
+DESCRIPTION = 'description'
+DOCUMENTATION = 'documentation'
+
 PROJECT_DATA = OrderedDict()
-PROJECT_DATA['uuid'] = 'Name'
-PROJECT_DATA['author'] = 'Author'
-PROJECT_DATA['revision'] = 'Version'
-PROJECT_DATA['published'] = 'Published'
-PROJECT_DATA['description'] = 'Description'
-PROJECT_DATA['documentation'] = 'Documentation'
+PROJECT_DATA[SIMPLE_NAME] = 'Name'
+PROJECT_DATA[UUID] = 'UUID'
+PROJECT_DATA[AUTHOR] = 'Author'
+PROJECT_DATA[REVISIONS] = 'Version'
+PROJECT_DATA[PUBLISHED] = 'Published'
+PROJECT_DATA[DESCRIPTION] = 'Description'
+PROJECT_DATA[DOCUMENTATION] = 'Documentation'
 ProjectEntry = namedtuple('ProjectEntry', [key for key in PROJECT_DATA.keys()])
 
 
+def get_column_index(project_data_key):
+    """ Return ``index`` position in ``PROJECT_DATA`` OrderedDict for the given
+    ``project_data_key``.
+
+    If the ``project_data_key`` is not found, ``None`` is returned."""
+    return list(PROJECT_DATA.keys()).index(project_data_key)
+
+
 class ProjectHandleDialog(QDialog):
-    def __init__(self, title, btn_text, parent=None):
+    def __init__(self, simple_name, title, btn_text, parent=None):
         super(ProjectHandleDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'project_handle.ui')
         uic.loadUi(filepath, self)
 
         self.set_dialog_texts(title, btn_text)
-        self.buttonBox.accepted.connect(self.accept)
 
         self.twProjects.setModel(TableModel(parent=self))
+        rev_delegate = ComboBoxDelegate(self.twProjects)
+        rev_column = get_column_index(REVISIONS)
+        self.twProjects.setItemDelegateForColumn(rev_column, rev_delegate)
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
         self.twProjects.doubleClicked.connect(self.accept)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.leTitle.textChanged.connect(self._titleChanged)
+        self.leTitle.setText(simple_name)
 
         register_for_broadcasts(self)
 
@@ -55,8 +76,8 @@ class ProjectHandleDialog(QDialog):
     def eventFilter(self, obj, event):
         if isinstance(event, KaraboBroadcastEvent):
             if event.sender is KaraboEventSender.ProjectItemsList:
-                uuids = event.data.get('items', [])
-                self.twProjects.model().add_project_manager_data(uuids)
+                items = event.data.get('items', [])
+                self.twProjects.model().add_project_manager_data(items)
             return False
         return super(ProjectHandleDialog, self).eventFilter(obj, event)
 
@@ -71,9 +92,14 @@ class ProjectHandleDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setText(btn_text)
 
     def selected_item(self):
-        rows = self.twProjects.selectionModel().selectedRows()
-        if rows:
-            return rows[0].data()
+        selection_model = self.twProjects.selectionModel()
+        uuid_index = get_column_index(UUID)
+        uuid_entry = selection_model.selectedRows(uuid_index)
+        rev_index = get_column_index(REVISIONS)
+        rev_entry = selection_model.selectedRows(rev_index)
+        if uuid_entry and rev_entry:
+            delegate = self.twProjects.itemDelegate(rev_entry[0])
+            return (uuid_entry[0].data(), int(delegate.selectedItem()))
         return None
 
     @property
@@ -101,19 +127,25 @@ class ProjectHandleDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
 
-class NewProjectDialog(ProjectHandleDialog):
-    def __init__(self, title="New Project", btn_text="New", parent=None):
-        super(NewProjectDialog, self).__init__(title, btn_text, parent)
+class NewProjectDialog(QDialog):
+    def __init__(self, title="New project", parent=None):
+        super(NewProjectDialog, self).__init__(parent)
+        filepath = op.join(op.abspath(op.dirname(__file__)),
+                           'project_new.ui')
+        uic.loadUi(filepath, self)
+
+        self.setWindowTitle(title)
+
+    @property
+    def simple_name(self):
+        return self.leTitle.text()
 
 
 class LoadProjectDialog(ProjectHandleDialog):
-    def __init__(self, title="Load Project", btn_text="Load", parent=None):
-        super(LoadProjectDialog, self).__init__(title, btn_text, parent)
-
-
-class SaveProjectDialog(ProjectHandleDialog):
-    def __init__(self, title="Save Project", btn_text="Save", parent=None):
-        super(SaveProjectDialog, self).__init__(title, btn_text, parent)
+    def __init__(self, simple_name='', title="Load project", btn_text="Load",
+                 parent=None):
+        super(LoadProjectDialog, self).__init__(simple_name, title, btn_text,
+                                                parent)
 
 
 class TableModel(QAbstractTableModel):
@@ -128,24 +160,41 @@ class TableModel(QAbstractTableModel):
     def _extractData(self):
         from karabo_gui.project.api import TEST_DOMAIN
 
-        project_uuids = self.db_conn.get_uuids_of_type(TEST_DOMAIN, 'project')
-        self.add_project_manager_data(project_uuids)
+        project_data = self.db_conn.get_available_project_data(
+            TEST_DOMAIN, 'project')
+        self.add_project_manager_data(project_data)
 
-    def add_project_manager_data(self, uuids):
-        for uuid in uuids:
-            # XXX: Fetch the other information via ``uuid``
-            entry = ProjectEntry(
-                uuid=uuid,
-                author='author',
-                revision='revision',
-                published='published',
-                description='description',
-                documentation='documentation',
-                )
-            self.entries.append(entry)
+    def add_project_manager_data(self, data):
+        """ Add the given `data` to the internal data structure
+
+        :param data: A `HashList` with the keys per entry:
+                     - 'uuid' - The unique ID of the Project
+                     - 'revisions' - A list of revisions for the given project
+                     - 'simple_name' - The name for displaying
+                     - 'item_type' - Should be project in that case
+        """
+        # XXX: this only works if the sent list of uuids is complete
+        self.beginResetModel()
+        try:
+            self.entries = []
+            for it in data:
+                rev_list = it.get('revisions')
+                entry = ProjectEntry(
+                    simple_name=it.get('simple_name'),
+                    uuid=it.get('uuid'),
+                    author=rev_list[0].get('user') if rev_list else '',
+                    revisions=[r.get('revision', '') for r in rev_list],
+                    published=rev_list[0].get('date') if rev_list else '',
+                    description='description',
+                    documentation='documentation',
+                    )
+                self.entries.append(entry)
+        finally:
+            self.endResetModel()
 
     def hasProject(self, uuid):
-        """ Check whether the given `uuid exists in the current model.
+        """ Check whether the given ``uuid`` exists in the current model.
+
         :return: True if it exists, false otherwise
         """
         for entry in self.entries:
@@ -170,3 +219,113 @@ class TableModel(QAbstractTableModel):
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
             return self.headers[section]
+
+
+class ComboBoxDelegate(QStyledItemDelegate):
+    def __init__(self, parent=None):
+        super(ComboBoxDelegate, self).__init__(parent)
+        # Fake combobox used for later rendering
+        self.cbSelection = QComboBox(parent)
+        self.cbSelection.hide()
+        self.current_selection = 0
+        parent.clicked.connect(self.cellClicked)
+        self.cellEditMode = False
+        self.currentCellIndex = None  # QPersistentModelIndex
+
+    def selectedItem(self):
+        return self.cbSelection.itemText(self.current_selection)
+
+    def _isRelevantColumn(self, index):
+        """ This methods checks whether the column of the given ``index``
+            belongs to the revision column.
+
+            Returns tuple:
+            [0] - states whether this is a relevant column
+            [1] - the list of revisions which needs to be shown in the combobox
+            Otherwise ``False`` and an empty string is returned.
+        """
+        column = index.column()
+        if column == get_column_index(REVISIONS):
+            revisions = index.data()
+            return (True, revisions)
+        return (False, [])
+
+    def _updateWidget(self, combo, index, revisions):
+        """ Put given ``revisions`` in combobox
+
+        :param combo: The `QComboBox` which should be updated
+        :param index: A `QModelIndex` of the view
+        :param revisions: A string list with all available revisions
+        """
+        column = index.column()
+        if column == get_column_index(REVISIONS):
+            revisions = index.data()
+            if not revisions:
+                # XXX TODO: Sometimes project db sends empty list - to be fixed
+                return
+            with SignalBlocker(combo):
+                combo.clear()
+                for rev in revisions:
+                    combo.addItem(str(rev))
+
+    def createEditor(self, parent, option, index):
+        """ This method is called whenever the delegate is in edit mode."""
+        isRelevant, revisions = self._isRelevantColumn(index)
+        if isRelevant:
+            # This combobox is for the highlighting effect when clicking/editing
+            # the index, is deleted whenever `closePersistentEditor` is called
+            combo = QComboBox(parent)
+            combo.currentIndexChanged.connect(self.currentIndexChanged)
+            self._updateWidget(combo, index, revisions)
+            return combo
+        else:
+            return super(ComboBoxDelegate, self).createEditor(parent, option,
+                                                              index)
+
+    def setEditorData(self, combo, index):
+        isRelevant, revisions = self._isRelevantColumn(index)
+        if isRelevant:
+            self._updateWidget(combo, index, revisions)
+        else:
+            super(ComboBoxDelegate, self).setEditorData(combo, index)
+
+    def paint(self, painter, option, index):
+        isRelevant, revisions = self._isRelevantColumn(index)
+        if isRelevant:
+            self.cbSelection.setGeometry(option.rect)
+            self._updateWidget(self.cbSelection, index, revisions)
+            if option.state == QStyle.State_Selected:
+                painter.fillRect(option.rect, option.palette.highlight())
+            pixmap = QPixmap.grabWidget(self.cbSelection)
+            painter.drawPixmap(option.rect.x(), option.rect.y(), pixmap)
+        else:
+            super(ComboBoxDelegate, self).paint(painter, option, index)
+
+    def updateEditorGeometry(self, combo, option, index):
+        isRelevant, revisions = self._isRelevantColumn(index)
+        if isRelevant:
+            combo.setGeometry(option.rect)
+            self._updateWidget(combo, index, revisions)
+
+    def currentIndexChanged(self, index):
+        self.current_selection = index
+
+    @pyqtSlot(object)
+    def cellClicked(self, index):
+        isRelevant, revisions = self._isRelevantColumn(index)
+        if isRelevant:
+            if self.cellEditMode:
+                # Remove old persistent model index
+                self.parent().closePersistentEditor(self.currentCellIndex)
+            # Current model index is stored and added to stay persistent until
+            # editing mode is done
+            self.currentCellIndex = index
+            # If no editor exists, the delegate will create a new editor which
+            # means that here ``createEditor`` is called
+            self.parent().openPersistentEditor(self.currentCellIndex)
+            self.cellEditMode = True
+        else:
+            if self.cellEditMode:
+                self.cellEditMode = False
+                # Persistent model index and data namely QComboBox cleaned up
+                self.parent().closePersistentEditor(self.currentCellIndex)
