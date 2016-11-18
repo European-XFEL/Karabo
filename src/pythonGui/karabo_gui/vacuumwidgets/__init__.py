@@ -19,5 +19,5 @@ __all__ = [
     "temperatureprobeswidget",
     "turbopumpwidget",
     "valvewidget",
-    "agilentionpump",
+    "agilentionwidget",
 ]
