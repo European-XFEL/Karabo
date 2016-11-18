@@ -125,7 +125,7 @@ class PythonDevice(NoFsm):
             STRING_ELEMENT(expected).key("status")
                     .displayedName("Status")
                     .description("A more detailed status description")
-                    .readOnly().initalValue("")
+                    .readOnly().initialValue("")
                     .commit(),
 
             ALARM_ELEMENT(expected).key("alarmCondition")
