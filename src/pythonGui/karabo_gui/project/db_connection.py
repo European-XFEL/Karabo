@@ -80,6 +80,17 @@ class ProjectDatabaseConnection(QObject):
         cached = self.cache.get_uuids_of_type(domain, obj_type)
         return cached
 
+    def get_available_project_data(self, domain, obj_type):
+        """ Find out what's available
+        """
+        # XXX: Please don't keep this here!
+        self._ensure_login()
+
+        # Fire and "forget". An event will be broadcast with the reply
+        self.network.onProjectListItems(self.project_manager, domain, obj_type)
+        # Call locally as well
+        return self.cache.get_available_project_data(domain, obj_type)
+
     def retrieve(self, domain, uuid, revision, existing=None):
         """Read an object from the database.
         """
@@ -108,7 +119,8 @@ class ProjectDatabaseConnection(QObject):
         # Don't ask the GUI server if you're already waiting for this object
         if key not in self._waiting_for_write:
             self._waiting_for_write[key] = obj
-            xml = write_project_model(obj)
+            # Project DB expects xml as string
+            xml = write_project_model(obj).decode('utf-8')
             items = [Hash('domain', domain, 'uuid', uuid, 'revision', revision,
                           'xml', xml, 'overwrite', False)]
             self.network.onProjectSaveItems(self.project_manager, items)
@@ -142,14 +154,18 @@ class ProjectDatabaseConnection(QObject):
         """ A bunch of items were just saved
         """
         for item in items:
+            domain = item['domain']
+            uuid = item['uuid']
+            revision = item['revision']
             entry = item['entry']
-            uuid = entry['uuid']
-            domain = entry['domain']
-            revision = entry['revision']
             if item['success']:
                 vers_info = entry['versioning_info']
                 revisions = vers_info['revisions']
-                new_revision = revisions[-1]['revision']
+                if not revisions:
+                    # No revisions available
+                    new_revision = revision
+                else:
+                    new_revision = revisions[-1]['revision']
 
                 key = (uuid, revision)
                 obj = self._waiting_for_write.pop(key)

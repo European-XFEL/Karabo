@@ -182,24 +182,33 @@ class ProjectDatabase(ContextDecorator):
         rxml = result.results[0]
         try:
             rdict["document"] = rxml.find(self._add_vers_ns('document')).text
-            rdict["revisions"] = []
-            revisions = rxml.find(self._add_vers_ns('revisions'))
-            for revision in revisions.getchildren():
-                rentry = {}
-                rentry['revision'] = int(revision.attrib['rev'])
-                rentry['date'] = revision.find(self._add_vers_ns('date')).text
-                rentry['user'] = revision.find(self._add_vers_ns('user')).text
-                rdict["revisions"].append(rentry)
+            rdict["revisions"] = self._revision_xml_to_dict(rxml)
         except AttributeError:
             raise RuntimeError("Could not extract versioning information for"
                                "item at path {}".format(path))
 
         return rdict
 
+    def _revision_xml_to_dict(self, rxml):
+        """ Strip revision data from given ``rxml`` and it return it
+
+        :param rxml: The revision related xml
+        :return: List of dicts containing revision data
+        """
+        rlist = []
+        revisions = rxml.find(self._add_vers_ns('revisions'))
+        for revision in revisions.getchildren():
+            rentry = {}
+            rentry['revision'] = int(revision.attrib['rev'])
+            rentry['date'] = revision.find(self._add_vers_ns('date')).text
+            rentry['user'] = revision.find(self._add_vers_ns('user')).text
+            rlist.append(rentry)
+        return rlist
+
     def _add_vers_ns(self, element):
         return "{" + self.vers_namespace + "}" + element
 
-    def save_item(self, domain, item, item_xml, overwrite=False):
+    def save_item(self, domain, uuid, item_xml, overwrite=False):
         """
         Saves a item xml file into the domain. It will
         create a new entry if the item does not exist yet, or create a new
@@ -216,7 +225,7 @@ class ProjectDatabase(ContextDecorator):
         access rights.
 
         :param domain: the domain under which this item is to be stored
-        :param item: the items name
+        :param uuid: the item's uuid
         :param item_xml: the xml containing the item information
         :param overwrite: defaults to False. If set to True versioning
                           information is removed prior to database injection,
@@ -243,6 +252,20 @@ class ProjectDatabase(ContextDecorator):
         # Extraction the revision number as provided
         item_tree = self._make_xml_if_needed(item_xml)
         revision = item_tree.get(self._add_vers_ns('revision'))
+        initial_save = False
+        if revision is None:
+            revision = item_tree.get('revision')
+            # Check whether `uuid` already exists
+            path = "{}/{}".format(self.root, domain)
+            query = """
+                    xquery version "3.0";
+                    for $c at $i in collection("{path}?select=*")
+                    where $c/*/@uuid = "{uuid}"
+                    return $c
+                    """.format(path=path, uuid=uuid)
+            res = self.dbhandle.query(query).results
+            if not res:
+                initial_save = True
 
         # try to save the item xml, if overwrite is set to True we remove
         # the versioning specific attributes first.
@@ -258,17 +281,22 @@ class ProjectDatabase(ContextDecorator):
         # case convert it
         item_xml = self._make_str_if_needed(item_xml)
 
-        path = "{}/{}/{}".format(self.root, domain, item)
+        path = "{}/{}/{}".format(self.root, domain, uuid)
         success = False
         try:
             success = self.dbhandle.load(item_xml, path)
+            # The db does not create a versioning history when the project is
+            # saved for the first time. If this is the case we save it again to
+            # enforce the versioning increment
+            if initial_save:
+                success = self.dbhandle.load(item_xml, path)
         except ExistDBException:
             success = False
 
         meta = {}
         meta['versioning_info'] = self.get_versioning_info(path)
         meta['domain'] = domain
-        meta['uuid'] = item
+        meta['uuid'] = uuid
         meta['revision'] = revision
         return (success, meta)
 
@@ -463,6 +491,7 @@ class ProjectDatabase(ContextDecorator):
         """
         query = """
                 xquery version "3.0";
+                import module namespace v="{vnamespace}";
                 {maybe_let}
                 for $c at $i in collection("{root}/{domain}/?select=*")
                 {maybe_where}
@@ -470,22 +499,26 @@ class ProjectDatabase(ContextDecorator):
                 """
         maybe_let, maybe_where = '', ''
         if item_types is not None:
-            maybe_let = 'let $item_types := {}'.format(tuple(item_types))
+            maybe_let = "let $item_types := ('{}')".format("','".join(item_types))
             maybe_where = 'where $c/*/@item_type = $item_types'
 
         r_names = ('uuid', 'simple_name', 'item_type')
-        r_attrs = ' '.join(['{name}="{{$c/*/@{name}}}"'.format(name=n)
+        r_attrs = ''.join(['{{$c/*/@{name}}}'.format(name=n)
                            for n in r_names])
+        revs = '<v:revisions>{v:history($c)//*/v:revision}</v:revisions>'
 
-        return_stmnt = 'return <item {} />'.format(r_attrs)
+        return_stmnt = 'return <item>{attrs}{revs}</item>'.format(attrs=r_attrs,
+                                                                  revs=revs)
 
         query = query.format(maybe_let=maybe_let,
                              maybe_where=maybe_where,
                              root=self.root, domain=domain,
-                             return_stmnt=return_stmnt)
+                             return_stmnt=return_stmnt,
+                             vnamespace=self.vers_namespace)
         try:
             res = self.dbhandle.query(query)
             return [{'uuid': r.attrib['uuid'],
+                     'revisions': self._revision_xml_to_dict(r),
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name']}
                     for r in res.results]
