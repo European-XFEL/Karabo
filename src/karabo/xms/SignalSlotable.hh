@@ -18,6 +18,7 @@
 
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/PackParameters.hh"
+#include "karabo/util/MetaTools.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/JmsConnection.hh"
 #include "karabo/net/JmsConsumer.hh"
@@ -368,12 +369,6 @@ namespace karabo {
             static std::string generateInstanceId();
 
             void setDeviceServerPointer(boost::any serverPtr);
-
-            void inputHandlerWrap(const InputHandler& handler, const InputChannel::Pointer& input);
-
-            void dataHandlerWrap(const DataHandler& handler, const karabo::util::Hash& data, const InputChannel::MetaData& metaData);
-
-            void endOfStreamHandlerWrap(const InputHandler& handler, const InputChannel::Pointer& input);
 
             bool connectP2P(const std::string& instanceId);
 
@@ -1085,9 +1080,9 @@ namespace karabo {
 #define KARABO_SLOT3(slotName, a1, a2, a3) this->registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName);
 #define KARABO_SLOT4(slotName, a1, a2, a3, a4) this->registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName);
 
-#define KARABO_ON_INPUT(channelName, funcName) this->registerInputHandler(channelName, boost::bind(&Self::funcName,this,_1));
-#define KARABO_ON_DATA(channelName, funcName) this->registerDataHandler(channelName, boost::bind(&Self::funcName, this,_1,_2));
-#define KARABO_ON_EOS(channelName, funcName) this->registerEndOfStreamHandler(channelName, boost::bind(&Self::funcName,this,_1));
+#define KARABO_ON_INPUT(channelName, funcName) this->registerInputHandler(channelName, karabo::util::bind_weak(&Self::funcName,this,_1));
+#define KARABO_ON_DATA(channelName, funcName) this->registerDataHandler(channelName, karabo::util::bind_weak(&Self::funcName, this,_1,_2));
+#define KARABO_ON_EOS(channelName, funcName) this->registerEndOfStreamHandler(channelName, karabo::util::bind_weak(&Self::funcName,this,_1));
 
 #define _KARABO_SIGNAL_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
 #define _KARABO_SYSTEM_SIGNAL_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC

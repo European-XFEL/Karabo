@@ -1660,54 +1660,18 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::inputHandlerWrap(const InputHandler& handler, const InputChannel::Pointer& input) {
-            try {
-                // Make sure that SignalSlotable shared pointer can be built (device still exists)...  otherwise exception is thrown
-                SignalSlotable::Pointer self = shared_from_this();
-                // call user callback
-                handler(input);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_INFO << "\"inputHandlerWrap\" call is too late: Device is destroyed already -- " << e.what();
-            }
-        }
-
-
         void SignalSlotable::registerInputHandler(const std::string& channelName, const InputHandler& handler) {
-            getInputChannel(channelName)->registerInputHandler(boost::bind(&SignalSlotable::inputHandlerWrap, this, handler, _1));
-        }
-
-
-        void SignalSlotable::dataHandlerWrap(const DataHandler& handler, const karabo::util::Hash& data, const InputChannel::MetaData& metaData) {
-            try {
-                // Make sure that SignalSlotable shared pointer can be built...  if not the we get exception
-                SignalSlotable::Pointer self = shared_from_this();
-                // call user callback
-                handler(data, metaData);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_INFO << "\"dataHandlerWrap\" call is too late: Device is destroyed already -- " << e.what();
-            }
+            getInputChannel(channelName)->registerInputHandler(handler);
         }
 
 
         void SignalSlotable::registerDataHandler(const std::string& channelName, const DataHandler& handler) {
-            getInputChannel(channelName)->registerDataHandler(boost::bind(&SignalSlotable::dataHandlerWrap, this, handler, _1, _2));
-        }
-
-
-        void SignalSlotable::endOfStreamHandlerWrap(const InputHandler& handler, const InputChannel::Pointer& input) {
-            try {
-                // Make sure that SignalSlotable shared pointer can be built (device still exists)...  otherwise exception is thrown
-                SignalSlotable::Pointer self = shared_from_this();
-                // call user callback
-                handler(input);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_INFO << "\"endOfStreamHandlerWrap\" call is too late: Device is destroyed already -- " << e.what();
-            }
+            getInputChannel(channelName)->registerDataHandler(handler);
         }
 
 
         void SignalSlotable::registerEndOfStreamHandler(const std::string& channelName, const InputHandler& handler) {
-            getInputChannel(channelName)->registerEndOfStreamEventHandler(boost::bind(&SignalSlotable::endOfStreamHandlerWrap, this, handler, _1));
+            getInputChannel(channelName)->registerEndOfStreamEventHandler(handler);
         }
 
 

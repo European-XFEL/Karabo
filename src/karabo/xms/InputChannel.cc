@@ -509,6 +509,7 @@ namespace karabo {
 
 
         void InputChannel::triggerIOEvent() {
+            std::string exceptMsg;
             try {
                 // There is either m_inputHandler or m_dataHandler
                 // (or neither), see registerInputHandler and registerDataHandler.
@@ -530,21 +531,29 @@ namespace karabo {
                 } else if (m_inputHandler) {
                     m_inputHandler(shared_from_this());
                 }
-                // Whatever handler (even none): we are done with the data.
-                m_ioService.post(util::bind_weak(&InputChannel::update, this));
-            } catch (const std::exception& ex) {
-                KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" exception -- " << ex.what();
+            } catch (const Exception& e) {
+                (exceptMsg += "exception:\n") += e.detailedMsg();
+            } catch (const std::exception& se) {
+                (exceptMsg += "standard exception: ") += se.what();
+            } catch (...) {
+                exceptMsg += "unknown exception";
             }
+
+            if (!exceptMsg.empty()) {
+                KARABO_LOG_FRAMEWORK_ERROR << "'triggerIOEvent' for instance '"
+                        << m_instanceId << "' caught " << exceptMsg;
+            }
+
+            // Whatever handler (even none or one that throws): we are done with the data.
+            m_ioService.post(util::bind_weak(&InputChannel::update, this));
         }
 
 
         void InputChannel::triggerEndOfStreamEvent() {
-            try {
-                if (m_endOfStreamHandler) {
-                    m_endOfStreamHandler(shared_from_this());
-                }
-            } catch (const std::exception& ex) {
-                KARABO_LOG_FRAMEWORK_ERROR << "\"triggerEndOfStreamEvent\" call is problematic -- " << ex.what();
+            // No exception handling needed:
+            // Since this method is posted, EventLoop::runProtected() handles that.
+            if (m_endOfStreamHandler) {
+                m_endOfStreamHandler(shared_from_this());
             }
         }
 
