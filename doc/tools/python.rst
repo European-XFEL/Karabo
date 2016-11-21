@@ -60,26 +60,26 @@ complaints::
     def expectedParameters(expected):
         (
             STRING_ELEMENT(expected).key("_serverId_")
-                    .displayedName("_ServerID_")
-                    .description("Do not set this property, it will be"
-                                 " set by the device-server")
-                    .expertAccess().assignmentInternal().noDefaultValue().init()
-                    .commit(),
+                .displayedName("_ServerID_")
+                .description("Do not set this property, it will be"
+                             " set by the device-server")
+                .expertAccess().assignmentInternal().noDefaultValue().init()
+                .commit(),
 
             STRING_ELEMENT(expected).key("_deviceId_")
-                    .displayedName("_DeviceID_")
-                    .description("Do not set this property, it will be set"
-                                 " by the device-server")
-                    .expertAccess().assignmentInternal().noDefaultValue().init()
-                    .commit(),
+                .displayedName("_DeviceID_")
+                .description("Do not set this property, it will be set"
+                             " by the device-server")
+                .expertAccess().assignmentInternal().noDefaultValue().init()
+                .commit(),
 
             NODE_ELEMENT(expected).key("_connection_")
-                    .displayedName("Connection")
-                    .description("The connection to the communication layer"
-                                 " of the distributed system")
-                    .appendParametersOf(JmsConnection)
-                    .adminAccess()
-                    .commit(),
+                .displayedName("Connection")
+                .description("The connection to the communication layer"
+                             " of the distributed system")
+                .appendParametersOf(JmsConnection)
+                .adminAccess()
+                .commit(),
         )
 
 Documentation
