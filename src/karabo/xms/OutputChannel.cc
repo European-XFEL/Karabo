@@ -141,7 +141,8 @@ namespace karabo {
             using namespace karabo::net;
             
             if (ec) {
-                onTcpChannelError(ec, channel);
+                KARABO_LOG_FRAMEWORK_DEBUG << "onTcpConnect received error code " << ec.value() << " (i.e. '"
+                        << ec.message() << "').";
                 return;
             }
             
