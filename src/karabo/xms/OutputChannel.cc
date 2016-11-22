@@ -719,7 +719,7 @@ namespace karabo {
         }
 
         void OutputChannel::write(const karabo::util::Hash& data) {
-            OutputChannel::MetaData meta(/*source*/ m_instanceId+"/"+m_channelName, /*timestamp*/ karabo::util::Timestamp());
+            OutputChannel::MetaData meta(/*source*/ m_instanceId+":"+m_channelName, /*timestamp*/ karabo::util::Timestamp());
             Memory::write(data, m_channelId, m_chunkId, meta);
         }
 
