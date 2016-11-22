@@ -2,7 +2,8 @@ from unittest import TestCase, main
 
 from pint import DimensionalityError
 
-from karabo.middlelayer import cross, dot, linspace, unit
+from karabo.middlelayer import unit
+from karabo.numeric import cross, dot, linspace
 
 
 class Tests(TestCase):
