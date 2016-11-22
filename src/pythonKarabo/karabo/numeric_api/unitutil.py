@@ -10,12 +10,7 @@ def linspace(start, stop, *args, **kwargs):
             isinstance(stop, QuantityValue)):
         return numpy.linspace(start, stop, *args, **kwargs)
 
-    if (start == 0) is True:
-        return numpy.linspace(start, stop.value, *args, **kwargs) * stop.units
-
-    if (stop == 0) is not True:
-        stop = float(stop / start.units)
-
+    stop = float(stop / start.units)
     return numpy.linspace(start.magnitude, stop, *args, **kwargs) * start.units
 
 
