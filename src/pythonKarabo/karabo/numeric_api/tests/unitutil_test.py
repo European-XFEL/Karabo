@@ -18,10 +18,6 @@ class Tests(TestCase):
                             [0, 1, 2]))
         self.assertTrue(all(linspace(-2 * unit.m, 0 * unit.m, 3) / unit.m ==
                             [-2, -1, 0]))
-        self.assertTrue(all(linspace(0, 2 * unit.m, 3) / unit.m ==
-                            [0, 1, 2]))
-        self.assertTrue(all(linspace(-2 * unit.m, 0, 3) / unit.m ==
-                            [-2, -1, 0]))
 
         with self.assertRaises(DimensionalityError):
             linspace(2 * unit.kg, 3 * unit.m, 3)
