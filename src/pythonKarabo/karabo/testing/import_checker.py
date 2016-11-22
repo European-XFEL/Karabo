@@ -10,18 +10,6 @@ def _get_ast(path):
         return compile(fp.read(), path, "exec", ast.PyCF_ONLY_AST)
 
 
-def _iter_nodes(node):
-    """ Iterate over all of the nodes in an AST.
-    """
-    for name in node._fields:
-        field = getattr(node, name, None)
-        if isinstance(field, ast.AST):
-            yield field
-        elif isinstance(field, list):
-            for item in field:
-                yield item
-
-
 def check_for_disallowed_module_imports(forbidden_module, path):
     """ Check a source file for imports from ``forbidden_module``.
 
@@ -47,10 +35,9 @@ def check_for_disallowed_module_imports(forbidden_module, path):
         return parts[-level]
 
     tree = _get_ast(path)
-    warning_msg = 'Imports are not allowed from "{}" in this module!'.format(
-        forbidden_module
-    )
-    for node in _iter_nodes(tree):
+    warning_msg = ('Imports are not allowed from "{}"'
+                   ' in this module! ({})').format(forbidden_module, path)
+    for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for imp in node.names:
                 assert forbidden_module not in imp.name, warning_msg
@@ -66,8 +53,9 @@ def check_for_star_imports(path):
     """ Check a source file for "import *" usage.
     """
     tree = _get_ast(path)
-    warning_msg = 'Star imports are not allowed in this module!'
-    for node in _iter_nodes(tree):
+    warning_msg = ('Star imports are not allowed in this module!'
+                   ' ({})').format(path)
+    for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             for alias in node.names:
                 assert alias.name != '*', warning_msg
