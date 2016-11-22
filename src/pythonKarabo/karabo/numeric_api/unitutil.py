@@ -1,7 +1,7 @@
 from functools import wraps
 import numpy
 
-from .basetypes import QuantityValue
+from karabo.middlelayer import QuantityValue
 
 
 @wraps(numpy.linspace)
