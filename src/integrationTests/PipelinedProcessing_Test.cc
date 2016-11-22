@@ -99,12 +99,12 @@ void PipelinedProcessing_Test::testPipe() {
     
     // Test if data source was correctly passed
     std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >("pipeTestReceiver", "dataSources");
-    CPPUNIT_ASSERT(sources[0] == "p2pTestSender/output1");
+    CPPUNIT_ASSERT(sources[0] == "p2pTestSender:output1");
     
     // This only can be tested if we used an input handler and not onData
     if (!m_deviceClient->get<bool>("pipeTestReceiver", "onData")) {
         std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >("pipeTestReceiver", "dataSourcesFromIndex");
-        CPPUNIT_ASSERT(sources[0] == "p2pTestSender/output1");
+        CPPUNIT_ASSERT(sources[0] == "p2pTestSender:output1");
     }
 
 }
