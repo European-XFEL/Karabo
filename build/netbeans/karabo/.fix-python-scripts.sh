@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Script for fixing up the shebang lines of Python entry-point scripts
+# Script for fixing up the shebang lines of Python entry-point scripts of 
+# Karabo entry points.
 #
 # Author: <john.wiggins@xfel.eu>
 #
@@ -11,23 +12,15 @@ if [ "$OS" = "Darwin" ]; then
   exit 0
 fi
 
-
 PACKAGEDIR=$1
 
-# TODO: Add an environment setup script to Karabo and use "/usr/bin/env python3" here.
 NEW_SHEBANG_LINE="#!/usr/bin/env python3"
 SED_PROGRAM='1 s%^.*$%'$NEW_SHEBANG_LINE'%g'
 
-PYTHON_ENTRY_POINTS=(2to3 2to3-3.4 convert-karabo-device-project cygdb cython
-    easy_install easy_install-3.4 f2py3 generate-karabo-project guidata-tests
-    guiqwt-tests idle3 idle3.4 ideviceclient ikarabo ipcluster ipcluster3
-    ipcontroller ipcontroller3 ipengine ipengine3 iptest iptest3 ipython
-    ipython3 karabo_device_server karabo-gui karaboServerControl.py nosetests
-    nosetests-3.4 pip pip3 pip3.4 pnuke prsync pscp pslurp pssh
-    pssh-askpass pydoc3 pydoc3.4 pygmentize pyvenv pyvenv-3.4 rst2html.py
-    rst2latex.py rst2man.py rst2odt_prepstyles.py rst2odt.py rst2pseudoxml.py
-    rst2s5.py rst2xetex.py rst2xml.py rstpep2html.py sift sphinx-apidoc
-    sphinx-autogen sphinx-build sphinx-quickstart wheel
+PYTHON_ENTRY_POINTS=(convert-karabo-device convert-karabo-project
+    ideviceclient ikarabo karabo_device_server karabo-gui
+    karabo-middlelayer-device-server karaboServerControl.py project-runner
+    scene-runner
 )
 
 count=0
