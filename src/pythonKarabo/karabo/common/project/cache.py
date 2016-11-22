@@ -75,7 +75,6 @@ class ProjectDBCache(object):
         if not op.exists(domain_dir):
             return []
 
-        from karabo.middlelayer import Hash
         uuid_revs = {}
         for fn in os.listdir(domain_dir):
             uuid, revision = self._uuid_revision_from_filename(fn)
@@ -83,8 +82,8 @@ class ProjectDBCache(object):
             root = fromstring(xml)
             root_type = root.attrib.get('item_type')
             if root_type == obj_type:
-                revHash = Hash(uuid, int(root.attrib.get('revision')),
-                               'simple_name', root.attrib.get('simple_name'))
+                revHash = {uuid: int(root.attrib.get('revision')),
+                           'simple_name': root.attrib.get('simple_name')}
                 uuid_revs.setdefault(uuid, []).append(revHash)
 
         proj_data = []
@@ -93,12 +92,12 @@ class ProjectDBCache(object):
             revisions = []
             for v in value:
                 simple_name = v.get('simple_name', '')
-                revisions.append(Hash('revision', v.get(uuid, 0),
-                                      'user', '',
-                                      'date', ''))
-            proj_data.append(Hash('uuid', uuid,
-                                  'revisions', revisions,
-                                  'simple_name', simple_name))
+                revisions.append({'revision': v.get(uuid, 0),
+                                  'user': '',
+                                  'date': ''})
+            proj_data.append({'uuid': uuid,
+                              'revisions': revisions,
+                              'simple_name': simple_name})
         return proj_data
 
     def _generate_filepath(self, domain, uuid, revision):
