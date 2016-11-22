@@ -89,7 +89,8 @@ namespace karabo {
                     //m_ownPort = Statics::generateServerPort();
                     karabo::util::Hash h("type", "server", "port", 0, "compressionUsageThreshold", m_compression * 1E6);
                     m_dataConnection = karabo::net::Connection::create("Tcp", h);
-                    m_ownPort = m_dataConnection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
+                    // Cannot yet use bind_weak - we are still in constructor :-(.
+                    m_ownPort = m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
                 } catch (const std::exception& ex) {
                     if (tryAgain > 0) {
                         tryAgain--;
