@@ -7,6 +7,12 @@ from karabo.numeric import cross, dot, linspace
 
 
 class Tests(TestCase):
+    def setUp(self):
+        self.ts1 = 1 * unit.m
+        self.ts1.timestamp = 100
+        self.ts2 = self.ts1 / unit.m
+        self.ts2.timestamp = 200
+
     def test_linspace(self):
         self.assertTrue(all(linspace(3, 5, 3) == [3, 4, 5]))
         self.assertTrue(all(linspace(0, 2, 3) == [0, 1, 2]))
@@ -19,6 +25,9 @@ class Tests(TestCase):
         self.assertTrue(all(linspace(-2 * unit.m, 0 * unit.m, 3) / unit.m ==
                             [-2, -1, 0]))
 
+        self.assertEqual(
+            linspace(self.ts1, 3 * self.ts1, self.ts2).timestamp, 200)
+
         with self.assertRaises(DimensionalityError):
             linspace(2 * unit.kg, 3 * unit.m, 3)
 
@@ -30,6 +39,8 @@ class Tests(TestCase):
                             [-3, 6, -3] * unit.m))
         self.assertTrue(all(cross([1, 2, 3] * unit.s, [4, 5, 6] * unit.m) ==
                             [-3, 6, -3] * unit.m * unit.s))
+        self.assertEqual(cross([1, 2, 3] * self.ts1,
+                               [4, 5, 6] * self.ts2).timestamp, 200)
 
     def test_dot(self):
         self.assertEqual(dot([1, 2, 3], [4, 5, 6]), 32)
@@ -37,6 +48,8 @@ class Tests(TestCase):
         self.assertEqual(dot([1, 2, 3], [4, 5, 6] * unit.m), 32 * unit.m)
         self.assertEqual(dot([1, 2, 3] * unit.s, [4, 5, 6] * unit.m),
                          32 * unit.m * unit.s)
+        self.assertEqual(dot([1, 2, 3] * self.ts1,
+                             [4, 5, 6] * self.ts2).timestamp, 200)
 
 if __name__ == "__main__":
     main()

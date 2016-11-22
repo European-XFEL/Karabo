@@ -1,23 +1,27 @@
 from functools import wraps
-import numpy
+import numpy as np
 
 from karabo.middlelayer import QuantityValue
+from karabo.middlelayer_api.basetypes import wrap_function
 
 
-@wraps(numpy.linspace)
+@wraps(np.linspace)
+@wrap_function
 def linspace(start, stop, *args, **kwargs):
     if not (isinstance(start, QuantityValue) or
             isinstance(stop, QuantityValue)):
-        return numpy.linspace(start, stop, *args, **kwargs)
+        return np.linspace(start, stop, *args, **kwargs)
 
     stop = float(stop / start.units)
-    return numpy.linspace(start.magnitude, stop, *args, **kwargs) * start.units
+    return QuantityValue(
+        np.linspace(start.magnitude, stop, *args, **kwargs), start.units)
 
 
-@wraps(numpy.dot)
+@wraps(np.dot)
+@wrap_function
 def dot(a, b, *args, **kwargs):
     if not (isinstance(a, QuantityValue) or isinstance(b, QuantityValue)):
-        return numpy.dot(a, b, *args, **kwargs)
+        return np.dot(a, b, *args, **kwargs)
 
     if not isinstance(a, QuantityValue):
         a = QuantityValue(a)
@@ -25,13 +29,14 @@ def dot(a, b, *args, **kwargs):
     if not isinstance(b, QuantityValue):
         b = QuantityValue(b)
 
-    return numpy.dot(a.magnitude, b.magnitude) * (a.units * b.units)
+    return QuantityValue(np.dot(a.magnitude, b.magnitude), a.units * b.units)
 
 
-@wraps(numpy.cross)
+@wraps(np.cross)
+@wrap_function
 def cross(a, b, *args, **kwargs):
     if not (isinstance(a, QuantityValue) or isinstance(b, QuantityValue)):
-        return numpy.cross(a, b, *args, **kwargs)
+        return np.cross(a, b, *args, **kwargs)
 
     if not isinstance(a, QuantityValue):
         a = QuantityValue(a)
@@ -39,4 +44,4 @@ def cross(a, b, *args, **kwargs):
     if not isinstance(b, QuantityValue):
         b = QuantityValue(b)
 
-    return numpy.cross(a.magnitude, b.magnitude) * (a.units * b.units)
+    return QuantityValue(np.cross(a.magnitude, b.magnitude), a.units * b.units)
