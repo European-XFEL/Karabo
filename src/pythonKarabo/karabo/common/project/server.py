@@ -30,6 +30,8 @@ class DeviceServerModel(BaseProjectObjectModel):
     """
     # The device ID of the instantiated server
     server_id = String
+    # The host on which the server runs
+    host = String
     # A list of possible devices for the server
     devices = List(Instance(DeviceInstanceModel))
 
@@ -60,9 +62,13 @@ def read_device_server(io_obj):
 
     document = parse(io_obj)
     root = document.getroot()
-    server_id = root.get('server_id')
     devices = [_read_device_instance(e) for e in root.findall('device')]
-    return DeviceServerModel(server_id=server_id, devices=devices)
+    traits = {
+        'server_id': root.get('server_id'),
+        'host': root.get('host'),
+        'devices': devices
+    }
+    return DeviceServerModel(**traits)
 
 
 def write_device_server(model):
@@ -85,6 +91,7 @@ def write_device_server(model):
 
     root = Element('device_server')
     root.set('server_id', model.server_id)
+    root.set('host', model.host)
     for device in model.devices:
         _write_device_instance(device, root)
 

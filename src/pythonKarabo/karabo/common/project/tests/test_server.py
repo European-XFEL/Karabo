@@ -5,7 +5,7 @@ from karabo.testing.utils import temp_xml_file, xml_is_equal
 
 UUID = 'c43e5c53-bea4-4e9e-921f-042b52e58f4c'
 SERVER_XML = """
-<device_server server_id='testServer'>
+<device_server server_id='testServer' host='serverserverFoo'>
     <device instance_id='fooDevice'
             if_exists='ignore'
             active_uuid='{uuid}'
@@ -28,6 +28,7 @@ def test_reading():
         server = read_device_server(fn)
 
     assert server.server_id == 'testServer'
+    assert server.host == 'serverserverFoo'
     assert len(server.devices) == 2
 
     dev0 = server.devices[0]
@@ -61,7 +62,8 @@ def test_writing():
     bar = DeviceInstanceModel(instance_id='barDevice', if_exists='restart',
                               configs=[dev1, dev2],
                               active_config_ref=(UUID, 2))
-    server = DeviceServerModel(server_id='testServer', devices=[foo, bar])
+    server = DeviceServerModel(server_id='testServer', host='serverserverFoo',
+                               devices=[foo, bar])
 
     xml = write_device_server(server)
     assert xml_is_equal(SERVER_XML, xml)

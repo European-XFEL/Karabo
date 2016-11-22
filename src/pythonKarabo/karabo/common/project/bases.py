@@ -15,6 +15,9 @@ class BaseProjectObjectModel(HasStrictTraits):
     # A simple, human-readable name. Doesn't need to be unique
     simple_name = String
 
+    # A description for this object
+    description = String
+
     # When True, the object contains unsaved data
     modified = Bool(False, transient=True)
 
