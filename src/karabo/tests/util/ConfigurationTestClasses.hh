@@ -280,6 +280,7 @@ namespace configurationTest {
             FLOAT_ELEMENT(expected).key("shapes.rectangle.b")
                     .description("Rectangle side - b")
                     .displayedName("Side B")
+                    .tags("b")
                     .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();

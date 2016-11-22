@@ -1905,6 +1905,7 @@ void exportPyUtilSchema() {
         //s.def("", &Schema::, ());     // overwrite<>(default) not implemented
         s.def("updateAliasMap", &schemawrap::updateAliasMap);
         s.def("hasRollingStatistics", &Schema::hasRollingStatistics);
+        s.def("subSchema", &Schema::subSchema, (bp::arg("subNode"), bp::arg("filterTags") = ""));
     }// end Schema
 
     /////////////////////////////////////////////////////////////

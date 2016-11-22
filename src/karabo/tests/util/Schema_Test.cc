@@ -784,3 +784,18 @@ void Schema_Test::testStateAndAlarmSets(){
     CPPUNIT_ASSERT(r.first == true); //should validate as we faked setAlarmCondition
 }
 
+void Schema_Test::testSubSchema() {
+    Schema schema("test");
+    GraphicsRenderer1::expectedParameters(schema);
+    {
+        Schema sub = schema.subSchema("shapes.rectangle");
+        CPPUNIT_ASSERT(sub.has("b"));
+        CPPUNIT_ASSERT(sub.has("c"));
+    }
+    {
+        Schema sub = schema.subSchema("shapes.rectangle", "b");
+        CPPUNIT_ASSERT(sub.has("b"));
+        CPPUNIT_ASSERT(!sub.has("c"));
+    }
+}
+
