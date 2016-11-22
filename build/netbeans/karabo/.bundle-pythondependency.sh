@@ -17,10 +17,7 @@ PACKAGENAME=$DEPNAME-$KARABOVERSION
 
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
-    DISTRO_RELEASE=$(lsb_release -rs)
-    if [ "$DISTRO_ID" = "Scientific" -o "$DISTRO_ID" = "CentOS" ]; then
-       DISTRO_RELEASE=${DISTRO_RELEASE%%\.*}
-    fi
+    DISTRO_RELEASE=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
 elif [ "$OS" = "Darwin" ]; then
     DISTRO_ID=MacOSX
     DISTRO_RELEASE=$(uname -r)
