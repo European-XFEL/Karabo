@@ -6,9 +6,9 @@ import sys
 
 from setuptools import setup, find_packages
 
-MAJOR = 2
-MINOR = 0
-MICRO = 2
+MAJOR = 1
+MINOR = 5
+MICRO = 0
 IS_RELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 VERSION_FILE_PATH = op.join('karabo_gui', '_version.py')
