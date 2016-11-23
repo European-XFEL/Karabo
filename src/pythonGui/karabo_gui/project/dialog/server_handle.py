@@ -26,6 +26,8 @@ class ServerHandleDialog(QDialog):
             title = 'Edit server'
             self.leServerId.setText(model.server_id)
             index = self.cbHost.findText(model.host)
+            # NOTE: index might be -1 if model.host is not online (or empty)
+            # QComboBox handles this correctly, but the user should be notified
             self.cbHost.setCurrentIndex(index)
             self.teDescription.setPlainText(model.description)
         self.setWindowTitle(title)
@@ -36,15 +38,15 @@ class ServerHandleDialog(QDialog):
         from karabo.middlelayer import Hash
         from karabo_gui.topology import Manager
 
-        available_hosts = []
+        available_hosts = set()
         servers = Manager().systemHash.get('server', Hash())
         for server_id, _, attrs in servers.iterall():
             if not attrs:
                 continue
 
-            host = attrs.get("host", "UNKNOWN")
-            if host not in available_hosts:
-                available_hosts.append(host)
+            host = attrs.get("host", "")
+            if host:
+                available_hosts.add(host)
         return available_hosts
 
     @property
