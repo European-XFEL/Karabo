@@ -1186,16 +1186,15 @@ namespace karabo {
         #undef applyRuntimeUpdateTypeResolver
 
         
-        Schema Schema::subSchema(const std::string& subNode, const std::string& filterTags) const {
+        Schema Schema::subSchema(const std::string& subNodePath, const std::string& filterTags) const {
             Schema sub;
             const karabo::util::Hash& subHash = m_hash.get<Hash>(subNode);
             sub.setParameterHash(subHash);
-            if(filterTags.empty()) {
-                return sub;
+            if(!filterTags.empty()) {
+                karabo::util::Hash filteredHash;
+                HashFilter::byTag(sub, subHash, filteredHash, filterTags);
+                sub.setParameterHash(filteredHash);
             }
-            karabo::util::Hash filteredHash;
-            HashFilter::byTag(sub, subHash, filteredHash, filterTags);
-            sub.setParameterHash(filteredHash);
             return sub;
         }
 

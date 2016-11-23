@@ -1619,7 +1619,7 @@ namespace karabo {
              * @param filterTags optional tags to filter sub schema by
              * @return a sub-schema of this schema.
              */
-            Schema subSchema(const std::string& subNode, const std::string& filterTags = std::string()) const;
+            Schema subSchema(const std::string& subNodePath, const std::string& filterTags = std::string()) const;
 
 
         private: // functions
