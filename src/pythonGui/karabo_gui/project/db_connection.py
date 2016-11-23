@@ -11,9 +11,9 @@ from karabo.common.project.api import get_user_cache, read_lazy_object
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.newproject.io import (read_project_model,
                                                   write_project_model)
-from karabo_gui.network import Network
 from karabo_gui.mediator import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.singletons.api import get_network
 
 # global singleton
 __db_conn = None
@@ -37,7 +37,7 @@ class ProjectDatabaseConnection(QObject):
     def __init__(self, parent=None):
         super(ProjectDatabaseConnection, self).__init__(parent)
         self.cache = get_user_cache()
-        self.network = Network()
+        self.network = get_network()
 
         # Register for broadcast events
         register_for_broadcasts(self)

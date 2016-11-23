@@ -34,8 +34,8 @@ from karabo_gui.mediator import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
     register_for_broadcasts)
 from karabo_gui.messagebox import MessageBox
-import karabo_gui.network as network
-from karabo_gui.topology import getDevice, Manager
+from karabo_gui.singletons.api import get_manager, get_network
+from karabo_gui.topology import getDevice
 from karabo_gui.util import getOpenFileName, getSaveFileName
 
 
@@ -425,7 +425,7 @@ class ProjectModel(QStandardItemModel):
         """ put the running macros from the systemHash into the project model
         """
         macros = {}
-        hash = Manager().systemHash.get("macro", Hash())
+        hash = get_manager().systemHash.get("macro", Hash())
         for k, v, a in hash.iterall():
             macros.setdefault((a["project"], a["module"]), []).append(k)
 
@@ -693,7 +693,7 @@ class ProjectModel(QStandardItemModel):
         self.selectIndex(self.currentIndex())
         # Update deviceDialog data
         if self.deviceDialog is not None:
-            self.deviceDialog.updateServerTopology(Manager().systemHash)
+            self.deviceDialog.updateServerTopology(get_manager().systemHash)
         self.updateMacros()
 
 
@@ -864,7 +864,8 @@ class ProjectModel(QStandardItemModel):
         """
         The local file system of the given CLOUD \projectName is returned.
         """
-        return os.path.join(globals.KARABO_PROJECT_FOLDER, network.Network().username,
+        network = get_network()
+        return os.path.join(globals.KARABO_PROJECT_FOLDER, network.username,
                             projectName)
 
     def closeExistentProject(self, filename):
@@ -930,7 +931,8 @@ class ProjectModel(QStandardItemModel):
         self.removeProject(project)
         
         if project.access == ProjectAccess.CLOUD:
-            network.Network().onCloseProject(project.basename)
+            network = get_network()
+            network.onCloseProject(project.basename)
             os.remove(self._localCloudProjectPath(project.basename))
 
 
@@ -1062,7 +1064,8 @@ class ProjectModel(QStandardItemModel):
         
         # Show dialog to select plugin
         self.deviceDialog = DeviceGroupDialog()
-        if not self.deviceDialog.updateServerTopology(Manager().systemHash, device):
+        manager = get_manager()
+        if not self.deviceDialog.updateServerTopology(manager.systemHash, device):
             QMessageBox.warning(None, "No servers available",
             "There are no servers available.<br>Please check, if all servers "
             "are <br>started correctly!")

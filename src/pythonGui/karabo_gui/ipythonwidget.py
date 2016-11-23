@@ -13,7 +13,7 @@ from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtconsole import kernel_mixins, inprocess
 
 from karabo.middlelayer import Hash
-from karabo_gui.network import network
+from karabo_gui.singletons.api import get_network
 from karabo_gui.topology import getDevice
 
 
@@ -52,11 +52,13 @@ class KernelManager(kernel_mixins.QtKernelManagerMixin):
 
     def start_kernel(self):
         hostname = socket.gethostname().replace(".", "_")
+        network = get_network()
         self.name = "CLI-{}-{}".format(hostname, os.getpid())
         network.onInitDevice("Karabo_MacroServer", "IPythonKernel", self.name,
                              Hash())
 
     def shutdown_kernel(self):
+        network = get_network()
         network.onKillDevice(self.name)
 
     def client(self):

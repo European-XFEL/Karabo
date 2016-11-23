@@ -4,18 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
-"""This module contains a class which represents the logging panel of the bottom
-   middle of the MainWindow which is un/dockable.
-"""
-
-__all__ = ["LoggingPanel"]
-
-
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
 from karabo_gui.logwidget import LogWidget
-from karabo_gui.topology import Manager
+from karabo_gui.singletons.api import get_manager
 
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
@@ -25,15 +17,16 @@ class LoggingPanel(Dockable, QWidget):
         super(LoggingPanel, self).__init__()
 
         self.__logWidget = LogWidget(self)
-        
-        mainLayout = QVBoxLayout(self)
-        mainLayout.setContentsMargins(5,5,5,5)
-        mainLayout.addWidget(self.__logWidget)
-        
-        Manager().signalLogDataAvailable.connect(self.__logWidget.onLogDataAvailable)
-        
-        self.setupActions()
 
+        mainLayout = QVBoxLayout(self)
+        mainLayout.setContentsMargins(5, 5, 5, 5)
+        mainLayout.addWidget(self.__logWidget)
+
+        manager = get_manager()
+        manager.signalLogDataAvailable.connect(
+            self.__logWidget.onLogDataAvailable)
+
+        self.setupActions()
 
     def setupActions(self):
         text = "Save log data to file"
@@ -47,7 +40,6 @@ class LoggingPanel(Dockable, QWidget):
         self.__acClearLog.setToolTip(text)
         self.__acClearLog.setStatusTip(text)
         self.__acClearLog.triggered.connect(self.__logWidget.onClearLog)
-
 
     def setupToolBars(self, toolBar, parent):
         toolBar.addAction(self.__acSaveLog)

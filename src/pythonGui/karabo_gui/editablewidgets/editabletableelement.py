@@ -53,7 +53,8 @@ from karabo_gui.widget import DisplayWidget, EditableWidget
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.const import ns_karabo
-from karabo_gui.topology import getDevice, Manager
+from karabo_gui.singletons.api import get_manager
+from karabo_gui.topology import getDevice
 import karabo_gui.schema as schema
 
 
@@ -372,7 +373,7 @@ class FromPropertyPopUp(QDialog):
             self.deviceIdSelectionChanged)
 
         # connect signal if device schema not yet available
-        Manager().signalUpdateScenes.connect(self.delayedSchema)
+        get_manager().signalUpdateScenes.connect(self.delayedSchema)
 
         self.actAsMonitorCheck = QCheckBox("Act as monitor")
         self.actAsMonitorCheck.setChecked(True)
@@ -392,7 +393,7 @@ class FromPropertyPopUp(QDialog):
         self.layout.addWidget(self.buttonBox)
 
     def getCurrentDeviceInstances(self):
-        devicesHash = Manager().systemHash["device"]
+        devicesHash = get_manager().systemHash["device"]
         devices = []
         for k, v, a in devicesHash.iterall():
             if 'type' in a:
