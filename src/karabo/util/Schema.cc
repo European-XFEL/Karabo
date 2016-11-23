@@ -1188,7 +1188,7 @@ namespace karabo {
         
         Schema Schema::subSchema(const std::string& subNodePath, const std::string& filterTags) const {
             Schema sub;
-            const karabo::util::Hash& subHash = m_hash.get<Hash>(subNode);
+            const karabo::util::Hash& subHash = m_hash.get<Hash>(subNodePath);
             sub.setParameterHash(subHash);
             if(!filterTags.empty()) {
                 karabo::util::Hash filteredHash;
