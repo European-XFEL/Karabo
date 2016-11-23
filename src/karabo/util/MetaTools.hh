@@ -152,9 +152,13 @@ namespace karabo {
 
 
         /**
-         * Weakly binds function f to an object of class O, but assures shared ownership of the object while f is executed.
+         * Weakly binds function f to an object of class Obj, but assures shared ownership of the object while f is executed.
          * This means that during the lifetime of calling f, the object cannot be destroyed, but destruction is not blocked
-         * if f is not being executed but only bound. Below is an example of how to bind to a boost::asio interface.
+         * if f is not being executed but only bound.
+         * Class Obj needs to derive from boost::enable_shared_from_this and the object pointer o has to be hold by a
+         * shared_ptr. This means that you cannot use bind_weak within the constructor of Obj nor for objects constructed on
+         * the stack.
+         * Below is an example of how to bind to a boost::asio interface.
          *
          * void Device::executeStepFunction(int arg, const boost::system::error_code& error) {
          *     ....
@@ -163,7 +167,7 @@ namespace karabo {
          * }
          *
          * @param f: function to bind, give as &Foo::bar
-         * @param o: object to bind to, needs to derive from boost::enable_shared_from_this
+         * @param o: pointer to object to bind to
          * @param p: parameters as one would give to boost::bind. Placeholders are fully supported.
          * @return: bound functor, compatible with boost bind.
          */
