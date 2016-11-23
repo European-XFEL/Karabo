@@ -12,6 +12,7 @@
 #include <boost/pointer_cast.hpp>
 #include "OutputChannel.hh"
 #include "karabo/net/TcpChannel.hh"
+#include "karabo/util/MetaTools.hh"
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -88,6 +89,7 @@ namespace karabo {
                     //m_ownPort = Statics::generateServerPort();
                     karabo::util::Hash h("type", "server", "port", 0, "compressionUsageThreshold", m_compression * 1E6);
                     m_dataConnection = karabo::net::Connection::create("Tcp", h);
+                    // Cannot yet use bind_weak - we are still in constructor :-(.
                     m_ownPort = m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
                 } catch (const std::exception& ex) {
                     if (tryAgain > 0) {
@@ -140,15 +142,16 @@ namespace karabo {
             using namespace karabo::net;
             
             if (ec) {
-                onTcpChannelError(ec, channel);
+                KARABO_LOG_FRAMEWORK_DEBUG << "onTcpConnect received error code " << ec.value() << " (i.e. '"
+                        << ec.message() << "').";
                 return;
             }
             
             m_dataChannels.insert(channel);
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
             KARABO_LOG_FRAMEWORK_DEBUG << "***** Connection established to socket " << tch->socket().native() << " *****";
-            channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
-            m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
+            channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
+            m_dataConnection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
         }
 
 
@@ -228,7 +231,7 @@ namespace karabo {
                 }
 
             }
-            channel->readAsyncHash(boost::bind(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
+            channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
         }
 
 
