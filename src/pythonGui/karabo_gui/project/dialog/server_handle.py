@@ -8,6 +8,9 @@ import os.path as op
 from PyQt4 import uic
 from PyQt4.QtGui import QDialog
 
+from karabo.middlelayer import Hash
+from karabo_gui.topology import Manager
+
 
 class ServerHandleDialog(QDialog):
     def __init__(self, model=None, parent=None):
@@ -16,7 +19,6 @@ class ServerHandleDialog(QDialog):
                            'server_handle.ui')
         uic.loadUi(filepath, self)
 
-        # XXX Get available hosts from systemTopology
         for host in self._get_available_hosts():
             self.cbHost.addItem(host)
 
@@ -33,11 +35,8 @@ class ServerHandleDialog(QDialog):
         self.setWindowTitle(title)
 
     def _get_available_hosts(self):
-        """ Get all available host of `systemTopology`
+        """ Get all available hosts of `systemTopology`
         """
-        from karabo.middlelayer import Hash
-        from karabo_gui.topology import Manager
-
         available_hosts = set()
         servers = Manager().systemHash.get('server', Hash())
         for server_id, _, attrs in servers.iterall():
