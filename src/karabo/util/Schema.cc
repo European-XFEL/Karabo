@@ -20,6 +20,7 @@
 #include "StringTools.hh"
 #include "karabo/webAuth/Authenticator.hh"
 #include "karabo/log/Logger.hh"
+#include "HashFilter.hh"
 
 namespace karabo {
     namespace util {
@@ -1183,6 +1184,19 @@ namespace karabo {
         #undef checkForRunttimeUpdateFixedType
         #undef checkForRunttimeUpdateTemplatedType
         #undef applyRuntimeUpdateTypeResolver
+
+        
+        Schema Schema::subSchema(const std::string& subNodePath, const std::string& filterTags) const {
+            Schema sub;
+            const karabo::util::Hash& subHash = m_hash.get<Hash>(subNodePath);
+            sub.setParameterHash(subHash);
+            if(!filterTags.empty()) {
+                karabo::util::Hash filteredHash;
+                HashFilter::byTag(sub, subHash, filteredHash, filterTags);
+                sub.setParameterHash(filteredHash);
+            }
+            return sub;
+        }
 
     }
 }
