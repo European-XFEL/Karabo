@@ -1612,6 +1612,14 @@ namespace karabo {
              * @return true if all updates succeeded, false otherwise
              */
             bool applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates);
+            
+            /**
+             * Retrieve a sub-schema of the schema
+             * @param subNodePath path of the node element to retrieve sub schema from
+             * @param filterTags optional tags to filter sub schema by
+             * @return a sub-schema of this schema.
+             */
+            Schema subSchema(const std::string& subNodePath, const std::string& filterTags = std::string()) const;
 
 
         private: // functions
