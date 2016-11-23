@@ -7,8 +7,7 @@ import sys
 
 from PyQt4.QtGui import QApplication, QFrame, QHBoxLayout, QVBoxLayout
 
-from karabo_gui.network import Network
-from karabo_gui.topology import Manager
+from karabo_gui.singletons.api import get_manager, get_network
 from .api import ProjectView
 from .panel import ProjectPanel
 
@@ -50,7 +49,8 @@ def main():
     widget.show()
     widget.resize(300, 500)
 
-    Manager()
-    Network().connectToServer()
+    # XXX: Just a hack to connect to the GUI Server for testing
+    get_manager()
+    get_network().connectToServer()
 
     app.exec_()

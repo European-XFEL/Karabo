@@ -3,8 +3,8 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
                          QToolButton, QWidget)
 
 from karabo_gui import icons
-from karabo_gui.network import Network
 from karabo_gui.sceneview.utils import get_status_symbol_as_pixmap
+from karabo_gui.singletons.api import get_network
 from .utils import get_box, determine_if_value_unchanged
 
 
@@ -175,7 +175,8 @@ class BaseWidgetContainer(QWidget):
 
     def _on_apply_clicked(self):
         widget = self.old_style_widget
-        network = []
+        network = get_network()
+        changes = []
         for b in widget.boxes:
             b.signalUserChanged.emit(b, widget.value, None)
             if b.configuration.type == "macro":
@@ -187,13 +188,13 @@ class BaseWidgetContainer(QWidget):
                     device_box = d.getBox(b.path)
                     device_box.set(widget.value)
                     # Send to network per device
-                    Network().onReconfigure([(device_box, widget.value)])
+                    network.onReconfigure([(device_box, widget.value)])
             elif b.descriptor is not None:
-                network.append((b, widget.value))
+                changes.append((b, widget.value))
 
-        if network:
+        if changes:
             self.__busyTimer.start(5000)
-            Network().onReconfigure(network)
+            network.onReconfigure(changes)
 
     def _on_decline_clicked(self):
         widget = self.old_style_widget

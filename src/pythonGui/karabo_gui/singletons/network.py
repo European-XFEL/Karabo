@@ -19,25 +19,15 @@ from karabo_gui import background
 from karabo_gui.dialogs.logindialog import LoginDialog
 from karabo_gui import globals
 
-# This holds the value of this module's singleton
-network = None
 
-
-def Network():
-    global network
-    if network is None:
-        network = _Network()
-    return network
-
-
-class _Network(QObject):
+class Network(QObject):
     # signals
     signalServerConnectionChanged = pyqtSignal(bool)
     signalUserChanged = pyqtSignal()
     signalReceivedData = pyqtSignal(object)
 
-    def __init__(self):
-        super(_Network, self).__init__()
+    def __init__(self, parent=None):
+        super(Network, self).__init__(parent=parent)
 
         self.authenticator = None
         self.username = None
@@ -88,8 +78,8 @@ class _Network(QObject):
 
     def startServerConnection(self, username, password, provider, hostname, port):
         """
-        Attempt to connect to host on given port and save user specific data for
-        later authentification.
+        Attempt to connect to host on given port and save user specific data
+        for later authentification.
         """
         self.username = username
         self.password = password
@@ -116,8 +106,8 @@ class _Network(QObject):
             return
 
         self.tcpSocket.disconnectFromHost()
-        if (self.tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
-            self.tcpSocket.waitForDisconnected(5000):
+        if (self.tcpSocket.state() == QAbstractSocket.UnconnectedState or
+                self.tcpSocket.waitForDisconnected(5000)):
             return
 
         print("Disconnect failed:", self.tcpSocket.errorString())
@@ -160,7 +150,7 @@ class _Network(QObject):
 
                 # Inform the mainwindow to change correspondingly the allowed level-downgrade
                 self.signalUserChanged.emit()
-                self._sendLoginInformation(self.username, self.password, \
+                self._sendLoginInformation(self.username, self.password,
                                            self.provider, self.sessionToken)
                 return
 
@@ -175,7 +165,7 @@ class _Network(QObject):
 
         # Inform the mainwindow to change correspondingly the allowed level-downgrade
         self.signalUserChanged.emit()
-        self._sendLoginInformation(self.username, self.password, self.provider, \
+        self._sendLoginInformation(self.username, self.password, self.provider,
                                    self.sessionToken)
 
     def _logout(self):
@@ -183,7 +173,8 @@ class _Network(QObject):
         Authentification logout.
         """
         # Execute Logout
-        if self.authenticator is None: return
+        if self.authenticator is None:
+            return
 
         try:
             self.authenticator.logout()
@@ -501,9 +492,9 @@ class _Network(QObject):
 
     def _tcpWriteHash(self, h):
         # There might be a connect to server in progress, but without success
-        if self.tcpSocket is None or \
-           self.tcpSocket.state() == QAbstractSocket.HostLookupState or \
-           self.tcpSocket.state() == QAbstractSocket.ConnectingState:
+        if (self.tcpSocket is None or
+                self.tcpSocket.state() == QAbstractSocket.HostLookupState or
+                self.tcpSocket.state() == QAbstractSocket.ConnectingState):
             # Save request for connection established
             self.requestQueue.append(h)
             return

@@ -18,8 +18,7 @@ from PyQt4.QtGui import QAction, QHBoxLayout, QLabel, QToolButton, QWidget
 
 from . import icons
 from .messagebox import MessageBox
-from .network import Network
-from .topology import Manager
+from .singletons.api import get_manager, get_network
 from .widget import EditableWidget, DisplayWidget, Widget
 
 
@@ -235,7 +234,8 @@ class EditableApplyLaterComponent(BaseComponent):
         self.connectWidget(box)
         self.widgetFactory.setReadOnly(False)
         # In case of attributes (Hash-V2) connect another function here
-        self.signalConflictStateChanged.connect(Manager().onConflictStateChanged)
+        manager = get_manager()
+        self.signalConflictStateChanged.connect(manager.onConflictStateChanged)
 
     def connectWidget(self, box):
         BaseComponent.connectWidget(self, box)
@@ -295,7 +295,8 @@ class EditableApplyLaterComponent(BaseComponent):
 
     # Slot called when changes need to be sent to Manager
     def onApplyClicked(self):
-        network = []
+        network = get_network()
+        changes = []
         for b in self.boxes:
             b.signalUserChanged.emit(b, self.widgetFactory.value, None)
             if b.configuration.type == "macro":
@@ -307,13 +308,15 @@ class EditableApplyLaterComponent(BaseComponent):
                     deviceBox = d.getBox(b.path)
                     deviceBox.set(self.widgetFactory.value)
                     # Send to network per device
-                    Network().onReconfigure([(deviceBox, self.widgetFactory.value)])
+                    # XXX: This can probably be batched for the device group
+                    dev_changes = [(deviceBox, self.widgetFactory.value)]
+                    network.onReconfigure(dev_changes)
             elif b.descriptor is not None:
-                network.append((b, self.widgetFactory.value))
+                changes.append((b, self.widgetFactory.value))
 
-        if network:
+        if changes:
             self.__busyTimer.start(5000)
-            Network().onReconfigure(network)
+            network.onReconfigure(changes)
 
     def onApplyRemoteChanges(self):
         for b in self.boxes:
