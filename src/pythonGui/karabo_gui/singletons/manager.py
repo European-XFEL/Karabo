@@ -30,14 +30,14 @@ from karabo_gui.mediator import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.navigationtreemodel import NavigationTreeModel
-from karabo_gui.network import Network
 from karabo_gui.projectmodel import ProjectModel
+from karabo_gui.singletons.api import get_network
 from karabo_gui.topology import getClass
 from karabo_gui.util import (
     getOpenFileName, getSaveFileName, getSchemaAttributeUpdates)
 
 
-class _Manager(QObject):
+class Manager(QObject):
     # signals
     signalReset = pyqtSignal()
     signalUpdateScenes = pyqtSignal()
@@ -58,7 +58,7 @@ class _Manager(QObject):
     signalProjectSaved = pyqtSignal(str, bool, object) # projectName, success, data
 
     def __init__(self, *args, **kwargs):
-        super(_Manager, self).__init__()
+        super(Manager, self).__init__()
 
         # Model for navigation views
         self.systemTopology = NavigationTreeModel(self)
@@ -69,9 +69,10 @@ class _Manager(QObject):
         self.projectTopology.selectionModel.selectionChanged.connect(
             self.onProjectModelSelectionChanged)
 
-        Network().signalServerConnectionChanged.connect(
+        network = get_network()
+        network.signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
-        Network().signalReceivedData.connect(self.onReceivedData)
+        network.signalReceivedData.connect(self.onReceivedData)
 
         # Sets all parameters to start configuration
         self.reset()
@@ -149,8 +150,8 @@ class _Manager(QObject):
         schemaAttrUpdates = getSchemaAttributeUpdates(baseSchema, config)
 
         # Send signal to network
-        Network().onInitDevice(serverId, classId, deviceId, config,
-                               attrUpdates=schemaAttrUpdates)
+        get_network().onInitDevice(serverId, classId, deviceId, config,
+                                   attrUpdates=schemaAttrUpdates)
 
     def shutdownDevice(self, deviceId, showConfirm=True):
         if showConfirm:
@@ -161,7 +162,7 @@ class _Manager(QObject):
             if reply == QMessageBox.No:
                 return
 
-        Network().onKillDevice(deviceId)
+        get_network().onKillDevice(deviceId)
 
     def shutdownServer(self, serverId):
         reply = QMessageBox.question(None, 'Shutdown device server',
@@ -171,7 +172,7 @@ class _Manager(QObject):
         if reply == QMessageBox.No:
             return
 
-        Network().onKillServer(serverId)
+        get_network().onKillServer(serverId)
 
     def onReceivedData(self, hash):
         getattr(self, "handle_" + hash["type"])(
@@ -368,7 +369,7 @@ class _Manager(QObject):
         self.signalLogDataAvailable.emit(messages)
 
     def handle_brokerInformation(self, **kwargs):
-        Network()._handleBrokerInformation(**kwargs)
+        get_network()._handleBrokerInformation(**kwargs)
 
     def handle_systemTopology(self, systemTopology):
         if self.systemHash is None:
@@ -513,7 +514,7 @@ class _Manager(QObject):
         conf = self.deviceData[deviceId]
         # Schema already existent -> schema injected
         if conf.status in ("alive", "monitoring"):
-            Network().onGetDeviceConfiguration(self.deviceData[deviceId])
+            get_network().onGetDeviceConfiguration(self.deviceData[deviceId])
 
         # Add configuration with schema to device data
         conf.setSchema(schema)

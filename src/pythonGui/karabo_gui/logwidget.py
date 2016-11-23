@@ -17,7 +17,7 @@ from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
 
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
-from karabo_gui.topology import Manager
+from karabo_gui.singletons.api import get_manager
 from karabo_gui.util import getSaveFileName
 
 
@@ -378,7 +378,7 @@ class LogWidget(QWidget):
         if value is None:
             return
 
-        Manager().signalSelectNewNavigationItem.emit(value)
+        get_manager().signalSelectNewNavigationItem.emit(value)
 
     def onSaveToFile(self):
         """ Write current database content to a file """

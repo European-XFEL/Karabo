@@ -15,7 +15,7 @@ import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
                                  register_for_broadcasts)
-from karabo_gui.topology import Manager
+from karabo_gui.singletons.api import get_manager
 from karabo_gui.treewidgetitems.popupwidget import PopupWidget
 
 
@@ -23,7 +23,8 @@ class NavigationTreeView(QTreeView):
     def __init__(self, parent):
         super(NavigationTreeView, self).__init__(parent)
 
-        self.setModel(Manager().systemTopology)
+        manager = get_manager()
+        self.setModel(manager.systemTopology)
         self.setSelectionModel(self.model().selectionModel)
         self.model().modelReset.connect(self.expandAll)
 
@@ -64,58 +65,60 @@ class NavigationTreeView(QTreeView):
         return super(NavigationTreeView, self).eventFilter(obj, event)
 
     def _setupContextMenu(self):
+        manager = get_manager()
+
         self.setContextMenuPolicy(Qt.CustomContextMenu)
-        
+
         text = "About"
         self.acAbout = QAction("About", self)
         self.acAbout.setStatusTip(text)
         self.acAbout.setToolTip(text)
         self.acAbout.triggered.connect(self.onAbout)
-        
+
         # Device server instance menu
         self.mServerItem = QMenu(self)
-        
+
         text = "Shutdown instance"
         self.acKillServer = QAction(icons.delete, text, self)
         self.acKillServer.setStatusTip(text)
         self.acKillServer.setToolTip(text)
         self.acKillServer.triggered.connect(self.onKillInstance)
         self.mServerItem.addAction(self.acKillServer)
-        
+
         self.mServerItem.addSeparator()
         self.mServerItem.addAction(self.acAbout)
-        
+
         # Device class/instance menu
         self.mDeviceItem = QMenu(self)
-        
+
         text = "Open configuration (*.xml)"
         self.acOpenFromFile = QAction(icons.load, text, self)
         self.acOpenFromFile.setStatusTip(text)
         self.acOpenFromFile.setToolTip(text)
-        self.acOpenFromFile.triggered.connect(Manager().onOpenFromFile)
+        self.acOpenFromFile.triggered.connect(manager.onOpenFromFile)
         self.mDeviceItem.addAction(self.acOpenFromFile)
-        
+
         text = "Open configuration from project"
         self.acOpenFromProject = QAction(icons.load, text, self)
         self.acOpenFromProject.setStatusTip(text)
         self.acOpenFromProject.setToolTip(text)
-        self.acOpenFromProject.triggered.connect(Manager().onOpenFromProject)
+        self.acOpenFromProject.triggered.connect(manager.onOpenFromProject)
         self.mDeviceItem.addAction(self.acOpenFromProject)
-        
+
         self.mDeviceItem.addSeparator()
-        
+
         text = "Save configuration as (*.xml)"
         self.acSaveToFile = QAction(icons.saveAs, text, self)
         self.acSaveToFile.setStatusTip(text)
         self.acSaveToFile.setToolTip(text)
-        self.acSaveToFile.triggered.connect(Manager().onSaveToFile)
+        self.acSaveToFile.triggered.connect(manager.onSaveToFile)
         self.mDeviceItem.addAction(self.acSaveToFile)
-        
+
         text = "Save configuration to project"
         self.acSaveToProject = QAction(icons.saveAs, text, self)
         self.acSaveToProject.setStatusTip(text)
         self.acSaveToProject.setToolTip(text)
-        self.acSaveToProject.triggered.connect(Manager().onSaveToProject)
+        self.acSaveToProject.triggered.connect(manager.onSaveToProject)
         self.mDeviceItem.addAction(self.acSaveToProject)
 
         text = "Shutdown instance"
@@ -126,13 +129,10 @@ class NavigationTreeView(QTreeView):
         self.mDeviceItem.addAction(self.acKillDevice)
 
         self.mDeviceItem.addSeparator()
-        
         self.mDeviceItem.addAction(self.acAbout)
-
 
     def currentIndex(self):
         return self.model().currentIndex()
-
 
     def currentIndexType(self):
         """Returns the type of the current index (NODE, DEVICE_SERVER_INSTANCE,
@@ -141,7 +141,7 @@ class NavigationTreeView(QTreeView):
         index = self.currentIndex()
         if not index.isValid():
             return NavigationItemTypes.UNDEFINED
-        
+
         level = self.model().getHierarchyLevel(index)
         if level == 0:
             return NavigationItemTypes.HOST
@@ -151,9 +151,8 @@ class NavigationTreeView(QTreeView):
             return NavigationItemTypes.CLASS
         elif level == 3:
             return NavigationItemTypes.DEVICE
-        
-        return NavigationItemTypes.UNDEFINED
 
+        return NavigationItemTypes.UNDEFINED
 
     def indexInfo(self, index=None):
         """ return the info about the index.
@@ -162,7 +161,6 @@ class NavigationTreeView(QTreeView):
         if index is None:
             index = self.currentIndex()
         return self.model().indexInfo(index)
-
 
     def findIndex(self, path):
         # Find modelIndex via path
@@ -176,32 +174,29 @@ class NavigationTreeView(QTreeView):
         self.clearSelection()
         self.model().clear()
 
-
     def onAbout(self):
         index = self.currentIndex()
         node = index.internalPointer()
         popupWidget = PopupWidget(self)
         popupWidget.setInfo(node.attributes)
-        
+
         pos = QCursor.pos()
         pos.setX(pos.x() + 10)
         pos.setY(pos.y() + 10)
         popupWidget.move(pos)
         popupWidget.show()
 
-
     def onKillInstance(self):
         itemInfo = self.indexInfo()
-        
         type = itemInfo.get('type')
-        
+        manager = get_manager()
+
         if type is NavigationItemTypes.DEVICE:
             deviceId = itemInfo.get('deviceId')
-            Manager().shutdownDevice(deviceId)
+            manager.shutdownDevice(deviceId)
         elif type is NavigationItemTypes.SERVER:
             serverId = itemInfo.get('serverId')
-            Manager().shutdownServer(serverId)
-
+            manager.shutdownServer(serverId)
 
     def onCustomContextMenuRequested(self, pos):
         type = self.currentIndexType()
@@ -216,7 +211,6 @@ class NavigationTreeView(QTreeView):
             self.acKillDevice.setVisible(True)
             self.acAbout.setVisible(True)
             self.mDeviceItem.exec_(QCursor.pos())
-
 
     def mimeData(self, items):
         return self.model().mimeData(items)

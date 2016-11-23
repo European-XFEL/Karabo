@@ -20,7 +20,6 @@ from karabo_gui.const import ALARM_COLOR
 from karabo_gui.docktabwindow import DockTabWindow
 from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
                                  register_for_broadcasts)
-from karabo_gui.network import Network
 from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.loggingpanel import LoggingPanel
@@ -32,6 +31,7 @@ from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
 from karabo_gui.sceneview.api import SceneView
+from karabo_gui.singletons.api import get_network
 
 
 class MainWindow(QMainWindow):
@@ -104,6 +104,8 @@ class MainWindow(QMainWindow):
         return super(MainWindow, self).eventFilter(obj, event)
 
     def _setupActions(self):
+        network = get_network()
+
         text = "Change access level"
         self.tbAccessLevel = QToolButton(self)
         self.tbAccessLevel.setIcon(icons.lock)
@@ -159,7 +161,7 @@ class MainWindow(QMainWindow):
         self.acServerConnect.setStatusTip(text)
         self.acServerConnect.setToolTip(text)
         self.acServerConnect.setCheckable(True)
-        self.acServerConnect.triggered.connect(Network().onServerConnection)
+        self.acServerConnect.triggered.connect(network.onServerConnection)
 
         text = "Exit"
         self.acExit = QAction(icons.exit, "&{}".format(text), self)
