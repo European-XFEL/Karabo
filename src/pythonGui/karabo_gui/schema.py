@@ -262,18 +262,18 @@ class Type(hashmod.Type, metaclass=Monkey):
 
     def set(self, box, value, timestamp=None):
         box._set(value, timestamp)
-        
-   
+
+
     def copyFrom(self, box, otherbox, who):
         """Copy data from ``otherbox`` to ``box``.
-        
+
         ``who`` is a function called on each leaf's descriptor,
         and the value is only copied if this function returns
         something true."""
         if who(self) and otherbox.hasValue():
             box._set(otherbox.value, None)
-            
-            
+
+
     def connectOtherBox(self, box, other):
         """
         The signalUpdateComponent is connected from ``box`` to ``other`` to
@@ -424,6 +424,8 @@ class Bool(hashmod.Bool, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     icon = icons.boolean
 
+class Vector(hashmod.Vector, metaclass=Monkey):
+    pass
 
 class Object(object):
     def __init__(self, box):
@@ -517,7 +519,7 @@ class Schema(hashmod.Descriptor):
                                                AccessMode.INITONLY))
         self.metricPrefixSymbol = attrs.get('metricPrefixSymbol', '')
         self.unitSymbol = attrs.get('unitSymbol', '')
-        
+
         if parent is None:
             ral = AccessLevel.OBSERVER
         else:
@@ -644,7 +646,7 @@ class Schema(hashmod.Descriptor):
 
     def copyFrom(self, box, otherbox, who=lambda x: True):
         """Copy data from ``otherbox`` to ``box``.
-        
+
         The value of otherbox is recursively copied into box.
         ``who`` is a function called on each leaf's descriptor,
         and the value is only copied if this function returns
@@ -655,10 +657,10 @@ class Schema(hashmod.Descriptor):
             if myChild is not None and otherChild is not None:
                 myChild.copyFrom(otherChild, who)
 
-    
+
     def connectOtherBox(self, box, other):
         """Connect value changes of ``box`` to ``other``.
-        
+
         The signalUpdateComponent is recursively connected from ``box`` to
         ``other``.
         """
@@ -799,7 +801,7 @@ class ChoiceOfNodes(Schema):
         for i in range(item.childCount()):
             child = item.child(i)
             childKey = child.box.path[-1]
-            
+
             if item.defaultValue is None:
                 if i > 0:
                     child.setHidden(True)
@@ -853,7 +855,7 @@ class ChoiceOfNodes(Schema):
 
     def set(self, box, value, timestamp=None):
         """The value of this ChoiceElement is set.
-        
+
         ``value`` is a string or a Schema with the selected choice
         """
         if isinstance(value, str):
@@ -863,7 +865,7 @@ class ChoiceOfNodes(Schema):
         # Go on recursively
         box._set(box.value, timestamp)
 
-        
+
     def slotSet(self, box, otherbox, value):
         """value is another choice element to copy from"""
         self.set(box, otherbox.current)
@@ -871,7 +873,7 @@ class ChoiceOfNodes(Schema):
 
     def copyFrom(self, box, otherbox, who):
         """Copy data from ``otherbox`` to ``box``.
-        
+
         ``who`` is a function called on each leaf's descriptor,
         and the value is only copied if this function returns
         something true."""
@@ -879,7 +881,7 @@ class ChoiceOfNodes(Schema):
         box.current = otherbox.current
         box._set(box.value, None)
 
-    
+
     def connectOtherBox(self, box, other):
         """
         The signalUpdateComponent is recursively connected from ``box`` to
@@ -924,7 +926,7 @@ class ListOfNodes(hashmod.Descriptor):
 
     def copyFrom(self, box, otherbox, who):
         """Copy data from ``otherbox`` to ``box``.
-        
+
         ``who`` is a function called on each leaf's descriptor,
         and the value is only copied if this function returns
         something true."""
@@ -942,7 +944,7 @@ class ListOfNodes(hashmod.Descriptor):
 class VectorHash(hashmod.VectorHash, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     #icon = icons.string
- 
+
     def item(self, treeWidget, parentItem, box, isClass):
         item = TableTreeWidgetItem(box, treeWidget, parentItem)
         item.setIcon(0, self.icon if self.options is None else icons.enum)
@@ -956,7 +958,7 @@ class VectorHash(hashmod.VectorHash, metaclass=Monkey):
         else:
             if self.accessMode is AccessMode.RECONFIGURABLE:
                 component = EditableApplyLaterComponent
-        
+
         if component is not None:
             factory = EditableWidget.getClass(box)(box, treeWidget)
             item.editableComponent = component(factory, box, treeWidget)
