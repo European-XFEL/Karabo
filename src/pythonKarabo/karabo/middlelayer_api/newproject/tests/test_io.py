@@ -1,11 +1,14 @@
 from contextlib import contextmanager
+from io import BytesIO
 import os.path as op
 from tempfile import TemporaryDirectory
 
+from nose.tools import assert_raises
 from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 
 from karabo.common.project.api import (
-    ProjectDBCache, ProjectModel, read_lazy_object, walk_traits_object,
+    MacroModel, ProjectDBCache, ProjectModel,
+    read_lazy_object, walk_traits_object,
     PROJECT_OBJECT_CATEGORIES)
 from karabo.middlelayer import Project
 from ..convert import convert_old_project
@@ -83,6 +86,12 @@ def _write_project(project, devices, storage):
 
 # -----------------------------------------------------------------------------
 
+def test_simple_read():
+    model = MacroModel(code='print(42)', initialized=True)
+    xml = write_project_model(model)
+    rmodel = read_project_model(BytesIO(xml), existing=None)
+    assert model.code == rmodel.code
+
 
 def test_save_project():
     old_project = _get_old_project()
@@ -115,3 +124,26 @@ def test_project_cache():
         project_uuids = storage.get_uuids_of_type(TEST_DOMAIN, 'project')
         assert len(project_uuids) == 1
         assert project_uuids[0] == project.uuid
+
+
+def test_uninitialized_save():
+    model = ProjectModel()
+    with assert_raises(AssertionError):
+        write_project_model(model)
+
+
+def test_wrong_existing_type():
+    model = MacroModel(code='print(42)', initialized=True)
+    xml = write_project_model(model)
+    with assert_raises(AssertionError):
+        read_project_model(BytesIO(xml), existing=ProjectModel())
+
+
+def test_existing_obj_mismatch():
+    # `model` and `existing` have different UUIDs
+    model = MacroModel(code='print(42)', initialized=True)
+    existing = MacroModel()
+
+    xml = write_project_model(model)
+    with assert_raises(AssertionError):
+        read_project_model(BytesIO(xml), existing=existing)
