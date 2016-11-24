@@ -9,7 +9,7 @@ from PyQt4 import uic
 from PyQt4.QtGui import QDialog
 
 from karabo.middlelayer import Hash
-from karabo_gui.topology import Manager
+from karabo_gui.singletons.api import get_manager
 
 
 class ServerHandleDialog(QDialog):
@@ -38,7 +38,7 @@ class ServerHandleDialog(QDialog):
         """ Get all available hosts of `systemTopology`
         """
         available_hosts = set()
-        servers = Manager().systemHash.get('server', Hash())
+        servers = get_manager().systemHash.get('server', Hash())
         for server_id, _, attrs in servers.iterall():
             if not attrs:
                 continue

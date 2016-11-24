@@ -10,7 +10,7 @@ from PyQt4.QtGui import QDialog, QMessageBox, QStackedLayout, QWidget
 import karabo_gui.icons as icons
 from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.docktabwindow import Dockable
-from .db_connection import get_db_conn
+from karabo_gui.singletons.api import get_db_conn
 from .dialog.project_handle import LoadProjectDialog, NewProjectDialog
 
 
