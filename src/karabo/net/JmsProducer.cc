@@ -41,8 +41,7 @@ namespace karabo {
             // This function will block in case no connection is available and return immediately otherwise
             m_connection->waitForConnectionAvailable();
 
-            // We are posting through a strand, this guarantees sequential processing which is required by openMQ
-            m_mqStrand.post(bind_weak(&karabo::net::JmsProducer::asyncWrite, this, topic, header, body, priority, timeToLive));
+            this->asyncWrite(topic, header, body, priority, timeToLive);
         }
 
 
@@ -100,7 +99,7 @@ namespace karabo {
                     // Need to clear old handles
                     this->clearProducerHandles();
                     // Next trial will re-cache all handles
-                    this->asyncWrite(topic, header, body, priority, timeToLive);
+                    m_mqStrand.post(bind_weak(&karabo::net::JmsProducer::asyncWrite, this, topic, header, body, priority, timeToLive));
                     break;
                 }
                 default:
