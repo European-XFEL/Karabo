@@ -55,7 +55,7 @@ def _build_getter(key, modulename, klassname):
 
 # This is where all the singletons are defined
 get_manager = _build_getter('manager', '.singletons.manager', 'Manager')
-get_meditator = _build_getter('manager', '.singletons.mediator', 'Mediator')
+get_meditator = _build_getter('mediator', '.singletons.mediator', 'Mediator')
 get_network = _build_getter('network', '.singletons.network', 'Network')
 
 # XXX: To add: MainWindow instance, Topology object
