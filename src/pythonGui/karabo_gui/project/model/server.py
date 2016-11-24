@@ -148,5 +148,10 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         dialog = DeviceHandleDialog()
         result = dialog.exec()
         if result == QDialog.Accepted:
-            device = DeviceInstanceModel(instance_id=dialog.instance_id)
+            traits = {
+                'instance_id': dialog.instance_id,
+                'if_exists': dialog.if_exists,
+                'description': dialog.description
+            }
+            device = DeviceInstanceModel(**traits)
             self.model.devices.append(device)
