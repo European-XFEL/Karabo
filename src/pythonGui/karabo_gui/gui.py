@@ -4,11 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-__author__="kerstin weger"
-# export PYTHONPATH= <pathToExfelSuite>/lib/debug
-
 from traceback import print_exception, format_exception
 
+from karabo_gui.singletons.api import get_manager, get_network
+
+# Global MainWindow singleton
 window = None
 
 
@@ -20,8 +20,6 @@ def init(app):
     soon after they launch the GUI.
     """
     from karabo_gui.mainwindow import MainWindow
-    from karabo_gui.network import Network
-    from karabo_gui.topology import Manager
     import karabo # XXX: I think this could be for side effects?
     import karabo_gui.gui_registry_loader # XXX: Only imported for side-effects
     import karabo_gui.icons as icons
@@ -31,7 +29,7 @@ def init(app):
     icons.init()
 
     app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
-    
+
 #    app.setStyleSheet(""
 #        "exfel--gui--DockWindow exfel--gui--DivWidget {"
 #        "border-style: solid;"
@@ -43,20 +41,21 @@ def init(app):
 #        "margin-bottom: 0px;"
 #        "}")
 
+    manager = get_manager()
+    network = get_network()
+
     global window
     window = MainWindow()
-    window.signalQuitApplication.connect(Network().onQuitApplication)
-    Manager().signalUpdateScenes.connect(window.onUpdateScenes)
-    Network().signalServerConnectionChanged.connect(
+    window.signalQuitApplication.connect(network.onQuitApplication)
+    manager.signalUpdateScenes.connect(window.onUpdateScenes)
+    network.signalServerConnectionChanged.connect(
         window.onServerConnectionChanged)
-    Network().signalUserChanged.connect(window.onUpdateAccessLevel)
+    network.signalUserChanged.connect(window.onUpdateAccessLevel)
     window.show()
 
 
 def excepthook(type, value, traceback):
     from PyQt4.QtGui import QMessageBox
-
-    from karabo_gui.network import Network
 
     print_exception(type, value, traceback)
     mb = QMessageBox(getattr(value, "icon", QMessageBox.Critical),
@@ -66,8 +65,9 @@ def excepthook(type, value, traceback):
                                        " " * 300 + "\n"))
     text = "".join(format_exception(type, value, traceback))
     mb.setDetailedText(text)
-    #mb.exec_()
+    # mb.exec_()
     try:
-        Network().onError(text)
+        network = get_network()
+        network.onError(text)
     except Exception:
         print("could not send exception to network")

@@ -1,22 +1,22 @@
 
-# This is the global singleton for the Manager() function.
-_manager = None
+from .singletons.api import get_manager, get_network
 
 
 def getDevice(deviceId):
     """ Find the Device instance in the system topology with the ID `deviceId`.
     """
     from .configuration import Configuration
-    from .network import Network
 
-    manager = Manager()
+    manager = get_manager()
+    network = get_network()
 
     device = manager.deviceData.get(deviceId)
     if device is None:
-        device = manager.deviceData[deviceId] = Configuration(deviceId, 'device')
+        device = Configuration(deviceId, 'device')
+        manager.deviceData[deviceId] = device
         device.updateStatus()
     if device.descriptor is None and device.status not in ("offline", "requested"):
-        Network().onGetDeviceSchema(deviceId)
+        network.onGetDeviceSchema(deviceId)
         device.status = "requested"
     return device
 
@@ -37,28 +37,17 @@ def getClass(serverId, classId):
     the ID `classId`.
     """
     from .configuration import Configuration
-    from .network import Network
 
-    manager = Manager()
+    manager = get_manager()
+    network = get_network()
 
-    cls = manager.serverClassData.get((serverId, classId))
-    if cls is None:
+    klass = manager.serverClassData.get((serverId, classId))
+    if klass is None:
         path = "{}.{}".format(serverId, classId)
-        cls = manager.serverClassData[serverId, classId] = Configuration(path, 'class')
+        klass = Configuration(path, 'class')
+        manager.serverClassData[serverId, classId] = klass
 
-    if cls.descriptor is None or cls.status not in ("requested", "schema"):
-        Network().onGetClassSchema(serverId, classId)
-        cls.status = "requested"
-    return cls
-
-
-def Manager():
-    """ Return the manager singleton.
-    """
-    from .manager import _Manager
-
-    global _manager
-    if _manager is None:
-        _manager = _Manager()
-
-    return _manager
+    if klass.descriptor is None or klass.status not in ("requested", "schema"):
+        network.onGetClassSchema(serverId, classId)
+        klass.status = "requested"
+    return klass

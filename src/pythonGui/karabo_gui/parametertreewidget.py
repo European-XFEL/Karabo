@@ -4,20 +4,13 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
-"""This module contains a class which represents the treewidget of the configuration
-   panel containing the parameters of a device class/instance.
-"""
-
-__all__ = ["ParameterTreeWidget"]
+from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt
+from PyQt4.QtGui import QAbstractItemView, QCursor, QHeaderView, QMenu, QTreeWidget
 
 from karabo_gui.components import BaseComponent, EditableApplyLaterComponent
 import karabo_gui.globals as globals
-from karabo_gui.network import Network
+from karabo_gui.singletons.api import get_network
 from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
-
-from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt
-from PyQt4.QtGui import QAbstractItemView, QCursor, QHeaderView, QMenu, QTreeWidget
 
 
 class ParameterTreeWidget(QTreeWidget):
@@ -271,7 +264,7 @@ class ParameterTreeWidget(QTreeWidget):
             selectedItems = self.allItems()
         boxes = sum([self.applyItem(item) for item in selectedItems], [ ])
         # TODO: deviceGroups...
-        Network().onReconfigure(boxes)
+        get_network().onReconfigure(boxes)
 
 
     def onApplyAllRemoteChanges(self):

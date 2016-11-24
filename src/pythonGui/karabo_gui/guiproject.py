@@ -8,19 +8,18 @@ This module contains a class which represents the project related datastructure.
 """
 import csv
 from datetime import datetime
-from zipfile import ZipFile
 
 from PyQt4.QtCore import pyqtSignal, QObject
 
 from karabo.middlelayer_api.project import (
     BaseDevice, BaseDeviceGroup, Monitor, Project, ProjectConfiguration)
 from karabo.middlelayer import (
-    AccessMode, Hash, read_macro, read_scene, MacroModel, SceneModel, XMLParser,
-    XMLWriter)
+    AccessMode, Hash, read_macro, read_scene, MacroModel, SceneModel,
+    XMLParser, XMLWriter)
 from karabo_gui.configuration import Configuration
 from karabo_gui.messagebox import MessageBox
-from karabo_gui.network import network
-from karabo_gui.topology import getClass, getDevice, Manager
+from karabo_gui.singletons.api import get_manager
+from karabo_gui.topology import getClass, getDevice
 
 
 class BaseConfiguration(Configuration):
@@ -93,7 +92,7 @@ class BaseConfiguration(Configuration):
             self.redummy()
         self.descriptor = conf.descriptor
         self.mergeInitConfig()
-        Manager().onShowConfiguration(self)
+        get_manager().onShowConfiguration(self)
 
 
 class Device(BaseDevice, BaseConfiguration):
@@ -112,7 +111,7 @@ class Device(BaseDevice, BaseConfiguration):
         and finds out the gory details for this project device """
         self.error = error
 
-        manager = Manager()
+        manager = get_manager()
         if manager.systemHash is None:
             self.status = "offline"
             return
@@ -512,7 +511,7 @@ class GuiProject(Project, QObject):
         self.setModified(False)
 
     def _instantiateDevice(self, device):
-        manager = Manager()
+        manager = get_manager()
         if device.isOnline():
             if device.ifexists == "ignore":
                 return
@@ -554,7 +553,7 @@ class GuiProject(Project, QObject):
             self.instantiate(d)
 
     def _shutdownDevice(self, device, showConfirm):
-        Manager().shutdownDevice(device.id, showConfirm)
+        get_manager().shutdownDevice(device.id, showConfirm)
 
     def shutdown(self, device, showConfirm=True):
         """

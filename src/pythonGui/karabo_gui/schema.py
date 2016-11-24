@@ -11,7 +11,7 @@
 from karabo.middlelayer import AccessMode, AccessLevel, NodeType, Hash, Timestamp
 import karabo.middlelayer_api.hash as hashmod
 from karabo_gui.registry import Monkey
-from karabo_gui.network import Network
+from karabo_gui.singletons.api import get_network
 import karabo_gui.icons as icons
 
 from karabo_gui.attributeediting.api import (EDITABLE_ATTRIBUTE_NAMES,
@@ -161,7 +161,7 @@ class Box(QObject):
 
 
     def getPropertyHistory(self, t0, t1, maxNumData):
-        Network().onGetPropertyHistory(self, t0, t1, maxNumData)
+        get_network().onGetPropertyHistory(self, t0, t1, maxNumData)
 
 
     def __str__(self):
@@ -249,8 +249,8 @@ class Descriptor(hashmod.Descriptor, metaclass=Monkey):
 
     def __set__(self, instance, value):
         if instance.__box__.configuration.type == "device":
-            Network().onReconfigure([(getattr(instance.__box__.boxvalue,
-                                              self.key), value)])
+            get_network().onReconfigure([(getattr(instance.__box__.boxvalue,
+                                                  self.key), value)])
         else:
             instance.__dict__[self.key]._set(self.cast(value), None)
 
@@ -465,7 +465,7 @@ class NetworkObject(Object, QObject):
 
     @pyqtSlot(bool)
     def onVisibilityChanged(self, visible):
-        Network().onSubscribeToOutput(self.__box__, visible)
+        get_network().onSubscribeToOutput(self.__box__, visible)
 
 
 class Dummy(object):
@@ -755,7 +755,7 @@ class Slot(Object):
 
 class SlotNode(Schema):
     def execute(self, box):
-        Network().onExecute(box)
+        get_network().onExecute(box)
 
 
     def item(self, treeWidget, parentItem, box, isClass):
