@@ -24,6 +24,8 @@ class Tests(TestCase):
                             [0, 1, 2]))
         self.assertTrue(all(linspace(-2 * unit.m, 0 * unit.m, 3) / unit.m ==
                             [-2, -1, 0]))
+        self.assertTrue(all(linspace(3 * unit.m / unit.m, 5, 3) == [3, 4, 5]))
+        self.assertTrue(all(linspace(3, 5 * unit.m / unit.m, 3) == [3, 4, 5]))
 
         self.assertEqual(
             linspace(self.ts1, 3 * self.ts1, self.ts2).timestamp, 200)

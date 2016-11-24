@@ -12,6 +12,9 @@ def linspace(start, stop, *args, **kwargs):
             isinstance(stop, QuantityValue)):
         return np.linspace(start, stop, *args, **kwargs)
 
+    if not isinstance(start, QuantityValue):
+        start = QuantityValue(start)
+
     stop = float(stop / start.units)
     return QuantityValue(
         np.linspace(start.magnitude, stop, *args, **kwargs), start.units)
