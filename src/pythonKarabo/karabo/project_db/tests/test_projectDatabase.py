@@ -9,9 +9,9 @@ from karabo.project_db.util import stop_database
 
 def create_hierarchy(db, prefix, uuid_suf, level=0):
     uuid = "{}_{}".format(prefix, uuid_suf)
-    xml = '<project item_type="{atype}" uuid="{uuid}"'\
+    xml = '<project item_type="{atype}" uuid="{uuid}" alias = "{alias}"'\
           ' simple_name="{name}">'.format(uuid=uuid, atype='project',
-                                          name=uuid)
+                                          alias=uuid, name=uuid)
 
     xml += "<children>"
     counter = 0
@@ -19,9 +19,12 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
     if level < 2:
         for i in range(4):
             sub_uuid = create_hierarchy(db, uuid, counter, level + 1)
+
             xml += ('<project item_type="{atype}" uuid="{uuid}"'
+                    ' alias = "{alias}"'
                     ' simple_name="{name}" />').format(uuid=sub_uuid,
                                                        atype='project',
+                                                       alias=sub_uuid,
                                                        name=sub_uuid)
             counter += 1
 
@@ -106,7 +109,7 @@ class TestProjectDatabase(TestCase):
                 self.assertTrue(db.domain_exists("LOCAL_TEST"))
 
             with self.subTest(msg='test_get_versioning_info'):
-                xml_rep = "<test>foo</test>"
+                xml_rep = "<test alias='test'>foo</test>"
 
                 # db.save_project('LOCAL', 'testproject', ret)
                 path = "{}/{}".format(db.root, 'LOCAL/testproject')
@@ -122,6 +125,7 @@ class TestProjectDatabase(TestCase):
                 first_rev = vers['revisions'][0]
                 self.assertTrue('revision' in first_rev)
                 self.assertTrue('date' in first_rev)
+                self.assertTrue('alias' in first_rev)
                 self.assertEqual(first_rev['user'], 'admin')
 
             with self.subTest(msg='test_save_item'):
