@@ -23,18 +23,16 @@ from karabo_gui.dialogs.projectdialog import (
     ProjectSaveDialog, ProjectLoadDialog)
 from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject
 from karabo_gui.projectmodel import ProjectModel
-from karabo_gui.network import Network
-from karabo_gui.topology import Manager
+from karabo_gui.singletons.api import get_manager, get_network
 
 
 class ProjectTreeView(QTreeView):
-
 
     def __init__(self, parent=None):
         super(ProjectTreeView, self).__init__(parent)
 
         # Set same mode for each project view
-        self.setModel(Manager().projectTopology)
+        self.setModel(get_manager().projectTopology)
         self.model().signalExpandIndex.connect(self.setExpanded)
         self.setSelectionModel(self.model().selectionModel)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -137,7 +135,7 @@ class ProjectTreeView(QTreeView):
         if location == ProjectAccess.CLOUD:
             data = self.projectDataBytes(fileName)
             # Send save project to cloud request to network
-            Network().onNewProject(projectName, data)
+            get_network().onNewProject(projectName, data)
 
 
     def projectOpen(self):
@@ -148,7 +146,7 @@ class ProjectTreeView(QTreeView):
             return
         
         if self.projectDialog.location == ProjectAccess.CLOUD:
-            Network().onLoadProject(self.projectDialog.filename)
+            get_network().onLoadProject(self.projectDialog.filename)
         elif self.projectDialog.location == ProjectAccess.LOCAL:
             self.model().projectOpen(self.projectDialog.filepath, \
                                      self.projectDialog.location)
@@ -176,7 +174,7 @@ class ProjectTreeView(QTreeView):
                 self.model().projectSave()
                 data = self.projectDataBytes(project.filename)
                 # Send save project to cloud request to network
-                Network().onSaveProject(project.basename, data)
+                get_network().onSaveProject(project.basename, data)
             if resultBtn == btnLocally:
                 project.access = ProjectAccess.LOCAL
                 self.projectSaveAs(project.access)
@@ -217,7 +215,7 @@ class ProjectTreeView(QTreeView):
         # Only checking back in project on server by closing it when new project
         # is saved to cloud as well
         if oldProjectAccess == ProjectAccess.CLOUD and location == ProjectAccess.CLOUD:
-            Network().onCloseProject(oldProject.basename)
+            get_network().onCloseProject(oldProject.basename)
 
         fileName = os.path.join(filePath, projectName)
         self.model().projectSaveAs(fileName, location)
@@ -225,7 +223,7 @@ class ProjectTreeView(QTreeView):
         if location == ProjectAccess.CLOUD:
             data = self.projectDataBytes(fileName)
             # Send save project to cloud request to network
-            Network().onNewProject(projectName, data)
+            get_network().onNewProject(projectName, data)
 
     def writeCloudProjectData(self, projectName, data):
         return self.model().writeCloudProjectData(projectName, data)
