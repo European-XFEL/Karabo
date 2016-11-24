@@ -47,7 +47,8 @@ from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog,
 from PyQt4.QtCore import (Qt, QAbstractTableModel, QModelIndex, QObject, SIGNAL,
                           SLOT, pyqtSlot)
 
-from karabo.middlelayer import Hash, Type, VectorHash, SchemaHashType
+from karabo.middlelayer import (AccessMode, Hash, Type, VectorHash,
+                                SchemaHashType)
 from karabo_gui.widget import DisplayWidget, EditableWidget
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
@@ -159,10 +160,19 @@ class TableModel(QAbstractTableModel):
 
         cKey = self.columnHash.getKeys()[idx.column()]
         valueType = self.columnSchema.getValueType(cKey)()
+        accessMode = AccessMode(self.columnSchema.hash[cKey, "accessMode"])
         if isinstance(valueType, schema.Bool) and self.role == Qt.EditRole:
 
-            return Qt.ItemIsUserCheckable | Qt.ItemIsSelectable | \
-                   Qt.ItemIsEnabled
+            if accessMode == AccessMode.READONLY:
+                return (Qt.ItemIsUserCheckable | Qt.ItemIsSelectable
+                     & ~Qt.ItemIsEnabled)
+
+            return (Qt.ItemIsUserCheckable | Qt.ItemIsSelectable
+                    | Qt.ItemIsEnabled)
+
+
+        if accessMode == AccessMode.READONLY:
+            return QAbstractTableModel.flags(self, idx) & ~Qt.ItemIsEditable
 
         return QAbstractTableModel.flags(self, idx) | Qt.ItemIsEditable
 
