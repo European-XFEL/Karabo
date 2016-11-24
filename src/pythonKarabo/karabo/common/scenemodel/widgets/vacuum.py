@@ -13,7 +13,8 @@ VACUUM_WIDGETS = (
     'CryoCoolerWidget', 'HydraulicValveWidget', 'MaxiGaugeWidget',
     'MembranePumpWidget', 'MotorWidget', 'PressureGaugeWidget',
     'PressureSwitchWidget', 'RightAngleValveWidget', 'ShutOffValveWidget',
-    'TemperatureProbeWidget', 'TurboPumpWidget', 'ValveWidget'
+    'TemperatureProbeWidget', 'TurboPumpWidget', 'ValveWidget',
+    'AgilentIonWidget'
 )
 
 
