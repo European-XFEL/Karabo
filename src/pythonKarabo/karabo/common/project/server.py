@@ -20,6 +20,7 @@ class DeviceInstanceModel(HasStrictTraits):
     # If the device is already online, should it be ignored or restarted?
     if_exists = Enum('ignore', 'restart')
     # A list of references to possible configurations
+    # XXX use Dict here instead for faster lookup?
     configs = List(Instance(DeviceConfigurationModel))
     # UUID/Rev of the currently active configuration
     active_config_ref = Tuple(String, Int)
