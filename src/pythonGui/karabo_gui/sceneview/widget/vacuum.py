@@ -6,7 +6,7 @@ _VACUUM_CLASS_NAMES = (
     'MembranePumpWidget', 'MotorWidget', 'PressureGaugeWidget',
     'PressureSwitchWidget', 'RightAngleValveWidget', 'ShutOffValveWidget',
     'TemperatureProbeWidget', 'TurboPumpWidget', 'ValveWidget',
-    'AgilentIonWidget')
+    'AgilentIonWidget', 'LampWidget')
 
 _VACUUM_WIDGETS = {n: Widget.widgets[n] for n in _VACUUM_CLASS_NAMES}
 
