@@ -5,7 +5,6 @@
 #############################################################################
 
 from PyQt4.QtCore import QObject
-from PyQt4.QtGui import QApplication
 
 from karabo.common.project.api import get_user_cache, read_lazy_object
 from karabo.middlelayer import Hash
@@ -14,19 +13,6 @@ from karabo.middlelayer_api.newproject.io import (read_project_model,
 from karabo_gui.mediator import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.singletons.api import get_network
-
-# global singleton
-__db_conn = None
-
-
-def get_db_conn():
-    """ Get the global database connection object
-    """
-    global __db_conn
-    if __db_conn is None:
-        app = QApplication.instance()
-        __db_conn = ProjectDatabaseConnection(parent=app)
-    return __db_conn
 
 
 class ProjectDatabaseConnection(QObject):
