@@ -88,7 +88,7 @@ namespace karabo {
             MQStatus status = MQSendMessageExt(producerHandle, messageHandle,
                                                MQ_NON_PERSISTENT_DELIVERY,
                                                priority, timeToLive);
-
+            MQFreeMessage(messageHandle);
             MQError statusCode = MQGetStatusCode(status);
             switch (statusCode) {
                 case MQ_SUCCESS:
