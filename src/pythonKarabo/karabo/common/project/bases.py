@@ -22,7 +22,7 @@ class BaseProjectObjectModel(HasStrictTraits):
     modified = Bool(False, transient=True)
 
     # When False, the object is known to be uninitialized
-    initialized = Bool(True, transient=True)
+    initialized = Bool(False, transient=True)
 
     # Version and unique id
     revision = Int(transient=True)

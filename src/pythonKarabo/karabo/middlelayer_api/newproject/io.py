@@ -71,10 +71,10 @@ def write_project_model(model):
     }
 
     if not model.initialized:
-        msg = "Attempted to write a project object which is uninitialized!"
-        raise AssertionError(msg)
+        msg = "Attempted to write a '{}' object which is uninitialized!"
+        raise AssertionError(msg.format(type(model).__name__))
 
-    item_type = _ITEM_TYPES.get(model.__class__)
+    item_type = _ITEM_TYPES.get(type(model))
     writer = writers.get(item_type)
     child_xml = writer(model)
 
@@ -150,9 +150,9 @@ def _device_reader(io_obj, existing, metadata):
     hsh = Hash.decode(io_obj.read(), 'XML')
     for class_id, configuration in hsh.items():
         break
-    dev.trait_set(class_id=class_id, configuration=configuration)
-    # XXX: Check whether `initialized` should be set somewhere else
-    dev.initialized = True
+
+    dev.trait_set(class_id=class_id, configuration=configuration,
+                  initialized=True)
 
     return dev
 
@@ -165,17 +165,14 @@ def _device_server_reader(io_obj, existing, metadata):
 
     server = read_device_server(io_obj)
     server.trait_set(**traits)
-    # XXX: Check whether `initialized` should be set somewhere else
-    server.initialized = True
 
     # Now copy into the existing object
     existing.server_id = server.server_id
     existing.host = server.host
     existing.devices[:] = server.devices[:]
-    # XXX: Check whether `initialized` should be set somewhere else
-    existing.initialized = server.initialized
+    existing.initialized = True
 
-    return server
+    return existing
 
 
 def _macro_reader(io_obj, existing, metadata):
@@ -188,7 +185,6 @@ def _macro_reader(io_obj, existing, metadata):
     code = root.text
     if code is not None:
         macro.trait_set(code=base64.b64decode(code).decode('utf-8'))
-    # XXX: Check whether `initialized` should be set somewhere else
     macro.initialized = True
 
     return macro
@@ -211,9 +207,7 @@ def _project_reader(io_obj, existing, metadata):
     project_hash = hsh['project']
     traits.update({k: _get_items(project_hash, k)
                    for k in PROJECT_OBJECT_CATEGORIES})
-    project.trait_set(**traits)
-    # XXX: Check whether `initialized` should be set somewhere else
-    project.initialized = True
+    project.trait_set(initialized=True, **traits)
     return project
 
 
@@ -225,8 +219,6 @@ def _scene_reader(io_obj, existing, metadata):
 
     scene = read_scene(io_obj)
     scene.trait_set(**traits)
-    # XXX: Check whether `initialized` should be set somewhere else
-    scene.initialized = True
 
     # Then copy into the existing
     existing.file_format_version = scene.file_format_version
@@ -234,10 +226,9 @@ def _scene_reader(io_obj, existing, metadata):
     existing.width = scene.width
     existing.height = scene.height
     existing.children[:] = scene.children[:]
-    # XXX: Check whether `initialized` should be set somewhere else
-    existing.initialized = scene.initialized
+    existing.initialized = True
 
-    return scene
+    return existing
 
 # -----------------------------------------------------------------------------
 
