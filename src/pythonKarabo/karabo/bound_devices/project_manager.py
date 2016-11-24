@@ -268,6 +268,8 @@ class ProjectManager(PythonDevice):
                             * revision: the revision number
                             * date: the date this revision was added
                             * user: the user that added this revision
+                            * alias: an alias for the revision. Will return the
+                                     revision number if none is set.
         """
 
         self.log.DEBUG("Retrieving version info: {}"
