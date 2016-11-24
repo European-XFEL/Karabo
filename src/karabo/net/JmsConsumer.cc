@@ -96,6 +96,7 @@ namespace karabo {
                     MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
                     this->parseHeader(messageHandle, *header);
                     m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                    MQFreeMessage(messageHandle);
                     m_notifyStrand.post(boost::bind(handler, header, body));
                     break;
                 }
