@@ -7,6 +7,8 @@ import uuid
 
 from traits.api import HasStrictTraits, Bool, Dict, Int, String
 
+from .const import EXISTDB_INITIAL_VERSION
+
 
 class BaseProjectObjectModel(HasStrictTraits):
     """ A base class for all things which can be serialized and sent to
@@ -25,7 +27,7 @@ class BaseProjectObjectModel(HasStrictTraits):
     initialized = Bool(False, transient=True)
 
     # Version and unique id
-    revision = Int(transient=True)
+    revision = Int(EXISTDB_INITIAL_VERSION, transient=True)
     uuid = String
     # Per-revision alias (for the humans!)
     alias = String(transient=True)

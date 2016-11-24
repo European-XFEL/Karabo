@@ -6,8 +6,9 @@ from lxml import etree
 from karabo.common.project.api import (
     PROJECT_DB_TYPE_DEVICE, PROJECT_DB_TYPE_DEVICE_SERVER,
     PROJECT_DB_TYPE_MACRO, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
-    PROJECT_OBJECT_CATEGORIES, DeviceConfigurationModel, DeviceServerModel,
-    MacroModel, ProjectModel, read_device_server, write_device_server)
+    PROJECT_OBJECT_CATEGORIES, NS_EXISTDB_VERSIONING, DeviceConfigurationModel,
+    DeviceServerModel, MacroModel, ProjectModel,
+    read_device_server, write_device_server)
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.hash import Hash
 
@@ -26,6 +27,8 @@ _PROJECT_ITEM_TYPES = {
 }
 # Check it
 assert len(_PROJECT_ITEM_TYPES) == len(PROJECT_OBJECT_CATEGORIES)
+# Register an eXistDB namespace
+etree.register_namespace('v', NS_EXISTDB_VERSIONING[1:-1])
 
 
 def read_project_model(io_obj, existing=None):
@@ -114,7 +117,7 @@ def _db_metadata_reader(metadata):
     """
     attrs = {
         'uuid': metadata['uuid'],
-        'revision': int(metadata['revision']),
+        'revision': int(metadata[NS_EXISTDB_VERSIONING + 'revision']),
         'alias': metadata['alias'],
         'simple_name': metadata['simple_name'],
         'description': metadata['description'],
@@ -239,7 +242,7 @@ def _model_db_metadata(model):
     """
     attrs = model.db_attrs.copy()
     attrs['uuid'] = model.uuid
-    attrs['revision'] = str(model.revision)
+    attrs[NS_EXISTDB_VERSIONING + 'revision'] = str(model.revision)
     attrs['alias'] = model.alias
     attrs['simple_name'] = model.simple_name
     attrs['description'] = model.description
