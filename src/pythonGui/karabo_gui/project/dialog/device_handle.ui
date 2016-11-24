@@ -19,7 +19,7 @@
      <item row="0" column="0">
       <widget class="QLabel" name="laTitle">
        <property name="text">
-        <string>Device Id:</string>
+        <string>Device ID:</string>
        </property>
       </widget>
      </item>
@@ -51,14 +51,14 @@
       </widget>
      </item>
      <item row="3" column="0">
-      <widget class="QLabel" name="laStartupBehaviour">
+      <widget class="QLabel" name="laIfExists">
        <property name="text">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Startup behaviour&lt;/p&gt;&lt;p&gt;if already online:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QComboBox" name="cbStartupBehaviour">
+      <widget class="QComboBox" name="cbIfExists">
        <item>
         <property name="text">
          <string>ignore</string>
@@ -79,7 +79,11 @@
       </widget>
      </item>
      <item row="4" column="1">
-      <widget class="QLineEdit" name="leAuthor"/>
+      <widget class="QLineEdit" name="leAuthor">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
      </item>
      <item row="5" column="0">
       <widget class="QLabel" name="laCopyOf">
