@@ -17,7 +17,7 @@ from karabo_gui.docktabwindow import Dockable
 from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
                                  broadcast_event, register_for_broadcasts,
                                  unregister_from_broadcasts)
-from karabo_gui.network import Network
+from karabo_gui.singletons.api import get_network
 
 
 class AlarmPanel(Dockable, QWidget):
@@ -236,7 +236,7 @@ class ButtonDelegate(QStyledItemDelegate):
                 id_index = getAlarmKeyIndex(ALARM_ID)
                 model = index.model()
                 alarm_id = model.index(index.row(), id_index).data()
-                Network().onAcknowledgeAlarm(model.instanceId, alarm_id)
+                get_network().onAcknowledgeAlarm(model.instanceId, alarm_id)
         else:
             if self.cellEditMode:
                 self.cellEditMode = False

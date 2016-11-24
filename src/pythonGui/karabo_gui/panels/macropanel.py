@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 """ This is the central panel to edit macros. """
-from PyQt4.QtCore import Qt, pyqtSignal, QEvent
+from PyQt4.QtCore import Qt, QEvent
 from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QMessageBox,
                          QSplitter, QTextCursor)
 from qtconsole.pygments_highlighter import PygmentsHighlighter
@@ -15,7 +15,7 @@ import karabo_gui.icons as icons
 from karabo_gui.mediator import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
     unregister_from_broadcasts)
-from karabo_gui.network import Network
+from karabo_gui.singletons.api import get_network
 from karabo_gui.topology import getDevice
 from karabo_gui.util import getSaveFileName
 
@@ -117,8 +117,8 @@ class MacroPanel(Dockable, QSplitter):
             h = Hash("code", self.macro_model.code,
                      "module", self.macro_model.title,
                      "project", self.macro_model.project_name)
-            Network().onInitDevice("Karabo_MacroServer", "MetaMacro",
-                                   instance_id, h)
+            get_network().onInitDevice("Karabo_MacroServer", "MetaMacro",
+                                       instance_id, h)
 
     def onSave(self):
         fn = getSaveFileName(

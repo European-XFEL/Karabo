@@ -13,7 +13,8 @@ from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.schema import ChoiceOfNodes
-from karabo_gui.topology import getDeviceBox, Manager
+from karabo_gui.singletons.api import get_manager
+from karabo_gui.topology import getDeviceBox
 from karabo_gui.widget import DisplayWidget, EditableWidget
 from .const import WIDGET_FACTORIES
 
@@ -123,7 +124,7 @@ class NavigationDropHandler(SceneDnDHandler):
         # Restore cursor for dialog input
         QApplication.restoreOverrideCursor()
         # Open dialog to set up new device (group)
-        dialog = DeviceGroupDialog(Manager().systemHash)
+        dialog = DeviceGroupDialog(get_manager().systemHash)
         # Set server and class id
         dialog.serverId = server_id
         dialog.classId = class_id

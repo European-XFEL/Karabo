@@ -4,9 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
-__all__ = ["ProjectSaveDialog", "ProjectLoadDialog"]
-
 import datetime
 import os
 from os.path import abspath, dirname, exists, join
@@ -15,7 +12,7 @@ import karabo_gui.globals as globals
 import karabo_gui.icons as icons
 from karabo.middlelayer import ProjectAccess
 from karabo_gui.messagebox import MessageBox
-import karabo_gui.network as network
+from karabo_gui.singletons.api import get_network
 
 from PyQt4 import uic
 from PyQt4.QtCore import (QDir, Qt)
@@ -48,7 +45,7 @@ class ProjectDialog(QDialog):
         self.hasCloudProjects = False
         
         # Request all available projects in cloud
-        network.Network().onGetAvailableProjects()
+        get_network().onGetAvailableProjects()
         
         self.twProjects.currentItemChanged.connect(self.onCloudProjectChanged)
         
@@ -103,7 +100,7 @@ class ProjectDialog(QDialog):
                else ProjectAccess.CLOUD
 
     def _cloudPath(self):
-        path = join(globals.KARABO_PROJECT_FOLDER, network.Network().username)
+        path = join(globals.KARABO_PROJECT_FOLDER, get_network().username)
         if not exists(path):
             os.mkdir(path)
         return path
@@ -217,7 +214,7 @@ class ProjectSaveDialog(ProjectDialog):
                 if item.text(0) == self.basename:
                     checkedOut = item.data(0, Qt.UserRole)
                     checkedOutBy = item.text(2)
-                    if checkedOut and (checkedOutBy != network.Network().username):
+                    if checkedOut and (checkedOutBy != get_network().username):
                         # Project is locked - can be overwritten by same user
                         QMessageBox.warning(None, 'Project already checked out',
                             "Another project with the same name \"<b>{}</b>\"<br>"

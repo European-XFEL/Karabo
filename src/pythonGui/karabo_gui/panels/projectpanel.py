@@ -4,43 +4,37 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
-"""This module contains a class which represents the project panel on the
-   middle left of the MainWindow which is un/dockable.
-"""
-
-__all__ = ["ProjectPanel"]
+from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.projecttreeview import ProjectTreeView
 import karabo_gui.icons as icons
-from karabo_gui.topology import Manager
-
-from PyQt4.QtGui import (QAction, QVBoxLayout, QWidget)
+from karabo_gui.singletons.api import get_manager
 
 
 class ProjectPanel(Dockable, QWidget):
     def __init__(self):
         super(ProjectPanel, self).__init__()
-        
+
         title = "Projects"
         self.setWindowTitle(title)
 
         self.twProject = ProjectTreeView(self)
-        self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)
+        self.twProject.model().signalSelectionChanged.connect(
+            self.onSelectionChanged)
         # Connect signal to get project available
-        manager = Manager()
-        manager.signalAvailableProjects.connect(self.twProject.onAvailableProjects)
+        manager = get_manager()
+        manager.signalAvailableProjects.connect(
+            self.twProject.onAvailableProjects)
         manager.signalProjectLoaded.connect(self.twProject.onProjectLoaded)
         manager.signalProjectSaved.connect(self.twProject.onProjectSaved)
         manager.signalReset.connect(self.onResetPanel)
 
         mainLayout = QVBoxLayout(self)
-        mainLayout.setContentsMargins(5,5,5,5)
+        mainLayout.setContentsMargins(5, 5, 5, 5)
         mainLayout.addWidget(self.twProject)
 
         self.setupActions()
-
 
     def setupActions(self):
         text = "New project"
@@ -71,31 +65,25 @@ class ProjectPanel(Dockable, QWidget):
         self.acProjectSaveAs.setEnabled(False)
         self.acProjectSaveAs.triggered.connect(self.twProject.projectSaveAs)
 
-
     def setupToolBars(self, standardToolBar, parent):
         standardToolBar.addAction(self.acProjectNew)
         standardToolBar.addAction(self.acProjectOpen)
         standardToolBar.addAction(self.acProjectSave)
         standardToolBar.addAction(self.acProjectSaveAs)
 
-
     def closeAllProjects(self):
         return self.twProject.closeAllProjects()
-
 
     def enableToolBar(self, enabled):
         self.acProjectNew.setEnabled(enabled)
         self.acProjectOpen.setEnabled(enabled)
 
-
     def modifiedProjects(self):
         return self.twProject.modifiedProjects()
-
 
     def onSelectionChanged(self, selectedIndexes):
         self.acProjectSave.setEnabled(len(selectedIndexes) > 0)
         self.acProjectSaveAs.setEnabled(len(selectedIndexes) > 0)
-
 
     def onResetPanel(self):
         self.closeAllProjects()

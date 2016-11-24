@@ -4,19 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
-"""
-This module contains a class which represents configurations for classes and
-devices.
-"""
-
-__all__ = ["Configuration"]
-
 from PyQt4.QtCore import pyqtSignal
 
-from karabo_gui.network import Network
 from karabo_gui.schema import Schema, Box
-from karabo_gui.topology import Manager
+from karabo_gui.singletons.api import get_manager, get_network
 
 
 class BulkNotifications(object):
@@ -25,16 +16,14 @@ class BulkNotifications(object):
     def __init__(self, conf):
         self.configuration = conf
 
-
     def __enter__(self):
         self.configuration.bulk_changes = True
-
 
     def __exit__(self, a, b, c):
         self.configuration.bulk_changes = False
         for box, (value, timestamp) in self.configuration.bulk_list.items():
             box.signalUpdateComponent.emit(box, value, timestamp)
-        self.configuration.bulk_list = { }
+        self.configuration.bulk_list = {}
 
 
 class Configuration(Box):
@@ -61,15 +50,14 @@ class Configuration(Box):
         self.classId = None
         self.index = None
 
-
     def setSchema(self, schema):
         if self.descriptor is not None:
             self.redummy()
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
         if self.status == "requested":
             if self.visible > 0:
-                manager = Manager()
-                Network().onStartMonitoringDevice(self.id)
+                manager = get_manager()
+                get_network().onStartMonitoringDevice(self.id)
                 index = manager.systemTopology.findIndex(self.id)
                 if index is not None and index.isValid():
                     assert not index.internalPointer().monitoring
@@ -77,7 +65,6 @@ class Configuration(Box):
                     manager.systemTopology.dataChanged.emit(
                         index, index)
             self.status = "schema"
-
 
     @property
     def status(self):
@@ -98,7 +85,6 @@ class Configuration(Box):
         in a project. Actual devices are just "offline". """
         return self._status
 
-
     @status.setter
     def status(self, value):
         assert value in ('offline', 'noserver', 'noplugin', 'online',
@@ -108,23 +94,20 @@ class Configuration(Box):
             self._status = value
         self.signalStatusChanged.emit(self, value, self.error)
 
-
     def isOnline(self):
         return self.status not in ("offline", "noplugin", "noserver",
                                    "incompatible")
 
-
     def checkClassSchema(self):
         pass
 
-
     def updateStatus(self):
         """ determine the status from the system topology """
-        manager = Manager()
+        manager = get_manager()
         if manager.systemHash is None:
             self.status = "offline"
             return
-        
+
         for k in ("device", "macro", "server"):
             try:
                 attrs = manager.systemHash[k][self.id, ...]
@@ -143,7 +126,7 @@ class Configuration(Box):
         error = attrs.get("status") == "error"
         self.error = error
         if self.status == "offline" and self.visible > 0:
-            Network().onGetDeviceSchema(self.id)
+            get_network().onGetDeviceSchema(self.id)
             self.status = "requested"
         elif self.status not in ("requested", "schema", "alive", "monitoring"):
             self.status = "online"
@@ -164,20 +147,17 @@ class Configuration(Box):
             box = getattr(box.boxvalue, p)
         return box
 
-
     def hasBox(self, path):
         for p in path:
             if hasattr(self.boxvalue, p):
                 return True
         return False
 
-
     def boxChanged(self, box, value, timestamp):
         if self.bulk_changes:
             self.bulk_list[box] = value, timestamp
         else:
             box.signalUpdateComponent.emit(box, value, timestamp)
-
 
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
@@ -186,30 +166,30 @@ class Configuration(Box):
         parameterEditor.globalAccessLevelChanged()
         parameterEditor.ensureMiddleColumnWidth()
 
-
     def addVisible(self):
         self.visible += 1
         if self.visible == 1 and self.status not in ("offline", "requested"):
+            network = get_network()
             if self.status == "online":
-                Network().onGetDeviceSchema(self.id)
+                network.onGetDeviceSchema(self.id)
                 self.status = "requested"
             else:
-                manager = Manager()
-                Network().onStartMonitoringDevice(self.id)
+                manager = get_manager()
+                network.onStartMonitoringDevice(self.id)
                 idx = manager.systemTopology.findIndex(self.id)
                 if idx is not None and idx.isValid():
                     assert not idx.internalPointer().monitoring
                     idx.internalPointer().monitoring = True
                     manager.systemTopology.dataChanged.emit(idx, idx)
 
-
     __enter__ = addVisible
 
     def removeVisible(self):
         self.visible -= 1
         if self.visible == 0 and self.status not in ("offline", "requested"):
-            manager = Manager()
-            Network().onStopMonitoringDevice(self.id)
+            manager = get_manager()
+            network = get_network()
+            network.onStopMonitoringDevice(self.id)
             index = manager.systemTopology.findIndex(self.id)
             if index is not None and index.isValid():
                 assert index.internalPointer().monitoring
@@ -218,14 +198,13 @@ class Configuration(Box):
             if self.status == "monitoring":
                 self.status = "alive"
 
-
     def __exit__(self, a, b, c):
         self.removeVisible()
 
-
     def refresh(self):
-        Network().onGetDeviceConfiguration(self)
-
+        network = get_network()
+        network.onGetDeviceConfiguration(self)
 
     def shutdown(self):
-        Manager().shutdownDevice(self.id)
+        manager = get_manager()
+        manager.shutdownDevice(self.id)

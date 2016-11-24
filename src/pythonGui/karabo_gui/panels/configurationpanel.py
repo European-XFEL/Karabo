@@ -4,22 +4,14 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
-"""This module contains a class which represents the configuration panel on the
-   right of the MainWindow which is un/dockable.
-"""
-
-__all__ = ["ConfigurationPanel"]
-
-
 from os.path import abspath, dirname, join
 
-from karabo_gui.docktabwindow import DockTabWindow, Dockable
+from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
 from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.parametertreewidget import ParameterTreeWidget
 from karabo_gui.projecttreeview import ProjectTreeView
-from karabo_gui.topology import Manager
+from karabo_gui.singletons.api import get_manager
 
 from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
@@ -95,7 +87,7 @@ class ConfigurationPanel(Dockable, QWidget):
         vLayout.setContentsMargins(0,0,0,0)
         vLayout.addWidget(splitTopPanes)
 
-        manager = Manager()
+        manager = get_manager()
         manager.signalNewNavigationItem.connect(self.onNewNavigationItem)
         manager.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         manager.signalShowConfiguration.connect(self.onShowConfiguration)
@@ -210,7 +202,7 @@ class ConfigurationPanel(Dockable, QWidget):
 
 
     def setupActions(self):
-        manager = Manager()
+        manager = get_manager()
 
         text = "Open configuration from file (*.xml)"
         self.acOpenFromFile = QAction(icons.load, text, self)
@@ -569,7 +561,7 @@ class ConfigurationPanel(Dockable, QWidget):
 
 
     def onConflictStateChanged(self, deviceId, hasConflict):
-        conf = Manager().deviceData.get(deviceId)
+        conf = get_manager().deviceData.get(deviceId)
         if conf is None:
             return
 
@@ -678,7 +670,7 @@ class ConfigurationPanel(Dockable, QWidget):
         deviceId = indexInfo.get('deviceId')
         config = indexInfo.get('config')
 
-        Manager().initDevice(serverId, classId, deviceId, config)
+        get_manager().initDevice(serverId, classId, deviceId, config)
 
 
     def onGlobalAccessLevelChanged(self):
