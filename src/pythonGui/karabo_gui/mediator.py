@@ -3,7 +3,7 @@ from enum import Enum
 from PyQt4.QtCore import QEvent
 from PyQt4.QtGui import QApplication
 
-from karabo_gui.singletons.api import get_meditator
+from karabo_gui.singletons.api import get_mediator
 
 
 # Enum for karabo broadcast event senders
@@ -45,7 +45,7 @@ class KaraboBroadcastEvent(QEvent):
 def broadcast_event(event):
     """ Broadcast the given `event`.
     """
-    mediator = get_meditator()
+    mediator = get_mediator()
     QApplication.postEvent(mediator, event)
 
 
@@ -53,7 +53,7 @@ def register_for_broadcasts(qobject):
     """ Register the given `qobject` to the events coming from the singleton
         `mediator`.
     """
-    mediator = get_meditator()
+    mediator = get_mediator()
     mediator.installEventFilter(qobject)
 
 
@@ -61,5 +61,5 @@ def unregister_from_broadcasts(qobject):
     """ Unregister the given `qobject` from the events coming from the
         singleton mediator object.
     """
-    mediator = get_meditator()
+    mediator = get_mediator()
     mediator.removeEventFilter(qobject)
