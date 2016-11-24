@@ -20,4 +20,5 @@ __all__ = [
     "turbopumpwidget",
     "valvewidget",
     "agilentionwidget",
+    "lampwidget"
 ]

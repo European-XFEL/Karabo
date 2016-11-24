@@ -14,7 +14,7 @@ VACUUM_WIDGETS = (
     'MembranePumpWidget', 'MotorWidget', 'PressureGaugeWidget',
     'PressureSwitchWidget', 'RightAngleValveWidget', 'ShutOffValveWidget',
     'TemperatureProbeWidget', 'TurboPumpWidget', 'ValveWidget',
-    'AgilentIonWidget'
+    'AgilentIonWidget', 'LampWidget'
 )
 
 
@@ -43,3 +43,4 @@ def _build_vacuum_widget_readers():
 
 # Call the builder to register all the vacuum widget readers and writers
 _build_vacuum_widget_readers()
+cd
