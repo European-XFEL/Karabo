@@ -103,7 +103,7 @@ def _project_new_handler(item_model):
     dialog = NewProjectDialog()
     if dialog.exec() == QDialog.Accepted:
         # This overwrites the current model
-        model = ProjectModel(simple_name=dialog.simple_name)
+        model = ProjectModel(simple_name=dialog.simple_name, initialized=True)
         item_model.traits_data_model = model
 
 
