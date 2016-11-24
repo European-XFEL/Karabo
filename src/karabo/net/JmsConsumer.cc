@@ -86,6 +86,7 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_WARN << "Received a message of wrong type";
                         m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
                                                   handler, topic, selector));
+                        MQFreeMessage(messageHandle);
                         return;
                     }
                     Hash::Pointer header(new Hash());
@@ -96,7 +97,6 @@ namespace karabo {
                     MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
                     this->parseHeader(messageHandle, *header);
                     m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
-                    MQFreeMessage(messageHandle);
                     m_notifyStrand.post(boost::bind(handler, header, body));
                     break;
                 }
@@ -124,9 +124,11 @@ namespace karabo {
                     MQString tmp = MQGetStatusString(status);
                     std::string errorString(tmp);
                     MQFreeString(tmp);
+                    MQFreeMessage(messageHandle);
                     throw KARABO_OPENMQ_EXCEPTION(errorString);
                 }
             }
+            MQFreeMessage(messageHandle);
         }
 
 
