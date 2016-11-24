@@ -162,6 +162,9 @@ class ProjectDatabase(ContextDecorator):
                     revision: the revision number
                     date: the date this revision was added
                     user: the user that added this revision
+                    alias: an alias for the revision. If none is set the
+                           revision number is returned
+
 
         :raises: ExistDBException if user is not authorized for this
                  transaction or the versioning query to the database failed
@@ -185,6 +188,29 @@ class ProjectDatabase(ContextDecorator):
         try:
             rdict["document"] = rxml.find(self._add_vers_ns('document')).text
             rdict["revisions"] = self._revision_xml_to_dict(rxml)
+
+            # get alias information
+            revs = [str(r["revision"]) for r in rdict["revisions"]]
+            if len(revs) > 0:
+                revsstr = "({})".format(",".join(revs))
+                query = """
+                        import module namespace v="{ns}";
+                        let $revisions := {revs}
+                        for $rev in $revisions
+                        return  <entry rev="{{$rev}}">{{v:doc(doc("{path}"),
+                        $rev)/@alias}}</entry>
+                        """.format(ns=self.vers_namespace, revs=revsstr,
+                                   path=path)
+
+                result = self.dbhandle.query(query)
+                res = result.results
+                aliases = {}
+                for e in res:
+                    aliases[e.attrib['rev']] = e.attrib.get('alias',
+                        str(e.attrib['rev']))
+                for r in rdict["revisions"]:
+                    rstr = str(r['revision'])
+                    r["alias"] = aliases.get(rstr, rstr)
 
         except AttributeError:
             raise RuntimeError("Could not extract versioning information for"
@@ -268,12 +294,19 @@ class ProjectDatabase(ContextDecorator):
                 if nsattr in item_tree.attrib:
                     item_tree.attrib.pop(nsattr)
             item_xml = self._make_str_if_needed(item_tree)
+        # for default revisons we add versioning information
+        elif revision == default:
+            etree.register_namespace('v', self.vers_namespace)
+            item_tree.attrib[self._add_vers_ns('revision')] = str(revision)
+            item_tree.attrib[self._add_vers_ns('path')] = path
+            key = hex(int(round(time.time() * 1000)))+hex(revision)
+            item_tree.attrib[self._add_vers_ns('key')] = key
 
         # check if the xml we got passed is an etree or a string. In the latter
         # case convert it
         item_xml = self._make_str_if_needed(item_tree)
-
         success = False
+
         try:
             success = self.dbhandle.load(item_xml, path)
             # we need to save twice to have initial versioning infor
