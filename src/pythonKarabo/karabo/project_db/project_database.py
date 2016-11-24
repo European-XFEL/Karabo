@@ -6,6 +6,7 @@ from eulexistdb import db
 from eulexistdb.exceptions import ExistDBException
 from lxml import etree
 
+from karabo.common.project.const import EXISTDB_INITIAL_VERSION
 from .util import assure_running
 from .dbsettings import DbSettings
 
@@ -161,6 +162,7 @@ class ProjectDatabase(ContextDecorator):
                     revision: the revision number
                     date: the date this revision was added
                     user: the user that added this revision
+
         :raises: ExistDBException if user is not authorized for this
                  transaction or the versioning query to the database failed
                  otherwise.
@@ -183,9 +185,10 @@ class ProjectDatabase(ContextDecorator):
         try:
             rdict["document"] = rxml.find(self._add_vers_ns('document')).text
             rdict["revisions"] = self._revision_xml_to_dict(rxml)
+
         except AttributeError:
             raise RuntimeError("Could not extract versioning information for"
-                               "item at path {}".format(path))
+                               " item at path {}".format(path))
 
         return rdict
 
@@ -249,26 +252,15 @@ class ProjectDatabase(ContextDecorator):
         if not self.domain_exists(domain):
             self.add_domain(domain)
 
+        path = "{}/{}/{}".format(self.root, domain, uuid)
+
         # Extraction the revision number as provided
         item_tree = self._make_xml_if_needed(item_xml)
-        revision = item_tree.get(self._add_vers_ns('revision'))
-        initial_save = False
-        if revision is None:
-            revision = item_tree.get('revision')
-            # Check whether `uuid` already exists
-            path = "{}/{}".format(self.root, domain)
-            query = """
-                    xquery version "3.0";
-                    for $c at $i in collection("{path}?select=*")
-                    where $c/*/@uuid = "{uuid}"
-                    return $c
-                    """.format(path=path, uuid=uuid)
-            res = self.dbhandle.query(query).results
-            if not res:
-                initial_save = True
+        default = EXISTDB_INITIAL_VERSION
+        revision = int(item_tree.get(self._add_vers_ns('revision'), default))
 
-        # try to save the item xml, if overwrite is set to True we remove
-        # the versioning specific attributes first.
+        # try to save the item xml, if overwrite is set
+        # we remove the versioning specific attributes first.
         if overwrite:
             versioning_attrs = ['key', 'revision', 'path']
             for attr in versioning_attrs:
@@ -276,20 +268,18 @@ class ProjectDatabase(ContextDecorator):
                 if nsattr in item_tree.attrib:
                     item_tree.attrib.pop(nsattr)
             item_xml = self._make_str_if_needed(item_tree)
+        # for default revisons we add versioning information
+        elif revision == default:
+            etree.register_namespace('v', self.vers_namespace)
+            item_tree.attrib[self._add_vers_ns('revision')] = str(revision)
 
         # check if the xml we got passed is an etree or a string. In the latter
         # case convert it
-        item_xml = self._make_str_if_needed(item_xml)
+        item_xml = self._make_str_if_needed(item_tree)
 
-        path = "{}/{}/{}".format(self.root, domain, uuid)
         success = False
         try:
             success = self.dbhandle.load(item_xml, path)
-            # The db does not create a versioning history when the project is
-            # saved for the first time. If this is the case we save it again to
-            # enforce the versioning increment
-            if initial_save:
-                success = self.dbhandle.load(item_xml, path)
         except ExistDBException:
             success = False
 
@@ -405,7 +395,7 @@ class ProjectDatabase(ContextDecorator):
             try:
                 item = self.dbhandle.getDoc(path).decode('utf-8')
             except ExistDBException:
-                return ""
+                return "", -1
 
         else:
             query = """
@@ -417,7 +407,7 @@ class ProjectDatabase(ContextDecorator):
             try:
                 item = self.dbhandle.query(query).results[0]
             except ExistDBException:
-                return ""
+                return "", -1
 
         item = self._make_xml_if_needed(item)
         # add versioning info
@@ -432,7 +422,7 @@ class ProjectDatabase(ContextDecorator):
         item.attrib[self._add_vers_ns('revision')] = str(last_rev)
         item.attrib[self._add_vers_ns('key')] = key
         item.attrib[self._add_vers_ns('path')] = path
-        return self._make_str_if_needed(item)
+        return self._make_str_if_needed(item), last_rev
 
     def load_multi(self, domain, item_xml_str, list_tags):
         """

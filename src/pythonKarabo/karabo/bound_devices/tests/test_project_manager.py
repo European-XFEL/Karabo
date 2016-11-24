@@ -197,9 +197,10 @@ class TestProjectManager(TestCase):
             items = [item, ]
             ret = self.ss.request("projManTest", "slotSaveItems",
                                   'admin', items).waitForReply(5000)
-            ret = ret[0]  # returns tuple
-            self.assertTrue(ret.has('testdevice1'))
-            self.assertTrue(ret.get('testdevice1').get("success"))
+            items = ret[0].get("items")
+            item = items[0]
+            self.assertEqual(item.get('entry.uuid'), "testdevice1")
+            self.assertTrue(item.get("success"))
 
         with self.subTest(msg="Test loading data"):
             items = [Hash("uuid", "testconfig0", "domain", "LOCAL"),
