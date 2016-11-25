@@ -77,21 +77,17 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
             device.instance_id = dialog.instance_id
             device.if_exists = dialog.if_exists
 
-            active_config_ref = (dialog.active_uuid, dialog.active_revision)
-            # Find existing DeviceConfigurationModel
-            is_found = False
-            for conf in device.configs:
-                if (conf.uuid, conf.revision) == active_config_ref:
-                    device.active_config_ref = active_config_ref
-                    conf.description = dialog.description
-                    is_found = True
-                    break
-            # XXX TODO: a new configuration might have been created in dialog
-            if is_found:
-                config_model = DeviceConfigurationModel(
+            # Look for existing DeviceConfigurationModel
+            dev_conf = device.select_config(dialog.active_uuid,
+                                            dialog.active_revision)
+            if dev_conf is None:
+                dev_conf = DeviceConfigurationModel(
                     class_id=dialog.class_id, configuration=Hash(),
                     description=dialog.description
                 )
-                device.configs.append(config_model)
-                active_config_ref = (config_model.uuid, config_model.revision)
+                device.configs.append(dev_conf)
+                device.active_config_ref = (dev_conf.uuid, dev_conf.revision)
+            else:
+                active_config_ref = (dialog.active_uuid, dialog.active_revision)
                 device.active_config_ref = active_config_ref
+                dev_conf.description = dialog.description
