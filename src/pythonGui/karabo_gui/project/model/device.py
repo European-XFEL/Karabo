@@ -80,7 +80,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
             # Look for existing DeviceConfigurationModel
             dev_conf = device.select_config(dialog.active_uuid,
                                             dialog.active_revision)
-            if dev_conf is None:
+            if dialog.new_config or dev_conf is None:
                 dev_conf = DeviceConfigurationModel(
                     class_id=dialog.class_id, configuration=Hash(),
                     description=dialog.description

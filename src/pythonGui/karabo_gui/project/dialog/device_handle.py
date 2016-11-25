@@ -30,32 +30,31 @@ class DeviceHandleDialog(QDialog):
         if model is None:
             title = 'Add device'
             self.gbConfig.setEnabled(False)
-            self.cbConfig.setEnabled(False)
-            self.cbVersion.setEnabled(False)
         else:
             title = 'Edit device'
             self.leTitle.setText(model.instance_id)
-
-            # XXX TODO There is a toggle missing to decide whether to choose an
-            # existing configuration or add a new one (self.gbConfig...)
+            # Map UUIDs to list of available DeviceConfigurationModels
+            uuid_configs = {}
             for config in model.configs:
-                # XXX TODO there can be the same uuids in the list of configs
-                # and revisions - here we need to get a mapping of uuid to
-                # available revisions
-                if (config.uuid, config.revision) == model.active_config_ref:
-                    index = self.cbClass.findText(config.class_id)
-                    self.cbClass.setCurrentIndex(index)
-                    self.teDescription.setPlainText(config.description)
-                self.cbConfig.addItem(config.uuid, config.revision)
+                uuid_configs.setdefault(config.uuid, []).append(config)
+
+            for uuid, configs in uuid_configs.items():
+                # Add UUID to combobox and add list of device configs as itemData
+                self.cbConfig.addItem(uuid, configs)
+
+            # XXX TODO the active revision number is always 0
+            active_uuid, active_rev = model.active_config_ref
+            dev_conf = model.select_config(active_uuid, active_rev)
+            if dev_conf is not None:
+                self._update_config_widgets(dev_conf)
 
             # Make sure the signal is triggered when setting the index below
             self.cbConfig.setCurrentIndex(-1)
             # Update revisions combobox if configuration changes
             self.cbConfig.currentIndexChanged[int].connect(self.config_changed)
-            uuid, revision = model.active_config_ref
-            index = self.cbConfig.findText(uuid)
+            index = self.cbConfig.findText(active_uuid)
             self.cbConfig.setCurrentIndex(index)
-            index = self.cbVersion.findText(str(revision))
+            index = self.cbVersion.findText(str(active_rev))
             self.cbVersion.setCurrentIndex(index)
 
             index = self.cbIfExists.findText(model.if_exists)
@@ -79,11 +78,29 @@ class DeviceHandleDialog(QDialog):
                     available_plugins.append(class_id)
         return available_plugins
 
+    def _update_config_widgets(self, dev_config_model):
+        """ Update all relevant widgets which show `DeviceConfigurationModel`
+        information
+
+        :param dev_config_model: The `DeviceConfgurationModel` which data
+                                 should be displayed.
+        """
+        index = self.cbClass.findText(dev_config_model.class_id)
+        self.cbClass.setCurrentIndex(index)
+        self.teDescription.setPlainText(dev_config_model.description)
+        index = self.cbVersion.findText(str(dev_config_model.revision))
+        self.cbVersion.setCurrentIndex(index)
+
     @pyqtSlot(int)
     def config_changed(self, index):
-        revision = self.cbConfig.itemData(index)
+        configs = self.cbConfig.itemData(index)
         self.cbVersion.clear()
-        self.cbVersion.addItem(str(revision))
+        self.cbVersion.addItems([str(conf.revision) for conf in configs])
+
+        if configs:
+            # Update dialog to active configuration data
+            active_config = configs[-1]
+            self._update_config_widgets(active_config)
 
     @property
     def instance_id(self):
@@ -97,6 +114,9 @@ class DeviceHandleDialog(QDialog):
     def if_exists(self):
         return self.cbIfExists.currentText()
 
+    @property
+    def new_config(self):
+        return not self.gbConfig.isChecked()
 
     @property
     def active_uuid(self):
