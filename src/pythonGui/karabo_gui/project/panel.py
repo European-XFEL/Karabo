@@ -86,9 +86,6 @@ def _project_load_handler(item_model):
     result = dialog.exec()
     if result == QDialog.Accepted:
         uuid, revision = dialog.selected_item()
-        print()
-        print("uuid", uuid, revision)
-        print()
         if uuid is not None and revision is not None:
             db_conn = get_db_conn()
             model = ProjectModel(uuid=uuid, revision=revision)
