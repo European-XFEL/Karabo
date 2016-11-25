@@ -16,7 +16,7 @@ from karabo_gui.mediator import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
     KaraboBroadcastEvent
 )
-from karabo_gui.project.db_connection import get_db_conn
+from karabo_gui.singletons.api import get_db_conn
 
 SIMPLE_NAME = 'simple_name'
 UUID = 'uuid'
