@@ -2,11 +2,12 @@ from karabo_gui.widget import Widget
 from .base import BaseWidgetContainer
 
 _VACUUM_CLASS_NAMES = (
-    'CryoCoolerWidget', 'HydraulicValveWidget', 'MaxiGaugeWidget',
-    'MembranePumpWidget', 'MotorWidget', 'PressureGaugeWidget',
-    'PressureSwitchWidget', 'RightAngleValveWidget', 'ShutOffValveWidget',
-    'TemperatureProbeWidget', 'TurboPumpWidget', 'ValveWidget',
-    'AgilentIonWidget')
+    'AgilentIonWidget', 'CryoCoolerWidget', 'HydraulicValveWidget',
+    'LampWidget', 'MaxiGaugeWidget', 'MembranePumpWidget', 'MotorWidget',
+    'PressureGaugeWidget', 'PressureSwitchWidget', 'RightAngleValveWidget',
+    'ShutOffValveWidget', 'TemperatureProbeWidget', 'TurboPumpWidget'
+    'ValveWidget'
+    )
 
 _VACUUM_WIDGETS = {n: Widget.widgets[n] for n in _VACUUM_CLASS_NAMES}
 

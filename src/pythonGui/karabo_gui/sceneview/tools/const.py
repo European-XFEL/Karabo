@@ -57,8 +57,10 @@ WIDGET_FACTORIES = {
     'SelectionIcons': SelectionIconsModel,
     'Monitor': MonitorModel,
     'SingleBit': SingleBitModel,
+    'AgilentIonWidget': VacuumWidgetModel,
     'CryoCoolerWidget': VacuumWidgetModel,
     'HydraulicValveWidget': VacuumWidgetModel,
+    'LampWidget': VacuumWidgetModel,
     'MaxiGaugeWidget': VacuumWidgetModel,
     'MembranePumpWidget': VacuumWidgetModel,
     'MotorWidget': VacuumWidgetModel,
@@ -69,5 +71,4 @@ WIDGET_FACTORIES = {
     'TemperatureProbeWidget': VacuumWidgetModel,
     'TurboPumpWidget': VacuumWidgetModel,
     'ValveWidget': VacuumWidgetModel,
-    'AgilentIonWidget': VacuumWidgetModel,
 }
