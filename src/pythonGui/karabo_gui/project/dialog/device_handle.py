@@ -11,7 +11,7 @@ from PyQt4.QtGui import QDialog
 
 from karabo.middlelayer import AccessLevel, Hash
 import karabo_gui.globals as krb_globals
-from karabo_gui.topology import Manager
+from karabo_gui.singletons.api import get_manager
 
 
 class DeviceHandleDialog(QDialog):
@@ -65,7 +65,7 @@ class DeviceHandleDialog(QDialog):
     def _get_available_plugins(self):
         """ Get all available plugins of `systemTopology`"""
         available_plugins = []
-        servers = Manager().systemHash.get('server', Hash())
+        servers = get_manager().systemHash.get('server', Hash())
         for _, _, attrs in servers.iterall():
             if not attrs:
                 continue
