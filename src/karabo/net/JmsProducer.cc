@@ -38,9 +38,6 @@ namespace karabo {
         void JmsProducer::write(const std::string& topic, const karabo::util::Hash::Pointer& header,
                                 const karabo::util::Hash::Pointer& body, const int priority, const int timeToLive) {
 
-            // This function will block in case no connection is available and return immediately otherwise
-            m_connection->waitForConnectionAvailable();
-
             this->asyncWrite(topic, header, body, priority, timeToLive);
         }
 
