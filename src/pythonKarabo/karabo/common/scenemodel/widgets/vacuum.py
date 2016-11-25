@@ -10,11 +10,11 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 VACUUM_WIDGETS = (
-    'CryoCoolerWidget', 'HydraulicValveWidget', 'MaxiGaugeWidget',
-    'MembranePumpWidget', 'MotorWidget', 'PressureGaugeWidget',
-    'PressureSwitchWidget', 'RightAngleValveWidget', 'ShutOffValveWidget',
-    'TemperatureProbeWidget', 'TurboPumpWidget', 'ValveWidget',
-    'AgilentIonWidget', 'LampWidget'
+    'AgilentIonWidget', 'CryoCoolerWidget', 'HydraulicValveWidget',
+    'LampWidget', 'MaxiGaugeWidget', 'MembranePumpWidget', 'MotorWidget',
+    'PressureGaugeWidget', 'PressureSwitchWidget', 'RightAngleValveWidget',
+    'ShutOffValveWidget', 'TemperatureProbeWidget', 'TurboPumpWidget',
+    'ValveWidget'
 )
 
 
