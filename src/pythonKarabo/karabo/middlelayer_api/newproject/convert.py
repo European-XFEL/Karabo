@@ -17,6 +17,7 @@ def convert_old_project(old_project):
         macros=_convert_macros(old_project.macros),
         scenes=_convert_scenes(old_project, old_project.scenes),
         servers=servers,
+        initialized=True
     )
 
     return project, devices
@@ -37,7 +38,8 @@ def _convert_devices(old_devices):
             continue  # Skip DeviceGroup objects
 
         config_model = DeviceConfigurationModel(class_id=dev.classId,
-                                                configuration=dev.initConfig)
+                                                configuration=dev.initConfig,
+                                                initialized=True)
         uuid, rev = config_model.uuid, config_model.revision
         instance_model = DeviceInstanceModel(instance_id=dev.filename,
                                              if_exists=dev.ifexists,
@@ -46,7 +48,8 @@ def _convert_devices(old_devices):
         dev_instances[dev.serverId].append(instance_model)
         devices.append(config_model)
 
-    servers = [DeviceServerModel(server_id=server_id, devices=instances)
+    servers = [DeviceServerModel(server_id=server_id, devices=instances,
+                                 initialized=True)
                for server_id, instances in dev_instances.items()]
 
     return devices, servers
