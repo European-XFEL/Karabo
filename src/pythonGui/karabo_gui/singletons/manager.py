@@ -560,7 +560,7 @@ class Manager(QObject):
 
     def handle_projectListItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
-        success = reply.get('success', True)
+        success = reply.get('success', default=True)
         if not success:
             MessageBox.showError(reply['reason'])
             return
@@ -580,7 +580,7 @@ class Manager(QObject):
 
     def handle_projectLoadItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
-        success = reply.get('success', True)
+        success = reply.get('success', default=True)
         if not success:
             MessageBox.showError(reply['reason'])
             return
@@ -590,7 +590,7 @@ class Manager(QObject):
 
     def handle_projectSaveItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
-        success = reply.get('success', True)
+        success = reply.get('success', default=True)
         if not success:
             MessageBox.showError(reply['reason'])
             return
