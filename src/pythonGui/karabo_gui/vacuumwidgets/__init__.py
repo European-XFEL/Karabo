@@ -7,8 +7,10 @@
 # define package vacuumwidgets
 
 __all__ = [
+    "agilentionwidget",
     "cryocoolerwidget",
     "hydraulicvalvewidget",
+    "lampwidget"
     "maxigaugewidget",
     "membranepumpwidget",
     "motorwidget",
@@ -19,5 +21,4 @@ __all__ = [
     "temperatureprobeswidget",
     "turbopumpwidget",
     "valvewidget",
-    "agilentionwidget",
 ]
