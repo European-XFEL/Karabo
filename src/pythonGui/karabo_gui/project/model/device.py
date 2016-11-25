@@ -83,7 +83,8 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
             if dialog.new_config or dev_conf is None:
                 dev_conf = DeviceConfigurationModel(
                     class_id=dialog.class_id, configuration=Hash(),
-                    description=dialog.description
+                    description=dialog.description,
+                    initialized=True
                 )
                 device.configs.append(dev_conf)
                 device.active_config_ref = (dev_conf.uuid, dev_conf.revision)

@@ -21,7 +21,7 @@ class DeviceHandleDialog(QDialog):
                            'device_handle.ui')
         uic.loadUi(filepath, self)
 
-        # XXX Get available plugins from systemTopology
+        # Get available plugins from systemTopology
         for class_id in self._get_available_plugins():
             self.cbClass.addItem(class_id)
 
@@ -54,8 +54,6 @@ class DeviceHandleDialog(QDialog):
             self.cbConfig.currentIndexChanged[int].connect(self.config_changed)
             index = self.cbConfig.findText(active_uuid)
             self.cbConfig.setCurrentIndex(index)
-            index = self.cbVersion.findText(str(active_rev))
-            self.cbVersion.setCurrentIndex(index)
 
             index = self.cbIfExists.findText(model.if_exists)
             self.cbIfExists.setCurrentIndex(index)
@@ -72,7 +70,7 @@ class DeviceHandleDialog(QDialog):
             for class_id, visibility in zip(attrs.get("deviceClasses", []),
                                             attrs.get("visibilities", [])):
                 # Only show accessible plugins depending on global access level
-                if AccessLevel(visibility) > krb_globals.GLOBAL_ACCESS_LEVEL:
+                if AccessLevel(visibility) >= krb_globals.GLOBAL_ACCESS_LEVEL:
                     continue
                 if class_id not in available_plugins:
                     available_plugins.append(class_id)
