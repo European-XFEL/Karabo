@@ -98,7 +98,7 @@ def get_middlelayer_funcs():
 
 
 def get_refactor_funcs():
-    from krbgui.data.api import Hash, read_binary_hash, write_binary_hash
+    from krbdata.data.api import Hash, read_binary_hash, write_binary_hash
 
     return (read_binary_hash, write_binary_hash, Hash)
 
@@ -137,6 +137,7 @@ def main():
     args = parser.parse_args()
     if 1 <= args.api <= 3:
         run_benchmark(args)
+
 
 if __name__ == '__main__':
     main()
