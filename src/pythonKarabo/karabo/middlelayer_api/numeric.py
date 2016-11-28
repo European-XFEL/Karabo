@@ -19,4 +19,4 @@ functions in the :py:mod:`karabo.numeric` module. These are:
 
     See :py:func:`numpy.cross`
 """
-from .numeric_api.unitutil import cross, dot, linspace
+from .unitutil import cross, dot, linspace
