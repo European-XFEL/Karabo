@@ -42,11 +42,9 @@ class Manager(QObject):
     signalReset = pyqtSignal()
     signalUpdateScenes = pyqtSignal()
 
-    signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
     signalShowConfiguration = pyqtSignal(object) # configuration
 
-    signalConflictStateChanged = pyqtSignal(object, bool) # key, hasConflict
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
@@ -205,9 +203,6 @@ class Manager(QObject):
 
             self.signalChangingState.emit(configuration, False)
 
-    def onConflictStateChanged(self, key, hasConflict):
-        self.signalConflictStateChanged.emit(key, hasConflict)
-
     def onNavigationTreeModelSelectionChanged(self, selected, deselect):
         """
         This slot is called whenever something of the navigation panel is selected.
@@ -227,9 +222,6 @@ class Manager(QObject):
             return
 
         self.systemTopology.selectionModel.clear()
-
-    def onNewNavigationItem(self, itemInfo):
-        self.signalNewNavigationItem.emit(itemInfo)
 
     def onShowConfiguration(self, conf):
         # Notify ConfigurationPanel
