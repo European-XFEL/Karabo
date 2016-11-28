@@ -1283,9 +1283,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectBeginUserSession : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
                 if (!checkProjectManagerId(channel, projectManager, "projectBeginUserSession")) return;
-                const std::string& user = info.get<std::string>("user");
-                const std::string& password = info.get<std::string>("password");
-                request(projectManager, "slotBeginUserSession", user, password)
+                const std::string& token = info.get<std::string>("token");
+                request(projectManager, "slotBeginUserSession", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectBeginUserSession", _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectBeginUserSession(): " << e.userFriendlyMsg();
@@ -1298,8 +1297,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectEndUserSession : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
                 if (!checkProjectManagerId(channel, projectManager, "projectEndUserSession")) return;
-                const std::string& user = info.get<std::string>("user");
-                request(projectManager, "slotEndUserSession", user)
+                const std::string& token = info.get<std::string>("token");
+                request(projectManager, "slotEndUserSession", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectEndUserSession", _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectEndUserSession(): " << e.userFriendlyMsg();
@@ -1312,9 +1311,9 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectSaveItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
                 if (!checkProjectManagerId(channel, projectManager, "projectSaveItems")) return;
-                const std::string& user = info.get<std::string>("user");
+                const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
-                request(projectManager, "slotSaveItems", user, items)
+                request(projectManager, "slotSaveItems", token, items)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectSaveItems", _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectSaveItems(): " << e.userFriendlyMsg();
@@ -1327,9 +1326,9 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectLoadItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
                 if (!checkProjectManagerId(channel, projectManager, "projectLoadItems")) return;
-                const std::string& user = info.get<std::string>("user");
+                const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
-                request(projectManager, "slotLoadItems", user, items)
+                request(projectManager, "slotLoadItems", token, items)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectLoadItems", _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectLoadItems(): " << e.userFriendlyMsg();
@@ -1342,9 +1341,9 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectLoadItemsAndSubs : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
                 if (!checkProjectManagerId(channel, projectManager, "projectLoadItemsAndSubs")) return;
-                const std::string& user = info.get<std::string>("user");
+                const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
-                request(projectManager, "slotLoadItemsAndSubs", user, items)
+                request(projectManager, "slotLoadItemsAndSubs", token, items)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectLoadItemsAndSubs", _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectLoadItemsAndSubs(): " << e.userFriendlyMsg();
@@ -1357,9 +1356,9 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectGetVersionInfo : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
                 if (!checkProjectManagerId(channel, projectManager, "projectGetVersionInfo")) return;
-                const std::string& user = info.get<std::string>("user");
+                const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
-                request(projectManager, "slotGetVersionInfo", user, items)
+                request(projectManager, "slotGetVersionInfo", token, items)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectGetVersionInfo", _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectGetVersionInfo(): " << e.userFriendlyMsg();
@@ -1382,10 +1381,10 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
                 if (!checkProjectManagerId(channel, projectManager, "projectListItems")) return;
-                const std::string& user = info.get<std::string>("user");
+                const std::string& token = info.get<std::string>("token");
                 const std::string& domain = info.get<std::string>("domain");
                 const std::vector<std::string>& item_types = info.get<std::vector < std::string >> ("item_types");
-                request(projectManager, "slotListItems", user, domain, item_types)
+                request(projectManager, "slotListItems", token, domain, item_types)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListItems", _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListItems(): " << e.userFriendlyMsg();
@@ -1398,8 +1397,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListDomains : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
                 if (!checkProjectManagerId(channel, projectManager, "projectListDomains")) return;
-                const std::string& user = info.get<std::string>("user");
-                request(projectManager, "slotListDomains", user)
+                const std::string& token = info.get<std::string>("token");
+                request(projectManager, "slotListDomains", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListDomains", _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListItems(): " << e.userFriendlyMsg();
