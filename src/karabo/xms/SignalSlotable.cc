@@ -861,7 +861,10 @@ namespace karabo {
             call("*", "slotPing", m_instanceId, 0, activateTracking);
             // The function slotPingAnswer will be called by all instances available now
             // Lets wait a fair amount of time - huaaah this is bad isn't it :-(
+            // Since we block here for a long time, add a thread to ensure that all slotPingAnswer can be processed.
+            EventLoop::addThread();
             boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+            EventLoop::removeThread();
             boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
             KARABO_LOG_FRAMEWORK_DEBUG << "Available instances: " << m_trackedInstances;
             return m_trackedInstances;
