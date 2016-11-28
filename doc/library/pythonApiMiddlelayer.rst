@@ -54,3 +54,5 @@ Python Middlelayer API
 
 .. automodule:: karabo.middlelayer_api.timestamp
    :members:
+
+.. automodule:: karabo.numeric
