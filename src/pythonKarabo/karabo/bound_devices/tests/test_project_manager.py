@@ -184,7 +184,7 @@ class TestProjectManager(TestCase):
 
         with self.subTest(msg="Test initializing user session"):
             ret = self.ss.request("projManTest", "slotBeginUserSession",
-                                  "admin", "karabo").waitForReply(5000)
+                                  "admin").waitForReply(5000)
             self.assertTrue(ret[0].get("success"))
 
         with self.subTest(msg="Test saving data"):

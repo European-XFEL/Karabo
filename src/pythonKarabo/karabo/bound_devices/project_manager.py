@@ -102,40 +102,41 @@ class ProjectManager(PythonDevice):
         """
         return self.get("host"), self.get("port")
 
-    def slotBeginUserSession(self, user, password):
+    def slotBeginUserSession(self, token):
         """
         Initialize a DB connection for a user
-        :param user: database user
-        :param password: password of user
+        :param token: database user token
         """
+        # XXX: Leave these hardcoded until session tokens are working
+        user, password = "admin", "karabo"
         host, port = self._getCurrentConfig()
         db = ProjectDatabase(user, password,
                              server=host,
                              port=port,
                              test_mode=self.get("testMode"))
-        self.user_db_sessions[user] = db
+        self.user_db_sessions[token] = db
 
         self.log.DEBUG("Initialized user session")
         self.reply(Hash("success", True))
 
-    def slotEndUserSession(self, user):
+    def slotEndUserSession(self, token):
         """
         End a user session
-        :param user: database user
+        :param token: database user token
         """
-        del self.user_db_sessions[user]
+        del self.user_db_sessions[token]
 
         self.log.DEBUG("Ended user session")
         self.reply(Hash("success", True))
 
-    def _checkDbInitialized(self, user):
-        if user not in self.user_db_sessions:
+    def _checkDbInitialized(self, token):
+        if token not in self.user_db_sessions:
             raise RuntimeError("You need to init a database session first")
 
-    def slotSaveItems(self, user, items):
+    def slotSaveItems(self, token, items):
         """
         Save items in project database
-        :param user: database user
+        :param token: database user token
         :param items: items to be save. Should be a list(Hash) object were each
                       entry is of the form:
 
@@ -152,10 +153,10 @@ class ProjectManager(PythonDevice):
 
         self.log.DEBUG("Saving items: {}".format([i.get("uuid") for i in
                                                   items]))
-        self._checkDbInitialized(user)
+        self._checkDbInitialized(token)
 
         savedItems = []
-        with self.user_db_sessions[user] as db_session:
+        with self.user_db_sessions[token] as db_session:
             for item in items:
                 xml = item.get("xml")
                 uuid = item.get("uuid")
@@ -168,11 +169,11 @@ class ProjectManager(PythonDevice):
                 savedItems.append(item)
         self.reply(Hash('items', savedItems))
 
-    def slotLoadItems(self, user, items):
+    def slotLoadItems(self, token, items):
         """
         Loads items from the database
 
-        :param user: database user
+        :param token: database user token
         :param items: list of Hashes containing information on which items
                       to load. Each list entry should be a Hash containing
 
@@ -189,10 +190,10 @@ class ProjectManager(PythonDevice):
         self.log.DEBUG("Loading items: {}"
                        .format([i.get("uuid") for i in items]))
 
-        self._checkDbInitialized(user)
+        self._checkDbInitialized(token)
 
         loadedItems = []
-        with self.user_db_sessions[user] as db_session:
+        with self.user_db_sessions[token] as db_session:
             for item in items:
                 domain = item.get("domain")
                 uuid = item.get("uuid")
@@ -204,11 +205,11 @@ class ProjectManager(PythonDevice):
 
         self.reply(Hash('items', loadedItems))
 
-    def slotLoadItemsAndSubs(self, user, items):
+    def slotLoadItemsAndSubs(self, token, items):
         """
         Loads items from the database - including any sub items.
 
-        :param user: database user
+        :param token: database user token
         :param items: list of Hashes containing information on which items
                       to load. Each list entry should be a Hash containing
 
@@ -225,10 +226,10 @@ class ProjectManager(PythonDevice):
         self.log.DEBUG("Loading multiple: {}"
                        .format([i.get("uuid") for i in items]))
 
-        self._checkDbInitialized(user)
+        self._checkDbInitialized(token)
 
         loadedItems = []
-        with self.user_db_sessions[user] as db_session:
+        with self.user_db_sessions[token] as db_session:
             for item in items:
                 domain = item.get("domain")
                 uuid = item.get("uuid")
@@ -245,11 +246,11 @@ class ProjectManager(PythonDevice):
 
         self.reply(Hash('items', loadedItems))
 
-    def slotGetVersionInfo(self, user, items):
+    def slotGetVersionInfo(self, token, items):
         """
         Retrieve versioning information from the database for a list of items
 
-        :param user: database user
+        :param token: database user token
         :param domain: the item is to be found at
         :param items: list of Hashes containing information on which items
                       to load. Each list entry should be a Hash containing
@@ -272,10 +273,10 @@ class ProjectManager(PythonDevice):
         self.log.DEBUG("Retrieving version info: {}"
                        .format([i.get("uuid") for i in items]))
 
-        self._checkDbInitialized(user)
+        self._checkDbInitialized(token)
 
         versionInfos = Hash()
-        with self.user_db_sessions[user] as db_session:
+        with self.user_db_sessions[token] as db_session:
             for item in items:
                 domain = item.get("domain")
                 uuid = item.get("uuid")
@@ -285,19 +286,20 @@ class ProjectManager(PythonDevice):
 
         self.reply(versionInfos)
 
-    def slotListItems(self, user, domain, item_types=None):
+    def slotListItems(self, token, domain, item_types=None):
         """
         List items in domain which match item_types if given, or all items
         if not given
+        :param token: database user token
         :param domain: domain to list items from
         :param item_types: list or tuple of item_types to list
         :return: a list of Hashes where each entry has keys: uuid, item_type
                  and simple_name
         """
 
-        self._checkDbInitialized(user)
+        self._checkDbInitialized(token)
 
-        with self.user_db_sessions[user] as db_session:
+        with self.user_db_sessions[token] as db_session:
             res = db_session.list_items(domain, item_types)
             resHashes = []
             for r in res:
@@ -309,15 +311,15 @@ class ProjectManager(PythonDevice):
                 resHashes.append(h)
             self.reply(Hash('items', resHashes))
 
-    def slotListDomains(self, user):
+    def slotListDomains(self, token):
         """
         List domains available on this database
-        :param user:
+        :param token: database user token
         :return:
         """
 
-        self._checkDbInitialized(user)
+        self._checkDbInitialized(token)
 
-        with self.user_db_sessions[user] as db_session:
+        with self.user_db_sessions[token] as db_session:
             res = db_session.list_domains()
             self.reply(Hash('domains', res))
