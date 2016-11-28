@@ -63,18 +63,16 @@ class ProjectView(QTreeView):
         clicked_item_model = model_ref()
         if clicked_item_model is not None:
             parent_project = _parent_project(clicked_item_model)
-            is_project = isinstance(clicked_item_model, ProjectModelItem)
-            if parent_project is None or is_project:
-                menu = QMenu(self)
+            menu = clicked_item_model.context_menu(parent_project,
+                                                   parent=self)
+            if parent_project is None:
                 close_action = QAction('Close project', menu)
                 project_model = clicked_item_model.model
                 close_action.triggered.connect(partial(self._close_project,
                                                        project_model,
                                                        parent_project))
                 menu.addAction(close_action)
-            else:
-                menu = clicked_item_model.context_menu(parent_project,
-                                                       parent=self)
+
             menu.exec(QCursor.pos())
 
     def _close_project(self, project, parent_project):
