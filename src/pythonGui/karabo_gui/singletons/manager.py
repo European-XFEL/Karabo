@@ -48,7 +48,6 @@ class Manager(QObject):
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
-    signalLogDataAvailable = pyqtSignal(object) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str)
 
     signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
@@ -360,7 +359,9 @@ class Manager(QObject):
                                           confHash))
 
     def handle_log(self, messages):
-        self.signalLogDataAvailable.emit(messages)
+        data = {'messages': messages}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.LogMessages, data))
 
     def handle_brokerInformation(self, **kwargs):
         get_network()._handleBrokerInformation(**kwargs)
