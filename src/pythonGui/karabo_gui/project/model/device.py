@@ -9,8 +9,11 @@ import weakref
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance, on_trait_change
 
-from karabo.common.project.api import (DeviceInstanceModel, DeviceServerModel,
-                                       find_parent_object)
+from karabo.common.project.api import (
+    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
+    find_parent_object
+)
+from karabo.middlelayer import Hash
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
@@ -27,7 +30,8 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         menu = QMenu(parent)
 
         edit_action = QAction('Edit', menu)
-        edit_action.triggered.connect(self._edit_device)
+        edit_action.triggered.connect(partial(self._edit_device,
+                                              parent_project))
         dupe_action = QAction('Duplicate', menu)
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
@@ -62,8 +66,29 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         if device in server_model.devices:
             server_model.devices.remove(device)
 
-    def _edit_device(self):
-        dialog = DeviceHandleDialog(self.model)
+    def _edit_device(self, project):
+        device = self.model
+        server_model = find_parent_object(device, project,
+                                          DeviceServerModel)
+        dialog = DeviceHandleDialog(server_id=server_model.server_id,
+                                    model=device)
         result = dialog.exec()
         if result == QDialog.Accepted:
-            self.model.instance_id = dialog.instance_id
+            device.instance_id = dialog.instance_id
+            device.if_exists = dialog.if_exists
+
+            # Look for existing DeviceConfigurationModel
+            dev_conf = device.select_config(dialog.active_uuid,
+                                            dialog.active_revision)
+            if dialog.new_config or dev_conf is None:
+                dev_conf = DeviceConfigurationModel(
+                    class_id=dialog.class_id, configuration=Hash(),
+                    description=dialog.description,
+                    initialized=True
+                )
+                device.configs.append(dev_conf)
+                device.active_config_ref = (dev_conf.uuid, dev_conf.revision)
+            else:
+                active_config_ref = (dialog.active_uuid, dialog.active_revision)
+                device.active_config_ref = active_config_ref
+                dev_conf.description = dialog.description
