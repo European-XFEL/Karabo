@@ -33,10 +33,6 @@ class NavigationPanel(Dockable, QWidget):
         """
         self.twNavigation.clear()
 
-    def onNewNavigationItem(self, itemInfo):
-        # itemInfo: id, name, type, (status), (refType), (refId), (schema)
-        self.twNavigation.createNewItem(itemInfo, True)
-
     def onSelectNewNavigationItem(self, devicePath):
         self.twNavigation.selectItem(devicePath)
 
