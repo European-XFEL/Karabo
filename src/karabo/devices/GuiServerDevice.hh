@@ -144,29 +144,41 @@ namespace karabo {
              * 
              * .. table:: ``onRead`` allowed types
              * 
-             *      ======================= =========================
-             *      type                    resulting method call
-             *      ----------------------- -------------------------
-             *      login                   onLogin
-             *      reconfigure             onReconfigure
-             *      execute                 onExecute
-             *      getDeviceConfiguration  onGetDeviceConfiguration
-             *      getDeviceSchema         onGetDeviceSchema
-             *      getClassSchema          onGetClassSchema
-             *      initDevice              onInitDevice
-             *      killServer              onKillServer
-             *      killDevice              onKillDevice
-             *      startMonitoringDevice   onStartMonitoringDevice
-             *      stopMonitoringDevice    onStopMonitoringDevice
-             *      getPropertyHistory      onGetPropertyHistory
-             *      subscribeNetwork        onSubscribeNetwork
-             *      error                   onGuiError
-             *      getAvailableProjects    onGetAvailableProjects
-             *      newProject              onNewProject
-             *      loadProject             onLoadProject
-             *      saveProject             onSaveProject
-             *      closeProject            onCloseProject
-             *      ======================= =========================
+             *      =======================     =========================
+             *      type                        resulting method call
+             *      -----------------------     -------------------------
+             *      login                       onLogin
+             *      reconfigure                 onReconfigure
+             *      execute                     onExecute
+             *      getDeviceConfiguration      onGetDeviceConfiguration
+             *      getDeviceSchema             onGetDeviceSchema
+             *      getClassSchema              onGetClassSchema
+             *      initDevice                  onInitDevice
+             *      killServer                  onKillServer
+             *      killDevice                  onKillDevice
+             *      startMonitoringDevice       onStartMonitoringDevice
+             *      stopMonitoringDevice        onStopMonitoringDevice
+             *      getPropertyHistory          onGetPropertyHistory
+             *      subscribeNetwork            onSubscribeNetwork
+             *      error                       onGuiError
+             *      getAvailableProjects        onGetAvailableProjects
+             *      newProject                  onNewProject
+             *      loadProject                 onLoadProject
+             *      saveProject                 onSaveProject
+             *      closeProject                onCloseProject
+             *      acknowledgeAlarm            onAcknowledgeAlarm
+             *      requestAlarms               onRequestAlarms
+             *      updateAttributes            onUpdateAttributes
+             *      projectBeginUserSession     onProjectBeginUserSession
+             *      projectEndUserSession       onProjectEndUserSession
+             *      projectSaveItems            onProjectSaveItems
+             *      projectLoadItems            onProjectLoadItems
+             *      projectLoadItemsAndSubs     onProjectLoadItemsAndSubs
+             *      projectGetVersionInfo       onProjectGetVersionInfo
+             *      projectListProjectManagers  onProjectListProjectManagers
+             *      projectListItems            onProjectListItems
+             *      projectListDomains          onProjectListDomains
+             *      =======================     =========================
              * 
              * \endverbatim
              * 
@@ -659,13 +671,13 @@ namespace karabo {
             std::vector<std::string> getKnownProjectManagers() const;
 
             /**
-             * Initialize a configuration database session for a user. This user should later always be passed to subsequent database
+             * Initialize a configuration database session for a user.
+             * The token should continue to be passed to subsequent database
              * interactions to identify this session.
              * @param channel from which the request originates
              * @param info is a Hash that should contain:
              *          - projectManager: project manager device to forward request to
-             *          - user: username of the database user
-             *          - password: password for this user
+             *          - token: token of the database user
              * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
              */
             void onProjectBeginUserSession(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
@@ -676,7 +688,7 @@ namespace karabo {
              * @param channel from which the request originates
              * @param info is a Hash that should contain:
              *          - projectManager: project manager device to forward request to
-             *          - user: username of the database user
+             *          - token: token of the database user
              * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
              */
             void onProjectEndUserSession(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
@@ -686,7 +698,7 @@ namespace karabo {
              * @param channel from which the request originates
              * @param info is a Hash that should contain:
              *          - projectManager: project manager device to forward request to
-             *          - user: username of the database user - identifies the session
+             *          - token: token of the database user - identifies the session
              *          - items: a vector of Hashes where each Hash is of the form:
              *                   - xml: xml of the item
              *                   - uuid: uuid of the item
@@ -702,7 +714,7 @@ namespace karabo {
              * @param channel from which the request originates
              * @param info is a Hash that should contain:
              *          - projectManager: project manager device to forward request to
-             *          - user: username of the database user - identifies the session
+             *          - token: token of the database user - identifies the session
              *          - items: a vector of Hashes where each Hash is of the form:
              *                   - uuid: uuid of the item
              *                   - revision (optional): revision to load. If not given the newest revision will be returned
@@ -717,7 +729,7 @@ namespace karabo {
              * @param channel from which the request originates
              * @param info is a Hash that should contain:
              *          - projectManager: project manager device to forward request to
-             *          - user: username of the database user - identifies the session
+             *          - token: token of the database user - identifies the session
              *          - items: a vector of Hashes where each Hash is of the form:
              *                   - uuid: uuid of the item
              *                   - revision (optional): revision to load. If not given the newest revision will be returned
@@ -734,7 +746,7 @@ namespace karabo {
              * @param channel from which the request originates
              * @param info is a Hash that should contain:
              *          - projectManager: project manager device to forward request to
-             *          - user: username of the database user - identifies the session
+             *          - token: token of the database user - identifies the session
              *          - items: a vector of Hashes where each Hash is of the form:
              *                   - uuid: uuid of the item
              *                   - domain: to load this item from.
@@ -758,7 +770,7 @@ namespace karabo {
              * @param channel from which the request originates
              * @param info is a Hash that should contain:
              *          - projectManager: project manager device to forward request to
-             *          - user: username of the database user - identifies the session
+             *          - token: token of the database user - identifies the session
              *          - domain: domain to list items from
              *          - item_types: a vector of strings indicating the itemtypes to filter for.
              * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
@@ -770,7 +782,7 @@ namespace karabo {
              * @param channel from which the request originates
              * @param info is a Hash that should contain:
              *          - projectManager: project manager device to forward request to
-             *          - user: username of the database user - identifies the session
+             *          - token: token of the database user - identifies the session
              * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
              */
             void onProjectListDomains(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
