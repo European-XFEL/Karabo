@@ -24,6 +24,18 @@ class DeviceInstanceModel(HasStrictTraits):
     # UUID/Rev of the currently active configuration
     active_config_ref = Tuple(String, Int)
 
+    def select_config(self, uuid, revision):
+        """ Find the `DeviceConfigurationModel` matching the given `uuid` and
+        `revision`.
+        
+        :param uuid: A UUID as a String
+        :param revision: A revision number as Int
+        :return: The `DeviceConfigurationModel` object, if found, else `None`
+        """
+        for dev_config in self.configs:
+            if (dev_config.uuid, dev_config.revision) == (uuid, revision):
+                return dev_config
+
 
 class DeviceServerModel(BaseProjectObjectModel):
     """ An object representing a device server
