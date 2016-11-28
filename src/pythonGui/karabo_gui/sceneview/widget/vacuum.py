@@ -5,7 +5,7 @@ _VACUUM_CLASS_NAMES = (
     'AgilentIonWidget', 'CryoCoolerWidget', 'HydraulicValveWidget',
     'LampWidget', 'MaxiGaugeWidget', 'MembranePumpWidget', 'MotorWidget',
     'PressureGaugeWidget', 'PressureSwitchWidget', 'RightAngleValveWidget',
-    'ShutOffValveWidget', 'TemperatureProbeWidget', 'TurboPumpWidget'
+    'ShutOffValveWidget', 'TemperatureProbeWidget', 'TurboPumpWidget',
     'ValveWidget'
     )
 
