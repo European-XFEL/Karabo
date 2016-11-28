@@ -27,6 +27,8 @@ class BaseProjectObjectModel(HasStrictTraits):
     # Version and unique id
     revision = Int(transient=True)
     uuid = String
+    # Per-revision alias (for the humans!)
+    alias = String(transient=True)
 
     # Database-provided attributes which need to be preserved
     db_attrs = Dict(transient=True)
