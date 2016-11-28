@@ -26,16 +26,10 @@ class ProjectModelItem(BaseProjectTreeItem):
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
-        close_action = QAction('Close project', menu)
-        menu.addAction(close_action)
-
-        # If this project is the top of the hierarchy, its parent must be None
-        # In that case, do NOT add a 'Delete' action
-        if parent_project is not None:
-            delete_action = QAction('Delete', menu)
-            delete_action.triggered.connect(partial(self._delete_project,
-                                                    parent_project))
-            menu.addAction(delete_action)
+        delete_action = QAction('Delete', menu)
+        delete_action.triggered.connect(partial(self._delete_project,
+                                                parent_project))
+        menu.addAction(delete_action)
 
         return menu
 

@@ -36,9 +36,14 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
                                                 parent_project))
+        instantiate_action = QAction('Instantiate', menu)
+        shutdown_action = QAction('Shutdown', menu)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
+        menu.addSeparator()
+        menu.addAction(instantiate_action)
+        menu.addAction(shutdown_action)
         return menu
 
     def create_qt_item(self):

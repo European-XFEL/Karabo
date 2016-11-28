@@ -46,12 +46,16 @@ class DeviceServerModelItem(BaseProjectTreeItem):
                                                 parent_project))
         add_action = QAction('Add device', menu)
         add_action.triggered.connect(self._add_device)
+        instantiate_action = QAction('Instantiate all devices', menu)
+        shutdown_action = QAction('Shutdown all devices')
         remove_all_action = QAction('Delete all devices', menu)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
         menu.addSeparator()
         menu.addAction(add_action)
+        menu.addAction(instantiate_action)
+        menu.addAction(shutdown_action)
         menu.addAction(remove_all_action)
         return menu
 
