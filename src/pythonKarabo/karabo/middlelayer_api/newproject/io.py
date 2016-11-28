@@ -113,8 +113,9 @@ def _db_metadata_reader(metadata):
     """ Read the traits which are common to all BaseProjectObjectModel objects
     """
     attrs = {
-        'revision': int(metadata['revision']),
         'uuid': metadata['uuid'],
+        'revision': int(metadata['revision']),
+        'alias': metadata['alias'],
         'simple_name': metadata['simple_name'],
         'description': metadata['description'],
         'db_attrs': {k: metadata.get(k, '') for k in ('key', 'path')},
@@ -239,6 +240,7 @@ def _model_db_metadata(model):
     attrs = model.db_attrs.copy()
     attrs['uuid'] = model.uuid
     attrs['revision'] = str(model.revision)
+    attrs['alias'] = model.alias
     attrs['simple_name'] = model.simple_name
     attrs['description'] = model.description
     return attrs
