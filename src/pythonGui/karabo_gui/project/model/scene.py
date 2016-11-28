@@ -9,10 +9,11 @@ import weakref
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance
 
-from karabo.common.scenemodel.api import SceneModel
+from karabo.common.scenemodel.api import SceneModel, write_scene
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
+from karabo_gui.util import getSaveFileName
 from .bases import BaseProjectTreeItem
 
 
@@ -31,6 +32,7 @@ class SceneModelItem(BaseProjectTreeItem):
         delete_action.triggered.connect(partial(self._delete_scene,
                                                 parent_project))
         save_as_action = QAction('Save As...', menu)
+        save_as_action.triggered.connect(self._save_scene)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
@@ -60,3 +62,18 @@ class SceneModelItem(BaseProjectTreeItem):
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
+
+    def _save_scene(self):
+        scene = self.model
+        fn = getSaveFileName(caption='Save scene to file',
+                             filter='SVG (*.svg)',
+                             suffix='svg',
+                             selectFile=scene.simple_name)
+        if not fn:
+            return
+
+        if not fn.endswith('.svg'):
+            fn = '{}.svg'.format(fn)
+
+        with open(fn, 'wb') as fout:
+            fout.write(write_scene(scene))

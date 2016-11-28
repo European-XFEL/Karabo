@@ -9,10 +9,11 @@ import weakref
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance
 
-from karabo.common.project.api import MacroModel
+from karabo.common.project.api import MacroModel, write_macro
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
+from karabo_gui.util import getSaveFileName
 from .bases import BaseProjectTreeItem
 
 
@@ -30,9 +31,13 @@ class MacroModelItem(BaseProjectTreeItem):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_macro,
                                                 parent_project))
+        save_as_action = QAction('Save As...', menu)
+        save_as_action.triggered.connect(self._save_macro)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
+        menu.addSeparator()
+        menu.addAction(save_as_action)
         return menu
 
     def create_qt_item(self):
@@ -57,3 +62,18 @@ class MacroModelItem(BaseProjectTreeItem):
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
+
+    def _save_macro(self):
+        macro = self.model
+        fn = getSaveFileName(caption='Save macro to file',
+                             filter='Python Macro (*.py)',
+                             suffix='py',
+                             selectFile=macro.simple_name)
+        if not fn:
+            return
+
+        if not fn.endswith('.py'):
+            fn = '{}.py'.format(fn)
+
+        with open(fn, 'w') as fout:
+            fout.write(write_macro(macro))
