@@ -809,7 +809,7 @@ def execute(device, slot):
     if isinstance(device, Proxy):
         device = device._deviceId
     assert isinstance(slot, str)
-    yield from get_instance().call("device", slot)
+    return (yield from get_instance().call(device, slot))
 
 
 @synchronize

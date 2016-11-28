@@ -9,10 +9,10 @@ import weakref
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    AlarmCondition, Configurable, connectDevice, Device, DeviceNode, Float,
-    getDevice, Hash, Int32, KaraboError, lock, MetricPrefix, Node, setNoWait,
-    setWait, Slot, State, String, unit, Unit, VectorChar, VectorInt16,
-    VectorString, VectorFloat, waitUntil, waitUntilNew)
+    AlarmCondition, Configurable, connectDevice, Device, DeviceNode, execute,
+    Float, getDevice, Hash, Int32, KaraboError, lock, MetricPrefix, Node,
+    setNoWait, setWait, Slot, State, String, unit, Unit, VectorChar,
+    VectorInt16, VectorString, VectorFloat, waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.device_client import Queue
 
@@ -154,10 +154,16 @@ class Tests(DeviceTest):
     @async_tst
     def test_execute(self):
         """test the execution of remote slots"""
-        self.assertFalse(self.remote.done)
+        self.remote.done = False
         with (yield from getDevice("remote")) as d:
             yield from d.doit()
         yield from sleep(0.1)
+        self.assertTrue(self.remote.done)
+
+    @async_tst
+    def test_execute_noproxy(self):
+        self.remote.done = False
+        yield from execute("remote", "doit")
         self.assertTrue(self.remote.done)
 
     @async_tst
