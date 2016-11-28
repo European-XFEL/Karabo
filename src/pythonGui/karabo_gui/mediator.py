@@ -14,6 +14,7 @@ class KaraboEventSender(Enum):
     ConnectMacroInstance = "Connect macro instance"
     DeviceInitReply = "Device instantiate reply"
     LogMessages = "Log messages"
+    NotificationMessage = "Notification message"
     OpenMacro = "Open macro"
     OpenSceneLink = "Scene link"
     OpenSceneView = "Open scene view"

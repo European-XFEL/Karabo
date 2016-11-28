@@ -48,8 +48,6 @@ class Manager(QObject):
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
-    signalNotificationAvailable = pyqtSignal(str, str, str, str)
-
     signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
     signalProjectLoaded = pyqtSignal(str, object, object) # projectName, metaData, data
     signalProjectSaved = pyqtSignal(str, bool, object) # projectName, success, data
@@ -614,9 +612,13 @@ class Manager(QObject):
 
     # ---------------------------------------------------------------------
 
-    def handle_notification(self, deviceId, messageType, shortMsg, detailedMsg):
-        self.signalNotificationAvailable.emit(deviceId, messageType, shortMsg,
-                                              detailedMsg)
+    def handle_notification(self, device, message, short, detailed):
+        data = {'device_id': device,
+                'message_type': message,
+                'short_msg': short,
+                'detailed_msg': detailed}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.NotificationMessage, data))
 
     def handle_networkData(self, name, data):
         deviceId, property = name.split(":")
