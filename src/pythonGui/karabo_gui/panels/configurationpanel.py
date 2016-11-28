@@ -88,11 +88,8 @@ class ConfigurationPanel(Dockable, QWidget):
         vLayout.addWidget(splitTopPanes)
 
         manager = get_manager()
-        manager.signalNewNavigationItem.connect(self.onNewNavigationItem)
         manager.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         manager.signalShowConfiguration.connect(self.onShowConfiguration)
-        
-        manager.signalConflictStateChanged.connect(self.onConflictStateChanged)
         manager.signalChangingState.connect(self.onChangingState)
         manager.signalErrorState.connect(self.onErrorState)
         manager.signalReset.connect(self.onResetPanel)
@@ -513,12 +510,6 @@ class ConfigurationPanel(Dockable, QWidget):
             self._removeParameterEditorPage(self.__swParameterEditor
                                     .widget(self.__swParameterEditor.count()-1))
 
-
-    def onNewNavigationItem(self, itemInfo):
-        # itemInfo: id, name, type, (status), (refType), (refId), (schema)
-        self.twNavigation.createNewItem(itemInfo)
-
-
     def onSelectNewNavigationItem(self, devicePath):
         self.twNavigation.selectItem(devicePath)
 
@@ -558,22 +549,6 @@ class ConfigurationPanel(Dockable, QWidget):
             self.prevConfiguration.removeVisible()
 
         self.showParameterPage(configuration)
-
-
-    def onConflictStateChanged(self, deviceId, hasConflict):
-        conf = get_manager().deviceData.get(deviceId)
-        if conf is None:
-            return
-
-        if conf.parameterEditor is None:
-            return
-
-        result = conf.parameterEditor.checkApplyButtonsEnabled()
-        self.pbApplyAll.setEnabled(result[0])
-        self.pbResetAll.setEnabled(result[0])
-        if result[1] == hasConflict:
-            self.hasConflicts = hasConflict
-
 
     def onChangingState(self, conf, isChanging):
         if not hasattr(conf, "timer"):
