@@ -81,7 +81,7 @@ if [ -e DEPENDS ]; then cp DEPENDS $PACKAGEDIR; fi
 if [ -e $(pwd)/custom.sh ]; then $(pwd)/custom.sh; fi
 
 cd $PACKAGEDIR/../
-safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz $PACKAGENAME/$PLUGINNAME"
+safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz $PACKAGENAME"
 
 # Create installation script
 echo -e '#!/bin/bash\n'"VERSION=$VERSION\nPLUGINNAME=$PLUGINNAME\nKARABOVERSION=$KARABOVERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
