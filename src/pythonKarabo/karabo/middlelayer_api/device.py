@@ -86,7 +86,6 @@ class Device(AlarmMixin, SignalSlotable):
                displayedName="Logger",
                requiredAccessLevel=AccessLevel.EXPERT)
 
-    signalAlarmUpdate = Signal(String(), Hash())
     signalChanged = Signal(HashType(), String())
     signalStateChanged = Signal(HashType(), String())
     signalSchemaUpdated = Signal(SchemaHashType(), String())
