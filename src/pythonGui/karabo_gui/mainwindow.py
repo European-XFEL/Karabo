@@ -61,10 +61,20 @@ class MainWindow(QMainWindow):
         # object and `self` are being destroyed when the GUI exists
         register_for_broadcasts(self)
 
+    def closeEvent(self, event):
+        if not self._quit():
+            event.ignore()
+            return
+
+        event.accept()
+        QMainWindow.closeEvent(self, event)
+
     def eventFilter(self, obj, event):
         if isinstance(event, KaraboBroadcastEvent):
             sender = event.sender
-            if sender is KaraboEventSender.OpenSceneView:
+            if sender is KaraboEventSender.DeviceDataReceived:
+                self._updateScenes()
+            elif sender is KaraboEventSender.OpenSceneView:
                 data = event.data
                 self.addSceneView(data.get('model'), data.get('project'))
                 return False
@@ -438,25 +448,6 @@ class MainWindow(QMainWindow):
         for instId in instanceIds:
             self._removeAlarmPanel(instId)
 
-    def closeEvent(self, event):
-        if not self._quit():
-            event.ignore()
-            return
-
-        event.accept()
-        QMainWindow.closeEvent(self, event)
-
-    @pyqtSlot()
-    def onExit(self):
-        if not self._quit():
-            return
-        qApp.quit()
-
-    @pyqtSlot()
-    def onHelpAbout(self):
-        # TODO: add about dialog for karabo including version etc.
-        print("onHelpAbout")
-
     def addSceneView(self, sceneModel, project):
         """ Add a scene view to show the content of the given `sceneModel in
             the GUI.
@@ -492,6 +483,23 @@ class MainWindow(QMainWindow):
         divWidget = self.middleTab.addDockableTab(
             macroPanel, macroModel.title, self)
         self.selectTabWindow(self.middleTab, divWidget)
+
+    def _updateScenes(self):
+        for divWidget in self.middleTab.divWidgetList:
+            scene_view = getattr(divWidget.dockableWidget, 'scene_view', None)
+            if scene_view is not None and scene_view.isVisible():
+                scene_view.update()
+
+    @pyqtSlot()
+    def onExit(self):
+        if not self._quit():
+            return
+        qApp.quit()
+
+    @pyqtSlot()
+    def onHelpAbout(self):
+        # TODO: add about dialog for karabo including version etc.
+        print("onHelpAbout")
 
     @pyqtSlot(object)
     def onChangeAccessLevel(self, action):
@@ -556,13 +564,6 @@ class MainWindow(QMainWindow):
             self.acOperator.setChecked(False)
             self.acUser.setChecked(False)
             self.acObserver.setChecked(False)
-
-    @pyqtSlot()
-    def onUpdateScenes(self):
-        for divWidget in self.middleTab.divWidgetList:
-            scene_view = getattr(divWidget.dockableWidget, 'scene_view', None)
-            if scene_view is not None and scene_view.isVisible():
-                scene_view.update()
 
     @pyqtSlot(object)
     def onTabMaximized(self, tabWidget):

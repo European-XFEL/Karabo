@@ -63,8 +63,6 @@ def handle_device_state_change(box, value, timestamp):
 
 class Manager(QObject):
     # signals
-    signalUpdateScenes = pyqtSignal()
-
     signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
     signalProjectLoaded = pyqtSignal(str, object, object) # projectName, metaData, data
     signalProjectSaved = pyqtSignal(str, bool, object) # projectName, success, data
@@ -362,6 +360,13 @@ class Manager(QObject):
         project.addConfiguration(conf.id, ProjectConfiguration(project, name,
                                           confHash))
 
+    def _deviceDataReceived(self):
+        """Notify all listeners that some (class, schema, or config) data was
+        received.
+        """
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.DeviceDataReceived, {}))
+
     def handle_log(self, messages):
         data = {'messages': messages}
         broadcast_event(KaraboBroadcastEvent(
@@ -503,7 +508,7 @@ class Manager(QObject):
         # Notify ConfigurationPanel
         self.onShowConfiguration(conf)
         # Trigger update scenes
-        self.signalUpdateScenes.emit()
+        self._deviceDataReceived()
 
     def handle_deviceSchema(self, deviceId, schema):
         if deviceId not in self.deviceData:
@@ -522,7 +527,7 @@ class Manager(QObject):
 
         self.onShowConfiguration(conf)
         # Trigger update scenes
-        self.signalUpdateScenes.emit()
+        self._deviceDataReceived()
 
     def handle_deviceConfiguration(self, deviceId, configuration):
         device = self.deviceData.get(deviceId)
@@ -534,7 +539,7 @@ class Manager(QObject):
         if device.status == "schema":
             device.status = "alive"
             # Trigger update scenes - to draw possible Workflow Connections
-            self.signalUpdateScenes.emit()
+            self._deviceDataReceived()
         if device.status == "alive" and device.visible > 0:
             device.status = "monitoring"
 
