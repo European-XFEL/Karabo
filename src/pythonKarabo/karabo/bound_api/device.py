@@ -602,7 +602,7 @@ class PythonDevice(NoFsm):
 
         return Hash("toClear", toClear, "toAdd", toAdd)
 
-    def slotResubmitAlarms(self, existingAlarms):
+    def slotReSubmitAlarms(self, existingAlarms):
         """
         This slot is called by the alarm service when it gets  (re-)
         instantiated. The alarm service will pass any for this instances that
@@ -1025,7 +1025,7 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDevice)
         self._ss.registerSlot(self.slotUpdateSchemaAttributes)
-        self._ss.registerSlot(self.slotResubmitAlarms)
+        self._ss.registerSlot(self.slotReSubmitAlarms)
         # timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
         self._ss.registerSlot(self.slotLoggerPriority)
