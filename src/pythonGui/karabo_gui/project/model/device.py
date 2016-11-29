@@ -115,11 +115,8 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         uuid, revision = device.active_config_ref
         dev_conf = device.select_config(uuid, revision)
         if dev_conf is not None:
-            server_id = server.server_id
-            instance_id = device.instance_id
-            class_id = dev_conf.class_id
-            config = dev_conf.configuration
-            get_manager().initDevice(server_id, class_id, instance_id, config)
+            get_manager().initDevice(server.server_id, dev_conf.class_id,
+                                     device.instance_id, dev_conf.configuration)
 
     def shutdown_device(self, show_confirm=True):
         device = self.model
