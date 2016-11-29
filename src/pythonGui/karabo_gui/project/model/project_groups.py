@@ -174,6 +174,7 @@ def _load_macro(project):
     macro_model = read_macro(fn)
     # Set the scene model title
     macro_model.simple_name = op.splitext(op.basename(fn))[0]
+    macro_model.modified = True
     project.macros.append(macro_model)
 
 
@@ -194,6 +195,7 @@ def _load_scene(project):
     # Read SceneModel
     scene_model = read_scene(fn)
     scene_model.simple_name = op.splitext(op.basename(fn))[0]
+    scene_model.modified = True
     project.scenes.append(scene_model)
 
 
