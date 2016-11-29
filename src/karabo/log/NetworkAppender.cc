@@ -40,7 +40,7 @@ namespace karabo {
             STRING_ELEMENT(s).key("topic")
                     .displayedName("Topic")
                     .description("The topic on which the log messages should be published")
-                    .assignmentOptional().defaultValue("karabo_log")
+                    .assignmentOptional().noDefaultValue()
                     .commit();
         }
 

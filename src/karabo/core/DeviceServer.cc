@@ -184,7 +184,12 @@ namespace karabo {
 
         void DeviceServer::loadLogger(const Hash& input) {
 
-            const Hash& config = input.get<Hash>("Logger");
+            Hash config = input.get<Hash>("Logger");
+
+            if (!config.has("network.topic")) {
+                // If not specified, use the local topic for log messages
+                config.set("network.topic", m_topic);
+            }
 
             Logger::configure(config);
 
