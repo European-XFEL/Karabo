@@ -834,10 +834,10 @@ class Tests(DeviceTest):
         yield from self.local.alarm_future
         ah = self.local.alarmhash
         self.assertFalse(ah["toClear"])
-        self.assertEqual(ah["toAdd.alarm.type"], "warnLow")
-        self.assertEqual(ah["toAdd.alarm.description"],
+        self.assertEqual(ah["toAdd.alarm.warnLow.type"], "warnLow")
+        self.assertEqual(ah["toAdd.alarm.warnLow.description"],
                          "When they go low, we go high")
-        self.assertTrue(ah["toAdd.alarm.needsAcknowledging"])
+        self.assertTrue(ah["toAdd.alarm.warnLow.needsAcknowledging"])
         self.remote.alarm = 11
         self.remote.update()
         self.local.alarm_future = Future()

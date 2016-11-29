@@ -50,13 +50,13 @@ class AlarmMixin(Configurable):
                 if old is not AlarmCondition.NONE:
                     toClear.setdefault(prop, []).append(old.value)
             else:
-                toAdd[prop] = Hash(
+                toAdd[prop] = Hash(cond.value, Hash(
                     "type", cond.value,
                     "description",
                     getattr(desc, "alarmInfo_{}".format(cond.value), ""),
                     "needsAcknowledging",
-                    getattr(desc, "alarmNeedsAck_{}".format(cond.value), ""))
-                toAdd[prop, ...] = timestamp.toDict()
+                    getattr(desc, "alarmNeedsAck_{}".format(cond.value), "")))
+                toAdd[prop][cond.value, ...] = timestamp.toDict()
         self._old_alarms = {}
         self._changed_alarms = set()
         if toAdd or toClear:
