@@ -43,7 +43,6 @@ class Manager(QObject):
     signalUpdateScenes = pyqtSignal()
 
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
-    signalShowConfiguration = pyqtSignal(object) # configuration
 
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
@@ -221,8 +220,10 @@ class Manager(QObject):
         self.systemTopology.selectionModel.clear()
 
     def onShowConfiguration(self, conf):
-        # Notify ConfigurationPanel
-        self.signalShowConfiguration.emit(conf)
+        # Notify listeners
+        data = {'configuration': conf}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.ShowConfiguration, data))
 
     def currentConfigurationAndClassId(self):
         """

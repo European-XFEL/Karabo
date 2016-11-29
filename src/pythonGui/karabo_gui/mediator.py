@@ -29,6 +29,7 @@ class KaraboEventSender(Enum):
     ProjectItemsLoaded = "Project items loaded"
     ProjectItemsSaved = "Project items saved"
     ShowAlarmServices = "Show alarm services"
+    ShowConfiguration = "Show configuration"
     ShowDevice = "Show device"
 
 
