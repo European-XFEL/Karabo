@@ -17,6 +17,7 @@ from karabo.middlelayer import Hash
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
+from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager
 from .bases import BaseProjectTreeItem
 
@@ -37,6 +38,8 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
                                                 parent_project))
+        save_action = QAction('Save', menu)
+        save_action.triggered.connect(self._save_device)
         instantiate_action = QAction('Instantiate', menu)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      parent_project))
@@ -45,6 +48,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
+        menu.addAction(save_action)
         menu.addSeparator()
         menu.addAction(instantiate_action)
         menu.addAction(shutdown_action)
@@ -101,6 +105,9 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
                 active_config_ref = (dialog.active_uuid, dialog.active_revision)
                 device.active_config_ref = active_config_ref
                 dev_conf.description = dialog.description
+
+    def _save_device(self):
+        save_object(self.model)
 
     def _instantiate_device(self, project):
         server = find_parent_object(self.model, project, DeviceServerModel)
