@@ -77,9 +77,9 @@ PYTHON_FIXER_SCRIPT=$(pwd)/.fix-python-scripts.sh
 PACKAGEDIR=$BASEDIR/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
-# Always clean the bundle
-if [ -d $BASEDIR/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE ]; then
-    rm -rf $BASEDIR/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE
+# Carefully clean the bundle
+if [ -d $PACKAGEDIR ]; then
+    rm -rf $PACKAGEDIR/activate $PACKAGEDIR/extern $PACKAGEDIR/include $PACKAGEDIR/lib $PACKAGEDIR/bin
 fi
 rm -f $BASEDIR/karabo
 
