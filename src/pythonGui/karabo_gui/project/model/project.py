@@ -3,7 +3,6 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from functools import partial
 import weakref
 
 from PyQt4.QtGui import QAction, QMenu, QStandardItem
@@ -31,11 +30,7 @@ class ProjectModelItem(BaseProjectTreeItem):
         # In that case, do NOT add a 'Delete' action
         if parent_project is not None:
             edit_action = QAction('Edit', menu)
-            delete_action = QAction('Delete', menu)
-            delete_action.triggered.connect(partial(self._delete_project,
-                                                    parent_project))
             menu.addAction(edit_action)
-            menu.addAction(delete_action)
 
         return menu
 
@@ -54,10 +49,3 @@ class ProjectModelItem(BaseProjectTreeItem):
 
     # ----------------------------------------------------------------------
     # action handlers
-
-    def _delete_project(self, parent_project):
-        """ Remove the project associated with this item from its project
-        """
-        project = self.model
-        if project in parent_project.subprojects:
-            parent_project.subprojects.remove(project)
