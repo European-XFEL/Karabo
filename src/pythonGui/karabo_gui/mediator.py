@@ -13,6 +13,8 @@ class KaraboEventSender(Enum):
     AlarmDeviceUpdate = "Alarm device update"
     ConnectMacroInstance = "Connect macro instance"
     DeviceInitReply = "Device instantiate reply"
+    DeviceErrorChanged = "Device error state changed"
+    DeviceStateChanged = "Device state changed"
     LogMessages = "Log messages"
     NotificationMessage = "Notification message"
     OpenMacro = "Open macro"
