@@ -297,6 +297,7 @@ class LogWidget(QWidget):
                for i, log in enumerate(logData, start=self.tailindex + 1)]
         self.tailindex += len(logData)
         self.logs.extend(new)
+
         for log in self.filter(new):
             self.queryModel.add(log)
         self.prune()
@@ -461,7 +462,7 @@ class LogQueryModel(QAbstractTableModel):
                 hi = mid
             else:
                 lo = mid + 1
-        self.beginInsertRows(QModelIndex(), lo, lo + 1)
+        self.beginInsertRows(QModelIndex(), lo, lo)
         self.filtered.insert(lo, data)
         self.endInsertRows()
 
