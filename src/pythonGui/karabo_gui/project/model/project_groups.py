@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from functools import partial
+import os.path as op
 import weakref
 
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
@@ -12,12 +13,14 @@ from traits.api import Callable, Dict, Instance, List, String
 from karabo.common.project.api import (DeviceServerModel, MacroModel,
                                        ProjectModel)
 from karabo.common.scenemodel.api import SceneModel
+from karabo.middlelayer import read_macro, read_scene
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
+from karabo_gui.util import getOpenFileName
 from .bases import BaseProjectTreeItem
 
 
@@ -123,6 +126,7 @@ def _fill_macros_menu(menu, parent_project):
     add_action = QAction('Add macro', menu)
     add_action.triggered.connect(partial(_add_macro, parent_project))
     load_action = QAction('Load macro...', menu)
+    load_action.triggered.connect(partial(_load_macro, parent_project))
     menu.addAction(add_action)
     menu.addAction(load_action)
 
@@ -130,19 +134,16 @@ def _fill_macros_menu(menu, parent_project):
 def _fill_scenes_menu(menu, parent_project):
     add_action = QAction('Add scene', menu)
     add_action.triggered.connect(partial(_add_scene, parent_project))
-    open_action = QAction('Load scene...', menu)
+    load_action = QAction('Load scene...', menu)
+    load_action.triggered.connect(partial(_load_scene, parent_project))
     menu.addAction(add_action)
-    menu.addAction(open_action)
+    menu.addAction(load_action)
 
 
 def _fill_servers_menu(menu, parent_project):
     add_action = QAction('Add server', menu)
     add_action.triggered.connect(partial(_add_server, parent_project))
-    remove_all_action = QAction('Delete all', menu)
-    remove_selected_action = QAction('Delete selected', menu)
     menu.addAction(add_action)
-    menu.addAction(remove_all_action)
-    menu.addAction(remove_selected_action)
 
 
 def _fill_subprojects_menu(menu, parent_project):
@@ -165,6 +166,18 @@ def _add_macro(project):
         project.macros.append(macro)
 
 
+def _load_macro(project):
+    fn = getOpenFileName(caption='Load macro', filter='Python Macros (*.py)')
+    if not fn:
+        return
+    # Read MacroModel
+    macro_model = read_macro(fn)
+    # Set the scene model title
+    macro_model.simple_name = op.splitext(op.basename(fn))[0]
+    macro_model.modified = True
+    project.macros.append(macro_model)
+
+
 def _add_scene(project):
     """ Add a scene to the associated project
     """
@@ -173,6 +186,17 @@ def _add_scene(project):
         # XXX: TODO check for existing
         scene = SceneModel(simple_name=dialog.simple_name, initialized=True)
         project.scenes.append(scene)
+
+
+def _load_scene(project):
+    fn = getOpenFileName(caption='Load scene', filter='SVG Files (*.svg)')
+    if not fn:
+        return
+    # Read SceneModel
+    scene_model = read_scene(fn)
+    scene_model.simple_name = op.splitext(op.basename(fn))[0]
+    scene_model.modified = True
+    project.scenes.append(scene_model)
 
 
 def _add_server(project):

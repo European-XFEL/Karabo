@@ -155,20 +155,22 @@ class Manager(QObject):
 
     def shutdownDevice(self, deviceId, showConfirm=True):
         if showConfirm:
-            reply = QMessageBox.question(None, 'Shutdown device',
-                "Do you really want to shutdown the device \"<b>{}</b>\"?".format(deviceId),
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
+            ask = ('Do you really want to shutdown the device \"<b>{}</b>\"?'
+                   ).format(deviceId)
+            reply = QMessageBox.question(None, 'Shutdown device', ask,
+                                         QMessageBox.Yes | QMessageBox.No,
+                                         QMessageBox.No)
             if reply == QMessageBox.No:
                 return
 
         get_network().onKillDevice(deviceId)
 
     def shutdownServer(self, serverId):
-        reply = QMessageBox.question(None, 'Shutdown device server',
-            "Do you really want to shutdown the device server \"<b>{}</b>\"?".format(serverId),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
+        ask = ('Do you really want to shutdown the server \"<b>{}</b>\"?'
+               ).format(serverId)
+        reply = QMessageBox.question(None, 'Shutdown server', ask,
+                                     QMessageBox.Yes | QMessageBox.No,
+                                     QMessageBox.No)
         if reply == QMessageBox.No:
             return
 

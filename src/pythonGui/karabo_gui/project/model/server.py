@@ -6,7 +6,7 @@
 from functools import partial
 import weakref
 
-from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
+from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox, QStandardItem
 from traits.api import Callable, Dict, Instance, List, on_trait_change
 
 from karabo.common.project.api import (
@@ -16,6 +16,7 @@ from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
+from karabo_gui.singletons.api import get_manager
 from .bases import BaseProjectTreeItem
 from .device import DeviceInstanceModelItem
 
@@ -44,14 +45,24 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_server,
                                                 parent_project))
+        shutdown_action = QAction('Shutdown', menu)
+        shutdown_action.triggered.connect(self._shutdown_server)
         add_action = QAction('Add device', menu)
         add_action.triggered.connect(self._add_device)
+        instantiate_all_action = QAction('Instantiate all devices', menu)
+        instantiate_all_action.triggered.connect(self._instantiate_devices)
+        shutdown_all_action = QAction('Shutdown all devices', menu)
+        shutdown_all_action.triggered.connect(self._shutdown_devices)
         remove_all_action = QAction('Delete all devices', menu)
+        remove_all_action.triggered.connect(self._delete_all_devices)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
+        menu.addAction(shutdown_action)
         menu.addSeparator()
         menu.addAction(add_action)
+        menu.addAction(instantiate_all_action)
+        menu.addAction(shutdown_all_action)
         menu.addAction(remove_all_action)
         return menu
 
@@ -144,6 +155,10 @@ class DeviceServerModelItem(BaseProjectTreeItem):
             self.model.host = dialog.host
             self.model.description = dialog.description
 
+    def _shutdown_server(self):
+        server = self.model
+        get_manager().shutdownServer(server.server_id)
+
     def _add_device(self):
         """ Add a device to this server
         """
@@ -164,3 +179,24 @@ class DeviceServerModelItem(BaseProjectTreeItem):
             }
             device = DeviceInstanceModel(**traits)
             self.model.devices.append(device)
+
+    def _delete_all_devices(self):
+        server = self.model
+        ask = ('Do you really want to delete all devices of server '
+               '\"<b>{}</b>\"?').format(server.simple_name)
+        reply = QMessageBox.question(None, 'Delete all devices', ask,
+                                     QMessageBox.Yes | QMessageBox.No,
+                                     QMessageBox.No)
+        if reply == QMessageBox.No:
+            return
+
+        server.devices[:] = []
+
+    def _instantiate_devices(self):
+        server = self.model
+        for dev_inst_item in self.children:
+            dev_inst_item.instantiate(server)
+
+    def _shutdown_devices(self):
+        for dev_inst_item in self.children:
+            dev_inst_item.shutdown_device(show_confirm=False)
