@@ -175,6 +175,11 @@ safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 
+# Activation script
+cd $BASEDIR
+sed "s%__VENV_DIR__%$BASEDIR/karabo%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
+cd -
+
 # bundle scripts for plugin packages
 cd ../karabo
 cp .bundle-cppplugin.sh .bundle-pythonplugin.sh $PACKAGEDIR/bin
