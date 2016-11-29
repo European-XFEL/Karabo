@@ -14,9 +14,12 @@ from karabo.common.project.api import (
     find_parent_object
 )
 from karabo.middlelayer import Hash
+from karabo.middlelayer_api.newproject.io import (read_project_model,
+                                                  write_project_model)
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
+from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager
 from .bases import BaseProjectTreeItem
@@ -35,10 +38,14 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         edit_action.triggered.connect(partial(self._edit_device,
                                               parent_project))
         dupe_action = QAction('Duplicate', menu)
+        dupe_action.triggered.connect(partial(self._duplicate_device,
+                                              parent_project))
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
                                                 parent_project))
         save_action = QAction('Save', menu)
+        # XXX TODO other solution due to the fact that DeviceInstanceModel
+        # is not BaseProjectObjectModel
         save_action.triggered.connect(partial(save_object, self.model))
         instantiate_action = QAction('Instantiate', menu)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
@@ -105,6 +112,21 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
                 active_config_ref = (dialog.active_uuid, dialog.active_revision)
                 device.active_config_ref = active_config_ref
                 dev_conf.description = dialog.description
+
+    def _duplicate_device(self, project):
+        device = self.model
+        server_model = find_parent_object(device, project,
+                                          DeviceServerModel)
+        dialog = ObjectDuplicateDialog(device.instance_id)
+        if dialog.exec() == QDialog.Accepted:
+            # XXX TODO other solution due to the fact that DeviceInstanceModel
+            # is not BaseProjectObjectModel
+            xml = write_project_model(device)
+            dupe_names = dialog.duplicate_names
+            for simple_name in dupe_names:
+                dupe_device = read_project_model(xml)
+                dupe_device.simple_name = simple_name
+                server_model.devices.append(dupe_device)
 
     def _instantiate_device(self, project):
         server = find_parent_object(self.model, project, DeviceServerModel)
