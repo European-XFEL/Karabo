@@ -156,7 +156,3 @@ class Device(AlarmMixin, SignalSlotable):
     def _notifyNewSchema(self):
         """Notfiy the network that our schema has changed"""
         self.signalSchemaUpdated(self.getDeviceSchema(), self.deviceId)
-
-    @slot
-    def slotReSubmitAlarms(self, existingAlarms):
-        return self.deviceId, Hash()
