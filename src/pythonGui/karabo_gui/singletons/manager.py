@@ -63,7 +63,6 @@ def handle_device_state_change(box, value, timestamp):
 
 class Manager(QObject):
     # signals
-    signalReset = pyqtSignal()
     signalUpdateScenes = pyqtSignal()
 
     signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
@@ -194,14 +193,14 @@ class Manager(QObject):
             **{k: v for k, v in hash.items() if k != "type"})
 
     def onServerConnectionChanged(self, isConnected):
-        """
-        If the server connection is changed, the model needs an update.
+        """If the server connection is changed, the model needs an update.
         """
         if isConnected:
             return
 
-        # Send reset signal to all panels which needs a reset
-        self.signalReset.emit()
+        # Broadcast event to all panels which needs a reset
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.NetworkDisconnected, {}))
         # Reset manager settings
         self.reset()
 
