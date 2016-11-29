@@ -189,6 +189,9 @@ namespace karabo {
 
             karabo::net::JmsConnection::Pointer getConnection() const;
 
+            // TODO This will BREAK during multi-topic refactoring
+            const std::string& getTopic() const { return m_topic; }
+
             /**
              * This function must only be called within a slotFunctions body. It returns the current object handling
              * the callback which provides more information on the sender.
