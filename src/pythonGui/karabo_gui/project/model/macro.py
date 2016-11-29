@@ -4,15 +4,17 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from functools import partial
+from io import StringIO
 import weakref
 
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance
 
-from karabo.common.project.api import MacroModel, write_macro
+from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
+from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import save_object
 from karabo_gui.util import getSaveFileName
 from .bases import BaseProjectTreeItem
@@ -29,6 +31,8 @@ class MacroModelItem(BaseProjectTreeItem):
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(self._edit_macro)
         dupe_action = QAction('Duplicate', menu)
+        dupe_action.triggered.connect(partial(self._duplicate_macro,
+                                              parent_project))
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_macro,
                                                 parent_project))
@@ -66,6 +70,20 @@ class MacroModelItem(BaseProjectTreeItem):
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
+
+    def _duplicate_macro(self, project):
+        macro = self.model
+        dialog = ObjectDuplicateDialog(macro.simple_name)
+        if dialog.exec() == QDialog.Accepted:
+            code = write_macro(macro)
+            dupe_names = dialog.duplicate_names
+            for simple_name in dupe_names:
+                dupe_macro = read_macro(StringIO(code))
+                dupe_macro.simple_name = simple_name
+                project.macros.append(dupe_macro)
+
+    def _save_macro(self):
+        save_object(self.model)
 
     def _save_macro_to_file(self):
         macro = self.model

@@ -16,7 +16,7 @@ def save_object(obj):
     """
     from karabo_gui.project.api import TEST_DOMAIN
 
-    dialog = ObjectSaveDialog(obj)
+    dialog = ObjectSaveDialog(obj.alias)
     if dialog.exec() == QDialog.Accepted:
         obj.alias = dialog.alias
         db_conn = get_db_conn()

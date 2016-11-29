@@ -42,7 +42,6 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(self._edit_server)
-        dupe_action = QAction('Duplicate', menu)
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_server,
                                                 parent_project))
@@ -59,7 +58,6 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         remove_all_action = QAction('Delete all devices', menu)
         remove_all_action.triggered.connect(self._delete_all_devices)
         menu.addAction(edit_action)
-        menu.addAction(dupe_action)
         menu.addAction(delete_action)
         menu.addAction(save_action)
         menu.addAction(shutdown_action)
