@@ -16,6 +16,7 @@ class KaraboEventSender(Enum):
     DeviceErrorChanged = "Device error state changed"
     DeviceStateChanged = "Device state changed"
     LogMessages = "Log messages"
+    NetworkDisconnected = "Network disconnected"
     NotificationMessage = "Notification message"
     OpenMacro = "Open macro"
     OpenSceneLink = "Scene link"

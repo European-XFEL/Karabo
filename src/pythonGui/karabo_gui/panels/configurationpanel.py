@@ -93,9 +93,6 @@ class ConfigurationPanel(Dockable, QWidget):
         vLayout.setContentsMargins(0,0,0,0)
         vLayout.addWidget(splitTopPanes)
 
-        manager = get_manager()
-        manager.signalReset.connect(self.onResetPanel)
-
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
         
@@ -217,6 +214,8 @@ class ConfigurationPanel(Dockable, QWidget):
                 configuration = event.data.get('configuration')
                 is_changing = event.data.get('is_changing')
                 self.onErrorState(configuration, is_changing)
+            elif event.sender is KaraboEventSender.NetworkDisconnected:
+                self._resetPanel()
             return False
         return super(ConfigurationPanel, self).eventFilter(obj, event)
 
@@ -518,20 +517,19 @@ class ConfigurationPanel(Dockable, QWidget):
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
 
-
-### slots ###
-    def onResetPanel(self):
-        """
-        This slot is called when the configurator needs a reset which means all
+    def _resetPanel(self):
+        """This is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
         self.prevConfiguration = None
-        
+
         # Do not remove the first two widgets (empty page and waiting page)
         while self.__swParameterEditor.count() > 2:
-            self._removeParameterEditorPage(self.__swParameterEditor
-                                    .widget(self.__swParameterEditor.count()-1))
+            index = self.__swParameterEditor.count()-1
+            page = self.__swParameterEditor.widget(index)
+            self._removeParameterEditorPage(page)
 
+### slots ###
     def onSelectNewNavigationItem(self, devicePath):
         self.twNavigation.selectItem(devicePath)
 
