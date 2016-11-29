@@ -49,7 +49,7 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         save_action.triggered.connect(partial(save_object, self.model))
         shutdown_action = QAction('Shutdown', menu)
         shutdown_action.triggered.connect(self._shutdown_server)
-        add_action = QAction('Add device', menu)
+        add_action = QAction('Add device configuration', menu)
         add_action.triggered.connect(self._add_device)
         instantiate_all_action = QAction('Instantiate all devices', menu)
         instantiate_all_action.triggered.connect(self._instantiate_devices)
