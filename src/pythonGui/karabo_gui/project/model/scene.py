@@ -13,6 +13,7 @@ from karabo.common.scenemodel.api import SceneModel, write_scene
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
+from karabo_gui.project.utils import save_object
 from karabo_gui.util import getSaveFileName
 from .bases import BaseProjectTreeItem
 
@@ -31,12 +32,15 @@ class SceneModelItem(BaseProjectTreeItem):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_scene,
                                                 parent_project))
+        save_action = QAction('Save', menu)
+        save_action.triggered.connect(self._save_scene)
         save_as_action = QAction('Save As...', menu)
-        save_as_action.triggered.connect(self._save_scene)
+        save_as_action.triggered.connect(self._save_scene_to_file)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
         menu.addSeparator()
+        menu.addAction(save_action)
         menu.addAction(save_as_action)
         return menu
 
@@ -64,6 +68,9 @@ class SceneModelItem(BaseProjectTreeItem):
             self.model.simple_name = dialog.simple_name
 
     def _save_scene(self):
+        save_object(self.model)
+
+    def _save_scene_to_file(self):
         scene = self.model
         fn = getSaveFileName(caption='Save scene to file',
                              filter='SVG (*.svg)',

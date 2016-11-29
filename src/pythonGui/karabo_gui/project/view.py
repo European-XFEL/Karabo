@@ -5,11 +5,12 @@
 #############################################################################
 from functools import partial
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QAction, QCursor, QMenu, QMessageBox, QTreeView
+from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
 
 from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo.middlelayer_api.newproject.io import write_project_model
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.project.utils import save_object
 from .item_model import ProjectItemModel
 from .model.project import ProjectModelItem
 from .model.project_groups import ProjectSubgroupItem
@@ -67,14 +68,20 @@ class ProjectView(QTreeView):
                                                    parent=self)
             is_project = isinstance(clicked_item_model, ProjectModelItem)
             if parent_project is None or is_project:
-                close_action = QAction('Close project', menu)
                 project_model = clicked_item_model.model
+                save_action = QAction('Save', menu)
+                save_action.triggered.connect(partial(self._save_action,
+                                                      project_model))
+                close_action = QAction('Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
                                                        project_model,
                                                        parent_project))
                 menu.addAction(close_action)
 
             menu.exec(QCursor.pos())
+
+    def _save_action(self, project):
+        save_object(project)
 
     def _close_project(self, project, parent_project):
         """ Close the given `project`

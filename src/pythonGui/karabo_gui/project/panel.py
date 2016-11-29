@@ -5,12 +5,13 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtGui import QDialog, QMessageBox, QStackedLayout, QWidget
+from PyQt4.QtGui import QDialog, QStackedLayout, QWidget
 
 from karabo.common.project.api import DeviceServerModel
 import karabo_gui.icons as icons
 from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.docktabwindow import Dockable
+from karabo_gui.project.dialog.object_handle import ObjectSaveDialog
 from karabo_gui.singletons.api import get_db_conn
 from .dialog.project_handle import LoadProjectDialog, NewProjectDialog
 
@@ -121,25 +122,17 @@ def _project_save_handler(item_model):
 
     # XXX: This is saving EVERYTHING in the project, regardless of need.
     # XXX: Don't do this unless explicitly requested! Save objects individually
-    simple_name = item_model.traits_data_model.simple_name
-    reply = QMessageBox.question(None, 'Save project',
-                                 'Do you really want to save the project '
-                                 '"<b>{}</b>"?'
-                                 .format(simple_name),
-                                 QMessageBox.Yes | QMessageBox.No,
-                                 QMessageBox.Yes)
-
-    if reply == QMessageBox.No:
-        return
-
-    db_conn = get_db_conn()
     proj_model = item_model.traits_data_model
-    for childname in PROJECT_OBJECT_CATEGORIES:
-        children = getattr(proj_model, childname)
-        for child in children:
-            if isinstance(child, DeviceServerModel):
-                for dev_inst in child.devices:
-                    for dev_conf in dev_inst.configs:
-                        store_obj(db_conn, dev_conf)
-            store_obj(db_conn, child)
-    store_obj(db_conn, proj_model)
+    dialog = ObjectSaveDialog(proj_model)
+    if dialog.exec() == QDialog.Accepted:
+        proj_model.alias = dialog.alias
+        db_conn = get_db_conn()
+        for childname in PROJECT_OBJECT_CATEGORIES:
+            children = getattr(proj_model, childname)
+            for child in children:
+                if isinstance(child, DeviceServerModel):
+                    for dev_inst in child.devices:
+                        for dev_conf in dev_inst.configs:
+                            store_obj(db_conn, dev_conf)
+                store_obj(db_conn, child)
+        store_obj(db_conn, proj_model)
