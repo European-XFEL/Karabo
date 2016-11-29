@@ -6,29 +6,35 @@
 
 from os.path import abspath, dirname, join
 
-from karabo_gui.docktabwindow import Dockable
-import karabo_gui.icons as icons
-from karabo_gui.navigationtreeview import NavigationTreeView
-from karabo_gui.parametertreewidget import ParameterTreeWidget
-from karabo_gui.projecttreeview import ProjectTreeView
-from karabo_gui.singletons.api import get_manager
-
 from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
                          QMovie, QPalette, QPushButton,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
 
+from karabo_gui.docktabwindow import Dockable
+import karabo_gui.icons as icons
+from karabo_gui.mediator import (
+    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.navigationtreeview import NavigationTreeView
+from karabo_gui.parametertreewidget import ParameterTreeWidget
+from karabo_gui.projecttreeview import ProjectTreeView
+from karabo_gui.singletons.api import get_manager
+
 
 class ConfigurationPanel(Dockable, QWidget):
     def __init__(self):
         super(ConfigurationPanel, self).__init__()
-        
+
+        # Register for broadcast events.
+        # This object lives as long as the app. No need to unregister.
+        register_for_broadcasts(self)
+
         self.__toolBar = None
-        
+
         title = "Configuration Editor"
         self.setWindowTitle(title)
-        
+
         # map = { deviceId, timer }
         self.__changingTimerDeviceIdMap = dict()
 
@@ -89,7 +95,6 @@ class ConfigurationPanel(Dockable, QWidget):
 
         manager = get_manager()
         manager.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
-        manager.signalShowConfiguration.connect(self.onShowConfiguration)
         manager.signalChangingState.connect(self.onChangingState)
         manager.signalErrorState.connect(self.onErrorState)
         manager.signalReset.connect(self.onResetPanel)
@@ -197,6 +202,15 @@ class ConfigurationPanel(Dockable, QWidget):
         self.setupActions()
         self.setLayout(mainLayout)
 
+    def eventFilter(self, obj, event):
+        """ Router for incoming broadcasts
+        """
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.ShowConfiguration:
+                configuration = event.data.get('configuration')
+                self.onShowConfiguration(configuration)
+            return False
+        return super(ConfigurationPanel, self).eventFilter(obj, event)
 
     def setupActions(self):
         manager = get_manager()
