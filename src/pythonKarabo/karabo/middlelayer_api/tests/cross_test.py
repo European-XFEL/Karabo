@@ -144,8 +144,6 @@ class Tests(DeviceTest):
         self.process = yield from create_subprocess_exec(
             os.path.join(karabo, "bin", "karabo-deviceserver"),
             "historytest.xml", stderr=PIPE, stdout=PIPE)
-        yield from self.wait_for_stderr(
-            "'DataLogger-middlelayerDevice' got started")
 
         @coroutine
         def print_stdout():
@@ -154,7 +152,8 @@ class Tests(DeviceTest):
                 print(line.decode("ascii"), end="")
         async(print_stdout())
 
-        yield from sleep(0.1)
+        with (yield from getDevice("DataLogger-middlelayerDevice")) as logger:
+            yield from waitUntil(lambda: logger.state == State.NORMAL)
 
         for i in range(4):
             self.device.value = i
