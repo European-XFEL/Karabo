@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns#">
+<meta charset="utf-8">
+<meta content="IE=edge" http-equiv="X-UA-Compatible">
+<meta content="object" property="og:type">
+<meta content="GitLab" property="og:site_name">
+<meta content="requirements.txt · master · Karabo / rtd-conf-py" property="og:title">
+<meta content="GitLab Community Edition" property="og:description">
+<meta content="https://git.xfel.eu/gitlab/assets/gitlab_logo-7ae504fe4f68fdebb3c2034e36621930cd36ea87924c11ff65dbcb8ed50dca58.png" property="og:image">
+<meta content="https://git.xfel.eu/gitlab/Karabo/rtd-conf-py/blob/master/requirements.txt" property="og:url">
+<meta content="summary" property="twitter:card">
+<meta content="requirements.txt · master · Karabo / rtd-conf-py" property="twitter:title">
+<meta content="GitLab Community Edition" property="twitter:description">
+<meta content="https://git.xfel.eu/gitlab/assets/gitlab_logo-7ae504fe4f68fdebb3c2034e36621930cd36ea87924c11ff65dbcb8ed50dca58.png" property="twitter:image">
+
+<title>requirements.txt · master · Karabo / rtd-conf-py · GitLab</title>
+<meta content="GitLab Community Edition" name="description">
+<link rel="shortcut icon" type="image/x-icon" href="/gitlab/assets/favicon-075eba76312e8421991a0c1f89a89ee81678bcde72319dd3e8047e2a47cd3a42.ico" />
+<link rel="stylesheet" media="all" href="/gitlab/assets/application-2b3bd409e02920f1a87254c46d8632634cd7e20eeff23e33ff6fe4e6932ab7ff.css" />
+<link rel="stylesheet" media="print" href="/gitlab/assets/print-68eed6d8135d858318821e790e25da27b2b4b9b8dbb1993fa6765d8e2e3e16ee.css" />
+<script src="/gitlab/assets/application-24068fc560d9687f1ae05fef0c94402769976021c8054c2648db09c5e5a009f1.js"></script>
+<meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="7rUSU4YSftsx3GsyZKU55liBzg6H0x/+xKB1Puy0EkmT/HTG7Ps4PyHeEgFGQHHKpPR+htpNmiSIii4M5PBPzg==" />
+<meta content="origin-when-cross-origin" name="referrer">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
+<meta content="#474D57" name="theme-color">
+<link rel="apple-touch-icon" type="image/x-icon" href="/gitlab/assets/touch-icon-iphone-5a9cee0e8a51212e70b90c87c12f382c428870c0ff67d1eb034d884b78d2dae7.png" />
+<link rel="apple-touch-icon" type="image/x-icon" href="/gitlab/assets/touch-icon-ipad-a6eec6aeb9da138e507593b464fdac213047e49d3093fc30e90d9a995df83ba3.png" sizes="76x76" />
+<link rel="apple-touch-icon" type="image/x-icon" href="/gitlab/assets/touch-icon-iphone-retina-72e2aadf86513a56e050e7f0f2355deaa19cc17ed97bbe5147847f2748e5a3e3.png" sizes="120x120" />
+<link rel="apple-touch-icon" type="image/x-icon" href="/gitlab/assets/touch-icon-ipad-retina-8ebe416f5313483d9c1bc772b5bbe03ecad52a54eba443e5215a22caed2a16a2.png" sizes="152x152" />
+<link color="rgb(226, 67, 41)" href="/gitlab/assets/logo-d36b5212042cebc89b96df4bf6ac24e43db316143e89926c0db839ff694d2de4.svg" rel="mask-icon">
+<meta content="/gitlab/assets/msapplication-tile-1196ec67452f618d39cdd85e2e3a542f76574c071051ae7effbfde01710eb17d.png" name="msapplication-TileImage">
+<meta content="#30353E" name="msapplication-TileColor">
+
+
+
+
+<style>
+  [data-user-is] {
+    display: none !important;
+  }
+  
+  [data-user-is="7"] {
+    display: block !important;
+  }
+  
+  [data-user-is="7"][data-display="inline"] {
+    display: inline !important;
+  }
+  
+  [data-user-is-not] {
+    display: block !important;
+  }
+  
+  [data-user-is-not][data-display="inline"] {
+    display: inline !important;
+  }
+  
+  [data-user-is-not="7"] {
+    display: none !important;
+  }
+</style>
+
+</head>
+
+<body class="ui_charcoal" data-group="" data-page="projects:blob:show" data-project="rtd-conf-py">
+<script>
+//<![CDATA[
+window.gon={};gon.api_version="v3";gon.default_avatar_url="https://git.xfel.eu/gitlab/assets/no_avatar-849f9c04a3a0d0cea2424ae97b27447dc64a7dbfae83c036c45b403392f0e8ba.png";gon.max_file_size=10;gon.relative_url_root="/gitlab";gon.shortcuts_path="/gitlab/help/shortcuts";gon.user_color_scheme="white";gon.award_menu_url="/gitlab/emojis";gon.current_user_id=7;gon.api_token="KXGhJH1y112U6sedXcqy";
+//]]>
+</script>
+<script>
+  window.project_uploads_path = "/gitlab/Karabo/rtd-conf-py/uploads";
+  window.markdown_preview_path = "/gitlab/Karabo/rtd-conf-py/markdown_preview";
+</script>
+
+<header class="header-collapsed navbar navbar-fixed-top navbar-gitlab with-horizontal-nav">
+<div class="container-fluid">
+<div class="header-content">
+<button aria-label="Toggle global navigation" class="side-nav-toggle" type="button">
+<span class="sr-only">Toggle navigation</span>
+<i class="fa fa-bars"></i>
+</button>
+<button class="navbar-toggle" type="button">
+<span class="sr-only">Toggle navigation</span>
+<i class="fa fa-ellipsis-v"></i>
+</button>
+<div class="navbar-collapse collapse">
+<ul class="nav navbar-nav">
+<li class="hidden-sm hidden-xs">
+<div class="has-location-badge search search-form">
+<form class="navbar-form" action="/gitlab/search" accept-charset="UTF-8" method="get"><input name="utf8" type="hidden" value="&#x2713;" /><div class="search-input-container">
+<div class="location-badge">This project</div>
+<div class="search-input-wrap">
+<div class="dropdown" data-url="/gitlab/search/autocomplete">
+<input type="search" name="search" id="search" placeholder="Search" class="search-input dropdown-menu-toggle" spellcheck="false" tabindex="1" autocomplete="off" data-toggle="dropdown" />
+<div class="dropdown-menu dropdown-select">
+<div class="dropdown-content"><ul>
+<li>
+<a class="is-focused dropdown-menu-empty-link">
+Loading...
+</a>
+</li>
+</ul>
+</div><div class="dropdown-loading"><i class="fa fa-spinner fa-spin"></i></div>
+</div>
+<i class="search-icon"></i>
+<i class="clear-icon js-clear-input"></i>
+</div>
+</div>
+</div>
+<input type="hidden" name="group_id" id="group_id" />
+<input type="hidden" name="project_id" id="search_project_id" value="30" />
+<input type="hidden" name="search_code" id="search_code" value="true" />
+<script>
+  gl.projectOptions = gl.projectOptions || {};
+  gl.projectOptions["rtd-conf-py"] = {
+    issuesPath: "/gitlab/Karabo/rtd-conf-py/issues",
+    mrPath: "/gitlab/Karabo/rtd-conf-py/merge_requests",
+    name: "rtd-conf-py"
+  };
+</script>
+<script>
+  gl.dashboardOptions = {
+    issuesPath: "https://git.xfel.eu/gitlab/dashboard/issues",
+    mrPath: "https://git.xfel.eu/gitlab/dashboard/merge_requests"
+  };
+</script>
+<input type="hidden" name="repository_ref" id="repository_ref" value="master" />
+
+<div class="search-autocomplete-opts hide" data-autocomplete-path="/gitlab/search/autocomplete" data-autocomplete-project-id="30" data-autocomplete-project-ref="master"></div>
+</form></div>
+
+</li>
+<li class="visible-sm visible-xs">
+<a title="Search" aria-label="Search" data-toggle="tooltip" data-placement="bottom" data-container="body" href="/gitlab/search"><i class="fa fa-search"></i>
+</a></li>
+<li>
+<a title="Todos" aria-label="Todos" data-toggle="tooltip" data-placement="bottom" data-container="body" href="/gitlab/dashboard/todos"><i class="fa fa-bell fa-fw"></i>
+<span class="badge todos-pending-count">
+18
+</span>
+</a></li>
+<li>
+<a title="New project" aria-label="New project" data-toggle="tooltip" data-placement="bottom" data-container="body" href="/gitlab/projects/new"><i class="fa fa-plus fa-fw"></i>
+</a></li>
+<li class="header-user dropdown">
+<a class="header-user-dropdown-toggle" data-toggle="dropdown" href="/gitlab/u/heisenb"><img width="26" height="26" class="header-user-avatar" src="https://secure.gravatar.com/avatar/a798dae0040febe9391183f817095f3c?s=52&amp;d=identicon" alt="A798dae0040febe9391183f817095f3c?s=52&amp;d=identicon" />
+<span class="caret"></span>
+</a><div class="dropdown-menu-nav dropdown-menu-align-right">
+<ul>
+<li>
+<a class="profile-link" aria-label="Profile" data-user="heisenb" href="/gitlab/u/heisenb">Profile</a>
+</li>
+<li>
+<a aria-label="Profile Settings" href="/gitlab/profile">Profile Settings</a>
+</li>
+<li class="divider"></li>
+<li>
+<a class="sign-out-link" aria-label="Sign out" rel="nofollow" data-method="delete" href="/gitlab/users/sign_out">Sign out</a>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<h1 class="title"><a href="/gitlab/groups/Karabo">Karabo</a> / <a class="project-item-select-holder" href="/gitlab/Karabo/rtd-conf-py">rtd-conf-py</a><i aria-label="Toggle switch project dropdown" data-target=".js-dropdown-menu-projects" data-toggle="dropdown" class="fa fa-chevron-down dropdown-toggle-caret js-projects-dropdown-toggle"></i></h1>
+<div class="header-logo">
+<a class="home" title="Dashboard" id="logo" href="/gitlab/"><svg width="36" height="36" id="tanuki-logo">
+  <path id="tanuki-right-ear" class="tanuki-shape" fill="#e24329" d="M2 14l9.38 9v-9l-4-12.28c-.205-.632-1.176-.632-1.38 0z"/>
+  <path id="tanuki-left-ear" class="tanuki-shape" fill="#e24329" d="M34 14l-9.38 9v-9l4-12.28c.205-.632 1.176-.632 1.38 0z"/>
+  <path id="tanuki-nose" class="tanuki-shape" fill="#e24329" d="M18,34.38 3,14 33,14 Z"/>
+  <path id="tanuki-right-eye" class="tanuki-shape" fill="#fc6d26" d="M18,34.38 11.38,14 2,14 6,25Z"/>
+  <path id="tanuki-left-eye" class="tanuki-shape" fill="#fc6d26" d="M18,34.38 24.62,14 34,14 30,25Z"/>
+  <path id="tanuki-right-cheek" class="tanuki-shape" fill="#fca326" d="M2 14L.1 20.16c-.18.565 0 1.2.5 1.56l17.42 12.66z"/>
+  <path id="tanuki-left-cheek" class="tanuki-shape" fill="#fca326" d="M34 14l1.9 6.16c.18.565 0 1.2-.5 1.56L18 34.38z"/>
+</svg>
+
+</a></div>
+<div class="js-dropdown-menu-projects">
+<div class="dropdown-menu dropdown-select dropdown-menu-projects">
+<div class="dropdown-title"><span>Go to a project</span><button class="dropdown-title-button dropdown-menu-close" aria-label="Close" type="button"><i class="fa fa-times dropdown-menu-close-icon"></i></button></div>
+<div class="dropdown-input"><input type="search" id="" class="dropdown-input-field" placeholder="Search your projects" autocomplete="off" /><i class="fa fa-search dropdown-input-search"></i><i role="button" class="fa fa-times dropdown-input-clear js-dropdown-input-clear"></i></div>
+<div class="dropdown-content"></div>
+<div class="dropdown-loading"><i class="fa fa-spinner fa-spin"></i></div>
+</div>
+</div>
+
+</div>
+</div>
+</header>
+
+<script>
+  var findFileURL = "/gitlab/Karabo/rtd-conf-py/find_file/master";
+</script>
+
+<div class="page-sidebar-collapsed page-with-sidebar">
+<div class="nicescroll sidebar-expanded sidebar-wrapper">
+<div class="sidebar-action-buttons">
+<a class="nav-header-btn toggle-nav-collapse" title="Open/Close" href="#"><span class="sr-only">Toggle navigation</span>
+<i class="fa fa-bars"></i>
+</a><a class="nav-header-btn pin-nav-btn has-tooltip  js-nav-pin" title="Pin Navigation" data-placement="right" data-container="body" href="#"><span class="sr-only">Toggle navigation pinning</span>
+<i class="fa fa-fw fa-thumb-tack"></i>
+</a></div>
+<ul class="nav nav-sidebar">
+<li class="active home"><a title="Projects" class="dashboard-shortcuts-projects" href="/gitlab/dashboard/projects"><span>
+Projects
+</span>
+</a></li><li class=""><a title="Todos" href="/gitlab/dashboard/todos"><span>
+Todos
+<span class="count">18</span>
+</span>
+</a></li><li class=""><a class="dashboard-shortcuts-activity" title="Activity" href="/gitlab/dashboard/activity"><span>
+Activity
+</span>
+</a></li><li class=""><a title="Groups" href="/gitlab/dashboard/groups"><span>
+Groups
+</span>
+</a></li><li class=""><a title="Milestones" href="/gitlab/dashboard/milestones"><span>
+Milestones
+</span>
+</a></li><li class=""><a title="Issues" class="dashboard-shortcuts-issues" href="/gitlab/dashboard/issues?assignee_id=7"><span>
+Issues
+<span class="count">0</span>
+</span>
+</a></li><li class=""><a title="Merge Requests" class="dashboard-shortcuts-merge_requests" href="/gitlab/dashboard/merge_requests?assignee_id=7"><span>
+Merge Requests
+<span class="count">0</span>
+</span>
+</a></li><li class=""><a title="Snippets" href="/gitlab/dashboard/snippets"><span>
+Snippets
+</span>
+</a></li><li class=""><a title="Help" href="/gitlab/help"><span>
+Help
+</span>
+</a></li><li class=""><a title="Profile Settings" data-placement="bottom" href="/gitlab/profile"><span>
+Profile Settings
+</span>
+</a></li></ul>
+
+</div>
+<div class="layout-nav">
+<div class="container-fluid">
+<div class="controls">
+<div class="dropdown project-settings-dropdown">
+<a class="dropdown-new btn btn-default" data-toggle="dropdown" href="#" id="project-settings-button">
+<i class="fa fa-cog"></i>
+<i class="fa fa-caret-down"></i>
+</a>
+<ul class="dropdown-menu dropdown-menu-align-right">
+<li class=""><a title="Members" class="team-tab tab" href="/gitlab/Karabo/rtd-conf-py/project_members"><span>
+Members
+</span>
+</a></li><li class=""><a title="Groups" href="/gitlab/Karabo/rtd-conf-py/group_links"><span>
+Groups
+</span>
+</a></li><li class=""><a title="Deploy Keys" href="/gitlab/Karabo/rtd-conf-py/deploy_keys"><span>
+Deploy Keys
+</span>
+</a></li><li class=""><a title="Webhooks" href="/gitlab/Karabo/rtd-conf-py/hooks"><span>
+Webhooks
+</span>
+</a></li><li class=""><a title="Services" href="/gitlab/Karabo/rtd-conf-py/services"><span>
+Services
+</span>
+</a></li><li class=""><a title="Protected Branches" href="/gitlab/Karabo/rtd-conf-py/protected_branches"><span>
+Protected Branches
+</span>
+</a></li><li class=""><a title="Runners" href="/gitlab/Karabo/rtd-conf-py/runners"><span>
+Runners
+</span>
+</a></li><li class=""><a title="Variables" href="/gitlab/Karabo/rtd-conf-py/variables"><span>
+Variables
+</span>
+</a></li><li class=""><a title="Triggers" href="/gitlab/Karabo/rtd-conf-py/triggers"><span>
+Triggers
+</span>
+</a></li><li class=""><a title="CI/CD Pipelines" href="/gitlab/Karabo/rtd-conf-py/pipelines/settings"><span>
+CI/CD Pipelines
+</span>
+</a></li>
+<li class="divider"></li>
+<li>
+<a href="/gitlab/Karabo/rtd-conf-py/edit">Edit Project
+</a></li>
+</ul>
+</div>
+</div>
+<div class="nav-control scrolling-tabs-container">
+<div class="fade-left">
+<i class="fa fa-angle-left"></i>
+</div>
+<div class="fade-right">
+<i class="fa fa-angle-right"></i>
+</div>
+<ul class="nav-links scrolling-tabs">
+<li class="home"><a title="Project" class="shortcuts-project" href="/gitlab/Karabo/rtd-conf-py"><span>
+Project
+</span>
+</a></li><li class=""><a title="Activity" class="shortcuts-project-activity" href="/gitlab/Karabo/rtd-conf-py/activity"><span>
+Activity
+</span>
+</a></li><li class="active"><a title="Repository" class="shortcuts-tree" href="/gitlab/Karabo/rtd-conf-py/tree/master"><span>
+Repository
+</span>
+</a></li><li class=""><a title="Pipelines" class="shortcuts-pipelines" href="/gitlab/Karabo/rtd-conf-py/pipelines"><span>
+Pipelines
+</span>
+</a></li><li class=""><a title="Graphs" class="shortcuts-graphs" href="/gitlab/Karabo/rtd-conf-py/graphs/master"><span>
+Graphs
+</span>
+</a></li><li class=""><a title="Issues" class="shortcuts-issues" href="/gitlab/Karabo/rtd-conf-py/issues"><span>
+Issues
+<span class="badge count issue_counter">0</span>
+</span>
+</a></li><li class=""><a title="Merge Requests" class="shortcuts-merge_requests" href="/gitlab/Karabo/rtd-conf-py/merge_requests"><span>
+Merge Requests
+<span class="badge count merge_counter">0</span>
+</span>
+</a></li><li class=""><a title="Wiki" class="shortcuts-wiki" href="/gitlab/Karabo/rtd-conf-py/wikis/home"><span>
+Wiki
+</span>
+</a></li><li class="hidden">
+<a title="Network" class="shortcuts-network" href="/gitlab/Karabo/rtd-conf-py/network/master">Network
+</a></li>
+<li class="hidden">
+<a class="shortcuts-new-issue" href="/gitlab/Karabo/rtd-conf-py/issues/new">Create a new issue
+</a></li>
+<li class="hidden">
+<a title="Builds" class="shortcuts-builds" href="/gitlab/Karabo/rtd-conf-py/builds">Builds
+</a></li>
+<li class="hidden">
+<a title="Commits" class="shortcuts-commits" href="/gitlab/Karabo/rtd-conf-py/commits/master">Commits
+</a></li>
+</ul>
+</div>
+
+</div>
+</div>
+<div class="content-wrapper page-with-layout-nav">
+
+
+<div class="flash-container flash-container-page">
+</div>
+
+
+<div class="">
+<div class="content">
+<div class="clearfix">
+<div class="scrolling-tabs-container sub-nav-scroll">
+<div class="fade-left">
+<i class="fa fa-angle-left"></i>
+</div>
+<div class="fade-right">
+<i class="fa fa-angle-right"></i>
+</div>
+<div class="nav-links sub-nav scrolling-tabs">
+<ul class="container-fluid container-limited">
+<li class="active"><a href="/gitlab/Karabo/rtd-conf-py/tree/master">Files
+</a></li><li class=""><a href="/gitlab/Karabo/rtd-conf-py/commits/master">Commits
+</a></li><li class=""><a href="/gitlab/Karabo/rtd-conf-py/network/master">Network
+</a></li><li class=""><a href="/gitlab/Karabo/rtd-conf-py/compare?from=master&amp;to=master">Compare
+</a></li><li class=""><a href="/gitlab/Karabo/rtd-conf-py/branches">Branches
+</a></li><li class=""><a href="/gitlab/Karabo/rtd-conf-py/tags">Tags
+</a></li></ul>
+</div>
+</div>
+
+<div class="container-fluid container-limited">
+
+<div class="tree-holder" id="tree-holder">
+<div class="nav-block">
+<div class="tree-ref-holder">
+<form class="project-refs-form" action="/gitlab/Karabo/rtd-conf-py/refs/switch" accept-charset="UTF-8" method="get"><input name="utf8" type="hidden" value="&#x2713;" /><input type="hidden" name="destination" id="destination" value="blob" />
+<input type="hidden" name="path" id="path" value="requirements.txt" />
+<div class="dropdown">
+<button class="dropdown-menu-toggle js-project-refs-dropdown" type="button" data-toggle="dropdown" data-selected="master" data-ref="master" data-refs-url="/gitlab/Karabo/rtd-conf-py/refs"><span class="dropdown-toggle-text">master</span><i class="fa fa-chevron-down"></i></button>
+<div class="dropdown-menu dropdown-menu-selectable">
+<div class="dropdown-title"><span>Switch branch/tag</span><button class="dropdown-title-button dropdown-menu-close" aria-label="Close" type="button"><i class="fa fa-times dropdown-menu-close-icon"></i></button></div>
+<div class="dropdown-input"><input type="search" id="" class="dropdown-input-field" placeholder="Search branches and tags" autocomplete="off" /><i class="fa fa-search dropdown-input-search"></i><i role="button" class="fa fa-times dropdown-input-clear js-dropdown-input-clear"></i></div>
+<div class="dropdown-content"></div>
+<div class="dropdown-loading"><i class="fa fa-spinner fa-spin"></i></div>
+</div>
+</div>
+</form>
+</div>
+<ul class="breadcrumb repo-breadcrumb">
+<li>
+<a href="/gitlab/Karabo/rtd-conf-py/tree/master">rtd-conf-py
+</a></li>
+<li>
+<a href="/gitlab/Karabo/rtd-conf-py/blob/master/requirements.txt"><strong>
+requirements.txt
+</strong>
+</a></li>
+</ul>
+</div>
+<ul class="blob-commit-info hidden-xs">
+<li class="commit js-toggle-container" id="commit-85a03666">
+<a href="mailto:steffen.hauf@xfel.eu"><img class="avatar has-tooltip hidden-xs s36" alt="Steffen Hauf&#39;s avatar" title="Steffen Hauf" src="https://secure.gravatar.com/avatar/a0df065b2d4d04b79f76bcb72168e722?s=72&amp;d=identicon" /></a>
+<div class="commit-info-block">
+<div class="commit-row-title">
+<span class="item-title">
+<a class="commit-row-message" href="/gitlab/Karabo/rtd-conf-py/commit/85a036662750d34aa8f130c8ff66ea6bbdd695de">Add slumber</a>
+<span class="commit-row-message visible-xs-inline">
+&middot;
+85a03666
+</span>
+</span>
+<div class="commit-actions hidden-xs">
+<button class="btn btn-clipboard" data-toggle="tooltip" data-placement="bottom" data-container="body" data-clipboard-text="85a036662750d34aa8f130c8ff66ea6bbdd695de" type="button" title="Copy to Clipboard"><i class="fa fa-clipboard"></i></button>
+<a class="commit-short-id btn btn-transparent" href="/gitlab/Karabo/rtd-conf-py/commit/85a036662750d34aa8f130c8ff66ea6bbdd695de">85a03666</a>
+<a class="btn btn-default" href="/gitlab/Karabo/rtd-conf-py/tree/85a036662750d34aa8f130c8ff66ea6bbdd695de">Browse Files</a>
+</div>
+</div>
+<div class="commit-row-info">
+<a class="commit-author-link has-tooltip" title="steffen.hauf@xfel.eu" href="mailto:steffen.hauf@xfel.eu">Steffen Hauf</a>
+authored
+<time class="time_ago js-timeago js-timeago-pending" datetime="2016-11-16T11:07:52Z" title="Nov 16, 2016 12:07pm" data-toggle="tooltip" data-placement="top" data-container="body">2016-11-16 12:07:52 +0100</time><script>
+//<![CDATA[
+$('.js-timeago-pending').removeClass('js-timeago-pending').timeago()
+//]]>
+</script>
+</div>
+</div>
+</li>
+
+</ul>
+<div class="blob-content-holder" id="blob-content-holder">
+<article class="file-holder">
+<div class="file-title">
+<i class="fa fa-file-text-o fa-fw"></i>
+<strong>
+requirements.txt
+</strong>
+<small>
+61 Bytes
+</small>
+<div class="file-actions hidden-xs">
+<div class="btn-group tree-btn-group">
+<a class="btn btn-sm" target="_blank" href="/gitlab/Karabo/rtd-conf-py/raw/master/requirements.txt">Raw</a>
+<a class="btn btn-sm" href="/gitlab/Karabo/rtd-conf-py/blame/master/requirements.txt">Blame</a>
+<a class="btn btn-sm" href="/gitlab/Karabo/rtd-conf-py/commits/master/requirements.txt">History</a>
+<a class="btn btn-sm" href="/gitlab/Karabo/rtd-conf-py/blob/e7443040cb2f2c9a155ac77459cf3df8d17ee372/requirements.txt">Permalink</a>
+</div>
+<div class="btn-group" role="group">
+<a class="btn btn-sm" href="/gitlab/Karabo/rtd-conf-py/edit/master/requirements.txt">Edit</a>
+<button name="button" type="submit" class="btn btn-default" data-target="#modal-upload-blob" data-toggle="modal">Replace</button>
+<button name="button" type="submit" class="btn btn-remove" data-target="#modal-remove-blob" data-toggle="modal">Delete</button>
+</div>
+
+</div>
+</div>
+<div class="file-content code js-syntax-highlight">
+<div class="line-numbers">
+<a class="diff-line-num" data-line-number="1" href="#L1" id="L1">
+<i class="fa fa-link"></i>
+1
+</a>
+<a class="diff-line-num" data-line-number="2" href="#L2" id="L2">
+<i class="fa fa-link"></i>
+2
+</a>
+</div>
+<div class="blob-content" data-blob-id="68c84bcae9ab12a88bd5450b3359bf60f3278839">
+<pre class="code highlight"><code><span id="LC1" class="line">git+https://git.xfel.eu/gitlab/Karabo/rtd-conf-py.git</span>
+<span id="LC2" class="line">slumber</span></code></pre>
+</div>
+</div>
+
+
+</article>
+</div>
+
+</div>
+<div class="modal" id="modal-remove-blob">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+<a class="close" data-dismiss="modal" href="#">×</a>
+<h3 class="page-title">Delete requirements.txt</h3>
+</div>
+<div class="modal-body">
+<form class="form-horizontal js-replace-blob-form js-quick-submit js-requires-input" action="/gitlab/Karabo/rtd-conf-py/blob/master/requirements.txt" accept-charset="UTF-8" method="post"><input name="utf8" type="hidden" value="&#x2713;" /><input type="hidden" name="_method" value="delete" /><input type="hidden" name="authenticity_token" value="qOWsbFdLgMvzFng+cZ3K31qkIg0RzxljjNAhBhY3aS7VrMr5PaLGL+MUAQ1TeILzptGShUxRnLnA+no0HnM0qQ==" /><div class="form-group commit_message-group">
+<label class="control-label" for="commit_message-6ff2c304c56cb78cb5ecef1291256a30">Commit message
+</label><div class="col-sm-10">
+<div class="commit-message-container">
+<div class="max-width-marker"></div>
+<textarea name="commit_message" id="commit_message-6ff2c304c56cb78cb5ecef1291256a30" class="form-control js-commit-message" placeholder="Delete requirements.txt" required="required" rows="3">
+Delete requirements.txt</textarea>
+</div>
+</div>
+</div>
+
+<div class="form-group branch">
+<label class="control-label" for="target_branch">Target branch</label>
+<div class="col-sm-10">
+<input type="text" name="target_branch" id="target_branch" value="master" required="required" class="form-control js-target-branch" />
+<div class="js-create-merge-request-container">
+<div class="checkbox">
+<label for="create_merge_request-690e82ece7ec497ab32fddbcb9ad8bc4"><input type="checkbox" name="create_merge_request" id="create_merge_request-690e82ece7ec497ab32fddbcb9ad8bc4" value="1" class="js-create-merge-request" checked="checked" />
+Start a <strong>new merge request</strong> with these changes
+</label></div>
+</div>
+</div>
+</div>
+<input type="hidden" name="original_branch" id="original_branch" value="master" class="js-original-branch" />
+
+<div class="form-group">
+<div class="col-sm-offset-2 col-sm-10">
+<button name="button" type="submit" class="btn btn-remove btn-remove-file">Delete file</button>
+<a class="btn btn-cancel" data-dismiss="modal" href="#">Cancel</a>
+</div>
+</div>
+</form></div>
+</div>
+</div>
+</div>
+<script>
+  new NewCommitForm($('.js-replace-blob-form'))
+</script>
+
+<div class="modal" id="modal-upload-blob">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+<a class="close" data-dismiss="modal" href="#">×</a>
+<h3 class="page-title">Replace requirements.txt</h3>
+</div>
+<div class="modal-body">
+<form class="js-quick-submit js-upload-blob-form form-horizontal" action="/gitlab/Karabo/rtd-conf-py/update/master/requirements.txt" accept-charset="UTF-8" method="post"><input name="utf8" type="hidden" value="&#x2713;" /><input type="hidden" name="_method" value="put" /><input type="hidden" name="authenticity_token" value="zQKaddjl25+jtClylnYxHOPn/urZOo00faR4BOCeNsSwS/zgsgyde7O2UEG0k3kwH5JOYoSkCO4xjiM26NprQw==" /><div class="dropzone">
+<div class="dropzone-previews blob-upload-dropzone-previews">
+<p class="dz-message light">
+Attach a file by drag &amp; drop or
+<a class="markdown-selector" href="#">click to upload</a>
+</p>
+</div>
+</div>
+<br>
+<div class="alert alert-danger data dropzone-alerts" style="display:none"></div>
+<div class="form-group commit_message-group">
+<label class="control-label" for="commit_message-31c9780d4edf8d1f9e817ba023f071ad">Commit message
+</label><div class="col-sm-10">
+<div class="commit-message-container">
+<div class="max-width-marker"></div>
+<textarea name="commit_message" id="commit_message-31c9780d4edf8d1f9e817ba023f071ad" class="form-control js-commit-message" placeholder="Replace requirements.txt" required="required" rows="3">
+Replace requirements.txt</textarea>
+</div>
+</div>
+</div>
+
+<div class="form-group branch">
+<label class="control-label" for="target_branch">Target branch</label>
+<div class="col-sm-10">
+<input type="text" name="target_branch" id="target_branch" value="master" required="required" class="form-control js-target-branch" />
+<div class="js-create-merge-request-container">
+<div class="checkbox">
+<label for="create_merge_request-53b954ea73bff6f68f1a3c0ee9b033c5"><input type="checkbox" name="create_merge_request" id="create_merge_request-53b954ea73bff6f68f1a3c0ee9b033c5" value="1" class="js-create-merge-request" checked="checked" />
+Start a <strong>new merge request</strong> with these changes
+</label></div>
+</div>
+</div>
+</div>
+<input type="hidden" name="original_branch" id="original_branch" value="master" class="js-original-branch" />
+
+<div class="form-actions">
+<button name="button" type="submit" class="btn btn-small btn-create btn-upload-file" id="submit-all">Replace file</button>
+<a class="btn btn-cancel" data-dismiss="modal" href="#">Cancel</a>
+</div>
+</form></div>
+</div>
+</div>
+</div>
+<script>
+  disableButtonIfEmptyField($('.js-upload-blob-form').find('.js-commit-message'), '.btn-upload-file');
+  new BlobFileDropzone($('.js-upload-blob-form'), 'put');
+  new NewCommitForm($('.js-upload-blob-form'))
+</script>
+
+</div>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+  GitLab.GfmAutoComplete.dataSource = "/gitlab/Karabo/rtd-conf-py/autocomplete_sources?type_id=master%2Frequirements.txt"
+  GitLab.GfmAutoComplete.cachedData = undefined;
+  GitLab.GfmAutoComplete.setup();
+</script>
+
+
+</body>
+</html>
+

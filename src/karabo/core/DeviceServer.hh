@@ -58,6 +58,7 @@ namespace karabo {
             std::vector<karabo::util::Hash> m_autoStart;
 
             karabo::util::Hash m_availableDevices;
+            std::vector<std::string> m_devices;
 
             typedef std::map<std::string, boost::shared_ptr<BaseDevice> > DeviceInstanceMap;
             DeviceInstanceMap m_deviceInstanceMap;
@@ -210,7 +211,6 @@ namespace karabo {
             void slotLoggerPriority(const std::string& prio);
 
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
-
         };
 
     }

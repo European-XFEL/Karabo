@@ -57,3 +57,4 @@ build/python/*.exe
 /build/netbeans/deviceServer/build/
 /build/netbeans/brokerMessageLogger/build/
 /build/netbeans/integrationTests/build/
+/src/templates/cppDevice/minimal/build/

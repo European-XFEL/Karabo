@@ -28,10 +28,6 @@ namespace karabo {
         using namespace std;
 
 
-        //        Schema::Schema() : m_rootName("") {
-        //        };
-
-
         Schema::Schema(const std::string& classId, const Schema::AssemblyRules& rules) :
             m_currentAccessMode(rules.m_accessMode), m_currentState(rules.m_state), m_currentAccessLevel(rules.m_accessLevel), m_rootName(classId) {
         }
@@ -55,11 +51,6 @@ namespace karabo {
         const karabo::util::Hash& Schema::getParameterHash() const {
             return m_hash;
         }
-
-
-        //        const karabo::util::Hash& Schema::getParameterHash1() const {
-        //            return m_hash;
-        //        }
 
 
         std::vector<std::string> Schema::getKeys(const std::string& path) const {
@@ -175,11 +166,6 @@ namespace karabo {
         //**********************************************
         //                Value Type                   *
         //**********************************************
-
-
-        //const string& Schema::getValueType(const std::string& path) const {
-        //   return m_hash.getAttribute<string > (path, KARABO_SCHEMA_VALUE_TYPE);
-        // }
 
 
         Types::ReferenceType Schema::getValueType(const std::string& path) const {
@@ -364,6 +350,7 @@ namespace karabo {
             m_hash.setAttribute(path, KARABO_SCHEMA_SKIP_VALIDATION, value);
         }
 
+
         bool Schema::getSkipValidation(const std::string& path) {
             if (m_hash.hasAttribute(path, KARABO_SCHEMA_SKIP_VALIDATION)) {
                 return m_hash.getAttributeAs<bool>(path, KARABO_SCHEMA_SKIP_VALIDATION);
@@ -401,42 +388,47 @@ namespace karabo {
             m_hash.setAttribute(path, KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector > (value, ","));
 
         }
-        
+
+
         void Schema::setAllowedStates(const std::string& path, const std::vector<State>& value) {
             setAllowedStates(path, karabo::util::toString(value));
         }
-        
+
+
         void Schema::setAllowedStates(const std::string& path, const State& s1) {
             const State arr[] = {s1};
-            setAllowedStates(path, std::vector<State>(arr, arr+1));
+            setAllowedStates(path, std::vector<State>(arr, arr + 1));
         }
-        
+
+
         void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2) {
             const State arr[] = {s1, s2};
-            setAllowedStates(path, std::vector<State>(arr, arr+2));
+            setAllowedStates(path, std::vector<State>(arr, arr + 2));
         }
-        
+
+
         void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3) {
             const State arr[] = {s1, s2, s3};
-            setAllowedStates(path, std::vector<State>(arr, arr+3));
+            setAllowedStates(path, std::vector<State>(arr, arr + 3));
         }
-        
+
+
         void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3, const State& s4) {
             const State arr[] = {s1, s2, s3, s4};
-            setAllowedStates(path, std::vector<State>(arr, arr+4));
+            setAllowedStates(path, std::vector<State>(arr, arr + 4));
         }
-        
+
+
         void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3, const State& s4, const State& s5) {
             const State arr[] = {s1, s2, s3, s4, s5};
-            setAllowedStates(path, std::vector<State>(arr, arr+5));
+            setAllowedStates(path, std::vector<State>(arr, arr + 5));
         }
-        
+
+
         void Schema::setAllowedStates(const std::string& path, const State& s1, const State& s2, const State& s3, const State& s4, const State& s5, const State& s6) {
             const State arr[] = {s1, s2, s3, s4, s5, s6};
-            setAllowedStates(path, std::vector<State>(arr, arr+6));
+            setAllowedStates(path, std::vector<State>(arr, arr + 6));
         }
-        
-        
 
 
         bool Schema::hasAllowedStates(const std::string& path) const {
@@ -445,9 +437,9 @@ namespace karabo {
 
 
         const vector<State> Schema::getAllowedStates(const std::string& path) const {
-            std::vector<string> stateList =  m_hash.getAttribute<vector<string> >(path, KARABO_SCHEMA_ALLOWED_STATES);
+            std::vector<string> stateList = m_hash.getAttribute<vector<string> >(path, KARABO_SCHEMA_ALLOWED_STATES);
             std::vector<State> ret;
-            for(unsigned int i = 0; i != stateList.size(); ++i){
+            for (unsigned int i = 0; i != stateList.size(); ++i) {
                 ret.push_back(State::fromString(stateList[i]));
             }
             return ret;
@@ -673,7 +665,8 @@ namespace karabo {
         bool Schema::hasAlarmVarianceHigh(const std::string& path) const {
             return m_hash.hasAttribute(path, KARABO_ALARM_VARIANCE_HIGH);
         }
-        
+
+
         bool Schema::hasInterlock(const std::string& path) const {
             return m_hash.hasAttribute(path, KARABO_INTERLOCK);
         }
@@ -690,10 +683,11 @@ namespace karabo {
             }
             return m_hash.getAttribute<unsigned int>(path, KARABO_SCHEMA_ROLLING_STATS_EVAL);
         }
-        
-        void Schema::setRollingStatistics(const std::string& path, unsigned int interval){
+
+
+        void Schema::setRollingStatistics(const std::string& path, unsigned int interval) {
             m_hash.setAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS, true);
-            m_hash.setAttribute(path, KARABO_SCHEMA_ROLLING_STATS_EVAL, interval);      
+            m_hash.setAttribute(path, KARABO_SCHEMA_ROLLING_STATS_EVAL, interval);
         }
 
 
@@ -877,11 +871,8 @@ namespace karabo {
 
         void Schema::help(const string& classId, ostream& os) {
             ostringstream stream;
-            stream << "----- HELP -----" << endl;
             if (classId.empty() || classId == getRootName()) {
 
-
-                stream << "Schema: " << getRootName() << endl;
                 vector<string> keys = getKeys();
 
 
@@ -903,7 +894,6 @@ namespace karabo {
                     }
                 }
             } else {
-                stream << "Schema: " << getRootName() << ", key: " << classId << endl;
 
                 int nodeTypeClassId;
                 try {
@@ -913,7 +903,6 @@ namespace karabo {
                 }
 
                 if (nodeTypeClassId == Schema::LEAF) {
-                    stream << "LEAF element" << endl;
                     processingLeaf(classId, stream);
                 }
 
@@ -921,9 +910,6 @@ namespace karabo {
 
                     vector<string> keys = getKeys(classId);
                     if (!keys.empty()) {
-
-
-                        stream << "NODE element" << endl;
 
 
                         BOOST_FOREACH(string key, keys) {
@@ -946,15 +932,12 @@ namespace karabo {
                             }
                         }
                     } else {
-                        stream << "NODE element (contains no other elements)" << endl;
                         processingNode(classId, stream);
                     }
                 }
 
                 if (nodeTypeClassId == Schema::CHOICE_OF_NODES) {
 
-
-                    stream << "CHOICE element" << endl;
                     vector<string> keys = getKeys(classId);
 
 
@@ -966,8 +949,6 @@ namespace karabo {
 
                 if (nodeTypeClassId == Schema::LIST_OF_NODES) {
 
-
-                    stream << "LIST element" << endl;
                     vector<string> keys = getKeys(classId);
 
 
@@ -990,7 +971,7 @@ namespace karabo {
 
             string valueType = Types::to<ToLiteral>(getValueType(key));
 
-            stream << "\n  ." << showKey << " (" << valueType << ")" << endl;
+            stream << "\n  " << showKey << " (" << valueType << ")" << endl;
 
             processingStandardAttributes(key, stream);
 
@@ -1011,7 +992,7 @@ namespace karabo {
 
         void Schema::processingNode(const std::string& key, ostringstream & stream) {
             string showKey = extractKey(key);
-            stream << "\n  ." << showKey << " (NODE)" << endl;
+            stream << "\n  " << showKey << " (NODE)" << endl;
 
 
             if (hasDescription(key))
@@ -1024,7 +1005,7 @@ namespace karabo {
 
 
             string showKey = extractKey(key);
-            stream << "\n  ." << showKey << " (CHOICE_OF_NODES)" << endl;
+            stream << "\n  " << showKey << " (CHOICE_OF_NODES)" << endl;
             processingStandardAttributes(key, stream);
         }
 
@@ -1033,7 +1014,7 @@ namespace karabo {
 
 
             string showKey = extractKey(key);
-            stream << "\n  ." << showKey << " (LIST_OF_NODES)" << endl;
+            stream << "\n  " << showKey << " (LIST_OF_NODES)" << endl;
             processingStandardAttributes(key, stream);
         }
 
@@ -1104,27 +1085,29 @@ namespace karabo {
         bool similar(const Schema& left, const Schema& right) {
             return similar(left.getParameterHash(), right.getParameterHash());
         }
-        
+
+
         const std::string Schema::getInfoForAlarm(const std::string& path, const AlarmCondition& condition) const {
-            const std::string attr = std::string(KARABO_ALARM_INFO)+"_"+condition.asString();
-            if(m_hash.hasAttribute(path, attr)){
+            const std::string attr = std::string(KARABO_ALARM_INFO) + "_" + condition.asString();
+            if (m_hash.hasAttribute(path, attr)) {
                 return m_hash.getAttribute<std::string>(path, attr);
             } else {
                 return std::string();
             }
         }
-        
-        const bool Schema::doesAlarmNeedAcknowledging(const std::string& path, const karabo::util::AlarmCondition& condition) const{
-            const std::string attr = std::string(KARABO_SCHEMA_ALARM_ACK)+"_"+condition.asString();
-            if(m_hash.hasAttribute(path, attr)){
+
+
+        const bool Schema::doesAlarmNeedAcknowledging(const std::string& path, const karabo::util::AlarmCondition& condition) const {
+            const std::string attr = std::string(KARABO_SCHEMA_ALARM_ACK) + "_" + condition.asString();
+            if (m_hash.hasAttribute(path, attr)) {
                 return m_hash.getAttribute<bool>(path, attr);
             } else {
                 return false;
             }
         }
-        
-        #define applyRuntimeUpdateTypeResolver(Type, RefType, CppType, Func) if(Type == RefType) Func(path, it->getAs<CppType>("value"));
-        #define checkForRunttimeUpdateTemplatedType(Type, Attr, Func) if(attribute == Attr) { \
+
+#define applyRuntimeUpdateTypeResolver(Type, RefType, CppType, Func) if(Type == RefType) Func(path, it->getAs<CppType>("value"));
+#define checkForRunttimeUpdateTemplatedType(Type, Attr, Func) if(attribute == Attr) { \
                         applyRuntimeUpdateTypeResolver(Type, Types::BOOL, bool, Func)\
                         applyRuntimeUpdateTypeResolver(Type, Types::CHAR, char, Func)\
                         applyRuntimeUpdateTypeResolver(Type, Types::UINT8, unsigned char, Func)\
@@ -1142,13 +1125,14 @@ namespace karabo {
                         applyRuntimeUpdateTypeResolver(Type, Types::STRING, string, Func)\
                         }
 
-        #define checkForRunttimeUpdateFixedType(Attr, Func, CppType) if(attribute == Attr) Func(path, it->getAs<CppType>("value"));
-        #define checkForRunttimeUpdateFixedTypeEnum(Attr, Func, EnumType) if(attribute == Attr) Func(path, EnumType(it->get<int>("value")));
-        
-        bool Schema::applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates){
+#define checkForRunttimeUpdateFixedType(Attr, Func, CppType) if(attribute == Attr) Func(path, it->getAs<CppType>("value"));
+#define checkForRunttimeUpdateFixedTypeEnum(Attr, Func, EnumType) if(attribute == Attr) Func(path, EnumType(it->get<int>("value")));
+
+
+        bool Schema::applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates) {
             bool success = true;
-            for(auto it = updates.begin(); it != updates.end(); ++it){
-                try{
+            for (auto it = updates.begin(); it != updates.end(); ++it) {
+                try {
                     const std::string& path = it->get<std::string>("path");
                     const std::string& attribute = it->get<std::string>("attribute");
 
@@ -1179,11 +1163,11 @@ namespace karabo {
             }
             return success;
         }
-        
-        #undef checkForRunttimeUpdateFixedTypeEnum
-        #undef checkForRunttimeUpdateFixedType
-        #undef checkForRunttimeUpdateTemplatedType
-        #undef applyRuntimeUpdateTypeResolver
+
+#undef checkForRunttimeUpdateFixedTypeEnum
+#undef checkForRunttimeUpdateFixedType
+#undef checkForRunttimeUpdateTemplatedType
+#undef applyRuntimeUpdateTypeResolver
 
         
         Schema Schema::subSchema(const std::string& subNodePath, const std::string& filterTags) const {

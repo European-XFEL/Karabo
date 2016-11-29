@@ -94,15 +94,14 @@ do
     source ./.allParse
 
     # the match is too indescriminant and fails to identify all cases! Correct solution use pid chain?
-    job=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep $exe | awk '{print $1}')
+    job=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep -F "$exe")
 
     if [ -n "$job" ]; then	
         echo "INFO $exe running, not restarting"
     else 
         target=$exe
         # on CentOS, HOSTNAME contains domain => strip off from 1st dot
-        #title="\"${HOSTNAME%%.*}: $exe\""
-        title="${HOSTNAME%%.*}:$exe"
+        title=$(echo ${HOSTNAME%%.*}:$exe | awk '{print $1 ":" $2}')
         options="-T $title -sb -rightbar -sl $scroll -hold"
 	display=""
 	if [ -n "$XUSE" ] && [ "$xuse" = "yes" ]; then
@@ -110,17 +109,17 @@ do
 	fi
         if [ "$nox" == "true" ]; then
             # No xterms should be used, disregard stdout and stderr
-            echo "INFO Starting: $target $params > /dev/null 2>&1 &"
-            $target $params > /dev/null 2>&1 &
+            echo "INFO Starting: $target > /dev/null 2>&1 &"
+            $target > /dev/null 2>&1 &
         else
-            echo "INFO Starting: xterm $options $display -e bash -c \"$target $params\" &"
-            xterm $options $icon $display -e bash -c "$target $params" &
+            echo "INFO Starting: xterm $options $display -e bash -c \"$target\" &"
+            xterm $options $icon $display -e bash -c "$target" &
         fi
 	# store name and pid of started process
         bg=$!
 	# Give the xterm processes time to start and set up their pids
 	sleep 0.5 
-        echo "key: $exe $!" >> .allInfo 
+        echo "key: $bg $exe" >> .allInfo 
 	# put pid and its child pids in one line of file
 	echo -n "$bg " >> .allStart.pid
 	cpid=`pgrep -P $bg`
