@@ -1,0 +1,8 @@
+nbproject/private
+nbproject/Package-*.bash
+nbproject/Makefile-*.mk
+package/
+dist/
+build/
+.dep.inc
+
