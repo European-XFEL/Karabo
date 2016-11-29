@@ -98,9 +98,17 @@ class Simple(object):
     maxInc = Attribute()
 
     alarmHigh = Attribute()
+    alarmInfo_alarmHigh = Attribute("")
+    alarmNeedsAck_alarmHigh = Attribute(False)
     alarmLow = Attribute()
+    alarmInfo_alarmLow = Attribute("")
+    alarmNeedsAck_alarmLow = Attribute(False)
     warnHigh = Attribute()
+    alarmInfo_warnHigh = Attribute("")
+    alarmNeedsAck_warnHigh = Attribute(False)
     warnLow = Attribute()
+    alarmInfo_warnLow = Attribute("")
+    alarmNeedsAck_warnLow = Attribute(False)
 
     @classmethod
     def read(cls, file):
