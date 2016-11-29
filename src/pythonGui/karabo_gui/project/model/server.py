@@ -182,17 +182,15 @@ class DeviceServerModelItem(BaseProjectTreeItem):
 
     def _delete_all_devices(self):
         server = self.model
-        ask = """
-        Do you really want to delete all devices of server \"<b>{}</b>\"?
-        """.format(server.simple_name)
+        ask = ('Do you really want to delete all devices of server '
+               '\"<b>{}</b>\"?').format(server.simple_name)
         reply = QMessageBox.question(None, 'Delete all devices', ask,
                                      QMessageBox.Yes | QMessageBox.No,
                                      QMessageBox.No)
         if reply == QMessageBox.No:
             return
 
-        while server.devices:
-            server.devices.pop()
+        server.devices[:] = []
 
     def _instantiate_devices(self):
         server = self.model

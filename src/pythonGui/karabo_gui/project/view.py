@@ -89,10 +89,8 @@ class ProjectView(QTreeView):
 
         # Save possible changes - XXX TODO check `modified` flag
         if project.modified:
-            ask = """
-            The project has be modified.<br />Do you want to save the project
-            before closing?
-            """
+            ask = ('The project has be modified.<br />Do you want to save the '
+                   'project before closing?')
             options = (QMessageBox.Save | QMessageBox.Discard |
                        QMessageBox.Cancel)
             reply = QMessageBox.question(None, 'Save changes before closing',
