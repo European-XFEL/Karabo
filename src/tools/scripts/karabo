@@ -43,8 +43,13 @@ def parse_commandline():
 
     parser_chkdev.add_argument('api',
                                type=str,
-                               choices=['c++', 'python', 'middle-layer'],
+                               choices=['cpp', 'python', 'middleLayer'],
                                help='The API of the new device')
+
+    parser_chkdev.add_argument('-f', '--force',
+                               action='store_true',
+                               help='Force creation of device, may override\
+                                     existing')
 
     parser_chkdev = sps.add_parser('checkout',
                                    help='Checks out a device (sources) from the\
@@ -133,23 +138,41 @@ def parse_commandline():
 
 
 def new(args):
-    print('NEW')
+    with pushd_popd():
+        path = 'devices/{}'.format(args.device)
+        class_name = args.device[0].capitalize() + args.device[1:]
+        if os.path.isdir(path):
+            if args.force:
+                run_cmd('rm -rf {}'.format(path))
+            else:
+                print('Device {} already exists.'
+                      .format(args.device))
+                return
+        run_cmd('mkdir -p {}'.format(path))
+        run_cmd('cp -rf templates/{}/minimal/* {}'.format(args.api, path))
+        run_cmd('cp -rf templates/{}/minimal/.gitignore {}'.format(args.api,
+                path))
+        run_cmd('configuretemplate.sh {} {} {} {}'.format(path, args.device,
+                class_name, args.api))
+        os.chdir(path)
+        run_cmd('git init')
+        run_cmd('git remote add origin {}/karaboDevices/{}.git'
+                .format(args.git, args.device))
+        run_cmd('git add .')
+        run_cmd('git commit -m "Initial commit"')
 
 
 def checkout(args):
-    old_path = os.getcwd()
+    with pushd_popd():
+        path = 'devices/{}'.format(args.device)
+        if os.path.isdir(path):
+            print('INFO The device already exists, skipped checkout')
+        else:
+            run_cmd('git clone {}/karaboDevices/{} {}'.format(args.git,
+                    args.device, path))
 
-    path = 'devices/{}'.format(args.device)
-    if os.path.isdir(path):
-        print('INFO The device already exists, skipped checkout')
-    else:
-        run_cmd('git clone {}/karaboDevices/{} {}'.format(args.git,
-                args.device, path))
-
-    if develop in args:
-        develop(args)
-
-    os.chdir(old_path)
+        if develop in args:
+            develop(args)
 
 
 def install(args):
@@ -168,6 +191,8 @@ def install(args):
         else:
             run_cmd('pip install --upgrade .')
 
+    run_cmd('rm -rf tmp')
+
 
 def uninstall(args):
     so_path = 'plugins/lib{}.so'.format(args.device)
@@ -178,20 +203,17 @@ def uninstall(args):
 
 
 def develop(args):
-    old_path = os.getcwd()
-
-    path = 'devices/{}'.format(args.device)
-    if not os.path.isdir(path):
-        checkout(args)
-    os.chdir(path)
-    if os.path.isfile('Makefile'):
-        run_cmd('make CONF={}'.format(args.config))
-        os.chdir('../../plugins')
-        run_cmd('ln -sf ../{}/dist/{}/*/*.so'.format(path, args.config))
-    else:
-        run_cmd('pip install -e .')
-
-    os.chdir(old_path)
+    with pushd_popd():
+        path = 'devices/{}'.format(args.device)
+        if not os.path.isdir(path):
+            checkout(args)
+        os.chdir(path)
+        if os.path.isfile('Makefile'):
+            run_cmd('make CONF={}'.format(args.config))
+            os.chdir('../../plugins')
+            run_cmd('ln -sf ../{}/dist/{}/*/*.so'.format(path, args.config))
+        else:
+            run_cmd('pip install -e .')
 
 
 def undevelop(args):

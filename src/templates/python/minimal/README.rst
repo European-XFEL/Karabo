@@ -1,6 +1,6 @@
-**************
-__CLASS_NAME__
-**************
+******************************
+__CLASS_NAME__ Device (Python)
+******************************
 
 Testing
 =======
@@ -23,4 +23,4 @@ Running
 
 If you want to manually start a server using this device, simply type:
 
-``karabo-pythondeviceserver serverId=pythonServer/1 devices=__CLASS_NAME__``
+``karabo-pythonserver serverId=pythonServer/1 devices=__CLASS_NAME__``
