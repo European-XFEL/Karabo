@@ -37,13 +37,34 @@ from karabo_gui.util import (
     getOpenFileName, getSaveFileName, getSchemaAttributeUpdates)
 
 
+def handle_device_state_change(box, value, timestamp):
+    """This forwards a device descriptor's state to the configuration panel
+    """
+    broadcast = broadcast_event
+    configuration = box.configuration
+
+    if State(value).isDerivedFrom(State.CHANGING):
+        # Only a state change
+        data = {'configuration': configuration, 'is_changing': True}
+        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceStateChanged,
+                                       data))
+    else:
+        # First the error state
+        data = {'configuration': configuration,
+                'is_changing': State(value) is State.ERROR}
+        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceErrorChanged,
+                                       data))
+
+        # Then a regular state change notification
+        data['is_changing'] = False
+        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceStateChanged,
+                                       data))
+
+
 class Manager(QObject):
     # signals
     signalReset = pyqtSignal()
     signalUpdateScenes = pyqtSignal()
-
-    signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
-    signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
     signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
     signalProjectLoaded = pyqtSignal(str, object, object) # projectName, metaData, data
@@ -183,19 +204,6 @@ class Manager(QObject):
         self.signalReset.emit()
         # Reset manager settings
         self.reset()
-
-    def _triggerStateChange(self, box, value, timestamp):
-        configuration = box.configuration
-        # Update GUI due to state changes
-        if State(value).isDerivedFrom(State.CHANGING):
-            self.signalChangingState.emit(configuration, True)
-        else:
-            if State(value) is State.ERROR:
-                self.signalErrorState.emit(configuration, True)
-            else:
-                self.signalErrorState.emit(configuration, False)
-
-            self.signalChangingState.emit(configuration, False)
 
     def onNavigationTreeModelSelectionChanged(self, selected, deselect):
         """
@@ -510,8 +518,8 @@ class Manager(QObject):
 
         # Add configuration with schema to device data
         conf.setSchema(schema)
-        conf.boxvalue.state.signalUpdateComponent.connect(
-            self._triggerStateChange)
+        box_signal = conf.boxvalue.state.signalUpdateComponent
+        box_signal.connect(handle_device_state_change)
 
         self.onShowConfiguration(conf)
         # Trigger update scenes
