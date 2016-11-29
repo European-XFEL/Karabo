@@ -42,8 +42,6 @@ class Manager(QObject):
     signalReset = pyqtSignal()
     signalUpdateScenes = pyqtSignal()
 
-    signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
-
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 

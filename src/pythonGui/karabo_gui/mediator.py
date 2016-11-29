@@ -31,6 +31,7 @@ class KaraboEventSender(Enum):
     ShowAlarmServices = "Show alarm services"
     ShowConfiguration = "Show configuration"
     ShowDevice = "Show device"
+    ShowNavigationItem = "Show navigation item"
 
 
 class KaraboBroadcastEvent(QEvent):
