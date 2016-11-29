@@ -64,7 +64,6 @@ then
   installDir="${install_prefix_dir}"
 fi
 
-echo "This is a self-extracting archive."
 if [ "x${interactive}x" = "xTRUEx" ]
 then
   read -e -p " Installation path [$installDir]: " dir
@@ -87,7 +86,7 @@ SKIP=`awk '/^__TARFILE_FOLLOWS__/ { print NR + 1; exit 0; }' $0`
 tail -n +$SKIP $0 | (cd  $installDir && tar xzf -) || echo_exit "Problem unpacking the file $0"
 echo  " unpacking finished successfully"
 echo
-echo " Package was successfully installed to: $installDir/$PLUGINNAME-$VERSION-$KARABOVERSION"
+echo " Package was successfully installed to: $installDir"
 echo
 echo
 exit 0
