@@ -22,6 +22,8 @@ class NotificationPanel(Dockable, QWidget):
         mainLayout.setContentsMargins(5, 5, 5, 5)
         mainLayout.addWidget(self.__logWidget)
 
+        # Register for broadcast events.
+        # This object lives as long as the app. No need to unregister.
         register_for_broadcasts(self)
 
     def eventFilter(self, obj, event):
