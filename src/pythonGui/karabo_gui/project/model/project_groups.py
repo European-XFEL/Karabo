@@ -143,11 +143,7 @@ def _fill_scenes_menu(menu, parent_project):
 def _fill_servers_menu(menu, parent_project):
     add_action = QAction('Add server', menu)
     add_action.triggered.connect(partial(_add_server, parent_project))
-    remove_all_action = QAction('Delete all', menu)
-    remove_selected_action = QAction('Delete selected', menu)
     menu.addAction(add_action)
-    menu.addAction(remove_all_action)
-    menu.addAction(remove_selected_action)
 
 
 def _fill_subprojects_menu(menu, parent_project):
