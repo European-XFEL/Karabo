@@ -178,6 +178,8 @@ cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 # Activation script
 cd $BASEDIR
 sed "s%__VENV_DIR__%$BASEDIR/karabo%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
+# templates
+cp -rf src/templates $PACKAGEDIR
 cd -
 
 # bundle scripts for plugin packages
