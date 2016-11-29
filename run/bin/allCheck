@@ -11,6 +11,13 @@ if [ $? -ne 0 ]; then
     exit 1;
 fi
 
+# Make sure Karabo is installed
+if [ -z $KARABO ]; then
+  echo
+  echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
+  exit 1
+fi
+
 if [ ! -e "allInfo" ]; then
     cp allInfo.orig allInfo
 fi
@@ -27,11 +34,11 @@ function fclean()
             return $count
         fi
 	if [ "$nn" = "key:" ]; then
-	    name=$n0
-	    pid=$n1
-            xpid=$(ps -u $USER -o pid,ppid | grep "^[ \t]*$pid[ \t]*[0-9]*[ \t]*" | grep -v grep | grep $pid | awk '{print $1}')
+	    pid=$n0
+	    name=$n1
+	    xpid=$(ps -u $USER -o pid | grep "^[ \t]*$pid[ \t]*[0-9]*[ \t]*" | grep -v grep | grep $pid)
 	    if [ "x$pid" = "x$xpid" ]; then  # yes, the x is needed!
-                echo "INFO [$count] $name still running with pid $n1"
+                echo "INFO [$count] $name (pid $pid)"
 	        count+=1
 	    fi
         elif [ "$nn" = "args:" ]; then
@@ -56,7 +63,7 @@ source allInfo
 test -n "$ALLINFO" || { echo "ERROR ALLINFO array does not exist"; exit 3;} 
 
 # check allInfo content definitions
-declare -i TOKENS=5
+declare -i TOKENS=4
 for key in "${!ALLINFO[@]}"
 do
     value=${ALLINFO[$key]}
@@ -68,14 +75,10 @@ do
     fi
 
     source ./.allParse
+    # echo "exe: $exe ${#exe[@]}"
+    # echo "wait: $wait ${#wait[@]}"
+    # echo "scroll: $scroll ${#scroll[@]}"
 
-#    echo "exe: $exe ${#exe[@]}"
-#    echo "params: $params ${#params[@]}"
-#    echo "wait: $wait ${#wait[@]}"
-#    echo "scroll: $scroll ${#scroll[@]}"
-
-    test -f $exe || { echo "ERROR bad exe file: $exe in: $value, no such file"; exit 7;}
-    test -e $exe || { echo "ERROR bad exe file: $exe in: $value, not executable"; exit 8;}
     test -n $wait || { echo "ERROR cannot have zero length, seconds to wait before xterm"; exit 9;}
     test -n $scroll || { echo "ERROR cannot have zero length, scroll line count"; exit 12;}
 done
@@ -98,7 +101,7 @@ do
     source ./.allParse
 
     orphans="no"
-    jobs=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep $exe | awk '{print $1}')
+    jobs=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep -F "$exe")
     for job in $jobs; 
     do 
     	echo "INFO $name running orphaned from xterm, pid "$job

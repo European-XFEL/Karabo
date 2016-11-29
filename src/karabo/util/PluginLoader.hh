@@ -51,6 +51,10 @@ namespace karabo {
             bool update();
 
             const boost::filesystem::path& getPluginDirectory() const;
+            
+            std::vector<std::string> getKnownPlugins() const;
+            
+            void updatePluginsToLoad(const std::vector<std::string>& pluginsToLoad);
 
         protected:
 
@@ -60,6 +64,8 @@ namespace karabo {
 
             static std::map<boost::filesystem::path, void*> m_loadedPlugins;
             static std::vector<std::string> m_failedPlugins;
+            static std::set<std::string> m_knownPlugins;
+            std::set<std::string> m_pluginsToLoad;
 
         };
     } // namespace util

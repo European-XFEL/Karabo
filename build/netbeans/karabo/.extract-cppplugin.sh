@@ -69,9 +69,6 @@ if [ "x${interactive}x" = "xTRUEx" ]
 then
   read -e -p " Installation path [$installDir]: " dir
   dir=${dir/#\~/$HOME}
-    # Always resolve to absolute path
-    #installDir=`[[ $dir = /* ]] && echo "$dir" || echo "$PWD/${dir#./}"`
-    #mkdir -p $installDir
   if [ "x${dir}x" != "xx" ]; then
      if [ ! -d ${dir} ]; then
        mkdir -p  ${dir} ||  echo_exit "Cannot create directory $dir"
@@ -89,22 +86,6 @@ echo -n " Extracting files, please wait..."
 SKIP=`awk '/^__TARFILE_FOLLOWS__/ { print NR + 1; exit 0; }' $0`
 tail -n +$SKIP $0 | (cd  $installDir && tar xzf -) || echo_exit "Problem unpacking the file $0"
 echo  " unpacking finished successfully"
-# Any script here will happen after the tar file extract.
-echo
-echo -n "Running post install script..."
-#if [ "x${KARABO}x" != "xx" ]; then
-#   if [ ! -d ${KARABO}/cppplugins ]; then
-#      mkdir ${KARABO}/cppplugins || echo_exit "Cannot create directory ${KARABO}/plugins"
-#   fi
-#   echo "Creating link to plugins folder..."
-#   #olddir=`pwd`; cd ${KARABO}/plugins; ln -sf $installDir/$PLUGINNAME-$VERSION/*; cd $olddir
-#   olddir=`pwd`; cd ${KARABO}/cppplugins; find $installDir/$PLUGINNAME-$VERSION -type f -exec ln -sf {} \; ; cd $olddir
-#fi
-# to do: loop for predefined dependencies to install
-#for dep in $intDeps; do
-#   echo "installing dependency $dep"
-#done
-echo " done."
 echo
 echo " Package was successfully installed to: $installDir/$PLUGINNAME-$VERSION-$KARABOVERSION"
 echo

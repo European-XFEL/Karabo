@@ -1,0 +1,203 @@
+#!/usr/bin/env python
+import argparse
+import subprocess
+import sys
+import os
+import contextlib
+
+
+def run_local():
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir("{}/..".format(dname))
+
+
+def run_cmd(cmd):
+    try:
+        output = subprocess.check_output(cmd, shell=True)
+        return output
+    except subprocess.CalledProcessError as e:
+        print("Problem with system call: {}".format(e))
+
+
+@contextlib.contextmanager
+def pushd_popd():
+    old_path = os.getcwd()
+    try:
+        yield
+    finally:
+        os.chdir(old_path)
+
+
+def parse_commandline():
+    parser = argparse.ArgumentParser(description=('Karabo Utility Script'))
+    sps = parser.add_subparsers(metavar='')
+
+    parser_chkdev = sps.add_parser('new',
+                                   help='Creates a new device from template')
+    parser_chkdev.set_defaults(command=new)
+
+    parser_chkdev.add_argument('device',
+                               type=str,
+                               help='The name of the new device package')
+
+    parser_chkdev.add_argument('api',
+                               type=str,
+                               choices=['c++', 'python', 'middle-layer'],
+                               help='The API of the new device')
+
+    parser_chkdev = sps.add_parser('checkout',
+                                   help='Checks out a device (sources) from the\
+                                         repository')
+    parser_chkdev.set_defaults(command=checkout)
+
+    parser_chkdev.add_argument('device',
+                               type=str,
+                               help='The name of the device package')
+
+    parser_chkdev.add_argument('-d', '--develop',
+                               action='store_true',
+                               help='Installs device in develop mode')
+
+    parser_chkdev.add_argument('-c', '--config',
+                               type=str,
+                               metavar='',
+                               choices=['Debug', 'Release'],
+                               default='Debug',
+                               help='Build configuration (Debug/Release)')
+
+    parser_chkdev = sps.add_parser('install',
+                                   help='Installs an existing device')
+    parser_chkdev.set_defaults(command=install)
+
+    parser_chkdev.add_argument('device',
+                               type=str,
+                               help='The name of the device package')
+
+    parser_chkdev.add_argument('tag',
+                               type=str,
+                               help='The tag to install')
+
+    parser_chkdev.add_argument('-c', '--config',
+                               type=str,
+                               metavar='',
+                               choices=['Debug', 'Release'],
+                               default='Debug',
+                               help='Build configuration (Debug/Release)')
+
+    parser_chkdev = sps.add_parser('uninstall',
+                                   help='Uninstalls an existing device')
+    parser_chkdev.set_defaults(command=uninstall)
+
+    parser_chkdev.add_argument('device',
+                               type=str,
+                               help='The name of the device package')
+
+    parser_chkdev = sps.add_parser('develop',
+                                   help='Activates develop mode for a given\
+                                   device')
+    parser_chkdev.set_defaults(command=develop)
+
+    parser_chkdev.add_argument('device',
+                               type=str,
+                               help='The name of the device package')
+
+    parser_chkdev.add_argument('-c', '--config',
+                               type=str,
+                               metavar='',
+                               choices=['Debug', 'Release'],
+                               default='Debug',
+                               help='Build configuration (Debug/Release)')
+
+    parser_chkdev = sps.add_parser('undevelop',
+                                   help='Deactivates develop mode for a given\
+                                   device')
+    parser_chkdev.set_defaults(command=undevelop)
+
+    parser_chkdev.add_argument('device',
+                               type=str,
+                               help='The name of the device package')
+
+    parser.add_argument('-g', '--git',
+                        nargs=1,
+                        default='ssh://git@git.xfel.eu:10022',
+                        help='URL to the git repository')
+
+    args = parser.parse_args()
+
+    if len(sys.argv) <= 1:
+        parser.print_help()
+        parser.exit()
+
+    args.command(args)
+
+
+def new(args):
+    print('NEW')
+
+
+def checkout(args):
+    old_path = os.getcwd()
+
+    path = 'devices/{}'.format(args.device)
+    if os.path.isdir(path):
+        print('INFO The device already exists, skipped checkout')
+    else:
+        run_cmd('git clone {}/karaboDevices/{} {}'.format(args.git,
+                args.device, path))
+
+    if develop in args:
+        develop(args)
+
+    os.chdir(old_path)
+
+
+def install(args):
+    with pushd_popd():
+        path = 'tmp/{}'.format(args.device)
+        if os.path.isdir(path):
+            run_cmd('rm -rf {}'.format(path))
+        os.makedirs(path, exist_ok=True)
+        run_cmd('git clone {}/karaboDevices/{} --depth 1 -b {}\
+                --single-branch {}'
+                .format(args.git, args.device, args.tag, path))
+        os.chdir(path)
+        if os.path.isfile('Makefile'):
+            run_cmd('make CONF={}'.format(args.config))
+            run_cmd('cp -f dist/{}/*/*.so ../../plugins/'.format(args.config))
+        else:
+            run_cmd('pip install --upgrade .')
+
+
+def uninstall(args):
+    so_path = 'plugins/lib{}.so'.format(args.device)
+    if os.path.isfile(so_path):
+        run_cmd('rm -rf {}'.format(so_path))
+    else:
+        run_cmd('pip uninstall -y {}'.format(args.device))
+
+
+def develop(args):
+    old_path = os.getcwd()
+
+    path = 'devices/{}'.format(args.device)
+    if not os.path.isdir(path):
+        checkout(args)
+    os.chdir(path)
+    if os.path.isfile('Makefile'):
+        run_cmd('make CONF={}'.format(args.config))
+        os.chdir('../../plugins')
+        run_cmd('ln -sf ../{}/dist/{}/*/*.so'.format(path, args.config))
+    else:
+        run_cmd('pip install -e .')
+
+    os.chdir(old_path)
+
+
+def undevelop(args):
+    uninstall(args)
+
+
+if __name__ == "__main__":
+    run_local()
+    parse_commandline()

@@ -74,12 +74,9 @@ echo
 echo " #####################################################################"
 echo
 echo " NOTE: This installer will NOT change any settings on your machine."
-echo "       Installation will be limited to a directory (\"karabo-$VERSION\")" 
+echo "       Installation will be limited to a directory (\"karabo\")" 
 echo "       under the specified path and a $HOME/.karabo for private settings."
 echo
-echo "       In case you also install Karabo's run environment a directory"
-echo "       (\"karaboRun\") will be created under the specified run-path."
-echo "       Already existing karaboRun folders will be updated."
 echo 
 
 installDir=$HOME
@@ -89,55 +86,27 @@ if [ "x${install_prefix_dir}x" != "xx" ]; then
     runDir=0
 fi
 
-echo " This is a self-extracting archive."
 if [ "x${interactive}x" = "xTRUEx" ]; then
-    read -e -p " Framework installation path [$HOME]: " dir
+    read -e -p " Karabo installation path [$HOME]: " dir
     dir=${dir/#\~/$HOME}
     # Always resolve to absolute path
-    #dir=$(dirname `[[ $dir = /* ]] && echo "$dir" || echo "$PWD/${dir#./}"`)
-    #mkdir -p $installDir
     if [ "x${dir}x" != "xx" ]; then
 	if [ ! -d ${dir} ]; then
 	    mkdir -p  ${dir} ||  echo_exit "Cannot create directory $dir"
 	fi
 	installDir=`cd "${dir}"; pwd`
-    fi
-    read -e -p " Run environment installation path (type 0 to skip) [$HOME]: " dir
-    dir=${dir/#\~/$HOME}
-    # Always resolve to absolute path
-    #dir=$(dirname `[[ $dir = /* ]] && echo "$dir" || echo "$PWD/${dir#./}"`)
-    if [ "$dir" = "0" ]; then 
-	runDir=0
-    elif [ "x${dir}x" != "xx" ]; then
-	if [ ! -d ${dir} ]; then
-	    mkdir -p  ${dir} ||  echo_exit "Cannot create directory $dir"
-	fi
-	runDir=`cd "${dir}"; pwd`
-	
-    fi
+    fi    
 fi
 echo -n " Extracting files, please wait..."
 # searches for the line number where finish the script and start the tar.gz
 SKIP=`awk '/^__TARFILE_FOLLOWS__/ { print NR + 1; exit 0; }' $0`
-#remember our file name
-#THIS=`pwd`/$0
-# take the tarfile and pipe it into tar
-#cd $installDir
-#tail -n +$SKIP $THIS | tar -xz
 tail -n +$SKIP $0 | (cd  $installDir && tar xzf -) || echo_exit "Problem unpacking the file $0"
 echo  " unpacking finished successfully"
 # Any script here will happen after the tar file extract.
-echo
-echo -n " Running post install script..."
 
 # Fix up the venv activation script
-KARABO=$(get_abs_path $installDir/karabo-$VERSION)
+KARABO=$(get_abs_path $installDir/karabo)
 sed "s%__VENV_DIR__%$KARABO%g" $KARABO/bin/activate.tmpl > $KARABO/activate
-
-if [ "$runDir" != "0" ]; then
-    cp -rf $KARABO/karaboRun $runDir/
-    ln -sf $KARABO/activate $runDir/karaboRun/activate
-fi
 
 # Make sure the ~/.karabo directory exists
 mkdir -p $HOME/.karabo
@@ -165,16 +134,9 @@ sed -i "/'sip_bin'/c\    'sip_bin':            '$KARABO/extern/bin/sip'," sipcon
 sed -i "/'sip_inc_dir'/c\    'sip_inc_dir':        '$KARABO/extern/$includeDir'," sipconfig.py
 sed -i "/'sip_mod_dir'/c\    'sip_mod_dir':        '$KARABO/extern/$sitePackagesDir'," sipconfig.py
 cd -
-echo " done."
-echo
 echo
 echo " Karabo framework was successfully installed to: $KARABO"
 echo
-if [ "$runDir" != "0" ]; then
-    echo " Karabo's run environment was successfully installed to: $runDir/karaboRun"
-else
-    echo " Karabo's run environment was NOT installed."
-fi
 echo
 exit 0
 # NOTE: Don't place any newline characters after the last line below.

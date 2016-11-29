@@ -58,7 +58,7 @@ if [ $? -ne 0 ]; then
     # Otherwise use the short hash
     VERSION=$(git rev-parse --short HEAD)
 fi
-PACKAGENAME=karabo-$VERSION
+PACKAGENAME=karabo
 
 NUM_CORES=2  # default
 if [ "$OS" = "Linux" ]; then
@@ -85,6 +85,8 @@ rm -f $BASEDIR/karabo
 
 # Start fresh
 mkdir -p $PACKAGEDIR
+mkdir -p $PACKAGEDIR/plugins
+mkdir -p $PACKAGEDIR/var/log
 
 # Version information
 echo $VERSION > $PACKAGEDIR/VERSION
@@ -172,26 +174,6 @@ cd ../pythonGui
 safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
-
-# serverControl
-cd ../serverControl
-safeRunCommand "./build.sh"
-cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-
-# pythonTools (deprecated)
-#cd ../pythonTools
-#safeRunCommand "./build.sh"
-#cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-
-# run (Karabo's run/package development environment)
-cd $BASEDIR
-tar --exclude=run/servers/karaboHistory -cf - run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
-# Activation script
-sed "s%__VENV_DIR__%$BASEDIR/karabo%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
-ln -s $PACKAGEDIR/activate $PACKAGEDIR/karaboRun/activate
-# Version information
-echo $VERSION > $PACKAGEDIR/karaboRun/VERSION
-cd -
 
 # bundle scripts for plugin packages
 cd ../karabo

@@ -10,7 +10,7 @@ if [ ${#@} -le 0 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
     echo "  $0 [-h|--help] topic [broker:port [firstMessageIdx [numMessages]]]"
     echo
     echo "Default broker:port is '$BROKER_DEFAULT'."
-    echo "Must be called from a directory where './queryBroker' is available."
+    echo "Needs karabo-querybroker as dependency."
     echo
     exit 0
 fi
@@ -19,7 +19,7 @@ TOPIC=$1
 # Broker from argument or from default if argument not set (or null).
 BROKER=${2:-$BROKER_DEFAULT}
 
-COMMAND="./queryBroker -b $BROKER list msg -t t -n $TOPIC -nocheck"
+COMMAND="karabo-querybroker -b $BROKER list msg -t t -n $TOPIC -nocheck"
 # If more arguments are given, use them (otherwise ${3:+<...>} stays empty):
 COMMAND="$COMMAND ${3:+-startMsgIndex $3} ${4:+-maxMsgsRet $4}"
 
@@ -36,7 +36,7 @@ declare -i counter=0
 
 for msgID in `$COMMAND | grep 'ID:' | awk '{print $2}' `; do
     echo "message query no. ${counter}: "
-    ./queryBroker -b $BROKER query msg -t t -n $TOPIC -nocheck -msgID $msgID
+    ./karabo-querybroker -b $BROKER query msg -t t -n $TOPIC -nocheck -msgID $msgID
     echo
     echo "=================================================================="
     echo

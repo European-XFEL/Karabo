@@ -44,7 +44,7 @@
           <useLinkerLibraries>false</useLinkerLibraries>
         </ccTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-deviceserver</output>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppdeviceserver</output>
           <linkerAddLib>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
@@ -54,6 +54,7 @@
             <pElem>${KARABO}/lib</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerDynSerch>
+          <stripSymbols>true</stripSymbols>
           <linkerLibItems>
             <linkerLibProjectItem>
               <makeArtifact PL="../karabo"
@@ -109,6 +110,7 @@
           </incDir>
         </cTool>
         <ccTool>
+          <developmentMode>5</developmentMode>
           <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
@@ -124,7 +126,7 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-deviceserver</output>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppdeviceserver</output>
           <linkerAddLib>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
