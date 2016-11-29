@@ -3,13 +3,13 @@
 # servers and applications used in a localhost device setup
 #
 # management scripts: 
-#   1. allStart - to start karabo processes defined by the ALLINFO environmental
+# 1. allStart   - to start karabo processes defined by the ALLINFO environmental
 #                 allStart has a single optional parameter "-nox" which controls whether
 #	       	  the processes are started as individual xterms or accumulated as background jobs
-#   2. allStop  - to stop started processes
-#   3. allCheck - to check the definitions used by test system scripts 
+# 2. allStop    - to stop started processes
+# 3. allCheck   - to check the definitions used by test system scripts 
 #                 this script is the only check made of the definitions used
-#   5. allRestart - to restart any "missing" applicationsd
+# 4. allRestart - to restart any "missing" applications
 #                 a candidate to a missing application is the gui which was closed at
 #                 the end of the last session with all other applications left running.
 # 
@@ -21,13 +21,13 @@
 ##################
 
 # If you are using Karabo at home and run a local broker you can you use directly
-#export KARABO_BROKER_HOSTS="localhost:7777"
+#export KARABO_BROKER="tcp://localhost:7777"
 
 # If you are only at the European XFEL GmbH you may use this settings
-export KARABO_BROKER_HOSTS="exfl-broker:7777"
+export KARABO_BROKER="tcp://exfl-broker:7777"
 
 # This setting is the default, it will try the XFEL broker first and failover to a local if unsuccessful
-#export KARABO_BROKER_HOSTS="exfl-broker:7777,localhost:7777"
+#export KARABO_BROKER="tcp://exfl-broker:7777,tcp://localhost:7777"
 
 #################
 # Broker Topic  #
@@ -37,7 +37,7 @@ export KARABO_BROKER_HOSTS="exfl-broker:7777"
 
 # You may want to fix it using:
 
-#export KARABO_BROKER_TOPIC=xbeam
+#export KARABO_BROKER_TOPIC=karabo
 
 
 ##################################
@@ -53,19 +53,17 @@ KARABO_KILL_SIGNAL=9
 # Applications #
 ################
 
-# Component definitions, currently 6 tokens per process
-# 1. relative path of the starter filename (including the starter)
-# 2. blank separated parameters to starter
-# 3. delay, in seconds, before starting next process
-# 4. number of scroll lines of xterm
-# 5. if "yes" use the x11 display specified in XUSE environmental. To start applications on the
+# 1. command line
+# 2. delay, in seconds, before starting next process
+# 3. number of scroll lines of xterm
+# 4. if "yes" use the x11 display specified in XUSE environmental. To start applications on the
 #    control host define XUSE to the main console ($ export XUSE=":0") and, provided your login account
-#    is identical to the console's owner account, all applications with 9="yes" will be displayed there. 
-#    Applications started in this way will remain alive when the session is closed. 
+#    is identical to the console's owner account, all applications with 4="yes" will be displayed there. 
+#    Applications started in this way will remain alive when the session is closed.
+ 
 # Note: additional servers can be added by duplicating a server line and performing
 # the necessary directory [definition 2] renaming (servers have unique directories)
 # and providing a unique ALLINFO array index
-KARABO_SERVERS="../servers"
 
 ###################
 # Service Servers #
@@ -73,51 +71,27 @@ KARABO_SERVERS="../servers"
 
 # Better don't touch
 
-logLevel=INFO
-serverId=Karabo_CentralLoggingServer
-ALLINFO[0]="$KARABO_SERVERS/centralLoggingServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
+# Default log level
+logger=Logger.priority=INFO
 
 
-logLevel=INFO  
-serverId=Karabo_GuiServer
-port=44444
-ALLINFO[1]="$KARABO_SERVERS/guiServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel DeviceServer.autoStart[0].GuiServerDevice.port=$port:0:1000:yes"
+ALLINFO[0]="karabo-cppdeviceserver serverId=karabo/guiServer devices=GuiServerDevice autoStart[0].GuiServerDevice.port=44444 $logger:0:1000:yes"
 
-logLevel=INFO
-serverId=Karabo_DataLoggerServer
-ALLINFO[2]="$KARABO_SERVERS/dataLoggerServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
+ALLINFO[1]="karabo-cppdeviceserver serverId=karabo/logAggregator devices=CentralLogging autoStart[0].CentralLogging $logger:0:1000:yes"
 
-logLevel=INFO
-serverId=Karabo_DLManagerServer
-ALLINFO[3]="$KARABO_SERVERS/dataLoggerManagerServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
+ALLINFO[2]="karabo-cppdeviceserver serverId=karabo/dataLogger devices=DataLogger,DataLogReader $logger:0:1000:yes"
 
-logLevel=INFO
-serverId=Karabo_ProjectServer
-ALLINFO[4]="$KARABO_SERVERS/projectServer/startCppServer:DeviceServer.Logger.priority=$logLevel DeviceServer.serverId=$serverId:0:1000:yes"
+ALLINFO[3]="karabo-cppdeviceserver serverId=karabo/dataLoggerManager devices=DataLoggerManager autoStart[0].DataLoggerManager $logger:0:1000:yes"
 
-logLevel=INFO
-serverId=Karabo_MacroServer
-ALLINFO[5]="$KARABO_SERVERS/macroServer/startPythonServerApi2:DeviceServer.serverId=$serverId:0:1000:yes"
+ALLINFO[4]="karabo-cppdeviceserver serverId=karabo/projectManager devices=ProjectManager autoStart[0].ProjectManager $logger:0:1000:yes"
 
-logLevel=INFO
-serverId=Karabo_AlarmServer
-ALLINFO[6]="$KARABO_SERVERS/alarmServer/startCppServer:DeviceServer.Logger.priority=$logLevel DeviceServer.serverId=$serverId:0:1000:yes"
-
-
-logLevel=INFO
-serverId=Karabo_ProjectServerDB
-ALLINFO[7]="$KARABO_SERVERS/projectServerPy/startPythonServerApi1:DeviceServer.Logger.priority=$logLevel DeviceServer.serverId=$serverId:0:1000:yes"
-
+#ALLINFO[5]="karabo-pythondeviceserver serverId=karabo/macroServer $logger:0:1000:yes"
 
 #####################
 # Device Server C++ #
 #####################
 
-serverId=Karabo_CppServer
-logLevel=INFO
-
-ALLINFO[10]="$KARABO_SERVERS/cppDeviceServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
-
+ALLINFO[10]="karabo-cppdeviceserver serverId=generic/develop/1 Logger.priority=INFO:0:1000:yes"
 
 ########################
 # Device Server Python #
@@ -126,19 +100,11 @@ ALLINFO[10]="$KARABO_SERVERS/cppDeviceServer/startCppServer:DeviceServer.serverI
 serverId=Karabo_PythonServer
 logLevel=INFO
 
-ALLINFO[20]="$KARABO_SERVERS/pythonDeviceServer/startPythonServerApi1:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
-
-#############################
-# Device Server Middlelayer #
-#############################
-
-# logLevel configuration currently not supported for middlelayer
-serverId=Karabo_MiddlelayerServer
-ALLINFO[30]="$KARABO_SERVERS/middlelayerServer/startMiddlelayerServer:DeviceServer.serverId=$serverId:0:1000:yes"
+#ALLINFO[20]="$KARABO_SERVERS/pythonDeviceServer/startPythonServerApi1:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
 
 
 ###################
 # User Interfaces #
 ###################
 
-ALLINFO[40]="./startGui::0:1000:no"
+ALLINFO[30]="karabo-gui:0:1000:no"

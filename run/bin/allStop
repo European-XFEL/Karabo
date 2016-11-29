@@ -76,7 +76,7 @@ while read line; do
     # There must be at least two parts and we skip the 'argument' line
     nParts=${#lineParts[@]}
     if [ $nParts -gt 1 ] && [ ${lineParts[0]} != "args:" ]; then
-        name=${lineParts[$nParts - 2]} # last but one (!) part of 'lineParts'
+        name=${lineParts[@]:2}
         killThis=0
         if [ "$#" -eq 0 ]; then
             # no arguments: kill all
@@ -92,7 +92,7 @@ while read line; do
         fi
         if [ $killThis -eq 1 ]; then
 	    # get pid
-            mainPid=${lineParts[$nParts - 1]}
+            mainPid=${lineParts[1]}
             # Recursively get pids of all descendant processes:
             # (Note: Array copying here does not care about sparse arrays or
             #        spaces in array elements.)

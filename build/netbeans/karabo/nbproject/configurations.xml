@@ -25,6 +25,7 @@
       <itemPath>../../../src/karabo/core/DeviceClient.hh</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.hh</itemPath>
+      <itemPath>../../../src/karabo/core/Runner.cc</itemPath>
       <itemPath>../../../src/karabo/core/Runner.hh</itemPath>
       <itemPath>../../../src/karabo/core.hpp</itemPath>
     </logicalFolder>
@@ -587,6 +588,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/Runner.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/Runner.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -2484,6 +2487,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/Runner.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/Runner.hh" ex="false" tool="3" flavor2="0">
       </item>
