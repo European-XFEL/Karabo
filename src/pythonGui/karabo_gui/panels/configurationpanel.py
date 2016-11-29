@@ -94,7 +94,6 @@ class ConfigurationPanel(Dockable, QWidget):
         vLayout.addWidget(splitTopPanes)
 
         manager = get_manager()
-        manager.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         manager.signalChangingState.connect(self.onChangingState)
         manager.signalErrorState.connect(self.onErrorState)
         manager.signalReset.connect(self.onResetPanel)
@@ -209,6 +208,9 @@ class ConfigurationPanel(Dockable, QWidget):
             if event.sender is KaraboEventSender.ShowConfiguration:
                 configuration = event.data.get('configuration')
                 self.onShowConfiguration(configuration)
+            elif event.sender is KaraboEventSender.ShowNavigationItem:
+                device_path = event.data.get('device_path')
+                self.onSelectNewNavigationItem(device_path)
             return False
         return super(ConfigurationPanel, self).eventFilter(obj, event)
 
