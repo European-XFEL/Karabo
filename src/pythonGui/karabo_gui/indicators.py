@@ -39,26 +39,30 @@ STATE_COLORS = {
     State.PASSIVE: PASSIVE_COLOR
 }
 
-
+WARN_GLOBAL = 'warn'
 WARN_LOW = 'warnLow'
 WARN_HIGH = 'warnHigh'
 WARN_VARIANCE_LOW = 'warnVarianceLow'
 WARN_VARIANCE_HIGH = 'warnVarianceHigh'
+ALARM_GLOBAL = 'alarm'
 ALARM_LOW = 'alarmLow'
 ALARM_HIGH = 'alarmHigh'
 ALARM_VARIANCE_LOW = 'alarmVarianceLow'
 ALARM_VARIANCE_HIGH = 'alarmVarianceHigh'
-
+INTERLOCK = 'interlock'
 
 ALARM_ICONS = {
+    WARN_GLOBAL: icons.warnGlobal,
     WARN_LOW: icons.warnLow,
     WARN_HIGH: icons.warnHigh,
     WARN_VARIANCE_LOW: icons.warnVarianceLow,
     WARN_VARIANCE_HIGH: icons.warnVarianceHigh,
+    ALARM_GLOBAL: icons.alarmGlobal,
     ALARM_LOW: icons.alarmLow,
     ALARM_HIGH: icons.alarmHigh,
     ALARM_VARIANCE_LOW: icons.alarmVarianceLow,
     ALARM_VARIANCE_HIGH: icons.alarmVarianceHigh,
+    INTERLOCK: icons.interlock,
 }
 
 
