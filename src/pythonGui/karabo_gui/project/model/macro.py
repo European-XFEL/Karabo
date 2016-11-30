@@ -33,7 +33,7 @@ class MacroModelItem(BaseProjectTreeItem):
         delete_action.triggered.connect(partial(self._delete_macro,
                                                 parent_project))
         save_action = QAction('Save', menu)
-        save_action.triggered.connect(self._save_macro)
+        save_action.triggered.connect(partial(save_object, self.model))
         save_as_action = QAction('Save As...', menu)
         save_as_action.triggered.connect(self._save_macro_to_file)
         menu.addAction(edit_action)
@@ -66,9 +66,6 @@ class MacroModelItem(BaseProjectTreeItem):
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
-
-    def _save_macro(self):
-        save_object(self.model)
 
     def _save_macro_to_file(self):
         macro = self.model

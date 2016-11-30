@@ -70,7 +70,7 @@ class ProjectView(QTreeView):
             if parent_project is None or is_project:
                 project_model = clicked_item_model.model
                 save_action = QAction('Save', menu)
-                save_action.triggered.connect(partial(self._save_action,
+                save_action.triggered.connect(partial(save_object,
                                                       project_model))
                 close_action = QAction('Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
@@ -79,9 +79,6 @@ class ProjectView(QTreeView):
                 menu.addAction(close_action)
 
             menu.exec(QCursor.pos())
-
-    def _save_action(self, project):
-        save_object(project)
 
     def _close_project(self, project, parent_project):
         """ Close the given `project`

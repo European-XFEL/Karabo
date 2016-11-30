@@ -39,7 +39,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         delete_action.triggered.connect(partial(self._delete_device,
                                                 parent_project))
         save_action = QAction('Save', menu)
-        save_action.triggered.connect(self._save_device)
+        save_action.triggered.connect(partial(save_object, self.model))
         instantiate_action = QAction('Instantiate', menu)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      parent_project))
@@ -105,9 +105,6 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
                 active_config_ref = (dialog.active_uuid, dialog.active_revision)
                 device.active_config_ref = active_config_ref
                 dev_conf.description = dialog.description
-
-    def _save_device(self):
-        save_object(self.model)
 
     def _instantiate_device(self, project):
         server = find_parent_object(self.model, project, DeviceServerModel)
