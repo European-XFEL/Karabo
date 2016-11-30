@@ -6,29 +6,35 @@
 
 from os.path import abspath, dirname, join
 
-from karabo_gui.docktabwindow import Dockable
-import karabo_gui.icons as icons
-from karabo_gui.navigationtreeview import NavigationTreeView
-from karabo_gui.parametertreewidget import ParameterTreeWidget
-from karabo_gui.projecttreeview import ProjectTreeView
-from karabo_gui.singletons.api import get_manager
-
 from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
                          QMovie, QPalette, QPushButton,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
 
+from karabo_gui.docktabwindow import Dockable
+import karabo_gui.icons as icons
+from karabo_gui.mediator import (
+    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.navigationtreeview import NavigationTreeView
+from karabo_gui.parametertreewidget import ParameterTreeWidget
+from karabo_gui.projecttreeview import ProjectTreeView
+from karabo_gui.singletons.api import get_manager
+
 
 class ConfigurationPanel(Dockable, QWidget):
     def __init__(self):
         super(ConfigurationPanel, self).__init__()
-        
+
+        # Register for broadcast events.
+        # This object lives as long as the app. No need to unregister.
+        register_for_broadcasts(self)
+
         self.__toolBar = None
-        
+
         title = "Configuration Editor"
         self.setWindowTitle(title)
-        
+
         # map = { deviceId, timer }
         self.__changingTimerDeviceIdMap = dict()
 
@@ -86,16 +92,6 @@ class ConfigurationPanel(Dockable, QWidget):
         vLayout = QVBoxLayout(topWidget)
         vLayout.setContentsMargins(0,0,0,0)
         vLayout.addWidget(splitTopPanes)
-
-        manager = get_manager()
-        manager.signalNewNavigationItem.connect(self.onNewNavigationItem)
-        manager.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
-        manager.signalShowConfiguration.connect(self.onShowConfiguration)
-        
-        manager.signalConflictStateChanged.connect(self.onConflictStateChanged)
-        manager.signalChangingState.connect(self.onChangingState)
-        manager.signalErrorState.connect(self.onErrorState)
-        manager.signalReset.connect(self.onResetPanel)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
@@ -200,6 +196,28 @@ class ConfigurationPanel(Dockable, QWidget):
         self.setupActions()
         self.setLayout(mainLayout)
 
+    def eventFilter(self, obj, event):
+        """ Router for incoming broadcasts
+        """
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.ShowConfiguration:
+                configuration = event.data.get('configuration')
+                self.onShowConfiguration(configuration)
+            elif event.sender is KaraboEventSender.ShowNavigationItem:
+                device_path = event.data.get('device_path')
+                self.onSelectNewNavigationItem(device_path)
+            elif event.sender is KaraboEventSender.DeviceStateChanged:
+                configuration = event.data.get('configuration')
+                is_changing = event.data.get('is_changing')
+                self.onChangingState(configuration, is_changing)
+            elif event.sender is KaraboEventSender.DeviceErrorChanged:
+                configuration = event.data.get('configuration')
+                is_changing = event.data.get('is_changing')
+                self.onErrorState(configuration, is_changing)
+            elif event.sender is KaraboEventSender.NetworkDisconnected:
+                self._resetPanel()
+            return False
+        return super(ConfigurationPanel, self).eventFilter(obj, event)
 
     def setupActions(self):
         manager = get_manager()
@@ -499,26 +517,19 @@ class ConfigurationPanel(Dockable, QWidget):
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
 
-
-### slots ###
-    def onResetPanel(self):
-        """
-        This slot is called when the configurator needs a reset which means all
+    def _resetPanel(self):
+        """This is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
         self.prevConfiguration = None
-        
+
         # Do not remove the first two widgets (empty page and waiting page)
         while self.__swParameterEditor.count() > 2:
-            self._removeParameterEditorPage(self.__swParameterEditor
-                                    .widget(self.__swParameterEditor.count()-1))
+            index = self.__swParameterEditor.count()-1
+            page = self.__swParameterEditor.widget(index)
+            self._removeParameterEditorPage(page)
 
-
-    def onNewNavigationItem(self, itemInfo):
-        # itemInfo: id, name, type, (status), (refType), (refId), (schema)
-        self.twNavigation.createNewItem(itemInfo)
-
-
+### slots ###
     def onSelectNewNavigationItem(self, devicePath):
         self.twNavigation.selectItem(devicePath)
 
@@ -558,22 +569,6 @@ class ConfigurationPanel(Dockable, QWidget):
             self.prevConfiguration.removeVisible()
 
         self.showParameterPage(configuration)
-
-
-    def onConflictStateChanged(self, deviceId, hasConflict):
-        conf = get_manager().deviceData.get(deviceId)
-        if conf is None:
-            return
-
-        if conf.parameterEditor is None:
-            return
-
-        result = conf.parameterEditor.checkApplyButtonsEnabled()
-        self.pbApplyAll.setEnabled(result[0])
-        self.pbResetAll.setEnabled(result[0])
-        if result[1] == hasConflict:
-            self.hasConflicts = hasConflict
-
 
     def onChangingState(self, conf, isChanging):
         if not hasattr(conf, "timer"):

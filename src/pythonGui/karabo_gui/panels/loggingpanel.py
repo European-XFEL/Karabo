@@ -3,13 +3,13 @@
 # Created on February 1, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
 from karabo_gui.logwidget import LogWidget
-from karabo_gui.singletons.api import get_manager
-
-from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
+from karabo_gui.mediator import (
+    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 
 
 class LoggingPanel(Dockable, QWidget):
@@ -22,11 +22,21 @@ class LoggingPanel(Dockable, QWidget):
         mainLayout.setContentsMargins(5, 5, 5, 5)
         mainLayout.addWidget(self.__logWidget)
 
-        manager = get_manager()
-        manager.signalLogDataAvailable.connect(
-            self.__logWidget.onLogDataAvailable)
-
         self.setupActions()
+
+        # Register for broadcast events.
+        # This object lives as long as the app. No need to unregister.
+        register_for_broadcasts(self)
+
+    def eventFilter(self, obj, event):
+        """ Router for incoming broadcasts
+        """
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.LogMessages:
+                messages = event.data.get('messages', [])
+                self.__logWidget.onLogDataAvailable(messages)
+            return False
+        return super(LoggingPanel, self).eventFilter(obj, event)
 
     def setupActions(self):
         text = "Save log data to file"

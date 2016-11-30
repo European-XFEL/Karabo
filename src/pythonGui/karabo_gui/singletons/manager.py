@@ -37,22 +37,32 @@ from karabo_gui.util import (
     getOpenFileName, getSaveFileName, getSchemaAttributeUpdates)
 
 
+def handle_device_state_change(box, value, timestamp):
+    """This forwards a device descriptor's state to the configuration panel
+    """
+    broadcast = broadcast_event
+    configuration = box.configuration
+
+    if State(value).isDerivedFrom(State.CHANGING):
+        # Only a state change
+        data = {'configuration': configuration, 'is_changing': True}
+        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceStateChanged,
+                                       data))
+    else:
+        # First the error state
+        data = {'configuration': configuration,
+                'is_changing': State(value) is State.ERROR}
+        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceErrorChanged,
+                                       data))
+
+        # Then a regular state change notification
+        data['is_changing'] = False
+        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceStateChanged,
+                                       data))
+
+
 class Manager(QObject):
     # signals
-    signalReset = pyqtSignal()
-    signalUpdateScenes = pyqtSignal()
-
-    signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
-    signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
-    signalShowConfiguration = pyqtSignal(object) # configuration
-
-    signalConflictStateChanged = pyqtSignal(object, bool) # key, hasConflict
-    signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
-    signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
-
-    signalLogDataAvailable = pyqtSignal(object) # logData
-    signalNotificationAvailable = pyqtSignal(str, str, str, str)
-
     signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
     signalProjectLoaded = pyqtSignal(str, object, object) # projectName, metaData, data
     signalProjectSaved = pyqtSignal(str, bool, object) # projectName, success, data
@@ -181,32 +191,16 @@ class Manager(QObject):
             **{k: v for k, v in hash.items() if k != "type"})
 
     def onServerConnectionChanged(self, isConnected):
-        """
-        If the server connection is changed, the model needs an update.
+        """If the server connection is changed, the model needs an update.
         """
         if isConnected:
             return
 
-        # Send reset signal to all panels which needs a reset
-        self.signalReset.emit()
+        # Broadcast event to all panels which needs a reset
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.NetworkDisconnected, {}))
         # Reset manager settings
         self.reset()
-
-    def _triggerStateChange(self, box, value, timestamp):
-        configuration = box.configuration
-        # Update GUI due to state changes
-        if State(value).isDerivedFrom(State.CHANGING):
-            self.signalChangingState.emit(configuration, True)
-        else:
-            if State(value) is State.ERROR:
-                self.signalErrorState.emit(configuration, True)
-            else:
-                self.signalErrorState.emit(configuration, False)
-
-            self.signalChangingState.emit(configuration, False)
-
-    def onConflictStateChanged(self, key, hasConflict):
-        self.signalConflictStateChanged.emit(key, hasConflict)
 
     def onNavigationTreeModelSelectionChanged(self, selected, deselect):
         """
@@ -228,12 +222,11 @@ class Manager(QObject):
 
         self.systemTopology.selectionModel.clear()
 
-    def onNewNavigationItem(self, itemInfo):
-        self.signalNewNavigationItem.emit(itemInfo)
-
     def onShowConfiguration(self, conf):
-        # Notify ConfigurationPanel
-        self.signalShowConfiguration.emit(conf)
+        # Notify listeners
+        data = {'configuration': conf}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.ShowConfiguration, data))
 
     def currentConfigurationAndClassId(self):
         """
@@ -367,8 +360,17 @@ class Manager(QObject):
         project.addConfiguration(conf.id, ProjectConfiguration(project, name,
                                           confHash))
 
+    def _deviceDataReceived(self):
+        """Notify all listeners that some (class, schema, or config) data was
+        received.
+        """
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.DeviceDataReceived, {}))
+
     def handle_log(self, messages):
-        self.signalLogDataAvailable.emit(messages)
+        data = {'messages': messages}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.LogMessages, data))
 
     def handle_brokerInformation(self, **kwargs):
         get_network()._handleBrokerInformation(**kwargs)
@@ -506,7 +508,7 @@ class Manager(QObject):
         # Notify ConfigurationPanel
         self.onShowConfiguration(conf)
         # Trigger update scenes
-        self.signalUpdateScenes.emit()
+        self._deviceDataReceived()
 
     def handle_deviceSchema(self, deviceId, schema):
         if deviceId not in self.deviceData:
@@ -520,12 +522,12 @@ class Manager(QObject):
 
         # Add configuration with schema to device data
         conf.setSchema(schema)
-        conf.boxvalue.state.signalUpdateComponent.connect(
-            self._triggerStateChange)
+        box_signal = conf.boxvalue.state.signalUpdateComponent
+        box_signal.connect(handle_device_state_change)
 
         self.onShowConfiguration(conf)
         # Trigger update scenes
-        self.signalUpdateScenes.emit()
+        self._deviceDataReceived()
 
     def handle_deviceConfiguration(self, deviceId, configuration):
         device = self.deviceData.get(deviceId)
@@ -537,7 +539,7 @@ class Manager(QObject):
         if device.status == "schema":
             device.status = "alive"
             # Trigger update scenes - to draw possible Workflow Connections
-            self.signalUpdateScenes.emit()
+            self._deviceDataReceived()
         if device.status == "alive" and device.visible > 0:
             device.status = "monitoring"
 
@@ -621,9 +623,13 @@ class Manager(QObject):
 
     # ---------------------------------------------------------------------
 
-    def handle_notification(self, deviceId, messageType, shortMsg, detailedMsg):
-        self.signalNotificationAvailable.emit(deviceId, messageType, shortMsg,
-                                              detailedMsg)
+    def handle_notification(self, device, message, short, detailed):
+        data = {'device_id': device,
+                'message_type': message,
+                'short_msg': short,
+                'detailed_msg': detailed}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.NotificationMessage, data))
 
     def handle_networkData(self, name, data):
         deviceId, property = name.split(":")
