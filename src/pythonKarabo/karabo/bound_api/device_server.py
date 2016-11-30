@@ -216,10 +216,8 @@ class DeviceServer(object):
             Hash("pluginNamespace", config["pluginNamespace"],
                  "pluginDirectory", config["pluginDirectory"],
                  "pluginNames", config["pluginNames"]))
-        self.loadLogger(config)
         self.pid = os.getpid()
         self.seqnum = 0
-        self.log = Logger.getCategory(self.serverid)
 
         info = Hash("type", "server")
         info["serverId"] = self.serverid
@@ -229,6 +227,9 @@ class DeviceServer(object):
          # Instantiate and start SignalSlotable object
         self.ss = SignalSlotable(self.serverid, "JmsConnection", self.connectionParameters, 10, info)
         self.ss.start()
+
+        self.loadLogger(config)
+        self.log = Logger.getCategory(self.serverid)
 
         self._registerAndConnectSignalsAndSlots()
         brokerUrl = self.ss.getConnection().getBrokerUrl()
@@ -242,6 +243,10 @@ class DeviceServer(object):
         return self.hostname + "_Server_" + str(os.getpid())
 
     def loadLogger(self, config):
+        if not config.has("Logger.network.topic"):
+            # If not specified, use the local topic for log messages
+            config.set("Logger.network.topic", self.ss.getTopic())
+
         Logger.configure(config["Logger"])
         Logger.useOstream()
         Logger.useFile()
