@@ -1,13 +1,14 @@
-from traits.api import (HasStrictTraits, Enum, Instance, Int, Float, List,
-                        Range, String)
+from traits.api import Enum, Instance, Int, Float, List, Range, String
+
+from karabo.common.savable import BaseSavableModel
 
 
-class BaseLayoutData(HasStrictTraits):
+class BaseLayoutData(BaseSavableModel):
     """ An empty base class to simplify holding layout data in other objects.
     """
 
 
-class BaseSceneObjectData(HasStrictTraits):
+class BaseSceneObjectData(BaseSavableModel):
     """ A base class for all object which can appear in a scene.
     """
     # The data needed by the layout which is the parent for this object
