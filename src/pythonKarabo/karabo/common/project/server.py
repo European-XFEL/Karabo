@@ -5,14 +5,14 @@
 #############################################################################
 from xml.etree.ElementTree import Element, SubElement, parse, tostring
 
-from traits.api import (HasStrictTraits, Enum, Instance, Int, List, String,
-                        Tuple)
+from traits.api import Enum, Instance, Int, List, String, Tuple
 
+from karabo.common.savable import BaseSavableModel
 from .bases import BaseProjectObjectModel
 from .device import DeviceConfigurationModel
 
 
-class DeviceInstanceModel(HasStrictTraits):
+class DeviceInstanceModel(BaseSavableModel):
     """ A device which can be instantiated by a server
     """
     # The device ID of the instantiated device
