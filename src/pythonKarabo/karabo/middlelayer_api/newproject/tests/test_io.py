@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from io import BytesIO
+from io import StringIO
 import os.path as op
 from tempfile import TemporaryDirectory
 
@@ -89,7 +89,7 @@ def _write_project(project, devices, storage):
 def test_simple_read():
     model = MacroModel(code='print(42)', initialized=True)
     xml = write_project_model(model)
-    rmodel = read_project_model(BytesIO(xml), existing=None)
+    rmodel = read_project_model(StringIO(xml), existing=None)
     assert model.code == rmodel.code
 
 
@@ -136,7 +136,7 @@ def test_wrong_existing_type():
     model = MacroModel(code='print(42)', initialized=True)
     xml = write_project_model(model)
     with assert_raises(AssertionError):
-        read_project_model(BytesIO(xml), existing=ProjectModel())
+        read_project_model(StringIO(xml), existing=ProjectModel())
 
 
 def test_existing_obj_mismatch():
@@ -146,4 +146,4 @@ def test_existing_obj_mismatch():
 
     xml = write_project_model(model)
     with assert_raises(AssertionError):
-        read_project_model(BytesIO(xml), existing=existing)
+        read_project_model(StringIO(xml), existing=existing)

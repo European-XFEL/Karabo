@@ -43,4 +43,4 @@ def write_single_model(model):
 def _writer_core(model, root):
     writer = get_writer()
     writer(model, root)
-    return tostring(root, encoding='utf-8')
+    return tostring(root, encoding='unicode')
