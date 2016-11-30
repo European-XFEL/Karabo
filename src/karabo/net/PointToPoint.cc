@@ -4,6 +4,7 @@
 #include "utils.hh"
 #include "PointToPoint.hh"
 #include "EventLoop.hh"
+#include "karabo/util/MetaTools.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -13,7 +14,7 @@ namespace karabo {
     namespace net {
 
 
-        class PointToPoint::Producer {
+        class PointToPoint::Producer : public boost::enable_shared_from_this<PointToPoint::Producer> {
 
             typedef std::map<Channel::Pointer, std::set<std::string> > ChannelToSlotInstanceIds;
 
@@ -67,7 +68,8 @@ namespace karabo {
         };
 
 
-        class PointToPoint::Consumer {
+        class PointToPoint::Consumer : public boost::enable_shared_from_this<PointToPoint::Consumer> {
+
 
             typedef std::map<std::string, ConsumeHandler> SlotInstanceIds;
             // Mapping signalInstanceId into signalConnectionString like "tcp://host:port" and set of pairs of slotInstanceId and ConsumeHandler
@@ -147,6 +149,7 @@ namespace karabo {
             , m_connection()
             , m_registeredChannels() {
             m_connection = Connection::create(Hash("Tcp.port", 0, "Tcp.type", "server"));
+            // No bind_weak in constructor possible yet...
             m_port = m_connection->startAsync(boost::bind(&PointToPoint::Producer::connectHandler, this, _1, _2));
         }
 
@@ -165,7 +168,7 @@ namespace karabo {
                     }
                 }
             }
-            channel->close();
+            if (channel) channel->close();
         }
 
 
@@ -174,10 +177,10 @@ namespace karabo {
                 channelErrorHandler(e, channel);
                 return;
             }
-            m_connection->startAsync(boost::bind(&PointToPoint::Producer::connectHandler, this, _1, _2));
+            m_connection->startAsync(bind_weak(&PointToPoint::Producer::connectHandler, this, _1, _2));
             channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
             channel->setAsyncChannelPolicy(4, "LOSSLESS");
-            channel->readAsyncString(boost::bind(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
+            channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
             boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
             m_registeredChannels[channel] = std::set<std::string>();
         }
@@ -203,7 +206,7 @@ namespace karabo {
             else if (command == "UNSUBSCRIBE")
                 m_registeredChannels[channel].erase(slotInstanceId);
             // wait for next command
-            channel->readAsyncString(boost::bind(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
+            channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
         }
 
 
@@ -376,8 +379,6 @@ namespace karabo {
                 channelErrorHandler(ec, signalInstanceId, signalConnectionString, connection, channel);
                 return;
             }
-            //channel->setErrorHandler(boost::bind(&Consumer::channelErrorHandler, this,
-            //                                     signalInstanceId, signalConnectionString, connection, channel, _1));
             // bookkeeping ...
             {
                 boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
@@ -388,7 +389,8 @@ namespace karabo {
             // Subscribe to producer with our own instanceId
             channel->write(slotInstanceId + " SUBSCRIBE");
             // ... and, finally, wait for publications ...
-            channel->readAsyncHashPointerHashPointer(boost::bind(&Consumer::consume, this, _1, signalInstanceId, signalConnectionString, connection, channel, _2, _3));
+            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1, signalInstanceId,
+                                                               signalConnectionString, connection, channel, _2, _3));
         }
 
 
@@ -415,8 +417,8 @@ namespace karabo {
 
                     Connection::Pointer connection = Connection::create(Hash("Tcp", params));
 
-                    connection->startAsync(boost::bind(&Consumer::connectHandler, this, _1, slotInstanceId,
-                                                       signalInstanceId, signalConnectionString, handler, connection, _2));
+                    connection->startAsync(bind_weak(&Consumer::connectHandler, this, _1, slotInstanceId,
+                                                     signalInstanceId, signalConnectionString, handler, connection, _2));
 
                     return;
                 }
@@ -520,11 +522,9 @@ namespace karabo {
                 handler(slotInstanceId, header, body);
             }
             // Re-register itself
-            channel->readAsyncHashPointerHashPointer(boost::bind(&Consumer::consume, this, _1,
-                                                                 signalInstanceId,
-                                                                 signalConnectionString,
-                                                                 connection,
-                                                                 channel, _2, _3));
+            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1,
+                                                               signalInstanceId, signalConnectionString,
+                                                               connection, channel, _2, _3));
         }
 
 
