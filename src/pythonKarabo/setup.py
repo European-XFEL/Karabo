@@ -114,8 +114,8 @@ if __name__ == '__main__':
         },
         entry_points={
             'console_scripts': [
-                'karabo_device_server=karabo.bound_api.device_server:main',
-                'karabo-middlelayer-device-server=karabo.middlelayer_api.device_server:main',
+                'karabo-pythonserver=karabo.bound_api.device_server:main',
+                'karabo-middlelayerserver=karabo.middlelayer_api.device_server:main',
                 'ideviceclient=karabo.interactive.ideviceclient:main',
                 'ikarabo=karabo.interactive.ikarabo:main',
                 'convert-karabo-device=karabo.interactive.convert_device_project:main',
