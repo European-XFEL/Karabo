@@ -124,6 +124,10 @@ def test_project_cache():
         project_uuids = storage.get_uuids_of_type(TEST_DOMAIN, 'project')
         assert len(project_uuids) == 1
         assert project_uuids[0] == project.uuid
+        proj_data = storage.get_available_project_data(TEST_DOMAIN, 'project')
+        assert proj_data[0]['uuid'] == project.uuid
+        assert len(proj_data[0]['revisions']) == 1
+        assert proj_data[0]['simple_name'] == project.simple_name
 
 
 def test_uninitialized_save():

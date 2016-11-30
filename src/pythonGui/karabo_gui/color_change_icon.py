@@ -27,7 +27,7 @@ class ColorChangeIcon(object):
 
         root = Element(ns_svg+'svg')
         root.append(self.element)
-        return tostring(root, encoding='utf-8')
+        return tostring(root, encoding='unicode')
 
 
 def get_color_change_icons(path):
