@@ -33,7 +33,7 @@ class SceneModelItem(BaseProjectTreeItem):
         delete_action.triggered.connect(partial(self._delete_scene,
                                                 parent_project))
         save_action = QAction('Save', menu)
-        save_action.triggered.connect(self._save_scene)
+        save_action.triggered.connect(partial(save_object, self.model))
         save_as_action = QAction('Save As...', menu)
         save_as_action.triggered.connect(self._save_scene_to_file)
         menu.addAction(edit_action)
@@ -66,9 +66,6 @@ class SceneModelItem(BaseProjectTreeItem):
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
-
-    def _save_scene(self):
-        save_object(self.model)
 
     def _save_scene_to_file(self):
         scene = self.model

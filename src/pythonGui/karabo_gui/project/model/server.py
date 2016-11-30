@@ -47,7 +47,7 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         delete_action.triggered.connect(partial(self._delete_server,
                                                 parent_project))
         save_action = QAction('Save', menu)
-        save_action.triggered.connect(self._save_server)
+        save_action.triggered.connect(partial(save_object, self.model))
         shutdown_action = QAction('Shutdown', menu)
         shutdown_action.triggered.connect(self._shutdown_server)
         add_action = QAction('Add device', menu)
@@ -162,9 +162,6 @@ class DeviceServerModelItem(BaseProjectTreeItem):
     def _shutdown_server(self):
         server = self.model
         get_manager().shutdownServer(server.server_id)
-
-    def _save_server(self):
-        save_object(self.model)
 
     def _add_device(self):
         """ Add a device to this server

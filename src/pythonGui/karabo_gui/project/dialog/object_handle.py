@@ -15,7 +15,7 @@ class ObjectSaveDialog(QDialog):
         """
         super(ObjectSaveDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'object_handle.ui')
+                           'object_save.ui')
         uic.loadUi(filepath, self)
         self.setWindowTitle('Save object {}'.format(model.simple_name))
         self.leAlias.setText(model.alias)
