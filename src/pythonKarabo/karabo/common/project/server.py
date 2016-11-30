@@ -107,4 +107,4 @@ def write_device_server(model):
     for device in model.devices:
         _write_device_instance(device, root)
 
-    return tostring(root)
+    return tostring(root, encoding='unicode')

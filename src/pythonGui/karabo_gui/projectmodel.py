@@ -7,7 +7,7 @@
 This module contains a class which represents a model to display projects in
 a treeview.
 """
-from io import BytesIO
+from io import StringIO
 import os
 import os.path
 
@@ -1294,7 +1294,7 @@ class ProjectModel(QStandardItemModel):
 
         project = self.getProjectForObject(oldSceneModel)
         xml = write_scene(oldSceneModel)
-        fileObj = BytesIO(xml)
+        fileObj = StringIO(xml)
         for index in range(dialog.startIndex, dialog.endIndex+1):
             title = "{}{}".format(dialog.displayPrefix, index)
             newSceneModel = self.addScene(project, title, fileObj)
@@ -1651,7 +1651,7 @@ class ProjectModel(QStandardItemModel):
         if not fn.endswith(".svg"):
             fn = "{}.svg".format(fn)
 
-        with open(fn, "wb") as fout:
+        with open(fn, "w") as fout:
             fout.write(write_scene(sceneModel))
 
     def onOpenScene(self):

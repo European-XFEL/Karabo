@@ -79,5 +79,5 @@ class SceneModelItem(BaseProjectTreeItem):
         if not fn.endswith('.svg'):
             fn = '{}.svg'.format(fn)
 
-        with open(fn, 'wb') as fout:
+        with open(fn, 'w') as fout:
             fout.write(write_scene(scene))

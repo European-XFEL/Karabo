@@ -24,7 +24,7 @@ class ProjectDBCache(object):
         if not op.exists(domain_dir):
             os.mkdir(domain_dir)
 
-        with open(path, mode='wb') as fp:
+        with open(path, mode='w') as fp:
             fp.write(data)
 
     def retrieve(self, domain, uuid, revision, existing=None):
@@ -35,7 +35,7 @@ class ProjectDBCache(object):
             msg = 'Cache object for UUID: {} Revision: {} not found'
             raise FileNotFoundError(msg.format(uuid, revision))
 
-        with open(path, mode='rb') as fp:
+        with open(path, mode='r') as fp:
             return fp.read()
 
     def get_uuids_of_type(self, domain, obj_type):
