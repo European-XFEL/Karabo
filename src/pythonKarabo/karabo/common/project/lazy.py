@@ -3,7 +3,7 @@
 # Created on October 20, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from io import BytesIO
+from io import StringIO
 
 from .bases import BaseProjectObjectModel
 from .utils import walk_traits_object
@@ -44,7 +44,7 @@ def _read_lazy_object_r(domain, uuid, revision, db_iface, reader, existing,
     requested_objs.add((uuid, revision))
 
     if data:
-        obj = reader(BytesIO(data), existing=existing)
+        obj = reader(StringIO(data), existing=existing)
 
         walk_traits_object(obj, visitor)
         for child in collected:
