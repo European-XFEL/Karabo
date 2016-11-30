@@ -42,6 +42,7 @@ class DockTabWindow(QTabWidget):
         self.divWidgetList = set()
         self.lastWidget = None
         self.currentChanged.connect(self.onCurrentChanged)
+        self.tabCloseRequested.connect(self.onCloseTab)
 
 #        self.setStyleSheet("QTabWidget {border-style: solid;"
 #                                       "border: 1px solid gray;"
@@ -80,15 +81,11 @@ class DockTabWindow(QTabWidget):
     def addCornerWidget(self, tbNewTab):
         self.setCornerWidget(tbNewTab)
 
-
     def updateTabsClosable(self):
         if self.count() > 1 and not self.tabsClosable():
             self.setTabsClosable(True)
-            self.tabCloseRequested.connect(self.onCloseTab)
         elif self.count() == 1:
             self.setTabsClosable(False)
-            self.tabCloseRequested.disconnect(self.onCloseTab)
-
 
 ### slots ###
     def onCloseTab(self, index):
