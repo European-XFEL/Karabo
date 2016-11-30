@@ -1095,29 +1095,25 @@ class VectorHash(Vector):
     basetype = HashType
     number = 31
 
-    def __init__(self, rowSchema=None, strict=True, **kwargs):
+    rowSchema = Attribute()
+
+    def __init__(self, rows=None, strict=True, **kwargs):
         super(VectorHash, self).__init__(strict=strict, **kwargs)
 
-        if rowSchema is None:
-            # This (and the default for rowSchema) is a HACK to enable the Gui
-            # again to work with table elements. That was broken after
-            # introduction of this VectorHash.__init__ - which itself was added
-            # for partial support of the TableElement in middlelayer_api
-            # (partial means: getDevice("device_with_table_elem") does not
-            #  crash anymore).
-            # The problematic line in the Gui code was line 523 in schema.py:
-            #   ret = Type.fromname[attrs['valueType']]()
-            # which requires __init__ to work without arguments.
-            self.cls = None
+        if rows is not None:
+            self.rowSchema = rows.getClassSchema()
+            self.displayType = "Table"
+
+        if self.rowSchema is None:
             return
 
         self.dtype = np.dtype([(k, Type.fromname[a["valueType"]].numpy)
-                               for k, v, a in rowSchema.hash.iterall()])
+                               for k, v, a in self.rowSchema.hash.iterall()])
         self.coltypes = {k: Type.fromname[a["valueType"]](strict=False, **a)
-                         for k, v, a in rowSchema.hash.iterall()}
+                         for k, v, a in self.rowSchema.hash.iterall()}
         self.units = {k: (a.get("unitSymbol", None),
                           a.get("metricPrefixSymbol", MetricPrefix.NONE))
-                      for k, _, a in rowSchema.hash.iterall()}
+                      for k, _, a in self.rowSchema.hash.iterall()}
 
     @classmethod
     def read(cls, file):
