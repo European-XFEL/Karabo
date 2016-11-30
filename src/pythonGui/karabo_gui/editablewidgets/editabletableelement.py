@@ -53,6 +53,9 @@ from karabo_gui.widget import DisplayWidget, EditableWidget
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.const import ns_karabo
+from karabo_gui.mediator import (
+    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
+    unregister_from_broadcasts)
 from karabo_gui.singletons.api import get_manager
 from karabo_gui.topology import getDevice
 import karabo_gui.schema as schema
@@ -372,12 +375,8 @@ class FromPropertyPopUp(QDialog):
         self.deviceCombo.currentIndexChanged['QString'].connect(
             self.deviceIdSelectionChanged)
 
-        # connect signal if device schema not yet available
-        get_manager().signalUpdateScenes.connect(self.delayedSchema)
-
         self.actAsMonitorCheck = QCheckBox("Act as monitor")
         self.actAsMonitorCheck.setChecked(True)
-
 
         # buttons for return
         self.buttonBox = QDialogButtonBox(self)
@@ -391,6 +390,26 @@ class FromPropertyPopUp(QDialog):
         self.layout.addWidget(self.propertyCombo)
         self.layout.addWidget(self.actAsMonitorCheck)
         self.layout.addWidget(self.buttonBox)
+
+        # Register for events, Note: unregister_from_broadcasts is necessary
+        # when this dialog disappears!
+        register_for_broadcasts(self)
+
+    def closeEvent(self, event):
+        """Unregister from receiving broadcast events when closing
+        """
+        # QDialog also implements this method
+        super(FromPropertyPopUp, self).closeEvent(event)
+        unregister_from_broadcasts(self)
+
+    def eventFilter(self, obj, event):
+        """Router for incoming broadcasts
+        """
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.DeviceDataReceived:
+                self.delayedSchema()
+            return False
+        return super(FromPropertyPopUp, self).eventFilter(obj, event)
 
     def getCurrentDeviceInstances(self):
         devicesHash = get_manager().systemHash["device"]

@@ -12,7 +12,13 @@ class KaraboEventSender(Enum):
     AlarmUpdate = "Alarm update"
     AlarmDeviceUpdate = "Alarm device update"
     ConnectMacroInstance = "Connect macro instance"
+    DeviceDataReceived = "Device class/schema/config received"
     DeviceInitReply = "Device instantiate reply"
+    DeviceErrorChanged = "Device error state changed"
+    DeviceStateChanged = "Device state changed"
+    LogMessages = "Log messages"
+    NetworkDisconnected = "Network disconnected"
+    NotificationMessage = "Notification message"
     OpenMacro = "Open macro"
     OpenSceneLink = "Scene link"
     OpenSceneView = "Open scene view"
@@ -27,7 +33,9 @@ class KaraboEventSender(Enum):
     ProjectItemsLoaded = "Project items loaded"
     ProjectItemsSaved = "Project items saved"
     ShowAlarmServices = "Show alarm services"
+    ShowConfiguration = "Show configuration"
     ShowDevice = "Show device"
+    ShowNavigationItem = "Show navigation item"
 
 
 class KaraboBroadcastEvent(QEvent):

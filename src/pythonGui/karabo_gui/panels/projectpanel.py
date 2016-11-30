@@ -3,18 +3,23 @@
 # Created on July 11, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 from karabo_gui.docktabwindow import Dockable
-from karabo_gui.projecttreeview import ProjectTreeView
 import karabo_gui.icons as icons
+from karabo_gui.mediator import (
+    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.projecttreeview import ProjectTreeView
 from karabo_gui.singletons.api import get_manager
 
 
 class ProjectPanel(Dockable, QWidget):
     def __init__(self):
         super(ProjectPanel, self).__init__()
+
+        # Register for broadcast events.
+        # This object lives as long as the app. No need to unregister.
+        register_for_broadcasts(self)
 
         title = "Projects"
         self.setWindowTitle(title)
@@ -28,13 +33,22 @@ class ProjectPanel(Dockable, QWidget):
             self.twProject.onAvailableProjects)
         manager.signalProjectLoaded.connect(self.twProject.onProjectLoaded)
         manager.signalProjectSaved.connect(self.twProject.onProjectSaved)
-        manager.signalReset.connect(self.onResetPanel)
 
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5, 5, 5, 5)
         mainLayout.addWidget(self.twProject)
 
         self.setupActions()
+
+    def eventFilter(self, obj, event):
+        """ Router for incoming broadcasts
+        """
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.NetworkDisconnected:
+                # Don't show projects when there's no server connection
+                self.closeAllProjects()
+            return False
+        return super(ProjectPanel, self).eventFilter(obj, event)
 
     def setupActions(self):
         text = "New project"
@@ -84,6 +98,3 @@ class ProjectPanel(Dockable, QWidget):
     def onSelectionChanged(self, selectedIndexes):
         self.acProjectSave.setEnabled(len(selectedIndexes) > 0)
         self.acProjectSaveAs.setEnabled(len(selectedIndexes) > 0)
-
-    def onResetPanel(self):
-        self.closeAllProjects()
