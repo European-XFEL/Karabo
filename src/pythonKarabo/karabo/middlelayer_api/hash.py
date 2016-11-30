@@ -337,12 +337,12 @@ class Descriptor(object):
             return instance.__dict__[self.key]
 
     def __set__(self, instance, value):
-        if self.assignment is Assignment.OPTIONAL and (
-                value is None or isinstance(value, (basetypes.NoneValue))):
-            instance.setValue(self,
-                              basetypes.NoneValue(value, descriptor=self))
+        if (self.assignment is Assignment.OPTIONAL and
+                not basetypes.isSet(value)):
+            value = basetypes.NoneValue(value, descriptor=self)
         else:
-            instance.setValue(self, self.toKaraboValue(value))
+            value = self.toKaraboValue(value)
+        instance.setValue(self, value)
 
     def setter(self, instance, value):
         """This is called when the value is changed from the outside
