@@ -39,6 +39,12 @@ class AlarmMixin(Configurable):
         super(AlarmMixin, self).setChildValue(key, value, desc)
 
     def update(self):
+        changes = self.__gather_alarms()
+        if changes is not None:
+            self.signalAlarmUpdate(self.deviceId, changes)
+        super(AlarmMixin, self).update()
+
+    def __gather_alarms(self):
         toAdd = Hash()
         toClear = Hash()
 
@@ -59,8 +65,19 @@ class AlarmMixin(Configurable):
                 toAdd[prop][cond.value, ...] = timestamp.toDict()
         self._old_alarms = {}
         self._changed_alarms = set()
-        if toAdd or toClear:
-            self.signalAlarmUpdate(self.deviceId,
-                                   Hash("toAdd", toAdd, "toClear", toClear))
 
-        super(AlarmMixin, self).update()
+        if toAdd or toClear:
+            return Hash("toAdd", toAdd, "toClear", toClear)
+
+    @slot
+    def slotReSubmitAlarms(self, existing):
+        self._changed_alarms = set(self._alarmConditions.keys())
+        self._changed_alarms.update(existing.keys())
+        self._old_alarms = {k: AlarmCondition(next(iter(v)))
+                            for k, v in existing.items()}
+
+        changes = self.__gather_alarms()
+        if changes is not None:
+            return self.deviceId, changes
+        else:
+            return self.deviceId, Hash("toAdd", Hash(), "toClear", Hash())
