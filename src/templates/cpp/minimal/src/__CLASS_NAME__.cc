@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Author: <__EMAIL__>
  *
  * Created on __DATE__
