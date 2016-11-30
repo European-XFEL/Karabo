@@ -1296,7 +1296,7 @@ def _gettype(data):
                 return _gettype(data[0]).vectortype
             else:
                 return VectorString
-        elif data is None:
+        elif not basetypes.isSet(data):
             return None_
         else:
             raise TypeError('unknown datatype {}'.format(data.__class__))
