@@ -42,7 +42,7 @@ fi
 \$KARABO/extern/bin/ideviceclient "\$@"
 End-of-file
 
-cat > karabo-pythondeviceserver <<End-of-file
+cat > karabo-pythonserver <<End-of-file
 #!/bin/bash
 #
 # This file was automatically generated. Do not edit.
@@ -58,11 +58,11 @@ if [ "\$OS" = "Darwin" ]; then
     export DYLD_LIBRARY_PATH=\$KARABO/lib:\$KARABO/extern/lib:\$DYLD_LIBRARY_PATH
 fi
 
-\$KARABO/extern/bin/karabo_device_server "\$@"
+\$KARABO/extern/bin/karabo-pythonserver "\$@"
 End-of-file
 
 chmod a+x karabo-cli
-chmod a+x karabo-pythondeviceserver
+chmod a+x karabo-pythonserver
 
 cd ../../../../../../src/pythonKarabo
 rm -rf dist/ build/

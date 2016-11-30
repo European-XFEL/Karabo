@@ -56,13 +56,13 @@ LDLIBSOPTIONS=-L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../lib -Wl,-rpath,\$$O
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppdeviceserver
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppserver
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppdeviceserver: ../karabo/dist/Debug/GNU-Linux-x86/lib/libkarabo.so
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppserver: ../karabo/dist/Debug/GNU-Linux-x86/lib/libkarabo.so
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppdeviceserver: ${OBJECTFILES}
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppserver: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppdeviceserver ${OBJECTFILES} ${LDLIBSOPTIONS} -Wl,-rpath-link,${KARABO}/extern/lib -s
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppserver ${OBJECTFILES} ${LDLIBSOPTIONS} -Wl,-rpath-link,${KARABO}/extern/lib -s
 
 ${OBJECTDIR}/_ext/147234221/deviceServer.o: ../../../src/deviceServer/deviceServer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/147234221
@@ -75,7 +75,7 @@ ${OBJECTDIR}/_ext/147234221/deviceServer.o: ../../../src/deviceServer/deviceServ
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppdeviceserver
+	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppserver
 
 # Subprojects
 .clean-subprojects:
