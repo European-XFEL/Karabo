@@ -355,17 +355,19 @@ class PythonDevice(NoFsm):
         """Get SignalSlotable object embedded in PythonDevice instance."""
         return self._ss
 
-
     def loadLogger(self, config):
-        """
-        Load the distributed logger
+        """Load the distributed logger
         :param config: a Hash providing logger configuration
         :return:
         """
+        if not config.has("Logger.network.topic"):
+            # If not specified, use the local topic for log messages
+            config.set("Logger.network.topic", self._ss.getTopic())
+
         Logger.configure(config.get("Logger"))
-        Logger.useOstream();
-        Logger.useFile();
-        Logger.useNetwork();
+        Logger.useOstream()
+        Logger.useFile()
+        Logger.useNetwork()
         Logger.useOstream("karabo", False)
         Logger.useFile("karabo", False)
 
