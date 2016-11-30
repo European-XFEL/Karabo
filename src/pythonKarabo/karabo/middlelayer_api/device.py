@@ -3,6 +3,7 @@ import socket
 
 from karabo.common.states import State
 from .alarm import AlarmMixin
+from .basetypes import isSet
 from .enums import AccessLevel, AccessMode, Assignment
 from .exceptions import KaraboError
 from .hash import Bool, Hash, HashType, Int32, SchemaHashType, String
@@ -92,7 +93,7 @@ class Device(AlarmMixin, SignalSlotable):
 
     def __init__(self, configuration):
         super(Device, self).__init__(configuration)
-        if not hasattr(self, "serverId"):
+        if not isSet(self.serverId):
             self.serverId = self._serverId_
 
         self.hostname, _, self.domainname = socket.gethostname().partition('.')
@@ -125,7 +126,7 @@ class Device(AlarmMixin, SignalSlotable):
         r = Hash()
         for k in self._allattrs:
             a = getattr(self, k, None)
-            if a is not None:
+            if isSet(a):
                 v = getattr(type(self), k)
                 value, attrs = v.toDataAndAttrs(a)
                 r[k] = value
