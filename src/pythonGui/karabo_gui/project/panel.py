@@ -7,11 +7,10 @@ from functools import partial
 
 from PyQt4.QtGui import QDialog, QStackedLayout, QWidget
 
-from karabo.common.project.api import DeviceServerModel
 import karabo_gui.icons as icons
 from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.docktabwindow import Dockable
-from karabo_gui.project.dialog.object_handle import ObjectSaveDialog
+from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_db_conn
 from .dialog.project_handle import LoadProjectDialog, NewProjectDialog
 
@@ -114,25 +113,4 @@ def _project_save_handler(item_model):
 
     :param item_model: The `ProjectItemModel` of the `ProjectView`
     """
-    from karabo.common.project.api import PROJECT_OBJECT_CATEGORIES
-    from karabo_gui.project.api import TEST_DOMAIN
-
-    def store_obj(db_conn, obj):
-        db_conn.store(TEST_DOMAIN, obj.uuid, obj.revision, obj)
-
-    # XXX: This is saving EVERYTHING in the project, regardless of need.
-    # XXX: Don't do this unless explicitly requested! Save objects individually
-    proj_model = item_model.traits_data_model
-    dialog = ObjectSaveDialog(proj_model)
-    if dialog.exec() == QDialog.Accepted:
-        proj_model.alias = dialog.alias
-        db_conn = get_db_conn()
-        for childname in PROJECT_OBJECT_CATEGORIES:
-            children = getattr(proj_model, childname)
-            for child in children:
-                if isinstance(child, DeviceServerModel):
-                    for dev_inst in child.devices:
-                        for dev_conf in dev_inst.configs:
-                            store_obj(db_conn, dev_conf)
-                store_obj(db_conn, child)
-        store_obj(db_conn, proj_model)
+    save_object(item_model.traits_data_model)
