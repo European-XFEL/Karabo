@@ -1,0 +1,112 @@
+#############################################################################
+# Author: <john.wiggins@xfel.eu>
+# Created on November 30, 2016
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+from traits.api import (HasStrictTraits, Bool, Dict, List, Instance,
+                        TraitDictEvent, TraitListEvent)
+
+_CONTAINER_EVENT_SUFFIX = '_items'
+_CONTAINER_EVENT_TYPES = (TraitDictEvent, TraitListEvent)
+_CONTAINER_TYPES = (Dict, List)
+
+
+class BaseSavableModel(HasStrictTraits):
+    """ A base class for all things which can be serialized.
+
+    The key purpose of this class is to handle modification tracking in data
+    models. A model is modified whenever one of its direct non-transient,
+    non-property traits is modified. A model is also modified if it has an
+    Instance trait (or List/Dict of Instance) whose object(s) is/are also a
+    BaseSavableModel and THAT object receives a modification.
+    """
+    # When True, the object contains unsaved data
+    modified = Bool(False, transient=True)
+
+    def _anytrait_changed(self, name, old, new):
+        """ Listen for changes to all non-transient, non-property traits and
+        mark the object as modified accordingly.
+        """
+        if not self.traits_inited():
+            # Calls during initialization will attach listeners for initial
+            # container items
+            self._manage_container_item_listeners(name, old, new)
+            return
+
+        # Detect *_items changes
+        if (name.endswith(_CONTAINER_EVENT_SUFFIX) and
+                isinstance(new, _CONTAINER_EVENT_TYPES)):
+            # Change name to the actual trait name
+            name = name[:-len(_CONTAINER_EVENT_SUFFIX)]
+
+        # copyable_trait_names() returns all the trait names which contain
+        # data which should be persisted (or copied when making a deep copy).
+        if name in self.copyable_trait_names():
+            self.modified = True
+            self._manage_container_item_listeners(name, old, new)
+
+    def _child_modification(self, modified):
+        """Called when a child BaseSavableModel is modified
+        """
+        # Flip self.modified to True if modified is True, but don't reset
+        # self.modified if modified is False.
+        self.modified = self.modified or modified
+
+    def _manage_container_item_listeners(self, name, old, new):
+        """When a container trait has Instance items inside, we want to be
+        notified when those instances are modified. To that end, a notification
+        handler needs to be attached to every child.
+        """
+        # Bail out quickly
+        trait = self.trait(name)
+        is_savable_instance = _is_savable_instance(trait)
+        if not (_is_list_of_child_objs(trait) or is_savable_instance):
+            return
+
+        if isinstance(new, TraitListEvent):
+            added = new.added
+            removed = new.removed
+        elif isinstance(new, TraitDictEvent):
+            added = new.added.values()
+            removed = new.removed.values()
+        elif is_savable_instance:
+            added = [new] if new is not None else []
+            removed = [old] if old is not None else []
+        elif isinstance(new, dict) or isinstance(old, dict):
+            added = new.values() if new is not None else []
+            removed = old.values() if old is not None else []
+        else:  # list
+            added = new or []
+            removed = old or []
+
+        for child in removed:
+            child.on_trait_change(self._child_modification, 'modified',
+                                  remove=True)
+        for child in added:
+            child.on_trait_change(self._child_modification, 'modified')
+
+
+def _is_savable_instance(trait):
+    """Is some trait object an Instance(BaseSavableModel) trait?
+    """
+    if not isinstance(trait.trait_type, Instance):
+        return False
+    inner_type = trait.trait_type.klass
+    if not issubclass(inner_type, BaseSavableModel):
+        return False
+    return True
+
+
+def _is_list_of_child_objs(trait):
+    """Is some trait object an List(Instance(BaseSavableModel))
+    or Dict(<keytype>, Instance(BaseSavableModel)) trait?
+    """
+    if not isinstance(trait.trait_type, _CONTAINER_TYPES):
+        return False
+    # `-1` handles the value type of a Dict trait (and List too)
+    inner_type = trait.inner_traits[-1].trait_type
+    if not isinstance(inner_type, Instance):
+        return False
+    if not issubclass(inner_type.klass, BaseSavableModel):
+        return False
+    return True
