@@ -8,7 +8,8 @@ from PyQt4.QtGui import QVBoxLayout, QWidget
 
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.logwidget import LogWidget
-from karabo_gui.singletons.api import get_manager
+from karabo_gui.mediator import (
+    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 
 
 class NotificationPanel(Dockable, QWidget):
@@ -21,5 +22,20 @@ class NotificationPanel(Dockable, QWidget):
         mainLayout.setContentsMargins(5, 5, 5, 5)
         mainLayout.addWidget(self.__logWidget)
 
-        get_manager().signalNotificationAvailable.connect(
-            self.__logWidget.onNotificationAvailable)
+        # Register for broadcast events.
+        # This object lives as long as the app. No need to unregister.
+        register_for_broadcasts(self)
+
+    def eventFilter(self, obj, event):
+        """ Router for incoming broadcasts
+        """
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.NotificationMessage:
+                device_id = event.data['device_id']
+                message_type = event.data['message_type']
+                short_msg = event.data['short_msg']
+                detailed_msg = event.data['detailed_msg']
+                handler = self.__logWidget.onNotificationAvailable
+                handler(device_id, message_type, short_msg, detailed_msg)
+            return False
+        return super(NotificationPanel, self).eventFilter(obj, event)

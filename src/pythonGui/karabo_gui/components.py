@@ -18,7 +18,7 @@ from PyQt4.QtGui import QAction, QHBoxLayout, QLabel, QToolButton, QWidget
 
 from . import icons
 from .messagebox import MessageBox
-from .singletons.api import get_manager, get_network
+from .singletons.api import get_network
 from .widget import EditableWidget, DisplayWidget, Widget
 
 
@@ -177,7 +177,6 @@ class EditableNoApplyComponent(BaseComponent):
 
 class EditableApplyLaterComponent(BaseComponent):
     # signals
-    signalConflictStateChanged = pyqtSignal(str, bool)  # key, hasConflict
     signalApplyChanged = pyqtSignal(object, bool)  # key, state of apply button
 
     def __init__(self, classAlias, box, parent):
@@ -233,9 +232,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
         self.connectWidget(box)
         self.widgetFactory.setReadOnly(False)
-        # In case of attributes (Hash-V2) connect another function here
-        manager = get_manager()
-        self.signalConflictStateChanged.connect(manager.onConflictStateChanged)
 
     def connectWidget(self, box):
         BaseComponent.connectWidget(self, box)

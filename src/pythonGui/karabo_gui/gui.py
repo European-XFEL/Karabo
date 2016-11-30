@@ -6,7 +6,7 @@
 
 from traceback import print_exception, format_exception
 
-from karabo_gui.singletons.api import get_manager, get_network
+from karabo_gui.singletons.api import get_network
 
 # Global MainWindow singleton
 window = None
@@ -41,13 +41,11 @@ def init(app):
 #        "margin-bottom: 0px;"
 #        "}")
 
-    manager = get_manager()
     network = get_network()
 
     global window
     window = MainWindow()
     window.signalQuitApplication.connect(network.onQuitApplication)
-    manager.signalUpdateScenes.connect(window.onUpdateScenes)
     network.signalServerConnectionChanged.connect(
         window.onServerConnectionChanged)
     network.signalUserChanged.connect(window.onUpdateAccessLevel)
