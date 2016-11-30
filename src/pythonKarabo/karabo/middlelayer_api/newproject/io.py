@@ -101,7 +101,7 @@ def _wrap_child_element_xml(child_xml, root_metadata):
     """
     element = etree.Element('xml', **root_metadata)
     element.text = ''  # This guarantees a closing tag (</xml>)
-    root_xml = etree.tostring(element)
+    root_xml = etree.tostring(element, encoding='utf-8')
 
     index = root_xml.rfind(b'</xml>')
     return root_xml[:index] + child_xml + root_xml[index:]
@@ -259,7 +259,7 @@ def _macro_writer(model):
     element = etree.Element('macro')
     code = model.code.encode('utf-8')
     element.text = base64.b64encode(code)
-    return etree.tostring(element)
+    return etree.tostring(element, encoding='utf-8')
 
 
 def _project_writer(model):
