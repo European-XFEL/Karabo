@@ -1,11 +1,8 @@
-
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on February 1, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
 """This module contains the manager class which works as a man in the middle of
    the star structure. All relevant signals go over here.
 
@@ -16,13 +13,12 @@
 
 from datetime import datetime
 
-from karabo.middlelayer import (
-    Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration)
-
 from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.common.states import State
+from karabo.middlelayer import (
+    Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration)
 from karabo_gui.configuration import BulkNotifications
 from karabo_gui.dialogs.configurationdialog import (
     SelectProjectDialog, SelectProjectConfigurationDialog)
@@ -63,12 +59,12 @@ def handle_device_state_change(box, value, timestamp):
 
 class Manager(QObject):
     # signals
-    signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
-    signalProjectLoaded = pyqtSignal(str, object, object) # projectName, metaData, data
-    signalProjectSaved = pyqtSignal(str, bool, object) # projectName, success, data
+    signalAvailableProjects = pyqtSignal(object)
+    signalProjectLoaded = pyqtSignal(str, object, object)
+    signalProjectSaved = pyqtSignal(str, bool, object)
 
-    def __init__(self, *args, **kwargs):
-        super(Manager, self).__init__()
+    def __init__(self, parent=None):
+        super(Manager, self).__init__(parent=parent)
 
         # Model for navigation views
         self.systemTopology = NavigationTreeModel(self)
@@ -151,7 +147,7 @@ class Manager(QObject):
             read_only_paths = descriptor.getReadOnlyPaths()
             for key in read_only_paths:
                 # Remove all read only parameters
-                if key in config: # erase does not tolerate non-existing keys
+                if key in config:  # erase does not tolerate non-existing keys
                     config.erase(key)
 
         # Compute a runtime schema from the configuration and an unmodified
@@ -165,8 +161,8 @@ class Manager(QObject):
 
     def shutdownDevice(self, deviceId, showConfirm=True):
         if showConfirm:
-            ask = ('Do you really want to shutdown the device \"<b>{}</b>\"?'
-                   ).format(deviceId)
+            ask = ('Do you really want to shutdown the device '
+                   '"<b>{}</b>"?').format(deviceId)
             reply = QMessageBox.question(None, 'Shutdown device', ask,
                                          QMessageBox.Yes | QMessageBox.No,
                                          QMessageBox.No)
@@ -176,8 +172,8 @@ class Manager(QObject):
         get_network().onKillDevice(deviceId)
 
     def shutdownServer(self, serverId):
-        ask = ('Do you really want to shutdown the server \"<b>{}</b>\"?'
-               ).format(serverId)
+        ask = ('Do you really want to shutdown the server '
+               '"<b>{}</b>"?').format(serverId)
         reply = QMessageBox.question(None, 'Shutdown server', ask,
                                      QMessageBox.Yes | QMessageBox.No,
                                      QMessageBox.No)
@@ -203,9 +199,9 @@ class Manager(QObject):
         self.reset()
 
     def onNavigationTreeModelSelectionChanged(self, selected, deselect):
-        """
-        This slot is called whenever something of the navigation panel is selected.
-        If an item was selected, the selection of the project panel is cleared.
+        """This slot is called whenever something of the navigation panel is
+        selected. If an item was selected, the selection of the project panel
+        is cleared.
         """
         if not selected.indexes():
             return
@@ -213,9 +209,9 @@ class Manager(QObject):
         self.projectTopology.selectionModel.clear()
 
     def onProjectModelSelectionChanged(self, selected, deselected):
-        """
-        This slot is called whenever something of the project panel is selected.
-        If an item was selected, the selection of the navigation panel is cleared.
+        """This slot is called whenever something of the project panel is
+        selected. If an item was selected, the selection of the navigation
+        panel is cleared.
         """
         if not selected.indexes():
             return
@@ -229,14 +225,14 @@ class Manager(QObject):
             KaraboEventSender.ShowConfiguration, data))
 
     def currentConfigurationAndClassId(self):
-        """
-        This function returns the configuration of the currently selected device
-        which can be part of the systemTopology or the projectTopology.
+        """This function returns the configuration of the currently selected
+        device which can be part of the systemTopology or the projectTopology.
 
         Returns None, If no device is selected.
         """
         if self.systemTopology.currentIndex().isValid():
-            indexInfo = self.systemTopology.indexInfo(self.systemTopology.currentIndex())
+            index = self.systemTopology.currentIndex()
+            indexInfo = self.systemTopology.indexInfo(index)
             deviceId = indexInfo.get("deviceId")
             classId = indexInfo.get("classId")
             serverId = indexInfo.get("serverId")
@@ -248,7 +244,8 @@ class Manager(QObject):
             else:
                 return None
         elif self.projectTopology.currentIndex().isValid():
-            indexInfo = self.projectTopology.indexInfo(self.projectTopology.currentIndex())
+            index = self.projectTopology.currentIndex()
+            indexInfo = self.projectTopology.indexInfo(index)
             return indexInfo.get("conf"), indexInfo.get("classId")
         else:
             return None
@@ -276,7 +273,8 @@ class Manager(QObject):
 
     def onOpenFromProject(self):
         # Open dialog to select project and configuration
-        dialog = SelectProjectConfigurationDialog(self.projectTopology.projects)
+        projects = self.projectTopology.projects
+        dialog = SelectProjectConfigurationDialog(projects)
         if dialog.exec_() == QDialog.Rejected:
             return
 
@@ -286,13 +284,11 @@ class Manager(QObject):
         self._loadClassConfiguration(conf, config, classId)
 
     def onSaveToFile(self):
+        """This function saves the current configuration of a device to a file.
         """
-        This function saves the current configuration of a device to a file.
-        """
-        filename = getSaveFileName(
-                        caption="Save configuration as",
-                        filter="Configuration (*.xml)",
-                        suffix="xml")
+        filename = getSaveFileName(caption="Save configuration as",
+                                   filter="Configuration (*.xml)",
+                                   suffix="xml")
         if not filename:
             return
 
@@ -311,8 +307,8 @@ class Manager(QObject):
             w.writeToFile(config, file)
 
     def onSaveToProject(self):
-        """
-        This function saves the current configuration of a device to the project.
+        """This function saves the current configuration of a device to the
+        project.
         """
         # Open dialog to select project to which configuration should be saved
         dialog = SelectProjectDialog(self.projectTopology.projects)
@@ -332,10 +328,13 @@ class Manager(QObject):
             if deviceId == conf.id:
                 for c in configs:
                     if c.filename[:-4] == name:
-                        reply = QMessageBox.question(None, 'Project configuration already exists',
-                            "Another configuration with the same name \"<b>{}</b>\" <br> "
-                            "already exists. Do you want to overwrite it?".format(name),
-                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                        title = 'Project configuration already exists'
+                        msg = ('Another configuration with the same name '
+                               '"<b>{}</b>" <br> already exists. Do you want '
+                               'to overwrite it?').format(name)
+                        reply = QMessageBox.question(
+                            None, title, msg, QMessageBox.Yes | QMessageBox.No,
+                            QMessageBox.No)
 
                         if reply == QMessageBox.No:
                             return
@@ -349,16 +348,15 @@ class Manager(QObject):
                 hsh, attrs = conf.toHash()
                 confHash = Hash(classId, hsh)
                 confHash[classId, ...] = attrs
-                project.insertConfiguration(index, conf.id,
-                                            ProjectConfiguration(project, name,
-                                            confHash))
+                project_conf = ProjectConfiguration(project, name, confHash)
+                project.insertConfiguration(index, conf.id, project_conf)
                 return
 
         hsh, attrs = conf.toHash()
         confHash = Hash(classId, hsh)
         confHash[classId, ...] = attrs
-        project.addConfiguration(conf.id, ProjectConfiguration(project, name,
-                                          confHash))
+        project_conf = ProjectConfiguration(project, name, confHash)
+        project.addConfiguration(conf.id, project_conf)
 
     def _deviceDataReceived(self):
         """Notify all listeners that some (class, schema, or config) data was
@@ -404,17 +402,24 @@ class Manager(QObject):
         If the instance already exists in the central hash, it is first
         removed from there. """
         # Check for existing stuff and remove
-        instanceIds, serverClassIds = self.systemTopology.detectExistingInstances(topologyEntry)
-        for id in instanceIds:
-            logMessage = dict(
-                timestamp=datetime.now().isoformat(), type="INFO", category=id,
-                message='Detected dirty shutdown for instance "{}", '
-                        'which is coming up now.'.format(id))
-            self.handle_log([logMessage])
+        detect_instances = self.systemTopology.detectExistingInstances
+        instanceIds, serverClassIds = detect_instances(topologyEntry)
+
+        log_messages = []
+        for inst_id in instanceIds:
+            message = {
+                'timestamp': datetime.now().isoformat(),
+                'type': 'INFO',
+                'category': inst_id,
+                'message': ('Detected dirty shutdown for instance "{}", '
+                            'which is coming up now.').format(inst_id)
+            }
+            log_messages.append(message)
 
             # Clear deviceId parameter page, if existent
-            self._clearDeviceParameterPage(id)
+            self._clearDeviceParameterPage(inst_id)
 
+        self.handle_log(log_messages)
         self._clearServerClassParameterPages(serverClassIds)
 
         # Update system topology with new configuration
@@ -436,7 +441,8 @@ class Manager(QObject):
                 getClass(k[0], k[1])
 
     def handle_instanceGone(self, instanceId, instanceType):
-        """ Remove instanceId from central hash and update """
+        """ Remove instanceId from central hash and update
+        """
         if instanceType in ("device", "macro"):
             # Distribute gone alarm service devices
             instanceIds = self._extractAlarmServices()
@@ -486,16 +492,17 @@ class Manager(QObject):
         self.handle_deviceSchema(instanceId, schema)
 
     def handle_classSchema(self, serverId, classId, schema):
-        if (serverId, classId) not in self.serverClassData:
-            print('not requested schema for classId {} arrived'.format(classId))
+        key = (serverId, classId)
+        if key not in self.serverClassData:
+            print('Unrequested schema for classId {} arrived'.format(classId))
             return
 
         # Save a clean copy
         schemaCopy = Schema()
         schemaCopy.copy(schema)
-        self._immutableServerClassData[serverId, classId] = schemaCopy
+        self._immutableServerClassData[key] = schemaCopy
 
-        conf = self.serverClassData[serverId, classId]
+        conf = self.serverClassData[key]
         if conf.descriptor is not None:
             return
 
@@ -512,7 +519,7 @@ class Manager(QObject):
 
     def handle_deviceSchema(self, deviceId, schema):
         if deviceId not in self.deviceData:
-            print('not requested schema for device {} arrived'.format(deviceId))
+            print('Unrequested schema for device {} arrived'.format(deviceId))
             return
 
         conf = self.deviceData[deviceId]
