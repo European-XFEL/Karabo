@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from io import BytesIO
+from io import StringIO
 import os.path as op
 from tempfile import TemporaryDirectory
 
@@ -89,7 +89,7 @@ def _write_project(project, devices, storage):
 def test_simple_read():
     model = MacroModel(code='print(42)', initialized=True)
     xml = write_project_model(model)
-    rmodel = read_project_model(BytesIO(xml), existing=None)
+    rmodel = read_project_model(StringIO(xml), existing=None)
     assert model.code == rmodel.code
 
 
@@ -124,6 +124,10 @@ def test_project_cache():
         project_uuids = storage.get_uuids_of_type(TEST_DOMAIN, 'project')
         assert len(project_uuids) == 1
         assert project_uuids[0] == project.uuid
+        proj_data = storage.get_available_project_data(TEST_DOMAIN, 'project')
+        assert proj_data[0]['uuid'] == project.uuid
+        assert len(proj_data[0]['revisions']) == 1
+        assert proj_data[0]['simple_name'] == project.simple_name
 
 
 def test_uninitialized_save():
@@ -136,7 +140,7 @@ def test_wrong_existing_type():
     model = MacroModel(code='print(42)', initialized=True)
     xml = write_project_model(model)
     with assert_raises(AssertionError):
-        read_project_model(BytesIO(xml), existing=ProjectModel())
+        read_project_model(StringIO(xml), existing=ProjectModel())
 
 
 def test_existing_obj_mismatch():
@@ -146,4 +150,4 @@ def test_existing_obj_mismatch():
 
     xml = write_project_model(model)
     with assert_raises(AssertionError):
-        read_project_model(BytesIO(xml), existing=existing)
+        read_project_model(StringIO(xml), existing=existing)
