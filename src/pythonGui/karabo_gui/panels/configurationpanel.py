@@ -23,8 +23,8 @@ from karabo_gui.singletons.api import get_manager
 
 
 class ConfigurationPanel(Dockable, QWidget):
-    def __init__(self):
-        super(ConfigurationPanel, self).__init__()
+    def __init__(self, parent=None):
+        super(ConfigurationPanel, self).__init__(parent=parent)
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.
@@ -39,19 +39,21 @@ class ConfigurationPanel(Dockable, QWidget):
         self.__changingTimerDeviceIdMap = dict()
 
         mainLayout = QVBoxLayout(self)
-        mainLayout.setContentsMargins(5,5,5,5)
+        mainLayout.setContentsMargins(5, 5, 5, 5)
 
         # Layout for navigation and project tree
         self.navSplitter = QSplitter(Qt.Vertical)
         # Navigation tree
         self.twNavigation = NavigationTreeView(self)
-        self.twNavigation.model().signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twNavigation.model().signalItemChanged.connect(
+            self.onDeviceItemChanged)
         self.twNavigation.hide()
         self.navSplitter.addWidget(self.twNavigation)
 
         # Project tree
         self.twProject = ProjectTreeView(self)
-        self.twProject.model().signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twProject.model().signalItemChanged.connect(
+            self.onDeviceItemChanged)
         self.twProject.hide()
         self.navSplitter.addWidget(self.twProject)
 
@@ -67,7 +69,7 @@ class ConfigurationPanel(Dockable, QWidget):
         twInitalParameterEditorPage = ParameterTreeWidget()
         twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
         self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
-        
+
         # Wait page
         waitWidget = QLabel()
         waitWidget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
@@ -77,7 +79,7 @@ class ConfigurationPanel(Dockable, QWidget):
         waitWidget.setMovie(movie)
         movie.start()
         self.__swParameterEditor.addWidget(waitWidget)
-        
+
         self.prevConfiguration = None
 
         topWidget = QWidget(self)
@@ -90,18 +92,18 @@ class ConfigurationPanel(Dockable, QWidget):
         splitTopPanes.setStretchFactor(1, 3)
 
         vLayout = QVBoxLayout(topWidget)
-        vLayout.setContentsMargins(0,0,0,0)
+        vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.addWidget(splitTopPanes)
 
         hLayout = QHBoxLayout()
-        hLayout.setContentsMargins(0,5,5,5)
-        
+        hLayout.setContentsMargins(0, 5, 5, 5)
+
         text = "Instantiate device"
         self.pbInitDevice = QPushButton(icons.start, text)
         self.pbInitDevice.setToolTip(text)
         self.pbInitDevice.setStatusTip(text)
         self.pbInitDevice.setVisible(False)
-        self.pbInitDevice.setMinimumSize(140,32)
+        self.pbInitDevice.setMinimumSize(140, 32)
         self.pbInitDevice.clicked.connect(self.onInitDevice)
         hLayout.addWidget(self.pbInitDevice)
 
@@ -110,7 +112,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.pbKillInstance.setStatusTip(text)
         self.pbKillInstance.setToolTip(text)
         self.pbKillInstance.setVisible(False)
-        self.pbKillInstance.setMinimumSize(140,32)
+        self.pbKillInstance.setMinimumSize(140, 32)
         # use action for button to reuse
         self.acKillInstance = QAction(icons.kill, text, self)
         self.acKillInstance.setStatusTip(text)
@@ -118,7 +120,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acKillInstance.triggered.connect(self.onKillInstance)
         self.pbKillInstance.clicked.connect(self.acKillInstance.triggered)
         hLayout.addWidget(self.pbKillInstance)
-        
+
         self.__hasConflicts = False
 
         text = "Apply all"
@@ -128,7 +130,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.pbApplyAll.setStatusTip(description)
         self.pbApplyAll.setVisible(False)
         self.pbApplyAll.setEnabled(False)
-        self.pbApplyAll.setMinimumSize(140,32)
+        self.pbApplyAll.setMinimumSize(140, 32)
         # use action for button to reuse
         self.acApplyAll = QAction(icons.apply, text, self)
         self.acApplyAll.setStatusTip(text)
@@ -147,7 +149,8 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acApplyRemoteChanges = QAction(text, self)
         self.acApplyRemoteChanges.setStatusTip(text)
         self.acApplyRemoteChanges.setToolTip(text)
-        self.acApplyRemoteChanges.triggered.connect(self.onApplyAllRemoteChanges)
+        self.acApplyRemoteChanges.triggered.connect(
+            self.onApplyAllRemoteChanges)
 
         text = "Apply selected local changes"
         self.acApplySelectedChanges = QAction(text, self)
@@ -159,8 +162,9 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acApplySelectedRemoteChanges = QAction(text, self)
         self.acApplySelectedRemoteChanges.setStatusTip(text)
         self.acApplySelectedRemoteChanges.setToolTip(text)
-        self.acApplySelectedRemoteChanges.triggered.connect(self.onApplySelectedRemoteChanges)
-        
+        self.acApplySelectedRemoteChanges.triggered.connect(
+            self.onApplySelectedRemoteChanges)
+
         # add menu to toolbutton
         self.mApply = QMenu(self.pbApplyAll)
         self.mApply.addAction(self.acApplyLocalChanges)
@@ -168,17 +172,18 @@ class ConfigurationPanel(Dockable, QWidget):
         self.mApply.addSeparator()
         self.mApply.addAction(self.acApplySelectedChanges)
         self.mApply.addAction(self.acApplySelectedRemoteChanges)
-        
+
         hLayout.addWidget(self.pbApplyAll)
-        
+
         text = "Decline all"
-        decription = "Decline all property changes and reset them to value on device"
+        decription = ("Decline all property changes and reset them to value "
+                      "on device")
         self.pbResetAll = QPushButton(icons.no, text)
         self.pbResetAll.setToolTip(decription)
         self.pbResetAll.setStatusTip(decription)
         self.pbResetAll.setVisible(False)
         self.pbResetAll.setEnabled(False)
-        self.pbResetAll.setMinimumSize(140,32)
+        self.pbResetAll.setMinimumSize(140, 32)
         # use action for button to reuse
         self.acResetAll = QAction(icons.no, text, self)
         self.acResetAll.setStatusTip(text)
@@ -233,7 +238,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acOpenFromProject.setStatusTip(text)
         self.acOpenFromProject.setToolTip(text)
         self.acOpenFromProject.triggered.connect(manager.onOpenFromProject)
-        
+
         self.openMenu = QMenu()
         self.openMenu.addAction(self.acOpenFromFile)
         self.openMenu.addAction(self.acOpenFromProject)
@@ -257,7 +262,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acSaveToProject.setStatusTip(text)
         self.acSaveToProject.setToolTip(text)
         self.acSaveToProject.triggered.connect(manager.onSaveToProject)
-        
+
         self.saveMenu = QMenu()
         self.saveMenu.addAction(self.acSaveToFile)
         self.saveMenu.addAction(self.acSaveToProject)
@@ -270,23 +275,22 @@ class ConfigurationPanel(Dockable, QWidget):
         self.tbSaveConfig.setPopupMode(QToolButton.InstantPopup)
         self.tbSaveConfig.setMenu(self.saveMenu)
 
-
     def setupToolBars(self, toolBar, parent):
         # Save action to member variables to make setVisible work later
         self.acOpenConfig = toolBar.addWidget(self.tbOpenConfig)
         self.acSaveConfig = toolBar.addWidget(self.tbSaveConfig)
 
-
     def updateApplyAllActions(self, configuration):
-        twParameterEditor = self.__swParameterEditor.widget(configuration.index)
+        index = configuration.index
+        twParameterEditor = self.__swParameterEditor.widget(index)
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
-        if (self.pbApplyAll.isEnabled() is True) and (nbSelected > 0):
+        if self.pbApplyAll.isEnabled() is True and nbSelected > 0:
             if nbSelected == 1:
                 text = "Apply selected"
             else:
                 text = "Apply ({}) selected".format(nbSelected)
-            
+
             description = "Apply selected property changes in one go"
             self.acApplyLocalChanges.setVisible(False)
             self.acApplyRemoteChanges.setVisible(False)
@@ -307,13 +311,13 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acApplyAll.setText(text)
         self.acApplyAll.setStatusTip(description)
         self.acApplyAll.setToolTip(description)
-        
+
         if self.hasConflicts is True:
             text = "Resolve conflicts"
             self.pbApplyAll.setStatusTip(text)
             self.pbApplyAll.setToolTip(text)
             self.pbApplyAll.setMenu(self.mApply)
-            
+
             self.acApplyAll.setStatusTip(text)
             self.acApplyAll.setToolTip(text)
             self.acApplyAll.setMenu(self.mApply)
@@ -321,9 +325,9 @@ class ConfigurationPanel(Dockable, QWidget):
             self.pbApplyAll.setMenu(None)
             self.acApplyAll.setMenu(None)
 
-
     def updateResetAllActions(self, configuration):
-        twParameterEditor = self.__swParameterEditor.widget(configuration.index)
+        index = configuration.index
+        twParameterEditor = self.__swParameterEditor.widget(index)
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
         if (self.pbResetAll.isEnabled() is True) and (nbSelected > 0):
@@ -331,11 +335,13 @@ class ConfigurationPanel(Dockable, QWidget):
                 text = "Decline selected"
             else:
                 text = "Decline ({}) selected".format(nbSelected)
-            description = "Decline all selected property changes and reset them to value on device"
+            description = ("Decline all selected property changes and reset "
+                           "them to value on device")
         else:
             text = "Decline all"
-            description = "Decline all property changes and reset them to value on device"
-        
+            description = ("Decline all property changes and reset them to "
+                           "value on device")
+
         self.pbResetAll.setText(text)
         self.pbResetAll.setStatusTip(description)
         self.pbResetAll.setToolTip(description)
@@ -344,12 +350,11 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acResetAll.setStatusTip(description)
         self.acResetAll.setToolTip(text)
 
-
     def _createNewParameterPage(self, configuration):
         twParameterEditor = ParameterTreeWidget(configuration)
         twParameterEditor.setHeaderLabels([
             "Parameter", "Current value on device", "Value"])
-        
+
         twParameterEditor.addContextMenu(self.openMenu)
         twParameterEditor.addContextMenu(self.saveMenu)
         twParameterEditor.addContextSeparator()
@@ -358,23 +363,27 @@ class ConfigurationPanel(Dockable, QWidget):
         twParameterEditor.addContextAction(self.acResetAll)
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
         twParameterEditor.itemSelectionChanged.connect(self.onSelectionChanged)
-        
+
         if configuration.type in ("class", "projectClass", "deviceGroupClass"):
             twParameterEditor.hideColumn(1)
 
         if configuration is not None:
             configuration.fillWidget(twParameterEditor)
-        
+
         index = self.__swParameterEditor.addWidget(twParameterEditor)
         return index
 
+    # ----------------------------------------------------------------------
+    # getter functions
 
-### getter functions ###
-    def _hasConflicts(self):
+    @property
+    def hasConflicts(self):
         return self.__hasConflicts
-    def _setHasConflicts(self, hasConflicts):
+
+    @hasConflicts.setter
+    def hasConflicts(self, hasConflicts):
         self.__hasConflicts = hasConflicts
-        
+
         if hasConflicts is True:
             icon = icons.applyConflict
             text = "Resolve conflict"
@@ -387,7 +396,7 @@ class ConfigurationPanel(Dockable, QWidget):
             self.acApplyAll.setStatusTip(text)
             self.acApplyAll.setToolTip(text)
             self.acApplyAll.setMenu(self.mApply)
-            
+
             self.pbResetAll.setEnabled(False)
             self.acResetAll.setEnabled(False)
         else:
@@ -398,7 +407,7 @@ class ConfigurationPanel(Dockable, QWidget):
             self.pbApplyAll.setStatusTip(description)
             self.pbApplyAll.setToolTip(description)
             self.pbApplyAll.setMenu(None)
-            
+
             self.acApplyAll.setIcon(icon)
             self.acApplyAll.setStatusTip(text)
             self.acApplyAll.setToolTip(text)
@@ -408,35 +417,30 @@ class ConfigurationPanel(Dockable, QWidget):
 
         self.acApplySelectedChanges.setVisible(not hasConflicts)
         self.acApplySelectedRemoteChanges.setVisible(not hasConflicts)
-    hasConflicts = property(fget=_hasConflicts, fset=_setHasConflicts)
-
 
     def _setApplyAllEnabled(self, configuration, enable):
         self.pbApplyAll.setEnabled(enable)
         self.acApplyAll.setEnabled(enable)
         self.updateApplyAllActions(configuration)
 
-
     def _setResetAllEnabled(self, configuration, enable):
         self.pbResetAll.setEnabled(enable)
         self.acResetAll.setEnabled(enable)
         self.updateResetAllActions(configuration)
 
-
     def _setParameterEditorIndex(self, index):
         self.__swParameterEditor.blockSignals(True)
         self.__swParameterEditor.setCurrentIndex(index)
         self.__swParameterEditor.blockSignals(False)
-        
-        show = index != 0
+
+        show = (index != 0)
         self.acOpenConfig.setVisible(show)
         self.acSaveConfig.setVisible(show)
-
 
     def _hideAllButtons(self):
         # Hide buttons and actions
         self.pbInitDevice.setVisible(False)
-        
+
         self.pbKillInstance.setVisible(False)
         self.acKillInstance.setVisible(False)
         self.pbApplyAll.setVisible(False)
@@ -444,14 +448,11 @@ class ConfigurationPanel(Dockable, QWidget):
         self.pbResetAll.setVisible(False)
         self.acResetAll.setVisible(False)
 
-
     def _getCurrentParameterEditor(self):
         return self.__swParameterEditor.currentWidget()
-    
-    
+
     def _getParameterEditorByPath(self, path):
-        """
-        Returns the parameterEditor-Treewidget with the given \path.
+        """Returns the parameterEditor-Treewidget with the given ``path``.
         If not found, return None.
         """
         for index in range(self.__swParameterEditor.count()):
@@ -462,42 +463,40 @@ class ConfigurationPanel(Dockable, QWidget):
                 return twParameterEditor
         return None
 
-
     def _updateButtonsVisibility(self, visible):
         self.pbInitDevice.setVisible(visible)
-        
+
         self.pbKillInstance.setVisible(not visible)
         self.pbApplyAll.setVisible(not visible)
         self.pbResetAll.setVisible(not visible)
-        
+
         self.acKillInstance.setVisible(not visible)
         self.acApplyAll.setVisible(not visible)
         self.acResetAll.setVisible(not visible)
     updateButtonsVisibility = property(fset=_updateButtonsVisibility)
 
-
     def showParameterPage(self, configuration):
-        """ Show the parameters for configuration """
+        """Show the parameters for configuration
+        """
         if configuration is None:
             self._setParameterEditorIndex(0)
         else:
             index = configuration.index
             if configuration.index is None:
-                configuration.index = self._createNewParameterPage(configuration)
+                cindex = self._createNewParameterPage(configuration)
+                configuration.index = cindex
                 index = 1  # Show waiting page
             self._setParameterEditorIndex(index)
-        
-        if configuration not in (None, self.prevConfiguration) and \
-           configuration.type in ("device", "deviceGroup"):
+
+        if (configuration not in (None, self.prevConfiguration) and
+                configuration.type in ("device", "deviceGroup")):
             configuration.addVisible()
-        
+
         self.prevConfiguration = configuration
 
-
     def _removeParameterEditorPage(self, twParameterEditor):
-        """
-        The \twParameterEditor is remove from StackedWidget and all registered
-        components get unregistered.
+        """The ``twParameterEditor`` is remove from StackedWidget and all
+        registered components get unregistered.
         """
         if twParameterEditor is None:
             return
@@ -508,11 +507,9 @@ class ConfigurationPanel(Dockable, QWidget):
         self.__swParameterEditor.removeWidget(twParameterEditor)
         self._showEmptyPage()
 
-
     def _showEmptyPage(self):
-        """
-        This function shows the default page of the parameter editor stacked widget
-        and hides all buttons.
+        """This function shows the default page of the parameter editor
+        stacked widget and hides all buttons.
         """
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
@@ -529,16 +526,18 @@ class ConfigurationPanel(Dockable, QWidget):
             page = self.__swParameterEditor.widget(index)
             self._removeParameterEditorPage(page)
 
-### slots ###
+    # -----------------------------------------------------------------------
+    # slots
+
     def onSelectNewNavigationItem(self, devicePath):
         self.twNavigation.selectItem(devicePath)
-
 
     def onShowConfiguration(self, configuration):
         if configuration.index is None:
             configuration.index = self._createNewParameterPage(configuration)
         else:
-            twParameterEditor = self.__swParameterEditor.widget(configuration.index)
+            index = configuration.index
+            twParameterEditor = self.__swParameterEditor.widget(index)
             twParameterEditor.clear()
             configuration.fillWidget(twParameterEditor)
 
@@ -546,26 +545,28 @@ class ConfigurationPanel(Dockable, QWidget):
         if (currentIndex == 1) and (self.prevConfiguration is configuration):
             # Waiting page is shown
             self._setParameterEditorIndex(configuration.index)
-        
+
         if self.__swParameterEditor.currentIndex() == configuration.index:
-            if configuration.type in ("other", "deviceGroupClass", "deviceGroup"):
+            hidden_types = ("other", "deviceGroupClass", "deviceGroup")
+            if configuration.type in hidden_types:
                 self._hideAllButtons()
             elif configuration.descriptor is not None:
-                self.updateButtonsVisibility = \
-                    configuration.type in ('class', 'projectClass')
+                vis_types = ('class', 'projectClass')
+                self.updateButtonsVisibility = configuration.type in vis_types
 
-
-    def onDeviceItemChanged(self, type, configuration):
+    def onDeviceItemChanged(self, item_type, configuration):
         # Update buttons
-        if type in ("other", "deviceGroupClass", "deviceGroup") or \
-           (configuration is not None and configuration.descriptor is None):
+        if (item_type in ("other", "deviceGroupClass", "deviceGroup") or
+                (configuration is not None and
+                 configuration.descriptor is None)):
             self._hideAllButtons()
         else:
-            self.updateButtonsVisibility = configuration is not None and \
-                                           configuration.type in ('class', 'projectClass')
-        
-        if self.prevConfiguration not in (None, configuration) and \
-           self.prevConfiguration.type in ("device", "deviceGroup"):
+            vis_types = ('class', 'projectClass')
+            self.updateButtonsVisibility = (configuration is not None and
+                                            configuration.type in vis_types)
+
+        if (self.prevConfiguration not in (None, configuration) and
+                self.prevConfiguration.type in ("device", "deviceGroup")):
             self.prevConfiguration.removeVisible()
 
         self.showParameterPage(configuration)
@@ -586,50 +587,45 @@ class ConfigurationPanel(Dockable, QWidget):
                 parameterEditor = self.__swParameterEditor.widget(conf.index)
                 parameterEditor.setReadOnly(False)
 
- 
     def onErrorState(self, conf, inErrorState):
         if conf.index is not None:
             parameterEditor = self.__swParameterEditor.widget(conf.index)
             parameterEditor.setErrorState(inErrorState)
 
-
     def onTimeOut(self):
         timer = self.sender()
         timer.stop()
-        
+
         # Check path against path of current parameter editor
         mapValues = list(self.__changingTimerDeviceIdMap.values())
         for i in range(len(mapValues)):
             if timer == mapValues[i]:
                 path = list(self.__changingTimerDeviceIdMap.keys())[i]
-                
+
                 parameterEditor = self._getParameterEditorByPath(path)
                 if parameterEditor:
                     parameterEditor.setReadOnly(True)
                 break
 
-
     def onApplyChanged(self, box, enable, hasConflicts=False):
-        # Called when apply button of ParameterPage changed
+        """Called when apply button of ParameterPage changed
+        """
         self._setApplyAllEnabled(box.configuration, enable)
         self._setResetAllEnabled(box.configuration, enable)
         self.hasConflicts = hasConflicts
 
-
     def onSelectionChanged(self):
-        """ Update the apply and reset buttons """
+        """Update the apply and reset buttons
+        """
         conf = self.sender().conf
         self.updateApplyAllActions(conf)
         self.updateResetAllActions(conf)
 
-
     def onApplyAll(self):
         self._getCurrentParameterEditor().onApplyAll()
 
-
     def onApplyAllRemoteChanges(self):
         self._getCurrentParameterEditor().onApplyAllRemoteChanges()
-
 
     def onApplySelectedRemoteChanges(self):
         twParameterEditor = self._getCurrentParameterEditor()
@@ -637,15 +633,12 @@ class ConfigurationPanel(Dockable, QWidget):
         for item in selectedItems:
             twParameterEditor.applyRemoteChanges(item)
 
-
     def onResetAll(self):
         self._getCurrentParameterEditor().resetAll()
-
 
     def onKillInstance(self):
         # Check whether an index of the Navigation or ProjectPanel is selected
         self.prevConfiguration.shutdown()
-
 
     def onInitDevice(self):
         # Check whether an index of the Navigation or ProjectPanel is selected
@@ -659,14 +652,12 @@ class ConfigurationPanel(Dockable, QWidget):
 
         if len(indexInfo) == 0:
             return
-        
+
         serverId = indexInfo.get('serverId')
         classId = indexInfo.get('classId')
         deviceId = indexInfo.get('deviceId')
         config = indexInfo.get('config')
-
         get_manager().initDevice(serverId, classId, deviceId, config)
-
 
     def onGlobalAccessLevelChanged(self):
         for index in range(self.__swParameterEditor.count()):
@@ -674,18 +665,14 @@ class ConfigurationPanel(Dockable, QWidget):
             if isinstance(twParameterEditor, ParameterTreeWidget):
                 twParameterEditor.globalAccessLevelChanged()
 
-
     def onSaveToFile(self):
         self.twNavigation.onSaveToFile()
-
 
     def onSaveToProject(self):
         self.twNavigation.onSaveToProject()
 
-
     def onOpenFromFile(self):
         self.twNavigation.onOpenFromFile()
-
 
     def onOpenFromProject(self):
         self.twNavigation.onOpenFromProject()
@@ -699,4 +686,3 @@ class ConfigurationPanel(Dockable, QWidget):
         self.navSplitter.hide()
         self.twNavigation.hide()
         self.twProject.hide()
-
