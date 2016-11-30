@@ -8,7 +8,6 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
 
 from karabo.common.project.api import ProjectModel, find_parent_object
-from karabo.middlelayer_api.newproject.io import write_project_model
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.utils import save_object
 from .item_model import ProjectItemModel
@@ -70,15 +69,33 @@ class ProjectView(QTreeView):
             if parent_project is None or is_project:
                 project_model = clicked_item_model.model
                 save_action = QAction('Save', menu)
-                save_action.triggered.connect(partial(save_object,
+                save_action.triggered.connect(partial(self._save_project,
                                                       project_model))
                 close_action = QAction('Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
                                                        project_model,
                                                        parent_project))
+                menu.addAction(save_action)
                 menu.addAction(close_action)
 
             menu.exec(QCursor.pos())
+
+    def _save_project(self, project):
+        # Save possible changes - XXX TODO check `modified` flag
+        if project.modified:
+            ask = ('The project has be modified.<br />Do you want to save the '
+                   'project?')
+            options = (QMessageBox.Save | QMessageBox.Cancel)
+            reply = QMessageBox.question(None, 'Save project',
+                                         ask, options, QMessageBox.Save)
+            if reply == QMessageBox.Cancel:
+                return
+
+            if reply == QMessageBox.Save:
+                # XXX: still not completely correct once there are child
+                # objects - loading of this project not possible due to wrong
+                # revision references
+                save_object(project)
 
     def _close_project(self, project, parent_project):
         """ Close the given `project`
@@ -91,19 +108,7 @@ class ProjectView(QTreeView):
         if reply == QMessageBox.No:
             return
 
-        # Save possible changes - XXX TODO check `modified` flag
-        if project.modified:
-            ask = ('The project has be modified.<br />Do you want to save the '
-                   'project before closing?')
-            options = (QMessageBox.Save | QMessageBox.Discard |
-                       QMessageBox.Cancel)
-            reply = QMessageBox.question(None, 'Save changes before closing',
-                                         ask, options, QMessageBox.Save)
-            if reply == QMessageBox.Cancel:
-                return
-
-            if reply == QMessageBox.Save:
-                write_project_model(project)
+        self._save_project(project)
 
         if parent_project is not None:
             # A subproject
