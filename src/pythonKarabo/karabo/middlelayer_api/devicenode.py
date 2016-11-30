@@ -2,6 +2,7 @@ from asyncio import async, CancelledError, coroutine, Queue
 from collections import OrderedDict
 from itertools import chain
 
+from .basetypes import isSet
 from .device_client import getDevice, lock
 from .enums import AccessMode, NodeType
 from .signalslot import coslot
@@ -110,6 +111,9 @@ class DeviceNode(String):
 
     @coroutine
     def initialize(self, instance, value):
+        if not isSet(value):
+            instance.__dict__[self.key] = None
+            return
         proxy = yield from getDevice(value)
         proxy._datahash = Hash()
         instance.__dict__[self.key] = proxy
