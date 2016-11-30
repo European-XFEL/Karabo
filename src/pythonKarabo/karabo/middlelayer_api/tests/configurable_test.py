@@ -2,8 +2,8 @@ import asyncio
 from unittest import TestCase, main
 
 from karabo.middlelayer import (
-    AccessMode, Assignment, Configurable, Hash, Int32, KaraboError, Node,
-    String, Unit, unit, VectorHash)
+    AccessMode, Assignment, Configurable, Hash, Int32, isSet, KaraboError,
+    Node, String, Unit, unit, VectorHash)
 
 
 class DummyConfigurable(Configurable):
@@ -57,8 +57,8 @@ class Tests(TestCase):
             node = Node(B)
 
         a = A()
-        self.assertFalse(hasattr(a, "value"))
-        self.assertFalse(hasattr(a.node, "value"))
+        self.assertFalse(isSet(a.value))
+        self.assertFalse(isSet(a.node.value))
         a = A(rehash(value=7, node=Hash("value", 3)))
         self.assertEqual(a.value, 7 * unit.meter)
         self.assertEqual(a.node.value, 3 * unit.meter)
@@ -141,12 +141,13 @@ class Tests(TestCase):
             node = Node(B)
 
         a = A()
-        self.assertFalse(hasattr(a, "value"))
-        self.assertFalse(hasattr(a.node, "value"))
+        self.assertFalse(isSet(a.value))
+        self.assertFalse(isSet(a.node.value))
         a = A(rehash(value=7, node=Hash("value", 3)))
         # we ignore read only parameters in configuration
-        self.assertFalse(hasattr(a, "value"))
-        self.assertFalse(hasattr(a.node, "value"))
+        self.assertFalse(isSet(a.value))
+        self.assertFalse(isSet(a.node.value))
+        a.assertValue(None)
         a.value = 9 * unit.meter
         a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
@@ -201,8 +202,8 @@ class Tests(TestCase):
             node = Node(B)
 
         a = A()
-        self.assertFalse(hasattr(a, "value"))
-        self.assertFalse(hasattr(a.node, "value"))
+        self.assertFalse(isSet(a.value))
+        self.assertFalse(isSet(a.node.value))
         a = A(rehash(value=7, node=Hash("value", 3)))
         self.assertEqual(a.value, 7 * unit.meter)
         self.assertEqual(a.node.value, 3 * unit.meter)
