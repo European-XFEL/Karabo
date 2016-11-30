@@ -124,7 +124,7 @@ def parse_commandline():
                                help='The name of the device package')
 
     parser.add_argument('-g', '--git',
-                        nargs=1,
+                        type=str,
                         default='ssh://git@git.xfel.eu:10022',
                         help='URL to the git repository')
 
