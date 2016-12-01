@@ -130,7 +130,7 @@ namespace karabo {
 
 
         SignalSlotable::Requestor::Requestor(SignalSlotable* signalSlotable) :
-            m_signalSlotable(signalSlotable), m_replyId(generateUUID()) {
+            m_signalSlotable(signalSlotable), m_replyId(generateUUID()), m_timeout(0) {
         }
 
 
