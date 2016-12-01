@@ -294,13 +294,6 @@ class ProjectDatabase(ContextDecorator):
                 if nsattr in item_tree.attrib:
                     item_tree.attrib.pop(nsattr)
             item_xml = self._make_str_if_needed(item_tree)
-        # for default revisons we add versioning information
-        elif revision == default:
-            etree.register_namespace('v', self.vers_namespace)
-            item_tree.attrib[self._add_vers_ns('revision')] = str(revision)
-            item_tree.attrib[self._add_vers_ns('path')] = path
-            key = hex(int(round(time.time() * 1000)))+hex(revision)
-            item_tree.attrib[self._add_vers_ns('key')] = key
 
         # check if the xml we got passed is an etree or a string. In the latter
         # case convert it
