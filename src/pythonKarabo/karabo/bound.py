@@ -6,7 +6,6 @@ from .bound_api.configurator import Configurator
 from .bound_api.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .bound_api.base_fsm import BaseFsm
 from .bound_api.camera_fsm import CameraFsm
-from .bound_api.compute_device import ComputeFsm
 from .bound_api.no_fsm import NoFsm
 from .bound_api.ok_error_fsm import OkErrorFsm
 from .bound_api.start_stop_fsm import StartStopFsm

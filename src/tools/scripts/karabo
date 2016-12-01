@@ -197,7 +197,7 @@ def install(args):
 def uninstall(args):
     so_path = 'plugins/lib{}.so'.format(args.device)
     if os.path.isfile(so_path):
-        run_cmd('rm -rf {}'.format(so_path))
+        run_cmd('rm -f {}'.format(so_path))
     else:
         run_cmd('pip uninstall -y {}'.format(args.device))
 
