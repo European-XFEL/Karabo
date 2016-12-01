@@ -20,6 +20,10 @@ class PopUp(DisplayWidget):
         self.message = box
         self.ok = self.cancel = None
 
+    def typeChanged(self, box):
+        if box is self.message:
+            self.dialog.setWindowTitle(box.descriptor.displayedName)
+
     def addBox(self, box):
         if not isinstance(box.descriptor, SlotNode):
             return False
