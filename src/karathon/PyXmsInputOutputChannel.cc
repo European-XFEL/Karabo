@@ -194,12 +194,28 @@ namespace karathon {
         return new karabo::xms::Memory::MetaData(bp::extract<std::string>(src), bp::extract<karabo::util::Timestamp>(ts));
     }
 
-    bp::object MemoryMetaData::getSource(karabo::xms::Memory::MetaData& self) {
+    void MemoryMetaData::setSource(karabo::xms::Memory::MetaData& self, const bp::object& src) {
+        if (!bp::extract<std::string>(src).check()) {
+            throw KARABO_PYTHON_EXCEPTION("Can't extract c++ object 'std::string' from python object");
+        }
+        self.setSource(bp::extract<std::string>(src));
+    }
+
+
+    bp::object MemoryMetaData::getSource(const karabo::xms::Memory::MetaData& self) {
         return bp::object(self.getSource());
     }
 
 
-    bp::object MemoryMetaData::getTimestamp(karabo::xms::Memory::MetaData& self) {
+    void MemoryMetaData::setTimestamp(karabo::xms::Memory::MetaData& self, const bp::object& ts) {
+        if (!bp::extract<karabo::util::Timestamp>(ts).check()) {
+            throw KARABO_PYTHON_EXCEPTION("Can't extract c++ object 'karabo::util::Timestamp' from python object");
+        }
+        self.setTimestamp(bp::extract<karabo::util::Timestamp>(ts));
+    }
+
+
+    bp::object MemoryMetaData::getTimestamp(const karabo::xms::Memory::MetaData& self) {
         return bp::object(self.getTimestamp());
     }
 
@@ -458,7 +474,9 @@ void exportPyXmsInputOutputChannel() {
         using namespace karabo::xms;
         bp::class_<Memory::MetaData, boost::noncopyable>("MemoryMetaData", bp::no_init)
                 .def("__init__", boost::python::make_constructor(&karathon::constructMemoryMetaData))
+                .def("setSource", &karathon::MemoryMetaData().setSource, (bp::arg("source")))
                 .def("getSource", &karathon::MemoryMetaData().getSource)
+                .def("setTimestamp", &karathon::MemoryMetaData().setTimestamp, (bp::arg("timestamp")))
                 .def("getTimestamp", &karathon::MemoryMetaData().getTimestamp)
                 ;
     }

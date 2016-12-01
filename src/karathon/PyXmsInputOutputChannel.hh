@@ -60,8 +60,10 @@ namespace karathon {
 
     struct MemoryMetaData {
 
-        static bp::object getSource(karabo::xms::Memory::MetaData& self);
-        static bp::object getTimestamp(karabo::xms::Memory::MetaData& self);
+        static void setSource(karabo::xms::Memory::MetaData& self, const bp::object& src);
+        static bp::object getSource(const karabo::xms::Memory::MetaData& self);
+        static void setTimestamp(karabo::xms::Memory::MetaData& self, const bp::object& ts);
+        static bp::object getTimestamp(const karabo::xms::Memory::MetaData& self);
     };
 
     struct OutputChannelWrap {
