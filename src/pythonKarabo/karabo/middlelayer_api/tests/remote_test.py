@@ -1,4 +1,4 @@
-from asyncio import (async, coroutine, get_event_loop, sleep, wait_for,
+from asyncio import (async, coroutine, Future, get_event_loop, sleep, wait_for,
                      TimeoutError)
 from contextlib import contextmanager
 from datetime import datetime
@@ -11,7 +11,7 @@ from pint import DimensionalityError
 from karabo.middlelayer import (
     AlarmCondition, Configurable, connectDevice, Device, DeviceNode, execute,
     Float, getDevice, Hash, Int32, KaraboError, lock, MetricPrefix, Node,
-    setNoWait, setWait, Slot, State, String, unit, Unit, VectorChar,
+    setNoWait, setWait, Slot, slot, State, String, unit, Unit, VectorChar,
     VectorInt16, VectorString, VectorFloat, waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.device_client import Queue
@@ -53,6 +53,9 @@ class Remote(Device):
     string_list = VectorString()
 
     nested = Node(Nested)
+
+    alarm = Float(warnLow=10, alarmInfo_warnLow="When they go low, we go high",
+                  alarmNeedsAck_warnLow=True, alarmHigh=20)
 
     @Int32()
     def other(self, value):
@@ -115,6 +118,8 @@ class Remote(Device):
 
 
 class Local(Device):
+    alarmhash = None
+
     @Slot()
     @coroutine
     def error(self):
@@ -140,6 +145,11 @@ class Local(Device):
         else:
             with (yield from getDevice("remote")) as d:
                 yield from d.doit()
+
+    @slot
+    def slotAlarmUpdate(self, deviceId, alarms):
+        self.alarm_future.set_result(None)
+        self.alarmhash = alarms
 
 
 class Tests(DeviceTest):
@@ -770,7 +780,16 @@ class Tests(DeviceTest):
             'assignment': 0,
             'nodeType': 0,
             'defaultValue': 7,
-            'valueType': 'INT32'})
+            'valueType': 'INT32',
+            'alarmInfo_alarmHigh': '',
+            'alarmInfo_alarmLow': '',
+            'alarmInfo_warnHigh': '',
+            'alarmInfo_warnLow': '',
+            'alarmNeedsAck_alarmHigh': False,
+            'alarmNeedsAck_alarmLow': False,
+            'alarmNeedsAck_warnHigh': False,
+            'alarmNeedsAck_warnLow': False,
+            })
         self.assertEqual(h["nested", ...], {
             'requiredAccessLevel': 0,
             'assignment': 0,
@@ -805,6 +824,28 @@ class Tests(DeviceTest):
                 yield from d
                 self.assertEqual(d.lockedBy, "local")
             yield from waitUntil(lambda: d.lockedBy == "")
+
+    @async_tst
+    def test_alarm(self):
+        self.remote.signalAlarmUpdate.connect("local", "slotAlarmUpdate")
+        self.remote.alarm = 3
+        self.remote.update()
+        self.local.alarm_future = Future()
+        yield from self.local.alarm_future
+        ah = self.local.alarmhash
+        self.assertFalse(ah["toClear"])
+        self.assertEqual(ah["toAdd.alarm.warnLow.type"], "warnLow")
+        self.assertEqual(ah["toAdd.alarm.warnLow.description"],
+                         "When they go low, we go high")
+        self.assertTrue(ah["toAdd.alarm.warnLow.needsAcknowledging"])
+        self.remote.alarm = 11
+        self.remote.update()
+        self.local.alarm_future = Future()
+        yield from self.local.alarm_future
+        ah = self.local.alarmhash
+        self.assertFalse(ah["toAdd"])
+        self.assertEqual(ah["toClear.alarm"], ["warnLow"])
+        self.remote.signalAlarmUpdate.disconnect("local", "slotAlarmUpdate")
 
 
 if __name__ == "__main__":

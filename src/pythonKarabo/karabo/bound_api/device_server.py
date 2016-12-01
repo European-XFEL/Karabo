@@ -77,7 +77,8 @@ class DeviceServer(object):
                     .assignmentOptional()
                     .defaultValue(PythonDevice.getRegisteredClasses())
                     .expertAccess()
-                    .commit(),
+                    .commit()
+                    ,
             LIST_ELEMENT(expected).key("autoStart")
                     .displayedName("Auto start")
                     .description("Auto starts selected devices")
@@ -186,13 +187,11 @@ class DeviceServer(object):
         self.visibility = config.get("visibility")
 
         self.connectionParameters = copy.copy(config['connection'])
-        self.pluginLoader = PluginLoader.create(
-            "PythonPluginLoader",
-            Hash("pluginNamespace", config["pluginNamespace"]))
+        plc = Hash("pluginNamespace", config["pluginNamespace"])
+        self.pluginLoader = PluginLoader.create("PythonPluginLoader", plc)
         self.loadLogger(config)
         self.pid = os.getpid()
         self.seqnum = 0
-        self.log = Logger.getCategory(self.serverid)
 
         info = Hash("type", "server")
         info["serverId"] = self.serverid
@@ -203,6 +202,9 @@ class DeviceServer(object):
         self.ss = SignalSlotable(self.serverid, "JmsConnection",
                                  self.connectionParameters, 10, info)
         self.ss.start()
+
+        self.loadLogger(config)
+        self.log = Logger.getCategory(self.serverid)
 
         self._registerAndConnectSignalsAndSlots()
         brokerUrl = self.ss.getConnection().getBrokerUrl()
@@ -217,6 +219,10 @@ class DeviceServer(object):
         return self.hostname + "_Server_" + str(os.getpid())
 
     def loadLogger(self, config):
+        if not config.has("Logger.network.topic"):
+            # If not specified, use the local topic for log messages
+            config.set("Logger.network.topic", self.ss.getTopic())
+
         Logger.configure(config["Logger"])
         Logger.useOstream()
         Logger.useFile()

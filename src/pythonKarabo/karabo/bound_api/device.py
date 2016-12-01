@@ -355,17 +355,19 @@ class PythonDevice(NoFsm):
         """Get SignalSlotable object embedded in PythonDevice instance."""
         return self._ss
 
-
     def loadLogger(self, config):
-        """
-        Load the distributed logger
+        """Load the distributed logger
         :param config: a Hash providing logger configuration
         :return:
         """
+        if not config.has("Logger.network.topic"):
+            # If not specified, use the local topic for log messages
+            config.set("Logger.network.topic", self._ss.getTopic())
+
         Logger.configure(config.get("Logger"))
-        Logger.useOstream();
-        Logger.useFile();
-        Logger.useNetwork();
+        Logger.useOstream()
+        Logger.useFile()
+        Logger.useNetwork()
         Logger.useOstream("karabo", False)
         Logger.useFile("karabo", False)
 
@@ -602,7 +604,7 @@ class PythonDevice(NoFsm):
 
         return Hash("toClear", toClear, "toAdd", toAdd)
 
-    def slotResubmitAlarms(self, existingAlarms):
+    def slotReSubmitAlarms(self, existingAlarms):
         """
         This slot is called by the alarm service when it gets  (re-)
         instantiated. The alarm service will pass any for this instances that
@@ -1025,7 +1027,7 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDevice)
         self._ss.registerSlot(self.slotUpdateSchemaAttributes)
-        self._ss.registerSlot(self.slotResubmitAlarms)
+        self._ss.registerSlot(self.slotReSubmitAlarms)
         # timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
         self._ss.registerSlot(self.slotLoggerPriority)

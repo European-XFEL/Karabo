@@ -233,6 +233,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  (bp::tuple(SignalSlotableWrap::*)(const std::string&))(&SignalSlotableWrap::existsPy),
                  (bp::arg("instanceId")))
             .def("getConnection", &SignalSlotable::getConnection)
+            .def("getTopic", &SignalSlotable::getTopic, bp::return_value_policy< bp::copy_const_reference > ())
             ;
 }
 
