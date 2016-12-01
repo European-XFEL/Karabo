@@ -1,6 +1,6 @@
 #! /bin/bash
 ####################################################################################
-# karabo-allcheck checks the correctness of the definitions contained in allInfo
+# karabo-check checks the correctness of the definitions contained in config
 # author: CY 18.12.2012
 
 # Make sure the script runs in this directory
@@ -18,8 +18,8 @@ if [ -z $KARABO ]; then
   exit 1
 fi
 
-if [ ! -e "allInfo" ]; then
-    cp allInfo.orig allInfo
+if [ ! -e "config" ]; then
+    cp config.orig config
 fi
 
 # returns the number of xterms running and cleans up if there are none
@@ -29,7 +29,7 @@ function fclean()
     while true; do
         if ! read nn n0 n1; then
 	    if [ "$count" = "0" ]; then
-		mv .allInfo .allInfo.last
+		mv .config .config.last
             fi
             return $count
         fi
@@ -53,37 +53,18 @@ function fclean()
 #source ~/.bash_profile
 [ -f $HOME/.bash_profile ] &&  source $HOME/.bash_profile
 
-# required allInfo file
-foo=allInfo
+# required config file
+foo=config
 test -r $foo || { echo "ERROR cannot read definitions file $foo";  exit 1;}
 
 # required environmental
-source allInfo
-test -n "$ALLINFO" || { echo "ERROR ALLINFO array does not exist"; exit 3;} 
-
-# check allInfo content definitions
-declare -i TOKENS=4
-for key in "${!ALLINFO[@]}"
-do
-    value=${ALLINFO[$key]}
-    
-    nf=$(echo $value | awk -F ":" '{print NF}')
-    if [ $nf != "$TOKENS" ]; then
-        echo "ERROR need $TOKENS : separated tokens, find $nf in: $value"
-        exit 4
-    fi
-
-    wait=$(echo $value | awk -F ":" '{print $2}')   # delay in seconds before starting following xterm
-    scroll=$(echo $value | awk -F ":" '{print $3}') # xterm scroll line count
-    
-    test -n $wait || { echo "ERROR cannot have zero length, seconds to wait before xterm"; exit 9;}
-    test -n $scroll || { echo "ERROR cannot have zero length, scroll line count"; exit 12;}
-done
+source config
+test -n "$START" || { echo "ERROR START array does not exist"; exit 3;} 
 
 # check already running xterms
-    foo=.allInfo
+    foo=.config
     if [ -r $foo ]; then
-	cat .allInfo | fclean
+	cat .config | fclean
         xterms=$?
 	if [ $xterms != "0" ]; then
 	    echo "WARN $xterms Karabo processes are running! To cold start use allStop"
@@ -92,9 +73,9 @@ done
     fi
 
 # check orphaned process
-for key in "${!ALLINFO[@]}"
+for key in "${!START[@]}"
 do
-    value=${ALLINFO[$key]}
+    value=${START[$key]}
     exe=$(echo $value | awk -F ":" '{print $1}')
 
     orphans="no"
@@ -112,4 +93,3 @@ fi
 
 # must be OK then!
 exit 0
-
