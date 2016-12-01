@@ -4,7 +4,6 @@ from PyQt4.QtGui import QMessageBox
 from PyQt4.QtSvg import QSvgWidget
 
 from karabo.middlelayer import String
-
 from karabo_gui.widget import DisplayWidget
 from karabo_gui.schema import SlotNode
 
