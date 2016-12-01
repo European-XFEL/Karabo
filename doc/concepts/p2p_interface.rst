@@ -72,7 +72,8 @@ Finally, the data is sent by calling the device method
         this->writeChannel("output", data);
 
 with the key of the channel as the first and the ``Data`` object as the second
-argument.
+argument.  The current timestamp will be added to the ``Data`` object as a
+meta data information.
 
 Once the data stream is finished, i.e. no further data is to be sent, the
 end of stream method has to be called with the output channel key as argument
