@@ -12,3 +12,6 @@ PROJECT_DB_TYPE_SCENE = 'scene'
 PROJECT_OBJECT_CATEGORIES = (
     'macros', 'scenes', 'servers', 'subprojects'
 )
+
+NS_EXISTDB_VERSIONING = "{http://exist-db.org/versioning}"
+EXISTDB_INITIAL_VERSION = 0

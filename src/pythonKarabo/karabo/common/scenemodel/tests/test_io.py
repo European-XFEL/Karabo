@@ -1,4 +1,4 @@
-from io import BytesIO
+from io import StringIO
 import os
 import os.path as op
 from xml.etree.ElementTree import Element
@@ -168,7 +168,7 @@ def test_writing():
 def test_scene_version():
     scene = SceneModel()
     xml = write_scene(scene)
-    scene = read_scene(BytesIO(xml))
+    scene = read_scene(StringIO(xml))
     assert scene.file_format_version == SCENE_FILE_VERSION
 
 

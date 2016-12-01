@@ -26,6 +26,7 @@ ERROR_COLOR_ALPHA = (255, 155, 155, 128)  # semitransparent
 
 WARN_COLOR = (255, 102, 0)  # orange
 ALARM_COLOR = (255, 0, 0)  # red
+INTERLOCK_COLOR = (51, 51, 255)  # blue
 
 # Scene dimensions
 SCENE_MIN_WIDTH = 1024

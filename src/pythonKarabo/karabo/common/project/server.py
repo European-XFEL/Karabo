@@ -27,7 +27,7 @@ class DeviceInstanceModel(HasStrictTraits):
     def select_config(self, uuid, revision):
         """ Find the `DeviceConfigurationModel` matching the given `uuid` and
         `revision`.
-        
+
         :param uuid: A UUID as a String
         :param revision: A revision number as Int
         :return: The `DeviceConfigurationModel` object, if found, else `None`
@@ -107,4 +107,4 @@ def write_device_server(model):
     for device in model.devices:
         _write_device_instance(device, root)
 
-    return tostring(root)
+    return tostring(root, encoding='unicode')

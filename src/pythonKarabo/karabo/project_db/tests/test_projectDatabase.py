@@ -9,8 +9,8 @@ from karabo.project_db.util import stop_database
 
 def create_hierarchy(db, prefix, uuid_suf, level=0):
     uuid = "{}_{}".format(prefix, uuid_suf)
-    xml = '<project item_type="{type}" uuid="{uuid}"'\
-          ' simple_name="{name}">'.format(uuid=uuid, type='project',
+    xml = '<project item_type="{atype}" uuid="{uuid}"'\
+          ' simple_name="{name}">'.format(uuid=uuid, atype='project',
                                           name=uuid)
 
     xml += "<children>"
@@ -19,23 +19,23 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
     if level < 2:
         for i in range(4):
             sub_uuid = create_hierarchy(db, uuid, counter, level + 1)
-            xml += ('<project item_type="{type}" uuid="{uuid}"'
+            xml += ('<project item_type="{atype}" uuid="{uuid}"'
                     ' simple_name="{name}" />').format(uuid=sub_uuid,
-                                                       type='project',
+                                                       atype='project',
                                                        name=sub_uuid)
             counter += 1
 
     # create some scenes
     for i in range(4):
         sub_uuid = '{}_{}'.format(uuid, counter)
-        xml += ('<scene item_type="{type}" uuid="{uuid}"'
+        xml += ('<scene item_type="{atype}" uuid="{uuid}"'
                 ' simple_name="{name}" />').format(uuid=sub_uuid,
-                                                   type='scene',
+                                                   atype='scene',
                                                    name=sub_uuid)
 
-        scene_xml = ('<scene item_type="{type}" uuid="{uuid}"'
+        scene_xml = ('<scene item_type="{atype}" uuid="{uuid}"'
                      ' simple_name="{name}" >foo</scene>'
-                     .format(uuid=sub_uuid, type='scene', name=sub_uuid))
+                     .format(uuid=sub_uuid, atype='scene', name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, scene_xml)
 
@@ -44,14 +44,14 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
     # create some device_servers
     for i in range(4):
         sub_uuid = '{}_{}'.format(uuid, counter)
-        xml += ('<device_server item_type="{type}" uuid="{uuid}"'
+        xml += ('<device_server item_type="{atype}" uuid="{uuid}"'
                 ' simple_name="{name}" />').format(uuid=sub_uuid,
-                                                   type='device_server',
+                                                   atype='device_server',
                                                    name=sub_uuid)
 
-        ds_xml = ('<device_server item_type="{type}" uuid="{uuid}"'
+        ds_xml = ('<device_server item_type="{atype}" uuid="{uuid}"'
                   ' simple_name="{name}" >foo</device_server>'
-                  .format(uuid=sub_uuid, type='device_server',
+                  .format(uuid=sub_uuid, atype='device_server',
                           name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, ds_xml)
@@ -176,7 +176,7 @@ class TestProjectDatabase(TestCase):
                                  origin)
 
             with self.subTest(msg='load_item'):
-                item = db.load_item('LOCAL', 'testproject_copy2')
+                item, revision = db.load_item('LOCAL', 'testproject_copy2')
                 itemxml = db._make_xml_if_needed(item)
                 self.assertEqual(itemxml.tag, 'test')
                 self.assertEqual(itemxml.text, 'foo')
@@ -190,7 +190,7 @@ class TestProjectDatabase(TestCase):
 
                 path = "{}/LOCAL/testproject2".format(db.root)
                 doc = db._make_xml_if_needed(db.load_item('LOCAL',
-                                                          'testproject2'))
+                                                          'testproject2')[0])
 
                 success, meta = db.save_item('LOCAL', 'testproject2',
                                              xml_rep_start)
@@ -211,7 +211,7 @@ class TestProjectDatabase(TestCase):
 
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 test = db._make_xml_if_needed(db.load_item('LOCAL',
-                                                           'testproject2'))
+                                                           'testproject2')[0])
                 self.assertEqual(test.text, 'goo')
                 self.assertFalse(success)
                 self.assertTrue('versioning_info' in meta)
@@ -222,7 +222,7 @@ class TestProjectDatabase(TestCase):
 
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 test = db._make_xml_if_needed(db.load_item('LOCAL',
-                                                           'testproject2'))
+                                                           'testproject2')[0])
                 self.assertEqual(test.text, 'hoo')
 
             with self.subTest(msg='test_load_multi'):

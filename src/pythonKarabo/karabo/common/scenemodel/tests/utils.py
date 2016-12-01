@@ -35,6 +35,6 @@ def single_model_round_trip(model):
     """
     scene = SceneModel(children=[model])
     xml = write_scene(scene)
-    with temp_xml_file(xml.decode('utf-8')) as fn:
+    with temp_xml_file(xml) as fn:
         rt_scene = read_scene(fn)
     return rt_scene.children[0]
