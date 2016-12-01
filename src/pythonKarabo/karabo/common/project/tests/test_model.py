@@ -18,4 +18,4 @@ def test_project_modified_obj_check():
 
     macro.code = "print('I was modified!')"
     walk_traits_object(proj, find_modified)
-    assert modified == [macro]
+    assert modified == [proj, macro]
