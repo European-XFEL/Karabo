@@ -1,6 +1,6 @@
 #! /bin/bash
 #######################################################################
-# karabo-allrestart restarts those ALLINFO applications which have died
+# karabo-restart restarts those START applications which have died
 # author: CY 16.1.2013
 
 # Make sure the script runs in this directory
@@ -11,19 +11,19 @@ if [ $? -ne 0 ]; then
     exit 1;
 fi
 
-foo="./.allInfo"
+foo="./.config"
 if [ ! -e $foo ]; then
-    echo "ERROR no previous karabo-allstart"
+    echo "ERROR no previous karabo-start"
     exit 1
 fi
 
-arg=$(grep "args:" $foo | grep "karabo-allstart" | grep -v grep | awk '{print $3}')
+arg=$(grep "args:" $foo | grep "karabo-start" | grep -v grep | awk '{print $3}')
 if [ -n "$arg" ]; then
     echo "INFO Restarting with argument: $arg"
 fi 
 
 export RESTART="yes"
-./karabo-allstart $arg
+./karabo-start $arg
 
 exit $?
 
