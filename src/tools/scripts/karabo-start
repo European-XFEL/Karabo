@@ -8,16 +8,16 @@ icon=""
 if [ ${#@} -gt 0 ]; then
     if [ $1 == "-h" ] || [ $1 == "-help" ] || [ $1 == "--help" ]; then
         echo
-        echo "allStart - start applications as defined in allInfo file"
+        echo "karabo-start - start applications as defined in config file"
         echo
-        echo "  allStart [-h|-help|--help|-nox|--nox|-iconize|--iconize]"
+        echo "  karabo-start [-h|--help|-nox|--nox|-iconize|--iconize]"
         echo
         echo "If any of the help options is given, print this help."
         echo
-        echo "The applications to be started are defined in the file 'allInfo'"
-        echo "that lies in the same directory as the allStart script."
-        echo "If no allInfo file is there, one is created as a copy of"
-        echo "allInfo.org. See the comments in there for more details."
+        echo "The applications to be started are defined in the file 'config'"
+        echo "that lies in the same directory as the karabo-start script."
+        echo "If no config file is there, one is created as a copy of"
+        echo "config.org. See the comments in there for more details."
         echo
         echo "By default, all applications are started in their own xterm"
         echo "windows that display their outputs."
@@ -31,12 +31,12 @@ if [ ${#@} -gt 0 ]; then
         echo "visible xterms are iconized on startup."
         echo
         exit 0
-    elif [ $1 == "-nox" ] || [ $1 == "--nox" ]; then
+    elif [ $1 == "-n" ] || [ $1 == "--nox" ]; then
         nox="true"
-        # shift  # must not remove from argument list to keep it in .allInfo
-    elif [ $1 == "-iconize" ] || [ $1 == "--iconize" ]; then
+        # shift  # must not remove from argument list to keep it in .config
+    elif [ $1 == "-i" ] || [ $1 == "--iconize" ]; then
         icon="-iconic"
-        # shift  # must not remove from argument list to keep it in .allInfo
+        # shift  # must not remove from argument list to keep it in .config
     else
         echo "Unknown option '$1', please consult help: $0 --help"
         exit 1
@@ -52,13 +52,12 @@ if [ $? -ne 0 ]; then
 fi
 
 # Create a copy of the original if not done yet
-if [ ! -e "allInfo" ]; then
-    cp allInfo.orig allInfo
+if [ ! -e "config" ]; then
+    cp config.orig config
 fi
 
-
 # check startup
-./karabo-allcheck
+./karabo-check
 
 check=$?
 
@@ -69,33 +68,30 @@ elif  [ -n "$RESTART" ] && [ "$check" = "0" ]; then
     echo
     echo "INFO restart all processes"    
     # Clean old pid file
-    mv .allStart.pid .allStart.pid.last 2> /dev/null
+    mv .karabo-start.pid .karabo-start.pid.last 2> /dev/null
 elif [ "$check" != "0" ]; then 
     echo
-    echo "ERROR processes are running, cannot allStart"
+    echo "ERROR processes are running, cannot karabo-start"
     echo
     exit 1;
 else
     # Clean old pid file
-    mv .allStart.pid .allStart.pid.last 2> /dev/null
+    mv .karabo-start.pid .karabo-start.pid.last 2> /dev/null
 fi
 
 
-# ALLINFO content checking is done in karabo-allcheck 
-source ./allInfo
+# START content checking is done in karabo-check 
+source ./config
 
 # store args for possible restart
 if [ "$check" = "0" ]; then
-    echo "args: $0 $@" >> .allInfo 
+    echo "args: $0 $@" >> .config 
 fi
 
-for key in "${!ALLINFO[@]}"
+for key in "${!START[@]}"
 do
-    value=${ALLINFO[$key]}
-    exe=$(echo $value | awk -F ":" '{print $1}')  
-    wait=$(echo $value | awk -F ":" '{print $2}')
-    scroll=$(echo $value | awk -F ":" '{print $3}')
-    xuse=$(echo $value | awk -F ":" '{print $4}')
+    value=${START[$key]}
+    exe=$(echo $value | awk -F ":" '{print $1}')
 
     # the match is too indescriminant and fails to identify all cases! Correct solution use pid chain?
     job=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep -F "$exe")
@@ -106,11 +102,11 @@ do
         target=$exe
         # on CentOS, HOSTNAME contains domain => strip off from 1st dot
         title=$(echo ${HOSTNAME%%.*}:$exe | awk '{print $1 ":" $2}')
-        options="-T $title -sb -rightbar -sl $scroll -hold"
-	display=""
-	if [ -n "$XUSE" ] && [ "$xuse" = "yes" ]; then
-	    display="-display $XUSE"
-	fi
+        options="-T $title -sb -rightbar -sl 10000 -hold"
+        display=""
+        if [ -z "$XUSE" ]; then
+	        display="-display $XUSE"
+        fi
         if [ "$nox" == "true" ]; then
             # No xterms should be used, disregard stdout and stderr
             echo "INFO Starting: $target > /dev/null 2>&1 &"
@@ -123,18 +119,16 @@ do
         bg=$!
 	# Give the xterm processes time to start and set up their pids
 	sleep 0.5 
-        echo "key: $bg $exe" >> .allInfo 
+        echo "key: $bg $exe" >> .config 
 	# put pid and its child pids in one line of file
-	echo -n "$bg " >> .allStart.pid
+	echo -n "$bg " >> .karabo-start.pid
 	cpid=`pgrep -P $bg`
 	while [ -n "$cpid" ]; do
-	    echo -n "$cpid " >> .allStart.pid
+	    echo -n "$cpid " >> .karabo-start.pid
 	    cpid=`pgrep -P $cpid`
 	done
         # now add newline
-        echo >> .allStart.pid
-        # Sleep as defined in allInfo
-        sleep $wait
+        echo >> .karabo-start.pid
     fi    
 done
 
