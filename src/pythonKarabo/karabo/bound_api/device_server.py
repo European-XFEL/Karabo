@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__author__="Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__ ="$Jul 26, 2012 10:06:25 AM$"
+__author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
+__date__  = "$Jul 26, 2012 10:06:25 AM$"
 
 import os
 import os.path
@@ -10,19 +10,16 @@ import sys
 import signal
 import copy
 import socket
-import platform
 from subprocess import Popen
 import threading
 import time
-import inspect
 import traceback
 
 from karathon import (
-    CHOICE_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
+    VECTOR_STRING_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
     PATH_ELEMENT, STRING_ELEMENT, LIST_ELEMENT,
     AccessLevel, JmsConnection,
-    Hash, Logger, Priority, Schema, SignalSlotable,
-    loadFromFile, saveToFile, EventLoop
+    Hash, Logger, Schema, SignalSlotable, saveToFile, EventLoop
 )
 
 from karabo.common.states import State
@@ -74,25 +71,24 @@ class DeviceServer(object):
                     .expertAccess()
                     .commit()
                     ,
-            PATH_ELEMENT(expected).key("pluginDirectory")
-                    .displayedName("Plugin Directory")
-                    .description("Directory to search for plugins")
-                    .assignmentOptional().defaultValue("plugins")
-                    .isDirectory()
+            VECTOR_STRING_ELEMENT(expected).key("devices")
+                    .displayedName("Devices")
+                    .description("The devices classes the server will manage")
+                    .assignmentOptional()
+                    .defaultValue(PythonDevice.getRegisteredClasses())
                     .expertAccess()
+                    .commit(),
+            LIST_ELEMENT(expected).key("autoStart")
+                    .displayedName("Auto start")
+                    .description("Auto starts selected devices")
+                    .appendNodesOfConfigurationBase(PythonDevice)
+                    .assignmentOptional().noDefaultValue()
                     .commit()
                     ,
             STRING_ELEMENT(expected).key("pluginNamespace")
                     .displayedName("Plugin Namespace")
                     .description("Namespace to search for plugins")
                     .assignmentOptional().defaultValue("karabo.bound_device")
-                    .expertAccess()
-                    .commit()
-                    ,
-            STRING_ELEMENT(expected).key("pluginNames")
-                    .displayedName("Devices to Load")
-                    .description("Comma separated list of class names of devices which should be loaded")
-                    .assignmentOptional().defaultValue("")
                     .expertAccess()
                     .commit()
                     ,
@@ -104,13 +100,6 @@ class DeviceServer(object):
                     ,
             OVERWRITE_ELEMENT(expected).key("Logger.file.filename")
                     .setNewDefaultValue("device-server.log")
-                    .commit()
-                    ,
-            LIST_ELEMENT(expected).key("autoStart")
-                    .displayedName("Auto start")
-                    .description("Auto starts selected devices")
-                    .appendNodesOfConfigurationBase(PythonDevice)
-                    .assignmentOptional().noDefaultValue()
                     .commit()
         )
 
@@ -186,26 +175,12 @@ class DeviceServer(object):
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
         self.needScanPlugins = True
         self.autoStart = config.get("autoStart")
+        self.devices = config.get("devices")
 
-        # set serverId
-        serverIdFileName = "serverId.xml"
-        if os.path.isfile(serverIdFileName):
-            hash = loadFromFile(serverIdFileName)
-            if 'serverId' in config:
-                self.serverid = config['serverId'] # Else whatever was configured
-                saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName, Hash("format.Xml.indentation", 3))
-            elif 'DeviceServer.serverId' in hash:
-                self.serverid = hash['DeviceServer.serverId'] # If file exists, it has priority
-            else:
-                print("WARN : Found serverId.xml without serverId contained")
-                self.serverid = self._generateDefaultServerId() # If nothing configured -> generate
-                saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName, Hash("format.Xml.indentation", 3))
-        else: # No file
-            if 'serverId' in config:
-                self.serverid = config['serverId']
-            else:
-                self.serverid = self._generateDefaultServerId()
-            saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName, Hash("format.Xml.indentation", 3))
+        if 'serverId' in config:
+            self.serverid = config['serverId']
+        else:
+            self.serverid = self._generateDefaultServerId()
 
         # What visibility this server should have
         self.visibility = config.get("visibility")
@@ -213,9 +188,7 @@ class DeviceServer(object):
         self.connectionParameters = copy.copy(config['connection'])
         self.pluginLoader = PluginLoader.create(
             "PythonPluginLoader",
-            Hash("pluginNamespace", config["pluginNamespace"],
-                 "pluginDirectory", config["pluginDirectory"],
-                 "pluginNames", config["pluginNames"]))
+            Hash("pluginNamespace", config["pluginNamespace"]))
         self.loadLogger(config)
         self.pid = os.getpid()
         self.seqnum = 0
@@ -227,13 +200,15 @@ class DeviceServer(object):
         info["host"] = self.hostname
         info["visibility"] = self.visibility
          # Instantiate and start SignalSlotable object
-        self.ss = SignalSlotable(self.serverid, "JmsConnection", self.connectionParameters, 10, info)
+        self.ss = SignalSlotable(self.serverid, "JmsConnection",
+                                 self.connectionParameters, 10, info)
         self.ss.start()
 
         self._registerAndConnectSignalsAndSlots()
         brokerUrl = self.ss.getConnection().getBrokerUrl()
-        self.log.INFO("Starting Karabo DeviceServer on host: {}, serverId: {}, broker: {}".format(
-                      self.hostname, self.serverid, brokerUrl))
+        self.log.INFO("Starting Karabo DeviceServer on host: {}, serverId: {},"
+                      " broker: {}".format(self.hostname,
+                                           self.serverid, brokerUrl))
 
         self.fsm.start()
         signal.pause()
@@ -248,7 +223,6 @@ class DeviceServer(object):
         Logger.useNetwork()
         Logger.useOstream("karabo", False)
         Logger.useFile("karabo", False)
-
 
     def _registerAndConnectSignalsAndSlots(self):
         self.ss.registerSlot(self.slotStartDevice)
@@ -265,18 +239,11 @@ class DeviceServer(object):
         self.log.INFO("DeviceServer with id '{0.serverid}' starts up on host "
                       "'{0.hostname}'".format(self))
         if self.needScanPlugins:
-            self.log.INFO("Keep watching path: '{0.pluginDirectory}' and "
-                          "namespace: '{0.pluginNamespace}' for Device "
-                          "plugins".format(self.pluginLoader))
-            self.pluginThread = threading.Thread(target = self.scanPlugins)
+            self.log.INFO("Keep watching namespace: '{0.pluginNamespace}' for "
+                          "Device plugins".format(self.pluginLoader))
+            self.pluginThread = threading.Thread(target=self.scanPlugins)
             self.scanning = True
             self.pluginThread.start()
-
-    def import_plugin(self, name):
-        """ Return the device class defined by an entrypoint.
-        """
-        entrypoint = self.pluginLoader.getPlugin(name)
-        return entrypoint.load()
 
     def scanPlugins(self):
         self.availableModules = {}
@@ -285,22 +252,33 @@ class DeviceServer(object):
             for ep in entrypoints:
                 if ep.name in self.availableModules:
                     continue
-                try:
-                    deviceClass = ep.load()
-                except ImportError as e:
-                    self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(ep.name, e))
-                    continue
+                if ep.name in self.devices or not self.devices:
+                    try:
+                        deviceClass = ep.load()
+                    except ImportError as e:
+                        self.log.WARN("scanPlugins: Cannot import module "
+                                      "{} -- {}".format(ep.name, e))
+                        continue
 
-                classid = deviceClass.__classid__
-                try:
-                    schema = Configurator(PythonDevice).getSchema(classid)
-                    self.availableModules[ep.name] = classid
-                    self.availableDevices[classid] = {"mustNotify": True, "module": ep.name, "xsd": schema}
-                    self.newPluginAvailable()
-                    self.log.INFO('Successfully loaded plugin: "{}:{}"'.format(ep.module_name, ep.name))
-                except (RuntimeError, AttributeError) as e:
-                    self.log.ERROR("Failure while building schema for class {}, base class {} and bases {} : {}".format(
-                        classid, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
+                    classid = deviceClass.__classid__
+                    try:
+                        schema = Configurator(PythonDevice).getSchema(classid)
+                        self.availableModules[ep.name] = classid
+                        self.availableDevices[classid] = {"mustNotify": True,
+                                                          "module": ep.name,
+                                                          "xsd": schema}
+                        self.newPluginAvailable()
+                        self.log.INFO('Successfully loaded plugin: "{}:{}"'
+                                      .format(ep.module_name, ep.name))
+                    except (RuntimeError, AttributeError) as e:
+                        m = "Failure while building schema for class {}, base "
+                        "class {} and bases {} : {}".format(classid,
+                                                            deviceClass.
+                                                            __base_classid__,
+                                                            deviceClass.
+                                                            __bases_classid__,
+                                                            e.message)
+                        self.log.ERROR(m)
             time.sleep(3)
 
     def stopDeviceServer(self):
@@ -345,8 +323,6 @@ class DeviceServer(object):
                 raise RuntimeError(msg)
 
             modname = self.availableDevices[classid]["module"]
-            # NOTE: Device class should be imported using self.import_plugin()
-            # and device schema should be validated here.
 
             filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
             while os.path.isfile(filename):
@@ -382,7 +358,6 @@ class DeviceServer(object):
         self.log.DEBUG("Sending instance update as new device plugins are available: {}".format(deviceClasses))
         self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities))
 
-
     def noStateTransition(self):
         self.log.WARN("DeviceServer \"{}\" does not allow the transition for this event.".format(self.serverid))
 
@@ -406,7 +381,8 @@ class DeviceServer(object):
                        "death.".format(instanceId, self))
         if instanceId in self.deviceInstanceMap:
             t = self.deviceInstanceMap[instanceId]
-            if t: t.join()
+            if t:
+                t.join()
             del self.deviceInstanceMap[instanceId]
             self.log.INFO("Device '{}' removed from server.".format(instanceId))
 
@@ -472,9 +448,13 @@ class Launcher(object):
 def main(args=None):
     args = args or sys.argv
     try:
+        PluginLoader.create("PythonPluginLoader", Hash()).update()
         t = threading.Thread(target=EventLoop.work)
         t.start()
         server = Runner(DeviceServer).instantiate(args)
+        if not server:
+            EventLoop.stop()
+            t.join()
     except:
         traceback.print_exc(file=sys.stderr)
         EventLoop.stop()
