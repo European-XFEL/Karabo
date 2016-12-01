@@ -268,10 +268,6 @@ class ProjectDatabase(ContextDecorator):
                 if nsattr in item_tree.attrib:
                     item_tree.attrib.pop(nsattr)
             item_xml = self._make_str_if_needed(item_tree)
-        # for default revisons we add versioning information
-        elif revision == default:
-            etree.register_namespace('v', self.vers_namespace)
-            item_tree.attrib[self._add_vers_ns('revision')] = str(revision)
 
         # check if the xml we got passed is an etree or a string. In the latter
         # case convert it
@@ -280,6 +276,9 @@ class ProjectDatabase(ContextDecorator):
         success = False
         try:
             success = self.dbhandle.load(item_xml, path)
+            # we need to save twice to have initial versioning infor
+            if revision == default:
+                success = self.dbhandle.load(item_xml, path)
         except ExistDBException:
             success = False
 
