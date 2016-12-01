@@ -664,7 +664,7 @@ namespace karabo {
 
             void replyException(const karabo::util::Hash& header, const std::string& message);
 
-            void sendPotentialReply(const karabo::util::Hash& header, bool global);
+            void sendPotentialReply(const karabo::util::Hash& header, const std::string& slotFunction, bool global);
 
             void sendErrorHappenedReply(const karabo::util::Hash& header, const std::string& errorMesssage);
 
