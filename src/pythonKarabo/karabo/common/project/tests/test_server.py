@@ -67,3 +67,31 @@ def test_writing():
 
     xml = write_device_server(server)
     assert xml_is_equal(SERVER_XML, xml)
+
+
+def test_child_modification_tracking():
+    dev0 = DeviceConfigurationModel(uuid=UUID, revision=0)
+    dev1 = DeviceConfigurationModel(uuid=UUID, revision=1)
+    dev2 = DeviceConfigurationModel(uuid=UUID, revision=2)
+    foo = DeviceInstanceModel(instance_id='fooDevice', if_exists='ignore',
+                              configs=[dev0], active_config_ref=(UUID, 0))
+    bar = DeviceInstanceModel(instance_id='barDevice', if_exists='restart',
+                              configs=[dev1, dev2],
+                              active_config_ref=(UUID, 2))
+    server = DeviceServerModel(server_id='testServer', host='serverserverFoo',
+                               devices=[foo])
+    server.devices.append(bar)
+
+    server.modified = False
+    foo.if_exists = 'restart'
+    assert server.modified
+
+    server.modified = foo.modified = False
+
+    bar.active_config_ref = (UUID, 1)
+    assert server.modified
+
+    server.devices.pop()
+    server.modified = False
+    foo.if_exists = 'ignore'
+    assert server.modified
