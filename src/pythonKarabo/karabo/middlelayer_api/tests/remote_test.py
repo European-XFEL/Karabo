@@ -10,9 +10,10 @@ from pint import DimensionalityError
 
 from karabo.middlelayer import (
     AlarmCondition, Configurable, connectDevice, Device, DeviceNode, execute,
-    Float, getDevice, Hash, Int32, KaraboError, lock, MetricPrefix, Node,
-    setNoWait, setWait, Slot, slot, State, String, unit, Unit, VectorChar,
-    VectorInt16, VectorString, VectorFloat, waitUntil, waitUntilNew)
+    Float, getDevice, Hash, isSet, Int32, KaraboError, lock, MetricPrefix,
+    Node, setNoWait, setWait, Slot, slot, State, String, unit, Unit,
+    VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
+    waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.device_client import Queue
 
@@ -27,7 +28,8 @@ class Superslot(Slot):
 
 class SuperInteger(Int32):
     def setter(self, device, value):
-        device.value = 2 * value
+        if isSet(value):
+            device.value = 2 * value
 
 
 class NestNest(Configurable):
@@ -63,12 +65,13 @@ class Remote(Device):
 
     @Int32()
     def once(self, value):
-        if self.once_value is None:
+        if isSet(value) and self.once_value is None:
             self.once_value = value
 
     @Int32()
     def error_value(self, value):
-        raise RuntimeError
+        if isSet(value):
+            raise RuntimeError
 
     @Int32(allowedStates=[State.ON])
     def disallowed_int(self, value):
@@ -745,7 +748,7 @@ class Tests(DeviceTest):
 
         a = A({"_deviceId_": "devicenode"})
         yield from a.startInstance()
-        self.assertFalse(hasattr(a, "dn"))
+        self.assertIs(a.dn, None)
 
     @async_tst
     def test_prenatal_proxy(self):

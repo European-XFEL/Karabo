@@ -143,6 +143,8 @@ class Simple(object):
                              format(ret, self.key))
 
     def alarmCondition(self, data):
+        if not basetypes.isSet(data):
+            return AlarmCondition.NONE
         if self.alarmLow is not None and data < self.alarmLow:
             return AlarmCondition.ALARM_LOW
         if self.alarmHigh is not None and data > self.alarmHigh:
@@ -335,7 +337,12 @@ class Descriptor(object):
             return instance.__dict__[self.key]
 
     def __set__(self, instance, value):
-        instance.setValue(self, self.toKaraboValue(value))
+        if (self.assignment is Assignment.OPTIONAL and
+                not basetypes.isSet(value)):
+            value = basetypes.NoneValue(value, descriptor=self)
+        else:
+            value = self.toKaraboValue(value)
+        instance.setValue(self, value)
 
     def setter(self, instance, value):
         """This is called when the value is changed from the outside
@@ -370,8 +377,12 @@ class Descriptor(object):
         `value` still is the bare Hash value, as it came from the network.
         `initialize` is called with corresponding `KaraboValue`.
         """
-        ret = self.initialize(instance,
-                              self.toKaraboValue(value, strict=False))
+        if value is None:
+            value = basetypes.NoneValue(descriptor=self)
+        else:
+            value = self.toKaraboValue(value, strict=False)
+
+        ret = self.initialize(instance, value)
         if ret is None:
             return []
         else:
@@ -407,8 +418,6 @@ class Descriptor(object):
             if self.assignment is Assignment.MANDATORY:
                 raise KaraboError(
                     'assignment is mandatory for "{}"'.format(self.key))
-            if self.defaultValue is None:
-                return []
             return self._initialize(instance, self.defaultValue)
         return self._initialize(instance, value)
 
@@ -1296,7 +1305,7 @@ def _gettype(data):
                 return _gettype(data[0]).vectortype
             else:
                 return VectorString
-        elif data is None:
+        elif not basetypes.isSet(data):
             return None_
         else:
             raise TypeError('unknown datatype {}'.format(data.__class__))
