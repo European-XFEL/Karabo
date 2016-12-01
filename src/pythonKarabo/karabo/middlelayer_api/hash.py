@@ -1098,6 +1098,11 @@ class VectorHash(Vector):
     rowSchema = Attribute()
 
     def __init__(self, rows=None, strict=True, **kwargs):
+        """A VectorHash is a table
+
+        :param row: The structure of each row. This is a `Configurable`
+        class.
+        """
         super(VectorHash, self).__init__(strict=strict, **kwargs)
 
         if rows is not None:
