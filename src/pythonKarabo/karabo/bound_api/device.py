@@ -655,7 +655,8 @@ class PythonDevice(NoFsm):
         """
 
         channel = self._ss.getOutputChannel(channelName)
-        channel.write(data)
+        meta = MemoryMetaData("{}:{}".format(self.deviceId, channelName), self._getActualTimestamp())
+        channel.write(data, meta)
         channel.update()
 
     def signalEndOfStream(self, channelName):
