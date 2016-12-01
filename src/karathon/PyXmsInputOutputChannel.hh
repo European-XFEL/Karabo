@@ -27,27 +27,27 @@ namespace bp = boost::python;
 
 namespace karathon {
 
-       struct ImageDataWrap : public karabo::xms::ImageData {
+    struct ImageDataWrap : public karabo::xms::ImageData {
 
-           static boost::shared_ptr<karabo::xms::ImageData > make5(const bp::object& obj,
-                                                                   const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                                                                   const karabo::xms::EncodingType encoding = karabo::xms::Encoding::UNDEFINED,
-                                                                   const int bitsPerPixel = 8);
-           static bp::object getDataPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
-           static void setDataPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
-           static bp::object getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
-           static void setDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
-           static bp::object getDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
-           static void setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
-           static bp::object getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
-           static void setROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
-           static bp::object getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
-           static void setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& geometry);
-           static karabo::util::DetectorGeometry getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
-           static void setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& header);
-           static const karabo::util::Hash& getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
+        static boost::shared_ptr<karabo::xms::ImageData > make5(const bp::object& obj,
+                                                                const karabo::util::Dims& dimensions = karabo::util::Dims(),
+                                                                const karabo::xms::EncodingType encoding = karabo::xms::Encoding::UNDEFINED,
+                                                                const int bitsPerPixel = 8);
+        static bp::object getDataPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
+        static void setDataPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
+        static bp::object getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
+        static void setDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
+        static bp::object getDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
+        static void setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
+        static bp::object getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
+        static void setROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
+        static bp::object getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
+        static void setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& geometry);
+        static karabo::util::DetectorGeometry getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
+        static void setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& header);
+        static const karabo::util::Hash& getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
 
-       };
+    };
 
     //    struct ImageDataElementWrap {
 
@@ -56,11 +56,21 @@ namespace karathon {
     //                                                              const bp::object& defaultValue);
     //    };
 
+    karabo::xms::Memory::MetaData* constructMemoryMetaData(const bp::object& src, const bp::object& ts);
+
+    struct MemoryMetaData {
+
+        static void setSource(karabo::xms::Memory::MetaData& self, const bp::object& src);
+        static bp::object getSource(const karabo::xms::Memory::MetaData& self);
+        static void setTimestamp(karabo::xms::Memory::MetaData& self, const bp::object& ts);
+        static bp::object getTimestamp(const karabo::xms::Memory::MetaData& self);
+    };
+
     struct OutputChannelWrap {
 
         static void registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler);
         static void proxyIOEventHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::OutputChannel>& self);
-        static void writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data);
+        static void writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data, const bp::object& meta);
         static void updatePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self);
         static void signalEndOfStreamPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self);
     };
