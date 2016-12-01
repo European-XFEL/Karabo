@@ -1,4 +1,7 @@
-from PyQt4.QtGui import QMessageBox, QWidget
+import os.path as osp
+
+from PyQt4.QtGui import QMessageBox
+from PyQt4.QtSvg import QSvgWidget
 
 from karabo.middlelayer import String
 
@@ -12,7 +15,8 @@ class PopUp(DisplayWidget):
 
     def __init__(self, box, parent):
         super(PopUp, self).__init__(None)
-        self.widget = QWidget(parent)
+        self.widget = QSvgWidget(
+            osp.join(osp.dirname(__file__), "speech-balloon.svg"), parent)
         self.dialog = QMessageBox(parent)
         self.dialog.setStandardButtons(QMessageBox.Ok)
         self.dialog.setModal(False)
