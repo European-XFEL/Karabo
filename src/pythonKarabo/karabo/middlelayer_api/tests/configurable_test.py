@@ -3,7 +3,7 @@ from unittest import TestCase, main
 
 from karabo.middlelayer import (
     AccessMode, Assignment, Configurable, Hash, Int32, KaraboError, Node,
-    Unit, unit)
+    String, Unit, unit, VectorHash)
 
 
 class DummyConfigurable(Configurable):
@@ -441,6 +441,24 @@ class Tests(TestCase):
             nested=Hash("nested", Hash("value", 7)))))
         self.assertEqual(a.nested.nested.value, 7)
         a.assertChild("nested.nested.value", 7)
+
+    def test_table(self):
+        class Row(Configurable):
+            name = String()
+            number = Int32()
+
+        class A(Configurable):
+            table = VectorHash(rows=Row, defaultValue=[])
+
+        a = A()
+        self.assertEqual(a.table.shape, (0,))
+        a.table = [("asf", 3), ("fw", 2)]
+        self.assertEqual(a.table.shape, (2,))
+        self.assertEqual(a.table["name"][1], "fw")
+
+        a = A(Hash("table", [Hash("name", "bla", "number", 5)]))
+        self.assertEqual(a.table.shape, (1,))
+        self.assertEqual(a.table["name"][0], "bla")
 
 
 if __name__ == "__main__":
