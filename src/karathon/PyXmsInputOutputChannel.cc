@@ -182,6 +182,44 @@ namespace karathon {
     // }
 
 
+    karabo::xms::Memory::MetaData* constructMemoryMetaData(const bp::object& src, const bp::object& ts) {
+        if (!bp::extract<karabo::util::Timestamp>(ts).check()) {
+            throw KARABO_PYTHON_EXCEPTION("Can't extract c++ object 'karabo::util::Timestamp' from python object");
+        }
+
+        if (!bp::extract<std::string>(src).check()) {
+            throw KARABO_PYTHON_EXCEPTION("Can't extract c++ object 'std::string' from python object");
+        }
+
+        return new karabo::xms::Memory::MetaData(bp::extract<std::string>(src), bp::extract<karabo::util::Timestamp>(ts));
+    }
+
+    void MemoryMetaData::setSource(karabo::xms::Memory::MetaData& self, const bp::object& src) {
+        if (!bp::extract<std::string>(src).check()) {
+            throw KARABO_PYTHON_EXCEPTION("Can't extract c++ object 'std::string' from python object");
+        }
+        self.setSource(bp::extract<std::string>(src));
+    }
+
+
+    bp::object MemoryMetaData::getSource(const karabo::xms::Memory::MetaData& self) {
+        return bp::object(self.getSource());
+    }
+
+
+    void MemoryMetaData::setTimestamp(karabo::xms::Memory::MetaData& self, const bp::object& ts) {
+        if (!bp::extract<karabo::util::Timestamp>(ts).check()) {
+            throw KARABO_PYTHON_EXCEPTION("Can't extract c++ object 'karabo::util::Timestamp' from python object");
+        }
+        self.setTimestamp(bp::extract<karabo::util::Timestamp>(ts));
+    }
+
+
+    bp::object MemoryMetaData::getTimestamp(const karabo::xms::Memory::MetaData& self) {
+        return bp::object(self.getTimestamp());
+    }
+
+
     void OutputChannelWrap::registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
         self->registerIOEventHandler(boost::bind(OutputChannelWrap::proxyIOEventHandler, handler, _1));
     }
@@ -193,14 +231,17 @@ namespace karathon {
     }
 
 
-    void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data) {
-        if (bp::extract<karabo::util::Hash::Pointer>(data).check()) {
-            ScopedGILRelease nogil;
-            self->write(bp::extract<karabo::util::Hash::Pointer>(data));
-        } else
-            throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
+    void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data, const bp::object& meta) {
+        if (!bp::extract<karabo::xms::Memory::MetaData>(meta).check()) {
+            throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type. Check for MemoryMetaData");
+        }
 
-#undef _KARABO_IMAGE_DATA_WRITE
+        if (!bp::extract<karabo::util::Hash>(data).check()) {
+            throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
+        }
+
+        ScopedGILRelease nogil;
+        self->write(bp::extract<karabo::util::Hash>(data), bp::extract<karabo::xms::Memory::MetaData>(meta));
     }
 
 
@@ -430,6 +471,17 @@ void exportPyXmsInputOutputChannel() {
 
 
     {
+        using namespace karabo::xms;
+        bp::class_<Memory::MetaData, boost::noncopyable>("MemoryMetaData", bp::no_init)
+                .def("__init__", boost::python::make_constructor(&karathon::constructMemoryMetaData))
+                .def("setSource", &karathon::MemoryMetaData().setSource, (bp::arg("source")))
+                .def("getSource", &karathon::MemoryMetaData().getSource)
+                .def("setTimestamp", &karathon::MemoryMetaData().setTimestamp, (bp::arg("timestamp")))
+                .def("getTimestamp", &karathon::MemoryMetaData().getTimestamp)
+                ;
+    }
+
+    {
         bp::class_<karabo::xms::OutputChannel, boost::shared_ptr<karabo::xms::OutputChannel>, boost::noncopyable >("OutputChannel", bp::no_init)
 
                 .def("setInstanceIdAndName", &karabo::xms::OutputChannel::setInstanceIdAndName, (bp::arg("instanceId"), bp::arg("name")))
@@ -440,7 +492,7 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("getInformation", &karabo::xms::OutputChannel::getInformation)
 
-                .def("write", &karathon::OutputChannelWrap().writePy, (bp::arg("data")))
+                .def("write", &karathon::OutputChannelWrap().writePy, (bp::arg("data"), bp::arg("meta")))
 
                 .def("update", &karathon::OutputChannelWrap().updatePy)
 
