@@ -78,18 +78,18 @@ namespace karabo {
                     .adminAccess()
                     .commit();
 
-            LIST_ELEMENT(expected).key("autoStart")
-                    .displayedName("Auto start")
-                    .description("Auto starts selected devices")
-                    .appendNodesOfConfigurationBase<karabo::core::BaseDevice>()
-                    .assignmentOptional().noDefaultValue()
-                    .commit();
-
             VECTOR_STRING_ELEMENT(expected).key("devices")
                     .displayedName("Devices")
                     .description("The devices classes the server will manage")
                     .assignmentOptional().defaultValue(BaseDevice::getRegisteredClasses())
                     .expertAccess()
+                    .commit();
+
+            LIST_ELEMENT(expected).key("autoStart")
+                    .displayedName("Auto start")
+                    .description("Auto starts selected devices")
+                    .appendNodesOfConfigurationBase<karabo::core::BaseDevice>()
+                    .assignmentOptional().noDefaultValue()
                     .commit();
 
             BOOL_ELEMENT(expected).key("scanPlugins")
