@@ -104,10 +104,12 @@ namespace karabo {
 
         void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                            const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
-                                           const std::string& topic) const {
+                                           const std::string& topic, bool forceViaBroker) const {
 
-            if (tryToCallDirectly(instanceId, header, body)) return;
-            if (tryToCallP2P(instanceId, header, body, prio)) return;
+            if (!forceViaBroker) {
+                if (tryToCallDirectly(instanceId, header, body)) return;
+                if (tryToCallP2P(instanceId, header, body, prio)) return;
+            }
 
             const std::string& t = topic.empty() ? m_topic : topic;
             m_producerChannel->write(t, header, body, prio, timeToLive);
@@ -696,13 +698,11 @@ namespace karabo {
             } else {
                 replyBody = boost::make_shared<Hash>();
             }
-            if (slotFunction == "slotPing") {
-                // HACK - must not bypass the broker:
-                // Our answer may interest someone remote trying to come up with our instanceId...
-                m_producerChannel->write(m_topic, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
-            } else {
-                doSendMessage(targetInstanceId, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
-            }
+            // Our answer to slotPing may interest someone remote trying to come up with our instanceId,
+            // so we must not bypass the broker.
+            const bool viaBroker = (slotFunction == "slotPing");
+            doSendMessage(targetInstanceId, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL,
+                          m_topic, viaBroker);
         }
 
 
