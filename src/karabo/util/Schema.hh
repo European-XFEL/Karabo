@@ -62,6 +62,13 @@ namespace karabo {
         inline AccessType & operator&=(AccessType& __a, AccessType __b) {
             return __a = __a & __b;
         }
+        
+        enum DaqDataType {
+            PULSE  = 0,
+            TRAIN  = 1,
+            PULSEMASTER  = 10,
+            TRAINMASTER  = 11,
+        };
 
         /**
          * The Schema class correlates to the Hash class like an XML Schema document correlates to an XML document.
@@ -131,6 +138,8 @@ namespace karabo {
 #define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
             
 #define KARABO_RUNTIME_SCHEMA_UPDATE "runtimeSchemaUpdates"
+            
+#define KARABO_SCHEMA_DAQ_DATA_TYPE "daqDataType"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
@@ -1620,6 +1629,28 @@ namespace karabo {
              * @return a sub-schema of this schema.
              */
             Schema subSchema(const std::string& subNodePath, const std::string& filterTags = std::string()) const;
+            
+            
+            /**
+             * Set the DAQ data type for a given node element. 
+             * 
+             * Data types may only be set for node elements
+             * @param path at which the node is located
+             * @param dataType of this node
+             */
+            void setDaqDataType(const std::string& path, const DaqDataType& dataType);
+            
+            /**
+             * Get the DAQ data type for a given node element
+             * @param path
+             */
+            DaqDataType getDaqDataType(const std::string& path) const;
+            
+            /**
+             * Check if a DAQ data type has been set for a given element.
+             * @param path
+             */
+            bool hasDaqDataType(const std::string& path) const;
 
 
         private: // functions
@@ -1657,7 +1688,6 @@ namespace karabo {
             void r_updateAliasMap(const std::vector<std::string> keys, const std::string oldPath = "");
 
             void setAllowedStates(const std::string& path, const std::string& value);
-            
             
 
         };
