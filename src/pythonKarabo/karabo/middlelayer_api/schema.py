@@ -2,7 +2,7 @@ from asyncio import coroutine, gather
 from collections import OrderedDict
 from enum import Enum
 
-from .basetypes import KaraboValue
+from .basetypes import KaraboValue, isSet
 from .enums import NodeType
 from .hash import Attribute, Descriptor, Hash, Schema, HashList
 from .registry import Registry
@@ -123,7 +123,8 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     def setValue(self, descriptor, value):
         if isinstance(value, KaraboValue) and value.timestamp is None:
             value.timestamp = Timestamp()
-        self.setChildValue(descriptor.key, value, descriptor)
+        if isSet(value):
+            self.setChildValue(descriptor.key, value, descriptor)
         self.__dict__[descriptor.key] = value
 
     def setChildValue(self, key, value, desc):
@@ -196,7 +197,7 @@ class Node(Descriptor):
         r = Hash()
         for k in self.cls._allattrs:
             a = getattr(instance, k, None)
-            if a is not None:
+            if isSet(a):
                 value, attrs = getattr(self.cls, k).toDataAndAttrs(a)
                 r[k] = value
                 r[k, ...].update(attrs)

@@ -19,8 +19,9 @@ from .middlelayer_api.enums import (
     Unit
 )
 from .middlelayer_api.basetypes import (
-    BoolValue, EnumValue, KaraboValue, QuantityValue, StringValue, TableValue,
-    unit_registry as unit, VectorStringValue, VectorCharValue
+    BoolValue, EnumValue, isSet, KaraboValue, NoneValue, QuantityValue,
+    StringValue, TableValue, unit_registry as unit, VectorStringValue,
+    VectorCharValue
 )
 from .middlelayer_api.devicenode import DeviceNode
 from .middlelayer_api.exceptions import KaraboError
