@@ -126,8 +126,8 @@ namespace karabo {
             if (what.empty()) {
                 std::cout << "\nUsage: " << programName << " <configuration>\n" << std::endl;
                 std::cout << "\nPositional arguments:" << std::endl;
-                std::cout << "<configuration> " << "A set of (hierarchical) <key> = <value> pairs" << std::endl;
-                std::cout << "                " << "Use: --help [key] to list available keys or sub-keys, respectively" << std::endl;
+                std::cout << "<configuration> A set of (hierarchical) <key>=<value> pairs" << std::endl;
+                std::cout << "                Use: --help [key] to list available keys or sub-keys, respectively" << std::endl;
                 DeviceServer::getSchema("DeviceServer").help();
             } else {
                 DeviceServer::getSchema("DeviceServer").help(what);
