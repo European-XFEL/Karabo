@@ -40,11 +40,10 @@ class NavigationTreeView(QTreeView):
 
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        #self.setSortingEnabled(True)
-        #self.sortByColumn(0, Qt.AscendingOrder)
 
         self._setupContextMenu()
-        self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+        self.customContextMenuRequested.connect(
+            self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is

@@ -182,6 +182,10 @@ namespace karabo {
             path += "/device-server.log";
 
             config.set("file.filename", path.generic_string());
+            if (!config.has("network.topic")) {
+                // If not specified, use the local topic for log messages
+                config.set("network.topic", m_topic);
+            }
 
             Logger::configure(config);
 

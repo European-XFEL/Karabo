@@ -1,13 +1,14 @@
 import base64
-from io import BytesIO
+from io import StringIO
 
 from lxml import etree
 
 from karabo.common.project.api import (
     PROJECT_DB_TYPE_DEVICE, PROJECT_DB_TYPE_DEVICE_SERVER,
     PROJECT_DB_TYPE_MACRO, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
-    PROJECT_OBJECT_CATEGORIES, DeviceConfigurationModel, DeviceServerModel,
-    MacroModel, ProjectModel, read_device_server, write_device_server)
+    PROJECT_OBJECT_CATEGORIES, NS_EXISTDB_VERSIONING, DeviceConfigurationModel,
+    DeviceServerModel, MacroModel, ProjectModel,
+    read_device_server, write_device_server)
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.hash import Hash
 
@@ -26,6 +27,8 @@ _PROJECT_ITEM_TYPES = {
 }
 # Check it
 assert len(_PROJECT_ITEM_TYPES) == len(PROJECT_OBJECT_CATEGORIES)
+# Register an eXistDB namespace
+etree.register_namespace('v', NS_EXISTDB_VERSIONING[1:-1])
 
 
 def read_project_model(io_obj, existing=None):
@@ -47,13 +50,13 @@ def read_project_model(io_obj, existing=None):
     parent, child = _unwrap_child_element_xml(io_obj.read())
 
     # Grab the metadata from the parent
-    parent = etree.parse(BytesIO(parent)).getroot()
+    parent = etree.parse(StringIO(parent)).getroot()
     metadata = dict(parent.items())
     item_type = metadata.get('item_type')
     factory = factories.get(item_type)
 
     # Construct from the child data + metadata
-    return factory(BytesIO(child), existing, metadata)
+    return factory(StringIO(child), existing, metadata)
 
 
 def write_project_model(model):
@@ -86,10 +89,10 @@ def write_project_model(model):
 
 
 def _unwrap_child_element_xml(xml):
-    """ Unwrap a blob of XML bytes into two independent documents
+    """ Unwrap a blob of XML into two independent documents
     """
-    start_index = xml.find(b'>') + 1
-    end_index = xml.rfind(b'</xml>')
+    start_index = xml.find('>') + 1
+    end_index = xml.rfind('</xml>')
     parent = xml[:start_index] + xml[end_index:]
     child = xml[start_index:end_index]
     return parent, child
@@ -101,9 +104,9 @@ def _wrap_child_element_xml(child_xml, root_metadata):
     """
     element = etree.Element('xml', **root_metadata)
     element.text = ''  # This guarantees a closing tag (</xml>)
-    root_xml = etree.tostring(element)
+    root_xml = etree.tostring(element, encoding='unicode')
 
-    index = root_xml.rfind(b'</xml>')
+    index = root_xml.rfind('</xml>')
     return root_xml[:index] + child_xml + root_xml[index:]
 
 # -----------------------------------------------------------------------------
@@ -114,7 +117,7 @@ def _db_metadata_reader(metadata):
     """
     attrs = {
         'uuid': metadata['uuid'],
-        'revision': int(metadata['revision']),
+        'revision': int(metadata[NS_EXISTDB_VERSIONING + 'revision']),
         'alias': metadata['alias'],
         'simple_name': metadata['simple_name'],
         'description': metadata['description'],
@@ -239,7 +242,7 @@ def _model_db_metadata(model):
     """
     attrs = model.db_attrs.copy()
     attrs['uuid'] = model.uuid
-    attrs['revision'] = str(model.revision)
+    attrs[NS_EXISTDB_VERSIONING + 'revision'] = str(model.revision)
     attrs['alias'] = model.alias
     attrs['simple_name'] = model.simple_name
     attrs['description'] = model.description
@@ -250,7 +253,7 @@ def _device_writer(model):
     """ A writer for device configurations
     """
     hsh = Hash(model.class_id, model.configuration)
-    return hsh.encode('XML')
+    return hsh.encode('XML').decode()
 
 
 def _macro_writer(model):
@@ -259,7 +262,7 @@ def _macro_writer(model):
     element = etree.Element('macro')
     code = model.code.encode('utf-8')
     element.text = base64.b64encode(code)
-    return etree.tostring(element)
+    return etree.tostring(element, encoding='unicode')
 
 
 def _project_writer(model):
@@ -272,4 +275,4 @@ def _project_writer(model):
                               for obj in objects]
 
     hsh = Hash('project', project)
-    return hsh.encode('XML')
+    return hsh.encode('XML').decode()

@@ -1,11 +1,8 @@
-
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on February 1, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
 """This module contains the manager class which works as a man in the middle of
    the star structure. All relevant signals go over here.
 
@@ -16,13 +13,12 @@
 
 from datetime import datetime
 
-from karabo.middlelayer import (
-    Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration)
-
 from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.common.states import State
+from karabo.middlelayer import (
+    Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration)
 from karabo_gui.configuration import BulkNotifications
 from karabo_gui.dialogs.configurationdialog import (
     SelectProjectDialog, SelectProjectConfigurationDialog)
@@ -37,28 +33,38 @@ from karabo_gui.util import (
     getOpenFileName, getSaveFileName, getSchemaAttributeUpdates)
 
 
+def handle_device_state_change(box, value, timestamp):
+    """This forwards a device descriptor's state to the configuration panel
+    """
+    broadcast = broadcast_event
+    configuration = box.configuration
+
+    if State(value).isDerivedFrom(State.CHANGING):
+        # Only a state change
+        data = {'configuration': configuration, 'is_changing': True}
+        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceStateChanged,
+                                       data))
+    else:
+        # First the error state
+        data = {'configuration': configuration,
+                'is_changing': State(value) is State.ERROR}
+        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceErrorChanged,
+                                       data))
+
+        # Then a regular state change notification
+        data['is_changing'] = False
+        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceStateChanged,
+                                       data))
+
+
 class Manager(QObject):
     # signals
-    signalReset = pyqtSignal()
-    signalUpdateScenes = pyqtSignal()
+    signalAvailableProjects = pyqtSignal(object)
+    signalProjectLoaded = pyqtSignal(str, object, object)
+    signalProjectSaved = pyqtSignal(str, bool, object)
 
-    signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
-    signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
-    signalShowConfiguration = pyqtSignal(object) # configuration
-
-    signalConflictStateChanged = pyqtSignal(object, bool) # key, hasConflict
-    signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
-    signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
-
-    signalLogDataAvailable = pyqtSignal(object) # logData
-    signalNotificationAvailable = pyqtSignal(str, str, str, str)
-
-    signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
-    signalProjectLoaded = pyqtSignal(str, object, object) # projectName, metaData, data
-    signalProjectSaved = pyqtSignal(str, bool, object) # projectName, success, data
-
-    def __init__(self, *args, **kwargs):
-        super(Manager, self).__init__()
+    def __init__(self, parent=None):
+        super(Manager, self).__init__(parent=parent)
 
         # Model for navigation views
         self.systemTopology = NavigationTreeModel(self)
@@ -141,7 +147,7 @@ class Manager(QObject):
             read_only_paths = descriptor.getReadOnlyPaths()
             for key in read_only_paths:
                 # Remove all read only parameters
-                if key in config: # erase does not tolerate non-existing keys
+                if key in config:  # erase does not tolerate non-existing keys
                     config.erase(key)
 
         # Compute a runtime schema from the configuration and an unmodified
@@ -155,20 +161,22 @@ class Manager(QObject):
 
     def shutdownDevice(self, deviceId, showConfirm=True):
         if showConfirm:
-            reply = QMessageBox.question(None, 'Shutdown device',
-                "Do you really want to shutdown the device \"<b>{}</b>\"?".format(deviceId),
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
+            ask = ('Do you really want to shutdown the device '
+                   '"<b>{}</b>"?').format(deviceId)
+            reply = QMessageBox.question(None, 'Shutdown device', ask,
+                                         QMessageBox.Yes | QMessageBox.No,
+                                         QMessageBox.No)
             if reply == QMessageBox.No:
                 return
 
         get_network().onKillDevice(deviceId)
 
     def shutdownServer(self, serverId):
-        reply = QMessageBox.question(None, 'Shutdown device server',
-            "Do you really want to shutdown the device server \"<b>{}</b>\"?".format(serverId),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
+        ask = ('Do you really want to shutdown the server '
+               '"<b>{}</b>"?').format(serverId)
+        reply = QMessageBox.question(None, 'Shutdown server', ask,
+                                     QMessageBox.Yes | QMessageBox.No,
+                                     QMessageBox.No)
         if reply == QMessageBox.No:
             return
 
@@ -179,37 +187,21 @@ class Manager(QObject):
             **{k: v for k, v in hash.items() if k != "type"})
 
     def onServerConnectionChanged(self, isConnected):
-        """
-        If the server connection is changed, the model needs an update.
+        """If the server connection is changed, the model needs an update.
         """
         if isConnected:
             return
 
-        # Send reset signal to all panels which needs a reset
-        self.signalReset.emit()
+        # Broadcast event to all panels which needs a reset
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.NetworkDisconnected, {}))
         # Reset manager settings
         self.reset()
 
-    def _triggerStateChange(self, box, value, timestamp):
-        configuration = box.configuration
-        # Update GUI due to state changes
-        if State(value).isDerivedFrom(State.CHANGING):
-            self.signalChangingState.emit(configuration, True)
-        else:
-            if State(value) is State.ERROR:
-                self.signalErrorState.emit(configuration, True)
-            else:
-                self.signalErrorState.emit(configuration, False)
-
-            self.signalChangingState.emit(configuration, False)
-
-    def onConflictStateChanged(self, key, hasConflict):
-        self.signalConflictStateChanged.emit(key, hasConflict)
-
     def onNavigationTreeModelSelectionChanged(self, selected, deselect):
-        """
-        This slot is called whenever something of the navigation panel is selected.
-        If an item was selected, the selection of the project panel is cleared.
+        """This slot is called whenever something of the navigation panel is
+        selected. If an item was selected, the selection of the project panel
+        is cleared.
         """
         if not selected.indexes():
             return
@@ -217,31 +209,30 @@ class Manager(QObject):
         self.projectTopology.selectionModel.clear()
 
     def onProjectModelSelectionChanged(self, selected, deselected):
-        """
-        This slot is called whenever something of the project panel is selected.
-        If an item was selected, the selection of the navigation panel is cleared.
+        """This slot is called whenever something of the project panel is
+        selected. If an item was selected, the selection of the navigation
+        panel is cleared.
         """
         if not selected.indexes():
             return
 
         self.systemTopology.selectionModel.clear()
 
-    def onNewNavigationItem(self, itemInfo):
-        self.signalNewNavigationItem.emit(itemInfo)
-
     def onShowConfiguration(self, conf):
-        # Notify ConfigurationPanel
-        self.signalShowConfiguration.emit(conf)
+        # Notify listeners
+        data = {'configuration': conf}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.ShowConfiguration, data))
 
     def currentConfigurationAndClassId(self):
-        """
-        This function returns the configuration of the currently selected device
-        which can be part of the systemTopology or the projectTopology.
+        """This function returns the configuration of the currently selected
+        device which can be part of the systemTopology or the projectTopology.
 
         Returns None, If no device is selected.
         """
         if self.systemTopology.currentIndex().isValid():
-            indexInfo = self.systemTopology.indexInfo(self.systemTopology.currentIndex())
+            index = self.systemTopology.currentIndex()
+            indexInfo = self.systemTopology.indexInfo(index)
             deviceId = indexInfo.get("deviceId")
             classId = indexInfo.get("classId")
             serverId = indexInfo.get("serverId")
@@ -253,7 +244,8 @@ class Manager(QObject):
             else:
                 return None
         elif self.projectTopology.currentIndex().isValid():
-            indexInfo = self.projectTopology.indexInfo(self.projectTopology.currentIndex())
+            index = self.projectTopology.currentIndex()
+            indexInfo = self.projectTopology.indexInfo(index)
             return indexInfo.get("conf"), indexInfo.get("classId")
         else:
             return None
@@ -281,7 +273,8 @@ class Manager(QObject):
 
     def onOpenFromProject(self):
         # Open dialog to select project and configuration
-        dialog = SelectProjectConfigurationDialog(self.projectTopology.projects)
+        projects = self.projectTopology.projects
+        dialog = SelectProjectConfigurationDialog(projects)
         if dialog.exec_() == QDialog.Rejected:
             return
 
@@ -291,13 +284,11 @@ class Manager(QObject):
         self._loadClassConfiguration(conf, config, classId)
 
     def onSaveToFile(self):
+        """This function saves the current configuration of a device to a file.
         """
-        This function saves the current configuration of a device to a file.
-        """
-        filename = getSaveFileName(
-                        caption="Save configuration as",
-                        filter="Configuration (*.xml)",
-                        suffix="xml")
+        filename = getSaveFileName(caption="Save configuration as",
+                                   filter="Configuration (*.xml)",
+                                   suffix="xml")
         if not filename:
             return
 
@@ -316,8 +307,8 @@ class Manager(QObject):
             w.writeToFile(config, file)
 
     def onSaveToProject(self):
-        """
-        This function saves the current configuration of a device to the project.
+        """This function saves the current configuration of a device to the
+        project.
         """
         # Open dialog to select project to which configuration should be saved
         dialog = SelectProjectDialog(self.projectTopology.projects)
@@ -337,10 +328,13 @@ class Manager(QObject):
             if deviceId == conf.id:
                 for c in configs:
                     if c.filename[:-4] == name:
-                        reply = QMessageBox.question(None, 'Project configuration already exists',
-                            "Another configuration with the same name \"<b>{}</b>\" <br> "
-                            "already exists. Do you want to overwrite it?".format(name),
-                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                        title = 'Project configuration already exists'
+                        msg = ('Another configuration with the same name '
+                               '"<b>{}</b>" <br> already exists. Do you want '
+                               'to overwrite it?').format(name)
+                        reply = QMessageBox.question(
+                            None, title, msg, QMessageBox.Yes | QMessageBox.No,
+                            QMessageBox.No)
 
                         if reply == QMessageBox.No:
                             return
@@ -354,19 +348,27 @@ class Manager(QObject):
                 hsh, attrs = conf.toHash()
                 confHash = Hash(classId, hsh)
                 confHash[classId, ...] = attrs
-                project.insertConfiguration(index, conf.id,
-                                            ProjectConfiguration(project, name,
-                                            confHash))
+                project_conf = ProjectConfiguration(project, name, confHash)
+                project.insertConfiguration(index, conf.id, project_conf)
                 return
 
         hsh, attrs = conf.toHash()
         confHash = Hash(classId, hsh)
         confHash[classId, ...] = attrs
-        project.addConfiguration(conf.id, ProjectConfiguration(project, name,
-                                          confHash))
+        project_conf = ProjectConfiguration(project, name, confHash)
+        project.addConfiguration(conf.id, project_conf)
+
+    def _deviceDataReceived(self):
+        """Notify all listeners that some (class, schema, or config) data was
+        received.
+        """
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.DeviceDataReceived, {}))
 
     def handle_log(self, messages):
-        self.signalLogDataAvailable.emit(messages)
+        data = {'messages': messages}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.LogMessages, data))
 
     def handle_brokerInformation(self, **kwargs):
         get_network()._handleBrokerInformation(**kwargs)
@@ -400,17 +402,24 @@ class Manager(QObject):
         If the instance already exists in the central hash, it is first
         removed from there. """
         # Check for existing stuff and remove
-        instanceIds, serverClassIds = self.systemTopology.detectExistingInstances(topologyEntry)
-        for id in instanceIds:
-            logMessage = dict(
-                timestamp=datetime.now().isoformat(), type="INFO", category=id,
-                message='Detected dirty shutdown for instance "{}", '
-                        'which is coming up now.'.format(id))
-            self.handle_log([logMessage])
+        detect_instances = self.systemTopology.detectExistingInstances
+        instanceIds, serverClassIds = detect_instances(topologyEntry)
+
+        log_messages = []
+        for inst_id in instanceIds:
+            message = {
+                'timestamp': datetime.now().isoformat(),
+                'type': 'INFO',
+                'category': inst_id,
+                'message': ('Detected dirty shutdown for instance "{}", '
+                            'which is coming up now.').format(inst_id)
+            }
+            log_messages.append(message)
 
             # Clear deviceId parameter page, if existent
-            self._clearDeviceParameterPage(id)
+            self._clearDeviceParameterPage(inst_id)
 
+        self.handle_log(log_messages)
         self._clearServerClassParameterPages(serverClassIds)
 
         # Update system topology with new configuration
@@ -432,7 +441,8 @@ class Manager(QObject):
                 getClass(k[0], k[1])
 
     def handle_instanceGone(self, instanceId, instanceType):
-        """ Remove instanceId from central hash and update """
+        """ Remove instanceId from central hash and update
+        """
         if instanceType in ("device", "macro"):
             # Distribute gone alarm service devices
             instanceIds = self._extractAlarmServices()
@@ -482,16 +492,17 @@ class Manager(QObject):
         self.handle_deviceSchema(instanceId, schema)
 
     def handle_classSchema(self, serverId, classId, schema):
-        if (serverId, classId) not in self.serverClassData:
-            print('not requested schema for classId {} arrived'.format(classId))
+        key = (serverId, classId)
+        if key not in self.serverClassData:
+            print('Unrequested schema for classId {} arrived'.format(classId))
             return
 
         # Save a clean copy
         schemaCopy = Schema()
         schemaCopy.copy(schema)
-        self._immutableServerClassData[serverId, classId] = schemaCopy
+        self._immutableServerClassData[key] = schemaCopy
 
-        conf = self.serverClassData[serverId, classId]
+        conf = self.serverClassData[key]
         if conf.descriptor is not None:
             return
 
@@ -504,11 +515,11 @@ class Manager(QObject):
         # Notify ConfigurationPanel
         self.onShowConfiguration(conf)
         # Trigger update scenes
-        self.signalUpdateScenes.emit()
+        self._deviceDataReceived()
 
     def handle_deviceSchema(self, deviceId, schema):
         if deviceId not in self.deviceData:
-            print('not requested schema for device {} arrived'.format(deviceId))
+            print('Unrequested schema for device {} arrived'.format(deviceId))
             return
 
         conf = self.deviceData[deviceId]
@@ -518,12 +529,12 @@ class Manager(QObject):
 
         # Add configuration with schema to device data
         conf.setSchema(schema)
-        conf.boxvalue.state.signalUpdateComponent.connect(
-            self._triggerStateChange)
+        box_signal = conf.boxvalue.state.signalUpdateComponent
+        box_signal.connect(handle_device_state_change)
 
         self.onShowConfiguration(conf)
         # Trigger update scenes
-        self.signalUpdateScenes.emit()
+        self._deviceDataReceived()
 
     def handle_deviceConfiguration(self, deviceId, configuration):
         device = self.deviceData.get(deviceId)
@@ -535,7 +546,7 @@ class Manager(QObject):
         if device.status == "schema":
             device.status = "alive"
             # Trigger update scenes - to draw possible Workflow Connections
-            self.signalUpdateScenes.emit()
+            self._deviceDataReceived()
         if device.status == "alive" and device.visible > 0:
             device.status = "monitoring"
 
@@ -619,9 +630,13 @@ class Manager(QObject):
 
     # ---------------------------------------------------------------------
 
-    def handle_notification(self, deviceId, messageType, shortMsg, detailedMsg):
-        self.signalNotificationAvailable.emit(deviceId, messageType, shortMsg,
-                                              detailedMsg)
+    def handle_notification(self, device, message, short, detailed):
+        data = {'device_id': device,
+                'message_type': message,
+                'short_msg': short,
+                'detailed_msg': detailed}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.NotificationMessage, data))
 
     def handle_networkData(self, name, data):
         deviceId, property = name.split(":")
