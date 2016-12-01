@@ -625,7 +625,7 @@ namespace karabo {
 
             void doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
-                               const std::string& topic = "") const;
+                               const std::string& topic = "", bool forceViaBroker = false) const;
 
         private: // Functions
 
