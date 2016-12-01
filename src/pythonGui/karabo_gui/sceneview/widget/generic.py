@@ -4,7 +4,8 @@ from karabo.common.scenemodel.api import (
     DirectoryModel, DisplayCommandModel, DisplayLabelModel, DisplayPlotModel,
     DoubleLineEditModel, EditableListElementModel, EditableListModel,
     EditableSpinBoxModel, FileInModel, FileOutModel, HexadecimalModel,
-    IntLineEditModel, KnobModel, LineEditModel, SliderModel, XYPlotModel
+    IntLineEditModel, KnobModel, LineEditModel, PopUpModel, SliderModel,
+    XYPlotModel
 )
 from karabo_gui.widget import Widget
 
@@ -22,6 +23,7 @@ _GENERIC_WIDGET_FACTORIES = {
     HexadecimalModel: 'Hexadecimal',
     IntLineEditModel: 'IntLineEdit',
     KnobModel: 'Knob',
+    PopUpModel: 'PopUp',
     SliderModel: 'Slider',
     XYPlotModel: 'XYPlot',
 }

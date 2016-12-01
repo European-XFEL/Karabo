@@ -10,7 +10,7 @@ from karabo.common.scenemodel.api import (
     EvaluatorModel, FileInModel, FileOutModel, FixedLayoutModel,
     FloatSpinBoxModel, GridLayoutModel, HexadecimalModel, IntLineEditModel,
     KnobModel, LabelModel, LineEditModel, LineModel, LinePlotModel,
-    MonitorModel, PathModel, RectangleModel, SceneLinkModel,
+    MonitorModel, PathModel, PopUpModel, RectangleModel, SceneLinkModel,
     ScientificImageModel, SelectionIconsModel, SingleBitModel, SliderModel,
     TableElementModel, TextIconsModel, UnknownXMLDataModel, VacuumWidgetModel,
     WebcamImageModel, WorkflowItemModel, XYPlotModel
@@ -60,6 +60,7 @@ _SCENE_OBJ_FACTORIES = {
     EditableSpinBoxModel: GenericWidgetContainer,
     HexadecimalModel: GenericWidgetContainer,
     IntLineEditModel: GenericWidgetContainer,
+    PopUpModel: GenericWidgetContainer,
     KnobModel: GenericWidgetContainer,
     SliderModel: GenericWidgetContainer,
     XYPlotModel: GenericWidgetContainer,
