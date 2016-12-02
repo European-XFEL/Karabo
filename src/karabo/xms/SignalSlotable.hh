@@ -625,7 +625,7 @@ namespace karabo {
 
             void doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
-                               const std::string& topic = "") const;
+                               const std::string& topic = "", bool forceViaBroker = false) const;
 
         private: // Functions
 
@@ -664,7 +664,7 @@ namespace karabo {
 
             void replyException(const karabo::util::Hash& header, const std::string& message);
 
-            void sendPotentialReply(const karabo::util::Hash& header, bool global);
+            void sendPotentialReply(const karabo::util::Hash& header, const std::string& slotFunction, bool global);
 
             void sendErrorHappenedReply(const karabo::util::Hash& header, const std::string& errorMesssage);
 
