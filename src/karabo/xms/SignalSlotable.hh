@@ -713,10 +713,10 @@ namespace karabo {
             /// True if instance with ID 'slotInstanceId' has slot 'slotFunction'.
             /// Internally uses "slotHasSlot" for remote instances, but shortcuts if ID is the own one.
             /// Always true if 'slotInstanceId == "*"' (i.e. global slot).
-            bool instanceHasSlot(const std::string& slotInstanceId, const std::string& slotFunction);
+            bool instanceHasSlot(const std::string& slotInstanceId, std::string slotFunction);
 
             /// Slot to tell whether instance has a slot of given name.
-            void slotHasSlot(const std::string& slotFunction);
+            void slotHasSlot(std::string slotFunction);
 
             bool tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction,
                                            const std::string& slotInstanceId, const std::string& slotFunction);
@@ -762,13 +762,13 @@ namespace karabo {
             void slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
-            bool hasSlot(const std::string& slotFunction) const;
+            bool hasSlot(std::string slotFunction) const;
 
             // Thread-safe, locks m_signalSlotInstancesMutex
-            SlotInstancePointer getSlot(const std::string& slotFunction) const;
+            SlotInstancePointer getSlot(std::string slotFunction) const;
 
             // Thread-safe, locks m_signalSlotInstancesMutex
-            void removeSlot(const std::string& slotFunction);
+            void removeSlot(std::string slotFunction);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             bool hasSignal(const std::string& signalFunction) const;
