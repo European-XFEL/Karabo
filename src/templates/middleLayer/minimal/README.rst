@@ -5,7 +5,7 @@ __CLASS_NAME__ Device (MiddleLayer)
 Testing
 =======
 
-Every Karabo device in Python represents is shipped as a regular python package.
+Every Karabo device in Python is shipped as a regular python package.
 In order to make the device visible to any device-server you have to install
 the package to Karabo's own Python environment.
 
