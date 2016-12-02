@@ -532,13 +532,15 @@ class ProjectDatabase(ContextDecorator):
             res = self.dbhandle.query(query)
             bpath = "{}/{}/".format(self.root, domain)
             return [{'uuid': r.attrib['uuid'],
-                     'revisions': self.get_versioning_info(bpath+r.attrib[
-                         'uuid'])['revisions'],
+                     'revisions': self._get_rev_info(bpath+r.attrib['uuid']),
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name']}
                     for r in res.results]
         except ExistDBException:
             return []
+
+    def _get_rev_info(self, path):
+        return self.get_versioning_info(path)['revisions']
 
     def list_domains(self):
         """
