@@ -20,7 +20,7 @@ if [ ${#@} -gt 0 ]; then
 	echo "Otherwise open one xterm per log file in the directories matching"
 	echo "'\$KARABO_SERVERS/*'. The xterm will show the newest of the rolling"
 	echo "log files '${logFilePattern}' in the directory, scrolled to its end."
-        echo "\$KARABO_SERVERS has to be defined in the allInfo file."
+        echo "\$KARABO_SERVERS has to be defined in the config file."
         echo "Note that for C++ servers there is one log file only whereas for bound"
         echo "Python servers there is one for the server and one for each device"
         echo "started by the server."
@@ -53,16 +53,16 @@ if [ $? -ne 0 ]; then
     exit 1;
 fi
 
-if [ ! -e "allInfo" ]; then
-    cp allInfo.orig allInfo
+if [ ! -e "config" ]; then
+    cp config.orig config
 fi
 
-# required allInfo file
-foo=allInfo
+# required config file
+foo=config
 test -r $foo || { echo "ERROR cannot read definitions file $foo";  exit 1;}
 
 # required environmental
-source allInfo
+source config
 test -n "$KARABO_SERVERS" || { echo "ERROR KARABO_SERVERS variable does not exist"; exit 3;}
 
 declare -i count=0
