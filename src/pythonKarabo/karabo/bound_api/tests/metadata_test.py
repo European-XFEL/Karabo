@@ -10,10 +10,13 @@ class  Metadata_TestCase(unittest.TestCase):
     def test_metadata_general_functionality(self):
         
         es = Epochstamp(1356441936, 789333123456789123)
-        ts = Timestamp(es, Trainstamp())
+        ts = Timestamp(es, Trainstamp(987654321))
         meta = MemoryMetaData('abc', ts)
         
         self.assertTrue(meta.getSource() == 'abc')
+        self.assertTrue(meta.getTimestamp().getTrainId() == 987654321)
+        self.assertTrue(meta.getTimestamp().getSeconds() == 1356441936)
+        self.assertTrue(meta.getTimestamp().getFractionalSeconds() == 789333123456789123)
         self.assertTrue(meta.getTimestamp().toFormattedString() == ts.toFormattedString())
         self.assertFalse(meta.getTimestamp() == ts)
 
@@ -23,6 +26,7 @@ class  Metadata_TestCase(unittest.TestCase):
 
         ts1 = Timestamp()
         meta.setTimestamp(ts1)
+        self.assertTrue(meta.getTimestamp().getTrainId() == 0)
         self.assertFalse(meta.getTimestamp().toFormattedString() == ts.toFormattedString())
         self.assertTrue(meta.getTimestamp().toFormattedString() == ts1.toFormattedString())
 
