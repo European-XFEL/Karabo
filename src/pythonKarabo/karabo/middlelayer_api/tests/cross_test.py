@@ -142,7 +142,7 @@ class Tests(DeviceTest):
 
         karabo = os.environ["KARABO"]
         self.process = yield from create_subprocess_exec(
-            os.path.join(karabo, "bin", "karabo-deviceserver"),
+            os.path.join(karabo, "bin", "karabo-cppserver"),
             "historytest.xml", stderr=PIPE, stdout=PIPE)
 
         @coroutine
