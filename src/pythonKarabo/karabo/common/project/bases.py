@@ -5,10 +5,13 @@
 #############################################################################
 import uuid
 
-from traits.api import HasStrictTraits, Bool, Dict, Int, String
+from traits.api import Bool, Dict, Int, String
+
+from karabo.common.savable import BaseSavableModel
+from .const import EXISTDB_INITIAL_VERSION
 
 
-class BaseProjectObjectModel(HasStrictTraits):
+class BaseProjectObjectModel(BaseSavableModel):
     """ A base class for all things which can be serialized and sent to
     a Project server.
     """
@@ -18,14 +21,11 @@ class BaseProjectObjectModel(HasStrictTraits):
     # A description for this object
     description = String
 
-    # When True, the object contains unsaved data
-    modified = Bool(False, transient=True)
-
     # When False, the object is known to be uninitialized
     initialized = Bool(False, transient=True)
 
     # Version and unique id
-    revision = Int(transient=True)
+    revision = Int(EXISTDB_INITIAL_VERSION, transient=True)
     uuid = String
     # Per-revision alias (for the humans!)
     alias = String(transient=True)
@@ -50,15 +50,3 @@ class BaseProjectObjectModel(HasStrictTraits):
             # Reset to a safe value
             self.uuid = old
             raise
-
-    def _anytrait_changed(self, name, old, new):
-        """ Listen for changes to all non-transient, non-property traits and
-        mark the object as modified accordingly.
-        """
-        if not self.traits_inited():
-            return
-
-        # copyable_trait_names() returns all the trait names which contain
-        # data which should be persisted (or copied when making a deep copy).
-        if name in self.copyable_trait_names():
-            self.modified = True

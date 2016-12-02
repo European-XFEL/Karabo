@@ -104,10 +104,12 @@ namespace karabo {
 
         void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                            const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
-                                           const std::string& topic) const {
+                                           const std::string& topic, bool forceViaBroker) const {
 
-            if (tryToCallDirectly(instanceId, header, body)) return;
-            if (tryToCallP2P(instanceId, header, body, prio)) return;
+            if (!forceViaBroker) {
+                if (tryToCallDirectly(instanceId, header, body)) return;
+                if (tryToCallP2P(instanceId, header, body, prio)) return;
+            }
 
             const std::string& t = topic.empty() ? m_topic : topic;
             m_producerChannel->write(t, header, body, prio, timeToLive);
@@ -130,7 +132,7 @@ namespace karabo {
 
 
         SignalSlotable::Requestor::Requestor(SignalSlotable* signalSlotable) :
-            m_signalSlotable(signalSlotable), m_replyId(generateUUID()) {
+            m_signalSlotable(signalSlotable), m_replyId(generateUUID()), m_timeout(0) {
         }
 
 
@@ -574,7 +576,7 @@ namespace karabo {
                             SlotInstancePointer slot = getSlot(slotFunction);
                             if (slot) {
                                 slot->callRegisteredSlotFunctions(*header, *body);
-                                sendPotentialReply(*header, globalCall);
+                                sendPotentialReply(*header, slotFunction, globalCall);
                             } else if (!globalCall) {
                                 // Warn on non-existing slot, but only if directly addressed:
                                 const std::string& signalInstanceId = (header->has("signalInstanceId") ? // const ref is essential!
@@ -625,7 +627,8 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::sendPotentialReply(const karabo::util::Hash& header, bool global) {
+        void SignalSlotable::sendPotentialReply(const karabo::util::Hash& header,
+                                                const std::string& slotFunction, bool global) {
 
             // We could be requested in two different ways.
             // TODO: Get rid of requestNoWait code path once receiveAsync is everywhere.
@@ -652,7 +655,7 @@ namespace karabo {
                     // But it is fishy if the slot was requested instead of simply called!
                     KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Refusing to reply to "
                             << header.get<std::string>("signalInstanceId") << " since it request-ed '"
-                            << header.get<std::string>("slotFunctions") << "' (i.e. globally).";
+                            << slotFunction << "' (i.e. globally).";
                 }
                 // KARABO_LOG_FRAMEWORK_DEBUG << this->getInstanceId() << ": sendPotentialReply - but global request.";
                 return;
@@ -663,7 +666,7 @@ namespace karabo {
             Replies::iterator it = m_replies.find(boost::this_thread::get_id());
             if (caseRequestNoWait && it == m_replies.end()) {
                 KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Slot '"
-                        << header.get<std::string>("slotFunctions") << "' did not place a "
+                        << slotFunction << "' did not place a "
                         << "reply, but was called via requestNoWait";
                 return;
             }
@@ -695,7 +698,11 @@ namespace karabo {
             } else {
                 replyBody = boost::make_shared<Hash>();
             }
-            doSendMessage(targetInstanceId, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+            // Our answer to slotPing may interest someone remote trying to come up with our instanceId,
+            // so we must not bypass the broker.
+            const bool viaBroker = (slotFunction == "slotPing");
+            doSendMessage(targetInstanceId, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL,
+                          m_topic, viaBroker);
         }
 
 
@@ -877,7 +884,7 @@ namespace karabo {
 
             if (rand != 0) {
                 // case 1) Called by an instance that is coming up: rand is his m_randPing before it gets 'valid',
-                // case 2) or by SignalSlotable::exists: rand is 1
+                // case 2) or by SignalSlotable::exists or SignalSlotable::connectP2P: rand is 1
                 if (instanceId == m_instanceId) {
                     if (rand == m_randPing) {
                         // We are in case 1) and I ask myself. I must not answer, at least not in time.
