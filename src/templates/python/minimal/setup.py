@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 from os.path import dirname
-
 from setuptools import setup, find_packages
 
 
@@ -15,7 +14,7 @@ def _get_version_string():
 
 setup(name='__PACKAGE_NAME__',
       version=_get_version_string(),
-      author='',
+      author='__EMAIL__',
       author_email='__EMAIL__',
       description='',
       long_description='',
