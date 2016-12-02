@@ -17,7 +17,10 @@ int main(int argc, char** argv) {
 
     try {
 
-        // Let the factory now about all available plugins
+        // Let the factory now about all available plugins.
+        // It is important to load plugins even before having a device server
+        // instance, as this allows the help function to correctly show available
+        // devices and enabling the server to autoStart them if needed.
         Hash pluginConfig("pluginDirectory", Version::getPathToKaraboInstallation() + "/plugins");
         PluginLoader::create("PluginLoader", pluginConfig)->update();
 
