@@ -8,10 +8,11 @@ from io import StringIO
 import weakref
 
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
-from traits.api import Instance, on_trait_change
+from traits.api import Instance, Property, on_trait_change
 
 from karabo.common.project.api import (
-    DeviceInstanceModel, DeviceServerModel, find_parent_object
+    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
+    find_parent_object
 )
 from karabo.middlelayer_api.newproject.io import (read_project_model,
                                                   write_project_model)
@@ -29,6 +30,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     """
     # Redefine model with the correct type
     model = Instance(DeviceInstanceModel)
+    active_config = Property(Instance(DeviceConfigurationModel))
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
@@ -74,8 +76,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
             return
         self.qt_item.setText(self.model.instance_id)
 
-    @property
-    def _active_config(self):
+    def _get_active_config(self):
         """ Return the active device configuration object
 
         :return If a `DeviceConfigurationModel` for the `DeviceInstanceModel`s
@@ -144,7 +145,9 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         device = self.model
         server_model = find_parent_object(device, project,
                                           DeviceServerModel)
-        active_config = self._active_config
+        active_config = self.active_config
+        if active_config is None:
+            return
         dialog = ObjectDuplicateDialog(device.instance_id)
         if dialog.exec() == QDialog.Accepted:
             xml = write_project_model(active_config)
@@ -152,7 +155,8 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
                 dupe_dev_conf = read_project_model(StringIO(xml))
                 # Set a new UUID and revision
                 dupe_dev_conf.reset_uuid_and_version()
-                dupe_dev_conf.alias = active_config.alias
+                dupe_dev_conf.alias = '{}-{}'.format(active_config.alias,
+                                                     simple_name)
                 config_ref = (dupe_dev_conf.uuid, dupe_dev_conf.revision)
                 dev_inst = DeviceInstanceModel(
                     instance_id=simple_name,
@@ -163,7 +167,9 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
                 server_model.devices.append(dev_inst)
 
     def _save_device(self):
-        save_object(self._active_config)
+        active_config = self.active_config
+        if active_config is not None:
+            save_object(active_config)
 
     def _instantiate_device(self, project):
         server = find_parent_object(self.model, project, DeviceServerModel)
