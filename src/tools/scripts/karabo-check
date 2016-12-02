@@ -87,7 +87,7 @@ do
     done
 done
 if [ $orphans = "yes" ]; then
-    echo "WARN orphans are running! To cold start use allStop"
+    echo "WARN orphans are running! To cold start use karabo-stop"
     exit 16;
 fi
 
