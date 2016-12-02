@@ -226,10 +226,11 @@ void SignalSlotable_Test::testMethod() {
     // shortcut address:
     demo->call("", "slotC", 1);
     
+    reply = 0;
     try {
         demo->request("", "noded.slot", 1).timeout(500).receive(reply);
     } catch (karabo::util::TimeoutException&) {
-        CPPUNIT_ASSERT_MESSAGE(false, "Timeout request/receive noded.slot via \"\"");
+        CPPUNIT_ASSERT_MESSAGE(false, "Timeout request/receive noded.slot");
     }
     CPPUNIT_ASSERT_EQUAL(2, reply);
 
