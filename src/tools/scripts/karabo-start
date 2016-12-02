@@ -104,7 +104,7 @@ do
         title=$(echo ${HOSTNAME%%.*}:$exe | awk '{print $1 ":" $2}')
         options="-T $title -sb -rightbar -sl 10000 -hold"
         display=""
-        if [ -z "$XUSE" ]; then
+        if [ -n "$XUSE" ]; then
 	        display="-display $XUSE"
         fi
         if [ "$nox" == "true" ]; then
