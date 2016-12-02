@@ -1218,9 +1218,12 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::instanceHasSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
+        bool SignalSlotable::instanceHasSlot(const std::string& slotInstanceId, std::string slotFunction) {
 
             if (slotInstanceId == "*") return true; // GLOBAL slots may or may not exist
+            
+            //convert noded slots to follow underscore representation
+            boost::replace_all(slotFunction, ".", "_");
 
             bool slotExists = false;
 
@@ -1250,7 +1253,10 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotHasSlot(const std::string& slotFunction) {
+        void SignalSlotable::slotHasSlot(std::string slotFunction) {
+            //handle noded slots
+            boost::replace_all(slotFunction, ".", "_");
+            
             bool result = false;
             {
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
@@ -1433,13 +1439,19 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::hasSlot(const std::string& slotFunction) const {
+        bool SignalSlotable::hasSlot(std::string slotFunction) const {
+            //handle noded slots
+            boost::replace_all(slotFunction, ".", "_");
+            
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             return m_slotInstances.find(slotFunction) != m_slotInstances.end();
         }
 
 
-        SignalSlotable::SlotInstancePointer SignalSlotable::getSlot(const std::string& slotFunction) const {
+        SignalSlotable::SlotInstancePointer SignalSlotable::getSlot(std::string slotFunction) const {
+            //handle noded slots
+            boost::replace_all(slotFunction, ".", "_");
+            
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             SlotInstances::const_iterator it = m_slotInstances.find(slotFunction);
             if (it != m_slotInstances.end()) return it->second;
@@ -1447,7 +1459,10 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::removeSlot(const std::string& slotFunction) {
+        void SignalSlotable::removeSlot(std::string slotFunction) {
+            //handle noded slots
+            boost::replace_all(slotFunction, ".", "_");
+            
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             m_slotInstances.erase(slotFunction);
             // Will clean any associated timers to this slot
