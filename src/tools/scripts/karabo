@@ -148,13 +148,12 @@ def parse_commandline():
     if len(sys.argv) <= 1:
         parser.print_help()
         parser.exit()
-
     args.command(args)
 
 
 def new(args):
     with pushd_popd():
-        path = 'devices/{}'.format(args.device)
+        path = os.path.join('devices', args.device)
         class_name = args.device[0].capitalize() + args.device[1:]
         if os.path.isdir(path):
             if args.force:
@@ -164,9 +163,9 @@ def new(args):
                       .format(args.device))
                 return
         run_cmd('mkdir -p {}'.format(path))
-        run_cmd('cp -rf templates/{}/minimal/* {}'.format(args.api, path))
-        run_cmd('cp -rf templates/{}/minimal/.gitignore {}'.format(args.api,
-                path))
+        tpath = os.path.join('templates', args.api, 'minimal')
+        run_cmd('cp -rf {} {}'.format(os.path.join(tpath, '*'), path))
+        run_cmd('cp -f {} {}'.format(os.path.join(tpath, '.gitignore'), path))
         run_cmd('configuretemplate.sh {} {} {} {}'.format(path, args.device,
                 class_name, args.api))
         os.chdir(path)
@@ -177,11 +176,13 @@ def new(args):
         run_cmd('git commit -m "Initial commit"')
         print('New device package was added to: {}'
               .format(os.path.abspath(path)))
+        print('Use: "git push -u origin master" if you want start versioning '
+              'remotely')
 
 
 def checkout(args):
     with pushd_popd():
-        path = 'devices/{}'.format(args.device)
+        path = os.path.join('devices', args.device)
         if os.path.isdir(path):
             print('INFO The device package already exists, skipped checkout')
         else:
@@ -191,13 +192,13 @@ def checkout(args):
             print('done.')
             print('Device package was added to: {}'
                   .format(os.path.abspath(path)))
-        if develop in args:
-            develop(args)
+    if 'develop' in args:
+        develop(args)
 
 
 def install(args):
     with pushd_popd():
-        path = 'tmp/{}'.format(args.device)
+        path = os.path.join('tmp', args.device)
         if os.path.isdir(path):
             run_cmd('rm -rf {}'.format(path))
         os.makedirs(path, exist_ok=True)
@@ -211,7 +212,9 @@ def install(args):
             print('Compiling... [please wait] ', end='', flush=True)
             run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
             print('done.')
-            run_cmd('cp -f dist/{}/*/*.so ../../plugins/'.format(args.config))
+            src = os.path.join('dist', args.config, '*', '*.so')
+            tgt = os.path.join('..', '..', 'plugins')
+            run_cmd('cp -f {} {}'.format(src, tgt))
         else:
             run_cmd('pip install --upgrade .')
         print("Installation succeeded.")
@@ -229,7 +232,7 @@ def uninstall(args):
 
 def develop(args):
     with pushd_popd():
-        path = 'devices/{}'.format(args.device)
+        path = os.path.join('devices', args.device)
         if not os.path.isdir(path):
             checkout(args)
         os.chdir(path)
@@ -237,8 +240,9 @@ def develop(args):
             print('Compiling... [please wait] ', end='', flush=True)
             run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
             print('done.')
-            os.chdir('../../plugins')
-            run_cmd('ln -sf ../{}/dist/{}/*/*.so'.format(path, args.config))
+            os.chdir(os.path.join('..', '..', 'plugins'))
+            lib = os.path.join('..', path, 'dist', args.config, '*', '*.so')
+            run_cmd('ln -sf {}'.format(lib))
         else:
             run_cmd('pip install -e .')
         print("Develop installation succeeded.")
