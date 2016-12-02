@@ -41,7 +41,7 @@ If you want to manually start a server using this device, simply type:
 
 Or just use (a properly configured):
 
-``karabo-allstart``
+``karabo-start``
 
 Packaging
 =========
@@ -49,4 +49,3 @@ Packaging
 A binary installation package can be created by typing:
 
 ``make package``
-
