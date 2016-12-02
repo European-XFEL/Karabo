@@ -457,10 +457,11 @@ class EventLoop(SelectorEventLoop):
 
     def getBroker(self, deviceId, classId):
         if self.connection is None:
-            hosts = os.environ.get("KARABO_BROKER_HOSTS",
+            hosts = os.environ.get("KARABO_BROKER",
                                    "exfl-broker.desy.de:7777").split(',')
             for hp in hosts:
-                host, port = hp.split(':')
+                protocol, host, port = hp.split(':')
+                host = host[2:]
                 p = openmq.Properties()
                 p["MQBrokerHostName"] = host.strip()
                 p["MQBrokerHostPort"] = int(port)
