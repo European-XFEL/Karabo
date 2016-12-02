@@ -23,7 +23,7 @@
 # If you are using Karabo at home and run a local broker you can you use directly
 #export KARABO_BROKER="tcp://localhost:7777"
 
-# If you are only at the European XFEL GmbH you may use this settings
+# If you are at the European XFEL GmbH you may use this settings
 export KARABO_BROKER="tcp://exfl-broker:7777"
 
 # This setting is the default, it will try the XFEL broker first and failover to a local if unsuccessful
