@@ -44,15 +44,11 @@ export KARABO_BROKER="tcp://exfl-broker:7777"
 # Kill Signal (used by karabo-stop)  #
 #########################################
 
-# Better don't touch
-
-KARABO_KILL_SIGNAL=9
+KARABO_KILL_SIGNAL=15
 
 ###################
 # Service Servers #
 ###################
-
-# Better don't touch
 
 # Default log level
 logger=Logger.priority=INFO
