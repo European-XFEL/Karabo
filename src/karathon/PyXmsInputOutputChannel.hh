@@ -49,21 +49,13 @@ namespace karathon {
 
     };
 
-    //    struct ImageDataElementWrap {
-
-    //        static karabo::xms::ImageDataElement& setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement >& self,
-    //                                                              const std::string& subKey,
-    //                                                              const bp::object& defaultValue);
-    //    };
-
-    karabo::xms::Memory::MetaData* constructMemoryMetaData(const bp::object& src, const bp::object& ts);
-
-    struct MemoryMetaData {
-
-        static void setSource(karabo::xms::Memory::MetaData& self, const bp::object& src);
-        static bp::object getSource(const karabo::xms::Memory::MetaData& self);
-        static void setTimestamp(karabo::xms::Memory::MetaData& self, const bp::object& ts);
-        static bp::object getTimestamp(const karabo::xms::Memory::MetaData& self);
+    class MemoryMetaData : public karabo::xms::Memory::MetaData {
+    public:
+        MemoryMetaData(const bp::object& src, const bp::object& ts);
+        void setSource(const bp::object& src);
+        bp::object getSource();
+        void setTimestamp(const bp::object& ts);
+        bp::object getTimestamp();
     };
 
     struct OutputChannelWrap {

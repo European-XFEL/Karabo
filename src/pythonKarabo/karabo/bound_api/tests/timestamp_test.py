@@ -9,7 +9,7 @@ import platform
 from karabo.bound import (Epochstamp, Timestamp, Trainstamp,
                           TimeDuration, Hash, Types,
                           ATTOSEC, FEMTOSEC, PICOSEC, NANOSEC,
-                          MICROSEC, MILLISEC)
+                          MICROSEC, MILLISEC, MemoryMetaData)
 
 class  Timestamp_TestCase(unittest.TestCase):
     #def setUp(self):
@@ -213,6 +213,29 @@ class  Timestamp_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail(" testing comparison operators: " + str(e))
 
+    def test_metadata(self):
+        
+        es = Epochstamp(1356441936, 789333123456789123)
+        ts = Timestamp(es, Trainstamp())
+        meta = MemoryMetaData('abc', ts)
+        
+        try:
+            self.assertTrue(meta.getSource() == 'abc')
+            self.assertTrue(meta.getTimestamp().toFormattedString() == ts.toFormattedString())
+            self.assertFalse(meta.getTimestamp() == ts)
+            
+            meta.setSource('xyz')
+            self.assertFalse(meta.getSource() == 'abc')
+            self.assertTrue(meta.getSource() == 'xyz')
+            
+            ts1 = Timestamp()
+            meta.setTimestamp(ts1)
+            self.assertFalse(meta.getTimestamp().toFormattedString() == ts.toFormattedString())
+            self.assertTrue(meta.getTimestamp().toFormattedString() == ts1.toFormattedString())
+            
+        except Exception as e:
+            self.fail(" testing metadata access: {}".format(e))
+        
 
 if __name__ == '__main__':
     unittest.main()
