@@ -1225,43 +1225,51 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::instanceHasSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
+        bool SignalSlotable::instanceHasSlot(const std::string& slotInstanceId, const std::string& unmangledSlotFunction) {
 
             if (slotInstanceId == "*") return true; // GLOBAL slots may or may not exist
-
+            
+            //convert noded slots to follow underscore representation
+            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction 
+                                                      : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
+            
             bool slotExists = false;
 
             if (slotInstanceId == m_instanceId) { // Local slot requested
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-                if (m_slotInstances.find(slotFunction) != m_slotInstances.end()) { // Slot found
+                if (m_slotInstances.find(mangledSlotFunction) != m_slotInstances.end()) { // Slot found
                     slotExists = true;
                 } else {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Requested slot '" << slotFunction
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Requested slot '" << mangledSlotFunction
                             << "' is currently not available locally on instance '" << m_instanceId << "'.";
                 }
             } else {// Remote slot requested
                 try {
-                    request(slotInstanceId, "slotHasSlot", slotFunction).timeout(1000).receive(slotExists);
+                    request(slotInstanceId, "slotHasSlot", mangledSlotFunction).timeout(1000).receive(slotExists);
                     if (!slotExists) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Requested slot '" << slotFunction
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Requested slot '" << mangledSlotFunction
                                 << "' is currently not available on remote instance '" << slotInstanceId << "'.";
                     }
                 } catch (const karabo::util::TimeoutException&) {
                     karabo::util::Exception::clearTrace();
                     slotExists = false;
                     KARABO_LOG_FRAMEWORK_WARN << "Remote instance '" << slotInstanceId << "' did not respond in time"
-                            << " whether it has a slot '" << slotFunction << "'.";
+                            << " whether it has a slot '" << mangledSlotFunction << "'.";
                 }
             }
             return slotExists;
         }
 
 
-        void SignalSlotable::slotHasSlot(const std::string& slotFunction) {
+        void SignalSlotable::slotHasSlot(const std::string& unmangledSlotFunction) {
+            //handle noded slots
+            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction 
+                                                      : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
+            
             bool result = false;
             {
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-                if (m_slotInstances.find(slotFunction) != m_slotInstances.end()) {
+                if (m_slotInstances.find(mangledSlotFunction) != m_slotInstances.end()) {
                     result = true;
                 }
             }
@@ -1440,25 +1448,37 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::hasSlot(const std::string& slotFunction) const {
+        bool SignalSlotable::hasSlot(const std::string& unmangledSlotFunction) const {
+            //handle noded slots
+            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction 
+                                                      : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
+            
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-            return m_slotInstances.find(slotFunction) != m_slotInstances.end();
+            return m_slotInstances.find(mangledSlotFunction) != m_slotInstances.end();
         }
 
 
-        SignalSlotable::SlotInstancePointer SignalSlotable::getSlot(const std::string& slotFunction) const {
+        SignalSlotable::SlotInstancePointer SignalSlotable::getSlot(const std::string& unmangledSlotFunction) const {
+            //handle noded slots
+            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction 
+                                                      : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
+            
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-            SlotInstances::const_iterator it = m_slotInstances.find(slotFunction);
+            SlotInstances::const_iterator it = m_slotInstances.find(mangledSlotFunction);
             if (it != m_slotInstances.end()) return it->second;
             return SlotInstancePointer();
         }
 
 
-        void SignalSlotable::removeSlot(const std::string& slotFunction) {
+        void SignalSlotable::removeSlot(const std::string& unmangledSlotFunction) {
+            //handle noded slots
+            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction 
+                                                      : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
+            
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-            m_slotInstances.erase(slotFunction);
+            m_slotInstances.erase(mangledSlotFunction);
             // Will clean any associated timers to this slot
-            m_receiveAsyncTimeoutHandlers.erase(slotFunction);
+            m_receiveAsyncTimeoutHandlers.erase(mangledSlotFunction);
         }
 
 
