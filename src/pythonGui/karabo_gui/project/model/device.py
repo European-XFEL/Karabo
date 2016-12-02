@@ -17,7 +17,6 @@ from karabo.middlelayer import Hash
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
-from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager
 from .bases import BaseProjectTreeItem
 
@@ -39,7 +38,6 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         delete_action.triggered.connect(partial(self._delete_device,
                                                 parent_project))
         save_action = QAction('Save', menu)
-        save_action.triggered.connect(partial(save_object, self.model))
         instantiate_action = QAction('Instantiate', menu)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      parent_project))
