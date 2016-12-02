@@ -26,7 +26,7 @@ namespace karabo {
         /**
          * @class Runner
          * @brief The Runner class starts device-servers in the distributed system
-         * 
+         *
          * The Runner class instantiates device-servers in the distributed system. It parses
          * command line arguments to deduce configuration.
          */
@@ -38,6 +38,16 @@ namespace karabo {
 
             KARABO_CONFIGURATION_BASE_CLASS;
 
+            /**
+             * Instantiates a device server taking command line arguments into account
+             *
+             * Users of this function must check the returned pointer for validity.
+             * The pointer may be empty in case the --help option is given.
+             *
+             * @param argc Number of commandline arguments
+             * @param argv String array of commandline options
+             * @return Pointer to device server instance (may be empty)
+             */
             static DeviceServer::Pointer instantiate(int argc, char** argv);
 
         private:
