@@ -172,29 +172,6 @@ namespace karathon {
     }
 
 
-    // karabo::xms::ImageDataElement& ImageDataElementWrap::setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement >& self,
-    //                                                                      const std::string& subKey,
-    //                                                                      const bp::object& defaultValue) {
-
-    //     boost::any anyValue;
-    //     karathon::Wrapper::toAny(defaultValue, anyValue);
-    //     return self->setDefaultValue(subKey, anyValue);
-    // }
-
-
-//    karabo::xms::Memory::MetaData* constructMemoryMetaData(const bp::object& src, const bp::object& ts) {
-//        if (!bp::extract<karabo::util::Timestamp>(ts).check()) {
-//            throw KARABO_PYTHON_EXCEPTION("Can't extract c++ object 'karabo::util::Timestamp' from python object");
-//        }
-//
-//        if (!bp::extract<std::string>(src).check()) {
-//            throw KARABO_PYTHON_EXCEPTION("Can't extract c++ object 'std::string' from python object");
-//        }
-//
-//        return new karabo::xms::Memory::MetaData(bp::extract<std::string>(src), bp::extract<karabo::util::Timestamp>(ts));
-//    }
-
-
     MemoryMetaData::MemoryMetaData(const bp::object& src, const bp::object& ts)
     : karabo::xms::Memory::MetaData(bp::extract<std::string>(src), bp::extract<karabo::util::Timestamp>(ts)) {
     }

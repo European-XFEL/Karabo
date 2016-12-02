@@ -1,0 +1,32 @@
+# To change this license header, choose License Headers in Project Properties.
+# To change this template file, choose Tools | Templates
+# and open the template in the editor.
+
+import unittest
+from karabo.bound import Epochstamp, Timestamp, Trainstamp, MemoryMetaData
+
+class  Metadata_TestCase(unittest.TestCase):
+
+    def test_metadata_general_functionality(self):
+        
+        es = Epochstamp(1356441936, 789333123456789123)
+        ts = Timestamp(es, Trainstamp())
+        meta = MemoryMetaData('abc', ts)
+        
+        self.assertTrue(meta.getSource() == 'abc')
+        self.assertTrue(meta.getTimestamp().toFormattedString() == ts.toFormattedString())
+        self.assertFalse(meta.getTimestamp() == ts)
+
+        meta.setSource('xyz')
+        self.assertFalse(meta.getSource() == 'abc')
+        self.assertTrue(meta.getSource() == 'xyz')
+
+        ts1 = Timestamp()
+        meta.setTimestamp(ts1)
+        self.assertFalse(meta.getTimestamp().toFormattedString() == ts.toFormattedString())
+        self.assertTrue(meta.getTimestamp().toFormattedString() == ts1.toFormattedString())
+
+
+if __name__ == '__main__':
+    unittest.main()
+
