@@ -32,13 +32,17 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
     for i in range(4):
         sub_uuid = '{}_{}'.format(uuid, counter)
         xml += ('<scene item_type="{atype}" uuid="{uuid}"'
+                ' alias = "{alias}"'
                 ' simple_name="{name}" />').format(uuid=sub_uuid,
                                                    atype='scene',
+                                                   alias=sub_uuid,
                                                    name=sub_uuid)
 
         scene_xml = ('<scene item_type="{atype}" uuid="{uuid}"'
+                     ' alias = "{alias}"'
                      ' simple_name="{name}" >foo</scene>'
-                     .format(uuid=sub_uuid, atype='scene', name=sub_uuid))
+                     .format(uuid=sub_uuid, atype='scene',
+                             alias=uuid, name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, scene_xml)
 
@@ -48,14 +52,17 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
     for i in range(4):
         sub_uuid = '{}_{}'.format(uuid, counter)
         xml += ('<device_server item_type="{atype}" uuid="{uuid}"'
+                ' alias = "{alias}"'
                 ' simple_name="{name}" />').format(uuid=sub_uuid,
                                                    atype='device_server',
+                                                   alias=uuid,
                                                    name=sub_uuid)
 
         ds_xml = ('<device_server item_type="{atype}" uuid="{uuid}"'
+                  ' alias = "{alias}"'
                   ' simple_name="{name}" >foo</device_server>'
                   .format(uuid=sub_uuid, atype='device_server',
-                          name=sub_uuid))
+                          alias=uuid, name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, ds_xml)
 
