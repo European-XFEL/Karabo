@@ -517,13 +517,11 @@ class ProjectDatabase(ContextDecorator):
             maybe_let = "let $item_types := ('{}')".format("','".join(item_types))
             maybe_where = 'where $c/*/@item_type = $item_types'
 
-        r_names = ('uuid', 'simple_name', 'item_type', 'alias')
+        r_names = ('uuid', 'simple_name', 'item_type')
         r_attrs = ''.join(['{{$c/*/@{name}}}'.format(name=n)
                            for n in r_names])
-        revs = '<v:revisions>{v:history($c)//*/v:revision}</v:revisions>'
 
-        return_stmnt = 'return <item>{attrs}{revs}</item>'.format(attrs=r_attrs,
-                                                                  revs=revs)
+        return_stmnt = 'return <item>{attrs}</item>'.format(attrs=r_attrs)
 
         query = query.format(maybe_let=maybe_let,
                              maybe_where=maybe_where,
@@ -532,11 +530,12 @@ class ProjectDatabase(ContextDecorator):
                              vnamespace=self.vers_namespace)
         try:
             res = self.dbhandle.query(query)
+            bpath = "{}/{}/".format(self.root, domain)
             return [{'uuid': r.attrib['uuid'],
-                     'revisions': self._revision_xml_to_dict(r),
+                     'revisions': self.get_versioning_info(bpath+r.attrib[
+                         'uuid'])['revisions'],
                      'item_type': r.attrib['item_type'],
-                     'simple_name': r.attrib['simple_name'],
-                     'alias': r.attrib['alias']}
+                     'simple_name': r.attrib['simple_name']}
                     for r in res.results]
         except ExistDBException:
             return []
