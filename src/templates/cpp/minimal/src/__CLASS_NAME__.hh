@@ -38,7 +38,7 @@ namespace karabo {
         __CLASS_NAME__(const karabo::util::Hash& config);
 
         /**
-         * The destructor will be called in case the device gets killed (i.e. the event-loop returns)
+         * The destructor will be called in case the device gets killed
          */
         virtual ~__CLASS_NAME__();
 
