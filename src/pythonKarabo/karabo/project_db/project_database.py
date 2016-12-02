@@ -517,7 +517,7 @@ class ProjectDatabase(ContextDecorator):
             maybe_let = "let $item_types := ('{}')".format("','".join(item_types))
             maybe_where = 'where $c/*/@item_type = $item_types'
 
-        r_names = ('uuid', 'simple_name', 'item_type')
+        r_names = ('uuid', 'simple_name', 'item_type', 'alias')
         r_attrs = ''.join(['{{$c/*/@{name}}}'.format(name=n)
                            for n in r_names])
         revs = '<v:revisions>{v:history($c)//*/v:revision}</v:revisions>'
@@ -535,7 +535,8 @@ class ProjectDatabase(ContextDecorator):
             return [{'uuid': r.attrib['uuid'],
                      'revisions': self._revision_xml_to_dict(r),
                      'item_type': r.attrib['item_type'],
-                     'simple_name': r.attrib['simple_name']}
+                     'simple_name': r.attrib['simple_name'],
+                     'alias': r.attrib['alias']}
                     for r in res.results]
         except ExistDBException:
             return []
