@@ -11,6 +11,7 @@ from datetime import datetime
 
 from PyQt4.QtCore import pyqtSignal, QObject
 
+from karabo.common.savable import clear_modified_flag
 from karabo.middlelayer_api.project import (
     BaseDevice, BaseDeviceGroup, Monitor, Project, ProjectConfiguration)
 from karabo.middlelayer import (
@@ -389,10 +390,17 @@ class GuiProject(Project, QObject):
             deviceGroup.addDevice(device)
         return deviceGroup
 
+    def _sceneModified(self, modified):
+        if modified:
+            self.setModified(True)
+
     def addScene(self, sceneModel):
         super(GuiProject, self).addScene(sceneModel)
         self.signalSceneAdded.emit(sceneModel)
         self.setModified(True)
+
+        # Watch the `modified` flag
+        sceneModel.on_trait_change(self._sceneModified, 'modified')
 
     def insertScene(self, index, scene):
         """
@@ -400,6 +408,9 @@ class GuiProject(Project, QObject):
         """
         super(GuiProject, self).insertScene(index, scene)
         self.signalSceneInserted.emit(index, scene)
+
+        # Watch the `modified` flag
+        scene.on_trait_change(self._sceneModified, 'modified')
 
     def addConfiguration(self, deviceId, configuration):
         super(GuiProject, self).addConfiguration(deviceId, configuration)
@@ -467,6 +478,9 @@ class GuiProject(Project, QObject):
             self.devices.pop(index)
             return index
         elif isinstance(object, SceneModel):
+            # Stop watching the `modified` flag
+            sceneModel.on_trait_change(self._sceneModified, 'modified',
+                                       remove=True)
             index = self.scenes.index(object)
             self.scenes.pop(index)
             return index
@@ -509,6 +523,9 @@ class GuiProject(Project, QObject):
         """
         super(GuiProject, self).zip(filename=filename)
         self.setModified(False)
+
+        for scene in self.scenes:
+            clear_modified_flag(scene)
 
     def _instantiateDevice(self, device):
         manager = get_manager()
