@@ -76,8 +76,7 @@ class MacroModelItem(BaseProjectTreeItem):
         dialog = ObjectDuplicateDialog(macro.simple_name)
         if dialog.exec() == QDialog.Accepted:
             code = write_macro(macro)
-            dupe_names = dialog.duplicate_names
-            for simple_name in dupe_names:
+            for simple_name in dialog.duplicate_names:
                 dupe_macro = read_macro(StringIO(code))
                 dupe_macro.simple_name = simple_name
                 project.macros.append(dupe_macro)

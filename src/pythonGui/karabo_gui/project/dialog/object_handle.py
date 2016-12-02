@@ -14,7 +14,10 @@ from karabo_gui.util import SignalBlocker
 
 class ObjectSaveDialog(QDialog):
     def __init__(self, alias=None, parent=None):
-        """ The dialog expects a ``model``
+        """ The dialog expects a ``alias`` string
+
+        :param alias: A string which could be used for saving a project object
+        :param parent: A parent object
         """
         super(ObjectSaveDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
@@ -31,7 +34,11 @@ class ObjectSaveDialog(QDialog):
 
 class ObjectDuplicateDialog(QDialog):
     def __init__(self, simple_name, parent=None):
-        """ The dialog expects a ``model``
+        """ The dialog expects a ``simple_name`` string
+
+        :param simple_name: A string which could be used for creating the new
+                            duplicate simple Name
+        :param parent: A parent object
         """
         super(ObjectDuplicateDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
@@ -48,9 +55,9 @@ class ObjectDuplicateDialog(QDialog):
         start_index = self.sbStart.value()
         end_index = self.sbEnd.value()
         # Update text
-        nb_dupes = end_index - start_index + 1
-        self.laText.setText(('You are about to create <b>{}</b> duplicate(s)'
-                             ).format(nb_dupes))
+        nb_dupe = end_index - start_index + 1
+        text = 'You are about to create <b>{}</b> duplicate(s)'.format(nb_dupe)
+        self.laText.setText(text)
 
     @pyqtSlot(int)
     def _indexChanged(self, value):

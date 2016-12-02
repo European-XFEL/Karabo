@@ -76,8 +76,7 @@ class SceneModelItem(BaseProjectTreeItem):
         dialog = ObjectDuplicateDialog(scene.simple_name)
         if dialog.exec() == QDialog.Accepted:
             xml = write_scene(scene)
-            dupe_names = dialog.duplicate_names
-            for simple_name in dupe_names:
+            for simple_name in dialog.duplicate_names:
                 dupe_scene = read_scene(StringIO(xml))
                 dupe_scene.simple_name = simple_name
                 project.scenes.append(dupe_scene)
