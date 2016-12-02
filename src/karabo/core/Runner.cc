@@ -19,7 +19,7 @@ namespace karabo {
 
     namespace core {
 
-
+        
         DeviceServer::Pointer Runner::instantiate(int argc, char** argv) {
 
             const std::string classId("DeviceServer");
