@@ -470,10 +470,10 @@ namespace karabo {
                     }
                     visibilities.push_back(tmp.get<Schema>("xsd").getDefaultValue<int>("visibility"));
                 }
-                KARABO_LOG_DEBUG << "Sending instance update as new device plugins are available: "
-                        << karabo::util::toString(deviceClasses);
-                this->updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities));
             }
+            KARABO_LOG_DEBUG << "Sending instance update as new device plugins are available: "
+                    << karabo::util::toString(deviceClasses);
+            this->updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities));
         }
 
 
