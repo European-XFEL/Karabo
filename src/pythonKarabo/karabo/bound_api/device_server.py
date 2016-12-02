@@ -460,7 +460,6 @@ def main(args=None):
         server = Runner(DeviceServer).instantiate(args)
         if not server:
             EventLoop.stop()
-            t.join()
     except:
         traceback.print_exc(file=sys.stderr)
         EventLoop.stop()
