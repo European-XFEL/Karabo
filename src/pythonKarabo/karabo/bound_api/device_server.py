@@ -17,7 +17,7 @@ import traceback
 
 from karathon import (
     VECTOR_STRING_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    PATH_ELEMENT, STRING_ELEMENT, LIST_ELEMENT,
+    STRING_ELEMENT, LIST_ELEMENT,
     AccessLevel, JmsConnection,
     Hash, Logger, Schema, SignalSlotable, saveToFile, EventLoop
 )
