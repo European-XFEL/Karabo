@@ -179,11 +179,15 @@ class TableModel(QAbstractTableModel):
             self.entries = []
             for it in data:
                 rev_list = it.get('revisions')
+                rev_data = []
+                for rev in rev_list:
+                    rev_data.append((rev.get('revision', ''),
+                                     rev.get('alias', '')))
                 entry = ProjectEntry(
                     simple_name=it.get('simple_name'),
                     uuid=it.get('uuid'),
                     author=rev_list[0].get('user') if rev_list else '',
-                    revisions=[r.get('revision', '') for r in rev_list],
+                    revisions=rev_data,
                     published=rev_list[0].get('date') if rev_list else '',
                     description='description',
                     documentation='documentation',
@@ -233,7 +237,7 @@ class ComboBoxDelegate(QStyledItemDelegate):
         self.currentCellIndex = None  # QPersistentModelIndex
 
     def selectedItem(self):
-        return self.cbSelection.itemText(self.current_selection)
+        return self.cbSelection.itemData(self.current_selection)
 
     def _isRelevantColumn(self, index):
         """ This methods checks whether the column of the given ``index``
@@ -255,18 +259,18 @@ class ComboBoxDelegate(QStyledItemDelegate):
 
         :param combo: The `QComboBox` which should be updated
         :param index: A `QModelIndex` of the view
-        :param revisions: A string list with all available revisions
+        :param revisions: A list with all available revisions and mapped aliases
+                          as tuple
         """
         column = index.column()
         if column == get_column_index(REVISIONS):
             revisions = index.data()
             if not revisions:
-                # XXX TODO: Sometimes project db sends empty list - to be fixed
                 return
             with SignalBlocker(combo):
                 combo.clear()
-                for rev in revisions:
-                    combo.addItem(str(rev))
+                for rev, alias in revisions:
+                    combo.addItem('{} <{}>'.format(alias, rev), rev)
 
     def createEditor(self, parent, option, index):
         """ This method is called whenever the delegate is in edit mode."""
