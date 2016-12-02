@@ -8,8 +8,8 @@ import numpy
 from karabo.middlelayer import unit
 from karabo.middlelayer_api.enums import Unit, MetricPrefix
 from karabo.middlelayer_api.basetypes import (
-    QuantityValue, StringValue, VectorCharValue, BoolValue, EnumValue,
-    TableValue, VectorStringValue, wrap)
+    NoneValue, QuantityValue, isSet, StringValue, VectorCharValue, BoolValue,
+    EnumValue, TableValue, VectorStringValue, wrap)
 from karabo.middlelayer_api.hash import Hash, Int32, Float
 from karabo.middlelayer_api.timestamp import Timestamp
 
@@ -99,6 +99,32 @@ class Tests(TestCase):
         a = {False: 2, True: 3}
         self.assertEqual(a[f], 2)
         self.assertEqual(a[t], 3)
+
+    def test_none(self):
+        n = NoneValue(descriptor=7, timestamp=22)
+        self.assertFalse(n)
+        self.assertEqual(n, None)
+        self.assertFalse(isSet(n))
+        self.assertEqual(n.descriptor, 7)
+        self.assertEqual(n.timestamp, 22)
+        self.assertEqual(str(n), "None")
+        self.assertEqual(repr(n), "None")
+
+        Hash("n", n).encode("Bin")
+
+        nn = NoneValue(n)
+        self.assertEqual(nn.timestamp, 22)
+
+        a = {n: 3}
+        self.assertEqual(a[None], 3)
+        a = {None: 2}
+        self.assertEqual(a[n], 2)
+
+    def test_isset(self):
+        self.assertTrue(isSet(3))
+        self.assertTrue(isSet(BoolValue(True)))
+        self.assertFalse(isSet(NoneValue()))
+        self.assertFalse(isSet(None))
 
     def test_enum(self):
         class E(Enum):

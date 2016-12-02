@@ -143,6 +143,8 @@ class Simple(object):
                              format(ret, self.key))
 
     def alarmCondition(self, data):
+        if not basetypes.isSet(data):
+            return AlarmCondition.NONE
         if self.alarmLow is not None and data < self.alarmLow:
             return AlarmCondition.ALARM_LOW
         if self.alarmHigh is not None and data > self.alarmHigh:
@@ -335,7 +337,12 @@ class Descriptor(object):
             return instance.__dict__[self.key]
 
     def __set__(self, instance, value):
-        instance.setValue(self, self.toKaraboValue(value))
+        if (self.assignment is Assignment.OPTIONAL and
+                not basetypes.isSet(value)):
+            value = basetypes.NoneValue(value, descriptor=self)
+        else:
+            value = self.toKaraboValue(value)
+        instance.setValue(self, value)
 
     def setter(self, instance, value):
         """This is called when the value is changed from the outside
@@ -370,8 +377,12 @@ class Descriptor(object):
         `value` still is the bare Hash value, as it came from the network.
         `initialize` is called with corresponding `KaraboValue`.
         """
-        ret = self.initialize(instance,
-                              self.toKaraboValue(value, strict=False))
+        if value is None:
+            value = basetypes.NoneValue(descriptor=self)
+        else:
+            value = self.toKaraboValue(value, strict=False)
+
+        ret = self.initialize(instance, value)
         if ret is None:
             return []
         else:
@@ -407,8 +418,6 @@ class Descriptor(object):
             if self.assignment is Assignment.MANDATORY:
                 raise KaraboError(
                     'assignment is mandatory for "{}"'.format(self.key))
-            if self.defaultValue is None:
-                return []
             return self._initialize(instance, self.defaultValue)
         return self._initialize(instance, value)
 
@@ -1095,29 +1104,30 @@ class VectorHash(Vector):
     basetype = HashType
     number = 31
 
-    def __init__(self, rowSchema=None, strict=True, **kwargs):
+    rowSchema = Attribute()
+
+    def __init__(self, rows=None, strict=True, **kwargs):
+        """A VectorHash is a table
+
+        :param row: The structure of each row. This is a `Configurable`
+        class.
+        """
         super(VectorHash, self).__init__(strict=strict, **kwargs)
 
-        if rowSchema is None:
-            # This (and the default for rowSchema) is a HACK to enable the Gui
-            # again to work with table elements. That was broken after
-            # introduction of this VectorHash.__init__ - which itself was added
-            # for partial support of the TableElement in middlelayer_api
-            # (partial means: getDevice("device_with_table_elem") does not
-            #  crash anymore).
-            # The problematic line in the Gui code was line 523 in schema.py:
-            #   ret = Type.fromname[attrs['valueType']]()
-            # which requires __init__ to work without arguments.
-            self.cls = None
+        if rows is not None:
+            self.rowSchema = rows.getClassSchema()
+            self.displayType = "Table"
+
+        if self.rowSchema is None:
             return
 
         self.dtype = np.dtype([(k, Type.fromname[a["valueType"]].numpy)
-                               for k, v, a in rowSchema.hash.iterall()])
+                               for k, v, a in self.rowSchema.hash.iterall()])
         self.coltypes = {k: Type.fromname[a["valueType"]](strict=False, **a)
-                         for k, v, a in rowSchema.hash.iterall()}
+                         for k, v, a in self.rowSchema.hash.iterall()}
         self.units = {k: (a.get("unitSymbol", None),
                           a.get("metricPrefixSymbol", MetricPrefix.NONE))
-                      for k, _, a in rowSchema.hash.iterall()}
+                      for k, _, a in self.rowSchema.hash.iterall()}
 
     @classmethod
     def read(cls, file):
@@ -1295,7 +1305,7 @@ def _gettype(data):
                 return _gettype(data[0]).vectortype
             else:
                 return VectorString
-        elif data is None:
+        elif not basetypes.isSet(data):
             return None_
         else:
             raise TypeError('unknown datatype {}'.format(data.__class__))
