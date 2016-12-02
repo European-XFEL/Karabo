@@ -1,9 +1,19 @@
 #!/usr/bin/env python
+from os.path import dirname
 from setuptools import setup, find_packages
 
 
+def _get_version_string():
+    try:
+        from karabo.packaging.versioning import get_package_version
+    except ImportError:
+        print("WARNING: Karabo framework not found! Version will be blank!")
+        return ''
+
+    return get_package_version(dirname(__file__))
+
 setup(name='__CLASS_NAME__',
-      version="1.0.0",
+      version=_get_version_string(),
       author='__EMAIL__',
       author_email='__EMAIL__',
       description='',
