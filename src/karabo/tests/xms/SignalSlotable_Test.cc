@@ -43,6 +43,8 @@ public:
         KARABO_SLOT(slotB, int, karabo::util::Hash);
 
         KARABO_SLOT(slotC, int);
+        
+        KARABO_SLOT(noded_slot, int);
 
     }
 
@@ -75,6 +77,14 @@ public:
 
 
     void slotC(int number) {
+        boost::mutex::scoped_lock lock(m_mutex);
+        // Assertions
+        m_messageCount++;
+        if (number != 1) m_allOk = false;
+        reply(number + number);
+    }
+    
+    void noded_slot(int number) {
         boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
@@ -215,9 +225,21 @@ void SignalSlotable_Test::testMethod() {
     demo->call(instanceId, "slotC", 1);
     // shortcut address:
     demo->call("", "slotC", 1);
+    
+    reply = 0;
+    try {
+        demo->request("", "noded.slot", 1).timeout(500).receive(reply);
+    } catch (karabo::util::TimeoutException&) {
+        CPPUNIT_ASSERT_MESSAGE(false, "Timeout request/receive noded.slot");
+    }
+    CPPUNIT_ASSERT_EQUAL(2, reply);
 
-    waitDemoOk(demo, 10);
-    CPPUNIT_ASSERT(demo->wasOk(10));
+    waitDemoOk(demo, 11);
+    CPPUNIT_ASSERT(demo->wasOk(11));
+    
+    
+
+    
 }
 
 
