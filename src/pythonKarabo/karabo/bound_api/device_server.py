@@ -73,7 +73,7 @@ class DeviceServer(object):
                     ,
             VECTOR_STRING_ELEMENT(expected).key("devices")
                     .displayedName("Devices")
-                    .description("The devices classes the server will manage")
+                    .description("The device classes the server will manage")
                     .assignmentOptional()
                     .defaultValue(PythonDevice.getRegisteredClasses())
                     .expertAccess()
