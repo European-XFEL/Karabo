@@ -67,7 +67,7 @@ test -n "$START" || { echo "ERROR START array does not exist"; exit 3;}
 	cat .config | fclean
         xterms=$?
 	if [ $xterms != "0" ]; then
-	    echo "WARN $xterms Karabo processes are running! To cold start use allStop"
+	    echo "WARN $xterms Karabo processes are running! To cold start use karabo-stop"
 	    exit 13; # !! must be 13
 	fi
     fi
