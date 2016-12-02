@@ -162,6 +162,9 @@ class ProjectDatabase(ContextDecorator):
                     revision: the revision number
                     date: the date this revision was added
                     user: the user that added this revision
+                    alias: an alias for the revision. If none is set the
+                           revision number is returned
+
 
         :raises: ExistDBException if user is not authorized for this
                  transaction or the versioning query to the database failed
@@ -185,6 +188,29 @@ class ProjectDatabase(ContextDecorator):
         try:
             rdict["document"] = rxml.find(self._add_vers_ns('document')).text
             rdict["revisions"] = self._revision_xml_to_dict(rxml)
+
+            # get alias information
+            revs = [str(r["revision"]) for r in rdict["revisions"]]
+            if len(revs) > 0:
+                revsstr = "({})".format(",".join(revs))
+                query = """
+                        import module namespace v="{ns}";
+                        let $revisions := {revs}
+                        for $rev in $revisions
+                        return  <entry rev="{{$rev}}">{{v:doc(doc("{path}"),
+                        $rev)/@alias}}</entry>
+                        """.format(ns=self.vers_namespace, revs=revsstr,
+                                   path=path)
+
+                result = self.dbhandle.query(query)
+                res = result.results
+                aliases = {}
+                for e in res:
+                    aliases[e.attrib['rev']] = e.attrib.get('alias',
+                        str(e.attrib['rev']))
+                for r in rdict["revisions"]:
+                    rstr = str(r['revision'])
+                    r["alias"] = aliases.get(rstr, rstr)
 
         except AttributeError:
             raise RuntimeError("Could not extract versioning information for"
@@ -272,8 +298,8 @@ class ProjectDatabase(ContextDecorator):
         # check if the xml we got passed is an etree or a string. In the latter
         # case convert it
         item_xml = self._make_str_if_needed(item_tree)
-
         success = False
+
         try:
             success = self.dbhandle.load(item_xml, path)
             # we need to save twice to have initial versioning infor
@@ -494,10 +520,8 @@ class ProjectDatabase(ContextDecorator):
         r_names = ('uuid', 'simple_name', 'item_type')
         r_attrs = ''.join(['{{$c/*/@{name}}}'.format(name=n)
                            for n in r_names])
-        revs = '<v:revisions>{v:history($c)//*/v:revision}</v:revisions>'
 
-        return_stmnt = 'return <item>{attrs}{revs}</item>'.format(attrs=r_attrs,
-                                                                  revs=revs)
+        return_stmnt = 'return <item>{attrs}</item>'.format(attrs=r_attrs)
 
         query = query.format(maybe_let=maybe_let,
                              maybe_where=maybe_where,
@@ -506,13 +530,17 @@ class ProjectDatabase(ContextDecorator):
                              vnamespace=self.vers_namespace)
         try:
             res = self.dbhandle.query(query)
+            bpath = "{}/{}/".format(self.root, domain)
             return [{'uuid': r.attrib['uuid'],
-                     'revisions': self._revision_xml_to_dict(r),
+                     'revisions': self._get_rev_info(bpath+r.attrib['uuid']),
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name']}
                     for r in res.results]
         except ExistDBException:
             return []
+
+    def _get_rev_info(self, path):
+        return self.get_versioning_info(path)['revisions']
 
     def list_domains(self):
         """
