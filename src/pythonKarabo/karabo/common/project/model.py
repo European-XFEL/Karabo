@@ -19,5 +19,6 @@ class ProjectModel(BaseProjectObjectModel):
     scenes = List(Instance(SceneModel))
     servers = List(Instance(DeviceServerModel))
 
+
 # This is outside the class because `ProjectModel` isn't available until here
 ProjectModel.add_class_trait('subprojects', List(Instance(ProjectModel)))

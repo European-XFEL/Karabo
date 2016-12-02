@@ -149,8 +149,20 @@ class KaraboValue(object):
             yield y
 
 
+class _Singleton(KaraboValue):
+    """Base class for True, False, None"""
+    def __bool__(self):
+        return bool(self.value)
+
+    def __repr__(self):
+        return repr(self.value)
+
+    def __hash__(self):
+        return hash(self.value)
+
+
 @wrap_methods
-class BoolValue(KaraboValue):
+class BoolValue(_Singleton):
     """This contains bools.
 
     Objects of this class behave effectively like normal bools, just
@@ -166,14 +178,25 @@ class BoolValue(KaraboValue):
     def __eq__(self, other):
         return self.value == bool(other)
 
-    def __bool__(self):
-        return self.value
 
-    def __repr__(self):
-        return repr(self.value)
+class NoneValue(_Singleton):
+    """This represents a value which is not set.
 
-    def __hash__(self):
-        return hash(self.value)
+    This is mostly the Karabo equivalent of `None`.
+    """
+    value = None
+
+    def __init__(self, value=None, **kwargs):
+        assert value is None or isinstance(value, NoneValue)
+        super(NoneValue, self).__init__(value, **kwargs)
+
+    def __eq__(self, other):
+        return other is None or isinstance(other, NoneValue)
+
+
+def isSet(value):
+    """Test whether *value* actually has a value"""
+    return not (value is None or isinstance(value, NoneValue))
 
 
 @wrap_methods
@@ -236,6 +259,8 @@ class StringlikeValue(KaraboValue):
 
 # if you override __eq__, __hash__ gets set to None to avoid incorrect
 # accidental inheritance. This fixes that.
+del BoolValue.__hash__
+del NoneValue.__hash__
 del StringlikeValue.__hash__
 
 
