@@ -50,3 +50,9 @@ class BaseProjectObjectModel(BaseSavableModel):
             # Reset to a safe value
             self.uuid = old
             raise
+
+    def reset_uuid_and_version(self):
+        """Reset the ``uuid`` and ``revision``
+        """
+        self.revision = EXISTDB_INITIAL_VERSION
+        self.uuid = str(uuid.uuid4())
