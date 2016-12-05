@@ -799,3 +799,27 @@ void Schema_Test::testSubSchema() {
     }
 }
 
+void Schema_Test::testDaqDataType(){
+    Schema schema("test");
+    GraphicsRenderer1::expectedParameters(schema);
+    {
+        schema.setDaqDataType("triangle", DaqDataType::PULSE);
+        CPPUNIT_ASSERT(schema.getDaqDataType("triangle") == DaqDataType::PULSE);
+    }
+    {
+        schema.setDaqDataType("triangle", DaqDataType::TRAIN);
+        CPPUNIT_ASSERT(schema.getDaqDataType("triangle") == DaqDataType::TRAIN);
+    }
+    {
+        schema.setDaqDataType("triangle", DaqDataType::PULSEMASTER);
+        CPPUNIT_ASSERT(schema.getDaqDataType("triangle") == DaqDataType::PULSEMASTER);
+    }
+    {
+        schema.setDaqDataType("triangle", DaqDataType::TRAINMASTER);
+        CPPUNIT_ASSERT(schema.getDaqDataType("triangle") == DaqDataType::TRAINMASTER);
+    }
+    {
+        CPPUNIT_ASSERT_THROW(schema.setDaqDataType("antiAlias", DaqDataType::TRAINMASTER), karabo::util::ParameterException);
+    }
+}
+
