@@ -579,6 +579,8 @@ namespace karabo {
 
             void onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
+            void onP2pMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+
             void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             void processEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
