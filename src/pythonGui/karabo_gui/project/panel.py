@@ -113,4 +113,6 @@ def _project_save_handler(item_model):
 
     :param item_model: The `ProjectItemModel` of the `ProjectView`
     """
-    save_object(item_model.traits_data_model)
+    traits_model = item_model.traits_data_model
+    if traits_model is not None:
+        save_object(traits_model)
