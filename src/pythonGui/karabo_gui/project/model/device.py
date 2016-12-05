@@ -14,6 +14,7 @@ from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object
 )
+from karabo.middlelayer import Hash
 from karabo.middlelayer_api.newproject.io import (read_project_model,
                                                   write_project_model)
 from karabo_gui import icons
@@ -38,7 +39,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(partial(self._edit_device,
                                               parent_project))
-        config_menu = self._create_sub_menu(menu)
+        config_menu = self._create_sub_menu(menu, parent_project)
         dupe_action = QAction('Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_device,
                                               parent_project))
@@ -87,11 +88,13 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         uuid, revision = device.active_config_ref
         return device.select_config(uuid, revision)
 
-    def _create_sub_menu(self, parent_menu):
+    def _create_sub_menu(self, parent_menu, parent_project):
         """ Create sub menu for parent menu and return it
         """
         config_menu = QMenu('Configuration', parent_menu)
-        add_action = QAction('Add configuration', config_menu)
+        add_action = QAction('Add device configuration', config_menu)
+        add_action.triggered.connect(partial(self._add_configuration,
+                                             parent_project))
         config_menu.addAction(add_action)
         active_uuid, active_rev = self.model.active_config_ref
         for dev_conf in self.model.configs:
@@ -135,7 +138,25 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
                 active_config_ref = (dialog.active_uuid,
                                      dialog.active_revision)
                 device.active_config_ref = active_config_ref
+                dev_conf.class_id = dialog.class_id
                 dev_conf.description = dialog.description
+
+    def _add_configuration(self, project):
+        device = self.model
+        server_model = find_parent_object(device, project,
+                                          DeviceServerModel)
+        dialog = DeviceHandleDialog(server_id=server_model.server_id,
+                                    model=device, add_config=True)
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            config_model = DeviceConfigurationModel(
+                class_id=dialog.class_id, configuration=Hash(),
+                alias=dialog.alias, description=dialog.description,
+                initialized=True
+            )
+            active_config_ref = (config_model.uuid, config_model.revision)
+            device.configs.append(config_model)
+            device.active_config_ref = active_config_ref
 
     def _duplicate_device(self, project):
         """ Duplicate the active device configuration of the model
