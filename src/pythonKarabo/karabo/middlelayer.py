@@ -18,6 +18,7 @@ from .middlelayer_api.enums import (
     AccessLevel, AccessMode, Assignment, EncodingType, MetricPrefix, NodeType,
     Unit
 )
+from .middlelayer_api.eventloop import KaraboFuture
 from .middlelayer_api.basetypes import (
     BoolValue, EnumValue, isSet, KaraboValue, NoneValue, QuantityValue,
     StringValue, TableValue, unit_registry as unit, VectorStringValue,
