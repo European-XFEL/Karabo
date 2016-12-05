@@ -58,7 +58,7 @@ class TestDevice(PythonDevice):
             SLOT_ELEMENT(expected).key("backfire")
             .commit(),
 
-            SLOT_ELEMENT(expected).key("inject")
+            SLOT_ELEMENT(expected).key("injectSchema")
             .commit(),
 
             TABLE_ELEMENT(expected).key("table")
@@ -74,7 +74,7 @@ class TestDevice(PythonDevice):
         self.registerInitialFunction(self.initialize)
         self.registerSlot(self.setA)
         self.registerSlot(self.backfire)
-        self.registerSlot(self.inject)
+        self.registerSlot(self.injectSchema)
 
     def initialize(self):
         pass
@@ -90,7 +90,7 @@ class TestDevice(PythonDevice):
         remote.set("middlelayerDevice", "value", 99)
         remote.execute("middlelayerDevice", "slot")
 
-    def inject(self):
+    def injectSchema(self):
         schema = Schema()
 
         (

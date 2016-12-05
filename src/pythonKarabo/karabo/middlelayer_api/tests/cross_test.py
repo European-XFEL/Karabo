@@ -129,7 +129,7 @@ class Tests(DeviceTest):
             self.assertEqual(proxy.table[1]["d"], 7 * unit.meter)
             self.assertEqual(proxy.table[0]["s"], "african")
 
-            yield from proxy.inject()
+            yield from proxy.injectSchema()
             yield from sleep(0.1)
             self.assertEqual(proxy.word, "Hello")
             self.assertEqual(proxy.word.descriptor.description, "The word")
