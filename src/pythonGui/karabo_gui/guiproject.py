@@ -518,6 +518,10 @@ class GuiProject(Project, QObject):
         super(GuiProject, self).unzip(factories=objFactories)
         self.setModified(False)
 
+        # Scenes tend to start out in the modified state. Clear that.
+        for scene in self.scenes:
+            clear_modified_flag(scene)
+
     def zip(self, filename=None):
         """ This method saves this project as a zip file.
         """
