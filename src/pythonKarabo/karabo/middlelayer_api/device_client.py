@@ -80,10 +80,12 @@ class ProxySlot(Slot):
 
         @synchronize
         def method(self):
-            yield from self._update()
-            self._device._use()
-            return (yield from self._raise_on_death(
-                self._device.call(self._deviceId, key)))
+            @asyncio.coroutine
+            def inner():
+                yield from self._update()
+                self._device._use()
+                return (yield from self._device.call(self._deviceId, key))
+            return (yield from self._raise_on_death(inner()))
         method.__doc__ = self.description
         return method.__get__(instance, owner)
 
