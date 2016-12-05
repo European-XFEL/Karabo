@@ -189,14 +189,13 @@ class Manager(QObject):
     def onServerConnectionChanged(self, isConnected):
         """If the server connection is changed, the model needs an update.
         """
-        if isConnected:
-            return
-
-        # Broadcast event to all panels which needs a reset
+        # Broadcast event to all panels which need a reset
         broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.NetworkDisconnected, {}))
-        # Reset manager settings
-        self.reset()
+            KaraboEventSender.NetworkConnectStatus, {'status': isConnected}))
+
+        if not isConnected:
+            # Reset manager settings
+            self.reset()
 
     def onNavigationTreeModelSelectionChanged(self, selected, deselect):
         """This slot is called whenever something of the navigation panel is
