@@ -3,7 +3,7 @@ from karabo_gui.widget import VacuumWidget
 
 
 class LampSmallWidget(VacuumWidget):
-    alias = "Generic LampSmall"
+    alias = "Generic Lamp Small"
     statePixmapName = {
         State.CHANGING: 'lampsmall-changing',
         State.ACTIVE: 'lampsmall-active',
