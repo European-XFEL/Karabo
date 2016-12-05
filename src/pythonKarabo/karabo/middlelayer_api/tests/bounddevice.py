@@ -58,6 +58,9 @@ class TestDevice(PythonDevice):
             SLOT_ELEMENT(expected).key("backfire")
             .commit(),
 
+            SLOT_ELEMENT(expected).key("inject")
+            .commit(),
+
             TABLE_ELEMENT(expected).key("table")
             .displayedName("bla")
             .setNodeSchema(tableSchema)
@@ -71,6 +74,7 @@ class TestDevice(PythonDevice):
         self.registerInitialFunction(self.initialize)
         self.registerSlot(self.setA)
         self.registerSlot(self.backfire)
+        self.registerSlot(self.inject)
 
     def initialize(self):
         pass
@@ -85,6 +89,19 @@ class TestDevice(PythonDevice):
         remote = self.remote()
         remote.set("middlelayerDevice", "value", 99)
         remote.execute("middlelayerDevice", "slot")
+
+    def inject(self):
+        schema = Schema()
+
+        (
+            STRING_ELEMENT(schema).key("word")
+            .displayedName("Word")
+            .description("The word")
+            .assignmentOptional().defaultValue("Hello")
+            .reconfigurable()
+            .commit()
+        )
+        self.updateSchema(schema)
 
 
 if __name__ == "__main__":
