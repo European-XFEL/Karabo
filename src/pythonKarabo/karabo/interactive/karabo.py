@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import argparse
 import subprocess
 import sys
@@ -10,9 +9,14 @@ DEV_NULL = open(os.devnull, 'w')
 
 
 def run_local():
-    abspath = os.path.abspath(__file__)
-    dname = os.path.dirname(abspath)
-    os.chdir("{}/..".format(dname))
+    try:
+        karabo_dir = os.environ['KARABO']
+        os.chdir(karabo_dir)
+    except KeyError:
+        print('$KARABO is not defined. Make sure you have sourced the '
+              'activate script for the Karabo Framework which you would '
+              'like to use.')
+        sys.exit(1)
 
 
 def run_cmd(cmd):
@@ -252,6 +256,10 @@ def undevelop(args):
     uninstall(args)
 
 
-if __name__ == "__main__":
+def main():
     run_local()
     parse_commandline()
+
+
+if __name__ == "__main__":
+    main()
