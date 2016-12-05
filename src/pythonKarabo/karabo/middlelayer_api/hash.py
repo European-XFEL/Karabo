@@ -45,6 +45,7 @@ class Attribute(object):
 
 
 class Enumable(object):
+    """The base class for all descriptors which can be an enumeration"""
     known_classes = {"State": State,
                      "AlarmCondition": AlarmCondition}
 
@@ -607,6 +608,7 @@ class Type(Descriptor, Registry):
 
 
 class Vector(Type):
+    """This is the base class for all vectors of data"""
     @classmethod
     def register(cls, name, dict):
         super(Vector, cls).register(name, dict)
@@ -626,6 +628,8 @@ class Vector(Type):
 
 
 class NumpyVector(Vector):
+    """The base class for all vectors which can be represented as numpy
+    vectors"""
     vstrs = { }
     numpy = np.object_
 
@@ -1103,17 +1107,17 @@ class HashType(Type):
 
 
 class VectorHash(Vector):
+    """A VectorHash is a table
+
+    :param row: The structure of each row. This is a :class:`Configurable`
+    class.
+    """
     basetype = HashType
     number = 31
 
     rowSchema = Attribute()
 
     def __init__(self, rows=None, strict=True, **kwargs):
-        """A VectorHash is a table
-
-        :param row: The structure of each row. This is a `Configurable`
-        class.
-        """
         super(VectorHash, self).__init__(strict=strict, **kwargs)
 
         if rows is not None:
