@@ -45,7 +45,7 @@ class ProjectPanel(Dockable, QWidget):
         """
         if isinstance(event, KaraboBroadcastEvent):
             if event.sender is KaraboEventSender.NetworkConnectStatus:
-                if not event.data.get['status']:
+                if not event.data['status']:
                     # Don't show projects when there's no server connection
                     self.closeAllProjects()
             return False
