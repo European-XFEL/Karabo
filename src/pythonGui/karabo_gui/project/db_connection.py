@@ -33,7 +33,7 @@ class ProjectDatabaseConnection(QObject):
         self._waiting_for_write = {}
 
         # XXX: Temporary
-        self.project_manager = 'Karabo_ProjectServerDB_ProjectManager_1'
+        self.project_manager = 'KaraboProjectDBServer'
 
         # XXX: This is really asinine right now!
         self._have_logged_in = False

@@ -197,7 +197,7 @@ class DeviceServer(object):
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["visibility"] = self.visibility
-         # Instantiate and start SignalSlotable object
+        # Instantiate and start SignalSlotable object
         self.ss = SignalSlotable(self.serverid, "JmsConnection",
                                  self.connectionParameters, 10, info)
         self.ss.start()
@@ -334,7 +334,7 @@ class DeviceServer(object):
                 self.seqnum += 1
                 filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
             saveToFile(config, filename, Hash("format.Xml.indentation", 2))
-            params = [self.pluginLoader.pluginDirectory, modname, classid, filename]
+            params = [modname, classid, filename]
 
             launcher = Launcher(params)
             launcher.start()
@@ -354,11 +354,14 @@ class DeviceServer(object):
                 # if in autostart we start this device
                 if self.autoStart is not None:
                     for entry in self.autoStart:
-                        if entry.get("PythonDevice.classId") == classid:
-                            config = entry.get("PythonDevice")
-                            self.instantiateDevice(Hash("classId", classid,
-                                                        "configuration",
-                                                         config))
+                        entry_class_id = entry.getKeys()[0]
+                        if entry_class_id == classid:
+                            config = entry.get(entry_class_id)
+                            hsh = Hash("classId", classid,
+                                       "configuration", config)
+                            if 'deviceId' in config:
+                                hsh.set('deviceId', config.get('deviceId'))
+                            self.instantiateDevice(hsh)
             visibilities.append(d['xsd'].getDefaultValue("visibility"))
         self.log.DEBUG("Sending instance update as new device plugins are available: {}".format(deviceClasses))
         self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities))

@@ -1439,7 +1439,7 @@ def launchPythonDevice():
     from .plugin_loader import PluginLoader
 
     # NOTE: The first argument is '-c'
-    _, plugindir, modname, classid, xmlfile = tuple(sys.argv)
+    _, modname, classid, xmlfile = tuple(sys.argv)
     config = PythonDevice.loadConfiguration(xmlfile)
     # If log filename not specified, make use of device name to avoid
     # that different processes write to the same file.
@@ -1452,9 +1452,7 @@ def launchPythonDevice():
         defaultLog = "device-" + deviceId.replace(os.path.sep, "_") + ".log"
         config["Logger.file.filename"] = defaultLog
     loader = PluginLoader.create(
-        "PythonPluginLoader",
-        Hash("pluginNamespace", "karabo.bound_device",
-             "pluginDirectory", plugindir)
+        "PythonPluginLoader", Hash("pluginNamespace", "karabo.bound_device")
     )
     loader.update()
 
