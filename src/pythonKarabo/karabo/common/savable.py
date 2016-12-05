@@ -11,6 +11,31 @@ _CONTAINER_EVENT_TYPES = (TraitDictEvent, TraitListEvent)
 _CONTAINER_TYPES = (Dict, List)
 
 
+def clear_modified_flag(model):
+    """Set the ``modified`` trait to False in an object tree.
+
+    This recurses into all child models and sets the modified flag to False
+    whenever it is found.
+
+    :param model: A BaseSavableModel (or subclass) instance
+    """
+    if isinstance(model, BaseSavableModel):
+        model.modified = False
+
+        for name in model.copyable_trait_names():
+            attribute = getattr(model, name)
+            if isinstance(attribute, BaseSavableModel):
+                attribute.modified = False
+            elif isinstance(attribute, list):
+                for child in attribute:
+                    if isinstance(child, BaseSavableModel):
+                        clear_modified_flag(child)
+            elif isinstance(attribute, dict):
+                for child in attribute.values():
+                    if isinstance(child, BaseSavableModel):
+                        clear_modified_flag(child)
+
+
 class BaseSavableModel(HasStrictTraits):
     """ A base class for all things which can be serialized.
 
