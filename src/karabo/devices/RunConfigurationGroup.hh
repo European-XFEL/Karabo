@@ -64,6 +64,7 @@ namespace karabo {
             void fillTable(const std::vector<karabo::util::Hash>& current,
                            std::vector<karabo::util::Hash>& input,
                            std::vector<karabo::util::Hash>& table);
+            
 
         };
     }

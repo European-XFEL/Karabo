@@ -139,15 +139,24 @@ namespace karabo {
 
             initAvailableGroups();
 
-            m_deviceIds = getConfigurationGroupDeviceIds();
-            m_groupIds = getConfigurationGroupIds();
-            Schema schema = getFullSchema();
-            schema.setOptions("currentGroup", toString(m_groupIds), ",");
-            this->updateSchema(schema, true);
+            updateCurrentGroupSchema();
 
             printConfig();
 
             updateState(State::NORMAL);
+        }
+        
+        void RunConfigurator::updateCurrentGroupSchema() {
+            m_deviceIds = getConfigurationGroupDeviceIds();
+            m_groupIds = getConfigurationGroupIds();
+            const std::string currentGroup = get<std::string>("currentGroup");
+            Schema schema = getFullSchema();
+            schema.setOptions("currentGroup", toString(m_groupIds), ",");
+            this->updateSchema(schema, true);
+            if(std::find(m_groupIds.begin(), m_groupIds.end(), currentGroup) != m_groupIds.end()){
+                set("currentGroup", currentGroup);
+            }
+
         }
 
 
@@ -158,7 +167,7 @@ namespace karabo {
                 const string& deviceId = it->first;
                 const Hash& group = it->second;
                 KARABO_LOG_FRAMEWORK_DEBUG << "deviceId:" << deviceId << ", groupId:" << group.get<string>("id")
-                        << ", desc:" << group.get<string>("description") << ", use:" << group.get<bool>("use");
+                        << ", desc:" << (group.has("group") ? group.get<string>("description") : "" )<< ", use:" << group.get<bool>("use");
                 KARABO_LOG_FRAMEWORK_DEBUG << "\tExpert";
                 const vector<Hash>& expert = group.get<vector < Hash >> ("expert");
                 for (vector<Hash>::const_iterator ii = expert.begin(); ii != expert.end(); ++ii) {
@@ -319,7 +328,8 @@ namespace karabo {
                     updateCurrentGroup();
                 }
             }
-
+            
+            updateCurrentGroupSchema();
             set("availableGroups", g);
         }
 
@@ -328,6 +338,7 @@ namespace karabo {
             setNoValidate("currentGroup", m_configurations[m_cursor].get<string>("id"));
             updateCurrentSources();
             updateCompiledSourceList();
+            
         }
 
 
@@ -354,48 +365,71 @@ namespace karabo {
 
 
         void RunConfigurator::updateCompiledSourceList() {
-            Hash& g = m_configurations[m_cursor];
-            bool use = g.get<bool>("use");
+            std::map<std::string, Hash> sources;
+            for(auto it = m_configurations.cbegin(); it != m_configurations.cend(); ++it) {
+                const Hash& g = it->second;
+                bool use = g.get<bool>("use");
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "updateCompiledSourceList()  cursor : " << m_cursor << ", use : " << use;
+                KARABO_LOG_FRAMEWORK_DEBUG << "updateCompiledSourceList()  cursor : " << it->first << ", use : " << use;
 
-            vector<Hash> sources;
+                if(use){
+                    
+                    const vector<Hash>& expert = g.get<vector<Hash> >("expert");
+                    for (size_t i = 0; i < expert.size(); i++) {
+                        const string& src = expert[i].get<string>("source");
+                        const bool pipeline = (expert[i].hasAttribute("source", "pipeline") ? expert[i].getAttribute<bool>("source", "pipeline"): false);
+                        const string& type = expert[i].get<string>("type");
+                        const string& behavior = expert[i].get<string>("behavior");
+                        const bool monitored = expert[i].get<bool>("monitored");
+                        Hash h("source", src
+                               , "type", type
+                               , "behavior", behavior
+                               , "monitored", monitored
+                               , "use", use);
+                        h.setAttribute("source", "pipeline", pipeline);
+                        auto exIt = sources.find(src);
+                        if(exIt != sources.end()){
+                            const std::string& exbehavior = exIt->second.get<std::string>("behavior");
+                            bool exmonitored = exIt->second.get<bool>("monitored");
+                            if (exmonitored) h.set("monitored", true);
+                            if (behavior == "init" || (behavior == "read-only" && exbehavior != "init")) {
+                                h.set("behavior", exbehavior);
+                            }
+                        }
+                        sources[src] = std::move(h);
+                    }
 
-            vector<Hash>& expert = g.get<vector<Hash> >("expert");
-            for (size_t i = 0; i < expert.size(); i++) {
-                const string& src = expert[i].get<string>("source");
-                const bool pipeline = expert[i].getAttribute<bool>("source", "pipeline");
-                const string& type = expert[i].get<string>("type");
-                const string& behavior = expert[i].get<string>("behavior");
-                const bool monitored = expert[i].get<bool>("monitored");
-                Hash h("source", src
-                       , "type", type
-                       , "behavior", behavior
-                       , "monitored", monitored
-                       , "use", use);
-                h.setAttribute("source", "pipeline", pipeline);
-                expert[i].set("use", use);
-                sources.push_back(h);
+                    const vector<Hash>& user = g.get<vector<Hash> >("user");
+                    for (size_t ii = 0; ii < user.size(); ii++) {
+                        const string& src = user[ii].get<string>("source");
+                        const bool pipeline = (user[ii].hasAttribute("source", "pipeline") ? user[ii].getAttribute<bool>("source", "pipeline"): false);
+                        const string& type = user[ii].get<string>("type");
+                        const string& behavior = user[ii].get<string>("behavior");
+                        const bool monitored = user[ii].get<bool>("monitored");
+                        Hash h("source", src
+                               , "type", type
+                               , "behavior", behavior
+                               , "monitored", monitored
+                               , "use", use);
+                        h.setAttribute("source", "pipeline", pipeline);
+                        auto exIt = sources.find(src);
+                        if(exIt != sources.end()){
+                            const std::string& exbehavior = exIt->second.get<std::string>("behavior");
+                            bool exmonitored = exIt->second.get<bool>("monitored");
+                            if (exmonitored) h.set("monitored", true);
+                            if (behavior == "init" || (behavior == "read-only" && exbehavior != "init")) {
+                                h.set("behavior", exbehavior);
+                            }
+                        }
+                        sources[src] = std::move(h);
+                    }
+                }
             }
-
-            vector<Hash>& user = g.get<vector<Hash> >("user");
-            for (size_t ii = 0; ii < user.size(); ii++) {
-                const string& src = user[ii].get<string>("source");
-                const bool pipeline = user[ii].getAttribute<bool>("source", "pipeline");
-                const string& type = user[ii].get<string>("type");
-                const string& behavior = user[ii].get<string>("behavior");
-                const bool monitored = user[ii].get<bool>("monitored");
-                Hash h("source", src
-                       , "type", type
-                       , "behavior", behavior
-                       , "monitored", monitored
-                       , "use", use);
-                h.setAttribute("source", "pipeline", pipeline);
-                user[ii].set("use", use);
-                sources.push_back(h);
+            std::vector<Hash> sourceVec;
+            for(auto it = sources.cbegin(); it != sources.cend(); ++it){
+                sourceVec.push_back(it->second);
             }
-
-            set("sources", sources);
+            set("sources", sourceVec);
         }
 
 
@@ -518,11 +552,12 @@ namespace karabo {
 
         void RunConfigurator::preReconfigure(karabo::util::Hash & incomingReconfiguration) {
             KARABO_LOG_FRAMEWORK_DEBUG << "============ preReconfigure  ===============";
-            Schema schema = getFullSchema();
+            const Schema schema = getFullSchema();
             if (incomingReconfiguration.has("currentGroup")) {
+                const std::string& currentGroup = incomingReconfiguration.get<string>("currentGroup");
                 string oldCursor = m_cursor;
                 KARABO_LOG_FRAMEWORK_DEBUG << "============ preReconfigure cursor WAS ==> " << m_cursor;
-                m_cursor = getDeviceIdByGroupId(incomingReconfiguration.get<string>("currentGroup"));
+                m_cursor = getDeviceIdByGroupId(currentGroup);
                 KARABO_LOG_FRAMEWORK_DEBUG << "============ preReconfigure cursor NOW ==> " << m_cursor;
                 if (oldCursor != m_cursor) {
                     // Clear old stuff
@@ -558,10 +593,6 @@ namespace karabo {
             const vector<Hash>& groups = get<vector < Hash >> ("availableGroups");
             for (const auto& h : groups) KARABO_LOG_FRAMEWORK_DEBUG << "...\n" << h;
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "************  sourcesOnly    ***************\n";
-            const vector<Hash>& sOnly = get<vector < Hash >> ("sourcesOnly");
-            for (const auto& h : sOnly) KARABO_LOG_FRAMEWORK_DEBUG << "...\n" << h;
-
             KARABO_LOG_FRAMEWORK_DEBUG << "************ sources         ***************\n";
             const vector<Hash>& sources = get<vector < Hash >> ("sources");
             for (const auto& h : sources) KARABO_LOG_FRAMEWORK_DEBUG << "...\n" << h;
@@ -579,14 +610,14 @@ namespace karabo {
                 const string& deviceId = getDeviceIdByGroupId(groupId);
                 const bool useFlag = hash.get<bool>("use");
                 MapGroup::iterator ii = m_configurations.find(deviceId);
-                ii->second.set("use", useFlag);
                 if (ii != m_configurations.end()) {
-                    vector<Hash>& expert = ii->second.get<vector < Hash >> ("expert");
+                    ii->second.set("use", useFlag);
+                    vector<Hash> expert = (ii->second.has("expert") ? ii->second.get<vector < Hash >> ("expert") : vector < Hash >());
                     for (vector<Hash>::iterator jj = expert.begin(); jj != expert.end(); ++jj) {
                         jj->set("use", useFlag);
                     }
 
-                    vector<Hash>& user = ii->second.get<vector < Hash >> ("user");
+                    vector<Hash> user = (ii->second.has("user") ? ii->second.get<vector < Hash >> ("user") : vector < Hash >());
                     for (vector<Hash>::iterator jj = user.begin(); jj != user.end(); ++jj) {
                         jj->set("use", useFlag);
                     }
