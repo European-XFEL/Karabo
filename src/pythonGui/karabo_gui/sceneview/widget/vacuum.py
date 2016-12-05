@@ -3,7 +3,7 @@ from .base import BaseWidgetContainer
 
 _VACUUM_CLASS_NAMES = (
     'AgilentIonWidget', 'CryoCoolerWidget', 'HydraulicValveWidget',
-    'LampWidget', 'LampSmallWidget''MaxiGaugeWidget', 'MembranePumpWidget',
+    'LampWidget', 'LampSmallWidget', 'MaxiGaugeWidget', 'MembranePumpWidget',
     'MotorWidget', 'PressureGaugeWidget', 'PressureSwitchWidget',
     'RightAngleValveWidget', 'ShutOffValveWidget', 'TemperatureProbeWidget',
     'TurboPumpWidget', 'ValveWidget'
