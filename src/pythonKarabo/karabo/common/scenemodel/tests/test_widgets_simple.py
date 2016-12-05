@@ -6,8 +6,9 @@ from ..api import (BitfieldModel, CheckBoxModel, ChoiceElementModel,
                    EditableListElementModel, EditableListModel,
                    EditableSpinBoxModel, FileInModel, FileOutModel,
                    HexadecimalModel, IntLineEditModel, KnobModel, LabelModel,
-                   LineEditModel, SceneLinkModel, SceneWriterException,
-                   SliderModel, WorkflowItemModel, XYPlotModel)
+                   LineEditModel, PopUpModel, SceneLinkModel,
+                   SceneWriterException, SliderModel, WorkflowItemModel,
+                   XYPlotModel)
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
 
@@ -52,7 +53,7 @@ def test_all_empty_widgets():
         BitfieldModel, DisplayCommandModel, DisplayLabelModel,
         DisplayPlotModel, DoubleLineEditModel, EditableListModel,
         EditableListElementModel, EditableSpinBoxModel, HexadecimalModel,
-        IntLineEditModel, KnobModel, SliderModel, XYPlotModel
+        IntLineEditModel, KnobModel, SliderModel, XYPlotModel, PopUpModel
     )
     for klass in model_classes:
         yield _check_empty_widget, klass

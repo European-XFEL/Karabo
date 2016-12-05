@@ -6,9 +6,10 @@ from karabo.common.scenemodel.api import (
     DisplayStateColorModel, DoubleLineEditModel, EditableListElementModel,
     EditableListModel, EditableSpinBoxModel, EvaluatorModel, FileInModel,
     FileOutModel, FloatSpinBoxModel, HexadecimalModel, IntLineEditModel,
-    KnobModel, LineEditModel, LinePlotModel, MonitorModel, ScientificImageModel,
-    SelectionIconsModel, SingleBitModel, SliderModel, TableElementModel,
-    TextIconsModel, VacuumWidgetModel, WebcamImageModel, XYPlotModel
+    KnobModel, LineEditModel, LinePlotModel, MonitorModel, PopUpModel,
+    ScientificImageModel, SelectionIconsModel, SingleBitModel, SliderModel,
+    TableElementModel, TextIconsModel, VacuumWidgetModel, WebcamImageModel,
+    XYPlotModel
 )
 
 WIDGET_FACTORIES = {
@@ -71,4 +72,5 @@ WIDGET_FACTORIES = {
     'TemperatureProbeWidget': VacuumWidgetModel,
     'TurboPumpWidget': VacuumWidgetModel,
     'ValveWidget': VacuumWidgetModel,
+    'PopUp': PopUpModel,
 }

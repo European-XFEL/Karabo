@@ -28,6 +28,7 @@ __all__ = [
     "eval",
     "icons",
     "monitor",
+    "popup",
     "xyplot",
     "xyvectors",
     "imagewidgets",
