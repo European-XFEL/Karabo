@@ -82,6 +82,8 @@ namespace karabo {
             void reconfigureSources(const std::vector<karabo::util::Hash>& groups, const karabo::util::Schema& schema);
 
             void printConfig() const;
+            
+            void updateCurrentGroupSchema();
 
         private:
 
@@ -89,6 +91,7 @@ namespace karabo {
             std::string m_cursor;
             std::vector<std::string> m_deviceIds;
             std::vector<std::string> m_groupIds;
+           
         };
     }
 }

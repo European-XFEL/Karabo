@@ -82,8 +82,7 @@ namespace karabo {
             STRING_ELEMENT(expected).key("group.id")
                     .displayedName("Name")
                     .description("Name of run configuration group.")
-                    .assignmentOptional().defaultValue("Enter group id")
-                    .reconfigurable()
+                    .assignmentMandatory()
                     .commit();
 
             STRING_ELEMENT(expected).key("group.description")
@@ -173,7 +172,7 @@ namespace karabo {
             if (inputGroup.has("expert")) {
                 vector<Hash> expert;
 
-                const vector<Hash>& current = currentGroup.get<vector < Hash >> ("expert");
+                const vector<Hash>& current = (currentGroup.has("expert") ? currentGroup.get<vector < Hash >> ("expert") : std::vector<Hash>());
                 vector<Hash>& input = inputGroup.get<vector < Hash >> ("expert");
                 fillTable(current, input, expert);
                 // update expert table
@@ -183,13 +182,14 @@ namespace karabo {
             if (inputGroup.has("user")) {
                 vector<Hash> user;
 
-                const vector<Hash>& current = currentGroup.get<vector < Hash >> ("user");
+                const vector<Hash>& current = (currentGroup.has("user") ? currentGroup.get<vector < Hash >> ("user") : std::vector<Hash>());
                 vector<Hash>& input = inputGroup.get<vector < Hash >> ("user");
                 fillTable(current, input, user);
                 // set new version of expert table
                 inputGroup.set("user", user);
             }
         }
+        
 
 
         void RunConfigurationGroup::fillTable(const std::vector<karabo::util::Hash>& current,
