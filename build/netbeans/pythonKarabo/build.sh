@@ -23,47 +23,6 @@ mkdir -p $DIST/lib
 mkdir -p $DIST/bin
 cd $DIST/bin
 
-cat > karabo-cli <<End-of-file
-#!/bin/bash
-#
-# This file was automatically generated. Do not edit.
-#
-SCRIPT_DIR=\$(dirname \`[[ \$0 = /* ]] && echo "\$0" || echo "\$PWD/\${0#./}"\`)
-KARABO=\$SCRIPT_DIR/..
-OS=\$(uname -s)
-export PATH=\$KARABO/extern/bin:\$PATH
-export PYTHONPATH=\$KARABO/extern/lib/karabo_python
-if [ "\$OS" = "Darwin" ]; then
-    export PATH=/opt/local/bin:\$PATH
-    export PYTHONPATH=\$KARABO/lib:\$PYTHONPATH
-    export DYLD_LIBRARY_PATH=\$KARABO/lib:\$KARABO/extern/lib:\$DYLD_LIBRARY_PATH
-fi
-
-\$KARABO/extern/bin/ideviceclient "\$@"
-End-of-file
-
-cat > karabo-pythondeviceserver <<End-of-file
-#!/bin/bash
-#
-# This file was automatically generated. Do not edit.
-#
-SCRIPT_DIR=\$(dirname \`[[ \$0 = /* ]] && echo "\$0" || echo "\$PWD/\${0#./}"\`)
-KARABO=\$SCRIPT_DIR/..
-OS=\$(uname -s)
-export PATH=\$KARABO/extern/bin:\$PATH
-export PYTHONPATH=\$KARABO/extern/lib/karabo_python
-if [ "\$OS" = "Darwin" ]; then
-    export PATH=/opt/local/bin:\$PATH
-    export PYTHONPATH=\$KARABO/lib:\$PYTHONPATH
-    export DYLD_LIBRARY_PATH=\$KARABO/lib:\$KARABO/extern/lib:\$DYLD_LIBRARY_PATH
-fi
-
-\$KARABO/extern/bin/karabo_device_server "\$@"
-End-of-file
-
-chmod a+x karabo-cli
-chmod a+x karabo-pythondeviceserver
-
 cd ../../../../../../src/pythonKarabo
 rm -rf dist/ build/
 if [ "$BUILD_OPTION" == "wheel" ]; then

@@ -1,0 +1,95 @@
+#! /bin/bash
+####################################################################################
+# karabo-check checks the correctness of the definitions contained in config
+# author: CY 18.12.2012
+
+# Make sure the script runs in this directory
+scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+cd ${scriptDir}
+if [ $? -ne 0 ]; then
+    echo "ERROR Could not change directory to ${scriptDir}"
+    exit 1;
+fi
+
+# Make sure Karabo is installed
+if [ -z $KARABO ]; then
+  echo
+  echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
+  exit 1
+fi
+
+if [ ! -e "config" ]; then
+    cp config.orig config
+fi
+
+# returns the number of xterms running and cleans up if there are none
+function fclean()
+{
+    declare -i count=0
+    while true; do
+        if ! read nn n0 n1; then
+	    if [ "$count" = "0" ]; then
+		mv .config .config.last
+            fi
+            return $count
+        fi
+	if [ "$nn" = "key:" ]; then
+	    pid=$n0
+	    name=$n1
+	    if [ -d /proc/$pid ]; then
+		echo "INFO [$count] $name (pid $pid)"
+	        count+=1
+	    fi
+        elif [ "$nn" = "args:" ]; then
+	    job="$n0"
+            arg="$n1"
+	    # echo "INFO last invocation: $job $arg"
+	fi
+    done
+    return $count
+}
+
+# source bash_profile to update PATH
+#source ~/.bash_profile
+[ -f $HOME/.bash_profile ] &&  source $HOME/.bash_profile
+
+# required config file
+foo=config
+test -r $foo || { echo "ERROR cannot read definitions file $foo";  exit 1;}
+
+# required environmental
+source config
+test -n "$START" || { echo "ERROR START array does not exist"; exit 3;} 
+
+# check already running xterms
+    foo=.config
+    if [ -r $foo ]; then
+	cat .config | fclean
+        xterms=$?
+	if [ $xterms != "0" ]; then
+	    echo "WARN $xterms Karabo processes are running! To cold start use karabo-stop"
+	    exit 13; # !! must be 13
+	fi
+    fi
+
+# check orphaned process
+for key in "${!START[@]}"
+do
+    value=${START[$key]}
+    exe=$(echo $value | awk -F ":" '{print $1}')
+
+    orphans="no"
+    jobs=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep -F "$exe")
+    for job in $jobs; 
+    do 
+    	echo "INFO $name running orphaned from xterm, pid "$job
+	orphans="yes"
+    done
+done
+if [ $orphans = "yes" ]; then
+    echo "WARN orphans are running! To cold start use karabo-stop"
+    exit 16;
+fi
+
+# must be OK then!
+exit 0

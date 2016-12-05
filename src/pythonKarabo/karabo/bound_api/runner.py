@@ -1,12 +1,9 @@
-__author__="Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__ ="$May 24, 2013 11:36:55 AM$"
+__author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
+__date__ = "$May 24, 2013 11:36:55 AM$"
 
 import os
-import sys
-import traceback
 
-from karathon import Hash, loadFromFile, saveToFile
-from .configurator import Configurator
+from karathon import Hash, loadFromFile
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
 
@@ -14,116 +11,81 @@ from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Runner", "1.0")
 class Runner(object):
 
-    def __init__(self, theclass):
-        self.theClass = theclass
-        
+    def __init__(self, deviceServer):
+        self.deviceServer = deviceServer
+
     def instantiate(self, args):
-        instance = None
-        configuration = self.parseCommandLine(args)
-        if not configuration.empty():
-            instance = self.theClass.create(configuration)
-        return instance
-    
+        classId = 'DeviceServer'
+        try:
+            ret = self.parseCommandLine(args)
+            if ret[0]:
+                config = ret[1]
+                if not config.empty():
+                    if config.has(classId):
+                        return self.deviceServer.create(config)
+                    else:
+                        return self.deviceServer.create(classId, config)
+                else:
+                    return self.deviceServer.create(classId, config)
+            else:
+                return None
+        except Exception as e:
+            print(str(e))
+            return None
+
     def parseCommandLine(self, args):
         try:
-            # Check if autoloading needed
-            autoload = False
-            autoLoadFileName = "autoload.xml"
-            if os.path.exists(autoLoadFileName):
-                autoload = True;
-                
-            if len(args) == 1 and not autoload:
-                self.showUsage(args[0])
-                return Hash()
             firstArg = ""
             if len(args) > 1:
                 firstArg = args[1]
             if firstArg[0:2] == "--":
                 self.processOption(firstArg[2:], args)
-                return Hash()
+                return False, Hash()
             if firstArg[0:1] == "-":
                 self.processOption(firstArg[1:], args)
-                return Hash()
-            if firstArg == "help":
-                self.processOption(firstArg, args)
-                return Hash()
-            
+                return False, Hash()
+
             configuration = Hash()
-            if autoload:
-                # auto load configuration "autoload.xml"
-                autoLoadFileName = "autoload.xml"
-                if os.path.exists(autoLoadFileName):
-                    tmp = Hash()
-                    loadFromFile(tmp, autoLoadFileName)
-                    configuration += tmp
-            
+
             for a in args[1:]:
                 tmp = Hash()
                 self.readToken(a, tmp)
                 configuration += tmp
-            
-            saveToFile(configuration, "lastConfiguration.xml")
-            return configuration
+            return True, configuration
+
         except Exception as e:
             print(str(e))
-            return Hash()
-        
+            return False, Hash()
+
     def processOption(self, option, args):
         lowerOption = option.lower()
-        if lowerOption == "create-xsd":
-            if len(args) > 2:
-                classid = args[2]
-                pos = classid.find(".")
-                if pos > 0:
-                    classid = classid[0, pos]
-                schema = self.theClass.getSchema(classid)
-                print("\nGenerating list of expected parameters. Writing output to file: %s.xsd\n" % classid)
-                saveToFile(schema, classid + ".xsd")
-            else:
-                print("Expecting command line input, telling for whom the xsd file should be generated.")
-        elif lowerOption == "help":
+        if lowerOption == "help" or lowerOption == "h":
             if len(args) > 2:
                 self.showUsage(args[1], args[2])
             else:
                 self.showUsage(args[0])
-        elif lowerOption == "version" or lowerOption == "v":
-            if len(args) > 2:
-                classid = args[2]
-                pos = classid.find(".")
-                if pos > 0:
-                    classid = classid[0, pos]
-                # TODO implement
-            else:
-                print("Runner-Version: %s" % Runner.__version__);
-                print("%s--Version: %s" % (self.theClass.__name__, self.theClass.__version__))
+        # TODO implement -v, --version option
         else:
             self.showUsage(args[0])
-    
-    def showUsage(self, programName, what = ""):
-        self.printXfelWelcome()
-        print("Usage: %s <configuration>\n" % programName)
-        runnableType = self.theClass.__name__
-        if what == "":
-            print("The <configuration> reflects a set of (hierarchical) key-value types.")
-            print("You can supply <configuration> information as xml file or as command-line input or a combination of both.\n")
-            print("Example:\nAssume the key \"%s.someThreshold\" and a corresponding value \"4.2\".\nThe corresponding xml file should look like this:\n" % runnableType)
-            print("  \"<%s><someThreshold>4.2</someThreshold></%s>\"\n\nIf you saved the file under \"config.xml\" you should then type:\n  '%s config.xml'\n\n" % (runnableType, runnableType, programName))
-            print("For the same configuration given as command line arguments you should type:\n  '%s %s.someThreshold=\"4.2\"'\n" % (programName, runnableType))
-            print("Following %s <choice>s are available:" % runnableType)
-            print(self.theClass.getRegisteredClasses())
-            print("\nType: '%s help <choice>' for help on a specific choice" % programName)
-            print("Type: '%s --create-xsd <choice>' to generate full description of all parameters (in xml schema format)" % programName)
+
+    def showUsage(self, name, what=""):
+        print("\n ################################################################")
+        print(" #                   Karabo Device Server")
+        print(" #")
+        print(" # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.")
+        print(" ################################################################\n")
+        if not what:
+            print("Usage: {} <configuration>\n".format(name.split('/')[-1]))
+            print("Positional arguments:\n")
+            print("<configuration> A set of (hierarchical) <key>=<value> "
+                  "pairs")
+            print("                Use: --help [key] to list available keys "
+                  "or sub-keys, respectively")
+            self.deviceServer.getSchema('DeviceServer').help()
         else:
-            classid = what
-            pos = what.find('.')
-            if pos >= 0:
-                classid = what[0:pos]
-                path = what[pos+1:]
-            else:
-                path = ""
-            self.theClass.getSchema(classid).help(path)
-        print()
-        
+            self.deviceServer.getSchema('DeviceServer').help(what)
+        print("")
+
     def readToken(self, token, config):
         if os.path.exists(token):
             loadFromFile(config, token)
@@ -144,15 +106,3 @@ class Runner(object):
                             self.readToken(subtok, config[key])
                 else:
                     config[key] = value
-        
-    def printXfelWelcome(self):
-        runnableType = self.theClass.__name__
-        runnableVersion = self.theClass.__version__
-        print("\n ##################################################################")
-        print(" #             Simple Karabo %s Runner" % runnableType)
-        print(" #")
-        print(" # Runner-Version: %s" % Runner.__version__)
-        print(" # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.")
-        print(" ##################################################################\n")
-        
-        

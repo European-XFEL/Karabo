@@ -1,5 +1,0 @@
-    exe=$(echo $value | awk -F ":" '{print $1}')    # exectuable (full relative path)
-    params=$(echo $value | awk -F ":" '{print $2}') # blank separated parameters of $exe   
-    wait=$(echo $value | awk -F ":" '{print $3}')   # delay in seconds before starting following xterm
-    scroll=$(echo $value | awk -F ":" '{print $4}') # xterm scroll line count
-    xuse=$(echo $value | awk -F ":" '{print $5}')   # xhost display to use if requested, not set use default display

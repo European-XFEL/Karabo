@@ -17,22 +17,33 @@ int main(int argc, char** argv) {
 
     try {
 
-        boost::thread t(boost::bind(&EventLoop::work));
+        // Let the factory now about all available plugins.
+        // It is important to load plugins even before having a device server
+        // instance, as this allows the help function to correctly show available
+        // devices and enabling the server to autoStart them if needed.
+        Hash pluginConfig("pluginDirectory", Version::getPathToKaraboInstallation() + "/plugins");
+        PluginLoader::create("PluginLoader", pluginConfig)->update();
 
         // Instantiate device server
-        DeviceServer::Pointer deviceServer = Runner<DeviceServer>::instantiate(argc, argv);
+        DeviceServer::Pointer deviceServer = Runner::instantiate(argc, argv);
 
-        // Handle signals using the event-loop
-        EventLoop::setSignalHandler([&deviceServer](int signo) {
-            deviceServer.reset(); // triggers the destructor
-        });
+        if (deviceServer) {
 
-        // Start the device server
-        deviceServer->finalizeInternalInitialization();
+            boost::thread t(boost::bind(&EventLoop::work));
 
-        t.join(); // Blocking central event loop
+            // Handle signals using the event-loop
+            EventLoop::setSignalHandler([&deviceServer](int signo) {
+                deviceServer.reset(); // triggers the destructor
+            });
+
+            // Start the device server
+            deviceServer->finalizeInternalInitialization();
+
+            t.join(); // Blocking central event loop
+        }
 
         return EXIT_SUCCESS;
+
     } catch (const Exception& e) {
         std::cerr << "Exception caught: " << e << std::endl;
     } catch (const std::exception& e) {
