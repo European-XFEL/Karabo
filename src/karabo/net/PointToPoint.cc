@@ -491,10 +491,7 @@ namespace karabo {
 
             // Get from header...
             // ... slotInstanceIdsString
-            string slotInstanceIdsString = header->get<string>("slotInstanceIds");
-
-            // Strip it from "|"
-            slotInstanceIdsString.substr(1, slotInstanceIdsString.length() - 2);
+            const string& slotInstanceIdsString = header->get<string>("slotInstanceIds");
 
             // Split into vector of "slotInstanceId"
             vector<string> ids;
@@ -519,7 +516,7 @@ namespace karabo {
                     handler = iii->second;
                 }
                 // call user callback of type "ConsumeHandler"
-                handler(slotInstanceId, header, body);
+                handler(header, body);
             }
             // Re-register itself
             channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1,

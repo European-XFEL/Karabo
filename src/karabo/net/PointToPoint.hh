@@ -21,8 +21,7 @@
 namespace karabo {
     namespace net {
 
-        typedef boost::function<bool (const std::string&,
-                                      const karabo::util::Hash::Pointer&,
+        typedef boost::function<void (const karabo::util::Hash::Pointer&,
                                       const karabo::util::Hash::Pointer&) > ConsumeHandler;
 
         /**
