@@ -149,7 +149,7 @@ namespace karabo {
         void RunConfigurator::updateCurrentGroupSchema() {
             m_deviceIds = getConfigurationGroupDeviceIds();
             m_groupIds = getConfigurationGroupIds();
-            const std::string& currentGroup = get<std::string>("currentGroup");
+            const std::string currentGroup = get<std::string>("currentGroup");
             Schema schema = getFullSchema();
             schema.setOptions("currentGroup", toString(m_groupIds), ",");
             this->updateSchema(schema, true);
@@ -370,7 +370,7 @@ namespace karabo {
                 const Hash& g = it->second;
                 bool use = g.get<bool>("use");
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "updateCompiledSourceList()  cursor : " << m_cursor << ", use : " << use;
+                KARABO_LOG_FRAMEWORK_DEBUG << "updateCompiledSourceList()  cursor : " << it->first << ", use : " << use;
 
                 if(use){
                     
@@ -396,7 +396,7 @@ namespace karabo {
                                 h.set("behavior", exbehavior);
                             }
                         }
-                        sources[src] = h;
+                        sources[src] = std::move(h);
                     }
 
                     const vector<Hash>& user = g.get<vector<Hash> >("user");
@@ -421,7 +421,7 @@ namespace karabo {
                                 h.set("behavior", exbehavior);
                             }
                         }
-                        sources[src] = h;
+                        sources[src] = std::move(h);
                     }
                 }
             }
@@ -552,7 +552,7 @@ namespace karabo {
 
         void RunConfigurator::preReconfigure(karabo::util::Hash & incomingReconfiguration) {
             KARABO_LOG_FRAMEWORK_DEBUG << "============ preReconfigure  ===============";
-            const Schema& schema = getFullSchema();
+            const Schema schema = getFullSchema();
             if (incomingReconfiguration.has("currentGroup")) {
                 const std::string& currentGroup = incomingReconfiguration.get<string>("currentGroup");
                 string oldCursor = m_cursor;
