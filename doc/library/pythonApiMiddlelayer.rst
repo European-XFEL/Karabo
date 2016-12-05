@@ -27,7 +27,7 @@ There is also a second API without proxies to access remote devices.
 This is useful if many devices have to be accessed for only a short
 interaction, that does not warrant the overhead of creating a proxy.
 It should be noted that most of that overhead is to inquire the
-current state of devices. This is why there is not non-proxy version
+current state of devices. This is why there is no non-proxy version
 to inspect the state of a remote device, as for this it is more
 efficient to create a proxy.
 
