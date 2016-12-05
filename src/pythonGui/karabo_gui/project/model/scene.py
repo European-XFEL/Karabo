@@ -13,6 +13,8 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.mediator import (broadcast_event, KaraboBroadcastEvent,
+                                 KaraboEventSender)
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.utils import save_object
@@ -54,6 +56,11 @@ class SceneModelItem(BaseProjectTreeItem):
         item.setIcon(icons.image)
         item.setEditable(False)
         return item
+
+    def double_click(self, parent_project, parent=None):
+        data = {'model': self.model, 'project': parent_project}
+        broadcast_event(KaraboBroadcastEvent(KaraboEventSender.OpenSceneView,
+                                             data))
 
     # ----------------------------------------------------------------------
     # action handlers

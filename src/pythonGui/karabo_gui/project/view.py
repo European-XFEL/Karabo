@@ -34,6 +34,18 @@ class ProjectView(QTreeView):
         self.destroy()
         event.accept()
 
+    def mouseDoubleClickEvent(self, event):
+        indices = self.selectionModel().selectedIndexes()
+        if not indices:
+            return
+
+        first_index = indices[0]
+        model_ref = first_index.data(PROJECT_ITEM_MODEL_REF)
+        clicked_item_model = model_ref()
+        if clicked_item_model is not None:
+            parent_project = self._parent_project(clicked_item_model)
+            clicked_item_model.double_click(parent_project, parent=self)
+
     # ----------------------------
     # Public methods
 
@@ -45,15 +57,17 @@ class ProjectView(QTreeView):
     # ----------------------------
     # Private methods
 
+    def _parent_project(self, model):
+        """ Find the parent project model of a given item model
+        """
+        if isinstance(model, (ProjectItemModel, ProjectSubgroupItem)):
+            return model.model
+        root_project = self.model().traits_data_model
+        return find_parent_object(model.model, root_project, ProjectModel)
+
     def _show_context_menu(self):
         """ Show a context menu for the currently selected item.
         """
-        def _parent_project(model):
-            if isinstance(model, (ProjectItemModel, ProjectSubgroupItem)):
-                return model.model
-            root_project = self.model().traits_data_model
-            return find_parent_object(model.model, root_project, ProjectModel)
-
         indices = self.selectionModel().selectedIndexes()
         if not indices:
             return
@@ -62,7 +76,7 @@ class ProjectView(QTreeView):
         model_ref = first_index.data(PROJECT_ITEM_MODEL_REF)
         clicked_item_model = model_ref()
         if clicked_item_model is not None:
-            parent_project = _parent_project(clicked_item_model)
+            parent_project = self._parent_project(clicked_item_model)
             menu = clicked_item_model.context_menu(parent_project,
                                                    parent=self)
             is_project = isinstance(clicked_item_model, ProjectModelItem)
