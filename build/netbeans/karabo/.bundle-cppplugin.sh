@@ -4,7 +4,6 @@ safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
 
-    echo cmnd=$cmnd
     eval $cmnd
     ret_code=$?
     if [ $ret_code != 0 ]; then
@@ -19,25 +18,7 @@ PLATFORM=$3
 
 OS=$(uname -s)
 MACHINE=$(uname -m)
-if tmp=$(svn info . | grep URL)
-then
-    tmp=${tmp%%-*}
-    VERSION=${tmp##*/}
-    if [ "$VERSION" = "trunk" ]; then
-        tmp=$(svn info . | grep Revision)
-        VERSION=r${tmp##*: }
-    fi
-elif tmp=$(jsvn info . | grep URL)
-then
-    tmp=${tmp%%-*}
-    VERSION=${tmp##*/}
-    if [ "$VERSION" = "trunk" ]; then
-        tmp=$(jsvn info . | grep Revision)
-        VERSION=r${tmp##*: }
-    fi
-else
-    VERSION=$(git rev-parse --short HEAD)
-fi
+VERSION=$(git rev-parse --short HEAD)
 
 if [ -z $KARABO ]; then
   echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
@@ -48,7 +29,6 @@ fi
 
 PLUGINNAME=`basename $(pwd)`
 PACKAGENAME=$PLUGINNAME-$VERSION-$KARABOVERSION
-echo PACKAGENAME $PACKAGENAME
 
 NUM_CORES=2  # default
 if [ "$OS" = "Linux" ]; then
@@ -62,8 +42,8 @@ elif [ "$OS" = "Darwin" ]; then
 fi
 
 EXTRACT_SCRIPT=$KARABO/bin/.extract-cppplugin.sh
-PACKAGEDIR=$(pwd)/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
-INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+PACKAGEDIR=$(pwd)/package
+INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}-${CONF}.sh
 
 # Always clean the bundle
 rm -rf $PACKAGEDIR
@@ -71,22 +51,20 @@ rm -rf $PACKAGEDIR
 # Start fresh
 mkdir -p $PACKAGEDIR
 
-# cp -rf $DISTDIR/$CONF/$PLATFORM/*.so $PACKAGEDIR
 find $DISTDIR/$CONF/$PLATFORM -maxdepth 1 -type f -name \*.so -exec cp {} $PACKAGEDIR \;
-
-# copy DEPENDS file if exists
-if [ -e DEPENDS ]; then cp DEPENDS $PACKAGEDIR; fi
 
 # run custom script
 if [ -e $(pwd)/custom.sh ]; then $(pwd)/custom.sh; fi
 
-cd $PACKAGEDIR/../
-safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz $PACKAGENAME"
+cd $PACKAGEDIR
+safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz *.so"
 
 # Create installation script
 echo -e '#!/bin/bash\n'"VERSION=$VERSION\nPLUGINNAME=$PLUGINNAME\nKARABOVERSION=$KARABOVERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
 chmod a+x $INSTALLSCRIPT
 
+# Clean up
+safeRunCommand "rm -f ${PACKAGENAME}.tar.gz *.so"
 
 echo
 echo "Created package: ${PACKAGEDIR%/*}/$INSTALLSCRIPT"

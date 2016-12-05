@@ -1,0 +1,29 @@
+#! /bin/bash
+#######################################################################
+# karabo-restart restarts those START applications which have died
+# author: CY 16.1.2013
+
+# Make sure the script runs in this directory
+scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+cd ${scriptDir}
+if [ $? -ne 0 ]; then
+    echo "ERROR Could not change directory to ${scriptDir}"
+    exit 1;
+fi
+
+foo="./.config"
+if [ ! -e $foo ]; then
+    echo "ERROR no previous karabo-start"
+    exit 1
+fi
+
+arg=$(grep "args:" $foo | grep "karabo-start" | grep -v grep | awk '{print $3}')
+if [ -n "$arg" ]; then
+    echo "INFO Restarting with argument: $arg"
+fi 
+
+export RESTART="yes"
+./karabo-start $arg
+
+exit $?
+

@@ -1,0 +1,135 @@
+#! /bin/bash
+####################################################################################
+# author: CY 18.12.2012
+
+# print help message if first argument asks for help
+nox="false"  #  i.e. _do_ use separate xterms
+icon=""
+if [ ${#@} -gt 0 ]; then
+    if [ $1 == "-h" ] || [ $1 == "-help" ] || [ $1 == "--help" ]; then
+        echo
+        echo "karabo-start - start applications as defined in config file"
+        echo
+        echo "  karabo-start [-h|--help|-nox|--nox|-iconize|--iconize]"
+        echo
+        echo "If any of the help options is given, print this help."
+        echo
+        echo "The applications to be started are defined in the file 'config'"
+        echo "that lies in the same directory as the karabo-start script."
+        echo "If no config file is there, one is created as a copy of"
+        echo "config.org. See the comments in there for more details."
+        echo
+        echo "By default, all applications are started in their own xterm"
+        echo "windows that display their outputs."
+        echo "If any of the 'no X' options (-nox|--nox) is given, all"
+        echo "applications are started within the calling shell and their"
+        echo "output is swallowed."
+        echo "Using the 'showLogs' script, server log files can nevertheless"
+        echo "be investigated."
+        echo
+        echo "If any of the 'iconize xterms' options (-iconize|--iconize) is given, all"
+        echo "visible xterms are iconized on startup."
+        echo
+        exit 0
+    elif [ $1 == "-n" ] || [ $1 == "--nox" ]; then
+        nox="true"
+        # shift  # must not remove from argument list to keep it in .config
+    elif [ $1 == "-i" ] || [ $1 == "--iconize" ]; then
+        icon="-iconic"
+        # shift  # must not remove from argument list to keep it in .config
+    else
+        echo "Unknown option '$1', please consult help: $0 --help"
+        exit 1
+    fi
+fi
+
+# Make sure the script runs in this directory
+scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+cd ${scriptDir}
+if [ $? -ne 0 ]; then
+    echo "ERROR Could not change directory to ${scriptDir}"
+    exit 1;
+fi
+
+# Create a copy of the original if not done yet
+if [ ! -e "config" ]; then
+    cp config.orig config
+fi
+
+# check startup
+./karabo-check
+
+check=$?
+
+if [ -n "$RESTART" ] && [ "$check" = "13" ]; then
+    echo
+    echo "INFO restarting any missing processes"
+elif  [ -n "$RESTART" ] && [ "$check" = "0" ]; then
+    echo
+    echo "INFO restart all processes"    
+    # Clean old pid file
+    mv .karabo-start.pid .karabo-start.pid.last 2> /dev/null
+elif [ "$check" != "0" ]; then 
+    echo
+    echo "ERROR processes are running, cannot karabo-start"
+    echo
+    exit 1;
+else
+    # Clean old pid file
+    mv .karabo-start.pid .karabo-start.pid.last 2> /dev/null
+fi
+
+
+# START content checking is done in karabo-check 
+source ./config
+
+# store args for possible restart
+if [ "$check" = "0" ]; then
+    echo "args: $0 $@" >> .config 
+fi
+
+for key in "${!START[@]}"
+do
+    value=${START[$key]}
+    exe=$(echo $value | awk -F ":" '{print $1}')
+
+    # the match is too indescriminant and fails to identify all cases! Correct solution use pid chain?
+    job=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep -F "$exe")
+
+    if [ -n "$job" ]; then	
+        echo "INFO $exe running, not restarting"
+    else 
+        target=$exe
+        # on CentOS, HOSTNAME contains domain => strip off from 1st dot
+        title=$(echo ${HOSTNAME%%.*}:$exe | awk '{print $1 ":" $2}')
+        options="-T $title -sb -rightbar -sl 10000 -hold"
+        display=""
+        if [ -n "$XUSE" ]; then
+	        display="-display $XUSE"
+        fi
+        if [ "$nox" == "true" ]; then
+            # No xterms should be used, disregard stdout and stderr
+            echo "INFO Starting: $target > /dev/null 2>&1 &"
+            $target > /dev/null 2>&1 &
+        else
+            echo "INFO Starting: xterm $options $display -e bash -c \"$target\" &"
+            xterm $options $icon $display -e bash -c "$target" &
+        fi
+	# store name and pid of started process
+        bg=$!
+	# Give the xterm processes time to start and set up their pids
+	sleep 0.5 
+        echo "key: $bg $exe" >> .config 
+	# put pid and its child pids in one line of file
+	echo -n "$bg " >> .karabo-start.pid
+	cpid=`pgrep -P $bg`
+	while [ -n "$cpid" ]; do
+	    echo -n "$cpid " >> .karabo-start.pid
+	    cpid=`pgrep -P $cpid`
+	done
+        # now add newline
+        echo >> .karabo-start.pid
+    fi    
+done
+
+exit 0
