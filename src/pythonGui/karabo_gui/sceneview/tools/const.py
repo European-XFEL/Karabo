@@ -61,6 +61,7 @@ WIDGET_FACTORIES = {
     'CryoCoolerWidget': VacuumWidgetModel,
     'HydraulicValveWidget': VacuumWidgetModel,
     'LampWidget': VacuumWidgetModel,
+    'LampSmallWidget': VacuumWidgetModel,
     'MaxiGaugeWidget': VacuumWidgetModel,
     'MembranePumpWidget': VacuumWidgetModel,
     'MotorWidget': VacuumWidgetModel,
