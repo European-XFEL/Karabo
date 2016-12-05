@@ -1181,6 +1181,22 @@ namespace karabo {
             }
             return sub;
         }
+        
+        
+       void Schema::setDaqDataType(const std::string& path, const DaqDataType& dataType){
+           if(!isNode(path)){
+               throw KARABO_PARAMETER_EXCEPTION("DAQ data types may only be set for node elements. Element at "+path+ " is not a node element!");
+           }
+           m_hash.setAttribute<int>(path, KARABO_SCHEMA_DAQ_DATA_TYPE, dataType);
+       }
+
+       DaqDataType Schema::getDaqDataType(const std::string& path) const{
+           return static_cast<DaqDataType>(m_hash.getAttribute<int>(path, KARABO_SCHEMA_DAQ_DATA_TYPE));
+       }
+
+       bool Schema::hasDaqDataType(const std::string& path) const {
+           return m_hash.hasAttribute(path, KARABO_SCHEMA_DAQ_DATA_TYPE);
+       }
 
     }
 }
