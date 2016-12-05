@@ -766,7 +766,7 @@ namespace karabo {
 
                 // Merge all parameters
                 if (keepParameters) validated.merge(m_parameters);
-                set(validated);
+                setNoValidate(validated);
 
                 KARABO_LOG_INFO << "Schema updated";
             }
@@ -818,7 +818,7 @@ namespace karabo {
 
                 // Merge all parameters
                 if (keepParameters) validated.merge(m_parameters);
-                set(validated);
+                setNoValidate(validated);
 
                 KARABO_LOG_INFO << "Schema updated";
             }
