@@ -193,21 +193,18 @@ class Proxy(object):
         to this proxy dies while the *coro* is executed, a KaraboError is
         raised.
         """
-        def raiser():
-            if not self._alive:
-                raise KaraboError('device "{}" died'.format(self._deviceId))
-            try:
-                return (yield from coro)
-            except asyncio.CancelledError:
-                if self._alive:
-                    raise
-                else:
-                    raise KaraboError(
-                        'device "{}" died'.format(self._deviceId))
-        task = asyncio.async(raiser())
+        if not self._alive:
+            raise KaraboError('device "{}" died'.format(self._deviceId))
+        task = asyncio.async(coro)
         self._running_tasks.add(task)
         task.add_done_callback(lambda fut: self._running_tasks.discard(fut))
-        return (yield from task)
+        try:
+            return (yield from task)
+        except asyncio.CancelledError:
+            if self._alive:
+                raise
+            else:
+                raise KaraboError('device "{}" died'.format(self._deviceId))
 
     def __enter__(self):
         self._used += 1
