@@ -69,7 +69,7 @@ class ProjectView(QTreeView):
             if parent_project is None or is_project:
                 project_model = clicked_item_model.model
                 save_action = QAction('Save', menu)
-                save_action.triggered.connect(partial(self._save_project,
+                save_action.triggered.connect(partial(save_object,
                                                       project_model))
                 close_action = QAction('Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
@@ -81,7 +81,7 @@ class ProjectView(QTreeView):
             menu.exec(QCursor.pos())
 
     def _save_project(self, project):
-        # Save possible changes - XXX TODO check `modified` flag
+        # Save possible changes
         if project.modified:
             ask = ('The project has be modified.<br />Do you want to save the '
                    'project?')
