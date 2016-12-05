@@ -136,9 +136,9 @@ namespace karabo {
 
 #define KARABO_SCHEMA_ALARM_ACK "alarmNeedsAck"
 #define KARABO_SCHEMA_ALARM_INFO "alarmInfo"
-            
+
 #define KARABO_RUNTIME_SCHEMA_UPDATE "runtimeSchemaUpdates"
-            
+
 #define KARABO_SCHEMA_DAQ_DATA_TYPE "daqDataType"
 
             // Grant friendship to the GenericElement

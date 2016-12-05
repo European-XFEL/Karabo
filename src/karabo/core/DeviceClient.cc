@@ -1839,7 +1839,8 @@ if (nodeData) {\
                         || attrKey == KARABO_SCHEMA_UNIT_SYMBOL
                         || attrKey == KARABO_SCHEMA_METRIC_PREFIX_ENUM
                         || attrKey == KARABO_SCHEMA_METRIC_PREFIX_NAME
-                        || attrKey == KARABO_SCHEMA_METRIC_PREFIX_SYMBOL)
+                        || attrKey == KARABO_SCHEMA_METRIC_PREFIX_SYMBOL
+                        || attrKey == KARABO_SCHEMA_DAQ_DATA_TYPE)
                         hash.setAttribute(path, ii->getKey(), ii->getValueAsAny());
                 }
             }
