@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<DeviceServer>
-  <scanPlugins KRB_Type="STRING">false</scanPlugins>
-  <serverId KRB_Type="STRING">Karabo_DataLoggerServer</serverId>
-  <visibility>4</visibility>
-  <Logger><priority>INFO</priority></Logger>
-</DeviceServer>

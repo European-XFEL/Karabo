@@ -54,41 +54,27 @@ class DeviceServer(SignalSlotable):
         defaultValue="karabo.middlelayer_device",
         requiredAccessLevel=AccessLevel.EXPERT)
 
+    devices = String(
+        displayedName="Devices",
+        description="The devices classes the server will manage",
+        assignment=Assignment.OPTIONAL, defaultValue="",
+        requiredAccessLevel=AccessLevel.EXPERT)
+
     log = Node(Logger,
                description="Logging settings",
                displayedName="Logger",
                requiredAccessLevel=AccessLevel.EXPERT)
 
-    instanceCountPerDeviceServer = { }
-
+    instanceCountPerDeviceServer = {}
 
     def __init__(self, configuration):
         super().__init__(configuration)
-        self.deviceInstanceMap = { }
+        self.deviceInstanceMap = {}
         self.hostname, _, self.domainname = socket.gethostname().partition('.')
         self.needScanPlugins = True
+        if not hasattr(self, 'serverId'):
+            self.serverId = self._generateDefaultServerId()
 
-        # set serverId
-        serverIdFileName = "serverId.xml"
-        if os.path.isfile(serverIdFileName):
-            with open(serverIdFileName, 'r') as fin:
-                p = XMLParser()
-                hash = p.read(fin.read())
-            if self.serverId != "__none__":
-                saveToFile(Hash("DeviceServer.serverId", self.serverId),
-                           serverIdFileName)
-            elif 'DeviceServer.serverId' in hash:
-                self.serverId = hash['DeviceServer.serverId'] # If file exists, it has priority
-            else:
-                print("WARN : Found serverId.xml without serverId contained")
-                self.serverId = self._generateDefaultServerId() # If nothing configured -> generate
-                saveToFile(Hash("DeviceServer.serverId", self.serverId),
-                           serverIdFileName)
-        else: # No file
-            if self.serverId == "__none__":
-                self.serverId = self._generateDefaultServerId()
-            saveToFile(Hash("DeviceServer.serverId", self.serverId),
-                       serverIdFileName)
         self.deviceId = self._deviceId_ = self.serverId
 
         self.pluginLoader = PluginLoader(
@@ -151,20 +137,21 @@ class DeviceServer(SignalSlotable):
             for ep in entrypoints:
                 if ep.name in self.plugins:
                     continue
-                try:
-                    self.plugins[ep.name] = (yield from get_event_loop().
-                                             run_in_executor(None, ep.load))
-                except Exception:
-                    self.logger.exception(
-                        'Cannot load plugin "{}"'.format(ep.name))
-                else:
-                    self.updateInstanceInfo(self.deviceClassesHash())
+                if ep.name in self.devices.split(',') or not self.devices:
+                    try:
+                        self.plugins[ep.name] = (yield from get_event_loop().
+                                                 run_in_executor(None,
+                                                                 ep.load))
+                    except Exception:
+                        self.logger.exception(
+                            'Cannot load plugin "{}"'.format(ep.name))
+                    else:
+                        self.updateInstanceInfo(self.deviceClassesHash())
             yield from sleep(3)
-
 
     def errorFoundAction(self, m1, m2):
         self.log.ERROR("{} -- {}".format(m1,m2))
-    
+
     def endErrorAction(self):
         pass
 
@@ -214,12 +201,11 @@ class DeviceServer(SignalSlotable):
         config['Logger'] = copy.copy(self.loggerConfiguration)
         return classid, config['_deviceId_'], config
 
-
     def parseOld(self, hash):
          # Input 'config' parameter comes from GUI or DeviceClient
         classid = next(iter(hash))
         self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n{}".format(hash))        
+        self.log.DEBUG("with the following configuration:\n{}".format(hash))
         configuration = copy.copy(hash[classid])
         configuration["_serverId_"] = self.serverId
         deviceid = str()
@@ -227,13 +213,12 @@ class DeviceServer(SignalSlotable):
             deviceid = configuration["deviceId"]
         else:
             deviceid = self._generateDefaultDeviceInstanceId(classid)
-            
+
         configuration["_deviceId_"] = deviceid
         # Add logger configuration from DeviceServer:
         configuration["Logger"] = copy.copy(self.loggerConfiguration)
         return classid, deviceid, configuration
 
-        
     def deviceClassesHash(self):
         return Hash(
             "deviceClasses", list(self.plugins.keys()),
@@ -280,7 +265,7 @@ def main(args=None):
     loop = EventLoop()
     set_event_loop(loop)
     params = Hash({k: v for k, v in (a.split("=", 2) for a in args[1:])})
-    server = DeviceServer(params["DeviceServer"])
+    server = DeviceServer(params)
     if server:
         server.startInstance()
         try:

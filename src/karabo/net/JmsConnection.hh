@@ -10,15 +10,16 @@
 
 #include "karabo/util/ClassInfo.hh"
 #include "karabo/util/Schema.hh"
-#include <string>
+
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/asio.hpp>
 #include <openmqc/mqcrt.h>
+#include <openmqc/mqlogutil-priv.h>
 
-#include <karabo/util/ClassInfo.hh>
+#include <string>
 
 #define MQ_SAFE_CALL(mqCall) \
         { \
@@ -147,6 +148,15 @@ namespace karabo {
 
             void setConnectionProperties(const std::string& scheme, const std::string& host, const int port,
                                          const MQPropertiesHandle& propertiesHandle) const;
+
+            static void onOpenMqLog(const MQLoggingLevel severity,
+                             const MQInt32 logCode,
+                             ConstMQString logMessage,
+                             const MQInt64 timeOfMessage,
+                             const MQInt64 connectionID,
+                             ConstMQString filename,
+                             const MQInt32 fileLineNumber,
+                             void* callbackData);
 
 
         private:

@@ -14,6 +14,7 @@
 #endif
 
 #include "PathElement.hh"
+#include "VectorElement.hh"
 #include "PluginLoader.hh"
 #include "karabo/log/Logger.hh"
 
@@ -30,6 +31,7 @@ namespace karabo {
         // Static initialization
         map<path, void*> PluginLoader::m_loadedPlugins = map<path, void*>();
         vector<string> PluginLoader::m_failedPlugins = vector<string>();
+        std::set<std::string> PluginLoader::m_knownPlugins = std::set<std::string>();
 
 
         void PluginLoader::expectedParameters(Schema& expected) {
@@ -43,16 +45,35 @@ namespace karabo {
                     .expertAccess()
                     .commit();
 
+            VECTOR_STRING_ELEMENT(expected)
+                    .key("pluginsToLoad")
+                    .displayedName("Plugins to load")
+                    .assignmentOptional().defaultValue(std::vector<std::string>(1, "*"))
+                    .expertAccess()
+                    .commit();
         }
 
 
         PluginLoader::PluginLoader(const Hash& input) {
             m_pluginDirectory = boost::filesystem::path(input.get<string>("pluginDirectory"));
+            const std::vector<std::string>& pluginsToLoad = input.get<std::vector<std::string> >("pluginsToLoad");
+            m_pluginsToLoad.insert(pluginsToLoad.cbegin(), pluginsToLoad.cend());
         }
 
 
         const path& PluginLoader::getPluginDirectory() const {
             return m_pluginDirectory;
+        }
+
+
+        std::vector<std::string> PluginLoader::getKnownPlugins() const {
+            return std::vector<std::string>(m_knownPlugins.cbegin(), m_knownPlugins.cbegin());
+        }
+
+
+        void PluginLoader::updatePluginsToLoad(const std::vector<std::string>& pluginsToLoad) {
+            m_pluginsToLoad.clear();
+            m_pluginsToLoad.insert(pluginsToLoad.cbegin(), pluginsToLoad.cend());
         }
 
 
@@ -85,7 +106,14 @@ namespace karabo {
                                     faultyPlugin = true;
                                     break;
                                 }
+                            //add to known plugins
+                            m_knownPlugins.insert(it->path().stem().string());
+
                             if (faultyPlugin) continue;
+                            if (m_pluginsToLoad.find(it->path().stem().string()) == m_pluginsToLoad.end() &&
+                                m_pluginsToLoad.find("*") == m_pluginsToLoad.end()) {
+                                continue;
+                            }
                             if (m_loadedPlugins.find(plugin) == m_loadedPlugins.end()) {
                                 void* libHandle = dlopen(plugin.c_str(), RTLD_NOW);
                                 if (libHandle == 0) {
@@ -93,7 +121,6 @@ namespace karabo {
                                             << it->path().filename()
                                             << ":\n\t" << string(dlerror());
                                     m_failedPlugins.push_back(plugin);
-                                    //throw KARABO_INIT_EXCEPTION("Failed to load plugin " + string(it->path().filename().string()) + ": " + string(dlerror()));
                                 } else {
                                     m_loadedPlugins[it->path()] = libHandle;
                                     KARABO_LOG_FRAMEWORK_INFO << "Successfully loaded plugin: "

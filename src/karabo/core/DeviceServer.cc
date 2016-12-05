@@ -78,6 +78,13 @@ namespace karabo {
                     .adminAccess()
                     .commit();
 
+            VECTOR_STRING_ELEMENT(expected).key("devices")
+                    .displayedName("Devices")
+                    .description("The devices classes the server will manage")
+                    .assignmentOptional().defaultValue(BaseDevice::getRegisteredClasses())
+                    .expertAccess()
+                    .commit();
+
             LIST_ELEMENT(expected).key("autoStart")
                     .displayedName("Auto start")
                     .description("Auto starts selected devices")
@@ -92,11 +99,12 @@ namespace karabo {
                     .assignmentOptional().defaultValue(true)
                     .commit();
 
+            const std::string defaultPluginPath = Version::getPathToKaraboInstallation() + "/plugins";
             PATH_ELEMENT(expected)
                     .key("pluginDirectory")
                     .displayedName("Plugin Directory")
                     .description("Directory to search for plugins")
-                    .assignmentOptional().defaultValue("plugins")
+                    .assignmentOptional().defaultValue(defaultPluginPath)
                     .isDirectory()
                     .expertAccess()
                     .commit();
@@ -115,31 +123,13 @@ namespace karabo {
 
         DeviceServer::DeviceServer(const karabo::util::Hash& config) : m_log(0), m_scanPluginsTimer(EventLoop::getIOService()) {
 
-            string serverIdFileName("serverId.xml");
-
-            // Set serverId
-            if (boost::filesystem::exists(serverIdFileName)) {
-                Hash hash;
-                karabo::io::loadFromFile(hash, serverIdFileName);
-                if (config.has("serverId")) {
-                    config.get("serverId", m_serverId);
-                    // Update file for next startup
-                    karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
-                } else if (hash.has("DeviceServer.serverId")) hash.get("DeviceServer.serverId", m_serverId);
-                else {
-                    KARABO_LOG_FRAMEWORK_WARN << "Found serverId.xml without serverId contained";
-                    m_serverId = generateDefaultServerId();
-                    karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
-                }
-            } else { // No file
-                if (config.has("serverId")) {
-                    config.get("serverId", m_serverId);
-                } else {
-                    m_serverId = generateDefaultServerId();
-                }
-                // Generate file for next startup
-                karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
+            if (config.has("serverId")) {
+                config.get("serverId", m_serverId);
+            } else {
+                m_serverId = generateDefaultServerId();
             }
+
+            config.get("devices", m_devices);
 
             // Device configurations for those to automatically start
             if (config.has("autoStart")) config.get("autoStart", m_autoStart);
@@ -153,7 +143,8 @@ namespace karabo {
             m_connection = Configurator<JmsConnection>::createNode("connection", config);
             m_connection->connect();
 
-            m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory")));
+            m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory"),
+                                                                       "pluginsToLoad", "*"));
             loadLogger(config);
 
             karabo::util::Hash instanceInfo;
@@ -171,7 +162,7 @@ namespace karabo {
 
 
         std::string DeviceServer::generateDefaultServerId() const {
-            return net::bareHostName() += "_Server_" + util::toString(getpid());
+            return net::bareHostName() += "/" + util::toString(getpid());
         }
 
 
@@ -186,6 +177,11 @@ namespace karabo {
 
             Hash config = input.get<Hash>("Logger");
 
+            boost::filesystem::path path(Version::getPathToKaraboInstallation() + "/var/log/" + m_serverId);
+            boost::filesystem::create_directories(path);
+            path += "/device-server.log";
+
+            config.set("file.filename", path.generic_string());
             if (!config.has("network.topic")) {
                 // If not specified, use the local topic for log messages
                 config.set("network.topic", m_topic);
@@ -205,6 +201,8 @@ namespace karabo {
 
             // Initialize category
             m_log = &(karabo::log::Logger::getCategory(m_serverId));
+
+            KARABO_LOG_FRAMEWORK_INFO << "Logfiles are written to: " << path;
         }
 
 
@@ -462,15 +460,19 @@ namespace karabo {
             deviceClasses.reserve(m_availableDevices.size());
 
             for (Hash::iterator it = m_availableDevices.begin(); it != m_availableDevices.end(); ++it) {
-                deviceClasses.push_back(it->getKey());
+                const std::string& deviceClass = it->getKey();
+                if (std::find(m_devices.begin(), m_devices.end(), deviceClass) != m_devices.end()) {
+                    deviceClasses.push_back(it->getKey());
 
-                Hash& tmp = it->getValue<Hash>();
-                if (tmp.get<bool>("mustNotify") == true) {
-                    tmp.set("mustNotify", false);
+                    Hash& tmp = it->getValue<Hash>();
+                    if (tmp.get<bool>("mustNotify") == true) {
+                        tmp.set("mustNotify", false);
+                    }
+                    visibilities.push_back(tmp.get<Schema>("xsd").getDefaultValue<int>("visibility"));
                 }
-                visibilities.push_back(tmp.get<Schema>("xsd").getDefaultValue<int>("visibility"));
             }
-            KARABO_LOG_DEBUG << "Sending instance update as new device plugins are available: " << karabo::util::toString(deviceClasses);
+            KARABO_LOG_DEBUG << "Sending instance update as new device plugins are available: "
+                    << karabo::util::toString(deviceClasses);
             this->updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities));
         }
 

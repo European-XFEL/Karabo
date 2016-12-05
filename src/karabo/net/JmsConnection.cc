@@ -5,8 +5,6 @@
  * Created on July 15, 2016, 4:08 PM
  */
 
-#include <openmqc/mqlogutil-priv.h>
-
 #include <karabo/util.hpp>
 #include <karabo/log.hpp>
 
@@ -63,9 +61,9 @@ namespace karabo {
             // thanks to openMQ :-(
             EventLoop::addThread();
 
-            // Set logging function
-            // TODO: Decide what should be done here
-            MQSetLogFileName("openMQLib.log");
+            MQSetLoggingFunc(&karabo::net::JmsConnection::onOpenMqLog, 0);
+            MQSetStdErrLogLevel(MQ_LOG_OFF);
+
         }
 
 
@@ -77,6 +75,8 @@ namespace karabo {
         void JmsConnection::parseBrokerUrl() {
 
             using std::string;
+
+
             BOOST_FOREACH(const string& url, m_availableBrokerUrls) {
                 const boost::tuple<string, string, string, string, string> urlParts = karabo::net::parseUrl(url);
                 m_brokerAddresses.push_back(make_tuple(urlParts.get<0>(), urlParts.get<1>(), urlParts.get<2>()));
@@ -208,6 +208,25 @@ namespace karabo {
 
         boost::shared_ptr<JmsProducer> JmsConnection::createProducer() {
             return boost::shared_ptr<JmsProducer>(new JmsProducer(shared_from_this()));
+        }
+
+
+        void JmsConnection::onOpenMqLog(const MQLoggingLevel severity, const MQInt32 logCode, ConstMQString logMessage,
+                                        const MQInt64 timeOfMessage, const MQInt64 connectionID, ConstMQString filename,
+                                        const MQInt32 fileLineNumber, void* callbackData) {
+            switch (severity) {
+                case MQ_LOG_SEVERE:
+                    karabo::log::Logger::logError("openMq") << logMessage;
+                    break;
+                case MQ_LOG_WARNING:
+                    karabo::log::Logger::logWarn("openMq") << logMessage;
+                    break;
+                case MQ_LOG_INFO:
+                    karabo::log::Logger::logInfo("openMq") << logMessage;
+                    break;
+                default:
+                    break; // do nothing                    
+            }
         }
     }
 }

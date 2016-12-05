@@ -1,0 +1,90 @@
+############################################################
+# config contains configuration definitions to manage 
+# servers and applications used in a localhost device setup
+#
+# management scripts: 
+# 1. karabo-start   - to start karabo processes defined by the START environmental
+#                     karabo-start has a single optional parameter "-nox" which controls whether
+#	       	  	      the processes are started as individual xterms or accumulated as background jobs
+# 2. karabo-stop    - to stop started processes
+# 3. karabo-check   - to check the definitions used by test system scripts 
+#              	      this script is the only check made of the definitions used
+# 4. karabo-restart - to restart any "missing" applications
+#                     a candidate to a missing application is the gui which was closed at
+#                 	  the end of the last session with all other applications left running.
+# 
+# author: CY 18.12.2012, largely modified: BH 09.04.2015
+
+
+##################
+#  Broker Hosts  #
+##################
+
+# If you are using Karabo at home and run a local broker you can you use directly
+#export KARABO_BROKER="tcp://localhost:7777"
+
+# If you are at the European XFEL GmbH you may use this settings
+export KARABO_BROKER="tcp://exfl-broker:7777"
+
+# This setting is the default, it will try the XFEL broker first and failover to a local if unsuccessful
+#export KARABO_BROKER="tcp://exfl-broker:7777,tcp://localhost:7777"
+
+#################
+# Broker Topic  #
+#################
+
+# By default your username will become your topic name
+
+# You may want to fix it using:
+
+#export KARABO_BROKER_TOPIC=karabo
+
+
+#########################################
+# Kill Signal (used by karabo-stop)  #
+#########################################
+
+KARABO_KILL_SIGNAL=15
+
+###################
+# Service Servers #
+###################
+
+# Default log level
+logger=Logger.priority=INFO
+
+START[0]="karabo-cppserver serverId=karabo/guiServer devices=GuiServerDevice autoStart[0].GuiServerDevice.port=44444 $logger"
+
+START[1]="karabo-cppserver serverId=karabo/logAggregator devices=CentralLogging autoStart[0].CentralLogging $logger:0:1000"
+
+START[2]="karabo-cppserver serverId=karabo/dataLogger devices=DataLogger,DataLogReader $logger"
+
+START[3]="karabo-cppserver serverId=karabo/dataLoggerManager devices=DataLoggerManager autoStart[0].DataLoggerManager $logger"
+
+START[4]="karabo-cppserver serverId=karabo/projectManager devices=ProjectManager autoStart[0].ProjectManager $logger"
+
+#START[5]="karabo-pythondeviceserver serverId=karabo/macroServer $logger"
+
+##############
+# Server C++ #
+##############
+
+START[10]="karabo-cppserver serverId=cppServer/1 Logger.priority=INFO"
+
+#################
+# Server Python #
+#################
+
+#START[20]="karabo-pythonserver serverId=pythonServer/1 Logger.priority=INFO"
+
+######################
+# Server MiddleLayer #
+######################
+
+START[30]="karabo-middlelayerserver serverId=middlelayerServer/1 Logger.priority=INFO"
+
+###################
+# User Interfaces #
+###################
+
+START[40]="karabo-gui"
