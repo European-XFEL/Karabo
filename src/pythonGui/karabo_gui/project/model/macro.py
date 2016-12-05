@@ -81,9 +81,6 @@ class MacroModelItem(BaseProjectTreeItem):
                 dupe_macro.simple_name = simple_name
                 project.macros.append(dupe_macro)
 
-    def _save_macro(self):
-        save_object(self.model)
-
     def _save_macro_to_file(self):
         macro = self.model
         fn = getSaveFileName(caption='Save macro to file',
