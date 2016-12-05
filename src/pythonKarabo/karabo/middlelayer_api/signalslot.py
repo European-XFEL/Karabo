@@ -312,6 +312,12 @@ class SignalSlotable(Configurable):
             f.set_result(None)
         loop.changedFutures = set()
 
+    @coslot
+    def slotSchemaUpdated(self, schema, deviceId):
+        d = self._devices.get(deviceId)
+        if d is not None:
+            yield from d._onSchemaUpdated(schema)
+
     @slot
     def slotInstanceNew(self, instanceId, info):
         future = self._new_device_futures.pop(instanceId, None)
