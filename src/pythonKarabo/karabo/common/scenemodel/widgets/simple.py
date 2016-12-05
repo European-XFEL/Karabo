@@ -119,6 +119,10 @@ class LineEditModel(BaseWidgetObjectData):
     klass = Enum('DisplayLineEdit', 'EditableLineEdit')
 
 
+class PopUpModel(BaseWidgetObjectData):
+    """ A model for a pop up window """
+
+
 class SceneLinkModel(BaseWidgetObjectData):
     """ A model for a scene link
     """
@@ -246,7 +250,7 @@ def _build_empty_widget_readers_and_writers():
     names = ('BitfieldModel', 'DisplayCommandModel', 'DisplayLabelModel',
              'DisplayPlotModel', 'DoubleLineEditModel', 'EditableListModel',
              'EditableListElementModel', 'EditableSpinBoxModel',
-             'HexadecimalModel', 'IntLineEditModel', 'KnobModel',
+             'HexadecimalModel', 'IntLineEditModel', 'KnobModel', 'PopUpModel',
              'SliderModel', 'XYPlotModel')
     for name in names:
         klass = globals()[name]

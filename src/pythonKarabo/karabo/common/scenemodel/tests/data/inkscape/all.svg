@@ -328,6 +328,15 @@
            krb:keys="p1.stringProperty"
            krb:widget="EditableLineEdit"
            id="rect60" />
+        <rect
+           height="37"
+           width="105"
+           x="406"
+           y="637"
+           krb:class="DisplayComponent"
+           krb:keys="p1.stringProperty"
+           krb:widget="PopUp"
+           id="rect60-3" />
       </g>
       <g
          krb:class="BoxLayout"
