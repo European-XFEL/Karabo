@@ -152,8 +152,7 @@ class Proxy(object):
         conf, _ = yield from self._device.call(self._deviceId,
                                                "slotGetConfiguration")
         namespace = _createProxyDict(schema.hash, "")
-        Cls = type(schema.name, (Proxy,), namespace)
-        self.__class__ = Cls
+        self.__class__ = type(schema.name, (Proxy,), namespace)
         self._onChanged(conf)
 
     def setValue(self, desc, value):
