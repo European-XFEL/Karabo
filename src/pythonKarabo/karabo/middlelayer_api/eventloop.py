@@ -458,7 +458,7 @@ class EventLoop(SelectorEventLoop):
     def getBroker(self, deviceId, classId):
         if self.connection is None:
             hosts = os.environ.get("KARABO_BROKER",
-                                   "exfl-broker.desy.de:7777").split(',')
+                                   "tcp://exfl-broker.desy.de:7777").split(',')
             for hp in hosts:
                 protocol, host, port = hp.split(':')
                 host = host[2:]
