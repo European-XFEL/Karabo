@@ -71,8 +71,8 @@ class DeviceServer(object):
                     .expertAccess()
                     .commit()
                     ,
-            VECTOR_STRING_ELEMENT(expected).key("devices")
-                    .displayedName("Devices")
+            VECTOR_STRING_ELEMENT(expected).key("deviceClasses")
+                    .displayedName("Device Classes")
                     .description("The device classes the server will manage")
                     .assignmentOptional()
                     .defaultValue(PythonDevice.getRegisteredClasses())
@@ -176,7 +176,7 @@ class DeviceServer(object):
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
         self.needScanPlugins = True
         self.autoStart = config.get("autoStart")
-        self.devices = config.get("devices")
+        self.deviceClasses = config.get("deviceClasses")
 
         if 'serverId' in config:
             self.serverid = config['serverId']
@@ -189,7 +189,6 @@ class DeviceServer(object):
         self.connectionParameters = copy.copy(config['connection'])
         plc = Hash("pluginNamespace", config["pluginNamespace"])
         self.pluginLoader = PluginLoader.create("PythonPluginLoader", plc)
-        self.loadLogger(config)
         self.pid = os.getpid()
         self.seqnum = 0
 
@@ -258,7 +257,7 @@ class DeviceServer(object):
             for ep in entrypoints:
                 if ep.name in self.availableModules:
                     continue
-                if ep.name in self.devices or not self.devices:
+                if ep.name in self.deviceClasses or not self.deviceClasses:
                     try:
                         deviceClass = ep.load()
                     except ImportError as e:
