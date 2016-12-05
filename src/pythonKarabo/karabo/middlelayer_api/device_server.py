@@ -54,9 +54,9 @@ class DeviceServer(SignalSlotable):
         defaultValue="karabo.middlelayer_device",
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    devices = String(
-        displayedName="Devices",
-        description="The devices classes the server will manage",
+    deviceClasses = String(
+        displayedName="Device Classes",
+        description="The device classes the server will manage",
         assignment=Assignment.OPTIONAL, defaultValue="",
         requiredAccessLevel=AccessLevel.EXPERT)
 
@@ -137,7 +137,8 @@ class DeviceServer(SignalSlotable):
             for ep in entrypoints:
                 if ep.name in self.plugins:
                     continue
-                if ep.name in self.devices.split(',') or not self.devices:
+                if (ep.name in self.deviceClasses.split(',')
+                        or not self.deviceClasses):
                     try:
                         self.plugins[ep.name] = (yield from get_event_loop().
                                                  run_in_executor(None,
@@ -264,7 +265,15 @@ def main(args=None):
     args = args or sys.argv
     loop = EventLoop()
     set_event_loop(loop)
-    params = Hash({k: v for k, v in (a.split("=", 2) for a in args[1:])})
+
+    def get(para):
+        d = DeviceServer
+        for p in para.split('.'):
+            d = getattr(d, p)
+        return d
+
+    params = Hash({k: get(k).fromstring(v) 
+                   for k, v in (a.split("=", 2) for a in args[1:])})
     server = DeviceServer(params)
     if server:
         server.startInstance()

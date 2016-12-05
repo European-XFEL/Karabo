@@ -58,7 +58,7 @@ namespace karabo {
             std::vector<karabo::util::Hash> m_autoStart;
 
             karabo::util::Hash m_availableDevices;
-            std::vector<std::string> m_devices;
+            std::vector<std::string> m_deviceClasses;
 
             typedef std::map<std::string, boost::shared_ptr<BaseDevice> > DeviceInstanceMap;
             DeviceInstanceMap m_deviceInstanceMap;
