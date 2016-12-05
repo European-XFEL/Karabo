@@ -58,8 +58,8 @@ def assure_running(project_db_server=None, project_db_port=None):
         # we check if the db is already running
         if not check_running():
             # we execute the start script for the database
-            script_path = os.path.join(karabo_install, 'karaboRun', 'bin',
-                                       'startConfigDB')
+            script_path = os.path.join(karabo_install, 'bin',
+                                       'karabo-startconfigdb')
             check_call([script_path])
             # wait until the database is actually up
             maxTimeout = 60
@@ -108,8 +108,8 @@ def stop_database():
     karabo_install = os.getenv('KARABO')
     waitBetween = 5
     if check_running():
-        script_path = os.path.join(karabo_install, 'karaboRun', 'bin',
-                                   'stopConfigDB')
+        script_path = os.path.join(karabo_install, 'bin',
+                                   'karabo-stopconfigdb')
         check_call([script_path])
 
     # wait til we are down
