@@ -38,6 +38,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.inheritance_diagram',
     'sphinx.ext.ifconfig',
     'sphinx.ext.graphviz',
     'breathe',
