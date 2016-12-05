@@ -5,6 +5,8 @@ import os
 import contextlib
 import multiprocessing
 
+from karabo.packaging.device_template import configure_template
+
 DEV_NULL = open(os.devnull, 'w')
 
 
@@ -39,9 +41,9 @@ def pushd_popd():
 
 
 def parse_commandline():
-    parser = argparse.ArgumentParser(description=('Karabo Utility Script'),
-                                     formatter_class=
-                                     argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=('Karabo Utility Script'),
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     sps = parser.add_subparsers(metavar='')
 
     parser_new = sps.add_parser('new',
@@ -170,8 +172,8 @@ def new(args):
         tpath = os.path.join('templates', args.api, 'minimal')
         run_cmd('cp -rf {} {}'.format(os.path.join(tpath, '*'), path))
         run_cmd('cp -f {} {}'.format(os.path.join(tpath, '.gitignore'), path))
-        run_cmd('configuretemplate.sh {} {} {} {}'.format(path, args.device,
-                class_name, args.api))
+        email = os.environ.get('USER', 'Unknown')
+        configure_template(path, args.device, class_name, email)
         os.chdir(path)
         run_cmd('git init')
         run_cmd('git remote add origin {}/karaboDevices/{}.git'
