@@ -66,6 +66,8 @@ START[4]="karabo-cppserver serverId=karabo/projectManager deviceClasses=ProjectM
 
 START[5]="karabo-middlelayerserver serverId=karabo/macroServer visibility=4"
 
+START[6]="karabo-pythonserver serverId=karabo/projectDBServer deviceClasses=ProjectManager autoStart[0].ProjectManager.deviceId=KaraboProjectDBServer visibility=4 $logger"
+
 ##############
 # Server C++ #
 ##############
