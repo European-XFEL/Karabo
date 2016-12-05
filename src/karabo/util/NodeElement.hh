@@ -114,6 +114,11 @@ namespace karabo {
                 this->m_node->setValue<Hash >(schema.getParameterHash());
                 return *this;
             }
+            
+            NodeElement& setDaqDataType(const DaqDataType& dataType){
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_DAQ_DATA_TYPE, dataType);
+                return *this;
+            }
 
         protected:
 
