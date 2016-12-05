@@ -307,6 +307,8 @@ class Descriptor(object):
             else:
                 self.allowedStates = set((State(s) for s in allowedStates))
 
+        self.__doc__ = self.description
+
     def toSchemaAndAttrs(self, device, state):
         """return schema for device in state
 
@@ -503,7 +505,7 @@ class Slot(Descriptor):
     def __call__(self, method):
         """Decorate a method to be a Slot"""
         if self.description is None:
-            self.description = method.__doc__
+            self.description = self.__doc__ = method.__doc__
         self.method = method
         return self
 
