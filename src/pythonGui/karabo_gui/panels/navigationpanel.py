@@ -32,9 +32,9 @@ class NavigationPanel(Dockable, QWidget):
         """ Router for incoming broadcasts
         """
         if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.NetworkDisconnected:
-                # The last selection is not needed anymore
-                self.twNavigation.clear()
+            if event.sender is KaraboEventSender.NetworkConnectStatus:
+                if not event.data.get['status']:
+                    self.twNavigation.clear()
             return False
         return super(NavigationPanel, self).eventFilter(obj, event)
 
