@@ -220,7 +220,7 @@ class ConfigurationPanel(Dockable, QWidget):
                 is_changing = event.data.get('is_changing')
                 self.onErrorState(configuration, is_changing)
             elif event.sender is KaraboEventSender.NetworkConnectStatus:
-                if not event.data.get['status']:
+                if not event.data['status']:
                     self._resetPanel()
             return False
         return super(ConfigurationPanel, self).eventFilter(obj, event)
