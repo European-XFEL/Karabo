@@ -27,6 +27,7 @@ from .widgets.simple import (BitfieldModel, CheckBoxModel, ChoiceElementModel,
                              EditableListElementModel, EditableListModel,
                              EditableSpinBoxModel, FileInModel, FileOutModel,
                              HexadecimalModel, IntLineEditModel, KnobModel,
-                             LabelModel, LineEditModel, SceneLinkModel,
-                             SliderModel, WorkflowItemModel, XYPlotModel)
+                             LabelModel, LineEditModel, PopUpModel,
+                             SceneLinkModel, SliderModel, WorkflowItemModel,
+                             XYPlotModel)
 from .widgets.vacuum import VacuumWidgetModel
