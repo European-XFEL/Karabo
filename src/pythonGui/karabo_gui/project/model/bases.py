@@ -49,6 +49,14 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
         :param parent: A QObject which can be passed as a Qt object parent.
         """
 
+    def single_click(self, parent_project, parent=None):
+        """ Handles a single click event on this item.
+
+        :param parent_project: The ProjectModel which is the immediate parent
+                               of the item which was clicked on.
+        :param parent: A QObject which can be passed as a Qt object parent.
+        """
+
     def is_ui_initialized(self):
         """ Returns True if ``create_qt_item()`` has been called.
         """
