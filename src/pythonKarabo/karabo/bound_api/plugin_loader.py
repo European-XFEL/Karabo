@@ -1,6 +1,3 @@
-__author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__ = "$May 8, 2013 12:55:50 PM$"
-
 from pkg_resources import WorkingSet
 
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
@@ -21,6 +18,7 @@ class PluginLoader(object):
         e.expertAccess().commit()
 
     def __init__(self, config):
+        self._entrypoints = []
         if "pluginNamespace" in config:
             self.pluginNamespace = config["pluginNamespace"]
         else:
@@ -36,7 +34,7 @@ class PluginLoader(object):
 
     def update(self):
         ws = WorkingSet()
-        epoints = list(ws.iter_entry_points(self.pluginNamespace))
-        for ep in epoints:
+        self._entrypoints = list(ws.iter_entry_points(self.pluginNamespace))
+        for ep in self._entrypoints:
             ep.load()
-        return epoints
+        return self._entrypoints
