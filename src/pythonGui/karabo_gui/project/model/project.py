@@ -5,8 +5,9 @@
 #############################################################################
 import weakref
 
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QMenu, QStandardItem
-from traits.api import Instance, List
+from traits.api import Instance, List, on_trait_change
 
 from karabo.common.project.api import ProjectModel
 from karabo_gui import icons
@@ -46,6 +47,24 @@ class ProjectModelItem(BaseProjectTreeItem):
         font.setBold(True)
         item.setFont(font)
         return item
+
+    @on_trait_change("model.modified")
+    def modified_change(self):
+        """ Whenever the project is modified it should be visible"""
+        if not self.is_ui_initialized():
+            return
+
+        # Show modified flag on parent projects
+        brush = self.qt_item.foreground()
+        if self.model.modified:
+            # Change color to blue
+            brush.setColor(Qt.blue)
+            self.qt_item.setText("*{}".format(self.model.simple_name))
+        else:
+            # Change color to black
+            brush.setColor(Qt.black)
+            self.qt_item.setText("{}".format(self.model.simple_name))
+        self.qt_item.setForeground(brush)
 
     # ----------------------------------------------------------------------
     # action handlers
