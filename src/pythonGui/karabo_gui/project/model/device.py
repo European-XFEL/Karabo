@@ -19,6 +19,8 @@ from karabo.middlelayer_api.newproject.io import (read_project_model,
                                                   write_project_model)
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.mediator import (broadcast_event, KaraboBroadcastEvent,
+                                 KaraboEventSender)
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import save_object
@@ -70,6 +72,13 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         item.setIcon(icons.deviceClass)
         item.setEditable(False)
         return item
+
+    def single_click(self, parent_project, parent=None):
+        config = self._get_active_config()
+        if config is not None and config.configuration is not None:
+            data = {'configuration': config.configuration}
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.ShowConfiguration, data))
 
     @on_trait_change("model.instance_id")
     def instance_id_change(self):
