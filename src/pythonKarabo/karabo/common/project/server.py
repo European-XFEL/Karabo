@@ -36,6 +36,47 @@ class DeviceInstanceModel(BaseSavableModel):
             if (dev_config.uuid, dev_config.revision) == (uuid, revision):
                 return dev_config
 
+    def _configs_changed(self, old, new):
+        """ Traits notification handler for list assignment
+        """
+        self._update_config_listeners(old, new)
+
+    def _configs_items_changed(self, event):
+        """ Traits notification handler for list inserts/removes
+        """
+        self._update_config_listeners(event.removed, event.added)
+
+    def _update_config_listeners(self, removed, added):
+        """ Whenever the List of ``configs`` is changed, the listeners need to
+        be updated
+
+        :param removed: A list of removed ``DeviceConfigurationModel`` objects
+        :param added: A list of added ``DeviceConfigurationModel`` objects
+        """
+        for config_model in removed:
+            # Remove listener for ``revision`` change event
+            config_model.on_trait_change(self._update_active_revision,
+                                         'revision', remove=True)
+
+        for config_model in added:
+            # Add listener for ``revision`` change event
+            config_model.on_trait_change(self._update_active_revision,
+                                         'revision')
+
+    def _update_active_revision(self, obj, name, old, new):
+        """ Whenever the revision of a ``DeviceConfigurationModel`` is changed
+        the ``active_config_ref`` might refer to it and needs to be updated
+
+        :param obj: The ``DeviceInstanceModel`` object which revision was
+                    changed
+        :param name: The name of the trait
+        :param old: The old value of the trait
+        :param new: The new value of the trait
+        """
+        uuid, revision = self.active_config_ref
+        if (obj.uuid == uuid) and (revision == old):
+            self.active_config_ref = uuid, new
+
 
 class DeviceServerModel(BaseProjectObjectModel):
     """ An object representing a device server
