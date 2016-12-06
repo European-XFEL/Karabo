@@ -13,7 +13,6 @@ import socket
 from subprocess import Popen
 import threading
 import time
-import traceback
 
 from karathon import (
     VECTOR_STRING_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
@@ -455,16 +454,16 @@ class Launcher(object):
 
 def main(args=None):
     args = args or sys.argv
+    PluginLoader.create("PythonPluginLoader", Hash()).update()
+    t = threading.Thread(target=EventLoop.work)
+    t.start()
     try:
-        PluginLoader.create("PythonPluginLoader", Hash()).update()
-        t = threading.Thread(target=EventLoop.work)
-        t.start()
         server = Runner(DeviceServer).instantiate(args)
         if not server:
             EventLoop.stop()
     except:
-        traceback.print_exc(file=sys.stderr)
         EventLoop.stop()
+        raise
     finally:
         t.join()
 
