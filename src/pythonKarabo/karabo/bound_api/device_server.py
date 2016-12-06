@@ -452,6 +452,9 @@ class Launcher(object):
 
 
 def main(args=None):
+    # Change directory to $KARABO/var/data
+    os.chdir(os.path.join(os.environ['KARABO'], 'var', 'data'))
+
     args = args or sys.argv
     try:
         PluginLoader.create("PythonPluginLoader", Hash()).update()
