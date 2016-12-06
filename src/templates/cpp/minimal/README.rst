@@ -37,7 +37,7 @@ Running
 
 If you want to manually start a server using this device, simply type:
 
-``karabo-cppserver serverId=cppServer/1 devices=__CLASS_NAME__``
+``karabo-cppserver serverId=cppServer/1 deviceClasses=__CLASS_NAME__``
 
 Or just use (a properly configured):
 

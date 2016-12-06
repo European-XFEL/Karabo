@@ -52,18 +52,19 @@ KARABO_KILL_SIGNAL=15
 
 # Default log level
 logger=Logger.priority=INFO
+v=visibility=4
 
-START[0]="karabo-cppserver serverId=karabo/guiServer devices=GuiServerDevice autoStart[0].GuiServerDevice.port=44444 $logger"
+START[0]="karabo-cppserver serverId=karabo/guiServer deviceClasses=GuiServerDevice autoStart[0].GuiServerDevice.port=44444 visibility=4 $logger"
 
-START[1]="karabo-cppserver serverId=karabo/logAggregator devices=CentralLogging autoStart[0].CentralLogging $logger:0:1000"
+START[1]="karabo-cppserver serverId=karabo/logAggregator deviceClasses=CentralLogging autoStart[0].CentralLogging visibility=4 $logger:0:1000"
 
-START[2]="karabo-cppserver serverId=karabo/dataLogger devices=DataLogger,DataLogReader $logger"
+START[2]="karabo-cppserver serverId=karabo/dataLogger deviceClasses=DataLogger,DataLogReader visibility=4 $logger"
 
-START[3]="karabo-cppserver serverId=karabo/dataLoggerManager devices=DataLoggerManager autoStart[0].DataLoggerManager $logger"
+START[3]="karabo-cppserver serverId=karabo/dataLoggerManager deviceClasses=DataLoggerManager autoStart[0].DataLoggerManager visibility=4 $logger"
 
-START[4]="karabo-cppserver serverId=karabo/projectManager devices=ProjectManager autoStart[0].ProjectManager $logger"
+START[4]="karabo-cppserver serverId=karabo/projectManager deviceClasses=ProjectManager autoStart[0].ProjectManager visibility=4 $logger"
 
-#START[5]="karabo-pythondeviceserver serverId=karabo/macroServer $logger"
+START[5]="karabo-middlelayerserver serverId=karabo/macroServer visibility=4"
 
 ##############
 # Server C++ #
@@ -75,13 +76,13 @@ START[10]="karabo-cppserver serverId=cppServer/1 Logger.priority=INFO"
 # Server Python #
 #################
 
-#START[20]="karabo-pythonserver serverId=pythonServer/1 Logger.priority=INFO"
+START[20]="karabo-pythonserver serverId=pythonServer/1 Logger.priority=INFO"
 
 ######################
 # Server MiddleLayer #
 ######################
 
-START[30]="karabo-middlelayerserver serverId=middlelayerServer/1 Logger.priority=INFO"
+START[30]="karabo-middlelayerserver serverId=middlelayerServer/1"
 
 ###################
 # User Interfaces #
