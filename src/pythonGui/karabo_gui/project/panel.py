@@ -91,6 +91,7 @@ def _project_load_handler(item_model):
             model = ProjectModel(uuid=uuid, revision=revision)
             read_lazy_object(TEST_DOMAIN, uuid, revision, db_conn,
                              read_project_model, existing=model)
+            model.modified = False
             item_model.traits_data_model = model
 
 
