@@ -23,6 +23,7 @@ class ProjectView(QTreeView):
 
         item_model = ProjectItemModel(self)
         self.setModel(item_model)
+        self.selectionModel().selectionChanged.connect(self._selection_change)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
@@ -35,16 +36,10 @@ class ProjectView(QTreeView):
         event.accept()
 
     def mouseDoubleClickEvent(self, event):
-        indices = self.selectionModel().selectedIndexes()
-        if not indices:
-            return
-
-        first_index = indices[0]
-        model_ref = first_index.data(PROJECT_ITEM_MODEL_REF)
-        clicked_item_model = model_ref()
-        if clicked_item_model is not None:
-            parent_project = self._parent_project(clicked_item_model)
-            clicked_item_model.double_click(parent_project, parent=self)
+        selected_item_model = self._get_selected_model()
+        if selected_item_model is not None:
+            parent_project = self._parent_project(selected_item_model)
+            selected_item_model.double_click(parent_project, parent=self)
 
     # ----------------------------
     # Public methods
@@ -57,6 +52,17 @@ class ProjectView(QTreeView):
     # ----------------------------
     # Private methods
 
+    def _get_selected_model(self):
+        """ Return the currently selected item model.
+        """
+        indices = self.selectionModel().selectedIndexes()
+        if not indices:
+            return None
+
+        first_index = indices[0]
+        model_ref = first_index.data(PROJECT_ITEM_MODEL_REF)
+        return model_ref()
+
     def _parent_project(self, model):
         """ Find the parent project model of a given item model
         """
@@ -65,23 +71,26 @@ class ProjectView(QTreeView):
         root_project = self.model().traits_data_model
         return find_parent_object(model.model, root_project, ProjectModel)
 
+    def _selection_change(self, selected, deselected):
+        """ Notify item model objects when their Qt list item object is
+        selected.
+        """
+        selected_item_model = self._get_selected_model()
+        if selected_item_model is not None:
+            parent_project = self._parent_project(selected_item_model)
+            selected_item_model.single_click(parent_project, parent=self)
+
     def _show_context_menu(self):
         """ Show a context menu for the currently selected item.
         """
-        indices = self.selectionModel().selectedIndexes()
-        if not indices:
-            return
-
-        first_index = indices[0]
-        model_ref = first_index.data(PROJECT_ITEM_MODEL_REF)
-        clicked_item_model = model_ref()
-        if clicked_item_model is not None:
-            parent_project = self._parent_project(clicked_item_model)
-            menu = clicked_item_model.context_menu(parent_project,
-                                                   parent=self)
-            is_project = isinstance(clicked_item_model, ProjectModelItem)
+        selected_item_model = self._get_selected_model()
+        if selected_item_model is not None:
+            parent_project = self._parent_project(selected_item_model)
+            menu = selected_item_model.context_menu(parent_project,
+                                                    parent=self)
+            is_project = isinstance(selected_item_model, ProjectModelItem)
             if parent_project is None or is_project:
-                project_model = clicked_item_model.model
+                project_model = selected_item_model.model
                 save_action = QAction('Save', menu)
                 save_action.triggered.connect(partial(save_object,
                                                       project_model))
