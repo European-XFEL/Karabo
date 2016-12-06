@@ -78,8 +78,8 @@ namespace karabo {
                     .adminAccess()
                     .commit();
 
-            VECTOR_STRING_ELEMENT(expected).key("devices")
-                    .displayedName("Devices")
+            VECTOR_STRING_ELEMENT(expected).key("deviceClasses")
+                    .displayedName("Device Classes")
                     .description("The devices classes the server will manage")
                     .assignmentOptional().defaultValue(BaseDevice::getRegisteredClasses())
                     .expertAccess()
@@ -129,7 +129,7 @@ namespace karabo {
                 m_serverId = generateDefaultServerId();
             }
 
-            config.get("devices", m_devices);
+            config.get("deviceClasses", m_deviceClasses);
 
             // Device configurations for those to automatically start
             if (config.has("autoStart")) config.get("autoStart", m_autoStart);
@@ -461,7 +461,7 @@ namespace karabo {
 
             for (Hash::iterator it = m_availableDevices.begin(); it != m_availableDevices.end(); ++it) {
                 const std::string& deviceClass = it->getKey();
-                if (std::find(m_devices.begin(), m_devices.end(), deviceClass) != m_devices.end()) {
+                if (std::find(m_deviceClasses.begin(), m_deviceClasses.end(), deviceClass) != m_deviceClasses.end()) {
                     deviceClasses.push_back(it->getKey());
 
                     Hash& tmp = it->getValue<Hash>();

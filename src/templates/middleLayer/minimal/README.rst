@@ -23,7 +23,7 @@ Running
 
 If you want to manually start a server using this device, simply type:
 
-``karabo-middlelayerserver serverId=middleLayerServer/1 devices=__CLASS_NAME__``
+``karabo-middlelayerserver serverId=middleLayerServer/1 deviceClasses=__CLASS_NAME__``
 
 Or just use (a properly configured):
 
