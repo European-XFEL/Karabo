@@ -223,7 +223,7 @@ class SceneView(QWidget):
 
         self._scene_obj_cache = {}
         fill_root_layout(self.layout, self.scene_model, self.inner,
-                         self._scene_obj_cache)
+                         self._scene_obj_cache, self.tab_visible)
 
     def item_at_position(self, pos):
         """ Returns the topmost object whose bounds contain `pos`.
@@ -381,12 +381,13 @@ class SceneView(QWidget):
             obj = self._scene_obj_cache.get(model)
             if obj is not None:
                 remove_object_from_layout(obj, self.layout,
-                                          self._scene_obj_cache)
+                                          self._scene_obj_cache,
+                                          self.tab_visible)
         self._remove_workflow_items(event.removed)
 
         for model in event.added:
             create_object_from_model(self.layout, model, self.inner,
-                                     self._scene_obj_cache)
+                                     self._scene_obj_cache, self.tab_visible)
         self._add_workflow_items(event.added)
 
     def _add_workflow_items(self, models):
