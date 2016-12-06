@@ -22,7 +22,7 @@ from karabo.middlelayer import (
 from karabo_gui.configuration import BulkNotifications
 from karabo_gui.dialogs.configurationdialog import (
     SelectProjectDialog, SelectProjectConfigurationDialog)
-from karabo_gui.mediator import (
+from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.navigationtreemodel import NavigationTreeModel
