@@ -6,9 +6,9 @@
 from PyQt4.QtGui import QVBoxLayout, QWidget
 
 from karabo_gui.docktabwindow import Dockable
-from karabo_gui.navigationtreeview import NavigationTreeView
-from karabo_gui.mediator import (
+from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.navigationtreeview import NavigationTreeView
 
 
 class NavigationPanel(Dockable, QWidget):

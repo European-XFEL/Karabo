@@ -13,8 +13,8 @@ from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QHeaderView,
 
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
-                                 register_for_broadcasts)
+from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
+                               register_for_broadcasts)
 from karabo_gui.singletons.api import get_manager
 from karabo_gui.treewidgetitems.popupwidget import PopupWidget
 

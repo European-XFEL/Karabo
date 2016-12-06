@@ -10,5 +10,5 @@ class Mediator(QObject):
     """ An empty class which only needs to be a QObject so that it can route
     QEvents.
 
-    See ``karabo_gui.mediator`` for more details.
+    See ``karabo_gui.events`` for more details.
     """

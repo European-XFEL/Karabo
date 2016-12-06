@@ -18,8 +18,8 @@ from karabo.middlelayer import AccessLevel
 from karabo_gui import globals
 from karabo_gui.const import ALARM_COLOR
 from karabo_gui.docktabwindow import DockTabWindow
-from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
-                                 register_for_broadcasts)
+from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
+                               register_for_broadcasts)
 from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.loggingpanel import LoggingPanel

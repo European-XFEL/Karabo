@@ -15,9 +15,9 @@ from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QLabel, QLineEdit, QPushButton, QTableView,
                          QToolButton, QVBoxLayout, QWidget)
 
-import karabo_gui.icons as icons
-from karabo_gui.mediator import (
+from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
+import karabo_gui.icons as icons
 from karabo_gui.util import getSaveFileName
 
 
