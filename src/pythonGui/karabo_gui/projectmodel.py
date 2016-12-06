@@ -30,7 +30,7 @@ from karabo_gui.dialogs.duplicatedialog import DuplicateDialog
 from karabo_gui.dialogs.monitordialog import MonitorDialog
 from karabo_gui.dialogs.scenedialog import SceneDialog
 from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject
-from karabo_gui.mediator import (
+from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
     register_for_broadcasts)
 from karabo_gui.messagebox import MessageBox

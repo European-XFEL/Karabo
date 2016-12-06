@@ -14,9 +14,9 @@ from karabo_gui.alarm_model import (ACKNOWLEDGE, ALARM_DATA, ALARM_ID,
                                     ALARM_TYPE, DEVICE_ID, PROPERTY,
                                     SHOW_DEVICE, AlarmModel, getAlarmKeyIndex)
 from karabo_gui.docktabwindow import Dockable
-from karabo_gui.mediator import (KaraboBroadcastEvent, KaraboEventSender,
-                                 broadcast_event, register_for_broadcasts,
-                                 unregister_from_broadcasts)
+from karabo_gui.events import (
+    KaraboBroadcastEvent, KaraboEventSender, broadcast_event,
+    register_for_broadcasts, unregister_from_broadcasts)
 from karabo_gui.singletons.api import get_network
 
 
