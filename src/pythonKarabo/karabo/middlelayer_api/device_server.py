@@ -261,6 +261,9 @@ class DeviceServer(SignalSlotable):
 
 
 def main(args=None):
+    # Change directory to $KARABO/var/data
+    os.chdir(os.path.join(os.environ['KARABO'], 'var', 'data'))
+
     args = args or sys.argv
     loop = EventLoop()
     set_event_loop(loop)
