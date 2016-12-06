@@ -15,55 +15,82 @@ from karabo_gui.singletons.api import get_manager
 
 
 class DeviceHandleDialog(QDialog):
-    def __init__(self, server_id=None, model=None, parent=None):
+    def __init__(self, server_id=None, model=None, add_config=False,
+                 parent=None):
+        """ A dialog to configure device configurations
+
+        :param server_id: The ID of the server the device configuration belongs
+                          to
+        :param model: The ``DeviceInstanceModel`` object
+        :param add_config: A boolean which describes whether a new
+                           ``DeviceConfigurationModel`` should be added
+        :param parent: The parent of the dialog
+        """
         super(DeviceHandleDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'device_handle.ui')
         uic.loadUi(filepath, self)
 
+        self._initUI(server_id, model, add_config)
+
+    def _initUI(self, server_id, model, add_config):
         # Get available plugins from systemTopology
         for class_id in self._get_available_plugins():
             self.cbClass.addItem(class_id)
-
         self.leServerId.setText(server_id)
 
         if model is None:
-            title = 'Add device'
-            self.cbConfig.setEditable(True)
-            self.laVersion.setVisible(False)
-            self.cbVersion.setVisible(False)
+            title = 'Add device configuration'
+            self._update_widgets_to_add_config()
         else:
-            title = 'Edit device'
-            self.leTitle.setText(model.instance_id)
-            # Map UUIDs to list of available DeviceConfigurationModels
-            uuid_configs = {}
-            for config in model.configs:
-                key = (config.uuid, config.alias)
-                uuid_configs.setdefault(key, []).append(config)
-
-            for key, configs in uuid_configs.items():
-                uuid, alias = key
-                # Add alias to combobox and add tuple of uuid and list of
-                # device configs
-                self.cbConfig.addItem(alias, (uuid, configs))
-
             active_uuid, active_rev = model.active_config_ref
             active_dev_conf = model.select_config(active_uuid, active_rev)
-            if active_dev_conf is not None:
-                self._update_config_widgets(active_dev_conf)
+            if add_config:
+                title = 'Add device configuration'
+                self._update_widgets_to_add_config()
 
-            # Make sure the signal is triggered when setting the index below
-            self.cbConfig.setCurrentIndex(-1)
-            # Update revisions combobox if configuration changes
-            self.cbConfig.currentIndexChanged[int].connect(self.config_changed)
+                # These widgets belong to a ``DeviceInstanceModel`` and
+                # should not be changed in case a configuration is added
+                self.leTitle.setEnabled(False)
+                self.cbClass.setEnabled(False)
+                self.cbIfExists.setEnabled(False)
+                if active_dev_conf is not None:
+                    self._update_plugin_widget(active_dev_conf.class_id)
+            else:
+                title = 'Edit device configuration'
+                self._init_config_widgets(model)
+                if active_dev_conf is not None:
+                    self._update_config_widgets(active_dev_conf)
+                    index = self.cbConfig.findText(active_dev_conf.alias)
+                    self.cbConfig.setCurrentIndex(index)
 
-            if active_dev_conf is not None:
-                index = self.cbConfig.findText(active_dev_conf.alias)
-                self.cbConfig.setCurrentIndex(index)
-
+            self.leTitle.setText(model.instance_id)
             index = self.cbIfExists.findText(model.if_exists)
             self.cbIfExists.setCurrentIndex(index)
         self.setWindowTitle(title)
+
+    def _init_config_widgets(self, dev_inst_model):
+        """ Init all device configuration related widgets to the associated
+        ``dev_inst_model``
+
+        :param dev_inst_model: The ``DeviceInstanceModel`` object
+        """
+        # Map UUIDs to list of available DeviceConfigurationModels
+        uuid_configs = {}
+        for config in dev_inst_model.configs:
+            key = (config.uuid, config.alias)
+            uuid_configs.setdefault(key, []).append(config)
+
+        for key, configs in uuid_configs.items():
+            uuid, alias = key
+            # Add alias to combobox and add tuple of uuid and list of
+            # device configs
+            self.cbConfig.addItem(alias, (uuid, configs))
+
+        # Make sure the signal is triggered when setting the index below
+        self.cbConfig.setCurrentIndex(-1)
+        # Update revisions combobox if configuration changes
+        self.cbConfig.currentIndexChanged[int].connect(self.config_changed)
 
     def _get_available_plugins(self):
         """ Get all available plugins of `systemTopology`"""
@@ -82,6 +109,14 @@ class DeviceHandleDialog(QDialog):
                     available_plugins.append(class_id)
         return available_plugins
 
+    def _update_widgets_to_add_config(self):
+        """ Whenever a ``DeviceConfigurationModel`` is added, configuration
+        related widgets need to be made editable or hidden.
+        """
+        self.cbConfig.setEditable(True)
+        self.laVersion.setVisible(False)
+        self.cbVersion.setVisible(False)
+
     def _update_config_widgets(self, dev_config_model):
         """ Update all relevant widgets which show `DeviceConfigurationModel`
         information
@@ -89,11 +124,14 @@ class DeviceHandleDialog(QDialog):
         :param dev_config_model: The `DeviceConfgurationModel` which data
                                  should be displayed.
         """
-        index = self.cbClass.findText(dev_config_model.class_id)
-        self.cbClass.setCurrentIndex(index)
+        self._update_plugin_widget(dev_config_model.class_id)
         self.teDescription.setPlainText(dev_config_model.description)
         index = self.cbVersion.findData(dev_config_model.revision)
         self.cbVersion.setCurrentIndex(index)
+
+    def _update_plugin_widget(self, class_id):
+        index = self.cbClass.findText(class_id)
+        self.cbClass.setCurrentIndex(index)
 
     @pyqtSlot(int)
     def config_changed(self, index):
