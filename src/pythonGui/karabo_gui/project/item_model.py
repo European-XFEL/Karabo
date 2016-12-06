@@ -18,7 +18,7 @@ class ProjectItemModel(QStandardItemModel):
 
     def __init__(self, parent=None):
         super(ProjectItemModel, self).__init__(parent)
-        self.q_selection_model = QItemSelectionModel(self)
+        self.q_selection_model = QItemSelectionModel(self, self)
 
         self._traits_model = None
         self._shadow_model = None
