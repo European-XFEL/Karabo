@@ -121,7 +121,8 @@ def _db_metadata_reader(metadata):
         'alias': metadata['alias'],
         'simple_name': metadata['simple_name'],
         'description': metadata['description'],
-        'db_attrs': {k: metadata.get(k, '') for k in ('key', 'path')},
+        'db_attrs': {k: metadata.get(NS_EXISTDB_VERSIONING + k, '')
+                     for k in ('key', 'path')},
     }
     return attrs
 
