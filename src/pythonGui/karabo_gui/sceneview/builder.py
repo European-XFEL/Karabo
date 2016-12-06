@@ -145,26 +145,30 @@ def add_object_to_layout(obj, layout):
     obj.show()
 
 
-def remove_object_from_layout(obj, layout, object_dict):
+def remove_object_from_layout(obj, layout, object_dict, scene_visible):
     """ Remove a SceneView object from a layout.
     """
     if is_shape(obj):
         layout._remove_shape(obj)
     elif is_widget(obj):
         layout._remove_widget(obj)
+        if scene_visible and hasattr(obj, 'boxes'):
+            _update_box_visibility(obj.boxes, False)
     elif is_layout(obj):
         layout._remove_layout(obj)
         # Recursively remove all children
         for model in obj.model.children:
             child_obj = object_dict.get(model)
             if child_obj:
-                remove_object_from_layout(child_obj, obj, object_dict)
+                remove_object_from_layout(child_obj, obj, object_dict,
+                                          scene_visible)
 
     # Hide object from scene until reparenting is done
     obj.hide()
 
 
-def create_object_from_model(layout, model, parent_widget, object_dict):
+def create_object_from_model(layout, model, parent_widget, object_dict,
+                             scene_visible):
     """ Create a SceneView object to mirror a data model object.
     """
     obj = object_dict.get(model)
@@ -180,7 +184,7 @@ def create_object_from_model(layout, model, parent_widget, object_dict):
         add_object_to_layout(obj, layout)
         if is_layout(obj):
             # recurse
-            fill_root_layout(obj, model, parent_widget, object_dict)
+            fill_root_layout(obj, model, parent_widget, object_dict, scene_visible)
             model_rect = QRect(model.x, model.y, model.width, model.height)
             if model_rect.isEmpty():
                 # Ask the layout to calculate a suitable size
@@ -196,9 +200,12 @@ def create_object_from_model(layout, model, parent_widget, object_dict):
             if model_rect.isEmpty():
                 model_rect.setSize(obj.sizeHint())
                 obj.set_geometry(model_rect)
+            if scene_visible and hasattr(obj, 'boxes'):
+                _update_box_visibility(obj.boxes, True)
 
 
-def fill_root_layout(layout, parent_model, parent_widget, object_dict):
+def fill_root_layout(layout, parent_model, parent_widget, object_dict,
+                     scene_visible):
     """ Recursively build scene GUI objects for a given parent model object.
     Whenever a layout is encountered, its children are then added recursively.
 
@@ -206,7 +213,7 @@ def fill_root_layout(layout, parent_model, parent_widget, object_dict):
     """
     for child_model in parent_model.children:
         create_object_from_model(layout, child_model, parent_widget,
-                                 object_dict)
+                                 object_dict, scene_visible)
 
 
 def bring_object_to_front(obj):
@@ -250,3 +257,17 @@ def is_shape(scene_obj):
 def is_widget(scene_obj):
     """Returns True if `scene_obj` is a widget."""
     return isinstance(scene_obj, _WIDGET_CLASSES)
+
+
+def _update_box_visibility(boxes, is_visible):
+    """ Update the ``boxes`` visibility
+
+    :param boxes: The boxes which visibility should change
+    :param is_visible: States the visibility flag 
+    """
+    for b in boxes:
+        if is_visible:
+            b.addVisible()
+        else:
+            b.removeVisible()
+
