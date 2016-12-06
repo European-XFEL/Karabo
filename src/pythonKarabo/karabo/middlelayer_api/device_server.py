@@ -266,12 +266,15 @@ def main(args=None):
     loop = EventLoop()
     set_event_loop(loop)
 
+    # This function parses a dict with potentially nested values 
+    # ('.' seperated) and adds them flat as attribtues to the class
     def get(para):
         d = DeviceServer
         for p in para.split('.'):
             d = getattr(d, p)
         return d
 
+    # The fromstring function takes over proper type conversion
     params = Hash({k: get(k).fromstring(v) 
                    for k, v in (a.split("=", 2) for a in args[1:])})
     server = DeviceServer(params)
