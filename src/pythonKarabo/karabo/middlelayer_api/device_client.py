@@ -80,10 +80,12 @@ class ProxySlot(Slot):
 
         @synchronize
         def method(self):
-            yield from self._update()
-            self._device._use()
-            return (yield from self._raise_on_death(
-                self._device.call(self._deviceId, key)))
+            @asyncio.coroutine
+            def inner():
+                yield from self._update()
+                self._device._use()
+                return (yield from self._device.call(self._deviceId, key))
+            return (yield from self._raise_on_death(inner()))
         method.__doc__ = self.description
         return method.__get__(instance, owner)
 
@@ -119,6 +121,7 @@ class Proxy(object):
         self._sync = sync
         self._alive = True
         self._running_tasks = set()
+        self._last_update_task = None
 
     @classmethod
     def __dir__(cls):
@@ -164,14 +167,35 @@ class Proxy(object):
             h[desc.longkey], _ = desc.toDataAndAttrs(value)
             loop.sync(self._raise_on_death(self._device.call(
                 self.deviceId, "slotReconfigure", h)), timeout=-1, wait=True)
+        elif (self._last_update_task is not None and
+              self._last_update_task.done() and
+              self._last_update_task.exception() is not None):
+            task = self._last_update_task
+            self._last_update_task = None
+            task.result()  # raise the exception
         else:
             update = not self._sethash
             self._sethash[desc.longkey], _ = desc.toDataAndAttrs(value)
             if update:
-                asyncio.async(self._update())
+                self._last_update_task = asyncio.async(
+                    self._update(self._last_update_task))
 
     @asyncio.coroutine
-    def _update(self):
+    def _update(self, task=False):
+        """assure all properties are properly set
+
+        property settings are cached in self._sethash. This method
+        will assure they have properly been sent to the device, or it will
+        send it itself. An error is raised if that fails.
+
+        :param task: is an already running update task, if supplied.
+        self._last_update_task is checked otherwise.
+        """
+        if task is False:
+            task = self._last_update_task
+            self._last_update_task = None
+        if task is not None:
+            yield from task
         if self._sethash:
             sethash, self._sethash = self._sethash, Hash()
             yield from self._device._ss.request(
@@ -191,21 +215,18 @@ class Proxy(object):
         to this proxy dies while the *coro* is executed, a KaraboError is
         raised.
         """
-        def raiser():
-            if not self._alive:
-                raise KaraboError('device "{}" died'.format(self._deviceId))
-            try:
-                return (yield from coro)
-            except asyncio.CancelledError:
-                if self._alive:
-                    raise
-                else:
-                    raise KaraboError(
-                        'device "{}" died'.format(self._deviceId))
-        task = asyncio.async(raiser())
+        if not self._alive:
+            raise KaraboError('device "{}" died'.format(self._deviceId))
+        task = asyncio.async(coro)
         self._running_tasks.add(task)
         task.add_done_callback(lambda fut: self._running_tasks.discard(fut))
-        return (yield from task)
+        try:
+            return (yield from task)
+        except asyncio.CancelledError:
+            if self._alive:
+                raise
+            else:
+                raise KaraboError('device "{}" died'.format(self._deviceId))
 
     def __enter__(self):
         self._used += 1
