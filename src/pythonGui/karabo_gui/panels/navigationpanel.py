@@ -33,7 +33,7 @@ class NavigationPanel(Dockable, QWidget):
         """
         if isinstance(event, KaraboBroadcastEvent):
             if event.sender is KaraboEventSender.NetworkConnectStatus:
-                if not event.data.get['status']:
+                if not event.data['status']:
                     self.twNavigation.clear()
             return False
         return super(NavigationPanel, self).eventFilter(obj, event)
