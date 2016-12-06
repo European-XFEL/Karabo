@@ -335,6 +335,7 @@ class Tests(DeviceTest):
 
     @async_tst
     def test_state(self):
+        self.remote.state = State.UNKNOWN
         with (yield from getDevice("remote")) as d:
             self.assertEqual(d.state, State.UNKNOWN)
             self.assertEqual(d.alarmCondition, AlarmCondition.NONE)
@@ -504,39 +505,43 @@ class Tests(DeviceTest):
         """test that values cannot be set if in wrong state"""
         self.assertEqual(self.remote.state, State.UNKNOWN)
         with (yield from getDevice("remote")) as d:
-            try:
-                d.value = 7
-                yield from waitUntil(lambda: d.value == 7)
-                # disallowed_int is normally not allowed
-                with self.assertLogs(logger="remote", level="WARNING") as logs:
-                    d.disallowed_int = 333
-                    yield from sleep(0.02)
-                self.assertEqual(len(logs.records), 1)
-                self.assertEqual(logs.records[0].levelname, "WARNING")
-                self.assertEqual(d.value, 7)
-                # d.allow() sets d.value to 777 and is changing state such that
-                # disallowed_int can be set ...
+            d.value = 7
+            yield from waitUntil(lambda: d.value == 7)
+            # disallowed_int is normally not allowed
+            with self.assertLogs(logger="remote", level="WARNING") as log:
+                # no error here as we need to wait for network round-trip
+                d.disallowed_int = 333
+                yield from sleep(0.02)
+            with self.assertRaises(KaraboError):
+                # this raises the error from above
+                d.value = 8
+            with self.assertLogs(logger="remote", level="WARNING") as log,\
+                    self.assertRaises(KaraboError):
+                d.disallowed_int = 333
                 yield from d.allow()
-                self.assertEqual(d.value, 777)
-                d.value = 4
-                # ... but it cannot be called itself anymore ...
-                with self.assertLogs(logger="remote", level="WARN") as logs, \
-                        self.assertRaises(KaraboError):
-                    yield from d.allow()
-                self.assertEqual(len(logs.records), 1)
-                self.assertEqual(logs.records[0].levelname, "WARNING")
-                self.assertEqual(d.value, 4)
-                # ... but disallowed_int sets this back ...
-                d.disallowed_int = 444
-                yield from waitUntil(lambda: d.value == 444)
-                self.assertEqual(d.value, 444)
-                # ... so allow can be called again!
+            self.assertEqual(len(log.records), 1)
+            self.assertEqual(log.records[0].levelname, "WARNING")
+            self.assertEqual(d.value, 7)
+
+            # d.allow() sets d.value to 777 and is changing state such that
+            # disallowed_int can be set ...
+            yield from d.allow()
+            self.assertEqual(d.value, 777)
+            d.value = 4
+            # ... but it cannot be called itself anymore ...
+            with self.assertLogs(logger="remote", level="WARN") as logs, \
+                    self.assertRaises(KaraboError):
                 yield from d.allow()
-                self.assertEqual(d.value, 777)
-            finally:
-                # set the state back
-                d.disallowed_int = 7
-                self.remote.state = State.UNKNOWN
+            self.assertEqual(len(logs.records), 1)
+            self.assertEqual(logs.records[0].levelname, "WARNING")
+            self.assertEqual(d.value, 4)
+            # ... but disallowed_int sets this back ...
+            d.disallowed_int = 444
+            yield from waitUntil(lambda: d.value == 444)
+            self.assertEqual(d.value, 444)
+            # ... so allow can be called again!
+            yield from d.allow()
+            self.assertEqual(d.value, 777)
 
     @async_tst
     def test_log(self):
