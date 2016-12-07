@@ -344,35 +344,35 @@ class LogWidget(QWidget):
         types = {k for k, v in buttons.items() if v.isChecked()}
         if types:
             g = (log for log in g if (log.messageType in types))
+            if self.gbDate.isChecked():
+                startDateTime = self.dtStartDate.dateTime()
+                startTime = startDateTime.time()
+                startTime.setHMS(startTime.hour(), startTime.minute(), 0)
+                startDateTime.setTime(startTime)
+                endDateTime = self.dtEndDate.dateTime()
+                endTime = endDateTime.time()
+                endTime.setHMS(endTime.hour(), endTime.minute(), 59)
+                endDateTime.setTime(endTime)
 
-        if self.gbDate.isChecked():
-            startDateTime = self.dtStartDate.dateTime()
-            startTime = startDateTime.time()
-            startTime.setHMS(startTime.hour(), startTime.minute(), 0)
-            startDateTime.setTime(startTime)
-            endDateTime = self.dtEndDate.dateTime()
-            endTime = endDateTime.time()
-            endTime.setHMS(endTime.hour(), endTime.minute(), 59)
-            endDateTime.setTime(endTime)
+                # Check start and end range
+                if endDateTime < startDateTime:
+                    self.dtStartDate.setDateTime(endDateTime)
+                    self.dtEndDate.setDateTime(startDateTime)
 
-            # Check start and end range
-            if endDateTime < startDateTime:
-                self.dtStartDate.setDateTime(endDateTime)
-                self.dtEndDate.setDateTime(startDateTime)
+                g = (log for log in g
+                     if startDateTime < log.dateTime < endDateTime)
 
-            g = (log for log in g
-                 if startDateTime < log.dateTime < endDateTime)
-
-        text = self.leSearch.text()
-        if text:
-            ins = self.pbSearchInsId.isChecked()
-            des = self.pbSearchDescr.isChecked()
-            add = self.pbSearchAddDescr.isChecked()
-            g = (log for log in g
-                 if (ins and text in log.instanceId) or
-                    (des and text in log.description) or
-                    (add and text in log.additionalDescription))
-        return list(g)
+            text = self.leSearch.text()
+            if text:
+                ins = self.pbSearchInsId.isChecked()
+                des = self.pbSearchDescr.isChecked()
+                add = self.pbSearchAddDescr.isChecked()
+                g = (log for log in g
+                     if (ins and text in log.instanceId) or
+                        (des and text in log.description) or
+                        (add and text in log.additionalDescription))
+            return list(g)
+        return []
 
     def onItemDoubleClicked(self, index):
         value = index.data()
