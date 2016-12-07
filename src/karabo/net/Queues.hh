@@ -251,7 +251,7 @@ namespace karabo {
                 if (size() < m_capacity) {
                     LosslessQueue::push_back(entry);
                 } else {
-                    KARABO_LOG_FRAMEWORK_WARN << "Ignored message pointer in push_back since capacity ("
+                    KARABO_LOG_FRAMEWORK_WARN << "Ignored message pointer upon pushing since capacity ("
                             << m_capacity << ") reached.";
                 }
             }
@@ -260,7 +260,7 @@ namespace karabo {
 
         /**
          * @class RemoveOldestQueue
-         * @brief The RemoveOldestQueue implements a queue that remove the oldest
+         * @brief The RemoveOldestQueue implements a queue that removes the oldest
          *        element in the queue when it has reached is maximum capacity
          *        and a new element is pushed to it
          */
@@ -318,8 +318,8 @@ namespace karabo {
 
             void push_back(const Message::Pointer& entry) {
                 if (m_queue.full()) {
-                    KARABO_LOG_FRAMEWORK_WARN << "Will overwrite old message pointer in push_back since buffer (size = "
-                            << m_queue.size() << ") is full.";
+                    KARABO_LOG_FRAMEWORK_WARN << "Overwrite old message pointer upon pushing to buffer since it is full (size = "
+                            << m_queue.size() << ").";
                 }
                 m_queue.push_back(entry);
             }
