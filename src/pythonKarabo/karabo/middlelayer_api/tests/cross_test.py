@@ -146,9 +146,10 @@ class Tests(DeviceTest):
         before = datetime.now()
 
         karabo = os.environ["KARABO"]
+        xml = os.path.abspath('historytest.xml')
         self.process = yield from create_subprocess_exec(
             os.path.join(karabo, "bin", "karabo-cppserver"),
-            "historytest.xml", stderr=PIPE, stdout=PIPE)
+            xml, stderr=PIPE, stdout=PIPE)
 
         @coroutine
         def print_stdout():
