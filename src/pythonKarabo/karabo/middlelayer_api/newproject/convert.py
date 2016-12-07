@@ -41,10 +41,10 @@ def _convert_devices(old_devices):
                                                 configuration=dev.initConfig,
                                                 initialized=True)
         uuid, rev = config_model.uuid, config_model.revision
-        instance_model = DeviceInstanceModel(instance_id=dev.filename,
-                                             if_exists=dev.ifexists,
-                                             configs=[config_model],
-                                             active_config_ref=(uuid, rev))
+        instance_model = DeviceInstanceModel(
+            class_id=dev.classId, instance_id=dev.filename,
+            if_exists=dev.ifexists, configs=[config_model],
+            active_config_ref=(uuid, rev))
         dev_instances[dev.serverId].append(instance_model)
         devices.append(config_model)
 

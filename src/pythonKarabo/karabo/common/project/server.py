@@ -15,6 +15,8 @@ from .device import DeviceConfigurationModel
 class DeviceInstanceModel(BaseSavableModel):
     """ A device which can be instantiated by a server
     """
+    # The class ID of the device
+    class_id = String
     # The device ID of the instantiated device
     instance_id = String
     # If the device is already online, should it be ignored or restarted?
@@ -36,6 +38,14 @@ class DeviceInstanceModel(BaseSavableModel):
             if (dev_config.uuid, dev_config.revision) == (uuid, revision):
                 return dev_config
 
+    def _class_id_changed(self):
+        """When ``class_id`` changes, make sure the configurations are
+        compatible.
+        """
+        configs = [cnf for cnf in self.configs
+                   if cnf.class_id == self.class_id]
+        self.configs = configs
+
     def _configs_changed(self, old, new):
         """ Traits notification handler for list assignment
         """
@@ -53,15 +63,32 @@ class DeviceInstanceModel(BaseSavableModel):
         :param removed: A list of removed ``DeviceConfigurationModel`` objects
         :param added: A list of added ``DeviceConfigurationModel`` objects
         """
+        active_ref = self.active_config_ref
         for config_model in removed:
+            # Handle our active configuration leaving!
+            if (config_model.uuid, config_model.revision) == active_ref:
+                self.active_config_ref = ('', 0)
             # Remove listener for ``revision`` change event
             config_model.on_trait_change(self._update_active_revision,
                                          'revision', remove=True)
 
+        rejects = []
         for config_model in added:
+            # Reject incompatible configurations
+            if self.class_id and config_model.class_id != self.class_id:
+                rejects.append(config_model)
             # Add listener for ``revision`` change event
             config_model.on_trait_change(self._update_active_revision,
                                          'revision')
+
+        if rejects:
+            # Remove the incompatible configurations!
+            # This is recursive, but in each call `added` will be empty
+            for config_model in rejects:
+                self.configs.remove(config_model)
+
+            # Wait until we've made ourself consistent before raising
+            raise ValueError("Incompatible configuration(s) added to device!")
 
     def _update_active_revision(self, obj, name, old, new):
         """ Whenever the revision of a ``DeviceConfigurationModel`` is changed
@@ -99,12 +126,14 @@ def read_device_server(io_obj):
         traits = {
             'uuid': element.get('uuid'),
             'revision': int(element.get('revision')),
+            'class_id': element.get('class_id', ''),
             'initialized': False,
         }
         return DeviceConfigurationModel(**traits)
 
     def _read_device_instance(element):
         traits = {
+            'class_id': element.get('class_id'),
             'instance_id': element.get('instance_id'),
             'if_exists': element.get('if_exists', 'ignore'),
             'active_config_ref': (element.get('active_uuid'),
@@ -129,12 +158,14 @@ def write_device_server(model):
     """
     def _write_configs(obj, parent):
         element = SubElement(parent, 'config')
+        element.set('class_id', obj.class_id)
         element.set('uuid', obj.uuid)
         element.set('revision', str(obj.revision))
 
     def _write_device_instance(obj, parent):
         element = SubElement(parent, 'device')
         active_uuid, active_rev = obj.active_config_ref
+        element.set('class_id', obj.class_id)
         element.set('instance_id', obj.instance_id)
         element.set('if_exists', obj.if_exists)
         element.set('active_uuid', active_uuid)
