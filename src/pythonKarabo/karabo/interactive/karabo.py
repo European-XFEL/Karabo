@@ -150,7 +150,6 @@ def parse_commandline():
                              'to run simultaneously.')
 
     args = parser.parse_args()
-    print(args)
     if len(sys.argv) <= 1:
         parser.print_help()
         parser.exit()
