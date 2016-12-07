@@ -36,6 +36,7 @@ class KaraboEventSender(Enum):
     ShowConfiguration = "Show configuration"
     ShowDevice = "Show device"
     ShowNavigationItem = "Show navigation item"
+    SystemTopologyUpdate = "System topology updated"
 
 
 class KaraboBroadcastEvent(QEvent):
