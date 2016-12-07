@@ -342,7 +342,7 @@ class LogWidget(QWidget):
                            WARN_LOW=self.pbFilterWarning,
                            WARN_HIGH=self.pbFilterWarning)
         types = {k for k, v in buttons.items() if v.isChecked()}
-        if len(types):
+        if types:
             g = (log for log in g if (log.messageType in types))
             if self.gbDate.isChecked():
                 startDateTime = self.dtStartDate.dateTime()
@@ -372,8 +372,7 @@ class LogWidget(QWidget):
                         (des and text in log.description) or
                         (add and text in log.additionalDescription))
             return list(g)
-        else:
-            return []
+        return []
 
     def onItemDoubleClicked(self, index):
         value = index.data()
