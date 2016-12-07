@@ -222,10 +222,10 @@ namespace karabo {
             m_randPing(rand() + 2),
             m_trackAllInstances(false),
             m_heartbeatInterval(10),
-            m_discoverConnectionResourcesMode(false),
-            m_heartbeatTimer(EventLoop::getIOService()),
             m_trackingTimer(EventLoop::getIOService()),
-            m_performanceTimer(EventLoop::getIOService()) {
+            m_heartbeatTimer(EventLoop::getIOService()),
+            m_performanceTimer(EventLoop::getIOService()),
+            m_discoverConnectionResourcesMode(false) {
             setTopic();
             EventLoop::addThread();
         }
@@ -1964,8 +1964,17 @@ namespace karabo {
             if (signalConnectionString.empty()) return false;
 
             m_pointToPoint->connect(signalInstanceId, m_instanceId, signalConnectionString,
-                                    boost::bind(&SignalSlotable::tryToCallDirectly, this, _1, _2, _3));
+                                    bind_weak(&SignalSlotable::onP2pMessage, this, _1, _2));
             return true;
+        }
+
+
+        void SignalSlotable::onP2pMessage(const karabo::util::Hash::Pointer& header,
+                                          const karabo::util::Hash::Pointer& body) {
+
+            EventLoop::getIOService().post(bind_weak(&SignalSlotable::processEvent, this, header, body));
+            // To be equivalent to onBrokerMessage, we would have to re-register for the next p2p message.
+            // Currently this is done in PointToPoint::Consumer::consume(...) and cannot easily be moved here.
         }
 
 
