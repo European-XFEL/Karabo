@@ -115,14 +115,14 @@ def _wrap_child_element_xml(child_xml, root_metadata):
 def _db_metadata_reader(metadata):
     """ Read the traits which are common to all BaseProjectObjectModel objects
     """
+    db_attrs_keys = (NS_EXISTDB_VERSIONING + k for k in ('key', 'path'))
     attrs = {
         'uuid': metadata['uuid'],
         'revision': int(metadata[NS_EXISTDB_VERSIONING + 'revision']),
         'alias': metadata['alias'],
         'simple_name': metadata['simple_name'],
         'description': metadata['description'],
-        'db_attrs': {k: metadata.get(NS_EXISTDB_VERSIONING + k, '')
-                     for k in ('key', 'path')},
+        'db_attrs': {k: metadata.get(k, '') for k in db_attrs_keys},
     }
     return attrs
 
