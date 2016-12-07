@@ -344,17 +344,24 @@ class Tests(DeviceTest):
     def test_disconnect(self):
         """test values are not updating when disconnected"""
         self.remote.counter = -1
+        # there are often still changes on the way that we don't want to see
+        yield from sleep(0.1)
         d = yield from getDevice("remote")
         task = async(d.count())
         yield from sleep(0.1)
-        self.assertEqual(d.counter, -1)
+        self.assertEqual(d.counter, -1,
+                         "we're not connected still seeing changes")
         yield from sleep(0.1)
         with (yield from d):
+            yield from sleep(0.1)
             tmp = d.counter
-            self.assertNotEqual(d.counter, -1)
+            self.assertNotEqual(d.counter, -1,
+                                "not seeing changes although connected")
         yield from sleep(0.1)
-        self.assertLess(tmp, 12)
-        self.assertLess(d.counter - tmp, 2)
+        # sanity check: the counter should still be running
+        self.assertLess(tmp, 20)
+        self.assertLess(d.counter - tmp, 2,
+                        "to many messages arrived after disconnecting")
         with d:
             yield from sleep(0.5)
             self.assertEqual(d.counter, 29)
