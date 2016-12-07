@@ -34,21 +34,15 @@ def run_cmd(cmd):
         exit()
 
 
-try:
-    @contextlib.contextmanager
-    def pushd_popd(path=None):
-        path = path = os.environ['KARABO'] if path is None else path
-        old_path = os.getcwd()
-        os.chdir(path)
-        try:
-            yield
-        finally:
-            os.chdir(old_path)
-except KeyError:
-    print('$KARABO is not defined. Make sure you have sourced the '
-          'activate script for the Karabo Framework which you would '
-          'like to use.')
-    sys.exit(1)
+@contextlib.contextmanager
+def pushd_popd():
+    path = os.environ['KARABO']
+    old_path = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(old_path)
 
 
 def parse_commandline():
@@ -336,8 +330,8 @@ def install_dependencies(args):
     print('Found dependencies:', dep_names)
     print('Automatically installing now.')
     for item in devices:
-        args['device'] = item[0]
-        args['tag'] = item[1]
+        setattr(args, 'device', item[0])
+        setattr(args, 'tag', item[1])
         install(args)
 
 
