@@ -34,6 +34,7 @@ def run_cmd(cmd):
         print("Problem with system call: {}".format(e))
         exit()
 
+
 try:
     @contextlib.contextmanager
     def pushd_popd(path=os.environ['KARABO']):
@@ -116,8 +117,8 @@ def parse_commandline():
                             help='Build configuration {Debug|Release}')
 
     parser_insf = sps.add_parser('install-file',
-                                 help='Installs devices as given in the '
-                                 'configuration file')
+                                 help='Installs devices given in the '
+                                      'configuration file')
     parser_insf.set_defaults(command=install_file)
 
     parser_insf.add_argument('filename',
@@ -140,7 +141,7 @@ def parse_commandline():
                              help='The name of the device package')
 
     parser_uinsf = sps.add_parser('uninstall-file',
-                                  help='Uninstalls devices as given in the '
+                                  help='Uninstalls devices given in the '
                                        'configuration file')
     parser_uinsf.set_defaults(command=uninstall_file)
 
@@ -229,7 +230,8 @@ def checkout(args):
         else:
             print('Downloading {}... '.format(args.device), end='', flush=True)
             run_cmd('git clone {}/karaboDevices/{} {}'.format(args.git,
-                    args.device, path))
+                                                              args.device,
+                                                              path))
             print('done.')
             print('Device package was added to: {}'
                   .format(os.path.abspath(path)))
@@ -269,8 +271,8 @@ def install_file(args):
     filename = os.path.join(INVOKE_DIR, args.filename)
     devices = parse_configuration_file(filename)
     for item in devices:
-        setattr(args, 'device', item[0])
-        setattr(args, 'tag', item[1])
+        args['device'] = item[0]
+        args['tag'] = item[1]
         install(args)
 
 
@@ -279,7 +281,6 @@ def parse_configuration_file(filename):
     with open(filename) as csvfile:
         rows = csv.reader(csvfile, delimiter=',')
         for row in rows:
-            #  print(row)
             if len(row) != 2 or '#' in row[0]:
                 continue
             row[0] = row[0].strip()
@@ -302,7 +303,7 @@ def uninstall_file(args):
     filename = os.path.join(INVOKE_DIR, args.filename)
     devices = parse_configuration_file(filename)
     for item in devices:
-        setattr(args, 'device', item[0])
+        args['device'] = item[0]
         uninstall(args)
 
 
@@ -327,17 +328,17 @@ def develop(args):
 
 
 def install_dependencies(args):
-    '''Installs dependencies as specified in the DEPENDS file.
+    """Installs dependencies as specified in the DEPENDS file.
     NOTE: This function must be run in the directory of the DEPENDS file!
-    '''
+    """
     devices = parse_configuration_file('DEPENDS')
     print('Found dependencies: {}'.format(', '.join('{} ({})'
-                                              .format(e[0], e[1])
+                                                    .format(e[0], e[1])
                                                     for e in devices)))
     print('Automatically installing now.')
     for item in devices:
-        setattr(args, 'device', item[0])
-        setattr(args, 'tag', item[1])
+        args['device'] = item[0]
+        args['tag'] = item[1]
         install(args)
 
 
