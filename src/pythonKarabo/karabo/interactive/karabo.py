@@ -150,7 +150,7 @@ def parse_commandline():
                              'to run simultaneously.')
 
     args = parser.parse_args()
-
+    print(args)
     if len(sys.argv) <= 1:
         parser.print_help()
         parser.exit()
@@ -198,7 +198,7 @@ def checkout(args):
             print('done.')
             print('Device package was added to: {}'
                   .format(os.path.abspath(path)))
-    if 'develop' in args:
+    if args.develop:
         develop(args)
 
 
