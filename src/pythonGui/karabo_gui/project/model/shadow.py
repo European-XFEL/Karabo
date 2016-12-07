@@ -3,6 +3,7 @@
 # Created on October 28, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from karabo_gui.project.topo_listener import SystemTopologyListener
 from .device import DeviceInstanceModelItem
 from .macro import MacroModelItem
 from .scene import SceneModelItem
@@ -77,6 +78,11 @@ def create_device_server_model_shadow(model):
     for device in model.devices:
         child = shadow.child_create(model=device)
         shadow.children.append(child)
+
+    # Attach the topology listener
+    callback = shadow.system_topology_callback
+    shadow.topo_listener = SystemTopologyListener(callback)
+
     return shadow
 
 
@@ -87,3 +93,6 @@ def destroy_device_server_model_shadow(shadow_model):
     model = shadow_model.model
     model.on_trait_change(
         shadow_model.item_handler, 'devices_items', remove=True)
+
+    # Detach the topology listener
+    shadow_model.topo_listener = None
