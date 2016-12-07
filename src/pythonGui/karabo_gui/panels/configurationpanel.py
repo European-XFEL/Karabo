@@ -208,6 +208,9 @@ class ConfigurationPanel(Dockable, QWidget):
             if event.sender is KaraboEventSender.ShowConfiguration:
                 configuration = event.data.get('configuration')
                 self.onShowConfiguration(configuration)
+            elif event.sender is KaraboEventSender.TreeItemSingleClick:
+                configuration = event.data.get('configuration')
+                self.onDeviceItemChanged(configuration.type, configuration)
             elif event.sender is KaraboEventSender.ShowNavigationItem:
                 device_path = event.data.get('device_path')
                 self.onSelectNewNavigationItem(device_path)
