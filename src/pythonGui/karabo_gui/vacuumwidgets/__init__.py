@@ -10,6 +10,7 @@ __all__ = [
     "agilentionwidget",
     "cryocoolerwidget",
     "hydraulicvalvewidget",
+    "lampsmallwidget",
     "lampwidget",
     "maxigaugewidget",
     "membranepumpwidget",

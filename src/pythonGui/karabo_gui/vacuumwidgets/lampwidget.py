@@ -8,6 +8,7 @@ class LampWidget(VacuumWidget):
         State.CHANGING: 'lamp-changing',
         State.ACTIVE: 'lamp-active',
         State.PASSIVE: 'lamp-passive',
+        State.STATIC: 'lamp-static',
         State.INIT: 'lamp-init',
         State.KNOWN: 'lamp-known',
         State.ERROR: 'lamp-error',
