@@ -24,7 +24,7 @@ def _log_exception(func, device, message):
     _, exception, _ = sys.exc_info()
     default = ('Exception in slot "%s" of device "%s" called by "%s"',
                func.__qualname__, device.deviceId,
-               message.properties['signalInstanceId'])
+               message.properties['signalInstanceId'].decode("ascii"))
     logmessage = getattr(exception, "logmessage", default)
     level = getattr(exception, "loglevel", logging.ERROR)
     logger.log(level, *logmessage, exc_info=True)

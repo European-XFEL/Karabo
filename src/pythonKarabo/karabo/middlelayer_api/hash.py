@@ -480,7 +480,7 @@ class Slot(Descriptor):
             msg = 'Calling slot "{}" not allowed in state "{}"'.format(
                 self.key, instance.state)
             device._ss.reply(message, msg, error=True)
-            device.logger.warn(msg)
+            device.logger.warning(msg)
             return
 
         coro = get_event_loop().run_coroutine_or_thread(func)
