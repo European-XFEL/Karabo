@@ -12,7 +12,7 @@ from PyQt4.QtSvg import QSvgRenderer
 from karabo.common.scenemodel.api import write_single_model
 from karabo_gui.dialogs.dialogs import SceneLinkDialog
 from karabo_gui.dialogs.textdialog import TextDialog
-from karabo_gui.mediator import (
+from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.sceneview.utils import calc_rect_from_text
 

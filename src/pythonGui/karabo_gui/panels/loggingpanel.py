@@ -6,10 +6,10 @@
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 from karabo_gui.docktabwindow import Dockable
+from karabo_gui.events import (
+    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 import karabo_gui.icons as icons
 from karabo_gui.logwidget import LogWidget
-from karabo_gui.mediator import (
-    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 
 
 class LoggingPanel(Dockable, QWidget):

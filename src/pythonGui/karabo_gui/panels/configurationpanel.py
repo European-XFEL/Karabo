@@ -13,9 +13,9 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
                          QWidget)
 
 from karabo_gui.docktabwindow import Dockable
-import karabo_gui.icons as icons
-from karabo_gui.mediator import (
+from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+import karabo_gui.icons as icons
 from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.parametertreewidget import ParameterTreeWidget
 from karabo_gui.projecttreeview import ProjectTreeView

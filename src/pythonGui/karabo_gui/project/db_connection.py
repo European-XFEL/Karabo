@@ -10,7 +10,7 @@ from karabo.common.project.api import get_user_cache, read_lazy_object
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.newproject.io import (read_project_model,
                                                   write_project_model)
-from karabo_gui.mediator import (
+from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.singletons.api import get_network
 
