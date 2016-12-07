@@ -11,12 +11,12 @@ from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
 from PyQt4.QtGui import (QComboBox, QDialog, QDialogButtonBox, QPixmap, QStyle,
                          QStyledItemDelegate)
 
-from karabo_gui.util import SignalBlocker
-from karabo_gui.mediator import (
+from karabo_gui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
     KaraboBroadcastEvent
 )
 from karabo_gui.singletons.api import get_db_conn
+from karabo_gui.util import SignalBlocker
 
 SIMPLE_NAME = 'simple_name'
 UUID = 'uuid'

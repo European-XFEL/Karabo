@@ -11,10 +11,10 @@ from qtconsole.pygments_highlighter import PygmentsHighlighter
 
 from karabo.middlelayer import Hash, write_macro
 from karabo_gui.docktabwindow import Dockable
-import karabo_gui.icons as icons
-from karabo_gui.mediator import (
+from karabo_gui.events import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
     unregister_from_broadcasts)
+import karabo_gui.icons as icons
 from karabo_gui.singletons.api import get_network
 from karabo_gui.topology import getDevice
 from karabo_gui.util import getSaveFileName
