@@ -9,12 +9,11 @@ import csv
 from karabo.packaging.device_template import configure_template
 
 DEV_NULL = open(os.devnull, 'w')
-INVOKE_DIR = ''
+INVOKE_DIR = os.getcwd()
 
 
 def run_local():
     global INVOKE_DIR
-    INVOKE_DIR = os.getcwd()
     try:
         karabo_dir = os.environ['KARABO']
         os.chdir(karabo_dir)
@@ -37,7 +36,8 @@ def run_cmd(cmd):
 
 try:
     @contextlib.contextmanager
-    def pushd_popd(path=os.environ['KARABO']):
+    def pushd_popd(path=None):
+        path = path = os.environ['KARABO'] if path is None else path
         old_path = os.getcwd()
         os.chdir(path)
         try:
@@ -278,7 +278,7 @@ def install_file(args):
 
 def parse_configuration_file(filename):
     devices = []
-    with open(filename) as csvfile:
+    with open(filename, 'r') as csvfile:
         rows = csv.reader(csvfile, delimiter=',')
         for row in rows:
             if len(row) != 2 or '#' in row[0]:
@@ -332,9 +332,8 @@ def install_dependencies(args):
     NOTE: This function must be run in the directory of the DEPENDS file!
     """
     devices = parse_configuration_file('DEPENDS')
-    print('Found dependencies: {}'.format(', '.join('{} ({})'
-                                                    .format(e[0], e[1])
-                                                    for e in devices)))
+    dep_names = ', '.join('{} ({})'.format(e[0], e[1]) for e in devices)
+    print('Found dependencies:', dep_names)
     print('Automatically installing now.')
     for item in devices:
         args['device'] = item[0]
