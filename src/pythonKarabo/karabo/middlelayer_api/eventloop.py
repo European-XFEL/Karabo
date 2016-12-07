@@ -90,17 +90,14 @@ class Broker:
         async(heartbeat())
 
     def call(self, signal, targets, reply, args):
+        if not targets:
+            return
         p = openmq.Properties()
         p['signalFunction'] = signal
-        if targets:
-            p['slotInstanceIds'] = ('|' + '||'.join(t for t in targets) + '|'
-                                    ).encode("utf8")
-            p['slotFunctions'] = ('|' + '||'.join(
-                "{}:{}".format(k, ",".join(v)) for k, v in targets.items()) +
-                '|').encode("utf8")
-        else:
-            p['slotInstanceIds'] = b'__none__'
-            p['slotFunctions'] = b'__none__'
+        p['slotInstanceIds'] = (
+            '|' + '||'.join(t for t in targets) + '|').encode("utf8")
+        funcs = ("{}:{}".format(k, ",".join(v)) for k, v in targets.items())
+        p['slotFunctions'] = ('|' + '||'.join(funcs) + '|').encode("utf8")
         if reply is not None:
             p['replyTo'] = reply
         p['hostname'] = socket.gethostname()
