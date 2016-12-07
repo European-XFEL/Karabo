@@ -13,6 +13,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/circular_buffer.hpp>
 
+#include "karabo/log/Logger.hh"
 
 namespace karabo {
     namespace net {
@@ -76,7 +77,7 @@ namespace karabo {
 
             public:
 
-            typedef boost::shared_ptr<Queue> Pointer;
+            KARABO_CLASSINFO(Queue, "Queue", "1.0")
 
             Queue() {
             }
@@ -160,6 +161,8 @@ namespace karabo {
 
         public:
 
+            KARABO_CLASSINFO(LosslessQueue, "LosslessQueue", "1.0")
+
             LosslessQueue() {
             }
 
@@ -223,6 +226,8 @@ namespace karabo {
 
         public:
 
+            KARABO_CLASSINFO(RejectNewestQueue, "RejectNewestQueue", "1.0")
+
             RejectNewestQueue() : LosslessQueue(), m_capacity(1000) {
             }
 
@@ -243,7 +248,12 @@ namespace karabo {
             }
 
             void push_back(const Message::Pointer& entry) {
-                if (size() < m_capacity) LosslessQueue::push_back(entry);
+                if (size() < m_capacity) {
+                    LosslessQueue::push_back(entry);
+                } else {
+                    KARABO_LOG_FRAMEWORK_WARN << "Ignored message pointer in push_back since capacity ("
+                            << m_capacity << ") reached.";
+                }
             }
 
         };
@@ -260,6 +270,8 @@ namespace karabo {
             boost::circular_buffer<Message::Pointer> m_queue;
 
         public:
+
+            KARABO_CLASSINFO(RemoveOldestQueue, "RemoveOldestQueue", "1.0")
 
             RemoveOldestQueue() : m_queue(1000) {
             }
@@ -305,6 +317,10 @@ namespace karabo {
             }
 
             void push_back(const Message::Pointer& entry) {
+                if (m_queue.full()) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Will overwrite old message pointer in push_back since buffer (size = "
+                            << m_queue.size() << ") is full.";
+                }
                 m_queue.push_back(entry);
             }
 
