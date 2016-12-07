@@ -7,14 +7,14 @@ Devices
 =======
 
 The device is the core concept of Karabo. Basically, Karabo consists of a set of devices
-running somewhere on the network. Every device is an instance of an object-oriented class,
+running somewhere on the network. Every device is an instance of an object-oriented class
 which implements the device interface and logic. Each device serves one logical
 and encapsulated service, i.e. 1 device = 1 service.
 
 A device can represent:
 
 - A single IO channel (e.g. a digital output for switching something on or off)
-- A single equipment (e.g. a motor or a pump)
+- A single piece of equipment (e.g. a motor or a pump)
 - A controller driving a set of equipment (e.g. a pump controller)
 - A group of equipment that together forms a larger component (e.g. a slit using two
   underlying motors)
@@ -26,8 +26,8 @@ The main purpose of devices is to hide the implementation details of the underly
 service from the user and provide a standardized interface to the outside world.
 
 In order to unambiguously address a device running somewhere in the network, each device
-is identified by a unique name. A Karabo distributed system will not allow to start a
-second device with an instance name that already exists somewhere in its managed topology.
+is identified by a unique name. A Karabo distributed system will not allow a second device
+to be started with an instance name that already exists somewhere in its managed topology.
 
 Device instance names follow a prescribed schema encoding
 usage *domain*, device *type* and *member* instance into a "/" separated path:
@@ -84,7 +84,7 @@ requirements, resulting from *composition* over device boundaries:
 	- distribute common data to multiple devices
 	- group hardware logically split into multiple devices into a single physical component
 
-Because we compose behaviour over multiple device instances such middle-layer devices are
+Because we compose behavior over multiple device instances such middle-layer devices are
 called *composite* devices.
 
 A second flavor of middle-layer devices are so-called *channel* devices. These are useful
@@ -124,7 +124,7 @@ Device Slots
 	*middle-layer* devices are given in Section :ref:`middle_layer_api`.
 
 *Device slots* can conceptually be seen as member functions of a C++ or Python
-class, which are additionally exposed to all other devices in the control
+class which are additionally exposed to all other devices in the control
 system. Slots may be called with up to four arguments of the types described in
 Section :ref:`data_types` (although many more are possible using a Hash as a container).
 They may have no return value or reply a value of a Karabo-known type as part of
@@ -135,8 +135,8 @@ a possibly asynchronous reply.
 The Call & Request/Reply Patterns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-At its core Karabo uses a combination of signals and slots to provide for (inter)device
-communication. This *low-level* interface can be directly used if a large degree over message
+At its core Karabo uses a combination of signals and slots to provide for (inter-)device
+communication. This *low-level* interface can be directly used if a large degree of message
 passing patterns and the (a)synchronicity of events is needed. In the C++ API and Bound API it is
 exposed as part of the Device interface. If an exception occurs on the remote device
 being interacted with an exception will be thrown in case of synchronous operations on
@@ -283,9 +283,9 @@ with multiple methods.
 Technical Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Every device is subscribed as a client to a central message broker. All devices subscribe
-with their device names. The broker uses this names for message routing during the
+with their device names. The broker uses these names for message routing during the
 request / reply communication. The requesting instance generates a unique ID for each
-request, which is shipped with the message and is used for blocking and un-blocking or
+request, which is shipped with the message and is used for blocking and unblocking or
 registering and finding a provided callback, respectively. Details on Broker communication
 can be found in Section :ref:`broker`.
 
@@ -308,7 +308,7 @@ received further specification using attributes (Section :ref:`attributes`). Alo
 methods, properties constitute an integral part of a device's self description, as defined
 by its ``Schema``. By defining a property the following is implied
 
-- the property is readable (*get*) and possibly writeable (*set*) from within the distributed
+- the property is readable (*get*) and possibly writable (*set*) from within the distributed
   system using a combination of *device id* and *property key* and given the user
   has appropriate access rights.
 - the combination of *device id* and *key* is unique across the distributed system installation.
@@ -392,7 +392,7 @@ programmer defines node types which can be used in this list::
 Which Type of Device to Write
 +++++++++++++++++++++++++++++
 
-The type of device, *bound* or *middle-layer* depends on how your intended application fits
+The type of device, *bound* or *middle-layer*, depends on how your intended application fits
 into the classification scheme described in the previous section. If you are in doubt
 contact the CAS group for assistance. If direct hardware-access or p2p-interfaces are
 involved the usage of *bound* devices is usually the right way to go.
@@ -402,14 +402,14 @@ C++ or Python
 
 If you are writing a middle-layer device the choice is simple, as you will be using a
 Python API. While the middle-layer API at first glance is slender and pythonic, it hides
-most of the explicit calls (in terms of asynchronousity) exposed by the other APIs in the
+most of the explicit calls (in terms of asynchronicity) exposed by the other APIs in the
 back-end. Programmers are thus advised to make themselves familiar with what may
 *actually* happen upon a seemingly innocent property assignment as
 described in Section :ref:`middle_layer_api`.
 
 If the application at hand requires use of a bound device you can choose between the C++
 API or the Python API binding to it. Both are intentionally kept similar in syntax,
-even if this may seem *un-pythonic* at times. Ever so often the choice will simply depend
+even if this may seem *un-pythonic* at times. Every so often the choice will simply depend
 on your personal programming preferences, i.e. if you are more comfortable in the one or
 the other languages. Both APIs are feature-complete with respect to each other (but not to
 the middle-layer API, although is much more true vice versa).
@@ -421,7 +421,7 @@ programmers to reach the performance of Numpy *ufuncs*, i.e. those numpy/scipy c
 bind to C++ or FORTRAN code underneath.
 
 If you require explicit static typing and compile-time type checking C++ is the way to go.
-For the sake of brevity most code examples given in the following will by in the Python-API
+For the sake of brevity most code examples given in the following will by in the Python API
 unless otherwise indicated.
 
 Device Version vs. Karabo Version
@@ -448,10 +448,10 @@ Karabo devices provide a set of common hooks in both the Python and C++ APIs (bu
 the middle-layer API). Developers can use these hooks to trigger special functionality
 on events common to all devices. They are as following:
 
-- *preReconfigure(incomingReconfiguration)*: allows to alter an incoming re-configuration
-  to the device *before* actually updating device properties. This hook can be used to
-  perform more sophisticated validity checks or to alter the configuration before
-  its application. The configuration is passed as a Karabo Hash, which contains all
+- *preReconfigure(incomingReconfiguration)*: allows an incoming re-configuration to the
+  device to be altered *before* actually updating device properties. This hook can be used
+  to perform more sophisticated validity checks or to alter the configuration before
+  its application. The configuration is passed as a Karabo Hash which contains all
   altered properties.
 
   .. note::
@@ -482,8 +482,8 @@ Device Servers
 
 Device servers are the hosts for Karabo devices. They are responsible for loading the
 device code and running the device in an event loop, i.e. keeping it live and available
-to the distributed system. Device servers come in three flavors: C++, Python and middle-
-layer device servers. In addition to the user instantiated devices Karabo auxilary
+to the distributed system. Device servers come in three flavors: C++, Python and
+middle-layer device servers. In addition to the user instantiated devices Karabo auxiliary
 devices are run on device servers. These are:
 
 - the data logging service (see Section :ref:`data_logging`)
@@ -576,10 +576,10 @@ Synchronous and Asynchronous Communication via the Client Interface
 ===================================================================
 
 As was mentioned in the `Device Slots`_ section, Karabo devices support two types
-of calls to slots on devices: synchronous calls and asynchronous calls on the lower
-level signal-slot interface. Often such a detailed level of control over (a)synchronicity
+of calls to slots on devices: synchronous calls and asynchronous calls on the lower-level
+signal-slot interface. Often such a detailed level of control over (a)synchronicity
 of communication is not needed. In such cases the *DeviceClient* interface can be used.
-The device client is accessible using the ``remote()` function:
+The device client is accessible using the ``remote()`` function:
 
 .. code-block:: Python
 
@@ -612,7 +612,7 @@ and retrieve them
 	self.remote().get("/a/remote/device", "A")
 
 If you depend on executing some code whenever a property on a device changes *property
-monitors* come in use. They allow to register a callback to be executed whenever the
+monitors* come into use. They allow you to register a callback to be executed whenever the
 property changes:
 
 .. code-block:: Python
@@ -648,7 +648,7 @@ The Simple State Machine
 All device APIs in Karabo provide state-awareness via so-called *simple state machines*.
 The underlying assumption is that for (bound) devices, where strict state transition rules
 need to be enforced, these will have been implemented in hardware or in firmware on PLCs.
-Bound devices thus need to be able to follow, or reflect the hardware state, but not enforce
+Bound devices thus need to be able to follow or reflect the hardware state, but not enforce
 strict state transition rules. In other words: state-violating input to the hardware is
 caught by the hardware, preserving hardware safety, not by the software device.
 
@@ -691,10 +691,10 @@ Karabo properties can have a number of common data types, ranging from simple an
 scalars, vectors of these, as well as composite types such as arrays or arbitrary rank
 and tables, i.e. 2-d arrays with a fixed column schema.
 
-Additionally, Karabo implements a key-value container, which preserves insertion order
+Additionally, Karabo implements a key-value container which preserves insertion order
 and can be iterated over: the Karabo Hash.
 
-Karabo datatypes "live" in the Karabo Hash, they are converted to the native types of
+Karabo datatypes "live" in the Karabo Hash. They are converted to the native types of
 the programming language upon retrieval (get) from the Hash and from the native types
 upon assignment to the Hash. In C++ this is explicitly done using template mechanisms,
 in Python an implicit conversion is performed. Casting is supported using the ``getAs`
@@ -726,8 +726,8 @@ In C++ templating mechanisms are used:
 The Karabo Hash
 +++++++++++++++
 
-The Karabo Hash is a key-value container. This means element (values) in a Hash can be
-addressed by a string key.
+The Karabo Hash is a key-value container. This means the (values of) elements in a Hash
+can be addressed by a string key.
 
 .. code-block:: Python
 
@@ -773,7 +773,7 @@ validity bounds:
 	checkBounds(h, "foo")
 	#raises AttributeError
 
-In fact bound-checking is already included in Karabo and can be enabled for upon property
+In fact bound-checking is already included in Karabo and can be enabled upon property
 definition. It is implemented using attributes.
 
 From the Python perspective a Hash corresponds to something like an ordered
@@ -801,7 +801,7 @@ thus identifiable by *paths*, separated with "." characters:
 	#will print "Test"
 
 Note that in the above examples copies of *h2* and *h1* are created upon insertion. The
-following call with thus fail, as *h2* has not been set an attribute:
+following call will thus fail, as *h2* has not been set an attribute:
 
 .. code-block:: Python
 
@@ -811,13 +811,13 @@ following call with thus fail, as *h2* has not been set an attribute:
 .. note::
 
 	While the above examples are Python code, having to access items of a dictionary-like
-	container by key, instead of iterating over key-value pairs seems unnecessary complex.
+	container by key, instead of iterating over key-value pairs, seems unnecessary complex.
 	In the middle-layer API a more *pythonic* solution is available using
 	``Hash.iteritems()``.
 
 .. note::
 
-    In both python APIs requesting a non-existing key from the Hash will return
+    In both Python APIs requesting a non-existing key from the Hash will return
     ``None``.
 
 
@@ -845,7 +845,7 @@ Floating point types:     FLOAT, DOUBLE
 Complex Types
 +++++++++++++
 
-Complex types are available in Karabo. The are available for float and double
+Complex types are available in Karabo. They are available for float and double
 scalar and vector types described in the previous section by prepending
 ``COMPLEX``.
 
@@ -854,7 +854,7 @@ Complex scalar types:    COMPLEX_FLOAT, COMPLEX_DOUBLE
 Complex vector types:    VECTOR_COMPLEX_FLOAT, VECTOR_COMPLEX_DOUBLE
 =======================  ===========================================
 
-In C++ the underlying type is ``std::complex<>``, in python the ``complex``
+In C++ the underlying type is ``std::complex<>``, in Python the ``complex``
 type is used. The following two examples are equivalent:
 
 .. code-block:: C++
@@ -889,8 +889,8 @@ Hash type:                VECTOR_HASH
 NDArray Types
 +++++++++++++
 
-Multidimensional types are represented using the ``NDArray`` type, and the
-associated ``NDARRAY_ELEMENT``. The element itself is untyped, rather it
+Multidimensional types are represented using the ``NDArray`` type and the
+associated ``NDARRAY_ELEMENT``. The element itself is untyped. Rather it
 will always internally store data as a ``ByteArray`` alongside an attribute
 for type information.
 
@@ -986,7 +986,7 @@ Bounds are specified when defining a devices expected parameters:
         self.set("bounded", 600)  # raises exception~
 
 Additionally, alarm conditions may be set in the variance of a parameter,
-evaluated in defined a rolling window:
+evaluated in a defined rolling window:
 
 .. code-block:: Python
 
@@ -1001,7 +1001,7 @@ evaluated in defined a rolling window:
 
 .. note::
 
-   Alarm condition defintions need to always be closed of by stating if the
+   Alarm condition definitions need to always be closed of by stating if the
    alarm needs acknowledging on the alarm service to disappear.
 
 Units
@@ -1156,8 +1156,8 @@ Timestamps
 ++++++++++
 
 Karabo's properties have timestamps, which are either passed up from hardware
-interfaced to the control system, or set to the current time upon property
-assignment. A central timing service assures synchronization accoss the
+interfaced to the control system or set to the current time upon property
+assignment. A central timing service assures synchronization across the
 distributed system. Alternatively, developers may set an arbitrary timestamp
 upon assignment as an optional parameter in set commands:
 
@@ -1209,7 +1209,7 @@ the following functions:
 
 Timestamps are given by seconds of the UNIX epoch alongside fractional seconds
 used to provide additional accuracy for resolving the XFEL pulse-structure in
-the femto-second range.
+the femtosecond range.
 
 .. function:: getFractionalSeconds()
 
@@ -1225,10 +1225,10 @@ the femto-second range.
 The Karabo Schema
 +++++++++++++++++
 
-Karabo stores a static description of a device as part of the device' schema.
+Karabo stores a static description of a device as part of the device's schema.
 The schema contains information on the expected parameters of the device,
-including property types and default values. Underlying, the schema uses the
-same technology as the Karabo Hash, to construct a hierarchical, ordered key-
+including property types and default values. Underneath, the schema uses the
+same technology as the Karabo Hash to construct a hierarchical, ordered key-
 value representation. It is serializable to XML. Currently, Karabo does not
 support schema evolution.
 
