@@ -87,6 +87,8 @@ rm -f $BASEDIR/karabo
 mkdir -p $PACKAGEDIR
 mkdir -p $PACKAGEDIR/plugins
 mkdir -p $PACKAGEDIR/var/log
+mkdir -p $PACKAGEDIR/var/data
+
 
 # Version information
 echo $VERSION > $PACKAGEDIR/VERSION

@@ -17,6 +17,9 @@ int main(int argc, char** argv) {
 
     try {
 
+        // We always change the directory to $KARABO/var/data
+        boost::filesystem::current_path(boost::filesystem::path(Version::getPathToKaraboInstallation() + "/var/data"));
+
         // Let the factory now about all available plugins.
         // It is important to load plugins even before having a device server
         // instance, as this allows the help function to correctly show available
