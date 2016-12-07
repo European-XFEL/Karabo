@@ -93,7 +93,6 @@ namespace karabo {
             void disconnect(const std::string& signalInstanceId, const std::string& slotInstanceId);
 
             void consume(const karabo::net::ErrorCode& ec,
-                         const std::string& signalInstanceId,
                          const std::string& signalConnectionString,
                          const karabo::net::Connection::Pointer& connection,
                          const karabo::net::Channel::Pointer& channel,
@@ -109,7 +108,6 @@ namespace karabo {
                                         const karabo::net::Connection::Pointer& connection);
 
             void channelErrorHandler(const karabo::net::ErrorCode& ec,
-                                     const std::string& signalInstanceId,
                                      const std::string& signalConnectionString,
                                      const karabo::net::Connection::Pointer& connection,
                                      const karabo::net::Channel::Pointer& channel);
@@ -122,6 +120,8 @@ namespace karabo {
                     m_openConnections[signalConnectionString] = std::make_pair(connection, channel);
             }
 
+            /** To be called under protection of 'boost::mutex::scoped_lock lock(m_connectedInstancesMutex);'.
+             */
             void storeSignalSlotConnectionInfo(const std::string& slotInstanceId,
                                                const std::string& signalInstanceId,
                                                const std::string& signalConnectionString,
@@ -197,8 +197,6 @@ namespace karabo {
             boost::split(v, s, boost::is_any_of(" "));
             const string& slotInstanceId = v[0];
             const string& command = v[1];
-
-            //KARABO_LOG_FRAMEWORK_DEBUG << "Consumer registration message : \"" << subscription << "\".";
 
             boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
             if (command == "SUBSCRIBE")
@@ -331,13 +329,12 @@ namespace karabo {
 
 
         void PointToPoint::Consumer::channelErrorHandler(const karabo::net::ErrorCode& ec,
-                                                         const std::string& signalInstanceId,
                                                          const std::string& signalConnectionString,
                                                          const karabo::net::Connection::Pointer& connection,
                                                          const karabo::net::Channel::Pointer& channel) {
             if (ec.value() != 2 && ec.value() != 125) {
-                KARABO_LOG_FRAMEWORK_WARN << "karabo::net::Channel to \"" << signalInstanceId
-                        << "\" using \"" << signalConnectionString << "\" failed.  Code " << ec.value() << " -- \"" << ec.message() << "\"";
+                KARABO_LOG_FRAMEWORK_WARN << "karabo::net::Channel to \"" << signalConnectionString
+                        << "\" failed.  Code " << ec.value() << " -- \"" << ec.message() << "\"";
             }
             {
                 boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
@@ -360,10 +357,13 @@ namespace karabo {
                                                                    const std::string& signalInstanceId,
                                                                    const std::string& signalConnectionString,
                                                                    const ConsumeHandler& handler) {
-            if (m_connectedInstances.find(signalInstanceId) == m_connectedInstances.end())
+            if (m_connectedInstances.find(signalInstanceId) == m_connectedInstances.end()) {
                 m_connectedInstances[signalInstanceId] = std::make_pair(signalConnectionString, Consumer::SlotInstanceIds());
+            }
             SlotInstanceIds& slotInstanceIds = m_connectedInstances[signalInstanceId].second;
-            if (slotInstanceIds.find(slotInstanceId) == slotInstanceIds.end()) slotInstanceIds[slotInstanceId] = handler;
+            if (slotInstanceIds.find(slotInstanceId) == slotInstanceIds.end()) {
+                slotInstanceIds[slotInstanceId] = handler;
+            }
         }
 
 
@@ -376,7 +376,7 @@ namespace karabo {
                                                     const karabo::net::Channel::Pointer& channel) {
 
             if (ec) {
-                channelErrorHandler(ec, signalInstanceId, signalConnectionString, connection, channel);
+                channelErrorHandler(ec, signalConnectionString, connection, channel);
                 return;
             }
             // bookkeeping ...
@@ -389,7 +389,7 @@ namespace karabo {
             // Subscribe to producer with our own instanceId
             channel->write(slotInstanceId + " SUBSCRIBE");
             // ... and, finally, wait for publications ...
-            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1, signalInstanceId,
+            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1,
                                                                signalConnectionString, connection, channel, _2, _3));
         }
 
@@ -440,7 +440,7 @@ namespace karabo {
             ConnectedInstances::iterator it = m_connectedInstances.find(signalInstanceId);
             if (it == m_connectedInstances.end()) return; // Done! ... nothing to disconnect
 
-            string signalConnectionString = it->second.first;
+            const string& signalConnectionString = it->second.first;
 
             // un-subscribe from producer
             Connection::Pointer connection = m_openConnections[signalConnectionString].first;
@@ -453,9 +453,6 @@ namespace karabo {
 
             // It may happen that signalInstanceId entry will be erased...
             if (slotInstanceIds.empty()) m_connectedInstances.erase(it);
-
-            //KARABO_LOG_FRAMEWORK_DEBUG << "Point-to-point connection between \"" << signalInstanceId << "\" and \""
-            //        << slotInstanceId << "\"  closed.";
 
             if (m_openConnections.find(signalConnectionString) == m_openConnections.end()) return;
 
@@ -477,7 +474,6 @@ namespace karabo {
 
 
         void PointToPoint::Consumer::consume(const karabo::net::ErrorCode& ec,
-                                             const std::string& signalInstanceId,
                                              const std::string& signalConnectionString,
                                              const karabo::net::Connection::Pointer& connection,
                                              const karabo::net::Channel::Pointer& channel,
@@ -485,16 +481,12 @@ namespace karabo {
                                              karabo::util::Hash::Pointer& body) {
 
             if (ec) {
-                channelErrorHandler(ec, signalInstanceId, signalConnectionString, connection, channel);
+                channelErrorHandler(ec, signalConnectionString, connection, channel);
                 return;
             }
-
-            // Get from header...
-            // ... slotInstanceIdsString
-            string slotInstanceIdsString = header->get<string>("slotInstanceIds");
-
-            // Strip it from "|"
-            slotInstanceIdsString.substr(1, slotInstanceIdsString.length() - 2);
+            // Get signalInstancdId and slotInstanceIds from header
+            const string& signalInstanceId = header->get<string>("signalInstanceId");
+            const string& slotInstanceIdsString = header->get<string>("slotInstanceIds");
 
             // Split into vector of "slotInstanceId"
             vector<string> ids;
@@ -519,11 +511,10 @@ namespace karabo {
                     handler = iii->second;
                 }
                 // call user callback of type "ConsumeHandler"
-                handler(slotInstanceId, header, body);
+                handler(header, body);
             }
             // Re-register itself
-            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1,
-                                                               signalInstanceId, signalConnectionString,
+            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1, signalConnectionString,
                                                                connection, channel, _2, _3));
         }
 
