@@ -725,7 +725,7 @@ class Tests(DeviceTest):
 
                 d.dn.othr = 111
                 yield from d
-                self.assertFalse(hasattr(d.dn, "othr"))
+                self.assertFalse(isSet(d.dn.othr))
         finally:
             yield from a.slotKillDevice()
 
