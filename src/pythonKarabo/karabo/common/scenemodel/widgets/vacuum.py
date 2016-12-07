@@ -11,7 +11,7 @@ from karabo.common.scenemodel.registry import (
 
 VACUUM_WIDGETS = (
     'AgilentIonWidget', 'CryoCoolerWidget', 'HydraulicValveWidget',
-    'LampWidget', 'LampSmallWidget', 'MaxiGaugeWidget', 'MembranePumpWidget',
+    'LampSmallWidget', 'LampWidget', 'MaxiGaugeWidget', 'MembranePumpWidget',
     'MotorWidget', 'PressureGaugeWidget', 'PressureSwitchWidget',
     'RightAngleValveWidget', 'ShutOffValveWidget', 'TemperatureProbeWidget',
     'TurboPumpWidget', 'ValveWidget'
