@@ -10,7 +10,8 @@ from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
 from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.project.utils import save_object
-from .item_model import ProjectItemModel
+from karabo_gui.singletons.api import get_project_model
+from karabo_gui.singletons.project_model import ProjectViewItemModel
 from .model.project import ProjectModelItem
 from .model.project_groups import ProjectSubgroupItem
 
@@ -21,8 +22,7 @@ class ProjectView(QTreeView):
     def __init__(self, parent=None):
         super(ProjectView, self).__init__(parent)
 
-        item_model = ProjectItemModel(self)
-        self.setModel(item_model)
+        self.setModel(get_project_model())
         self.selectionModel().selectionChanged.connect(self._selection_change)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -66,7 +66,7 @@ class ProjectView(QTreeView):
     def _parent_project(self, model):
         """ Find the parent project model of a given item model
         """
-        if isinstance(model, (ProjectItemModel, ProjectSubgroupItem)):
+        if isinstance(model, (ProjectViewItemModel, ProjectSubgroupItem)):
             return model.model
         root_project = self.model().traits_data_model
         return find_parent_object(model.model, root_project, ProjectModel)

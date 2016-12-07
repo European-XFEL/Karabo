@@ -5,19 +5,20 @@
 #############################################################################
 from PyQt4.QtGui import QItemSelectionModel, QStandardItemModel
 
-from .model.shadow import (create_project_model_shadow,
-                           destroy_project_model_shadow)
+from karabo_gui.project.model.shadow import (
+    create_project_model_shadow, destroy_project_model_shadow
+)
 
 TABLE_HEADER_LABELS = ["Projects"]
 
 
-class ProjectItemModel(QStandardItemModel):
+class ProjectViewItemModel(QStandardItemModel):
     """ A QStandardItemModel which mediates between our Traits-based data model
     and Qt
     """
 
     def __init__(self, parent=None):
-        super(ProjectItemModel, self).__init__(parent)
+        super(ProjectViewItemModel, self).__init__(parent)
         self.q_selection_model = QItemSelectionModel(self, self)
 
         self._traits_model = None

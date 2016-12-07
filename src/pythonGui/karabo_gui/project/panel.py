@@ -74,7 +74,7 @@ class ProjectPanel(Dockable, QWidget):
 def _project_load_handler(item_model):
     """ Load a project model and assign it to the `item_model`
 
-    :param item_model: The `ProjectItemModel` of the `ProjectView`
+    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
     """
     # XXX: HACK. This is only written this way to get _something_ loaded.
     # It must change when integrating into the full GUI
@@ -98,7 +98,7 @@ def _project_load_handler(item_model):
 def _project_new_handler(item_model):
     """ Create a new project model and assign it to the given `item_model`
 
-    :param item_model: The `ProjectItemModel` of the `ProjectView`
+    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
     """
     from karabo.common.project.api import ProjectModel
 
@@ -112,7 +112,7 @@ def _project_new_handler(item_model):
 def _project_save_handler(item_model):
     """ Save the project model of the given `item_model`
 
-    :param item_model: The `ProjectItemModel` of the `ProjectView`
+    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
     """
     traits_model = item_model.traits_data_model
     if traits_model is not None:
