@@ -125,7 +125,7 @@ class Proxy(object):
 
     @classmethod
     def __dir__(cls):
-        return dir(cls)
+        return cls._allattrs
 
     def _use(self):
         pass
@@ -315,6 +315,10 @@ class SubProxy(object):
 
     def __getattr__(self, attr):
         return getattr(self._parent, attr)
+
+    @classmethod
+    def __dir__(cls):
+        return cls._allattrs
 
 
 class OneShotQueue(asyncio.Future):
@@ -550,6 +554,7 @@ def _createProxyDict(hash, prefix):
             dict[k].key = k
             dict[k].longkey = prefix + k
             dict[k].description = a.get("description")
+    dict["_allattrs"] = list(hash)
     return dict
 
 
