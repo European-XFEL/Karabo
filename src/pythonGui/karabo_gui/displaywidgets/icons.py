@@ -13,7 +13,13 @@ from karabo_gui.messagebox import MessageBox
 from karabo_gui.util import getOpenFileName, temp_file
 from karabo_gui.widget import DisplayWidget
 
-DEFAULT_PIXMAP = icons.no.icon.pixmap(100)
+
+def _default_pixmap():
+    """Hide this in a function so that karabo_gui can be unit tested.
+
+    Touching QPixmap as an import side effect is EVIL. Don't do that.
+    """
+    return icons.no.pixmap(100)
 
 
 def create_temp_url(item_obj, image_data):
@@ -50,7 +56,7 @@ class Label(QLabel):
 
     def setPixmap(self, pixmap):
         if pixmap is None:
-            QLabel.setPixmap(self, DEFAULT_PIXMAP)
+            QLabel.setPixmap(self, _default_pixmap())
         else:
             QLabel.setPixmap(self, pixmap)
 
@@ -77,7 +83,7 @@ class Item(object):
             is available as byte string.
         """
         if self.data is None:
-            self.pixmap = DEFAULT_PIXMAP
+            self.pixmap = _default_pixmap()
             create_temp_url(self, self.pixmap)
             return True
 
@@ -194,7 +200,7 @@ class Icons(DisplayWidget):
 
     def setPixmap(self, p):
         if p is None:
-            self.widget.setPixmap(DEFAULT_PIXMAP)
+            self.widget.setPixmap(_default_pixmap())
         else:
             self.widget.setPixmap(p)
 
