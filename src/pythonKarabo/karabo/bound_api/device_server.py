@@ -452,8 +452,13 @@ class Launcher(object):
 
 
 def main(args=None):
-    # Change directory to $KARABO/var/data
-    os.chdir(os.path.join(os.environ['KARABO'], 'var', 'data'))
+    try:
+        # Change directory to $KARABO/var/data
+        os.chdir(os.path.join(os.environ['KARABO'], 'var', 'data'))
+    except KeyError:
+        print("ERROR: $KARABO is not defined. Make sure you have sourced the "
+              "'activate' script.")
+        return
 
     args = args or sys.argv
     try:
