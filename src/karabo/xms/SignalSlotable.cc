@@ -10,6 +10,7 @@
 
 #include "SignalSlotable.hh"
 #include "karabo/util/Version.hh"
+#include "karabo/net/EventLoop.hh"
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
@@ -226,13 +227,13 @@ namespace karabo {
             m_trackingTimer(EventLoop::getIOService()),
             m_performanceTimer(EventLoop::getIOService()) {
             setTopic();
+            EventLoop::addThread();
         }
 
 
         SignalSlotable::SignalSlotable(const string& instanceId, const JmsConnection::Pointer& connection,
                                        const int heartbeatInterval, const karabo::util::Hash& instanceInfo) :
             SignalSlotable() {
-            setTopic();
             init(instanceId, connection, heartbeatInterval, instanceInfo);
         }
 
@@ -241,7 +242,6 @@ namespace karabo {
                                        const karabo::util::Hash& brokerConfiguration,
                                        const int heartbeatInterval, const karabo::util::Hash& instanceInfo) :
             SignalSlotable() {
-            setTopic();
             JmsConnection::Pointer connection = Configurator<JmsConnection>::create(connectionClass, brokerConfiguration);
             init(instanceId, connection, heartbeatInterval, instanceInfo);
         }
@@ -258,6 +258,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << m_instanceId << "\" shuts cleanly down";
                 call("*", "slotInstanceGone", m_instanceId, m_instanceInfo);
             }
+            EventLoop::removeThread();
         }
 
 
@@ -860,7 +861,10 @@ namespace karabo {
             call("*", "slotPing", m_instanceId, 0, activateTracking);
             // The function slotPingAnswer will be called by all instances available now
             // Lets wait a fair amount of time - huaaah this is bad isn't it :-(
+            // Since we block here for a long time, add a thread to ensure that all slotPingAnswer can be processed.
+            EventLoop::addThread();
             boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+            EventLoop::removeThread();
             boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
             KARABO_LOG_FRAMEWORK_DEBUG << "Available instances: " << m_trackedInstances;
             return m_trackedInstances;
