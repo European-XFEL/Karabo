@@ -53,9 +53,12 @@ def _build_getter(key, modulename, klassname):
 
     return getter
 
+
 # This is where all the singletons are defined
 get_db_conn = _build_getter('db_conn', '.project.db_connection',
                             'ProjectDatabaseConnection')
+get_project_model = _build_getter('project_model', '.singletons.project_model',
+                                  'ProjectViewItemModel')
 get_manager = _build_getter('manager', '.singletons.manager', 'Manager')
 get_mediator = _build_getter('mediator', '.singletons.mediator', 'Mediator')
 get_network = _build_getter('network', '.singletons.network', 'Network')
