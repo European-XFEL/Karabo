@@ -268,9 +268,10 @@ class Descriptor(object):
     requiredAccessLevel = Attribute(AccessLevel.OBSERVER)
     displayType = Attribute()
     allowedStates = None
+    tags = None
 
     def __init__(self, strict=True, key="(unknown key)",
-                 allowedStates=None, **kwargs):
+                 allowedStates=None, tags=None, **kwargs):
         """Create a new descriptor with appropriate attributes
 
         The attributes are given as keyword arguments. If we define
@@ -306,6 +307,11 @@ class Descriptor(object):
                         format(allowedStates))
             else:
                 self.allowedStates = set((State(s) for s in allowedStates))
+        if tags is not None:
+            self.tags = set(tags)
+            if not all((isinstance(s, str) for s in self.tags)):
+                raise TypeError('tags must contain strings, not "{}"'.
+                                format(tags))
 
     def toSchemaAndAttrs(self, device, state):
         """return schema for device in state
@@ -324,6 +330,8 @@ class Descriptor(object):
         attrs = {name: attr for name, attr in attrs if attr is not None}
         if self.allowedStates is not None:
             attrs["allowedStates"] = [s.value for s in self.allowedStates]
+        if self.tags is not None:
+            attrs["tags"] = list(self.tags)
         return Hash(), attrs
 
     def __get__(self, instance, owner):

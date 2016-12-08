@@ -83,6 +83,7 @@ class Tests(DeviceTest):
         self.assertEqual(a_desc.minInc, 11)
         self.assertEqual(a_desc.maxInc, 23)
         self.assertEqual(a_desc.allowedStates, {State.INIT, State.UNKNOWN})
+        self.assertEqual(a_desc.tags, {"bla", "blub"})
 
         self.assertEqual(len(proxy.table), 1)
         self.assertEqual(proxy.table[0]["d"], 5 * unit.meter)
