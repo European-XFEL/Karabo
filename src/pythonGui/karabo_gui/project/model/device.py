@@ -123,7 +123,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
                 # Connect to signal
                 conf.signalNewDescriptor.connect(self._new_descriptor)
             else:
-                self.project_device.descriptor = conf.descriptor
+                self._set_descriptor(conf)
         if self.real_device.isOnline():
             return self.real_device
 
@@ -133,18 +133,31 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         """The global ``Configuration`` has received a new class schema which
         needs to be set for the ``project_device`` as well
         """
+        self._set_descriptor(conf)
+        # Disconnect signal again
+        conf.signalNewDescriptor.disconnect(self._new_descriptor)
+
+    def _set_descriptor(self, conf):
         if self.project_device.descriptor is not None:
             self.project_device.redummy()
         self.project_device.descriptor = conf.descriptor
-        config = self._get_active_config()
-        if config is not None and config.configuration is not None:
-            self.project_device.fromHash(config.configuration)
+
+        # Update active configuration hash
+        self._merge_hash()
 
         # Notify configuration panel
         self._broadcast_show_configuration(self.project_device)
 
-        # Disconnect signal again
-        conf.signalNewDescriptor.disconnect(self._new_descriptor)
+    def _merge_hash(self):
+        """Merge the active configuration Hash into the existing"""
+        if self.project_device.descriptor is None:
+            return
+
+        # Set default values for configuration
+        self.project_device.setDefault()
+        config = self._get_active_config()
+        if config is not None and config.configuration is not None:
+            self.project_device.fromHash(config.configuration)
 
     def _broadcast_show_configuration(self, device_box):
         """ Notify configuration panel to show configuration of ``device_box``
