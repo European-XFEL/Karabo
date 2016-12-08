@@ -131,3 +131,19 @@ def test_child_configuration_rejection():
 
     inst.configs.append(dev1)
     assert len(inst.configs) == 1
+
+
+def test_child_finding():
+    conf = DeviceConfigurationModel(class_id='BazClass', uuid=UUID, revision=0)
+    foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
+                              configs=[conf], active_config_ref=(UUID, 0))
+    bar = DeviceInstanceModel(class_id='BazClass', instance_id='barDevice',
+                              configs=[conf], active_config_ref=(UUID, 0))
+    server = DeviceServerModel(server_id='testServer', host='serverserverFoo',
+                               devices=[foo, bar])
+
+    found = server.get_device_instance('barDevice')
+    assert found is bar
+
+    not_found = server.get_device_instance('banana')
+    assert not_found is None

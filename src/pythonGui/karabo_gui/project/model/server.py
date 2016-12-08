@@ -16,6 +16,7 @@ from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.events import (register_for_broadcasts,
                                unregister_from_broadcasts)
+from karabo_gui.indicators import DeviceStatus, get_device_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
@@ -100,11 +101,20 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         # Synchronize the GUI with the Traits model
         self._update_ui_children(additions, removals)
 
-    def system_topology_callback(self, added, removed):
+    def system_topology_callback(self, devices, servers):
         """ This callback is called by the ``SystemTopologyListener`` object
         in the ``topo_listener`` trait.
         """
-        pass
+        server = self.model
+        child_dev_ids = set([inst.instance_id for inst in server.devices])
+        for dev_id, class_id, status in devices:
+            if dev_id in child_dev_ids:
+                inst = server.get_device_instance(dev_id)
+                if inst is not None and inst.class_id == class_id:
+                    inst.status = status
+        for server_id, host, status in servers:
+            if server.server_id == server_id and server.host == host:
+                server.status = status
 
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
@@ -146,6 +156,15 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         if not self.is_ui_initialized():
             return
         self.qt_item.setText(self.model.server_id)
+
+    @on_trait_change("model.status")
+    def status_change(self):
+        if not self.is_ui_initialized():
+            return
+        status_enum = DeviceStatus(self.model.status)
+        icon = get_device_status_icon(status_enum)
+        if icon is not None:
+            self.qt_item.setIcon(icon)
 
     def _topo_listener_changed(self, name, old, new):
         """Handle broadcast event registration/unregistration here.
@@ -190,6 +209,7 @@ class DeviceServerModelItem(BaseProjectTreeItem):
             )
             active_config_ref = (config_model.uuid, config_model.revision)
             traits = {
+                'class_id': dialog.class_id,
                 'instance_id': dialog.instance_id,
                 'if_exists': dialog.if_exists,
                 'configs': [config_model],

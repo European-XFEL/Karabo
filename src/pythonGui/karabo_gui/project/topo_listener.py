@@ -23,8 +23,8 @@ class SystemTopologyListener(QObject):
         """
         if isinstance(event, KaraboBroadcastEvent):
             if event.sender is KaraboEventSender.SystemTopologyUpdate:
-                added = event.data.get('devices-added', [])
-                removed = event.data.get('devices-removed', [])
-                self.callback(added, removed)
+                devices = event.data.get('devices', [])
+                servers = event.data.get('servers', [])
+                self.callback(devices, servers)
             return False
         return super(SystemTopologyListener, self).eventFilter(obj, event)

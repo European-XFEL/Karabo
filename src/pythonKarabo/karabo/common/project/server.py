@@ -25,6 +25,8 @@ class DeviceInstanceModel(BaseSavableModel):
     configs = List(Instance(DeviceConfigurationModel))
     # UUID/Rev of the currently active configuration
     active_config_ref = Tuple(String, Int)
+    # The current status of the device
+    status = String('offline', transient=True)
 
     def select_config(self, uuid, revision):
         """ Find the `DeviceConfigurationModel` matching the given `uuid` and
@@ -114,6 +116,14 @@ class DeviceServerModel(BaseProjectObjectModel):
     host = String
     # A list of possible devices for the server
     devices = List(Instance(DeviceInstanceModel))
+    # The current status of the server
+    status = String('offline', transient=True)
+
+    def get_device_instance(self, instance_id):
+        for dev in self.devices:
+            if dev.instance_id == instance_id:
+                return dev
+        return None
 
     def _server_id_changed(self, old, new):
         self.simple_name = new
