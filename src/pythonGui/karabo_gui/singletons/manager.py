@@ -391,8 +391,8 @@ class Manager(QObject):
                 KaraboEventSender.ShowAlarmServices, data))
 
         # Tell the world about new devices
-        data = {'added': _extract_topology_devices(systemTopology),
-                'removed': []}
+        data = {'devices-added': _extract_topology_devices(systemTopology),
+                'devices-removed': []}
         broadcast_event(KaraboBroadcastEvent(
                 KaraboEventSender.SystemTopologyUpdate, data))
 
@@ -473,7 +473,8 @@ class Manager(QObject):
             path = instanceType + "." + instanceId
             attributes = self.systemHash.getAttributes(path)
             classId = attributes.get("classId", "unknown-class")
-            data = {'added': [], 'removed': [(instanceId, classId)]}
+            data = {'devices-added': [],
+                    'devices-removed': [(instanceId, classId)]}
             broadcast_event(KaraboBroadcastEvent(
                     KaraboEventSender.SystemTopologyUpdate, data))
 
