@@ -108,7 +108,8 @@ if __name__ == '__main__':
             "karabo_gui.dialogs": ["*.ui"],
             "karabo_gui.displaywidgets": ["*.ui", "*.svg"],
             "karabo_gui.icons": ["*.*", "vacuum/*.*",
-                                 "vacuum/bigger/*.*"],
+                                 "vacuum/bigger/*.*",
+                                 "statefulicons/iconset/*.svg"],
         }
     }
 

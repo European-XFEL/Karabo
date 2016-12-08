@@ -5,3 +5,4 @@
 from karabo_gui.displaywidgets import *
 from karabo_gui.editablewidgets import *
 from karabo_gui.vacuumwidgets import *
+from karabo_gui.icons.statefulicons.statefuliconwidget import StatefulIconWidget
