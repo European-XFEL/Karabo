@@ -12,7 +12,7 @@ from karabo_gui.project.dialog.object_handle import ObjectSaveDialog
 from karabo_gui.singletons.api import get_db_conn
 
 
-class WeakMethodWrapper(object):
+class WeakMethodRef(object):
     """ A weakref.ref() for bound methods
     """
     def __init__(self, bound_method, num_args=-1):

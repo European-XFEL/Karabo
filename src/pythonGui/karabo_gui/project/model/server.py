@@ -37,7 +37,7 @@ class DeviceServerModelItem(BaseProjectTreeItem):
     # Different devices for the server
     children = List(Instance(DeviceInstanceModelItem))
     _child_map = Dict  # dictionary for fast lookups during removal
-    # An object which listens to the system topology
+    # An object which listens to system topology updates
     topo_listener = Instance(SystemTopologyListener)
 
     def context_menu(self, parent_project, parent=None):
