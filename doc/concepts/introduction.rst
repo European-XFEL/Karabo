@@ -5,7 +5,7 @@ Introduction
 Karabo is the name of European XFEL GmbH's homogenoeus software
 framework.
 
-It essentially is a framework allowing to build plugable distributed
+It essentially is a framework allowing the building of plugable distributed
 (networked) applications that can be remotely controlled. 
 Karabo can be used for control and data acquisition (i.e. as `SCADA
 <http://en.wikipedia.org/wiki/SCADA>`_ system) but also for
@@ -47,7 +47,7 @@ are kept updated with significant deviations from normal system-performance.
 What Karabo Is Not
 ==================
 
-Karabo is by **no** means a fails-safe system. As such any core protection of
+Karabo is by **no** means a fail-safe system. As such any core protection of
 hardware, and especially personal may **not** be implemented in Karabo. Karabo
 may only be used as a view and configuration tool for these protection systems.
 
