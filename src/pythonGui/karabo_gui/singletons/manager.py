@@ -391,8 +391,8 @@ class Manager(QObject):
                 KaraboEventSender.ShowAlarmServices, data))
 
         # Tell the world about new devices
-        data = {'devices-added': _extract_topology_devices(systemTopology),
-                'devices-removed': []}
+        devices, servers = _extract_topology_devices(systemTopology)
+        data = {'devices': devices, 'servers': servers}
         broadcast_event(KaraboBroadcastEvent(
                 KaraboEventSender.SystemTopologyUpdate, data))
 
@@ -448,6 +448,8 @@ class Manager(QObject):
     def handle_instanceGone(self, instanceId, instanceType):
         """ Remove instanceId from central hash and update
         """
+        removed_devices, removed_servers = [], []
+
         if instanceType in ("device", "macro"):
             # Distribute gone alarm service devices
             instanceIds = self._extractAlarmServices()
@@ -469,14 +471,11 @@ class Manager(QObject):
             # Update system topology
             self.systemTopology.eraseDevice(instanceId)
 
-            # Tell the world about departing devices
+            # Record departing devices
             path = instanceType + "." + instanceId
             attributes = self.systemHash.getAttributes(path)
             classId = attributes.get("classId", "unknown-class")
-            data = {'devices-added': [],
-                    'devices-removed': [(instanceId, classId)]}
-            broadcast_event(KaraboBroadcastEvent(
-                    KaraboEventSender.SystemTopologyUpdate, data))
+            removed_devices.append((instanceId, classId, 'offline'))
 
             # Remove device from systemHash
             if self.systemHash is not None and path in self.systemHash:
@@ -486,8 +485,13 @@ class Manager(QObject):
             serverClassIds = self.systemTopology.eraseServer(instanceId)
             self._clearServerClassParameterPages(serverClassIds)
 
-            # Remove server from systemHash
+            # Record departing servers
             path = "server." + instanceId
+            attributes = self.systemHash.getAttributes(path)
+            host = attributes.get('host', 'UNKNOWN')
+            removed_servers.append((instanceId, host, 'offline'))
+
+            # Remove server from systemHash
             if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
 
@@ -498,6 +502,11 @@ class Manager(QObject):
             self.projectTopology.clearParameterPages(serverClassIds)
 
         self.projectTopology.updateNeeded()
+
+        # Broadcast the change to listeners
+        data = {'devices': removed_devices, 'servers': removed_servers}
+        broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.SystemTopologyUpdate, data))
 
     def handle_attributesUpdated(self, reply):
         instanceId = reply["instanceId"]
@@ -691,8 +700,18 @@ class Manager(QObject):
 def _extract_topology_devices(topo_hash):
     """Get all the devices and their classes out of a system topology update.
     """
-    devices = []
-    for device_id, _, attrs in topo_hash['device'].iterall():
-        class_id = attrs.get("classId", "unknown-class")
-        devices.append((device_id, class_id))
-    return devices
+    devices, servers = [], []
+
+    if 'device' in topo_hash:
+        for device_id, _, attrs in topo_hash['device'].iterall():
+            class_id = attrs.get('classId', 'unknown-class')
+            status = attrs.get('status', 'ok')
+            devices.append((device_id, class_id, status))
+
+    if 'server' in topo_hash:
+        for server_id, _, attrs in topo_hash['server'].iterall():
+            host = attrs.get('host', 'UNKNOWN')
+            status = attrs.get('status', 'ok')
+            servers.append((server_id, host, status))
+
+    return devices, servers

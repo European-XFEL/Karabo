@@ -85,7 +85,7 @@ def get_state_icon(state):
     """
     global _STATE_ICONS
     if _STATE_ICONS is None:
-        _STATE_ICONS = {k: _create_state_icon(v)
+        _STATE_ICONS = {k: _create_state_icon(v.value)
                         for k, v in STATE_COLORS.items()}
 
     # Remark: order matters here - tree relation!
@@ -161,7 +161,7 @@ class DeviceStatus(Enum):
     STATUS_ERROR = 'error'
 
 
-def get_device_status_icon(status, error):
+def get_device_status_icon(status, error=False):
     """A `QIcon` for the given `status` is returned.
     """
     status_icons = {
@@ -181,7 +181,7 @@ def get_device_status_icon(status, error):
     if status == DeviceStatus.STATUS_MONITORING and not error:
         return None
     elif status != DeviceStatus.STATUS_OFFLINE and error:
-        return status_icons.get('error')
+        return status_icons.get(DeviceStatus.STATUS_ERROR)
 
     return status_icons.get(status)
 
@@ -192,6 +192,6 @@ def get_device_status_pixmap(status, error, extent=16):
     `extent` sets the size of the pixmap. The pixmap might be smaller than
     requested, but never larger.
     """
-    icon = get_device_status_icon(status, error)
+    icon = get_device_status_icon(status, error=error)
     if icon is not None:
         return icon.pixmap(extent)
