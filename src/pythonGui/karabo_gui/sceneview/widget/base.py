@@ -3,7 +3,7 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
                          QToolButton, QWidget)
 
 from karabo_gui import icons
-from karabo_gui.sceneview.utils import get_status_symbol_as_pixmap
+from karabo_gui.indicators import get_device_status_pixmap
 from karabo_gui.singletons.api import get_network
 from .utils import get_box, determine_if_value_unchanged
 
@@ -252,7 +252,7 @@ class BaseWidgetContainer(QWidget):
     def _device_status_changed(self, configuration, status, error):
         """ Callback when the status of the device is changes.
         """
-        pixmap = get_status_symbol_as_pixmap(status, error)
+        pixmap = get_device_status_pixmap(status, error)
         if pixmap is not None:
             self.status_symbol.setPixmap(pixmap)
             self.status_symbol.show()
