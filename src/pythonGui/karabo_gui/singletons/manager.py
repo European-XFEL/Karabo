@@ -390,6 +390,12 @@ class Manager(QObject):
             broadcast_event(KaraboBroadcastEvent(
                 KaraboEventSender.ShowAlarmServices, data))
 
+        # Tell the world about new devices
+        data = {'devices-added': _extract_topology_devices(systemTopology),
+                'devices-removed': []}
+        broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.SystemTopologyUpdate, data))
+
     def handle_systemVersion(self, version):
         """ Handle the version number reply from the GUI server.
         """
@@ -463,8 +469,16 @@ class Manager(QObject):
             # Update system topology
             self.systemTopology.eraseDevice(instanceId)
 
-            # Remove device from systemHash
+            # Tell the world about departing devices
             path = instanceType + "." + instanceId
+            attributes = self.systemHash.getAttributes(path)
+            classId = attributes.get("classId", "unknown-class")
+            data = {'devices-added': [],
+                    'devices-removed': [(instanceId, classId)]}
+            broadcast_event(KaraboBroadcastEvent(
+                    KaraboEventSender.SystemTopologyUpdate, data))
+
+            # Remove device from systemHash
             if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
         elif instanceType == "server":
@@ -670,3 +684,15 @@ class Manager(QObject):
                         'alarm_type': aHash.get('type')}
                 broadcast_event(KaraboBroadcastEvent(
                     KaraboEventSender.AlarmDeviceUpdate, data))
+
+
+# ------------------------------------------------------------------
+
+def _extract_topology_devices(topo_hash):
+    """Get all the devices and their classes out of a system topology update.
+    """
+    devices = []
+    for device_id, _, attrs in topo_hash['device'].iterall():
+        class_id = attrs.get("classId", "unknown-class")
+        devices.append((device_id, class_id))
+    return devices
