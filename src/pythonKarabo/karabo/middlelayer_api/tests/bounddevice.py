@@ -33,6 +33,7 @@ class TestDevice(PythonDevice):
             .minExc(22).maxExc(33).minInc(11).maxInc(23)
             .displayedName("parameter a")
             .alias("something")
+            .tags("bla,blub")
             .description("a's description")
             .allowedStates(State.INIT, State.UNKNOWN)
             .unit(AMPERE)
