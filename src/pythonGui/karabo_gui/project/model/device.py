@@ -38,9 +38,9 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     active_config = Property(Instance(DeviceConfigurationModel))
 
     # Refers to the configuration box of type 'device'
-    real_device = Instance(Configuration)
+    real_device = Instance(Configuration, allow_none=True)
     # Refers to the configuration box of type 'projectClass'
-    project_device = Instance(Configuration)
+    project_device = Instance(Configuration, allow_none=True)
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
@@ -108,6 +108,8 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         device = self.model
         if self.real_device is None:
             self.real_device = getDevice(device.instance_id)
+            # Track status changes - XXX this signal needs to be disconnected
+            # whenever the device is gone or the device id changes
         if self.project_device is None:
             self.project_device = Configuration(device.instance_id,
                                                 'projectClass')
@@ -132,20 +134,24 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         needs to be set for the ``project_device`` as well
         """
         if self.project_device.descriptor is not None:
-            self.redummy()
+            self.project_device.redummy()
         self.project_device.descriptor = conf.descriptor
-        active_config = self._get_active_config()
-        if active_config is not None:
-            self.project_device.fromHash(active_config.configuration)
+        config = self._get_active_config()
+        if config is not None and config.configuration is not None:
+            self.project_device.fromHash(config.configuration)
 
         # Notify configuration panel
-        data = {'configuration': self.project_device}
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.ShowConfiguration, data))
+        self._broadcast_show_configuration(self.project_device)
 
         # Disconnect signal again
-        conf = getClass(self.project_device.serverId, self.classId)
         conf.signalNewDescriptor.disconnect(self._new_descriptor)
+
+    def _broadcast_show_configuration(self, device_box):
+        """ Notify configuration panel to show configuration of ``device_box``
+        """
+        data = {'configuration': device_box}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.ShowConfiguration, data))
 
     def _get_active_config(self):
         """ Return the active device configuration object
