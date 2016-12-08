@@ -230,7 +230,7 @@ class ScenePanel(Dockable, QScrollArea):
         q_action.setCheckable(sv_action.checkable)
         q_action.triggered.connect(partial(sv_action.perform, self.scene_view))
         if sv_action.shortcut != QKeySequence.UnknownKey:
-            q_action.setShortcut(QKeySequence(sv_action.shortcut))
+            q_action.setShortcuts(QKeySequence.keyBindings(sv_action.shortcut))
         return q_action
 
     def _build_qaction_group(self, actions):
