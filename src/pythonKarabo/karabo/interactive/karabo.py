@@ -13,7 +13,6 @@ INVOKE_DIR = os.getcwd()
 
 
 def run_local():
-    global INVOKE_DIR
     try:
         karabo_dir = os.environ['KARABO']
         os.chdir(karabo_dir)
