@@ -42,7 +42,7 @@ class Nested(Configurable):
 
 
 class Remote(Device):
-    value = Int32(description="The Value", defaultValue=7)
+    value = Int32(description="The Value", defaultValue=7, tags={"whatever"})
     counter = Int32(defaultValue=-1)
 
     unit_int = Int32(unitSymbol=Unit.METER)
@@ -796,6 +796,7 @@ class Tests(DeviceTest):
             'nodeType': 0,
             'defaultValue': 7,
             'valueType': 'INT32',
+            'tags': ['whatever'],
             'alarmInfo_alarmHigh': '',
             'alarmInfo_alarmLow': '',
             'alarmInfo_warnHigh': '',
