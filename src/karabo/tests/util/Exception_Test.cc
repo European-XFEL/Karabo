@@ -28,7 +28,7 @@ void Exception_Test::testMethod() {
         throw KARABO_LOGIC_EXCEPTION("error");
     } catch (const std::exception& e) {
         std::string expected("1. Exception =====>  {");
-        CPPUNIT_ASSERT(std::string(e.what(), 22) == expected);
+        CPPUNIT_ASSERT(std::string(e.what(), expected.size()) == expected);
     }
 }
 
