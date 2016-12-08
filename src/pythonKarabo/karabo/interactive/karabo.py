@@ -13,7 +13,6 @@ INVOKE_DIR = os.getcwd()
 
 
 def run_local():
-    global INVOKE_DIR
     try:
         karabo_dir = os.environ['KARABO']
         os.chdir(karabo_dir)
@@ -228,7 +227,7 @@ def checkout(args):
             print('done.')
             print('Device package was added to: {}'
                   .format(os.path.abspath(path)))
-    if args.develop:
+    if hasattr(args, 'develop') and args.develop:
         develop(args)
 
 
