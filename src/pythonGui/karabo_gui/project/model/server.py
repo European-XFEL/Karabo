@@ -14,8 +14,11 @@ from karabo.common.project.api import (
 from karabo.middlelayer import Hash
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.events import (register_for_broadcasts,
+                               unregister_from_broadcasts)
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
+from karabo_gui.project.topo_listener import SystemTopologyListener
 from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager
 from .bases import BaseProjectTreeItem
@@ -27,16 +30,15 @@ class DeviceServerModelItem(BaseProjectTreeItem):
     """
     # Redefine model with the correct type
     model = Instance(DeviceServerModel)
-
     # A factory for shadow items wrapping children
     child_create = Callable
-
     # A callable which can gracefully destroy a child shadow object
     child_destroy = Callable
-
     # Different devices for the server
     children = List(Instance(DeviceInstanceModelItem))
     _child_map = Dict  # dictionary for fast lookups during removal
+    # An object which listens to system topology updates
+    topo_listener = Instance(SystemTopologyListener)
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
@@ -98,6 +100,12 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         # Synchronize the GUI with the Traits model
         self._update_ui_children(additions, removals)
 
+    def system_topology_callback(self, added, removed):
+        """ This callback is called by the ``SystemTopologyListener`` object
+        in the ``topo_listener`` trait.
+        """
+        pass
+
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
 
@@ -138,6 +146,14 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         if not self.is_ui_initialized():
             return
         self.qt_item.setText(self.model.server_id)
+
+    def _topo_listener_changed(self, name, old, new):
+        """Handle broadcast event registration/unregistration here.
+        """
+        if old is not None:
+            unregister_from_broadcasts(old)
+        if new is not None:
+            register_for_broadcasts(new)
 
     # ----------------------------------------------------------------------
     # action handlers
