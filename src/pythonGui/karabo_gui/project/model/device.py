@@ -18,6 +18,7 @@ from karabo.middlelayer import Hash
 from karabo.middlelayer_api.newproject.io import (read_project_model,
                                                   write_project_model)
 from karabo_gui import icons
+from karabo_gui.configuration import Configuration
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
                                KaraboEventSender)
@@ -25,6 +26,7 @@ from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager
+from karabo_gui.topology import getClass, getDevice
 from .bases import BaseProjectTreeItem
 
 
@@ -34,6 +36,11 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     # Redefine model with the correct type
     model = Instance(DeviceInstanceModel)
     active_config = Property(Instance(DeviceConfigurationModel))
+
+    # Refers to the configuration box of type 'device'
+    real_device = Instance(Configuration, allow_none=True)
+    # Refers to the configuration box of type 'projectClass'
+    project_device = Instance(Configuration, allow_none=True)
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
@@ -76,15 +83,75 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     def single_click(self, parent_project, parent=None):
         config = self._get_active_config()
         if config is not None and config.configuration is not None:
-            data = {'configuration': config.configuration}
+            device_box = self._get_device_entry(parent_project, config)
+            # XXX the configurator expects the clicked configuration before
+            # it can show the actual configuration
+            data = {'configuration': device_box}
             broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.ShowConfiguration, data))
+                KaraboEventSender.TreeItemSingleClick, data))
 
     @on_trait_change("model.instance_id")
     def instance_id_change(self):
         if not self.is_ui_initialized():
             return
         self.qt_item.setText(self.model.instance_id)
+
+    def _get_device_entry(self, project, active_config):
+        """ Return the ``Configuration`` box for the device instance id
+        depending on the fact whether the device is running or not
+
+        :param project: The project this device belongs to
+        :param active_config: The active device configuration
+
+        :return The device configuration which is currently available
+        """
+        device = self.model
+        if self.real_device is None:
+            self.real_device = getDevice(device.instance_id)
+            # Track status changes - XXX this signal needs to be disconnected
+            # whenever the device is gone or the device id changes
+        if self.project_device is None:
+            self.project_device = Configuration(device.instance_id,
+                                                'projectClass')
+            server_model = find_parent_object(device, project,
+                                              DeviceServerModel)
+            self.project_device.serverId = server_model.server_id
+            self.project_device.classId = active_config.class_id
+            # Get class configuration
+            conf = getClass(server_model.server_id, active_config.class_id)
+            if conf.descriptor is None:
+                # Connect to signal
+                conf.signalNewDescriptor.connect(self._new_descriptor)
+            else:
+                self.project_device.descriptor = conf.descriptor
+        if self.real_device.isOnline():
+            return self.real_device
+
+        return self.project_device
+
+    def _new_descriptor(self, conf):
+        """The global ``Configuration`` has received a new class schema which
+        needs to be set for the ``project_device`` as well
+        """
+        if self.project_device.descriptor is not None:
+            self.project_device.redummy()
+        self.project_device.descriptor = conf.descriptor
+        config = self._get_active_config()
+        if config is not None and config.configuration is not None:
+            self.project_device.fromHash(config.configuration)
+
+        # Notify configuration panel
+        self._broadcast_show_configuration(self.project_device)
+
+        # Disconnect signal again
+        conf.signalNewDescriptor.disconnect(self._new_descriptor)
+
+    def _broadcast_show_configuration(self, device_box):
+        """ Notify configuration panel to show configuration of ``device_box``
+        """
+        data = {'configuration': device_box}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.ShowConfiguration, data))
 
     def _get_active_config(self):
         """ Return the active device configuration object
