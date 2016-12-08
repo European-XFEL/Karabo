@@ -3,7 +3,7 @@
 # Created on October 6, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-"""This module contains constants for unified states and alarm indicators."""
+from enum import Enum
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QIcon, QPainter, QPixmap
@@ -40,32 +40,35 @@ ALARM_ICONS = {
     INTERLOCK: icons.interlock,
 }
 
+
 # --------------------------------------------------------------------------
 # Mapping states to colors
 
-UNKNOWN_COLOR = (255, 170, 0)
-KNOWN_NORMAL_COLOR = (200, 200, 200)
-INIT_COLOR = (230, 230, 170)
-DISABLED_COLOR = (255, 0, 255)
-ERROR_COLOR = (255, 0, 0)
-CHANGING_DECREASING_INCREASING_COLOR = (0, 170, 255)
-STATIC_COLOR = (170, 255, 127)
-ACTIVE_COLOR = (0, 170, 0)
-PASSIVE_COLOR = (204, 204, 255)
+class _StateColorsEnum(Enum):
+    UNKNOWN_COLOR = (255, 170, 0)
+    KNOWN_NORMAL_COLOR = (200, 200, 200)
+    INIT_COLOR = (230, 230, 170)
+    DISABLED_COLOR = (255, 0, 255)
+    ERROR_COLOR = (255, 0, 0)
+    CHANGING_DECREASING_INCREASING_COLOR = (0, 170, 255)
+    STATIC_COLOR = (170, 255, 127)
+    ACTIVE_COLOR = (0, 170, 0)
+    PASSIVE_COLOR = (204, 204, 255)
+
 
 STATE_COLORS = {
-    State.UNKNOWN: UNKNOWN_COLOR,
-    State.KNOWN: KNOWN_NORMAL_COLOR,
-    State.NORMAL: KNOWN_NORMAL_COLOR,
-    State.INIT: INIT_COLOR,
-    State.DISABLED: DISABLED_COLOR,
-    State.ERROR: ERROR_COLOR,
-    State.CHANGING: CHANGING_DECREASING_INCREASING_COLOR,
-    State.DECREASING: CHANGING_DECREASING_INCREASING_COLOR,
-    State.INCREASING: CHANGING_DECREASING_INCREASING_COLOR,
-    State.STATIC: STATIC_COLOR,
-    State.ACTIVE: ACTIVE_COLOR,
-    State.PASSIVE: PASSIVE_COLOR
+    State.UNKNOWN: _StateColorsEnum.UNKNOWN_COLOR,
+    State.KNOWN: _StateColorsEnum.KNOWN_NORMAL_COLOR,
+    State.NORMAL: _StateColorsEnum.KNOWN_NORMAL_COLOR,
+    State.INIT: _StateColorsEnum.INIT_COLOR,
+    State.DISABLED: _StateColorsEnum.DISABLED_COLOR,
+    State.ERROR: _StateColorsEnum.ERROR_COLOR,
+    State.CHANGING: _StateColorsEnum.CHANGING_DECREASING_INCREASING_COLOR,
+    State.DECREASING: _StateColorsEnum.CHANGING_DECREASING_INCREASING_COLOR,
+    State.INCREASING: _StateColorsEnum.CHANGING_DECREASING_INCREASING_COLOR,
+    State.STATIC: _StateColorsEnum.STATIC_COLOR,
+    State.ACTIVE: _StateColorsEnum.ACTIVE_COLOR,
+    State.PASSIVE: _StateColorsEnum.PASSIVE_COLOR
 }
 
 
@@ -131,39 +134,53 @@ def _create_state_icon(color):
 # --------------------------------------------------------------------------
 # Mapping device status to icons
 
-STATUS_OFFLINE = 'offline'  # device could, but is not started
-STATUS_ONLINE = 'online'  # the device is online but doesn't have a schema yet
-STATUS_ALIVE = 'alive'  # everything is up-and-running
-STATUS_MONITORING = 'monitoring'  # we are registered to monitor this device
-STATUS_REQUESTED = 'requested'  # a schema is requested, but didnt arrive yet
-STATUS_SCHEMA = 'schema'  # the device has a schema, but no value yet
-STATUS_DEAD = 'dead'
-STATUS_NOSERVER = 'noserver'  # device server not available
-STATUS_NOPLUGIN = 'noplugin'  # class plugin not available
-STATUS_INCOMPATIBLE = 'incompatible'  # device running, but of different type
-STATUS_MISSING = 'missing'
-STATUS_ERROR = 'error'
+class DeviceStatus(Enum):
+    # device could, but is not started
+    STATUS_OFFLINE = 'offline'
+    # the device is online, but no detailed information retrieved yet
+    STATUS_OK = 'ok'
+    # the device is online but doesn't have a schema yet
+    STATUS_ONLINE = 'online'
+    # everything is up-and-running
+    STATUS_ALIVE = 'alive'
+    # we are registered to monitor this device
+    STATUS_MONITORING = 'monitoring'
+    # a schema is requested, but didnt arrive yet
+    STATUS_REQUESTED = 'requested'
+    # the device has a schema, but no value yet
+    STATUS_SCHEMA = 'schema'
+    # the device is dead
+    STATUS_DEAD = 'dead'
+    # device server not available
+    STATUS_NOSERVER = 'noserver'
+    # class plugin not available
+    STATUS_NOPLUGIN = 'noplugin'
+    # device running, but of different type
+    STATUS_INCOMPATIBLE = 'incompatible'
+    STATUS_MISSING = 'missing'
+    STATUS_ERROR = 'error'
 
 
 def get_device_status_icon(status, error):
     """A `QIcon` for the given `status` is returned.
     """
     status_icons = {
-        STATUS_OFFLINE: icons.deviceOffline,
-        STATUS_ALIVE: icons.deviceAlive,
-        STATUS_REQUESTED: icons.device_requested,
-        STATUS_SCHEMA: icons.device_schema,
-        STATUS_DEAD: icons.device_dead,
-        STATUS_NOSERVER: icons.deviceOfflineNoServer,
-        STATUS_NOPLUGIN: icons.deviceOfflineNoPlugin,
-        STATUS_INCOMPATIBLE: icons.deviceIncompatible,
-        STATUS_MISSING: icons.propertyMissing,
-        STATUS_ERROR: icons.device_error
+        DeviceStatus.STATUS_OFFLINE: icons.deviceOffline,
+        DeviceStatus.STATUS_OK: icons.deviceAlive,
+        DeviceStatus.STATUS_ALIVE: icons.deviceAlive,
+        DeviceStatus.STATUS_REQUESTED: icons.device_requested,
+        DeviceStatus.STATUS_SCHEMA: icons.device_schema,
+        DeviceStatus.STATUS_DEAD: icons.device_dead,
+        DeviceStatus.STATUS_NOSERVER: icons.deviceOfflineNoServer,
+        DeviceStatus.STATUS_NOPLUGIN: icons.deviceOfflineNoPlugin,
+        DeviceStatus.STATUS_INCOMPATIBLE: icons.deviceIncompatible,
+        DeviceStatus.STATUS_MISSING: icons.propertyMissing,
+        DeviceStatus.STATUS_ERROR: icons.device_error
     }
 
-    if status == STATUS_MONITORING and not error:
+    if status == DeviceStatus.STATUS_MONITORING and not error:
         return None
-    elif status != STATUS_OFFLINE and error:
+    elif status != DeviceStatus.STATUS_OFFLINE and error:
         return status_icons.get('error')
 
     return status_icons.get(status)
