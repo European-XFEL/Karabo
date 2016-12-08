@@ -641,11 +641,18 @@ class ConfigurationPanel(Dockable, QWidget):
         self._getCurrentParameterEditor().resetAll()
 
     def onKillInstance(self):
-        # Check whether an index of the Navigation or ProjectPanel is selected
         self.prevConfiguration.shutdown()
 
     def onInitDevice(self):
-        # Check whether an index of the Navigation or ProjectPanel is selected
+        conf_type = self.prevConfiguration.type
+        if conf_type == 'projectClass':
+            project_device = self.prevConfiguration
+            get_manager().initDevice(project_device.serverId,
+                                     project_device.classId,
+                                     project_device.id,
+                                     project_device.toHash())
+            return
+
         if self.twNavigation.currentIndex().isValid():
             indexInfo = self.twNavigation.indexInfo()
         elif self.twProject.currentIndex().isValid():
