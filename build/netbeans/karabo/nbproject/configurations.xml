@@ -408,6 +408,8 @@
         <itemPath>../../../src/karabo/tests/util/Dims_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Epochstamp_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Epochstamp_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/util/Exception_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/Exception_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Factory_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Factory_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/HashFilter_Test.cc</itemPath>
@@ -1492,6 +1494,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/util/Epochstamp_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Exception_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Exception_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3391,6 +3403,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/util/Epochstamp_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Exception_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Exception_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
