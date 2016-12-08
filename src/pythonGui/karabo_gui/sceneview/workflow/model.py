@@ -6,10 +6,7 @@ from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Event,
                         cached_property, on_trait_change)
 
 from karabo.common.scenemodel.api import WorkflowItemModel
-from karabo_gui.indicators import (
-    STATUS_OFFLINE, STATUS_ONLINE, STATUS_ALIVE, STATUS_MONITORING,
-    STATUS_REQUESTED, STATUS_SCHEMA, STATUS_DEAD, STATUS_NOSERVER,
-    STATUS_NOPLUGIN, STATUS_INCOMPATIBLE, STATUS_MISSING, STATUS_ERROR)
+from karabo_gui.indicators import DeviceStatus
 from karabo_gui.schema import Dummy
 from karabo_gui.topology import getDevice
 from .const import (
@@ -24,10 +21,7 @@ class WorkflowDeviceStatusModel(HasStrictTraits):
     # The box for the device
     box = Any
     # The status of the device
-    status = Enum(STATUS_OFFLINE, STATUS_ONLINE, STATUS_ALIVE,
-                  STATUS_MONITORING, STATUS_REQUESTED, STATUS_SCHEMA,
-                  STATUS_DEAD, STATUS_NOSERVER, STATUS_NOPLUGIN,
-                  STATUS_INCOMPATIBLE, STATUS_MISSING, STATUS_ERROR)
+    status = Enum(*DeviceStatus)
     # If device is in error
     error = Bool
     # The item model associated with this device status
