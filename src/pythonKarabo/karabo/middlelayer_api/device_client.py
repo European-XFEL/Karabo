@@ -166,7 +166,7 @@ class Proxy(object):
             h = Hash()
             h[desc.longkey], _ = desc.toDataAndAttrs(value)
             loop.sync(self._raise_on_death(self._device.call(
-                self.deviceId, "slotReconfigure", h)), timeout=-1, wait=True)
+                self._deviceId, "slotReconfigure", h)), timeout=-1, wait=True)
         elif (self._last_update_task is not None and
               self._last_update_task.done() and
               self._last_update_task.exception() is not None):
