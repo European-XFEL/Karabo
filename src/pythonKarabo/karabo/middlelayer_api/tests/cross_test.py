@@ -61,18 +61,11 @@ class Tests(DeviceTest):
         if had_to_kill:
             self.fail("process didn't properly go down")
 
-    @coroutine
-    def wait_for_stderr(self, wait):
-        line = ""
-        while wait not in line:
-            line = (yield from self.process.stderr.readline()).decode("ascii")
-
     @async_tst
-    def test_cross(self):        
+    def test_cross(self):
         # it takes typically 2 s for the bound device to start
         self.process = yield from create_subprocess_exec(
-             sys.executable, "bounddevice.py", stderr=PIPE)
-        yield from self.wait_for_stderr("got started")
+             sys.executable, "bounddevice.py")
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
                          "didn't receive initial value from bound device")
