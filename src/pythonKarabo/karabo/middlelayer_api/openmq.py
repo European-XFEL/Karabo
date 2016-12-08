@@ -99,6 +99,13 @@ class Properties(MutableMapping):
     def valid(self):
         return self.handle.value != 0xFEEEFEEE
 
+    def __repr__(self):
+        if not self.valid():
+            return "MQProperty{INVALID}"
+        else:
+            props = ("{}:{!r}".format(k, v) for k, v in self.items())
+            return "MQProperty{" + ", ".join(props) + "}"
+
     def __del__(self):
         if self.valid():
             self.dll.MQFreeProperties(self.handle)
