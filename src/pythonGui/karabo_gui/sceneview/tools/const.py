@@ -9,8 +9,9 @@ from karabo.common.scenemodel.api import (
     KnobModel, LineEditModel, LinePlotModel, MonitorModel, PopUpModel,
     ScientificImageModel, SelectionIconsModel, SingleBitModel, SliderModel,
     TableElementModel, TextIconsModel, VacuumWidgetModel, WebcamImageModel,
-    XYPlotModel
+    XYPlotModel, StatefulIconWidgetModel
 )
+
 
 WIDGET_FACTORIES = {
     'Bitfield': BitfieldModel,
@@ -74,4 +75,6 @@ WIDGET_FACTORIES = {
     'TurboPumpWidget': VacuumWidgetModel,
     'ValveWidget': VacuumWidgetModel,
     'PopUp': PopUpModel,
+    'StatefulIconWidget': StatefulIconWidgetModel,
 }
+
