@@ -9,10 +9,10 @@ import weakref
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    AlarmCondition, Configurable, connectDevice, Device, DeviceNode, execute,
-    Float, getDevice, Hash, isSet, Int32, KaraboError, lock, MetricPrefix,
-    Node, setNoWait, setWait, Slot, slot, State, String, unit, Unit,
-    VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
+    AlarmCondition, Bool, Configurable, connectDevice, Device, DeviceNode,
+    execute, Float, getDevice, Hash, isSet, Int32, KaraboError, lock,
+    MetricPrefix, Node, setNoWait, setWait, Slot, slot, State, String, unit,
+    Unit, VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
     waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.device_client import Queue
@@ -42,6 +42,7 @@ class Nested(Configurable):
 
 
 class Remote(Device):
+    done = Bool()
     value = Int32(description="The Value", defaultValue=7, tags={"whatever"})
     counter = Int32(defaultValue=-1)
 
@@ -663,11 +664,11 @@ class Tests(DeviceTest):
         """test that errors of created tasks are properly reported"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
-            with (yield from getDevice("local")) as d:
-                yield from d.task_error()
-                yield from sleep(0.1)
-        self.assertTrue(self.remote.done)
-        self.remote.done = False
+            with (yield from getDevice("local")) as local, \
+                 (yield from getDevice("remote")) as remote:
+                yield from local.task_error()
+                self.assertFalse(remote.done)
+                yield from waitUntil(lambda: remote.done)
         self.assertIsNone(self.local.exc_slot)
         self.assertIsInstance(self.local.exception, RuntimeError)
         del self.local.exc_slot
