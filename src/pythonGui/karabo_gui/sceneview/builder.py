@@ -12,8 +12,9 @@ from karabo.common.scenemodel.api import (
     KnobModel, LabelModel, LineEditModel, LineModel, LinePlotModel,
     MonitorModel, PathModel, PopUpModel, RectangleModel, SceneLinkModel,
     ScientificImageModel, SelectionIconsModel, SingleBitModel, SliderModel,
-    TableElementModel, TextIconsModel, UnknownXMLDataModel, VacuumWidgetModel,
-    WebcamImageModel, WorkflowItemModel, XYPlotModel
+    StatefulIconWidgetModel, TableElementModel, TextIconsModel,
+    UnknownXMLDataModel, VacuumWidgetModel, WebcamImageModel,
+    WorkflowItemModel, XYPlotModel
 )
 
 from .const import QT_BOX_LAYOUT_DIRECTION
@@ -25,8 +26,8 @@ from .widget.api import (
     DisplayStateColorContainer, EvaluatorContainer, FloatSpinBoxContainer,
     GenericWidgetContainer, IconsContainer, LabelWidget, LinePlotContainer,
     MonitorContainer, SceneLinkWidget, SimpleImageWidgetContainer,
-    SingleBitContainer, TableElementContainer, UnknownSvgWidget,
-    VacuumWidgetContainer, WorkflowItemWidget
+    SingleBitContainer, StatefulIconContainer, TableElementContainer,
+    UnknownSvgWidget, VacuumWidgetContainer, WorkflowItemWidget
 )
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
@@ -83,6 +84,7 @@ _SCENE_OBJ_FACTORIES = {
     LinePlotModel: LinePlotContainer,
     TableElementModel: TableElementContainer,
     WorkflowItemModel: WorkflowItemWidget,
+    StatefulIconWidgetModel: StatefulIconContainer
 }
 
 
