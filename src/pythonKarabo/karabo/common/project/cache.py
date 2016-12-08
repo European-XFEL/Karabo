@@ -85,7 +85,8 @@ class ProjectDBCache(object):
             root_type = root.attrib.get('item_type')
             if root_type == obj_type:
                 rev_str = root.attrib.get(NS_EXISTDB_VERSIONING+'revision')
-                revHash = {uuid: int(rev_str),
+                alias = root.attrib.get('alias')
+                revHash = {uuid: (int(rev_str), alias),
                            'simple_name': root.attrib.get('simple_name')}
                 uuid_revs.setdefault(uuid, []).append(revHash)
 
@@ -95,7 +96,9 @@ class ProjectDBCache(object):
             revisions = []
             for v in value:
                 simple_name = v.get('simple_name', '')
-                revisions.append({'revision': v.get(uuid, 0),
+                rev, alias = v.get(uuid, (0, ''))
+                revisions.append({'revision': rev,
+                                  'alias': alias,
                                   'user': '',
                                   'date': ''})
             proj_data.append({'uuid': uuid,
