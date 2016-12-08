@@ -6,7 +6,7 @@ from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Event,
                         cached_property, on_trait_change)
 
 from karabo.common.scenemodel.api import WorkflowItemModel
-from karabo_gui.sceneview.const import (
+from karabo_gui.indicators import (
     STATUS_OFFLINE, STATUS_ONLINE, STATUS_ALIVE, STATUS_MONITORING,
     STATUS_REQUESTED, STATUS_SCHEMA, STATUS_DEAD, STATUS_NOSERVER,
     STATUS_NOPLUGIN, STATUS_INCOMPATIBLE, STATUS_MISSING, STATUS_ERROR)

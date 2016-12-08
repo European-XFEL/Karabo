@@ -3,8 +3,8 @@ from weakref import proxy
 from PyQt4.QtCore import QPoint, Qt
 from PyQt4.QtGui import QBrush, QPainter, QPainterPath, QPen, QWidget
 
-from karabo_gui.sceneview.utils import (
-    get_status_symbol_as_pixmap, save_painter_state)
+from karabo_gui.indicators import get_device_status_pixmap
+from karabo_gui.sceneview.utils import save_painter_state
 from .const import (CHANNEL_DIAMETER, CHANNEL_WIDTH, CHANNEL_INPUT,
                     CHANNEL_OUTPUT, DATA_DIST_SHARED)
 
@@ -63,7 +63,6 @@ def _draw_connection(painter, connection):
 def _draw_device_state(painter, device_state):
     """ Draw a pixmap which reflects the state the connected device is in.
     """
-    pixmap = get_status_symbol_as_pixmap(device_state.status,
-                                         device_state.error)
+    pixmap = get_device_status_pixmap(device_state.status, device_state.error)
     if pixmap is not None:
         painter.drawPixmap(device_state.position, pixmap)
