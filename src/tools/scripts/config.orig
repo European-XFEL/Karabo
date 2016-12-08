@@ -52,7 +52,6 @@ KARABO_KILL_SIGNAL=15
 
 # Default log level
 logger=Logger.priority=INFO
-v=visibility=4
 
 START[0]="karabo-cppserver serverId=karabo/guiServer deviceClasses=GuiServerDevice autoStart[0].GuiServerDevice.port=44444 visibility=4 $logger"
 
@@ -60,13 +59,15 @@ START[1]="karabo-cppserver serverId=karabo/logAggregator deviceClasses=CentralLo
 
 START[2]="karabo-cppserver serverId=karabo/dataLogger deviceClasses=DataLogger,DataLogReader visibility=4 $logger"
 
-START[3]="karabo-cppserver serverId=karabo/dataLoggerManager deviceClasses=DataLoggerManager autoStart[0].DataLoggerManager visibility=4 $logger"
+START[3]="karabo-cppserver serverId=karabo/dataLoggerManager deviceClasses=DataLoggerManager autoStart[0].DataLoggerManager.serverList=\"karabo/dataLogger\" visibility=4 $logger"
 
 START[4]="karabo-cppserver serverId=karabo/projectManager deviceClasses=ProjectManager autoStart[0].ProjectManager visibility=4 $logger"
 
-START[5]="karabo-middlelayerserver serverId=karabo/macroServer visibility=4"
+START[5]="karabo-cppserver serverId=karabo/alarmServer deviceClasses=AlarmService autoStart[0].AlarmService visibility=4 $logger"
 
-START[6]="karabo-pythonserver serverId=karabo/projectDBServer deviceClasses=ProjectManager autoStart[0].ProjectManager.deviceId=KaraboProjectDB visibility=4 $logger"
+START[6]="karabo-middlelayerserver serverId=karabo/macroServer visibility=4"
+
+START[7]="karabo-pythonserver serverId=karabo/projectDBServer deviceClasses=ProjectManager autoStart[0].ProjectManager.deviceId=KaraboProjectDB visibility=4 $logger"
 
 ##############
 # Server C++ #
