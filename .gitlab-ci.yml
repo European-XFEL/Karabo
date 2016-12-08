@@ -33,6 +33,9 @@
   before_script:
     - locale-gen en_US.UTF-8
     - update-locale LANG=en_US.UTF-8
+    # Start X11 so that GUI tests can runTests
+    - export DISPLAY=:99.0
+    - start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
   script:
     - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
     - bash ./auto_build_all.sh Debug --noBundle --runTests
