@@ -228,7 +228,7 @@ def checkout(args):
             print('done.')
             print('Device package was added to: {}'
                   .format(os.path.abspath(path)))
-    if args.develop:
+    if hasattr(args, 'develop') and args.develop:
         develop(args)
 
 
