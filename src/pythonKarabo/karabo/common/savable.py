@@ -23,7 +23,7 @@ def clear_modified_flag(model):
         model.modified = False
 
         for name in model.copyable_trait_names():
-            attribute = getattr(model, name)
+            attribute = getattr(model, name, None)
             if isinstance(attribute, BaseSavableModel):
                 attribute.modified = False
             elif isinstance(attribute, list):
