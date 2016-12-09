@@ -10,7 +10,7 @@ from PyQt4.QtGui import QDialog, QStackedLayout, QWidget
 import karabo_gui.icons as icons
 from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.docktabwindow import Dockable
-from karabo_gui.project.utils import save_object
+from karabo_gui.project.utils import save_project
 from karabo_gui.singletons.api import get_db_conn
 from .dialog.project_handle import LoadProjectDialog, NewProjectDialog
 
@@ -116,4 +116,4 @@ def _project_save_handler(item_model):
     """
     traits_model = item_model.traits_data_model
     if traits_model is not None:
-        save_object(traits_model)
+        save_project(traits_model)
