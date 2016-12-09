@@ -23,7 +23,7 @@ class ObjectSaveDialog(QDialog):
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'object_save.ui')
         uic.loadUi(filepath, self)
-        self.setWindowTitle('Save object')
+        self.setWindowTitle('Set version alias')
         if alias is not None:
             self.leAlias.setText(alias)
 
