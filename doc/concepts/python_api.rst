@@ -9,23 +9,23 @@ Usage Scenarios
 
 The Python *bound* API is to be used if direct hardware interaction is to
 be implemented in the Python programming language. Additionally, it allows
-access to Karabo's point-to-point communication interface, by means of binding
-the C++ code. Thus any processing algorithms implemented in Python,
+access to Karabo's point-to-point communication interface by means of binding
+the C++ code. Thus any processing algorithms implemented in Python
 which need to pass larger amounts of data in a pipelined fashion should
-be implemented in this API:
+be implemented in this API.
 
 Benefits
 ++++++++
 
-Depending on application the Python *bound* API may provide for faster developement
-cycles than the C++  API. In any case, the Python *bound* API is
+Depending on the application the Python *bound* API may provide for faster
+development cycles than the C++ API. In any case, the Python *bound* API is
 feature-complete with respect to the C++, and frequently uses the same code
 basis by binding the C++ code.
 
 Limitations
 +++++++++++
 
-As Python is a dynamically typed language, application which require close
+As Python is a dynamically typed language, applications which require close
 matching to hardware types may be better programmed in statically typed and
 compile-time checked C++.
 
@@ -35,7 +35,7 @@ the C++ API.
 
 Finally, Python, being an interpreted language, has performance short-comings
 with respect to compiled C++ code. For most control aspects these should be
-negligable, and even for high-performance processing tasks can frequently be
+negligible, and even for high-performance processing tasks can frequently be
 mitigated by using e.g. ``mod:numpy`` or ``mod:scipy`` routines. European
 XFEL's calibration suite is an example of high-performance code implemented in
 Python.
@@ -45,19 +45,19 @@ Programming Policies
 ====================
 
 While device developers are encouraged to write *pythonic* Python, the API
-purposely breaks with some conventions, to more closely resemble the C++ API
+purposely breaks with some conventions to more closely resemble the C++ API
 calls. This was done so that programmers switching between both languages will
 not need to learn a separate set of method calls to access the same underlying
 functionality.
 
-Especially when directly accessing hardware it is considered good practice to rather be
-verbose in coding, than aim for the shortest possible implementation in Python.
-Accordingly, if e.g. a list comprehension significantly obscurs the functionality
+Especially when directly accessing hardware it is considered good practice to be somewhat
+verbose in coding, rather than aim for the shortest possible implementation in Python.
+Accordingly, if e.g. a list comprehension significantly obscures the functionality
 implemented, consider writing a loop instead.
 
 For documentation, it is best practice to follow documentation guidelines set
 in PEP8, and document using reStructured text syntax. Specifically, you will
-need to document the devices's state diagram, as otherwise it should
+need to document each device's state diagram, as otherwise it should
 not be publicly released.
 
 The "Conveyor" device
@@ -235,7 +235,7 @@ Consider the code of our device - ConveyorPy.py:
         # Put more state machine actions here if needed...
 
 
-Consider the main steps of the code above, that are important to
+Consider the main steps of the code above, which are important to
 mention while writing devices in Python:
 
 1. Import needed pieces from the karabo.api package:
@@ -258,7 +258,7 @@ mention while writing devices in Python:
    The current recommendation is to use NoFsm. If you need an FSM, read
    :ref:`this <stateMachines>` section.
 
-3. Place decorator ``KARABO_CLASSINFO`` just before class definition. It has
+3. Place the decorator ``KARABO_CLASSINFO`` just before class definition. It has
    two parameters: "classId" and "version" similar to the corresponding C++
    macro. In class definition we specify that our class inherits from
    ``PythonDevice`` as well as from ``NoFsm`` (see step 2):
@@ -285,7 +285,7 @@ mention while writing devices in Python:
          self.timeout = 1000  # milliseconds
          self.repetition = -1 # forever
 
-   In the constructor you always have to call first the super class' constructor.
+   In the constructor you always have to call the super class's constructor first.
 
    Then you need to register the function that will be called when the device
    is instantiated.
@@ -293,15 +293,15 @@ mention while writing devices in Python:
    Finally you have to register all the slots: in the example start,
    stop and reset.
 
-5. Define static method ``expectedParameters``, where you should describe what
+5. Define the static method ``expectedParameters``, where you should describe what
    properties are available on this device.
 
-6. Define implementation of initial function (in the example ``initialState``)
+6. Define the implementation of initial function (in the example ``initialState``)
    and of the slots. They will have to call ``self.updateState(newState)`` at
    the very end, in order to update device's state.
 
    These functions must be non-blocking: if they need to run some process which
-   takes long time, they should start it in a separate thread, or even better by
+   takes a long time, they should start it in a separate thread, or even better by
    using the ``Worker`` class. See the complete example code for the Worker's
    usage.
 
@@ -327,7 +327,7 @@ It can be instantiated and started like this:
 
 The 'repetition' parameter will specify how many times the task has to
 be executed (-1 means 'forever'), the 'timeout' parameter will set the
-interval between two calls, ``self.hook`` is the callback function defined
+interval between two calls and ``self.hook`` is the callback function defined
 by the user, for example:
 
 .. code-block:: python

@@ -5,16 +5,16 @@ Middle Layer Devices
 ********************
 
 In Karabo ``middle-layer`` devices are devices which interact with other devices,
-frequently *bound* devices, for a means of aggregating their functionality into
-a view closer to the hardware being controlled, controlling many similar entities are once
+frequently *bound* devices, as a means of aggregating their functionality into
+a view closer to the hardware being controlled, controlling many similar entities at once
 or providing aggregate state information (``composite devices``). They may also implement
-higher level functionality, such as scans (``scan devices``), data acquisition scenarios,
+higher-level functionality, such as scans (``scan devices``), data acquisition scenarios
 or processing pipeline reconfiguration.
 
 The ``middle-layer`` API has been designed with such tasks in mind. It exposes a concise
 and efficient interface for tasks such as interacting with properties of other devices,
 monitoring such properties, executing commands and waiting on their completion, either
-synchronously or asynchronously. It does not expose the fine grained event control as is
+synchronously or asynchronously. It does not expose the fine-grained event control as is
 possible with the *bound* APIs nor does it allow for a full FSM implementation. A complete
 list of limitations is given in the corresponding section.
 
@@ -23,11 +23,11 @@ list of limitations is given in the corresponding section.
 Benefits
 ========
 
-The benefits or the middle-layer API are its pythonic, concise syntax aimed at rapid
+The benefits of the middle-layer API are its pythonic, concise syntax aimed at rapid
 development cycles. As a result much fewer lines of code for implementing interfaces
-than in the *bound* APIs are needed, and there is no need to worry about request/reply
-patterns. Instead properties of remote devices are accessed just if they were a normal Python
-object. Consider
+are needed than in the *bound* APIs, and there is no need to worry about request/reply
+patterns. Instead properties of remote devices are accessed just as if they were a normal
+Python object. Consider
 
 ..  code-block:: Python
 
@@ -79,7 +79,7 @@ Limitations
 ===========
 
 The middle-layer API is aimed at devices controlling other devices, **not** at controlling
-hardware directly. This reflects itself in the following limitations with respect to  *driver*
+hardware directly. This is reflected in the following limitations with respect to  *driver*
 API devices:
 
 - no full finite state machine is implemented. Specifically, the simple state machine
@@ -87,7 +87,7 @@ API devices:
   to the programmer to assure proper transitions at all times.
 
 - the low level signal/slots interface is not exposed through the API. Accordingly,
-  fine grained control of event synchronicity is not possible to implement.
+  fine-grained control of event synchronicity is not possible to implement.
 
 - the pipelined processing interfaces are not exposed. For performance reasons the
   pipelined processing API is realized via
@@ -99,8 +99,8 @@ API devices:
 API Documentation
 =================
 
-Karabo uses `Python <http://www.python.org>`_ as a middle-layer and macro language. Readers
-are thus referred to the `Python Documentation
+Karabo uses `Python <http://www.python.org>`_ as a middle-layer and macro language.
+Readers are thus referred to the `Python Documentation
 <http://docs.python.org/3/>`_ for language-specific questions. Especially the `tutorial
 <http://docs.python.org/3/tutorial/index.html>`_ is a good starting point for beginners.
 
@@ -133,7 +133,7 @@ in the *bound* APIs it is expected that the programmer specifies under which Kar
 this device can be run. This is done by setting the ``__version__`` property.
 
 In the example we create a single slot by decorating a member function accordingly. This
-will render as a button labelled "hello" in the GUI or be accessible using
+will render as a button labeled "hello" in the GUI or be accessible using
 ``remote().execute("/some/remote/device", "hello")`` from the CLI.
 
 .. note::
@@ -180,11 +180,11 @@ Units
 +++++
 
 The properties of a ``PythonDevice`` contain more than just their
-value, they are full-fledged objects with additional attributes.
+value: they are full-fledged objects with additional attributes.
 
 You can define a unit for a property, which is then used in the
-calculations of this property. In the middle-layer API units amongst other
-things are implement using the ``pint`` module.
+calculations of this property. In the middle-layer API, units, amongst other
+things, are implemented using the ``pint`` module.
 
 A unit is declared using the ``unitSymbol`` and optionally, the
 ``metricPrefixSymbol`` attributes::
@@ -253,7 +253,7 @@ the newer timestamp of ``self.distance`` or ``self.times``::
     Developers should be aware that automated timestamp handling defaults to the
     newest timestamp, i.e. the time at which the last assignment operation
     on a variable in a calculation occured. Additionally, these timestamps are
-    not synchronized XFEL's timing system, but with the host's local clock.
+    not synchronized with XFEL's timing system, but with the host's local clock.
     If handling of timestamps is a critical aspect of the algorithm being
     implemented it is strongly recommended to be explicit in timestamp handling,
     i.e. use ``speed_timestamp = self.speed.timestamp`` and re-assign this
@@ -264,13 +264,13 @@ Other Property Attributes
 
 Attributes of properties may be accessed as members of the property.
 This may sound a bit strange as first, if one views the property as a
-piece of data. By understanding the properties are in fact objects the
+piece of data. By understanding that the properties are in fact objects, the
 interface becomes more natural.
 
 The attributes which can be specified as part of property definition,
-i.e. *default* attributes are directly accessible. Note that the middle-layer
-API knows a fixed list of attributes, it is not possible to have user
-defined attributes.
+i.e. *default* attributes, are directly accessible. Note that the middle-layer
+API knows a fixed list of attributes. It is not possible to have user-defined
+attributes.
 
 +------------------+------------------------------------------------------------------------------------+
 |**Attribute**       **Example**                                                                        |
@@ -339,8 +339,8 @@ messages: a warning should be issued if some a state has been reached that is no
 considered normal, but logic has been implemented to recover from it. It may also be
 issued if there are known indications that the device is running into an error state.
 
-Conversely, an error message should be issued if an unforeseen scenario has happend, i.e.
-there is no logic to recover from this, or if a foreseen error has happend which needs
+Conversely, an error message should be issued if an unforeseen scenario has happened, i.e.
+there is no logic to recover from this, or if a foreseen error has happened which needs
 human attention to recover from, e.g. by manual procedures or overrides.
 
 .. warning::
@@ -350,7 +350,7 @@ human attention to recover from, e.g. by manual procedures or overrides.
 
 	Experience from other facilites shows that *error-spamming* leads to users accepting
 	errors and associated notifications as a normal operation state - they are not!.
-	Error notifications should be so rare, that they trigger a human examination of the
+	Error notifications should be so rare that they trigger a human examination of the
 	problem!
 
 	An error-categorized message may trigger email or text notification of experts.
@@ -362,7 +362,7 @@ Synchronized Functions
 ++++++++++++++++++++++
 
 There are many functions in Karabo which do not instantaneously execute.
-Frequently, it is important, that other code can continue running,
+Frequently, it is important that other code can continue running
 while such a function is still executing. For the ease of
 use, all those functions, which are documented here as
 *synchronized*, follow the same calling convention, namely, they have
@@ -372,7 +372,7 @@ timeout
     gives a timeout in seconds. If the function is not done after
     it timed out, a ``TimeoutError`` will be raised, unless the
     timeout is -1, meaning infinite timeout. The executed function
-    will be cancelled once it times out.
+    will be canceled once it times out.
 
 callback
     instead of blocking until the function is done, it returns
@@ -396,12 +396,12 @@ operations:
 
     .. py:method:: cancelled()
 
-        Return whether the function was cancelled
+        Return whether the function was canceled
 
     .. py:method:: done()
 
         Return whether the function is done, so returned normally,
-        raised an exception or was cancelled.
+        raised an exception or was canceled.
 
     .. py:method:: result()
 
@@ -432,9 +432,9 @@ background:
    the background, and the caller is notified via a the callback upon
    completion, with any return values passed as a future.
 
-   The called function can be cancelled. This happens the next time it
+   The called function can be canceled. This happens the next time it
    calls a synchronized_ function. A ``CancelledError`` is raised in
-   the called function, which allows to react to the cancellation,
+   the called function, which allows you to react to the cancellation,
    including ignoring it.
 
     .. note::
@@ -452,7 +452,7 @@ background:
    .. warning::
 
       You should always prefer this sleep function over
-      ``time.sleep``. As described above, this sleep can be cancelled,
+      ``time.sleep``. As described above, this sleep can be canceled,
       while ``time.sleep`` cannot.
 
 
@@ -519,7 +519,7 @@ retain a linear program flow.
 Generically using other devices
 +++++++++++++++++++++++++++++++
 
-Often one wants to generalize a middle layer device such that it can
+Often one wants to generalize a middle-layer device such that it can
 utilize other devices generically, defined by the user. Three special
 properties allow for that: ``RemoteDevice`` lets a user define a
 device to be used, while with a ``RemoteProperty`` the user can point
@@ -571,9 +571,9 @@ the movement of an X- and Y-stage:
     to the same name. If the property given is a node element, all properties
     below that node element are mirrored.
 
-The remote devices will render a nodes in your expected parameters under the
-names you assign them. This node contains as first entry the remote device's
-instance_id, which you should assign upon initialization.
+The remote devices will render as nodes in your expected parameters under the
+names you assign them. Each of these nodes contains as its first entry the
+remote devices instance_id, which you should assign upon initialization.
 
 Optionally, the ``target`` attribute
 can be used to inject the remote device properties from device node into a specific
@@ -606,7 +606,7 @@ needs to achieve this::
 Frequently, it is expected that a command will take a while to
 execute. Depending on how this is realized in the remote device the
 device will change states, e.g. go into a moving state, but the
-command returns immediately, or, the command does not return until the
+command returns immediately, or the command does not return until the
 action has completed.  In such cases the the program flow of the
 middle-layer device should either:
 
@@ -640,8 +640,8 @@ To handle the first two cases we may use the ``waitUntil`` methods::
 
 
 The final case, continuing in the middle-layer device program flow
-although a command is blocking, and then executing a callback upon
-completion is handled by supplying the callback to the command::
+although a command is blocking and then executing a callback upon
+completion, is handled by supplying the callback to the command::
 
     def blockingCallWithCallback(self):
         with getDevice("someDevice") as someDevice:
@@ -654,7 +654,7 @@ completion is handled by supplying the callback to the command::
         # do something
         ...
 
-In all cases the callback function as *future* as its only parameter.
+In all cases the callback function has *future* as its only parameter.
 You can get the possible return value of the called function with
 ``future.result()``.
 
@@ -740,7 +740,7 @@ device in terms of a slot for the middle-layer device to call.
 Locking Devices In Use
 ++++++++++++++++++++++
 
-Middle-layer devices controlling hardware via a *driver* devices often need to be assured
+Middle-layer devices controlling hardware via *driver* devices often need to be assured
 of exclusive access to the hardware. For instance, during a scan one would want to
 prevent accidental overriding of commands issued by the scan device, as would be possible
 by a user accessing the ``driver`` device. To resolve this issue devices support
@@ -782,9 +782,9 @@ of the lock, or an empty string if nobody holds a lock.
 .. todo::
 
 	The lock concept needs to be implemented and discussed. Since it needs to be accessible
-	also from the ```` apis on option is to implement a lock slot in all apis. This takes
+	also from the APIs one option is to implement a lock slot in all APIs. This takes
 	the locking devices instance id as parameter, sets a ``lockedBy`` property to the
-	instance id of the locking device. and after execution will block all interactions
+	instance id of the locking device and after execution will block all interactions
 	not from this instance id until the device is unlocked. In a first step we might actually
 	only implement that the GUI evaluated the device as being locked and grey it out.
 	Conversely, there needs to be an unlock slot (also taking the instance id as parameter)
@@ -802,16 +802,17 @@ of the lock, or an empty string if nobody holds a lock.
 Convenience Shorthands
 ++++++++++++++++++++++
 
-Although property access via device proxies is usually to be preferred, there a scenarios
+Although property access via device proxies is usually to be preferred, there are scenarios
 where only a single or very few interactions with a remote device are necessary. In such
 a case the following shorthands may be used::
 
    setWait("deviceId", "someOtherParameter", a)
    execute("deviceId", "someSlot", timeout=10)
 
-The aforementioned commands are blocking and all accept an optional timeout parameter. They raise a ``TimeoutError`` if the specified duration has passed.
+The aforementioned commands are blocking and all accept an optional timeout parameter.
+They raise a ``TimeoutError`` if the specified duration has passed.
 
-Additionally, non-blocking methods are provided indicated by the suffix ``NoWait`` to
+Additionally, non-blocking methods are provided, indicated by the suffix ``NoWait`` to
 each command::
 
    def callback(deviceId, parameterName, value):
@@ -872,7 +873,7 @@ Errors do happen. When they happen, in Python typically an exception is
 raised. The best way to do error handling is to use the usual Python
 try-except-statements.
 
-So far we have introduced and taken care or time-out errors. Another recurring situation
+So far we have introduced and taken care of time-out errors. Another recurring situation
 is that a user cancels a operation currently in progress. In such cases a ``CancelledError``
 is raised:
 
@@ -893,7 +894,7 @@ generic fashion. In either case it might be advisable to bring the system back i
 defined, safe state. This can be done by overwriting the following device methods::
 
     def onCancelled(self, slot):
-        """to be called if a user cancelled the operation"""
+        """to be called if a user canceled the operation"""
 
 The ``slot`` is the slot that had been executed.
 
@@ -943,7 +944,7 @@ right approach. Check out the python dependencies available for Karabo, or reque
 library to be added, before reimplementing existing functionality.
 
 Finally, as middle-layer devices often facilitate recurring tasks,
-there is a chance that some-one has faced the same problem before and thus a macro or
+there is a chance that someone has faced the same problem before and thus a macro or
 middle-layer device for a similar problem is already available. Search the repository
 first, before reinventing the wheel.
 
@@ -965,13 +966,13 @@ multiple devices into a single entity. They come in different, non-exclusive var
   a composite device may present the mean value or other statistical aggregates of
   properties it reads from the other devices.
 
-- Manager-type devices: manage a group of possibly heterogenous devices by assuring e.g.
+- Manager-type devices: manage a group of possibly heterogeneous devices by assuring e.g.
   that configuration or calibration data is loaded and distributed, state transitions
   are performed in a sequenced order for the entire group, or that managed devices are
   made aware of each other through a single communication point.
 
 In all cases it is good practice to make the composite device configurable to the device
-instances it compositions on, i.e. you should not hard code instance ids into it. Instead,
+instances it is composed of, i.e. you should not hard code instance ids into it. Instead,
 either provide a string or table field to add instance ids too, or a slot on which the
 devices composed upon can register themselves, provided they are given the *configurable*
 instance id of the composition device.
@@ -979,13 +980,13 @@ instance id of the composition device.
 .. warning::
 
 	When writing composite devices make yourself aware if the hardware enforces some
-	time of protection from misconfiguration or not. In the latter case, consider not
+	type of protection from misconfiguration or not. In the latter case, consider not
 	re-implementing safety features already present on the device you compose upon, but
-	delegate the decision of whether a command is same to execute to them.
+	delegate the decision of whether a command is safe to execute to them.
 
 .. note::
 
-	Before implementing a new composite device to check whether a similar task has been
+	Before implementing a new composite device check whether a similar task has been
 	taken care of before, and may be adaptable to your needs.
 
 
@@ -999,16 +1000,16 @@ scan device most frequently
 2. steps a hardware property through a range of values, defined by a starting position, an
    increment and an end position or the number of steps
 3. at each step triggers some sort of processing or data acquisition of other value
-4. brings the hardware and devices it relies back into the initial state or another defined
+4. brings the hardware and devices it relies on back into the initial state or another defined
    state.
 
 Given the above requirements, a scan device thus
 
-- needs to be aware of subordinate devices it controls, which may be of heterogenous
+- needs to be aware of subordinate devices it controls, which may be of heterogeneous
   nature, which can be implemented in either or both ways described for composite devices.
 - Must be able to lock these devices so that no outside interference is possible during
   the scan. This is done via the locking mechanism.
-- Must be able to trigger data acquisition via the run mananagement, which may be done
+- Must be able to trigger data acquisition via the run management, which may be done
   using the Karabo-provided *simpleRunAcquistion* device.
 
 An exemplary device scanning is implemented below. In the example ``command()``
@@ -1039,7 +1040,7 @@ control variable using the error itself, its integral and its derivative.
     about the expected parameters, its types, comments, units, everything.
     It is only broadcast rarely over the network, typically only during
     the initial handshake with the device. Once the schema is known, only
-    *configurations*, or even only parts of configurations are sent over
+    *configurations*, or even only parts of configurations, are sent over
     the network in a tree structure called *Hash* (which is not a hash
     table).
 
@@ -1098,10 +1099,10 @@ control variable using the error itself, its integral and its derivative.
       just described.
 
       During initialization, more properties may be set than during a
-      normal reconfiguration at runtime, this is why we have to treat it
-      special and cannot use the code path for the latter.
+      normal reconfiguration at runtime. This is why we have to treat it
+      as a special case and cannot use the code path for the latter.
 
-      This behavior also allows to define special properties that do
+      This behavior also allows us to define special properties that do
       something during initialization. As an example, a ``RemoteDevice``
       parameter may already connect to the remote device upon
       initialization. Properly declaring a parameter to refer to a remote
@@ -1199,7 +1200,7 @@ control variable using the error itself, its integral and its derivative.
     operating on that value.
 
     But the reason becomes obvious when we want to use device properties
-    for anything else than their value. Most simply,
+    for anything other than their value. Most simply,
     ``help(device.speed)`` should not show the help for float values,
     but actually give help on the device's parameter.
 
