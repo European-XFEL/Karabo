@@ -1,3 +1,9 @@
+#############################################################################
+# Author: <steffen.hauf@xfel.eu>
+# Created on December 8, 2016
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
 from xml.etree.ElementTree import SubElement
 
 from traits.api import String
@@ -28,4 +34,3 @@ def _statefulwidget_widget_reader(read_func, element):
     traits = read_base_widget_data(element)
     traits['icon_name'] = element.get(NS_KARABO + 'icon_name', '')
     return StatefulIconWidgetModel(**traits)
-

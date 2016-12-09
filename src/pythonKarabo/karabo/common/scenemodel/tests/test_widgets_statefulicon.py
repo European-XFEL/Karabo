@@ -5,6 +5,7 @@ from .utils import (assert_base_traits, base_widget_traits,
 
 STATEFUL_ICON_WIDGETS = ['foo', 'bar', 'foobar']
 
+
 def test_statefulicon_widget():
     model = StatefulIconWidgetModel()
     for name in STATEFUL_ICON_WIDGETS:
