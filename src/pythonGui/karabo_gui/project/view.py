@@ -132,7 +132,7 @@ class ProjectView(QTreeView):
 
         self._save_project(project)
 
-        if parent_project is not None:
+        if project is not parent_project:
             # A subproject
             if project in parent_project.subprojects:
                 parent_project.subprojects.remove(project)
