@@ -105,16 +105,15 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         """ This callback is called by the ``SystemTopologyListener`` object
         in the ``topo_listener`` trait.
         """
-        server = self.model
-        child_dev_ids = set([inst.instance_id for inst in server.devices])
+        child_dev_ids = set([inst.instance_id for inst in self.model.devices])
         for dev_id, class_id, status in devices:
             if dev_id in child_dev_ids:
-                inst = server.get_device_instance(dev_id)
+                inst = self.model.get_device_instance(dev_id)
                 if inst is not None and inst.class_id == class_id:
                     inst.status = status
         for server_id, host, status in servers:
-            if server.server_id == server_id and server.host == host:
-                server.status = status
+            if self.model.server_id == server_id and self.model.host == host:
+                self.model.status = status
 
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
