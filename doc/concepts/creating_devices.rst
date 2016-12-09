@@ -97,7 +97,7 @@ Examples:
 
         ./karabo new simulatedCamera testDevices pythonDevice minimal SimulatedCamera
 
-3. Create a package dependency myDep, which is in form of a netbeans project.
+3. Create a package dependency myDep, which is in form of a Netbeans project.
 
     .. code-block:: bash
 
