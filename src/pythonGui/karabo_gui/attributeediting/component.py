@@ -32,9 +32,9 @@ class EditAttributeComponent(BaseComponent):
     def onEditingFinished(self, box, value):
         setattr(box.descriptor, self._attributeName, value)
 
-        # Configuration changed - so project needs to be informed to show it
-        if box.configuration.type in ('projectClass', 'deviceGroupClass'):
-            box.configuration.signalConfigurationModified.emit(True)
+        # Configuration changed - so project needs to be informed
+        if box.configuration.type == 'projectClass':
+            box.configuration.signalBoxChanged.emit()
 
     def setEnabled(self, enable):
         self.widget.setEnabled(enable)
