@@ -12,11 +12,10 @@ from traits.api import Callable, Dict, Instance, List, on_trait_change
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel)
 from karabo.middlelayer import Hash
-from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.events import (register_for_broadcasts,
                                unregister_from_broadcasts)
-from karabo_gui.indicators import DeviceStatus, get_device_status_icon
+from karabo_gui.indicators import DeviceStatus, get_project_server_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
@@ -74,7 +73,8 @@ class DeviceServerModelItem(BaseProjectTreeItem):
     def create_qt_item(self):
         item = QStandardItem(self.model.server_id)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
-        item.setIcon(icons.yes)
+        icon = get_project_server_status_icon(DeviceStatus.STATUS_ONLINE)
+        item.setIcon(icon)
         item.setEditable(False)
         for child in self.children:
             item.appendRow(child.qt_item)
@@ -162,7 +162,7 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         if not self.is_ui_initialized():
             return
         status_enum = DeviceStatus(self.model.status)
-        icon = get_device_status_icon(status_enum)
+        icon = get_project_server_status_icon(status_enum)
         if icon is not None:
             self.qt_item.setIcon(icon)
 

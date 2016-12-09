@@ -21,7 +21,7 @@ from karabo_gui.configuration import Configuration
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
                                KaraboEventSender)
-from karabo_gui.indicators import DeviceStatus, get_device_status_icon
+from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import save_object
@@ -76,7 +76,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     def create_qt_item(self):
         item = QStandardItem(self.model.instance_id)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
-        icon = get_device_status_icon(DeviceStatus.STATUS_OFFLINE)
+        icon = get_project_device_status_icon(DeviceStatus.STATUS_OFFLINE)
         item.setIcon(icon)
         item.setEditable(False)
         return item
@@ -102,7 +102,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         if not self.is_ui_initialized():
             return
         status_enum = DeviceStatus(self.model.status)
-        icon = get_device_status_icon(status_enum)
+        icon = get_project_device_status_icon(status_enum)
         if icon is not None:
             self.qt_item.setIcon(icon)
 
