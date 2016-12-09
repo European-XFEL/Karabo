@@ -14,7 +14,7 @@ broker topics through an (expert-only) expected parameter.
 Specifically, a device configured to use more than one topic will
 react on incoming messages from any configured topic and will send a copy of
 every outgoing message to all configured topics. On the broker side, message
-copies which have no consumer in a given topic are simply discarded off.
+copies which have no consumer in a given topic are simply discarded.
 
 Shared Resources
 ================
@@ -26,8 +26,8 @@ shared by both instruments in the SASE or the shared laser installations.
 Devices can be configured to not interpret assignment and command messages from
 a topic they are configured to communicated with. This allows for exclusive
 resource sharing. For example, one of two experiments sharing a laser
-installation, can request exclusive rights to the shared laser devices, by
-requesting to not interpret command and assingment messages from the topic the
+installation can request exclusive rights to the shared laser devices by
+requesting to not interpret command and assignment messages from the topic the
 other instrument is configured to. Say the first experiment uses topic
 *exp1* and the second topic *exp2*. If *exp1* needs exclusive access, it would
 configure all laser devices to ignore messages from topic *exp2*. The experiment
@@ -36,7 +36,7 @@ as property update messages would still be sent to both topics.
 
 .. note::
 
-    A final remaning topic must always be enabled for assingment message and command
+    A final remaining topic must always be enabled for assignment message and command
     message evaluation, as otherwise the device would not be configurable
     anymore. Specifically a message blocking reconfiguration to a single remaining
     topic will not be applied by the device.
@@ -116,7 +116,7 @@ Data Loggers
 
 Connect to the slow control properties of a device via a point-to-point
 connection because they devour a large amount of data. In this way logging
-messages to not stress the broker unecessarily. See Section :ref:`data_logging`
+messages does not stress the broker unnecessarily. See Section :ref:`data_logging`
 for details.
 
 P2P Communication For Pipelined Processing and DAQ
