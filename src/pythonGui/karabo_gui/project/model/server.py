@@ -215,6 +215,7 @@ class DeviceServerModelItem(BaseProjectTreeItem):
                 'active_config_ref': active_config_ref
             }
             device = DeviceInstanceModel(**traits)
+            device.modified = True
             self.model.devices.append(device)
 
     def _delete_all_devices(self):
