@@ -195,3 +195,35 @@ def get_device_status_pixmap(status, error, extent=16):
     icon = get_device_status_icon(status, error=error)
     if icon is not None:
         return icon.pixmap(extent)
+
+
+def get_project_device_status_icon(status, error=False):
+    """An icon for the given device `status`.
+
+    NOTE: These icons are for the Project Panel
+    """
+    status_icons = {
+        DeviceStatus.STATUS_ERROR: icons.deviceInstanceError,
+        DeviceStatus.STATUS_NOSERVER: icons.deviceOfflineNoServer,
+        DeviceStatus.STATUS_NOPLUGIN: icons.deviceOfflineNoPlugin,
+        DeviceStatus.STATUS_OFFLINE: icons.deviceOffline,
+        DeviceStatus.STATUS_INCOMPATIBLE: icons.deviceIncompatible,
+    }
+
+    if status != DeviceStatus.STATUS_OFFLINE and error:
+        return status_icons.get(DeviceStatus.STATUS_ERROR)
+
+    return status_icons.get(status, icons.deviceInstance)
+
+
+def get_project_server_status_icon(status):
+    """An icon for the given server `status`.
+
+    NOTE: These icons are for the Project Panel
+    """
+    status_icons = {
+        DeviceStatus.STATUS_ONLINE: icons.yes,
+        DeviceStatus.STATUS_OFFLINE: icons.no,
+    }
+
+    return status_icons.get(status)
