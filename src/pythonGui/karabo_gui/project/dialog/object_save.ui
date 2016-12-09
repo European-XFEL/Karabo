@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>300</width>
+    <width>355</width>
     <height>90</height>
    </rect>
   </property>
@@ -19,12 +19,16 @@
      <item>
       <widget class="QLabel" name="laAlias">
        <property name="text">
-        <string>Save as:</string>
+        <string>Version alias:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="leAlias"/>
+      <widget class="QLineEdit" name="leAlias">
+       <property name="toolTip">
+        <string>Set a human readable version alias</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
