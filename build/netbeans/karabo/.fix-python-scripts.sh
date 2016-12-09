@@ -18,8 +18,8 @@ NEW_SHEBANG_LINE="#!/usr/bin/env python3"
 SED_PROGRAM='1 s%^.*$%'$NEW_SHEBANG_LINE'%g'
 
 PYTHON_ENTRY_POINTS=(convert-karabo-device convert-karabo-project
-    ideviceclient ikarabo karabo_device_server karabo-gui
-    karabo-middlelayer-device-server karaboServerControl.py project-runner
+    ikarabo karabo karabo-cli karabo-gui karabo-middlelayerserver
+    karabo-pythonserver project-runner
     scene-runner
 )
 
