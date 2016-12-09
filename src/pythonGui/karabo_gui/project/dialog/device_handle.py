@@ -52,7 +52,6 @@ class DeviceHandleDialog(QDialog):
                 # These widgets belong to a ``DeviceInstanceModel`` and
                 # should not be changed in case a configuration is added
                 self.leTitle.setEnabled(False)
-                self.cbClass.setEnabled(False)
                 self.cbIfExists.setEnabled(False)
                 if active_dev_conf is not None:
                     self._update_plugin_widget(active_dev_conf.class_id)
@@ -64,6 +63,7 @@ class DeviceHandleDialog(QDialog):
                     index = self.cbConfig.findText(active_dev_conf.alias)
                     self.cbConfig.setCurrentIndex(index)
 
+            self.cbClass.setEnabled(False)
             self.leTitle.setText(model.instance_id)
             index = self.cbIfExists.findText(model.if_exists)
             self.cbIfExists.setCurrentIndex(index)
