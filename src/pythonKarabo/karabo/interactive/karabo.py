@@ -263,8 +263,8 @@ def install_file(args):
     filename = os.path.join(INVOKE_DIR, args.filename)
     devices = parse_configuration_file(filename)
     for item in devices:
-        args['device'] = item[0]
-        args['tag'] = item[1]
+		setattr(args, 'device', item[0])		
+		setattr(args, 'tag', item[1])
         install(args)
 
 
@@ -295,7 +295,7 @@ def uninstall_file(args):
     filename = os.path.join(INVOKE_DIR, args.filename)
     devices = parse_configuration_file(filename)
     for item in devices:
-        args['device'] = item[0]
+		setattr(args, 'device', item[0])
         uninstall(args)
 
 
