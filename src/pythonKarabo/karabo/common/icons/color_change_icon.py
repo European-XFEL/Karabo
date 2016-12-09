@@ -3,11 +3,11 @@
 # Created on November 7, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from os import listdir, path
+from os.path import join, isfile, splitext
 from xml.etree.ElementTree import Element, parse, tostring
-from os import listdir
-from os.path import join, isfile
 
-from karabo_gui.const import ns_svg, ns_inkscape
+from karabo.common.scenemodel.const import NS_SVG
 
 
 class ColorChangeIcon(object):
@@ -33,13 +33,13 @@ class ColorChangeIcon(object):
             style['fill'] = color
             element.set('style', _join_style_attr(style))
 
-        root = Element(ns_svg+'svg')
+        root = Element(NS_SVG+'svg')
         root.append(self.element)
         return tostring(root, encoding='unicode')
 
 
 def _get_color_change_icon(path):
-    """Extract all the icons from and SVG file which contain regions with a
+    """Icon from and SVG file which contain regions with a
     fill color of white.
 
     :param path: A path to an SVG file
@@ -58,26 +58,23 @@ def _get_color_change_icon(path):
                 yield group
 
     def _iter_groups_r(element):
-        for group in element.findall(ns_svg + 'g'):
+        for group in element.findall(NS_SVG + 'g'):
             yield group
             for subgroup in _iter_groups_r(group):
                 yield subgroup
 
-    def _iter_changeable_icons(root):
-        for icon in _iter_icon_groups(root):
-            description = icon.findall(ns_svg +'desc')[0].text
-            styleable = [(c, _split_style_attr(s))
-                         for c, s in _iter_children_with_styles(icon)]
-            white_subelements = [c for c, s in styleable
-                                 if s.get('fill', '').lower() == '#ffffff']
-            if white_subelements:
-                yield icon, white_subelements, description
-
     tree = parse(path)
-    icons = [ColorChangeIcon(icon, white_subelements, description)
-             for icon, white_subelements, description
-                in _iter_changeable_icons(tree)]
-    return {icon.name: icon for icon in icons}
+
+    icon = list(_iter_icon_groups(tree))
+    if len(icon) == 0:
+        return False
+    icon = icon[0]
+    description = icon.findall(NS_SVG + 'desc')[0].text
+    styleable = [(c, _split_style_attr(s))
+                 for c, s in _iter_children_with_styles(icon)]
+    white_subelements = [c for c, s in styleable
+                         if s.get('fill', '').lower() == '#ffffff']
+    return ColorChangeIcon(icon, white_subelements, description)
 
 def get_color_change_icons(path):
     """
@@ -85,10 +82,11 @@ def get_color_change_icons(path):
     """
     icons = {}
     for in_file in listdir(path):
-        if isfile(join(path, in_file)):
+        fpath = join(path, in_file)
+        if isfile(fpath) and splitext(fpath)[-1] == '.svg':
             icon = _get_color_change_icon(join(path, in_file))
-            for k, i in icon.items():
-                icons[k] = i
+            if icon:
+                icons[icon.name] = icon
 
     return icons
 
@@ -101,3 +99,6 @@ def _join_style_attr(style):
 
 def _split_style_attr(style):
     return {k: v for k, v in (s.split(':') for s in style.split(';'))}
+
+icon_path = path.join(path.dirname(__file__),  "iconset")
+icons = get_color_change_icons(icon_path)
