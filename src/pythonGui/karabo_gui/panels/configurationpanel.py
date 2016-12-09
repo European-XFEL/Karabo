@@ -645,10 +645,11 @@ class ConfigurationPanel(Dockable, QWidget):
         conf_type = self.prevConfiguration.type
         if conf_type == 'projectClass':
             project_device = self.prevConfiguration
+            hsh, _ = project_device.toHash()  # Ignore returned attributes
             get_manager().initDevice(project_device.serverId,
                                      project_device.classId,
                                      project_device.id,
-                                     project_device.toHash())
+                                     hsh)
             return
 
         if self.twNavigation.currentIndex().isValid():
