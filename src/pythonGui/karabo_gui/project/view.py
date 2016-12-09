@@ -9,7 +9,7 @@ from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
 
 from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
-from karabo_gui.project.utils import save_object
+from karabo_gui.project.utils import save_project
 from karabo_gui.singletons.api import get_project_model
 from .model.project import ProjectModelItem
 from .model.project_groups import ProjectSubgroupItem
@@ -91,7 +91,7 @@ class ProjectView(QTreeView):
             if parent_project is None or is_project:
                 project_model = selected_item_model.model
                 save_action = QAction('Save', menu)
-                save_action.triggered.connect(partial(save_object,
+                save_action.triggered.connect(partial(save_project,
                                                       project_model))
                 close_action = QAction('Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
@@ -114,10 +114,7 @@ class ProjectView(QTreeView):
                 return
 
             if reply == QMessageBox.Save:
-                # XXX: still not completely correct once there are child
-                # objects - loading of this project not possible due to wrong
-                # revision references
-                save_object(project)
+                save_project(project)
 
     def _close_project(self, project, parent_project):
         """ Close the given `project`
