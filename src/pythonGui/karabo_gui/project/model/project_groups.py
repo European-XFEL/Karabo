@@ -163,6 +163,7 @@ def _add_macro(project):
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
         macro = MacroModel(simple_name=dialog.simple_name, initialized=True)
+        macro.modified = True
         project.macros.append(macro)
 
 
@@ -171,11 +172,11 @@ def _load_macro(project):
     if not fn:
         return
     # Read MacroModel
-    macro_model = read_macro(fn)
+    macro = read_macro(fn)
     # Set the scene model title
-    macro_model.simple_name = op.splitext(op.basename(fn))[0]
-    macro_model.modified = True
-    project.macros.append(macro_model)
+    macro.simple_name = op.splitext(op.basename(fn))[0]
+    macro.modified = True
+    project.macros.append(macro)
 
 
 def _add_scene(project):
@@ -185,6 +186,7 @@ def _add_scene(project):
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
         scene = SceneModel(simple_name=dialog.simple_name, initialized=True)
+        scene.modified = True
         project.scenes.append(scene)
 
 
@@ -193,10 +195,10 @@ def _load_scene(project):
     if not fn:
         return
     # Read SceneModel
-    scene_model = read_scene(fn)
-    scene_model.simple_name = op.splitext(op.basename(fn))[0]
-    scene_model.modified = True
-    project.scenes.append(scene_model)
+    scene = read_scene(fn)
+    scene.simple_name = op.splitext(op.basename(fn))[0]
+    scene.modified = True
+    project.scenes.append(scene)
 
 
 def _add_server(project):
@@ -212,6 +214,7 @@ def _add_server(project):
             'initialized': True,
         }
         server = DeviceServerModel(**traits)
+        server.modified = True
         project.servers.append(server)
 
 
@@ -222,4 +225,5 @@ def _add_project(project):
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
         model = ProjectModel(simple_name=dialog.simple_name, initialized=True)
+        model.modified = True
         project.subprojects.append(model)
