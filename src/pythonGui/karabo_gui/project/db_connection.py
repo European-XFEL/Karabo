@@ -7,6 +7,7 @@
 from PyQt4.QtCore import QObject
 
 from karabo.common.project.api import get_user_cache, read_lazy_object
+from karabo.common.savable import clear_modified_flag
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.newproject.io import (read_project_model,
                                                   write_project_model)
@@ -160,7 +161,7 @@ class ProjectDatabaseConnection(QObject):
                 data = write_project_model(obj)
                 self.cache.store(domain, uuid, new_revision, data)
                 # No longer dirty!
-                obj.modified = False
+                clear_modified_flag(obj)
             else:
                 # XXX: Make some noise.
                 # Right now, only the modified flag doesn't get updated.
