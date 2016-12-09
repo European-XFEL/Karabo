@@ -1,0 +1,15 @@
+from ..api import StatefulIconWidgetModel
+from ..widgets.statefulicon import STATEFUL_ICON_WIDGETS
+from .utils import (assert_base_traits, base_widget_traits,
+                    single_model_round_trip)
+
+
+def test_statefulicon_widget():
+    model = StatefulIconWidgetModel()
+    for name in STATEFUL_ICON_WIDGETS:
+        traits = base_widget_traits(parent='DisplayComponent')
+        traits['icon_name'] = name
+        model = StatefulIconWidgetModel(**traits)
+        read_model = single_model_round_trip(model)
+        assert_base_traits(read_model)
+        assert read_model.icon_name == name
