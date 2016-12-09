@@ -1,8 +1,9 @@
 from ..api import StatefulIconWidgetModel
-from ..widgets.statefulicon import STATEFUL_ICON_WIDGETS
+
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
 
+STATEFUL_ICON_WIDGETS = ['foo', 'bar', 'foobar']
 
 def test_statefulicon_widget():
     model = StatefulIconWidgetModel()
