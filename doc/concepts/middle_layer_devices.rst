@@ -573,7 +573,7 @@ the movement of an X- and Y-stage:
 
 The remote devices will render as nodes in your expected parameters under the
 names you assign them. Each of these nodes contains as its first entry the
-remote devices instance_id, which you should assign upon initialization.
+remote device's instance_id, which you should assign upon initialization.
 
 Optionally, the ``target`` attribute
 can be used to inject the remote device properties from device node into a specific
