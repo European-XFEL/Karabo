@@ -31,4 +31,4 @@ from .widgets.simple import (BitfieldModel, CheckBoxModel, ChoiceElementModel,
                              SceneLinkModel, SliderModel, WorkflowItemModel,
                              XYPlotModel)
 from .widgets.vacuum import VacuumWidgetModel
-from .widgets.statefulicon import StatefulIconWidgetModel, stateful_icons
+from .widgets.statefulicon import StatefulIconWidgetModel, icons

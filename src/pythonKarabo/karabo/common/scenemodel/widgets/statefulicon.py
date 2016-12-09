@@ -1,46 +1,39 @@
-import os
-
+from traits.api import Enum
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Enum
-
+from karabo.common.icons.color_change_icon import icons
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
-from karabo.common.scenemodel.const import NS_SVG
+from karabo.common.scenemodel.const import NS_KARABO
 from karabo.common.scenemodel.io_utils import (
-    read_empty_display_editable_widget, write_base_widget_data)
+    read_base_widget_data, write_base_widget_data)
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
-from karabo.common.scenemodel.color_change_icon import get_color_change_icons
 
 
 STATEFUL_ICON_WIDGETS = []
-stateful_icon_path = os.path.join(os.path.dirname(__file__), "..", "iconset")
-stateful_icons = get_color_change_icons(stateful_icon_path)
 
-for key, icon in stateful_icons.items():
+for key, icon in icons.items():
     STATEFUL_ICON_WIDGETS.append(key)
+
 
 class StatefulIconWidgetModel(BaseWidgetObjectData):
     """ A model for StatefulIconWidgetModel objects"""
-    klass = Enum(*STATEFUL_ICON_WIDGETS)
+    icon_name = Enum(*STATEFUL_ICON_WIDGETS)
+    klass = 'StatefulIconWidget'
 
 
 @register_scene_writer(StatefulIconWidgetModel)
-def _vacuum_widget_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'g')
+def _statefulwidget_widget_writer(write_func, model, parent):
+    element = SubElement(parent, NS_KARABO + 'statefulicon')
+    element.set(NS_KARABO + 'icon_name', model.icon_name)
     write_base_widget_data(model, element, model.klass)
     return element
 
 
-def _build_stateful_icon_widget_readers():
-    """ Build readers for all the possible stateful icon widgets.
-    """
-    def _reader(read_func, element):
-        traits = read_empty_display_editable_widget(element)
-        return StatefulIconWidgetModel(**traits)
+@register_scene_reader('StatefulIconWidget', version=2)
+def _statefulwidget_widget_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits['icon_name'] = element.get(NS_KARABO + 'icon_name', '')
+    return StatefulIconWidgetModel(**traits)
 
-    for widget in STATEFUL_ICON_WIDGETS:
-        register_scene_reader(widget, version=1)(_reader)
-
-# Call the builder to register all the stateful icon widget readers and writers
-_build_stateful_icon_widget_readers()
+register_scene_reader('statefulicon', version=2)(_statefulwidget_widget_reader)

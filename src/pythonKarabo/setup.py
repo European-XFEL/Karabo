@@ -103,7 +103,7 @@ if __name__ == '__main__':
         packages=find_packages(),
         package_data={
             'karabo.bound_api.tests': ['resources/*.*'],
-            'karabo.common.scenemodel': ["iconset/*.svg"],
+            'karabo.common.icons': ["iconset/*.svg"],
             "karabo.common.scenemodel.tests": ["data/*.svg",
                                                "data/inkscape/*.svg",
                                                "data/legacy/*.svg",
