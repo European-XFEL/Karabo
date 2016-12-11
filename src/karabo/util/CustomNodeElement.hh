@@ -267,6 +267,7 @@ namespace karabo {
              * Registers this element into the Schema
              */
             void commit() {
+                m_schema.getParameterHash().setAttribute(m_key, KARABO_SCHEMA_CLASS_ID, Described::classInfo().getClassId());
             }
         };
     }
