@@ -39,7 +39,6 @@ namespace karabo {
 
             TcpConnection::Pointer m_connectionPointer;
             boost::asio::io_service::strand m_readStrand;
-            boost::asio::io_service::strand m_writeStrand;
             boost::asio::ip::tcp::socket m_socket;
             HandlerType m_activeHandler;
             bool m_readHeaderFirst;
