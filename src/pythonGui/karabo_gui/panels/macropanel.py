@@ -117,7 +117,7 @@ class MacroPanel(Dockable, QSplitter):
             h = Hash("code", self.macro_model.code,
                      "module", self.macro_model.title,
                      "project", self.macro_model.project_name)
-            get_network().onInitDevice("Karabo_MacroServer", "MetaMacro",
+            get_network().onInitDevice("karabo/macroServer", "MetaMacro",
                                        instance_id, h)
 
     def onSave(self):
