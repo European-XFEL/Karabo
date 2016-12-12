@@ -577,8 +577,7 @@ namespace karabo {
                 if (!error) return;
                 else throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
 
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::write(const char*, const size_t&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -595,8 +594,7 @@ namespace karabo {
                     m_binarySerializer->save(data, archive);
                     this->write(&archive[0], archive.size());
                 }
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::write(const karabo::util::Hash&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -633,8 +631,7 @@ namespace karabo {
                         this->write(&headerBuf[0], headerBuf.size(), &bodyBuf[0], bodyBuf.size());
                     }
                 }
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::write(const Hash&, const Hash&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -671,8 +668,7 @@ namespace karabo {
                         write(&headerBuf[0], headerBuf.size(), data, size);
                     }
                 }
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::write(const Hash&, const char*, const size_t&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -697,8 +693,7 @@ namespace karabo {
                 if (error) {
                     throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
                 }
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::write(const char*, const size_t&, const char*, const size_t&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -719,8 +714,7 @@ namespace karabo {
                 boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::asyncWriteHandler, this,
                                                          boost::asio::placeholders::error, handler));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::managedWriteAsync(const WriteCompleteHandler&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -740,8 +734,7 @@ namespace karabo {
                 boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::asyncWriteHandler, this,
                                                          boost::asio::placeholders::error, handler));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::managedWriteAsyncWithHeader(const WriteCompleteHandler&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -759,8 +752,7 @@ namespace karabo {
                 boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::asyncWriteHandler, this,
                                                          boost::asio::placeholders::error, handler));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::unmanagedWriteAsync(const char*, const size_t&, const WriteCompleteHandler&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -780,8 +772,7 @@ namespace karabo {
                 boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::asyncWriteHandler, this,
                                                          boost::asio::placeholders::error, handler));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::unmanagedWriteAsyncWithHeader(const char*, const size_t&, const WriteCompleteHandler&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -847,8 +838,7 @@ namespace karabo {
                 } else {
                     this->unmanagedWriteAsync(data, size, handler);
                 }
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::writeAsyncRaw(const char*, const size_t&, const WriteCompleteHandler&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -857,8 +847,7 @@ namespace karabo {
         void TcpChannel::writeAsyncVector(const vector<char>& data, const Channel::WriteCompleteHandler& handler) {
             try {
                 this->writeAsyncRaw(&data[0], data.size(), handler);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::writeAsyncVector(const vector<char>&, const WriteCompleteHandler&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -881,8 +870,7 @@ namespace karabo {
                                          util::bind_weak(&TcpChannel::asyncWriteHandlerBody, this,
                                                          boost::asio::placeholders::error,
                                                          handler, dataPtr));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::writeAsyncVectorPointer(const boost::shared_ptr<vector<char> >&, const WriteCompleteHandler&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -893,8 +881,7 @@ namespace karabo {
                 boost::shared_ptr<std::vector<char> > dataPtr(new std::vector<char>());
                 this->prepareDataFromHash(hash, dataPtr);
                 this->writeAsyncVectorPointer(dataPtr, handler);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::writeAsyncHash(const Hash&, const WriteCompleteHandler&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -925,8 +912,7 @@ namespace karabo {
                         this->unmanagedWriteAsyncWithHeader(data, size, handler);
                     }
                 }
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::writeAsyncHashRaw(const Hash&, const char*, const size_t&, const WriteCompleteHandler&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -936,9 +922,7 @@ namespace karabo {
                                               const Channel::WriteCompleteHandler& handler) {
             try {
                 this->writeAsyncHashRaw(header, &data[0], data.size(), handler);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::writeAsyncHashVector(const Hash&, const std::vector<char>&,"
-                        " const WriteCompleteHandler&) exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -961,10 +945,7 @@ namespace karabo {
                                          util::bind_weak(&TcpChannel::asyncWriteHandlerHeaderBody,
                                                          this, boost::asio::placeholders::error,
                                                          handler, header, body));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::writeAsyncHeaderBodyImpl(const boost::shared_ptr<std::vector"
-                        "<char> >&, const boost::shared_ptr<std::vector<char> >&, const WriteCompleteHandler&) exception : '"
-                        << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -987,8 +968,7 @@ namespace karabo {
                     this->prepareDataFromHash(header, headerPtr);
                     writeAsyncHeaderBodyImpl(headerPtr, data, handler);
                 }
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::writeAsyncHashVectorPointer exception : '" << e.what() << "'.\n";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -999,8 +979,7 @@ namespace karabo {
                 boost::shared_ptr<std::vector<char> > dataPtr(new std::vector<char>());
                 this->prepareDataFromHash(hash, dataPtr);
                 this->writeAsyncHashVectorPointer(header, dataPtr, handler);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::writeAsyncHashHash exception : '" << e.what() << "'.";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -1009,8 +988,7 @@ namespace karabo {
         void TcpChannel::asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler) {
             try {
                 EventLoop::getIOService().post(boost::bind(handler, e));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::asyncWriteHandler exception : '" << e.what() << "'.";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -1021,8 +999,7 @@ namespace karabo {
                                                const boost::shared_ptr<std::vector<char> >& body) {
             try {
                 EventLoop::getIOService().post(boost::bind(handler, e));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::asyncWriteHandlerBody exception : '" << e.what() << "'.";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
@@ -1034,8 +1011,7 @@ namespace karabo {
                                                      const boost::shared_ptr<std::vector<char> >& body) {
             try {
                 EventLoop::getIOService().post(boost::bind(handler, e));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::asyncWriteHandlerHeaderBody exception : '" << e.what() << "'.";
+            } catch (...) {
                 KARABO_RETHROW
             }
         }
