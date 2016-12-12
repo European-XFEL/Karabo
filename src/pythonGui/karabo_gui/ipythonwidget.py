@@ -27,6 +27,7 @@ class IPythonWidget(RichJupyterWidget):
         self.kernel_manager.start_kernel()
         self.kernel_client = self.kernel_manager.client()
         self.exit_requested.connect(self.stop)
+        self.execute_on_complete_input = False
 
     def stop(self):
         self.kernel_client.stop_channels()
