@@ -1,6 +1,7 @@
 from asyncio import async, coroutine, get_event_loop
 from queue import Empty
 import pickle
+from textwrap import dedent
 
 from jupyter_client.blocking.channels import ZMQSocketChannel
 from jupyter_client.channels import HBChannel
@@ -28,6 +29,7 @@ class ChannelMixin(ZMQSocketChannel, ChannelABC):
                 msg = yield from loop.run_in_executor(None, self.get_msg,
                                                       True, 1)
                 self.call_handlers(pickle.dumps(msg))
+                self.device.doNotCompressEvents += 1
                 self.device.update()
             except Empty:
                 pass
@@ -88,6 +90,15 @@ class IPythonKernel(Device):
     def stdin(self, msg):
         if self.client is not None:
             self.client.stdin_channel.send(pickle.loads(msg))
+
+    doNotCompressEvents = Int32(
+        description=dedent("""\
+            The existence of this expected parameter tells the
+            GUI server that it should send changes directly to the
+            GUI, without cmpressing it with other events."""),
+        accessMode=AccessMode.READONLY,
+        requiredAccessLevel=AccessLevel.EXPERT,
+        defaultValue=0)
 
     visibility = Int32(enum=AccessLevel, defaultValue=AccessLevel.ADMIN)
 
