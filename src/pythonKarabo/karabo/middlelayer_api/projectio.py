@@ -184,10 +184,10 @@ def _read_macros(zf, projectConfig, factories):
     macros = []
     macroFactory = factories['Macro']
 
-    for title in projectConfig[Project.MACROS_KEY]:
-        data = zf.read("{}/{}".format(Project.MACROS_KEY, "{}.py".format(title)))
+    for name in projectConfig[Project.MACROS_KEY]:
+        data = zf.read("{}/{}".format(Project.MACROS_KEY, "{}.py".format(name)))
         macro_model = macroFactory(StringIO(data.decode()))
-        macro_model.title = title
+        macro_model.simple_name = name
         macros.append(macro_model)
 
     return macros
@@ -299,9 +299,9 @@ def _write_macros(zf, objects):
     macroHash = Hash()
 
     for macro_model in objects:
-        name = "{}/{}.py".format(Project.MACROS_KEY, macro_model.title)
+        name = "{}/{}.py".format(Project.MACROS_KEY, macro_model.simple_name)
         zf.writestr(name, write_macro(macro_model))
-        macroHash[macro_model.title] = name
+        macroHash[macro_model.simple_name] = name
 
     return macroHash
 
