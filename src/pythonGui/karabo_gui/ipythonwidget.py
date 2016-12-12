@@ -93,7 +93,7 @@ class KernelClient(inprocess.QtInProcessKernelClient):
             self.stdin_channel.receive)
 
     def onStateChanged(self, box, state, timestamp):
-        self.alive = state == "Running"
+        self.alive = state == "STARTED"
         if self.alive:
             if not self.started:
                 self.start_channels()
