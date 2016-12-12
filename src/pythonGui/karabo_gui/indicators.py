@@ -44,7 +44,7 @@ ALARM_ICONS = {
 # --------------------------------------------------------------------------
 # Mapping states to colors
 
-class _StateColorsEnum(Enum):
+class _StateColors(Enum):
     UNKNOWN_COLOR = (255, 170, 0)
     KNOWN_NORMAL_COLOR = (200, 200, 200)
     INIT_COLOR = (230, 230, 170)
@@ -57,18 +57,18 @@ class _StateColorsEnum(Enum):
 
 
 STATE_COLORS = {
-    State.UNKNOWN: _StateColorsEnum.UNKNOWN_COLOR,
-    State.KNOWN: _StateColorsEnum.KNOWN_NORMAL_COLOR,
-    State.NORMAL: _StateColorsEnum.KNOWN_NORMAL_COLOR,
-    State.INIT: _StateColorsEnum.INIT_COLOR,
-    State.DISABLED: _StateColorsEnum.DISABLED_COLOR,
-    State.ERROR: _StateColorsEnum.ERROR_COLOR,
-    State.CHANGING: _StateColorsEnum.CHANGING_DECREASING_INCREASING_COLOR,
-    State.DECREASING: _StateColorsEnum.CHANGING_DECREASING_INCREASING_COLOR,
-    State.INCREASING: _StateColorsEnum.CHANGING_DECREASING_INCREASING_COLOR,
-    State.STATIC: _StateColorsEnum.STATIC_COLOR,
-    State.ACTIVE: _StateColorsEnum.ACTIVE_COLOR,
-    State.PASSIVE: _StateColorsEnum.PASSIVE_COLOR
+    State.UNKNOWN: _StateColors.UNKNOWN_COLOR.value,
+    State.KNOWN: _StateColors.KNOWN_NORMAL_COLOR.value,
+    State.NORMAL: _StateColors.KNOWN_NORMAL_COLOR.value,
+    State.INIT: _StateColors.INIT_COLOR.value,
+    State.DISABLED: _StateColors.DISABLED_COLOR.value,
+    State.ERROR: _StateColors.ERROR_COLOR.value,
+    State.CHANGING: _StateColors.CHANGING_DECREASING_INCREASING_COLOR.value,
+    State.DECREASING: _StateColors.CHANGING_DECREASING_INCREASING_COLOR.value,
+    State.INCREASING: _StateColors.CHANGING_DECREASING_INCREASING_COLOR.value,
+    State.STATIC: _StateColors.STATIC_COLOR.value,
+    State.ACTIVE: _StateColors.ACTIVE_COLOR.value,
+    State.PASSIVE: _StateColors.PASSIVE_COLOR.value
 }
 
 
@@ -85,7 +85,7 @@ def get_state_icon(state):
     """
     global _STATE_ICONS
     if _STATE_ICONS is None:
-        _STATE_ICONS = {k: _create_state_icon(v.value)
+        _STATE_ICONS = {k: _create_state_icon(v)
                         for k, v in STATE_COLORS.items()}
 
     # Remark: order matters here - tree relation!
