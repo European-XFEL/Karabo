@@ -88,7 +88,7 @@ def assure_running(project_db_server=None, project_db_port=None):
         try:
             tSettings = ProbeDbSettings(project_db_server,
                                         port=project_db_port)
-            dbhandle = db.ExistDB(tSettings.server_uri)
+            dbhandle = db.ExistDB(tSettings.server_url)
             if not dbhandle.hasCollection(tSettings.root_collection):
                 raise ProjectDBError("An eXistDB instance with karabo "
                                      "collections was found running on {}."
