@@ -1074,11 +1074,13 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const Message::Pointer& mp, int prio) {
+            bool inProgress = false;
             {
                 boost::mutex::scoped_lock lock(m_queueMutex);
                 m_queue[prio]->push_back(mp);
+                inProgress = m_writeInProgress;
             }
-            if (!m_writeInProgress)
+            if (!inProgress)
                 doWrite();
         }
 
@@ -1095,21 +1097,21 @@ namespace karabo {
 
         void TcpChannel::doWrite() {
             Message::Pointer mp;
-            m_writeInProgress = true;
             {
                 boost::mutex::scoped_lock lock(m_queueMutex);
+                m_writeInProgress = true;
                 for (int i = 9; i >= 0; --i) {
                     if (!m_queue[i] || m_queue[i]->empty()) continue;
                     mp = m_queue[i]->front();
                     m_queue[i]->pop_front();
                     break;
                 }
+                if (!mp) {
+                    m_writeInProgress = false;
+                    return;
+                }
             }
 
-            if (!mp) {
-                m_writeInProgress = false;
-                return;
-            }
 
             vector<const_buffer> buf;
 
@@ -1138,7 +1140,7 @@ namespace karabo {
                 if (!isEmpty()) {
                     doWrite();
                 } else {
-                    mp.reset(); // TODO:  probably it is not needed :  mp will be destroyed anyway when it leaves the scope
+                    boost::mutex::scoped_lock lock(m_queueMutex);
                     m_writeInProgress = false;
                 }
 
