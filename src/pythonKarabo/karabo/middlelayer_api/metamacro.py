@@ -15,13 +15,13 @@ class MetaMacro(Device):
         displayedName="Python Code",
         description="The code to be executed. It typically defines Macros",
         accessMode=AccessMode.INITONLY)
-    project = String(
-        displayedName="Containing Project",
-        description="The project this code is contained in",
-        accessMode=AccessMode.INITONLY)
     module = String(
         displayedName="Name of Module",
         description="The name of the module within the project",
+        accessMode=AccessMode.INITONLY)
+    uuid = String(
+        displayedName="Project DB UUID",
+        description="The UUID for this macro",
         accessMode=AccessMode.INITONLY)
     visibility = Int32(enum=AccessLevel, defaultValue=AccessLevel.ADMIN)
 
@@ -38,8 +38,11 @@ class MetaMacro(Device):
     def startInstance(self, server=None):
         # this does not call super, as we don't want to run MetaMacro itself,
         # but only the macros in the supplied code
-        p = dict(_serverId_=self.serverId, project=self.project,
-                 module=self.module)
+        p = {
+            '_serverId_': self.serverId,
+            'uuid': self.uuid,
+            'module': self.module,
+        }
         objs = []
         for c in self.classes:
             p["_deviceId_"] = "{}-{}".format(self.deviceId, c.__name__)

@@ -6,6 +6,7 @@ import os
 import sys
 import time
 from unittest import TestCase, main, skip
+import uuid
 import weakref
 
 from karabo.middlelayer_api.cli import (connectDevice, DeviceClient,
@@ -130,7 +131,8 @@ class Tests(TestCase):
 
     @coroutine
     def init_macroserver(self, server):
-        config = Hash("project", "test", "module", "test", "code", self.code)
+        config = Hash("uuid", str(uuid.uuid4()), "module", "test",
+                      "code", self.code)
         h = Hash("classId", "MetaMacro", "configuration", config,
                  "deviceId", "bla")
         yield from sleep(1.2)
