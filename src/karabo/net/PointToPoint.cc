@@ -178,7 +178,7 @@ namespace karabo {
                 return;
             }
             m_connection->startAsync(bind_weak(&PointToPoint::Producer::connectHandler, this, _1, _2));
-            channel->setAsyncChannelPolicy(3, "REJECT_NEWEST");
+            channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
             channel->setAsyncChannelPolicy(4, "LOSSLESS");
             channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
             boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
