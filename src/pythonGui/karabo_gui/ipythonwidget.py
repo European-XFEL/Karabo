@@ -54,7 +54,7 @@ class KernelManager(kernel_mixins.QtKernelManagerMixin):
         hostname = socket.gethostname().replace(".", "_")
         network = get_network()
         self.name = "CLI-{}-{}".format(hostname, os.getpid())
-        network.onInitDevice("Karabo_MacroServer", "IPythonKernel", self.name,
+        network.onInitDevice("karabo/macroServer", "IPythonKernel", self.name,
                              Hash())
 
     def shutdown_kernel(self):
