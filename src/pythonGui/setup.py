@@ -92,6 +92,7 @@ is_released = {is_released}
 
     return fullversion
 
+
 if __name__ == '__main__':
     version = _write_version_py()
 
@@ -108,8 +109,10 @@ if __name__ == '__main__':
             "karabo_gui.dialogs": ["*.ui"],
             "karabo_gui.displaywidgets": ["*.ui", "*.svg"],
             "karabo_gui.icons": ["*.*", "vacuum/*.*",
-                                 "vacuum/bigger/*.*",
-                                 "statefulicons/iconset/*.svg"],
+                                 "statefulicons/iconset/*.svg",
+                                 "vacuum/bigger/*.*"],
+            "karabo_gui.project.dialog": ["*.ui"],
+
         }
     }
 

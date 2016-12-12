@@ -3,7 +3,7 @@
 # Created on November 7, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from os import listdir, path
+from os import listdir
 from os.path import join, isfile, splitext
 from xml.etree.ElementTree import Element, parse, tostring
 
@@ -65,10 +65,10 @@ def _get_color_change_icon(path):
 
     tree = parse(path)
 
-    icon = list(_iter_icon_groups(tree))
-    if len(icon) == 0:
+    try:
+        icon = list(_iter_icon_groups(tree))[0]
+    except IndexError:
         return None
-    icon = icon[0]
     description = icon.findall(NS_SVG + 'desc')[0].text
     styleable = [(c, _split_style_attr(s))
                  for c, s in _iter_children_with_styles(icon)]
@@ -100,6 +100,3 @@ def _join_style_attr(style):
 
 def _split_style_attr(style):
     return {k: v for k, v in (s.split(':') for s in style.split(';'))}
-
-_icon_path = path.join(path.dirname(__file__),  "iconset")
-ICONS = get_color_change_icons(_icon_path)
