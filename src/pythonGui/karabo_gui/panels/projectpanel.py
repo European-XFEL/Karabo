@@ -5,19 +5,21 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtGui import QDialog, QStackedLayout, QWidget
+from PyQt4.QtGui import QAction, QDialog, QStackedLayout, QWidget
 
+from karabo.common.project.api import ProjectModel, read_lazy_object
+from karabo.common.savable import clear_modified_flag
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 import karabo_gui.icons as icons
-from karabo.common.savable import clear_modified_flag
 from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.project.api import ProjectView
 from karabo_gui.project.dialog.project_handle import (
     LoadProjectDialog, NewProjectDialog)
 from karabo_gui.project.utils import save_project
 from karabo_gui.singletons.api import get_db_conn
+from karabo_gui.util import getOpenFileName
 
 
 class ProjectPanel(Dockable, QWidget):
@@ -69,9 +71,20 @@ class ProjectPanel(Dockable, QWidget):
             tooltip="Save Project Snapshot",
             triggered=_project_save_handler,
         )
+        load_old = KaraboAction(
+            icon=icons.load,
+            text="&Load Legacy Project",
+            tooltip="Load a Legacy Project",
+            triggered=_old_project_load_handler,
+        )
 
         qactions = []
-        for k_action in (new, load, save):
+        for k_action in (new, load, save, None, load_old):
+            if k_action is None:
+                q_ac = QAction(self)
+                q_ac.setSeparator(True)
+                qactions.append(q_ac)
+                continue
             q_ac = build_qaction(k_action, self)
             q_ac.setEnabled(False)
             item_model = self.project_view.model()
@@ -106,8 +119,7 @@ def _project_load_handler(item_model):
     :param item_model: The `ProjectViewItemModel` of the `ProjectView`
     """
     # XXX: HACK. This is only written this way to get _something_ loaded.
-    # It must change when integrating into the full GUI
-    from karabo.common.project.api import ProjectModel, read_lazy_object
+    # It must change once the ProjectDB is fully supported
     from karabo_gui.project.api import TEST_DOMAIN
     from karabo.middlelayer_api.newproject.io import read_project_model
 
@@ -124,13 +136,31 @@ def _project_load_handler(item_model):
             item_model.traits_data_model = model
 
 
+def _old_project_load_handler(item_model):
+    """ Load an old project model and assign it to the `item_model`
+
+    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
+    """
+    # XXX: These imports will change soon
+    from karabo.middlelayer import Project
+    from karabo.middlelayer_api.newproject.convert import convert_old_project
+
+    fn = getOpenFileName(caption='Load Old Project',
+                         filter='Legacy Karabo Projects (*.krb)')
+    if not fn:
+        return
+    project = Project(fn)
+    project.unzip()
+    model, _ = convert_old_project(project)
+    clear_modified_flag(model)
+    item_model.traits_data_model = model
+
+
 def _project_new_handler(item_model):
     """ Create a new project model and assign it to the given `item_model`
 
     :param item_model: The `ProjectViewItemModel` of the `ProjectView`
     """
-    from karabo.common.project.api import ProjectModel
-
     dialog = NewProjectDialog()
     if dialog.exec() == QDialog.Accepted:
         # This overwrites the current model
