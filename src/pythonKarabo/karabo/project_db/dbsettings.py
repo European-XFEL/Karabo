@@ -14,7 +14,8 @@ class DbSettings:
 
 class ProbeDbSettings(DbSettings):
     def __init__(self, server, port=8080):
-        super(ProbeDbSettings, self).__init__('admin', 'karabo', server,
+        user = 'admin' if server == 'localhost' else 'karabo'
+        super(ProbeDbSettings, self).__init__(user, 'karabo', server,
                                               port=port)
 
 
