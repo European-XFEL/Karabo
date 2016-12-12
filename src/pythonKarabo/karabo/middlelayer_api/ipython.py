@@ -62,6 +62,8 @@ class Client(KernelClient):
 
 
 class IPythonKernel(Device):
+    client = None
+
     archive = Bool(
         displayedName="Archive", accessMode=AccessMode.RECONFIGURABLE,
         assignment=Assignment.OPTIONAL, defaultValue=False)
@@ -70,19 +72,22 @@ class IPythonKernel(Device):
         accessMode=AccessMode.RECONFIGURABLE,
         requiredAccessLevel=AccessLevel.EXPERT)
     def shell(self, msg):
-        self.client.shell_channel.send(pickle.loads(msg))
+        if self.client is not None:
+            self.client.shell_channel.send(pickle.loads(msg))
 
     @VectorChar(
         accessMode=AccessMode.RECONFIGURABLE,
         requiredAccessLevel=AccessLevel.EXPERT)
     def iopub(self, msg):
-        self.client.iopub_channel.send(pickle.loads(msg))
+        if self.client is not None:
+            self.client.iopub_channel.send(pickle.loads(msg))
 
     @VectorChar(
         accessMode=AccessMode.RECONFIGURABLE,
         requiredAccessLevel=AccessLevel.EXPERT)
     def stdin(self, msg):
-        self.client.stdin_channel.send(pickle.loads(msg))
+        if self.client is not None:
+            self.client.stdin_channel.send(pickle.loads(msg))
 
     visibility = Int32(enum=AccessLevel, defaultValue=AccessLevel.ADMIN)
 
