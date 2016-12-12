@@ -1863,6 +1863,9 @@ if (nodeData) {\
                         if(schemaHash.hasAttribute(key+".shape", "defaultValue")){
                             h.set("shape", schemaHash.getAttributeAsAny(key+".shape", "defaultValue"));
                         }
+                        if(schemaHash.hasAttribute(key+".type", "defaultValue")){
+                            h.set("type", schemaHash.getAttributeAsAny(key+".type", "defaultValue"));
+                        }
                     }
                 }
                 if(it->getType() == karabo::util::Types::HASH) recursivelyAddCompoundDataTypes(schemaHash.get<Hash>(key), it->getValue<Hash>());
