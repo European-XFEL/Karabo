@@ -11,22 +11,18 @@ from .bases import BaseProjectObjectModel
 class MacroModel(BaseProjectObjectModel):
     """ An object representing the data for a Karabo Python macro.
     """
-    # The title of the macro
-    # XXX: Use `super().simple_name` in the future
-    title = String(transient=True)
     # The instance ID of the running macro
-    instance_id = Property(String, depends_on=['title', 'project_name'])
+    instance_id = Property(String, depends_on=['simple_name', 'uuid',
+                                               'revision'])
     # The instance names of all active macros
     instances = List(String, transient=True)
     # The actual macro source
     code = String()
-    # The name of the project this macro belongs to
-    project_name = String()
 
     @cached_property
     def _get_instance_id(self):
-        # XXX: Including the project name is dangerous. We should change this.
-        return "Macro-{}-{}".format(self.project_name, self.title)
+        return "Macro-{}-{}-{}".format(self.simple_name, self.uuid,
+                                       self.revision)
 
 
 def read_macro(filename_or_fileobj):
