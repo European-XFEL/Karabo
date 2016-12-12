@@ -1183,7 +1183,8 @@ namespace karabo {
             // NOTE: This will block us here, i.e. we are deaf for other changes...
             // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
             notifyPropertyChangedMonitors(hash, instanceId);
-            if (m_runSignalsChangedThread) {
+            // magic: if the hash contains a change for the expected parameter "doNotCompressElements", we are sending them to the GUI no matter what
+            if (m_runSignalsChangedThread && !hash.has("doNotCompressEvents")) {
                 boost::mutex::scoped_lock lock(m_signalsChangedMutex);
                 // Just book keep paths here and call 'notifyDeviceChangedMonitors'
                 // later with content from m_runtimeSystemDescription.
