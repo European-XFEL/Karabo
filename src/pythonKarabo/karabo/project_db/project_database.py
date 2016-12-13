@@ -7,7 +7,7 @@ from eulexistdb.exceptions import ExistDBException
 from lxml import etree
 
 from karabo.common.project.const import EXISTDB_INITIAL_VERSION
-from .util import assure_running
+from .util import assure_running, ProjectDBError
 from .dbsettings import DbSettings
 
 
@@ -419,8 +419,8 @@ class ProjectDatabase(ContextDecorator):
             # simple interface
             try:
                 item = self.dbhandle.getDoc(path).decode('utf-8')
-            except ExistDBException:
-                return "", -1
+            except ExistDBException as e:
+                raise ProjectDBError(e)
 
         else:
             query = """
@@ -431,8 +431,8 @@ class ProjectDatabase(ContextDecorator):
                        revision=revision)
             try:
                 item = self.dbhandle.query(query).results[0]
-            except ExistDBException:
-                return "", -1
+            except ExistDBException as e:
+                raise ProjectDBError(e)
 
         item = self._make_xml_if_needed(item)
         # add versioning info
@@ -536,8 +536,8 @@ class ProjectDatabase(ContextDecorator):
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name']}
                     for r in res.results]
-        except ExistDBException:
-            return []
+        except ExistDBException as e:
+                raise ProjectDBError(e)
 
     def _get_rev_info(self, path):
         return self.get_versioning_info(path)['revisions']
