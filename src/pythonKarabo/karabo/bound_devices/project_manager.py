@@ -110,6 +110,8 @@ class ProjectManager(PythonDevice):
         # XXX: Leave these hardcoded until session tokens are working
         user, password = "admin", "karabo"
         host, port = self._getCurrentConfig()
+        if host != "localhost":
+            user = "karabo"
         db = ProjectDatabase(user, password,
                              server=host,
                              port=port,
