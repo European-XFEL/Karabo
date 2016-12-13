@@ -4,7 +4,7 @@ from unittest import TestCase
 from lxml import etree
 
 from karabo.project_db.project_database import ProjectDatabase
-from karabo.project_db.util import stop_database
+from karabo.project_db.util import stop_database, ProjectDBError
 
 
 def create_hierarchy(db, prefix, uuid_suf, level=0):
@@ -191,6 +191,19 @@ class TestProjectDatabase(TestCase):
                 itemxml = db._make_xml_if_needed(item)
                 self.assertEqual(itemxml.tag, 'test')
                 self.assertEqual(itemxml.text, 'foo')
+                # we are not revisioned yet, as we just moved and didn't
+                # overwrite anything
+                if revision == 0:
+                    with self.assertRaises(ProjectDBError):
+                        db.load_item('LOCAL', 'testproject_copy2', revision)
+                else:
+                    # the test was run a second time on an existing database
+                    # we overwrite so have a revision.
+                    item, revision = db.load_item('LOCAL', 'testproject_copy2',
+                                              revision)
+                    itemxml = db._make_xml_if_needed(item)
+                    self.assertEqual(itemxml.tag, 'test')
+                    self.assertEqual(itemxml.text, 'foo')
 
             with self.subTest(msg='test_save_item_conflict'):
                 xml_rep_start = '<test>foo</test>'

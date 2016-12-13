@@ -50,9 +50,12 @@ def assure_running(project_db_server=None, project_db_port=None):
 
     if project_db_server is None:
         project_db_server = os.getenv('KARABO_PROJECT_DB', None)
+        if project_db_server is None: # last try localhost
+            project_db_server = "localhost"
 
     if project_db_port is None:
         project_db_port = os.getenv('KARABO_PROJECT_DB_PORT', 8080)
+
 
     if project_db_server is None or project_db_server == 'localhost':
         # we check if the db is already running
