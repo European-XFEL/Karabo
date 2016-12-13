@@ -1090,8 +1090,8 @@ namespace karabo {
                     for (int i = 9; i >= 0; --i) {
                         if (!m_queue[i] || m_queue[i]->empty()) continue;
                         mp = m_queue[i]->front();
-                        if (mp && isExternalCaller) {
-                            if (m_writeInProgress) return;
+                        if (mp) {
+                            if (isExternalCaller && m_writeInProgress) return;
                             m_writeInProgress = true;
                         }
                         m_queue[i]->pop_front();
@@ -1133,6 +1133,9 @@ namespace karabo {
         void TcpChannel::doWriteHandler(Message::Pointer& mp, boost::system::error_code ec, std::size_t length) {
             if (!ec) {
                 doWrite(false);
+            } else {
+                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::doWrite exception : " << ec.value() << " -- " << ec.message();
+                m_writeInProgress = false;
             }
         }
 
