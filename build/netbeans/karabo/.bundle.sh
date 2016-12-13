@@ -33,7 +33,6 @@ safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
 
-    echo cmnd=$cmnd
     eval $cmnd
     ret_code=$?
     if [ $ret_code != 0 ]; then
