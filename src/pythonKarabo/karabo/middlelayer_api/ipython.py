@@ -112,7 +112,8 @@ class IPythonKernel(Device):
         self.manager = KernelManager(client_factory=Client)
         self.manager.start_kernel(
             extra_arguments=["-c", "from karabo.middlelayer_api.cli import *",
-                             "--IPCompleter.limit_to__all__=True"])
+                             "--IPCompleter.limit_to__all__=True",
+                             "--matplotlib=inline"])
         self.client = self.manager.client()
         self.client.shell_channel.device = self
         self.client.iopub_channel.device = self
