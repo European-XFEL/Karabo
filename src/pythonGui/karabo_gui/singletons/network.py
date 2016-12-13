@@ -334,7 +334,7 @@ class Network(QObject):
     def onExecute(self, box, *args):
         h = Hash("type", "execute")
         h.set("deviceId", box.configuration.id)
-        h.set("command", box.path[-1])
+        h.set("command", ".".join(box.path))
 
         for i, arg in enumerate(args):
             h.set("a{}".format(i + 1), arg)
