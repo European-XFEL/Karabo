@@ -45,7 +45,8 @@ Contents:
    .. mpod_devices
 
    cameras
-   .. gui
+   
+   gui
    .. gui_server
    .. gui_scene_files
    .. doocs
