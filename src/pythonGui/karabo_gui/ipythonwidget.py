@@ -12,7 +12,7 @@ from ipykernel.inprocess.client import InProcessKernelClient
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtconsole import kernel_mixins, inprocess
 
-from karabo.middlelayer import Hash
+from karabo.middlelayer import Hash, State
 from karabo_gui.singletons.api import get_network
 from karabo_gui.topology import getDevice
 
@@ -96,7 +96,7 @@ class KernelClient(inprocess.QtInProcessKernelClient):
             self.stdin_channel.receive)
 
     def onStateChanged(self, box, state, timestamp):
-        self.alive = state == "STARTED"
+        self.alive = State(state) is State.STARTED
         if self.alive:
             if not self.started:
                 self.start_channels()
