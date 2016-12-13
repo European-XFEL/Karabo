@@ -209,16 +209,18 @@ namespace karathon {
 
 
     void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data, const bp::object& meta) {
-        if (!bp::extract<karabo::xms::Memory::MetaData>(meta).check()) {
-            throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type. Check for MemoryMetaData");
+        if (!bp::extract<karathon::MemoryMetaData>(meta).check()) {
+            throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type for parameter 'meta'. Needs to be ChannelMetaData");
         }
 
         if (!bp::extract<karabo::util::Hash>(data).check()) {
-            throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
+            throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type for parameter 'data'. Needs to be Hash");
         }
-
+        // we need to copy here before the GIL release, otherwise data might be altered during writing.
+        const karabo::util::Hash dataHash = bp::extract<karabo::util::Hash>(data);
+        const karabo::xms::Memory::MetaData metaData = bp::extract<karathon::MemoryMetaData>(meta);
         ScopedGILRelease nogil;
-        self->write(bp::extract<karabo::util::Hash>(data), bp::extract<karabo::xms::Memory::MetaData>(meta));
+        self->write(dataHash, metaData);
     }
 
 
@@ -448,7 +450,7 @@ void exportPyXmsInputOutputChannel() {
 
 
     {
-        bp::class_<karathon::MemoryMetaData, boost::noncopyable>("MemoryMetaData", bp::init<bp::object const &, bp::object const &>())
+        bp::class_<karathon::MemoryMetaData, boost::noncopyable>("ChannelMetaData", bp::init<bp::object const &, bp::object const &>())
                 .def("setSource", &karathon::MemoryMetaData::setSource, (bp::arg("source")))
                 .def("getSource", &karathon::MemoryMetaData::getSource)
                 .def("setTimestamp", &karathon::MemoryMetaData::setTimestamp, (bp::arg("timestamp")))
