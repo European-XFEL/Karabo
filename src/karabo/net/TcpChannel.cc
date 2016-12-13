@@ -1074,83 +1074,65 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const Message::Pointer& mp, int prio) {
-            bool inProgress = false;
             {
                 boost::mutex::scoped_lock lock(m_queueMutex);
                 m_queue[prio]->push_back(mp);
-                inProgress = m_writeInProgress;
             }
-            if (!inProgress)
-                doWrite();
+            doWrite(true);
         }
 
 
-        bool TcpChannel::isEmpty() {
-            boost::mutex::scoped_lock lock(m_queueMutex);
-            int size = 0;
-            for (int i = 9; i >= 0; --i) {
-                if (m_queue[i]) size += m_queue[i]->size();
-            }
-            return size == 0;
-        }
-
-
-        void TcpChannel::doWrite() {
-            Message::Pointer mp;
-            {
-                boost::mutex::scoped_lock lock(m_queueMutex);
-                m_writeInProgress = true;
-                for (int i = 9; i >= 0; --i) {
-                    if (!m_queue[i] || m_queue[i]->empty()) continue;
-                    mp = m_queue[i]->front();
-                    m_queue[i]->pop_front();
-                    break;
+        void TcpChannel::doWrite(bool isExternalCaller) {
+            try {
+                Message::Pointer mp;
+                {
+                    boost::mutex::scoped_lock lock(m_queueMutex);
+                    for (int i = 9; i >= 0; --i) {
+                        if (!m_queue[i] || m_queue[i]->empty()) continue;
+                        mp = m_queue[i]->front();
+                        if (mp && isExternalCaller) {
+                            if (m_writeInProgress) return;
+                            m_writeInProgress = true;
+                        }
+                        m_queue[i]->pop_front();
+                        break;
+                    }
+                    // if all queues are empty
+                    if (!mp) {
+                        m_writeInProgress = false;
+                        return;
+                    }
                 }
-                if (!mp) {
-                    m_writeInProgress = false;
-                    return;
+
+                vector<const_buffer> buf;
+
+                if (mp->header()) {
+                    VectorCharPointer hdr = mp->header();
+                    m_headerSize = hdr->size();
+                    buf.push_back(buffer(&m_headerSize, sizeof (unsigned int)));
+                    buf.push_back(buffer(*hdr));
                 }
+
+                const VectorCharPointer& data = mp->body();
+                m_bodySize = data->size();
+
+                buf.push_back(buffer(&m_bodySize, sizeof (unsigned int)));
+                buf.push_back(buffer(*data));
+
+                boost::asio::async_write(m_socket, buf,
+                                         util::bind_weak(&TcpChannel::doWriteHandler, this,
+                                                         mp, boost::asio::placeholders::error,
+                                                         boost::asio::placeholders::bytes_transferred()));
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::doWrite exception : " << e.what();
+                m_writeInProgress = false;
             }
-
-
-            vector<const_buffer> buf;
-
-            if (mp->header()) {
-                VectorCharPointer hdr = mp->header();
-                m_headerSize = hdr->size();
-                buf.push_back(buffer(&m_headerSize, sizeof (unsigned int)));
-                buf.push_back(buffer(*hdr));
-            }
-
-            const VectorCharPointer& data = mp->body();
-            m_bodySize = data->size();
-
-            buf.push_back(buffer(&m_bodySize, sizeof (unsigned int)));
-            buf.push_back(buffer(*data));
-
-            boost::asio::async_write(m_socket, buf,
-                                     util::bind_weak(&TcpChannel::doWriteHandler, this,
-                                                     mp, boost::asio::placeholders::error,
-                                                     boost::asio::placeholders::bytes_transferred()));
         }
 
 
         void TcpChannel::doWriteHandler(Message::Pointer& mp, boost::system::error_code ec, std::size_t length) {
             if (!ec) {
-                if (!isEmpty()) {
-                    doWrite();
-                } else {
-                    boost::mutex::scoped_lock lock(m_queueMutex);
-                    m_writeInProgress = false;
-                }
-
-                if (m_quit) {
-                    this->close();
-                }
-
-            } else {
-                this->close();
-                throw KARABO_NETWORK_EXCEPTION("code #" + toString(ec.value()) + " -- " + ec.message());
+                doWrite(false);
             }
         }
 
