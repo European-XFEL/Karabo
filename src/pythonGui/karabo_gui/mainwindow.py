@@ -43,7 +43,7 @@ class MainWindow(QMainWindow):
 
         # Create projects folder, if not exists
         if not os.path.exists(globals.KARABO_PROJECT_FOLDER):
-            os.mkdir(globals.KARABO_PROJECT_FOLDER)
+            os.makedirs(globals.KARABO_PROJECT_FOLDER, exist_ok=True)
 
         self._setupActions()
         self._setupMenuBar()
