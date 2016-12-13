@@ -133,10 +133,13 @@ sed -i "/'py_lib_dir'/c\    'py_lib_dir':         '$KARABO/extern/$configDir'," 
 sed -i "/'sip_bin'/c\    'sip_bin':            '$KARABO/extern/bin/sip'," sipconfig.py
 sed -i "/'sip_inc_dir'/c\    'sip_inc_dir':        '$KARABO/extern/$includeDir'," sipconfig.py
 sed -i "/'sip_mod_dir'/c\    'sip_mod_dir':        '$KARABO/extern/$sitePackagesDir'," sipconfig.py
-cd -
+cd - >/dev/null
 echo
 echo " Karabo framework was successfully installed to: $KARABO"
+echo 
+echo " NOTE: Using Karabo requires you to source the 'activate' file, like so:"
 echo
+echo "       source $KARABO/activate"
 echo
 exit 0
 # NOTE: Don't place any newline characters after the last line below.
