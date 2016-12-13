@@ -58,8 +58,8 @@ class MacroPanel(Dockable, QSplitter):
     def eventFilter(self, object, event):
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Tab:
-                self.teEditor.textCursor().insertText(" "*4)
-                return False
+                self.teEditor.textCursor().insertText(" " * 4)
+                return True
         elif isinstance(event, KaraboBroadcastEvent):
             sender = event.sender
             if sender is KaraboEventSender.ConnectMacroInstance:
@@ -95,6 +95,7 @@ class MacroPanel(Dockable, QSplitter):
     def initReply(self, ok, error):
         self.console.moveCursor(QTextCursor.End)
         self.console.insertPlainText(error)
+        self.console.insertPlainText("\n")
 
     def onRun(self):
         self.console.clear()
