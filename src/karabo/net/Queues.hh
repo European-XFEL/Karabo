@@ -79,7 +79,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(Queue, "Queue", "1.0")
 
-            Queue() {
+            Queue() : m_counter(0) {
             }
 
             virtual ~Queue() {
@@ -148,6 +148,10 @@ namespace karabo {
              * Pop the first element from the queue, decreases the size by one
              */
             virtual void pop_front() = 0;
+
+        protected:
+
+            unsigned long long m_counter;
         };
 
         /**
@@ -228,7 +232,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(RejectNewestQueue, "RejectNewestQueue", "1.0")
 
-            RejectNewestQueue() : LosslessQueue(), m_capacity(1000) {
+            RejectNewestQueue() : LosslessQueue(), m_capacity(5000) {
             }
 
             virtual ~RejectNewestQueue() {
@@ -251,11 +255,9 @@ namespace karabo {
                 if (size() < m_capacity) {
                     LosslessQueue::push_back(entry);
                 } else {
-                    static int counter = 0;
-                    if (counter++ % 1000 == 0) {
+                    if (m_counter++ % 1000 == 0) {
                         KARABO_LOG_FRAMEWORK_WARN << "Ignored message pointer upon pushing since capacity ("
                                 << m_capacity << ") reached.";
-                        counter = 1;
                     }
                 }
             }
@@ -277,7 +279,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(RemoveOldestQueue, "RemoveOldestQueue", "1.0")
 
-            RemoveOldestQueue() : m_queue(1000) {
+            RemoveOldestQueue() : m_queue(5000) {
             }
 
             virtual ~RemoveOldestQueue() {
@@ -321,13 +323,9 @@ namespace karabo {
             }
 
             void push_back(const Message::Pointer& entry) {
-                if (m_queue.full()) {
-                    static int counter = 0;
-                    if (counter++ % 1000 == 0) {
-                        KARABO_LOG_FRAMEWORK_WARN << "Overwrite old message pointer upon pushing to buffer since it is full (size = "
+                if (m_queue.full() && m_counter++ % 1000 == 0) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Overwrite old message pointer upon pushing to buffer since it is full (size = "
                             << m_queue.size() << ").";
-                        counter = 1;
-                    }
                 }
                 m_queue.push_back(entry);
             }
