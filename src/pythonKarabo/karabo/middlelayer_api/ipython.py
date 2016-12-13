@@ -93,9 +93,8 @@ class IPythonKernel(Device):
 
     doNotCompressEvents = Int32(
         description=dedent("""\
-            The existence of this expected parameter tells the
-            GUI server that it should send changes directly to the
-            GUI, without cmpressing it with other events."""),
+            Sending this expected parameter with the change of another
+            one prevents the GUI server from throtteling down fast changes"""),
         accessMode=AccessMode.READONLY,
         requiredAccessLevel=AccessLevel.EXPERT,
         defaultValue=0)

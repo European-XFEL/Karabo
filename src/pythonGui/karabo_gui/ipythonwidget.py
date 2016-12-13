@@ -27,6 +27,8 @@ class IPythonWidget(RichJupyterWidget):
         self.kernel_manager.start_kernel()
         self.kernel_client = self.kernel_manager.client()
         self.exit_requested.connect(self.stop)
+        # The following line avoids a bug in IPython's QtConsole
+        # see https://github.com/jupyter/qtconsole/issues/174
         self.execute_on_complete_input = False
 
     def stop(self):
