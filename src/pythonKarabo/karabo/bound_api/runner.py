@@ -96,20 +96,13 @@ class Runner(object):
             else:
                 key = token[0:pos].strip()
                 value = token[pos+1:].strip()
-                if value != "" and value[0] == "{" and value[-1] == "}":
-                    value = value[1:-1].strip()
+                if value != "" and value[0] == "{" and value[len(value) - 1] == "}":
+                    value = value[1, len(value) - 2].strip()
                     tokens = value.split(" ")
-                    config.set(key, Hash())
+                    config[key] = Hash()
                     for subtok in tokens:
                         subtok = subtok.strip()
                         if subtok != "":
-                            if "[" in key and "]" in key:
-                                keyToks = key.split("[")
-                                skey = keyToks[0]
-                                index = int(keyToks[1][:-1])
-                                self.readToken(subtok, config[skey][index])
-                            else:
-                                self.readToken(subtok, config[key])
+                            self.readToken(subtok, config[key])
                 else:
-                    config.set(key, value)
-
+                    config[key] = value
