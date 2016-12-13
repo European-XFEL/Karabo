@@ -206,10 +206,11 @@ class ProjectManager(PythonDevice):
                     xml, revision = db_session.load_item(domain, uuid, revision)
                     item.set("xml", xml)
                     item.set("revision", revision)
+                    loadedItems.append(item)
                 except ProjectDBError as e:
                     exceptionReason = str(e)
                     success = False
-                loadedItems.append(item)
+
 
         self.reply(Hash('items', loadedItems,
                         'success', success,
