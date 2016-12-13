@@ -254,7 +254,7 @@ class Tests(DeviceTest):
             self.assertEqual(self.local.currentSlot, "")
             self.assertEqual(self.local.state, State.PASSIVE)
             self.assertEqual(self.local.print, "hero")
-            self.assertEqual(self.local.printno, 2)
+            self.assertEqual(self.local.doNotCompressEvents, 2)
         finally:
             sys.stdout = sys.stdout.base
 
