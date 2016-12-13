@@ -209,7 +209,7 @@ def new(args):
         run_cmd('git add .')
         run_cmd('git commit -m "Initial commit"')
         print('New device package was added to: {}'
-              .format(os.path.abspath(path)))
+              .format(os.getcwd()))
         print('Use: "git push -u origin master" if you want start versioning '
               'remotely')
 
