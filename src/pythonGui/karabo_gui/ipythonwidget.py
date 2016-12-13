@@ -8,9 +8,16 @@ import os
 import pickle
 import socket
 
-from ipykernel.inprocess.client import InProcessKernelClient
-from qtconsole.rich_jupyter_widget import RichJupyterWidget
-from qtconsole import kernel_mixins, inprocess
+try:
+    from ipykernel.inprocess.client import InProcessKernelClient
+    from qtconsole.rich_jupyter_widget import RichJupyterWidget
+    from qtconsole import kernel_mixins, inprocess
+except ImportError:
+    from IPython.kernel.inprocess.client import InProcessKernelClient
+    from IPython.qt.console.rich_ipython_widget import RichIPythonWidget \
+        as RichJupyterWidget
+    from IPython.qt import kernel_mixins, inprocess
+
 
 from karabo.middlelayer import Hash
 from karabo_gui.singletons.api import get_network
