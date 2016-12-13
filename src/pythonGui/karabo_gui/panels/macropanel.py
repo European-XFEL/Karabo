@@ -84,7 +84,7 @@ class MacroPanel(Dockable, QSplitter):
     def connect(self, macro_instance):
         if macro_instance not in self.already_connected:
             device = getDevice(macro_instance)
-            device.boxvalue.printno.signalUpdateComponent.connect(
+            device.boxvalue.doNotCompressEvents.signalUpdateComponent.connect(
                 self.appendConsole)
             self.already_connected.add(macro_instance)
 
