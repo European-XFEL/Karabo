@@ -48,6 +48,12 @@ class ProjectModelItem(BaseProjectTreeItem):
         item.setFont(font)
         return item
 
+    @on_trait_change("model.simple_name")
+    def simple_name_change(self):
+        if not self.is_ui_initialized():
+            return
+        self.qt_item.setText(self.model.simple_name)
+
     @on_trait_change("model.modified")
     def modified_change(self):
         """ Whenever the project is modified it should be visible"""

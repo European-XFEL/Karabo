@@ -136,6 +136,8 @@ class ProjectDatabaseConnection(QObject):
                 obj = self._waiting_for_read.pop(key)
                 read_lazy_object(domain, uuid, revision, self,
                                  read_project_model, existing=obj)
+                # Loading will cause the modified flag to flip!
+                clear_modified_flag(obj)
 
     def _items_saved(self, items):
         """ A bunch of items were just saved
