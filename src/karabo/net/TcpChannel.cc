@@ -1077,7 +1077,7 @@ namespace karabo {
 
             boost::mutex::scoped_lock lock(m_queueMutex);
             m_queue[prio]->push_back(mp);
-            //std::cout << "*** writeAsync m_writeInProgress = " << m_writeInProgress << std::endl;
+
             if (!m_writeInProgress) {
                 m_writeInProgress = true;
                 EventLoop::getIOService().post(bind_weak(&TcpChannel::doWrite, this));
@@ -1134,7 +1134,7 @@ namespace karabo {
             if (!ec) {
                 doWrite();
             } else {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::doWrite exception : " << ec.value() << " -- " << ec.message();
+                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::doWriteHandler error : " << ec.value() << " -- " << ec.message();
                 m_writeInProgress = false;
             }
         }
