@@ -1,3 +1,5 @@
 pint
 git+https://git.xfel.eu/gitlab/Karabo/rtd-conf-py.git
 slumber
+cython
+traits
