@@ -1,5 +1,6 @@
 import copy
 from unittest import TestCase
+from uuid import uuid4
 
 from lxml import etree
 
@@ -7,30 +8,31 @@ from karabo.project_db.project_database import ProjectDatabase
 from karabo.project_db.util import stop_database, ProjectDBError
 
 
-def create_hierarchy(db, prefix, uuid_suf, level=0):
-    uuid = "{}_{}".format(prefix, uuid_suf)
+def _gen_uuid():
+    return str(uuid4())
+
+
+def create_hierarchy(db, level=0):
+    uuid = _gen_uuid()
     xml = '<project item_type="{atype}" uuid="{uuid}" alias = "{alias}"'\
           ' simple_name="{name}">'.format(uuid=uuid, atype='project',
                                           alias=uuid, name=uuid)
 
     xml += "<children>"
-    counter = 0
     # create some subprojects
     if level < 2:
         for i in range(4):
-            sub_uuid = create_hierarchy(db, uuid, counter, level + 1)
-
+            sub_uuid = create_hierarchy(db, level + 1)
             xml += ('<project item_type="{atype}" uuid="{uuid}"'
                     ' alias = "{alias}"'
                     ' simple_name="{name}" />').format(uuid=sub_uuid,
                                                        atype='project',
                                                        alias=sub_uuid,
                                                        name=sub_uuid)
-            counter += 1
 
     # create some scenes
     for i in range(4):
-        sub_uuid = '{}_{}'.format(uuid, counter)
+        sub_uuid = _gen_uuid()
         xml += ('<scene item_type="{atype}" uuid="{uuid}"'
                 ' alias = "{alias}"'
                 ' simple_name="{name}" />').format(uuid=sub_uuid,
@@ -46,11 +48,9 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
 
         db.save_item("LOCAL", sub_uuid, scene_xml)
 
-        counter += 1
-
     # create some device_servers
     for i in range(4):
-        sub_uuid = '{}_{}'.format(uuid, counter)
+        sub_uuid = _gen_uuid()
         xml += ('<device_server item_type="{atype}" uuid="{uuid}"'
                 ' alias = "{alias}"'
                 ' simple_name="{name}" />').format(uuid=sub_uuid,
@@ -65,8 +65,6 @@ def create_hierarchy(db, prefix, uuid_suf, level=0):
                           alias=uuid, name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, ds_xml)
-
-        counter += 1
 
     xml += "</children>"
     xml += "</project>"
@@ -91,6 +89,14 @@ class TestProjectDatabase(TestCase):
         self.assertEqual(str_rep, "<test>foo</test>\n")
 
     def test_project_interface(self):
+        # A bunch of document "names" for the following tests
+        testproject = _gen_uuid()
+        testproject2 = _gen_uuid()
+        testproject_copy = _gen_uuid()
+        testproject_copy2 = _gen_uuid()
+        testserver_m = _gen_uuid()
+        testconfig = [_gen_uuid() for i in range(4)]
+
         with ProjectDatabase(self.user, self.password, server='localhost',
                              test_mode=True) as db:
 
@@ -118,15 +124,15 @@ class TestProjectDatabase(TestCase):
             with self.subTest(msg='test_get_versioning_info'):
                 xml_rep = "<test alias='test'>foo</test>"
 
-                # db.save_project('LOCAL', 'testproject', ret)
-                path = "{}/{}".format(db.root, 'LOCAL/testproject')
+                # db.save_project('LOCAL', testproject, ret)
+                path = "{}/{}/{}".format(db.root, 'LOCAL', testproject)
                 db.dbhandle.load(xml_rep, path)
                 # do twice to assure a version increment
                 db.dbhandle.load(xml_rep, path)
 
                 vers = db.get_versioning_info(path)
                 self.assertEqual(vers['document'],
-                                 '/db/krb_test/LOCAL/testproject')
+                                 '/db/krb_test/LOCAL/' + testproject)
                 # depends on how often tests were run
                 self.assertGreaterEqual(len(vers['revisions']), 0)
                 first_rev = vers['revisions'][0]
@@ -137,9 +143,9 @@ class TestProjectDatabase(TestCase):
 
             with self.subTest(msg='test_save_item'):
                 xml_rep = '<test>foo</test>'
-                success, meta = db.save_item('LOCAL', 'testproject2', xml_rep)
+                success, meta = db.save_item('LOCAL', testproject2, xml_rep)
 
-                path = "{}/LOCAL/testproject2".format(db.root)
+                path = "{}/LOCAL/{}".format(db.root, testproject2)
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 decoded = db.dbhandle.getDoc(path).decode('utf-8')
                 self.assertEqual(decoded, xml_rep)
@@ -151,12 +157,11 @@ class TestProjectDatabase(TestCase):
             with self.subTest(msg='test_copy_item'):
 
                 xml_rep = "<test>foo</test>"
-                db.save_item('LOCAL', 'testproject', xml_rep)
+                db.save_item('LOCAL', testproject, xml_rep)
 
-                db.copy_item('LOCAL', 'REPO', 'testproject',
-                             'testproject_copy')
-                path = "{}/REPO/testproject_copy".format(db.root)
-                origin_path = "{}/LOCAL/testproject".format(db.root)
+                db.copy_item('LOCAL', 'REPO', testproject, testproject_copy)
+                path = "{}/REPO/{}".format(db.root, testproject_copy)
+                origin_path = "{}/LOCAL/{}".format(db.root, testproject)
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 decoded1 = db.dbhandle.getDoc(path).decode('utf-8')
                 decoded2 = db.dbhandle.getDoc(origin_path).decode('utf-8')
@@ -164,59 +169,50 @@ class TestProjectDatabase(TestCase):
 
             with self.subTest(msg='test_rename_item'):
 
-                origin_path = "{}/REPO/testproject_copy".format(db.root)
+                origin_path = "{}/REPO/{}".format(db.root, testproject_copy)
                 origin = db.dbhandle.getDoc(origin_path).decode('utf-8')
 
-                db.rename_item('REPO', 'testproject_copy', 'testproject_copy2')
-                path = "{}/REPO/testproject_copy2".format(db.root)
+                db.rename_item('REPO', testproject_copy, testproject_copy2)
+                path = "{}/REPO/{}".format(db.root, testproject_copy2)
 
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 self.assertEqual(db.dbhandle.getDoc(path).decode('utf-8'),
                                  origin)
 
             with self.subTest(msg='test_move_item'):
-                origin_path = "{}/REPO/testproject_copy2".format(db.root)
+                origin_path = "{}/REPO/{}".format(db.root, testproject_copy2)
 
                 origin = db.dbhandle.getDoc(origin_path).decode('utf-8')
 
-                db.move_item('REPO', 'LOCAL', 'testproject_copy2')
-                path = "{}/LOCAL/testproject_copy2".format(db.root)
+                db.move_item('REPO', 'LOCAL', testproject_copy2)
+                path = "{}/LOCAL/{}".format(db.root, testproject_copy2)
 
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 self.assertEqual(db.dbhandle.getDoc(path).decode('utf-8'),
                                  origin)
 
             with self.subTest(msg='load_item'):
-                item, revision = db.load_item('LOCAL', 'testproject_copy2')
+                item, revision = db.load_item('LOCAL', testproject_copy2)
                 itemxml = db._make_xml_if_needed(item)
                 self.assertEqual(itemxml.tag, 'test')
                 self.assertEqual(itemxml.text, 'foo')
-                # we are not revisioned yet, as we just moved and didn't
-                # overwrite anything
-                if revision == 0:
-                    with self.assertRaises(ProjectDBError):
-                        db.load_item('LOCAL', 'testproject_copy2', revision)
-                else:
-                    # the test was run a second time on an existing database
-                    # we overwrite so have a revision.
-                    item, revision = db.load_item('LOCAL', 'testproject_copy2',
-                                              revision)
-                    itemxml = db._make_xml_if_needed(item)
-                    self.assertEqual(itemxml.tag, 'test')
-                    self.assertEqual(itemxml.text, 'foo')
+
+                # Test that saving once doesn't actually generate a version???
+                with self.assertRaises(ProjectDBError):
+                    db.load_item('LOCAL', testproject_copy2, revision)
 
             with self.subTest(msg='test_save_item_conflict'):
                 xml_rep_start = '<test>foo</test>'
 
-                success, meta = db.save_item('LOCAL', 'testproject2',
+                success, meta = db.save_item('LOCAL', testproject2,
                                              xml_rep_start)
                 self.assertTrue(success)
 
-                path = "{}/LOCAL/testproject2".format(db.root)
+                path = "{}/LOCAL/{}".format(db.root, testproject2)
                 doc = db._make_xml_if_needed(db.load_item('LOCAL',
-                                                          'testproject2')[0])
+                                                          testproject2)[0])
 
-                success, meta = db.save_item('LOCAL', 'testproject2',
+                success, meta = db.save_item('LOCAL', testproject2,
                                              xml_rep_start)
 
                 doc.text = 'goo'
@@ -226,16 +222,16 @@ class TestProjectDatabase(TestCase):
                 doc2.attrib['{http://exist-db.org/versioning}revision'] = "-1"
                 doc2.attrib['{http://exist-db.org/versioning}key'] = "fdsf"
 
-                success, meta = db.save_item('LOCAL', 'testproject2', doc)
+                success, meta = db.save_item('LOCAL', testproject2, doc)
                 self.assertTrue(success)
-                success, meta = db.save_item('LOCAL', 'testproject2', doc)
+                success, meta = db.save_item('LOCAL', testproject2, doc)
                 self.assertTrue(success)
 
-                success, meta = db.save_item('LOCAL', 'testproject2', doc2)
+                success, meta = db.save_item('LOCAL', testproject2, doc2)
 
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 test = db._make_xml_if_needed(db.load_item('LOCAL',
-                                                           'testproject2')[0])
+                                                           testproject2)[0])
                 self.assertEqual(test.text, 'goo')
                 self.assertFalse(success)
                 self.assertTrue('versioning_info' in meta)
@@ -251,20 +247,21 @@ class TestProjectDatabase(TestCase):
 
             with self.subTest(msg='test_load_multi'):
                 # create a device server and multiple config entries
-                xml_reps = ['<test uuid="0">foo</test>',
-                            '<test uuid="1">goo</test>',
-                            '<test uuid="2">hoo</test>',
-                            '<test uuid="3">nope</test>']
+                xml_reps = ['<test uuid="{}">foo</test>'.format(testconfig[0]),
+                            '<test uuid="{}">goo</test>'.format(testconfig[1]),
+                            '<test uuid="{}">hoo</test>'.format(testconfig[2]),
+                            '<test uuid="{}">noo</test>'.format(testconfig[3]),
+                            ]
 
                 for i, rep in enumerate(xml_reps):
-                    success, meta = db.save_item('LOCAL', 'testconfig{}'
-                                                 .format(i), rep, True)
+                    success, meta = db.save_item('LOCAL', testconfig[i],
+                                                 rep, True)
                     self.assertTrue(success)
 
                 # twice to initiate versioning
                 for i, rep in enumerate(xml_reps):
-                    success, meta = db.save_item('LOCAL', 'testconfig{}'
-                                                 .format(i), rep, True)
+                    success, meta = db.save_item('LOCAL', testconfig[i],
+                                                 rep, True)
                     self.assertTrue(success)
 
                 self.assertTrue(success)
@@ -272,18 +269,17 @@ class TestProjectDatabase(TestCase):
                 # get version info for what we inserted
                 revisions = []
                 for i in range(3):
-                    path = "{}/LOCAL/testconfig{}"\
-                            .format(db.root, i)
+                    path = "{}/LOCAL/{}".format(db.root, testconfig[i])
                     v = db.get_versioning_info(path)
                     revisions.append(v['revisions'][-1]['revision'])
 
                 xml_serv = "<testserver list_tag='configs'><configs>"
                 for i in range(3):
-                    xml_serv += '<configuration uuid="{}" revision="{}"/>'\
-                                .format(i, revisions[i])
+                    xml_serv += ('<configuration uuid="{}" revision="{}"/>'
+                                 .format(testconfig[i], revisions[i]))
                 xml_serv += " </configs></testserver>"
 
-                success, meta = db.save_item('LOCAL', 'testserver_m', xml_serv)
+                success, meta = db.save_item('LOCAL', testserver_m, xml_serv)
                 self.assertTrue(success)
 
                 # now load again
@@ -296,11 +292,11 @@ class TestProjectDatabase(TestCase):
                     self.assertEqual(rxml.attrib['uuid'], gxml.attrib['uuid'])
 
             with self.subTest(msg='test_versioning_from_item'):
-                vers = db.get_versioning_info_item("LOCAL", "1")
+                vers = db.get_versioning_info_item("LOCAL", testconfig[1])
                 self.assertEqual(vers['document'],
-                                 '/db/krb_test/LOCAL/testconfig1')
+                                 '/db/krb_test/LOCAL/{}'.format(testconfig[1]))
 
-            create_hierarchy(db, "hierarchy_test", 0, 0)
+            create_hierarchy(db)
 
             with self.subTest(msg='test_list_items'):
                 items = db.list_items('LOCAL', ['project', 'scene'])
@@ -315,6 +311,5 @@ class TestProjectDatabase(TestCase):
                 items = db.list_domains()
                 for it in items:
                     self.assertTrue(it in ['LOCAL_TEST', 'REPO', 'LOCAL'])
-
 
             stop_database()
