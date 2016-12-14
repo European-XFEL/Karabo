@@ -1284,7 +1284,7 @@ class None_(Type):
 
 def _gettype(data):
     try:
-        if isinstance(data, np.ndarray):
+        if isinstance(data, np.ndarray) and data.ndim == 1:
             return NumpyVector.vstrs[data.dtype.str]
         else:
             return Type.strs[data.dtype.str]
