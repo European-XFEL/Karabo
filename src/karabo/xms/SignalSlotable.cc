@@ -33,8 +33,8 @@ namespace karabo {
 
         // Static initializations
         boost::uuids::random_generator SignalSlotable::Requestor::m_uuidGenerator;
-        std::map<std::string, SignalSlotable*> SignalSlotable::m_instanceMap;
-        boost::mutex SignalSlotable::m_instanceMapMutex;
+        std::unordered_map<std::string, SignalSlotable*> SignalSlotable::m_instanceMap;
+        boost::shared_mutex SignalSlotable::m_instanceMapMutex;
         std::map<std::string, std::string> SignalSlotable::m_connectionStrings;
         boost::mutex SignalSlotable::m_connectionStringsMutex;
         PointToPoint::Pointer SignalSlotable::m_pointToPoint;
@@ -47,8 +47,8 @@ namespace karabo {
             // Global signals must go via the broker
             if (instanceId == "*") return false;
             {
-                boost::mutex::scoped_lock lock(m_instanceMapMutex);
-                std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.find(instanceId);
+                boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
+                auto it = m_instanceMap.find(instanceId);
                 if (it != m_instanceMap.end()) {
                     EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent,
                                                              it->second, header, body));
@@ -263,8 +263,8 @@ namespace karabo {
 
 
         void SignalSlotable::deregisterFromShortcutMessaging() {
-            boost::mutex::scoped_lock lock(m_instanceMapMutex);
-            std::map<std::string, SignalSlotable*>::iterator it = m_instanceMap.find(m_instanceId);
+            boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
+            auto it = m_instanceMap.find(m_instanceId);
             // Let's be sure that we remove ourself:
             if (it != m_instanceMap.end() && it->second == this) {
                 m_instanceMap.erase(it);
@@ -280,7 +280,7 @@ namespace karabo {
 
 
         void SignalSlotable::registerForShortcutMessaging() {
-            boost::mutex::scoped_lock lock(m_instanceMapMutex);
+            boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
             SignalSlotable*& instance = m_instanceMap[m_instanceId];
             if (!instance) {
                 instance = this;
@@ -345,7 +345,7 @@ namespace karabo {
             {
                 // It is important to check first for local conflicts, else
                 // shortcut messaging (enabled by the conflicting instance) will trick slotPing request
-                boost::mutex::scoped_lock lock(m_instanceMapMutex);
+                boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
                 if (m_instanceMap.count(instanceId)) {
                     throw KARABO_SIGNALSLOT_EXCEPTION("Another instance with ID '" + instanceId +
                                                       "' is already online in this process (localhost)");
@@ -580,8 +580,6 @@ namespace karabo {
                                 sendPotentialReply(*header, slotFunction, globalCall);
                             } else if (!globalCall) {
                                 // Warn on non-existing slot, but only if directly addressed:
-                                const std::string& signalInstanceId = (header->has("signalInstanceId") ? // const ref is essential!
-                                                                       header->get<std::string>("signalInstanceId") : std::string("unknown"));
                                 KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a message from '"
                                         << signalInstanceId << "' to non-existing slot \"" << slotFunction << "\"";
                             } else {
