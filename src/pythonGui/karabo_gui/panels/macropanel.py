@@ -58,8 +58,8 @@ class MacroPanel(Dockable, QSplitter):
     def eventFilter(self, object, event):
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Tab:
-                self.teEditor.textCursor().insertText(" "*4)
-                return False
+                self.teEditor.textCursor().insertText(" " * 4)
+                return True
         elif isinstance(event, KaraboBroadcastEvent):
             sender = event.sender
             if sender is KaraboEventSender.ConnectMacroInstance:
@@ -84,7 +84,7 @@ class MacroPanel(Dockable, QSplitter):
     def connect(self, macro_instance):
         if macro_instance not in self.already_connected:
             device = getDevice(macro_instance)
-            device.boxvalue.printno.signalUpdateComponent.connect(
+            device.boxvalue.doNotCompressEvents.signalUpdateComponent.connect(
                 self.appendConsole)
             self.already_connected.add(macro_instance)
 
@@ -95,6 +95,7 @@ class MacroPanel(Dockable, QSplitter):
     def initReply(self, ok, error):
         self.console.moveCursor(QTextCursor.End)
         self.console.insertPlainText(error)
+        self.console.insertPlainText("\n")
 
     def onRun(self):
         self.console.clear()
@@ -117,7 +118,7 @@ class MacroPanel(Dockable, QSplitter):
             h = Hash("code", self.macro_model.code,
                      "module", self.macro_model.title,
                      "project", self.macro_model.project_name)
-            get_network().onInitDevice("Karabo_MacroServer", "MetaMacro",
+            get_network().onInitDevice("karabo/macroServer", "MetaMacro",
                                        instance_id, h)
 
     def onSave(self):
