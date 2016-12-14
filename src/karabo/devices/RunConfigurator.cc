@@ -56,35 +56,12 @@ namespace karabo {
                     .reconfigurable()
                     .commit();
 
-            STRING_ELEMENT(expected).key("currentGroup")
-                    .displayedName("Sources in group")
-                    .description("Current group identifier")
-                    .options("")
-                    .assignmentOptional().defaultValue("")
-                    .reconfigurable()
-                    .commit();
-
-            Schema sourceOnlyRow;
-
-            STRING_ELEMENT(sourceOnlyRow).key("sourceOnly")
-                    .displayedName("Source")
-                    .description("Data source full name.")
-                    .readOnly()
-                    .commit();
-
-            TABLE_ELEMENT(expected).key("sourcesOnly")
-                    .displayedName("")
-                    .description("List of data sources")
-                    .setColumns(sourceOnlyRow)
-                    .assignmentOptional().noDefaultValue()
-                    .reconfigurable()
-                    .commit();
 
             Schema sourceRow;
 
             BOOL_ELEMENT(sourceRow).key("use")
                     .displayedName("Use")
-                    .assignmentOptional().defaultValue(false)
+                    .assignmentOptional().defaultValue(true)
                     .reconfigurable()
                     .commit();
 
@@ -94,7 +71,6 @@ namespace karabo {
                     .addColumnsFromClass<RunControlDataSource>()
                     .addColumns(sourceRow)
                     .assignmentOptional().noDefaultValue()
-                    .reconfigurable()
                     .commit();
 
         }
@@ -103,9 +79,7 @@ namespace karabo {
         RunConfigurator::RunConfigurator(const karabo::util::Hash& input)
             : Device(input)
             , m_configurations()
-            , m_cursor()
-            , m_deviceIds()
-            , m_groupIds() { // TODO:  This is for DEBUGGING purposes ONLY!  Make it empty!
+            , m_groupDeviceMapping() {
 
             KARABO_INITIAL_FUNCTION(initialize);
 
@@ -121,9 +95,10 @@ namespace karabo {
             updateState(State::INIT);
 
             KARABO_SIGNAL2("signalRunConfiguration", karabo::util::Hash /*configuration*/, string /*deviceId*/)
+            KARABO_SIGNAL2("signalGroupSourceChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/)
             KARABO_SLOT(buildConfigurationInUse);
             KARABO_SLOT(updateAvailableGroups);
-            KARABO_SLOT(updateCurrentGroup);
+            KARABO_SLOT1(slotGetSourcesInGroup, std::string);
 
             m_configurations.clear();
 
@@ -139,24 +114,9 @@ namespace karabo {
 
             initAvailableGroups();
 
-            updateCurrentGroupSchema();
-
             printConfig();
 
             updateState(State::NORMAL);
-        }
-        
-        void RunConfigurator::updateCurrentGroupSchema() {
-            m_deviceIds = getConfigurationGroupDeviceIds();
-            m_groupIds = getConfigurationGroupIds();
-            const std::string currentGroup = get<std::string>("currentGroup");
-            Schema schema = getFullSchema();
-            schema.setOptions("currentGroup", toString(m_groupIds), ",");
-            this->updateSchema(schema, true);
-            if(std::find(m_groupIds.begin(), m_groupIds.end(), currentGroup) != m_groupIds.end()){
-                set("currentGroup", currentGroup);
-            }
-
         }
 
 
@@ -167,7 +127,7 @@ namespace karabo {
                 const string& deviceId = it->first;
                 const Hash& group = it->second;
                 KARABO_LOG_FRAMEWORK_DEBUG << "deviceId:" << deviceId << ", groupId:" << group.get<string>("id")
-                        << ", desc:" << (group.has("group") ? group.get<string>("description") : "" )<< ", use:" << group.get<bool>("use");
+                        << ", desc:" << (group.has("group") ? group.get<string>("description") : "") << ", use:" << group.get<bool>("use");
                 KARABO_LOG_FRAMEWORK_DEBUG << "\tExpert";
                 const vector<Hash>& expert = group.get<vector < Hash >> ("expert");
                 for (vector<Hash>::const_iterator ii = expert.begin(); ii != expert.end(); ++ii) {
@@ -190,32 +150,8 @@ namespace karabo {
         }
 
 
-        std::vector<std::string> RunConfigurator::getConfigurationGroupDeviceIds() const {
-            vector<string> ids;
-            for (MapGroup::const_iterator it = m_configurations.begin(); it != m_configurations.end(); ++it) {
-                ids.push_back(it->first);
-            }
-            return ids;
-        }
-
-
-        std::vector<std::string> RunConfigurator::getConfigurationGroupIds() const {
-            vector<string> ids;
-            for (MapGroup::const_iterator it = m_configurations.begin(); it != m_configurations.end(); ++it) {
-                const Hash& hash = it->second;
-                if (hash.has("id")) ids.push_back(hash.get<string>("id"));
-            }
-            return ids;
-        }
-
-
-        const std::string& RunConfigurator::getDeviceIdByGroupId(const std::string& groupId, const std::string& failure) const {
-            assert(m_groupIds.size() == m_deviceIds.size());
-            for (size_t i = 0; i < m_groupIds.size(); i++) {
-                if (m_groupIds[i] == groupId)
-                    return m_deviceIds[i];
-            }
-            return failure;
+        const std::string& RunConfigurator::getDeviceIdByGroupId(const std::string& groupId) {
+            return m_groupDeviceMapping[groupId];
         }
 
 
@@ -254,28 +190,12 @@ namespace karabo {
                     return;
 
                 // Add new configuration group into the map
-                m_configurations[deviceId] = Hash();
-                if (m_cursor.empty()) m_cursor = deviceId;
-                Hash& group = m_configurations[deviceId];
-                remote().get(deviceId, "group", group);
-                group.set("use", false);
-                if (!group.has("expert"))
-                    group.set("expert", vector<Hash>());
-                else {
-                    vector<Hash>& v = group.get<vector < Hash >> ("expert");
-                    for (size_t i = 0; i < v.size(); i++) v[i].set("use", false);
-                }
-                if (!group.has("user"))
-                    group.set("user", vector<Hash>());
-                else {
-                    vector<Hash>& v = group.get<vector < Hash >> ("user");
-                    for (size_t i = 0; i < v.size(); i++) v[i].set("use", false);
-                }
-
-                KARABO_LOG_FRAMEWORK_DEBUG << "New RunConfigurationGroup --> instanceId: '" << instanceId
-                        << "',  cursor is '" << m_cursor << "' ...\n" << group;
+                updateGroupConfiguration(deviceId);
 
                 updateAvailableGroups();
+
+                //register monitor to device
+                remote().registerDeviceMonitor(deviceId, boost::bind(&RunConfigurator::deviceUpdatedHandler, this, _1, _2));
 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "In newDeviceHandler:\n" << e;
@@ -298,8 +218,52 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "instanceGoneHandler -->  instanceId  '" << instanceId << "' is erased.";
 
             m_configurations.erase(instanceId);
-
             updateAvailableGroups();
+
+            remote().unregisterDeviceMonitor(instanceId);
+        }
+
+
+        void RunConfigurator::deviceUpdatedHandler(const std::string& deviceId, const karabo::util::Hash& update) {
+            if (update.has("group")) {
+                const Hash& group = update.get<Hash>("group");
+                updateGroupConfiguration(deviceId, group);
+                updateAvailableGroups();
+                updateCompiledSourceList();
+                // now notify clients
+                Hash result("group", remote().get<std::string>(deviceId, "group.id"), "instanceId", getInstanceId());
+                makeGroupSourceConfig(result, deviceId);
+                emit("signalGroupSourceChanged", result, deviceId);
+            }
+        }
+
+
+        void RunConfigurator::updateGroupConfiguration(const std::string& deviceId, const karabo::util::Hash& update) {
+
+
+            Hash& group = m_configurations[deviceId];
+            if (group.empty() || update.empty()) {
+                remote().get(deviceId, "group", group);
+                group.set("use", false);
+            } else {
+                bool use = group.get<bool>("use");
+                group.merge(update);
+                group.set("use", use);
+            }
+            m_groupDeviceMapping[group.get<std::string>("id")] = deviceId;
+            if (!group.has("expert"))
+                group.set("expert", vector<Hash>());
+            else {
+                vector<Hash>& v = group.get<vector < Hash >> ("expert");
+                for (size_t i = 0; i < v.size(); i++) v[i].set("use", false);
+            }
+            if (!group.has("user"))
+                group.set("user", vector<Hash>());
+            else {
+                vector<Hash>& v = group.get<vector < Hash >> ("user");
+                for (size_t i = 0; i < v.size(); i++) v[i].set("use", false);
+            }
+            KARABO_LOG_FRAMEWORK_DEBUG << "Updated RunConfigurationGroup --> instanceId: '" << deviceId;
         }
 
 
@@ -324,153 +288,80 @@ namespace karabo {
 
                 g.push_back(h);
 
-                if (deviceId == m_cursor) {
-                    updateCurrentGroup();
-                }
             }
-            
-            updateCurrentGroupSchema();
+
             set("availableGroups", g);
-        }
-
-
-        void RunConfigurator::updateCurrentGroup() {
-            setNoValidate("currentGroup", m_configurations[m_cursor].get<string>("id"));
-            updateCurrentSources();
-            updateCompiledSourceList();
-            
-        }
-
-
-        void RunConfigurator::updateCurrentSources() {
-            const Hash& g = m_configurations[m_cursor];
-
-            KARABO_LOG_FRAMEWORK_DEBUG << "updateCurrentSources()";
-            vector<Hash> sources;
-
-            const vector<Hash>& expert = g.get<vector<Hash> >("expert");
-            for (size_t i = 0; i < expert.size(); i++) {
-                const string& src = expert[i].get<string>("source");
-                sources.push_back(Hash("sourceOnly", src));
-            }
-
-            const vector<Hash>& user = g.get<vector<Hash> >("user");
-            for (size_t ii = 0; ii < user.size(); ii++) {
-                const string& src = user[ii].get<string>("source");
-                sources.push_back(Hash("sourceOnly", src));
-            }
-
-            set("sourcesOnly", sources);
         }
 
 
         void RunConfigurator::updateCompiledSourceList() {
             std::map<std::string, Hash> sources;
-            for(auto it = m_configurations.cbegin(); it != m_configurations.cend(); ++it) {
-                const Hash& g = it->second;
-                bool use = g.get<bool>("use");
+            for (auto it = m_configurations.begin(); it != m_configurations.end(); ++it) {
+                Hash& g = it->second;
+                const bool use = g.get<bool>("use");
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "updateCompiledSourceList()  cursor : " << it->first << ", use : " << use;
 
-                if(use){
-                    
-                    const vector<Hash>& expert = g.get<vector<Hash> >("expert");
-                    for (size_t i = 0; i < expert.size(); i++) {
-                        const string& src = expert[i].get<string>("source");
-                        const bool pipeline = (expert[i].hasAttribute("source", "pipeline") ? expert[i].getAttribute<bool>("source", "pipeline"): false);
-                        const string& type = expert[i].get<string>("type");
-                        const string& behavior = expert[i].get<string>("behavior");
-                        const bool monitored = expert[i].get<bool>("monitored");
-                        Hash h("source", src
-                               , "type", type
-                               , "behavior", behavior
-                               , "monitored", monitored
-                               , "use", use);
-                        h.setAttribute("source", "pipeline", pipeline);
-                        auto exIt = sources.find(src);
-                        if(exIt != sources.end()){
-                            const std::string& exbehavior = exIt->second.get<std::string>("behavior");
-                            bool exmonitored = exIt->second.get<bool>("monitored");
-                            if (exmonitored) h.set("monitored", true);
-                            if (behavior == "init" || (behavior == "read-only" && exbehavior != "init")) {
-                                h.set("behavior", exbehavior);
-                            }
+                vector<Hash>& expert = g.get<vector<Hash> >("expert");
+                for (size_t i = 0; i < expert.size(); i++) {
+                    expert[i].set("use", use);
+                    if (!use) continue;
+                    const string& src = expert[i].get<string>("source");
+                    const bool pipeline = (expert[i].hasAttribute("source", "pipeline") ? expert[i].getAttribute<bool>("source", "pipeline") : false);
+                    const string& type = expert[i].get<string>("type");
+                    const string& behavior = expert[i].get<string>("behavior");
+                    const bool monitored = expert[i].get<bool>("monitored");
+                    Hash h("source", src
+                           , "type", type
+                           , "behavior", behavior
+                           , "monitored", monitored
+                           , "use", use);
+                    h.setAttribute("source", "pipeline", pipeline);
+                    auto exIt = sources.find(src);
+                    if (exIt != sources.end()) {
+                        const std::string& exbehavior = exIt->second.get<std::string>("behavior");
+                        bool exmonitored = exIt->second.get<bool>("monitored");
+                        if (exmonitored) h.set("monitored", true);
+                        if (behavior == "init" || (behavior == "read-only" && exbehavior != "init")) {
+                            h.set("behavior", exbehavior);
                         }
-                        sources[src] = std::move(h);
                     }
+                    sources[src] = std::move(h);
+                }
 
-                    const vector<Hash>& user = g.get<vector<Hash> >("user");
-                    for (size_t ii = 0; ii < user.size(); ii++) {
-                        const string& src = user[ii].get<string>("source");
-                        const bool pipeline = (user[ii].hasAttribute("source", "pipeline") ? user[ii].getAttribute<bool>("source", "pipeline"): false);
-                        const string& type = user[ii].get<string>("type");
-                        const string& behavior = user[ii].get<string>("behavior");
-                        const bool monitored = user[ii].get<bool>("monitored");
-                        Hash h("source", src
-                               , "type", type
-                               , "behavior", behavior
-                               , "monitored", monitored
-                               , "use", use);
-                        h.setAttribute("source", "pipeline", pipeline);
-                        auto exIt = sources.find(src);
-                        if(exIt != sources.end()){
-                            const std::string& exbehavior = exIt->second.get<std::string>("behavior");
-                            bool exmonitored = exIt->second.get<bool>("monitored");
-                            if (exmonitored) h.set("monitored", true);
-                            if (behavior == "init" || (behavior == "read-only" && exbehavior != "init")) {
-                                h.set("behavior", exbehavior);
-                            }
+                vector<Hash>& user = g.get<vector<Hash> >("user");
+                for (size_t ii = 0; ii < user.size(); ii++) {
+                    user[ii].set("use", use);
+                    if (!use) continue;
+                    const string& src = user[ii].get<string>("source");
+                    const bool pipeline = (user[ii].hasAttribute("source", "pipeline") ? user[ii].getAttribute<bool>("source", "pipeline") : false);
+                    const string& type = user[ii].get<string>("type");
+                    const string& behavior = user[ii].get<string>("behavior");
+                    const bool monitored = user[ii].get<bool>("monitored");
+                    Hash h("source", src
+                           , "type", type
+                           , "behavior", behavior
+                           , "monitored", monitored
+                           , "use", use);
+                    h.setAttribute("source", "pipeline", pipeline);
+                    auto exIt = sources.find(src);
+                    if (exIt != sources.end()) {
+                        const std::string& exbehavior = exIt->second.get<std::string>("behavior");
+                        bool exmonitored = exIt->second.get<bool>("monitored");
+                        if (exmonitored) h.set("monitored", true);
+                        if (behavior == "init" || (behavior == "read-only" && exbehavior != "init")) {
+                            h.set("behavior", exbehavior);
                         }
-                        sources[src] = std::move(h);
                     }
+                    sources[src] = std::move(h);
+
                 }
             }
             std::vector<Hash> sourceVec;
-            for(auto it = sources.cbegin(); it != sources.cend(); ++it){
+            for (auto it = sources.cbegin(); it != sources.cend(); ++it) {
                 sourceVec.push_back(it->second);
             }
             set("sources", sourceVec);
-        }
-
-
-        std::vector<karabo::util::Hash> RunConfigurator::getAllSources(const std::string & deviceId) const {
-
-            KARABO_LOG_FRAMEWORK_DEBUG << "getAllSources{\"" << deviceId << "\")";
-
-            std::vector<karabo::util::Hash> v;
-            MapGroup::const_iterator it = m_configurations.find(deviceId);
-
-            if (it != m_configurations.end()) {
-                const Hash& g = it->second;
-
-                const std::vector<karabo::util::Hash>& expert = g.get<std::vector < karabo::util::Hash >> ("expert");
-                std::copy(expert.begin(), expert.end(), v.begin());
-
-                const std::vector<karabo::util::Hash>& user = g.get<std::vector < karabo::util::Hash >> ("user");
-                v.insert(v.end(), user.begin(), user.end());
-            }
-
-            return v;
-        }
-
-
-        std::vector<std::string> RunConfigurator::getAllSourceNames(const std::string & deviceId) const {
-
-            KARABO_LOG_FRAMEWORK_DEBUG << "getAllSourceNames(\"" << deviceId << "\")";
-
-            std::vector<std::string> v;
-            MapGroup::const_iterator it = m_configurations.find(deviceId);
-
-            if (it != m_configurations.end()) {
-                for (const auto& h : it->second.get<std::vector < karabo::util::Hash >> ("expert")) {
-                    if (h.has("source")) v.push_back(h.get<std::string>("source"));
-                }
-                for (const auto& h : it->second.get<std::vector < karabo::util::Hash >> ("user")) {
-                    if (h.has("source")) v.push_back(h.get<std::string>("source"));
-                }
-            }
-
-            return v;
         }
 
 
@@ -484,19 +375,17 @@ namespace karabo {
             for (MapGroup::const_iterator it = m_configurations.begin(); it != m_configurations.end(); ++it) {
                 const string& deviceId = it->first;
                 const Hash& group = it->second;
-                const bool useGroupFlag = group.get<bool>("use");
-                if (useGroupFlag) {
-                    const string& id = group.get<string>("id");
-                    buildDataSourceProperties(group.get<vector < Hash >> ("expert"), id, true, false, result);
-                    buildDataSourceProperties(group.get<vector < Hash >> ("user"),   id, false, true, result);
-                }
+
+                const string& id = group.get<string>("id");
+                buildDataSourceProperties(group.get<vector < Hash >> ("expert"), id, true, false, result);
+                buildDataSourceProperties(group.get<vector < Hash >> ("user"), id, false, true, result);
+
             }
 
             KARABO_LOG_FRAMEWORK_INFO << "Current Run Configuration is ...\n" << configuration;
 
             emit("signalRunConfiguration", configuration, getInstanceId());
-            
-            karabo::io::saveToFile<Hash>(configuration, "lastRunConfiguration.xml", Hash("format.Xml.indentation", 2, "format.Xml.writeDataTypes", true));
+
         }
 
 
@@ -506,21 +395,13 @@ namespace karabo {
 
             for (vector<Hash>::const_iterator ii = table.begin(); ii != table.end(); ++ii) {
                 const string& dataSourceId = ii->get<string>("source");
-                const bool pipelineFlag = ii->getAttribute<bool>("source", "pipeline");
+                const bool pipelineFlag = (ii->hasAttribute("source", "pipeline") ? ii->getAttribute<bool>("source", "pipeline") : false);
                 const string& dataSourceType = ii->get<string>("type");
                 string behavior = ii->get<string>("behavior");
                 const bool monitorOut = ii->get<bool>("monitored");
                 const bool inUse = ii->get<bool>("use");
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "buildDataSourceProperties dataSourceId : " << dataSourceId << ", pipeline : " << pipelineFlag;
-
-                // Inclusiveness for "behavior" attribute
-                // "smart" merging where "high-grade" behavior attribute overwrites "low-grade" one.
-                if (result.has(dataSourceId)) {
-                    const string& oldBehavior = result.getAttribute<string>(dataSourceId, "behavior");
-                    if (behavior == "init" || (behavior == "read-only" && oldBehavior == "record-all"))
-                        behavior = oldBehavior;
-                }
 
                 if (inUse) {
                     Hash properties;
@@ -553,20 +434,7 @@ namespace karabo {
         void RunConfigurator::preReconfigure(karabo::util::Hash & incomingReconfiguration) {
             KARABO_LOG_FRAMEWORK_DEBUG << "============ preReconfigure  ===============";
             const Schema schema = getFullSchema();
-            if (incomingReconfiguration.has("currentGroup")) {
-                const std::string& currentGroup = incomingReconfiguration.get<string>("currentGroup");
-                string oldCursor = m_cursor;
-                KARABO_LOG_FRAMEWORK_DEBUG << "============ preReconfigure cursor WAS ==> " << m_cursor;
-                m_cursor = getDeviceIdByGroupId(currentGroup);
-                KARABO_LOG_FRAMEWORK_DEBUG << "============ preReconfigure cursor NOW ==> " << m_cursor;
-                if (oldCursor != m_cursor) {
-                    // Clear old stuff
-                    set("sourceOnly", vector<Hash>());
-                    set("sources", vector<Hash>());
-                }
-                updateCurrentSources();
-                updateCompiledSourceList();
-            }
+
             for (Hash::const_iterator it = incomingReconfiguration.begin(); it != incomingReconfiguration.end(); ++it) {
                 const string& wid = it->getKey();
                 if (it->getType() == Types::VECTOR_HASH) {
@@ -576,10 +444,7 @@ namespace karabo {
                         if (wid == "availableGroups") {
                             reconfigureAvailableGroups(value, rowSchema);
                             updateCompiledSourceList();
-                        } else if (wid == "sourcesOnly")
-                            reconfigureSourcesOnly(value, rowSchema);
-                        else if (wid == "sources")
-                            reconfigureSources(value, rowSchema);
+                        }
                     }
                 }
             }
@@ -608,6 +473,7 @@ namespace karabo {
                 const Hash& hash = *it;
                 const string& groupId = hash.get<string>("groupId");
                 const string& deviceId = getDeviceIdByGroupId(groupId);
+                KARABO_LOG_FRAMEWORK_DEBUG << "Updating group " << groupId << " on device " << deviceId;
                 const bool useFlag = hash.get<bool>("use");
                 MapGroup::iterator ii = m_configurations.find(deviceId);
                 if (ii != m_configurations.end()) {
@@ -626,43 +492,29 @@ namespace karabo {
         }
 
 
-        void RunConfigurator::reconfigureSourcesOnly(const std::vector<karabo::util::Hash>& sources, const karabo::util::Schema & schema) {
+        void RunConfigurator::slotGetSourcesInGroup(const std::string& group) {
+            const std::string& deviceId = getDeviceIdByGroupId(group);
+            Hash result("group", group, "instanceId", getInstanceId());
+            makeGroupSourceConfig(result, deviceId);
+            reply(result);
         }
 
 
-        void RunConfigurator::reconfigureSources(const std::vector<karabo::util::Hash>& sources, const karabo::util::Schema & schema) {
-
-            for (vector<Hash>::const_iterator it = sources.begin(); it != sources.end(); ++it) {
-                const Hash& hash = *it;
-                const string& source = hash.get<string>("source");
-                const bool useFlag = hash.get<bool>("use");
-                const string& behavior = hash.get<string>("behavior");
-                const bool monitored = hash.get<bool>("monitored");
-
-                bool found = false;
-
-                vector<Hash>& expert = m_configurations[m_cursor].get<vector < Hash >> ("expert");
-                for (vector<Hash>::iterator ii = expert.begin(); ii != expert.end(); ++ii) {
-                    if (source == ii->get<string>("source")) {
-                        found = true;
-                        ii->set("use", useFlag);
-                        ii->set("behavior", behavior);
-                        ii->set("monitored", monitored);
-                        break;
-                    }
+        void RunConfigurator::makeGroupSourceConfig(karabo::util::Hash& result, const std::string& deviceId) const {
+            std::vector<Hash>& sources = result.bindReference<std::vector<Hash> >("sources");
+            MapGroup::const_iterator ii = m_configurations.find(deviceId);
+            if (ii != m_configurations.end()) {
+                vector<Hash> expert = (ii->second.has("expert") ? ii->second.get<vector < Hash >> ("expert") : vector < Hash >());
+                for (auto it = expert.begin(); it != expert.end(); ++it) {
+                    it->erase("use");
+                    it->set("access", "expert");
+                    sources.push_back(*it);
                 }
-
-                if (found) continue;
-
-                vector<Hash>& user = m_configurations[m_cursor].get<vector < Hash >> ("user");
-                for (vector<Hash>::iterator ii = user.begin(); ii != user.end(); ++ii) {
-                    if (source == ii->get<string>("source")) {
-                        found = true;
-                        ii->set("use", useFlag);
-                        ii->set("behavior", behavior);
-                        ii->set("monitored", monitored);
-                        break;
-                    }
+                vector<Hash> user = (ii->second.has("user") ? ii->second.get<vector < Hash >> ("user") : vector < Hash >());
+                for (auto it = user.begin(); it != user.end(); ++it) {
+                    it->erase("use");
+                    it->set("access", "user");
+                    sources.push_back(*it);
                 }
             }
         }
