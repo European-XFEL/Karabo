@@ -2,25 +2,27 @@
  Only GUI for Windows 7
 ***********************
 
-*To be done by M. Teichmann and J. Szuba*
+In order to install and run karaboGUI on Windows, you need a local python
+installation.
 
-In order to install and run karaboGUI on Windows, you need a local python installation.
-
-The recommended python suites are `Python(x,y) <https://code.google.com/p/pythonxy/>`_
-or `WinPython <http://winpython.github.io/>`_. However, as python(x,y) still
-lacks version with Python 3, currently the only possibility is to use
-:ref:`WinPython <install-winpython>`. The choice of python suite is dictated
+The recommended python suite is `WinPython 
+<https://sourceforge.net/projects/winpython/files/WinPython_3.4/3.4.3.3/>`_.
+This choice was made due to the fact that this suite is dictated
 by availability of almost all packages required by karaboGUI (like PyQwt,
 guiqwt, guidata).
 
-Additionally, you need to install one module called suds-jurko in Python(x,y) or
-WinPython using their package managers (for instance WinPython Control Panel).
+Additionally, you need to install three more modules (suds-jurko, traits, pint) 
+in WinPython using its package manager (for instance WinPython Control 
+Panel).
 
-Below you will find detailed instruction :ref:`how to install WinPython and karaboGUI <install-winpython>`.
+Below you will find detailed instruction :ref:`how to install WinPython and 
+karaboGUI <install-winpython>`.
 
 In principle you can try to use any other available Scientific Python
 distributions like:
 
+- `Python(x,y) <https://code.google.com/p/pythonxy/>`_: A free distribution for
+   Windows but does not yet support Python 3
 - `Anaconda <http://continuum.io/downloads>`_: A free distribution for the SciPy
    stack. Supports Linux, Windows and Mac
 - `Enthought Canopy <http://www.enthought.com/products/canopy/>`_: The free and
@@ -94,36 +96,52 @@ Get and install WinPython
 -------------------------
 
 Download the latest installation package
-`here <https://sourceforge.net/projects/winpython/files/WinPython_3.4/3.4.3.3/>`_
+`here <https://sourceforge.net/projects/winpython/files/WinPython_3.4/3.4.3.3/WinPython-32bit-3.4.3.3.exe/download>`_
 (**currently 3.4.3.3 using Python 3.4.3**) and install it following
 `instructions <https://github.com/winpython/winpython/wiki/Installation>`_.
 After installation register your WinPython distribution to Windows. From now on,
 you have Start Menu entry for WinPython.
 
+.. _install-addons:
+
 Get and install additional python packages
 ------------------------------------------
 
-To install the additional package suds-jurko 0.6 follow these instructions:
+There are three additional packages needed:
 
-- from the WinPython installation directory, launch the WinPython Command Prompt.
-- then use pip at the prompt to install the package typing 'pip install suds-jurko'.
+- `suds-jurko <http://pypi.python.org/packages/source/s/suds-jurko/suds-jurko-0.6.zip>`_
+
+- `traits 4.6.0 <https://pypi.python.org/pypi/traits>`_
+
+- `pint 0.7.2 <https://pypi.python.org/pypi/Pint/>`_
+
+
+To intall the additional packages follow these instructions:
+
+- from the WinPython installation directory, launch the WinPython Command Prompt
+- then use pip at the prompt to install the package typing 'pip install <packagename>'.
 
 or use WinPython Control Panel:
 
-- download suds-jurko from
-  `here <http://pypi.python.org/packages/source/s/suds-jurko/suds-jurko-0.6.zip>`_
+- download the package
 - open WinPython Control Panel, drag&drop downloaded file and install it
   (WinPython instructions
   `here <https://github.com/winpython/winpython/wiki/Installing-Additional-Packages>`_).
+
 
 Get and install karaboGUI
 -------------------------
 
 Download karaboGUI Windows installation binary
-`here <ftp://karabo:framework@ftp.desy.de/karaboGui/>`_ and run it. NOTE: if
-this link does not open automatically, type the following
-in the browser address bar: ftp://karabo:framework@ftp.desy.de/karaboGui/ .
-You should get Start Menu entry as well as karaboGUI shortcut on Desktop.
+`here <http://exflserv05/karabo/karaboGui/>`_ and install it as it was described
+for the :ref:`additional packages <install-addons>`.
+
+Currently there is no Start Menu entry or a shortcut on the Desktop. This needs
+to be created by going to the path where WinPython is installed::
+
+ [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages\karabo_gui
+
+and then right click on *main.py* and select *Send to Destop (create shortcut)*
 
 To uninstall karaboGui, open Control Panel -> Uninstall a program, find
 karaboGUI entry and uninstall it.
@@ -136,7 +154,7 @@ Due to `this issue <http://bugs.python.org/issue21354>`_
 the end ('python not found'), the menu entry and shortcut are not created. To
 start karaboGUI you need to navigate to::
 
- [WinPython_Installation_Dir]\python-3.4.3.amd64\Lib\site-packages\karaboGui 
+ [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages\karabo_gui 
 
 Right-click on *karabo-gui.py* and  select *Send to Desktop*. In this way, you have
 a shortcut on your *Desktop* and now you can easily start karaboGui via

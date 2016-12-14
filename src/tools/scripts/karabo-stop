@@ -20,7 +20,7 @@ if [ ${#@} -gt 0 ]; then
 	echo 
 	echo "With arguments, stop those config applications whose names"
 	echo "contain one of the arguments."
-        echo "Run ./karabo-check to see the names."
+        echo "Run karabo-check to see the names."
 	echo 
 	echo "EXAMPLES:"
         echo "(1) Stop everything:"
@@ -36,9 +36,15 @@ if [ ${#@} -gt 0 ]; then
     fi
 fi
 
+# Make sure Karabo is installed
+if [ -z $KARABO ]; then
+  echo
+  echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
+  exit 1
+fi
 
-# Make sure the script runs in this directory
-scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+# Make sure the script runs in $KARABO/var/config
+scriptDir=$KARABO/var/config
 cd ${scriptDir}
 if [ $? -ne 0 ]; then
     echo "ERROR Could not change directory to ${scriptDir}"
@@ -46,23 +52,23 @@ if [ $? -ne 0 ]; then
 fi
 
 if [ ! -e "config" ]; then
-    cp config.orig config
+    cp $KARABO/bin/config.orig config
 fi
 
-info="./.config"
+info=".config"
 if [ ! -e $info ]; then
     echo "ERROR no previous karabo-start"
     exit 1
 fi
 
-source ./config
+source config
 
 killedAny="no"
 
 # create new $info file - temporary for now
 newInfo=$(mktemp --tmpdir ${info}_XXXXXXXX)
 # also new pids file
-allPidsFile="./.karabo-start.pid"
+allPidsFile=".karabo-start.pid"
 newAllPidsFile=$(mktemp --tmpdir ${allPidsFile}_XXXXXXXX)
 cp $allPidsFile $newAllPidsFile
 
@@ -115,16 +121,6 @@ while read line; do
                 currChildPids=( ${newChildPids[@]} )
             done
 
-            test $verbose && echo "Kill mainpid $mainPid."
-            if kill -${KARABO_KILL_SIGNAL} $mainPid 1>/dev/null 2>&1; then
-                killed=1
-                echo "INFO Killed $name (pid $mainPid)."
-            else
-                echo "WARNING Could not kill $name with pid $mainPid."
-                echo "        Probably it is already dead, i.e. one can "
-                echo "        remove that line from $info."
-                echo "        Descendants pids are \"${allPids[@]}\"."
-            fi
             # Kill all descendants from list created above.
             # Note: If new child processes are created after the list is built
             #       above, we do not explicitly kill them here.
@@ -148,6 +144,18 @@ while read line; do
                 # $newAllPidsFile (where master and children are in same line).
 	        sed -i "/$mainPid/d" $newAllPidsFile
             fi
+
+            test $verbose && echo "Kill mainpid $mainPid."
+            if kill -${KARABO_KILL_SIGNAL} $mainPid 1>/dev/null 2>&1; then
+                killed=1
+                echo "INFO Killed $name (pid $mainPid)."
+            else
+                echo "WARNING Could not kill $name with pid $mainPid."
+                echo "        Probably it is already dead, i.e. one can "
+                echo "        remove that line from $info."
+                echo "        Descendants pids are \"${allPids[@]}\"."
+            fi
+
         fi  # End of "We should kill something for this line ($killThis -eq 1)."
     fi  # End of "Line could be properly interpreted ."
 

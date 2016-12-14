@@ -1183,7 +1183,9 @@ namespace karabo {
             // NOTE: This will block us here, i.e. we are deaf for other changes...
             // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
             notifyPropertyChangedMonitors(hash, instanceId);
-            if (m_runSignalsChangedThread) {
+            // magic: if the hash contains a change for the expected parameter "doNotCompressElements", we are sending them to the GUI no matter what
+            // Don't mix doNotCompressEvents with unrelated stuff, or causality will break down
+            if (m_runSignalsChangedThread && !hash.has("doNotCompressEvents")) {
                 boost::mutex::scoped_lock lock(m_signalsChangedMutex);
                 // Just book keep paths here and call 'notifyDeviceChangedMonitors'
                 // later with content from m_runtimeSystemDescription.
@@ -1840,9 +1842,35 @@ if (nodeData) {\
                         || attrKey == KARABO_SCHEMA_METRIC_PREFIX_ENUM
                         || attrKey == KARABO_SCHEMA_METRIC_PREFIX_NAME
                         || attrKey == KARABO_SCHEMA_METRIC_PREFIX_SYMBOL
-                        || attrKey == KARABO_SCHEMA_DAQ_DATA_TYPE)
+                        || attrKey == KARABO_SCHEMA_DAQ_DATA_TYPE
+                        || attrKey == KARABO_HASH_CLASS_ID)
                         hash.setAttribute(path, ii->getKey(), ii->getValueAsAny());
                 }
+            }
+            
+            recursivelyAddCompoundDataTypes(schemaHash, hash);
+            
+        }
+        
+        void DeviceClient::recursivelyAddCompoundDataTypes(const karabo::util::Hash& schemaHash, karabo::util::Hash & hash) const {
+            for(auto it = hash.begin(); it != hash.end(); ++it) {
+                const std::string& key = it->getKey();
+                if (schemaHash.hasAttribute(key, KARABO_SCHEMA_CLASS_ID)) {
+                    const std::string& classId = schemaHash.getAttribute<std::string>(key, KARABO_SCHEMA_CLASS_ID);
+                    it->setAttribute(KARABO_SCHEMA_CLASS_ID, classId);
+                    
+                    // special treatments for compounds below
+                    if (classId == karabo::util::NDArray::classInfo().getClassId()){
+                        Hash& h= it->getValue<Hash>();
+                        if(schemaHash.hasAttribute(key+".shape", "defaultValue")){
+                            h.set("shape", schemaHash.getAttributeAsAny(key+".shape", "defaultValue"));
+                        }
+                        if(schemaHash.hasAttribute(key+".type", "defaultValue")){
+                            h.set("type", schemaHash.getAttributeAsAny(key+".type", "defaultValue"));
+                        }
+                    }
+                }
+                if(it->getType() == karabo::util::Types::HASH) recursivelyAddCompoundDataTypes(schemaHash.get<Hash>(key), it->getValue<Hash>());
             }
         }
 
