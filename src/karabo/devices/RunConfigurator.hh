@@ -129,6 +129,11 @@ namespace karabo {
              */
             void makeGroupSourceConfig(karabo::util::Hash& result, const std::string& deviceId) const;
 
+            /**
+             * Helper function for updateCompiledSourceList
+             */
+            void createSource(std::vector<karabo::util::Hash>& data, std::map<std::string, karabo::util::Hash>& sources, bool use);
+
         private:
 
             std::map<std::string, karabo::util::Hash> m_configurations;
