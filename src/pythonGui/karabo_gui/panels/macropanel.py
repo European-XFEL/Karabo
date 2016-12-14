@@ -7,7 +7,11 @@
 from PyQt4.QtCore import Qt, QEvent
 from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QMessageBox,
                          QSplitter, QTextCursor)
-from qtconsole.pygments_highlighter import PygmentsHighlighter
+
+try:
+    from qtconsole.pygments_highlighter import PygmentsHighlighter
+except ImportError:
+    from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
 
 from karabo.middlelayer import Hash, write_macro
 from karabo_gui.docktabwindow import Dockable
