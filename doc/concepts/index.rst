@@ -47,6 +47,7 @@ Contents:
    cameras
    
    gui
+   .. gui_old
    .. gui_server
    .. gui_scene_files
    .. doocs
