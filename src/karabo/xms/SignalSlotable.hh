@@ -26,6 +26,8 @@
 #include "karabo/net/PointToPoint.hh"
 
 #include <queue>
+#include <map>
+#include <unordered_map>
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
@@ -557,8 +559,8 @@ namespace karabo {
             SlotCallGuardHandler m_slotCallGuardHandler;
             UpdatePerformanceStatisticsHandler m_updatePerformanceStatistics;
 
-            static std::map<std::string, SignalSlotable*> m_instanceMap;
-            static boost::mutex m_instanceMapMutex;
+            static std::unordered_map<std::string, SignalSlotable*> m_instanceMap;
+            static boost::shared_mutex m_instanceMapMutex;
 
             bool m_discoverConnectionResourcesMode;
             static std::map<std::string, std::string> m_connectionStrings;

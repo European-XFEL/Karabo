@@ -2,11 +2,11 @@
 Starting the GUI
 ================
 
-Navigate to the *bin* folder in karaboRun and type::
+Having Karabo installed properly type::
 
-  ./startGui
+  karabo-gui
 
-Instructions of how to use the GUI can be found :ref:`here <howto-gui>`.
+Instructions of how to use the GUI can be found :ref:`here <concepts-gui>`.
 
 If you log into the correct GUI server, you will be immediately able to view and
 control (given your access persmissions allow it) devices that are currently
@@ -17,17 +17,17 @@ online.
 Starting a Command Line
 =======================
 
-Navigate to the *bin* folder in karaboRun and type::
+Having Karabo installed properly type::
 
-  ./startCli
+  karabo-cli
 
 or::
 
-  ./ikarabo
+  ikarabo
 
-depending on what you want. Both comamnds provide a Python command line,
+depending on what you want. Both commands provide a Python command line,
 but with slightly different syntax.
 
-Using the comamnd line inteface is described :ref:`here <howto-cli>`.
+Using the command line interface is described :ref:`here <concepts-ikarabo>`.
 
 

@@ -43,8 +43,15 @@ if [ ${#@} -gt 0 ]; then
     fi
 fi
 
-# Make sure the script runs in this directory
-scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+# Make sure Karabo is installed
+if [ -z $KARABO ]; then
+  echo
+  echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
+  exit 1
+fi
+
+# Make sure the script runs in $KARABO/var/config
+scriptDir=$KARABO/var/config
 cd ${scriptDir}
 if [ $? -ne 0 ]; then
     echo "ERROR Could not change directory to ${scriptDir}"
@@ -53,11 +60,11 @@ fi
 
 # Create a copy of the original if not done yet
 if [ ! -e "config" ]; then
-    cp config.orig config
+    cp $KARABO/bin/config.orig config
 fi
 
 # check startup
-./karabo-check
+karabo-check
 
 check=$?
 
@@ -81,7 +88,7 @@ fi
 
 
 # START content checking is done in karabo-check 
-source ./config
+source config
 
 # store args for possible restart
 if [ "$check" = "0" ]; then
@@ -118,7 +125,7 @@ do
 	# store name and pid of started process
         bg=$!
 	# Give the xterm processes time to start and set up their pids
-	sleep 0.5 
+	sleep 0.2 
         echo "key: $bg $exe" >> .config 
 	# put pid and its child pids in one line of file
 	echo -n "$bg " >> .karabo-start.pid
