@@ -1,3 +1,5 @@
+.. _acknowledgement_service:
+
 ************************
 Acknowledgement Messages
 ************************
@@ -31,7 +33,7 @@ by then.
 
 .. note::
 
-	You should take care to misuse the acknowledgement service for a lot of 'are you sure'
+	You should take care not to misuse the acknowledgement service for a lot of 'are you sure'
 	type messages. Rather than relying on a human to take the right action you should
 	catch improper inputs and act accordingly in a programmatic fashion.
 	
@@ -50,7 +52,7 @@ Requesting Control over Shared Resources - Client Locking
 ---------------------------------------------------------
 
 A recurring scenario for acknowledgements is to request control over a shared resource.
-This e.g. the case for the pump-probe lasers shared amongst two hutches. In such a
+This is the case, for example, for the pump-probe lasers shared amongst two hutches. In such a
 scenario acknowledgments are used in conjunction with *client-locking*. The procedure
 is as follows:
 
@@ -74,7 +76,7 @@ is as follows:
 .. ifconfig:: includeDevInfo is True
 
     Client-side locking is implemented on a per-topic level. For devices
-    communicating with multiple broker topics, all but one topic may selectivly
+    communicating with multiple broker topics, all but one topic may selectively
     be disabled for assignment and command communications. The device is then
     locked for these topics.
 
