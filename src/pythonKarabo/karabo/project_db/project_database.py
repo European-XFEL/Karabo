@@ -426,11 +426,14 @@ class ProjectDatabase(ContextDecorator):
             query = """
             xquery version "3.0";
             import module namespace v="{vnamespace}";
-            return v:doc(doc('{path}'), {revision})
+            v:doc(doc('{path}'), {revision})
             """.format(vnamespace=self.vers_namespace, path=path,
                        revision=revision)
             try:
-                item = self.dbhandle.query(query).results[0]
+                res = self.dbhandle.query(query).results
+                if len(res) == 0:
+                    raise ProjectDBError("No item found for this revision")
+                item = res[0]
             except ExistDBException as e:
                 raise ProjectDBError(e)
 
@@ -481,7 +484,7 @@ class ProjectDatabase(ContextDecorator):
             let $uuids := {uuids}
             for $c at $i in collection("{path}/?select=*")
             where $c/*/@uuid = $uuids
-            return v:doc($c, $revs[index-of($uuids, data($c/*/@uuid))-1])
+            v:doc($c, $revs[index-of($uuids, data($c/*/@uuid))-1])
             """.format(vnamespace=self.vers_namespace, revs=tuple(revisions),
                        uuids=tuple(uuids), path=path)
 
