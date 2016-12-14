@@ -58,15 +58,13 @@ namespace karabo {
                     .assignmentOptional().defaultValue("karaboHistory")
                     .commit();
 
-            std::vector<std::string> emptyVec;
-
             VECTOR_STRING_ELEMENT(expected).key("serverList")
                     .displayedName("Server list")
                     .description("List of device server IDs where the DataLogger instance run. "
                                  "The load balancing is round-robin. If empty, try to get from logger map "
                                  "or, as last source, just use the server of this device.")
                     .init()
-                    .assignmentOptional().defaultValue(emptyVec)
+                    .assignmentMandatory()
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("visibility")
@@ -118,18 +116,6 @@ namespace karabo {
 
             remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::ensureLoggerRunning, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
-
-            // Server list must not be empty. If it is configured to be empty,
-            // try other sources: our logger map or, if that is empty as well,
-            // just use our server.
-            if (m_serverList.empty()) {
-                m_loggerMap.getPaths(m_serverList); // or just getKeys(..)?
-                if (m_serverList.empty()) {
-                    m_serverList.push_back(this->getServerId());
-                }
-                // Keep device property in sync:
-                this->set("serverList", m_serverList);
-            }
 
             // try to restart readers and loggers if needed - it works reliably on "stopped" system
             restartReadersAndLoggers();
@@ -219,7 +205,8 @@ namespace karabo {
                             } else {
                                 if (m_serverList.empty()) {
                                     // Cannot happen (see okStateOnEntry), but for better diagnostics in case it does:
-                                    throw KARABO_LOGIC_EXCEPTION("List of servers for data logging is empty.");
+                                    throw KARABO_PARAMETER_EXCEPTION("List of servers for data logging is empty."
+                                                                     " You have to define one data logger server, at least!");
                                 }
                                 m_serverIndex %= m_serverList.size();
                                 serverId = m_serverList[m_serverIndex++];
