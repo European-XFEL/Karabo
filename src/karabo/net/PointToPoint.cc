@@ -483,6 +483,10 @@ namespace karabo {
                 channelErrorHandler(ec, signalConnectionString, connection, channel);
                 return;
             }
+            
+            // Re-register itself
+            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1, signalConnectionString,
+                                                               connection, channel, _2, _3));
             // Get signalInstancdId and slotInstanceIds from header
             const string& signalInstanceId = header->get<string>("signalInstanceId");
             const string& slotInstanceIdsString = header->get<string>("slotInstanceIds");
@@ -512,9 +516,6 @@ namespace karabo {
                 // call user callback of type "ConsumeHandler"
                 handler(header, body);
             }
-            // Re-register itself
-            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1, signalConnectionString,
-                                                               connection, channel, _2, _3));
         }
 
 
