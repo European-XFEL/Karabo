@@ -334,7 +334,7 @@ namespace karabo {
 
             void writeAsync(const char* header, const size_t& hsize, const char* data, const size_t& dsize, int prio);
 
-            void doWrite(bool calledFromWriteasync);
+            void doWrite();
 
             void doWriteHandler(Message::Pointer& msg, boost::system::error_code, std::size_t length);
 
