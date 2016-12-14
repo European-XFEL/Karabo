@@ -10,6 +10,7 @@
 
 //#include <boost/enable_shared_from_this.hpp>
 
+#include <atomic>
 #include <karabo/io/TextSerializer.hh>
 #include <karabo/io/BinarySerializer.hh>
 
@@ -39,7 +40,6 @@ namespace karabo {
 
             TcpConnection::Pointer m_connectionPointer;
             boost::asio::io_service::strand m_readStrand;
-            boost::asio::io_service::strand m_writeStrand;
             boost::asio::ip::tcp::socket m_socket;
             HandlerType m_activeHandler;
             bool m_readHeaderFirst;
@@ -62,7 +62,7 @@ namespace karabo {
             boost::mutex m_queueMutex;
             std::vector<karabo::net::Queue::Pointer> m_queue;
             std::string m_policy;
-            bool m_writeInProgress;
+            std::atomic<bool> m_writeInProgress;
             bool m_quit;
 
         public:
@@ -335,8 +335,6 @@ namespace karabo {
             void writeAsync(const char* header, const size_t& hsize, const char* data, const size_t& dsize, int prio);
 
             void doWrite();
-
-            bool isEmpty();
 
             void doWriteHandler(Message::Pointer& msg, boost::system::error_code, std::size_t length);
 
