@@ -250,8 +250,9 @@ namespace karabo {
                 group.set("use", use);
             }
             m_groupDeviceMapping[group.get<std::string>("id")] = deviceId;
-            if (!group.has("expert"))
+            if (!group.has("expert")) {
                 group.set("expert", vector<Hash>());
+            }
             else {
                 vector<Hash>& v = group.get<vector < Hash >> ("expert");
                 for (size_t i = 0; i < v.size(); i++) v[i].set("use", false);
