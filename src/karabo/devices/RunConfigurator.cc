@@ -195,7 +195,7 @@ namespace karabo {
                 updateAvailableGroups();
 
                 //register monitor to device
-                remote().registerDeviceMonitor(deviceId, boost::bind(&RunConfigurator::deviceUpdatedHandler, this, _1, _2));
+                remote().registerDeviceMonitor(deviceId, karabo::util::bind_weak(&RunConfigurator::deviceUpdatedHandler, this, _1, _2));
 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "In newDeviceHandler:\n" << e;
@@ -240,7 +240,6 @@ namespace karabo {
 
         void RunConfigurator::updateGroupConfiguration(const std::string& deviceId, const karabo::util::Hash& update) {
 
-
             Hash& group = m_configurations[deviceId];
             if (group.empty() || update.empty()) {
                 remote().get(deviceId, "group", group);
@@ -257,9 +256,9 @@ namespace karabo {
                 vector<Hash>& v = group.get<vector < Hash >> ("expert");
                 for (size_t i = 0; i < v.size(); i++) v[i].set("use", false);
             }
-            if (!group.has("user"))
+            if (!group.has("user")) {
                 group.set("user", vector<Hash>());
-            else {
+            } else {
                 vector<Hash>& v = group.get<vector < Hash >> ("user");
                 for (size_t i = 0; i < v.size(); i++) v[i].set("use", false);
             }
@@ -303,65 +302,46 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "updateCompiledSourceList()  cursor : " << it->first << ", use : " << use;
 
                 vector<Hash>& expert = g.get<vector<Hash> >("expert");
-                for (size_t i = 0; i < expert.size(); i++) {
-                    expert[i].set("use", use);
-                    if (!use) continue;
-                    const string& src = expert[i].get<string>("source");
-                    const bool pipeline = (expert[i].hasAttribute("source", "pipeline") ? expert[i].getAttribute<bool>("source", "pipeline") : false);
-                    const string& type = expert[i].get<string>("type");
-                    const string& behavior = expert[i].get<string>("behavior");
-                    const bool monitored = expert[i].get<bool>("monitored");
-                    Hash h("source", src
-                           , "type", type
-                           , "behavior", behavior
-                           , "monitored", monitored
-                           , "use", use);
-                    h.setAttribute("source", "pipeline", pipeline);
-                    auto exIt = sources.find(src);
-                    if (exIt != sources.end()) {
-                        const std::string& exbehavior = exIt->second.get<std::string>("behavior");
-                        bool exmonitored = exIt->second.get<bool>("monitored");
-                        if (exmonitored) h.set("monitored", true);
-                        if (behavior == "init" || (behavior == "read-only" && exbehavior != "init")) {
-                            h.set("behavior", exbehavior);
-                        }
-                    }
-                    sources[src] = std::move(h);
-                }
+                createSource(expert, sources, use);
 
                 vector<Hash>& user = g.get<vector<Hash> >("user");
-                for (size_t ii = 0; ii < user.size(); ii++) {
-                    user[ii].set("use", use);
-                    if (!use) continue;
-                    const string& src = user[ii].get<string>("source");
-                    const bool pipeline = (user[ii].hasAttribute("source", "pipeline") ? user[ii].getAttribute<bool>("source", "pipeline") : false);
-                    const string& type = user[ii].get<string>("type");
-                    const string& behavior = user[ii].get<string>("behavior");
-                    const bool monitored = user[ii].get<bool>("monitored");
-                    Hash h("source", src
-                           , "type", type
-                           , "behavior", behavior
-                           , "monitored", monitored
-                           , "use", use);
-                    h.setAttribute("source", "pipeline", pipeline);
-                    auto exIt = sources.find(src);
-                    if (exIt != sources.end()) {
-                        const std::string& exbehavior = exIt->second.get<std::string>("behavior");
-                        bool exmonitored = exIt->second.get<bool>("monitored");
-                        if (exmonitored) h.set("monitored", true);
-                        if (behavior == "init" || (behavior == "read-only" && exbehavior != "init")) {
-                            h.set("behavior", exbehavior);
-                        }
-                    }
-                    sources[src] = std::move(h);
+                createSource(user, sources, use);
 
-                }
             }
             std::vector<Hash> sourceVec;
             for (auto it = sources.cbegin(); it != sources.cend(); ++it) {
                 sourceVec.push_back(it->second);
             }
             set("sources", sourceVec);
+        }
+
+
+        void RunConfigurator::createSource(std::vector<Hash>& data, std::map<std::string, Hash>& sources, bool use) {
+            for (size_t i = 0; i < data.size(); i++) {
+                data[i].set("use", use);
+                if (!use) continue;
+                const string& src = data[i].get<string>("source");
+                const bool pipeline = (data[i].hasAttribute("source", "pipeline") ? data[i].getAttribute<bool>("source", "pipeline") : false);
+                const string& type = data[i].get<string>("type");
+                const string& behavior = data[i].get<string>("behavior");
+                const bool monitored = data[i].get<bool>("monitored");
+                Hash h("source", src,
+                       "type", type,
+                       "behavior", behavior,
+                       "monitored", monitored,
+                       "use", use);
+                h.setAttribute("source", "pipeline", pipeline);
+                auto exIt = sources.find(src);
+                if (exIt != sources.end()) {
+                    const std::string& exbehavior = exIt->second.get<std::string>("behavior");
+                    bool exmonitored = exIt->second.get<bool>("monitored");
+                    if (exmonitored) h.set("monitored", true);
+                    if (behavior == "init" || (behavior == "read-only" && exbehavior != "init")) {
+                        h.set("behavior", exbehavior);
+                    }
+                }
+                sources[src] = std::move(h);
+            }
         }
 
 
