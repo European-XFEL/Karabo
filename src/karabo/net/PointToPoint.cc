@@ -70,7 +70,6 @@ namespace karabo {
 
         class PointToPoint::Consumer : public boost::enable_shared_from_this<PointToPoint::Consumer> {
 
-
             typedef std::map<std::string, ConsumeHandler> SlotInstanceIds;
             // Mapping signalInstanceId into signalConnectionString like "tcp://host:port" and set of pairs of slotInstanceId and ConsumeHandler
             typedef std::map<std::string, std::pair<std::string, SlotInstanceIds> > ConnectedInstances;
@@ -302,10 +301,9 @@ namespace karabo {
                                                             const std::string& signalInstanceId,
                                                             const std::string& signalConnectionString,
                                                             const karabo::net::Connection::Pointer& connection) {
-            if (ec.value() != 2 && ec.value() != 125) {
-                KARABO_LOG_FRAMEWORK_WARN << "Point-to-point connection to \"" << signalInstanceId << "\" using \"" << signalConnectionString
-                        << "\" failed.  Code " << ec.value() << " -- \"" << ec.message() << "\"";
-            }
+
+            KARABO_LOG_FRAMEWORK_WARN << "Point-to-point connection to \"" << signalInstanceId << "\" using \"" << signalConnectionString
+                    << "\" failed.  Code " << ec.value() << " -- \"" << ec.message() << "\"";
 
             karabo::net::Channel::Pointer channel;
             {
@@ -332,10 +330,10 @@ namespace karabo {
                                                          const std::string& signalConnectionString,
                                                          const karabo::net::Connection::Pointer& connection,
                                                          const karabo::net::Channel::Pointer& channel) {
-            if (ec.value() != 2 && ec.value() != 125) {
-                KARABO_LOG_FRAMEWORK_WARN << "karabo::net::Channel to \"" << signalConnectionString
-                        << "\" failed.  Code " << ec.value() << " -- \"" << ec.message() << "\"";
-            }
+            
+            KARABO_LOG_FRAMEWORK_WARN << "karabo::net::Channel to \"" << signalConnectionString
+                    << "\" failed.  Code " << ec.value() << " -- \"" << ec.message() << "\"";
+
             {
                 boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
 
@@ -349,7 +347,6 @@ namespace karabo {
                 if (ii != m_openConnections.end()) m_openConnections.erase(ii);
             }
             channel->close();
-            connection->stop();
         }
 
 
@@ -464,7 +461,9 @@ namespace karabo {
                     break;
                 }
             }
+            KARABO_LOG_FRAMEWORK_WARN << "Disconnect signal \"" << signalInstanceId << "\" from slot \"" << slotInstanceId << "\".";
             if (!found) {
+                KARABO_LOG_FRAMEWORK_WARN << "Close open TCP channel for signal connection : \"" << signalConnectionString << "\".";
                 channel->close();
                 connection->stop();
                 m_openConnections.erase(signalConnectionString);
@@ -484,6 +483,10 @@ namespace karabo {
                 channelErrorHandler(ec, signalConnectionString, connection, channel);
                 return;
             }
+            
+            // Re-register itself
+            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1, signalConnectionString,
+                                                               connection, channel, _2, _3));
             // Get signalInstancdId and slotInstanceIds from header
             const string& signalInstanceId = header->get<string>("signalInstanceId");
             const string& slotInstanceIdsString = header->get<string>("slotInstanceIds");
@@ -513,9 +516,6 @@ namespace karabo {
                 // call user callback of type "ConsumeHandler"
                 handler(header, body);
             }
-            // Re-register itself
-            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1, signalConnectionString,
-                                                               connection, channel, _2, _3));
         }
 
 

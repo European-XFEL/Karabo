@@ -66,6 +66,14 @@ deps:centos7:
   <<: *deps_build
   image: jwiggins/karabo-containers:centos-7
 
+test:ubuntu14:
+  <<: *mr_test_build
+  image: jwiggins/karabo-containers:ubuntu-14
+
+integration:ubuntu14:
+  <<: *integration_test_build
+  image: jwiggins/karabo-containers:ubuntu-14
+
 release:ubuntu14:
   <<: *release_build
   image: jwiggins/karabo-containers:ubuntu-14
@@ -87,10 +95,17 @@ release:centos7:
     - localedef -c -i en_US -f UTF-8 en_US.utf8
     - export LANG=en_US.UTF-8
 
-test:ubuntu14:
-  <<: *mr_test_build
+release:windowsGUI:
+  <<: *release_build
   image: jwiggins/karabo-containers:ubuntu-14
-
-integration:ubuntu14:
-  <<: *integration_test_build
-  image: jwiggins/karabo-containers:ubuntu-14
+  before_script:
+    - locale-gen en_US.UTF-8
+    - update-locale LANG=en_US.UTF-8
+  script:
+    - export REL_TAG=$CI_BUILD_REF_NAME
+    - export REL_ARTIFACT_DEST=karaboGui/KaraboGUI-$REL_TAG.win32.exe
+    - bash ./auto_build_all.sh Release --noDbInit --noBundle
+    - source karabo/activate
+    - cd build/python
+    - bash ./build.sh
+    - sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null KaraboGUI-*.exe xdata@exflserv05:/var/www/html/karabo/$REL_ARTIFACT_DEST

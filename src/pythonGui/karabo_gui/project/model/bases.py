@@ -6,9 +6,7 @@
 from abc import abstractmethod
 
 from PyQt4.QtGui import QStandardItem
-from traits.api import (
-    ABCHasStrictTraits, Instance, on_trait_change, Property
-)
+from traits.api import ABCHasStrictTraits, Instance, Property
 
 from karabo.common.project.api import BaseProjectObjectModel
 
@@ -72,9 +70,3 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
         if self._qt_item is None:
             self._qt_item = self.create_qt_item()
         return self._qt_item
-
-    @on_trait_change("model.simple_name")
-    def simple_name_change(self):
-        if not self.is_ui_initialized():
-            return
-        self.qt_item.setText(self.model.simple_name)

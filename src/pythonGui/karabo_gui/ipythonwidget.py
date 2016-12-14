@@ -8,11 +8,18 @@ import os
 import pickle
 import socket
 
-from ipykernel.inprocess.client import InProcessKernelClient
-from qtconsole.rich_jupyter_widget import RichJupyterWidget
-from qtconsole import kernel_mixins, inprocess
+try:
+    from ipykernel.inprocess.client import InProcessKernelClient
+    from qtconsole.rich_jupyter_widget import RichJupyterWidget
+    from qtconsole import kernel_mixins, inprocess
+except ImportError:
+    from IPython.kernel.inprocess.client import InProcessKernelClient
+    from IPython.qt.console.rich_ipython_widget import RichIPythonWidget \
+        as RichJupyterWidget
+    from IPython.qt import kernel_mixins, inprocess
 
-from karabo.middlelayer import Hash
+
+from karabo.middlelayer import Hash, State
 from karabo_gui.singletons.api import get_network
 from karabo_gui.topology import getDevice
 
@@ -27,6 +34,9 @@ class IPythonWidget(RichJupyterWidget):
         self.kernel_manager.start_kernel()
         self.kernel_client = self.kernel_manager.client()
         self.exit_requested.connect(self.stop)
+        # The following line avoids a bug in IPython's QtConsole
+        # see https://github.com/jupyter/qtconsole/issues/174
+        self.execute_on_complete_input = False
 
     def stop(self):
         self.kernel_client.stop_channels()
@@ -54,7 +64,7 @@ class KernelManager(kernel_mixins.QtKernelManagerMixin):
         hostname = socket.gethostname().replace(".", "_")
         network = get_network()
         self.name = "CLI-{}-{}".format(hostname, os.getpid())
-        network.onInitDevice("Karabo_MacroServer", "IPythonKernel", self.name,
+        network.onInitDevice("karabo/macroServer", "IPythonKernel", self.name,
                              Hash())
 
     def shutdown_kernel(self):
@@ -93,7 +103,7 @@ class KernelClient(inprocess.QtInProcessKernelClient):
             self.stdin_channel.receive)
 
     def onStateChanged(self, box, state, timestamp):
-        self.alive = state == "Running"
+        self.alive = State(state) is State.STARTED
         if self.alive:
             if not self.started:
                 self.start_channels()

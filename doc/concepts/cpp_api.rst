@@ -17,7 +17,7 @@ Benefits
 ++++++++
 
 The C++ API allows for statically typed, compile-time checked coding. Interfacing
-with hardware, which has fixed property types frequently benefits from this,
+with hardware which has fixed property types frequently benefits from this,
 as consistency checks of date types are enforced by the compiler.
 
 Additionally, depending on the task at hand a compiled device may also offer significant
@@ -31,8 +31,8 @@ Limitations
 +++++++++++
 
 The development cycles for compiled code tend to be longer, especially when
-heavy use of template mechanisms, as is the case for Karabo, is made.
-Additionally, more lines of code are frequently required in C++, than are
+heavy use is made of template mechanisms, as is the case for Karabo.
+Additionally, more lines of code are frequently required in C++ than are
 necessary for achieving the same functionality in Python.
 
 Programming Policies
@@ -81,19 +81,19 @@ guidelines are suggested:
   with `auto` if it aids readability. You do not specifically have to refactor
   otherwise working code though.
 
-- Do **not** use `std::shared_ptr`, we will continue to use `boost::shared_ptr`!
+- Do **not** use `std::shared_ptr`. We will continue to use `boost::shared_ptr`!
 
 - In general, if a `boost` and a `std`-library feature coexist
-  (smart pointers, mutices, bind, etc.), continue to use the boost implementation
+  (smart pointers, mutexes, bind, etc.), continue to use the boost implementation
   as we have done previously, especially if there is a risk that your new code
   needs to interact with existing code.
 
-- When using more „advanced“ features, like late return type declaration
+- When using more "advanced" features, like late return type declaration
   (`->decltype(foo)`), variadic templates or reference forwarding, add a short
   comment to these lines to aid people less experienced with C++11 features in
   the review.
 
-- We currently do not encourage to use newly introduced numerical types, e.g.
+- We currently do not encourage using newly introduced numerical types, e.g.
   `uint64_t` as the Karabo type system has not been fully prepared for them.
 
 Implementing Devices
@@ -280,7 +280,7 @@ is called-back by the configurator mechanism. Otherwise it is a regular construc
 
 	While still being constructed the device does not (fully) interact with the
 	distributed system. You should thus not have long running, or even blocking
-	code in the contructor. Such code belongs into initialization functions.
+	code in the constructor. Such code belongs in initialization functions.
 
 If you are managing your own threads in the device, which need joining or allocated
 heap memory that you need to free upon device destruction, the destructor is the place
@@ -308,7 +308,7 @@ change.
 
 .. note::
 
-    There is an exception to this policy, in that assingment may trigger an
+    There is an exception to this policy, in that assignment may trigger an
     action or state change but must be indicated by setting the ``setAndExecute``
     attribute on the property as detailed in Section :ref:`setandexecute`.
 
@@ -458,7 +458,7 @@ Now let us have a look at the implementation, here is the complete file
 	   // nothing else is possible during this state
 	   updateState(States::INIT);
 
-	   KARABO_LOG_INFO << "Connecting to conveyer hardware...";
+	   KARABO_LOG_INFO << "Connecting to conveyor hardware...";
 
 	   // Simulate some time it could need to connect and setup
 	   boost::this_thread::sleep(boost::posix_time::seconds(2));
@@ -477,7 +477,7 @@ Now let us have a look at the implementation, here is the complete file
 
 	   // If we do not stand still here that is an error
 	   if (currentSpeed > 0.0) {
-	       KARABO_LOG_ERROR << "Conveyer does not stand still at start-up";
+	       KARABO_LOG_ERROR << "Conveyor does not stand still at start-up";
 	       updateState(States::ERROR);
 	       return;
 	   }
@@ -567,10 +567,10 @@ The constructor
 
 
 does not deal with the provided configuration, despite calling the parent
-class' constructor with it (as is proper C++). This is completely fine for two reasons:
+class's constructor with it (as is proper C++). This is completely fine for two reasons:
 1. The provided configuration got validated BEFORE the constructor was even called.
-2. The Device<> base class manages the configuration (actually in form of a
-   :ref:`Hash <cppHash>`) and provides access to it with its getters and setters.
+2. The Device<> base class manages the configuration (actually in form of
+a  :ref:`Hash <cppHash>`) and provides access to it with its getters and setters.
 
 Of course you can create a member variable and assign it by using the value
 in the configuration passed, like:
@@ -588,7 +588,7 @@ should update it yourself in the postReconfiguration() function.
 
 	It is generally not recommended to keep any private members as copies of
 	configuration variables. Karabo's setters and getters will perform well enough
-	for most of use cases and assure that the device properties are kept syncronized
+	for most use cases and assure that the device properties are kept synchronized
 	with your configuration.
 
 As said before, no long lasting or even blocking activities should be
@@ -667,7 +667,7 @@ For this you can use the *has* function of the Hash object like here:
 As we only simulate a conveyor h/w, we send a message instead,
 pretending we did something. Messages using the KARABO_LOG\_ prefix
 will be visible to the users (distributed via the broker), they
-come in for categories DEBUG, INFO, WARN and ERROR.
+come in four categories: DEBUG, INFO, WARN and ERROR.
 
 ..warning::
 
@@ -685,8 +685,8 @@ practices for all call-back functions (mostly slots) of Karabo:
 2. Always update the state
 
 3. Only use try/catch blocks if you want to react on an exception
-   (by driving the device into *ERROR* state for example), else trust in Karabo in
-   handling them.
+   (by driving the device into *ERROR* state for example). Otherwise trust Karabo to
+   handle them.
 
 Now, in the initialize function (which is automatically called once the constructor
 finished execution)
@@ -698,7 +698,7 @@ finished execution)
         // nothing else is possible during this state
         updateState(States::INIT);
 
-        KARABO_LOG_INFO << "Connecting to conveyer hardware...";
+        KARABO_LOG_INFO << "Connecting to conveyor hardware...";
 
         // Simulate some time it could need to connect and setup
         boost::this_thread::sleep(boost::posix_time::seconds(2));
@@ -712,10 +712,10 @@ the following activity (namely connecting to the motor) may take some
 time (here simulated to be two seconds). Most importantly the GUI will
 be nicely graying out other buttons and informing the user what is
 happening. Once connected we internally call the stop command (in
-reality on should ask the hardware which state it is in an adapt
+reality one should ask the hardware which state it is in and adapt
 accordingly).
 
-We are almost done, start and stop are very similar and reset is
+We are almost done. Start and stop are very similar and reset is
 almost trivial, so lets only look
 at the start function:
 
@@ -730,7 +730,7 @@ at the start function:
 
         // If we do not stand still here that is an error
         if (currentSpeed > 0.0) {
-            KARABO_LOG_ERROR << "Conveyer does not stand still at start-up";
+            KARABO_LOG_ERROR << "Conveyor does not stand still at start-up";
             updateState(States::ERROR);
             return;
         }
@@ -760,7 +760,7 @@ about that using the intermediate state *STARTING*.
         updateState(States::STARTING); // use this if long-lasting work follows ...
 
 
-In the following lines you can see, how properties of your device (which must always be
+In the following lines you can see how properties of your device (which must always be
 part of the expectedParameters) can be read. A call to get is
 always thread-safe and always returns the latest value
 configured.
@@ -772,12 +772,12 @@ configured.
         float currentSpeed = get<float>("currentSpeed");
 
 The next part shows one example to potentially drive your device into an *ERROR* state.
-Here we check, whether the conveyer stands still before starting it.
+Here we check whether the conveyor stands still before starting it.
 Note the return statement to finish the execution of the function.
 
 The last part of the start function simulates the ramping up by giving several updates
 on the "currentSpeed" property with some fixed delay. Setting a property value like
-here for "currentSpeed" does two things, it updates the own device
-state and publishes this value to the broker, such that interested
+here for "currentSpeed" does two things: it updates its own device
+state and publishes this value to the broker so that interested
 clients will get an event.
 

@@ -7,7 +7,7 @@ from eulexistdb.exceptions import ExistDBException
 from lxml import etree
 
 from karabo.common.project.const import EXISTDB_INITIAL_VERSION
-from .util import assure_running
+from .util import assure_running, ProjectDBError
 from .dbsettings import DbSettings
 
 
@@ -419,20 +419,23 @@ class ProjectDatabase(ContextDecorator):
             # simple interface
             try:
                 item = self.dbhandle.getDoc(path).decode('utf-8')
-            except ExistDBException:
-                return "", -1
+            except ExistDBException as e:
+                raise ProjectDBError(e)
 
         else:
             query = """
             xquery version "3.0";
             import module namespace v="{vnamespace}";
-            return v:doc(doc('{path}'), {revision})
+            v:doc(doc('{path}'), {revision})
             """.format(vnamespace=self.vers_namespace, path=path,
                        revision=revision)
             try:
-                item = self.dbhandle.query(query).results[0]
-            except ExistDBException:
-                return "", -1
+                res = self.dbhandle.query(query).results
+                if len(res) == 0:
+                    raise ProjectDBError("No item found for this revision")
+                item = res[0]
+            except ExistDBException as e:
+                raise ProjectDBError(e)
 
         item = self._make_xml_if_needed(item)
         # add versioning info
@@ -481,7 +484,7 @@ class ProjectDatabase(ContextDecorator):
             let $uuids := {uuids}
             for $c at $i in collection("{path}/?select=*")
             where $c/*/@uuid = $uuids
-            return v:doc($c, $revs[index-of($uuids, data($c/*/@uuid))-1])
+            v:doc($c, $revs[index-of($uuids, data($c/*/@uuid))-1])
             """.format(vnamespace=self.vers_namespace, revs=tuple(revisions),
                        uuids=tuple(uuids), path=path)
 
@@ -536,8 +539,8 @@ class ProjectDatabase(ContextDecorator):
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name']}
                     for r in res.results]
-        except ExistDBException:
-            return []
+        except ExistDBException as e:
+                raise ProjectDBError(e)
 
     def _get_rev_info(self, path):
         return self.get_versioning_info(path)['revisions']

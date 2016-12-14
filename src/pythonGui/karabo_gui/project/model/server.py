@@ -156,6 +156,12 @@ class DeviceServerModelItem(BaseProjectTreeItem):
             return
         self.qt_item.setText(self.model.server_id)
 
+    @on_trait_change("model.simple_name")
+    def simple_name_change(self):
+        if not self.is_ui_initialized():
+            return
+        self.qt_item.setText(self.model.simple_name)
+
     @on_trait_change("model.status")
     def status_change(self):
         if not self.is_ui_initialized():

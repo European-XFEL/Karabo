@@ -113,7 +113,7 @@ class Macro(Device):
         accessMode=AccessMode.READONLY,
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    printno = Int32(
+    doNotCompressEvents = Int32(
         displayedName="Number of prints",
         description="The number of prints issued so far",
         defaultValue=0,
@@ -209,7 +209,7 @@ class Macro(Device):
 
     def printToConsole(self, data):
         self.print = data
-        self.printno += 1
+        self.doNotCompressEvents += 1
         self.update()
 
     @classmethod

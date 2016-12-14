@@ -39,6 +39,11 @@ export KARABO_BROKER="tcp://exfl-broker:7777"
 
 #export KARABO_BROKER_TOPIC=karabo
 
+################
+# Project DB   #
+################
+
+KARABO_PROJECT_DB_HOST="exflst105"
 
 #########################################
 # Kill Signal (used by karabo-stop)  #
@@ -65,9 +70,10 @@ START[4]="karabo-cppserver serverId=karabo/projectManager deviceClasses=ProjectM
 
 START[5]="karabo-cppserver serverId=karabo/alarmServer deviceClasses=AlarmService autoStart[0].AlarmService visibility=4 $logger"
 
+# karabo/macroServer is hard-coded in the GUI
 START[6]="karabo-middlelayerserver serverId=karabo/macroServer visibility=4"
 
-START[7]="karabo-pythonserver serverId=karabo/projectDBServer deviceClasses=ProjectManager autoStart[0].ProjectManager.deviceId=KaraboProjectDB visibility=4 $logger"
+START[7]="karabo-pythonserver serverId=karabo/projectDBServer deviceClasses=ProjectManager \"autoStart[0]={ProjectManager.host=$KARABO_PROJECT_DB_HOST ProjectManager.deviceId=KaraboProjectDB}\" visibility=4 $logger"
 
 ##############
 # Server C++ #

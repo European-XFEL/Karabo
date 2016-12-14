@@ -209,7 +209,7 @@ def new(args):
         run_cmd('git add .')
         run_cmd('git commit -m "Initial commit"')
         print('New device package was added to: {}'
-              .format(os.path.abspath(path)))
+              .format(os.getcwd()))
         print('Use: "git push -u origin master" if you want start versioning '
               'remotely')
 
@@ -263,8 +263,8 @@ def install_file(args):
     filename = os.path.join(INVOKE_DIR, args.filename)
     devices = parse_configuration_file(filename)
     for item in devices:
-        args['device'] = item[0]
-        args['tag'] = item[1]
+        args.device = item[0]
+        args.tag = item[1]
         install(args)
 
 
@@ -295,7 +295,7 @@ def uninstall_file(args):
     filename = os.path.join(INVOKE_DIR, args.filename)
     devices = parse_configuration_file(filename)
     for item in devices:
-        args['device'] = item[0]
+        args.device = item[0]
         uninstall(args)
 
 
@@ -328,8 +328,8 @@ def install_dependencies(args):
     print('Found dependencies:', dep_names)
     print('Automatically installing now.')
     for item in devices:
-        setattr(args, 'device', item[0])
-        setattr(args, 'tag', item[1])
+        args.device = item[0]
+        args.tag = item[1]
         install(args)
 
 

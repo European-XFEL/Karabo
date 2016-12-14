@@ -110,6 +110,8 @@ class ProjectManager(PythonDevice):
         # XXX: Leave these hardcoded until session tokens are working
         user, password = "admin", "karabo"
         host, port = self._getCurrentConfig()
+        if host != "localhost":
+            user = "karabo"
         db = ProjectDatabase(user, password,
                              server=host,
                              port=port,
@@ -193,17 +195,26 @@ class ProjectManager(PythonDevice):
         self._checkDbInitialized(token)
 
         loadedItems = []
+        exceptionReason = ""
+        success = True
         with self.user_db_sessions[token] as db_session:
             for item in items:
                 domain = item.get("domain")
                 uuid = item.get("uuid")
                 revision = item.get("revision", default=None)
-                xml, revision = db_session.load_item(domain, uuid, revision)
-                item.set("xml", xml)
-                item.set("revision", revision)
-                loadedItems.append(item)
+                try:
+                    xml, revision = db_session.load_item(domain, uuid, revision)
+                    item.set("xml", xml)
+                    item.set("revision", revision)
+                    loadedItems.append(item)
+                except ProjectDBError as e:
+                    exceptionReason = str(e)
+                    success = False
 
-        self.reply(Hash('items', loadedItems))
+
+        self.reply(Hash('items', loadedItems,
+                        'success', success,
+                        'reason', exceptionReason))
 
     def slotLoadItemsAndSubs(self, token, items):
         """
@@ -302,16 +313,24 @@ class ProjectManager(PythonDevice):
         self._checkDbInitialized(token)
 
         with self.user_db_sessions[token] as db_session:
-            res = db_session.list_items(domain, item_types)
-            resHashes = []
-            for r in res:
-                revisions = [dictToHash(rev) for rev in r['revisions']]
-                h = Hash('uuid', r['uuid'],
-                         'revisions', revisions,
-                         'item_type', r['item_type'],
-                         'simple_name', r['simple_name'])
-                resHashes.append(h)
-            self.reply(Hash('items', resHashes))
+            exceptionReason = ""
+            success = True
+            try:
+                res = db_session.list_items(domain, item_types)
+                resHashes = []
+                for r in res:
+                    revisions = [dictToHash(rev) for rev in r['revisions']]
+                    h = Hash('uuid', r['uuid'],
+                             'revisions', revisions,
+                             'item_type', r['item_type'],
+                             'simple_name', r['simple_name'])
+                    resHashes.append(h)
+            except ProjectDBError as e:
+                exceptionReason = str(e)
+                success = False
+            self.reply(Hash('items', resHashes,
+                            'success', success,
+                            'reason', exceptionReason))
 
     def slotListDomains(self, token):
         """

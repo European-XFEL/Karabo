@@ -13,7 +13,7 @@ from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
     UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
-    AccessLevel, AccessType, AssemblyRules, JmsConnection,
+    AccessLevel, AccessType, AssemblyRules, ChannelMetaData, JmsConnection,
     EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
     LeafType, loadFromFile, Logger, MetricPrefix, Priority,
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
@@ -655,7 +655,8 @@ class PythonDevice(NoFsm):
         """
 
         channel = self._ss.getOutputChannel(channelName)
-        meta = MemoryMetaData("{}:{}".format(self.deviceId, channelName), self._getActualTimestamp())
+        sourceName = "{}:{}".format(self.getInstanceId(), channelName)
+        meta = ChannelMetaData(sourceName, self._getActualTimestamp())
         channel.write(data, meta)
         channel.update()
 
