@@ -1,8 +1,22 @@
+"""\
+Useful commands in Karabo:
+==========================
+
+connectDevice(deviceId)
+  connect to a remote device, returns a proxy to it
+
+getDevices()
+  get a list of running devices
+
+instantiate(serverId, classId, deviceId, **kwargs)
+  instantiate a remote device
+
+shutdown(deviceId)
+  shut down a remote device
+"""
+
 try:
     from karabo._version import full_version as __version__
 except ImportError:
     # Don't cause a failure when running setup.py
     __version__ = ''
-
-__author__="Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__ ="$Jul 11, 2013 5:20:23 PM$"
