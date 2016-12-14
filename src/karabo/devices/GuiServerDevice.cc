@@ -79,8 +79,8 @@ namespace karabo {
 
             KARABO_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
-            registerSlot<std::string, std::string, karabo::util::Hash > (boost::bind(&GuiServerDevice::slotAlarmSignalsUpdate, this, _1, _2, _3), "slotAlarmSignalsUpdate");
-            registerSlot<karabo::util::Hash, std::string > (boost::bind(&GuiServerDevice::slotRunConfigSourcesUpdate, this, _1, _2), "slotRunConfigSourcesUpdate");
+            KARABO_SLOT(slotAlarmSignalsUpdate, std::string, std::string, karabo::util::Hash );
+            KARABO_SLOT(slotRunConfigSourcesUpdate, karabo::util::Hash, std::string);
             KARABO_SIGNAL("signalClientSignalsAlarmUpdate", Hash);
             KARABO_SIGNAL("signalClientRequestsAlarms");
 
