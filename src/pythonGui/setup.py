@@ -122,9 +122,10 @@ if __name__ == '__main__':
         metadata['package_dir'] = {'karabo': "../../src/pythonKarabo/karabo"}
         metadata['packages'].extend(
             ["karabo", "karabo.common", "karabo.common.scenemodel",
-             "karabo.common.project", "karabo.interactive",
-             "karabo.middlelayer_api", "karabo.middlelayer_api.newproject",
-             "karabo.packaging", "karabo.testing"]
+             "karabo.common.scenemodel.widgets", "karabo.common.project",
+             "karabo.interactive", "karabo.middlelayer_api",
+             "karabo.middlelayer_api.newproject", "karabo.packaging",
+             "karabo.testing"]
         )
         # Write out useful data
         with open('VERSION', 'w') as fp:
