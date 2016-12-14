@@ -33,7 +33,6 @@ safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
 
-    echo cmnd=$cmnd
     eval $cmnd
     ret_code=$?
     if [ $ret_code != 0 ]; then
@@ -88,7 +87,7 @@ mkdir -p $PACKAGEDIR
 mkdir -p $PACKAGEDIR/plugins
 mkdir -p $PACKAGEDIR/var/log
 mkdir -p $PACKAGEDIR/var/data
-
+mkdir -p $PACKAGEDIR/var/config
 
 # Version information
 echo $VERSION > $PACKAGEDIR/VERSION
@@ -159,6 +158,9 @@ cd ../
 #shell scripts - copy directly from src
 cd $BASEDIR/src/tools/scripts/
 cp -f * $PACKAGEDIR/bin
+if [ ! -e "$PACKAGEDIR/var/config/config" ]; then
+    cp config.orig $PACKAGEDIR/var/config/config
+fi
 cd -
 
 # Correct python interpreter path for scripts in 'bin' directory
