@@ -15,7 +15,7 @@ class KaraboStream:
     def write(self, data):
         try:
             get_event_loop().instance().printToConsole(data)
-        except (AttributeError, AssertionError):
+        except Exception:
             self.base.write(data)
 
     def flush(self):
