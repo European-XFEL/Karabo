@@ -1,6 +1,7 @@
 from asyncio import async, coroutine, get_event_loop
 from queue import Empty
 import pickle
+from textwrap import dedent
 
 from jupyter_client.blocking.channels import ZMQSocketChannel
 from jupyter_client.channels import HBChannel
@@ -28,6 +29,7 @@ class ChannelMixin(ZMQSocketChannel, ChannelABC):
                 msg = yield from loop.run_in_executor(None, self.get_msg,
                                                       True, 1)
                 self.call_handlers(pickle.dumps(msg))
+                self.device.doNotCompressEvents += 1
                 self.device.update()
             except Empty:
                 pass
@@ -62,6 +64,8 @@ class Client(KernelClient):
 
 
 class IPythonKernel(Device):
+    client = None
+
     archive = Bool(
         displayedName="Archive", accessMode=AccessMode.RECONFIGURABLE,
         assignment=Assignment.OPTIONAL, defaultValue=False)
@@ -70,19 +74,30 @@ class IPythonKernel(Device):
         accessMode=AccessMode.RECONFIGURABLE,
         requiredAccessLevel=AccessLevel.EXPERT)
     def shell(self, msg):
-        self.client.shell_channel.send(pickle.loads(msg))
+        if self.client is not None:
+            self.client.shell_channel.send(pickle.loads(msg))
 
     @VectorChar(
         accessMode=AccessMode.RECONFIGURABLE,
         requiredAccessLevel=AccessLevel.EXPERT)
     def iopub(self, msg):
-        self.client.iopub_channel.send(pickle.loads(msg))
+        if self.client is not None:
+            self.client.iopub_channel.send(pickle.loads(msg))
 
     @VectorChar(
         accessMode=AccessMode.RECONFIGURABLE,
         requiredAccessLevel=AccessLevel.EXPERT)
     def stdin(self, msg):
-        self.client.stdin_channel.send(pickle.loads(msg))
+        if self.client is not None:
+            self.client.stdin_channel.send(pickle.loads(msg))
+
+    doNotCompressEvents = Int32(
+        description=dedent("""\
+            Sending this expected parameter with the change of another
+            one prevents the GUI server from throtteling down fast changes"""),
+        accessMode=AccessMode.READONLY,
+        requiredAccessLevel=AccessLevel.EXPERT,
+        defaultValue=0)
 
     visibility = Int32(enum=AccessLevel, defaultValue=AccessLevel.ADMIN)
 
@@ -96,7 +111,8 @@ class IPythonKernel(Device):
         self.manager = KernelManager(client_factory=Client)
         self.manager.start_kernel(
             extra_arguments=["-c", "from karabo.middlelayer_api.cli import *",
-                             "--IPCompleter.limit_to__all__=True"])
+                             "--IPCompleter.limit_to__all__=True",
+                             "--matplotlib=inline"])
         self.client = self.manager.client()
         self.client.shell_channel.device = self
         self.client.iopub_channel.device = self
