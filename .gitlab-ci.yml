@@ -103,10 +103,9 @@ release:windowsGUI:
     - update-locale LANG=en_US.UTF-8
   script:
     - export REL_TAG=$CI_BUILD_REF_NAME
-    - export REL_ARTIFACT_DEST=karaboFramework/tags/$REL_TAG
+    - export REL_ARTIFACT_DEST=karaboGui/KaraboGUI-$REL_TAG.win32.exe
     - bash ./auto_build_all.sh Release --noDbInit --noBundle
     - source karabo/activate
     - cd build/python
     - bash ./build.sh
-    - sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null xdata@exflserv05 "mkdir -p /var/www/html/karabo/$REL_ARTIFACT_DEST"
-    - sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null *.exe xdata@exflserv05:/var/www/html/karabo/$REL_ARTIFACT_DEST
+    - sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null KaraboGUI-*.exe xdata@exflserv05:/var/www/html/karabo/$REL_ARTIFACT_DEST
