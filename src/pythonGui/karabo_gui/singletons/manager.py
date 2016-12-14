@@ -702,8 +702,9 @@ class Manager(QObject):
                     KaraboEventSender.AlarmDeviceUpdate, data))
 
     def _extractRunConfigurators(self):
-        """ This method extracts the existing devices of type ``AlarmService``
-            of the ``self.systemHash`` and returns the instance ids in a list.
+        """ This method extracts the existing devices of type
+            ``RunConfigurator of the ``self.systemHash`` and returns the
+            instance ids in a list.
          """
         instanceIds = []
         for deviceId, _, attrs in self.systemHash['device'].iterall():
