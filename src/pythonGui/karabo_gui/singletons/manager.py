@@ -390,6 +390,13 @@ class Manager(QObject):
             broadcast_event(KaraboBroadcastEvent(
                 KaraboEventSender.ShowAlarmServices, data))
 
+        instanceIds = self._extractRunConfigurators()
+        if instanceIds:
+            data = {'instanceIds': instanceIds}
+            # Create KaraboBroadcastEvent
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.AddRunConfigurator, data))
+
         # Tell the world about new devices
         devices, servers = _extract_topology_devices(systemTopology)
         data = {'devices': devices, 'servers': servers}
@@ -693,6 +700,21 @@ class Manager(QObject):
                         'alarm_type': aHash.get('type')}
                 broadcast_event(KaraboBroadcastEvent(
                     KaraboEventSender.AlarmDeviceUpdate, data))
+
+    def _extractRunConfigurators(self):
+        """ This method extracts the existing devices of type ``AlarmService``
+            of the ``self.systemHash`` and returns the instance ids in a list.
+         """
+        instanceIds = []
+        for deviceId, _, attrs in self.systemHash['device'].iterall():
+            classId = attrs.get("classId", "unknown-class")
+            if classId == 'RunConfigurator':
+                instanceIds.append(deviceId)
+        return instanceIds
+
+    def handle_runConfigSourcesInGroup(self, reply):
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.RunConfigSourcesUpdate, reply))
 
 
 # ------------------------------------------------------------------

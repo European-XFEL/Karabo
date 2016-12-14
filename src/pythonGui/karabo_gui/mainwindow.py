@@ -28,6 +28,7 @@ from karabo_gui.panels.navigationpanel import NavigationPanel
 from karabo_gui.panels.notificationpanel import NotificationPanel
 from karabo_gui.panels.placeholderpanel import PlaceholderPanel
 from karabo_gui.panels.projectpanel import ProjectPanel
+from karabo_gui.panels.runconfigpanel import RunConfigPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
 from karabo_gui.sceneview.api import SceneView
@@ -111,6 +112,11 @@ class MainWindow(QMainWindow):
                 data = event.data
                 self.removeAlarmServicePanels(data.get('instanceIds'))
                 return False
+            elif sender is KaraboEventSender.AddRunConfigurator:
+                data = event.data
+                self.addRunConfigPanel(data.get('instanceIds'))
+                return False
+
         return super(MainWindow, self).eventFilter(obj, event)
 
     def _setupActions(self):
@@ -234,6 +240,7 @@ class MainWindow(QMainWindow):
 
         # Container for all current alarm panels
         self.alarmPanels = {}
+        self.runConfigPanels = {}
 
         self.loggingPanel = LoggingPanel()
         self.scriptingPanel = ScriptingPanel()
@@ -443,10 +450,35 @@ class MainWindow(QMainWindow):
                 self.focusExistingTabWindow(self.outputTab, 'alarm_model',
                                             panel.alarm_model)
 
-    def removeAlarmServicePanels(self, instanceIds):
+    def _removeAlarmServicePanels(self, instanceIds):
         """ Remove alarm panels for the given ``instanceIds``."""
         for instId in instanceIds:
             self._removeAlarmPanel(instId)
+
+    def addRunConfigPanel(self, instanceIds):
+        for instId in instanceIds:
+            if instId not in self.runConfigPanels:
+                panel = RunConfigPanel(instId)
+
+                title = "Run configuration at {}".format(instId)
+                if len(self.runConfigPanels) == 0:
+                    title = "RunConfig"
+                divWidget = self.configurationTab.addDockableTab(panel, title,
+                                                                 self)
+                self.selectTabWindow(self.outputTab, divWidget)
+                self.runConfigPanels[instId] = panel
+
+    def removeRunConfigPanels(self, instanceIds):
+        """ Remove alarm panels for the given ``instanceIds``."""
+        for instId in instanceIds:
+             self._removeRunConfigPanel(instId)
+
+    def _removeRunConfigPanel(self, instanceId):
+         if instanceId in self.runConfigPanels:
+             panel = self.runConfigPanels[instanceId]
+             # Call closeEvent to unregister from broadcast events
+             panel.close()
+             self.configurationTab.removeDockableTab(panel)
 
     def addSceneView(self, sceneModel, project):
         """ Add a scene view to show the content of the given `sceneModel in

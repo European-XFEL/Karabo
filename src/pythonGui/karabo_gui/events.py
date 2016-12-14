@@ -8,6 +8,7 @@ from karabo_gui.singletons.api import get_mediator
 
 # Enum for karabo broadcast event senders
 class KaraboEventSender(Enum):
+    AddRunConfigurator = "Add run configurator"
     AlarmInitReply = "Alarm init reply"
     AlarmUpdate = "Alarm update"
     AlarmDeviceUpdate = "Alarm device update"
@@ -32,6 +33,7 @@ class KaraboEventSender(Enum):
     ProjectManagersList = "Project managers list"
     ProjectItemsLoaded = "Project items loaded"
     ProjectItemsSaved = "Project items saved"
+    RunConfigSourcesUpdate = "Run config sources in group received"
     ShowAlarmServices = "Show alarm services"
     ShowConfiguration = "Show configuration"
     ShowDevice = "Show device"
