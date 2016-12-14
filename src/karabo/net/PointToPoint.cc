@@ -302,10 +302,10 @@ namespace karabo {
                                                             const std::string& signalInstanceId,
                                                             const std::string& signalConnectionString,
                                                             const karabo::net::Connection::Pointer& connection) {
-            if (ec.value() != 2 && ec.value() != 125) {
+            //if (ec.value() != 2 && ec.value() != 125) {
                 KARABO_LOG_FRAMEWORK_WARN << "Point-to-point connection to \"" << signalInstanceId << "\" using \"" << signalConnectionString
                         << "\" failed.  Code " << ec.value() << " -- \"" << ec.message() << "\"";
-            }
+            //}
 
             karabo::net::Channel::Pointer channel;
             {
@@ -332,10 +332,11 @@ namespace karabo {
                                                          const std::string& signalConnectionString,
                                                          const karabo::net::Connection::Pointer& connection,
                                                          const karabo::net::Channel::Pointer& channel) {
-            if (ec.value() != 2 && ec.value() != 125) {
+            //if (ec.value() != 2 && ec.value() != 125) {
                 KARABO_LOG_FRAMEWORK_WARN << "karabo::net::Channel to \"" << signalConnectionString
                         << "\" failed.  Code " << ec.value() << " -- \"" << ec.message() << "\"";
-            }
+            //}
+
             {
                 boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
 
@@ -464,6 +465,7 @@ namespace karabo {
                     break;
                 }
             }
+            KARABO_LOG_FRAMEWORK_WARN << "*** PointToPoint::Consumer::disconnect *** found = " << found;
             if (!found) {
                 channel->close();
                 connection->stop();

@@ -1074,15 +1074,19 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const Message::Pointer& mp, int prio) {
-            {
-                boost::mutex::scoped_lock lock(m_queueMutex);
-                m_queue[prio]->push_back(mp);
+
+            boost::mutex::scoped_lock lock(m_queueMutex);
+            m_queue[prio]->push_back(mp);
+            //std::cout << "*** writeAsync m_writeInProgress = " << m_writeInProgress << std::endl;
+            if (!m_writeInProgress) {
+                m_writeInProgress = true;
+                EventLoop::getIOService().post(bind_weak(&TcpChannel::doWrite, this));
             }
-            doWrite(true);
         }
 
 
-        void TcpChannel::doWrite(bool isExternalCaller) {
+        void TcpChannel::doWrite() {
+
             try {
                 Message::Pointer mp;
                 {
@@ -1090,10 +1094,6 @@ namespace karabo {
                     for (int i = 9; i >= 0; --i) {
                         if (!m_queue[i] || m_queue[i]->empty()) continue;
                         mp = m_queue[i]->front();
-                        if (mp) {
-                            if (isExternalCaller && m_writeInProgress) return;
-                            m_writeInProgress = true;
-                        }
                         m_queue[i]->pop_front();
                         break;
                     }
@@ -1132,7 +1132,7 @@ namespace karabo {
 
         void TcpChannel::doWriteHandler(Message::Pointer& mp, boost::system::error_code ec, std::size_t length) {
             if (!ec) {
-                doWrite(false);
+                doWrite();
             } else {
                 KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::doWrite exception : " << ec.value() << " -- " << ec.message();
                 m_writeInProgress = false;
