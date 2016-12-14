@@ -1,14 +1,17 @@
-from functools import partial
+#############################################################################
+# Author: <steffen.hauf@xfel.eu>
+# Created on December 13, 2016
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
 from copy import copy
 
-from PyQt4.QtCore import pyqtSlot, QModelIndex, Qt
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QStandardItemModel, QVBoxLayout, QWidget,
-                         QStandardItem, QLabel, QAbstractItemView,
-                         QPushButton, QTreeView)
+                         QStandardItem, QLabel, QPushButton, QTreeView)
 
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
-                               broadcast_event, register_for_broadcasts,
+                               register_for_broadcasts,
                                unregister_from_broadcasts)
 from karabo_gui.singletons.api import get_network
 from karabo_gui.schema import Dummy
@@ -28,12 +31,10 @@ class RunConfigPanel(Dockable, QWidget):
         headers = ['source', 'type', 'behavior', 'monitor', 'access']
         self.groupModel = QStandardItemModel(0, len(headers), self.groupList)
 
-        for i, h in enumerate(headers):
-            self.groupModel.setHeaderData(i, Qt.Horizontal, h)
+        self.groupModel.setHorizontalHeaderLabels(headers)
 
         self.groupModel.itemChanged.connect(self.onGroupItemChanged)
         self.groupList.setModel(self.groupModel)
-
 
         self.pbSend = QPushButton("Send to DAQ")
         self.pbSend.clicked.connect(self.onPushToDaq)
@@ -49,19 +50,19 @@ class RunConfigPanel(Dockable, QWidget):
         # object and `self` are being destroyed when the GUI exists
         register_for_broadcasts(self)
 
+    def closeEvent(self, event):
+        unregister_from_broadcasts(self)
+
     def eventFilter(self, obj, event):
         """ Router for incoming broadcasts
         """
         if isinstance(event, KaraboBroadcastEvent):
             if event.sender is KaraboEventSender.DeviceStateChanged:
                 configuration = event.data.get('configuration')
-                if (configuration.classId == "RunConfigurator" and
-                    self.instanceId == configuration.id):
+                classId = configuration.classId
+                cid = configuration.id
+                if (classId == "RunConfigurator" and self.instanceId == cid):
                     self.updateConfig(configuration)
-            elif event.sender is KaraboEventSender.DeviceErrorChanged:
-                configuration = event.data.get('configuration')
-                is_changing = event.data.get('is_changing')
-                #self.onErrorState(configuration, is_changing)
             elif event.sender is KaraboEventSender.RunConfigSourcesUpdate:
                 senderId = event.data.get('instanceId')
                 if senderId != self.instanceId:
@@ -98,7 +99,6 @@ class RunConfigPanel(Dockable, QWidget):
 
         self.sendBox = config.getBox(["buildConfigurationInUse"])
 
-
     def _updateGroups(self):
         """
         Update the available run configuration groups list
@@ -125,7 +125,6 @@ class RunConfigPanel(Dockable, QWidget):
                 row = [QStandardItem(str(source.get(a))) for a in attrs]
                 item.appendRow(row)
 
-
     def onGroupItemChanged(self, item):
         """
         Called whenever the checked selection in the available groups changes.
@@ -135,21 +134,17 @@ class RunConfigPanel(Dockable, QWidget):
         """
         updates = copy(self.availableGroups)
 
-        selItem = None
         for i in range(self.groupModel.rowCount()):
             item = self.groupModel.item(i)
             if item is not None and item.text() in self.availableGroups:
                 updates[item.text()].set("use", bool(item.checkState()))
-                if item.checkState():
-                    selItem = item.text()
 
-        updateList = [i for k,i in updates.items()]
-        boxes = [(self.groupBox, updateList),]
+        updateList = [i for k, i in updates.items()]
+        boxes = [(self.groupBox, updateList), ]
         get_network().onReconfigure(boxes)
 
     def onPushToDaq(self):
         """
         Push the compiled source list to the DAQ service
-        :return:
         """
         self.sendBox.execute()

@@ -240,6 +240,7 @@ class MainWindow(QMainWindow):
 
         # Container for all current alarm panels
         self.alarmPanels = {}
+        # Container for all current run configuration panels
         self.runConfigPanels = {}
 
         self.loggingPanel = LoggingPanel()
@@ -450,7 +451,7 @@ class MainWindow(QMainWindow):
                 self.focusExistingTabWindow(self.outputTab, 'alarm_model',
                                             panel.alarm_model)
 
-    def _removeAlarmServicePanels(self, instanceIds):
+    def removeAlarmServicePanels(self, instanceIds):
         """ Remove alarm panels for the given ``instanceIds``."""
         for instId in instanceIds:
             self._removeAlarmPanel(instId)
@@ -469,16 +470,16 @@ class MainWindow(QMainWindow):
                 self.runConfigPanels[instId] = panel
 
     def removeRunConfigPanels(self, instanceIds):
-        """ Remove alarm panels for the given ``instanceIds``."""
+        """ Remove run config panels for the given ``instanceIds``."""
         for instId in instanceIds:
-             self._removeRunConfigPanel(instId)
+            self._removeRunConfigPanel(instId)
 
     def _removeRunConfigPanel(self, instanceId):
-         if instanceId in self.runConfigPanels:
-             panel = self.runConfigPanels[instanceId]
-             # Call closeEvent to unregister from broadcast events
-             panel.close()
-             self.configurationTab.removeDockableTab(panel)
+        if instanceId in self.runConfigPanels:
+            panel = self.runConfigPanels[instanceId]
+            # Call closeEvent to unregister from broadcast events
+            panel.close()
+            self.configurationTab.removeDockableTab(panel)
 
     def addSceneView(self, sceneModel, project):
         """ Add a scene view to show the content of the given `sceneModel in
