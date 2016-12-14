@@ -8,7 +8,7 @@ from io import StringIO
 import weakref
 
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
-from traits.api import Instance
+from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo_gui import icons
@@ -61,6 +61,12 @@ class SceneModelItem(BaseProjectTreeItem):
         data = {'model': self.model, 'project': parent_project}
         broadcast_event(KaraboBroadcastEvent(KaraboEventSender.OpenSceneView,
                                              data))
+
+    @on_trait_change("model.simple_name")
+    def simple_name_change(self):
+        if not self.is_ui_initialized():
+            return
+        self.qt_item.setText(self.model.simple_name)
 
     # ----------------------------------------------------------------------
     # action handlers
