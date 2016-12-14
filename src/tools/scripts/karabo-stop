@@ -121,16 +121,6 @@ while read line; do
                 currChildPids=( ${newChildPids[@]} )
             done
 
-            test $verbose && echo "Kill mainpid $mainPid."
-            if kill -${KARABO_KILL_SIGNAL} $mainPid 1>/dev/null 2>&1; then
-                killed=1
-                echo "INFO Killed $name (pid $mainPid)."
-            else
-                echo "WARNING Could not kill $name with pid $mainPid."
-                echo "        Probably it is already dead, i.e. one can "
-                echo "        remove that line from $info."
-                echo "        Descendants pids are \"${allPids[@]}\"."
-            fi
             # Kill all descendants from list created above.
             # Note: If new child processes are created after the list is built
             #       above, we do not explicitly kill them here.
@@ -154,6 +144,18 @@ while read line; do
                 # $newAllPidsFile (where master and children are in same line).
 	        sed -i "/$mainPid/d" $newAllPidsFile
             fi
+
+            test $verbose && echo "Kill mainpid $mainPid."
+            if kill -${KARABO_KILL_SIGNAL} $mainPid 1>/dev/null 2>&1; then
+                killed=1
+                echo "INFO Killed $name (pid $mainPid)."
+            else
+                echo "WARNING Could not kill $name with pid $mainPid."
+                echo "        Probably it is already dead, i.e. one can "
+                echo "        remove that line from $info."
+                echo "        Descendants pids are \"${allPids[@]}\"."
+            fi
+
         fi  # End of "We should kill something for this line ($killThis -eq 1)."
     fi  # End of "Line could be properly interpreted ."
 
