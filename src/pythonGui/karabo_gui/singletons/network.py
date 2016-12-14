@@ -486,6 +486,14 @@ class Network(QObject):
         h = Hash("type", "error", "traceback", error)
         self._tcpWriteHash(h)
 
+    # ---------------------------------------------------------------------
+    # Runconfiguration
+    def onSourcesInGroup(self, instanceId, group):
+        h = Hash("type", "runConfigSourcesInGroup")
+        h.set("runConfiguratorId", instanceId)
+        h.set("group", group)
+        self._tcpWriteHash(h)
+
 # --------------------------------------------------------------------------
 # private functions
 
