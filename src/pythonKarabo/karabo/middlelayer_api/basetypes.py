@@ -252,11 +252,6 @@ class StringlikeValue(KaraboValue):
         else:
             return super().__eq__(other)
 
-    @property
-    def value(self):
-        return self
-
-
 # if you override __eq__, __hash__ gets set to None to avoid incorrect
 # accidental inheritance. This fixes that.
 del BoolValue.__hash__
@@ -267,11 +262,17 @@ del StringlikeValue.__hash__
 @wrap_methods
 class VectorCharValue(StringlikeValue, bytes):
     """A VectorChar is a Python :class:`bytes` object"""
+    @property
+    def value(self):
+        return bytes(self)
 
 
 @wrap_methods
 class StringValue(StringlikeValue, str):
     """A StringValue is a Python :class:`str`."""
+    @property
+    def value(self):
+        return str(self)
 
 
 @wrap_methods
