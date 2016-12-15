@@ -1,19 +1,28 @@
 #############################################################################
-# Author: <kerstin.weger@xfel.eu>
-# Created on July 11, 2013
+# Author: <john.wiggins@xfel.eu>
+# Created on October 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
+from functools import partial
+
+from PyQt4.QtGui import QDialog, QStackedLayout, QWidget
 
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 import karabo_gui.icons as icons
-from karabo_gui.projecttreeview import ProjectTreeView
-from karabo_gui.singletons.api import get_manager
+from karabo.common.savable import clear_modified_flag
+from karabo_gui.actions import KaraboAction, build_qaction
+from karabo_gui.project.api import ProjectView
+from karabo_gui.project.dialog.project_handle import (
+    LoadProjectDialog, NewProjectDialog)
+from karabo_gui.project.utils import save_project
+from karabo_gui.singletons.api import get_db_conn
 
 
 class ProjectPanel(Dockable, QWidget):
+    """ A dockable panel which contains a view of the project
+    """
     def __init__(self):
         super(ProjectPanel, self).__init__()
 
@@ -24,78 +33,117 @@ class ProjectPanel(Dockable, QWidget):
         title = "Projects"
         self.setWindowTitle(title)
 
-        self.twProject = ProjectTreeView(self)
-        self.twProject.model().signalSelectionChanged.connect(
-            self.onSelectionChanged)
-        # Connect signal to get project available
-        manager = get_manager()
-        manager.signalAvailableProjects.connect(
-            self.twProject.onAvailableProjects)
-        manager.signalProjectLoaded.connect(self.twProject.onProjectLoaded)
-        manager.signalProjectSaved.connect(self.twProject.onProjectSaved)
+        self._toolbar_actions = []
 
-        mainLayout = QVBoxLayout(self)
-        mainLayout.setContentsMargins(5, 5, 5, 5)
-        mainLayout.addWidget(self.twProject)
-
-        self.setupActions()
+        self.project_view = ProjectView(parent=self)
+        layout = QStackedLayout(self)
+        layout.addWidget(self.project_view)
+        self.setLayout(layout)
 
     def eventFilter(self, obj, event):
         """ Router for incoming broadcasts
         """
         if isinstance(event, KaraboBroadcastEvent):
             if event.sender is KaraboEventSender.NetworkConnectStatus:
-                if not event.data['status']:
-                    # Don't show projects when there's no server connection
-                    self.closeAllProjects()
+                self._handle_network_status_change(event.data['status'])
             return False
         return super(ProjectPanel, self).eventFilter(obj, event)
 
-    def setupActions(self):
-        text = "New project"
-        self.acProjectNew = QAction(icons.new, "&New project", self)
-        self.acProjectNew.setStatusTip(text)
-        self.acProjectNew.setToolTip(text)
-        self.acProjectNew.setEnabled(False)
-        self.acProjectNew.triggered.connect(self.twProject.projectNew)
+    def _create_actions(self):
+        """ Create actions and return list of them"""
+        new = KaraboAction(
+            icon=icons.new,
+            text="&New Project",
+            tooltip="Create a New (Sub)project",
+            triggered=_project_new_handler,
+        )
+        load = KaraboAction(
+            icon=icons.load,
+            text="&Load Project",
+            tooltip="Load an Existing Project",
+            triggered=_project_load_handler,
+        )
+        save = KaraboAction(
+            icon=icons.save,
+            text="&Save Project",
+            tooltip="Save Project Snapshot",
+            triggered=_project_save_handler,
+        )
 
-        text = "Open project"
-        self.acProjectOpen = QAction(icons.load, "&Open project", self)
-        self.acProjectOpen.setStatusTip(text)
-        self.acProjectOpen.setToolTip(text)
-        self.acProjectOpen.setEnabled(False)
-        self.acProjectOpen.triggered.connect(self.twProject.projectOpen)
+        qactions = []
+        for k_action in (new, load, save):
+            q_ac = build_qaction(k_action, self)
+            q_ac.setEnabled(False)
+            item_model = self.project_view.model()
+            q_ac.triggered.connect(partial(k_action.triggered, item_model))
+            qactions.append(q_ac)
+        return qactions
 
-        text = "Save project"
-        self.acProjectSave = QAction(icons.save, "&Save project", self)
-        self.acProjectSave.setStatusTip(text)
-        self.acProjectSave.setToolTip(text)
-        self.acProjectSave.setEnabled(False)
-        self.acProjectSave.triggered.connect(self.twProject.projectSave)
+    def setupToolBars(self, toolbar, widget):
+        """ Setup the project specific toolbar """
+        self._toolbar_actions = self._create_actions()
+        for ac in self._toolbar_actions:
+            toolbar.addAction(ac)
 
-        text = "Save project as"
-        self.acProjectSaveAs = QAction(icons.saveAs, "&Save project as", self)
-        self.acProjectSaveAs.setStatusTip(text)
-        self.acProjectSaveAs.setToolTip(text)
-        self.acProjectSaveAs.setEnabled(False)
-        self.acProjectSaveAs.triggered.connect(self.twProject.projectSaveAs)
+    def onDock(self):
+        pass
 
-    def setupToolBars(self, standardToolBar, parent):
-        standardToolBar.addAction(self.acProjectNew)
-        standardToolBar.addAction(self.acProjectOpen)
-        standardToolBar.addAction(self.acProjectSave)
-        standardToolBar.addAction(self.acProjectSaveAs)
+    def onUndock(self):
+        pass
 
-    def closeAllProjects(self):
-        return self.twProject.closeAllProjects()
+    def _handle_network_status_change(self, status):
+        if not status:
+            # Don't show projects when there's no server connection
+            self.project_view.destroy()
 
-    def enableToolBar(self, enabled):
-        self.acProjectNew.setEnabled(enabled)
-        self.acProjectOpen.setEnabled(enabled)
+        for qaction in self._toolbar_actions:
+            qaction.setEnabled(status)
 
-    def modifiedProjects(self):
-        return self.twProject.modifiedProjects()
 
-    def onSelectionChanged(self, selectedIndexes):
-        self.acProjectSave.setEnabled(len(selectedIndexes) > 0)
-        self.acProjectSaveAs.setEnabled(len(selectedIndexes) > 0)
+def _project_load_handler(item_model):
+    """ Load a project model and assign it to the `item_model`
+
+    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
+    """
+    # XXX: HACK. This is only written this way to get _something_ loaded.
+    # It must change when integrating into the full GUI
+    from karabo.common.project.api import ProjectModel, read_lazy_object
+    from karabo_gui.project.api import TEST_DOMAIN
+    from karabo.middlelayer_api.newproject.io import read_project_model
+
+    dialog = LoadProjectDialog()
+    result = dialog.exec()
+    if result == QDialog.Accepted:
+        uuid, revision = dialog.selected_item()
+        if uuid is not None and revision is not None:
+            db_conn = get_db_conn()
+            model = ProjectModel(uuid=uuid, revision=revision)
+            read_lazy_object(TEST_DOMAIN, uuid, revision, db_conn,
+                             read_project_model, existing=model)
+            clear_modified_flag(model)
+            item_model.traits_data_model = model
+
+
+def _project_new_handler(item_model):
+    """ Create a new project model and assign it to the given `item_model`
+
+    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
+    """
+    from karabo.common.project.api import ProjectModel
+
+    dialog = NewProjectDialog()
+    if dialog.exec() == QDialog.Accepted:
+        # This overwrites the current model
+        model = ProjectModel(simple_name=dialog.simple_name, initialized=True,
+                             modified=True)
+        item_model.traits_data_model = model
+
+
+def _project_save_handler(item_model):
+    """ Save the project model of the given `item_model`
+
+    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
+    """
+    traits_model = item_model.traits_data_model
+    if traits_model is not None:
+        save_project(traits_model)

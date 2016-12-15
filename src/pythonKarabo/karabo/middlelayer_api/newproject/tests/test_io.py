@@ -86,11 +86,22 @@ def _write_project(project, devices, storage):
 
 # -----------------------------------------------------------------------------
 
+
 def test_simple_read():
     model = MacroModel(code='print(42)', initialized=True)
     xml = write_project_model(model)
     rmodel = read_project_model(StringIO(xml), existing=None)
     assert model.code == rmodel.code
+
+
+def test_invalid_read():
+    with _project_storage() as storage:
+        # Try to read something which is NOT THERE
+        project = ProjectModel(revision=5)
+        obj = read_lazy_object(TEST_DOMAIN, project.uuid, project.revision,
+                               storage, read_project_model, existing=project)
+        assert obj is project
+        assert not obj.initialized
 
 
 def test_save_project():

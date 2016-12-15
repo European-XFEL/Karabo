@@ -10,7 +10,7 @@ import os.path
 
 from PyQt4.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import (QAction, QActionGroup, QColor, QMainWindow, QMenu,
-                         QMessageBox, QSplitter, QToolButton, qApp)
+                         QSplitter, QToolButton, qApp)
 
 import karabo_gui.icons as icons
 from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
@@ -269,26 +269,7 @@ class MainWindow(QMainWindow):
         self._addPlaceholderMiddlePanel(False)
 
     def _quit(self):
-        # Check for project changes
-        projects = self.projectPanel.modifiedProjects()
-        if projects:
-            msgBox = QMessageBox(self)
-            msgBox.setWindowTitle("Save changes before closing")
-            msgBox.setText("Do you want to save your modified projects "
-                           "before closing?")
-            msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard |
-                                      QMessageBox.Cancel)
-            msgBox.setDefaultButton(QMessageBox.Save)
-
-            reply = msgBox.exec_()
-            if reply == QMessageBox.Cancel:
-                return False
-
-            if reply == QMessageBox.Discard:
-                for p in projects:
-                    p.setModified(False)
-
-        self.projectPanel.closeAllProjects()
+        # XXX: Check for project changes
         self.signalQuitApplication.emit()
 
         return True
@@ -303,8 +284,6 @@ class MainWindow(QMainWindow):
             # Add startup page
             self._createPlaceholderMiddlePanel()
 
-        # Enable or disable toolbar of project panel
-        self.projectPanel.enableToolBar(connectedToServer)
         # Remove all alarm panels
         if not connectedToServer:
             rm_keys = list(self.alarmPanels.keys())
@@ -497,7 +476,7 @@ class MainWindow(QMainWindow):
         # Add scene view to tab widget
         scenePanel = ScenePanel(sceneView, self.acServerConnect.isChecked())
         divWidget = self.middleTab.addDockableTab(
-            scenePanel, sceneModel.title, self)
+            scenePanel, sceneModel.simple_name, self)
         self.selectTabWindow(self.middleTab, divWidget)
 
     def addMacro(self, macroModel, project):
@@ -511,10 +490,10 @@ class MainWindow(QMainWindow):
 
         # Add the project name to the macro model because it is only needed
         # at instantiation time of the macro
-        macroModel.project_name = project.name
+        macroModel.project_name = project.simple_name
         macroPanel = MacroPanel(macroModel)
         divWidget = self.middleTab.addDockableTab(
-            macroPanel, macroModel.title, self)
+            macroPanel, macroModel.simple_name, self)
         self.selectTabWindow(self.middleTab, divWidget)
 
     def _updateScenes(self):

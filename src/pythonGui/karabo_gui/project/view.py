@@ -4,11 +4,14 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from functools import partial
+
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
 
 from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
+                               KaraboEventSender)
 from karabo_gui.project.utils import save_project
 from karabo_gui.singletons.api import get_project_model
 from .model.project import ProjectModelItem
@@ -46,6 +49,7 @@ class ProjectView(QTreeView):
     def destroy(self):
         """ Do some cleanup of the project's objects before death.
         """
+        self._cleanup_project(self.model().traits_data_model)
         self.model().traits_data_model = None
 
     # ----------------------------
@@ -116,6 +120,15 @@ class ProjectView(QTreeView):
             if reply == QMessageBox.Save:
                 save_project(project)
 
+    def _cleanup_project(self, project):
+        for scene in project.scenes:
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.RemoveSceneView, {'model': scene}))
+
+        for macro in project.macros:
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.RemoveMacro, {'model': macro}))
+
     def _close_project(self, project, parent_project):
         """ Close the given `project`
         """
@@ -128,6 +141,7 @@ class ProjectView(QTreeView):
             return
 
         self._save_project(project)
+        self._cleanup_project(project)
 
         if project is not parent_project:
             # A subproject

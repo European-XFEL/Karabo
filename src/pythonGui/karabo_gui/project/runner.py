@@ -7,12 +7,11 @@ import sys
 
 from PyQt4.QtGui import QApplication, QFrame, QHBoxLayout, QVBoxLayout
 
+from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.singletons.api import get_manager, get_network
-from .api import ProjectView
-from .panel import ProjectPanel
 
 
-def load_panel(project_view):
+def load_panel():
     import karabo_gui.icons as icons
     from karabo_gui.toolbar import ToolBar
 
@@ -38,14 +37,13 @@ def load_panel(project_view):
             self.toolBarLayout.addWidget(toolbar)
 
     icons.init()  # Very important!
-    return _Frame(ProjectPanel(project_view))
+    return _Frame(ProjectPanel())
 
 
 def main():
     app = QApplication(sys.argv)
 
-    project_view = ProjectView()
-    widget = load_panel(project_view)
+    widget = load_panel()
     widget.show()
     widget.resize(300, 500)
 

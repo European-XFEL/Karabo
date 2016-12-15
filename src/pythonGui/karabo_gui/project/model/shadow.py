@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from karabo_gui.project.topo_listener import SystemTopologyListener
-from .device import DeviceInstanceModelItem
+from .device import DeviceInstanceModelItem, destroy_device_shadow
 from .macro import MacroModelItem
 from .scene import SceneModelItem
 from .server import DeviceServerModelItem
@@ -75,7 +75,7 @@ def create_device_server_model_shadow(model):
     """
     shadow = DeviceServerModelItem(model=model,
                                    child_create=DeviceInstanceModelItem,
-                                   child_destroy=lambda x: None)
+                                   child_destroy=destroy_device_shadow)
     model.on_trait_change(shadow.items_assigned, 'devices')
     model.on_trait_change(shadow.items_mutated, 'devices_items')
     for device in model.devices:
