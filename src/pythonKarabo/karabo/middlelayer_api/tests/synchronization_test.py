@@ -3,7 +3,7 @@ from unittest import main
 import time
 
 from .eventloop import async_tst, DeviceTest, sync_tst
-from karabo.middlelayer import background, gather, sleep
+from karabo.middlelayer import background, gather, sleep, synchronous
 
 
 class Tests(DeviceTest):
@@ -158,6 +158,31 @@ class Tests(DeviceTest):
         sleep(6)
         self.assertGreater(time.time() - t, 6)
     test_sleep.slow = 1
+
+    @async_tst
+    def test_synchronous_async(self):
+        @synchronous
+        def f(arg):
+            nonlocal done
+            self.assertEqual(arg, 3)
+            done = True
+        done = False
+        yf = f(3)
+        yield from sleep(0.01)
+        self.assertFalse(done)
+        yield from yf
+        self.assertTrue(done)
+
+    @sync_tst
+    def test_synchronous_sync(self):
+        @synchronous
+        def f(arg):
+            nonlocal done
+            self.assertEqual(arg, 7)
+            done = True
+        done = False
+        f(7)
+        self.assertTrue(done)
 
 
 if __name__ == "__main__":
