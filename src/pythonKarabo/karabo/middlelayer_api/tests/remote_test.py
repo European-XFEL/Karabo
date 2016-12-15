@@ -259,12 +259,15 @@ class Tests(DeviceTest):
 
     @async_tst
     def test_set_local(self):
+        self.remote.unit_int = 3
         with self.assertRaises(DimensionalityError):
-            self.remote.unit_int = 3
+            self.remote.unit_int = 3 * unit.second / unit.second
+        self.remote.unit_float = 7.5
         with self.assertRaises(DimensionalityError):
-            self.remote.unit_float = 7.5
+            self.remote.unit_float = 7.5 * unit.m / unit.m
+        self.remote.unit_vector_int = [3, 4, 5]
         with self.assertRaises(DimensionalityError):
-            self.remote.unit_vector_int = [3, 4, 5]
+            self.remote.unit_vector_int = [3, 4, 5] * unit.m / unit.m
         with self.assertRaises(DimensionalityError):
             self.remote.unit_int = 3 * unit.second
         with self.assertRaises(DimensionalityError):
