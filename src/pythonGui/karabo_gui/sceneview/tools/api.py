@@ -1,15 +1,15 @@
-from .actions import (BoxVSceneAction, BoxHSceneAction, CreateToolAction,  # noqa
-                      GroupEntireSceneAction, GridSceneAction,  # noqa
-                      GroupSceneAction, SceneBringToFrontAction,  # noqa
-                      SceneSendToBackAction, UngroupSceneAction)  # noqa
-from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,  # noqa
-                        ScenePasteAction, ScenePasteReplaceAction,  # noqa
-                        SceneSelectAllAction)  # noqa
-from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,  # noqa
-                      TextSceneTool)  # noqa
-from .projecthandler import ProjectSceneHandler  # noqa
-from .selection import SceneSelectionTool  # noqa
-from .scenedndhandler import (ConfigurationDropHandler,  # noqa
-                              NavigationDropHandler)  # noqa
-from .widgethandler import WidgetSceneHandler  # noqa
-from .workflow import CreateWorkflowConnectionToolAction, WorkflowConnectionTool  # noqa
+# flake8: noqa
+from .actions import (BoxVSceneAction, BoxHSceneAction, CreateToolAction,
+                      GroupEntireSceneAction, GridSceneAction,
+                      GroupSceneAction, SceneBringToFrontAction,
+                      SceneSendToBackAction, UngroupSceneAction)
+from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,
+                        ScenePasteAction, ScenePasteReplaceAction,
+                        SceneSelectAllAction)
+from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,
+                      TextSceneTool)
+from .selection import SceneSelectionTool
+from .scenedndhandler import ConfigurationDropHandler
+from .widgethandler import WidgetSceneHandler
+from .workflow import (CreateWorkflowConnectionToolAction,
+                       WorkflowConnectionTool)

@@ -31,8 +31,7 @@ from karabo_gui.dialogs.monitordialog import MonitorDialog
 from karabo_gui.dialogs.scenedialog import SceneDialog
 from karabo_gui.guiproject import Category, Device, DeviceGroup, GuiProject
 from karabo_gui.events import (
-    broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
-    register_for_broadcasts)
+    broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.singletons.api import get_manager, get_network
 from karabo_gui.topology import getDevice
@@ -60,18 +59,6 @@ class ProjectModel(QStandardItemModel):
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
         self.setSupportedDragActions(Qt.CopyAction)
 
-        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
-        # not necessary for self due to the fact that the singleton mediator
-        # object and `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
-
-    def eventFilter(self, obj, event):
-        if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.OpenSceneLink:
-                data = event.data
-                self.openSceneLink(data.get("target"), data.get('project'))
-                return False
-        return super(ProjectModel, self).eventFilter(obj, event)
 
     def flags(self, index):
         flags = QStandardItemModel.flags(self, index)
