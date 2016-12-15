@@ -1,9 +1,11 @@
 """This module contains some synchronization routines for users"""
 
 import asyncio
-from asyncio import async, get_event_loop, iscoroutine
+from asyncio import (async, coroutine, get_event_loop, iscoroutine,
+                     iscoroutinefunction)
+from functools import wraps
 
-from .eventloop import KaraboFuture, synchronize
+from .eventloop import EventLoop, KaraboFuture, synchronize
 
 
 def background(task, *args, timeout=-1):
@@ -64,3 +66,27 @@ def sleep(delay, result=None):
     This method should be preferred over :func:`time.sleep`, as it is
     interruptable."""
     return asyncio.sleep(delay, result)
+
+
+def synchronous(func):
+    """Decorate a function to declare it synchronous
+
+    If you do not want to use ``yield from`` in your code, decorate it with
+    this. The code will be run in a separate thread.
+
+    However, if this code is called from asynchronous code, it has to be
+    yielded from!
+    """
+    @wraps(func)
+    def wrapper(*args):
+        @coroutine
+        def inner():
+            return (yield from background(func, *args))
+        loop = get_event_loop()
+        if loop is EventLoop.global_loop:
+            return inner()
+        else:
+            return func(*args)
+
+    assert not iscoroutinefunction(func)
+    return wrapper
