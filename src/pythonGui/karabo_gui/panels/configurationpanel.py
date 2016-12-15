@@ -18,7 +18,7 @@ from karabo_gui.events import (
 import karabo_gui.icons as icons
 from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.parametertreewidget import ParameterTreeWidget
-from karabo_gui.projecttreeview import ProjectTreeView
+from karabo_gui.project.view import ProjectView
 from karabo_gui.singletons.api import get_manager
 
 
@@ -51,9 +51,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.navSplitter.addWidget(self.twNavigation)
 
         # Project tree
-        self.twProject = ProjectTreeView(self)
-        self.twProject.model().signalItemChanged.connect(
-            self.onDeviceItemChanged)
+        self.twProject = ProjectView(parent=self)
         self.twProject.hide()
         self.navSplitter.addWidget(self.twProject)
 
@@ -647,16 +645,15 @@ class ConfigurationPanel(Dockable, QWidget):
         conf_type = self.prevConfiguration.type
         if conf_type == 'projectClass':
             project_device = self.prevConfiguration
+            hsh, _ = project_device.toHash()  # Ignore returned attributes
             get_manager().initDevice(project_device.serverId,
                                      project_device.classId,
                                      project_device.id,
-                                     project_device.toHash())
+                                     hsh)
             return
 
         if self.twNavigation.currentIndex().isValid():
             indexInfo = self.twNavigation.indexInfo()
-        elif self.twProject.currentIndex().isValid():
-            indexInfo = self.twProject.indexInfo()
         else:
             indexInfo = {}
             print("No device for initiation selected.")

@@ -38,7 +38,7 @@ class ProjectModelItem(BaseProjectTreeItem):
         return menu
 
     def create_qt_item(self):
-        item = QStandardItem(self.model.simple_name)
+        item = QStandardItem()
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         item.setIcon(icons.folder)
         item.setEditable(False)
@@ -48,16 +48,15 @@ class ProjectModelItem(BaseProjectTreeItem):
         font = item.font()
         font.setBold(True)
         item.setFont(font)
+        self._set_qt_item_text(item)
+
         return item
 
     @on_trait_change("model.simple_name")
     def simple_name_change(self):
         if not self.is_ui_initialized():
             return
-        if self.model.modified:
-            self.qt_item.setText("*{}".format(self.model.simple_name))
-        else:
-            self.qt_item.setText(self.model.simple_name)
+        self._set_qt_item_text(self.qt_item)
 
     @on_trait_change("model.modified")
     def modified_change(self):
@@ -65,17 +64,19 @@ class ProjectModelItem(BaseProjectTreeItem):
         if not self.is_ui_initialized():
             return
 
-        # Show modified flag on parent projects
-        brush = self.qt_item.foreground()
+        self._set_qt_item_text(self.qt_item)
+
+    def _set_qt_item_text(self, qt_item):
+        brush = qt_item.foreground()
         if self.model.modified:
             # Change color to blue
             brush.setColor(Qt.blue)
-            self.qt_item.setText("*{}".format(self.model.simple_name))
+            qt_item.setText("*{}".format(self.model.simple_name))
         else:
             # Change color to black
             brush.setColor(Qt.black)
-            self.qt_item.setText("{}".format(self.model.simple_name))
-        self.qt_item.setForeground(brush)
+            qt_item.setText("{}".format(self.model.simple_name))
+        qt_item.setForeground(brush)
 
     # ----------------------------------------------------------------------
     # action handlers

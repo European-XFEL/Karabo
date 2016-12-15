@@ -32,8 +32,7 @@ class ProjectDBCache(object):
         """
         path = self._generate_filepath(domain, uuid, revision)
         if not op.exists(path):
-            msg = 'Cache object for UUID: {} Revision: {} not found'
-            raise FileNotFoundError(msg.format(uuid, revision))
+            return None
 
         with open(path, mode='r') as fp:
             return fp.read()
