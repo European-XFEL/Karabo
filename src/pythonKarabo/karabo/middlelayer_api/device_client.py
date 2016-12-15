@@ -605,6 +605,8 @@ def getDevice(deviceId, *, sync=None, timeout=5):
             # do something with device
 
     On the command line, you might prefer using :func:`connectDevice`.
+
+    This is a synchronized coroutine.
     """
     if sync is None:
         sync = get_event_loop().sync_set
