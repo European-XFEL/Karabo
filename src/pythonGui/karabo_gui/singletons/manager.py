@@ -731,6 +731,11 @@ def _extract_topology_devices(topo_hash):
             status = attrs.get('status', 'ok')
             devices.append((device_id, class_id, status))
 
+    if 'macro' in topo_hash:
+        for device_id, _, attrs in topo_hash['macro'].iterall():
+            class_id = attrs.get('classId', 'unknown-class')
+            devices.append((device_id, class_id, 'ok'))
+
     if 'server' in topo_hash:
         for server_id, _, attrs in topo_hash['server'].iterall():
             host = attrs.get('host', 'UNKNOWN')
