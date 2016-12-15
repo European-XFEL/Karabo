@@ -290,7 +290,9 @@ class ProjectDatabase(ContextDecorator):
         xquery version "3.0";
         let $path := "{path}"
         {maybe_let}
-        return <items>{{for $doc in collection($path)
+        let $uuids := distinct-values(collection($path)/*/@uuid)
+        return <items>{{for $uuid in $uuids
+            for $doc in collection($path)[*/@uuid = $uuid][1]
             {maybe_where}
             return <item uuid="{{$doc/*/@uuid}}"
                          simple_name="{{$doc/*/@simple_name}}"
