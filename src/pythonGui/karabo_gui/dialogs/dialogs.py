@@ -3,7 +3,7 @@
 # Created on March 19, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
+from os import path
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QRegExp, Qt, QSize
@@ -11,7 +11,11 @@ from PyQt4.QtGui import (QDialogButtonBox, QColorDialog, QComboBox, QDialog,
                          QFontDialog, QFormLayout, QIcon, QPainter, QPalette,
                          QPen, QPixmap, QRegExpValidator, QTableWidgetItem,
                          QValidator)
-from os import path
+
+from karabo.common.project.api import walk_traits_object
+from karabo.common.scenemodel.api import SceneModel
+from karabo_gui.singletons.api import get_project_model
+
 
 class Validator(QValidator):
     def validate(self, input, pos):
@@ -274,16 +278,17 @@ class PenStyleComboBox(QComboBox):
 
         return QIcon(pix)
 
+
 class SceneLinkDialog(QDialog):
-    def __init__(self, sceneNames, target, parent=None):
+    def __init__(self, target, parent=None):
         super(SceneLinkDialog, self).__init__(parent=parent)
         uic.loadUi(path.join(path.dirname(__file__), 'scenelink.ui'), self)
 
         self._selectedScene = 0
-        self._sceneNames = sceneNames
+        self._sceneTargets = self._get_scenelink_targets()
         sceneCombo = self.sceneSelectCombo
-        for name in sceneNames:
-            sceneCombo.addItem(name)
+        for target in self._sceneTargets:
+            sceneCombo.addItem(target)
 
         targetIndex = sceneCombo.findText(target)
         if targetIndex > -1:
@@ -291,15 +296,31 @@ class SceneLinkDialog(QDialog):
 
         sceneCombo.setCurrentIndex(self._selectedScene)
 
+    def _get_scenelink_targets(self):
+        project = get_project_model().traits_data_model
+        if project is None:
+            return []
+
+        collected = set()
+
+        def visitor(obj):
+            nonlocal collected
+            if isinstance(obj, SceneModel):
+                target = "{}:{}:{}".format(obj.simple_name, obj.uuid,
+                                           obj.revision)
+                collected.add(target)
+
+        walk_traits_object(project, visitor)
+        return list(collected)
+
     @property
     def selectedScene(self):
-        if self._selectedScene == 0:
-            return ""
-        return self._sceneNames[self._selectedScene - 1]
+        return self._sceneTargets[self._selectedScene]
 
     @pyqtSlot(int)
     def on_sceneSelectCombo_currentIndexChanged(self, index):
         self._selectedScene = index
+
 
 class ReplaceDialog(QDialog):
 

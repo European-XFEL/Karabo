@@ -6,14 +6,11 @@
 from abc import abstractmethod
 
 from PyQt4.QtCore import QPoint
-from PyQt4.QtGui import QApplication, QBoxLayout, QDialog, QFont
+from PyQt4.QtGui import QBoxLayout, QFont
 from traits.api import ABCHasStrictTraits
 
 from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel
-from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.dialogs.devicedialogs import DeviceGroupDialog
 from karabo_gui.schema import ChoiceOfNodes
-from karabo_gui.singletons.api import get_manager
 from karabo_gui.topology import getDeviceBox
 from karabo_gui.widget import DisplayWidget, EditableWidget
 from .const import WIDGET_FACTORIES
@@ -100,69 +97,3 @@ class ConfigurationDropHandler(SceneDnDHandler):
                          layout_model)
 
         return layout_model
-
-
-class NavigationDropHandler(SceneDnDHandler):
-
-    def can_handle(self, event):
-        """ Check whether the drag event can be handled. """
-        sourceType = event.mimeData().data("sourceType")
-        if sourceType == "NavigationTreeView":
-            source = event.source()
-            item_type = source.indexInfo().get("type")
-            if item_type == NavigationItemTypes.CLASS:
-                return True
-        return False
-
-    def handle(self, scene_view, event):
-        """ Handle the drop event. """
-        source = event.source()
-        index_info = source.indexInfo()
-        server_id = index_info.get("serverId")
-        class_id = index_info.get("classId")
-
-        # Restore cursor for dialog input
-        QApplication.restoreOverrideCursor()
-        # Open dialog to set up new device (group)
-        dialog = DeviceGroupDialog(get_manager().systemHash)
-        # Set server and class id
-        dialog.serverId = server_id
-        dialog.classId = class_id
-
-        if dialog.exec_() == QDialog.Rejected:
-            event.accept()
-            return
-
-        device_id = dialog.deviceId
-        server_id = dialog.serverId
-        class_id = dialog.classId
-        ifexists = dialog.startupBehaviour
-        position = event.pos()
-
-        # Check whether an item for this device_id already exists
-        workflow_item_model = scene_view.workflow_model.get_item(device_id)
-        if workflow_item_model is not None:
-            scene_view.select_model(workflow_item_model)
-            event.accept()
-            return
-
-        project_handler = scene_view.project_handler
-        if not dialog.deviceGroup:
-            # Device
-            model = project_handler.create_device(device_id,
-                                                  server_id,
-                                                  class_id,
-                                                  ifexists,
-                                                  position)
-        else:
-            # Device Group
-            model = project_handler.create_device_group(dialog.deviceGroupName,
-                                                        server_id,
-                                                        class_id,
-                                                        ifexists,
-                                                        dialog.displayPrefix,
-                                                        dialog.startIndex,
-                                                        dialog.endIndex,
-                                                        position)
-        scene_view.add_models(model)
-        event.accept()

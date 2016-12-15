@@ -13,7 +13,8 @@ from PyQt4.QtGui import (QAction, QActionGroup, QColor, QMainWindow, QMenu,
                          QSplitter, QToolButton, qApp)
 
 import karabo_gui.icons as icons
-from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
+from karabo.common.project.api import walk_traits_object
+from karabo.common.scenemodel.api import SceneModel
 from karabo.middlelayer import AccessLevel
 from karabo_gui import globals
 from karabo_gui.const import ALARM_COLOR
@@ -32,7 +33,7 @@ from karabo_gui.panels.runconfigpanel import RunConfigPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
 from karabo_gui.sceneview.api import SceneView
-from karabo_gui.singletons.api import get_network
+from karabo_gui.singletons.api import get_network, get_project_model
 
 
 class MainWindow(QMainWindow):
@@ -73,50 +74,35 @@ class MainWindow(QMainWindow):
     def eventFilter(self, obj, event):
         if isinstance(event, KaraboBroadcastEvent):
             sender = event.sender
+            data = event.data
             if sender is KaraboEventSender.DeviceDataReceived:
                 self._updateScenes()
             elif sender is KaraboEventSender.OpenSceneView:
-                data = event.data
-                self.addSceneView(data.get('model'), data.get('project'))
-                return False
+                self.addSceneView(data.get('model'))
+            elif sender is KaraboEventSender.OpenSceneLink:
+                target = data.get('target')
+                self.addSceneView(self._load_scene_model(*target))
             elif sender is KaraboEventSender.RemoveSceneView:
-                data = event.data
                 self.removeMiddlePanel('scene_model', data.get('model'))
-                return False
             elif sender is KaraboEventSender.RenameSceneView:
-                data = event.data
                 self.renameMiddlePanel('scene_model', data.get('model'))
-                return False
             elif sender is KaraboEventSender.OpenMacro:
-                data = event.data
                 self.addMacro(data.get('model'), data.get('project'))
-                return False
             elif sender is KaraboEventSender.RemoveMacro:
-                data = event.data
                 self.removeMiddlePanel('macro_model', data.get('model'))
-                return False
             elif sender is KaraboEventSender.RenameMacro:
-                data = event.data
                 self.renameMiddlePanel('macro_model', data.get('model'))
-                return False
             elif sender is KaraboEventSender.ShowAlarmServices:
-                data = event.data
                 self.showAlarmServicePanels(data.get('instanceIds'))
-                return False
             elif sender in (KaraboEventSender.AlarmInitReply,
                             KaraboEventSender.AlarmUpdate):
-                data = event.data
                 self.showAlarmServicePanels([data.get('instanceId')])
-                return False
             elif sender is KaraboEventSender.RemoveAlarmServices:
-                data = event.data
                 self.removeAlarmServicePanels(data.get('instanceIds'))
-                return False
             elif sender is KaraboEventSender.AddRunConfigurator:
-                data = event.data
                 self.addRunConfigPanel(data.get('instanceIds'))
-                return False
 
+            return False
         return super(MainWindow, self).eventFilter(obj, event)
 
     def _setupActions(self):
@@ -274,6 +260,21 @@ class MainWindow(QMainWindow):
 
         return True
 
+    def _load_scene_model(self, uuid, revision):
+        found = None
+
+        def visitor(obj):
+            nonlocal found
+            if isinstance(obj, SceneModel):
+                if obj.uuid == uuid and obj.revision == revision:
+                    found = obj
+
+        project = get_project_model().traits_data_model
+        if project is None:
+            return None
+        walk_traits_object(project, visitor)
+        return found
+
     def _addPlaceholderMiddlePanel(self, connectedToServer):
         """The placholder for the middle panel is added.
 
@@ -295,36 +296,6 @@ class MainWindow(QMainWindow):
         """
         self.middleTab.removeDockableTab(self.placeholderPanel)
         self.placeholderPanel = None
-
-    def _readIconDataFromProject(self, sceneModel, project):
-        """ Go through the model tree to find existing icon models like
-        `DigitIconsModel`, `SelectionIconsModel`, `TextIconsModel` or
-        `DisplayIconsetModel` and use their `url` to load the actual image
-        data which is currently stored in the projects resources and put
-        them to the model data.
-
-        NOTE: This is only necessary for version 1 scene files. In newer
-        scene files, the `data` trait will already be initialized.
-        """
-        def _get_image_data(model):
-            if model.data:
-                return  # data trait is already set!
-            url = model.image
-            model.data = project.getURL(url)
-
-        def _update_icon_model(parent_model):
-            for child in parent_model.children:
-                if isinstance(child, BaseIconsModel):
-                    for icon_data in child.values:
-                        _get_image_data(icon_data)
-                elif isinstance(child, DisplayIconsetModel):
-                    _get_image_data(child)
-                else:
-                    if hasattr(child, "children"):
-                        _update_icon_model(child)
-
-        # Recursively set all icon model data
-        _update_icon_model(sceneModel)
 
     def checkAndRemovePlaceholderMiddlePanel(self):
         """ Remove placeholder from middle panel in case it makes sense.
@@ -460,20 +431,20 @@ class MainWindow(QMainWindow):
             panel.close()
             self.configurationTab.removeDockableTab(panel)
 
-    def addSceneView(self, sceneModel, project):
+    def addSceneView(self, sceneModel):
         """ Add a scene view to show the content of the given `sceneModel in
             the GUI.
         """
+        if sceneModel is None:
+            return
+
         self.checkAndRemovePlaceholderMiddlePanel()
         if self.focusExistingTabWindow(
                 self.middleTab, 'scene_model', sceneModel):
             return
 
-        # XXX: Set icon data to model, if existent (temporary solution)
-        self._readIconDataFromProject(sceneModel, project)
-        sceneView = SceneView(model=sceneModel, project=project)
-
         # Add scene view to tab widget
+        sceneView = SceneView(model=sceneModel, parent=self)
         scenePanel = ScenePanel(sceneView, self.acServerConnect.isChecked())
         divWidget = self.middleTab.addDockableTab(
             scenePanel, sceneModel.simple_name, self)

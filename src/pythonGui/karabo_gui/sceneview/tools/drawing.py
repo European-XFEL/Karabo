@@ -120,9 +120,7 @@ class SceneLinkTool(BaseSceneTool):
         """ A callback which is fired whenever the user ends a mouse click
         in the SceneView.
         """
-        project_handler = scene_view.project_handler
-        scenes = project_handler.get_scene_names()
-        dialog = SceneLinkDialog(scenes, "", parent=scene_view)
+        dialog = SceneLinkDialog("", parent=scene_view)
         result = dialog.exec_()
         if result == QDialog.Accepted:
             mouse_pos = event.pos()
