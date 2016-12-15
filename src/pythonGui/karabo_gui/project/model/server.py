@@ -210,7 +210,7 @@ class DeviceServerModelItem(BaseProjectGroupItem):
             config_model = DeviceConfigurationModel(
                 class_id=dialog.class_id, configuration=Hash(),
                 alias=dialog.alias, description=dialog.description,
-                initialized=True
+                initialized=True, modified=True
             )
             active_config_ref = (config_model.uuid, config_model.revision)
             traits = {
@@ -218,10 +218,11 @@ class DeviceServerModelItem(BaseProjectGroupItem):
                 'instance_id': dialog.instance_id,
                 'if_exists': dialog.if_exists,
                 'configs': [config_model],
-                'active_config_ref': active_config_ref
+                'active_config_ref': active_config_ref,
+                'initialized': True,
+                'modified': True,
             }
             device = DeviceInstanceModel(**traits)
-            device.modified = True
             self.model.devices.append(device)
 
     def _delete_all_devices(self):
