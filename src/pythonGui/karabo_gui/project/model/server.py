@@ -21,11 +21,11 @@ from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
 from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager
-from .bases import BaseProjectTreeItem
+from .bases import BaseProjectGroupItem
 from .device import DeviceInstanceModelItem
 
 
-class DeviceServerModelItem(BaseProjectTreeItem):
+class DeviceServerModelItem(BaseProjectGroupItem):
     """ A wrapper for DeviceServerModel objects
     """
     # Redefine model with the correct type
@@ -81,7 +81,7 @@ class DeviceServerModelItem(BaseProjectTreeItem):
 
         return item
 
-    def item_handler(self, event):
+    def item_handler(self, added, removed):
         """ Called for List-trait events on ``model`` (a DeviceServerModel)
 
         This notification handler is connected and disconnected in the
@@ -89,13 +89,13 @@ class DeviceServerModelItem(BaseProjectTreeItem):
         destroy_device_server_model_shadow functions.
         """
         removals = []
-        for model in event.removed:
+        for model in removed:
             item_model = self._child_map[model]
             self.children.remove(item_model)
             self.child_destroy(item_model)
             removals.append(item_model)
 
-        additions = [self.child_create(model=model) for model in event.added]
+        additions = [self.child_create(model=model) for model in added]
         self.children.extend(additions)
 
         # Synchronize the GUI with the Traits model
