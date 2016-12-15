@@ -315,9 +315,7 @@ class SceneLinkDialog(QDialog):
 
     @property
     def selectedScene(self):
-        if self._selectedScene == 0:
-            return ""
-        return self._sceneTargets[self._selectedScene - 1]
+        return self._sceneTargets[self._selectedScene]
 
     @pyqtSlot(int)
     def on_sceneSelectCombo_currentIndexChanged(self, index):
