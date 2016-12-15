@@ -32,6 +32,8 @@ def test_modified_flag():
 
     model.uuid = uuid.uuid4().hex
     assert model.modified
+    # Modifications bump the revision number
+    assert model.revision == 3
 
     model.modified = False
     assert not model.modified
