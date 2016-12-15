@@ -13,7 +13,6 @@ from functools import partial, wraps
 from io import BytesIO
 import logging
 import numbers
-import pint
 from struct import pack, unpack, calcsize
 import sys
 import weakref
@@ -158,10 +157,7 @@ class Simple(object):
     def toKaraboValue(self, data, strict=True):
         if self.enum is not None:
             return Enumable.toKaraboValue(self, data, strict)
-        if not strict or not self.dimensionality or isinstance(data, str):
-            data = basetypes.QuantityValue(data, descriptor=self)
-        elif not isinstance(data, basetypes.QuantityValue):
-            raise pint.DimensionalityError("no dimension", self.dimensionality)
+        data = basetypes.QuantityValue(data, descriptor=self)
         if data.units != self.units:
             data = data.to(self.units)
             data.descriptor = self
@@ -669,10 +665,7 @@ class NumpyVector(Vector):
     def toKaraboValue(self, data, strict=True):
         if not isinstance(data, basetypes.KaraboValue):
             data = self.cast(data)
-        if not strict or not self.dimensionality or isinstance(data, str):
-            data = basetypes.QuantityValue(data, descriptor=self)
-        elif not isinstance(data, basetypes.QuantityValue):
-            raise pint.DimensionalityError("no dimension", self.dimensionality)
+        data = basetypes.QuantityValue(data, descriptor=self)
         if data.units != self.units:
             data = data.to(self.units)
             data.descriptor = self
@@ -1284,7 +1277,7 @@ class None_(Type):
 
 def _gettype(data):
     try:
-        if isinstance(data, np.ndarray):
+        if isinstance(data, np.ndarray) and data.ndim == 1:
             return NumpyVector.vstrs[data.dtype.str]
         else:
             return Type.strs[data.dtype.str]

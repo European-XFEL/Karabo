@@ -128,12 +128,17 @@ class ProjectHandleDialog(QDialog):
 
 
 class NewProjectDialog(QDialog):
-    def __init__(self, title="New project", parent=None):
+    def __init__(self, model=None, parent=None):
         super(NewProjectDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'project_new.ui')
         uic.loadUi(filepath, self)
 
+        if model is None:
+            title = 'New project'
+        else:
+            title = 'Edit project'
+            self.leTitle.setText(model.simple_name)
         self.setWindowTitle(title)
 
     @property
