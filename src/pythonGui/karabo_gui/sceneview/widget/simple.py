@@ -106,11 +106,13 @@ class SceneLinkWidget(QPushButton):
 
     def _handle_click(self):
         if len(self.model.target) > 0:
-            # XXX: Remove reference to project and only use URL (which only
-            # points to the project where a scene is stored) in the future
-            scene_view = self.parent().parent()
-            project = scene_view.project_handler.project
-            data = {'target': self.model.target, 'project': project}
+            parts = self.model.target.split(':')
+            if len(parts) != 3:
+                return
+
+            # UUID, revision
+            target = (parts[1], int(parts[2]))
+            data = {'target': target}
             # Create KaraboBroadcastEvent
             broadcast_event(KaraboBroadcastEvent(
                 KaraboEventSender.OpenSceneLink, data))
@@ -135,9 +137,7 @@ class SceneLinkWidget(QPushButton):
         self.move(new_pos)
 
     def edit(self, scene_view):
-        project_handler = scene_view.project_handler
-        scenes = project_handler.get_scene_names()
-        dialog = SceneLinkDialog(scenes, self.model.target, parent=scene_view)
+        dialog = SceneLinkDialog(self.model.target, parent=scene_view)
         if dialog.exec() == QDialog.Rejected:
             return
 
