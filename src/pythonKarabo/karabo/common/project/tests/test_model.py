@@ -10,8 +10,8 @@ def test_project_modified_obj_check():
         if obj.modified:
             modified.append(obj)
 
-    macro = MacroModel(code="print('hello world')")
-    proj = ProjectModel(macros=[macro])
+    macro = MacroModel(code="print('hello world')", initialized=True)
+    proj = ProjectModel(macros=[macro], initialized=True)
 
     walk_traits_object(proj, find_modified)
     assert len(modified) == 0

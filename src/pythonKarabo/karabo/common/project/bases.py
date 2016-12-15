@@ -5,7 +5,7 @@
 #############################################################################
 import uuid
 
-from traits.api import Bool, Int, String
+from traits.api import Int, String
 
 from karabo.common.savable import BaseSavableModel
 from .const import EXISTDB_INITIAL_VERSION
@@ -20,9 +20,6 @@ class BaseProjectObjectModel(BaseSavableModel):
 
     # A description for this object
     description = String
-
-    # When False, the object is known to be uninitialized
-    initialized = Bool(False, transient=True)
 
     # Version and unique id
     revision = Int(EXISTDB_INITIAL_VERSION, transient=True)

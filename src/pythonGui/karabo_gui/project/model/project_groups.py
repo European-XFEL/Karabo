@@ -162,8 +162,8 @@ def _add_macro(project):
     dialog = MacroHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        macro = MacroModel(simple_name=dialog.simple_name, initialized=True)
-        macro.modified = True
+        macro = MacroModel(simple_name=dialog.simple_name, initialized=True,
+                           modified=True)
         project.macros.append(macro)
 
 
@@ -185,8 +185,8 @@ def _add_scene(project):
     dialog = SceneHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        scene = SceneModel(simple_name=dialog.simple_name, initialized=True)
-        scene.modified = True
+        scene = SceneModel(simple_name=dialog.simple_name, initialized=True,
+                           modified=True)
         project.scenes.append(scene)
 
 
@@ -212,9 +212,9 @@ def _add_server(project):
             'host': dialog.host,
             'description': dialog.description,
             'initialized': True,
+            'modified': True,
         }
         server = DeviceServerModel(**traits)
-        server.modified = True
         project.servers.append(server)
 
 
@@ -224,6 +224,6 @@ def _add_project(project):
     dialog = NewProjectDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        model = ProjectModel(simple_name=dialog.simple_name, initialized=True)
-        model.modified = True
+        model = ProjectModel(simple_name=dialog.simple_name, initialized=True,
+                             modified=True)
         project.subprojects.append(model)
