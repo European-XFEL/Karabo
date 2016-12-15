@@ -409,6 +409,11 @@ class QuantityValue(KaraboValue, Quantity):
     def value(self):
         return self.magnitude
 
+    def __index__(self):
+        if self.dimensionality:
+            raise pint.DimensionalityError("index must be dimensionless")
+        return self.magnitude.__index__()
+
     def __getattr__(self, attr):
         ret = super().__getattr__(attr)
         if callable(ret):
