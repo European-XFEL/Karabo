@@ -24,6 +24,8 @@ class Tests(TestCase):
         self.assertEqual(("abc" == s).timestamp, 3)
         self.assertEqual(s.descriptor, 5)
         self.assertEqual(s.timestamp, 3)
+        self.assertEqual(s.value, s)
+        self.assertIs(type(s.value), str)
 
         s2 = StringValue(s)
         self.assertTrue(s == s2)
@@ -38,6 +40,8 @@ class Tests(TestCase):
         self.assertFalse("ase" == b)
         self.assertEqual(b.descriptor, 7)
         self.assertEqual(b.timestamp, 2)
+        self.assertEqual(b.value, b)
+        self.assertIs(type(b.value), bytes)
 
         b2 = VectorCharValue(b)
         self.assertEqual(b, b2)
