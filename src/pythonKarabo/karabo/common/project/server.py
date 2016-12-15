@@ -48,7 +48,7 @@ class DeviceInstanceModel(BaseSavableModel):
                    if cnf.class_id == self.class_id]
         self.configs = configs
 
-    def _configs_changed(self, old, new):
+    def _configs_changed(self, name, old, new):
         """ Traits notification handler for list assignment
         """
         self._update_config_listeners(old, new)

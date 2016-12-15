@@ -21,10 +21,10 @@ from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.util import getOpenFileName
-from .bases import BaseProjectTreeItem
+from .bases import BaseProjectGroupItem, BaseProjectTreeItem
 
 
-class ProjectSubgroupItem(BaseProjectTreeItem):
+class ProjectSubgroupItem(BaseProjectGroupItem):
     """ A wrapper for ProjectModel subgroups (devices, scenes, macros, etc.)
     """
     # Redefine model with the correct type
@@ -67,20 +67,20 @@ class ProjectSubgroupItem(BaseProjectTreeItem):
             item.appendRow(child.qt_item)
         return item
 
-    def item_handler(self, event):
+    def item_handler(self, added, removed):
         """ Called for List-trait events on ``model`` (a ProjectModel)
 
         This notification handler is connected and disconnected in the
         create_project_model_shadow and destroy_project_model_shadow functions.
         """
         removals = []
-        for model in event.removed:
+        for model in removed:
             item_model = self._child_map[model]
             self.children.remove(item_model)
             self.child_destroy(item_model)
             removals.append(item_model)
 
-        additions = [self.child_create(model=model) for model in event.added]
+        additions = [self.child_create(model=model) for model in added]
         self.children.extend(additions)
 
         # Synchronize the GUI with the Traits model
