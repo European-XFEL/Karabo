@@ -46,6 +46,8 @@ from .middlelayer_api.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes
 )
 from .middlelayer_api.signalslot import Signal, SignalSlotable, slot, coslot
-from .middlelayer_api.synchronization import background, gather, sleep
+from .middlelayer_api.synchronization import (
+    background, gather, sleep, synchronous
+)
 from .middlelayer_api.timestamp import Timestamp
 from .middlelayer_api import numeric
