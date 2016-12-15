@@ -48,6 +48,9 @@ class BaseSavableModel(HasStrictTraits):
     # When True, the object contains unsaved data
     modified = Bool(False, transient=True)
 
+    # When False, the object has not been completely loaded
+    initialized = Bool(False, transient=True)
+
     def _anytrait_changed(self, name, old, new):
         """ Listen for changes to all non-transient, non-property traits and
         mark the object as modified accordingly.
@@ -67,7 +70,7 @@ class BaseSavableModel(HasStrictTraits):
         # copyable_trait_names() returns all the trait names which contain
         # data which should be persisted (or copied when making a deep copy).
         if name in self.copyable_trait_names():
-            self.modified = True
+            self.modified = self.initialized  # Iff we're initialized!
             self._manage_container_item_listeners(name, old, new)
 
     def _child_modification(self, modified):
