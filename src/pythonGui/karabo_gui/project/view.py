@@ -13,7 +13,7 @@ from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
                                KaraboEventSender)
 from karabo_gui.project.utils import save_project
-from karabo_gui.singletons.api import get_project_model
+from karabo_gui.singletons.api import get_manager, get_project_model
 from .model.project import ProjectModelItem
 from .model.project_groups import ProjectSubgroupItem
 
@@ -24,7 +24,9 @@ class ProjectView(QTreeView):
     def __init__(self, parent=None):
         super(ProjectView, self).__init__(parent)
 
-        self.setModel(get_project_model())
+        project_model = get_project_model()
+        self.setModel(project_model)
+        self.setSelectionModel(project_model.q_selection_model)
         self.selectionModel().selectionChanged.connect(self._selection_change)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -82,6 +84,9 @@ class ProjectView(QTreeView):
         if selected_item_model is not None:
             parent_project = self._parent_project(selected_item_model)
             selected_item_model.single_click(parent_project, parent=self)
+
+            # Clear the selection in the navigation panel
+            get_manager().systemTopology.selectionModel.clear()
 
     def _show_context_menu(self):
         """ Show a context menu for the currently selected item.
