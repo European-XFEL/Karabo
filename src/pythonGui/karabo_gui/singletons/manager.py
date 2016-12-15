@@ -27,7 +27,7 @@ from karabo_gui.events import (
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.navigationtreemodel import NavigationTreeModel
 from karabo_gui.projectmodel import ProjectModel
-from karabo_gui.singletons.api import get_network
+from karabo_gui.singletons.api import get_network, get_project_model
 from karabo_gui.topology import getClass
 from karabo_gui.util import (
     getOpenFileName, getSaveFileName, getSchemaAttributeUpdates)
@@ -205,7 +205,7 @@ class Manager(QObject):
         if not selected.indexes():
             return
 
-        self.projectTopology.selectionModel.clear()
+        get_project_model().q_selection_model.clear()
 
     def onProjectModelSelectionChanged(self, selected, deselected):
         """This slot is called whenever something of the project panel is
