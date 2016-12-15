@@ -201,16 +201,14 @@ class ProjectManager(PythonDevice):
             for item in items:
                 domain = item.get("domain")
                 uuid = item.get("uuid")
-                revision = item.get("revision", default=None)
+                revision = item.get("revision")
                 try:
-                    xml, revision = db_session.load_item(domain, uuid, revision)
+                    xml = db_session.load_item(domain, uuid, revision)
                     item.set("xml", xml)
-                    item.set("revision", revision)
                     loadedItems.append(item)
                 except ProjectDBError as e:
                     exceptionReason = str(e)
                     success = False
-
 
         self.reply(Hash('items', loadedItems,
                         'success', success,
@@ -240,21 +238,6 @@ class ProjectManager(PythonDevice):
         self._checkDbInitialized(token)
 
         loadedItems = []
-        with self.user_db_sessions[token] as db_session:
-            for item in items:
-                domain = item.get("domain")
-                uuid = item.get("uuid")
-                revision = item.get("revision", default=None)
-                list_tags = item.get("list_tags")
-                xml, revision = db_session.load_item(domain, uuid, revision)
-                item.set("xml", xml)
-                item.set("revision", revision)
-                loadedItems.append(item)
-                # load succeeded; check for children
-                if xml != "" and list_tags is not None:
-                    its = db_session.load_multi(domain, xml, list_tags)
-                    loadedItems.extend([dictToHash(it) for it in its])
-
         self.reply(Hash('items', loadedItems))
 
     def slotGetVersionInfo(self, token, items):
@@ -293,7 +276,7 @@ class ProjectManager(PythonDevice):
             for item in items:
                 domain = item.get("domain")
                 uuid = item.get("uuid")
-                vers = db_session.get_versioning_info_item(domain, uuid)
+                vers = db_session.get_versioning_info(domain, uuid)
                 # now convert the dict into a Hash
                 versionInfos.set(uuid, dictToHash(vers))
 
@@ -315,9 +298,9 @@ class ProjectManager(PythonDevice):
         with self.user_db_sessions[token] as db_session:
             exceptionReason = ""
             success = True
+            resHashes = []
             try:
                 res = db_session.list_items(domain, item_types)
-                resHashes = []
                 for r in res:
                     revisions = [dictToHash(rev) for rev in r['revisions']]
                     h = Hash('uuid', r['uuid'],

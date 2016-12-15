@@ -5,7 +5,7 @@
 #############################################################################
 import uuid
 
-from traits.api import Bool, Dict, Int, String
+from traits.api import Bool, Int, String
 
 from karabo.common.savable import BaseSavableModel
 from .const import EXISTDB_INITIAL_VERSION
@@ -29,9 +29,6 @@ class BaseProjectObjectModel(BaseSavableModel):
     uuid = String
     # Per-revision alias (for the humans!)
     alias = String(transient=True)
-
-    # Database-provided attributes which need to be preserved
-    db_attrs = Dict(transient=True)
 
     def _uuid_default(self):
         """If a uuid isn't supplied, generate one
