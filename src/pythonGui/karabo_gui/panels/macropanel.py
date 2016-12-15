@@ -104,9 +104,9 @@ class MacroPanel(Dockable, QSplitter):
     def onRun(self):
         self.console.clear()
         try:
-            compile(self.macro_model.code, self.macro_model.title, "exec")
+            compile(self.macro_model.code, self.macro_model.simple_name, "exec")
         except SyntaxError as e:
-            if e.filename[7:-3] == self.macro_model.title:
+            if e.filename[7:-3] == self.macro_model.simple_name:
                 c = self.teEditor.textCursor()
                 c.movePosition(c.Start)
                 c.movePosition(c.Down, n=e.lineno - 1)
@@ -118,10 +118,10 @@ class MacroPanel(Dockable, QSplitter):
                                 e.lineno))
         else:
             instance_id = self.macro_model.instance_id
-            macro_instance = getDevice(instance_id)
+            getDevice(instance_id)
             h = Hash("code", self.macro_model.code,
-                     "module", self.macro_model.title,
-                     "project", self.macro_model.project_name)
+                     "module", self.macro_model.simple_name,
+                     "uuid", self.macro_model.uuid)
             get_network().onInitDevice("karabo/macroServer", "MetaMacro",
                                        instance_id, h)
 
@@ -130,7 +130,7 @@ class MacroPanel(Dockable, QSplitter):
                 caption="Save macro to file",
                 filter="Python files (*.py)",
                 suffix="py",
-                selectFile=self.macro_model.title + ".py")
+                selectFile=self.macro_model.simple_name + ".py")
         if not fn:
             return
 

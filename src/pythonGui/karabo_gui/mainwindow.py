@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
             elif sender is KaraboEventSender.RenameSceneView:
                 self.renameMiddlePanel('scene_model', data.get('model'))
             elif sender is KaraboEventSender.OpenMacro:
-                self.addMacro(data.get('model'), data.get('project'))
+                self.addMacro(data.get('model'))
             elif sender is KaraboEventSender.RemoveMacro:
                 self.removeMiddlePanel('macro_model', data.get('model'))
             elif sender is KaraboEventSender.RenameMacro:
@@ -353,9 +353,9 @@ class MainWindow(QMainWindow):
         if divWidget is not None:
             index = self.middleTab.indexOf(divWidget)
             # Update title - important for undocked widgets
-            divWidget.updateTitle(model.title)
+            divWidget.updateTitle(model.simple_name)
             if index > -1:
-                self.middleTab.setTabText(index, model.title)
+                self.middleTab.setTabText(index, model.simple_name)
 
     def removeMiddlePanel(self, child_type, model):
         """ The middle panel for the given ``model`` is removed.
@@ -450,7 +450,7 @@ class MainWindow(QMainWindow):
             scenePanel, sceneModel.simple_name, self)
         self.selectTabWindow(self.middleTab, divWidget)
 
-    def addMacro(self, macroModel, project):
+    def addMacro(self, macroModel):
         """ Add a macro pane to show the content of the given `macroModel in
             the GUI.
         """
@@ -459,9 +459,6 @@ class MainWindow(QMainWindow):
                 self.middleTab, 'macro_model', macroModel):
             return
 
-        # Add the project name to the macro model because it is only needed
-        # at instantiation time of the macro
-        macroModel.project_name = project.simple_name
         macroPanel = MacroPanel(macroModel)
         divWidget = self.middleTab.addDockableTab(
             macroPanel, macroModel.simple_name, self)
