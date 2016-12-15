@@ -320,6 +320,11 @@ def synchronize(coro):
     @wraps(coro)
     def wrapper(*args, timeout=-1, wait=True, **kwargs):
         return get_event_loop().sync(coro(*args, **kwargs), timeout, wait)
+
+    if wrapper.__doc__ is not None:
+        if not wrapper.__doc__[-1] == "\n":
+            wrapper.__doc__ += "\n"
+        wrapper.__doc__ += "\nThis is a synchronized coroutine.\n"
     return wrapper
 
 
