@@ -1,19 +1,17 @@
 import os
-import time
 from contextlib import ContextDecorator
+from time import gmtime, strftime
 
-from eulexistdb import db
+from eulexistdb.db import ExistDB
 from eulexistdb.exceptions import ExistDBException
 from lxml import etree
 
-from karabo.common.project.const import EXISTDB_INITIAL_VERSION
+from karabo.common.project.api import EXISTDB_INITIAL_VERSION
 from .util import assure_running, ProjectDBError
 from .dbsettings import DbSettings
 
 
 class ProjectDatabase(ContextDecorator):
-
-    vers_namespace = "http://exist-db.org/versioning"
 
     def __init__(self, user, password, server=None, port=None,
                  test_mode=False):
@@ -43,13 +41,13 @@ class ProjectDatabase(ContextDecorator):
             port = os.getenv('KARABO_PROJECT_DB_PORT', 8080)
 
         self.settings = DbSettings(user, password, server, port)
-        self.root = self.settings.root_collection if not test_mode else\
-            self.settings.root_collection_test
+        self.root = (self.settings.root_collection if not test_mode else
+                     self.settings.root_collection_test)
 
     def __enter__(self):
             # assure there is a database running where we assume one would be
             assure_running(self.settings.server, self.settings.port)
-            self.dbhandle = db.ExistDB(self.settings.server_url)
+            self.dbhandle = ExistDB(self.settings.server_url)
             return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -126,34 +124,12 @@ class ProjectDatabase(ContextDecorator):
 
         raise AttributeError("Cannot handle type {}".format(type(xml_rep)))
 
-    def get_versioning_info_item(self, domain, item):
-        """
-        Returns the versioning info for an item identified by its uuid
-        :param domain: domain item is located at
-        :param item: to retrieve versioning info for
-        :return: see :ref:`get_versioning_info`
-        """
-
-        # path to where the possible entries are located
-        path = "{}/{}".format(self.root, domain)
-
-        query = """
-                xquery version "3.0";
-                for $c at $i in collection("{path}?select=*")
-                where $c/*/@uuid = "{uuid}"
-                return document-uri($c)
-                """.format(path=path, uuid=item)
-        try:
-            res = self.dbhandle.query(query)
-            return self.get_versioning_info(res.results[0].text)
-        except ExistDBException:
-            return {}
-
-    def get_versioning_info(self, path):
+    def get_versioning_info(self, domain, item):
         """
         Returns a dict object containing the versioning info for a given
         path.
-        :param path: path to item for which versioning information is to be
+        :param domain: domain of ``item``
+        :param item: UUID of the item for which versioning information is to be
                      extracted
         :return: a dict with the following entries:
                 document: the path of the document
@@ -172,70 +148,37 @@ class ProjectDatabase(ContextDecorator):
                  RuntimeError: if versioning information could not be extracted
                  from the query results.
         """
+        # path to where the possible entries are located
+        path = "{}/{}".format(self.root, domain)
+        query = """
+        xquery version "3.0";
 
-        query = ('import module namespace v="{}";'
-                 'v:history(doc("{}"))'.format(self.vers_namespace, path))
-        result = self.dbhandle.query(query)
-        if result.count != 1 or result.hits != 1:
-            raise RuntimeError("Expected exactly one result when querying"
-                               "version information for {}, but got {} hits"
-                               "and {} count"
-                               .format(path, result.hits, result.count))
+        let $uuid := "{uuid}"
+        let $path := "{path}"
 
-        # process result
-        rdict = {}
-        rxml = result.results[0]
+        return <versions>{{for $doc in collection($path)
+                           where $doc/*/@uuid = $uuid
+                           return <version revision="{{$doc/*/@revision}}"
+                                           user= "{{$doc/*/@user}}"
+                                           date="{{$doc/*/@date}}"
+                                           alias="{{$doc/*/@alias}}" />
+                           }}</versions>
+        """.format(uuid=item, path=path)
+
         try:
-            rdict["document"] = rxml.find(self._add_vers_ns('document')).text
-            rdict["revisions"] = self._revision_xml_to_dict(rxml)
+            res = self.dbhandle.query(query)
+            rxml = res.results[0]
+        except ExistDBException as e:
+            raise ProjectDBError(e)
 
-            # get alias information
-            revs = [str(r["revision"]) for r in rdict["revisions"]]
-            if len(revs) > 0:
-                revsstr = "({})".format(",".join(revs))
-                query = """
-                        import module namespace v="{ns}";
-                        let $revisions := {revs}
-                        for $rev in $revisions
-                        return  <entry rev="{{$rev}}">{{v:doc(doc("{path}"),
-                        $rev)/@alias}}</entry>
-                        """.format(ns=self.vers_namespace, revs=revsstr,
-                                   path=path)
-
-                result = self.dbhandle.query(query)
-                res = result.results
-                aliases = {}
-                for e in res:
-                    aliases[e.attrib['rev']] = e.attrib.get('alias',
-                        str(e.attrib['rev']))
-                for r in rdict["revisions"]:
-                    rstr = str(r['revision'])
-                    r["alias"] = aliases.get(rstr, rstr)
-
-        except AttributeError:
-            raise RuntimeError("Could not extract versioning information for"
-                               " item at path {}".format(path))
-
-        return rdict
-
-    def _revision_xml_to_dict(self, rxml):
-        """ Strip revision data from given ``rxml`` and it return it
-
-        :param rxml: The revision related xml
-        :return: List of dicts containing revision data
-        """
-        rlist = []
-        revisions = rxml.find(self._add_vers_ns('revisions'))
-        for revision in revisions.getchildren():
-            rentry = {}
-            rentry['revision'] = int(revision.attrib['rev'])
-            rentry['date'] = revision.find(self._add_vers_ns('date')).text
-            rentry['user'] = revision.find(self._add_vers_ns('user')).text
-            rlist.append(rentry)
-        return rlist
-
-    def _add_vers_ns(self, element):
-        return "{" + self.vers_namespace + "}" + element
+        doc = self._make_xml_if_needed(rxml)
+        revisions = [{'revision': int(c.get('revision')),
+                      'user': c.get('user'),
+                      'date': c.get('date'),
+                      'alias': c.get('alias', c.get('revision'))}
+                     for c in doc.getchildren()]
+        return {'document': "{}/{}".format(path, item),
+                'revisions': revisions}
 
     def save_item(self, domain, uuid, item_xml, overwrite=False):
         """
@@ -278,225 +221,57 @@ class ProjectDatabase(ContextDecorator):
         if not self.domain_exists(domain):
             self.add_domain(domain)
 
-        path = "{}/{}/{}".format(self.root, domain, uuid)
-
         # Extraction the revision number as provided
         item_tree = self._make_xml_if_needed(item_xml)
-        default = EXISTDB_INITIAL_VERSION
-        revision = int(item_tree.get(self._add_vers_ns('revision'), default))
+        revision = int(item_tree.get('revision', EXISTDB_INITIAL_VERSION))
+        if 'user' not in item_tree.attrib:
+            item_tree.attrib['user'] = 'Karabo User'
+        if 'date' not in item_tree.attrib:
+            item_tree.attrib['date'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
-        # try to save the item xml, if overwrite is set
-        # we remove the versioning specific attributes first.
-        if overwrite:
-            versioning_attrs = ['key', 'revision', 'path']
-            for attr in versioning_attrs:
-                nsattr = self._add_vers_ns(attr)
-                if nsattr in item_tree.attrib:
-                    item_tree.attrib.pop(nsattr)
-            item_xml = self._make_str_if_needed(item_tree)
-
-        # check if the xml we got passed is an etree or a string. In the latter
-        # case convert it
-        item_xml = self._make_str_if_needed(item_tree)
+        item_xml = self._make_str_if_needed(item_xml)
+        path = "{}/{}/{}_{}".format(self.root, domain, uuid, revision)
         success = False
-
         try:
             success = self.dbhandle.load(item_xml, path)
-            # we need to save twice to have initial versioning infor
-            if revision == default:
-                success = self.dbhandle.load(item_xml, path)
         except ExistDBException:
             success = False
 
         meta = {}
-        meta['versioning_info'] = self.get_versioning_info(path)
+        meta['versioning_info'] = self.get_versioning_info(domain, uuid)
         meta['domain'] = domain
         meta['uuid'] = uuid
         meta['revision'] = revision
         return (success, meta)
 
-    def copy_item(self, domain, target_domain, item, target_item):
+    def load_item(self, domain, item, revision):
         """
-        Copies item of item_type from domain to target_domain and target_item
-        :param domain: the originating domain
-        :param target_domain: the target_domain
-        :param item: the original item
-        :param target_item: the target item
-        :return: a string representation of the copy's xml
-        :raises: ExistDBException if user is not authorized for this query.
-                RuntimeError if copying failed otherwise.
-                AttributeError if a non-supported type is passed
-        """
-
-        # create domain if necessary
-        if not self.domain_exists(target_domain):
-            self.add_domain(target_domain)
-
-        path = "{}/{}".format(self.root, domain)
-        target_path = "{}/{}".format(self.root, target_domain)
-        return_path = None
-
-        # perform the copy
-        # if item names stay the same we can directly copy
-        query = None
-        if item == target_item:
-            query = ('xmldb:copy("{}", "{}", "{}")'
-                     .format(path, target_path, item))
-            return_path = "{}/{}".format(target_item, item)
-        # if they don't match we copy to a temporary, assured unique and then
-        # rename
-        else:
-            query = ('xmldb:copy("{0}", "{1}", "{2}"),'
-                     'xmldb:rename("{1}", "{2}", "{3}")'
-                     .format(path, target_path, item, target_item))
-            return_path = "{}/{}".format(target_path, target_item)
-
-        self.dbhandle.query(query)
-        return self.dbhandle.getDoc(return_path).decode('utf-8')
-
-    def rename_item(self, domain, item, target_item):
-        """
-        Renames item of item_type from in domain to target_item
-        :param domain: the originating domain
-        :param item: the original item
-        :param target_item: the target item
-        :return: a string representation of the renamed item's xml
-        :raises: ExistDBException if user is not authorized for this query.
-                RuntimeError if renaming failed otherwise.
-                AttributeError if a non-supported type is passed
-        """
-        path = "{}/{}".format(self.root, domain)
-
-        # perform the rename
-        query = ('xmldb:rename("{0}", "{1}", "{2}")'
-                 .format(path, item, target_item))
-
-        return_path = "{}/{}".format(path, target_item)
-
-        self.dbhandle.query(query)
-
-        return self.dbhandle.getDoc(return_path).decode('utf-8')
-
-    def move_item(self, domain, target_domain, item):
-        """
-        Moves item of item_type from domain to target_domain
-        :param domain: the originating domain
-        :param target_domain: the target_domain
-        :param item: the original item
-        :return: a string representation of the moved item's xml
-        :raises: ExistDBException if user is not authorized for this query.
-                RuntimeError if copying failed otherwise.
-                AttributeError if a non-supported type is passed
-        """
-
-        # create domain if necessary
-        if not self.domain_exists(target_domain):
-            self.add_domain(target_domain)
-
-        path = "{}/{}".format(self.root, domain)
-        target_path = "{}/{}".format(self.root, target_domain)
-
-        # perform the move
-        query = ('xmldb:move("{0}", "{1}", "{2}")'
-                 .format(path, target_path, item))
-
-        return_path = "{}/{}".format(target_path, item)
-
-        self.dbhandle.query(query)
-
-        return self.dbhandle.getDoc(return_path).decode('utf-8')
-
-    def load_item(self, domain, item, revision=None):
-        """
-        Load an item of `item_type` from `domain`
+        Load an item from `domain`
         :param domain: a domain to load from
         :param item: the name of the item to load
-        :param revision: optional revision number of item, use None if latest.
+        :param revision: revision number of item
         :return:
         """
-        path = "{}/{}/{}".format(self.root, domain, item)
-        if revision is None:
-            # simple interface
-            try:
-                item = self.dbhandle.getDoc(path).decode('utf-8')
-            except ExistDBException as e:
-                raise ProjectDBError(e)
-
-        else:
-            query = """
-            xquery version "3.0";
-            import module namespace v="{vnamespace}";
-            v:doc(doc('{path}'), {revision})
-            """.format(vnamespace=self.vers_namespace, path=path,
-                       revision=revision)
-            try:
-                res = self.dbhandle.query(query).results
-                if len(res) == 0:
-                    raise ProjectDBError("No item found for this revision")
-                item = res[0]
-            except ExistDBException as e:
-                raise ProjectDBError(e)
-
-        item = self._make_xml_if_needed(item)
-        # add versioning info
-        v_info = self.get_versioning_info(path)
-        last_rev = 0
-        if len(v_info["revisions"]) > 0:
-            last_rev = v_info["revisions"][-1]['revision']
-        # version filter expects also a key, this will also protect from
-        # overwriting versions.
-        key = hex(int(round(time.time() * 1000)))+hex(last_rev)
-        etree.register_namespace('v', self.vers_namespace)
-        item.attrib[self._add_vers_ns('revision')] = str(last_rev)
-        item.attrib[self._add_vers_ns('key')] = key
-        item.attrib[self._add_vers_ns('path')] = path
-        return self._make_str_if_needed(item), last_rev
-
-    def load_multi(self, domain, item_xml_str, list_tags):
-        """
-        Loads all items found in item_xml_str under children.
-
-        :param domain: the domain to load from
-        :param item_xml_str: the xml of the container item, at its root
-        :param list_tags: tags which identify children to load
-        :return:xml string of the loaded items
-        """
-
-        # gather information on revisions and uids
-        xml = self._make_xml_if_needed(item_xml_str)
-
-        revisions = []
-        uuids = []
-
-        for tag in list_tags:
-            subs = xml.find(tag)
-            for elem in subs:
-                revisions.append(elem.attrib['revision'])
-                uuids.append(elem.attrib['uuid'])
-
         # path to where the possible entries are located
         path = "{}/{}".format(self.root, domain)
-
         query = """
-            xquery version "3.0";
-            import module namespace v="{vnamespace}";
-            let $revs := {revs}
-            let $uuids := {uuids}
-            for $c at $i in collection("{path}/?select=*")
-            where $c/*/@uuid = $uuids
-            v:doc($c, $revs[index-of($uuids, data($c/*/@uuid))-1])
-            """.format(vnamespace=self.vers_namespace, revs=tuple(revisions),
-                       uuids=tuple(uuids), path=path)
+        xquery version "3.0";
+
+        let $uuid := "{uuid}"
+        let $rev := "{revision}"
+        let $collection := "{path}"
+
+        for $doc in collection($collection)
+            where $doc//@uuid = $uuid and $doc//@revision = $rev
+            return $doc
+        """.format(uuid=item, revision=revision, path=path)
 
         try:
             res = self.dbhandle.query(query)
-        except ExistDBException:
-            return []
-
-        return [{'uuid': r.attrib['uuid'],
-                 'revision': r.get('revision', 0),
-                 'domain': domain,
-                 'xml': self._make_str_if_needed(r)} for r in res.results]
+            rxml = res.results[0]
+            return rxml
+        except ExistDBException as e:
+            raise ProjectDBError(e)
 
     def list_items(self, domain, item_types=None):
         """
@@ -507,43 +282,40 @@ class ProjectDatabase(ContextDecorator):
         :return: a list of dicts where each entry has keys: uuid, item_type
                  and simple_name
         """
+        # path to where the possible entries are located
+        path = "{}/{}".format(self.root, domain)
         query = """
-                xquery version "3.0";
-                import module namespace v="{vnamespace}";
-                {maybe_let}
-                for $c at $i in collection("{root}/{domain}/?select=*")
-                {maybe_where}
-                {return_stmnt}
-                """
+        xquery version "3.0";
+        let $path := "{path}"
+        {maybe_let}
+        return <items>{{for $doc in collection($path)
+            {maybe_where}
+            return <item uuid="{{$doc/*/@uuid}}"
+                         simple_name="{{$doc/*/@simple_name}}"
+                         item_type="{{$doc/*/@item_type}}" />
+        }}</items>
+        """
         maybe_let, maybe_where = '', ''
         if item_types is not None:
-            maybe_let = "let $item_types := ('{}')".format("','".join(item_types))
-            maybe_where = 'where $c/*/@item_type = $item_types'
-
-        r_names = ('uuid', 'simple_name', 'item_type')
-        r_attrs = ''.join(['{{$c/*/@{name}}}'.format(name=n)
-                           for n in r_names])
-
-        return_stmnt = 'return <item>{attrs}</item>'.format(attrs=r_attrs)
+            maybe_let_tmp = "let $item_types := ('{}')"
+            maybe_let = maybe_let_tmp.format("','".join(item_types))
+            maybe_where = 'where $doc/*/@item_type = $item_types'
 
         query = query.format(maybe_let=maybe_let,
                              maybe_where=maybe_where,
-                             root=self.root, domain=domain,
-                             return_stmnt=return_stmnt,
-                             vnamespace=self.vers_namespace)
+                             path=path)
         try:
             res = self.dbhandle.query(query)
-            bpath = "{}/{}/".format(self.root, domain)
             return [{'uuid': r.attrib['uuid'],
-                     'revisions': self._get_rev_info(bpath+r.attrib['uuid']),
+                     'revisions': self._get_rev_info(domain, r.attrib['uuid']),
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name']}
-                    for r in res.results]
+                    for r in res.results[0].getchildren()]
         except ExistDBException as e:
                 raise ProjectDBError(e)
 
-    def _get_rev_info(self, path):
-        return self.get_versioning_info(path)['revisions']
+    def _get_rev_info(self, domain, item):
+        return self.get_versioning_info(domain, item)['revisions']
 
     def list_domains(self):
         """
@@ -551,8 +323,10 @@ class ProjectDatabase(ContextDecorator):
         :return:
         """
 
-        query = """xquery version "3.0";
-                xmldb:get-child-collections("{}")""".format(self.root)
+        query = """
+                xquery version "3.0";
+                xmldb:get-child-collections("{}")
+                """.format(self.root)
 
         try:
             res = self.dbhandle.query(query)
