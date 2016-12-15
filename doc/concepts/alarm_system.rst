@@ -19,22 +19,22 @@ messages: a warning should be issued if some a state has been reached that is no
 considered normal, but logic has been implemented to recover from it. It may also be
 issued if there are known indications that the device is running into an error state.
 
-Conversely, an error message should be issued if an unforeseen scenario has happend, i.e.
+Conversely, an error message should be issued if an unforeseen scenario has happened, i.e.
 there is no logic to recover from this.
 
 
 .. warning::
 
 	Make yourself aware of the conceptual difference between warnings and errors and
-	emit error notifications only in case of actual errors.
+	emit error notifications only in the case of actual errors.
 
-	Experience from other facilites shows that *error-spamming* leads to users accepting
-	errors and associated notifications as a normal operation state - they are not!.
-	Error notifications should be so rare, that they trigger a human examination of the
+	Experience from other facilities shows that *error-spamming* leads to users accepting
+	errors and associated notifications as a normal operation state - they are not!
+	Error notifications should be so rare that they trigger a human examination of the
 	problem!
 
-	The Karabo alarm system is separate of the distributed message log system. The message
-    system may thus not be used to indicate actual alarms.
+	The Karabo alarm system is separate from the distributed message log system. The message
+	system may thus not be used to indicate actual alarms.
 
 .. _alarm_system:
 
@@ -47,7 +47,7 @@ works by raising alarm conditions which are displayed in the GUI, can be
 queried from the CLI and are maintained by a centralized alarm service.
 
 In Karabo there are four alarm states, signified by color, symbol and
-level-number. They are summarized in the following table
+level-number. They are summarized in the following table:
 
 .. |alarm-interloc| image:: images/interlock_alarm.png
 
@@ -57,7 +57,7 @@ level-number. They are summarized in the following table
 
 
 .. table:: Alarm and warning conditions in Karabo and their graphical representation
-           for to-be acknowledged alarms (left symbol) and non-acknowledgable
+           for to-be-acknowledged alarms (left symbol) and non-acknowledgeable
            alarms (right symbol)
 
     ================ ================= =============================================================
@@ -71,7 +71,7 @@ level-number. They are summarized in the following table
 
 
 Alarm conditions are usually indicated on a per-property basis and set either through
-automatic evaluation of the bounds specified for a property, or through explicit
+automatic evaluation of the bounds specified for a property or through explicit
 calls.
 
 
@@ -86,12 +86,12 @@ You may also set this state directly, by calling
 
     self.setAlarmCondition(alarmConditions.CRITICAL,
                            acknowledge = True,
-                           decription = "Why I set this condition")
+                           description = "Why I set this condition")
 
 
-This should be reserved to when an alarm cannot be attributed to result from
-device properties. In all cases you **must** provide a short ``description`` of
-why the alarm condition was triggered. Similar to property alarms
+This should be reserved for when an alarm cannot be attributed to having
+resulted from device properties. In all cases you *should* provide a short
+``description`` of why the alarm condition was triggered. Like property alarms,
 interlock and critical conditions must be acknowledged. Acknowledgement of
 warnings can be controlled using the ``acknowledge`` parameter, which defaults
 to false.
@@ -101,16 +101,16 @@ to false.
     Alarms should always be indicated on the property which triggered the
     alarm if it is known.
 
-    Alarm conditions are independent of device state. A device may be perfectly
-    working, but its read-back values indicate that hardware is behaving
-    abnormal. E.g. a valve indicates quick rise in pressure which is abnormal,
-    the valve and valve devie are working normally but the value indicates an
+    Alarm conditions are independent of device state. A device may be working
+    perfectly, but its read-back values indicate that hardware is behaving
+    abnormally. For example, a valve indicates a quick rise in pressure which is abnormal,
+    the valve and valve device are working normally but the value indicates an
     alarm condition.
 
 
 .. ifconfig:: includeDevInfo is True
 
-    Any alarm condition triggered, which is above none will make device emit
+    Any alarm condition triggered that is not "None" will make a device emit
     a signal ``signalAlarm`` to be interpreted by the alarm service device.
 
     .. function:: signalAlarm(senderInstance, senderClass, property, condition,
@@ -119,7 +119,7 @@ to false.
         where ``senderInstance` is the instance id of the device in the alarm
         condition, ``property`` is the property by which the alarm was raised or
         empty in case the alarm was set to the device directly, ``condition``
-        is of type ``alarmCondition``, ``type`` indicates an alarmtype as
+        is of type ``alarmCondition``, ``type`` indicates an ``alarmType`` as
         set by the property attributes, and ``acknowledge`` designates if the
         alarm needs to be acknowledged. Finally, ``description`` gives the
         optional description of the alarm.
@@ -143,7 +143,7 @@ to false.
         for acknowledgement.
 
     The alarm service additionally allows acknowledgment of any alarms pending,
-    if the heartbeat signal from the device has not been recieved for more
+    if the heartbeat signal from the device has not been received for more
     than 30 seconds. In this case it indicates that acknowledgment has been
     cleared by time-out and not by a cleared alarm condition.
 
@@ -184,7 +184,7 @@ modifiers exist:
 
 .. function:: .alarmVarianceHigh(value)
 
-    A variance above this value will trigger a critcal condition. Must be
+    A variance above this value will trigger a critical condition. Must be
     preceded by a ``.enableRollingStats()`` command and closed of by
     ``evaluationInterval(n)``, where n is the rolling window size.
 
