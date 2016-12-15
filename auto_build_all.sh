@@ -120,7 +120,7 @@ Usage: $0 Debug|Release|Dependencies|Clean|Clean-All [flags]
 
 Available flags:
   --auto       - Tries to automatically install needed system packages (sudo rights required!)
-  --noBundle   - Only installs Karabo, does not create the software bundle
+  --bundle     - Installs Karabo AND  creates the software bundle. Default: no bundle is created!
   --pyDevelop  - Install Python packages in development mode rather than from wheels
   --runTests   - Run unit tests after building (useful for Debug|Release)
   --numJobs N  - Specify the number of jobs that make should use to run simultaneously
@@ -171,7 +171,7 @@ shift
 
 # Parse the commandline flags
 SKIP="y"
-BUNDLE="y"
+BUNDLE="n"
 RUNTESTS="n"
 RUNINTEGRATIONTESTS="n"
 PYOPT="wheel"
@@ -183,9 +183,9 @@ while [ -n "$1" ]; do
             # Don't skip building system dependencies
             SKIP="n"
             ;;
-        --noBundle)
+        --bundle)
             # Don't skip bundling
-            BUNDLE="n"
+            BUNDLE="y"
             ;;
         --pyDevelop)
             # Build Python packages in development mode
