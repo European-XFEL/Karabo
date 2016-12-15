@@ -70,3 +70,25 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
         if self._qt_item is None:
             self._qt_item = self.create_qt_item()
         return self._qt_item
+
+
+class BaseProjectGroupItem(BaseProjectTreeItem):
+    """ A base class for all project tree objects which have children.
+    """
+
+    def items_assigned(self, obj, name, old, new):
+        """ Handles assignment to a list trait and passes the notification
+        along to ``item_handler``
+        """
+        self.item_handler(new, old)
+
+    def items_mutated(self, event):
+        """ Handles mutation(insertion/removal) of a list trait and passes the
+        notification along to ``item_handler``
+        """
+        self.item_handler(event.added, event.removed)
+
+    @abstractmethod
+    def item_handler(self, added, removed):
+        """ Called for List-trait events on ``model``
+        """

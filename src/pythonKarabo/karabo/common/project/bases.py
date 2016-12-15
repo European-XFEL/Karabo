@@ -30,6 +30,12 @@ class BaseProjectObjectModel(BaseSavableModel):
     # Per-revision alias (for the humans!)
     alias = String(transient=True)
 
+    def _modified_changed(self):
+        """When an object is modified, increment its revision number
+        """
+        if self.modified:
+            self.revision += 1
+
     def _uuid_default(self):
         """If a uuid isn't supplied, generate one
         """

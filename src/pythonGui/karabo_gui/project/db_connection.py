@@ -146,22 +146,13 @@ class ProjectDatabaseConnection(QObject):
             domain = item['domain']
             uuid = item['uuid']
             revision = item['revision']
-            entry = item['entry']
             if item['success']:
-                vers_info = entry['versioning_info']
-                revisions = vers_info['revisions']
-                if not revisions:
-                    # No revisions available
-                    new_revision = revision
-                else:
-                    new_revision = revisions[-1]['revision']
-
                 key = (uuid, revision)
                 obj = self._waiting_for_write.pop(key)
 
-                obj.revision = new_revision
+                # Write to the local cache
                 data = write_project_model(obj)
-                self.cache.store(domain, uuid, new_revision, data)
+                self.cache.store(domain, uuid, revision, data)
                 # No longer dirty!
                 clear_modified_flag(obj)
             else:
