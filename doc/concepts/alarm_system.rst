@@ -90,7 +90,7 @@ You may also set this state directly, by calling
 
 
 This should be reserved for when an alarm cannot be attributed to having
-resulted from device properties. In all cases you **must** provide a short
+resulted from device properties. In all cases you *should* provide a short
 ``description`` of why the alarm condition was triggered. Like property alarms,
 interlock and critical conditions must be acknowledged. Acknowledgement of
 warnings can be controlled using the ``acknowledge`` parameter, which defaults
@@ -110,7 +110,7 @@ to false.
 
 .. ifconfig:: includeDevInfo is True
 
-    Any alarm condition triggered which is above none will make a device emit
+    Any alarm condition triggered that is not "None" will make a device emit
     a signal ``signalAlarm`` to be interpreted by the alarm service device.
 
     .. function:: signalAlarm(senderInstance, senderClass, property, condition,
@@ -119,7 +119,7 @@ to false.
         where ``senderInstance` is the instance id of the device in the alarm
         condition, ``property`` is the property by which the alarm was raised or
         empty in case the alarm was set to the device directly, ``condition``
-        is of type ``alarmCondition``, ``type`` indicates an alarmType as
+        is of type ``alarmCondition``, ``type`` indicates an ``alarmType`` as
         set by the property attributes, and ``acknowledge`` designates if the
         alarm needs to be acknowledged. Finally, ``description`` gives the
         optional description of the alarm.
