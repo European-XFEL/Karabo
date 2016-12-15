@@ -58,7 +58,7 @@ class MacroModelItem(BaseProjectTreeItem):
         return item
 
     def double_click(self, parent_project, parent=None):
-        data = {'model': self.model, 'project': parent_project}
+        data = {'model': self.model}
         broadcast_event(KaraboBroadcastEvent(KaraboEventSender.OpenMacro,
                                              data))
 
