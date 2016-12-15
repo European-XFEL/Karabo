@@ -1,11 +1,14 @@
+import uuid
+
 from karabo.common.project.api import MacroModel
 
 
 def test_instance_id_property():
-    macro = MacroModel(title='foo', project_name='proj')
+    UUID = str(uuid.uuid4())
+    macro = MacroModel(simple_name='foo', uuid=UUID, revision=2)
 
-    assert macro.instance_id == 'Macro-proj-foo'
-    macro.title = 'bar'
-    assert macro.instance_id == 'Macro-proj-bar'
-    macro.project_name = 'jorp'
-    assert macro.instance_id == 'Macro-jorp-bar'
+    assert macro.instance_id == 'Macro-foo-{}-2'.format(UUID)
+    macro.simple_name = 'bar'
+    assert macro.instance_id == 'Macro-bar-{}-2'.format(UUID)
+    macro.revision = 4
+    assert macro.instance_id == 'Macro-bar-{}-4'.format(UUID)

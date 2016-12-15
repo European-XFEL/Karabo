@@ -14,7 +14,7 @@ def convert_old_project(old_project):
     devices, servers = _convert_devices(old_project.devices)
     project = ProjectModel(
         simple_name=old_project.name,
-        macros=_convert_macros(old_project.macros),
+        macros=old_project.macros,
         scenes=_convert_scenes(old_project, old_project.scenes),
         servers=servers,
         initialized=True
@@ -53,15 +53,6 @@ def _convert_devices(old_devices):
                for server_id, instances in dev_instances.items()]
 
     return devices, servers
-
-
-def _convert_macros(macros):
-    """ Fill in the ``simple_name`` trait of MacroModel instances
-    """
-    for model in macros:
-        model.simple_name = model.title
-
-    return macros
 
 
 def _convert_scenes(project, scenes):

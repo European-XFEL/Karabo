@@ -169,7 +169,7 @@ class Project(object):
         returned.
         """
         for macro in self.macros:
-            if title == macro.title:
+            if title == macro.simple_name:
                 return macro
 
     def removeMacro(self, title):
@@ -177,7 +177,7 @@ class Project(object):
         removed.
         """
         for macro in self.macros:
-            if title == macro.title:
+            if title == macro.simple_name:
                 self.macro.remove(macro)
                 return
 
