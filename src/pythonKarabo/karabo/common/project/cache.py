@@ -8,8 +8,6 @@ import os.path as op
 from sys import platform
 from xml.etree.ElementTree import fromstring
 
-from .const import NS_EXISTDB_VERSIONING
-
 
 class ProjectDBCache(object):
     """ Local storage for project objects retrieved from the project database.
@@ -84,7 +82,7 @@ class ProjectDBCache(object):
             root = fromstring(xml)
             root_type = root.attrib.get('item_type')
             if root_type == obj_type:
-                rev_str = root.attrib.get(NS_EXISTDB_VERSIONING+'revision')
+                rev_str = root.attrib.get('revision')
                 alias = root.attrib.get('alias')
                 revHash = {uuid: (int(rev_str), alias),
                            'simple_name': root.attrib.get('simple_name')}

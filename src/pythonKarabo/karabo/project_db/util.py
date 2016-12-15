@@ -3,11 +3,9 @@ from time import sleep
 from subprocess import check_call
 
 import psutil
-from lxml import etree
 from eulexistdb import db
 from eulexistdb.exceptions import ExistDBException
 from requests.packages.urllib3.exceptions import HTTPError
-
 
 from .dbsettings import ProbeDbSettings, LocalDbSettings
 
@@ -50,12 +48,11 @@ def assure_running(project_db_server=None, project_db_port=None):
 
     if project_db_server is None:
         project_db_server = os.getenv('KARABO_PROJECT_DB', None)
-        if project_db_server is None: # last try localhost
+        if project_db_server is None:  # last try localhost
             project_db_server = "localhost"
 
     if project_db_port is None:
         project_db_port = os.getenv('KARABO_PROJECT_DB_PORT', 8080)
-
 
     if project_db_server is None or project_db_server == 'localhost':
         # we check if the db is already running
@@ -101,7 +98,6 @@ def assure_running(project_db_server=None, project_db_port=None):
                                  " at {}: {}".format(project_db_server, e))
 
 
-
 def stop_database():
     """
     Stops a **locally** running instance of eXistDB
@@ -120,11 +116,9 @@ def stop_database():
         sleep(waitBetween)
 
 
-
 def init_local_db():
     """
     Initializes the **local** database structures if not already present
-    Additionally, versioning is enabled for the data base.
     :return: None
     """
 
@@ -153,56 +147,3 @@ def init_local_db():
     else:
         print("Test root collection already exists at {}"
               .format(settings.root_collection_test))
-
-    # now we make sure we enable versioning by placing the config files in
-    # in the appropriate locations
-
-    # here we add the xconf file for version. A stub version of it
-    # exists in config_stubs as versioning.xconf.xml
-    print("Enabling versioning...")
-
-    loc = os.path.join(os.path.dirname(__file__),
-                       'config_stubs', 'versioning.xconf.xml')
-
-    with open(loc, "r") as f:
-        vers_conf_stub = f.read()
-        # now set this as configuration for the root collections
-        for root in [settings.root_collection,
-                     settings.root_collection_test]:
-
-                path = '/system/config/db{}'.format(root)
-
-                if not dbhandle.hasCollection(path):
-                    dbhandle.createCollection(path)
-                    dbhandle.load(vers_conf_stub,
-                                  "{}/collection.xconf".format(path))
-                    print("Added versioning conf to {}".format(path))
-                else:
-                    print("Versioning already enabled for {}".format(path))
-
-    # now set the appropriate filters in conf.xml
-    karabo_install = os.getenv('KARABO', None)
-    if karabo_install is None:
-        raise EnvironmentError("The $KARABO environment variable needs"
-                               " to be set!")
-    loc_conf = os.path.join(karabo_install, 'extern', 'eXistDB', 'db',
-                            'conf.xml')
-    conf = etree.parse(loc_conf)
-
-    loc_filter = os.path.join(os.path.dirname(__file__),
-                              'config_stubs', 'versioning_filter.xml')
-    filter = etree.parse(loc_filter).getroot()
-
-    serializer = conf.getroot().find('serializer')
-    serializer.insert(0, filter)
-    b_rep = etree.tostring(conf, pretty_print=True,
-                           encoding='UTF-8', xml_declaration=True)
-    str_rep = b_rep.decode("utf-8")
-
-    with open(loc_conf, "w") as f:
-        f.write(str_rep)
-
-    # in the end we have to restart the database
-    stop_database()
-    sleep(10) ##sleep here so database can shut down
-    assure_running(project_db_server='localhost')

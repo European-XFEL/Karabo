@@ -6,12 +6,13 @@
 import weakref
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QAction, QMenu, QStandardItem
+from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance, List, on_trait_change
 
 from karabo.common.project.api import ProjectModel
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from .bases import BaseProjectTreeItem
 from .project_groups import ProjectSubgroupItem
 
@@ -31,6 +32,7 @@ class ProjectModelItem(BaseProjectTreeItem):
         # In that case, do NOT add a 'Delete' action
         if parent_project is not None:
             edit_action = QAction('Edit', menu)
+            edit_action.triggered.connect(self._edit_project)
             menu.addAction(edit_action)
 
         return menu
@@ -52,7 +54,10 @@ class ProjectModelItem(BaseProjectTreeItem):
     def simple_name_change(self):
         if not self.is_ui_initialized():
             return
-        self.qt_item.setText(self.model.simple_name)
+        if self.model.modified:
+            self.qt_item.setText("*{}".format(self.model.simple_name))
+        else:
+            self.qt_item.setText(self.model.simple_name)
 
     @on_trait_change("model.modified")
     def modified_change(self):
@@ -74,3 +79,9 @@ class ProjectModelItem(BaseProjectTreeItem):
 
     # ----------------------------------------------------------------------
     # action handlers
+
+    def _edit_project(self):
+        dialog = NewProjectDialog(self.model)
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            self.model.simple_name = dialog.simple_name

@@ -7,7 +7,7 @@ import os.path as op
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QDialog
+from PyQt4.QtGui import QDialog, QDialogButtonBox
 
 from karabo.middlelayer import AccessLevel, Hash
 import karabo_gui.globals as krb_globals
@@ -68,6 +68,9 @@ class DeviceHandleDialog(QDialog):
             index = self.cbIfExists.findText(model.if_exists)
             self.cbIfExists.setCurrentIndex(index)
         self.setWindowTitle(title)
+        self.leTitle.textChanged.connect(self._update_button_box)
+        self.cbConfig.editTextChanged.connect(self._update_button_box)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
     def _init_config_widgets(self, dev_inst_model):
         """ Init all device configuration related widgets to the associated
@@ -132,6 +135,12 @@ class DeviceHandleDialog(QDialog):
     def _update_plugin_widget(self, class_id):
         index = self.cbClass.findText(class_id)
         self.cbClass.setCurrentIndex(index)
+
+    def _update_button_box(self, text):
+        """ Only enable Ok button, if title and configuration alias is set"""
+        enabled = (len(self.leTitle.text()) > 0 and
+                   len(self.cbConfig.currentText()) > 0)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
     @pyqtSlot(int)
     def config_changed(self, index):
