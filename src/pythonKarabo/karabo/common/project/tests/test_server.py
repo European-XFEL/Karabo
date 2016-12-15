@@ -86,17 +86,20 @@ def test_writing():
 
 
 def test_child_modification_tracking():
-    dev0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUID, revision=0)
-    dev1 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUID, revision=1)
-    dev2 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUID, revision=2)
+    dev0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUID, revision=0,
+                                    initialized=True)
+    dev1 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUID, revision=1,
+                                    initialized=True)
+    dev2 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUID, revision=2,
+                                    initialized=True)
     foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
                               if_exists='ignore', configs=[dev0],
-                              active_config_ref=(UUID, 0))
+                              active_config_ref=(UUID, 0), initialized=True)
     bar = DeviceInstanceModel(class_id='QuxClass', instance_id='barDevice',
                               if_exists='restart', configs=[dev1, dev2],
-                              active_config_ref=(UUID, 2))
+                              active_config_ref=(UUID, 2), initialized=True)
     server = DeviceServerModel(server_id='testServer', host='serverserverFoo',
-                               devices=[foo])
+                               devices=[foo], initialized=True)
     server.devices.append(bar)
 
     server.modified = False

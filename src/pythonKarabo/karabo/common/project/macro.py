@@ -43,7 +43,10 @@ def read_macro(filename_or_fileobj):
             macro_code = input.read()
     else:
         macro_code = filename_or_fileobj.read()
-    return MacroModel(code=macro_code, initialized=True)
+
+    model = MacroModel(code=macro_code)
+    model.initialized = True
+    return model
 
 
 def write_macro(macro):

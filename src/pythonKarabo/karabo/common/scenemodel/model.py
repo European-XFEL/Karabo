@@ -60,12 +60,12 @@ def __scene_reader(read_func, element):
         'width': float(element.get('width', 0)),
         'height': float(element.get('height', 0)),
         'extra_attributes': _read_extra_attributes(element),
-        'initialized': True,
     }
     scene = SceneModel(**traits)
     for child in element:
         scene.children.append(read_func(child))
 
+    scene.initialized = True
     return scene
 
 
