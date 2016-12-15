@@ -268,10 +268,12 @@ class ProjectDatabase(ContextDecorator):
 
         try:
             res = self.dbhandle.query(query)
-            rxml = res.results[0]
-            return rxml
+            return self._make_str_if_needed(res.results[0])
         except ExistDBException as e:
             raise ProjectDBError(e)
+        except IndexError:
+            msg = "Project object not found! (UUID: {}, revision: {})"
+            raise ProjectDBError(msg.format(item, revision))
 
     def list_items(self, domain, item_types=None):
         """

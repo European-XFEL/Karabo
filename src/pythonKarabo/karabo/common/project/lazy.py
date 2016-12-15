@@ -48,6 +48,8 @@ def _read_lazy_object_r(domain, uuid, revision, db_iface, reader, existing,
 
         walk_traits_object(obj, visitor)
         for child in collected:
+            if child is obj:
+                continue
             _read_lazy_object_r(domain, child.uuid, child.revision, db_iface,
                                 reader, child, requested_objs)
 
