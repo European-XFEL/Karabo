@@ -36,7 +36,8 @@ def create_project_model_shadow(model=None):
                                     trait_name=name,
                                     child_create=creator,
                                     child_destroy=destroyer)
-        model.on_trait_change(child.item_handler, name + '_items')
+        model.on_trait_change(child.items_assigned, name)
+        model.on_trait_change(child.items_mutated, name + '_items')
 
         subchildren = getattr(model, name)
         subitemchildren = [creator(model=submodel) for submodel in subchildren]
@@ -54,7 +55,8 @@ def destroy_project_model_shadow(shadow_model):
     model = shadow_model.model
     for child in shadow_model.children:
         name = child.trait_name
-        model.on_trait_change(child.item_handler, name + '_items',
+        model.on_trait_change(child.items_assigned, name, remove=True)
+        model.on_trait_change(child.items_mutated, name + '_items',
                               remove=True)
         # Recurse!
         if child.child_create is create_project_model_shadow:
@@ -74,7 +76,8 @@ def create_device_server_model_shadow(model):
     shadow = DeviceServerModelItem(model=model,
                                    child_create=DeviceInstanceModelItem,
                                    child_destroy=lambda x: None)
-    model.on_trait_change(shadow.item_handler, 'devices_items')
+    model.on_trait_change(shadow.items_assigned, 'devices')
+    model.on_trait_change(shadow.items_mutated, 'devices_items')
     for device in model.devices:
         child = shadow.child_create(model=device)
         shadow.children.append(child)
@@ -91,8 +94,9 @@ def destroy_device_server_model_shadow(shadow_model):
     all previously added Traits notification handlers.
     """
     model = shadow_model.model
-    model.on_trait_change(
-        shadow_model.item_handler, 'devices_items', remove=True)
+    model.on_trait_change(shadow_model.items_assigned, 'devices', remove=True)
+    model.on_trait_change(shadow_model.items_mutated, 'devices_items',
+                          remove=True)
 
     # Detach the topology listener
     shadow_model.topo_listener = None
