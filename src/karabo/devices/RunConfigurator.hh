@@ -19,6 +19,7 @@ namespace karabo {
     namespace devices {
 
         class RunConfigurator : public karabo::core::Device<> {
+
         public:
 
             KARABO_CLASSINFO(RunConfigurator, "RunConfigurator", "1.5")
@@ -31,67 +32,113 @@ namespace karabo {
 
             virtual ~RunConfigurator();
 
-            void initialize();
 
-            void initAvailableGroups();
-
-            void newDeviceHandler(const karabo::util::Hash& topologyEntry);
-
-            void deviceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
-
-            void updateAvailableGroups();
-
-            void updateCurrentGroup();
-
-            void updateCurrentSources();
-
-            void updateCompiledSourceList();
 
         private:
 
-            std::vector<std::string> getConfigurationGroupDeviceIds() const;
+            /**
+             * Initialize the device. Will scan the system topology for already available run configuration groups
+             */
+            void initialize();
 
-            std::vector<std::string> getConfigurationGroupIds() const;
+            /**
+             * Initialize the available run configuration groups
+             */
+            void initAvailableGroups();
 
-            const std::string& getDeviceIdByGroupId(const std::string& groupId, const std::string& failure = "") const;
+            /**
+             * React on updates in run configuration groups known by this device, i.e. update their list of sources
+             */
+            void updateAvailableGroups();
 
-            std::vector<karabo::util::Hash> getAllSources(const std::string& groupId) const;
+            /**
+             * Update the compiled source list, i.e. the flattened sources from all run configuration groups selected
+             * to be used
+             */
+            void updateCompiledSourceList();
 
-            std::vector<std::string> getAllSourceNames(const std::string& groupId) const;
+            /**
+             * Return a deviceId from a groupId
+             * @param groupId
+             */
+            const std::string& getDeviceIdByGroupId(const std::string& groupId);
 
-            //karabo::util::Hash filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema);
-
-            //void convertSchemaHash(const karabo::util::Hash& fullHash, karabo::util::Hash& hash);
-
+            /**
+             * Format the compiled source list into a configuration as required by the run controller and send this
+             * to the distributed system.           
+             */
             void buildConfigurationInUse();
 
+            /*
+             * Used by buildConfigurationInUse to build properties for each data source
+             */
             void buildDataSourceProperties(const std::vector<karabo::util::Hash>& table,
                                            const std::string& groupId,
                                            bool expertFlag,
                                            bool userFlag,
                                            karabo::util::Hash& result);
 
+            /**
+             * In the preReconfigure we check if new run configuration groups have been selected and update the
+             * compiled sources accordingly
+             */
             void preReconfigure(karabo::util::Hash& incomingReconfiguration);
 
+            /**
+             * In postReconfigure debug output is provided if requested
+             */
             void postReconfigure();
 
+            /**
+             * Helper function for reconfiguring the groups from preReconfigure
+             */
             void reconfigureAvailableGroups(const std::vector<karabo::util::Hash>& groups, const karabo::util::Schema& schema);
 
-            void reconfigureSourcesOnly(const std::vector<karabo::util::Hash>& groups, const karabo::util::Schema& schema);
-
-            void reconfigureSources(const std::vector<karabo::util::Hash>& groups, const karabo::util::Schema& schema);
-
+            /**
+             * Print the current run configuration
+             */
             void printConfig() const;
-            
-            void updateCurrentGroupSchema();
+
+            /**
+             * Handle new run configuration group devices appearing
+             */
+            void newDeviceHandler(const karabo::util::Hash& topologyEntry);
+
+            /**
+             * Handle run configuration group devices dissappearing
+             */
+            void deviceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+
+            /**
+             * Handle new run configuration group devices updating their source information
+             */
+            void deviceUpdatedHandler(const std::string& deviceId, const karabo::util::Hash& update);
+
+            /**
+             * Helper function to update group information if determined necessary in deviceUpdatedHandler
+             */
+            void updateGroupConfiguration(const std::string& deviceId, const karabo::util::Hash& update = karabo::util::Hash());
+
+            /**
+             * Return the sources in a group
+             */
+            void slotGetSourcesInGroup(const std::string& group);
+
+            /**
+             * Helper function to combine sources from a group  into a result hash.
+             */
+            void makeGroupSourceConfig(karabo::util::Hash& result, const std::string& deviceId) const;
+
+            /**
+             * Helper function for updateCompiledSourceList
+             */
+            void createSource(std::vector<karabo::util::Hash>& data, std::map<std::string, karabo::util::Hash>& sources, bool use);
 
         private:
 
             std::map<std::string, karabo::util::Hash> m_configurations;
-            std::string m_cursor;
-            std::vector<std::string> m_deviceIds;
-            std::vector<std::string> m_groupIds;
-           
+            std::map<std::string, std::string> m_groupDeviceMapping;
+
         };
     }
 }

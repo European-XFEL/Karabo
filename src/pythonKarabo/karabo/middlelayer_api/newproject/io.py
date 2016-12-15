@@ -6,8 +6,8 @@ from lxml import etree
 from karabo.common.project.api import (
     PROJECT_DB_TYPE_DEVICE, PROJECT_DB_TYPE_DEVICE_SERVER,
     PROJECT_DB_TYPE_MACRO, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
-    PROJECT_OBJECT_CATEGORIES, NS_EXISTDB_VERSIONING, DeviceConfigurationModel,
-    DeviceServerModel, MacroModel, ProjectModel,
+    PROJECT_OBJECT_CATEGORIES, DeviceConfigurationModel, DeviceServerModel,
+    MacroModel, ProjectModel,
     read_device_server, write_device_server)
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.hash import Hash
@@ -27,8 +27,6 @@ _PROJECT_ITEM_TYPES = {
 }
 # Check it
 assert len(_PROJECT_ITEM_TYPES) == len(PROJECT_OBJECT_CATEGORIES)
-# Register an eXistDB namespace
-etree.register_namespace('v', NS_EXISTDB_VERSIONING[1:-1])
 
 
 def read_project_model(io_obj, existing=None):
@@ -115,14 +113,12 @@ def _wrap_child_element_xml(child_xml, root_metadata):
 def _db_metadata_reader(metadata):
     """ Read the traits which are common to all BaseProjectObjectModel objects
     """
-    db_attrs_keys = (NS_EXISTDB_VERSIONING + k for k in ('key', 'path'))
     attrs = {
         'uuid': metadata['uuid'],
-        'revision': int(metadata[NS_EXISTDB_VERSIONING + 'revision']),
+        'revision': int(metadata['revision']),
         'alias': metadata['alias'],
         'simple_name': metadata['simple_name'],
         'description': metadata['description'],
-        'db_attrs': {k: metadata.get(k, '') for k in db_attrs_keys},
     }
     return attrs
 
@@ -241,9 +237,9 @@ def _scene_reader(io_obj, existing, metadata):
 def _model_db_metadata(model):
     """ Extract attributes which are stored in the root of a project DB object
     """
-    attrs = model.db_attrs.copy()
+    attrs = {}
     attrs['uuid'] = model.uuid
-    attrs[NS_EXISTDB_VERSIONING + 'revision'] = str(model.revision)
+    attrs['revision'] = str(model.revision)
     attrs['alias'] = model.alias
     attrs['simple_name'] = model.simple_name
     attrs['description'] = model.description

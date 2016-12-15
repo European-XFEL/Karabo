@@ -7,8 +7,9 @@ from pint import DimensionalityError
 from karabo.middlelayer import (
     AccessMode, Assignment, AccessLevel, Bool, Char, ComplexFloat, Double,
     Float, Hash, Int8, Int16, MetricPrefix, NumpyVector, QuantityValue,
-    Schema, State, String, Timestamp, Unit, UInt64, VectorBool, VectorChar,
-    VectorComplexFloat, VectorFloat, VectorHash, VectorInt8, VectorString)
+    Schema, State, String, Timestamp, Unit, unit, UInt64, VectorBool,
+    VectorChar, VectorComplexFloat, VectorFloat, VectorHash, VectorInt8,
+    VectorString)
 
 
 class Tests(TestCase):
@@ -96,8 +97,9 @@ class Tests(TestCase):
 
         d = Int8(unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.MILLI,
                  minExc=3, maxInc=6000)
+        v = d.toKaraboValue(5)
         with self.assertRaises(DimensionalityError):
-            v = d.toKaraboValue(5)
+            v = d.toKaraboValue(5 * unit.m / unit.m)
         v = d.toKaraboValue(5, strict=False)
         self.assertEqual(v, QuantityValue("5 mm"))
         v = d.toKaraboValue("5 m")
@@ -126,8 +128,9 @@ class Tests(TestCase):
 
         d = VectorInt8(unitSymbol=Unit.METER,
                        metricPrefixSymbol=MetricPrefix.MILLI)
+        v = d.toKaraboValue([2, 3, 4])
         with self.assertRaises(DimensionalityError):
-            v = d.toKaraboValue([2, 3, 4])
+            v = d.toKaraboValue([2, 3, 4] * unit.m / unit.m)
         v = d.toKaraboValue([2, 3, 4], strict=False)
         self.assertEqual(v[1], QuantityValue("3 mm"))
         self.assertNotEqual(v[2], 4)
@@ -146,8 +149,9 @@ class Tests(TestCase):
 
         d = Float(unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.MILLI,
                   minExc=3, maxInc=6000)
+        v = d.toKaraboValue(5)
         with self.assertRaises(DimensionalityError):
-            v = d.toKaraboValue(5)
+            v = d.toKaraboValue(5 * unit.m / unit.m)
         v = d.toKaraboValue(5, strict=False)
         self.assertEqual(v, QuantityValue("5 mm"))
         v = d.toKaraboValue("3.71111 m")
@@ -171,8 +175,9 @@ class Tests(TestCase):
 
         d = VectorFloat(unitSymbol=Unit.METER,
                         metricPrefixSymbol=MetricPrefix.MILLI)
+        v = d.toKaraboValue([2, 3, 4])
         with self.assertRaises(DimensionalityError):
-            v = d.toKaraboValue([2, 3, 4])
+            v = d.toKaraboValue([2, 3, 4] * unit.m / unit.m)
         v = d.toKaraboValue([2, 3, 4], strict=False)
         self.assertEqual(v[1], QuantityValue("3 mm"))
         self.assertNotEqual(v[2], 4)
@@ -191,8 +196,10 @@ class Tests(TestCase):
 
         d = ComplexFloat(unitSymbol=Unit.METER,
                          metricPrefixSymbol=MetricPrefix.MILLI)
+
+        v = d.toKaraboValue(5+3j)
         with self.assertRaises(DimensionalityError):
-            v = d.toKaraboValue(5+3j)
+            v = d.toKaraboValue((5+3j) * unit.m / unit.m)
         v = d.toKaraboValue(5+3j, strict=False)
         self.assertEqual(v.real, QuantityValue("5 mm"))
         self.assertEqual(v.imag, QuantityValue("3 mm"))
@@ -210,8 +217,9 @@ class Tests(TestCase):
 
         d = VectorComplexFloat(unitSymbol=Unit.METER,
                                metricPrefixSymbol=MetricPrefix.MILLI)
+        v = d.toKaraboValue([2+3j, 3+4j, 4])
         with self.assertRaises(DimensionalityError):
-            v = d.toKaraboValue([2+3j, 3+4j, 4])
+            v = d.toKaraboValue([2+3j, 3+4j, 4] * unit.m / unit.m)
         v = d.toKaraboValue([2+3j, 3+4j, 4], strict=False)
         self.assertEqual(v[1].real, QuantityValue("3 mm"))
         self.assertEqual(v[1].imag, QuantityValue("4 mm"))

@@ -79,7 +79,8 @@ namespace karabo {
 
             KARABO_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
-            registerSlot<std::string, std::string, karabo::util::Hash > (boost::bind(&GuiServerDevice::slotAlarmSignalsUpdate, this, _1, _2, _3), "slotAlarmSignalsUpdate");
+            KARABO_SLOT(slotAlarmSignalsUpdate, std::string, std::string, karabo::util::Hash );
+            KARABO_SLOT(slotRunConfigSourcesUpdate, karabo::util::Hash, std::string);
             KARABO_SIGNAL("signalClientSignalsAlarmUpdate", Hash);
             KARABO_SIGNAL("signalClientRequestsAlarms");
 
@@ -131,6 +132,7 @@ namespace karabo {
                         hn.setAttributes(it->getAttributes());
                         connectPotentialAlarmService(topologyEntry);
                         registerPotentialProjectManager(topologyEntry);
+                        connectPotentialRunConfigurator(topologyEntry);
                     }
                 }
 
@@ -266,6 +268,8 @@ namespace karabo {
                         onProjectListItems(channel, info);
                     } else if (type == "projectListDomains") {
                         onProjectListDomains(channel, info);
+                    } else if (type == "runConfigSourcesInGroup") {
+                        onRunConfigSourcesInGroup(channel, info);
                     }
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << "Ignoring request";
@@ -909,6 +913,7 @@ namespace karabo {
 
                     connectPotentialAlarmService(topologyEntry);
                     registerPotentialProjectManager(topologyEntry);
+                    connectPotentialRunConfigurator(topologyEntry);
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceNewHandler(): " << e.userFriendlyMsg();
@@ -1247,6 +1252,17 @@ namespace karabo {
         }
 
 
+        void GuiServerDevice::connectPotentialRunConfigurator(const karabo::util::Hash& topologyEntry) {
+            std::string type, instanceId;
+            typeAndInstanceFromTopology(topologyEntry, type, instanceId);
+            if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
+                topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "RunConfigurator") {
+                connect(instanceId, "signalGroupSourceChanged", "", "slotRunConfigSourcesUpdate");
+            }
+
+        }
+
+
         void GuiServerDevice::registerPotentialProjectManager(const karabo::util::Hash& topologyEntry) {
             std::string type, instanceId;
             typeAndInstanceFromTopology(topologyEntry, type, instanceId);
@@ -1426,6 +1442,31 @@ namespace karabo {
             channel->writeAsync(h, LOSSLESS);
             return false;
 
+        }
+
+
+        void GuiServerDevice::onRunConfigSourcesInGroup(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRunConfigSourcesInGroup : info ...\n" << info;
+                const std::string& runConfigurator = info.get<std::string>("runConfiguratorId");
+                const std::string& group = info.get<std::string>("group");
+                request(runConfigurator, "slotGetSourcesInGroup", group)
+                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "runConfigSourcesInGroup", _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRunConfigSourcesInGroup(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::slotRunConfigSourcesUpdate(const karabo::util::Hash& info, const std::string& deviceId) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting run config group update";
+                Hash h("type", "runConfigSourcesInGroup", "reply", info);
+                // Broadcast to all GUIs
+                safeAllClientsWrite(h, LOSSLESS);
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad config group update: " << e.userFriendlyMsg();
+            }
         }
 
     }
