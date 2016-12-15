@@ -298,6 +298,15 @@ class Tests(TestCase):
         self.assertFalse(b.dimensionality)
         self.assertEqual(b.timestamp, 10)
 
+    def test_int(self):
+        a = QuantityValue(3)
+        # range calls a.__index__
+        self.assertEqual(list(range(a)), [0, 1, 2])
+
+        a = QuantityValue(3.5)
+        with self.assertRaises(AttributeError):
+            range(a)
+
     def test_special(self):
         vps = QuantityValue(1, Unit.VOLT_PER_SECOND)
         aps = QuantityValue(1, Unit.AMPERE_PER_SECOND)
