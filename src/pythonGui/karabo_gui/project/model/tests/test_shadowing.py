@@ -3,11 +3,10 @@ from karabo.common.project.api import (
     PROJECT_OBJECT_CATEGORIES
 )
 from karabo.common.scenemodel.api import SceneModel
-from ..macro import MacroModelItem
 from ..scene import SceneModelItem
 from ..shadow import (
     create_device_server_model_shadow, create_project_model_shadow,
-    destroy_project_model_shadow
+    create_macro_model_shadow, destroy_project_model_shadow
 )
 
 
@@ -45,7 +44,7 @@ def test_project_model_shadowing():
     proj = ProjectModel(macros=macros, scenes=scenes, servers=servers,
                         subprojects=subprojects)
 
-    creators = (MacroModelItem, SceneModelItem,
+    creators = (create_macro_model_shadow, SceneModelItem,
                 create_device_server_model_shadow, create_project_model_shadow)
     item_model = create_project_model_shadow(proj)
     for subgroup, creator in zip(item_model.children, creators):
