@@ -5,6 +5,9 @@
 #############################################################################
 from PyQt4.QtGui import QItemSelectionModel, QStandardItemModel
 
+from karabo_gui.events import (
+    broadcast_event, KaraboBroadcastEvent, KaraboEventSender
+)
 from karabo_gui.project.model.shadow import (
     create_project_model_shadow, destroy_project_model_shadow
 )
@@ -26,6 +29,20 @@ class ProjectViewItemModel(QStandardItemModel):
 
         self.setHorizontalHeaderLabels(TABLE_HEADER_LABELS)
 
+    def cleanup_project(self):
+        """ Clean up the ``self._traits_model`` properly which means trigger
+        certain events"""
+        if self._traits_model is None:
+            return
+
+        for scene in self._traits_model.scenes:
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.RemoveSceneView, {'model': scene}))
+
+        for macro in self._traits_model.macros:
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.RemoveMacro, {'model': macro}))
+
     @property
     def traits_data_model(self):
         """ Return the project object at the root of the hierarchy
@@ -42,6 +59,8 @@ class ProjectViewItemModel(QStandardItemModel):
             self.clear()
             # `clear()` removes the header data
             self.setHorizontalHeaderLabels(TABLE_HEADER_LABELS)
+
+        self.cleanup_project()
 
         self._traits_model = model
         if model is not None:
