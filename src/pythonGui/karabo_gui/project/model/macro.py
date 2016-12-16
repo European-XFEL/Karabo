@@ -8,25 +8,66 @@ from io import StringIO
 import weakref
 
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
-from traits.api import Instance, on_trait_change
+from traits.api import Instance, String, on_trait_change
 
 from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
-from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
-                               KaraboEventSender)
+from karabo_gui.events import (
+    broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
+    KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
+from karabo_gui.project.topo_listener import SystemTopologyListener
 from karabo_gui.project.utils import save_object
+from karabo_gui.singletons.api import get_manager
+from karabo_gui.topology import getDevice
 from karabo_gui.util import getSaveFileName
-from .bases import BaseProjectTreeItem
+from .bases import BaseProjectGroupItem, BaseProjectTreeItem
 
 
-class MacroModelItem(BaseProjectTreeItem):
+class MacroInstanceItem(BaseProjectTreeItem):
+    """ A project panel item for running macro instances
+    """
+    # The instance ID of the running macro
+    instance_id = String
+
+    def context_menu(self, parent_project, parent=None):
+        menu = QMenu(parent)
+        shutdown_action = QAction('Shutdown', menu)
+        shutdown_action.triggered.connect(self.shutdown)
+        menu.addAction(shutdown_action)
+        return menu
+
+    def create_qt_item(self):
+        item = QStandardItem(self.instance_id)
+        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
+        icon = get_project_device_status_icon(DeviceStatus.STATUS_ONLINE)
+        item.setIcon(icon)
+        item.setEditable(False)
+        return item
+
+    def single_click(self, parent_project, parent=None):
+        macro_inst = getDevice(self.instance_id)
+        data = {'configuration': macro_inst}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.TreeItemSingleClick, data))
+
+    # ----------------------------------------------------------------------
+    # action handlers
+
+    def shutdown(self):
+        get_manager().shutdownDevice(self.instance_id, showConfirm=True)
+
+
+class MacroModelItem(BaseProjectGroupItem):
     """ A wrapper for MacroModel objects
     """
     # Redefine model with the correct type
     model = Instance(MacroModel)
+    # An object which listens to system topology updates
+    topo_listener = Instance(SystemTopologyListener)
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
@@ -62,11 +103,68 @@ class MacroModelItem(BaseProjectTreeItem):
         broadcast_event(KaraboBroadcastEvent(KaraboEventSender.OpenMacro,
                                              data))
 
+    def item_handler(self, added, removed):
+        """ Called when instances are added/removed
+        """
+        removals = []
+        for inst_id in removed:
+            item_model = self._child_map[inst_id]
+            self.children.remove(item_model)
+            self.child_destroy(item_model)
+            removals.append(item_model)
+
+        additions = [self.child_create(model=self.model, instance_id=inst_id)
+                     for inst_id in added]
+        self.children.extend(additions)
+
+        # Synchronize the GUI with the Traits model
+        self._update_ui_children(additions, removals)
+
+    def system_topology_callback(self, devices, servers):
+        """ This callback is called by the ``SystemTopologyListener`` object
+        in the ``topo_listener`` trait.
+        """
+        data = {'model': self.model}
+        running_instances = self.model.instances
+        for dev_id, class_id, status in devices:
+            if dev_id.startswith(self.model.instance_id):
+                if status == 'offline' and dev_id in running_instances:
+                    running_instances.remove(dev_id)
+                elif dev_id not in running_instances:
+                    running_instances.append(dev_id)
+                    data['instance'] = dev_id
+                    # Create KaraboBroadcastEvent
+                    broadcast_event(KaraboBroadcastEvent(
+                        KaraboEventSender.ConnectMacroInstance, data))
+
+    # ----------------------------------------------------------------------
+    # traits notification handlers
+
+    def _children_items_changed(self, event):
+        """ Maintain ``_child_map`` by watching item events on ``children``
+
+        This is a static notification handler which is connected automatically
+        by Traits.
+        """
+        for item_model in event.removed:
+            del self._child_map[item_model.instance_id]
+
+        for item_model in event.added:
+            self._child_map[item_model.instance_id] = item_model
+
     @on_trait_change("model.simple_name")
     def simple_name_change(self):
         if not self.is_ui_initialized():
             return
         self.qt_item.setText(self.model.simple_name)
+
+    def _topo_listener_changed(self, name, old, new):
+        """Handle broadcast event registration/unregistration here.
+        """
+        if old is not None:
+            unregister_from_broadcasts(old)
+        if new is not None:
+            register_for_broadcasts(new)
 
     # ----------------------------------------------------------------------
     # action handlers

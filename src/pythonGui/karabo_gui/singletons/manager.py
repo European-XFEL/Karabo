@@ -123,10 +123,11 @@ class Manager(QObject):
             of the ``self.systemHash`` and returns the instance ids in a list.
         """
         instanceIds = []
-        for deviceId, _, attrs in self.systemHash['device'].iterall():
-            classId = attrs.get("classId", "unknown-class")
-            if classId == 'AlarmService':
-                instanceIds.append(deviceId)
+        if 'device' in self.systemHash:
+            for deviceId, _, attrs in self.systemHash['device'].iterall():
+                classId = attrs.get("classId", "unknown-class")
+                if classId == 'AlarmService':
+                    instanceIds.append(deviceId)
         return instanceIds
 
     def initDevice(self, serverId, classId, deviceId, config=None):
@@ -714,10 +715,11 @@ class Manager(QObject):
             instance ids in a list.
          """
         instanceIds = []
-        for deviceId, _, attrs in self.systemHash['device'].iterall():
-            classId = attrs.get("classId", "unknown-class")
-            if classId == 'RunConfigurator':
-                instanceIds.append(deviceId)
+        if 'device' in self.systemHash:
+            for deviceId, _, attrs in self.systemHash['device'].iterall():
+                classId = attrs.get("classId", "unknown-class")
+                if classId == 'RunConfigurator':
+                    instanceIds.append(deviceId)
         return instanceIds
 
     def handle_runConfigSourcesInGroup(self, reply):
@@ -737,6 +739,11 @@ def _extract_topology_devices(topo_hash):
             class_id = attrs.get('classId', 'unknown-class')
             status = attrs.get('status', 'ok')
             devices.append((device_id, class_id, status))
+
+    if 'macro' in topo_hash:
+        for device_id, _, attrs in topo_hash['macro'].iterall():
+            class_id = attrs.get('classId', 'unknown-class')
+            devices.append((device_id, class_id, 'ok'))
 
     if 'server' in topo_hash:
         for server_id, _, attrs in topo_hash['server'].iterall():

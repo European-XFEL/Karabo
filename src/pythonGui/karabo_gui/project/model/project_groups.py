@@ -8,7 +8,7 @@ import os.path as op
 import weakref
 
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
-from traits.api import Callable, Dict, Instance, List, String
+from traits.api import Instance, String
 
 from karabo.common.project.api import (DeviceServerModel, MacroModel,
                                        ProjectModel)
@@ -21,7 +21,7 @@ from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.util import getOpenFileName
-from .bases import BaseProjectGroupItem, BaseProjectTreeItem
+from .bases import BaseProjectGroupItem
 
 
 class ProjectSubgroupItem(BaseProjectGroupItem):
@@ -29,22 +29,10 @@ class ProjectSubgroupItem(BaseProjectGroupItem):
     """
     # Redefine model with the correct type
     model = Instance(ProjectModel)
-
     # The name of the group shown in the GUI
     group_name = String
-
     # The name of the trait on ``model`` which is shadowed by ``children``
     trait_name = String
-
-    # A factory for shadow items wrapping children
-    child_create = Callable
-
-    # A callable which can gracefully destroy a child shadow object
-    child_destroy = Callable
-
-    # The child tree items
-    children = List(Instance(BaseProjectTreeItem))
-    _child_map = Dict  # dictionary for fast lookups during removal
 
     def context_menu(self, parent_project, parent=None):
         menu_fillers = {
@@ -66,60 +54,6 @@ class ProjectSubgroupItem(BaseProjectGroupItem):
         for child in self.children:
             item.appendRow(child.qt_item)
         return item
-
-    def item_handler(self, added, removed):
-        """ Called for List-trait events on ``model`` (a ProjectModel)
-
-        This notification handler is connected and disconnected in the
-        create_project_model_shadow and destroy_project_model_shadow functions.
-        """
-        removals = []
-        for model in removed:
-            item_model = self._child_map[model]
-            self.children.remove(item_model)
-            self.child_destroy(item_model)
-            removals.append(item_model)
-
-        additions = [self.child_create(model=model) for model in added]
-        self.children.extend(additions)
-
-        # Synchronize the GUI with the Traits model
-        self._update_ui_children(additions, removals)
-
-    def _children_items_changed(self, event):
-        """ Maintain ``_child_map`` by watching item events on ``children``
-
-        This is a static notification handler which is connected automatically
-        by Traits.
-        """
-        for item_model in event.removed:
-            del self._child_map[item_model.model]
-
-        for item_model in event.added:
-            self._child_map[item_model.model] = item_model
-
-    def _update_ui_children(self, additions, removals):
-        """ Propagate changes from the Traits model to the Qt item model.
-        """
-        def _find_child_qt_item(item_model):
-            for i in range(self.qt_item.rowCount()):
-                row_child = self.qt_item.child(i)
-                row_model = row_child.data(PROJECT_ITEM_MODEL_REF)()
-                if row_model is item_model:
-                    return i
-            return -1
-
-        # Stop immediately if the UI is not yet initialized
-        if not self.is_ui_initialized():
-            return
-
-        for item in removals:
-            index = _find_child_qt_item(item)
-            if index >= 0:
-                self.qt_item.removeRow(index)
-
-        for item in additions:
-            self.qt_item.appendRow(item.qt_item)
 
 
 def _fill_macros_menu(menu, parent_project):
