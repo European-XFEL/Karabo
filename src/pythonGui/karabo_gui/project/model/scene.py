@@ -78,6 +78,9 @@ class SceneModelItem(BaseProjectTreeItem):
         if scene in project.scenes:
             project.scenes.remove(scene)
 
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.RemoveSceneView, {'model': scene}))
+
     def _edit_scene(self):
         dialog = SceneHandleDialog(self.model)
         result = dialog.exec()
