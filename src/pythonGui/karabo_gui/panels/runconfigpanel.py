@@ -73,7 +73,7 @@ class RunConfigPanel(Dockable, QWidget):
                 self._updateDetails(group, sources)
             elif event.sender is KaraboEventSender.NetworkConnectStatus:
                 if not event.data['status']:
-                    self._resetPanel()
+                    self.groupList.destroy()
             return False
         return super(RunConfigPanel, self).eventFilter(obj, event)
 
@@ -99,10 +99,6 @@ class RunConfigPanel(Dockable, QWidget):
             self._updateCompiledSources(compSources)
 
         self.sendBox = config.getBox(["buildConfigurationInUse"])
-
-    def _resetPanel(self):
-        self.groupModel.clear()
-        self.groupModel.setHorizontalHeaderLabels(self.headers)
 
     def _updateGroups(self):
         """
