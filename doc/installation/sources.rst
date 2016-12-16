@@ -4,17 +4,113 @@
 Build from sources
 ******************
 
+Get and install the Karabo framework (quick - no details)
+=========================================================
+
+1. Create or move into a folder where you want to check out the 
+   Karabo Framework, e.g.
+
+  .. code-block:: bash
+
+    mkdir Development
+    cd Development
+
+2. Now check out:
+
+  .. code-block:: bash
+
+    git clone https://in.xfel.eu/gitlab/Karabo/Framework.git karaboFramework
+
+3. Compile the Karabo bundle by running the following command for the
+   Debug version
+
+  .. code-block:: bash
+
+    ./auto_build_all.sh Debug
+
+  .. note::
+  
+     The compilation will only succeed if you installed all dependencies.
+     You can do this manually (see below) or try using:
+
+     ``./auto_build_all.sh Debug --auto``
+
+     but be prepared to enter a sudo password from time to time.
+
+  Or this following one for the Release version, respectively.
+
+  .. code-block:: bash
+
+    ./auto_build_all.sh Release
+
+4. (Updated) If you failed building the external dependencies, try and
+   fix the error in the dependency and compile again. For reference,
+   this file:
+
+  .. code-block:: bash
+
+    karaboFramework/extern/<platform>/.marker.txt
+
+  contains a list of packages installed successfully on your
+  machine.
+
+Tips for re-compilation of karaboFramework if you have already your
+local working copy.
+
+1. If there were any extern updates (for instance a new package, or a
+   new version of existing package)
+
+  * the very clean way is to rebuild all extern with:
+
+    .. code-block:: bash
+
+      ./auto_build_all.sh Clean-All
+      ./auto_build_all.sh Debug
+
+  * if you know what you are doing:
+
+    .. code-block:: bash
+
+      cd extern
+      ./build.sh <platform> packageA packageB
+
+2. If there were any changes to netbeans project files like
+   configuration.xml or makefiles like Karabo-???.mk
+
+  * clean first and then rebuild:
+
+    .. code-block:: bash
+
+      ./auto_build_all.sh Clean
+      ./auto_build_all.sh Debug
+
+  or recompile in NetBeans
+
+3.  If there were only code changes then simply rebuild:
+
+  .. code-block:: bash
+
+    ./auto_build_all.sh Debug
+
+  or recompile in Netbeans
+
+
+
 Install dependencies
 ====================
 
 All
 ---
 
-In new openmq 5.0 admin password is encoded using bundled tool - you
-also need to install java before compiling karaboFramework to get
-properly configured local broker - see Netbeans instructions :ref:`how to
-install java <installingJava>`.
+If you intend to run Karabo all-local, i.e. have the message-broker and the
+configuration database running on your system, you need *Java*.
 
+On Ubuntu systems the easiest way do install Java is using a recent version
+of openjdk, for example:
+
+.. code-block:: bash
+
+  sudo apt-get install openjdk-7-jre
 
 Ubuntu type system
 ------------------
@@ -49,8 +145,8 @@ For running karabo python tests:
   sudo yum install ImageMagick-devel
 
 
-MacOS X
--------
+MacOS X (currently unmaintained, use with care)
+-----------------------------------------------
 
 1. Install Xcode
 
@@ -204,98 +300,17 @@ MacOS X
     port list py34-ipython
 
 
-Get and install the Karabo framework (quick - no details)
-=========================================================
-
-1. Create the folder where you want to check out the karaboFramework
-   and go there, e.g.
-
-  .. code-block:: bash
-
-    mkdir karaboFramework
-    cd karaboFramework
-
-2. Now check out:
-
-  .. code-block:: bash
-
-    git clone https://in.xfel.eu/gitlab/Karabo/Framework.git karaboFramework
-
-3. Compile the Karabo bundle by running the following command for the
-   Debug version
-
-  .. code-block:: bash
-
-    ./auto_build_all.sh Debug
-
-  Or this following one for the Release version, respectively.
-
-  .. code-block:: bash
-
-    ./auto_build_all.sh Release
-
-4. (Updated) If you failed building the external dependencies, try and
-   fix the error in the dependency and compile again. For reference,
-   this file:
-
-  .. code-block:: bash
-
-    karaboFramework/extern/<platform>/.marker.txt
-
-  contains a list of packages installed successfully on your
-  machine. Check if you installed all dependencies for your OS listed
-  above or try compilation again with:
-
-  .. code-block:: bash
-
-    ./auto_build_all.sh Debug --auto
-
-  but be prepared to enter a sudo password from time to time.
-
-
-Tips for re-compilation of karaboFramework if you have already your
-local working copy.
-
-1. If there were any extern updates (for instance a new package, or a
-   new version of existing package)
-
-  * the very clean way is to rebuild all extern with:
-
-    .. code-block:: bash
-
-      ./auto_build_all.sh Clean-All
-      ./auto_build_all.sh Debug
-
-  * if you know what you are doing:
-
-    .. code-block:: bash
-
-      cd extern
-      ./build.sh <platform> packageA packageB
-
-2. If there were any changes to netbeans project files like
-   configuration.xml or makefiles like Karabo-???.mk
-
-  * clean first and then rebuild:
-
-    .. code-block:: bash
-
-      ./auto_build_all.sh Clean
-      ./auto_build_all.sh Debug
-
-  or recompile in NetBeans
-
-3.  If there were only code changes then simply rebuild:
-
-  .. code-block:: bash
-
-    ./auto_build_all.sh Debug
-
-  or recompile in Netbeans
  
 
 Executing Unit Tests
 ====================
+
+The simplest way to run all tests is:
+
+.. code-block:: bash
+
+  ./auto_build_all.sh Debug --runTests
+  
 
 Karabo (C++)
 ------------
@@ -386,6 +401,10 @@ following structure of files and sources:
     application, which can load Device plugins into the distributed
     system.
 
+  **integrationTests/**
+  
+    Contains code for high-level integration tests.
+
   **karabo/**
 
     The central project, Karabo's backbone in C++. Its directory
@@ -406,6 +425,11 @@ following structure of files and sources:
     Native Python code providing two APIs: The middlelayer API which is pure
     Python and the bound API which makes use of the bindings to Karabo's C++ API
     provided by karathon.
+
+  **templates/**
+
+    Here the templates for Karabo's three API's are placed 
+    (will be utilized upon ``karabo new [...]``)
 
 **build/**
 
@@ -548,10 +572,11 @@ Creation of binary software bundle for shipping
 
   .. code-block:: bash
 
-    cd karaboFramework/build/netbeans/karabo
-    make bundle-package # or make package CONF=Release for Release configuration)
+     ./auto_build_install.sh Release --bundle
+  
+  After successfull bundling you should find a ``karabo-<version>.sh`` in 
 
-  * This will also go through all other projects as described above.
+  ``package/<Conf>/<OS-Name>/<OS-Version>/<Arch>/``
 
 2. Create installer script without GUI:
 
@@ -559,22 +584,3 @@ Creation of binary software bundle for shipping
 
     cd karaboFramework/build/netbeans/karabo
     make package GUIOPT=NOGUI
-
-3. The recommended way of compilation (or script creation and source
-   copy in case of python projects) of pythonGui, pythonCli,
-   pythonKarabo, deviceServer and brokerMessageLogger projects is
-   through *bundle-install* and *bundle-package* targets described
-   above. However you may also build C++ project like this (it will
-   check for external and karabo library dependency automatically):
-
-  * From command line:
-
-    .. code-block:: bash
-
-      cd karaboFramework/build/netbeans/deviceServer
-      make -j4
-
-  * From Netbeans
-
-    * Open project: karaboFramework/build/netbeans/deviceServer
-    * Build project
