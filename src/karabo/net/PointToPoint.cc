@@ -322,7 +322,7 @@ namespace karabo {
                 }
             }
             if (channel) channel->close();
-            connection->stop();
+            if (connection) connection->stop();
         }
 
 
@@ -346,7 +346,7 @@ namespace karabo {
                 OpenConnections::iterator ii = m_openConnections.find(signalConnectionString);
                 if (ii != m_openConnections.end()) m_openConnections.erase(ii);
             }
-            channel->close();
+            if (channel) channel->close();
         }
 
 
