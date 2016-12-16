@@ -231,18 +231,20 @@ class ProjectDatabase(ContextDecorator):
 
         item_xml = self._make_str_if_needed(item_xml)
         path = "{}/{}/{}_{}".format(self.root, domain, uuid, revision)
-        success = False
+
         try:
+            if self.dbhandle.hasDocument(path) and not overwrite:
+                raise ExistDBException("Versioning conflict. Document exists!")
             success = self.dbhandle.load(item_xml, path)
-        except ExistDBException:
-            success = False
+        except ExistDBException as e:
+            raise ProjectDBError
 
         meta = {}
         meta['versioning_info'] = self.get_versioning_info(domain, uuid)
         meta['domain'] = domain
         meta['uuid'] = uuid
         meta['revision'] = revision
-        return (success, meta)
+        return meta
 
     def load_item(self, domain, item, revision):
         """
