@@ -133,13 +133,12 @@ class TestProjectDatabase(TestCase):
 
             with self.subTest(msg='test_save_item'):
                 xml_rep = '<test revision="42">foo</test>'
-                success, meta = db.save_item('LOCAL', testproject2, xml_rep)
+                meta= db.save_item('LOCAL', testproject2, xml_rep)
 
                 path = "{}/LOCAL/{}_42".format(db.root, testproject2)
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 decoded = db.dbhandle.getDoc(path).decode('utf-8')
                 self.assertEqual(decoded, xml_rep)
-                self.assertTrue(success)
                 self.assertTrue('versioning_info' in meta)
                 self.assertTrue('domain' in meta)
                 self.assertTrue('uuid' in meta)
