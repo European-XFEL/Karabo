@@ -22,6 +22,7 @@ from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
 from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager
+from karabo_gui.topology import getDevice
 from karabo_gui.util import getSaveFileName
 from .bases import BaseProjectGroupItem, BaseProjectTreeItem
 
@@ -46,6 +47,12 @@ class MacroInstanceItem(BaseProjectTreeItem):
         item.setIcon(icon)
         item.setEditable(False)
         return item
+
+    def single_click(self, parent_project, parent=None):
+        macro_inst = getDevice(self.instance_id)
+        data = {'configuration': macro_inst}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.TreeItemSingleClick, data))
 
     # ----------------------------------------------------------------------
     # action handlers
