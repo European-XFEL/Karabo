@@ -1620,22 +1620,26 @@ namespace karabo {
 
                 Hash& toClear = result.bindReference<Hash>("toClear");
                 Hash& toAdd = result.bindReference<Hash>("toAdd");
-                std::unordered_set<std::string> knownAlarms; //alarms already known to the system which have not updated
+                std::map<std::string, std::unordered_set<std::string> > knownAlarms; //alarms already known to the system which have not updated
 
                 const Hash& current = m_validatorIntern.getParametersInWarnOrAlarm();
                 if (!previous.empty()) {
                     for (Hash::const_iterator it = previous.begin(); it != previous.end(); ++it) {
                         const boost::optional<const Hash::Node&> currentEntry = current.find(it->getKey());
-                        if (currentEntry) {
+                        const Hash& desc = it->getValue<Hash>();
+                        const std::string& exType = desc.get<std::string>("type");
+                        if (currentEntry &&  exType == currentEntry->getValue<Hash>().get<std::string>("type")) {
                             if (!forceUpdate // on force update we don't care if timestamps match
                                 && (Timestamp::fromHashAttributes(it->getAttributes())
                                     == Timestamp::fromHashAttributes(currentEntry->getAttributes()))) {
-                                knownAlarms.insert(it->getKey());
+                                knownAlarms[it->getKey()].insert(exType);
                             }
+                            
                             continue; //alarmCondition still exists nothing to clean
+                            
                         }
                         //add simple entry to allow for cleaning
-                        const Hash& desc = it->getValue<Hash>();
+                        ;
                         const std::string& property = it->getKey();
 
                         boost::optional<Hash::Node&> typesListN = toClear.find(property);
@@ -1650,10 +1654,11 @@ namespace karabo {
 
                 //now add new alarms
                 for (Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
+                    const Hash& desc = it->getValue<Hash>();
+                    const std::string& conditionString = desc.get<std::string>("type");
                     // avoid unnecessary chatter of already sent messages.
-                    if (forceUpdate || knownAlarms.find(it->getKey()) == knownAlarms.end()) {
-                        const Hash& desc = it->getValue<Hash>();
-                        const std::string& conditionString = desc.get<std::string>("type");
+                    if (forceUpdate || knownAlarms[it->getKey()].find(conditionString) == knownAlarms[it->getKey()].end()) {
+                        
                         const AlarmCondition& condition = AlarmCondition::fromString(conditionString);
 
                         const std::string& property = it->getKey();
@@ -1671,6 +1676,9 @@ namespace karabo {
                         occuredAt.toHashAttributes(entryNode.getAttributes());
                     }
                 }
+                
+                KARABO_LOG_INFO<<toClear;
+                KARABO_LOG_INFO<<toAdd;
 
 
 
