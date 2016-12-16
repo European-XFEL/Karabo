@@ -224,7 +224,7 @@ namespace karabo {
                         .description("The current state the device is in")
                         .initialValue(State::UNKNOWN)
                         .commit();
-                
+
                 STRING_ELEMENT(expected).key("status")
                         .displayedName("Status")
                         .description("A more detailed status description")
@@ -1091,7 +1091,6 @@ namespace karabo {
                 return karabo::util::AlarmCondition::fromString(this->get<std::string>("alarmCondition"));
             }
 
-
             /**
              * Set the global alarm condition
              * @param condition to set
@@ -1120,7 +1119,7 @@ namespace karabo {
                 Hash& toClear = emitHash.bindReference<Hash>("toClear");
                 Hash& toAdd = emitHash.bindReference<Hash>("toAdd");
                 const std::string& conditionString = condition.asString();
-                if(condition.asString() == AlarmCondition::NONE.asString() &&  currentGlobal != AlarmCondition::NONE.asString()) {
+                if (condition.asString() == AlarmCondition::NONE.asString() && currentGlobal != AlarmCondition::NONE.asString()) {
                     toClear.set("global", std::vector<std::string>(1, currentGlobal));
                 } else {
                     Hash::Node& propertyNode = toAdd.set("global", Hash());
@@ -1220,7 +1219,7 @@ namespace karabo {
                 using namespace karabo::util;
                 using namespace karabo::net;
 
-                
+
                 // This initializations or done here and not in the constructor 
                 // as they involve virtual function calls
                 this->initClassId();
@@ -1620,22 +1619,25 @@ namespace karabo {
 
                 Hash& toClear = result.bindReference<Hash>("toClear");
                 Hash& toAdd = result.bindReference<Hash>("toAdd");
-                std::unordered_set<std::string> knownAlarms; //alarms already known to the system which have not updated
+                std::map<std::string, std::unordered_set<std::string> > knownAlarms; //alarms already known to the system which have not updated
 
                 const Hash& current = m_validatorIntern.getParametersInWarnOrAlarm();
                 if (!previous.empty()) {
                     for (Hash::const_iterator it = previous.begin(); it != previous.end(); ++it) {
                         const boost::optional<const Hash::Node&> currentEntry = current.find(it->getKey());
-                        if (currentEntry) {
+                        const Hash& desc = it->getValue<Hash>();
+                        const std::string& exType = desc.get<std::string>("type");
+                        if (currentEntry && exType == currentEntry->getValue<Hash>().get<std::string>("type")) {
                             if (!forceUpdate // on force update we don't care if timestamps match
                                 && (Timestamp::fromHashAttributes(it->getAttributes())
                                     == Timestamp::fromHashAttributes(currentEntry->getAttributes()))) {
-                                knownAlarms.insert(it->getKey());
+                                knownAlarms[it->getKey()].insert(exType);
                             }
+
                             continue; //alarmCondition still exists nothing to clean
+
                         }
                         //add simple entry to allow for cleaning
-                        const Hash& desc = it->getValue<Hash>();
                         const std::string& property = it->getKey();
 
                         boost::optional<Hash::Node&> typesListN = toClear.find(property);
@@ -1650,10 +1652,11 @@ namespace karabo {
 
                 //now add new alarms
                 for (Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
+                    const Hash& desc = it->getValue<Hash>();
+                    const std::string& conditionString = desc.get<std::string>("type");
                     // avoid unnecessary chatter of already sent messages.
-                    if (forceUpdate || knownAlarms.find(it->getKey()) == knownAlarms.end()) {
-                        const Hash& desc = it->getValue<Hash>();
-                        const std::string& conditionString = desc.get<std::string>("type");
+                    if (forceUpdate || knownAlarms[it->getKey()].find(conditionString) == knownAlarms[it->getKey()].end()) {
+
                         const AlarmCondition& condition = AlarmCondition::fromString(conditionString);
 
                         const std::string& property = it->getKey();
@@ -1671,8 +1674,6 @@ namespace karabo {
                         occuredAt.toHashAttributes(entryNode.getAttributes());
                     }
                 }
-
-
 
             }
 
