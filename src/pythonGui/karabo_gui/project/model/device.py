@@ -102,12 +102,8 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     def single_click(self, parent_project, parent=None):
         config = self._get_active_config()
         if config is not None and config.configuration is not None:
-            device_box = self._get_device_entry(parent_project, config)
-            # XXX the configurator expects the clicked configuration before
-            # it can show the actual configuration
-            data = {'configuration': device_box}
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.TreeItemSingleClick, data))
+            configuration = self._get_device_entry(parent_project, config)
+            self._broadcast_item_click(configuration)
 
     @on_trait_change("model.instance_id")
     def instance_id_change(self):
@@ -130,6 +126,15 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         if icon is not None:
             self.qt_item.setIcon(icon)
 
+        self._broadcast_item_click(self._get_current_configuration())
+
+    @on_trait_change("model.active_config_ref")
+    def active_config_ref_change(self):
+        if not self.is_ui_initialized():
+            return
+
+        self._broadcast_item_click(self._get_current_configuration())
+
     def _get_device_entry(self, project, active_config):
         """ Return the ``Configuration`` box for the device instance id
         depending on the fact whether the device is running or not
@@ -143,7 +148,6 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         config_changed_slot = self._active_config_changed_in_configurator
         if self.real_device is None:
             self.real_device = getDevice(device.instance_id)
-            # XXX: Track configuration changes to the device instance??
         if self.project_device is None:
             self.project_device = Configuration(device.instance_id,
                                                 'projectClass')
@@ -161,6 +165,11 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
                 self._set_descriptor(conf)
             # Track configuration changes
             self.project_device.signalBoxChanged.connect(config_changed_slot)
+
+        return self._get_current_configuration()
+
+    def _get_current_configuration(self):
+        """ Return the current configuration depending on the status"""
         if self.real_device.isOnline():
             return self.real_device
 
@@ -197,6 +206,15 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         config = self._get_active_config()
         if config is not None and config.configuration is not None:
             self.project_device.fromHash(config.configuration)
+
+    def _broadcast_item_click(self, configuration):
+        if configuration is None:
+            return
+        # XXX the configurator expects the clicked configuration before
+        # it can show the actual configuration
+        data = {'configuration': configuration}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.TreeItemSingleClick, data))
 
     def _broadcast_show_configuration(self, device_box):
         """ Notify configuration panel to show configuration of ``device_box``
@@ -246,12 +264,10 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
             return
 
         device = self.model
-        configuration = self.project_device
-        if self.real_device.isOnline():
-            configuration = self.real_device
-
+        configuration = self._get_current_configuration()
+        if configuration is not None:
+            configuration.fromHash(config_model.configuration)
         device.active_config_ref = (config_model.uuid, config_model.revision)
-        configuration.fromHash(config_model.configuration)
 
     def _active_config_changed_in_configurator(self):
         """ This slot it connected to the signal
