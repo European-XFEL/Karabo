@@ -5,15 +5,13 @@
 # management scripts: 
 # 1. karabo-start   - to start karabo processes defined by the START environmental
 #                     karabo-start has a single optional parameter "-nox" which controls whether
-#	       	  	      the processes are started as individual xterms or accumulated as background jobs
+#	       	      the processes are started as individual xterms or accumulated as background jobs
 # 2. karabo-stop    - to stop started processes
 # 3. karabo-check   - to check the definitions used by test system scripts 
 #              	      this script is the only check made of the definitions used
 # 4. karabo-restart - to restart any "missing" applications
 #                     a candidate to a missing application is the gui which was closed at
-#                 	  the end of the last session with all other applications left running.
-# 
-# author: CY 18.12.2012, largely modified: BH 09.04.2015
+#                     the end of the last session with all other applications left running.
 
 
 ##################
@@ -60,7 +58,7 @@ logger=Logger.priority=INFO
 
 START[0]="karabo-cppserver serverId=karabo/guiServer deviceClasses=GuiServerDevice autoStart[0].GuiServerDevice.port=44444 visibility=4 $logger"
 
-START[1]="karabo-cppserver serverId=karabo/logAggregator deviceClasses=CentralLogging autoStart[0].CentralLogging visibility=4 $logger:0:1000"
+START[1]="karabo-cppserver serverId=karabo/logAggregator deviceClasses=CentralLogging autoStart[0].CentralLogging visibility=4 $logger"
 
 START[2]="karabo-cppserver serverId=karabo/dataLogger deviceClasses=DataLogger,DataLogReader visibility=4 $logger"
 
