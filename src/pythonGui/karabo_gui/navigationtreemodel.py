@@ -15,7 +15,7 @@ from karabo.middlelayer import AccessLevel, Hash
 from karabo_gui.enums import NavigationItemTypes
 import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
-from karabo_gui.indicators import ALARM_ICONS, get_state_icon
+from karabo_gui.indicators import ALARM_ICONS, get_state_icon, NONE
 from karabo_gui.topology import getClass, getDevice
 from karabo_gui.treenode import TreeNode
 
@@ -405,7 +405,7 @@ class NavigationTreeModel(QAbstractItemModel):
         elif column == 2 and role == Qt.DecorationRole:
             hierarchyLevel = self.getHierarchyLevel(index)
             if hierarchyLevel == 3:
-                if node.alarm_type is not None:
+                if node.alarm_type is not None and node.alarm_type != NONE:
                     return ALARM_ICONS[node.alarm_type].icon
 
     def flags(self, index):
