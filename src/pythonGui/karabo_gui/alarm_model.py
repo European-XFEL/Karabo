@@ -13,7 +13,7 @@ from karabo_gui.const import ALARM_COLOR, INTERLOCK_COLOR, WARN_COLOR
 from karabo_gui.indicators import (
     ALARM_GLOBAL, ALARM_HIGH, ALARM_LOW, ALARM_VARIANCE_HIGH,
     ALARM_VARIANCE_LOW, INTERLOCK, WARN_GLOBAL, WARN_HIGH, WARN_LOW,
-    WARN_VARIANCE_HIGH, WARN_VARIANCE_LOW
+    WARN_VARIANCE_HIGH, WARN_VARIANCE_LOW, NONE
 )
 
 ALARM_ID = 'id'
@@ -99,6 +99,9 @@ class AlarmModel(QAbstractTableModel):
         for id, h in rows.items():
             # Get data of hash
             for updateType, aHash in h.items():
+                if aHash.get(ALARM_TYPE) == NONE:
+                    # No need to add an entry
+                    continue
                 updateTypes.append(updateType)
                 # XXX: TODO use proper UTC to local time lib
                 params = {
