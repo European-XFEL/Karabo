@@ -28,10 +28,11 @@ class RunConfigPanel(Dockable, QWidget):
 
         self.groupList = QTreeView()
 
-        headers = ['source', 'type', 'behavior', 'monitor', 'access']
-        self.groupModel = QStandardItemModel(0, len(headers), self.groupList)
+        self.headers = ['source', 'type', 'behavior', 'monitor', 'access']
+        self.groupModel = QStandardItemModel(0, len(self.headers),
+                                             self.groupList)
 
-        self.groupModel.setHorizontalHeaderLabels(headers)
+        self.groupModel.setHorizontalHeaderLabels(self.headers)
 
         self.groupModel.itemChanged.connect(self.onGroupItemChanged)
         self.groupList.setModel(self.groupModel)
@@ -72,7 +73,7 @@ class RunConfigPanel(Dockable, QWidget):
                 self._updateDetails(group, sources)
             elif event.sender is KaraboEventSender.NetworkConnectStatus:
                 if not event.data['status']:
-                    self._resetPanel()
+                    self.groupList.destroy()
             return False
         return super(RunConfigPanel, self).eventFilter(obj, event)
 
@@ -110,7 +111,8 @@ class RunConfigPanel(Dockable, QWidget):
                 item = QStandardItem(key)
                 # add a checkbox to it
                 item.setCheckable(True)
-                item.setToolTip(group['description'])
+                if 'description' in group:
+                    item.setToolTip(group['description'])
                 self.groupModel.appendRow(item)
             get_network().onSourcesInGroup(self.instanceId, key)
 

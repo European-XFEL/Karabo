@@ -101,6 +101,8 @@ class MainWindow(QMainWindow):
                 self.removeAlarmServicePanels(data.get('instanceIds'))
             elif sender is KaraboEventSender.AddRunConfigurator:
                 self.addRunConfigPanel(data.get('instanceIds'))
+            elif sender is KaraboEventSender.RemoveRunConfigurator:
+                self.removeRunConfigPanels(data.get('instanceIds'))
 
             return False
         return super(MainWindow, self).eventFilter(obj, event)

@@ -24,6 +24,7 @@ class KaraboEventSender(Enum):
     OpenSceneLink = "Scene link"
     OpenSceneView = "Open scene view"
     RemoveAlarmServices = "Remove alarm services"
+    RemoveRunConfigurator = "Remove run configurator"
     RemoveMacro = "Remove macro"
     RemoveSceneView = "Remove scene view"
     RenameSceneView = "Rename scene view"
