@@ -92,11 +92,6 @@ class RunConfigPanel(Dockable, QWidget):
                 self.availableGroups[g['groupId']] = g
             self._updateGroups()
 
-        self.compBox = config.getBox(["sources"])
-        compSources = self.compBox.value
-        if not isinstance(compSources, Dummy):
-            self._updateCompiledSources(compSources)
-
         self.sendBox = config.getBox(["buildConfigurationInUse"])
 
     def _updateGroups(self):
@@ -120,10 +115,16 @@ class RunConfigPanel(Dockable, QWidget):
         """
         items = self.groupModel.findItems(group)
         for item in items:
+            existingSources = item.data(Qt.UserRole+1)
+            if existingSources is None:
+                existingSources = []
             for source in sources:
                 attrs = ['source', 'type', 'behavior', 'monitored', 'access']
                 row = [QStandardItem(str(source.get(a))) for a in attrs]
-                item.appendRow(row)
+                if source.get('source') not in existingSources:
+                    item.appendRow(row)
+                    existingSources.append(source.get('source'))
+            item.setData(existingSources, Qt.UserRole+1)
 
     def onGroupItemChanged(self, item):
         """
