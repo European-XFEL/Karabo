@@ -20,7 +20,7 @@
     - export REL_TAG=$CI_BUILD_REF_NAME
     - export REL_ARTIFACT_NAME=karabo-$REL_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh
     - export REL_ARTIFACT_DEST=karaboFramework/tags/$REL_TAG
-    - bash ./auto_build_all.sh Release --noDbInit
+    - bash ./auto_build_all.sh Release --noDbInit --bundle
     - mv package/Release/$REL_OS_NAME/$REL_OS_VERS_LONG/x86_64/karabo-*.sh $REL_ARTIFACT_NAME
     - sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null xdata@exflserv05 "mkdir -p /var/www/html/karabo/$REL_ARTIFACT_DEST"
     - sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME xdata@exflserv05:/var/www/html/karabo/$REL_ARTIFACT_DEST
@@ -38,7 +38,7 @@
     - start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
   script:
     - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
-    - bash ./auto_build_all.sh Debug --noBundle --runTests
+    - bash ./auto_build_all.sh Debug --runTests
   only:
     - branches
   except:
@@ -50,7 +50,7 @@
     - update-locale LANG=en_US.UTF-8
   script:
     - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
-    - bash ./auto_build_all.sh Debug --noBundle --runIntegrationTests
+    - bash ./auto_build_all.sh Debug --runIntegrationTests
   only:
     - master
 
@@ -104,7 +104,7 @@ release:windowsGUI:
   script:
     - export REL_TAG=$CI_BUILD_REF_NAME
     - export REL_ARTIFACT_DEST=karaboGui/KaraboGUI-$REL_TAG.win32.exe
-    - bash ./auto_build_all.sh Release --noDbInit --noBundle
+    - bash ./auto_build_all.sh Release --noDbInit
     - source karabo/activate
     - cd build/python
     - bash ./build.sh
