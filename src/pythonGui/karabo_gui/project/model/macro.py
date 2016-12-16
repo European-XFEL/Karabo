@@ -176,6 +176,9 @@ class MacroModelItem(BaseProjectGroupItem):
         if macro in project.macros:
             project.macros.remove(macro)
 
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.RemoveMacro, {'model': macro}))
+
     def _edit_macro(self):
         dialog = MacroHandleDialog(self.model)
         result = dialog.exec()
