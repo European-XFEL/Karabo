@@ -6,9 +6,11 @@
 from abc import abstractmethod
 
 from PyQt4.QtGui import QStandardItem
-from traits.api import ABCHasStrictTraits, Instance, Property
+from traits.api import (ABCHasStrictTraits, Callable, Dict, Instance, List,
+                        Property)
 
 from karabo.common.project.api import BaseProjectObjectModel
+from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 
 
 class BaseProjectTreeItem(ABCHasStrictTraits):
@@ -75,6 +77,13 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
 class BaseProjectGroupItem(BaseProjectTreeItem):
     """ A base class for all project tree objects which have children.
     """
+    # A factory for shadow items wrapping children
+    child_create = Callable
+    # A callable which can gracefully destroy a child shadow object
+    child_destroy = Callable
+    # Children shadow items
+    children = List(Instance(BaseProjectTreeItem))
+    _child_map = Dict  # dictionary for fast lookups during removal
 
     def items_assigned(self, obj, name, old, new):
         """ Handles assignment to a list trait and passes the notification
@@ -88,7 +97,53 @@ class BaseProjectGroupItem(BaseProjectTreeItem):
         """
         self.item_handler(event.added, event.removed)
 
-    @abstractmethod
     def item_handler(self, added, removed):
         """ Called for List-trait events on ``model``
         """
+        removals = []
+        for model in removed:
+            item_model = self._child_map[model]
+            self.children.remove(item_model)
+            self.child_destroy(item_model)
+            removals.append(item_model)
+
+        additions = [self.child_create(model=model) for model in added]
+        self.children.extend(additions)
+
+        # Synchronize the GUI with the Traits model
+        self._update_ui_children(additions, removals)
+
+    def _children_items_changed(self, event):
+        """ Maintain ``_child_map`` by watching item events on ``children``
+
+        This is a static notification handler which is connected automatically
+        by Traits.
+        """
+        for item_model in event.removed:
+            del self._child_map[item_model.model]
+
+        for item_model in event.added:
+            self._child_map[item_model.model] = item_model
+
+    def _update_ui_children(self, additions, removals):
+        """ Propagate changes from the Traits model to the Qt item model.
+        """
+        def _find_child_qt_item(item_model):
+            for i in range(self.qt_item.rowCount()):
+                row_child = self.qt_item.child(i)
+                row_model = row_child.data(PROJECT_ITEM_MODEL_REF)()
+                if row_model is item_model:
+                    return i
+            return -1
+
+        # Stop immediately if the UI is not yet initialized
+        if not self.is_ui_initialized():
+            return
+
+        for item in removals:
+            index = _find_child_qt_item(item)
+            if index >= 0:
+                self.qt_item.removeRow(index)
+
+        for item in additions:
+            self.qt_item.appendRow(item.qt_item)
