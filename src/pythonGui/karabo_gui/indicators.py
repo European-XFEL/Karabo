@@ -25,6 +25,7 @@ ALARM_HIGH = 'alarmHigh'
 ALARM_VARIANCE_LOW = 'alarmVarianceLow'
 ALARM_VARIANCE_HIGH = 'alarmVarianceHigh'
 INTERLOCK = 'interlock'
+NONE = 'none'
 
 ALARM_ICONS = {
     WARN_GLOBAL: icons.warnGlobal,
