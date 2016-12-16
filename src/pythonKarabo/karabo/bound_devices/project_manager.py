@@ -164,9 +164,15 @@ class ProjectManager(PythonDevice):
                 uuid = item.get("uuid")
                 overwrite = item.get("overwrite")
                 domain = item.get("domain")
-                success, meta = db_session.save_item(domain, uuid,
-                                                     xml, overwrite)
+                exceptionReason = ""
+                success = True
+                try:
+                    meta = db_session.save_item(domain, uuid, xml, overwrite)
+                except ProjectDBError as e:
+                    success = False
+                    exceptionReason = str(e)
                 item.set("success", success)
+                item.set("reason", exceptionReason)
                 item.set("entry", dictToHash(meta))
                 savedItems.append(item)
         self.reply(Hash('items', savedItems))
