@@ -123,10 +123,11 @@ class Manager(QObject):
             of the ``self.systemHash`` and returns the instance ids in a list.
         """
         instanceIds = []
-        for deviceId, _, attrs in self.systemHash['device'].iterall():
-            classId = attrs.get("classId", "unknown-class")
-            if classId == 'AlarmService':
-                instanceIds.append(deviceId)
+        if 'device' in self.systemHash:
+            for deviceId, _, attrs in self.systemHash['device'].iterall():
+                classId = attrs.get("classId", "unknown-class")
+                if classId == 'AlarmService':
+                    instanceIds.append(deviceId)
         return instanceIds
 
     def initDevice(self, serverId, classId, deviceId, config=None):
@@ -707,10 +708,11 @@ class Manager(QObject):
             instance ids in a list.
          """
         instanceIds = []
-        for deviceId, _, attrs in self.systemHash['device'].iterall():
-            classId = attrs.get("classId", "unknown-class")
-            if classId == 'RunConfigurator':
-                instanceIds.append(deviceId)
+        if 'device' in self.systemHash:
+            for deviceId, _, attrs in self.systemHash['device'].iterall():
+                classId = attrs.get("classId", "unknown-class")
+                if classId == 'RunConfigurator':
+                    instanceIds.append(deviceId)
         return instanceIds
 
     def handle_runConfigSourcesInGroup(self, reply):
