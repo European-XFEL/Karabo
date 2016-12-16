@@ -1,6 +1,6 @@
-******************
-Only GUI for MacOS
-******************
+**********************************************************
+Only GUI for MacOS (currently unmaintained, use with care)
+**********************************************************
 
 In order to install and run karaboGUI on MacOS, you need a local python installation.
 None of the known python scientific distribution (anaconda, canopy express, etc) contains pyqwt, guidata, guiqwt, so using macport is recommended.
