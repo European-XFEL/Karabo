@@ -466,6 +466,13 @@ class Manager(QObject):
                 broadcast_event(KaraboBroadcastEvent(
                     KaraboEventSender.RemoveAlarmServices, data))
 
+            instanceIds = self._extractRunConfigurators()
+            if instanceId in instanceIds:
+                data = {'instanceIds': [instanceId]}
+                # Create KaraboBroadcastEvent
+                broadcast_event(KaraboBroadcastEvent(
+                    KaraboEventSender.RemoveRunConfigurator, data))
+
             device = self.deviceData.get(instanceId)
             if device is not None:
                 device.status = "offline"
