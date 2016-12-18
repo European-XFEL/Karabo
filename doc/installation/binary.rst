@@ -6,7 +6,7 @@
 
 Use this installation option if you want to use Karabo for:
 
-- Running the GUI or CLI on your Laptop or PC in order to view/control an existing installation
+- Running the GUI or ikarabo on your Laptop or PC in order to view/control an existing installation
 
 - Starting Karabo all local, see how it works, develop macros and/or devices
 
@@ -20,7 +20,7 @@ If one of the option is for you simply follow the few steps below:
 Get and install Karabo Framework
 ===================================
 
-A self extracting shell script is available `here <ftp://karabo:framework@ftp.desy.de/karaboFramework/tags>`_.
+A self extracting shell script is available `here <http:exflserv05.desy.de/karabo/karaboFramework/tags>`_.
 
 Select the correct installer for your operating system and download it to some local folder.
 
@@ -29,12 +29,17 @@ Change permissions and extract it using the following commands::
     chmod +x karabo-*.sh
     ./karabo-*.sh
 
-The script will install two folders, one for the Karabo framework (*karabo-<version>*), containing libraries, dependencies, etc., and another one for running Karabo (*karaboRun*).
+The script will install a single ``karabo`` folder, containing everything needed (including dependencies)
+to get going with Karabo.
 
-When asked for the respective paths, simply press Enter to use the defaults or just
-enter a new path where you would like to install the Karabo Framework.
+.. note::
 
-Fortunately, you do not have to install any dependencies as everything is shipped within Karabo.
+   Before using Karabo you always have to source the ``activate`` script which is
+   available in Karabo's root folder.
 
-Your installation of the Karabo Framework is now complete!
+Once ``activate`` is sourced, your environment is ready and you should be able to e.g. run:
+
+``karabo-gui``
+
+
 
