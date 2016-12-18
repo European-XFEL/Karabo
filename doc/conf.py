@@ -12,7 +12,7 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
-#from rtd_conf import global_conf
+from rtd_conf import global_conf
 import sys
 import subprocess
 import os
@@ -40,6 +40,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
     'sphinx.ext.graphviz',
+    'breathe',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
