@@ -137,7 +137,7 @@ namespace karabo {
             if(std::getenv("KARABO_DISABLE_LOGGER_P2P") == NULL){
                 connectP2P(m_deviceToBeLogged);
             } else {
-                KARABO_LOG_WARN<<"Data logging via p2p has been disabled for loggers!";
+                KARABO_LOG_FRAMEWORK_WARN << "Data logging via p2p has been disabled for loggers!";
             }
         }
 
