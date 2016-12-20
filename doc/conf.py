@@ -321,13 +321,4 @@ def setup(app):
             crst.write(".. |{}-box| image::  ./colors/{}.png\n".format(c,c))
             crst.write("\n\n")
             
-# mock karathon and other modules commmonly used so that we don't have to
-# compile it
-from unittest.mock import MagicMock
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return Mock()
-MOCK_MODULES = ['karathon', 'IPython', 'eulexistdb', 'eulexistdb.exceptions',
-                'traits']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
