@@ -4,4 +4,4 @@ slumber
 breathe
 numpy
 matplotlib
-traits
+git+https://github.com/enthought/traits.git
