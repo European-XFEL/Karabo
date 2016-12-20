@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import os.path as op
-import operator
 
 from collections import OrderedDict, namedtuple
 from operator import attrgetter
