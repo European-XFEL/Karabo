@@ -1,12 +1,13 @@
+
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (
     QAction, QInputDialog, QLabel
 )
-from karabo.middlelayer import String, State
 from karabo_gui.const import ns_karabo, OK_COLOR, ERROR_COLOR_ALPHA
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
+from karabo.middlelayer import String, State
 
 
 class DisplayStateColor(DisplayWidget):
@@ -21,7 +22,7 @@ class DisplayStateColor(DisplayWidget):
         self.widget = QLabel(parent)
         self.widget.setAutoFillBackground(True)
         self.widget.setAlignment(Qt.AlignCenter)
-        self.widget.setMinimumWidth(160)
+        self.widget.setMinimumWidth(32)
         self.widget.setMinimumHeight(32)
         self.widget.setWordWrap(True)
 
@@ -45,6 +46,8 @@ class DisplayStateColor(DisplayWidget):
             bgColor = STATE_COLORS[State.ACTIVE]
         elif State(value).isDerivedFrom(State.PASSIVE):
             bgColor = STATE_COLORS[State.PASSIVE]
+        elif State(value) is State.NORMAL:
+            bgColor = STATE_COLORS[State.NORMAL]
         elif State(value) is State.ERROR:
             bgColor = STATE_COLORS[State.ERROR]
         else:
@@ -54,6 +57,7 @@ class DisplayStateColor(DisplayWidget):
 
         if self.widget.text() != self._staticText:
             self.widget.setText(self._staticText)
+            self.widget.setAlignment(Qt.AlignCenter)
 
     def save(self, element):
         """ Save to a scene SVG.
