@@ -1,3 +1,4 @@
+from collections import OrderedDict
 
 from karabo_gui.displaywidgets.displaystatecolor import DisplayStateColor
 from .base import BaseWidgetContainer
@@ -19,6 +20,7 @@ class _StateColorWrapper(DisplayStateColor):
         self.model.text = text
 
 
-class DisplayStateColorContainer(BaseWidgetContainer):
+class DisplayStateColor
+    Container(BaseWidgetContainer):
     def _create_widget(self, boxes):
         return _StateColorWrapper(self.model, boxes[0], self)

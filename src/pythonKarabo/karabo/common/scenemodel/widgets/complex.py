@@ -16,8 +16,6 @@ class DisplayStateColorModel(BaseWidgetObjectData):
     """
     # The text shown on the widget
     text = String
-    # The possible colors for the states
-    colors = Dict
 
 
 class EvaluatorModel(BaseWidgetObjectData):
