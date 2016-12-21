@@ -57,7 +57,6 @@ class DisplayStateColor(DisplayWidget):
 
         if self.widget.text() != self._staticText:
             self.widget.setText(self._staticText)
-            self.widget.setAlignment(Qt.AlignCenter)
 
     def save(self, element):
         """ Save to a scene SVG.
