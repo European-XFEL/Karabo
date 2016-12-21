@@ -25,14 +25,10 @@ TABLE_SCHEMA = (
 def test_display_state_color_widget():
     traits = base_widget_traits(parent='DisplayComponent')
     traits['text'] = 'foo'
-    traits['colors'] = {'red': (255, 0, 0, 255)}
     model = DisplayStateColorModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.text == 'foo'
-    assert len(read_model.colors) == 1
-    assert read_model.colors['red'] == (255, 0, 0, 255)
-
 
 def test_evaluator_widget():
     traits = base_widget_traits(parent='DisplayComponent')
