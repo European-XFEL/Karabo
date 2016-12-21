@@ -12,6 +12,7 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
+from traits.api import Int
 from rtd_conf import global_conf
 import sys
 import subprocess
@@ -38,6 +39,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.inheritance_diagram',
     'sphinx.ext.ifconfig',
     'sphinx.ext.graphviz',
     'breathe',
@@ -319,3 +321,4 @@ def setup(app):
             fig.savefig("{}/colors/{}.png".format(cwd, c) if 'concepts' in cwd else "{}/concepts/colors/{}.png".format(cwd, c), dpi=300)
             crst.write(".. |{}-box| image::  ./colors/{}.png\n".format(c,c))
             crst.write("\n\n")
+            
