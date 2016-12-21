@@ -20,7 +20,6 @@ class _StateColorWrapper(DisplayStateColor):
         self.model.text = text
 
 
-class DisplayStateColor
-    Container(BaseWidgetContainer):
+class DisplayStateColorContainer(BaseWidgetContainer):
     def _create_widget(self, boxes):
         return _StateColorWrapper(self.model, boxes[0], self)
