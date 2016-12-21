@@ -62,16 +62,6 @@ class TableElementModel(BaseWidgetObjectData):
 def _display_state_color_reader(read_func, element):
     traits = read_base_widget_data(element)
     traits['text'] = element.get(NS_KARABO + 'staticText', '')
-    colors = {}
-    for sub in element:
-        if sub.tag != (NS_KARABO + 'sc'):
-            continue
-        red = int(sub.get('red'))
-        green = int(sub.get('green'))
-        blue = int(sub.get('blue'))
-        alpha = int(sub.get('alpha'))
-        colors[sub.text] = (red, green, blue, alpha)
-    traits['colors'] = colors
     return DisplayStateColorModel(**traits)
 
 
@@ -79,15 +69,6 @@ def _display_state_color_reader(read_func, element):
 def _display_state_color_writer(write_func, model, parent):
     element = SubElement(parent, NS_SVG + 'rect')
     write_base_widget_data(model, element, 'DisplayStateColor')
-    element.set(NS_KARABO + 'staticText', model.text)
-    for name, color in model.colors.items():
-        sub = SubElement(element, NS_KARABO + "sc")
-        sub.text = name
-        red, green, blue, alpha = color
-        sub.set('red', str(red))
-        sub.set('green', str(green))
-        sub.set('blue', str(blue))
-        sub.set('alpha', str(alpha))
     return element
 
 
