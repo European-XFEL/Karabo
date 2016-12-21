@@ -12,6 +12,7 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
+from traits.api import Int
 from rtd_conf import global_conf
 import sys
 import subprocess
@@ -321,4 +322,3 @@ def setup(app):
             crst.write(".. |{}-box| image::  ./colors/{}.png\n".format(c,c))
             crst.write("\n\n")
             
-
