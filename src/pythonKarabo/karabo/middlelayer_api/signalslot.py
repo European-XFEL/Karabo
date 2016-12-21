@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
-from asyncio import (async, CancelledError, coroutine, get_event_loop,
-                     sleep, TimeoutError, wait, wait_for)
+from asyncio import (async, CancelledError, coroutine, FIRST_COMPLETED, Future,
+                     get_event_loop, sleep, TimeoutError, wait, wait_for)
 import logging
 import random
 import sys
@@ -323,6 +323,23 @@ class SignalSlotable(Configurable):
         future = self._new_device_futures.pop(instanceId, None)
         if future is not None:
             future.set_result(None)
+
+    @coroutine
+    def _call_once_alive(self, deviceId, slot, *args):
+        """try to call slot, wait until device becomes alive if needed"""
+        newdevice = self._new_device_futures.setdefault(deviceId, Future())
+        call = async(self.call(deviceId, slot, *args))
+        done, pending = yield from wait([newdevice, call],
+                                        return_when=FIRST_COMPLETED)
+        for p in pending:
+            p.cancel()
+        self._new_device_futures.pop(deviceId, None)
+        if call in done:
+            return call.result()
+        elif newdevice in done:
+            return (yield from self.call(deviceId, slot, *args))
+        else:
+            raise AssertionError("this should not happen")
 
     @slot
     def slotInstanceUpdated(self, instanceId, info):
