@@ -14,12 +14,12 @@ RESOLUTION = 10 ** 18  # current Karabo resolution is attoseconds
 
 @total_ordering
 class Timestamp(object):
-    def __init__(self, date=None):
-        """create a new timestamp
+    """This is a time stamp
 
-        date is either another timestamp (then we copy), None
-        (we return now) or a string that will be parsed with
-        dateutil"""
+    :param date: is either another timestamp (then we copy), None
+    (we return now) or a string that will be parsed with
+    :mod:`dateutil`"""
+    def __init__(self, date=None):
         self.tid = 0
         if date is None:
             self.time = int(time.time() * RESOLUTION)

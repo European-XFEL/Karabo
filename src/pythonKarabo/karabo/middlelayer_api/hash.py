@@ -44,6 +44,7 @@ class Attribute(object):
 
 
 class Enumable(object):
+    """The base class for all descriptors which can be an enumeration"""
     known_classes = {"State": State,
                      "AlarmCondition": AlarmCondition}
 
@@ -309,6 +310,8 @@ class Descriptor(object):
                 raise TypeError('tags must contain strings, not "{}"'.
                                 format(tags))
 
+        self.__doc__ = self.description
+
     def toSchemaAndAttrs(self, device, state):
         """return schema for device in state
 
@@ -506,7 +509,7 @@ class Slot(Descriptor):
     def __call__(self, method):
         """Decorate a method to be a Slot"""
         if self.description is None:
-            self.description = method.__doc__
+            self.description = self.__doc__ = method.__doc__
         self.method = method
         return self
 
@@ -608,6 +611,7 @@ class Type(Descriptor, Registry):
 
 
 class Vector(Type):
+    """This is the base class for all vectors of data"""
     @classmethod
     def register(cls, name, dict):
         super(Vector, cls).register(name, dict)
@@ -627,6 +631,8 @@ class Vector(Type):
 
 
 class NumpyVector(Vector):
+    """The base class for all vectors which can be represented as numpy
+    vectors"""
     vstrs = { }
     numpy = np.object_
 
@@ -1101,17 +1107,17 @@ class HashType(Type):
 
 
 class VectorHash(Vector):
+    """A VectorHash is a table
+
+    :param row: The structure of each row. This is a :class:`Configurable`
+    class.
+    """
     basetype = HashType
     number = 31
 
     rowSchema = Attribute()
 
     def __init__(self, rows=None, strict=True, **kwargs):
-        """A VectorHash is a table
-
-        :param row: The structure of each row. This is a `Configurable`
-        class.
-        """
         super(VectorHash, self).__init__(strict=strict, **kwargs)
 
         if rows is not None:

@@ -140,7 +140,7 @@ class Device(AlarmMixin, SignalSlotable):
             return 'Device locked by "{}"'.format(self.lockedBy)
 
     def slotReconfigure(self, reconfiguration, message):
-        """This can only be called as a slot"""
+        # This can only be called as a slot
         msg = self._checkLocked(message)
         if msg is not None:
             raise KaraboError(msg)

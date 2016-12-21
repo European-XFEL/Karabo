@@ -31,6 +31,11 @@ from .weak import Weak
 
 
 class DeviceClientBase(Device):
+    """Keep track of other devices
+
+    A :class:`~karabo.middlelayer.Device` which also inherits from this class
+    keeps track of all the other devices in this Karabo installation. Without
+    inheriting from this class, listing other devices is impossible."""
     abstract = True
 
     def __init__(self, configuration):
