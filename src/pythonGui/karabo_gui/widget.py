@@ -188,6 +188,7 @@ class VacuumWidget(DisplayWidget):
         self._styleSheet = ("QLabel#{}".format(objectName) +
                             " {{ background-color : rgba{}; }}")
         self.widget.setObjectName(objectName)
+        self.widget.setScaledContents(True)
         self.setErrorState(False)
 
     value = None
