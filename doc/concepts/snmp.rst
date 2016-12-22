@@ -17,7 +17,7 @@ Engineering Task Force (IETF). It consists of a set of standards for network
 management, including an application layer protocol, a database schema, and
 a set of data objects.
 
-In Karabo, SNMP devices may be accessed throught the snmpapi dependency, which
+In Karabo, SNMP devices may be accessed through the snmpapi dependency, which
 includes both a C++ library alongside Python bindings.
 
 The SNMP connection should be established in the devices initialization method:
