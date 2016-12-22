@@ -348,7 +348,7 @@ human attention to recover from, e.g. by manual procedures or overrides.
 	Make yourself aware of the conceptual difference between warnings and errors and
 	emit error notification only in case of actual errors.
 
-	Experience from other facilites shows that *error-spamming* leads to users accepting
+	Experience from other facilities shows that *error-spamming* leads to users accepting
 	errors and associated notifications as a normal operation state - they are not!.
 	Error notifications should be so rare that they trigger a human examination of the
 	problem!

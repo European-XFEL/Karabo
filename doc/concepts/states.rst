@@ -90,7 +90,7 @@ from it and will compare equal to it:
 
 |red-box| ERROR
     is reserved for hardware errors and uncaught processing errors on
-    pipelined-processing devices. It should only be used for an error pertinant
+    pipelined-processing devices. It should only be used for an error pertinent
     to the hardware component, not for indicating an alarm condition due to
     e.g. a property measured by the hardware. The latter case is handled via
     alarm conditions in Karabo. Note that no ``OK``
@@ -167,7 +167,7 @@ equal to ``NORMAL``:
     interface, do this either in the ``INIT`` state.
     Connection functionality should be implemented in the initialization hooks,
     **not** in the constructor or ``__init__`` methods, as it may take time, and would
-    otherwise yield the device inresponsive.
+    otherwise yield the device unresponsive.
 
 
 The following diagram shows how base-states and base states are connected,
@@ -427,7 +427,7 @@ changingSignificant = ``INCREASING|DECREASING``
      ``if definingState == CHANGING``.
 
 In rare scenarios states might to be trumped differently. Developers can
-provide for a different trumpin method using the ``UserStateSignifier` class.
+provide for a different trumping method using the ``UserStateSignifier` class.
 It expects a complete list of base states as input, the order of which determines
 trumping and provides the same ``returnMostSignificant`` method as in the
 default trumping implementation.
@@ -556,7 +556,7 @@ both:
 Devices with Transitionatory Behavior
 -------------------------------------
 
-Frequently, a transition from one hardware state to another will not be immidiate,
+Frequently, a transition from one hardware state to another will not be immediate,
 but rather take some time, e.g. if a stage is instructed to driver to a new
 location, a power supply is ramping to a new voltage or a chiller is set to
 a lower temperature. During a longer lasting transition such devices should be
@@ -727,7 +727,7 @@ The states introduced above are meant to be unified; accordingly, only a relativ
 small number of states has been defined. While it should always be possible to match
 a device state to one of the predefined-states, it can be useful to convey more specific
 information. For this the device status property is to be used, which is can be set
-to any string value using the normal assignment and retreival syntax in the *bound* APIs:
+to any string value using the normal assignment and retrieval syntax in the *bound* APIs:
 
 .. code-block:: Python
 
@@ -826,7 +826,7 @@ State machine glossary
 It is highly recommended to read MSM
 `user's guide <http://www.boost.org/doc/libs/1_57_0/libs/msm/doc/HTML/index.html>`_  or
 at least the `UML Short Guide and Tutorial <http://www.boost.org/doc/libs/1_57_0/libs/msm/doc/HTML/ch02.html>`_,
-which are availble on the boost MSM site. Here, for your convenience, we cite the
+which are available on the boost MSM site. Here, for your convenience, we cite the
 glossary that can be found in MSM documentation:
 
 state machine
@@ -883,7 +883,7 @@ initial state
 
 sub-machine
    A submachine is a state machine inserted as a state in
-   another state machine. It can have multiple occurances in the statemachine
+   another state machine. It can have multiple occurrences in the statemachine
    it is contained in.
 
 orthogonal regions

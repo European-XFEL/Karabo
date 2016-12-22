@@ -55,7 +55,7 @@ Bound devices
 
 *Bound* devices may be implemented either in C++ using the application
 programming interface (API), introduced in Section :ref:`cpp_api`, or using
-the Python API described in Section :ref:`python_api`. bound devices must
+the Python API described in Section :ref:`python_api`. Bound devices must
 **not** be implemented using the middle-layer device Python API, as this is
 not feature complete in this respect, e.g. it does not allow for
 strict typing.
@@ -64,7 +64,7 @@ strict typing.
 
 	The *driver* device Python API may not seem *pythonic* for seasoned Python programmers.
 	This was chosen purposely so that the Python API and the C++ API
-    are as similar as possible, allowing developers to more easily implement in both
+	are as similar as possible, allowing developers to more easily implement in both
 	APIs. In this way the choice of language can focus on the problem at hand, and not be
 	impacted by having to learn a new API.
 
@@ -75,7 +75,7 @@ Middle-layer Devices
 functionality over multiple bound devices. This might be the case when driving multiple
 axes of a motor (semi-)simultaneously, driving a slit, ramping a group of channels
 on a power supply or managing a multi-component processing pipeline.
-*Middle-layer* devices generally exhibits one or more of the following functional
+*Middle-layer* devices generally exhibit one or more of the following functional
 requirements, resulting from *composition* over device boundaries:
 
 	- interact with multiple devices to drive/monitor them in a coordinated fashion
@@ -446,7 +446,7 @@ Device Hooks
 
 Karabo devices provide a set of common hooks in both the Python and C++ APIs (but not
 the middle-layer API). Developers can use these hooks to trigger special functionality
-on events common to all devices. They are as following:
+on events common to all devices. They are as follows:
 
 - *preReconfigure(incomingReconfiguration)*: allows an incoming re-configuration to the
   device to be altered *before* actually updating device properties. This hook can be used
@@ -470,7 +470,7 @@ on events common to all devices. They are as following:
 - *onTimeUpdate(trainId, sec, frac, period)*: is executed when the device receives an
   update from the timing system.
 
-Additionally, device's without a full state machine, i.e. such using simple state machines
+Additionally, devices without a full state machine, i.e. such using simple state machines
 provide the `registerInitialFunction(func)*` method, which can be used to register a
 function to be called at the end of device initialization, i.e. after the device
 properties' initial values have been set and are available through the *get* and *set*
@@ -1118,7 +1118,7 @@ No prefix does not need an explicit specification but can be specified as
 
 	While Karabo allows for specifying metric prefixes it does **not** take these into
 	account in any calculations: whenever you retrieve a Karabo property it is converted
-	to the programming languages native type, which has no notion of prefixes! You can
+	to the programming language's native type, which has no notion of prefixes! You can
 	however use the *getPrefixFactor()* method to return a multiplicative factor depending
 	on the assigned prefix.
 

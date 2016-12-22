@@ -118,7 +118,7 @@ Configuring Instances
 +++++++++++++++++++++
 
 Instances are configured using the corresponding dialog, or through the context
-menu, which allows direct selection and creation of configuraitons.
+menu, which allows direct selection and creation of configurations.
 
 .. figure:: images/gui/project_panel_instance_config_current.png
 
@@ -130,7 +130,7 @@ menu, which allows direct selection and creation of configuraitons.
 
 .. note::
 
-    For configuring new Beckhoff servers it is best practive to instantiate
+    For configuring new Beckhoff servers it is best practice to instantiate
     the server somewhere in the domain of the project, i.e. manually on the
     host and let the server create generic devices. This will yield the proper
     instance ids on each device, as configured on the PLC. You should then
@@ -156,7 +156,7 @@ The Central Scene
    :alt: master_panel.png
 
    An example of a master panel in a central scene. Examples of analogue
-   guages for value display, spark lines indicating trends, and state + alarm
+   gauges for value display, spark lines indicating trends, and state + alarm
    conditions composite values are shown. The Sub-system boxes link to the
    respective detailed scense. Note how with one look onto the gauge widgets
    an operator can access the system state.
@@ -165,7 +165,7 @@ The Central Scene
    :alt: detail_panel.png
 
    An example of a detail panel in a central scene. Examples of analogue
-   guages for value display, spark lines indicating trends, and state + alarm
+   gauges for value display, spark lines indicating trends, and state + alarm
    conditions composite values are shown. Note how the state and alarm condition
    are separated for the gauge **Gauge_Down2**. The bottom buttons are hyper-links
    to the other detail panels and the master panel.

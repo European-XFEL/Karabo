@@ -24,7 +24,7 @@ PLC server
 Server Timeout
    is the maximum timeout in milliseconds allowed when communicating with the PLC. If upon
    communication with the PLC no acknowledgement is received after this duration the 
-   BeckhofCom device assumes a communication error and transitions to the *error* state.
+   BeckhoffCom device assumes a communication error and transitions to the *error* state.
    It defaults to 1000 ms, which should be sufficient even in congested network scenarios.
    
 Autoreset Time
@@ -44,7 +44,7 @@ state, which either, upon successful connection to the PLC, transitions to the *
 state, or in case of an error transitions to an *error* state.
 
 The error state is also reached upon any communication errors in the *connected* state. The
-user may then attempt to reste the device, using the *reset* slot. Executing a reset will
+user may then attempt to reset the device, using the *reset* slot. Executing a reset will
 bring the device back into the *connecting* state, and a new connection attempt is 
 initiated.
 
@@ -238,8 +238,8 @@ From the control system to the PLC
     
 From the PLC to the control system
     messages are placed into an output buffer by the PLC's sending devices using provided
-    functions. These function acknowledge the storage into the buffer. The buffer is
-    sent out en-block when a treshold of contained messages is exceeded.
+    functions. These functions acknowledge the storage into the buffer. The buffer is
+    sent out en-block when a threshold of contained messages is exceeded.
     
 .. warning::
 

@@ -54,7 +54,7 @@ public interface GUI clients act upon, is given.
 
     handles incoming data in the Hash  ``info`` from ``channel``.
     The further actions are determined by the contents of the ``type`` property
-    in ``info``. Valid types and there mapping to methods are given in the
+    in ``info``. Valid types and their mapping to methods are given in the
     following table:
 
     .. table:: ``onRead`` allowed types
@@ -101,7 +101,7 @@ public interface GUI clients act upon, is given.
 .. todo::
 
     Currently, nothing actually happens here. I would not prioritize user
-    management right now, but is should be done when time allows.
+    management right now, but it should be done when time allows.
 
 .. function:: onReconfigure(info)
 
@@ -191,7 +191,7 @@ public interface GUI clients act upon, is given.
 .. function:: onGetPropertyHistory(channel, info)
 
     requests the history for a ``property`` on ``deviceId`` in the time range
-    ``t0`` and ``t1`` as specified in ``info``. Additional the maximum number
+    ``t0`` and ``t1`` as specified in ``info``. Additionally, the maximum number
     of data points may be specified in ``maxNumData``. The request is
     asynchronously sent to the device logger logging information for ``deviceId``.
     The reply from the logger is then forwarded to the client on ``channel``
@@ -210,7 +210,7 @@ public interface GUI clients act upon, is given.
     registers the client connected on ``channel`` to a *pipe-lined processing*
     channel identified by ``channelName`` in ``info`` in case ``subscribe``
     is True. In case the *pipe-lined processing* channel is already connected
-    to the gui-server no futher action is taken. Otherwise, a new connection
+    to the gui-server no further action is taken. Otherwise, a new connection
     is opened, set to *copy* and  *dropping* behaviour in case the gui-server is busy, and
     with a maximum update frequency as defined by the ``delayOnInput`` property
     of the gui server. Network data from the *pipe-lined processing* connection
@@ -258,14 +258,14 @@ public interface GUI clients act upon, is given.
     is called back upon reply from the project manager upon a ``onNewProject``
     request. It forwards hashed information to the client communicating on
     ``channel`` where ``type=projectNew``, ``name`` is the projectName,
-    ``success`` indicates sucessfuly project creation and ``data`` is the
+    ``success`` indicates successful project creation and ``data`` is the
     project data.
 
 .. function:: onLoadProject(channel, info)
 
     requests loading of a project by the client communicating on ``channel``
     from the project manager. Here ``info`` contains the requesting ``user``
-    and project ``name``. Project loading is handled asyncroniously by the
+    and project ``name``. Project loading is handled asynchronously by the
     ``projectLoaded`` callback.
 
 .. function:: projectLoaded(channel, projectName, metaData, data)

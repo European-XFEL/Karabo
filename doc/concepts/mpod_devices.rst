@@ -19,12 +19,12 @@ three hierarchy levels exist on the hardware side:
 Additional hierarchy exists on the software side:
 
 - channels may be group to represent a hardware component or subcomponent
-- groups of channels may need to be configured and ramped simultanously.
+- groups of channels may need to be configured and ramped simultaneously.
 - logical groups of channels may be physically split over multiple supplies
 - individual channels may need to be exposed as a separate software device even
   though they belong to the same supply or crate.
 
-Implementing these hiearchy levels is examplary shown on MPOD devices in the
+Implementing these hierarchy levels is examplary shown on MPOD devices in the
 following.
 
 MPOD Devices
@@ -32,7 +32,7 @@ MPOD Devices
 
 MPOD devices are multi-channel power supplies which follow the crate-supply-channel
 hierarchy just introduced. Communication to the MPOD crate is established
-via SNMP, decribed in more detail in Section :ref:`snmp`. The crate device
+via SNMP, described in more detail in Section :ref:`snmp`. The crate device
 is implemented as a *bound* API device, which queries the crate for a
 list of supplies and channels present on it. Using schema injection it then
 generates a flat hierarchy of these channels in the karabo software device.
