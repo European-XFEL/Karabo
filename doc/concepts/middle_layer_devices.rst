@@ -786,7 +786,7 @@ of the lock, or an empty string if nobody holds a lock.
 	the locking devices instance id as parameter, sets a ``lockedBy`` property to the
 	instance id of the locking device and after execution will block all interactions
 	not from this instance id until the device is unlocked. In a first step we might actually
-	only implement that the GUI evaluated the device as being locked and grey it out.
+	only implement that the GUI evaluated the device as being locked and gray it out.
 	Conversely, there needs to be an unlock slot (also taking the instance id as parameter)
 	and allowing an unlock by the device which locked in the first place. Finally, we need
 	a parameterless unlockOverride slot, which is expert only and can always trigger the unlock.
