@@ -9,7 +9,7 @@ Device Class Names start Capitalized
 Property names are lower case
     i.e. ``myProperty``
 
-CamelCasing is prefered to using under_scores.
+CamelCasing is preferred to using under_scores.
     although this is not strictly enforced. You should however use a consistent
     naming convention in your device implementations
 
@@ -23,18 +23,18 @@ Karabo should only view interlocks
     interlock by informing on its status.
 
 No Device Releases without Documentation
-    Devices without proper documentation may not be released for publich use.
+    Devices without proper documentation may not be released for public use.
     Specifically, a device must document the states that might occur as part
     of its usage and any known limitations of the device.
 
 Property Assignment is **not** an Action
     In Karabo assignment to a property should not trigger an action. The action
-    should only be triggered by executing a command after the assingment.
+    should only be triggered by executing a command after the assignment.
     For example changing the target position of a linear stage will not make
     this stage move, the stage only moves if a ``move()`` command is issued.
     Certain types of hardware may not follow this principle, i.e. they may
     already take action upon setting a property. In these case it is up to
-    the device develper to maintain the *assignment is not an action* policy
+    the device developer to maintain the *assignment is not an action* policy
     by e.g. caching a property change in the device software and only
     forwarding it the hardware upon command execution. See Section
     :ref:`setandexecute` for examples. Exceptions may be mandated for
@@ -47,7 +47,7 @@ Middlelayer Devices should not directly control Hardware
     interaction and the middle-layer device should provide a higher level
     view on the interface.
 
-The ``ERROR`` State is reservered for Hardware Errors
+The ``ERROR`` State is reserved for Hardware Errors
     Software errors and communication problems should bring the device into
     the ``UNKNOWN`` state.
 
@@ -72,7 +72,7 @@ Commands in Nodes
     ``foo.bar()``, where ``foo`` is the Node (**not an object**) and ``bar``
     is the function. Karabo thus internally will replace the ``.`` separator
     with an underscore (``_``) yielding a function name which is valid in both
-    Python and C++: ``foo_bar()``. If you define a slot under an node in the
+    Python and C++: ``foo_bar()``. If you define a slot under a node in the
     expected parameters section
 
     .. code-block:: Python
@@ -111,11 +111,11 @@ Communication Patterns in Karabo
     usually manages an installation on the scale of a hutch. Broker communication
     has been tested to be able to cope with installations of approx. NNNN devices,
     providing event driven property updates in the ~10 Hz range.
-    There are how-ever two exceptions to this general rule: as the data loggers need to
+    There are however two exceptions to this general rule: as the data loggers need to
     receive messages from every device in the system they connect to all other
     devices in the DCS with p2p connections, thus bypassing the broker. Additionally,
     larger data or per-pulse data should be passed via p2p interfaces. This
-    is especially important with respect to data acquision, as the DAQ system expects
+    is especially important with respect to data acquisition, as the DAQ system expects
     per pulse data via a p2p interface and **not** as a *slow control* parameter.
 
 

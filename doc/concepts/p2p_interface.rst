@@ -6,7 +6,7 @@ The Point-to-Point (p2p) Interface
 
 .. sectionauthor:: Gero Flucke <gero.flucke@xfel.eu>
 
-The conveyor belt example given in the introduction of the C++ and Python API's is
+The conveyor belt example given in the introduction of the C++ and Python APIs is
 typical for a device that represents some hardware that is controlled and monitored.
 No data is *produced* by these devices, but just property changes are communicated.
 This is done via the central message broker.
@@ -89,7 +89,7 @@ Receiving Data: Input Channel
 For input channels one also needs to declare what data they expect to receive.
 This is done in exactly the same way as for output channels inside the
 ``expectedParameters`` method.
-Declaring the input channel is also analogue to the way an output channels is
+Declaring the input channel is also analogue to the way an output channel is
 declared:
 
 .. code-block:: c++
@@ -149,7 +149,7 @@ The signature of this member function has to be
 
     A simple way of ensuring that input and output channels work with the
     same data schema is to move schema creation to a static function which
-    is availble to all devices working on this type of data, e.g. by means
+    is available to all devices working on this type of data, e.g. by means
     of a dependency or library.
 
 Hierarchies in the Schema
@@ -306,9 +306,9 @@ For input channels simply replace ``OUTPUT_CHANNEL`` by ``INPUT_CHANNEL``.
 
 Image data refers to array-like data from camera interfaces. It may be
 represented as an ``IMAGEDATA``(or ``IMAGEDATA_ELEMENT``) element, which
-has fixed properties approriate to the camera origin of the data. These are:
+has fixed properties appropriate to the camera origin of the data. These are:
 
-- pixels: he N-dimensional array containing the pixels
+- pixels: The N-dimensional array containing the pixels
 - dims: The length of the array reflects total dimensionality and each element the extension in this dimension
 - dimTypes: Any dimension should have an enumerated type
 - dimScales: Dimension Scales
@@ -485,7 +485,7 @@ Defining and Configuring Topologies
 ===================================
 
 Pipelined processing in Karabo supports a variety of recurring topologies
-defining how data is passed throught the system.
+defining how data is passed through the system.
 
 Copying vs. Sharing Data
 ++++++++++++++++++++++++
@@ -524,7 +524,7 @@ queue
     to the output channel will not block.
 
 wait
-    for an input to become avaible, effectivly blocking the write call to the
+    for an input to become available, effectively blocking the write call to the
     output channel.
 
 drop
@@ -541,4 +541,4 @@ By default the channels are configured to *wait* behaviour, which assures delive
 but has the side effect of possibly stalling a complete processing pipeline by
 back-propagation. If a pipeline device with an input and output channels is
 used as a pipeline end-point, it is important to configure the last, unconnected
-output to drop to avoid this scenario from happending.
+output to drop to avoid this scenario from happening.
