@@ -22,7 +22,7 @@ instances which are shutdown it makes sure the logging device closes the log
 file and then shuts the log device instance down.
 
 .. note:: Data logging is implemented such, that logging information bypasses the broker,
-i.e. the logging of many devices should not lead to broker-congestion.
+	i.e. the logging of many devices should not lead to broker-congestion.
 
 
 Distinction from Data Acquisition
@@ -61,13 +61,13 @@ Retrieving Logged Information
 =============================
 
 Logged information can be retrieved in multiple ways: through the command
-line interface, iKarabo and the GUI. The first two ways are explict calls
+line interface, iKarabo and the GUI. The first two ways are explicit calls
 to the data logger readers to return information as specified by the
-user. In the GUI case, information is implicitly retreived when accessing
-the history of trendlines. Accordingly, the first to use cases are documented
+user. In the GUI case, information is implicitly retrieved when accessing
+the history of trendlines. Accordingly, the first two use cases are documented
 here.
 
-In the device client the following function exist for retrieving logger
+In the device client the following functions exist for retrieving logger
 information
 
 .. function:: getPropertyHistory(deviceId, property, from, to, maxNumData)
@@ -87,7 +87,7 @@ information
 
 .. function:: getDataLogReader(deviceId)
 
-    returns the device id of the data log reader assosicated to the device
+    returns the device id of the data log reader associated to the device
     on ``deviceId``
 
 
@@ -122,7 +122,7 @@ Logging Format
 ==============
 
 Log files are created and updated by the logging devices. Specifically,
-two files are created in a directory corresonding to the logged device's
+two files are created in a directory corresponding to the logged device's
 device id, containing subdirectories *raw* and *idx* for the log files and
 index files respectively.
 
@@ -139,7 +139,7 @@ The raw directory
     Logins are required if a file is reopened, after a device instance has
     reappeared.
 
-    These files are in ascii text format and all properties of a device are
+    These files are in ASCII text format and all properties of a device are
     stored subsequently in a single table.
 
     Additionally, an entry of the appended entry's index is maintained in

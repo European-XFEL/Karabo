@@ -13,7 +13,7 @@ Usage Scenarios
 Macros
 ++++++
 
-Macros should be used for the follwing recurring tasks:
+Macros should be used for the following recurring tasks:
 
 * small programs to be run from ``iKarabo`` which specialize generic iKarabo functionality, e.g. ``listAllMotors()``
 * recurring automizations, frequently limited to one experiment or a specific beamtime
@@ -60,7 +60,7 @@ a device-server, and the configuration of which can be versioned as described in
 
 The ``execute`` method will automatically be rendered as a button in the GUI. Additionally,
 a cancel button is created. You can specify in the macro's options if it initiates into the
-executing state or if an explict action by clicking ``Execute`` is required.
+executing state or if an explicit action by clicking ``Execute`` is required.
 
 In addition to overwriting the ``execute`` method you may specify unbound auxiliary functions.
 The following piece of code thus constitutes a valid macro:
@@ -107,7 +107,7 @@ Conversely, the following macro is bad practice:
 
 
 
-Additionally, only on instance of a given macro may run at a time. You cannot have multiple instances of the same
+Additionally, only one instance of a given macro may run at a time. You cannot have multiple instances of the same
 macro class running in the same domain!
 
 
@@ -190,7 +190,7 @@ function which gets executed when a remote property has changed::
             return (self.someDevice.temperature - 32) * 5 / 9
 
 Devices specified in the above way are accessible throughout the macro's lifetime. They may
-thus also be used in the macros ``execute`` method.
+thus also be used in the macro's ``execute`` method.
 
 .. warning::
 

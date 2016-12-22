@@ -28,7 +28,7 @@ as:
 In Karabo open loop devices are always operated by a combination of setting none to
 many target values to control the action and then executing a command specifying an action.
 Target value-less examples are opening a shutter, closing a valve, starting a pump.
-Examples were target-values are involve are that for a stepper motor first the target
+Examples where target-values are involved are that for a stepper motor first the target
 value is set, and then the motor drives to the target, or a heater warming an element
 to a specified temperature.
 
@@ -44,7 +44,7 @@ Discrete Closed Loop
 Closed loop systems in contrast take sensory input into account, by calculating a
 deviation from the target value and the current input, and then adjusting the input value
 through a regulatory function to converge towards the target value. Closed loop behaviour
-may be discrete or continous. In the first case a sensory value is used to decide the
+may be discrete or continuous. In the first case a sensory value is used to decide the
 course of action, afterwards the system is not further controlled:
 
 .. code-block :: Basic
@@ -59,9 +59,9 @@ course of action, afterwards the system is not further controlled:
        END
    END 
    
-Examples for discrete closed loop devices can be found in interlock systens, e.g. when
+Examples for discrete closed loop devices can be found in interlock systems, e.g. when
 a chiller may only be started if the detector vessel has been priorly evacuated. As is
-evident from the pseudo-code the seperation between command and target value assignment is
+evident from the pseudo-code the separation between command and target value assignment is
 similar to the open loop example, except for the initial conditional check, which would
 be implemented in Karabo either through state-checking of commands, validation of device
 properties upon command execution, or in hardware through direct sensory input.
@@ -69,7 +69,7 @@ properties upon command execution, or in hardware through direct sensory input.
 Continous Closed Loop
 =====================
 
-Finally, devices may be operated in continous closed loop behaviour, i.e. a continous 
+Finally, devices may be operated in continuous closed loop behaviour, i.e. a continuous
 sensory input is used to alter the input signal with the goal of minimizing the deviation
 of the output from the target value. Examples of such devices are motors holding a
 specific velocity or position, a heater or chiller with feedback from temperature sensors
@@ -241,7 +241,7 @@ operated motor can thus be implemented as:
    
 
 The state transition diagram for a device changing to a target position thus looks as
-following. Note that only the ``NORMAL`` meta-state as discussed in Section
+follows. Note that only the ``NORMAL`` meta-state as discussed in Section
 :ref:`states`.
 
 .. digraph:: state_transitions

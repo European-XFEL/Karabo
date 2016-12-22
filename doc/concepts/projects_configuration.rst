@@ -7,10 +7,10 @@ Projects & Configuration
 .. todo::
 
 	For this chapter I've assumed that we at some point also use the project view and
-	configuration to configure and execute device deployment. This is optional funcitonality
+	configuration to configure and execute device deployment. This is optional functionality
 	for day-1 but in my point of view is a natural consequence of having devices bound
 	to device servers and having a host property on the server. We should keep this in
-	mind, in terms what information is stored with device servers, e.g. karabo version
+	mind, in terms what information is stored with device servers, e.g. Karabo version
 	number etc, to then implement a deployment device at a later time.
 
 Device Configuration
@@ -38,7 +38,7 @@ Configurations may be persisted as part of three procedures:
 
 - persisting as part of a default/expert configuration. These configurations may be named
   and each named configuration is versioned independently. Default/expert configurations
-  should be know working configurations, which can be reapplied to a device or device
+  should be known working configurations, which can be reapplied to a device or device
   server if its current configuration is faulty.
   
 - persisting as part of a user configuration. These configurations may be named
@@ -50,14 +50,14 @@ Configurations may be persisted as part of three procedures:
   
 - persisting the last-known working configuration. If the device instance or server shuts
   down for any reason this is the configuration which will be loaded if not otherwise
-  defined. They may either be saved by user action, fro the GUI or the CLI (see below),
+  defined. They may either be saved by user action, from the GUI or the CLI (see below),
   or by default as configured in the project, device server and device server properties.
   In the latter case persisting occurs when a device instance is killed.
 
 .. warning::
 
 	In Karabo the persisted configurations are not automatically updated whenever a 
-	property of a device is altered. You need to instead used one of the mentioned
+	property of a device is altered. You need to instead use one of the mentioned
 	persisting options.
 	
 .. ifconfig:: includeDevInfo is True
@@ -344,7 +344,7 @@ Configurations may be persisted as part of three procedures:
         }
 
     These are updated upon successful initialization of a device (``in``) and
-    upon sucessful shutdown of a device instance (``out``). In either case
+    upon successful shutdown of a device instance (``out``). In either case
     as they are not project bound, a device used as part of one project and
     then used again as part of another can be configured to the last
     configuration it was running in as part of the first project by using
@@ -368,7 +368,7 @@ Configurations may be persisted as part of three procedures:
         <copied_from_name>copiedFromConfigName</copied_from_name>
         <copied_from_version>copiedFromConfigVersion</copied_from_version>
 
-        <!-- filled if a push update was requested, if non-empty acknwoledgement is requested
+        <!-- filled if a push update was requested, if non-empty acknowledgement is requested
              then emptied again upon acknowledgment. The copied_from fields get updated to this
              then -->
         <request_update_to_name>requestUpdateFromConfigName</request_update_to_name>
@@ -806,7 +806,7 @@ Configurations may be persisted as part of three procedures:
         <copied_from_name>copiedFromConfigName</copied_from_name>
         <copied_from_version>copiedFromConfigVersion</copied_from_version>
 
-        <!-- filled if a push update was requested, if non-empty acknwoledgement is requested
+        <!-- filled if a push update was requested, if non-empty acknowledgement is requested
              then emptied again upon acknowledgment. The copied_from fields get updated to this
              then -->
         <request_update_to_name>requestUpdateFromConfigName</request_update_to_name>
@@ -842,8 +842,8 @@ Configurations may be persisted as part of three procedures:
     .. note::
 
         Configuration resolution should happen by the database. The project manager service
-        responsible for device instantiation should not have to be aware of the hiearchy and
-        configuraiton resolution. Instead the database service should resolve all queries to a single
+        responsible for device instantiation should not have to be aware of the hierarchy and
+        configuration resolution. Instead the database service should resolve all queries to a single
         XML-based configuration file for a given device instance (the leaf elements in the
         database) and created a local copy of these in a flat hierarchy. The project manager
         then instantiates the device ids from these configuration files.
@@ -943,7 +943,7 @@ from 0 to N channels.
 
             )
 
-To expose each device as a seperate middle-layer device you would write a
+To expose each device as a separate middle-layer device you would write a
 device template
 
 .. code-block:: Python
@@ -1418,7 +1418,7 @@ the following commands.
 .. todo::
 
 	Check if this interface is feature-completed. If so, implementing a model to implement
-	it would provide the required api for the GUI to use as well.
+	it would provide the required API for the GUI to use as well.
 
 
 The Central Instantiation Service
