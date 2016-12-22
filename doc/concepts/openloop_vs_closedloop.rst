@@ -36,14 +36,14 @@ to a specified temperature.
 
 	The latter examples often implement a closed, regulator loop on the PLC side,
 	but in terms of device software are treated as open loop devices as the software is
-	not involved in the regulatory behaviour.
+	not involved in the regulatory behavior.
 
 Discrete Closed Loop
 ====================
 
 Closed loop systems in contrast take sensory input into account, by calculating a
 deviation from the target value and the current input, and then adjusting the input value
-through a regulatory function to converge towards the target value. Closed loop behaviour
+through a regulatory function to converge towards the target value. Closed loop behavior
 may be discrete or continuous. In the first case a sensory value is used to decide the
 course of action, afterwards the system is not further controlled:
 
@@ -69,11 +69,11 @@ properties upon command execution, or in hardware through direct sensory input.
 Continous Closed Loop
 =====================
 
-Finally, devices may be operated in continuous closed loop behaviour, i.e. a continuous
+Finally, devices may be operated in continuous closed loop behavior, i.e. a continuous
 sensory input is used to alter the input signal with the goal of minimizing the deviation
 of the output from the target value. Examples of such devices are motors holding a
 specific velocity or position, a heater or chiller with feedback from temperature sensors
-or a power supply ramping a voltage or current. In pseudo-code such behaviour can be
+or a power supply ramping a voltage or current. In pseudo-code such behavior can be
 expressed as
 
 .. code-block:: Basic
@@ -92,7 +92,7 @@ as open loop systems in the device software. This means that in Karabo operating
 a closed-loop mode should generally still accept changes of the target value as a 
 combination of setting the target value and the executing a command to update the target
 value on the hardware. For devices which would implicitly act on a changed property this
-behaviour should be maintained by delay of the property setting to the command execution:
+behavior should be maintained by delay of the property setting to the command execution:
 
 .. code-block:: Python
 
@@ -221,7 +221,7 @@ course resulting into a transition into e.g. ``states.WARNING`` or ``states.ERRO
 .. note::
 
 	From the control framework perspective there is no conceptional difference for 
-	open-loop behaviour of the motor. The state transitions will be the same:
+	open-loop behavior of the motor. The state transitions will be the same:
 	from the ``states.ON``state to the ``states.MOVING``state and back to
     ``states.ON``.
 	A middle-layer device evaluating these transitions does thus usually not have to

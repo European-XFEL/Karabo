@@ -211,7 +211,7 @@ public interface GUI clients act upon, is given.
     channel identified by ``channelName`` in ``info`` in case ``subscribe``
     is True. In case the *pipe-lined processing* channel is already connected
     to the gui-server no further action is taken. Otherwise, a new connection
-    is opened, set to *copy* and  *dropping* behaviour in case the gui-server is busy, and
+    is opened, set to *copy* and  *dropping* behavior in case the gui-server is busy, and
     with a maximum update frequency as defined by the ``delayOnInput`` property
     of the gui server. Network data from the *pipe-lined processing* connection
     is handled by the ``onNetworkData`` callback.
