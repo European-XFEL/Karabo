@@ -537,7 +537,7 @@ drop
     with care if large amounts of data are passed.
 
 
-By default the channels are configured to *wait* behaviour, which assures delivery
+By default the channels are configured to *wait* behavior, which assures delivery
 but has the side effect of possibly stalling a complete processing pipeline by
 back-propagation. If a pipeline device with an input and output channels is
 used as a pipeline end-point, it is important to configure the last, unconnected

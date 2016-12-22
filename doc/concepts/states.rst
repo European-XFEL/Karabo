@@ -475,7 +475,7 @@ in a state derived from ``DISABLED``:
 Devices with Binary-like behavior
 ---------------------------------
 
-Many hardware devices have states which map to a kind of "binary" behaviour,
+Many hardware devices have states which map to a kind of "binary" behavior,
 i.e. two states which are the opposite or counterpart of each other, thus
 deriving from ``ACTIVE`` and ``PASSIVE``. In each
 of this states the device is rather ``STATIC``, which is the base state for
@@ -778,12 +778,12 @@ Overview
 Finite state machines can be used to model real life system, which for most non-trivial
 tasks go through different stages (states) during their evolution, or during execution
 of a task. The system may change its state due to both internal or external events, and
-subsequent behaviour may depend on the current state on the system.
+subsequent behavior may depend on the current state on the system.
 
-Models can be used to approximate these states, stimuli and resulting behavioural changes
+Models can be used to approximate these states, stimuli and resulting behavioral changes
 and define them in terms of a finite set of states, events and transitions. The result of
 such an abstraction is a so-called finite state machine. Here the word *finite* is
-important, that all expected behaviour fits into the deterministic model describe the
+important, that all expected behavior fits into the deterministic model describe the
 system with a finite set of elements. Conversely, this means that any state not foreseen
 as part of the model should be considered faulty behavior and if implemented in software
 raise and error.
@@ -1175,13 +1175,13 @@ States
 
 To define a simple state, use one of the following macros
 
-* without entry or exit behaviours:
+* without entry or exit behaviors:
 
 .. code-block:: C++
 
   KARABO_FSM_STATE(StateClass)
 
-* with entry behaviour only ("virtual(V)" , "virtual empty(VE)" or
+* with entry behavior only ("virtual(V)" , "virtual empty(VE)" or
   "pure virtual(PV)" onEntryFunction):
 
 .. code-block:: C++
@@ -1196,7 +1196,7 @@ To define a simple state, use one of the following macros
 
   where n = 1..4  is the number of arguments to onEntryFunction.
 
-* with entry and exit behaviours ("virtual", "virtual empty" or "pure
+* with entry and exit behaviors ("virtual", "virtual empty" or "pure
   virtual" onEntryFunction and onExitFunction)
 
 .. code-block:: C++
@@ -1207,11 +1207,11 @@ To define a simple state, use one of the following macros
 
 To define *terminate* state, use one of the following macros:
 
-* without entry/exit behaviours
+* without entry/exit behaviors
 
   KARABO_FSM_TERMINATE_STATE(StateClass)
 
-* with entry behaviour only ("virtual", "virtual empty" or "pure virtual")
+* with entry behavior only ("virtual", "virtual empty" or "pure virtual")
 
 .. code-block:: C++
 
@@ -1219,7 +1219,7 @@ To define *terminate* state, use one of the following macros:
    KARABO_FSM_TERMINATE_STATE_VE_E(StateClass, onEntryFunct)
    KARABO_FSM_TERMINATE_STATE_PV_E(StateClass, onEntryFunct)
 
-* with entry and exit behaviours ("virtual", "virtual empty" or "pure
+* with entry and exit behaviors ("virtual", "virtual empty" or "pure
   virtual")
 
 .. code-block:: C++
@@ -1230,13 +1230,13 @@ To define *terminate* state, use one of the following macros:
 
 To define *interrupt* state, use one of the following macros:
 
-* without entry/exit behaviours
+* without entry/exit behaviors
 
 .. code-block:: C++
 
   KARABO_FSM_INTERRUPT_STATE(StateClass)
 
-* with entry behaviour only ("virtual", "virtual empty" or "pure virtual")
+* with entry behavior only ("virtual", "virtual empty" or "pure virtual")
 
 .. code-block:: C++
 
@@ -1244,7 +1244,7 @@ To define *interrupt* state, use one of the following macros:
    KARABO_FSM_INTERRUPT_STATE_VE_E(StateClass, onEntryFunction)
    KARABO_FSM_INTERRUPT_STATE_PV_E(StateClass, onEntryFunction)
 
-* with entry and exit behaviours ("virtual", "virtual empty" or "pure
+* with entry and exit behaviors ("virtual", "virtual empty" or "pure
   virtual")
 
 .. code-block:: C++
@@ -1260,13 +1260,13 @@ To define *interrupt* state, use one of the following macros:
 
 To define a *pseudoexit* state, use one of the following macros:
 
-* without entry/exit behaviours
+* without entry/exit behaviors
 
 .. code-block:: C++
 
   KARABO_FSM_EXIT_PSEUDO_STATE(StateClass, event)
 
-* with entry behaviour only ("virtual", "virtual empty" or "pure
+* with entry behavior only ("virtual", "virtual empty" or "pure
   virtual")
 
 .. code-block:: C++
@@ -1275,7 +1275,7 @@ To define a *pseudoexit* state, use one of the following macros:
    KARABO_FSM_EXIT_PSEUDO_STATE_VE_E(StateClass, event, onEntryFunction)
    KARABO_FSM_EXIT_PSEUDO_STATE_PV_E(StateClass, event, onEntryFunction)
 
-* with entry and exit behaviours ("virtual", "virtual empty" or "pure virtual")
+* with entry and exit behaviors ("virtual", "virtual empty" or "pure virtual")
 
 .. code-block:: C++
 
@@ -1489,7 +1489,7 @@ Complete Example
 ----------------
 
 The following is that of an okay/error outer FSM with an inner FSM defining a start/stop
-behaviour. It is taken from the Karabo sources and can directly be used by templating
+behavior. It is taken from the Karabo sources and can directly be used by templating
 a device to run on this FSM. The example further shows how slots are connected to events.
 
 .. code-block:: C++
