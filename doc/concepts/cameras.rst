@@ -30,7 +30,7 @@ Section), you will have:
 * A plugin (libgenicamCamera.so) providing a very basic interface to
   GenICam cameras. You will just be able to connect to the camera and
   start/stop an acquisition. No camera specific parameters will be
-  avaiable.
+  available.
 
 * A base class (GenicamCamera) in Karabo Framework, from which you can
   derive your camera specific class, where you can add all needed
