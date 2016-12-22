@@ -9,7 +9,7 @@ Karabo devices may bridge to DOOCS servers through the ``doocsapi`` Karabo depen
 In this scenario Karabo clients interface to the Karabo bridge device, which in turn 
 translates property requests, assignments and command calls to the DOOCS server. 
 The API supports DOOCS ``get``, ``set`` and ``monitor`` methods, which have the following
-behaviour:
+behavior:
 
 .. function:: get(propertyName)
 
