@@ -35,9 +35,9 @@ Changing properties is simply done by assignment to the proxy:
 	sampleStageX = connectDevice("sampleStageX")
 	sampleStage.target = 20
 	
-Upon assignment it is checked if the property is writeable (with the user's access rights)
+Upon assignment it is checked if the property is writable (with the user's access rights)
 and bounds and validity checks are performed. If any of these criteria are not matched
-and error is raised.
+an error is raised.
 
 .. note::
 
@@ -133,7 +133,7 @@ change upon assignment:
 	
 .. todo::
 
-	This concept should be briefly discussed with AE and the USPs, checking if *they* deam
+	This concept should be briefly discussed with AE and the USPs, checking if *they* deem
 	it a requirement. Further discussions should result in whether connecting to a device
 	will print out the regulated properties - User's need to made aware somehow, as 
 	assignment to these properties will violate the more general concept. Again the return
@@ -210,7 +210,7 @@ recordall record all properties of the device, including set-values.
 .. todo::
 
 	Technically, it is possible to preserve all online streaming functionality by
-	violating the principle that data on the stream outputs must be in the persited
+	violating the principle that data on the stream outputs must be in the persisted
 	file. One can discuss if for such a simple scan case we allow this.
 	
 	Discussants: ITDM, M. Kuster, Instruments

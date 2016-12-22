@@ -30,7 +30,7 @@ behaviour:
    
 .. note::
 
-	The ``doocsapi`` is available both in the Python and C++ driver apis.
+	The ``doocsapi`` is available both in the Python and C++ driver APIs.
 	
 .. todo::
 

@@ -60,7 +60,7 @@ unique name.
 
 .. todo::
 
-	Does the name need to be unique. If so it probably always has to be globally
+	Does the name need to be unique? If so it probably always has to be globally
 	unique to avoid conflicts if a domain-local configuration is later change to 
 	global availability.
 

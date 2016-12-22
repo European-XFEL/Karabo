@@ -249,5 +249,5 @@ recordall record all properties of the device, including set-values.
 .. todo::
 
 	Technically, it is possible to preserve all online streaming functionality by
-	violating the principle that data on the stream outputs must be in the persited
+	violating the principle that data on the stream outputs must be in the persisted
 	file. One can discuss if for such a simple scan case we allow this.
