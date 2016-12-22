@@ -273,6 +273,7 @@ class ComboBoxDelegate(QStyledItemDelegate):
             if not revisions:
                 return
             with SignalBlocker(combo):
+                revisions.sort(key=lambda t: t[0], reverse=True)
                 combo.clear()
                 for rev, alias in revisions:
                     combo.addItem('{} <{}>'.format(alias, rev), rev)
