@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt
-from PyQt4.QtGui import QAbstractItemView, QCursor, QHeaderView, QMenu, QTreeWidget
+from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt, QEvent, QPoint
+from PyQt4.QtGui import QAbstractItemView, QCursor, QHeaderView, QMenu, QTreeWidget, QLineEdit
 
 from karabo_gui.components import BaseComponent, EditableApplyLaterComponent
 import karabo_gui.globals as globals
@@ -18,7 +18,7 @@ class ParameterTreeWidget(QTreeWidget):
 
     def __init__(self, conf=None):
         super(ParameterTreeWidget, self).__init__()
-        
+
         self.conf = conf
         # Store previous selected item for tooltip handling
         self.prevItem = None
@@ -28,14 +28,13 @@ class ParameterTreeWidget(QTreeWidget):
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         #self.setSortingEnabled(True)
         #self.sortByColumn(0, Qt.AscendingOrder)
-        
+
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.mContext = QMenu(self) # Actions from configurationPanel are added via addContextAction
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
         self.model().setSupportedDragActions(Qt.CopyAction)
         self.setDragEnabled(True)
-
 
     def clear(self):
         """The components in the tree are children of this widget.
@@ -56,11 +55,9 @@ class ParameterTreeWidget(QTreeWidget):
 ### protected ###
     def mousePressEvent(self, event):
         item = self.itemAt(event.pos())
-        
         # Make sure the event was on a valid item
         if not item:
            return
-
         # Get the tree widget's x position
         treeX = self.header().sectionViewportPosition(0)
 
@@ -75,19 +72,28 @@ class ParameterTreeWidget(QTreeWidget):
         itemX = treeX + vRect.x() - rootX
 
         # Get the rect surrounding the icon
-        iconRect = QRect(itemX, vRect.y(), vRect.height(), vRect.height())      
+        iconRect = QRect(itemX, vRect.y(), vRect.height(), vRect.height())
 
         if self.prevItem and (self.prevItem is not item):
             # Hide tooltip of former item
             self.prevItem.setToolTipDialogVisible(False)
-        
+
         # Now check where the press event took place and handle it correspondingly
         if iconRect.contains(event.pos()):
             self.prevItem = item
             self.prevItem.setToolTipDialogVisible(True)
-            
         QTreeWidget.mousePressEvent(self, event)
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            item = self.itemAt(self.mapFromGlobal(QCursor.pos()) \
+                    - QPoint(0, self.header().height()))
+            if not item:
+                return
+            self.setCurrentItem(item)
+            self.onApplyCurrentItemChanges()
+
+        QTreeWidget.keyPressEvent(self, event)
 
     def mimeData(self, items):
         mimeData = QMimeData()
@@ -145,7 +151,7 @@ class ParameterTreeWidget(QTreeWidget):
                 continue
             if not isinstance(editableComponent, EditableApplyLaterComponent):
                 continue
-            
+
             if editableComponent.applyEnabled:
                 counter += 1
         return counter
