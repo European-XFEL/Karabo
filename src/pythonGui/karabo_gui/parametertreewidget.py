@@ -4,11 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt, QEvent, QPoint
-from PyQt4.QtGui import QAbstractItemView, QCursor, QHeaderView, QMenu, QTreeWidget, QLineEdit
-
-from karabo_gui.components import BaseComponent, EditableApplyLaterComponent
 import karabo_gui.globals as globals
+from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt, QPoint
+from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
+from karabo_gui.components import BaseComponent, EditableApplyLaterComponent
 from karabo_gui.singletons.api import get_network
 from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
