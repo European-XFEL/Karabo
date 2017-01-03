@@ -41,7 +41,7 @@ class WidgetSceneHandler(ABCHasStrictTraits):
             change_menu.addSeparator()
 
         widget_classes.sort(key=lambda x: x.alias)
-        for klass in (widget_classes):
+        for klass in widget_classes:
             ac = change_menu.addAction(klass.alias)
             ac.triggered.connect(partial(self._change_widget,
                                          scene_view, klass.__name__))
