@@ -4,10 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-import karabo_gui.globals as globals
-from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt, QPoint
-from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
+from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt, QEvent, QPoint
+from PyQt4.QtGui import QAbstractItemView, QCursor, QHeaderView, QMenu, QTreeWidget, QLineEdit
+
 from karabo_gui.components import BaseComponent, EditableApplyLaterComponent
+import karabo_gui.globals as globals
 from karabo_gui.singletons.api import get_network
 from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
@@ -54,9 +55,11 @@ class ParameterTreeWidget(QTreeWidget):
 ### protected ###
     def mousePressEvent(self, event):
         item = self.itemAt(event.pos())
+
         # Make sure the event was on a valid item
         if not item:
            return
+
         # Get the tree widget's x position
         treeX = self.header().sectionViewportPosition(0)
 
@@ -81,14 +84,16 @@ class ParameterTreeWidget(QTreeWidget):
         if iconRect.contains(event.pos()):
             self.prevItem = item
             self.prevItem.setToolTipDialogVisible(True)
+
         QTreeWidget.mousePressEvent(self, event)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
-            item = self.itemAt(self.mapFromGlobal(QCursor.pos()) \
-                    - QPoint(0, self.header().height()))
+        if event.key() == Qt.Key_Return or Qt.Key_Enter:
+            item = self.itemAt(self.mapFromGlobal(QCursor.pos())
+                               - QPoint(0, self.header().height()))
             if not item:
                 return
+
             self.setCurrentItem(item)
             self.onApplyCurrentItemChanges()
 
