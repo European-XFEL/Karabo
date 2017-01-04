@@ -8,7 +8,8 @@ import os.path as op
 from PyQt4 import uic
 from PyQt4.QtGui import QDialog
 
-from karabo.middlelayer import Hash
+from karabo.middlelayer import AccessLevel, Hash
+import karabo_gui.globals as krb_globals
 from karabo_gui.singletons.api import get_manager
 
 
@@ -19,38 +20,55 @@ class ServerHandleDialog(QDialog):
                            'server_handle.ui')
         uic.loadUi(filepath, self)
 
-        for host in self._get_available_hosts():
+        avail_hosts, avail_servers = self._get_available_hosts_servers()
+        for server_id in avail_servers:
+            self.cbServerId.addItem(server_id)
+
+        for host in avail_hosts:
             self.cbHost.addItem(host)
 
         if model is None:
             title = 'Add server'
         else:
             title = 'Edit server'
-            self.leServerId.setText(model.server_id)
+            index = self.cbServerId.findText(model.server_id)
+            if index < 0:
+                server_edit = self.cbServerId.lineEdit()
+                server_edit.setText(model.server_id)
+            else:
+                self.cbServerId.setCurrentIndex(index)
+
             index = self.cbHost.findText(model.host)
-            # NOTE: index might be -1 if model.host is not online (or empty)
-            # QComboBox handles this correctly, but the user should be notified
-            self.cbHost.setCurrentIndex(index)
+            if index < 0:
+                host_edit = self.cbHost.lineEdit()
+                host_edit.setText(model.host)
+            else:
+                self.cbHost.setCurrentIndex(index)
             self.teDescription.setPlainText(model.description)
         self.setWindowTitle(title)
 
-    def _get_available_hosts(self):
-        """ Get all available hosts of `systemTopology`
+    def _get_available_hosts_servers(self):
+        """ Get all available hosts and servers of the `systemTopology`
         """
         available_hosts = set()
+        available_servers = set()
         servers = get_manager().systemHash.get('server', Hash())
         for server_id, _, attrs in servers.iterall():
             if not attrs:
                 continue
 
+            visibility = AccessLevel(servers[server_id, "visibility"])
+            if visibility < krb_globals.GLOBAL_ACCESS_LEVEL:
+                available_servers.add(server_id)
+
             host = attrs.get("host", "")
             if host:
                 available_hosts.add(host)
-        return available_hosts
+        return available_hosts, available_servers
 
     @property
     def server_id(self):
-        return self.leServerId.text()
+        return self.cbServerId.currentText()
 
     @property
     def host(self):
