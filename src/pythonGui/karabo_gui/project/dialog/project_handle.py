@@ -4,7 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import os.path as op
+
 from collections import OrderedDict, namedtuple
+from operator import attrgetter
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
@@ -54,6 +56,7 @@ class ProjectHandleDialog(QDialog):
 
         self.set_dialog_texts(title, btn_text)
 
+        # Tableview
         self.twProjects.setModel(TableModel(parent=self))
         rev_delegate = ComboBoxDelegate(self.twProjects)
         rev_column = get_column_index(REVISIONS)
@@ -64,7 +67,8 @@ class ProjectHandleDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.leTitle.textChanged.connect(self._titleChanged)
         self.leTitle.setText(simple_name)
-
+        self.twProjects.setSortingEnabled(True)
+        self.twProjects.sortByColumn(get_column_index(SIMPLE_NAME), Qt.AscendingOrder)
         register_for_broadcasts(self)
 
     def closeEvent(self, event):
@@ -229,6 +233,13 @@ class TableModel(QAbstractTableModel):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
             return self.headers[section]
 
+    def sort(self, column, order):
+        """ Sort table by given column number and order """
+
+        self.entries.sort(key=attrgetter(ProjectEntry._fields[column]),
+                          reverse=bool(order))
+
+        self.layoutChanged.emit()
 
 class ComboBoxDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
