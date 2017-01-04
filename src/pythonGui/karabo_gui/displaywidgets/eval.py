@@ -41,7 +41,7 @@ class Evaluator(DisplayWidget):
 
 
     def setText(self, text=None):
-        if text is None:
+        if not text:
             return
 
         try:
