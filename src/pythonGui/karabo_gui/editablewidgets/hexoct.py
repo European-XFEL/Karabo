@@ -42,7 +42,7 @@ class Hexadecimal(EditableWidget, DisplayWidget):
 
     def typeChanged(self, box):
         rmin, rmax = box.descriptor.getMinMax()
-        mask = 'h' * (log2(max(abs(rmax), abs(rmin))) // 4 + 1)
+        mask = 'h' * int(log2(max(abs(rmax), abs(rmin))) // 4 + 1)
         if rmin < 0:
             mask = "#" + mask
         self.widget.setInputMask(mask)
