@@ -68,6 +68,7 @@ class ProjectHandleDialog(QDialog):
         self.leTitle.textChanged.connect(self._titleChanged)
         self.leTitle.setText(simple_name)
         self.twProjects.setSortingEnabled(True)
+        self.twProjects.sortByColumn(get_column_index(SIMPLE_NAME), Qt.AscendingOrder)
         register_for_broadcasts(self)
 
     def closeEvent(self, event):
@@ -237,6 +238,7 @@ class TableModel(QAbstractTableModel):
 
         self.entries.sort(key=attrgetter(ProjectEntry._fields[column]),
                           reverse=bool(order))
+
         self.layoutChanged.emit()
 
 class ComboBoxDelegate(QStyledItemDelegate):
