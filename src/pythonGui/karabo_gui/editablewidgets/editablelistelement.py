@@ -7,12 +7,12 @@
 
 """This module contains a class which represents a widget plugin for attributes
    and is created by the factory class EditableWidget.
-   
+
    Each plugin needs to implement the following interface:
-   
+
    def getCategoryAliasClassName():
        pass
-   
+
     class Maker:
         def make(self, **params):
             return Attribute*(**params)
@@ -29,24 +29,24 @@ from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import QDialog, QPushButton
 
 
-class EditableListElement(EditableWidget, DisplayWidget):
+class EditableListElement(EditableWidget):
     category = VectorString
     alias = "List Element Field"
     signalValueChanged = pyqtSignal(str, object) # key, value
-    
+
     def __init__(self, box, parent):
         super(EditableListElement, self).__init__(box)
-        
+
         self.__pushButton = QPushButton("Edit list", parent)
         self.__pushButton.setStyleSheet("QPushButton { text-align: left; }")
-        
+
         self.__choiceItemList = [] # list with hidden possible items of listelement
         self.__choiceStringList = [] # list with names of possible listelements
         self.__selectedItemList = [] # list with already added items
         self.__selectedStringList = [] # list with selected listelements
-        
+
         self.__isInit = False
-        
+
         self.__pushButton.clicked.connect(self.onClicked)
 
 
@@ -69,6 +69,8 @@ class EditableListElement(EditableWidget, DisplayWidget):
 
 
     def _addListItem(self, value, arrayIndex):
+            if not self.__choiceStringList:
+                return
             index = self.__choiceStringList.index(value)
             if index < 0:
                 return
@@ -91,9 +93,9 @@ class EditableListElement(EditableWidget, DisplayWidget):
     def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return
-        
+
         self.__selectedStringList = value
-        
+
         if self.__isInit is False:
             # Copy item
             self.copyListItem(value)
