@@ -5,8 +5,9 @@
 #############################################################################
 
 from PyQt4.QtCore import QByteArray, Qt
-from PyQt4.QtGui import (QLabel, QPixmap, QDialog, QListView,
-                         QStandardItemModel, QStandardItem, QIcon)
+from PyQt4.QtGui import (QPixmap, QDialog, QListView, QStandardItemModel,
+                         QStandardItem, QIcon)
+from PyQt4.QtSvg import QSvgWidget
 
 from karabo.common.states import State
 from karabo.middlelayer import String
@@ -29,13 +30,13 @@ class StatefulIconWidget(DisplayWidget):
     value = None
 
     def __init__(self, box, icon, parent):
-        #shpw a list to pick the icon from if it is not set
+        #show a list to pick the icon from if it is not set
         super(StatefulIconWidget, self).__init__(box)
         if icon is None:
             self._showIconDialog()
         else:
             self._setIcon(icon)
-        self.widget = QLabel(parent)
+        self.widget = QSvgWidget(parent)
         objectName = generateObjectName(self)
         self.widget.setObjectName(objectName)
         self.setErrorState(False)
@@ -83,38 +84,32 @@ class StatefulIconWidget(DisplayWidget):
         super_comp = super(StatefulIconWidget, cls).isCompatible(box, readonly)
         return super_comp and box.path == ('state',)
 
-    def _setPixmap(self, svg):
+    def _setSVG(self, svg):
         """
-        Use the SVG code to create a QPixMap()
-        :param svg:
-        :return:
+        :param svg: An XML for the icon
         """
-        p = QPixmap()
-        p.loadFromData(QByteArray(svg))
-        self.widget.setPixmap(p)
-        self.widget.setMaximumWidth(p.width())
-        self.widget.setMaximumHeight(p.height())
+        self.widget.load(QByteArray(svg))
 
     def setErrorState(self, isError):
         if isError:
-            self._setPixmap(self.icon.with_color(ERROR_COLOR_ALPHA))
+            self._setSVG(self.icon.with_color(ERROR_COLOR_ALPHA))
         else:
-            self._setPixmap(self.icon.with_color(OK_COLOR))
+            self._setSVG(self.icon.with_color(OK_COLOR))
 
     def valueChanged(self, box, value, timestamp=None):
         if State(value).isDerivedFrom(State.CHANGING):
-            self._setPixmap(self.icon.with_color(STATE_COLORS[State.CHANGING]))
+            self._setSVG(self.icon.with_color(STATE_COLORS[State.CHANGING]))
         elif State(value).isDerivedFrom(State.ACTIVE):
-            self._setPixmap(self.icon.with_color(STATE_COLORS[State.ACTIVE]))
+            self._setSVG(self.icon.with_color(STATE_COLORS[State.ACTIVE]))
         elif State(value).isDerivedFrom(State.PASSIVE):
-            self._setPixmap(self.icon.with_color(STATE_COLORS[State.PASSIVE]))
+            self._setSVG(self.icon.with_color(STATE_COLORS[State.PASSIVE]))
         elif State(value) is State.ERROR:
-            self._setPixmap(self.icon.with_color(STATE_COLORS[State.ERROR]))
+            self._setSVG(self.icon.with_color(STATE_COLORS[State.ERROR]))
         elif State(value) is State.INIT:
-            self._setPixmap(self.icon.with_color(STATE_COLORS[State.INIT]))
+            self._setSVG(self.icon.with_color(STATE_COLORS[State.INIT]))
         elif State(value) is State.DISABLED:
-            self._setPixmap(self.icon.with_color(STATE_COLORS[State.DISABLED]))
+            self._setSVG(self.icon.with_color(STATE_COLORS[State.DISABLED]))
         elif State(value) is State.NORMAL:
-            self._setPixmap(self.icon.with_color(OK_COLOR))
+            self._setSVG(self.icon.with_color(OK_COLOR))
         else:
-            self._setPixmap(self.icon.with_color(STATE_COLORS[State.UNKNOWN]))
+            self._setSVG(self.icon.with_color(STATE_COLORS[State.UNKNOWN]))
