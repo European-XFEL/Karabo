@@ -76,10 +76,10 @@ runUnitTests() {
     cd build/netbeans/pythonKarabo
     safeRunCommand "nosetests -v karabo.bound_api"
     safeRunCommand "nosetests -v karabo.common"
-    safeRunCommand "nosetests -v karabo.middlelayer_api"
     safeRunCommand "nosetests -v karabo.project_db"
     safeRunCommand "nosetests -v karabo.tests"
     safeRunCommand "nosetests -v karabo_gui"
+    safeRunCommand "nosetests -v karabo.middlelayer_api"
     echo
     echo Unit tests complete
     echo
