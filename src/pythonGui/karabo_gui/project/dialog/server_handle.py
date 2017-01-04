@@ -57,11 +57,11 @@ class ServerHandleDialog(QDialog):
             if not attrs:
                 continue
 
-            visibility = AccessLevel(servers[server_id, "visibility"])
+            visibility = AccessLevel(attrs['visibility'])
             if visibility < krb_globals.GLOBAL_ACCESS_LEVEL:
                 available_servers.add(server_id)
 
-            host = attrs.get("host", "")
+            host = attrs.get('host', '')
             if host:
                 available_hosts.add(host)
         return available_hosts, available_servers
