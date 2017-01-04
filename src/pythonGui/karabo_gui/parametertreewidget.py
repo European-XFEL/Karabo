@@ -8,9 +8,9 @@ from PyQt4.QtCore import pyqtSignal, QMimeData, QPoint, QRect, Qt
 from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
 
 from karabo_gui.components import BaseComponent, EditableApplyLaterComponent
+import karabo_gui.globals as globals
 from karabo_gui.singletons.api import get_network
 from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
-import karabo_gui.globals as globals
 
 
 class ParameterTreeWidget(QTreeWidget):
