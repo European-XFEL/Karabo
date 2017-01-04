@@ -4,12 +4,13 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-import karabo_gui.globals as globals
-from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt, QPoint
+from PyQt4.QtCore import pyqtSignal, QMimeData, QPoint, QRect, Qt
 from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
+
 from karabo_gui.components import BaseComponent, EditableApplyLaterComponent
 from karabo_gui.singletons.api import get_network
 from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
+import karabo_gui.globals as globals
 
 
 class ParameterTreeWidget(QTreeWidget):
@@ -84,19 +85,18 @@ class ParameterTreeWidget(QTreeWidget):
             self.prevItem = item
             self.prevItem.setToolTipDialogVisible(True)
 
-        QTreeWidget.mousePressEvent(self, event)
+        super(QTreeWidget, self).mousePressEvent(event)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Return or Qt.Key_Enter:
             item = self.itemAt(self.mapFromGlobal(QCursor.pos())
                                - QPoint(0, self.header().height()))
-            if not item:
+            if item:
+                self.setCurrentItem(item)
+                self.onApplyCurrentItemChanges()
                 return
 
-            self.setCurrentItem(item)
-            self.onApplyCurrentItemChanges()
-
-        QTreeWidget.keyPressEvent(self, event)
+        super(QTreeWidget, self).keyPressEvent(event)
 
     def mimeData(self, items):
         mimeData = QMimeData()
