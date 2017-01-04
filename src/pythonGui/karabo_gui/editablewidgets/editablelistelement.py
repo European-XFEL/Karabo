@@ -21,7 +21,7 @@
 __all__ = ["EditableListElement"]
 
 
-from karabo_gui.widget import DisplayWidget, EditableWidget
+from karabo_gui.widget import EditableWidget
 from karabo.middlelayer import Hash, VectorString
 from karabo_gui.stringlistedit import StringListEdit
 
