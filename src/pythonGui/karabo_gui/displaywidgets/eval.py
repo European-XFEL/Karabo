@@ -1,8 +1,7 @@
-__all__ = ["Evaluator"]
 
 import traceback
-from PyQt4.QtGui import QLineEdit, QInputDialog, QAction
-from PyQt4.QtGui import QMessageBox
+from PyQt4.QtGui import QAction, QInputDialog, QLineEdit, QMessageBox
+
 from karabo.middlelayer import String, Simple
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
@@ -42,9 +41,9 @@ class Evaluator(DisplayWidget):
 
 
     def setText(self, text=None):
-        if not text:
+        if text is None:
             return
-        
+
         try:
             self.function = eval("lambda x: {}".format(text), self.globals)
         except SyntaxError as e:
