@@ -5,8 +5,8 @@
 #############################################################################
 
 from PyQt4.QtCore import QByteArray, Qt
-from PyQt4.QtGui import (QLabel, QPixmap, QDialog, QListView,
-                         QStandardItemModel, QStandardItem, QIcon)
+from PyQt4.QtGui import (QPixmap, QDialog, QListView, QStandardItemModel,
+                         QStandardItem, QIcon)
 from PyQt4.QtSvg import QSvgWidget
 
 from karabo.common.states import State
@@ -86,9 +86,7 @@ class StatefulIconWidget(DisplayWidget):
 
     def _setSVG(self, svg):
         """
-        Use the SVG code
-        :param svg:
-        :return:
+        :param svg: An XML for the icon
         """
         self.widget.load(QByteArray(svg))
 
