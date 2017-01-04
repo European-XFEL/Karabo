@@ -12,7 +12,8 @@
 __all__ = ["StringListEdit"]
 
 
-from PyQt4.QtGui import (QDialog, QHBoxLayout, QInputDialog, QListWidget, QMessageBox, 
+from PyQt4.QtGui import (QApplication, QDialog, QHBoxLayout, QInputDialog,
+                         QFontMetrics, QListWidget, QLineEdit, QMessageBox,
                          QPushButton, QVBoxLayout)
 
 
@@ -96,7 +97,7 @@ class StringListEdit(QDialog):
 
         if self.listWidget.verticalScrollBar() is not None :
             width += self.listWidget.verticalScrollBar().width()
-        self.listWidget.setMinimumWidth(min(width, QCoreApplication.instance().desktop().screenGeometry().width() * 4 / 5)) #?
+        self.listWidget.setMinimumWidth(min(width, QApplication.instance().desktop().screenGeometry().width() * 4 / 5)) #?
         self.onUpdateButtons()
 
 
