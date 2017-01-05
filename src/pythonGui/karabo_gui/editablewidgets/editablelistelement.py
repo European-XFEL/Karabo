@@ -40,7 +40,7 @@ class EditableListElement(EditableWidget):
     def value(self):
         return self.__selectedStringList  # TODO: Hash(value) compare with EditableChoiceElement
 
-    def copyListItem(self, values, arrayIndex=0):
+    def copy_list_item(self, values, arrayIndex=0):
         if isinstance(values, list):
             for v in values:
                 self._addListItem(v, arrayIndex)
@@ -76,7 +76,7 @@ class EditableListElement(EditableWidget):
 
         if self.__isInit is False:
             # Copy item
-            self.copyListItem(value)
+            self.copy_list_item(value)
             self.__isInit = True
 
     @pyqtSlot()
@@ -95,9 +95,9 @@ class EditableListElement(EditableWidget):
                     parentItem.removeChild(item)
             self.__selectedStringList = []
 
-            for i in range(listEdit.get_list_count()):
+            for i in range(listEdit.getListCount()):
                 value = listEdit.get_list_element_at(i)
                 self.__selectedStringList.append(value)
 
                 # TODO: don't copy already existing item..
-                self.copyListItem(listEdit.get_list_element_at(i), i)
+                self.copy_list_item(listEdit.get_list_element_at(i), i)
