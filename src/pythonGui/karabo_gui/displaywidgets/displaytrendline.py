@@ -3,31 +3,23 @@ import datetime
 from bisect import bisect
 from collections import OrderedDict
 import os.path as op
-import pickle
-import base64
-from xml.etree.ElementTree import Element
 
-from karabo_gui.const import ns_karabo
-import karabo_gui.globals as krb_globals
-from karabo_gui.topology import getDevice
-from karabo_gui.util import SignalBlocker
-from karabo_gui.widget import DisplayWidget
-
+from guiqwt.plot import CurveWidget, PlotManager
+from guiqwt.tools import SelectPointTool
+from guiqwt.builder import make
+import numpy
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, QDateTime, QObject, QTimer, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import (QButtonGroup, QDateTimeEdit, QDialog, QHBoxLayout,
                          QIntValidator, QLabel, QLineEdit, QPushButton,
                          QVBoxLayout, QWidget)
-
-import numpy
-
 from PyQt4.Qwt5.Qwt import (QwtPlot, QwtScaleDraw, QwtText,
                             QwtLinearScaleEngine, QwtScaleDiv)
-from guiqwt.plot import CurveWidget, PlotManager
-from guiqwt.tools import SelectPointTool
-from guiqwt.builder import make
 
 from karabo.middlelayer import Simple, Timestamp
+import karabo_gui.globals as krb_globals
+from karabo_gui.util import SignalBlocker
+from karabo_gui.widget import DisplayWidget
 
 X_AXIS = "_x_axis_btns"
 Y_AXIS = "_y_axis_btns"
