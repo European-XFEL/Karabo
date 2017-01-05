@@ -1,17 +1,15 @@
-from karabo_gui.const import ns_karabo
-from karabo_gui.widget import DisplayWidget
 
+from numpy import log2
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QCheckBox, QInputDialog
 
-from numpy import log2
-
 from karabo.middlelayer import Integer
+from karabo_gui.widget import DisplayWidget
+
 
 class SingleBit(DisplayWidget):
     category = Integer
     alias = "Single Bit"
-
 
     def __init__(self, box, parent):
         super(SingleBit, self).__init__(box)
@@ -21,10 +19,8 @@ class SingleBit(DisplayWidget):
         self.widget.addAction(action)
         self.bit = 0
 
-
     def setReadOnly(self, ro):
         self.widget.setEnabled(not ro)
-
 
     @pyqtSlot()
     def onChangeBit(self):
@@ -42,15 +38,6 @@ class SingleBit(DisplayWidget):
         if ok:
             self._setBit(bit)
             self.valueChanged(self.boxes[0], self.boxes[0].value)
-
-
-    def save(self, element):
-        element.set(ns_karabo + "bit", repr(self.bit))
-
-
-    def load(self, element):
-        self._setBit(int(element.get(ns_karabo + "bit")))
-
 
     def valueChanged(self, box, value, timestamp=None):
         self.widget.setChecked((value >> self.bit) & 1 != 0)
