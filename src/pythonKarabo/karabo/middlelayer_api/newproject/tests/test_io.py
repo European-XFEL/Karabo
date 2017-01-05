@@ -112,6 +112,15 @@ def test_save_project():
         _write_project(project, devices, storage)
 
 
+def test_project_convert():
+    old_project = _get_old_project()
+    project, devices = convert_old_project(old_project)
+
+    for server in project.servers:
+        for dev_inst in server.devices:
+            assert not dev_inst.instance_id.endswith('.xml')
+
+
 def test_project_round_trip():
     old_project = _get_old_project()
     project, devices = convert_old_project(old_project)
