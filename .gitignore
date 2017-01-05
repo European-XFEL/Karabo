@@ -19,6 +19,7 @@ build/netbeans/*/*/*/nbproject/Makefile-*.mk
 build/netbeans/*/*/*/nbproject/private
 build/netbeans/*/*/*/nbproject/Package-*.bash
 dist/
+doc/concepts/colors.rst
 /private/*
 GNU-Linux-x86
 GNU_MacPorts-MacOSX
