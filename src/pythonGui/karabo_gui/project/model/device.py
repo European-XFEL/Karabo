@@ -94,7 +94,10 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     def create_qt_item(self):
         item = QStandardItem(self.model.instance_id)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
-        icon = get_project_device_status_icon(DeviceStatus.STATUS_OFFLINE)
+        # Get current status of device
+        manager = get_manager()
+        self.model.status = manager.get_device_status(self.model.instance_id)
+        icon = get_project_device_status_icon(DeviceStatus(self.model.status))
         item.setIcon(icon)
         item.setEditable(False)
         return item

@@ -726,6 +726,31 @@ class Manager(QObject):
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.RunConfigSourcesUpdate, reply))
 
+# ------------------------------------------------------------------
+
+    def get_server_status(self, server_id):
+        """Get status string for given server and return it
+        """
+        try:
+            server_key = 'server.{}'.format(server_id)
+            attrs = self.systemHash[server_key, ...]
+            status = attrs.get('status', 'ok')
+        except KeyError:
+            status = 'offline'
+
+        return status
+
+    def get_device_status(self, device_id):
+        """Get status string for given device and return it
+        """
+        try:
+            device_key = 'device.{}'.format(device_id)
+            attrs = self.systemHash[device_key, ...]
+            status = attrs.get('status', 'ok')
+        except KeyError:
+            status = 'offline'
+
+        return status
 
 # ------------------------------------------------------------------
 
