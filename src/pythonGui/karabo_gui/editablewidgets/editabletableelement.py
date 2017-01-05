@@ -40,19 +40,16 @@ first string-type column encountered is pre-filled with the deviceID.
 """
 import copy
 
+from PyQt4.QtCore import (Qt, QAbstractTableModel, QModelIndex, QObject,
+                          SIGNAL, SLOT, pyqtSlot)
 from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog,
                          QComboBox, QVBoxLayout, QWidget, QDialogButtonBox,
-                         QCheckBox, QItemDelegate, QStyledItemDelegate,
-                         QSizePolicy)
-from PyQt4.QtCore import (Qt, QAbstractTableModel, QModelIndex, QObject, SIGNAL,
-                          SLOT, pyqtSlot)
+                         QCheckBox, QItemDelegate, QStyledItemDelegate)
 
-from karabo.middlelayer import (AccessMode, Hash, Type, VectorHash,
-                                SchemaHashType)
+from karabo.middlelayer import AccessMode, Hash, Type, VectorHash
 from karabo_gui.widget import DisplayWidget, EditableWidget
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.const import ns_karabo
 from karabo_gui.events import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
     unregister_from_broadcasts)
