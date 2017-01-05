@@ -95,13 +95,8 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         item = QStandardItem(self.model.instance_id)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         # Get current status of device
-        try:
-            attrs = get_manager().systemHash[
-                'device.{}'.format(self.model.instance_id), ...]
-        except KeyError:
-            pass
-        else:
-            self.model.status = attrs.get('status', 'ok')
+        manager = get_manager()
+        self.model.status = manager.get_device_status(self.model.instance_id)
         icon = get_project_device_status_icon(DeviceStatus(self.model.status))
         item.setIcon(icon)
         item.setEditable(False)
