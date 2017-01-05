@@ -65,7 +65,15 @@ class DeviceServerModelItem(BaseProjectGroupItem):
     def create_qt_item(self):
         item = QStandardItem(self.model.server_id)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
-        icon = get_project_server_status_icon(DeviceStatus.STATUS_ONLINE)
+        # Get current status of server
+        try:
+            attrs = get_manager().systemHash[
+                'server.{}'.format(self.model.server_id), ...]
+        except KeyError:
+            pass
+        else:
+            self.model.status = attrs.get('status', 'ok')
+        icon = get_project_server_status_icon(DeviceStatus(self.model.status))
         item.setIcon(icon)
         item.setEditable(False)
         for child in self.children:
