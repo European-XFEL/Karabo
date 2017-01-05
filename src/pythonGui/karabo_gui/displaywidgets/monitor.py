@@ -77,15 +77,6 @@ class Monitor(DisplayWidget):
                 self.killTimer(self.timer)
             self.file.close()
 
-    def save(self, e):
-        if self.filename is not None:
-            e.set("filename", self.filename)
-        e.set("interval", str(self.interval))
-
-    def load(self, e):
-        self._setFilename(e.get("filename", None))
-        self._setInterval(float(e.get("interval")))
-
     def _setFilename(self, filename):
         """ Give derived classes a place to respond to changes. """
         self.filename = filename
