@@ -1,9 +1,7 @@
-
 from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import (
-    QAction, QInputDialog, QLabel
-)
-from karabo_gui.const import ns_karabo, OK_COLOR, ERROR_COLOR_ALPHA
+from PyQt4.QtGui import (QAction, QInputDialog, QFrame, QLabel)
+
+from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
@@ -23,8 +21,9 @@ class DisplayStateColor(DisplayWidget):
         self.widget.setAutoFillBackground(True)
         self.widget.setAlignment(Qt.AlignCenter)
         self.widget.setMinimumWidth(32)
-        self.widget.setMinimumHeight(32)
+        self.widget.setMinimumHeight(24)
         self.widget.setWordWrap(True)
+        self.widget.setFrameStyle(QFrame.Box | QFrame.Plain)
 
         objectName = generateObjectName(self)
         self._styleSheet = ("QLabel#{}".format(objectName) +
@@ -57,16 +56,6 @@ class DisplayStateColor(DisplayWidget):
 
         if self.widget.text() != self._staticText:
             self.widget.setText(self._staticText)
-
-    def save(self, element):
-        """ Save to a scene SVG.
-        """
-        element.set(ns_karabo + 'staticText', self._staticText)
-
-    def load(self, element):
-        """ Load from a scene SVG.
-        """
-        self._setStaticText(element.get(ns_karabo + 'staticText', ''))
 
     @pyqtSlot()
     def _onChangeStaticText(self):
