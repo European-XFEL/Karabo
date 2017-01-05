@@ -224,6 +224,7 @@ def get_project_server_status_icon(status):
     """
     status_icons = {
         DeviceStatus.STATUS_ONLINE: icons.yes,
+        DeviceStatus.STATUS_OK: icons.yes,
         DeviceStatus.STATUS_OFFLINE: icons.no,
     }
 
