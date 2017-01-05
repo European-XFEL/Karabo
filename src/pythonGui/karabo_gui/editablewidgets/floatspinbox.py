@@ -1,12 +1,7 @@
-__all__ = ["FloatSpinBox"]
-
 from numpy import log10
-
 from PyQt4.QtGui import QAction, QDoubleSpinBox, QInputDialog
 
 from karabo.middlelayer import Number
-
-from karabo_gui.const import ns_karabo
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
@@ -50,12 +45,6 @@ class FloatSpinBox(EditableWidget, DisplayWidget):
     @property
     def value(self):
         return self.widget.value()
-
-    def save(self, element):
-        element.set(ns_karabo + "step", repr(self.widget.singleStep()))
-
-    def load(self, element):
-        self._setStep(float(element.get(ns_karabo + "step")))
 
     def _setStep(self, step):
         """ Give derived classes a place to respond to changes. """

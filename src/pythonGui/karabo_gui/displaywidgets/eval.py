@@ -11,7 +11,7 @@ class Evaluator(DisplayWidget):
     category = String, Simple
     alias = "Evaluate Expression"
 
-    globals = { }
+    globals = {}
     exec("from numpy import *", globals)
 
     def __init__(self, box, parent):
@@ -27,18 +27,15 @@ class Evaluator(DisplayWidget):
         self.widget.addAction(action)
         action.triggered.connect(self.onChangeExpression)
 
-
     def function(self, x):
         """ this is just a placeholder """
         return x
-
 
     def onChangeExpression(self):
         text, ok = QInputDialog.getText(self.widget, "Enter Expression",
                                         "f(x) = ", text=self.text)
         if ok:
             self.setText(text)
-
 
     def setText(self, text=None):
         if not text:
@@ -55,7 +52,6 @@ class Evaluator(DisplayWidget):
         self.text = text
         self.valueChanged(None, self.value)
 
-
     def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return
@@ -67,11 +63,3 @@ class Evaluator(DisplayWidget):
             except Exception as e:
                 text = traceback.format_exception_only(type(e), e)[0]
             self.widget.setText(text)
-
-
-    def save(self, e):
-        e.set("expression", self.text)
-
-
-    def load(self, e):
-        self.setText(e.get("expression"))

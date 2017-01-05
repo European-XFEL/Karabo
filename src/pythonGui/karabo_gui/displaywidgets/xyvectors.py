@@ -1,17 +1,9 @@
-import base64
-import pickle
-from xml.etree.ElementTree import Element
-
-from PyQt4.Qwt5.Qwt import QwtPlot
-
 from guiqwt.plot import CurveDialog
 from guiqwt.builder import make
+from PyQt4.Qwt5.Qwt import QwtPlot
 
 from karabo.middlelayer import NumpyVector
-
-from karabo_gui.const import ns_karabo
 from karabo_gui.widget import DisplayWidget
-from karabo_gui.topology import getDevice
 
 
 class XYVector(DisplayWidget):
@@ -54,20 +46,6 @@ class XYVector(DisplayWidget):
         elif len(self.xbox.value) == len(value):
             self.curves[box].set_data(self.xbox.value, value)
         self.plot.replot()
-
-    def save(self, e):
-        for box, curve in self.curves.items():
-            ee = Element(ns_karabo + "box")
-            ee.set("device", box.configuration.id)
-            ee.set("path", ".".join(box.path))
-            ee.text = base64.b64encode(pickle.dumps(curve)).decode("ascii")
-            e.append(ee)
-
-    def load(self, e):
-        for ee in e:
-            box = getDevice(ee.get("device")).getBox(ee.get("path").split("."))
-            curve = pickle.loads(base64.b64decode(ee.text))
-            self._addCurve(box, curve)
 
     def _addCurve(self, box, curve):
         """ Give derived classes a place to respond to changes. """

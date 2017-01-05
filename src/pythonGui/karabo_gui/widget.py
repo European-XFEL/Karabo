@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
 """This module contains a class which represents a factory class to create
    display widgets.
 
@@ -15,8 +14,6 @@
 
 .. autoclass:: EditableWidget
 """
-
-__all__ = ["DisplayWidget"]
 
 import os.path
 
@@ -85,14 +82,6 @@ class Widget(Registry, QObject):
         Return whether that is possible. The default implementation returns
         False, as multi-box support has to be programmed by the user."""
         return False
-
-    def save(self, element):
-        """Saves the widget into the :class:`~xml.etree.ElementTree.Element`
-        element"""
-
-    def load(self, element):
-        """Loads the widgets from the :class:`~xml.etree.ElementTree.Element`
-        element """
 
     @pyqtSlot(object, object, object)
     @pyqtSlot()

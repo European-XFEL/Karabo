@@ -4,32 +4,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
-"""This module contains a class which represents a widget plugin for attributes
-   and is created by the factory class DisplayWidget.
-   
-   Each plugin needs to implement the following interface:
-   
-   def getCategoryAliasClassName():
-       pass
-   
-    class Maker:
-        def make(self, **params):
-            return Attribute*(**params)
-"""
-
-__all__ = ["DisplayCommand"]
-
-from karabo_gui.const import ns_karabo
-from karabo_gui.displaywidgets.icons import Item, SelectionDialog
-from karabo_gui.widget import DisplayWidget
-
-from karabo_gui.schema import SlotNode
-
 from PyQt4.QtCore import QSize, pyqtSlot
 from PyQt4.QtGui import QToolButton, QWidget, QAction, QStackedLayout, QIcon
 
-from xml.etree.ElementTree import Element
+from karabo_gui.displaywidgets.icons import Item, SelectionDialog
+from karabo_gui.widget import DisplayWidget
+from karabo_gui.schema import SlotNode
 
 
 class DisplayCommand(DisplayWidget):
@@ -49,7 +29,6 @@ class DisplayCommand(DisplayWidget):
         self.current = None
         self.actions = []
         self.addBox(box)
-
 
     def showDialog(self):
         dialog = SelectionDialog(self.project, self.actions, None)
@@ -73,11 +52,9 @@ class DisplayCommand(DisplayWidget):
         self.update()
         return True
 
-
     @property
     def boxes(self):
         return [a.box for a in self.actions]
-
 
     def typeChanged(self, box):
         for item in self.actions:
@@ -86,7 +63,6 @@ class DisplayCommand(DisplayWidget):
                 item.action.triggered.connect(box.execute)
                 item.action.setText(box.descriptor.displayedName)
                 item.value = box.descriptor.displayedName
-
 
     @pyqtSlot()
     def update(self):
@@ -99,21 +75,3 @@ class DisplayCommand(DisplayWidget):
                 break
         else:
             self.button.setDefaultAction(self.button.actions()[0])
-
-
-    def save(self, e):
-        for item in self.actions:
-            if item.url is not None:
-                ee = Element(ns_karabo + "action")
-                ee.set("key", item.box.key())
-                ee.set("image", item.url)
-                e.append(ee)
-
-    def load(self, e):
-        for ee in e:
-            key = ee.get("key")
-            for item in self.actions:
-                if item.box.key() == key:
-                    item.__init__(ee, self.project)
-                    break
-        self.updateIcons()
