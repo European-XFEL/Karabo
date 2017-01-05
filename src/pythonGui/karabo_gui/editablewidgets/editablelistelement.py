@@ -20,84 +20,82 @@ class EditableListElement(EditableWidget):
     def __init__(self, box, parent):
         super(EditableListElement, self).__init__(box)
 
-        self.__pushButton = QPushButton("Edit list", parent)
-        self.__pushButton.setStyleSheet("QPushButton { text-align: left; }")
+        self._pushButton = QPushButton("Edit list", parent)
+        self._pushButton.setStyleSheet("QPushButton { text-align: left; }")
 
-        self.__choiceItemList = []  # list with hidden possible items of listelement
-        self.__choiceStringList = []  # list with names of possible listelements
-        self.__selectedItemList = []  # list with already added items
-        self.__selectedStringList = []  # list with selected listelements
+        self._choice_item_list = []  # list with hidden possible items of listelement
+        self._choice_string_list = []  # list with names of possible listelements
+        self._selected_item_list = []  # list with already added items
+        self._selected_string_list = []  # list with selected listelements
 
-        self.__isInit = False
+        self._is_init = False
 
-        self.__pushButton.clicked.connect(self.onClicked)
+        self._pushButton.clicked.connect(self.onClicked)
 
     @property
     def widget(self):
-        return self.__pushButton
+        return self._pushButton
 
     @property
     def value(self):
-        return self.__selectedStringList  # TODO: Hash(value) compare with EditableChoiceElement
+        return self._selected_string_list  # TODO: Hash(value) compare with EditableChoiceElement
 
     def copy_list_item(self, values, arrayIndex=0):
         if isinstance(values, list):
             for v in values:
-                self._addListItem(v, arrayIndex)
+                self._add_list_item(v, arrayIndex)
         else:
-            self._addListItem(values, arrayIndex)
+            self._add_list_item(values, arrayIndex)
 
-    def _addListItem(self, value, arrayIndex):
-        if not self.__choiceStringList:
+    def _add_list_item(self, value, arrayIndex):
+        if not self._choice_string_list:
             return
-        index = self.__choiceStringList.index(value)
+        index = self._choice_string_list.index(value)
         if index < 0:
             return
 
-        choiceItem = self.__choiceItemList[index]
-        parentItem = choiceItem.parent()
+        choice_item = self._choice_item_list[index]
+        parent_item = choice_item.parent()
 
         # Change full key name...
-        newInternalKeyName = parentItem.box
-        newInternalKeyName.append("[{}]".format(arrayIndex))  # [next]
+        new_internal_keyname = parent_item.box
+        new_internal_keyname.append("[{}]".format(arrayIndex))  # [next]
 
-        copyItem = choiceItem.copy(parentItem, newInternalKeyName)
-        parentItem.setExpanded(True)
-        self.__selectedItemList.append(copyItem)
+        copy_item = choice_item.copy(parent_item, new_internal_keyname)
+        parent_item.setExpanded(True)
+        self._selected_item_list.append(copy_item)
 
         # Notify Manager about changes
-        self.signalValueChanged.emit(copyItem.box, Hash())
+        self.signalValueChanged.emit(copy_item.box, Hash())
 
     def valueChanged(self, box, value, timestamp=None):
-        if value is None:
-            return
 
-        self.__selectedStringList = value
+        self._selected_string_list = value
 
-        if self.__isInit is False:
+        if self._is_init is False:
             # Copy item
             self.copy_list_item(value)
-            self.__isInit = True
+            self._is_init = True
 
     @pyqtSlot()
     def onClicked(self):
         listEdit = StringListEdit(True, self.value)
         listEdit.setTexts("Add", "&Name", "Edit")
-        listEdit.set_allowed_choices(self.__choiceStringList,
-                                   self.__choiceItemList)
+        listEdit.set_allowed_choices(self._choice_string_list,
+                                     self._choice_item_list)
 
         if listEdit.exec_() == QDialog.Accepted:
             # Remove old items
-            for i in range(len(self.__selectedItemList)):
-                item = self.__selectedItemList[i]
-                parentItem = item.parent()
-                if parentItem is not None:
-                    parentItem.removeChild(item)
-            self.__selectedStringList = []
+            for i in range(len(self._selected_item_list)):
+                item = self._selected_item_list[i]
+                parent_item = item.parent()
+                if parent_item is not None:
+                    parent_item.removeChild(item)
+            self._selected_string_list = []
 
-            for i in range(listEdit.getListCount()):
+            for i in range(listEdit.get_list_count()):
                 value = listEdit.get_list_element_at(i)
-                self.__selectedStringList.append(value)
+                self._selected_string_list.append(value)
 
                 # TODO: don't copy already existing item..
                 self.copy_list_item(listEdit.get_list_element_at(i), i)
