@@ -341,7 +341,7 @@ class ProjectDatabase(ContextDecorator):
                  'user': c.get('user'),
                  'date': c.get('date'),
                  'alias': c.get('alias', c.get('revision'))}
-                 for c in revs]
+                for c in revs]
 
 
     def list_domains(self):
