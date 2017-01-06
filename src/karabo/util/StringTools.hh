@@ -114,7 +114,7 @@ namespace karabo {
         }
 
         inline std::string toString(const char* const& value) {
-            return std::string(value);
+            return std::string(value ? value : "");
         }
 
         inline std::string toString(const unsigned char value) {
