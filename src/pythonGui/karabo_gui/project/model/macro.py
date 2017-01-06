@@ -96,6 +96,7 @@ class MacroModelItem(BaseProjectGroupItem):
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         item.setIcon(icons.file)
         item.setEditable(False)
+        self.set_qt_item_text(item)
         return item
 
     def double_click(self, parent_project, parent=None):
@@ -139,6 +140,12 @@ class MacroModelItem(BaseProjectGroupItem):
 
     # ----------------------------------------------------------------------
     # traits notification handlers
+    @on_trait_change("model.modified")
+    def modified_change(self):
+        """ Whenever the project is modified it should be visible"""
+        if not self.is_ui_initialized():
+            return
+        self.set_qt_item_text(self.qt_item)
 
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
@@ -151,12 +158,6 @@ class MacroModelItem(BaseProjectGroupItem):
 
         for item_model in event.added:
             self._child_map[item_model.instance_id] = item_model
-
-    @on_trait_change("model.simple_name")
-    def simple_name_change(self):
-        if not self.is_ui_initialized():
-            return
-        self.qt_item.setText(self.model.simple_name)
 
     def _topo_listener_changed(self, name, old, new):
         """Handle broadcast event registration/unregistration here.
