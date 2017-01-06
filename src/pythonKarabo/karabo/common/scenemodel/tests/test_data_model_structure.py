@@ -10,8 +10,9 @@ EXPECTED_HASH = "6f3e50237c8583f88a59cdb58ba034fc6973e5f84e684a8de50e1677c8b247f
 FAILURE_MSG = """
 ##############################################################################
                             !!! WARNING !!!
-Changes have been detected in the structure of the Scene data model. Please
-read the scene file development documentation before proceeding!
+Changes have been detected in the structure of the Scene data model. If you
+haven't already, please read the 'Developing the Scene' section of the Karabo
+documentation before proceeding!
 
 Once the changes are complete, update the expected hash value here.
 ##############################################################################
