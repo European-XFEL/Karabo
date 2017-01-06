@@ -7,6 +7,7 @@ from functools import partial
 from io import StringIO
 import weakref
 
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance, Property, on_trait_change
 
@@ -108,17 +109,22 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
             configuration = self._get_device_entry(parent_project, config)
             self._broadcast_item_click(configuration)
 
-    @on_trait_change("model.instance_id")
-    def instance_id_change(self):
+    @on_trait_change("model.modified")
+    def modified_change(self):
+        """ Whenever the project is modified it should be visible"""
         if not self.is_ui_initialized():
             return
-        self.qt_item.setText(self.model.instance_id)
 
-    @on_trait_change("model.simple_name")
-    def simple_name_change(self):
-        if not self.is_ui_initialized():
-            return
-        self.qt_item.setText(self.model.simple_name)
+        brush = self.qt_item.foreground()
+        if self.model.modified:
+            # Change color to blue
+            brush.setColor(Qt.blue)
+            self.qt_item.setText("*{}".format(self.model.instance_id))
+        else:
+            # Change color to black
+            brush.setColor(Qt.black)
+            self.qt_item.setText("{}".format(self.model.instance_id))
+        self.qt_item.setForeground(brush)
 
     @on_trait_change("model.status")
     def status_change(self):
@@ -135,7 +141,6 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     def active_config_ref_change(self):
         if not self.is_ui_initialized():
             return
-
         self._broadcast_item_click(self._get_current_configuration())
 
     def _get_device_entry(self, project, active_config):
