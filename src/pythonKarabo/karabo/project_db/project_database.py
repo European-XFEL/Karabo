@@ -292,13 +292,29 @@ class ProjectDatabase(ContextDecorator):
         xquery version "3.0";
         let $path := "{path}"
         {maybe_let}
-        let $uuids := distinct-values(collection($path)/*/@uuid)
-        return <items>{{for $uuid in $uuids
-            for $doc in collection($path)[*/@uuid = $uuid][1]
-            {maybe_where}
-            return <item uuid="{{$doc/*/@uuid}}"
-                         simple_name="{{$doc/*/@simple_name}}"
-                         item_type="{{$doc/*/@item_type}}" />
+        return <items>{{
+        for $doc in collection($path)
+        let $uuid := $doc/*/@uuid
+        let $simple_name := $doc/*/@simple_name
+        let $item_type := $doc/*/@item_type
+        let $revs := $doc/*/@revision
+        let $aliases := $doc/*/@alias
+        let $dates := $doc/*/@date
+        let $users := $doc/*/@user
+        {maybe_where}
+        group by $uuid, $simple_name, $item_type
+        return <item uuid=" {{$uuid}}"
+                     simple_name="{{$simple_name}}"
+                     item_type="{{$item_type}}">
+                           {{
+                           for $rev in $revs
+                           let $idx := index-of($revs, $rev)
+                           return <version revision="{{$rev}}"
+                               user= "{{$users[$idx]}}"
+                               date="{{$dates[$idx]}}"
+                               alias="{{$aliases[$idx]}}" />
+                           }}
+                     </item>
         }}</items>
         """
         maybe_let, maybe_where = '', ''
@@ -313,15 +329,20 @@ class ProjectDatabase(ContextDecorator):
         try:
             res = self.dbhandle.query(query)
             return [{'uuid': r.attrib['uuid'],
-                     'revisions': self._get_rev_info(domain, r.attrib['uuid']),
+                     'revisions': self._get_rev_info(r.getchildren()),
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name']}
                     for r in res.results[0].getchildren()]
         except ExistDBException as e:
                 raise ProjectDBError(e)
 
-    def _get_rev_info(self, domain, item):
-        return self.get_versioning_info(domain, item)['revisions']
+    def _get_rev_info(self, revs):
+        return [{'revision': int(c.get('revision')),
+                 'user': c.get('user'),
+                 'date': c.get('date'),
+                 'alias': c.get('alias', c.get('revision'))}
+                 for c in revs]
+
 
     def list_domains(self):
         """
