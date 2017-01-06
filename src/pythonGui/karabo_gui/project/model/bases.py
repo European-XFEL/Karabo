@@ -5,6 +5,7 @@
 #############################################################################
 from abc import abstractmethod
 
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QStandardItem
 from traits.api import (ABCHasStrictTraits, Callable, Dict, Instance, List,
                         Property)
@@ -72,6 +73,18 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
         if self._qt_item is None:
             self._qt_item = self.create_qt_item()
         return self._qt_item
+
+    def set_qt_item_text(self, qt_item):
+        brush = qt_item.foreground()
+        if self.model.modified:
+            # Change color to blue
+            brush.setColor(Qt.blue)
+            qt_item.setText("*{}".format(self.model.simple_name))
+        else:
+            # Change color to black
+            brush.setColor(Qt.black)
+            qt_item.setText("{}".format(self.model.simple_name))
+        qt_item.setForeground(brush)
 
 
 class BaseProjectGroupItem(BaseProjectTreeItem):
