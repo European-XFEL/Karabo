@@ -71,7 +71,7 @@ namespace karabo {
              * @param archive to load the object from
              */
             virtual void load(T& object, const char* archive) {
-                this->load(object, std::string(archive)); // Creates a copy, but may be overridden for more performance
+                this->load(object, std::string(archive ? archive : "")); // Creates a copy, but may be overridden for more performance
             }
 
             /**
