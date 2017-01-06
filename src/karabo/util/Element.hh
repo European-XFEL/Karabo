@@ -516,7 +516,7 @@ namespace karabo {
 
         template<class KeyType, class AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(const char* const& value) {
-            m_value = std::string(value);
+            m_value = std::string(value ? value : "");
         }
 
         template<class KeyType, class AttributeType>
