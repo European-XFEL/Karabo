@@ -107,7 +107,7 @@ Unit Tests
 ----------
 
 The scene model code, by virtue of being independent from the view code, has
-very extensive test coverage. You should strive to maintian this when making
+very extensive test coverage. You should strive to maintain this when making
 changes. It is intended as a defensive measure against introducing breaking
 changes to users. Unfortunately, it's not automatic, and it requires a bit of
 discipline on the part of developers working on the scene.
@@ -138,12 +138,16 @@ should first do that before proceeding with the view portion. Once your new
 widget has a data model class associated with it, you can make it appear in the
 scene by doing the following:
 
-* Create a ``DisplayWidget`` class which will be shown in the scene
+* Create a ``DisplayWidget``/``EditableWidget`` class (or classes) which will
+  be shown in the scene
 * Create a ``BaseWidgetContainer`` class which acts as an intermediary between
   the ``DisplayWidget`` and the data model instance.
 
   * The ``karabo_gui.sceneview.widget`` subpackage has lots of examples if
     you're curious how this intermediary should work.
+  * If your model class contains no data (ie: it's only being used for its type)
+    then you might be able to use the machinery in
+    ``karabo_gui.sceneview.widget.generic``.
 
 * Add your container class to ``karabo_gui.sceneview.widget.api``
 * Import your model class in ``karabo_gui.sceneview.tools.const`` and add it
