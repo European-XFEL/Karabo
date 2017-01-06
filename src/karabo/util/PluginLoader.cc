@@ -119,7 +119,7 @@ namespace karabo {
                                 if (libHandle == 0) {
                                     KARABO_LOG_FRAMEWORK_ERROR << "Trouble loading plugin "
                                             << it->path().filename()
-                                            << ":\n\t" << string(dlerror());
+                                            << ":\n\t" << string(dlerror()); // dlerror() != 0 since dlopen above failed
                                     m_failedPlugins.push_back(plugin);
                                 } else {
                                     m_loadedPlugins[it->path()] = libHandle;
