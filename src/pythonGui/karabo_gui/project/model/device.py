@@ -193,6 +193,9 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
             self.project_device.redummy()
         self.project_device.descriptor = conf.descriptor
 
+        if self.real_device.descriptor is None:
+            self.real_device.descriptor = conf.descriptor
+
         # Update active configuration hash
         self._merge_hash()
 
