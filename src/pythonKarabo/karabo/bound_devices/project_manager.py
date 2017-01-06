@@ -166,14 +166,16 @@ class ProjectManager(PythonDevice):
                 domain = item.get("domain")
                 exceptionReason = ""
                 success = True
+                meta = None
                 try:
                     meta = db_session.save_item(domain, uuid, xml, overwrite)
+                    meta = dictToHash(meta)
                 except ProjectDBError as e:
                     success = False
                     exceptionReason = str(e)
                 item.set("success", success)
                 item.set("reason", exceptionReason)
-                item.set("entry", dictToHash(meta))
+                item.set("entry", meta)
                 savedItems.append(item)
         self.reply(Hash('items', savedItems))
 
