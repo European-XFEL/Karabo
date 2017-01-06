@@ -1,5 +1,8 @@
-The Scene file format
-+++++++++++++++++++++
+.. _scene-file-version-one:
+
+====================
+Scene File Version 1
+====================
 
 This is the (mostly) complete documentation of the ``Scene`` file format
 (version 1). The ``Scene`` file format is based on SVG and in fact, scene files
