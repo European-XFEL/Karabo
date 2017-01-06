@@ -119,8 +119,12 @@ namespace karathon {
                 receiveResponse(header, body);
                 // The header key "error" indicates whether an exception was thrown during the remote call
                 if (header->has("error") && header->get<bool>("error")) {
-                    throw karabo::util::RemoteException(body->get<std::string>("a1"),
-                                                        header->get<std::string>("signalInstanceId"));
+                    // Handling an error, so double check that input is as expected, i.e. body has key "a1":
+                    const boost::optional<karabo::util::Hash::Node&> textNode = body->find("a1");
+                    const std::string text(textNode && textNode->is<std::string>()
+                                           ? textNode->getValue<std::string>()
+                                           : "Error signaled, but body without string at key \"a1\"");
+                    throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"));
                 }
             }
 
