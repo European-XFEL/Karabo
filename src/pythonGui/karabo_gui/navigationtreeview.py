@@ -97,13 +97,6 @@ class NavigationTreeView(QTreeView):
         self.acOpenFromFile.triggered.connect(manager.onOpenFromFile)
         self.mDeviceItem.addAction(self.acOpenFromFile)
 
-        text = "Open configuration from project"
-        self.acOpenFromProject = QAction(icons.load, text, self)
-        self.acOpenFromProject.setStatusTip(text)
-        self.acOpenFromProject.setToolTip(text)
-        self.acOpenFromProject.triggered.connect(manager.onOpenFromProject)
-        self.mDeviceItem.addAction(self.acOpenFromProject)
-
         self.mDeviceItem.addSeparator()
 
         text = "Save configuration as (*.xml)"
@@ -112,13 +105,6 @@ class NavigationTreeView(QTreeView):
         self.acSaveToFile.setToolTip(text)
         self.acSaveToFile.triggered.connect(manager.onSaveToFile)
         self.mDeviceItem.addAction(self.acSaveToFile)
-
-        text = "Save configuration to project"
-        self.acSaveToProject = QAction(icons.saveAs, text, self)
-        self.acSaveToProject.setStatusTip(text)
-        self.acSaveToProject.setToolTip(text)
-        self.acSaveToProject.triggered.connect(manager.onSaveToProject)
-        self.mDeviceItem.addAction(self.acSaveToProject)
 
         text = "Shutdown instance"
         self.acKillDevice = QAction(icons.delete, text, self)
