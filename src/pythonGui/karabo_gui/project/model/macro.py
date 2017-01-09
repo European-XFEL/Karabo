@@ -96,7 +96,7 @@ class MacroModelItem(BaseProjectGroupItem):
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         item.setIcon(icons.file)
         item.setEditable(False)
-        self.set_qt_item_text(item)
+        self.set_qt_item_text(item, self.model.simple_name)
         return item
 
     def double_click(self, parent_project, parent=None):
@@ -145,7 +145,7 @@ class MacroModelItem(BaseProjectGroupItem):
         """ Whenever the project is modified it should be visible"""
         if not self.is_ui_initialized():
             return
-        self.set_qt_item_text(self.qt_item)
+        self.set_qt_item_text(self.qt_item, self.model.simple_name)
 
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
