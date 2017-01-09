@@ -41,26 +41,26 @@ class PenDialog(QDialog):
 
         self.pen = pen
         self.brush = brush
-        
+
         self.set_color()
 
         self.slStrokeOpacity.setValue(pen.color().alpha())
-        
+
         if pen.style() == Qt.NoPen:
             self.sbStrokeWidth.setValue(0)
         else:
             self.sbStrokeWidth.setValue(pen.widthF())
-        
+
         self.wDashType = PenStyleComboBox()
         self.formLayout.setWidget(3, QFormLayout.FieldRole, self.wDashType)
         self.wDashType.setPenStyle(self._get_style_from_pattern(self.pen))
 
         self.dsbDashOffset.setValue(self.pen.dashOffset())
-        
+
         getattr(self, self.linecaps[self.pen.capStyle()] + 'Cap').setChecked(True)
         getattr(self, self.linejoins[self.pen.joinStyle()] + 'Join').setChecked(True)
         self.dsbStrokeMiterLimit.setValue(self.pen.miterLimit())
-        
+
         self.setBrushWidgets()
 
     def _get_style_from_pattern(self, pen):
@@ -89,7 +89,7 @@ class PenDialog(QDialog):
         p = QPixmap(32, 16)
         p.fill(self.pen.color())
         self.pbStrokeColor.setIcon(QIcon(p))
-        
+
         if self.brush is not None:
             p.fill(self.brush.color())
             self.pbFillColor.setIcon(QIcon(p))
@@ -112,7 +112,7 @@ class PenDialog(QDialog):
             strokeColor = self.pen.color()
             strokeColor.setAlpha(self.slStrokeOpacity.value())
             self.pen.setColor(strokeColor)
-            
+
             if self.sbStrokeWidth.value() == 0:
                 self.pen.setStyle(Qt.NoPen)
             else:
@@ -129,7 +129,7 @@ class PenDialog(QDialog):
             for k, v in self.linejoins.items():
                 if getattr(self, v + 'Join').isChecked():
                     self.pen.setJoinStyle(k)
-            
+
             self.pen.setMiterLimit(self.dsbStrokeMiterLimit.value())
 
             if self.brush is not None:
@@ -155,16 +155,16 @@ class TextDialog(QDialog):
 
         self.textFont = self.label.font()
         self.textColor = self.label.palette().color(QPalette.Foreground)
-        
+
         self.cbFrameWidth.toggled.connect(self.onFrameWidthToggled)
         if self.label.frameWidth() > 0:
             self.cbFrameWidth.setChecked(True)
             self.sbFrameWidth.setValue(self.label.lineWidth())
-        
+
         self.cbBackground.toggled.connect(self.onBackgroundToggled)
         self.cbBackground.setChecked(self.label.hasBackground)
         self.backgroundColor = self.label.palette().color(QPalette.Background)
-        
+
         self.set_color()
 
     @pyqtSlot()
@@ -205,15 +205,15 @@ class TextDialog(QDialog):
             if self.cbBackground.isChecked():
                 ss.append("background-color: {};".format(self.backgroundColor.name()))
             self.label.hasBackground = self.cbBackground.isChecked()
-            
+
             if self.cbFrameWidth.isChecked() and self.sbFrameWidth.value() > 0:
                 self.label.setLineWidth(self.sbFrameWidth.value())
             else:
                 self.label.setLineWidth(0)
-            
+
             self.label.setStyleSheet("".join(ss))
             self.label.setText(self.leText.text())
-        
+
         return result
 
 class MacroDialog(QDialog):
@@ -221,10 +221,10 @@ class MacroDialog(QDialog):
         QDialog.__init__(self)
 
         uic.loadUi(path.join(path.dirname(__file__), 'macro.ui'), self)
-        
+
         v = QRegExpValidator(self)
         v.setRegExp(QRegExp(r"[A-Za-z_][A-Za-z0-9_]*"))
-        
+
         self.leName.setValidator(v)
         self.leName.textChanged.connect(self.onChanged)
         self.leName.setText(name)
@@ -271,7 +271,7 @@ class PenStyleComboBox(QComboBox):
         pen = QPen(style)
         pen.setWidth(2)
         p.setPen(pen)
-        
+
         mid = self.iconSize().height() / 2.0
         p.drawLine(0, mid, self.iconSize().width(), mid)
         p.end()
@@ -287,8 +287,8 @@ class SceneLinkDialog(QDialog):
         self._selectedScene = 0
         self._sceneTargets = self._get_scenelink_targets()
         sceneCombo = self.sceneSelectCombo
-        for target in self._sceneTargets:
-            sceneCombo.addItem(target)
+        for scene in self._sceneTargets:
+            sceneCombo.addItem(scene)
 
         targetIndex = sceneCombo.findText(target)
         if targetIndex > -1:
@@ -333,7 +333,7 @@ class ReplaceDialog(QDialog):
             item = QTableWidgetItem(d)
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             self.twTable.setItem(i, 0, item)
-            
+
             item = QTableWidgetItem(d)
             self.twTable.setItem(i, 1, item)
             self.twTable.editItem(item)
