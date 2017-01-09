@@ -235,15 +235,8 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acOpenFromFile.setToolTip(text)
         self.acOpenFromFile.triggered.connect(manager.onOpenFromFile)
 
-        text = "Open configuration from project"
-        self.acOpenFromProject = QAction(icons.load, text, self)
-        self.acOpenFromProject.setStatusTip(text)
-        self.acOpenFromProject.setToolTip(text)
-        self.acOpenFromProject.triggered.connect(manager.onOpenFromProject)
-
         self.openMenu = QMenu()
         self.openMenu.addAction(self.acOpenFromFile)
-        self.openMenu.addAction(self.acOpenFromProject)
         text = "Open configuration"
         self.tbOpenConfig = QToolButton()
         self.tbOpenConfig.setIcon(icons.load)
@@ -259,15 +252,8 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acSaveToFile.setToolTip(text)
         self.acSaveToFile.triggered.connect(manager.onSaveToFile)
 
-        text = "Save configuration to project"
-        self.acSaveToProject = QAction(icons.saveAs, text, self)
-        self.acSaveToProject.setStatusTip(text)
-        self.acSaveToProject.setToolTip(text)
-        self.acSaveToProject.triggered.connect(manager.onSaveToProject)
-
         self.saveMenu = QMenu()
         self.saveMenu.addAction(self.acSaveToFile)
-        self.saveMenu.addAction(self.acSaveToProject)
         text = "Save configuration"
         self.tbSaveConfig = QToolButton()
         self.tbSaveConfig.setIcon(icons.saveAs)
@@ -672,18 +658,6 @@ class ConfigurationPanel(Dockable, QWidget):
             twParameterEditor = self.__swParameterEditor.widget(index)
             if isinstance(twParameterEditor, ParameterTreeWidget):
                 twParameterEditor.globalAccessLevelChanged()
-
-    def onSaveToFile(self):
-        self.twNavigation.onSaveToFile()
-
-    def onSaveToProject(self):
-        self.twNavigation.onSaveToProject()
-
-    def onOpenFromFile(self):
-        self.twNavigation.onOpenFromFile()
-
-    def onOpenFromProject(self):
-        self.twNavigation.onOpenFromProject()
 
     def onUndock(self):
         self.navSplitter.show()
