@@ -6,26 +6,15 @@
 from os import path
 
 from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot, QRegExp, Qt, QSize
+from PyQt4.QtCore import pyqtSlot, Qt, QSize
 from PyQt4.QtGui import (QDialogButtonBox, QColorDialog, QComboBox, QDialog,
-                         QFontDialog, QFormLayout, QIcon, QPainter, QPalette,
-                         QPen, QPixmap, QRegExpValidator, QTableWidgetItem,
-                         QValidator)
+                         QFormLayout, QIcon, QPainter, QPen, QPixmap,
+                         QTableWidgetItem)
 
 from karabo.common.project.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel
 from karabo_gui.singletons.api import get_project_model
 
-
-class Validator(QValidator):
-    def validate(self, input, pos):
-        try:
-            if len([float(s) for s in input.split()]):
-                return QValidator.Intermediate, input, pos
-            else:
-                return QValidator.Acceptable, input, pos
-        except:
-            return QValidator.Invalid, input, pos
 
 class PenDialog(QDialog):
     linecaps = {Qt.FlatCap: "butt", Qt.SquareCap: "square",
@@ -143,99 +132,6 @@ class PenDialog(QDialog):
 
         return result
 
-class TextDialog(QDialog):
-
-    def __init__(self, label):
-        QDialog.__init__(self)
-        uic.loadUi(path.join(path.dirname(__file__), 'textdialog.ui'), self)
-
-        self.label = label
-
-        self.leText.setText(self.label.text())
-
-        self.textFont = self.label.font()
-        self.textColor = self.label.palette().color(QPalette.Foreground)
-
-        self.cbFrameWidth.toggled.connect(self.onFrameWidthToggled)
-        if self.label.frameWidth() > 0:
-            self.cbFrameWidth.setChecked(True)
-            self.sbFrameWidth.setValue(self.label.lineWidth())
-
-        self.cbBackground.toggled.connect(self.onBackgroundToggled)
-        self.cbBackground.setChecked(self.label.hasBackground)
-        self.backgroundColor = self.label.palette().color(QPalette.Background)
-
-        self.set_color()
-
-    @pyqtSlot()
-    def on_pbTextColor_clicked(self):
-        self.textColor = QColorDialog.getColor(self.textColor)
-        self.set_color()
-
-    @pyqtSlot()
-    def on_pbBackground_clicked(self):
-        self.backgroundColor = QColorDialog.getColor(self.backgroundColor)
-        self.set_color()
-
-    @pyqtSlot()
-    def on_pbFont_clicked(self):
-        font, ok = QFontDialog.getFont(self.textFont, self)
-        if ok:
-            self.textFont = font
-
-    def onFrameWidthToggled(self, checked):
-        self.sbFrameWidth.setEnabled(checked)
-
-    def onBackgroundToggled(self, checked):
-        self.pbBackground.setEnabled(checked)
-
-    def set_color(self):
-        p = QPixmap(24, 16)
-        p.fill(self.textColor)
-        self.pbTextColor.setIcon(QIcon(p))
-        p.fill(self.backgroundColor)
-        self.pbBackground.setIcon(QIcon(p))
-
-    def exec_(self):
-        result = QDialog.exec_(self)
-        if result == QDialog.Accepted:
-            ss = []
-            ss.append('qproperty-font: "{}";'.format(self.textFont.toString()))
-            ss.append("color: {};".format(self.textColor.name()))
-            if self.cbBackground.isChecked():
-                ss.append("background-color: {};".format(self.backgroundColor.name()))
-            self.label.hasBackground = self.cbBackground.isChecked()
-
-            if self.cbFrameWidth.isChecked() and self.sbFrameWidth.value() > 0:
-                self.label.setLineWidth(self.sbFrameWidth.value())
-            else:
-                self.label.setLineWidth(0)
-
-            self.label.setStyleSheet("".join(ss))
-            self.label.setText(self.leText.text())
-
-        return result
-
-class MacroDialog(QDialog):
-    def __init__(self, name=""):
-        QDialog.__init__(self)
-
-        uic.loadUi(path.join(path.dirname(__file__), 'macro.ui'), self)
-
-        v = QRegExpValidator(self)
-        v.setRegExp(QRegExp(r"[A-Za-z_][A-Za-z0-9_]*"))
-
-        self.leName.setValidator(v)
-        self.leName.textChanged.connect(self.onChanged)
-        self.leName.setText(name)
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
-    @property
-    def name(self):
-        return self.leName.text()
-
-    def onChanged(self, text):
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)
 
 class PenStyleComboBox(QComboBox):
     styles = [(Qt.SolidLine, "Solid line"),
