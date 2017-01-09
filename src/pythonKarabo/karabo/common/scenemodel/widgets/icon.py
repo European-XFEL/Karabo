@@ -1,7 +1,7 @@
 import base64
 from xml.etree.ElementTree import SubElement
 
-from traits.api import HasStrictTraits, Bool, Instance, List, String
+from traits.api import HasStrictTraits, Bool, Bytes, Instance, List, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, NS_SVG
@@ -11,16 +11,13 @@ from karabo.common.scenemodel.io_utils import (
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
-# Define a trait for bytes objects
-BytesTrait = Instance(bytes, args=(b'',))
-
 
 class DisplayIconsetModel(BaseWidgetObjectData):
     """ A model for DisplayIconset"""
     # A URL for an icon set (version 1 data only!)
     image = String(transient=True)
     # The actual icon set data
-    data = BytesTrait
+    data = Bytes
 
 
 class IconData(HasStrictTraits):
@@ -34,7 +31,7 @@ class IconData(HasStrictTraits):
     image = String(transient=True)
     # The actual icon data
     # NOTE: This data will only be automatically loaded from version 2+ files
-    data = BytesTrait
+    data = Bytes
 
 
 class BaseIconsModel(BaseWidgetObjectData):
@@ -134,6 +131,7 @@ def _build_icon_widget_readers_and_writers():
         register_scene_reader(file_name, version=2)(reader)
         register_scene_writer(klass)(_build_writer_func(file_name, tag))
 
+
 # Call the builder to register all the readers and writers
 _build_icon_widget_readers_and_writers()
 
@@ -194,6 +192,7 @@ def _read_icon_elements_version_1(parent, tag):
             traits['equal'] = True if sub.get('equal') == 'true' else False
         icons.append(IconData(**traits))
     return icons
+
 
 # Call the builder to register the version 1 readers
 _build_version_1_icon_widget_readers()
