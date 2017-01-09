@@ -74,16 +74,16 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
             self._qt_item = self.create_qt_item()
         return self._qt_item
 
-    def set_qt_item_text(self, qt_item):
+    def set_qt_item_text(self, qt_item, text):
         brush = qt_item.foreground()
         if self.model.modified:
             # Change color to blue
             brush.setColor(Qt.blue)
-            qt_item.setText("*{}".format(self.model.simple_name))
+            qt_item.setText("*{}".format(text))
         else:
             # Change color to black
             brush.setColor(Qt.black)
-            qt_item.setText("{}".format(self.model.simple_name))
+            qt_item.setText("{}".format(text))
         qt_item.setForeground(brush)
 
 

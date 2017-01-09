@@ -47,8 +47,7 @@ class ProjectModelItem(BaseProjectTreeItem):
         font = item.font()
         font.setBold(True)
         item.setFont(font)
-        self.set_qt_item_text(item)
-
+        self.set_qt_item_text(item, self.model.simple_name)
         return item
 
     @on_trait_change("model.modified")
@@ -56,7 +55,7 @@ class ProjectModelItem(BaseProjectTreeItem):
         """ Whenever the project is modified it should be visible"""
         if not self.is_ui_initialized():
             return
-        self.set_qt_item_text(self._qt_item)
+        self.set_qt_item_text(self._qt_item, self.model.simple_name)
 
     # ----------------------------------------------------------------------
     # action handlers

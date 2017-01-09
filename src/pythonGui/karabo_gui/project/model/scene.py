@@ -55,7 +55,7 @@ class SceneModelItem(BaseProjectTreeItem):
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         item.setIcon(icons.image)
         item.setEditable(False)
-        self.set_qt_item_text(item)
+        self.set_qt_item_text(item, self.model.simple_name)
         return item
 
     def double_click(self, parent_project, parent=None):
@@ -68,7 +68,7 @@ class SceneModelItem(BaseProjectTreeItem):
         """ Whenever the project is modified it should be visible"""
         if not self.is_ui_initialized():
             return
-        self.set_qt_item_text(self.qt_item)
+        self.set_qt_item_text(self.qt_item, self.model.simple_name)
 
     # ----------------------------------------------------------------------
     # action handlers

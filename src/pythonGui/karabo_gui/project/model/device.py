@@ -7,7 +7,6 @@ from functools import partial
 from io import StringIO
 import weakref
 
-from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance, Property, on_trait_change
 
@@ -101,6 +100,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         icon = get_project_device_status_icon(DeviceStatus(self.model.status))
         item.setIcon(icon)
         item.setEditable(False)
+        self.set_qt_item_text(item, self.model.instance_id)
         return item
 
     def single_click(self, parent_project, parent=None):
@@ -114,17 +114,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         """ Whenever the project is modified it should be visible"""
         if not self.is_ui_initialized():
             return
-
-        brush = self.qt_item.foreground()
-        if self.model.modified:
-            # Change color to blue
-            brush.setColor(Qt.blue)
-            self.qt_item.setText("*{}".format(self.model.instance_id))
-        else:
-            # Change color to black
-            brush.setColor(Qt.black)
-            self.qt_item.setText("{}".format(self.model.instance_id))
-        self.qt_item.setForeground(brush)
+        self.set_qt_item_text(self.qt_item, self.model.instance_id)
 
     @on_trait_change("model.status")
     def status_change(self):

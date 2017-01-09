@@ -73,6 +73,7 @@ class DeviceServerModelItem(BaseProjectGroupItem):
         item.setEditable(False)
         for child in self.children:
             item.appendRow(child.qt_item)
+        self.set_qt_item_text(item, self.model.simple_name)
         return item
 
     def system_topology_callback(self, devices, servers):
@@ -96,7 +97,7 @@ class DeviceServerModelItem(BaseProjectGroupItem):
         """ Whenever the project is modified it should be visible"""
         if not self.is_ui_initialized():
             return
-        self.set_qt_item_text(self.qt_item)
+        self.set_qt_item_text(self.qt_item, self.model.simple_name)
 
     @on_trait_change("model.status")
     def status_change(self):
