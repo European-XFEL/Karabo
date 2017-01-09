@@ -3,6 +3,7 @@ import sys
 
 from PyQt4.QtGui import QApplication, QFrame, QHBoxLayout, QVBoxLayout
 
+from karabo.common.scenemodel.api import read_scene
 from .api import SceneView
 
 
@@ -41,13 +42,14 @@ def main():
 
     filename = sys.argv[1]
 
-    scene_view = SceneView()
-    scene_view.load(filename)
+    model = read_scene(filename)
+    scene_view = SceneView(model=model)
     widget = load_panel(scene_view)
     widget.show()
     widget.setWindowTitle(op.basename(filename))
     widget.resize(1024, 768)
     app.exec_()
+
 
 if __name__ == '__main__':
     main()
