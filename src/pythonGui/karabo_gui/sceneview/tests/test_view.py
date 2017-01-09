@@ -8,7 +8,7 @@ import os.path as op
 
 from karabo.middlelayer import read_scene, SceneModel
 from karabo.common.scenemodel.api import (
-    SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+    UnknownXMLDataModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 import karabo.common.scenemodel.tests as sm
 from karabo_gui.sceneview.api import SceneView
 from karabo_gui.sceneview.layout.api import GroupLayout
@@ -16,6 +16,10 @@ from karabo_gui.testing import GuiTestCase
 
 DATA_DIR = op.join(op.abspath(op.dirname(sm.__file__)), 'data')
 INKSCAPE_DIR = op.join(DATA_DIR, 'inkscape')
+UNKNOWN_XML_MODEL = UnknownXMLDataModel(
+    tag='circle',
+    attributes={'cx': '100', 'cy': '100', 'r': '100'}
+)
 
 
 class TestSceneView(GuiTestCase):
@@ -31,6 +35,7 @@ class TestSceneView(GuiTestCase):
         self.assertIsInstance(self.view.layout, GroupLayout)
 
         scene_model = read_scene(op.join(dir, file_name))
+        scene_model.children.append(UNKNOWN_XML_MODEL)
         self.view.update_model(scene_model)
         self.assertIsInstance(self.view.scene_model, SceneModel)
         self.assertEqual(max(self.view.scene_model.width, SCENE_MIN_WIDTH),
