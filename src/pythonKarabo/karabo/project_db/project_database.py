@@ -303,7 +303,7 @@ class ProjectDatabase(ContextDecorator):
         let $users := $doc/*/@user
         {maybe_where}
         group by $uuid, $simple_name, $item_type
-        return <item uuid=" {{$uuid}}"
+        return <item uuid="{{$uuid}}"
                      simple_name="{{$simple_name}}"
                      item_type="{{$item_type}}">
                            {{
