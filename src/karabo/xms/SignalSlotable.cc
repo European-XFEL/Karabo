@@ -892,13 +892,13 @@ namespace karabo {
                         // We are in case 1) and I ask myself. I must not answer, at least not in time.
                         // HACK: Let's wait until my own request timed out for sure.
                         boost::this_thread::sleep(boost::posix_time::milliseconds(msPingTimeoutInIsValidInstanceId * 1.5));
-                    } else {
-                        // m_randPing == 0 (I am up) or >= 2 (I am 'booting')
-                        // 1) It is not me, so that guy must not come up: tell him. Note: Two guys coming up
-                        //    at the same time with the same id might both fail here.
-                        // 2) I just reply my existence.
-                        reply(m_instanceInfo);
                     }
+                    // else:
+                    // m_randPing == 0 (I am up) or >= 2 (I am 'booting')
+                    // 1) It is not me, so that guy must not come up: tell him. Note: Two guys coming up
+                    //    at the same time with the same id might both fail here.
+                    // 2) I just reply my existence.
+                    reply(m_instanceInfo);
                 }
             } else if (!m_randPing) {
                 // I should only answer, if my name got accepted which is indicated by a value of m_randPing==0
