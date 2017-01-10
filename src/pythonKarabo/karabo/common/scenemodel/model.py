@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Dict, Float, Instance, Int, List, String
+from traits.api import Constant, Dict, Float, Instance, Int, List, String
 
 from karabo.common.project.bases import BaseProjectObjectModel
 from .bases import BaseSceneObjectData
@@ -38,6 +38,12 @@ class UnknownXMLDataModel(BaseSceneObjectData):
     data = String
     # The element's children
     children = List(Instance(BaseSceneObjectData))
+
+    # XXX: These are needed by the GUI, but they will always be zero
+    x = Constant(0.0)
+    y = Constant(0.0)
+    height = Constant(0.0)
+    width = Constant(0.0)
 
 
 def _read_extra_attributes(element):
