@@ -148,6 +148,7 @@ def read_device_server(io_obj):
             'if_exists': element.get('if_exists', 'ignore'),
             'active_config_ref': (element.get('active_uuid'),
                                   int(element.get('active_rev'))),
+            'initialized': True
         }
         configs = [_read_configs(e) for e in element.findall('config')]
         return DeviceInstanceModel(configs=configs, **traits)
@@ -159,6 +160,7 @@ def read_device_server(io_obj):
         'server_id': root.get('server_id'),
         'host': root.get('host'),
         'devices': devices,
+        'initialized': True
     }
     return DeviceServerModel(**traits)
 

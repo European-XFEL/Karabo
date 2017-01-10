@@ -48,7 +48,7 @@ def test_reading():
     assert dev0.class_id == 'BazClass'
     assert dev0.instance_id == 'fooDevice'
     assert dev0.if_exists == 'ignore'
-    assert not dev0.initialized
+    assert dev0.initialized
     assert len(dev0.configs) == 1
     assert dev0.configs[0].revision == 0
     assert dev0.configs[0].uuid == UUID
@@ -59,7 +59,7 @@ def test_reading():
     assert dev1.class_id == 'QuxClass'
     assert dev1.instance_id == 'barDevice'
     assert dev1.if_exists == 'restart'
-    assert not dev1.initialized
+    assert dev1.initialized
     assert len(dev1.configs) == 2
     assert dev1.configs[0].revision == 1
     assert dev1.configs[0].uuid == UUID
