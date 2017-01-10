@@ -223,13 +223,6 @@ class Manager(QObject):
         else:
             return None, None
 
-    @staticmethod
-    def _loadClassConfiguration(classConfig, configHash, classId):
-        if classId not in configHash:
-            MessageBox.showError("Configuration load failed")
-            return
-        classConfig.fromHash(configHash[classId])
-
     def onOpenFromFile(self):
         filename = getOpenFileName(caption="Open configuration",
                                    filter="XML (*.xml)")
@@ -245,7 +238,10 @@ class Manager(QObject):
         with open(filename, 'rb') as file:
             config = r.read(file.read())
 
-        self._loadClassConfiguration(conf, config, classId)
+        if classId not in config:
+            MessageBox.showError("Configuration load failed")
+            return
+        conf.fromHash(config[classId])
 
     def onSaveToFile(self):
         """This function saves the current configuration of a device to a file.
