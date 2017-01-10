@@ -55,6 +55,7 @@ class SceneModelItem(BaseProjectTreeItem):
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         item.setIcon(icons.image)
         item.setEditable(False)
+        self.set_qt_item_text(item, self.model.simple_name)
         return item
 
     def double_click(self, parent_project, parent=None):
@@ -62,11 +63,12 @@ class SceneModelItem(BaseProjectTreeItem):
         broadcast_event(KaraboBroadcastEvent(KaraboEventSender.OpenSceneView,
                                              data))
 
-    @on_trait_change("model.simple_name")
-    def simple_name_change(self):
+    @on_trait_change("model.modified")
+    def modified_change(self):
+        """ Whenever the project is modified it should be visible"""
         if not self.is_ui_initialized():
             return
-        self.qt_item.setText(self.model.simple_name)
+        self.set_qt_item_text(self.qt_item, self.model.simple_name)
 
     # ----------------------------------------------------------------------
     # action handlers

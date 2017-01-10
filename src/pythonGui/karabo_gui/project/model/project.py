@@ -5,7 +5,6 @@
 #############################################################################
 import weakref
 
-from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance, List, on_trait_change
 
@@ -48,35 +47,15 @@ class ProjectModelItem(BaseProjectTreeItem):
         font = item.font()
         font.setBold(True)
         item.setFont(font)
-        self._set_qt_item_text(item)
-
+        self.set_qt_item_text(item, self.model.simple_name)
         return item
-
-    @on_trait_change("model.simple_name")
-    def simple_name_change(self):
-        if not self.is_ui_initialized():
-            return
-        self._set_qt_item_text(self.qt_item)
 
     @on_trait_change("model.modified")
     def modified_change(self):
         """ Whenever the project is modified it should be visible"""
         if not self.is_ui_initialized():
             return
-
-        self._set_qt_item_text(self.qt_item)
-
-    def _set_qt_item_text(self, qt_item):
-        brush = qt_item.foreground()
-        if self.model.modified:
-            # Change color to blue
-            brush.setColor(Qt.blue)
-            qt_item.setText("*{}".format(self.model.simple_name))
-        else:
-            # Change color to black
-            brush.setColor(Qt.black)
-            qt_item.setText("{}".format(self.model.simple_name))
-        qt_item.setForeground(brush)
+        self.set_qt_item_text(self._qt_item, self.model.simple_name)
 
     # ----------------------------------------------------------------------
     # action handlers

@@ -73,6 +73,7 @@ class DeviceServerModelItem(BaseProjectGroupItem):
         item.setEditable(False)
         for child in self.children:
             item.appendRow(child.qt_item)
+        self.set_qt_item_text(item, self.model.simple_name)
         return item
 
     def system_topology_callback(self, devices, servers):
@@ -91,18 +92,12 @@ class DeviceServerModelItem(BaseProjectGroupItem):
 
     # ----------------------------------------------------------------------
     # traits notification handlers
-
-    @on_trait_change("model.server_id")
-    def server_id_change(self):
+    @on_trait_change("model.modified")
+    def modified_change(self):
+        """ Whenever the project is modified it should be visible"""
         if not self.is_ui_initialized():
             return
-        self.qt_item.setText(self.model.server_id)
-
-    @on_trait_change("model.simple_name")
-    def simple_name_change(self):
-        if not self.is_ui_initialized():
-            return
-        self.qt_item.setText(self.model.simple_name)
+        self.set_qt_item_text(self.qt_item, self.model.simple_name)
 
     @on_trait_change("model.status")
     def status_change(self):
