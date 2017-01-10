@@ -120,7 +120,6 @@ if __name__ == '__main__':
                 'karabo-cli=karabo.interactive.ideviceclient:main',
                 'ikarabo=karabo.interactive.ikarabo:main',
                 'convert-karabo-device=karabo.interactive.convert_device_project:main',
-                'convert-karabo-project=karabo.interactive.upgrade_project_data:main',
              ],
             'karabo.bound_device': [
                 'ProjectManager=karabo.bound_devices.project_manager:ProjectManager',
