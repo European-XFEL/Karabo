@@ -13,20 +13,16 @@
 
 from datetime import datetime
 
-from PyQt4.QtCore import pyqtSignal, QObject
-from PyQt4.QtGui import QDialog, QMessageBox
+from PyQt4.QtCore import QObject
+from PyQt4.QtGui import QMessageBox
 
 from karabo.common.states import State
-from karabo.middlelayer import (
-    Hash, Schema, XMLWriter, XMLParser, ProjectConfiguration)
+from karabo.middlelayer import Hash, Schema, XMLWriter, XMLParser
 from karabo_gui.configuration import BulkNotifications
-from karabo_gui.dialogs.configurationdialog import (
-    SelectProjectDialog, SelectProjectConfigurationDialog)
 from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.navigationtreemodel import NavigationTreeModel
-from karabo_gui.projectmodel import ProjectModel
 from karabo_gui.singletons.api import get_network, get_project_model
 from karabo_gui.topology import getClass
 from karabo_gui.util import (
@@ -58,11 +54,6 @@ def handle_device_state_change(box, value, timestamp):
 
 
 class Manager(QObject):
-    # signals
-    signalAvailableProjects = pyqtSignal(object)
-    signalProjectLoaded = pyqtSignal(str, object, object)
-    signalProjectSaved = pyqtSignal(str, bool, object)
-
     def __init__(self, parent=None):
         super(Manager, self).__init__(parent=parent)
 
@@ -70,10 +61,6 @@ class Manager(QObject):
         self.systemTopology = NavigationTreeModel(self)
         self.systemTopology.selectionModel.selectionChanged.connect(
             self.onNavigationTreeModelSelectionChanged)
-        # Model for project views
-        self.projectTopology = ProjectModel(self)
-        self.projectTopology.selectionModel.selectionChanged.connect(
-            self.onProjectModelSelectionChanged)
 
         network = get_network()
         network.signalServerConnectionChanged.connect(
@@ -208,25 +195,15 @@ class Manager(QObject):
 
         get_project_model().q_selection_model.clear()
 
-    def onProjectModelSelectionChanged(self, selected, deselected):
-        """This slot is called whenever something of the project panel is
-        selected. If an item was selected, the selection of the navigation
-        panel is cleared.
-        """
-        if not selected.indexes():
-            return
-
-        self.systemTopology.selectionModel.clear()
-
     def onShowConfiguration(self, conf):
         # Notify listeners
         data = {'configuration': conf}
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.ShowConfiguration, data))
 
-    def currentConfigurationAndClassId(self):
+    def _currentConfigurationAndClassId(self):
         """This function returns the configuration of the currently selected
-        device which can be part of the systemTopology or the projectTopology.
+        device which can be part of the systemTopology.
 
         Returns None, If no device is selected.
         """
@@ -242,20 +219,9 @@ class Manager(QObject):
             elif serverId is not None:
                 return self.serverClassData[serverId, classId], classId
             else:
-                return None
-        elif self.projectTopology.currentIndex().isValid():
-            index = self.projectTopology.currentIndex()
-            indexInfo = self.projectTopology.indexInfo(index)
-            return indexInfo.get("conf"), indexInfo.get("classId")
+                return None, None
         else:
-            return None
-
-    @staticmethod
-    def _loadClassConfiguration(classConfig, configHash, classId):
-        if classId not in configHash:
-            MessageBox.showError("Configuration load failed")
-            return
-        classConfig.fromHash(configHash[classId])
+            return None, None
 
     def onOpenFromFile(self):
         filename = getOpenFileName(caption="Open configuration",
@@ -263,25 +229,19 @@ class Manager(QObject):
         if not filename:
             return
 
-        conf, classId = self.currentConfigurationAndClassId()
+        conf, classId = self._currentConfigurationAndClassId()
+        if conf is None:
+            MessageBox.showError("Configuration load failed")
+            return
 
         r = XMLParser()
         with open(filename, 'rb') as file:
             config = r.read(file.read())
 
-        self._loadClassConfiguration(conf, config, classId)
-
-    def onOpenFromProject(self):
-        # Open dialog to select project and configuration
-        projects = self.projectTopology.projects
-        dialog = SelectProjectConfigurationDialog(projects)
-        if dialog.exec_() == QDialog.Rejected:
+        if classId not in config:
+            MessageBox.showError("Configuration load failed")
             return
-
-        conf, classId = self.currentConfigurationAndClassId()
-
-        config = dialog.projectConfiguration().hash
-        self._loadClassConfiguration(conf, config, classId)
+        conf.fromHash(config[classId])
 
     def onSaveToFile(self):
         """This function saves the current configuration of a device to a file.
@@ -292,7 +252,7 @@ class Manager(QObject):
         if not filename:
             return
 
-        conf, classId = self.currentConfigurationAndClassId()
+        conf, classId = self._currentConfigurationAndClassId()
         if conf is None:
             MessageBox.showError("Configuration save failed")
             return
@@ -305,58 +265,6 @@ class Manager(QObject):
         w = XMLWriter()
         with open(filename, 'wb') as file:
             w.writeToFile(config, file)
-
-    def onSaveToProject(self):
-        """This function saves the current configuration of a device to the
-        project.
-        """
-        # Open dialog to select project to which configuration should be saved
-        dialog = SelectProjectDialog(self.projectTopology.projects)
-        if dialog.exec_() == QDialog.Rejected:
-            return
-
-        project = dialog.selectedProject()
-        conf, classId = self.currentConfigurationAndClassId()
-
-        # Check, if another configuration with same name already exists
-        name = dialog.configurationName()
-        if name.endswith(".xml"):
-            name = name[:-4]
-
-        overwrite = False
-        for deviceId, configs in project.configurations.items():
-            if deviceId == conf.id:
-                for c in configs:
-                    if c.filename[:-4] == name:
-                        title = 'Project configuration already exists'
-                        msg = ('Another configuration with the same name '
-                               '"<b>{}</b>" <br> already exists. Do you want '
-                               'to overwrite it?').format(name)
-                        reply = QMessageBox.question(
-                            None, title, msg, QMessageBox.Yes | QMessageBox.No,
-                            QMessageBox.No)
-
-                        if reply == QMessageBox.No:
-                            return
-
-                        overwrite = True
-                        break
-
-            if overwrite:
-                # Overwrite existing device
-                index = project.removeConfiguration(deviceId, c)
-                hsh, attrs = conf.toHash()
-                confHash = Hash(classId, hsh)
-                confHash[classId, ...] = attrs
-                project_conf = ProjectConfiguration(project, name, confHash)
-                project.insertConfiguration(index, conf.id, project_conf)
-                return
-
-        hsh, attrs = conf.toHash()
-        confHash = Hash(classId, hsh)
-        confHash[classId, ...] = attrs
-        project_conf = ProjectConfiguration(project, name, confHash)
-        project.addConfiguration(conf.id, project_conf)
 
     def _deviceDataReceived(self):
         """Notify all listeners that some (class, schema, or config) data was
@@ -382,7 +290,6 @@ class Manager(QObject):
         self.systemTopology.updateData(systemTopology)
         for v in self.deviceData.values():
             v.updateStatus()
-        self.projectTopology.updateNeeded()
         # Distribute current alarm service devices
         instanceIds = self._extractAlarmServices()
         if instanceIds:
@@ -514,9 +421,10 @@ class Manager(QObject):
                 v.updateStatus()
 
             # Clear corresponding parameter pages
-            self.projectTopology.clearParameterPages(serverClassIds)
-
-        self.projectTopology.updateNeeded()
+            # TODO: We need to find all the Configuration objects in the open
+            # projects and clear their parameter editor objects if they happen
+            # to belong to the server that was just removed!
+            # This was formerly handled by the old ProjectModel class
 
         # Broadcast the change to listeners
         data = {'devices': removed_devices, 'servers': removed_servers}
@@ -650,16 +558,20 @@ class Manager(QObject):
     # Legacy Project Interface
 
     def handle_availableProjects(self, availableProjects):
-        self.signalAvailableProjects.emit(availableProjects)
+        """ exists for compatibility with old GuiServers only """
+        pass
 
     def handle_projectNew(self, name, success, data):
-        self.signalProjectSaved.emit(name, success, data)
+        """ exists for compatibility with old GuiServers only """
+        pass
 
     def handle_projectLoaded(self, name, metaData, buffer):
-        self.signalProjectLoaded.emit(name, metaData, buffer)
+        """ exists for compatibility with old GuiServers only """
+        pass
 
     def handle_projectSaved(self, name, success, data):
-        self.signalProjectSaved.emit(name, success, data)
+        """ exists for compatibility with old GuiServers only """
+        pass
 
     def handle_projectClosed(self, name, success, data):
         """ exists for compatibility with old GuiServers only """
@@ -751,6 +663,7 @@ class Manager(QObject):
             status = 'offline'
 
         return status
+
 
 # ------------------------------------------------------------------
 
