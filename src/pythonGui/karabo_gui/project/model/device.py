@@ -100,6 +100,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         icon = get_project_device_status_icon(DeviceStatus(self.model.status))
         item.setIcon(icon)
         item.setEditable(False)
+        self.set_qt_item_text(item, self.model.instance_id)
         return item
 
     def single_click(self, parent_project, parent=None):
@@ -108,17 +109,12 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
             configuration = self._get_device_entry(parent_project, config)
             self._broadcast_item_click(configuration)
 
-    @on_trait_change("model.instance_id")
-    def instance_id_change(self):
+    @on_trait_change("model.modified")
+    def modified_change(self):
+        """ Whenever the project is modified it should be visible"""
         if not self.is_ui_initialized():
             return
-        self.qt_item.setText(self.model.instance_id)
-
-    @on_trait_change("model.simple_name")
-    def simple_name_change(self):
-        if not self.is_ui_initialized():
-            return
-        self.qt_item.setText(self.model.simple_name)
+        self.set_qt_item_text(self.qt_item, self.model.instance_id)
 
     @on_trait_change("model.status")
     def status_change(self):
@@ -135,7 +131,6 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     def active_config_ref_change(self):
         if not self.is_ui_initialized():
             return
-
         self._broadcast_item_click(self._get_current_configuration())
 
     def _get_device_entry(self, project, active_config):
