@@ -8,7 +8,7 @@ from functools import partial
 from PyQt4.QtGui import QAction, QDialog, QStackedLayout, QWidget
 
 from karabo.common.project.api import ProjectModel, read_lazy_object
-from karabo.common.savable import clear_modified_flag
+from karabo.common.savable import set_modified_flag
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
@@ -132,7 +132,7 @@ def _project_load_handler(item_model):
             model = ProjectModel(uuid=uuid, revision=revision)
             read_lazy_object(TEST_DOMAIN, uuid, revision, db_conn,
                              read_project_model, existing=model)
-            clear_modified_flag(model)
+            set_modified_flag(model)
             item_model.traits_data_model = model
 
 
@@ -152,7 +152,9 @@ def _old_project_load_handler(item_model):
     project = Project(fn)
     project.unzip()
     model, _ = convert_old_project(project)
-    clear_modified_flag(model)
+    # Set modified flag recursively to True to make sure that EVERYTHING gets
+    # saved to the database
+    set_modified_flag(model, True)
     item_model.traits_data_model = model
 
 
