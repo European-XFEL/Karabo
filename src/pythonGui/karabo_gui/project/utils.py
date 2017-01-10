@@ -6,7 +6,7 @@
 from types import MethodType
 import weakref
 
-from PyQt4.QtGui import QDialog
+from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.common.savable import BaseSavableModel
 from karabo.common.project.api import walk_traits_object
@@ -59,13 +59,36 @@ def save_object(obj):
 
 def save_project(project):
     """Before saving a project make sure that all children are already
-    saved"""
+    saved
+    :return Whether the saving was a success
+    """
     model = has_modified_children(project)
     if model is not None and model is not project:
         text = 'Please save individual project sub items first'
         MessageBox.showError(text=text, title='Modified project objects')
-        return
+        return False
     save_object(project)
+    return True
+
+
+def show_save_project_message(project):
+    """Check whether the given ``project`` is modified and show a messagebox to
+    allow the user to confirm saving or cancel
+
+    :return Whether the user wants to save
+    """
+    if project is not None and project.modified:
+        ask = ('The project \"<b>{}</b>\" has be modified.<br />Do you want '
+               'to save the project?').format(project.simple_name)
+        options = (QMessageBox.Save | QMessageBox.No)
+        reply = QMessageBox.question(None, 'Save project', ask, options,
+                                     QMessageBox.Save)
+        if reply == QMessageBox.No:
+            return False
+
+        if reply == QMessageBox.Save:
+            return True
+    return False
 
 
 def has_modified_children(model):
