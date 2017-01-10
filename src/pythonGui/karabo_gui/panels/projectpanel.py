@@ -132,7 +132,7 @@ def _project_load_handler(item_model):
             model = ProjectModel(uuid=uuid, revision=revision)
             read_lazy_object(TEST_DOMAIN, uuid, revision, db_conn,
                              read_project_model, existing=model)
-            set_modified_flag(model)
+            set_modified_flag(model, value=False)
             item_model.traits_data_model = model
 
 
@@ -154,7 +154,7 @@ def _old_project_load_handler(item_model):
     model, _ = convert_old_project(project)
     # Set modified flag recursively to True to make sure that EVERYTHING gets
     # saved to the database
-    set_modified_flag(model, True)
+    set_modified_flag(model, value=True)
     item_model.traits_data_model = model
 
 
