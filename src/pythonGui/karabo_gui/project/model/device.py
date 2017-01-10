@@ -15,8 +15,8 @@ from karabo.common.project.api import (
     find_parent_object
 )
 from karabo.middlelayer import Hash
-from karabo.middlelayer_api.newproject.io import (read_project_model,
-                                                  write_project_model)
+from karabo.middlelayer_api.project.io import (read_project_model,
+                                               write_project_model)
 from karabo_gui.configuration import Configuration
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,

@@ -3,8 +3,9 @@ free to use everything defined here, try to avoid doing deep imports
 into the Karabo package, as the internals may change.
 """
 from .common.alarm_conditions import AlarmCondition
-from .common.project.api import MacroModel, read_macro, write_macro
-from .common.scenemodel.api import read_scene, SceneModel, write_scene
+from .common.project.api import (
+    ProjectModel, MacroModel, read_macro, write_macro)
+from .common.scenemodel.api import SceneModel, read_scene, write_scene
 from .common.states import State, StateSignifier
 
 from .middlelayer_api.device_client import (
@@ -16,7 +17,7 @@ from .middlelayer_api.device_client import (
 )
 from .middlelayer_api.enums import (
     AccessLevel, AccessMode, Assignment, EncodingType, MetricPrefix, NodeType,
-    Unit
+    ProjectAccess, Unit
 )
 from .middlelayer_api.eventloop import KaraboFuture
 from .middlelayer_api.basetypes import (
@@ -39,9 +40,6 @@ from .middlelayer_api.hash import (
 )
 from .middlelayer_api.macro import Macro, Monitor
 from .middlelayer_api.device import Device
-from .middlelayer_api.project import (
-    BaseDevice, BaseDeviceGroup, Project, ProjectAccess, ProjectConfiguration
-)
 from .middlelayer_api.registry import MetaRegistry, Registry
 from .middlelayer_api.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes

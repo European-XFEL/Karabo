@@ -10,9 +10,9 @@ from karabo.common.project.api import (
     MacroModel, ProjectDBCache, ProjectModel,
     read_lazy_object, walk_traits_object,
     PROJECT_OBJECT_CATEGORIES)
-from karabo.middlelayer import Project
 from ..convert import convert_old_project
 from ..io import read_project_model, write_project_model
+from ..old import Project
 
 TEST_DOMAIN = 'TESTES'
 
