@@ -11,6 +11,7 @@ from karabo_gui.events import (
 from karabo_gui.project.model.shadow import (
     create_project_model_shadow, destroy_project_model_shadow
 )
+from karabo_gui.project.utils import save_project, show_save_project_message
 
 TABLE_HEADER_LABELS = ["Projects"]
 
@@ -29,7 +30,7 @@ class ProjectViewItemModel(QStandardItemModel):
 
         self.setHorizontalHeaderLabels(TABLE_HEADER_LABELS)
 
-    def cleanup_project(self):
+    def _cleanup_project(self):
         """ Clean up the ``self._traits_model`` properly which means trigger
         certain events"""
         if self._traits_model is None:
@@ -53,6 +54,10 @@ class ProjectViewItemModel(QStandardItemModel):
     def traits_data_model(self, model):
         """ Set the ProjectModel instance that we're presenting to Qt
         """
+        if show_save_project_message(self._traits_model):
+            if not save_project(self._traits_model):
+                return
+
         # Clean up any previously created shadow models
         if self._shadow_model is not None:
             destroy_project_model_shadow(self._shadow_model)
@@ -60,7 +65,7 @@ class ProjectViewItemModel(QStandardItemModel):
             # `clear()` removes the header data
             self.setHorizontalHeaderLabels(TABLE_HEADER_LABELS)
 
-        self.cleanup_project()
+        self._cleanup_project()
 
         self._traits_model = model
         if model is not None:
