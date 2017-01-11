@@ -103,7 +103,6 @@ class MainWindow(QMainWindow):
                 self.addRunConfigPanel(data.get('instanceIds'))
             elif sender is KaraboEventSender.RemoveRunConfigurator:
                 self.removeRunConfigPanels(data.get('instanceIds'))
-
             return False
         return super(MainWindow, self).eventFilter(obj, event)
 
@@ -366,7 +365,6 @@ class MainWindow(QMainWindow):
         divWidget = self._getDivWidget(self.middleTab, child_type, model)
         if divWidget is not None:
             self.middleTab.removeDockableTab(divWidget.dockableWidget)
-
         # If tabwidget is empty - show start page instead
         if self.middleTab.count() < 1:
             self._createPlaceholderMiddlePanel()
