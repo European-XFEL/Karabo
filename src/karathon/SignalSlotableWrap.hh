@@ -17,6 +17,7 @@
 #include "SlotWrap.hh"
 #include "ScopedGILRelease.hh"
 #include "Wrapper.hh"
+#include "PyXmsInputOutputChannel.hh"
 
 namespace bp = boost::python;
 
@@ -64,7 +65,7 @@ namespace karathon {
                                                                                     replySlotInstanceId,
                                                                                     replySlotFunction);
                     registerRequest(requestSlotInstanceId, header, body);
-                    sendRequest();                  
+                    sendRequest();
                 } catch (...) {
                     KARABO_RETHROW
                 }
@@ -285,7 +286,7 @@ namespace karathon {
 
         void registerDataHandlerPy(const std::string& channelName, const bp::object& handler) {
             registerDataHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnDataAvailableHandler, this, handler, _1, _2));
-        }      
+        }
 
         void registerInputHandlerPy(const std::string& channelName, const bp::object& handler) {
             registerInputHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler, this, handler, _1));
@@ -311,7 +312,8 @@ namespace karathon {
 
         void proxyOnInputAvailableHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
 
-        void proxyOnDataAvailableHandler(const bp::object& handler, const karabo::util::Hash& data, const karabo::xms::Memory::MetaData& metaData);
+        void proxyOnDataAvailableHandler(const bp::object& handler, const karabo::util::Hash& data,
+                                         const karabo::xms::InputChannel::MetaData& metaData);
 
         void proxyOnEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
 
