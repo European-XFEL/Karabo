@@ -11,29 +11,32 @@ _CONTAINER_EVENT_TYPES = (TraitDictEvent, TraitListEvent)
 _CONTAINER_TYPES = (Dict, List)
 
 
-def clear_modified_flag(model):
-    """Set the ``modified`` trait to False in an object tree.
+def set_modified_flag(model, value=False):
+    """Set the ``modified`` trait to the given key word argument ``value`` in
+    an object tree.
 
-    This recurses into all child models and sets the modified flag to False
+    This recurses into all child models and sets the modified flag to ``value``
     whenever it is found.
 
     :param model: A BaseSavableModel (or subclass) instance
+    :param value: States whether the flag should be set to ``False`` or
+                  ``True``
     """
     if isinstance(model, BaseSavableModel):
-        model.modified = False
+        model.modified = value
 
         for name in model.copyable_trait_names():
             attribute = getattr(model, name, None)
             if isinstance(attribute, BaseSavableModel):
-                attribute.modified = False
+                attribute.modified = value
             elif isinstance(attribute, list):
                 for child in attribute:
                     if isinstance(child, BaseSavableModel):
-                        clear_modified_flag(child)
+                        set_modified_flag(child, value=value)
             elif isinstance(attribute, dict):
                 for child in attribute.values():
                     if isinstance(child, BaseSavableModel):
-                        clear_modified_flag(child)
+                        set_modified_flag(child, value=value)
 
 
 class BaseSavableModel(HasStrictTraits):

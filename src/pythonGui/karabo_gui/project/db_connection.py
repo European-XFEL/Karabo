@@ -7,7 +7,7 @@
 from PyQt4.QtCore import QObject
 
 from karabo.common.project.api import get_user_cache, read_lazy_object
-from karabo.common.savable import clear_modified_flag
+from karabo.common.savable import set_modified_flag
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.newproject.io import (read_project_model,
                                                   write_project_model)
@@ -137,7 +137,7 @@ class ProjectDatabaseConnection(QObject):
                 read_lazy_object(domain, uuid, revision, self,
                                  read_project_model, existing=obj)
                 # Loading will cause the modified flag to flip!
-                clear_modified_flag(obj)
+                set_modified_flag(obj, value=False)
 
     def _items_saved(self, items):
         """ A bunch of items were just saved
@@ -154,7 +154,7 @@ class ProjectDatabaseConnection(QObject):
                 data = write_project_model(obj)
                 self.cache.store(domain, uuid, revision, data)
                 # No longer dirty!
-                clear_modified_flag(obj)
+                set_modified_flag(obj, value=False)
             else:
                 # XXX: Make some noise.
                 # Right now, only the modified flag doesn't get updated.
