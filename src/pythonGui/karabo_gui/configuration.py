@@ -6,6 +6,8 @@
 
 from PyQt4.QtCore import pyqtSignal
 
+from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
+                               broadcast_event)
 from karabo_gui.schema import Schema, Box
 from karabo_gui.singletons.api import get_manager, get_network
 
@@ -57,14 +59,7 @@ class Configuration(Box):
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
         if self.status == "requested":
             if self.visible > 0:
-                manager = get_manager()
-                get_network().onStartMonitoringDevice(self.id)
-                index = manager.systemTopology.findIndex(self.id)
-                if index is not None and index.isValid():
-                    assert not index.internalPointer().monitoring
-                    index.internalPointer().monitoring = True
-                    manager.systemTopology.dataChanged.emit(
-                        index, index)
+                _start_device_monitoring(self.id)
             self.status = "schema"
 
     @property
@@ -164,27 +159,14 @@ class Configuration(Box):
                 network.onGetDeviceSchema(self.id)
                 self.status = "requested"
             else:
-                manager = get_manager()
-                network.onStartMonitoringDevice(self.id)
-                idx = manager.systemTopology.findIndex(self.id)
-                if idx is not None and idx.isValid():
-                    assert not idx.internalPointer().monitoring
-                    idx.internalPointer().monitoring = True
-                    manager.systemTopology.dataChanged.emit(idx, idx)
+                _start_device_monitoring(self.id)
 
     __enter__ = addVisible
 
     def removeVisible(self):
         self.visible -= 1
         if self.visible == 0 and self.status not in ("offline", "requested"):
-            manager = get_manager()
-            network = get_network()
-            network.onStopMonitoringDevice(self.id)
-            index = manager.systemTopology.findIndex(self.id)
-            if index is not None and index.isValid():
-                assert index.internalPointer().monitoring
-                index.internalPointer().monitoring = False
-                manager.systemTopology.dataChanged.emit(index, index)
+            _stop_device_monitoring(self.id)
             if self.status == "monitoring":
                 self.status = "alive"
 
@@ -198,3 +180,23 @@ class Configuration(Box):
     def shutdown(self):
         manager = get_manager()
         manager.shutdownDevice(self.id)
+
+
+def _start_device_monitoring(device_id):
+    """Initiate device monitoring
+    """
+    get_network().onStartMonitoringDevice(device_id)
+    broadcast_event(KaraboBroadcastEvent(
+        KaraboEventSender.StartMonitoringDevice,
+        data={'device_id': device_id})
+    )
+
+
+def _stop_device_monitoring(device_id):
+    """Cease device monitoring
+    """
+    get_network().onStopMonitoringDevice(device_id)
+    broadcast_event(KaraboBroadcastEvent(
+        KaraboEventSender.StopMonitoringDevice,
+        data={'device_id': device_id})
+    )
