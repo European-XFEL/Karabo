@@ -17,7 +17,7 @@ from .middlelayer_api.device_client import (
 )
 from .middlelayer_api.enums import (
     AccessLevel, AccessMode, Assignment, EncodingType, MetricPrefix, NodeType,
-    ProjectAccess, Unit
+    Unit
 )
 from .middlelayer_api.eventloop import KaraboFuture
 from .middlelayer_api.basetypes import (

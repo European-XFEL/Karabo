@@ -44,14 +44,6 @@ class NodeType(IntEnum):
         return str(self.value)
 
 
-class ProjectAccess(Enum):
-    """ These states describes the access to a project.
-    """
-    CLOUD = 0  # read and write access
-    LOCAL = 1  # read and write access
-    CLOUD_READONLY = 2  # readonly access
-
-
 @unique
 class MetricPrefix(Enum):
     """ This are all the defined prefixes in the SI system """

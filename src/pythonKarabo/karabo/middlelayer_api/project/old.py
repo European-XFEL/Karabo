@@ -12,7 +12,6 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import read_scene
-from karabo.middlelayer_api.enums import ProjectAccess
 from karabo.middlelayer_api.hash import Hash, XMLParser, XMLWriter
 
 
@@ -23,7 +22,6 @@ class Project(object):
         self.version = 1
         self.filename = filename
         self.uuid = str(uuid4())
-        self.access = ProjectAccess.LOCAL  # LOCAL, CLOUD, CLOUD_READONLY
 
         # List of devices
         self.devices = []
