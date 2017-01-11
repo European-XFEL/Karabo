@@ -1,6 +1,6 @@
 from traits.api import HasTraits, HasStrictTraits, Dict, Instance, List
 
-from karabo.common.savable import BaseSavableModel, clear_modified_flag
+from karabo.common.savable import BaseSavableModel, set_modified_flag
 
 
 class Plain(HasStrictTraits):
@@ -52,40 +52,40 @@ def test_savable_children():
 
     complicated.children_dict['foo'].simple_child = 42
     assert complicated.modified
-    clear_modified_flag(parent)
+    set_modified_flag(parent)
 
     complicated.children_list[0].simple_child = 42
     assert complicated.modified
-    clear_modified_flag(complicated)
+    set_modified_flag(complicated)
 
     complicated.children_pod[0] = 42
     assert complicated.modified
-    clear_modified_flag(complicated)
+    set_modified_flag(complicated)
 
     complicated.sav_child.simple_child = 42
     assert complicated.modified
-    clear_modified_flag(complicated)
+    set_modified_flag(complicated)
 
     complicated.sav_child = Simple(simple_child=4, initialized=True)
     assert complicated.modified
-    clear_modified_flag(complicated)
+    set_modified_flag(complicated)
 
     complicated.sav_child.simple_child = 42
     assert complicated.modified
-    clear_modified_flag(parent)
+    set_modified_flag(parent)
 
     parent.nested[0].children_list[0].simple_child = 1000
     assert parent.modified and complicated.modified
-    clear_modified_flag(parent)
+    set_modified_flag(parent)
 
     parent.nested[0].children_list[0] = Simple(simple_child=0,
                                                initialized=True)
     assert parent.modified and complicated.modified
-    clear_modified_flag(parent)
+    set_modified_flag(parent)
 
     parent.nested[0].children_list[0].simple_child = 42
     assert parent.modified and complicated.modified
-    clear_modified_flag(parent)
+    set_modified_flag(parent)
 
 
 def test_notification_management():
@@ -95,25 +95,25 @@ def test_notification_management():
     assert not parent.modified
 
     parent.children_list.append(child)
-    clear_modified_flag(parent)
+    set_modified_flag(parent)
     child.simple_child = 42
     assert parent.modified
-    clear_modified_flag(parent)
+    set_modified_flag(parent)
 
     # After removing a child, it should not affect the old parent
     parent.children_list = []
-    clear_modified_flag(parent)
+    set_modified_flag(parent)
     child.simple_child = 0
     assert not parent.modified
 
     parent.children_dict['key'] = child
-    clear_modified_flag(parent)
+    set_modified_flag(parent)
     child.simple_child = 42
     assert parent.modified
 
     # After removing a child, it should not affect the old parent
-    clear_modified_flag(parent)
+    set_modified_flag(parent)
     del parent.children_dict['key']
-    clear_modified_flag(parent)
+    set_modified_flag(parent)
     child.simple_child = 0
     assert child.modified and not parent.modified
