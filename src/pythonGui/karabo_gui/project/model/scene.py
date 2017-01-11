@@ -65,14 +65,17 @@ class SceneModelItem(BaseProjectTreeItem):
 
     @on_trait_change("model.modified, model.simple_name")
     def modified_change(self):
-        """ Whenever the project is modified it should be visible"""
+        """ Whenever the project is modified it should be visible.
+
+        The scene name is modified in the project panel.
+        """
         if not self.is_ui_initialized():
             return
         self.set_qt_item_text(self.qt_item, self.model.simple_name)
 
     @on_trait_change("model.simple_name")
-    def modified_change_name(self):
-        """ Whenever the project is modified it should be visible"""
+    def on_model_name_change(self):
+        """ New scene name should appear in the middle panel """
         if not self.is_ui_initialized():
             return
         data = {'model': self.model}
