@@ -231,7 +231,7 @@ namespace karathon {
         if (onDataHandler != bp::object()) {
             // or: if (onDataHandler.ptr() != Py_None) {
             dataHandler = boost::bind(&SignalSlotableWrap::proxyOnDataAvailableHandler,
-                                      this, onDataHandler, _1);
+                                      this, onDataHandler, _1, _2);
         }
         if (onInputHandler != bp::object()) {
             inputHandler = boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler,
@@ -349,10 +349,11 @@ namespace karathon {
 
 
     void SignalSlotableWrap::proxyOnDataAvailableHandler(const bp::object& handler,
-                                                         const karabo::util::Hash& data) {
+                                                         const karabo::util::Hash& data,
+                                                         const karabo::xms::Memory::MetaData& metaData) {
         ScopedGILAcquire gil;
         try {
-            if (handler) handler(bp::object(data));
+            if (handler) handler(bp::object(data), bp::object(metaData));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) PyErr_Print();
             throw KARABO_PYTHON_EXCEPTION("Python data handler has thrown an exception.");
