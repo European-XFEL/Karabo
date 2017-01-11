@@ -9,6 +9,8 @@ from PyQt4.QtGui import QAction, QDialog, QStackedLayout, QWidget
 
 from karabo.common.project.api import ProjectModel, read_lazy_object
 from karabo.common.savable import set_modified_flag
+from karabo.middlelayer_api.project.api import (
+    OldProject, convert_old_project, read_project_model)
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
@@ -118,10 +120,8 @@ def _project_load_handler(item_model):
 
     :param item_model: The `ProjectViewItemModel` of the `ProjectView`
     """
-    # XXX: HACK. This is only written this way to get _something_ loaded.
-    # It must change once the ProjectDB is fully supported
+    # XXX: Hardcoding of the domain must be replaced with user selection!
     from karabo_gui.project.api import TEST_DOMAIN
-    from karabo.middlelayer_api.newproject.io import read_project_model
 
     dialog = LoadProjectDialog()
     result = dialog.exec()
@@ -141,15 +141,11 @@ def _old_project_load_handler(item_model):
 
     :param item_model: The `ProjectViewItemModel` of the `ProjectView`
     """
-    # XXX: These imports will change soon
-    from karabo.middlelayer import Project
-    from karabo.middlelayer_api.newproject.convert import convert_old_project
-
     fn = getOpenFileName(caption='Load Old Project',
                          filter='Legacy Karabo Projects (*.krb)')
     if not fn:
         return
-    project = Project(fn)
+    project = OldProject(fn)
     project.unzip()
     model, _ = convert_old_project(project)
     # Set modified flag recursively to True to make sure that EVERYTHING gets
