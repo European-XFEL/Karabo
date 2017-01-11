@@ -13,6 +13,8 @@ from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 from karabo.common.states import State
 from karabo.middlelayer import AccessLevel, Hash
 from karabo_gui.enums import NavigationItemTypes
+from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
+                               register_for_broadcasts)
 import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
 from karabo_gui.indicators import ALARM_ICONS, get_state_icon, NONE
@@ -32,6 +34,21 @@ class NavigationTreeModel(QAbstractItemModel):
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
+
+        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
+        # not necessary for self due to the fact that the singleton mediator
+        # object and `self` are being destroyed when the GUI exists
+        register_for_broadcasts(self)
+
+    def eventFilter(self, obj, event):
+        if isinstance(event, KaraboBroadcastEvent):
+            sender = event.sender
+            if sender is KaraboEventSender.StartMonitoringDevice:
+                self._toggleMonitoring(event.data.get('device_id', ''), True)
+            elif sender is KaraboEventSender.StopMonitoringDevice:
+                self._toggleMonitoring(event.data.get('device_id', ''), False)
+            return False
+        return super(NavigationTreeModel, self).eventFilter(obj, event)
 
     def _handleServerData(self, config):
         """ Put the configuration hash config into the internal
@@ -498,3 +515,10 @@ class NavigationTreeModel(QAbstractItemModel):
         self.beginResetModel()
         node.alarm_type = alarm_type
         self.endResetModel()
+
+    def _toggleMonitoring(self, device_id, monitoring):
+        index = self.findIndex(device_id)
+        if index is not None and index.isValid():
+            assert index.internalPointer().monitoring != monitoring
+            index.internalPointer().monitoring = monitoring
+            self.dataChanged.emit(index, index)
