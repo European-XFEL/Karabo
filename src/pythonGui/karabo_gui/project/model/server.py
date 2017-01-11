@@ -92,9 +92,11 @@ class DeviceServerModelItem(BaseProjectGroupItem):
 
     # ----------------------------------------------------------------------
     # traits notification handlers
-    @on_trait_change("model.modified")
-    def modified_change(self):
-        """ Whenever the project is modified it should be visible"""
+
+    @on_trait_change("model.modified,model.simple_name")
+    def update_ui_label(self):
+        """ Whenever the project is modified it should be visible to the user
+        """
         if not self.is_ui_initialized():
             return
         self.set_qt_item_text(self.qt_item, self.model.simple_name)
