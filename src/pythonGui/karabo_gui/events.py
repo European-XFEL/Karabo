@@ -39,6 +39,8 @@ class KaraboEventSender(Enum):
     ShowConfiguration = "Show configuration"
     ShowDevice = "Show device"
     ShowNavigationItem = "Show navigation item"
+    StartMonitoringDevice = "Start listening to device updates"
+    StopMonitoringDevice = "Stop listening to device updates"
     SystemTopologyUpdate = "System topology updated"
     TreeItemSingleClick = "Tree item single click"
 
