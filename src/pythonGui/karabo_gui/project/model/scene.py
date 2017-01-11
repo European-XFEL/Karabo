@@ -70,6 +70,15 @@ class SceneModelItem(BaseProjectTreeItem):
             return
         self.set_qt_item_text(self.qt_item, self.model.simple_name)
 
+    @on_trait_change("model.simple_name")
+    def modified_change(self):
+        """ Whenever the project is modified it should be visible"""
+        if not self.is_ui_initialized():
+            return
+        data = {'model': self.model}
+        broadcast_event(KaraboBroadcastEvent(KaraboEventSender.RenameSceneView,
+                                             data))
+ 
     # ----------------------------------------------------------------------
     # action handlers
 

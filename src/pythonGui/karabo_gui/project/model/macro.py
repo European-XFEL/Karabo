@@ -159,6 +159,14 @@ class MacroModelItem(BaseProjectGroupItem):
         for item_model in event.added:
             self._child_map[item_model.instance_id] = item_model
 
+    @on_trait_change("model.simple_name")
+    def simple_name_change(self):
+        if not self.is_ui_initialized():
+            return
+        data = {'model': self.model}
+        broadcast_event(KaraboBroadcastEvent(KaraboEventSender.RenameMacro,
+                                             data))
+
     def _topo_listener_changed(self, name, old, new):
         """Handle broadcast event registration/unregistration here.
         """
@@ -185,6 +193,9 @@ class MacroModelItem(BaseProjectGroupItem):
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
+            data = {'model': self.model}
+            broadcast_event(KaraboBroadcastEvent(KaraboEventSender.OpenMacro,
+                                                 data))
 
     def _duplicate_macro(self, project):
         macro = self.model
