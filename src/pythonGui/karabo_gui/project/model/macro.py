@@ -140,7 +140,7 @@ class MacroModelItem(BaseProjectGroupItem):
 
     # ----------------------------------------------------------------------
     # traits notification handlers
-    @on_trait_change("model.modified")
+    @on_trait_change("model.modified, model.simple_name")
     def modified_change(self):
         """ Whenever the project is modified it should be visible"""
         if not self.is_ui_initialized():
@@ -160,7 +160,7 @@ class MacroModelItem(BaseProjectGroupItem):
             self._child_map[item_model.instance_id] = item_model
 
     @on_trait_change("model.simple_name")
-    def simple_name_change(self):
+    def modified_change_name(self):
         if not self.is_ui_initialized():
             return
         data = {'model': self.model}
