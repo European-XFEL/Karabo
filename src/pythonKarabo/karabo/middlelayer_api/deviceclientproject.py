@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-"""
-This module contains a class which represents the project related datastructure.
+""" This module contains a class which represents the project related
+datastructure.
 """
 
 import csv
@@ -13,7 +13,7 @@ from datetime import datetime
 from threading import Timer
 
 from .hash import Hash, XMLParser, XMLWriter
-from .project import Project, BaseDevice, BaseDeviceGroup
+from .project.old import Project, BaseDevice, BaseDeviceGroup
 
 
 class ProjectDevice(BaseDevice):
@@ -23,20 +23,17 @@ class ProjectDevice(BaseDevice):
         self.deviceId = deviceId
         self.initConfig = None
 
-
     def fromXml(self, xmlString):
         """
         This function loads the corresponding XML file of this configuration.
         """
         self._initConfig = XMLParser().read(xmlString)
 
-
     def toXml(self):
         """
         This function returns the configurations' XML file as a string.
         """
         return XMLWriter().write(Hash(self.classId, self._initConfig))
-
 
 
 class ProjectDeviceGroup(BaseDeviceGroup):
@@ -48,7 +45,6 @@ class ProjectDeviceGroup(BaseDeviceGroup):
         self.classId = None
 
 
-
 class DeviceClientProject(Project):
     Device = ProjectDevice
     DeviceGroup = ProjectDeviceGroup
@@ -58,11 +54,10 @@ class DeviceClientProject(Project):
 
         self.deviceClient = deviceClient
 
-
     def remove(self, object):
         """
         The \object should be removed from this project.
-        
+
         Returns \index of the object in the list.
         """
         if isinstance(object, ProjectDevice):
@@ -70,16 +65,15 @@ class DeviceClientProject(Project):
             self.devices.pop(index)
             return index
 
-
     def instantiate(self, deviceIds):
         """
         This function instantiates the list of \devices.
         """
         devices = self.getDevices(deviceIds)
         if not devices:
-            print("The given devices do not belong to this project and " \
+            print("The given devices do not belong to this project and "
                   "therefore can not be instantiated.")
-        
+
         runningDevices = self.deviceClient.getDevices()
         for d in devices:
             if d.deviceId in runningDevices:
@@ -87,11 +81,10 @@ class DeviceClientProject(Project):
                     continue
                 elif d.ifexists == "restart":
                     self.deviceClient.shutdownDevice(d.deviceId)
-            
+
             data = XMLWriter().write(d.initConfig)
             self.deviceClient._instantiate(d.serverId, d.classId, d.deviceId,
                                            data)
-
 
     def instantiateAll(self):
         """
@@ -104,12 +97,10 @@ class DeviceClientProject(Project):
                     continue
                 elif d.ifexists == "restart":
                     self.deviceClient.shutdownDevice(d.deviceId)
-            
-            #data = BinaryWriter().write(d.initConfig) # this does not work
+
             data = XMLWriter().write(d.initConfig)
             self.deviceClient._instantiate(d.serverId, d.classId, d.deviceId,
                                            data)
-
 
     def shutdown(self, deviceIds):
         """
@@ -117,12 +108,11 @@ class DeviceClientProject(Project):
         """
         devices = self.getDevices(deviceIds)
         if not devices:
-            print("The given devices do not belong to this project and " \
+            print("The given devices do not belong to this project and "
                   "therefore can not be shutdown.")
-        
+
         for d in devices:
             self.deviceClient.shutdownDevice(d.deviceId)
-
 
     def shutdownAll(self):
         """
@@ -131,7 +121,6 @@ class DeviceClientProject(Project):
         for d in self.devices:
             self.deviceClient.shutdownDevice(d.deviceId)
 
-
     def startMonitoring(self, filename, interval=1):
         """
         Monitoring is started and all necessary variables are initiated.
@@ -139,15 +128,15 @@ class DeviceClientProject(Project):
         if self.isMonitoring:
             print("Monitoring is already started.")
             return
-        
+
         self.isMonitoring = True
-        
+
         if not filename.endswith(".csv"):
             filename = "{}.csv".format(filename)
-        
+
         self.monitorFile = open(filename, "a")
         self.monitorWriter = csv.writer(self.monitorFile)
-        
+
         self.monitorTuples = []
         monitorString = []
         for m in self.monitors:
@@ -155,20 +144,21 @@ class DeviceClientProject(Project):
             deviceId = m.config.get("deviceId")
             deviceProperty = m.config.get("deviceProperty")
             self.monitorTuples.append((deviceId, deviceProperty))
-            
-            monitorString.append("{}[{}{}]".format(m.config.get("name"),
-                                             m.config.get("metricPrefixSymbol"),
-                                             m.config.get("unitSymbol")))
-        
+
+            monitorString.append("{}[{}{}]".format(
+                m.config.get("name"),
+                m.config.get("metricPrefixSymbol"),
+                m.config.get("unitSymbol"))
+            )
+
         self.monitorWriter.writerow(["#timestamp"] + monitorString)
         if interval > 0:
             self.monitorTimer = MonitorTimer(interval, self.timerEvent)
             self.monitorTimer.start()
         else:
             self.monitorTimer = None
-        
-        print("Monitoring started...")
 
+        print("Monitoring started...")
 
     def stopMonitoring(self):
         """
@@ -177,15 +167,14 @@ class DeviceClientProject(Project):
         if not self.isMonitoring:
             print("Monitoring is already stopped.")
             return
-        
+
         self.isMonitoring = False
 
         if self.monitorTimer is not None:
             self.monitorTimer.stop()
         self.monitorFile.close()
-        
-        print("Monitoring stopped...")
 
+        print("Monitoring stopped...")
 
     def timerEvent(self):
         """
@@ -193,24 +182,23 @@ class DeviceClientProject(Project):
         """
         if self.monitorWriter is None:
             return
-        
+
         timestamp = datetime.now().isoformat()
-        row = [timestamp] + [self.deviceClient.get(deviceData[0], deviceData[1]) for deviceData in self.monitorTuples]
+        row = [timestamp] + [self.deviceClient.get(deviceData[0], deviceData[1])
+                             for deviceData in self.monitorTuples]
         self.monitorWriter.writerow(row)
 
 
-
 class MonitorTimer(object):
-    """
-    This class represents a time which can call a \function in a given \interval.
-    
+    """ This class represents a time which can call a \function in a given
+    \interval.
+
     Usage:
     mt = MonitorTimer(interval, self.timerEvent)
     mt.start()
     sleep(5)
     mt.stop()
     """
-
     def __init__(self, interval, function, *args, **kwargs):
         self._timer = None
         self.interval = interval
@@ -219,12 +207,10 @@ class MonitorTimer(object):
         self.kwargs = kwargs
         self.is_running = False
 
-
     def _run(self):
         self.is_running = False
         self.start()
         self.function(*self.args, **self.kwargs)
-
 
     def start(self):
         if not self.is_running:
@@ -232,8 +218,6 @@ class MonitorTimer(object):
             self._timer.start()
             self.is_running = True
 
-
     def stop(self):
         self._timer.cancel()
         self.is_running = False
-

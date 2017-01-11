@@ -10,9 +10,9 @@ from karabo.common.project.api import (
     MacroModel, ProjectDBCache, ProjectModel,
     read_lazy_object, walk_traits_object,
     PROJECT_OBJECT_CATEGORIES)
-from karabo.middlelayer import Project
-from ..convert import convert_old_project
-from ..io import read_project_model, write_project_model
+from ..api import (
+    convert_old_project, read_project_model, write_project_model, OldProject
+)
 
 TEST_DOMAIN = 'TESTES'
 
@@ -60,7 +60,7 @@ def _get_old_project():
     import karabo.testing as mod
 
     path = op.join(op.dirname(mod.__file__), 'resources', 'reference.krb')
-    old_project = Project(path)
+    old_project = OldProject(path)
     old_project.unzip()
     return old_project
 
