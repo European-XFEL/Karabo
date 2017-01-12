@@ -10,7 +10,7 @@ from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
 
 from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
-from karabo_gui.project.utils import save_project
+from karabo_gui.project.utils import maybe_save_modified_project, save_project
 from karabo_gui.singletons.api import get_manager, get_project_model
 from .model.project import ProjectModelItem
 from .model.project_groups import ProjectSubgroupItem
@@ -68,7 +68,7 @@ class ProjectView(QTreeView):
     def _parent_project(self, model):
         """ Find the parent project model of a given item model
         """
-        if isinstance(model, (ProjectModelItem, ProjectSubgroupItem)):
+        if isinstance(model, ProjectSubgroupItem):
             return model.model
         root_project = self.model().traits_data_model
         return find_parent_object(model.model, root_project, ProjectModel)
@@ -108,20 +108,6 @@ class ProjectView(QTreeView):
 
             menu.exec(QCursor.pos())
 
-    def _save_project(self, project):
-        # Save possible changes
-        if project.modified:
-            ask = ('The project has be modified.<br />Do you want to save the '
-                   'project?')
-            options = (QMessageBox.Save | QMessageBox.Cancel)
-            reply = QMessageBox.question(None, 'Save project',
-                                         ask, options, QMessageBox.Save)
-            if reply == QMessageBox.Cancel:
-                return
-
-            if reply == QMessageBox.Save:
-                save_project(project)
-
     def _close_project(self, project, parent_project):
         """ Close the given `project`
         """
@@ -133,12 +119,17 @@ class ProjectView(QTreeView):
         if reply == QMessageBox.No:
             return
 
-        self._save_project(project)
-
-        if project is not parent_project:
+        if parent_project is not None:
+            # Check for modififications before closing
+            if not maybe_save_modified_project(project):
+                return
             # A subproject
             if project in parent_project.subprojects:
                 parent_project.subprojects.remove(project)
         else:
+            # Check for modififications before closing
+            model = self.model().traits_data_model
+            if not maybe_save_modified_project(model):
+                return
             # The master project
             self.model().traits_data_model = None
