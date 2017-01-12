@@ -11,7 +11,6 @@ from karabo_gui.events import (
 from karabo_gui.project.model.shadow import (
     create_project_model_shadow, destroy_project_model_shadow
 )
-from karabo_gui.project.utils import save_project, show_save_project_message
 
 TABLE_HEADER_LABELS = ["Projects"]
 
@@ -54,10 +53,6 @@ class ProjectViewItemModel(QStandardItemModel):
     def traits_data_model(self, model):
         """ Set the ProjectModel instance that we're presenting to Qt
         """
-        if show_save_project_message(self._traits_model):
-            if not save_project(self._traits_model):
-                return
-
         # Clean up any previously created shadow models
         if self._shadow_model is not None:
             destroy_project_model_shadow(self._shadow_model)
