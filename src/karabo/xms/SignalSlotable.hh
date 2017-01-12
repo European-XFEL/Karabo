@@ -906,10 +906,18 @@ namespace karabo {
 
         template <typename ...Args>
         void SignalSlotable::Requestor::receive(Args&... args) {
+
+            auto getSignalInstanceId = [](const karabo::util::Hash::Pointer & header, std::string & result) {
+                if (header && header->has("signalInstanceId") && header->is<std::string>("signalInstanceId")) {
+                    header->get("signalInstanceId", result);
+                }
+            };
+            karabo::util::Hash::Pointer header;
             try {
-                karabo::util::Hash::Pointer header, body;
+                karabo::util::Hash::Pointer body;
                 receiveResponse(header, body);
-                if (header->has("error") && header->get<bool>("error")) {
+                const boost::optional<karabo::util::Hash::Node&> errorNode = header->find("error");
+                if (errorNode && errorNode->is<bool>() && errorNode->getValue<bool>()) {
                     // Handling an error, so double check that input is as expected, i.e. body has key "a1":
                     const boost::optional<karabo::util::Hash::Node&> textNode = body->find("a1");
                     const std::string text(textNode && textNode->is<std::string>()
@@ -920,7 +928,7 @@ namespace karabo {
                 karabo::util::unpack(*body, args...);
 
                 if (sizeof...(Args) != body->size()) {
-                    int nArgs = body->size() - sizeof...(Args);
+                    const int nArgs = body->size() - sizeof...(Args);
                     KARABO_LOG_FRAMEWORK_DEBUG << "Ignoring the last " << nArgs << " arguments of response:\n"
                             << *body;
                 }
@@ -928,10 +936,17 @@ namespace karabo {
             } catch (const karabo::util::TimeoutException&) {
                 KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
             } catch (const karabo::util::CastException &) {
-                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));
+                std::string signalInstanceId("unknown");
+                getSignalInstanceId(header, signalInstanceId);
+                const std::string msg("'" + m_signalSlotable->getInstanceId() + "' received incompatible response "
+                                      "from '" + signalInstanceId + "'");
+                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(msg));
             } catch (const karabo::util::Exception& e) {
-                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error while receiving message on instance \""
-                                                              + m_signalSlotable->getInstanceId() + "\""));
+                std::string signalInstanceId("unknown");
+                getSignalInstanceId(header, signalInstanceId);
+                const std::string msg("Error while '" + m_signalSlotable->getInstanceId() + "' received message from '"
+                                      + signalInstanceId + "'");
+                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION(msg));
             }
         }
 
