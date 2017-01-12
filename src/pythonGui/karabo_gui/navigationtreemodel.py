@@ -9,17 +9,30 @@ hierarchical navigation in a treeview."""
 from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
                           Qt, pyqtSignal)
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
+from traits.api import HasStrictTraits, WeakRef
 
 from karabo.common.states import State
-from karabo.middlelayer import AccessLevel, Hash
-from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
                                register_for_broadcasts)
 import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
 from karabo_gui.indicators import ALARM_ICONS, get_state_icon, NONE
 from karabo_gui.topology import getClass, getDevice
-from karabo_gui.treenode import TreeNode
+from karabo_gui.system_tree import SystemTree
+
+
+class _UpdateContext(HasStrictTraits):
+    """A context manager that can be handed off to code which doesn't need to
+    know that it's dealing with a Qt QAbstractItemModel.
+    """
+    item_model = WeakRef(QAbstractItemModel)
+
+    def __enter__(self):
+        self.item_model.beginResetModel()
+
+    def __exit__(self, *exc):
+        self.item_model.endResetModel()
+        return False
 
 
 class NavigationTreeModel(QAbstractItemModel):
@@ -28,8 +41,8 @@ class NavigationTreeModel(QAbstractItemModel):
     def __init__(self, parent=None):
         super(NavigationTreeModel, self).__init__(parent)
 
-        # Root node of hierarchy tree
-        self.rootNode = TreeNode()
+        # Our hierarchy tree
+        self.tree = SystemTree(update_context=_UpdateContext(item_model=self))
 
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self, self)
@@ -50,96 +63,6 @@ class NavigationTreeModel(QAbstractItemModel):
             return False
         return super(NavigationTreeModel, self).eventFilter(obj, event)
 
-    def _handleServerData(self, config):
-        """ Put the configuration hash config into the internal
-        tree structure  """
-
-        if "server" not in config:
-            return
-
-        for serverId, _, attrs in config["server"].iterall():
-            if len(attrs) < 1:
-                continue
-            host = attrs.get("host", "UNKNOWN")
-            visibility = AccessLevel(attrs.get("visibility",
-                                               AccessLevel.OBSERVER))
-
-            # Create node for host
-            hostNode = self.rootNode.getNode(host)
-            if hostNode is None:
-                hostNode = TreeNode(host, host, self.rootNode)
-                self.rootNode.appendChildNode(hostNode)
-
-            # Create node for server
-            serverNode = hostNode.getNode(serverId)
-            if serverNode is None:
-                serverNode = TreeNode(serverId, serverId, hostNode)
-                hostNode.appendChildNode(serverNode)
-            serverNode.visibility = visibility
-            serverNode.attributes = attrs
-
-            for classId, visibility in zip(attrs.get("deviceClasses", []),
-                                           attrs.get("visibilities", [])):
-                path = "{}.{}".format(serverId, classId)
-                classNode = serverNode.getNode(classId)
-                if classNode is None:
-                    classNode = TreeNode(classId, path, serverNode)
-                    serverNode.appendChildNode(classNode)
-                classNode.visibility = AccessLevel(visibility)
-
-    def _handleDeviceData(self, config):
-        """ This method puts the device data of the configuration hash into
-        the internal tree structure. """
-
-        if "device" not in config:
-            return
-
-        for deviceId, _, attrs in config["device"].iterall():
-            if len(attrs) < 1:
-                continue
-
-            visibility = AccessLevel(attrs.get("visibility",
-                                               AccessLevel.OBSERVER))
-            host = attrs.get("host", "UNKNOWN")
-            serverId = attrs.get("serverId", "unknown-server")
-            classId = attrs.get("classId", "unknown-class")
-            status = attrs.get("status", "ok")
-
-            # Host node
-            hostNode = self.rootNode.getNode(host)
-            if hostNode is None:
-                hostNode = TreeNode(host, host, self.rootNode)
-                self.rootNode.appendChildNode(hostNode)
-
-            # Server node
-            serverNode = hostNode.getNode(serverId)
-            if serverNode is None:
-                if serverId == "__none__":
-                    serverNode = TreeNode(serverId, serverId, hostNode)
-                    hostNode.appendChildNode(serverNode)
-                else:
-                    continue
-
-            # Class node
-            classNode = serverNode.getNode(classId)
-            if classNode is None:
-                if serverId == "__none__":
-                    path = "{}.{}".format(serverId, classId)
-                    classNode = TreeNode(classId, path, serverNode)
-                    serverNode.appendChildNode(classNode)
-                else:
-                    continue
-
-            # Device node
-            deviceNode = classNode.getNode(deviceId)
-            if deviceNode is None:
-                deviceNode = TreeNode(deviceId, deviceId, classNode)
-                classNode.appendChildNode(deviceNode)
-                deviceNode.monitoring = False
-            deviceNode.status = status
-            deviceNode.visibility = visibility
-            deviceNode.attributes = attrs
-
     def updateData(self, config):
         """This function is called whenever the system topology has changed
         and the view needs an update.
@@ -149,20 +72,15 @@ class NavigationTreeModel(QAbstractItemModel):
         # Get last selection path
         lastSelectionPath = self.currentSelectionPath()
 
-        self.beginResetModel()
-        try:
-            self._handleServerData(config)
-            self._handleDeviceData(config)
-        finally:
-            self.endResetModel()
+        # Modify the tree
+        self.tree.update(config)
 
         # Set last selection path
         if lastSelectionPath is not None:
             self.selectPath(lastSelectionPath)
 
     def currentSelectionPath(self):
-        """
-        Returns the current selection path, else None.
+        """Returns the current selection path, else None.
         """
         # Get last selection path
         selectedIndexes = self.selectionModel.selectedIndexes()
@@ -172,43 +90,24 @@ class NavigationTreeModel(QAbstractItemModel):
             return None
 
     def has(self, path):
-        return self.findIndex(path) is not None
+        return self.tree.find(path) is not None
 
     def eraseDevice(self, instanceId):
         index = self.findIndex(instanceId)
-        if (index is None) or (not index.isValid()):
+        if index is None or not index.isValid():
             return
 
-        self.beginResetModel()
-        try:
-            wasSelected = self.selectionModel.isSelected(index)
-            node = index.internalPointer()
-            parentNode = node.parentNode
-            parentNode.removeChildNode(node)
-        finally:
-            self.endResetModel()
-            if wasSelected:
-                # If the erased device was selected, select parent
-                self.selectPath(parentNode.path)
+        next_selection = ''
+        if self.selectionModel.isSelected(index):
+            next_selection = index.internalPointer().parent.path
+
+        self.tree.remove_device(instanceId)
+
+        if next_selection:
+            self.selectPath(next_selection)
 
     def eraseServer(self, instanceId):
-        index = self.findIndex(instanceId)
-        if (index is None) or (not index.isValid()):
-            return []
-
-        serverClassIds = []
-        self.beginResetModel()
-        try:
-            node = index.internalPointer()
-            parentNode = node.parentNode
-            # There are children, if server
-            for childNode in node.childNodes:
-                scid = (node.displayName, childNode.displayName)
-                serverClassIds.append(scid)
-            parentNode.removeChildNode(node)
-        finally:
-            self.endResetModel()
-        return serverClassIds
+        return self.tree.remove_server(instanceId)
 
     def detectExistingInstances(self, config):
         """This function checks whether instances already exist in the tree.
@@ -216,36 +115,7 @@ class NavigationTreeModel(QAbstractItemModel):
         \Returns a list with all existing instanceIds and a list with existing
         serverClassIds.
         """
-
-        existingIds = []
-        serverClassIds = []
-
-        serverKey = "server"
-        # Check servers
-        if config.has(serverKey):
-            serverConfig = config.get(serverKey)
-            for serverId in serverConfig.keys():
-                # Check, if serverId is already in central hash
-                index = self.findIndex(serverId)
-                if index is None:
-                    continue
-
-                serverClassIds.extend(self.eraseServer(serverId))
-                existingIds.append(serverId)
-
-        deviceKey = "device"
-        if config.has(deviceKey):
-            deviceConfig = config.get(deviceKey)
-            for deviceId in deviceConfig.keys():
-                # Check, if deviceId is already in central hash
-                index = self.findIndex(deviceId)
-                if index is None:
-                    continue
-
-                self.eraseDevice(deviceId)
-                existingIds.append(deviceId)
-
-        return existingIds, serverClassIds
+        return self.tree.clear_existing(config)
 
     def globalAccessLevelChanged(self):
         lastSelectionPath = self.currentSelectionPath()
@@ -254,46 +124,7 @@ class NavigationTreeModel(QAbstractItemModel):
             self.selectPath(lastSelectionPath)
 
     def clear(self):
-        """The model is going to be reseted.
-        """
-        self.beginResetModel()
-        self.rootNode.parentNode = None
-        self.rootNode.childNodes = []
-        self.endResetModel()
-
-    def getAsHash(self):
-        """This function creates a hash object, fills it with the current
-        visible topology and returns that hash.
-        """
-        h = Hash()
-        self._rGetAsHash(self.rootNode, h)
-        return h
-
-    def _rGetAsHash(self, node, hash, path=""):
-        """
-        This function goes recursively through the tree and stores its data in
-        a hash object, depending on the visibility.
-        """
-        if path == "":
-            path = node.displayName
-        else:
-            path = path + "." + node.displayName
-            hash.set(path, None)
-
-        for childNode in node.childNodes:
-            if childNode.visibility > krb_globals.GLOBAL_ACCESS_LEVEL:
-                continue
-            self._rGetAsHash(childNode, hash, path)
-
-    def getHierarchyLevel(self, index):
-        # Find out the hierarchy level of the selected node
-        hierarchyLevel = 0
-        seekRoot = index
-
-        while seekRoot.parent() != QModelIndex():
-            seekRoot = seekRoot.parent()
-            hierarchyLevel += 1
-        return hierarchyLevel
+        self.tree.clear_all()
 
     def currentIndex(self):
         return self.selectionModel.currentIndex()
@@ -308,17 +139,8 @@ class NavigationTreeModel(QAbstractItemModel):
                                             QItemSelectionModel.ClearAndSelect)
 
     def findIndex(self, path):
-        # Recursive search
-        return self._rFindIndex(self.rootNode, path)
-
-    def _rFindIndex(self, node, path):
-        for i in range(node.childCount()):
-            childNode = node.childNode(i)
-            resultNode = self._rFindIndex(childNode, path)
-            if resultNode:
-                return resultNode
-
-        if (node.path != "") and (path == node.path):
+        node = self.tree.find(path)
+        if node is not None:
             return self.createIndex(node.row(), 0, node)
         return None
 
@@ -327,50 +149,48 @@ class NavigationTreeModel(QAbstractItemModel):
         self.selectIndex(index)
 
     def index(self, row, column, parent=QModelIndex()):
-        """
-        Reimplemented function of QAbstractItemModel.
+        """Reimplemented function of QAbstractItemModel.
         """
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
 
         if not parent.isValid():
-            parentNode = self.rootNode
+            parent_node = self.tree.root
         else:
-            parentNode = parent.internalPointer()
+            parent_node = parent.internalPointer()
 
-        childNode = parentNode.childNode(row)
-        if childNode is not None:
+        child_node = parent_node.children[row]
+        if child_node is not None:
             # Consider visibility
-            if childNode.visibility > krb_globals.GLOBAL_ACCESS_LEVEL:
+            if child_node.visibility > krb_globals.GLOBAL_ACCESS_LEVEL:
                 return QModelIndex()
 
-            return self.createIndex(row, column, childNode)
+            return self.createIndex(row, column, child_node)
         else:
             return QModelIndex()
 
     def parent(self, index):
-        """
-        Reimplemented function of QAbstractItemModel.
+        """Reimplemented function of QAbstractItemModel.
         """
         if not index.isValid():
             return QModelIndex()
 
-        childNode = index.internalPointer()
-        if not childNode:
+        child_node = index.internalPointer()
+        if not child_node:
             return QModelIndex()
 
-        parentNode = childNode.parentNode
-        if not parentNode:
+        parent_node = child_node.parent
+        if not parent_node:
             return QModelIndex()
 
-        if parentNode == self.rootNode:
+        if parent_node == self.tree.root:
             return QModelIndex()
 
         # Consider visibility
-        if parentNode.visibility > krb_globals.GLOBAL_ACCESS_LEVEL:
+        if parent_node.visibility > krb_globals.GLOBAL_ACCESS_LEVEL:
             return QModelIndex()
 
-        return self.createIndex(parentNode.row(), 0, parentNode)
+        return self.createIndex(parent_node.row(), 0, parent_node)
 
     def rowCount(self, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -379,11 +199,11 @@ class NavigationTreeModel(QAbstractItemModel):
             return None
 
         if not parent.isValid():
-            parentNode = self.rootNode
+            parent_node = self.tree.root
         else:
-            parentNode = parent.internalPointer()
+            parent_node = parent.internalPointer()
 
-        return parentNode.childCount()
+        return len(parent_node.children)
 
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -395,12 +215,11 @@ class NavigationTreeModel(QAbstractItemModel):
         """
         column = index.column()
         node = index.internalPointer()
+        hierarchyLevel = node.level()
 
         if column == 0 and role == Qt.DisplayRole:
-            return node.displayName
+            return node.display_name
         elif column == 0 and role == Qt.DecorationRole:
-            # Find out the hierarchy level of the selected node
-            hierarchyLevel = self.getHierarchyLevel(index)
             if hierarchyLevel == 0:
                 return icons.host
             elif hierarchyLevel == 1:
@@ -415,12 +234,10 @@ class NavigationTreeModel(QAbstractItemModel):
                 else:
                     return icons.deviceInstance
         elif column == 1 and role == Qt.DecorationRole:
-            hierarchyLevel = self.getHierarchyLevel(index)
             if hierarchyLevel == 3:
                 state = State.ERROR if node.status == 'error' else State.STATIC
                 return get_state_icon(state)
         elif column == 2 and role == Qt.DecorationRole:
-            hierarchyLevel = self.getHierarchyLevel(index)
             if hierarchyLevel == 3:
                 if node.alarm_type is not None and node.alarm_type != NONE:
                     return ALARM_ICONS[node.alarm_type].icon
@@ -432,7 +249,7 @@ class NavigationTreeModel(QAbstractItemModel):
             return Qt.NoItemFlags
 
         ret = Qt.ItemIsEnabled | Qt.ItemIsSelectable
-        if self.getHierarchyLevel(index) > 0:
+        if index.internalPointer().level() > 0:
             ret |= Qt.ItemIsDragEnabled
         return ret
 
@@ -446,34 +263,10 @@ class NavigationTreeModel(QAbstractItemModel):
     def indexInfo(self, index):
         if not index.isValid():
             return {}
-
-        level = self.getHierarchyLevel(index)
-
-        if level == 0:
-            # item_type = NavigationItemTypes.HOST
-            return {}
-        elif level == 1:
-            item_type = NavigationItemTypes.SERVER
-            serverId = index.data()
-            return {'type': item_type, 'serverId': serverId}
-        elif level == 2:
-            item_type = NavigationItemTypes.CLASS
-            parentIndex = index.parent()
-            serverId = parentIndex.data()
-            classId = index.data()
-            return {'type': item_type, 'serverId': serverId,
-                    'classId': classId, 'deviceId': ''}
-        elif level == 3:
-            item_type = NavigationItemTypes.DEVICE
-            parentIndex = index.parent()
-            classId = parentIndex.data()
-            deviceId = index.data()
-            return {'type': item_type, 'classId': classId,
-                    'deviceId': deviceId}
+        return index.internalPointer().info()
 
     def mimeData(self, nodes):
         mimeData = QMimeData()
-        # Source type
         mimeData.setData("sourceType", "NavigationTreeView")
         return mimeData
 
@@ -485,10 +278,12 @@ class NavigationTreeModel(QAbstractItemModel):
 
         index = selectedIndexes[0]
 
+        node = None
         if not index.isValid():
             level = 0
         else:
-            level = self.getHierarchyLevel(index)
+            node = index.internalPointer()
+            level = node.level()
 
         if level == 0:
             conf = None
@@ -497,21 +292,19 @@ class NavigationTreeModel(QAbstractItemModel):
             conf = None
             item_type = "server"
         if level == 2:
-            parentIndex = index.parent()
-            serverId = parentIndex.data()
-            classId = index.data()
+            classId = node.display_name
+            serverId = node.parent.display_name
             conf = getClass(serverId, classId)
             item_type = conf.type
         elif level == 3:
-            deviceId = index.data()
+            deviceId = node.display_name
             conf = getDevice(deviceId)
             item_type = conf.type
 
         self.signalItemChanged.emit(item_type, conf)
 
     def updateAlarmIndicators(self, device_id, alarm_type):
-        index = self.findIndex(device_id)
-        node = index.internalPointer()
+        node = self.tree.find(device_id)
         self.beginResetModel()
         node.alarm_type = alarm_type
         self.endResetModel()

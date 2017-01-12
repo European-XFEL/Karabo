@@ -127,7 +127,7 @@ class NavigationTreeView(QTreeView):
         if not index.isValid():
             return NavigationItemTypes.UNDEFINED
 
-        level = self.model().getHierarchyLevel(index)
+        level = index.internalPointer().level()
         if level == 0:
             return NavigationItemTypes.HOST
         elif level == 1:
