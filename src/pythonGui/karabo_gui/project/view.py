@@ -120,12 +120,17 @@ class ProjectView(QTreeView):
             return
 
         if parent_project is not None:
+            # Check for modififications before closing
+            if show_save_project_message(project):
+                if not save_project(project):
+                    return
             # A subproject
             if project in parent_project.subprojects:
-                if show_save_project_message(project):
-                    if not save_project(project):
-                        return
                 parent_project.subprojects.remove(project)
         else:
+            # Check for modififications before closing
+            if show_save_project_message(self.model().traits_data_model):
+                if not save_project(self.model().traits_data_model):
+                    return
             # The master project
             self.model().traits_data_model = None
