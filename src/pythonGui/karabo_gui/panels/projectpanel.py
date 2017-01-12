@@ -19,7 +19,7 @@ from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.project.api import ProjectView
 from karabo_gui.project.dialog.project_handle import (
     LoadProjectDialog, NewProjectDialog)
-from karabo_gui.project.utils import save_project
+from karabo_gui.project.utils import maybe_save_modified_project, save_project
 from karabo_gui.singletons.api import get_db_conn
 from karabo_gui.util import getOpenFileName
 
@@ -123,6 +123,11 @@ def _project_load_handler(item_model):
     # XXX: Hardcoding of the domain must be replaced with user selection!
     from karabo_gui.project.api import TEST_DOMAIN
 
+    # Check for modififications before showing dialog
+    traits_data_model = item_model.traits_data_model
+    if not maybe_save_modified_project(traits_data_model):
+        return
+
     dialog = LoadProjectDialog()
     result = dialog.exec()
     if result == QDialog.Accepted:
@@ -141,10 +146,16 @@ def _old_project_load_handler(item_model):
 
     :param item_model: The `ProjectViewItemModel` of the `ProjectView`
     """
+    # Check for modififications before showing dialog
+    traits_data_model = item_model.traits_data_model
+    if not maybe_save_modified_project(traits_data_model):
+        return
+
     fn = getOpenFileName(caption='Load Old Project',
                          filter='Legacy Karabo Projects (*.krb)')
     if not fn:
         return
+
     project = OldProject(fn)
     project.unzip()
     model, _ = convert_old_project(project)
@@ -159,6 +170,11 @@ def _project_new_handler(item_model):
 
     :param item_model: The `ProjectViewItemModel` of the `ProjectView`
     """
+    # Check for modififications before showing dialog
+    traits_data_model = item_model.traits_data_model
+    if not maybe_save_modified_project(traits_data_model):
+        return
+
     dialog = NewProjectDialog()
     if dialog.exec() == QDialog.Accepted:
         # This overwrites the current model
