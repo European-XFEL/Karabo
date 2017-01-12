@@ -29,7 +29,7 @@ class ProjectViewItemModel(QStandardItemModel):
 
         self.setHorizontalHeaderLabels(TABLE_HEADER_LABELS)
 
-    def cleanup_project(self):
+    def _cleanup_project(self):
         """ Clean up the ``self._traits_model`` properly which means trigger
         certain events"""
         if self._traits_model is None:
@@ -60,7 +60,7 @@ class ProjectViewItemModel(QStandardItemModel):
             # `clear()` removes the header data
             self.setHorizontalHeaderLabels(TABLE_HEADER_LABELS)
 
-        self.cleanup_project()
+        self._cleanup_project()
 
         self._traits_model = model
         if model is not None:
