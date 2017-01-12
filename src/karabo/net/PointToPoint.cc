@@ -1,6 +1,12 @@
 #include <sstream>
+#include <string>
+#include <unordered_set>
+
 #include <boost/asio.hpp>
-#include <karabo/log.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/thread/shared_mutex.hpp>
+
+#include "karabo/log.hpp"
 #include "utils.hh"
 #include "PointToPoint.hh"
 #include "EventLoop.hh"
@@ -16,7 +22,7 @@ namespace karabo {
 
         class PointToPoint::Producer : public boost::enable_shared_from_this<PointToPoint::Producer> {
 
-            typedef std::map<Channel::Pointer, std::set<std::string> > ChannelToSlotInstanceIds;
+            typedef std::map<karabo::net::Channel::Pointer, std::unordered_set<std::string> > ChannelToSlotInstanceIds;
 
         public:
 
@@ -63,7 +69,7 @@ namespace karabo {
             unsigned int m_port;
             Connection::Pointer m_connection;
             ChannelToSlotInstanceIds m_registeredChannels;
-            boost::mutex m_registeredChannelsMutex;
+            boost::shared_mutex m_registeredChannelsMutex;
 
         };
 
@@ -159,8 +165,9 @@ namespace karabo {
 
         void PointToPoint::Producer::channelErrorHandler(const ErrorCode& ec, const Channel::Pointer& channel) {
             {
-                boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
-                for (map<Channel::Pointer, std::set<string> >::iterator it = m_registeredChannels.begin(); it != m_registeredChannels.end(); ++it) {
+                // Could use shared_lock here and promote to unique_lock before erase...
+                boost::unique_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
+                for (ChannelToSlotInstanceIds::const_iterator it = m_registeredChannels.begin(); it != m_registeredChannels.end(); ++it) {
                     if (it->first.get() == channel.get()) {
                         m_registeredChannels.erase(it);
                         break;
@@ -180,8 +187,8 @@ namespace karabo {
             channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
             channel->setAsyncChannelPolicy(4, "LOSSLESS");
             channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
-            boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
-            m_registeredChannels[channel] = std::set<std::string>();
+            boost::unique_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
+            m_registeredChannels[channel] = std::unordered_set<std::string>();
         }
 
 
@@ -197,7 +204,7 @@ namespace karabo {
             const string& slotInstanceId = v[0];
             const string& command = v[1];
 
-            boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
+            boost::unique_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
             if (command == "SUBSCRIBE")
                 m_registeredChannels[channel].insert(slotInstanceId);
             else if (command == "UNSUBSCRIBE")
@@ -208,8 +215,8 @@ namespace karabo {
 
 
         void PointToPoint::Producer::stop() {
-            boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
-            for (map<Channel::Pointer, std::set<string> >::iterator it = m_registeredChannels.begin(); it != m_registeredChannels.end(); ++it) {
+            boost::unique_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
+            for (ChannelToSlotInstanceIds::const_iterator it = m_registeredChannels.begin(); it != m_registeredChannels.end(); ++it) {
                 const Channel::Pointer& channel = it->first;
                 channel->close();
             }
@@ -222,13 +229,16 @@ namespace karabo {
                                              const karabo::util::Hash::Pointer& header,
                                              const karabo::util::Hash::Pointer& body,
                                              int prio) {
-            boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
-            for (map<Channel::Pointer, std::set<string> >::iterator it = m_registeredChannels.begin(); it != m_registeredChannels.end(); ++it) {
+            // A read-only lock since content of m_registeredChannels is not changed:
+            boost::shared_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
+            for (ChannelToSlotInstanceIds::const_iterator it = m_registeredChannels.begin(); it != m_registeredChannels.end(); ++it) {
                 const Channel::Pointer& channel = it->first;
-                const std::set<std::string>& slotInstanceIds = it->second;
-                std::set<string>::iterator ii = slotInstanceIds.find(slotInstanceId);
+                const std::unordered_set<std::string>& slotInstanceIds = it->second;
+                auto ii = slotInstanceIds.find(slotInstanceId);
                 if (ii == slotInstanceIds.end()) continue;
                 try {
+                    // Concurrent writeAsync allowed since TcpChannel protects its queues itself.
+                    // ==> No need to promote lock to unique_lock.
                     channel->writeAsync(*header, *body, prio);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_LOG_FRAMEWORK_WARN << e;
@@ -244,16 +254,17 @@ namespace karabo {
                                                         const karabo::util::Hash::Pointer& message, int prio) {
             if (registeredSlots.empty()) return;
 
-            boost::mutex::scoped_lock lock(m_registeredChannelsMutex);
+            // A read-only lock since content of m_registeredChannels is not changed:
+            boost::shared_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
 
-            for (Producer::ChannelToSlotInstanceIds::const_iterator ii = m_registeredChannels.begin();
+            for (ChannelToSlotInstanceIds::const_iterator ii = m_registeredChannels.begin();
                  ii != m_registeredChannels.end(); ++ii) {
 
                 const Channel::Pointer& channel = ii->first;
-                const std::set<string>& slotInstanceIds = ii->second;
+                const std::unordered_set<string>& slotInstanceIds = ii->second;
                 std::map<std::string, std::set<std::string> > slotsToUse;
 
-                for (std::set<std::string>::const_iterator iii = slotInstanceIds.begin(); iii != slotInstanceIds.end(); ++iii) {
+                for (auto iii = slotInstanceIds.cbegin(); iii != slotInstanceIds.cend(); ++iii) {
                     const string& slotInstanceId = *iii;
                     std::map<std::string, std::set<std::string> >::iterator it = registeredSlots.find(slotInstanceId);
                     if (it == registeredSlots.end()) continue;
