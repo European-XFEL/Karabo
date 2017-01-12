@@ -190,6 +190,35 @@ void SignalSlotable_Test::testReceiveAsyncTimeout() {
 }
 
 
+void SignalSlotable_Test::testReceiveExceptions() {
+    // Testing the different kinds of exceptions
+    auto greeter = boost::make_shared<SignalSlotable>("greeter");
+    auto responder = boost::make_shared<SignalSlotable>("responder");
+    greeter->start();
+    responder->start();
+
+    auto replyString = [&responder](const std::string & q) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(10)); // little sleep for TimeoutException below
+        responder->reply(q + ", world!");
+    };
+    responder->registerSlot<std::string>(replyString, "slotAnswer");
+
+    // Trying to receive int where string comes gives CastException:
+    int resultInt;
+    CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(500).receive(resultInt),
+                         karabo::util::CastException);
+    // Trying to receive more items than come gives karabo::util::SignalSlotException:
+    std::string answer;
+    CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(500).receive(answer, resultInt),
+                         karabo::util::SignalSlotException);
+    // Too short timeout gives TimeoutException:
+    CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(1).receive(answer),
+                         karabo::util::TimeoutException);
+    // Finally no exception:
+    CPPUNIT_ASSERT_NO_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(500).receive(answer));
+
+}
+
 void SignalSlotable_Test::testMethod() {
 
     const std::string instanceId("SignalSlotDemo");
