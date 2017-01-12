@@ -10,7 +10,7 @@ from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
 
 from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
-from karabo_gui.project.utils import save_project, show_save_project_message
+from karabo_gui.project.utils import maybe_save_modified_project, save_project
 from karabo_gui.singletons.api import get_manager, get_project_model
 from .model.project import ProjectModelItem
 from .model.project_groups import ProjectSubgroupItem
@@ -121,16 +121,15 @@ class ProjectView(QTreeView):
 
         if parent_project is not None:
             # Check for modififications before closing
-            if show_save_project_message(project):
-                if not save_project(project):
-                    return
+            if not maybe_save_modified_project(project):
+                return
             # A subproject
             if project in parent_project.subprojects:
                 parent_project.subprojects.remove(project)
         else:
             # Check for modififications before closing
-            if show_save_project_message(self.model().traits_data_model):
-                if not save_project(self.model().traits_data_model):
-                    return
+            model = self.model().traits_data_model
+            if not maybe_save_modified_project(model):
+                return
             # The master project
             self.model().traits_data_model = None

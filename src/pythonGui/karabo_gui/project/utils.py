@@ -91,6 +91,19 @@ def show_save_project_message(project):
     return False
 
 
+def maybe_save_modified_project(project):
+    """Check modified flag of the ``project`` and offer saving via dialog
+    """
+    if project is None:
+        return True
+
+    if show_save_project_message(project):
+        if not save_project(project):
+            return False
+
+    return True
+
+
 def has_modified_children(model):
     """ Check whether there are still children which ``modified`` flag is still
     True
