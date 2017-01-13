@@ -150,6 +150,7 @@ bundle-install: bundle
 bundle-clean: clean
 	cd ../karathon; $(MAKE) clean CONF=$(CONF)
 	cd ../deviceServer; $(MAKE) clean CONF=$(CONF)
+	cd ../integrationTests; $(MAKE) clean CONF=$(CONF)
 	cd ../brokerMessageLogger; $(MAKE) clean CONF=$(CONF)
 	cd ../tools/dataLoggerIndex/idxview; $(MAKE) clean CONF=$(CONF)
 	cd ../tools/dataLoggerIndex/idxbuild; $(MAKE) clean CONF=$(CONF)
