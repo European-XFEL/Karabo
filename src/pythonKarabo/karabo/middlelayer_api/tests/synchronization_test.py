@@ -1,9 +1,10 @@
 from asyncio import CancelledError, coroutine
+from pint import DimensionalityError
 from unittest import main
 import time
 
 from .eventloop import async_tst, DeviceTest, sync_tst
-from karabo.middlelayer import background, gather, sleep, synchronous
+from karabo.middlelayer import background, gather, sleep, synchronous, unit
 
 
 class Tests(DeviceTest):
@@ -157,6 +158,13 @@ class Tests(DeviceTest):
         t = time.time()
         sleep(6)
         self.assertGreater(time.time() - t, 6)
+
+        t = time.time()
+        sleep(1 * unit.ms)
+        self.assertLess(time.time() - t, 0.8)
+
+        with self.assertRaises(DimensionalityError):
+            sleep(1 * unit.meter)
     test_sleep.slow = 1
 
     @async_tst
