@@ -62,6 +62,9 @@ get_project_model = _build_getter('project_model', '.singletons.project_model',
 get_manager = _build_getter('manager', '.singletons.manager', 'Manager')
 get_mediator = _build_getter('mediator', '.singletons.mediator', 'Mediator')
 get_network = _build_getter('network', '.singletons.network', 'Network')
+get_selection_tracker = _build_getter('selection',
+                                      '.singletons.selection_tracker',
+                                      'SelectionTracker')
 
 # XXX: To add: MainWindow instance, Topology object
 
