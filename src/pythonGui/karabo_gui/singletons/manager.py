@@ -17,7 +17,7 @@ from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QMessageBox
 
 from karabo.common.states import State
-from karabo.middlelayer import Hash, Schema, XMLWriter, XMLParser
+from karabo.middlelayer import Schema
 from karabo_gui.configuration import BulkNotifications
 from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
@@ -25,8 +25,7 @@ from karabo_gui.messagebox import MessageBox
 from karabo_gui.navigationtreemodel import NavigationTreeModel
 from karabo_gui.singletons.api import get_network
 from karabo_gui.topology import getClass
-from karabo_gui.util import (
-    getOpenFileName, getSaveFileName, getSchemaAttributeUpdates)
+from karabo_gui.util import getSchemaAttributeUpdates
 
 
 def handle_device_state_change(box, value, timestamp):
@@ -188,71 +187,6 @@ class Manager(QObject):
         data = {'configuration': conf}
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.ShowConfiguration, data))
-
-    def _currentConfigurationAndClassId(self):
-        """This function returns the configuration of the currently selected
-        device which can be part of the systemTopology.
-
-        Returns None, If no device is selected.
-        """
-        if self.systemTopology.currentIndex().isValid():
-            index = self.systemTopology.currentIndex()
-            indexInfo = self.systemTopology.indexInfo(index)
-            deviceId = indexInfo.get("deviceId")
-            classId = indexInfo.get("classId")
-            serverId = indexInfo.get("serverId")
-
-            if deviceId is not None and deviceId:
-                return self.deviceData[deviceId], classId
-            elif serverId is not None:
-                return self.serverClassData[serverId, classId], classId
-            else:
-                return None, None
-        else:
-            return None, None
-
-    def onOpenFromFile(self):
-        filename = getOpenFileName(caption="Open configuration",
-                                   filter="XML (*.xml)")
-        if not filename:
-            return
-
-        conf, classId = self._currentConfigurationAndClassId()
-        if conf is None:
-            MessageBox.showError("Configuration load failed")
-            return
-
-        r = XMLParser()
-        with open(filename, 'rb') as file:
-            config = r.read(file.read())
-
-        if classId not in config:
-            MessageBox.showError("Configuration load failed")
-            return
-        conf.fromHash(config[classId])
-
-    def onSaveToFile(self):
-        """This function saves the current configuration of a device to a file.
-        """
-        filename = getSaveFileName(caption="Save configuration as",
-                                   filter="Configuration (*.xml)",
-                                   suffix="xml")
-        if not filename:
-            return
-
-        conf, classId = self._currentConfigurationAndClassId()
-        if conf is None:
-            MessageBox.showError("Configuration save failed")
-            return
-
-        hsh, attrs = conf.toHash()
-        config = Hash(classId, hsh)
-        config[classId, ...] = attrs
-
-        # Save configuration to file
-        w = XMLWriter()
-        with open(filename, 'wb') as file:
-            w.writeToFile(config, file)
 
     def _deviceDataReceived(self):
         """Notify all listeners that some (class, schema, or config) data was

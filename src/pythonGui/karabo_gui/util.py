@@ -7,6 +7,7 @@ from PyQt4.QtGui import QDialog, QFileDialog
 
 from karabo.middlelayer import Hash, MetricPrefix, Unit
 import karabo_gui.globals as globals
+from karabo_gui.messagebox import MessageBox
 
 
 class SignalBlocker(object):
@@ -110,6 +111,52 @@ def getSchemaAttributeUpdates(schema, config):
         return attr_updates
 
     return None
+
+
+def loadConfigurationFromFile(configuration):
+    """Given a ``Configuration`` object instance. Read a configuration Hash
+    from an XML file and assign it to the object.
+    """
+    filename = getOpenFileName(caption="Open configuration",
+                               filter="XML (*.xml)")
+    if not filename:
+        return
+
+    if configuration is None or configuration.classId is None:
+        MessageBox.showError("Configuration load failed")
+        return
+
+    with open(filename, 'rb') as fp:
+        config = Hash.decode(fp.read(), 'XML')
+
+    classId = configuration.classId
+    if classId not in config:
+        MessageBox.showError("Configuration load failed")
+        return
+    configuration.fromHash(config[classId])
+
+
+def saveConfigurationToFile(configuration):
+    """This function saves the current configuration of a device to a file.
+    """
+    filename = getSaveFileName(caption="Save configuration as",
+                               filter="Configuration (*.xml)",
+                               suffix="xml")
+    if not filename:
+        return
+
+    if configuration is None or configuration.classId is None:
+        MessageBox.showError("Configuration save failed")
+        return
+
+    hsh, attrs = configuration.toHash()
+    classId = configuration.classId
+    config = Hash(classId, hsh)
+    config[classId, ...] = attrs
+
+    # Save configuration to file
+    with open(filename, 'wb') as fp:
+        fp.write(config.encode('XML'))
 
 
 @contextmanager
