@@ -45,6 +45,8 @@ def getClass(serverId, classId):
     if klass is None:
         path = "{}.{}".format(serverId, classId)
         klass = Configuration(path, 'class')
+        klass.serverId = serverId
+        klass.classId = classId
         manager.serverClassData[serverId, classId] = klass
 
     if klass.descriptor is None or klass.status not in ("requested", "schema"):
