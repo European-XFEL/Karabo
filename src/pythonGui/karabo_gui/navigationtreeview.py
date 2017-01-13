@@ -13,8 +13,6 @@ from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QHeaderView,
 
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
-                               register_for_broadcasts)
 from karabo_gui.singletons.api import get_manager
 from karabo_gui.treewidgetitems.popupwidget import PopupWidget
 
@@ -45,23 +43,6 @@ class NavigationTreeView(QTreeView):
         self.customContextMenuRequested.connect(
             self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
-
-        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
-        # not necessary for self due to the fact that the singleton mediator
-        # object and `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
-
-    def eventFilter(self, obj, event):
-        if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.ShowDevice:
-                data = event.data
-                self.selectItem(data.get('deviceId'))
-                return False
-            elif event.sender is KaraboEventSender.AlarmDeviceUpdate:
-                data = event.data
-                self.model().updateAlarmIndicators(
-                    data.get('deviceId'), data.get('alarm_type'))
-        return super(NavigationTreeView, self).eventFilter(obj, event)
 
     def _setupContextMenu(self):
         manager = get_manager()
@@ -127,7 +108,7 @@ class NavigationTreeView(QTreeView):
         if not index.isValid():
             return NavigationItemTypes.UNDEFINED
 
-        level = self.model().getHierarchyLevel(index)
+        level = index.internalPointer().level()
         if level == 0:
             return NavigationItemTypes.HOST
         elif level == 1:
@@ -148,12 +129,10 @@ class NavigationTreeView(QTreeView):
         return self.model().indexInfo(index)
 
     def findIndex(self, path):
-        # Find modelIndex via path
         return self.model().findIndex(path)
 
     def selectItem(self, path):
-        index = self.findIndex(path)
-        self.model().selectIndex(index)
+        self.model().selectPath(path)
 
     def clear(self):
         self.clearSelection()
