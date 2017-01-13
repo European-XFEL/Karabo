@@ -348,7 +348,7 @@ def _read_scenes(zf, projectConfig):
         title = s["filename"]
         data = zf.read("{}/{}".format(SCENES_KEY, title))
         scene_model = read_scene(BytesIO(data))
-        scene_model.title = title
+        scene_model.simple_name = title
         scenes.append(scene_model)
 
     return scenes

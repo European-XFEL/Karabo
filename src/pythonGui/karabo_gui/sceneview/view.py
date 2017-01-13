@@ -50,7 +50,6 @@ class SceneView(QWidget):
         layout.addWidget(self.overlay)
         layout.addWidget(self.inner)
 
-        self.title = None
         self.scene_model = None
         self.selection_model = SceneSelectionModel()
         self.workflow_model = SceneWorkflowModel()
