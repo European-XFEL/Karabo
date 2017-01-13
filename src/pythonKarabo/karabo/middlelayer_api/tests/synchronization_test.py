@@ -1,4 +1,4 @@
-from asyncio import CancelledError, coroutine
+from asyncio import CancelledError, coroutine, TimeoutError
 from pint import DimensionalityError
 from unittest import main
 import time
@@ -166,6 +166,21 @@ class Tests(DeviceTest):
         with self.assertRaises(DimensionalityError):
             sleep(1 * unit.meter)
     test_sleep.slow = 1
+
+    @sync_tst
+    def test_timeout(self):
+        t = time.time()
+        with self.assertRaises(TimeoutError):
+            sleep(10, timeout=0.01)
+        self.assertLess(time.time() - t, 9)
+
+        t = time.time()
+        with self.assertRaises(TimeoutError):
+            sleep(10, timeout=10 * unit.ms)
+        self.assertLess(time.time() - t, 1)
+
+        with self.assertRaises(DimensionalityError):
+            sleep(10, timeout=10 * unit.meter)
 
     @async_tst
     def test_synchronous_async(self):
