@@ -56,11 +56,6 @@ class SystemTreeNode(HasStrictTraits):
             temp = temp.parent
         return level
 
-    def print(self, indent=0):
-        for child in self.children:
-            print(" " * indent, child.display_name)
-            child.print(indent=indent + 2)
-
     def row(self):
         if not self.parent:
             return None

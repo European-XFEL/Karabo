@@ -56,10 +56,17 @@ class NavigationTreeModel(QAbstractItemModel):
     def eventFilter(self, obj, event):
         if isinstance(event, KaraboBroadcastEvent):
             sender = event.sender
+            data = event.data
             if sender is KaraboEventSender.StartMonitoringDevice:
-                self._toggleMonitoring(event.data.get('device_id', ''), True)
+                self._toggleMonitoring(data.get('device_id', ''), True)
             elif sender is KaraboEventSender.StopMonitoringDevice:
-                self._toggleMonitoring(event.data.get('device_id', ''), False)
+                self._toggleMonitoring(data.get('device_id', ''), False)
+            elif event.sender is KaraboEventSender.ShowDevice:
+                self.selectPath(data.get('deviceId'))
+            elif event.sender is KaraboEventSender.AlarmDeviceUpdate:
+                device_id = data.get('deviceId')
+                alarm_type = data.get('alarm_type')
+                self._updateAlarmIndicators(device_id, alarm_type)
             return False
         return super(NavigationTreeModel, self).eventFilter(obj, event)
 
@@ -303,15 +310,16 @@ class NavigationTreeModel(QAbstractItemModel):
 
         self.signalItemChanged.emit(item_type, conf)
 
-    def updateAlarmIndicators(self, device_id, alarm_type):
-        node = self.tree.find(device_id)
-        self.beginResetModel()
-        node.alarm_type = alarm_type
-        self.endResetModel()
-
     def _toggleMonitoring(self, device_id, monitoring):
         index = self.findIndex(device_id)
         if index is not None and index.isValid():
             assert index.internalPointer().monitoring != monitoring
             index.internalPointer().monitoring = monitoring
+            self.dataChanged.emit(index, index)
+
+    def _updateAlarmIndicators(self, device_id, alarm_type):
+        index = self.findIndex(device_id)
+        if index is not None and index.isValid():
+            node = index.internalPointer()
+            node.alarm_type = alarm_type
             self.dataChanged.emit(index, index)
