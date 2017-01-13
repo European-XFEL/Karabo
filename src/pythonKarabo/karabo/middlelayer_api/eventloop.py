@@ -391,8 +391,10 @@ class NoEventLoop(AbstractEventLoop):
         """The main synchronization routine
 
         This injects the coroutine *coro* into the event loop of the main
-        thread, with a *timeout*. If *wait* is true, we wait for the coroutine
-        to execute, otherwise we return a :class:`KaraboFuture`.
+        thread, with a *timeout*. If *timeout* is a :class:`KaraboValue` its
+        unit is used, otherwise it is in seconds. If *wait* is true, we wait
+        for the coroutine to execute, otherwise we return a
+        :class:`KaraboFuture`.
         """
 
         if isinstance(timeout, KaraboValue):
