@@ -15,8 +15,6 @@ class SceneModel(BaseProjectObjectModel):
     """
     # The version of the file data (from the scene file)
     file_format_version = Int(SCENE_FILE_VERSION, transient=True)
-    # The title of the scene XXX: Remove when the old project is dead!
-    title = String(transient=True)
     # Extra attributes from the SVG file that we want to preserve.
     extra_attributes = Dict(transient=True)
     # The width of the scene in pixels
