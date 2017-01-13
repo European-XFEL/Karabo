@@ -23,7 +23,7 @@ from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.navigationtreemodel import NavigationTreeModel
-from karabo_gui.singletons.api import get_network, get_project_model
+from karabo_gui.singletons.api import get_network
 from karabo_gui.topology import getClass
 from karabo_gui.util import (
     getOpenFileName, getSaveFileName, getSchemaAttributeUpdates)
@@ -59,8 +59,6 @@ class Manager(QObject):
 
         # Model for navigation views
         self.systemTopology = NavigationTreeModel(self)
-        self.systemTopology.selectionModel.selectionChanged.connect(
-            self.onNavigationTreeModelSelectionChanged)
 
         network = get_network()
         network.signalServerConnectionChanged.connect(
@@ -184,16 +182,6 @@ class Manager(QObject):
         if not isConnected:
             # Reset manager settings
             self.reset()
-
-    def onNavigationTreeModelSelectionChanged(self, selected, deselect):
-        """This slot is called whenever something of the navigation panel is
-        selected. If an item was selected, the selection of the project panel
-        is cleared.
-        """
-        if not selected.indexes():
-            return
-
-        get_project_model().q_selection_model.clear()
 
     def onShowConfiguration(self, conf):
         # Notify listeners
