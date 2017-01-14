@@ -5,6 +5,7 @@ from asyncio import (async, coroutine, get_event_loop, iscoroutine,
                      iscoroutinefunction)
 from functools import wraps
 
+from .basetypes import KaraboValue, unit_registry as unit
 from .eventloop import EventLoop, KaraboFuture, synchronize
 
 
@@ -63,8 +64,13 @@ def gather(*args, return_exceptions=False):
 def sleep(delay, result=None):
     """do nothing for *delay* seconds
 
+    if *delay* is a :cls:`~karabo.middlelayer.KaraboValue`, its unit is
+    respected.
+
     This method should be preferred over :func:`time.sleep`, as it is
     interruptable."""
+    if isinstance(delay, KaraboValue):
+        delay /= unit.second
     return asyncio.sleep(delay, result)
 
 
