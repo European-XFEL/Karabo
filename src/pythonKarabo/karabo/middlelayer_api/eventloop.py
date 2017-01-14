@@ -20,6 +20,7 @@ import traceback
 import weakref
 
 from . import openmq
+from .basetypes import KaraboValue, unit_registry as unit
 from .exceptions import KaraboError
 from .hash import Hash
 
@@ -390,9 +391,14 @@ class NoEventLoop(AbstractEventLoop):
         """The main synchronization routine
 
         This injects the coroutine *coro* into the event loop of the main
-        thread, with a *timeout*. If *wait* is true, we wait for the coroutine
-        to execute, otherwise we return a :class:`KaraboFuture`.
+        thread, with a *timeout*. If *timeout* is a :class:`KaraboValue` its
+        unit is used, otherwise it is in seconds. If *wait* is true, we wait
+        for the coroutine to execute, otherwise we return a
+        :class:`KaraboFuture`.
         """
+
+        if isinstance(timeout, KaraboValue):
+            timeout /= unit.second
         if self._cancelled:
             raise CancelledError
         loop = self._instance._ss.loop
