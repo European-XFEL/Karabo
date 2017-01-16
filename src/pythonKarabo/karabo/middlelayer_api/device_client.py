@@ -571,20 +571,8 @@ def _getDevice(deviceId, sync, Proxy=Proxy):
         yield from ret
         return ret
 
-    newdevice = instance._new_device_futures.setdefault(
-        deviceId, asyncio.Future())
-    getschema = asyncio.async(instance.call(deviceId, "slotGetSchema", False))
-    done, pend = yield from asyncio.wait([newdevice, getschema],
-                                         return_when=asyncio.FIRST_COMPLETED)
-    for p in pend:
-        p.cancel()
-    instance._new_device_futures.pop(deviceId, None)
-    if getschema in done:
-        schema, _ = getschema.result()
-    elif newdevice in done:
-        schema, _ = yield from instance.call(deviceId, "slotGetSchema", False)
-    else:
-        raise AssertionError("this should not happen")
+    schema, _ = yield from instance._call_once_alive(deviceId, "slotGetSchema",
+                                                     False)
 
     dict = _createProxyDict(schema.hash, "")
     Cls = type(schema.name, (Proxy,), dict)
