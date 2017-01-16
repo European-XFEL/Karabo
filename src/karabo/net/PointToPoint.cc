@@ -257,15 +257,15 @@ namespace karabo {
             // A read-only lock since content of m_registeredChannels is not changed:
             boost::shared_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
 
-            for (ChannelToSlotInstanceIds::const_iterator ii = m_registeredChannels.begin();
-                 ii != m_registeredChannels.end(); ++ii) {
+            for (ChannelToSlotInstanceIds::const_iterator mapItChannelSlotInstIds = m_registeredChannels.cbegin();
+                 mapItChannelSlotInstIds != m_registeredChannels.cend(); ++mapItChannelSlotInstIds) {
 
-                const Channel::Pointer& channel = ii->first;
-                const std::unordered_set<string>& slotInstanceIds = ii->second;
+                const Channel::Pointer& channel = mapItChannelSlotInstIds->first;
+                const std::unordered_set<string>& slotInstanceIds = mapItChannelSlotInstIds->second;
                 std::map<std::string, std::set<std::string> > slotsToUse;
 
-                for (auto iii = slotInstanceIds.cbegin(); iii != slotInstanceIds.cend(); ++iii) {
-                    const string& slotInstanceId = *iii;
+                for (auto iSlotInstId = slotInstanceIds.cbegin(); iSlotInstId != slotInstanceIds.cend(); ++iSlotInstId) {
+                    const string& slotInstanceId = *iSlotInstId;
                     std::map<std::string, std::set<std::string> >::iterator it = registeredSlots.find(slotInstanceId);
                     if (it == registeredSlots.end()) continue;
                     slotsToUse[slotInstanceId] = it->second;
