@@ -15,18 +15,19 @@ import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.singletons.api import get_manager, get_selection_tracker
 from karabo_gui.treewidgetitems.popupwidget import PopupWidget
+from karabo_gui.util import loadConfigurationFromFile, saveConfigurationToFile
 
 
 class NavigationTreeView(QTreeView):
     def __init__(self, parent):
         super(NavigationTreeView, self).__init__(parent)
+        self._current_configuration = None
 
         manager = get_manager()
         self.setModel(manager.systemTopology)
-        selectionModel = self.model().selectionModel
-        self.setSelectionModel(selectionModel)
-        selectionModel.selectionChanged.connect(self.onSelectionChanged)
+        self.setSelectionModel(self.model().selectionModel)
         self.model().modelReset.connect(self.expandAll)
+        self.model().signalItemChanged.connect(self.onSelectionChanged)
 
         self.header().setResizeMode(0, QHeaderView.ResizeToContents)
         self.header().setResizeMode(1, QHeaderView.Fixed)
@@ -47,8 +48,6 @@ class NavigationTreeView(QTreeView):
         self.setDragEnabled(True)
 
     def _setupContextMenu(self):
-        manager = get_manager()
-
         self.setContextMenuPolicy(Qt.CustomContextMenu)
 
         text = "About"
@@ -77,7 +76,7 @@ class NavigationTreeView(QTreeView):
         self.acOpenFromFile = QAction(icons.load, text, self)
         self.acOpenFromFile.setStatusTip(text)
         self.acOpenFromFile.setToolTip(text)
-        self.acOpenFromFile.triggered.connect(manager.onOpenFromFile)
+        self.acOpenFromFile.triggered.connect(self.onOpenFromFile)
         self.mDeviceItem.addAction(self.acOpenFromFile)
 
         self.mDeviceItem.addSeparator()
@@ -86,7 +85,7 @@ class NavigationTreeView(QTreeView):
         self.acSaveToFile = QAction(icons.saveAs, text, self)
         self.acSaveToFile.setStatusTip(text)
         self.acSaveToFile.setToolTip(text)
-        self.acSaveToFile.triggered.connect(manager.onSaveToFile)
+        self.acSaveToFile.triggered.connect(self.onSaveToFile)
         self.mDeviceItem.addAction(self.acSaveToFile)
 
         text = "Shutdown instance"
@@ -137,6 +136,7 @@ class NavigationTreeView(QTreeView):
         self.model().selectPath(path)
 
     def clear(self):
+        self._current_configuration = None
         self.clearSelection()
         self.model().clear()
 
@@ -178,12 +178,21 @@ class NavigationTreeView(QTreeView):
             self.acAbout.setVisible(True)
             self.mDeviceItem.exec_(QCursor.pos())
 
-    def onSelectionChanged(self, selected, deselect):
-        if not selected.indexes():
-            return
+    def onSelectionChanged(self, item_type, configuration):
+        """Called by the data model when an item is selected
+        """
+        self._current_configuration = configuration
 
         # Grab control of the global selection
         get_selection_tracker().grab_selection(self.model().selectionModel)
+
+    def onOpenFromFile(self):
+        if self._current_configuration is not None:
+            loadConfigurationFromFile(self._current_configuration)
+
+    def onSaveToFile(self):
+        if self._current_configuration is not None:
+            saveConfigurationToFile(self._current_configuration)
 
     def mimeData(self, items):
         return self.model().mimeData(items)
