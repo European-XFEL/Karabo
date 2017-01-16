@@ -17,6 +17,7 @@ class HydraulicValveWidget(VacuumWidget):
         State.CHANGING: 'hydraulic-valve-orange',
         State.ACTIVE: 'hydraulic-valve-green',
         State.PASSIVE: 'hydraulic-valve-yellow',
+        State.NORMAL: 'hydraulic-valve-yellow',
         State.ERROR: 'hydraulic-valve-red',
         State.UNKNOWN: 'hydraulic-valve'
     }

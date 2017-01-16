@@ -17,6 +17,7 @@ class ValveWidget(VacuumWidget):
         State.CHANGING: 'valve-orange',
         State.ACTIVE: 'valve-green',
         State.PASSIVE: 'valve-yellow',
+        State.NORMAL: 'valve-yellow',
         State.ERROR: 'valve-red',
         State.UNKNOWN: 'valve'
     }

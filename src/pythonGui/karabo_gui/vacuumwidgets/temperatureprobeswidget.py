@@ -17,6 +17,7 @@ class TemperatureProbeWidget(VacuumWidget):
         State.CHANGING: 'thermometer-orange',
         State.ACTIVE: 'thermometer-green',
         State.PASSIVE: 'thermometer-yellow',
+        State.NORMAL: 'thermometer-yellow',
         State.ERROR: 'thermometer-red',
         State.UNKNOWN: 'thermometer'
     }
