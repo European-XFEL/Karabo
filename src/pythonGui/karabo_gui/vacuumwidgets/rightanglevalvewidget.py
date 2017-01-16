@@ -17,6 +17,7 @@ class RightAngleValveWidget(VacuumWidget):
         State.CHANGING: 'rightangle-valve-orange',
         State.ACTIVE: 'rightangle-valve-green',
         State.PASSIVE: 'rightangle-valve-yellow',
+        State.NORMAL: 'rightangle-valve-yellow',
         State.ERROR: 'rightangle-valve-red',
         State.UNKNOWN: 'rightangle-valve'
     }

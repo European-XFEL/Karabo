@@ -17,6 +17,7 @@ class MaxiGaugeWidget(VacuumWidget):
         State.CHANGING: 'maxi-gauge-orange',
         State.ACTIVE: 'maxi-gauge-green',
         State.PASSIVE: 'maxi-gauge-yellow',
+        State.NORMAL: 'maxi-gauge-yellow',
         State.ERROR: 'maxi-gauge-red',
         State.UNKNOWN: 'maxi-gauge'
     }

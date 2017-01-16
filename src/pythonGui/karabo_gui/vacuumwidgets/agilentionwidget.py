@@ -9,6 +9,7 @@ class AgilentIonWidget(VacuumWidget):
         State.ACTIVE: 'agilent-pump-active',
         State.PASSIVE: 'agilent-pump-passive',
         State.INIT: 'agilent-pump-init',
+        State.NORMAL: 'agilent-pump-known',
         State.KNOWN: 'agilent-pump-known',
         State.ERROR: 'agilent-pump-error',
         State.UNKNOWN: 'agilent-pump-unknown',
