@@ -11,6 +11,7 @@ class LampWidget(VacuumWidget):
         State.STATIC: 'lamp-static',
         State.INIT: 'lamp-init',
         State.KNOWN: 'lamp-known',
+        State.NORMAL: 'lamp-known',
         State.ERROR: 'lamp-error',
         State.UNKNOWN: 'lamp-unknown',
         State.DISABLED: 'lamp-disabled'
