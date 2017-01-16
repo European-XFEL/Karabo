@@ -59,7 +59,7 @@ namespace karabo {
                                      const int timeToLive) {
 
             // This function will block in case no connection is available and return immediately otherwise
-            m_connection->waitForConnectionAvailable();
+            //            m_connection->waitForConnectionAvailable();
 
             std::vector<char> buffer;
             m_binarySerializer->save(body, buffer);
@@ -95,6 +95,7 @@ namespace karabo {
                 {
                     // Need to clear old handles
                     this->clearProducerHandles();
+                    m_connection->waitForConnectionAvailable();
                     // Next trial will re-cache all handles
                     m_mqStrand.post(bind_weak(&karabo::net::JmsProducer::asyncWrite, this, topic, header, body, priority, timeToLive));
                     break;
@@ -119,6 +120,7 @@ namespace karabo {
             std::pair<MQSessionHandle, MQDestinationHandle> handles = ensureProducerDestinationAvailable(topic);
             MQProducerHandle producerHandle;
 
+            m_connection->waitForConnectionAvailable();
 
             MQ_SAFE_CALL(MQCreateMessageProducerForDestination(handles.first, handles.second, &producerHandle));
             m_producers[topic] = producerHandle;
@@ -133,6 +135,7 @@ namespace karabo {
             ProducerDestinations::const_iterator it = m_producerDestinations.find(topic);
             if (it != m_producerDestinations.end()) return it->second;
 
+            m_connection->waitForConnectionAvailable();
 
             MQSessionHandle sessionHandle = ensureProducerSessionAvailable();
             MQDestinationHandle destinationHandle;
