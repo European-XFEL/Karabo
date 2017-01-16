@@ -13,7 +13,7 @@ from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QHeaderView,
 
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.singletons.api import get_manager
+from karabo_gui.singletons.api import get_manager, get_selection_tracker
 from karabo_gui.treewidgetitems.popupwidget import PopupWidget
 
 
@@ -23,7 +23,9 @@ class NavigationTreeView(QTreeView):
 
         manager = get_manager()
         self.setModel(manager.systemTopology)
-        self.setSelectionModel(self.model().selectionModel)
+        selectionModel = self.model().selectionModel
+        self.setSelectionModel(selectionModel)
+        selectionModel.selectionChanged.connect(self.onSelectionChanged)
         self.model().modelReset.connect(self.expandAll)
 
         self.header().setResizeMode(0, QHeaderView.ResizeToContents)
@@ -175,6 +177,13 @@ class NavigationTreeView(QTreeView):
             self.acKillDevice.setVisible(True)
             self.acAbout.setVisible(True)
             self.mDeviceItem.exec_(QCursor.pos())
+
+    def onSelectionChanged(self, selected, deselect):
+        if not selected.indexes():
+            return
+
+        # Grab control of the global selection
+        get_selection_tracker().grab_selection(self.model().selectionModel)
 
     def mimeData(self, items):
         return self.model().mimeData(items)
