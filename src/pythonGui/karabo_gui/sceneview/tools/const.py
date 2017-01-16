@@ -62,7 +62,6 @@ WIDGET_FACTORIES = {
     'AgilentIonWidget': VacuumWidgetModel,
     'CryoCoolerWidget': VacuumWidgetModel,
     'HydraulicValveWidget': VacuumWidgetModel,
-    'LampSmallWidget': VacuumWidgetModel,
     'LampWidget': VacuumWidgetModel,
     'MaxiGaugeWidget': VacuumWidgetModel,
     'MembranePumpWidget': VacuumWidgetModel,
