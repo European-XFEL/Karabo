@@ -242,7 +242,8 @@ class NavigationTreeModel(QAbstractItemModel):
                     return icons.deviceInstance
         elif column == 1 and role == Qt.DecorationRole:
             if hierarchyLevel == 3:
-                state = State.ERROR if node.status == 'error' else State.STATIC
+                state = State.ERROR if node.status == 'error' else State.ACTIVE
+                # XXX: Maybe show more color options in the future
                 return get_state_icon(state)
         elif column == 2 and role == Qt.DecorationRole:
             if hierarchyLevel == 3:
