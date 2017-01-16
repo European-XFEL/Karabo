@@ -20,6 +20,7 @@ from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.parametertreewidget import ParameterTreeWidget
 from karabo_gui.project.view import ProjectView
 from karabo_gui.singletons.api import get_manager
+from karabo_gui.util import loadConfigurationFromFile, saveConfigurationToFile
 
 
 class ConfigurationPanel(Dockable, QWidget):
@@ -227,13 +228,11 @@ class ConfigurationPanel(Dockable, QWidget):
         return super(ConfigurationPanel, self).eventFilter(obj, event)
 
     def setupActions(self):
-        manager = get_manager()
-
         text = "Open configuration from file (*.xml)"
         self.acOpenFromFile = QAction(icons.load, text, self)
         self.acOpenFromFile.setStatusTip(text)
         self.acOpenFromFile.setToolTip(text)
-        self.acOpenFromFile.triggered.connect(manager.onOpenFromFile)
+        self.acOpenFromFile.triggered.connect(self.onOpenFromFile)
 
         self.openMenu = QMenu()
         self.openMenu.addAction(self.acOpenFromFile)
@@ -250,7 +249,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acSaveToFile = QAction(icons.saveAs, text, self)
         self.acSaveToFile.setStatusTip(text)
         self.acSaveToFile.setToolTip(text)
-        self.acSaveToFile.triggered.connect(manager.onSaveToFile)
+        self.acSaveToFile.triggered.connect(self.onSaveToFile)
 
         self.saveMenu = QMenu()
         self.saveMenu.addAction(self.acSaveToFile)
@@ -608,6 +607,14 @@ class ConfigurationPanel(Dockable, QWidget):
         conf = self.sender().conf
         self.updateApplyAllActions(conf)
         self.updateResetAllActions(conf)
+
+    def onOpenFromFile(self):
+        if self.prevConfiguration is not None:
+            loadConfigurationFromFile(self.prevConfiguration)
+
+    def onSaveToFile(self):
+        if self.prevConfiguration is not None:
+            saveConfigurationToFile(self.prevConfiguration)
 
     def onApplyAll(self):
         self._getCurrentParameterEditor().onApplyAll()
