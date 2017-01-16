@@ -17,6 +17,7 @@ class MotorWidget(VacuumWidget):
         State.CHANGING: 'motor-orange',
         State.ACTIVE: 'motor-green',
         State.PASSIVE: 'motor-yellow',
+        State.NORMAL: 'motor-yellow',
         State.ERROR: 'motor-red',
         State.UNKNOWN: 'motor'
     }

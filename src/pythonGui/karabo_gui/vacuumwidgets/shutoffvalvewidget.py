@@ -17,6 +17,7 @@ class ShutOffValveWidget(VacuumWidget):
         State.CHANGING: 'shutoff-valve-orange',
         State.ACTIVE: 'shutoff-valve-green',
         State.PASSIVE: 'shutoff-valve-yellow',
+        State.NORMAL: 'shutoff-valve-yellow',
         State.ERROR: 'shutoff-valve-red',
         State.UNKNOWN: 'shutoff-valve'
     }
