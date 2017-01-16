@@ -173,7 +173,8 @@ namespace karabo {
 
 
         const char* Exception::what() const throw () {
-            return detailedMsg().c_str();
+            m_detailedMsg = detailedMsg();
+            return m_detailedMsg.c_str();
         }
 
 
