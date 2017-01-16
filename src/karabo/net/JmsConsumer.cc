@@ -42,8 +42,6 @@ namespace karabo {
 
         void JmsConsumer::readAsync(const MessageHandler handler) {
 
-            m_connection->waitForConnectionAvailable();
-
             // If readAsync is scheduled before the event-loop is started, corresponding writes
             // (that are also only scheduled) may be executed first once the event-loop is started.
             // Registering the consumers to the broker BEFORE the event-loop runs protects from message loss.
@@ -57,7 +55,6 @@ namespace karabo {
 
         void JmsConsumer::asyncConsumeMessage(const MessageHandler handler, const std::string& topic, const std::string& selector) {
 
-            m_connection->waitForConnectionAvailable();
             MQSessionHandle sessionHandle = this->ensureConsumerSessionAvailable(topic, selector);
             MQConsumerHandle consumerHandle = this->getConsumer(topic, selector);
 
@@ -117,6 +114,7 @@ namespace karabo {
                     { // Invalidate handles and re-post
                         // This function may be called concurrently, hence its thread-safe
                         this->clearConsumerHandles();
+                        m_connection->waitForConnectionAvailable();
                         m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
                                                   handler, topic, selector));
                         break;
@@ -138,6 +136,8 @@ namespace karabo {
 
             Consumers::const_iterator it = m_consumers.find(topic + selector);
             if (it != m_consumers.end()) return it->second;
+
+            m_connection->waitForConnectionAvailable();
 
             std::pair<MQSessionHandle, MQDestinationHandle> handles = this->ensureConsumerDestinationAvailable(topic, selector);
             MQConsumerHandle consumerHandle;
@@ -168,6 +168,8 @@ namespace karabo {
 
             ConsumerSessions::const_iterator it = m_consumerSessions.find(topic + selector);
             if (it != m_consumerSessions.end()) return it->second;
+
+            m_connection->waitForConnectionAvailable();
 
             MQSessionHandle consumerSessionHandle;
             MQ_SAFE_CALL(MQCreateSession(m_connection->m_connectionHandle,
