@@ -11,6 +11,7 @@
 #include "karabo/io/Input.hh"
 #include "karabo/io/TextSerializer.hh"
 #include "karabo/util/Schema.hh"
+#include "karabo/util/MetaTools.hh"
 
 #include "DataLogger.hh"
 
@@ -85,8 +86,6 @@ namespace karabo {
             input.get("deviceToBeLogged", m_deviceToBeLogged);
             // start "flush" actor ...
             input.get("flushInterval", m_flushInterval); // in seconds
-            m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
-            m_flushDeadline.async_wait(boost::bind(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
 
 
@@ -139,6 +138,9 @@ namespace karabo {
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "Data logging via p2p has been disabled for loggers!";
             }
+
+            m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
+            m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
 
 
@@ -353,7 +355,7 @@ namespace karabo {
             doFlush();
             // arm timer again
             m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
-            m_flushDeadline.async_wait(boost::bind(&DataLogger::flushActor, this, boost::asio::placeholders::error));
+            m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
 
 
