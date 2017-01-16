@@ -17,6 +17,7 @@ class PressureGaugeWidget(VacuumWidget):
         State.CHANGING: 'pressure-gauge-orange',
         State.ACTIVE: 'pressure-gauge-green',
         State.PASSIVE: 'pressure-gauge-yellow',
+        State.NORMAL: 'pressure-gauge-yellow',
         State.ERROR: 'pressure-gauge-red',
         State.UNKNOWN: 'pressure-gauge'
     }

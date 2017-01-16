@@ -205,6 +205,8 @@ class VacuumWidget(DisplayWidget):
             self._setPixmap(self.statePixmapName[State.ACTIVE])
         elif State(value).isDerivedFrom(State.PASSIVE):
             self._setPixmap(self.statePixmapName[State.PASSIVE])
+        elif State(value).isDerivedFrom(State.NORMAL):
+            self._setPixmap(self.statePixmapName[State.NORMAL])
         elif State(value) is State.ERROR:
             self._setPixmap(self.statePixmapName[State.ERROR])
         else:

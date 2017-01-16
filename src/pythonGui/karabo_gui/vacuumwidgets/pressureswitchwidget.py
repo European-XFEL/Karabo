@@ -17,6 +17,7 @@ class PressureSwitchWidget(VacuumWidget):
         State.CHANGING: 'pressure-switch-orange',
         State.ACTIVE: 'pressure-switch-green',
         State.PASSIVE: 'pressure-switch-yellow',
+        State.NORMAL: 'pressure-switch-yellow',
         State.ERROR: 'pressure-switch-red',
         State.UNKNOWN: 'pressure-switch'
     }

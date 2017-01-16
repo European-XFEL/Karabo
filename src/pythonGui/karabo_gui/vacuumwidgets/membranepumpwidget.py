@@ -17,6 +17,7 @@ class MembranePumpWidget(VacuumWidget):
         State.CHANGING: 'membrane-pump-orange',
         State.ACTIVE: 'membrane-pump-green',
         State.PASSIVE: 'membrane-pump-yellow',
+        State.NORMAL: 'membrane-pump-yellow',
         State.ERROR: 'membrane-pump-red',
         State.UNKNOWN: 'membrane-pump'
     }

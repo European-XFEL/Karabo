@@ -17,6 +17,7 @@ class TurboPumpWidget(VacuumWidget):
         State.CHANGING: 'turbo-pump-orange',
         State.ACTIVE: 'turbo-pump-green',
         State.PASSIVE: 'turbo-pump-yellow',
+        State.NORMAL: 'turbo-pump-yellow',
         State.ERROR: 'turbo-pump-red',
         State.UNKNOWN: 'turbo-pump'
     }
