@@ -251,6 +251,13 @@ namespace karathon {
             return this->DeviceClient::getOutputChannelSchema(deviceId, outputChannelName);
         }
 
+        bp::object getDataSourceSchemaAsHashPy(const std::string& dataSourceId, int access) {
+            ScopedGILRelease nogil;
+            karabo::util::Hash properties;
+            getDataSourceSchemaAsHash(dataSourceId, properties, access);
+            return bp::object(properties);
+        }
+        
         boost::shared_ptr<karathon::LockWrap> lockPy(const std::string& deviceId, bool recursive, int timeout) {
             //non waiting request for lock
 
