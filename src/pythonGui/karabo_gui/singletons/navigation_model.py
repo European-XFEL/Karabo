@@ -80,7 +80,7 @@ class NavigationTreeModel(QAbstractItemModel):
         return super(NavigationTreeModel, self).eventFilter(obj, event)
 
     def currentSelectionPath(self):
-        """Returns the current selection path, else None.
+        """Returns the current selection path, or '' if nothing is selected.
         """
         # Get last selection path
         selectedIndexes = self.selectionModel.selectedIndexes()

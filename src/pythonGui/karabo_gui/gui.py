@@ -41,6 +41,7 @@ def init(app):
 #        "margin-bottom: 0px;"
 #        "}")
 
+    # Initialize the Manager singleton
     get_manager()
     network = get_network()
 
