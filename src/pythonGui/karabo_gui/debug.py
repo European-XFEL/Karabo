@@ -1,3 +1,5 @@
+import inspect
+import os.path as op
 import pdb
 
 from PyQt4.QtCore import pyqtRemoveInputHook
@@ -8,3 +10,20 @@ def set_trace():
     """
     pyqtRemoveInputHook()
     pdb.set_trace()
+
+
+def print_stack_trace(num_frames=0):
+    """Print a stack trace, without requiring an exception to have been thrown.
+    """
+    frames = inspect.stack()
+    num_frames = num_frames if num_frames != 0 else (len(frames) - 1)
+    frames_subset = frames[1:1+num_frames]
+    try:
+        print()
+        for tup in frames_subset[::-1]:
+            fname, line, function, context = tup[1:-1]
+            print('{}:{}:{}\n{}'.format(op.basename(fname), function, line,
+                                        context[0].strip()))
+    finally:
+        del frames
+        del frames_subset
