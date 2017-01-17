@@ -116,6 +116,7 @@ class DeviceServer(SignalSlotable):
 
     @coroutine
     def _run(self, **kwargs):
+        yield from self.scanPlugins()
         yield from super(DeviceServer, self)._run(**kwargs)
 
         self._ss.enter_context(self.log.setBroker(self._ss))
@@ -123,7 +124,7 @@ class DeviceServer(SignalSlotable):
 
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
                       format(self.hostname))
-        async(self.scanPlugins())
+        async(self.scanPluginsLoop())
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
 
@@ -131,24 +132,31 @@ class DeviceServer(SignalSlotable):
         return self.hostname + "_Server_" + str(os.getpid())
 
     @coroutine
-    def scanPlugins(self):
+    def scanPluginsLoop(self):
+        """every 3 s, check whether there are new entry points"""
         while True:
-            entrypoints = yield from self.pluginLoader.update()
-            for ep in entrypoints:
-                if ep.name in self.plugins:
-                    continue
-                if (ep.name in self.deviceClasses.split(',')
-                        or not self.deviceClasses):
-                    try:
-                        self.plugins[ep.name] = (yield from get_event_loop().
-                                                 run_in_executor(None,
-                                                                 ep.load))
-                    except Exception:
-                        self.logger.exception(
-                            'Cannot load plugin "{}"'.format(ep.name))
-                    else:
-                        self.updateInstanceInfo(self.deviceClassesHash())
+            if (yield from self.scanPlugins()):
+                self.updateInstanceInfo(self.deviceClassesHash())
             yield from sleep(3)
+
+    @coroutine
+    def scanPlugins(self):
+        """load all available entry points, return whether new plugin found"""
+        changes = False
+        entrypoints = yield from self.pluginLoader.update()
+        for ep in entrypoints:
+            if ep.name in self.plugins:
+                continue
+            if (ep.name in self.deviceClasses.split(',') or
+                    not self.deviceClasses):
+                try:
+                    self.plugins[ep.name] = (yield from get_event_loop().
+                                             run_in_executor(None, ep.load))
+                    changes = True
+                except Exception:
+                    self.logger.exception(
+                        'Cannot load plugin "{}"'.format(ep.name))
+        return changes
 
     def errorFoundAction(self, m1, m2):
         self.log.ERROR("{} -- {}".format(m1,m2))
