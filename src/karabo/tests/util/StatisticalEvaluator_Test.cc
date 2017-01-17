@@ -6,7 +6,6 @@
  */
 
 #include "StatisticalEvaluator_Test.hh"
-#include <math.h>
 #include <karabo/util/TimePeriod.hh>
 #include <karabo/util/TimeDuration.hh>
 #include <karabo/util/TimeProfiler.hh>
@@ -201,7 +200,7 @@ void StatisticalEvaluator::testVariance() {
     double EPSILON = 0.0001;
     karabo::util::RollingWindowStatistics stat(5);
     stat.update(5);
-    CPPUNIT_ASSERT(isnan(stat.getRollingWindowVariance()));
+    CPPUNIT_ASSERT(std::isnan(stat.getRollingWindowVariance()));
     stat.update(0);
     CPPUNIT_ASSERT(fabs(stat.getRollingWindowVariance() - 12.5) < EPSILON);
     stat.update(-5);

@@ -163,6 +163,7 @@ namespace karabo {
 
             ExceptionInfo m_exceptionInfo;
             std::string m_exceptionText;
+            mutable std::string m_detailedMsg;
             static boost::mutex m_mutex;
             static std::vector<ExceptionInfo> m_trace;
             static std::map<void*, ExceptionHandler> m_exceptionHandlers;
