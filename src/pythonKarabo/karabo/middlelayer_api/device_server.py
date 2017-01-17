@@ -9,7 +9,7 @@ import numpy
 
 from .enums import AccessLevel, AccessMode, Assignment
 from .eventloop import EventLoop
-from .hash import Hash, String, Int32
+from .hash import Hash, Int32, String, VectorString
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
@@ -54,7 +54,7 @@ class DeviceServer(SignalSlotable):
         defaultValue="karabo.middlelayer_device",
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    deviceClasses = String(
+    deviceClasses = VectorString(
         displayedName="Device Classes",
         description="The device classes the server will manage",
         assignment=Assignment.OPTIONAL, defaultValue="",
@@ -143,19 +143,17 @@ class DeviceServer(SignalSlotable):
     def scanPlugins(self):
         """load all available entry points, return whether new plugin found"""
         changes = False
+        classes = set(self.deviceClasses)
         entrypoints = yield from self.pluginLoader.update()
         for ep in entrypoints:
-            if ep.name in self.plugins:
+            if ep.name in self.plugins or (classes and ep.name not in classes):
                 continue
-            if (ep.name in self.deviceClasses.split(',') or
-                    not self.deviceClasses):
-                try:
-                    self.plugins[ep.name] = (yield from get_event_loop().
-                                             run_in_executor(None, ep.load))
-                    changes = True
-                except Exception:
-                    self.logger.exception(
-                        'Cannot load plugin "{}"'.format(ep.name))
+            try:
+                self.plugins[ep.name] = (yield from get_event_loop().
+                                         run_in_executor(None, ep.load))
+                changes = True
+            except Exception:
+                self.logger.exception('Cannot load plugin "%s"', ep.name)
         return changes
 
     def errorFoundAction(self, m1, m2):
