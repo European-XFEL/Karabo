@@ -1646,7 +1646,9 @@ namespace karabo {
                         }
                         std::vector<std::string>& typesList = typesListN->getValue<std::vector<std::string> >();
                         typesList.push_back(desc.get<std::string>("type"));
-                        KARABO_LOG_DEBUG << "Clearing alarm condition " << it->getKey() << " -> " << desc.get<std::string>("type");
+                        std::string propertyDotSep(it->getKey());
+                        boost::replace_all(propertyDotSep, Validator::kAlarmParamPathSeparator, ".");
+                        KARABO_LOG_DEBUG << "Clearing alarm condition " << propertyDotSep << " -> " << desc.get<std::string>("type");
                     }
                 }
 

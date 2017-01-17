@@ -53,7 +53,7 @@ from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.events import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
     unregister_from_broadcasts)
-from karabo_gui.singletons.api import get_manager
+from karabo_gui.singletons.api import get_topology
 from karabo_gui.topology import getDevice
 import karabo_gui.schema as schema
 
@@ -409,15 +409,13 @@ class FromPropertyPopUp(QDialog):
         return super(FromPropertyPopUp, self).eventFilter(obj, event)
 
     def getCurrentDeviceInstances(self):
-        devicesHash = get_manager().systemHash["device"]
-        devices = []
-        for k, v, a in devicesHash.iterall():
-            if 'type' in a:
-                if a[
-                    'type'] == 'device' and "Gui" not in k and "Log" not in k\
-                        and "ProjectManager" not in k:
-                    devices.append(k)
-        return devices
+        def filter(dev_id, attributes):
+            if attributes.get('type') == 'device':
+                return ("Gui" not in dev_id and "Log" not in dev_id
+                        and "ProjectManager" not in dev_id)
+            return False
+
+        return get_topology().search_system_tree('device', filter)
 
     def deviceIdSelectionChanged(self, deviceId):
         self.propertyCombo.clear()
