@@ -11,7 +11,7 @@ def convert_old_project(old_project):
     """ Given an old Project object ``old_project``, create a ProjectModel
     object which is equivalent.
     """
-    devices, servers = _convert_devices(old_project.devices)
+    servers, devices, configs = _convert_devices(old_project.devices)
     project = ProjectModel(
         simple_name=old_project.name,
         macros=old_project.macros,
@@ -20,7 +20,7 @@ def convert_old_project(old_project):
         initialized=True
     )
 
-    return project, devices
+    return project, devices, configs
 
 # -----------------------------------------------------------------------------
 
@@ -32,6 +32,7 @@ def _convert_devices(old_devices):
     """
     dev_instances = defaultdict(list)
     devices = []
+    configs = []
 
     for dev in old_devices:
         if hasattr(dev, 'devices'):
@@ -44,15 +45,16 @@ def _convert_devices(old_devices):
         instance_model = DeviceInstanceModel(
             class_id=dev.classId, instance_id=dev.filename.split('.')[0],
             if_exists=dev.ifexists, configs=[config_model],
-            active_config_ref=(uuid, rev))
+            active_config_ref=(uuid, rev), initialized=True)
         dev_instances[dev.serverId].append(instance_model)
-        devices.append(config_model)
+        devices.append(instance_model)
+        configs.append(config_model)
 
     servers = [DeviceServerModel(server_id=server_id, devices=instances,
                                  initialized=True)
                for server_id, instances in dev_instances.items()]
 
-    return devices, servers
+    return servers, devices, configs
 
 
 def _convert_scenes(project, scenes):
