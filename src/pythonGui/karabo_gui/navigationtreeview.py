@@ -13,7 +13,8 @@ from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QHeaderView,
 
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.singletons.api import get_manager, get_selection_tracker
+from karabo_gui.singletons.api import (get_manager, get_selection_tracker,
+                                       get_navigation_model)
 from karabo_gui.treewidgetitems.popupwidget import PopupWidget
 from karabo_gui.util import loadConfigurationFromFile, saveConfigurationToFile
 
@@ -23,11 +24,11 @@ class NavigationTreeView(QTreeView):
         super(NavigationTreeView, self).__init__(parent)
         self._current_configuration = None
 
-        manager = get_manager()
-        self.setModel(manager.systemTopology)
-        self.setSelectionModel(self.model().selectionModel)
-        self.model().modelReset.connect(self.expandAll)
-        self.model().signalItemChanged.connect(self.onSelectionChanged)
+        model = get_navigation_model()
+        self.setModel(model)
+        self.setSelectionModel(model.selectionModel)
+        model.modelReset.connect(self.expandAll)
+        model.signalItemChanged.connect(self.onSelectionChanged)
 
         self.header().setResizeMode(0, QHeaderView.ResizeToContents)
         self.header().setResizeMode(1, QHeaderView.Fixed)

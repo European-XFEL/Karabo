@@ -1,34 +1,22 @@
 
-from .singletons.api import get_manager, get_network
+from .singletons.api import get_topology
 
 
 def getDevice(deviceId):
     """ Find the Device instance in the system topology with the ID `deviceId`.
     """
-    from .configuration import Configuration
-
-    manager = get_manager()
-    network = get_network()
-
-    device = manager.deviceData.get(deviceId)
-    if device is None:
-        device = Configuration(deviceId, 'device')
-        manager.deviceData[deviceId] = device
-        device.updateStatus()
-    if device.descriptor is None and device.status not in ("offline", "requested"):
-        network.onGetDeviceSchema(deviceId)
-        device.status = "requested"
-    return device
+    return get_topology().get_device(deviceId)
 
 
 def getDeviceBox(box):
-    """return a box that belongs to an active device
+    """Return a box that belongs to an active device
 
     if the box already is part of a running device, return it,
     if it is from a class in a project, return the corresponding
-    instantiated device's box. """
+    instantiated device's box.
+    """
     if box.configuration.type == "projectClass":
-        return getDevice(box.configuration.id).getBox(box.path)
+        return get_topology().get_device(box.configuration.id).getBox(box.path)
     return box
 
 
@@ -36,20 +24,4 @@ def getClass(serverId, classId):
     """ Find the class in the system topology from the server `serverId` with
     the ID `classId`.
     """
-    from .configuration import Configuration
-
-    manager = get_manager()
-    network = get_network()
-
-    klass = manager.serverClassData.get((serverId, classId))
-    if klass is None:
-        path = "{}.{}".format(serverId, classId)
-        klass = Configuration(path, 'class')
-        klass.serverId = serverId
-        klass.classId = classId
-        manager.serverClassData[serverId, classId] = klass
-
-    if klass.descriptor is None or klass.status not in ("requested", "schema"):
-        network.onGetClassSchema(serverId, classId)
-        klass.status = "requested"
-    return klass
+    return get_topology().get_class(serverId, classId)
