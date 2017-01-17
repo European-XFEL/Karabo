@@ -21,6 +21,9 @@ class ProjectDeviceInstance(HasStrictTraits):
     # The current configuration for this device
     current_configuration = Property(Instance(Configuration))
 
+    # An event which is triggered whenever the class schema changes
+    schema_updated = Event
+
     # An event which is triggered whenever the configuration is updated
     configuration_updated = Event
 
@@ -43,6 +46,8 @@ class ProjectDeviceInstance(HasStrictTraits):
         # Connect to signals
         class_config.signalNewDescriptor.connect(self._descriptor_change_slot)
         real_device.signalStatusChanged.connect(self._status_change_slot)
+        real_device.signalBoxChanged.connect(self._config_change_slot)
+        project_device.signalBoxChanged.connect(self._config_change_slot)
 
         if class_config.descriptor is not None:
             self._descriptor_change_slot(class_config)
@@ -54,6 +59,9 @@ class ProjectDeviceInstance(HasStrictTraits):
         self._class_config.signalNewDescriptor.disconnect(new_descriptor)
         status_changed = self._status_change_slot
         self._real_device.signalStatusChanged.disconnect(status_changed)
+        config_changed = self._config_change_slot
+        self._real_device.signalBoxChanged.disconnect(config_changed)
+        self._project_device.signalBoxChanged.disconnect(config_changed)
 
     def _get_current_configuration(self):
         """Traits Property getter for the current configuration
@@ -62,6 +70,13 @@ class ProjectDeviceInstance(HasStrictTraits):
             return self._real_device
 
         return self._project_device
+
+    def _config_change_slot(self):
+        """The (possibly) current ``Configuration`` object has been edited by
+        a user.
+        """
+        # Let the world know
+        self.configuration_updated = True
 
     def _descriptor_change_slot(self, config):
         """The global class has received a new schema which needs to be set
@@ -79,15 +94,12 @@ class ProjectDeviceInstance(HasStrictTraits):
         self._project_device.setDefault()
 
         # Let the world know
-        self.configuration_updated = True
+        self.schema_updated = True
 
     def _status_change_slot(self, status, error_flag):
         """The `_real_device` has changed its status. Check if it's online
         """
         self.online = self._real_device.isOnline()
-
-        # Let the world know
-        self.configuration_updated = True
 
 
 class SystemTopology(HasStrictTraits):
