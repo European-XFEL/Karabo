@@ -17,14 +17,10 @@ from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QMessageBox
 
 from karabo.common.states import State
-from karabo.middlelayer import Schema
-from karabo_gui.configuration import BulkNotifications
 from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.messagebox import MessageBox
-from karabo_gui.navigationtreemodel import NavigationTreeModel
-from karabo_gui.singletons.api import get_network
-from karabo_gui.topology import getClass
+from karabo_gui.singletons.api import get_network, get_topology
 from karabo_gui.util import getSchemaAttributeUpdates
 
 
@@ -56,67 +52,17 @@ class Manager(QObject):
     def __init__(self, parent=None):
         super(Manager, self).__init__(parent=parent)
 
-        # Model for navigation views
-        self.systemTopology = NavigationTreeModel(self)
+        # The system topology singleton
+        self._topology = get_topology()
 
         network = get_network()
         network.signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
         network.signalReceivedData.connect(self.onReceivedData)
 
-        # Sets all parameters to start configuration
-        self.reset()
-
-    # Sets all parameters to start configuration
-    def reset(self):
-        self.systemHash = None
-
-        # Map stores { (serverId, class), Configuration }
-        self.serverClassData = {}
-        # Map stores { (serverId, class), Schema }
-        self._immutableServerClassData = {}
-        # Map stores { deviceId, Configuration }
-        self.deviceData = {}
-
-    def _clearDeviceParameterPage(self, deviceId):
-        conf = self.deviceData.get(deviceId)
-        if conf is None:
-            return
-        # Clear corresponding parameter page
-        if conf.parameterEditor is not None:
-            conf.parameterEditor.clear()
-
-        if conf.descriptor is not None:
-            conf.redummy()
-
-    def _clearServerClassParameterPages(self, serverClassIds):
-        for serverClassId in serverClassIds:
-            conf = self.serverClassData.get(serverClassId)
-            if conf is None:
-                continue
-
-            # Clear corresponding parameter page
-            if conf.parameterEditor is not None:
-                conf.parameterEditor.clear()
-
-            if conf.descriptor is not None:
-                conf.redummy()
-
-    def _extractAlarmServices(self):
-        """ This method extracts the existing devices of type ``AlarmService``
-            of the ``self.systemHash`` and returns the instance ids in a list.
-        """
-        instanceIds = []
-        if 'device' in self.systemHash:
-            for deviceId, _, attrs in self.systemHash['device'].iterall():
-                classId = attrs.get("classId", "unknown-class")
-                if classId == 'AlarmService':
-                    instanceIds.append(deviceId)
-        return instanceIds
-
     def initDevice(self, serverId, classId, deviceId, config=None):
         # Use standard configuration for server/classId
-        conf = getClass(serverId, classId)
+        conf = self._topology.get_class(serverId, classId)
         if config is None:
             config, _ = conf.toHash()  # Ignore returned attributes
 
@@ -137,7 +83,7 @@ class Manager(QObject):
 
         # Compute a runtime schema from the configuration and an unmodified
         # copy of the device class schema.
-        baseSchema = self._immutableServerClassData[serverId, classId]
+        baseSchema = self._topology.get_schema(serverId, classId)
         schemaAttrUpdates = getSchemaAttributeUpdates(baseSchema, config)
 
         # Send signal to network
@@ -178,22 +124,15 @@ class Manager(QObject):
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.NetworkConnectStatus, {'status': isConnected}))
 
+        # Clear the system topology
         if not isConnected:
-            # Reset manager settings
-            self.reset()
+            self._topology.clear()
 
     def onShowConfiguration(self, conf):
         # Notify listeners
         data = {'configuration': conf}
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.ShowConfiguration, data))
-
-    def _deviceDataReceived(self):
-        """Notify all listeners that some (class, schema, or config) data was
-        received.
-        """
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.DeviceDataReceived, {}))
 
     def handle_log(self, messages):
         data = {'messages': messages}
@@ -204,30 +143,15 @@ class Manager(QObject):
         get_network()._handleBrokerInformation(**kwargs)
 
     def handle_systemTopology(self, systemTopology):
-        if self.systemHash is None:
-            self.systemHash = systemTopology
-        else:
-            self.systemHash.merge(systemTopology, "merge")
-        # Update navigation and project treemodel
-        self.systemTopology.updateData(systemTopology)
-        for v in self.deviceData.values():
-            v.updateStatus()
-        # Distribute current alarm service devices
-        instanceIds = self._extractAlarmServices()
-        if instanceIds:
-            data = {'instanceIds': instanceIds}
-            # Create KaraboBroadcastEvent
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.ShowAlarmServices, data))
+        self._topology.update(systemTopology)
 
-        instanceIds = self._extractRunConfigurators()
-        if instanceIds:
-            data = {'instanceIds': instanceIds}
-            # Create KaraboBroadcastEvent
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.AddRunConfigurator, data))
+        # Tell the GUI about various devices that are alive
+        self._broadcast_about_instances('AlarmService',
+                                        KaraboEventSender.ShowAlarmServices)
+        self._broadcast_about_instances('RunConfigurator',
+                                        KaraboEventSender.AddRunConfigurator)
 
-        # Tell the world about new devices
+        # Tell the world about new devices/servers
         devices, servers = _extract_topology_devices(systemTopology)
         data = {'devices': devices, 'servers': servers}
         broadcast_event(KaraboBroadcastEvent(
@@ -239,16 +163,15 @@ class Manager(QObject):
         pass
 
     def handle_instanceNew(self, topologyEntry):
-        """ This function gets the configuration for a new instance.
+        """This function receives the configuration for a new instance.
 
         If the instance already exists in the central hash, it is first
-        removed from there. """
-        # Check for existing stuff and remove
-        detect_instances = self.systemTopology.detectExistingInstances
-        instanceIds, serverClassIds = detect_instances(topologyEntry)
+        removed from there.
+        """
+        existing_devices = self._topology.instance_new(topologyEntry)
 
         log_messages = []
-        for inst_id in instanceIds:
+        for inst_id in existing_devices:
             message = {
                 'timestamp': datetime.now().isoformat(),
                 'type': 'INFO',
@@ -257,101 +180,54 @@ class Manager(QObject):
                             'which is coming up now.').format(inst_id)
             }
             log_messages.append(message)
-
-            # Clear deviceId parameter page, if existent
-            self._clearDeviceParameterPage(inst_id)
-
         self.handle_log(log_messages)
-        self._clearServerClassParameterPages(serverClassIds)
 
-        # Update system topology with new configuration
-        self.handle_instanceUpdated(topologyEntry)
-        # Distribute new alarm service devices
-        instanceIds = self._extractAlarmServices()
-        if instanceIds:
-            data = {'instanceIds': instanceIds}
-            # Create KaraboBroadcastEvent
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.ShowAlarmServices, data))
+        # Tell the GUI about various devices that are alive
+        self._broadcast_about_instances('AlarmService',
+                                        KaraboEventSender.ShowAlarmServices)
+        self._broadcast_about_instances('RunConfigurator',
+                                        KaraboEventSender.AddRunConfigurator)
 
     def handle_instanceUpdated(self, topologyEntry):
-        self.handle_systemTopology(topologyEntry)
-        # Topology changed so send new class schema requests
-        if "server" in topologyEntry:
-            # Request schema for already viewed classes, if a server is new
-            for k in self.serverClassData:
-                getClass(k[0], k[1])
+        self._topology.instance_updated(topologyEntry)
 
     def handle_instanceGone(self, instanceId, instanceType):
-        """ Remove instanceId from central hash and update
+        """ Remove ``instance_id`` from topology and update
         """
-        removed_devices, removed_servers = [], []
+        def _instance_finder(instance_ids):
+            """If `instanceId` is in the list, make it the only item.
+            Otherwise, make sure the list is empty (so nothing will be
+            broadcast).
+            """
+            if instanceId in instance_ids:
+                instance_ids.clear()
+                instance_ids.append(instanceId)
+            else:
+                instance_ids.clear()
 
-        if instanceType in ("device", "macro"):
-            # Distribute gone alarm service devices
-            instanceIds = self._extractAlarmServices()
-            if instanceId in instanceIds:
-                data = {'instanceIds': [instanceId]}
-                # Create KaraboBroadcastEvent
-                broadcast_event(KaraboBroadcastEvent(
-                    KaraboEventSender.RemoveAlarmServices, data))
+        # Tell the GUI about various devices that are now gone
+        self._broadcast_about_instances(
+            'AlarmService', KaraboEventSender.RemoveAlarmServices,
+            transform=_instance_finder)
+        self._broadcast_about_instances(
+            'RunConfigurator', KaraboEventSender.RemoveRunConfigurator,
+            transform=_instance_finder)
 
-            instanceIds = self._extractRunConfigurators()
-            if instanceId in instanceIds:
-                data = {'instanceIds': [instanceId]}
-                # Create KaraboBroadcastEvent
-                broadcast_event(KaraboBroadcastEvent(
-                    KaraboEventSender.RemoveRunConfigurator, data))
+        # Update the system topology
+        devices, servers = self._topology.instance_gone(instanceId,
+                                                        instanceType)
+        # Broadcast the change to listeners
+        data = {'devices': devices, 'servers': servers}
+        broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.SystemTopologyUpdate, data))
 
-            device = self.deviceData.get(instanceId)
-            if device is not None:
-                device.status = "offline"
-                if device.descriptor is not None:
-                    device.redummy()
-                # Clear corresponding parameter page
-                if device.parameterEditor is not None:
-                    device.parameterEditor.clear()
-
-            # Update system topology
-            self.systemTopology.eraseDevice(instanceId)
-
-            # Record departing devices
-            path = instanceType + "." + instanceId
-            attributes = self.systemHash.getAttributes(path)
-            classId = attributes.get("classId", "unknown-class")
-            removed_devices.append((instanceId, classId, 'offline'))
-
-            # Remove device from systemHash
-            if self.systemHash is not None and path in self.systemHash:
-                del self.systemHash[path]
-        elif instanceType == "server":
-            # Update system topology
-            serverClassIds = self.systemTopology.eraseServer(instanceId)
-            self._clearServerClassParameterPages(serverClassIds)
-
-            # Record departing servers
-            path = "server." + instanceId
-            attributes = self.systemHash.getAttributes(path)
-            host = attributes.get('host', 'UNKNOWN')
-            removed_servers.append((instanceId, host, 'offline'))
-
-            # Remove server from systemHash
-            if self.systemHash is not None and path in self.systemHash:
-                del self.systemHash[path]
-
-            for v in self.deviceData.values():
-                v.updateStatus()
-
+        if instanceType == 'server':
             # Clear corresponding parameter pages
             # TODO: We need to find all the Configuration objects in the open
             # projects and clear their parameter editor objects if they happen
             # to belong to the server that was just removed!
             # This was formerly handled by the old ProjectModel class
-
-        # Broadcast the change to listeners
-        data = {'devices': removed_devices, 'servers': removed_servers}
-        broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.SystemTopologyUpdate, data))
+            pass
 
     def handle_attributesUpdated(self, reply):
         instanceId = reply["instanceId"]
@@ -359,66 +235,41 @@ class Manager(QObject):
         self.handle_deviceSchema(instanceId, schema)
 
     def handle_classSchema(self, serverId, classId, schema):
-        key = (serverId, classId)
-        if key not in self.serverClassData:
-            print('Unrequested schema for classId {} arrived'.format(classId))
+        conf = self._topology.class_schema_updated(serverId, classId, schema)
+        if conf is None:
             return
-
-        # Save a clean copy
-        schemaCopy = Schema()
-        schemaCopy.copy(schema)
-        self._immutableServerClassData[key] = schemaCopy
-
-        conf = self.serverClassData[key]
-        if conf.descriptor is not None:
-            return
-
-        if len(schema.hash) > 0:
-            # Set schema only, if data is available
-            conf.setSchema(schema)
-            # Set default values for configuration
-            conf.setDefault()
 
         # Notify ConfigurationPanel
+        # XXX: This causes a lot of stress on the GUI. Is it needed?
         self.onShowConfiguration(conf)
         # Trigger update scenes
-        self._deviceDataReceived()
+        self._device_data_received()
 
     def handle_deviceSchema(self, deviceId, schema):
-        if deviceId not in self.deviceData:
-            print('Unrequested schema for device {} arrived'.format(deviceId))
+        conf = self._topology.device_schema_updated(deviceId, schema)
+        if conf is None:
             return
 
-        conf = self.deviceData[deviceId]
-        # Schema already existent -> schema injected
-        if conf.status in ("alive", "monitoring"):
-            get_network().onGetDeviceConfiguration(self.deviceData[deviceId])
-
-        # Add configuration with schema to device data
-        conf.setSchema(schema)
+        # Listen to the Configuration object's state changes
         box_signal = conf.boxvalue.state.signalUpdateComponent
         box_signal.connect(handle_device_state_change)
 
         self.onShowConfiguration(conf)
         # Trigger update scenes
-        self._deviceDataReceived()
+        self._device_data_received()
 
     def handle_deviceConfiguration(self, deviceId, configuration):
-        device = self.deviceData.get(deviceId)
-        if device is None or device.descriptor is None:
+        device = self._topology.device_config_updated(deviceId, configuration)
+        if device is None:
             return
 
-        with BulkNotifications(device):
-            device.fromHash(configuration)
-        if device.status == "schema":
-            device.status = "alive"
+        if device.status in ('alive', 'monitoring'):
             # Trigger update scenes - to draw possible Workflow Connections
-            self._deviceDataReceived()
-        if device.status == "alive" and device.visible > 0:
-            device.status = "monitoring"
+            self._device_data_received()
 
     def handle_propertyHistory(self, deviceId, property, data):
-        box = self.deviceData[deviceId].getBox(property.split("."))
+        device = self._topology.get_device(deviceId)
+        box = device.getBox(property.split("."))
         box.signalHistoricData.emit(box, data)
 
     # ---------------------------------------------------------------------
@@ -510,12 +361,13 @@ class Manager(QObject):
             KaraboEventSender.NotificationMessage, data))
 
     def handle_networkData(self, name, data):
-        deviceId, property = name.split(":")
-        self.deviceData[deviceId].getBox(
-            property.split(".")).boxvalue.schema.fromHash(data)
+        device_id, prop_path = name.split(":")
+        device = self._topology.get_device(device_id)
+        box = device.getBox(prop_path.split("."))
+        box.boxvalue.schema.fromHash(data)
 
     def handle_initReply(self, deviceId, success, message):
-        device = self.deviceData.get(deviceId)
+        device = self._topology.get_device(deviceId)
         if device is not None:
             data = {'device': device, 'success': success, 'message': message}
             # Create KaraboBroadcastEvent
@@ -543,48 +395,37 @@ class Manager(QObject):
                 broadcast_event(KaraboBroadcastEvent(
                     KaraboEventSender.AlarmDeviceUpdate, data))
 
-    def _extractRunConfigurators(self):
-        """ This method extracts the existing devices of type
-            ``RunConfigurator of the ``self.systemHash`` and returns the
-            instance ids in a list.
-         """
-        instanceIds = []
-        if 'device' in self.systemHash:
-            for deviceId, _, attrs in self.systemHash['device'].iterall():
-                classId = attrs.get("classId", "unknown-class")
-                if classId == 'RunConfigurator':
-                    instanceIds.append(deviceId)
-        return instanceIds
-
     def handle_runConfigSourcesInGroup(self, reply):
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.RunConfigSourcesUpdate, reply))
 
-# ------------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # Private methods
 
-    def get_server_status(self, server_id):
-        """Get status string for given server and return it
+    def _broadcast_about_instances(self, class_id, event_type, transform=None):
+        """Search the system topology for devices of a given `class_id` and
+        then (possibly) transform that list of device IDs with a `transform`
+        function. If the transformed list has a length > 0, broadcast an event
+        containing the remaining IDs.
         """
-        try:
-            server_key = 'server.{}'.format(server_id)
-            attrs = self.systemHash[server_key, ...]
-            status = attrs.get('status', 'ok')
-        except KeyError:
-            status = 'offline'
+        def filter(dev_id, attrs):
+            dev_class_id = attrs.get('classId', 'UNKNOWN')
+            return dev_class_id == class_id
 
-        return status
+        instance_ids = self._topology.search_system_tree('device', filter)
+        if transform is not None:
+            transform(instance_ids)
+        if instance_ids:
+            data = {'instanceIds': instance_ids}
+            # Tell the world
+            broadcast_event(KaraboBroadcastEvent(event_type, data))
 
-    def get_device_status(self, device_id):
-        """Get status string for given device and return it
+    def _device_data_received(self):
+        """Notify all listeners that some (class, schema, or config) data was
+        received.
         """
-        try:
-            device_key = 'device.{}'.format(device_id)
-            attrs = self.systemHash[device_key, ...]
-            status = attrs.get('status', 'ok')
-        except KeyError:
-            status = 'offline'
-
-        return status
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.DeviceDataReceived, {}))
 
 
 # ------------------------------------------------------------------
