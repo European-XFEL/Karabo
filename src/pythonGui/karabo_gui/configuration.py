@@ -9,7 +9,7 @@ from PyQt4.QtCore import pyqtSignal
 from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
                                broadcast_event)
 from karabo_gui.schema import Schema, Box
-from karabo_gui.singletons.api import get_manager, get_network
+from karabo_gui.singletons.api import get_manager, get_network, get_topology
 
 
 class BulkNotifications(object):
@@ -96,17 +96,15 @@ class Configuration(Box):
 
     def updateStatus(self):
         """ determine the status from the system topology """
-        manager = get_manager()
-        if manager.systemHash is None:
+        topology = get_topology()
+        if not topology.online:
             self.status = "offline"
             return
 
         for k in ("device", "macro", "server"):
-            try:
-                attrs = manager.systemHash[k][self.id, ...]
-            except KeyError:
-                continue
-            if len(attrs) < 1:
+            path = '{}.{}'.format(k, self.id)
+            attrs = topology.get_attributes(path)
+            if not attrs:
                 continue
             break
         else:
