@@ -25,7 +25,7 @@ from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import save_object
-from karabo_gui.singletons.api import get_manager
+from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.topology import getClass, getDevice
 from .bases import BaseProjectTreeItem
 
@@ -95,8 +95,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         item = QStandardItem(self.model.instance_id)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         # Get current status of device
-        manager = get_manager()
-        self.model.status = manager.get_device_status(self.model.instance_id)
+        self.model.status = _get_device_status(self.model.instance_id)
         icon = get_project_device_status_icon(DeviceStatus(self.model.status))
         item.setIcon(icon)
         item.setEditable(False)
@@ -385,3 +384,13 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     def shutdown_device(self, show_confirm=True):
         device = self.model
         get_manager().shutdownDevice(device.instance_id, show_confirm)
+
+
+# ----------------------------------------------------------------------
+
+def _get_device_status(device_id):
+    topology = get_topology()
+    attributes = topology.get_attributes('device.{}'.format(device_id))
+    if attributes is not None:
+        return attributes.get('status', 'ok')
+    return 'offline'

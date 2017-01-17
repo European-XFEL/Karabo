@@ -70,7 +70,7 @@ class SystemTree(HasStrictTraits):
     root = Instance(SystemTreeNode, args=())
 
     # A context manager to enter when manipulating the tree
-    update_context = Any
+    update_context = Instance(object)
 
     def clear_all(self):
         """Removes all data from the model.
@@ -166,7 +166,7 @@ class SystemTree(HasStrictTraits):
         """
         class Dummy(object):
             def __enter__(self):
-                return
+                return self
 
             def __exit__(self, *exc):
                 return False

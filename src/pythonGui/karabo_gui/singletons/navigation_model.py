@@ -9,7 +9,7 @@ hierarchical navigation in a treeview."""
 from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
                           Qt, pyqtSignal)
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
-from traits.api import HasStrictTraits, WeakRef
+from traits.api import HasStrictTraits, String, WeakRef
 
 from karabo.common.states import State
 from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
@@ -17,8 +17,8 @@ from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
 import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
 from karabo_gui.indicators import ALARM_ICONS, get_state_icon, NONE
+from karabo_gui.singletons.api import get_topology
 from karabo_gui.topology import getClass, getDevice
-from karabo_gui.system_tree import SystemTree
 
 
 class _UpdateContext(HasStrictTraits):
@@ -26,12 +26,20 @@ class _UpdateContext(HasStrictTraits):
     know that it's dealing with a Qt QAbstractItemModel.
     """
     item_model = WeakRef(QAbstractItemModel)
+    last_selection = String
 
     def __enter__(self):
+        self.last_selection = self.item_model.currentSelectionPath()
         self.item_model.beginResetModel()
+        return self
 
     def __exit__(self, *exc):
         self.item_model.endResetModel()
+
+        if self.last_selection != '':
+            self.item_model.selectPath(self.last_selection)
+        self.last_selection = ''
+
         return False
 
 
@@ -42,7 +50,8 @@ class NavigationTreeModel(QAbstractItemModel):
         super(NavigationTreeModel, self).__init__(parent)
 
         # Our hierarchy tree
-        self.tree = SystemTree(update_context=_UpdateContext(item_model=self))
+        self.tree = get_topology().system_tree
+        self.tree.update_context = _UpdateContext(item_model=self)
 
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self, self)
@@ -70,22 +79,6 @@ class NavigationTreeModel(QAbstractItemModel):
             return False
         return super(NavigationTreeModel, self).eventFilter(obj, event)
 
-    def updateData(self, config):
-        """This function is called whenever the system topology has changed
-        and the view needs an update.
-
-        The incoming ``config`` represents the system topology.
-        """
-        # Get last selection path
-        lastSelectionPath = self.currentSelectionPath()
-
-        # Modify the tree
-        self.tree.update(config)
-
-        # Set last selection path
-        if lastSelectionPath is not None:
-            self.selectPath(lastSelectionPath)
-
     def currentSelectionPath(self):
         """Returns the current selection path, else None.
         """
@@ -94,7 +87,7 @@ class NavigationTreeModel(QAbstractItemModel):
         if selectedIndexes:
             return selectedIndexes[0].internalPointer().path
         else:
-            return None
+            return ''
 
     def has(self, path):
         return self.tree.find(path) is not None
@@ -127,7 +120,7 @@ class NavigationTreeModel(QAbstractItemModel):
     def globalAccessLevelChanged(self):
         lastSelectionPath = self.currentSelectionPath()
         self.modelReset.emit()
-        if lastSelectionPath is not None:
+        if lastSelectionPath != '':
             self.selectPath(lastSelectionPath)
 
     def clear(self):

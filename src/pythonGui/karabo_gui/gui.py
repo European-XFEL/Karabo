@@ -6,7 +6,7 @@
 
 from traceback import print_exception, format_exception
 
-from karabo_gui.singletons.api import get_network
+from karabo_gui.singletons.api import get_network, get_manager
 
 # Global MainWindow singleton
 window = None
@@ -41,6 +41,7 @@ def init(app):
 #        "margin-bottom: 0px;"
 #        "}")
 
+    get_manager()
     network = get_network()
 
     global window

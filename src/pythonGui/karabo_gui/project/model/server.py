@@ -20,7 +20,7 @@ from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
 from karabo_gui.project.utils import save_object
-from karabo_gui.singletons.api import get_manager
+from karabo_gui.singletons.api import get_manager, get_topology
 from .bases import BaseProjectGroupItem
 
 
@@ -66,8 +66,7 @@ class DeviceServerModelItem(BaseProjectGroupItem):
         item = QStandardItem(self.model.server_id)
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         # Get current status of server
-        manager = get_manager()
-        self.model.status = manager.get_server_status(self.model.server_id)
+        self.model.status = _get_server_status(self.model.server_id)
         icon = get_project_server_status_icon(DeviceStatus(self.model.status))
         item.setIcon(icon)
         item.setEditable(False)
@@ -184,3 +183,13 @@ class DeviceServerModelItem(BaseProjectGroupItem):
     def _shutdown_devices(self):
         for dev_inst_item in self.children:
             dev_inst_item.shutdown_device(show_confirm=False)
+
+
+# ----------------------------------------------------------------------
+
+def _get_server_status(server_id):
+    topology = get_topology()
+    attributes = topology.get_attributes('server.{}'.format(server_id))
+    if attributes is not None:
+        return attributes.get('status', 'ok')
+    return 'offline'
