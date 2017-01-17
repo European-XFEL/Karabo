@@ -9,7 +9,7 @@ import numpy
 
 from .enums import AccessLevel, AccessMode, Assignment
 from .eventloop import EventLoop
-from .hash import Hash, XMLParser, saveToFile, String, Int32
+from .hash import Hash, String, Int32
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
@@ -159,7 +159,7 @@ class DeviceServer(SignalSlotable):
         return changes
 
     def errorFoundAction(self, m1, m2):
-        self.log.ERROR("{} -- {}".format(m1,m2))
+        self.log.ERROR("{} -- {}".format(m1, m2))
 
     def endErrorAction(self):
         pass
@@ -211,7 +211,7 @@ class DeviceServer(SignalSlotable):
         return classid, config['_deviceId_'], config
 
     def parseOld(self, hash):
-         # Input 'config' parameter comes from GUI or DeviceClient
+        # Input 'config' parameter comes from GUI or DeviceClient
         classid = next(iter(hash))
         self.log.INFO("Trying to start {}...".format(classid))
         self.log.DEBUG("with the following configuration:\n{}".format(hash))
@@ -282,7 +282,7 @@ def main(args=None):
     loop = EventLoop()
     set_event_loop(loop)
 
-    # This function parses a dict with potentially nested values 
+    # This function parses a dict with potentially nested values
     # ('.' seperated) and adds them flat as attribtues to the class
     def get(para):
         d = DeviceServer
@@ -291,7 +291,7 @@ def main(args=None):
         return d
 
     # The fromstring function takes over proper type conversion
-    params = Hash({k: get(k).fromstring(v) 
+    params = Hash({k: get(k).fromstring(v)
                    for k, v in (a.split("=", 2) for a in args[1:])})
     server = DeviceServer(params)
     if server:
