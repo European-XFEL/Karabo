@@ -17,7 +17,6 @@ from karabo.common.project.api import (
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
-from karabo_gui.configuration import Configuration
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
 from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
                                KaraboEventSender)
@@ -26,22 +25,8 @@ from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager, get_topology
-from karabo_gui.topology import getClass, getDevice
+from karabo_gui.system_topology import ProjectDeviceInstance
 from .bases import BaseProjectTreeItem
-
-
-def destroy_device_shadow(shadow_model):
-    """Destroys a DeviceInstanceModelItem by disconnecting any connected
-    Qt signals.
-    """
-    if shadow_model.project_device is not None:
-        config = shadow_model.project_device
-        config.signalBoxChanged.disconnect(
-            shadow_model._active_config_changed_in_configurator)
-
-    if shadow_model._pending_descriptor_config is not None:
-        conf = shadow_model._pending_descriptor_config
-        conf.signalNewDescriptor.disconnect(shadow_model._new_descriptor)
 
 
 class DeviceInstanceModelItem(BaseProjectTreeItem):
@@ -51,14 +36,8 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     model = Instance(DeviceInstanceModel)
     active_config = Property(Instance(DeviceConfigurationModel))
 
-    # Refers to the configuration box of type 'device'
-    real_device = Instance(Configuration, allow_none=True)
-    # Refers to the configuration box of type 'projectClass'
-    project_device = Instance(Configuration, allow_none=True)
-
-    # When `project_device` is first initialized, we receive a descriptor
-    # asynchronously. We need to track this for Qt signal hygene
-    _pending_descriptor_config = Instance(Configuration, allow_none=True)
+    # A proxy for online and offline device configurations
+    project_device = Instance(ProjectDeviceInstance, allow_none=True)
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
@@ -105,8 +84,8 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     def single_click(self, parent_project, parent=None):
         config = self._get_active_config()
         if config is not None and config.configuration is not None:
-            configuration = self._get_device_entry(parent_project, config)
-            self._broadcast_item_click(configuration)
+            self._init_project_device(parent_project, config)
+            self._broadcast_item_click()
 
     @on_trait_change("model.modified,model.instance_id")
     def update_ui_label(self):
@@ -116,24 +95,13 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
             return
         self.set_qt_item_text(self.qt_item, self.model.instance_id)
 
-    @on_trait_change("model.status")
-    def status_change(self):
-        if not self.is_ui_initialized():
-            return
-        status_enum = DeviceStatus(self.model.status)
-        icon = get_project_device_status_icon(status_enum)
-        if icon is not None:
-            self.qt_item.setIcon(icon)
-
-        self._broadcast_item_click(self._get_current_configuration())
-
     @on_trait_change("model.active_config_ref")
     def active_config_ref_change(self):
         if not self.is_ui_initialized():
             return
-        self._broadcast_item_click(self._get_current_configuration())
+        self._broadcast_item_click()
 
-    def _get_device_entry(self, project, active_config):
+    def _init_project_device(self, project, active_config):
         """ Return the ``Configuration`` box for the device instance id
         depending on the fact whether the device is running or not
 
@@ -142,87 +110,22 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
 
         :return The device configuration which is currently available
         """
-        device = self.model
-        config_changed_slot = self._active_config_changed_in_configurator
-        if self.real_device is None:
-            self.real_device = getDevice(device.instance_id)
         if self.project_device is None:
-            self.project_device = Configuration(device.instance_id,
-                                                'projectClass')
+            device = self.model
             server_model = find_parent_object(device, project,
                                               DeviceServerModel)
-            self.project_device.serverId = server_model.server_id
-            self.project_device.classId = active_config.class_id
-            # Get class configuration
-            conf = getClass(server_model.server_id, active_config.class_id)
-            if conf.descriptor is None:
-                # Connect to signal
-                self._pending_descriptor_config = conf
-                conf.signalNewDescriptor.connect(self._new_descriptor)
-            else:
-                self._set_descriptor(conf)
-            # Track configuration changes
-            self.project_device.signalBoxChanged.connect(config_changed_slot)
+            self.project_device = get_topology().get_project_device(
+                device.instance_id, active_config.class_id,
+                server_model.server_id)
 
-        return self._get_current_configuration()
-
-    def _get_current_configuration(self):
-        """ Return the current configuration depending on the status"""
-        if self.real_device.isOnline():
-            return self.real_device
-
-        return self.project_device
-
-    def _new_descriptor(self, conf):
-        """The global ``Configuration`` has received a new class schema which
-        needs to be set for the ``project_device`` as well
-        """
-        self._set_descriptor(conf)
-        # Disconnect signal again
-        assert self._pending_descriptor_config is not None
-        self._pending_descriptor_config = None
-        conf.signalNewDescriptor.disconnect(self._new_descriptor)
-
-    def _set_descriptor(self, conf):
-        if self.project_device.descriptor is not None:
-            self.project_device.redummy()
-        self.project_device.descriptor = conf.descriptor
-
-        if self.real_device.descriptor is None:
-            self.real_device.descriptor = conf.descriptor
-
-        # Update active configuration hash
-        self._merge_hash()
-
-        # Notify configuration panel
-        self._broadcast_show_configuration(self.project_device)
-
-    def _merge_hash(self):
-        """Merge the active configuration Hash into the existing"""
-        if self.project_device.descriptor is None:
-            return
-
-        # Set default values for configuration
-        self.project_device.setDefault()
-        config = self._get_active_config()
-        if config is not None and config.configuration is not None:
-            self.project_device.fromHash(config.configuration)
-
-    def _broadcast_item_click(self, configuration):
-        if configuration is None:
-            return
+    def _broadcast_item_click(self):
         # XXX the configurator expects the clicked configuration before
         # it can show the actual configuration
-        data = {'configuration': configuration}
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.TreeItemSingleClick, data))
-
-    def _broadcast_show_configuration(self, device_box):
-        """ Notify configuration panel to show configuration of ``device_box``
-        """
-        data = {'configuration': device_box}
+        data = {'configuration': self.project_device.current_configuration}
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.ShowConfiguration, data))
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.TreeItemSingleClick, data))
 
     def _get_active_config(self):
         """ Return the active device configuration object
@@ -265,20 +168,35 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
             return
 
         device = self.model
-        configuration = self._get_current_configuration()
-        if configuration is not None:
-            configuration.fromHash(config_model.configuration)
+        configuration = self.project_device.current_configuration
+        configuration.fromHash(config_model.configuration)
         device.active_config_ref = (config_model.uuid, config_model.revision)
 
+    @on_trait_change('project_device.configuration_updated')
     def _active_config_changed_in_configurator(self):
-        """ This slot it connected to the signal
-        ``Configuration.signalBoxChanged`` which gets called whenever a box
-        related to a widget is edited
+        """Called whenever a box related to a widget is edited
         """
-        hsh, _ = self.project_device.toHash()  # Ignore returned attributes
+        configuration = self.project_device.current_configuration
+        if configuration.descriptor is None:
+            return
+
+        hsh, _ = configuration.toHash()  # Ignore returned attributes
         config = self._get_active_config()
         if config is not None:
             config.configuration = hsh
+
+        self._broadcast_item_click()
+
+    @on_trait_change("project_device.online")
+    def status_change(self):
+        if not self.is_ui_initialized():
+            return
+
+        configuration = self.project_device.current_configuration
+        status_enum = DeviceStatus(configuration.status)
+        icon = get_project_device_status_icon(status_enum)
+        if icon is not None:
+            self.qt_item.setIcon(icon)
 
     # ----------------------------------------------------------------------
     # action handlers
