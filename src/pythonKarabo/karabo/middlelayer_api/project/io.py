@@ -4,16 +4,19 @@ from io import StringIO
 from lxml import etree
 
 from karabo.common.project.api import (
-    PROJECT_DB_TYPE_DEVICE, PROJECT_DB_TYPE_DEVICE_SERVER,
-    PROJECT_DB_TYPE_MACRO, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
-    PROJECT_OBJECT_CATEGORIES, DeviceConfigurationModel, DeviceServerModel,
-    MacroModel, ProjectModel,
-    read_device_server, write_device_server)
+    PROJECT_DB_TYPE_DEVICE_INSTANCE, PROJECT_DB_TYPE_DEVICE_CONFIG,
+    PROJECT_DB_TYPE_DEVICE_SERVER, PROJECT_DB_TYPE_MACRO,
+    PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE, PROJECT_OBJECT_CATEGORIES,
+    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
+    MacroModel, ProjectModel, read_device, read_device_server, write_device,
+    write_device_server
+)
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.hash import Hash
 
 _ITEM_TYPES = {
-    DeviceConfigurationModel: PROJECT_DB_TYPE_DEVICE,
+    DeviceConfigurationModel: PROJECT_DB_TYPE_DEVICE_CONFIG,
+    DeviceInstanceModel: PROJECT_DB_TYPE_DEVICE_INSTANCE,
     DeviceServerModel: PROJECT_DB_TYPE_DEVICE_SERVER,
     MacroModel: PROJECT_DB_TYPE_MACRO,
     ProjectModel: PROJECT_DB_TYPE_PROJECT,
@@ -38,7 +41,8 @@ def read_project_model(io_obj, existing=None):
     :return: A project data model object (device config, scene, macro, etc.)
     """
     factories = {
-        PROJECT_DB_TYPE_DEVICE: _device_reader,
+        PROJECT_DB_TYPE_DEVICE_INSTANCE: _device_reader,
+        PROJECT_DB_TYPE_DEVICE_CONFIG: _device_config_reader,
         PROJECT_DB_TYPE_DEVICE_SERVER: _device_server_reader,
         PROJECT_DB_TYPE_MACRO: _macro_reader,
         PROJECT_DB_TYPE_PROJECT: _project_reader,
@@ -64,7 +68,8 @@ def write_project_model(model):
     :return: An XML bytestring representation of the object
     """
     writers = {
-        PROJECT_DB_TYPE_DEVICE: _device_writer,
+        PROJECT_DB_TYPE_DEVICE_INSTANCE: write_device,
+        PROJECT_DB_TYPE_DEVICE_CONFIG: _device_config_writer,
         PROJECT_DB_TYPE_DEVICE_SERVER: write_device_server,
         PROJECT_DB_TYPE_MACRO: _macro_writer,
         PROJECT_DB_TYPE_PROJECT: _project_writer,
@@ -146,6 +151,26 @@ def _device_reader(io_obj, existing, metadata):
     """ A reader for device configurations
     """
     traits = _db_metadata_reader(metadata)
+    existing = _check_preexisting(existing, DeviceInstanceModel, traits)
+
+    device = read_device(io_obj)
+    device.trait_set(**traits)
+
+    # Now copy into the existing object
+    existing.class_id = device.class_id
+    existing.instance_id = device.instance_id
+    existing.if_exists = device.if_exists
+    existing.configs[:] = device.configs[:]
+    existing.active_config_ref = device.active_config_ref
+    existing.initialized = True
+
+    return existing
+
+
+def _device_config_reader(io_obj, existing, metadata):
+    """ A reader for device configurations
+    """
+    traits = _db_metadata_reader(metadata)
     dev = _check_preexisting(existing, DeviceConfigurationModel, traits)
 
     hsh = Hash.decode(io_obj.read(), 'XML')
@@ -205,7 +230,7 @@ def _project_reader(io_obj, existing, metadata):
     project = _check_preexisting(existing, ProjectModel, traits)
 
     hsh = Hash.decode(io_obj.read(), 'XML')
-    project_hash = hsh['project']
+    project_hash = hsh[PROJECT_DB_TYPE_PROJECT]
     traits.update({k: _get_items(project_hash, k)
                    for k in PROJECT_OBJECT_CATEGORIES})
     project.trait_set(initialized=True, **traits)
@@ -246,7 +271,7 @@ def _model_db_metadata(model):
     return attrs
 
 
-def _device_writer(model):
+def _device_config_writer(model):
     """ A writer for device configurations
     """
     hsh = Hash(model.class_id, model.configuration)
@@ -256,7 +281,7 @@ def _device_writer(model):
 def _macro_writer(model):
     """ A writer for macros
     """
-    element = etree.Element('macro')
+    element = etree.Element(PROJECT_DB_TYPE_MACRO)
     code = model.code.encode('utf-8')
     element.text = base64.b64encode(code)
     return etree.tostring(element, encoding='unicode')
@@ -271,5 +296,5 @@ def _project_writer(model):
         project[item_type] = [Hash('uuid', obj.uuid, 'revision', obj.revision)
                               for obj in objects]
 
-    hsh = Hash('project', project)
+    hsh = Hash(PROJECT_DB_TYPE_PROJECT, project)
     return hsh.encode('XML').decode()
