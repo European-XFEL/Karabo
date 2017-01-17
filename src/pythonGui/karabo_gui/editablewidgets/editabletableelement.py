@@ -410,7 +410,7 @@ class FromPropertyPopUp(QDialog):
 
     def getCurrentDeviceInstances(self):
         def filter(dev_id, attributes):
-            if attributes.get('type', 'UNKNOWN') == 'device':
+            if attributes.get('type') == 'device':
                 return ("Gui" not in dev_id and "Log" not in dev_id
                         and "ProjectManager" not in dev_id)
             return False

@@ -59,9 +59,7 @@ class SystemTopology(HasStrictTraits):
         try:
             return self._system_hash[topology_path, ...]
         except KeyError:
-            pass
-
-        return None
+            return None
 
     def get_class(self, server_id, class_id):
         """Return the ``Configuration`` for a given class on a given server
