@@ -84,8 +84,10 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
     def single_click(self, parent_project, parent=None):
         config = self._get_active_config()
         if config is not None and config.configuration is not None:
-            self._init_project_device(parent_project, config)
-            self._broadcast_item_click()
+            if self.project_device is None:
+                self._init_project_device(parent_project, config)
+            else:
+                self._broadcast_item_click()
 
     @on_trait_change("model.modified,model.instance_id")
     def update_ui_label(self):
@@ -114,9 +116,11 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
             device = self.model
             server_model = find_parent_object(device, project,
                                               DeviceServerModel)
-            self.project_device = get_topology().get_project_device(
+            proj_device = get_topology().get_project_device(
                 device.instance_id, active_config.class_id,
-                server_model.server_id)
+                server_model.server_id
+            )
+            self.project_device = proj_device
 
     def _broadcast_item_click(self):
         # XXX the configurator expects the clicked configuration before
@@ -172,6 +176,13 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         configuration.fromHash(config_model.configuration)
         device.active_config_ref = (config_model.uuid, config_model.revision)
 
+    @on_trait_change('project_device.schema_updated,project_device.online')
+    def _device_schema_changed(self):
+        """Called when a new Schema arrives for `project_device` or it changes
+        between online <-> offline.
+        """
+        self._broadcast_item_click()
+
     @on_trait_change('project_device.configuration_updated')
     def _active_config_changed_in_configurator(self):
         """Called whenever a box related to a widget is edited
@@ -185,8 +196,6 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         if config is not None:
             config.configuration = hsh
 
-        self._broadcast_item_click()
-
     @on_trait_change("project_device.online")
     def status_change(self):
         if not self.is_ui_initialized():
@@ -197,6 +206,9 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         icon = get_project_device_status_icon(status_enum)
         if icon is not None:
             self.qt_item.setIcon(icon)
+
+        # XXX: If we are currently showing in the configuration panel, then
+        # The view there should get our now online/offline configuration
 
     # ----------------------------------------------------------------------
     # action handlers
