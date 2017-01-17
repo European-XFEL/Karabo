@@ -33,9 +33,9 @@ def _build_getter(key, modulename, klassname):
     the singleton. This uses ``importlib.import_module`` and ``getattr`` to
     resolve the class object.
 
-    Finally, each singleton's class is expected to be derived from QObject and
-    take a single keyword argument ``parent`` which in our case will always be
-    the global ``QApplication`` instance.
+    Finally, each singleton's class is expected to have an __init__ method
+    which takes a single keyword argument ``parent`` which in our case will
+    always be the global ``QApplication`` instance.
     """
     def creator():
         module = importlib.import_module(modulename, 'karabo_gui')
@@ -59,14 +59,18 @@ get_db_conn = _build_getter('db_conn', '.project.db_connection',
                             'ProjectDatabaseConnection')
 get_project_model = _build_getter('project_model', '.singletons.project_model',
                                   'ProjectViewItemModel')
+get_navigation_model = _build_getter('navigation_model',
+                                     '.singletons.navigation_model',
+                                     'NavigationTreeModel')
 get_manager = _build_getter('manager', '.singletons.manager', 'Manager')
 get_mediator = _build_getter('mediator', '.singletons.mediator', 'Mediator')
 get_network = _build_getter('network', '.singletons.network', 'Network')
 get_selection_tracker = _build_getter('selection',
                                       '.singletons.selection_tracker',
                                       'SelectionTracker')
+get_topology = _build_getter('topology', '.system_topology', 'SystemTopology')
 
-# XXX: To add: MainWindow instance, Topology object
+# XXX: To add: MainWindow instance (and others?)
 
 # Hide our implementation detail
 del _build_getter

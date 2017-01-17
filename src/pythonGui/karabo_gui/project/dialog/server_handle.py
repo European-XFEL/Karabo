@@ -8,9 +8,9 @@ import os.path as op
 from PyQt4 import uic
 from PyQt4.QtGui import QDialog
 
-from karabo.middlelayer import AccessLevel, Hash
+from karabo.middlelayer import AccessLevel
 import karabo_gui.globals as krb_globals
-from karabo_gui.singletons.api import get_manager
+from karabo_gui.singletons.api import get_topology
 
 
 class ServerHandleDialog(QDialog):
@@ -52,11 +52,8 @@ class ServerHandleDialog(QDialog):
         """
         available_hosts = set()
         available_servers = set()
-        servers = get_manager().systemHash.get('server', Hash())
-        for server_id, _, attrs in servers.iterall():
-            if not attrs:
-                continue
 
+        def filter(server_id, attrs):
             visibility = AccessLevel(attrs['visibility'])
             if visibility < krb_globals.GLOBAL_ACCESS_LEVEL:
                 available_servers.add(server_id)
@@ -64,6 +61,9 @@ class ServerHandleDialog(QDialog):
             host = attrs.get('host', '')
             if host:
                 available_hosts.add(host)
+            return False
+
+        get_topology().search_system_tree('server', filter)
         return available_hosts, available_servers
 
     @property
