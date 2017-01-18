@@ -26,10 +26,10 @@ from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.system_topology import ProjectDeviceInstance
-from .bases import BaseProjectTreeItem
+from .bases import BaseProjectGroupItem
 
 
-class DeviceInstanceModelItem(BaseProjectTreeItem):
+class DeviceInstanceModelItem(BaseProjectGroupItem):
     """ A wrapper for DeviceInstanceModel objects
     """
     # Redefine model with the correct type
@@ -53,7 +53,7 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         delete_action.triggered.connect(partial(self._delete_device,
                                                 parent_project))
         save_action = QAction('Save', menu)
-        save_action.triggered.connect(self._save_device)
+        save_action.triggered.connect(partial(save_object, self.model))
         instantiate_action = QAction('Instantiate', menu)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      parent_project))
@@ -71,13 +71,15 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         return menu
 
     def create_qt_item(self):
-        item = QStandardItem(self.model.instance_id)
+        item = QStandardItem()
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         # Get current status of device
         self.model.status = _get_device_status(self.model.instance_id)
         icon = get_project_device_status_icon(DeviceStatus(self.model.status))
         item.setIcon(icon)
         item.setEditable(False)
+        for child in self.children:
+            item.appendRow(child.qt_item)
         self.set_qt_item_text(item, self.model.instance_id)
         return item
 
@@ -290,11 +292,6 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
                     configs=[dupe_dev_conf]
                 )
                 server_model.devices.append(dev_inst)
-
-    def _save_device(self):
-        active_config = self.active_config
-        if active_config is not None:
-            save_object(active_config)
 
     def _instantiate_device(self, project):
         server = find_parent_object(self.model, project, DeviceServerModel)
