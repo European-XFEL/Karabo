@@ -965,7 +965,7 @@ namespace karabo {
             void updateState(const karabo::util::State& cs) {
                 try {
                     const std::string& currentState = cs.name();
-                    KARABO_LOG_FRAMEWORK_DEBUG << "updateState(state): \"" << currentState << "\".";
+                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ".updateState: \"" << currentState << "\".";
                     if (getState().name() != currentState) {
                         set("state", cs);
                         if (boost::regex_match(currentState, m_errorRegex)) {
@@ -1282,7 +1282,7 @@ namespace karabo {
                 this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
 
                 if (m_parameters.get<bool>("useTimeserver")) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to time server";
+                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": Connecting to time server";
                     connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick");
                 }
             }
@@ -1417,7 +1417,8 @@ namespace karabo {
             void ensureSlotIsValidUnderCurrentLock(const std::string& slotName, const std::string& callee) {
                 const std::string lockHolder = get<std::string>("lockedBy");
                 if (!lockHolder.empty()) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Device is locked by " << lockHolder << " and called by " << callee;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "'" << getInstanceId() << "' is locked by " << lockHolder
+                            << " and called by '" << callee << "'";
                     if (callee != "unknown" && callee != lockHolder) {
                         std::ostringstream msg;
                         msg << "Command " << "\"" << slotName << "\"" << " is not allowed as device is locked by "
