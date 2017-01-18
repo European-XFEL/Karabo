@@ -9,7 +9,7 @@ import numpy
 
 from .enums import AccessLevel, AccessMode, Assignment
 from .eventloop import EventLoop
-from .hash import Hash, XMLParser, saveToFile, String, Int32
+from .hash import Hash, Int32, String, VectorString
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
@@ -54,7 +54,7 @@ class DeviceServer(SignalSlotable):
         defaultValue="karabo.middlelayer_device",
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    deviceClasses = String(
+    deviceClasses = VectorString(
         displayedName="Device Classes",
         description="The device classes the server will manage",
         assignment=Assignment.OPTIONAL, defaultValue="",
@@ -116,6 +116,7 @@ class DeviceServer(SignalSlotable):
 
     @coroutine
     def _run(self, **kwargs):
+        yield from self.scanPlugins()
         yield from super(DeviceServer, self)._run(**kwargs)
 
         self._ss.enter_context(self.log.setBroker(self._ss))
@@ -123,7 +124,7 @@ class DeviceServer(SignalSlotable):
 
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
                       format(self.hostname))
-        async(self.scanPlugins())
+        async(self.scanPluginsLoop())
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
 
@@ -131,27 +132,32 @@ class DeviceServer(SignalSlotable):
         return self.hostname + "_Server_" + str(os.getpid())
 
     @coroutine
-    def scanPlugins(self):
+    def scanPluginsLoop(self):
+        """every 3 s, check whether there are new entry points"""
         while True:
-            entrypoints = yield from self.pluginLoader.update()
-            for ep in entrypoints:
-                if ep.name in self.plugins:
-                    continue
-                if (ep.name in self.deviceClasses.split(',')
-                        or not self.deviceClasses):
-                    try:
-                        self.plugins[ep.name] = (yield from get_event_loop().
-                                                 run_in_executor(None,
-                                                                 ep.load))
-                    except Exception:
-                        self.logger.exception(
-                            'Cannot load plugin "{}"'.format(ep.name))
-                    else:
-                        self.updateInstanceInfo(self.deviceClassesHash())
+            if (yield from self.scanPlugins()):
+                self.updateInstanceInfo(self.deviceClassesHash())
             yield from sleep(3)
 
+    @coroutine
+    def scanPlugins(self):
+        """load all available entry points, return whether new plugin found"""
+        changes = False
+        classes = set(self.deviceClasses)
+        entrypoints = yield from self.pluginLoader.update()
+        for ep in entrypoints:
+            if ep.name in self.plugins or (classes and ep.name not in classes):
+                continue
+            try:
+                self.plugins[ep.name] = (yield from get_event_loop().
+                                         run_in_executor(None, ep.load))
+                changes = True
+            except Exception:
+                self.logger.exception('Cannot load plugin "%s"', ep.name)
+        return changes
+
     def errorFoundAction(self, m1, m2):
-        self.log.ERROR("{} -- {}".format(m1,m2))
+        self.log.ERROR("{} -- {}".format(m1, m2))
 
     def endErrorAction(self):
         pass
@@ -203,7 +209,7 @@ class DeviceServer(SignalSlotable):
         return classid, config['_deviceId_'], config
 
     def parseOld(self, hash):
-         # Input 'config' parameter comes from GUI or DeviceClient
+        # Input 'config' parameter comes from GUI or DeviceClient
         classid = next(iter(hash))
         self.log.INFO("Trying to start {}...".format(classid))
         self.log.DEBUG("with the following configuration:\n{}".format(hash))
@@ -274,7 +280,7 @@ def main(args=None):
     loop = EventLoop()
     set_event_loop(loop)
 
-    # This function parses a dict with potentially nested values 
+    # This function parses a dict with potentially nested values
     # ('.' seperated) and adds them flat as attribtues to the class
     def get(para):
         d = DeviceServer
@@ -283,7 +289,7 @@ def main(args=None):
         return d
 
     # The fromstring function takes over proper type conversion
-    params = Hash({k: get(k).fromstring(v) 
+    params = Hash({k: get(k).fromstring(v)
                    for k, v in (a.split("=", 2) for a in args[1:])})
     server = DeviceServer(params)
     if server:

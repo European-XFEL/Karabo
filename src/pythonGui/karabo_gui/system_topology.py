@@ -4,12 +4,108 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from traits.api import HasStrictTraits, Bool, Dict, Instance, Property
+from traits.api import HasStrictTraits, Bool, Dict, Event, Instance, Property
 
 from karabo.middlelayer import Hash, Schema
 from karabo_gui.configuration import BulkNotifications, Configuration
 from karabo_gui.singletons.api import get_network
 from karabo_gui.system_tree import SystemTree
+
+
+class ProjectDeviceInstance(HasStrictTraits):
+    """An abstraction of devices needed for projects and workflow design.
+    No matter the online/offline state of a device, you can get a
+    ``Configuration`` object which is valid and associated with the same
+    device id.
+    """
+    # The current configuration for this device
+    current_configuration = Property(Instance(Configuration))
+
+    # An event which is triggered whenever the class schema changes
+    schema_updated = Event
+
+    # An event which is triggered whenever the configuration is updated
+    configuration_updated = Event
+
+    # Binary online/offline state of the device
+    online = Bool
+
+    # The online/offline configurations
+    _initial_configuration = Instance(Hash)
+    _class_config = Instance(Configuration)
+    _project_device = Instance(Configuration)
+    _real_device = Instance(Configuration)
+
+    def __init__(self, real_device, project_device, class_config, init_config):
+        super(ProjectDeviceInstance, self).__init__()
+
+        self.online = real_device.isOnline()
+        self._initial_configuration = init_config
+        self._class_config = class_config
+        self._project_device = project_device
+        self._real_device = real_device
+
+        # Connect to signals
+        class_config.signalNewDescriptor.connect(self._descriptor_change_slot)
+        real_device.signalStatusChanged.connect(self._status_change_slot)
+        real_device.signalBoxChanged.connect(self._config_change_slot)
+        project_device.signalBoxChanged.connect(self._config_change_slot)
+
+        if class_config.descriptor is not None:
+            self._descriptor_change_slot(class_config)
+
+    def destroy(self):
+        """Disconnect slots which are connected to this object's methods
+        """
+        new_descriptor = self._descriptor_change_slot
+        self._class_config.signalNewDescriptor.disconnect(new_descriptor)
+        status_changed = self._status_change_slot
+        self._real_device.signalStatusChanged.disconnect(status_changed)
+        config_changed = self._config_change_slot
+        self._real_device.signalBoxChanged.disconnect(config_changed)
+        self._project_device.signalBoxChanged.disconnect(config_changed)
+
+        _clear_configuration_instance(self._project_device)
+
+    def _get_current_configuration(self):
+        """Traits Property getter for the current configuration
+        """
+        if self.online:
+            return self._real_device
+
+        return self._project_device
+
+    def _config_change_slot(self):
+        """The (possibly) current ``Configuration`` object has been edited by
+        a user.
+        """
+        # Let the world know
+        self.configuration_updated = True
+
+    def _descriptor_change_slot(self, config):
+        """The global class has received a new schema which needs to be set
+        for the dependent device ``Configuration`` instances.
+        """
+        if self._project_device.descriptor is not None:
+            self._project_device.redummy()
+        self._project_device.descriptor = config.descriptor
+
+        if self._real_device.descriptor is not None:
+            self._real_device.redummy()
+        self._real_device.descriptor = config.descriptor
+
+        # Set values for offline configuration
+        self._project_device.setDefault()
+        if self._initial_configuration is not None:
+            self._project_device.fromHash(self._initial_configuration)
+
+        # Let the world know
+        self.schema_updated = True
+
+    def _status_change_slot(self, status, error_flag):
+        """The `_real_device` has changed its status. Check if it's online
+        """
+        self.online = self._real_device.isOnline()
 
 
 class SystemTopology(HasStrictTraits):
@@ -36,6 +132,9 @@ class SystemTopology(HasStrictTraits):
     _online_devices = Dict
     _offline_devices = Dict
 
+    # Mapping of device_id -> ProjectDeviceConfiguration
+    _project_devices = Dict
+
     # A Hash instance holding the entire current topology
     _system_hash = Instance(Hash, allow_none=True)
 
@@ -46,11 +145,21 @@ class SystemTopology(HasStrictTraits):
     def clear(self):
         """Clear all saved devices and classes
         """
+        self.clear_project_devices()
         self.system_tree.clear_all()
+
         self._system_hash = None
         self._class_schemas = {}
         self._class_configurations = {}
         self._online_devices = {}
+
+    def clear_project_devices(self):
+        """Clear all saved devices and classes
+        """
+        for dev in self._project_devices.values():
+            dev.destroy()
+
+        self._project_devices = {}
         self._offline_devices = {}
 
     def get_attributes(self, topology_path):
@@ -93,6 +202,33 @@ class SystemTopology(HasStrictTraits):
             device.status = 'requested'
 
         return device
+
+    def get_project_device(self, device_id, class_id='', server_id='',
+                           init_config=None):
+        """Return a ``ProjectDeviceInstance`` for a device on a specific
+        server.
+        """
+        if device_id not in self._project_devices:
+            if class_id == '' or server_id == '':
+                msg = ('Project device with id "{}" was requested without '
+                       'specifying the class_id or server_id! Perhaps a '
+                       'device exists in a scene workflow but not in an open '
+                       'project?')
+                raise RuntimeError(msg.format(device_id))
+
+            offline_device = Configuration(device_id, 'projectClass')
+            offline_device.serverId = server_id
+            offline_device.classId = class_id
+            self._offline_devices[device_id] = offline_device
+
+            class_configuration = self.get_class(server_id, class_id)
+            online_device = self.get_device(device_id)
+            instance = ProjectDeviceInstance(online_device, offline_device,
+                                             class_configuration,
+                                             init_config)
+            self._project_devices[device_id] = instance
+
+        return self._project_devices[device_id]
 
     def get_schema(self, server_id, class_id):
         """Return the ``Schema`` for a given class on a given server
