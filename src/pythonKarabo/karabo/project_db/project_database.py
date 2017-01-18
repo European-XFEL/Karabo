@@ -270,7 +270,10 @@ class ProjectDatabase(ContextDecorator):
 
         try:
             res = self.dbhandle.query(query)
-            return self._make_str_if_needed(res.results[0])
+            valid = [r for r in res.results
+                     if r.get('uuid') == item
+                     and r.get('revision') == str(revision)]
+            return self._make_str_if_needed(valid[0])
         except ExistDBException as e:
             raise ProjectDBError(e)
         except IndexError:
