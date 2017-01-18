@@ -84,6 +84,14 @@ class Tests(TestCase):
         self.assertEqual(schema.name, "MiddleLayerTestDevice")
         h = schema.hash
         self.assertEqual(h["counter", ...], {
+            'alarmInfo_alarmHigh': '',
+            'alarmInfo_warnHigh': '',
+            'alarmInfo_alarmLow': '',
+            'alarmInfo_warnLow': '',
+            'alarmNeedsAck_alarmHigh': False,
+            'alarmNeedsAck_warnHigh': False,
+            'alarmNeedsAck_alarmLow': False,
+            'alarmNeedsAck_warnLow': False,
             'accessMode': 4,
             'assignment': 0,
             'defaultValue': -1,
