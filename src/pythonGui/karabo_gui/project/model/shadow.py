@@ -4,7 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from karabo_gui.project.topo_listener import SystemTopologyListener
-from .device import DeviceInstanceModelItem, destroy_device_shadow
+from .device import DeviceInstanceModelItem
+from .device_config import DeviceConfigurationModelItem
 from .macro import MacroModelItem, MacroInstanceItem
 from .scene import SceneModelItem
 from .server import DeviceServerModelItem
@@ -21,9 +22,9 @@ def create_device_server_model_shadow(model):
     and must be detached later with a call to
     ``destroy_device_server_model_shadow``
     """
-    shadow = DeviceServerModelItem(model=model,
-                                   child_create=DeviceInstanceModelItem,
-                                   child_destroy=destroy_device_shadow)
+    shadow = DeviceServerModelItem(
+        model=model, child_create=create_device_instance_model_shadow,
+        child_destroy=destroy_device_instance_model_shadow)
     model.on_trait_change(shadow.items_assigned, 'devices')
     model.on_trait_change(shadow.items_mutated, 'devices_items')
     for device in model.devices:
@@ -48,6 +49,37 @@ def destroy_device_server_model_shadow(shadow_model):
 
     # Detach the topology listener
     shadow_model.topo_listener = None
+
+
+def create_device_instance_model_shadow(model):
+    """Creates a DeviceInstanceModelItem and its associated children to shadow
+    a DeviceInstanceModel instance for the purpose of interfacing with a Qt
+    item model.
+
+    Traits notification handlers are attached to the passed ``model`` object
+    and must be detached later with a call to
+    ``destroy_device_instance_model_shadow``
+    """
+    shadow = DeviceInstanceModelItem(model=model,
+                                     child_create=DeviceConfigurationModelItem,
+                                     child_destroy=lambda x: None)
+    model.on_trait_change(shadow.items_assigned, 'configs')
+    model.on_trait_change(shadow.items_mutated, 'configs_items')
+    for conf in model.configs:
+        child = shadow.child_create(model=conf)
+        shadow.children.append(child)
+
+    return shadow
+
+
+def destroy_device_instance_model_shadow(shadow_model):
+    """Destroys a DeviceInstanceModelItem and its associated children by
+    removing all previously added Traits notification handlers.
+    """
+    model = shadow_model.model
+    model.on_trait_change(shadow_model.items_assigned, 'configs', remove=True)
+    model.on_trait_change(shadow_model.items_mutated, 'configs_items',
+                          remove=True)
 
 
 def create_macro_model_shadow(model):
