@@ -20,8 +20,7 @@ except ImportError:
 
 
 from karabo.middlelayer import Hash, State
-from karabo_gui.singletons.api import get_network
-from karabo_gui.topology import getDevice
+from karabo_gui.singletons.api import get_network, get_topology
 
 
 class IPythonWidget(RichJupyterWidget):
@@ -91,7 +90,7 @@ class KernelClient(inprocess.QtInProcessKernelClient):
         self.alive = False
         self.started = False
         self.name = name
-        self.device = getDevice(self.name)
+        self.device = get_topology().get_device(self.name)
         self.device.addVisible()
         self.device.boxvalue.state.signalUpdateComponent.connect(
             self.onStateChanged)

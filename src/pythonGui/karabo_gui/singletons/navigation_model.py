@@ -18,7 +18,6 @@ import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
 from karabo_gui.indicators import ALARM_ICONS, get_state_icon, NONE
 from karabo_gui.singletons.api import get_topology
-from karabo_gui.topology import getClass, getDevice
 
 
 class _UpdateContext(HasStrictTraits):
@@ -295,11 +294,11 @@ class NavigationTreeModel(QAbstractItemModel):
         if level == 2:
             classId = node.display_name
             serverId = node.parent.display_name
-            conf = getClass(serverId, classId)
+            conf = get_topology().get_class(serverId, classId)
             item_type = conf.type
         elif level == 3:
             deviceId = node.display_name
-            conf = getDevice(deviceId)
+            conf = get_topology().get_device(deviceId)
             item_type = conf.type
 
         self.signalItemChanged.emit(item_type, conf)
