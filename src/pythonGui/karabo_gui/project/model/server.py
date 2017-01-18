@@ -141,8 +141,8 @@ class DeviceServerModelItem(BaseProjectGroupItem):
         if result == QDialog.Accepted:
             config_model = DeviceConfigurationModel(
                 class_id=dialog.class_id, configuration=Hash(),
-                alias=dialog.alias, description=dialog.description,
-                initialized=True, modified=True
+                simple_name=dialog.alias, alias=dialog.alias,
+                description=dialog.description, initialized=True, modified=True
             )
             active_config_ref = (config_model.uuid, config_model.revision)
             traits = {
