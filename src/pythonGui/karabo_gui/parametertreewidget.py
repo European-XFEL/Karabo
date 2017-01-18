@@ -293,8 +293,8 @@ class ParameterTreeWidget(QTreeWidget):
 
     def onApplyCurrentItemChanges(self):
         editableComponent = self.currentItem().editableComponent
-        if editableComponent is None \
-                or isinstance(editableComponent, EditableNoApplyComponent):
+        if (editableComponent is None
+                or isinstance(editableComponent, EditableNoApplyComponent)):
             return
         editableComponent.onApplyClicked()
 
