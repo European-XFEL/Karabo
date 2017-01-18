@@ -7,7 +7,8 @@
 from PyQt4.QtCore import pyqtSignal, QMimeData, QPoint, QRect, Qt
 from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
 
-from karabo_gui.components import BaseComponent, EditableApplyLaterComponent
+from karabo_gui.components import (BaseComponent, EditableApplyLaterComponent,
+                                   EditableNoApplyComponent)
 import karabo_gui.globals as globals
 from karabo_gui.singletons.api import get_network
 from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
@@ -292,10 +293,10 @@ class ParameterTreeWidget(QTreeWidget):
 
     def onApplyCurrentItemChanges(self):
         editableComponent = self.currentItem().editableComponent
-        if editableComponent is None:
+        if editableComponent is None \
+                or isinstance(editableComponent, EditableNoApplyComponent):
             return
         editableComponent.onApplyClicked()
-
 
     def onApplyCurrentItemRemoteChanges(self):
         editableComponent = self.currentItem().editableComponent
