@@ -99,11 +99,18 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
             return
         self.set_qt_item_text(self.qt_item, self.model.instance_id)
 
-    @on_trait_change("model.active_config_ref")
+    @on_trait_change("model:active_config_ref")
     def active_config_ref_change(self):
         if not self.is_ui_initialized():
             return
-        self._broadcast_item_click()
+
+        model = self._get_active_config()
+        if model is not None:
+            self.project_device.set_offline_configuration(model.configuration)
+
+        # Ignore for online devices!
+        if not self.project_device.online:
+            self._broadcast_item_click()
 
     def _init_project_device(self, project, active_config):
         """ Return the ``Configuration`` box for the device instance id

@@ -66,6 +66,18 @@ class ProjectDeviceInstance(HasStrictTraits):
 
         clear_configuration_instance(self._project_device)
 
+    def set_offline_configuration(self, configuration):
+        """Forcibly set the offline configuration Hash of the device.
+        """
+        if self._project_device.descriptor is None:
+            return
+
+        self._project_device.setDefault()
+        self._project_device.fromHash(configuration)
+
+    # ---------------------------------------------------------------------
+    # Traits Handlers
+
     def _get_current_configuration(self):
         """Traits Property getter for the current configuration
         """
@@ -73,6 +85,9 @@ class ProjectDeviceInstance(HasStrictTraits):
             return self._real_device
 
         return self._project_device
+
+    # ---------------------------------------------------------------------
+    # Qt Slots
 
     def _config_change_slot(self):
         """The (possibly) current ``Configuration`` object has been edited by
