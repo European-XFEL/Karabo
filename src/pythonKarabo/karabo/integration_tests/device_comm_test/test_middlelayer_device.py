@@ -57,12 +57,10 @@ class Tests(TestCase):
         the device on the device server is started from within a
         macro `remote`, such that we can test device instantiation
         from macros."""
-        yield from sleep(1)
         remote = Remote(_deviceId_="remote")
         yield from remote.startInstance()
         proxy = yield from getDevice("remote")
         yield from proxy.instantiate()
-        yield from sleep(2)
         return (yield from getDevice("other"))
 
     @coroutine
@@ -124,7 +122,7 @@ class Tests(TestCase):
         server = DeviceServer(
             dict(serverId="testServer",
                  pluginDirectory=os.path.dirname(__file__)))
-        server.startInstance()
+        self.loop.run_until_complete(server.startInstance())
         proxy = self.run_async(server, self.init_server(server))
         self.assertEqual(proxy.something, 222,
                          "MiddleLayerTestDevice.onInitialization "
@@ -164,8 +162,7 @@ class Tests(TestCase):
         dirname = os.path.dirname(__file__)
         server = DeviceServer(
             dict(serverId="testServer", pluginDirectory=dirname))
-        server.startInstance()
-        self.run_async(dc, sleep(1.1))
+        self.loop.run_until_complete(server.startInstance())
         with self.assertRaises(KaraboError):
             self.run_async(dc, instantiate("testServer",
                                            "SomeDevice", "someName"))
