@@ -11,11 +11,23 @@ from traits.api import ABCHasStrictTraits
 
 from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel
 from karabo_gui.schema import ChoiceOfNodes
-from karabo_gui.topology import getDeviceBox
+from karabo_gui.singletons.api import get_topology
 from karabo_gui.widget import DisplayWidget, EditableWidget
 from .const import WIDGET_FACTORIES
 
 _STACKED_WIDGET_OFFSET = 30
+
+
+def getDeviceBox(box):
+    """Return a box that belongs to an active device
+
+    if the box already is part of a running device, return it,
+    if it is from a class in a project, return the corresponding
+    instantiated device's box.
+    """
+    if box.configuration.type == "projectClass":
+        return get_topology().get_device(box.configuration.id).getBox(box.path)
+    return box
 
 
 class SceneDnDHandler(ABCHasStrictTraits):

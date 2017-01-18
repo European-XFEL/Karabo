@@ -8,7 +8,7 @@ from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Event,
 from karabo.common.scenemodel.api import WorkflowItemModel
 from karabo_gui.indicators import DeviceStatus
 from karabo_gui.schema import Dummy
-from karabo_gui.topology import getDevice
+from karabo_gui.singletons.api import get_topology
 from .const import (
     CHANNEL_INPUT, CHANNEL_OUTPUT, CHANNEL_HEIGHT, CONNECTION_OFFSET,
     DATA_DIST_COPY, DATA_DIST_SHARED)
@@ -344,7 +344,7 @@ def _get_channels(model, box, inputs=None, outputs=None):
 
 def _get_device_entry(model):
     """ Build a _DeviceEntry for a given WorkflowItemModel. """
-    device = getDevice(model.device_id)
+    device = get_topology().get_device(model.device_id)
     device_status = WorkflowDeviceStatusModel(box=device, model=model)
     inputs, outputs = _get_channels(model, device)
     return _DeviceEntry(device_id=model.device_id, box=device,
