@@ -54,7 +54,6 @@ from karabo_gui.events import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabo_gui.singletons.api import get_topology
-from karabo_gui.topology import getDevice
 import karabo_gui.schema as schema
 
 
@@ -127,7 +126,7 @@ class TableModel(QAbstractTableModel):
                 monitoredDeviceId = (
                 self.cdata[idx.row()].getAttribute(columnKey,
                                                    "isAliasing").split(".")[0])
-                status = getDevice(monitoredDeviceId).status
+                status = get_topology().get_device(monitoredDeviceId).status
                 if status in ["monitoring", "alive"]:
                     return icons.tableOnline.pixmap(10, 10)
                 elif status in ["online", "requested", "schema"]:
@@ -199,7 +198,8 @@ class TableModel(QAbstractTableModel):
                 del self.connectedMonitors[resp]
                 deviceId = resp.split(".")[0]
                 deviceProperty = ".".join(resp.split(".")[1:])
-                box = getDevice(deviceId).getBox(deviceProperty.split("."))
+                device = get_topology().get_device(deviceId)
+                box = device.getBox(deviceProperty.split("."))
                 if role == Qt.DisplayRole:
                     box.signalUpdateComponent.disconnect(self.monitorChanged)
 
@@ -207,7 +207,8 @@ class TableModel(QAbstractTableModel):
         cKey = self.columnHash.getKeys()[col]
         deviceId = resp.split(".")[0]
         deviceProperty = ".".join(resp.split(".")[1:])
-        box = getDevice(deviceId).getBox(deviceProperty.split("."))
+        device = get_topology().get_device(deviceId)
+        box = device.getBox(deviceProperty.split("."))
 
 
         # set these as attributes cell
@@ -420,7 +421,7 @@ class FromPropertyPopUp(QDialog):
     def deviceIdSelectionChanged(self, deviceId):
         self.propertyCombo.clear()
         self.selectedDeviceId = deviceId
-        descriptor = getDevice(deviceId).descriptor
+        descriptor = get_topology().get_device(deviceId).descriptor
         if descriptor is not None:
             properties = []
             for i, v in descriptor.dict.items():
