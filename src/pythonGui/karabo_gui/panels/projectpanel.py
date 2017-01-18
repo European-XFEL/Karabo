@@ -158,7 +158,7 @@ def _old_project_load_handler(item_model):
 
     project = OldProject(fn)
     project.unzip()
-    model, _ = convert_old_project(project)
+    model, _, _ = convert_old_project(project)
     # Set modified flag recursively to True to make sure that EVERYTHING gets
     # saved to the database
     set_modified_flag(model, value=True)
