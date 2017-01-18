@@ -68,7 +68,7 @@ get_network = _build_getter('network', '.singletons.network', 'Network')
 get_selection_tracker = _build_getter('selection',
                                       '.singletons.selection_tracker',
                                       'SelectionTracker')
-get_topology = _build_getter('topology', '.system_topology', 'SystemTopology')
+get_topology = _build_getter('topology', '.topology.api', 'SystemTopology')
 
 # XXX: To add: MainWindow instance (and others?)
 
