@@ -187,7 +187,7 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
         """
         self._broadcast_item_click()
 
-    @on_trait_change('project_device.configuration_updated')
+    @on_trait_change('project_device:configuration_updated')
     def _active_config_changed_in_configurator(self):
         """Called whenever a box related to a widget is edited
         """
@@ -258,7 +258,7 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
             config_model = DeviceConfigurationModel(
                 class_id=dialog.class_id, configuration=Hash(),
                 alias=dialog.alias, description=dialog.description,
-                initialized=True
+                initialized=True, modified=True
             )
             active_config_ref = (config_model.uuid, config_model.revision)
             device.configs.append(config_model)
