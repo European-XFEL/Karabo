@@ -25,7 +25,7 @@ from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager, get_topology
-from karabo_gui.system_topology import ProjectDeviceInstance
+from karabo_gui.topology.api import ProjectDeviceInstance
 from .bases import BaseProjectGroupItem
 
 
