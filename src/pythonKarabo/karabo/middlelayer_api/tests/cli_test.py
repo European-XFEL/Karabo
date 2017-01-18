@@ -135,9 +135,7 @@ class Tests(TestCase):
                       "code", self.code)
         h = Hash("classId", "MetaMacro", "configuration", config,
                  "deviceId", "bla")
-        yield from sleep(1.2)
         yield from server.call("Karabo_MacroServer", "slotStartDevice", h)
-        yield from sleep(1.1)
         proxy = yield from getDevice("bla-TestMacro")
         with proxy:
             yield from proxy.do()
@@ -147,7 +145,7 @@ class Tests(TestCase):
         loop = setEventLoop()
         with closing(loop):
             server = DeviceServer(dict(serverId="Karabo_MacroServer"))
-            server.startInstance()
+            loop.run_until_complete(server.startInstance())
             task = loop.create_task(self.init_macroserver(server), server)
             proxy = loop.run_until_complete(task)
             self.assertEqual(proxy.s, "done")
