@@ -11,6 +11,7 @@ from karabo_gui.events import (
 from karabo_gui.project.model.shadow import (
     create_project_model_shadow, destroy_project_model_shadow
 )
+from karabo_gui.singletons.api import get_topology
 
 TABLE_HEADER_LABELS = ["Projects"]
 
@@ -56,8 +57,9 @@ class ProjectViewItemModel(QStandardItemModel):
         # Clean up any previously created shadow models
         if self._shadow_model is not None:
             destroy_project_model_shadow(self._shadow_model)
+            get_topology().clear_project_devices()
             self.clear()
-            # `clear()` removes the header data
+            # Need to reset header data after clear()
             self.setHorizontalHeaderLabels(TABLE_HEADER_LABELS)
 
         self._cleanup_project()

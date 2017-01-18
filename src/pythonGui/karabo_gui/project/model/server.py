@@ -79,12 +79,6 @@ class DeviceServerModelItem(BaseProjectGroupItem):
         """ This callback is called by the ``SystemTopologyListener`` object
         in the ``topo_listener`` trait.
         """
-        child_dev_ids = set([inst.instance_id for inst in self.model.devices])
-        for dev_id, class_id, status in devices:
-            if dev_id in child_dev_ids:
-                inst = self.model.get_device_instance(dev_id)
-                if inst is not None and inst.class_id == class_id:
-                    inst.status = status
         for server_id, host, status in servers:
             if self.model.server_id == server_id and self.model.host == host:
                 self.model.status = status
