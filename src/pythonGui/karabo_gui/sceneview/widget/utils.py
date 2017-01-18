@@ -2,7 +2,7 @@ import numbers
 
 import numpy as np
 
-from karabo_gui.topology import getDevice
+from karabo_gui.singletons.api import get_topology
 
 
 def determine_if_value_unchanged(value, widget_value, box):
@@ -39,4 +39,4 @@ def determine_if_value_unchanged(value, widget_value, box):
 
 def get_box(device_id, path):
     """ Return the Box for a given device and property path. """
-    return getDevice(device_id).getBox(path.split("."))
+    return get_topology().get_device(device_id).getBox(path.split("."))
