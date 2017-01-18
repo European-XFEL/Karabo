@@ -42,6 +42,7 @@ class DeviceHandleDialog(QDialog):
         if model is None:
             title = 'Add device configuration'
             self._update_widgets_to_add_config()
+            self.cbConfig.lineEdit().setText('default')
         else:
             active_uuid, active_rev = model.active_config_ref
             active_dev_conf = model.select_config(active_uuid, active_rev)
