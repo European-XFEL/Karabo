@@ -288,6 +288,7 @@ class ComboBoxDelegate(QStyledItemDelegate):
                 combo.clear()
                 for rev, alias in revisions:
                     combo.addItem('{} <{}>'.format(alias, rev), rev)
+                combo.setCurrentIndex(self.current_selection)
 
     def createEditor(self, parent, option, index):
         """ This method is called whenever the delegate is in edit mode."""
