@@ -31,14 +31,16 @@ class ProjectDeviceInstance(HasStrictTraits):
     online = Bool
 
     # The online/offline configurations
+    _initial_configuration = Instance(Hash)
     _class_config = Instance(Configuration)
     _project_device = Instance(Configuration)
     _real_device = Instance(Configuration)
 
-    def __init__(self, real_device, project_device, class_config):
+    def __init__(self, real_device, project_device, class_config, init_config):
         super(ProjectDeviceInstance, self).__init__()
 
         self.online = real_device.isOnline()
+        self._initial_configuration = init_config
         self._class_config = class_config
         self._project_device = project_device
         self._real_device = real_device
@@ -62,6 +64,8 @@ class ProjectDeviceInstance(HasStrictTraits):
         config_changed = self._config_change_slot
         self._real_device.signalBoxChanged.disconnect(config_changed)
         self._project_device.signalBoxChanged.disconnect(config_changed)
+
+        _clear_configuration_instance(self._project_device)
 
     def _get_current_configuration(self):
         """Traits Property getter for the current configuration
@@ -90,8 +94,10 @@ class ProjectDeviceInstance(HasStrictTraits):
             self._real_device.redummy()
         self._real_device.descriptor = config.descriptor
 
-        # Set default values for offline configuration
+        # Set values for offline configuration
         self._project_device.setDefault()
+        if self._initial_configuration is not None:
+            self._project_device.fromHash(self._initial_configuration)
 
         # Let the world know
         self.schema_updated = True
@@ -139,16 +145,22 @@ class SystemTopology(HasStrictTraits):
     def clear(self):
         """Clear all saved devices and classes
         """
-        for dev in self._project_devices.values():
-            dev.destroy()
-
+        self.clear_project_devices()
         self.system_tree.clear_all()
+
         self._system_hash = None
         self._class_schemas = {}
         self._class_configurations = {}
         self._online_devices = {}
-        self._offline_devices = {}
+
+    def clear_project_devices(self):
+        """Clear all saved devices and classes
+        """
+        for dev in self._project_devices.values():
+            dev.destroy()
+
         self._project_devices = {}
+        self._offline_devices = {}
 
     def get_attributes(self, topology_path):
         """Return the attributes of a given node in the `_system_hash`.
@@ -191,7 +203,8 @@ class SystemTopology(HasStrictTraits):
 
         return device
 
-    def get_project_device(self, device_id, class_id='', server_id=''):
+    def get_project_device(self, device_id, class_id='', server_id='',
+                           init_config=None):
         """Return a ``ProjectDeviceInstance`` for a device on a specific
         server.
         """
@@ -211,7 +224,8 @@ class SystemTopology(HasStrictTraits):
             class_configuration = self.get_class(server_id, class_id)
             online_device = self.get_device(device_id)
             instance = ProjectDeviceInstance(online_device, offline_device,
-                                             class_configuration)
+                                             class_configuration,
+                                             init_config)
             self._project_devices[device_id] = instance
 
         return self._project_devices[device_id]

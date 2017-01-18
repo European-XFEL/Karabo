@@ -114,11 +114,13 @@ class DeviceInstanceModelItem(BaseProjectTreeItem):
         """
         if self.project_device is None:
             device = self.model
+            active = self._get_active_config()
+            init_config = None if active is None else active.configuration
             server_model = find_parent_object(device, project,
                                               DeviceServerModel)
             proj_device = get_topology().get_project_device(
                 device.instance_id, active_config.class_id,
-                server_model.server_id
+                server_model.server_id, init_config
             )
             self.project_device = proj_device
 
