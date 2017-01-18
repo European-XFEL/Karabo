@@ -71,7 +71,7 @@ def _project_storage():
         yield ProjectDBCache(dirpath)
 
 
-def _write_project(project, devices, storage):
+def _write_project(project, devices, configs, storage):
     for childname in PROJECT_OBJECT_CATEGORIES:
         children = getattr(project, childname)
         for child in children:
@@ -80,6 +80,9 @@ def _write_project(project, devices, storage):
     for dev in devices:
         data = write_project_model(dev)
         storage.store(TEST_DOMAIN, dev.uuid, dev.revision, data)
+    for conf in configs:
+        data = write_project_model(conf)
+        storage.store(TEST_DOMAIN, conf.uuid, conf.revision, data)
 
     data = write_project_model(project)
     storage.store(TEST_DOMAIN, project.uuid, project.revision, data)
@@ -106,15 +109,15 @@ def test_invalid_read():
 
 def test_save_project():
     old_project = _get_old_project()
-    project, devices = convert_old_project(old_project)
+    project, devices, configs = convert_old_project(old_project)
 
     with _project_storage() as storage:
-        _write_project(project, devices, storage)
+        _write_project(project, devices, configs, storage)
 
 
 def test_project_convert():
     old_project = _get_old_project()
-    project, devices = convert_old_project(old_project)
+    project, devices, configs = convert_old_project(old_project)
 
     for server in project.servers:
         for dev_inst in server.devices:
@@ -123,10 +126,10 @@ def test_project_convert():
 
 def test_project_round_trip():
     old_project = _get_old_project()
-    project, devices = convert_old_project(old_project)
+    project, devices, configs = convert_old_project(old_project)
 
     with _project_storage() as storage:
-        _write_project(project, devices, storage)
+        _write_project(project, devices, configs, storage)
         rt_project = ProjectModel(uuid=project.uuid, revision=project.revision)
         rt_project = read_lazy_object(TEST_DOMAIN, project.uuid,
                                       project.revision, storage,
@@ -137,10 +140,10 @@ def test_project_round_trip():
 
 def test_project_cache():
     old_project = _get_old_project()
-    project, devices = convert_old_project(old_project)
+    project, devices, configs = convert_old_project(old_project)
 
     with _project_storage() as storage:
-        _write_project(project, devices, storage)
+        _write_project(project, devices, configs, storage)
         project_uuids = storage.get_uuids_of_type(TEST_DOMAIN, 'project')
         assert len(project_uuids) == 1
         assert project_uuids[0] == project.uuid
