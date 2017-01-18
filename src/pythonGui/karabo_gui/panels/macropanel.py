@@ -19,8 +19,7 @@ from karabo_gui.events import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
     unregister_from_broadcasts)
 import karabo_gui.icons as icons
-from karabo_gui.singletons.api import get_network
-from karabo_gui.topology import getDevice
+from karabo_gui.singletons.api import get_network, get_topology
 from karabo_gui.util import getSaveFileName
 
 
@@ -87,7 +86,7 @@ class MacroPanel(Dockable, QSplitter):
 
     def connect(self, macro_instance):
         if macro_instance not in self.already_connected:
-            device = getDevice(macro_instance)
+            device = get_topology().get_device(macro_instance)
             device.boxvalue.doNotCompressEvents.signalUpdateComponent.connect(
                 self.appendConsole)
             self.already_connected.add(macro_instance)
@@ -118,7 +117,7 @@ class MacroPanel(Dockable, QSplitter):
                                 e.lineno))
         else:
             instance_id = self.macro_model.instance_id
-            getDevice(instance_id)
+            get_topology().get_device(instance_id)
             h = Hash("code", self.macro_model.code,
                      "module", self.macro_model.simple_name,
                      "uuid", self.macro_model.uuid)
