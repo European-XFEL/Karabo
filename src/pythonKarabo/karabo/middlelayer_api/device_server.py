@@ -9,7 +9,7 @@ import numpy
 
 from .enums import AccessLevel, AccessMode, Assignment
 from .eventloop import EventLoop
-from .hash import Hash, Int32, String, VectorString
+from .hash import Bool, Hash, Int32, String, VectorString
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
@@ -59,6 +59,23 @@ class DeviceServer(SignalSlotable):
         description="The device classes the server will manage",
         assignment=Assignment.OPTIONAL, defaultValue="",
         requiredAccessLevel=AccessLevel.EXPERT)
+
+    scanPluginsTask = None
+
+    @Bool(
+        displayedName="Scan plug-ins?",
+        description="Decides whether the server will scan the content of the "
+                    "plug-in folder and dynamically load found devices",
+        assignment=Assignment.OPTIONAL, defaultValue=True,
+        requiredAccessLevel=AccessLevel.EXPERT)
+    @coroutine
+    def scanPlugins(self, value):
+        if value and self.scanPluginsTask is None:
+            self.scanPluginsTask = async(self.scanPluginsLoop())
+        elif not value and self.scanPluginsTask is not None:
+            self.scanPluginsTask.cancel()
+            self.scanPluginsTask = None
+        self.scanPlugins = self.scanPluginsTask is not None
 
     log = Node(Logger,
                description="Logging settings",
@@ -116,7 +133,7 @@ class DeviceServer(SignalSlotable):
 
     @coroutine
     def _run(self, **kwargs):
-        yield from self.scanPlugins()
+        yield from self.scanPluginsOnce()
         yield from super(DeviceServer, self)._run(**kwargs)
 
         self._ss.enter_context(self.log.setBroker(self._ss))
@@ -124,7 +141,6 @@ class DeviceServer(SignalSlotable):
 
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
                       format(self.hostname))
-        async(self.scanPluginsLoop())
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
 
@@ -135,12 +151,12 @@ class DeviceServer(SignalSlotable):
     def scanPluginsLoop(self):
         """every 3 s, check whether there are new entry points"""
         while True:
-            if (yield from self.scanPlugins()):
+            if (yield from self.scanPluginsOnce()):
                 self.updateInstanceInfo(self.deviceClassesHash())
             yield from sleep(3)
 
     @coroutine
-    def scanPlugins(self):
+    def scanPluginsOnce(self):
         """load all available entry points, return whether new plugin found"""
         changes = False
         classes = set(self.deviceClasses)
