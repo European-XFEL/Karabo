@@ -69,7 +69,7 @@ class ProjectDeviceInstance(HasStrictTraits):
     def set_project_config_hash(self, config_hash):
         """Forcibly set the offline configuration Hash of the device.
         """
-        if self._offline_dev_config.descriptor is None:
+        if self._offline_dev_config.descriptor is None or config_hash is None:
             return
 
         self._offline_dev_config.setDefault()
