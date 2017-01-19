@@ -1,0 +1,86 @@
+***********************
+Starting device servers
+***********************
+
+Karabo servers are managing the lifetime of Karabo devices. Once a server has
+loaded a device class (as plugin) it can start and stop one or more instances
+of that device and provide it for distributed (remote) access.
+
+As Karabo provides three different APIs for devices also three different 
+servers are needed (C++, Python, and Middle-Layer).
+
+Despite some small differences, all servers share the following, most important
+configurations:
+
+1. Message Broker URL
+
+   Every server needs a connection to the central broker. This address must be
+   given in the format::
+     
+     tcp://<host>:<port>
+
+   and can be set per shell using the environmental `KARABO_BROKER`.
+
+   Example::
+  
+     export KARABO_BROKER=tcp://localhost:7777
+  
+   This tries to connect to a broker running locally on port 7777.
+
+2. Message Broker Topic
+
+   Each Karabo installation must use a single topic name under which all 
+   devices and servers are talking with each other. Think about a topic
+   like a chatroom on the server, only members of the same chatroom can share
+   information.
+
+   The topic can be provided as environmental as well, called 
+   `KARABO_BROKER_TOPIC`.
+   
+   Example::
+     
+     export KARABO_BROKER_TOPIC=myTopic
+
+3. Server-ID
+
+   Within a Karabo installation (i.e. under the same broker host and topic)
+   each server needs a unique ID to be identified.
+
+   As the server ID is specific to each server it must be provided as command
+   line argument::
+
+     karabo-<API>server serverId=MyServer
+     
+   With `<API>` being either `cpp`, `pyhon` or `middlelayer`.
+
+   The serverId can be skipped, in this case Karabo will generate a unique 
+   (but cryptic) one, which will also be different for consecutive server starts.
+   It is hence strongly recommended to *always* assign a serverId 
+   
+       
+4. Device Classes
+
+   Any server knows about all respective plugins (i.e. device classes), 
+   which are installed to the Karabo framework. Sometimes you want to 
+   explicitely steer which classes should be loaded by a given server.
+   This can be achieved by an additional commandline argument::
+     
+     karabo-<API>server deviceClasses=MyDeviceClass
+
+   or if several should be loaded::
+
+     karabo-<API>server deviceClasses="MyDeviceClass1,MyDeviceClass2"
+        
+
+
+
+C++ Server
+==========
+
+In order to start a minimal C++ server, simply type::
+
+  karabo-cppserver
+
+
+
+
