@@ -106,7 +106,7 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
 
         model = self._get_active_config()
         if model is not None:
-            self.project_device.set_offline_configuration(model.configuration)
+            self.project_device.set_project_config_hash(model.configuration)
 
         # Ignore for online devices!
         if not self.project_device.online:
