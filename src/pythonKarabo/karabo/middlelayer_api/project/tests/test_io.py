@@ -7,14 +7,13 @@ from nose.tools import assert_raises
 from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 
 from karabo.common.project.api import (
-    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     MacroModel, ProjectDBCache, ProjectModel, read_lazy_object,
-    recursive_save_object, walk_traits_object
+    walk_traits_object
 )
 from karabo.common.savable import set_modified_flag
-from karabo.common.scenemodel.api import SceneModel
 from ..api import (
-    convert_old_project, read_project_model, write_project_model, OldProject
+    convert_old_project, read_project_model, recursive_save_object,
+    write_project_model, OldProject
 )
 
 TEST_DOMAIN = 'TESTES'
@@ -76,7 +75,7 @@ def _project_storage():
 
 def _write_project(project, storage):
     set_modified_flag(project, value=True)  # Ensure everything is saved
-    recursive_save_object(project, storage, TEST_DOMAIN, write_project_model)
+    recursive_save_object(project, storage, TEST_DOMAIN)
 
 # -----------------------------------------------------------------------------
 

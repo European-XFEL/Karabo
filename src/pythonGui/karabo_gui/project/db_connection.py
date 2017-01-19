@@ -9,8 +9,7 @@ from PyQt4.QtCore import QObject
 from karabo.common.project.api import get_user_cache, read_lazy_object
 from karabo.common.savable import set_modified_flag
 from karabo.middlelayer import Hash
-from karabo.middlelayer_api.project.api import (read_project_model,
-                                                write_project_model)
+from karabo.middlelayer_api.project.api import read_project_model
 from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.singletons.api import get_network
@@ -95,7 +94,7 @@ class ProjectDatabaseConnection(QObject):
                     self._waiting_for_read[key] = existing
         return obj
 
-    def store(self, domain, uuid, revision, obj):
+    def store(self, domain, uuid, revision, data):
         """Write an object to the database
         """
         # XXX: Please don't keep this here!
@@ -105,11 +104,9 @@ class ProjectDatabaseConnection(QObject):
 
         # Don't ask the GUI server if you're already waiting for this object
         if key not in self._waiting_for_write:
-            self._waiting_for_write[key] = obj
-            # Project DB expects xml as string
-            xml = write_project_model(obj)
+            self._waiting_for_write[key] = data
             items = [Hash('domain', domain, 'uuid', uuid, 'revision', revision,
-                          'xml', xml, 'overwrite', False)]
+                          'xml', data, 'overwrite', False)]
             self.network.onProjectSaveItems(self.project_manager, items)
 
     # -------------------------------------------------------------------
@@ -148,13 +145,10 @@ class ProjectDatabaseConnection(QObject):
             revision = item['revision']
             if item['success']:
                 key = (uuid, revision)
-                obj = self._waiting_for_write.pop(key)
+                data = self._waiting_for_write.pop(key)
 
                 # Write to the local cache
-                data = write_project_model(obj)
                 self.cache.store(domain, uuid, revision, data)
-                # No longer dirty!
-                set_modified_flag(obj, value=False)
             else:
                 # XXX: Make some noise.
                 # Right now, only the modified flag doesn't get updated.
