@@ -8,6 +8,8 @@ import weakref
 
 from PyQt4.QtGui import QDialog, QMessageBox
 
+from karabo.common.project.api import (
+    BaseProjectObjectModel, walk_traits_object)
 from karabo.middlelayer_api.project.api import recursive_save_object
 from karabo_gui.project.dialog.object_handle import ObjectSaveDialog
 from karabo_gui.singletons.api import get_db_conn
@@ -48,11 +50,17 @@ def save_object(obj):
     """
     from karabo_gui.project.api import TEST_DOMAIN
 
+    def set_alias(root, alias):
+        def _visitor(model):
+            if isinstance(model, BaseProjectObjectModel):
+                model.alias = alias
+
+        walk_traits_object(root, _visitor)
+
     dialog = ObjectSaveDialog(alias=obj.alias)
     if dialog.exec() == QDialog.Accepted:
-        obj.alias = dialog.alias
-        db_conn = get_db_conn()
-        recursive_save_object(obj, db_conn, TEST_DOMAIN)
+        set_alias(obj, dialog.alias)
+        recursive_save_object(obj, get_db_conn(), TEST_DOMAIN)
 
 
 def show_save_project_message(project):
