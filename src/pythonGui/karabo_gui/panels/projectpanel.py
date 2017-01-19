@@ -19,7 +19,7 @@ from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.project.api import ProjectView
 from karabo_gui.project.dialog.project_handle import (
     LoadProjectDialog, NewProjectDialog)
-from karabo_gui.project.utils import maybe_save_modified_project, save_project
+from karabo_gui.project.utils import maybe_save_modified_project, save_object
 from karabo_gui.singletons.api import get_db_conn
 from karabo_gui.util import getOpenFileName
 
@@ -190,4 +190,4 @@ def _project_save_handler(item_model):
     """
     traits_model = item_model.traits_data_model
     if traits_model is not None:
-        save_project(traits_model)
+        save_object(traits_model)

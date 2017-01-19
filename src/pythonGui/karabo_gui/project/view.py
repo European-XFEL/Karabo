@@ -10,7 +10,7 @@ from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
 
 from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo_gui.const import PROJECT_ITEM_MODEL_REF
-from karabo_gui.project.utils import maybe_save_modified_project, save_project
+from karabo_gui.project.utils import maybe_save_modified_project, save_object
 from karabo_gui.singletons.api import get_project_model, get_selection_tracker
 from .model.project import ProjectModelItem
 from .model.project_groups import ProjectSubgroupItem
@@ -97,7 +97,7 @@ class ProjectView(QTreeView):
             if parent_project is None or is_project:
                 project_model = selected_item_model.model
                 save_action = QAction('Save', menu)
-                save_action.triggered.connect(partial(save_project,
+                save_action.triggered.connect(partial(save_object,
                                                       project_model))
                 close_action = QAction('Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
