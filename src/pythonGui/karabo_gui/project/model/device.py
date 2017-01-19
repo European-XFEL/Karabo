@@ -74,8 +74,9 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
         item = QStandardItem()
         item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
         # Get current status of device
-        self.model.status = _get_device_status(self.model.instance_id)
-        icon = get_project_device_status_icon(DeviceStatus(self.model.status))
+        configuration = self.project_device.current_configuration
+        status_enum = DeviceStatus(configuration.status)
+        icon = get_project_device_status_icon(status_enum)
         item.setIcon(icon)
         item.setEditable(False)
         for child in self.children:
@@ -325,13 +326,3 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
     def shutdown_device(self, show_confirm=True):
         device = self.model
         get_manager().shutdownDevice(device.instance_id, show_confirm)
-
-
-# ----------------------------------------------------------------------
-
-def _get_device_status(device_id):
-    topology = get_topology()
-    attributes = topology.get_attributes('device.{}'.format(device_id))
-    if attributes is not None:
-        return attributes.get('status', 'ok')
-    return 'offline'
