@@ -1,5 +1,8 @@
 from traits.api import HasTraits, Instance, List
 
+from karabo.common.savable import set_modified_flag
+from .bases import BaseProjectObjectModel
+
 
 def find_parent_object(model, ancestor_model, search_klass):
     """ Given a project child object and a project object which is the child's
@@ -60,3 +63,38 @@ def walk_traits_object(traits_obj, visitor_func):
 
     for leaf in _tree_iter(traits_obj):
         visitor_func(leaf)
+
+
+def recursive_save_object(root, storage, domain, writer_func):
+    """
+    """
+    def _is_list_of_has_traits(trait):
+        if not isinstance(trait.trait_type, List):
+            return False
+        inner_type = trait.inner_traits[0].trait_type
+        if not isinstance(inner_type, Instance):
+            return False
+        if not issubclass(inner_type.klass, BaseProjectObjectModel):
+            return False
+        return True
+
+    def _find_iterables(obj):
+        return [name for name in obj.copyable_trait_names()
+                if _is_list_of_has_traits(obj.trait(name))]
+
+    def _tree_iter(obj):
+        # Iteratively yield the children
+        iterables = _find_iterables(obj)
+        for name in iterables:
+            children = getattr(obj, name)
+            for child in children:
+                for subchild in _tree_iter(child):
+                    yield subchild
+        # Yield the root last
+        yield obj
+
+    for leaf in _tree_iter(root):
+        if leaf.modified:
+            data = writer_func(leaf)
+            storage.store(domain, leaf.uuid, leaf.revision, data)
+    set_modified_flag(root, value=False)
