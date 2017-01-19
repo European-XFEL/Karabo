@@ -66,7 +66,9 @@ def walk_traits_object(traits_obj, visitor_func):
 
 
 def recursive_save_object(root, storage, domain, writer_func):
-    """
+    """Recursively save a project object by using a depth first traversal and
+    saving all the modified ``BaseProjectObjectModel`` objects which are
+    found in the object tree.
     """
     def _is_list_of_has_traits(trait):
         if not isinstance(trait.trait_type, List):
