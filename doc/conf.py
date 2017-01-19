@@ -13,7 +13,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 from traits.api import Int
-from rtd_conf import global_conf
+#from rtd_conf import global_conf
 import sys
 import subprocess
 import os
@@ -42,7 +42,6 @@ extensions = [
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.ifconfig',
     'sphinx.ext.graphviz',
-    'breathe',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
