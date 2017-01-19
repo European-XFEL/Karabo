@@ -30,25 +30,25 @@ class ProjectDeviceInstance(HasStrictTraits):
     online = Bool
 
     # The online/offline configurations
-    _initial_configuration = Instance(Hash)
+    _initial_config_hash = Instance(Hash)
     _class_config = Instance(Configuration)
-    _project_device = Instance(Configuration)
-    _real_device = Instance(Configuration)
+    _offline_dev_config = Instance(Configuration)
+    _online_dev_config = Instance(Configuration)
 
-    def __init__(self, real_device, project_device, class_config, init_config):
+    def __init__(self, online_device, offline_device, class_config, init_hash):
         super(ProjectDeviceInstance, self).__init__()
 
-        self.online = real_device.isOnline()
-        self._initial_configuration = init_config
+        self.online = online_device.isOnline()
+        self._initial_config_hash = init_hash
         self._class_config = class_config
-        self._project_device = project_device
-        self._real_device = real_device
+        self._offline_dev_config = offline_device
+        self._online_dev_config = online_device
 
         # Connect to signals
         class_config.signalNewDescriptor.connect(self._descriptor_change_slot)
-        real_device.signalStatusChanged.connect(self._status_change_slot)
-        real_device.signalBoxChanged.connect(self._config_change_slot)
-        project_device.signalBoxChanged.connect(self._config_change_slot)
+        online_device.signalStatusChanged.connect(self._status_change_slot)
+        online_device.signalBoxChanged.connect(self._config_change_slot)
+        offline_device.signalBoxChanged.connect(self._config_change_slot)
 
         if class_config.descriptor is not None:
             self._descriptor_change_slot(class_config)
@@ -59,21 +59,21 @@ class ProjectDeviceInstance(HasStrictTraits):
         new_descriptor = self._descriptor_change_slot
         self._class_config.signalNewDescriptor.disconnect(new_descriptor)
         status_changed = self._status_change_slot
-        self._real_device.signalStatusChanged.disconnect(status_changed)
+        self._online_dev_config.signalStatusChanged.disconnect(status_changed)
         config_changed = self._config_change_slot
-        self._real_device.signalBoxChanged.disconnect(config_changed)
-        self._project_device.signalBoxChanged.disconnect(config_changed)
+        self._online_dev_config.signalBoxChanged.disconnect(config_changed)
+        self._offline_dev_config.signalBoxChanged.disconnect(config_changed)
 
-        clear_configuration_instance(self._project_device)
+        clear_configuration_instance(self._offline_dev_config)
 
-    def set_offline_configuration(self, configuration):
+    def set_project_config_hash(self, config_hash):
         """Forcibly set the offline configuration Hash of the device.
         """
-        if self._project_device.descriptor is None:
+        if self._offline_dev_config.descriptor is None:
             return
 
-        self._project_device.setDefault()
-        self._project_device.fromHash(configuration)
+        self._offline_dev_config.setDefault()
+        self._offline_dev_config.fromHash(config_hash)
 
     # ---------------------------------------------------------------------
     # Traits Handlers
@@ -82,9 +82,9 @@ class ProjectDeviceInstance(HasStrictTraits):
         """Traits Property getter for the current configuration
         """
         if self.online:
-            return self._real_device
+            return self._online_dev_config
 
-        return self._project_device
+        return self._offline_dev_config
 
     # ---------------------------------------------------------------------
     # Qt Slots
@@ -100,23 +100,24 @@ class ProjectDeviceInstance(HasStrictTraits):
         """The global class has received a new schema which needs to be set
         for the dependent device ``Configuration`` instances.
         """
-        if self._project_device.descriptor is not None:
-            self._project_device.redummy()
-        self._project_device.descriptor = config.descriptor
+        if self._offline_dev_config.descriptor is not None:
+            self._offline_dev_config.redummy()
+        self._offline_dev_config.descriptor = config.descriptor
 
-        if self._real_device.descriptor is not None:
-            self._real_device.redummy()
-        self._real_device.descriptor = config.descriptor
+        if self._online_dev_config.descriptor is not None:
+            self._online_dev_config.redummy()
+        self._online_dev_config.descriptor = config.descriptor
 
         # Set values for offline configuration
-        self._project_device.setDefault()
-        if self._initial_configuration is not None:
-            self._project_device.fromHash(self._initial_configuration)
+        self._offline_dev_config.setDefault()
+        if self._initial_config_hash is not None:
+            self._offline_dev_config.fromHash(self._initial_config_hash)
 
         # Let the world know
         self.schema_updated = True
 
     def _status_change_slot(self, status, error_flag):
-        """The `_real_device` has changed its status. Check if it's online
+        """The `_online_dev_config` trait has changed its status. Check if it's
+        online
         """
-        self.online = self._real_device.isOnline()
+        self.online = self._online_dev_config.isOnline()
