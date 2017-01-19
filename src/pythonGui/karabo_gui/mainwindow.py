@@ -249,7 +249,7 @@ class MainWindow(QMainWindow):
             self.configurationPanel.onGlobalAccessLevelChanged)
 
         mainSplitter.setStretchFactor(0, 2)
-        mainSplitter.setStretchFactor(1, 4)
+        mainSplitter.setStretchFactor(1, 2)
         mainSplitter.setStretchFactor(2, 2)
 
         self.setCentralWidget(mainSplitter)
