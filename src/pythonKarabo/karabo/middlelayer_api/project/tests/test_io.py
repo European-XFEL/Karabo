@@ -9,8 +9,9 @@ from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     MacroModel, ProjectDBCache, ProjectModel, read_lazy_object,
-    recursive_save_object, walk_traits_object, PROJECT_OBJECT_CATEGORIES
+    recursive_save_object, walk_traits_object
 )
+from karabo.common.savable import set_modified_flag
 from karabo.common.scenemodel.api import SceneModel
 from ..api import (
     convert_old_project, read_project_model, write_project_model, OldProject
@@ -73,21 +74,9 @@ def _project_storage():
         yield ProjectDBCache(dirpath)
 
 
-def _write_project(project, devices, configs, storage):
-    for childname in PROJECT_OBJECT_CATEGORIES:
-        children = getattr(project, childname)
-        for child in children:
-            data = write_project_model(child)
-            storage.store(TEST_DOMAIN, child.uuid, child.revision, data)
-    for dev in devices:
-        data = write_project_model(dev)
-        storage.store(TEST_DOMAIN, dev.uuid, dev.revision, data)
-    for conf in configs:
-        data = write_project_model(conf)
-        storage.store(TEST_DOMAIN, conf.uuid, conf.revision, data)
-
-    data = write_project_model(project)
-    storage.store(TEST_DOMAIN, project.uuid, project.revision, data)
+def _write_project(project, storage):
+    set_modified_flag(project, value=True)  # Ensure everything is saved
+    recursive_save_object(project, storage, TEST_DOMAIN, write_project_model)
 
 # -----------------------------------------------------------------------------
 
@@ -111,15 +100,15 @@ def test_invalid_read():
 
 def test_save_project():
     old_project = _get_old_project()
-    project, devices, configs = convert_old_project(old_project)
+    project = convert_old_project(old_project)
 
     with _project_storage() as storage:
-        _write_project(project, devices, configs, storage)
+        _write_project(project, storage)
 
 
 def test_project_convert():
     old_project = _get_old_project()
-    project, devices, configs = convert_old_project(old_project)
+    project = convert_old_project(old_project)
 
     for server in project.servers:
         for dev_inst in server.devices:
@@ -128,10 +117,10 @@ def test_project_convert():
 
 def test_project_round_trip():
     old_project = _get_old_project()
-    project, devices, configs = convert_old_project(old_project)
+    project = convert_old_project(old_project)
 
     with _project_storage() as storage:
-        _write_project(project, devices, configs, storage)
+        _write_project(project, storage)
         rt_project = ProjectModel(uuid=project.uuid, revision=project.revision)
         rt_project = read_lazy_object(TEST_DOMAIN, project.uuid,
                                       project.revision, storage,
@@ -142,10 +131,10 @@ def test_project_round_trip():
 
 def test_project_cache():
     old_project = _get_old_project()
-    project, devices, configs = convert_old_project(old_project)
+    project = convert_old_project(old_project)
 
     with _project_storage() as storage:
-        _write_project(project, devices, configs, storage)
+        _write_project(project, storage)
         project_uuids = storage.get_uuids_of_type(TEST_DOMAIN, 'project')
         assert len(project_uuids) == 1
         assert project_uuids[0] == project.uuid
@@ -176,38 +165,3 @@ def test_existing_obj_mismatch():
     xml = write_project_model(model)
     with assert_raises(AssertionError):
         read_project_model(StringIO(xml), existing=existing)
-
-
-def test_recusive_project_save():
-    UUID = 'c43e5c53-bea4-4e9e-921f-042b52e58f4c'
-    project = ProjectModel(uuid=UUID, revision=0, initialized=True)
-    macro = MacroModel(uuid=UUID, revision=1, code='print(42)',
-                       initialized=True)
-    project.macros.append(macro)
-    scene = SceneModel(uuid=UUID, revision=2, initialized=True)
-    project.scenes.append(scene)
-    dev0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUID, revision=0,
-                                    initialized=True)
-    dev1 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUID, revision=1,
-                                    initialized=True)
-    dev2 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUID, revision=2,
-                                    initialized=True)
-    foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                              if_exists='ignore', configs=[dev0],
-                              active_config_ref=(UUID, 0), uuid=UUID,
-                              revision=0, initialized=True)
-    bar = DeviceInstanceModel(class_id='QuxClass', instance_id='barDevice',
-                              if_exists='restart', configs=[dev1, dev2],
-                              active_config_ref=(UUID, 2), uuid=UUID,
-                              revision=1, initialized=True)
-    server = DeviceServerModel(server_id='testServer', host='serverserverFoo',
-                               devices=[foo, bar], initialized=True)
-    project.servers.append(server)
-    with _project_storage() as storage:
-        recursive_save_object(project, storage, TEST_DOMAIN,
-                              write_project_model)
-
-        model = ProjectModel(uuid=UUID, revision=0)
-        read_lazy_object(TEST_DOMAIN, UUID, 0, storage, read_project_model,
-                         existing=model)
-        _compare_projects(project, model)
