@@ -32,27 +32,45 @@ class DeviceServerModel(BaseProjectObjectModel):
                 return dev
         return None
 
-    def _server_id_changed(self, old, new):
+    def _server_id_changed(self, new):
         self.simple_name = new
+
+        # Update the child DeviceInstanceModels!
+        for dev in self.devices:
+            dev.server_id = new
+
+    def _update_device_server_ids(self, added):
+        """Manage the `server_id` trait of device instances as they arrive.
+        """
+        for dev in added:
+            dev.server_id = self.server_id
+
+    def _devices_changed(self, new):
+        self._update_device_server_ids(new)
+
+    def _devices_items_changed(self, event):
+        self._update_device_server_ids(event.added)
 
 
 def read_device_server(io_obj):
     """ A reader for device server models
     """
-    def _read_device(element):
+    def _read_device(element, server_id):
         traits = {
             'uuid': element.get('uuid'),
             'revision': int(element.get('revision')),
+            'server_id': server_id,  # Actually transient!
             'initialized': False
         }
         return DeviceInstanceModel(**traits)
 
     document = parse(io_obj)
     root = document.getroot()
-    devices = [_read_device(e)
+    server_id = root.get('server_id')
+    devices = [_read_device(e, server_id)
                for e in root.findall(PROJECT_DB_TYPE_DEVICE_INSTANCE)]
     traits = {
-        'server_id': root.get('server_id'),
+        'server_id': server_id,
         'host': root.get('host'),
         'devices': devices,
         'initialized': True

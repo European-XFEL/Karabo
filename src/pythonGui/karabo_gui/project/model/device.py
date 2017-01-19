@@ -84,12 +84,41 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
         return item
 
     def single_click(self, parent_project, parent=None):
-        config = self._get_active_config()
+        config = self.active_config
         if config is not None and config.configuration is not None:
-            if self.project_device is None:
-                self._init_project_device(parent_project, config)
-            else:
-                self._broadcast_item_click()
+            self._broadcast_item_click()
+
+    # ----------------------------------------------------------------------
+    # Traits handlers
+
+    def _get_active_config(self):
+        """Traits Property getter for the active device configuration object
+
+        :return If a `DeviceConfigurationModel` for the `DeviceInstanceModel`s
+        active `uuid` and `revision` can be found, otherwise a `NoneType` is
+        returned
+        """
+        device = self.model
+        uuid, revision = device.active_config_ref
+        return device.select_config(uuid, revision)
+
+    def _project_device_default(self):
+        """Traits default initializer for `project_device`.
+        """
+        device = self.model
+        config = self.active_config
+        return get_topology().get_project_device(
+            device.instance_id, device.class_id, device.server_id,
+            None if config is None else config.configuration
+        )
+
+    @on_trait_change("model:instance_id")
+    def _forced_project_device_change(self):
+        """Just to make life difficult, the instance_id changed. The
+        `project_device` trait needs to be reinitialized.
+        """
+        # Reuse the traits default initializer
+        self.project_device = self._project_device_default()
 
     @on_trait_change("model.modified,model.instance_id")
     def update_ui_label(self):
@@ -112,46 +141,67 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
         if not self.project_device.online:
             self._broadcast_item_click()
 
-    def _init_project_device(self, project, active_config):
-        """ Return the ``Configuration`` box for the device instance id
-        depending on the fact whether the device is running or not
-
-        :param project: The project this device belongs to
-        :param active_config: The active device configuration
-
-        :return The device configuration which is currently available
+    @on_trait_change('project_device:schema_updated,project_device:online')
+    def _device_schema_changed(self):
+        """Called when a new Schema arrives for `project_device` or it changes
+        between online <-> offline.
         """
-        if self.project_device is None:
-            device = self.model
-            active = self._get_active_config()
-            init_config = None if active is None else active.configuration
-            server_model = find_parent_object(device, project,
-                                              DeviceServerModel)
-            proj_device = get_topology().get_project_device(
-                device.instance_id, active_config.class_id,
-                server_model.server_id, init_config
-            )
-            self.project_device = proj_device
+        if not self.is_ui_initialized():
+            return
+        self._broadcast_item_click()
+
+    @on_trait_change('project_device:configuration_updated')
+    def _active_config_changed_in_configurator(self):
+        """Called whenever a box related to a widget is edited
+        """
+        configuration = self.project_device.current_configuration
+        if configuration.descriptor is None:
+            return
+
+        hsh, _ = configuration.toHash()  # Ignore returned attributes
+        config = self.active_config
+        if config is not None:
+            config.configuration = hsh
+
+    @on_trait_change("project_device.online")
+    def status_change(self):
+        if not self.is_ui_initialized():
+            return
+
+        configuration = self.project_device.current_configuration
+        status_enum = DeviceStatus(configuration.status)
+        icon = get_project_device_status_icon(status_enum)
+        if icon is not None:
+            self.qt_item.setIcon(icon)
+
+        # XXX: If we are currently showing in the configuration panel, then
+        # The view there should get our now online/offline configuration
+
+    # ----------------------------------------------------------------------
+    # Util methods
+
+    def _active_config_changed(self, config_model):
+        """Whenever the active config is changed from the context menu, update
+        the relevant device ``Configuration`` object
+        """
+        if config_model.configuration is None:
+            return
+
+        device = self.model
+        configuration = self.project_device.current_configuration
+        configuration.fromHash(config_model.configuration)
+        device.active_config_ref = (config_model.uuid, config_model.revision)
 
     def _broadcast_item_click(self):
         # XXX the configurator expects the clicked configuration before
         # it can show the actual configuration
-        data = {'configuration': self.project_device.current_configuration}
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.ShowConfiguration, data))
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.TreeItemSingleClick, data))
-
-    def _get_active_config(self):
-        """ Return the active device configuration object
-
-        :return If a `DeviceConfigurationModel` for the `DeviceInstanceModel`s
-        active `uuid` and `revision` can be found, otherwise a `NoneType` is
-        returned
-        """
-        device = self.model
-        uuid, revision = device.active_config_ref
-        return device.select_config(uuid, revision)
+        configuration = self.project_device.current_configuration
+        if configuration.descriptor is not None:
+            data = {'configuration': configuration}
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.ShowConfiguration, data))
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.TreeItemSingleClick, data))
 
     def _create_sub_menu(self, parent_menu, parent_project):
         """ Create sub menu for parent menu and return it
@@ -175,54 +225,8 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
 
         return config_menu
 
-    def _active_config_changed(self, config_model):
-        """Whenever the active config is changed from the context menu, update
-        the relevant device ``Configuration`` object
-        """
-        if config_model.configuration is None:
-            return
-
-        device = self.model
-        configuration = self.project_device.current_configuration
-        configuration.fromHash(config_model.configuration)
-        device.active_config_ref = (config_model.uuid, config_model.revision)
-
-    @on_trait_change('project_device.schema_updated,project_device.online')
-    def _device_schema_changed(self):
-        """Called when a new Schema arrives for `project_device` or it changes
-        between online <-> offline.
-        """
-        self._broadcast_item_click()
-
-    @on_trait_change('project_device:configuration_updated')
-    def _active_config_changed_in_configurator(self):
-        """Called whenever a box related to a widget is edited
-        """
-        configuration = self.project_device.current_configuration
-        if configuration.descriptor is None:
-            return
-
-        hsh, _ = configuration.toHash()  # Ignore returned attributes
-        config = self._get_active_config()
-        if config is not None:
-            config.configuration = hsh
-
-    @on_trait_change("project_device.online")
-    def status_change(self):
-        if not self.is_ui_initialized():
-            return
-
-        configuration = self.project_device.current_configuration
-        status_enum = DeviceStatus(configuration.status)
-        icon = get_project_device_status_icon(status_enum)
-        if icon is not None:
-            self.qt_item.setIcon(icon)
-
-        # XXX: If we are currently showing in the configuration panel, then
-        # The view there should get our now online/offline configuration
-
     # ----------------------------------------------------------------------
-    # action handlers
+    # QAction handlers
 
     def _delete_device(self, project):
         """ Remove the device associated with this item from its device server
@@ -282,6 +286,7 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
         active_config = self.active_config
         if active_config is None:
             return
+
         dialog = ObjectDuplicateDialog(device.instance_id)
         if dialog.exec() == QDialog.Accepted:
             xml = write_project_model(active_config)

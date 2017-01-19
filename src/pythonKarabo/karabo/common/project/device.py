@@ -22,6 +22,9 @@ class DeviceInstanceModel(BaseProjectObjectModel):
     class_id = String
     # The device ID of the instantiated device
     instance_id = String
+    # The server ID. Transient, because a parent DeviceServerModel will fill it
+    server_id = String(transient=True)
+
     # If the device is already online, should it be ignored or restarted?
     if_exists = Enum('ignore', 'restart')
     # A list of references to possible configurations
