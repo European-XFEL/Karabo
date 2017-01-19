@@ -139,3 +139,33 @@ def test_child_finding():
 
     not_found = server.get_device_instance('banana')
     assert not_found is None
+
+
+def test_child_server_id_minding():
+    dev = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
+                              initialized=True)
+    server = DeviceServerModel(server_id='testServer', host='machine',
+                               devices=[dev])
+
+    assert not dev.modified
+    assert dev.server_id == server.server_id
+
+    server.server_id = 'anotherServer'
+    assert not dev.modified
+    assert dev.server_id == server.server_id
+
+    second = DeviceInstanceModel(class_id='klaus', instance_id='chuck',
+                                 initialized=True)
+    server.devices.append(second)
+    assert not second.modified
+    assert second.server_id == server.server_id
+
+    server.devices = []
+    server.server_id = 'lastOne'
+    assert dev.server_id != server.server_id
+    assert second.server_id != server.server_id
+
+    dev.server_id = second.server_id = 'garbage'
+    server.devices = [second, dev]
+    assert dev.server_id == server.server_id
+    assert second.server_id == server.server_id
