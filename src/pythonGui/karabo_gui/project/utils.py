@@ -8,9 +8,9 @@ import weakref
 
 from PyQt4.QtGui import QDialog, QMessageBox
 
-from karabo.common.savable import BaseSavableModel
-from karabo.common.project.api import walk_traits_object
-from karabo_gui.messagebox import MessageBox
+from karabo.common.project.api import (
+    BaseProjectObjectModel, walk_traits_object)
+from karabo.middlelayer_api.project.api import recursive_save_object
 from karabo_gui.project.dialog.object_handle import ObjectSaveDialog
 from karabo_gui.singletons.api import get_db_conn
 
@@ -50,25 +50,18 @@ def save_object(obj):
     """
     from karabo_gui.project.api import TEST_DOMAIN
 
+    def set_alias(root, alias):
+        def _visitor(model):
+            if isinstance(model, BaseProjectObjectModel):
+                model.alias = alias
+
+        walk_traits_object(root, _visitor)
+
     dialog = ObjectSaveDialog(alias=obj.alias)
     if dialog.exec() == QDialog.Accepted:
-        obj.alias = dialog.alias
-        db_conn = get_db_conn()
-        db_conn.store(TEST_DOMAIN, obj.uuid, obj.revision, obj)
-
-
-def save_project(project):
-    """Before saving a project make sure that all children are already
-    saved
-    :return Whether the saving was a success
-    """
-    model = has_modified_children(project)
-    if model is not None and model is not project:
-        text = 'Please save individual project sub items first'
-        MessageBox.showError(text=text, title='Modified project objects')
-        return False
-    save_object(project)
-    return True
+        # XXX: Set same alias for each sub-item
+        set_alias(obj, dialog.alias)
+        recursive_save_object(obj, get_db_conn(), TEST_DOMAIN)
 
 
 def show_save_project_message(project):
@@ -98,27 +91,6 @@ def maybe_save_modified_project(project):
         return True
 
     if show_save_project_message(project):
-        if not save_project(project):
-            return False
+        save_object(project)
 
     return True
-
-
-def has_modified_children(model):
-    """ Check whether there are still children which ``modified`` flag is still
-    True
-
-    This recurses into all child models and checks the modified flag.
-
-    :return The model which modified is True, else None
-    """
-    class _Visitor(object):
-        modified_model = None
-
-        def __call__(self, obj):
-            if isinstance(obj, BaseSavableModel) and obj.modified:
-                self.modified_model = obj
-
-    visitor = _Visitor()
-    walk_traits_object(model, visitor)
-    return visitor.modified_model
