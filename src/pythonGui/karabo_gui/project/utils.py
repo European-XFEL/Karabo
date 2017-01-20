@@ -59,6 +59,7 @@ def save_object(obj):
 
     dialog = ObjectSaveDialog(alias=obj.alias)
     if dialog.exec() == QDialog.Accepted:
+        # XXX: Set same alias for each sub-item
         set_alias(obj, dialog.alias)
         recursive_save_object(obj, get_db_conn(), TEST_DOMAIN)
 
