@@ -67,8 +67,7 @@ def recursive_save_object(root, storage, domain):
     for leaf in _tree_iter(root):
         if leaf.modified:
             data = write_project_model(leaf)
-            storage.store(domain, leaf.uuid, leaf.revision, data)
-    set_modified_flag(root, value=False)
+            storage.store(domain, leaf.uuid, leaf.revision, data, leaf)
 
 
 def read_project_model(io_obj, existing=None):
