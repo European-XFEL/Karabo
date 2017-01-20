@@ -182,7 +182,13 @@ class Manager(QObject):
             log_messages.append(message)
         self.handle_log(log_messages)
 
-        # Tell the GUI about various devices that are alive
+        devices, servers = _extract_topology_devices(topologyEntry)
+        # Broadcast the change to listeners
+        data = {'devices': devices, 'servers': servers}
+        broadcast_event(KaraboBroadcastEvent(
+                        KaraboEventSender.SystemTopologyUpdate, data))
+
+        # Tell the GUI about various devices or servers that are alive
         self._broadcast_about_instances('AlarmService',
                                         KaraboEventSender.ShowAlarmServices)
         self._broadcast_about_instances('RunConfigurator',
