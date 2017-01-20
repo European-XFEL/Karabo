@@ -12,8 +12,8 @@ from karabo.common.project.api import (
 )
 from karabo.common.savable import set_modified_flag
 from ..api import (
-    convert_old_project, read_project_model, recursive_save_object,
-    write_project_model, OldProject
+    convert_old_project, OldProject, read_project_model, recursive_save_object,
+    write_project_model
 )
 
 TEST_DOMAIN = 'TESTES'
@@ -74,7 +74,7 @@ def _project_storage():
 
 
 def _write_project(project, storage):
-    set_modified_flag(project, value=True)  # Ensure everything is saved
+    set_modified_flag(project, value=True)  # Ensure everything gets saved
     recursive_save_object(project, storage, TEST_DOMAIN)
 
 # -----------------------------------------------------------------------------
