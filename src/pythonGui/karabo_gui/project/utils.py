@@ -52,7 +52,7 @@ def save_object(obj):
 
     def set_alias(root, alias):
         def _visitor(model):
-            if isinstance(model, BaseProjectObjectModel):
+            if isinstance(model, BaseProjectObjectModel) and model.modified:
                 model.alias = alias
 
         walk_traits_object(root, _visitor)

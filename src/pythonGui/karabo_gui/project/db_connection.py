@@ -94,7 +94,7 @@ class ProjectDatabaseConnection(QObject):
                     self._waiting_for_read[key] = existing
         return obj
 
-    def store(self, domain, uuid, revision, data):
+    def store(self, domain, uuid, revision, data, obj=None):
         """Write an object to the database
         """
         # XXX: Please don't keep this here!
@@ -104,7 +104,7 @@ class ProjectDatabaseConnection(QObject):
 
         # Don't ask the GUI server if you're already waiting for this object
         if key not in self._waiting_for_write:
-            self._waiting_for_write[key] = data
+            self._waiting_for_write[key] = (obj, data)
             items = [Hash('domain', domain, 'uuid', uuid, 'revision', revision,
                           'xml', data, 'overwrite', False)]
             self.network.onProjectSaveItems(self.project_manager, items)
@@ -145,10 +145,12 @@ class ProjectDatabaseConnection(QObject):
             revision = item['revision']
             if item['success']:
                 key = (uuid, revision)
-                data = self._waiting_for_write.pop(key)
+                obj, data = self._waiting_for_write.pop(key)
 
                 # Write to the local cache
-                self.cache.store(domain, uuid, revision, data)
+                self.cache.store(domain, uuid, revision, data, obj)
+                # No longer dirty!
+                obj.modified = False
             else:
                 # XXX: Make some noise.
                 # Right now, only the modified flag doesn't get updated.
