@@ -48,9 +48,9 @@ class DisplayImage(DisplayWidget):
         self.cellLayout.addWidget(self.axisLabel)
 
         self.currentAxis = QComboBox()
-        self.currentAxis.addItem("0")
-        self.currentAxis.addItem("1")
         self.currentAxis.addItem("2")
+        self.currentAxis.addItem("1")
+        self.currentAxis.addItem("0")
         self.currentAxis.setToolTip("Sets the axis over which the cell/pulse "
                                     "indexing is performed")
         self.currentAxis.currentIndexChanged.connect(self.axisChanged)
@@ -78,7 +78,7 @@ class DisplayImage(DisplayWidget):
         self.toolLayout.addWidget(self.cellWidget)
 
         self.selectedCell = 0
-        self.axis = 0
+        self.axis = 2
         self.npy = None
 
     def cellChanged(self, value):
