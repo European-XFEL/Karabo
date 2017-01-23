@@ -3,6 +3,7 @@ from contextlib import closing
 import gc
 from itertools import count
 import os
+import socket
 import sys
 import time
 from unittest import TestCase, main, skip
@@ -12,6 +13,7 @@ import weakref
 from karabo.middlelayer_api.cli import (connectDevice, DeviceClient,
                                         start_device_client)
 from karabo.middlelayer_api.device import Device
+from karabo.middlelayer_api.devicenode import DeviceNode
 from karabo.middlelayer_api.device_client import (
     getDevice, instantiate, shutdown, getDevices, getServers, getClasses)
 from karabo.middlelayer_api.device_server import DeviceServer
@@ -25,6 +27,7 @@ from .eventloop import setEventLoop
 
 class Remote(Macro):
     counter = Int(defaultValue=-1)
+    device = DeviceNode()
 
     @Slot()
     def count(self):
@@ -111,7 +114,9 @@ class Tests(TestCase):
             NoRemote(_deviceId_="NoRemote")
 
     def test_main(self):
-        Remote.main(["", "count", "counter=7"])
+        Remote.main(["", "count", "counter=7",
+                     "device=Remote_{}_{}".format(
+                        socket.gethostname(), os.getpid())])
 
     code = """if True:
         from karabo.middlelayer import *
