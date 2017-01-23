@@ -1,7 +1,10 @@
 from asyncio import (async, coroutine, gather, get_event_loop, set_event_loop,
                      TimeoutError, wait_for)
 import atexit
+from contextlib import closing
 from functools import wraps
+import os
+import socket
 import sys
 import threading
 
@@ -213,13 +216,14 @@ class Macro(Device):
         self.update()
 
     @classmethod
-    def main(cls):
-        if len(sys.argv) < 2:
+    def main(cls, argv=None):
+        if argv is None:
+            argv = sys.argv
+        if len(argv) < 2:
             if cls.__doc__ is not None:
                 print(cls.__doc__)
                 return
-            print("usage: {} slot [property=value] ...\n".
-                  format(sys.argv[0]))
+            print("usage: {} slot [property=value] ...\n".format(argv[0]))
             print("this calls a slot in macro {} with the given properties\n".
                   format(cls.__name__))
             print("available properties and slots:")
@@ -231,19 +235,28 @@ class Macro(Device):
                     t = type(v).__name__
                     print("{:10}{:10}{}".format(k, t, dn))
             return
-        args = {k: getattr(cls, k).fromstring(v) for k, v in
-                (a.split("=", 1) for a in sys.argv[2:])}
-        call = sys.argv[1]
+        args = {k: getattr(cls, k).fromstring(v)
+                for k, v in (a.split("=", 1) for a in argv[2:])}
+        call = argv[1]
         slot = getattr(cls, call)
         assert isinstance(slot, Slot), "only slots can be called"
 
         loop = EventLoop()
         set_event_loop(loop)
-        o = cls(args)
-        o.startInstance()
-        try:
-            loop.run_until_complete(loop.create_task(
-                loop.run_coroutine_or_thread(slot.method, o), o))
-            loop.run_until_complete(o.slotKillDevice())
-        finally:
-            loop.close()
+        if "deviceId" in args:
+            args["_deviceId_"] = args["deviceId"]
+        else:
+            args["_deviceId_"] = "{}_{}_{}".format(
+                cls.__name__, socket.gethostname(), os.getpid())
+
+        macro = cls(args)
+
+        @coroutine
+        def run():
+            yield from macro.startInstance()
+            future = loop.run_coroutine_or_thread(slot.method, macro)
+            yield from loop.create_task(future, macro)
+            yield from macro.slotKillDevice()
+
+        with closing(loop):
+            loop.run_until_complete(run())
