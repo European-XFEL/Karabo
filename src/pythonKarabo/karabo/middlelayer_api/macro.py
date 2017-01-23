@@ -1,6 +1,7 @@
 from asyncio import (async, coroutine, gather, get_event_loop, set_event_loop,
                      TimeoutError, wait_for)
 import atexit
+from contextlib import closing
 from functools import wraps
 import sys
 import threading
@@ -239,11 +240,14 @@ class Macro(Device):
 
         loop = EventLoop()
         set_event_loop(loop)
-        o = cls(args)
-        o.startInstance()
-        try:
-            loop.run_until_complete(loop.create_task(
-                loop.run_coroutine_or_thread(slot.method, o), o))
-            loop.run_until_complete(o.slotKillDevice())
-        finally:
-            loop.close()
+        macro = cls(args)
+
+        @coroutine
+        def run():
+            yield from macro.startInstance()
+            future = loop.run_coroutine_or_thread(slot.method, macro)
+            yield from loop.create_task(future, macro)
+            yield from macro.slotKillDevice()
+
+        with closing(loop):
+            loop.run_until_complete(run())
