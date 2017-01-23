@@ -49,9 +49,9 @@ namespace karathon {
 
     };
 
-    class MemoryMetaData : public karabo::xms::Memory::MetaData {
+    class ChannelMetaData : public karabo::xms::Memory::MetaData {
     public:
-        MemoryMetaData(const bp::object& src, const bp::object& ts);
+        ChannelMetaData(const bp::object& src, const bp::object& ts);
         void setSource(const bp::object& src);
         bp::object getSource();
         void setTimestamp(const bp::object& ts);
