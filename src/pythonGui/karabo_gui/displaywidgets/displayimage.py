@@ -25,18 +25,23 @@ class DisplayImage(DisplayWidget):
 
         self.widget = QWidget()
         self.layout = QHBoxLayout(self.widget)
+
+        self.toolWidget = QWidget()
+        self.toolLayout = QVBoxLayout(self.toolWidget)
+
         self.imageWidget = ImageDialog(
             edit=False, toolbar=True, wintitle=".".join(box.path))
         self.image = None
         self.plot = self.imageWidget.get_plot()
         self.layout.addWidget(self.imageWidget)
+        self.layout.addWidget(self.toolWidget)
 
         self.cellWidget = QWidget()
         self.cellLayout = QVBoxLayout(self.cellWidget)
 
-        self.cbUpdateColorMap = QCheckBox("Automatic intensity scale")
+        self.cbUpdateColorMap = QCheckBox("Autom LUT scale")
         self.cbUpdateColorMap.setChecked(False)
-        self.layout.addWidget(self.cbUpdateColorMap)
+        self.toolLayout.addWidget(self.cbUpdateColorMap)
 
         self.axisLabel = QLabel()
         self.axisLabel.setText("Indexed axis:")
@@ -70,7 +75,7 @@ class DisplayImage(DisplayWidget):
         self.cellWidget.setVisible(False)
         self.cellLayout.addWidget(self.slider)
 
-        self.layout.addWidget(self.cellWidget)
+        self.toolLayout.addWidget(self.cellWidget)
 
         self.selectedCell = 0
         self.axis = 0
@@ -112,7 +117,7 @@ class DisplayImage(DisplayWidget):
             return
 
         dimX, dimY, dimZ, format = get_dimensions_and_format(value)
-        if dimX is not None and dimY is not None:
+        if dimX is not None and dimY is not None and dimZ is None:
             if self.cellWidget.isVisible():
                 self.unsetSlider()
         elif dimZ is not None:
