@@ -299,10 +299,13 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
                                                      simple_name)
                 config_ref = (dupe_dev_conf.uuid, dupe_dev_conf.revision)
                 dev_inst = DeviceInstanceModel(
+                    class_id=device.class_id,
                     instance_id=simple_name,
                     if_exists=device.if_exists,
                     active_config_ref=config_ref,
-                    configs=[dupe_dev_conf]
+                    configs=[dupe_dev_conf],
+                    initialized=True,
+                    modified=True
                 )
                 server_model.devices.append(dev_inst)
 
