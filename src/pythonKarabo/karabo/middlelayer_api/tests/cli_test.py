@@ -111,12 +111,7 @@ class Tests(TestCase):
             NoRemote(_deviceId_="NoRemote")
 
     def test_main(self):
-        save = sys.argv
-        try:
-            sys.argv = ["", "count", "counter=7"]
-            Remote.main()
-        finally:
-            sys.argv = save
+        Remote.main(["", "count", "counter=7"])
 
     code = """if True:
         from karabo.middlelayer import *
