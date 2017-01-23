@@ -214,13 +214,14 @@ class Macro(Device):
         self.update()
 
     @classmethod
-    def main(cls):
-        if len(sys.argv) < 2:
+    def main(cls, argv=None):
+        if argv is None:
+            argv = sys.argv
+        if len(argv) < 2:
             if cls.__doc__ is not None:
                 print(cls.__doc__)
                 return
-            print("usage: {} slot [property=value] ...\n".
-                  format(sys.argv[0]))
+            print("usage: {} slot [property=value] ...\n".format(argv[0]))
             print("this calls a slot in macro {} with the given properties\n".
                   format(cls.__name__))
             print("available properties and slots:")
@@ -232,9 +233,9 @@ class Macro(Device):
                     t = type(v).__name__
                     print("{:10}{:10}{}".format(k, t, dn))
             return
-        args = {k: getattr(cls, k).fromstring(v) for k, v in
-                (a.split("=", 1) for a in sys.argv[2:])}
-        call = sys.argv[1]
+        args = {k: getattr(cls, k).fromstring(v)
+                for k, v in (a.split("=", 1) for a in argv[2:])}
+        call = argv[1]
         slot = getattr(cls, call)
         assert isinstance(slot, Slot), "only slots can be called"
 
