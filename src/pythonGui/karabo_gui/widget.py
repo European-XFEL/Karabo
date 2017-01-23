@@ -70,6 +70,7 @@ class Widget(Registry, QObject):
     @classmethod
     def getClass(cls, box):
         p = -1
+        winner = None
         for c in cls.getClasses(box):
             if c.priority > p:
                 winner = c
