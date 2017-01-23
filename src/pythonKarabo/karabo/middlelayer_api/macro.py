@@ -3,6 +3,8 @@ from asyncio import (async, coroutine, gather, get_event_loop, set_event_loop,
 import atexit
 from contextlib import closing
 from functools import wraps
+import os
+import socket
 import sys
 import threading
 
@@ -241,6 +243,12 @@ class Macro(Device):
 
         loop = EventLoop()
         set_event_loop(loop)
+        if "deviceId" in args:
+            args["_deviceId_"] = args["deviceId"]
+        else:
+            args["_deviceId_"] = "{}_{}_{}".format(
+                cls.__name__, socket.gethostname(), os.getpid())
+
         macro = cls(args)
 
         @coroutine
