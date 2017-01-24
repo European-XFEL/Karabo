@@ -108,8 +108,9 @@ class ProjectDatabaseConnection(QObject):
             self._waiting_for_write[key] = obj
             # Project DB expects xml as string
             xml = write_project_model(obj)
+            # XXX overwrite everytime until handled
             items = [Hash('domain', domain, 'uuid', uuid, 'revision', revision,
-                          'xml', xml, 'overwrite', False)]
+                          'xml', xml, 'overwrite', True)]
             self.network.onProjectSaveItems(self.project_manager, items)
 
     # -------------------------------------------------------------------
