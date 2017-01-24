@@ -73,9 +73,10 @@ def read_device_server(io_obj):
         'server_id': server_id,
         'host': root.get('host'),
         'devices': devices,
-        'initialized': True
     }
-    return DeviceServerModel(**traits)
+    model = DeviceServerModel(**traits)
+    model.initialized = True  # Do this last to avoid triggering `modified`
+    return model
 
 
 def write_device_server(model):
