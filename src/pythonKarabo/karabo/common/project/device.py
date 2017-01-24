@@ -121,7 +121,6 @@ def read_device(io_obj):
             'class_id': element.get('class_id'),
             'uuid': element.get('uuid'),
             'revision': int(element.get('revision')),
-            'initialized': False
         }
         return DeviceConfigurationModel(**traits)
 
@@ -136,9 +135,10 @@ def read_device(io_obj):
         'configs': configs,
         'active_config_ref': (root.get('active_uuid'),
                               int(root.get('active_rev'))),
-        'initialized': True
     }
-    return DeviceInstanceModel(**traits)
+    model = DeviceInstanceModel(**traits)
+    model.initialized = True  # Do this last to avoid triggering `modified`
+    return model
 
 
 def write_device(model):

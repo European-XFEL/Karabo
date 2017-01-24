@@ -5,6 +5,7 @@
 #############################################################################
 from functools import partial
 from io import StringIO
+from uuid import uuid4
 import weakref
 
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
@@ -288,8 +289,10 @@ class DeviceInstanceController(BaseProjectGroupController):
             config_model = DeviceConfigurationModel(
                 class_id=dialog.class_id, configuration=Hash(),
                 simple_name=dialog.alias, alias=dialog.alias,
-                description=dialog.description, initialized=True, modified=True
+                description=dialog.description
             )
+            # Set initialized and modified last to avoid bumping revision
+            config_model.initialized = config_model.modified = True
             active_config_ref = (config_model.uuid, config_model.revision)
             device.configs.append(config_model)
             device.active_config_ref = active_config_ref
@@ -312,7 +315,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             for simple_name in dialog.duplicate_names:
                 dupe_dev_conf = read_project_model(StringIO(xml))
                 # Set a new UUID and revision
-                dupe_dev_conf.reset_uuid_and_version()
+                dupe_dev_conf.trait_set(uuid=str(uuid4()), revision=0)
                 dupe_dev_conf.alias = '{}-{}'.format(active_config.alias,
                                                      simple_name)
                 config_ref = (dupe_dev_conf.uuid, dupe_dev_conf.revision)
@@ -321,10 +324,10 @@ class DeviceInstanceController(BaseProjectGroupController):
                     instance_id=simple_name,
                     if_exists=device.if_exists,
                     active_config_ref=config_ref,
-                    configs=[dupe_dev_conf],
-                    initialized=True,
-                    modified=True
+                    configs=[dupe_dev_conf]
                 )
+                # Set initialized and modified last to avoid bumping revision
+                dev_inst.initialized = dev_inst.modified = True
                 server_model.devices.append(dev_inst)
 
     def _instantiate_device(self, project):

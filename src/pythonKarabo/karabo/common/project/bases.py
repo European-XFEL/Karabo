@@ -28,12 +28,12 @@ class BaseProjectObjectModel(BaseSavableModel):
     alias = String(transient=True)
 
     def _modified_changed(self):
-        """When an object is modified, increment its revision number
+        """When an object is modified, increment its revision number. Ignore
+        modified flips if `initialized` is not yet True.
         """
-        # XXX: This is temporarily disable to avoid problems with versioning!
-        # if self.modified:
-        #    self.revision += 1
-        pass
+        # XXX: This is temporarily disabled to avoid problems with versioning!
+        # if self.initialized and self.modified:
+        #     self.revision += 1
 
     def _uuid_default(self):
         """If a uuid isn't supplied, generate one
