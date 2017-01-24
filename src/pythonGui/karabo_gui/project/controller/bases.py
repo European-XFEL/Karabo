@@ -11,14 +11,14 @@ from traits.api import (ABCHasStrictTraits, Callable, Dict, Instance, List,
                         Property)
 
 from karabo.common.project.api import BaseProjectObjectModel
-from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.const import PROJECT_CONTROLLER_REF
 
 
-class BaseProjectTreeItem(ABCHasStrictTraits):
-    """ A base class for all objects which wrap ProjectModel objects for use
+class BaseProjectController(ABCHasStrictTraits):
+    """ A base class for all objects which control ProjectModel objects for use
     in the ProjectTreeView.
     """
-    # The project model object represented here
+    # The project model object controlled here
     model = Instance(BaseProjectObjectModel)
 
     # The QStandardItem representing this object
@@ -87,15 +87,15 @@ class BaseProjectTreeItem(ABCHasStrictTraits):
         qt_item.setForeground(brush)
 
 
-class BaseProjectGroupItem(BaseProjectTreeItem):
-    """ A base class for all project tree objects which have children.
+class BaseProjectGroupController(BaseProjectController):
+    """ A base class for all project controller objects which have children.
     """
-    # A factory for shadow items wrapping children
+    # A factory for children controllers
     child_create = Callable
-    # A callable which can gracefully destroy a child shadow object
+    # A callable which can gracefully destroy a child controller
     child_destroy = Callable
-    # Children shadow items
-    children = List(Instance(BaseProjectTreeItem))
+    # Child controllers
+    children = List(Instance(BaseProjectController))
     _child_map = Dict  # dictionary for fast lookups during removal
 
     def items_assigned(self, obj, name, old, new):
@@ -144,7 +144,7 @@ class BaseProjectGroupItem(BaseProjectTreeItem):
         def _find_child_qt_item(item_model):
             for i in range(self.qt_item.rowCount()):
                 row_child = self.qt_item.child(i)
-                row_model = row_child.data(PROJECT_ITEM_MODEL_REF)()
+                row_model = row_child.data(PROJECT_CONTROLLER_REF)()
                 if row_model is item_model:
                     return i
             return -1

@@ -12,7 +12,7 @@ from traits.api import Instance, on_trait_change
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel)
 from karabo.middlelayer import Hash
-from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.events import (register_for_broadcasts,
                                unregister_from_broadcasts)
 from karabo_gui.indicators import DeviceStatus, get_project_server_status_icon
@@ -21,11 +21,11 @@ from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
 from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager, get_topology
-from .bases import BaseProjectGroupItem
+from .bases import BaseProjectGroupController
 
 
-class DeviceServerModelItem(BaseProjectGroupItem):
-    """ A wrapper for DeviceServerModel objects
+class DeviceServerController(BaseProjectGroupController):
+    """ A controller for DeviceServerModel objects
     """
     # Redefine model with the correct type
     model = Instance(DeviceServerModel)
@@ -64,7 +64,7 @@ class DeviceServerModelItem(BaseProjectGroupItem):
 
     def create_qt_item(self):
         item = QStandardItem(self.model.server_id)
-        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
+        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         # Get current status of server
         self.model.status = _get_server_status(self.model.server_id)
         icon = get_project_server_status_icon(DeviceStatus(self.model.status))

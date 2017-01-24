@@ -12,7 +12,7 @@ from traits.api import Instance, String, on_trait_change
 
 from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabo_gui import icons
-from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
     KaraboBroadcastEvent, KaraboEventSender)
@@ -23,11 +23,11 @@ from karabo_gui.project.topo_listener import SystemTopologyListener
 from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.util import getSaveFileName
-from .bases import BaseProjectGroupItem, BaseProjectTreeItem
+from .bases import BaseProjectGroupController, BaseProjectController
 
 
-class MacroInstanceItem(BaseProjectTreeItem):
-    """ A project panel item for running macro instances
+class MacroInstanceController(BaseProjectController):
+    """ A controller for running macro instances
     """
     # The instance ID of the running macro
     instance_id = String
@@ -41,7 +41,7 @@ class MacroInstanceItem(BaseProjectTreeItem):
 
     def create_qt_item(self):
         item = QStandardItem(self.instance_id)
-        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
+        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         icon = get_project_device_status_icon(DeviceStatus.STATUS_ONLINE)
         item.setIcon(icon)
         item.setEditable(False)
@@ -60,8 +60,8 @@ class MacroInstanceItem(BaseProjectTreeItem):
         get_manager().shutdownDevice(self.instance_id, showConfirm=True)
 
 
-class MacroModelItem(BaseProjectGroupItem):
-    """ A wrapper for MacroModel objects
+class MacroController(BaseProjectGroupController):
+    """ A controller for MacroModel objects
     """
     # Redefine model with the correct type
     model = Instance(MacroModel)
@@ -92,7 +92,7 @@ class MacroModelItem(BaseProjectGroupItem):
 
     def create_qt_item(self):
         item = QStandardItem(self.model.simple_name)
-        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
+        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         item.setIcon(icons.file)
         item.setEditable(False)
         self.set_qt_item_text(item, self.model.simple_name)
