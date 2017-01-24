@@ -9,7 +9,8 @@ from PyQt4.QtCore import QObject
 from karabo.common.project.api import get_user_cache, read_lazy_object
 from karabo.common.savable import set_modified_flag
 from karabo.middlelayer import Hash
-from karabo.middlelayer_api.project.api import read_project_model
+from karabo.middlelayer_api.project.api import (read_project_model,
+                                                write_project_model)
 from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.singletons.api import get_network
@@ -94,7 +95,7 @@ class ProjectDatabaseConnection(QObject):
                     self._waiting_for_read[key] = existing
         return obj
 
-    def store(self, domain, uuid, revision, data, obj=None):
+    def store(self, domain, uuid, revision, obj):
         """Write an object to the database
         """
         # XXX: Please don't keep this here!
@@ -104,9 +105,11 @@ class ProjectDatabaseConnection(QObject):
 
         # Don't ask the GUI server if you're already waiting for this object
         if key not in self._waiting_for_write:
-            self._waiting_for_write[key] = (obj, data)
+            self._waiting_for_write[key] = obj
+            # Project DB expects xml as string
+            xml = write_project_model(obj)
             items = [Hash('domain', domain, 'uuid', uuid, 'revision', revision,
-                          'xml', data, 'overwrite', False)]
+                          'xml', xml, 'overwrite', False)]
             self.network.onProjectSaveItems(self.project_manager, items)
 
     # -------------------------------------------------------------------
@@ -145,10 +148,11 @@ class ProjectDatabaseConnection(QObject):
             revision = item['revision']
             if item['success']:
                 key = (uuid, revision)
-                obj, data = self._waiting_for_write.pop(key)
+                obj = self._waiting_for_write.pop(key)
 
                 # Write to the local cache
-                self.cache.store(domain, uuid, revision, data, obj)
+                data = write_project_model(obj)
+                self.cache.store(domain, uuid, revision, data)
                 # No longer dirty!
                 obj.modified = False
             else:
