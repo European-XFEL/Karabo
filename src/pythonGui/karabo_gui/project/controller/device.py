@@ -74,8 +74,13 @@ class DeviceInstanceController(BaseProjectGroupController):
         item = QStandardItem()
         item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         # Get current status of device
-        configuration = self.project_device.current_configuration
-        status_enum = DeviceStatus(configuration.status)
+        if self.model.initialized:
+            # But only if our model is initialized!
+            configuration = self.project_device.current_configuration
+            status_enum = DeviceStatus(configuration.status)
+        else:
+            # Otherwise show the instance as offline
+            status_enum = DeviceStatus('offline')
         icon = get_project_device_status_icon(status_enum)
         item.setIcon(icon)
         item.setEditable(False)
@@ -108,6 +113,10 @@ class DeviceInstanceController(BaseProjectGroupController):
         """
         device = self.model
         config = self.active_config
+
+        # Complain loudly if this trait is initialized when the model isn't
+        assert device.initialized, "DeviceInstanceModel must be initialized!"
+
         return get_topology().get_project_device(
             device.instance_id, device.class_id, device.server_id,
             None if config is None else config.configuration
@@ -118,11 +127,15 @@ class DeviceInstanceController(BaseProjectGroupController):
         """Just to make life difficult, the instance_id changed. The
         `project_device` trait needs to be reinitialized.
         """
+        # Watch for incomplete model initialization
+        if not self.model.initialized:
+            return
+
         # Reuse the traits default initializer
         self.project_device = self._project_device_default()
 
     @on_trait_change("model.modified,model.instance_id")
-    def update_ui_label(self):
+    def _update_ui_label(self):
         """ Whenever the project is modified it should be visible to the user
         """
         if not self.is_ui_initialized():
@@ -130,8 +143,9 @@ class DeviceInstanceController(BaseProjectGroupController):
         self.set_qt_item_text(self.qt_item, self.model.instance_id)
 
     @on_trait_change("model:active_config_ref")
-    def active_config_ref_change(self):
-        if not self.is_ui_initialized():
+    def _active_config_ref_change(self):
+        # Watch for incomplete model and view initialization
+        if not (self.model.initialized and self.is_ui_initialized()):
             return
 
         model = self._get_active_config()
@@ -185,7 +199,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         """Whenever the active config is changed from the context menu, update
         the relevant device ``Configuration`` object
         """
-        if config_model.configuration is None:
+        if not self.model.initialized or config_model.configuration is None:
             return
 
         device = self.model
@@ -196,6 +210,10 @@ class DeviceInstanceController(BaseProjectGroupController):
     def _broadcast_item_click(self):
         # XXX the configurator expects the clicked configuration before
         # it can show the actual configuration
+
+        if not self.model.initialized:
+            return
+
         configuration = self.project_device.current_configuration
         if configuration.descriptor is not None:
             data = {'configuration': configuration}
