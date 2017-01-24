@@ -35,7 +35,7 @@ class DeviceHandleDialog(QDialog):
 
     def _initUI(self, server_id, model, add_config):
         # Get available plugins from systemTopology
-        for class_id in self._get_available_plugins():
+        for class_id in self._get_available_plugins(server_id):
             self.cbClass.addItem(class_id)
         self.leServerId.setText(server_id)
 
@@ -96,11 +96,14 @@ class DeviceHandleDialog(QDialog):
         # Update revisions combobox if configuration changes
         self.cbConfig.currentIndexChanged[int].connect(self.config_changed)
 
-    def _get_available_plugins(self):
-        """ Get all available plugins of `systemTopology`"""
+    def _get_available_plugins(self, device_server_id):
+        """ Get all available plugins of `systemTopology` for the given
+        ``device_server_id``"""
         available_plugins = set()
 
         def filter(server_id, attrs):
+            if device_server_id != server_id:
+                return False
             for class_id, visibility in zip(attrs.get('deviceClasses', []),
                                             attrs.get('visibilities', [])):
                 # Only show accessible plugins depending on global access level
