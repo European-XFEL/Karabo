@@ -1,11 +1,15 @@
+from uuid import uuid4
+
 from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.project.api import (
-    DeviceConfigurationModel, DeviceInstanceModel, read_device, write_device
+    BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
+    read_device, write_device, walk_traits_object
 )
 from karabo.testing.utils import temp_xml_file, xml_is_equal
 
-UUID = 'c43e5c53-bea4-4e9e-921f-042b52e58f4c'
+
+UUID = str(uuid4())
 DEVICE_XML = """
 <device_instance class_id='BazClass'
                  instance_id='fooDevice'
@@ -78,3 +82,34 @@ def test_child_finding():
 
     conf = foo.select_config(UUID, 3)
     assert conf is None
+
+
+def test_uuid_revision_update():
+    def _visitor(model):
+        if isinstance(model, BaseProjectObjectModel):
+            model.uuid = str(uuid4())
+            model.revision = 0
+
+    conf0_uuid = str(uuid4())
+    conf1_uuid = str(uuid4())
+    dev_uuid = str(uuid4())
+    conf0 = DeviceConfigurationModel(class_id='BarClass', uuid=conf0_uuid,
+                                     revision=42)
+    conf1 = DeviceConfigurationModel(class_id='BarClass', uuid=conf1_uuid,
+                                     revision=123)
+    dev = DeviceInstanceModel(class_id='BarClass', instance_id='fooDevice',
+                              configs=[conf0, conf1],
+                              active_config_ref=(conf0_uuid, 42),
+                              uuid=dev_uuid, revision=1)
+
+    selected_conf = dev.select_config(conf0_uuid, 42)
+    assert selected_conf is conf0
+
+    walk_traits_object(dev, _visitor)
+    assert conf0.uuid != conf0_uuid
+    assert conf1.uuid != conf1_uuid
+    assert dev.uuid != dev_uuid
+    assert dev.active_config_ref == (conf0.uuid, 0)
+
+    selected_conf = dev.select_config(conf0.uuid, 0)
+    assert selected_conf is conf0
