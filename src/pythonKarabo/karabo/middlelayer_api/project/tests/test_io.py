@@ -8,15 +8,26 @@ from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 
 from karabo.common.project.api import (
     MacroModel, ProjectDBCache, ProjectModel, read_lazy_object,
-    walk_traits_object
+    recursive_save_object, walk_traits_object
 )
 from karabo.common.savable import set_modified_flag
 from ..api import (
-    convert_old_project, OldProject, read_project_model, recursive_save_object,
-    write_project_model
+    convert_old_project, OldProject, read_project_model, write_project_model
 )
 
 TEST_DOMAIN = 'TESTES'
+
+
+class _StorageWrapper(object):
+    """A thin wrapper around storage objects which handles serialization of
+    project objects.
+    """
+    def __init__(self, storage):
+        self._storage = storage
+
+    def store(self, domain, uuid, revision, obj):
+        data = write_project_model(obj)
+        self._storage.store(domain, uuid, revision, data)
 
 
 def _compare_projects(proj0, proj1):
@@ -75,7 +86,8 @@ def _project_storage():
 
 def _write_project(project, storage):
     set_modified_flag(project, value=True)  # Ensure everything gets saved
-    recursive_save_object(project, storage, TEST_DOMAIN)
+    wrapped = _StorageWrapper(storage)
+    recursive_save_object(project, wrapped, TEST_DOMAIN)
 
 # -----------------------------------------------------------------------------
 

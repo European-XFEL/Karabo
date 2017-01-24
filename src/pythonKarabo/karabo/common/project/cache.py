@@ -15,7 +15,7 @@ class ProjectDBCache(object):
     def __init__(self, dirpath):
         self.dirpath = dirpath
 
-    def store(self, domain, uuid, revision, data, obj=None):
+    def store(self, domain, uuid, revision, data):
         """ Add an object to the cache
         """
         path = self._generate_filepath(domain, uuid, revision)
