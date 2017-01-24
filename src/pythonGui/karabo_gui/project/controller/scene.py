@@ -12,18 +12,18 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo_gui import icons
-from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
                                KaraboEventSender)
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.utils import save_object
 from karabo_gui.util import getSaveFileName
-from .bases import BaseProjectTreeItem
+from .bases import BaseProjectController
 
 
-class SceneModelItem(BaseProjectTreeItem):
-    """ A wrapper for SceneModel objects
+class SceneController(BaseProjectController):
+    """ A controller for SceneModel objects
     """
     # Redefine model with the correct type
     model = Instance(SceneModel)
@@ -52,7 +52,7 @@ class SceneModelItem(BaseProjectTreeItem):
 
     def create_qt_item(self):
         item = QStandardItem(self.model.simple_name)
-        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
+        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         item.setIcon(icons.image)
         item.setEditable(False)
         self.set_qt_item_text(item, self.model.simple_name)

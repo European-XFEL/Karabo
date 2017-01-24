@@ -9,11 +9,11 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
 
 from karabo.common.project.api import ProjectModel, find_parent_object
-from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.utils import maybe_save_modified_project, save_object
 from karabo_gui.singletons.api import get_project_model, get_selection_tracker
-from .model.project import ProjectModelItem
-from .model.project_groups import ProjectSubgroupItem
+from .controller.project import ProjectController
+from .controller.project_groups import ProjectSubgroupController
 
 
 class ProjectView(QTreeView):
@@ -38,10 +38,10 @@ class ProjectView(QTreeView):
         event.accept()
 
     def mouseDoubleClickEvent(self, event):
-        selected_item_model = self._get_selected_model()
-        if selected_item_model is not None:
-            parent_project = self._parent_project(selected_item_model)
-            selected_item_model.double_click(parent_project, parent=self)
+        selected_controller = self._get_selected_controller()
+        if selected_controller is not None:
+            parent_project = self._parent_project(selected_controller)
+            selected_controller.double_click(parent_project, parent=self)
 
     # ----------------------------
     # Public methods
@@ -54,33 +54,33 @@ class ProjectView(QTreeView):
     # ----------------------------
     # Private methods
 
-    def _get_selected_model(self):
-        """ Return the currently selected item model.
+    def _get_selected_controller(self):
+        """ Return the currently selected controller.
         """
         indices = self.selectionModel().selectedIndexes()
         if not indices:
             return None
 
         first_index = indices[0]
-        model_ref = first_index.data(PROJECT_ITEM_MODEL_REF)
-        return model_ref()
+        controller_ref = first_index.data(PROJECT_CONTROLLER_REF)
+        return controller_ref()
 
-    def _parent_project(self, model):
-        """ Find the parent project model of a given item model
+    def _parent_project(self, controller):
+        """ Find the parent project model of a given controller
         """
-        if isinstance(model, ProjectSubgroupItem):
-            return model.model
+        if isinstance(controller, ProjectSubgroupController):
+            return controller.model
         root_project = self.model().traits_data_model
-        return find_parent_object(model.model, root_project, ProjectModel)
+        return find_parent_object(controller.model, root_project, ProjectModel)
 
     def _selection_change(self, selected, deselected):
-        """ Notify item model objects when their Qt list item object is
+        """ Notify controller objects when their Qt list item object is
         selected.
         """
-        selected_item_model = self._get_selected_model()
-        if selected_item_model is not None:
-            parent_project = self._parent_project(selected_item_model)
-            selected_item_model.single_click(parent_project, parent=self)
+        selected_controller = self._get_selected_controller()
+        if selected_controller is not None:
+            parent_project = self._parent_project(selected_controller)
+            selected_controller.single_click(parent_project, parent=self)
 
             # Grab control of the global selection
             get_selection_tracker().grab_selection(self.selectionModel())
@@ -88,14 +88,14 @@ class ProjectView(QTreeView):
     def _show_context_menu(self):
         """ Show a context menu for the currently selected item.
         """
-        selected_item_model = self._get_selected_model()
-        if selected_item_model is not None:
-            parent_project = self._parent_project(selected_item_model)
-            menu = selected_item_model.context_menu(parent_project,
+        selected_controller = self._get_selected_controller()
+        if selected_controller is not None:
+            parent_project = self._parent_project(selected_controller)
+            menu = selected_controller.context_menu(parent_project,
                                                     parent=self)
-            is_project = isinstance(selected_item_model, ProjectModelItem)
+            is_project = isinstance(selected_controller, ProjectController)
             if parent_project is None or is_project:
-                project_model = selected_item_model.model
+                project_model = selected_controller.model
                 save_action = QAction('Save', menu)
                 save_action.triggered.connect(partial(save_object,
                                                       project_model))
