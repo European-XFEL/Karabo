@@ -9,8 +9,7 @@ import weakref
 from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.common.project.api import (
-    BaseProjectObjectModel, walk_traits_object)
-from karabo.middlelayer_api.project.api import recursive_save_object
+    BaseProjectObjectModel, recursive_save_object, walk_traits_object)
 from karabo_gui.project.dialog.object_handle import ObjectSaveDialog
 from karabo_gui.singletons.api import get_db_conn
 
