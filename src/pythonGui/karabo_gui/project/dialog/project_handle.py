@@ -58,9 +58,6 @@ class ProjectHandleDialog(QDialog):
 
         # Tableview
         self.twProjects.setModel(TableModel(parent=self))
-        rev_delegate = ComboBoxDelegate(self.twProjects)
-        rev_column = get_column_index(REVISIONS)
-        self.twProjects.setItemDelegateForColumn(rev_column, rev_delegate)
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
         self.twProjects.doubleClicked.connect(self.accept)
@@ -100,8 +97,8 @@ class ProjectHandleDialog(QDialog):
         rev_index = get_column_index(REVISIONS)
         rev_entry = selection_model.selectedRows(rev_index)
         if uuid_entry and rev_entry:
-            delegate = self.twProjects.itemDelegate(rev_entry[0])
-            return (uuid_entry[0].data(), int(delegate.selectedItem()))
+            revision, alias = rev_entry[0].data(Qt.UserRole)
+            return (uuid_entry[0].data(), int(revision))
         return None
 
     @property
@@ -186,10 +183,11 @@ class TableModel(QAbstractTableModel):
             self.entries = []
             for it in data:
                 rev_list = it.get('revisions')
-                rev_data = []
-                for rev in rev_list:
-                    rev_data.append((rev.get('revision', ''),
-                                     rev.get('alias', '')))
+                # XXX: intermediate solution to only display latest revision
+                # NOTE: The list is sorted - last entry is latest version
+                latest_rev = rev_list[-1]
+                rev_data = (latest_rev.get('revision', ''),
+                            latest_rev.get('alias', ''))
                 entry = ProjectEntry(
                     simple_name=it.get('simple_name'),
                     uuid=it.get('uuid'),
@@ -226,6 +224,11 @@ class TableModel(QAbstractTableModel):
             return None
         entry = self.entries[index.row()]
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
+            if index.column() == get_column_index(REVISIONS):
+                revision, alias = entry[index.column()]
+                return '{} <{}>'.format(alias, revision)
+            return entry[index.column()]
+        elif role == Qt.UserRole:
             return entry[index.column()]
         return None
 
