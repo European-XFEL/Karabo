@@ -30,8 +30,10 @@ class BaseProjectObjectModel(BaseSavableModel):
     def _modified_changed(self):
         """When an object is modified, increment its revision number
         """
-        if self.modified:
-            self.revision += 1
+        # XXX: This is temporarily disable to avoid problems with versioning!
+        # if self.modified:
+        #    self.revision += 1
+        pass
 
     def _uuid_default(self):
         """If a uuid isn't supplied, generate one
