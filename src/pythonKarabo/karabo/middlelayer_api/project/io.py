@@ -2,17 +2,15 @@ import base64
 from io import StringIO
 
 from lxml import etree
-from traits.api import Instance, List
 
 from karabo.common.project.api import (
     PROJECT_DB_TYPE_DEVICE_INSTANCE, PROJECT_DB_TYPE_DEVICE_CONFIG,
     PROJECT_DB_TYPE_DEVICE_SERVER, PROJECT_DB_TYPE_MACRO,
     PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE, PROJECT_OBJECT_CATEGORIES,
-    BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
-    DeviceServerModel, MacroModel, ProjectModel, read_device,
-    read_device_server, write_device, write_device_server
+    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
+    MacroModel, ProjectModel, read_device, read_device_server, write_device,
+    write_device_server
 )
-from karabo.common.savable import set_modified_flag
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.hash import Hash
 
@@ -32,42 +30,6 @@ _PROJECT_ITEM_TYPES = {
 }
 # Check it
 assert len(_PROJECT_ITEM_TYPES) == len(PROJECT_OBJECT_CATEGORIES)
-
-
-def recursive_save_object(root, storage, domain):
-    """Recursively save a project object by using a depth first traversal and
-    saving all the modified ``BaseProjectObjectModel`` objects which are
-    found in the object tree.
-    """
-    def _is_list_of_has_traits(trait):
-        if not isinstance(trait.trait_type, List):
-            return False
-        inner_type = trait.inner_traits[0].trait_type
-        if not isinstance(inner_type, Instance):
-            return False
-        if not issubclass(inner_type.klass, BaseProjectObjectModel):
-            return False
-        return True
-
-    def _find_iterables(obj):
-        return [name for name in obj.copyable_trait_names()
-                if _is_list_of_has_traits(obj.trait(name))]
-
-    def _tree_iter(obj):
-        # Iteratively yield the children
-        iterables = _find_iterables(obj)
-        for name in iterables:
-            children = getattr(obj, name)
-            for child in children:
-                for subchild in _tree_iter(child):
-                    yield subchild
-        # Yield the root last
-        yield obj
-
-    for leaf in _tree_iter(root):
-        if leaf.modified:
-            data = write_project_model(leaf)
-            storage.store(domain, leaf.uuid, leaf.revision, data, leaf)
 
 
 def read_project_model(io_obj, existing=None):

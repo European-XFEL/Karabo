@@ -1,5 +1,7 @@
 from traits.api import HasTraits, Instance, List
 
+from .bases import BaseProjectObjectModel
+
 
 def find_parent_object(model, ancestor_model, search_klass):
     """ Given a project child object and a project object which is the child's
@@ -27,6 +29,43 @@ def find_parent_object(model, ancestor_model, search_klass):
     visitor = _Visitor()
     walk_traits_object(ancestor_model, visitor)
     return visitor.parent
+
+
+def recursive_save_object(root, storage, domain):
+    """Recursively save a project object by using a depth first traversal and
+    saving all the modified ``BaseProjectObjectModel`` objects which are
+    found in the object tree.
+    """
+    # XXX: Yes, this is duplicated code. It's basically yield parent first vs.
+    # yield parent last. This should be generalized later in walk_traits_object
+    def _is_list_of_has_traits(trait):
+        if not isinstance(trait.trait_type, List):
+            return False
+        inner_type = trait.inner_traits[0].trait_type
+        if not isinstance(inner_type, Instance):
+            return False
+        if not issubclass(inner_type.klass, BaseProjectObjectModel):
+            return False
+        return True
+
+    def _find_iterables(obj):
+        return [name for name in obj.copyable_trait_names()
+                if _is_list_of_has_traits(obj.trait(name))]
+
+    def _tree_iter(obj):
+        # Iteratively yield the children
+        iterables = _find_iterables(obj)
+        for name in iterables:
+            children = getattr(obj, name)
+            for child in children:
+                for subchild in _tree_iter(child):
+                    yield subchild
+        # Yield the root last
+        yield obj
+
+    for leaf in _tree_iter(root):
+        if leaf.modified:
+            storage.store(domain, leaf.uuid, leaf.revision, leaf)
 
 
 def walk_traits_object(traits_obj, visitor_func):
