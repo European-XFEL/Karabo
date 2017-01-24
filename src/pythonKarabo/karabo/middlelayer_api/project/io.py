@@ -162,7 +162,7 @@ def _device_reader(io_obj, existing, metadata):
     existing.if_exists = device.if_exists
     existing.configs[:] = device.configs[:]
     existing.active_config_ref = device.active_config_ref
-    existing.initialized = True
+    existing.initialized = True  # Do this last to avoid triggering `modified`
 
     return existing
 
@@ -177,8 +177,8 @@ def _device_config_reader(io_obj, existing, metadata):
     for class_id, configuration in hsh.items():
         break
 
-    dev.trait_set(class_id=class_id, configuration=configuration,
-                  initialized=True)
+    dev.trait_set(class_id=class_id, configuration=configuration)
+    dev.initialized = True  # Do this last to avoid triggering `modified`
 
     return dev
 
@@ -196,7 +196,7 @@ def _device_server_reader(io_obj, existing, metadata):
     existing.server_id = server.server_id
     existing.host = server.host
     existing.devices[:] = server.devices[:]
-    existing.initialized = True
+    existing.initialized = True  # Do this last to avoid triggering `modified`
 
     return existing
 
@@ -211,7 +211,7 @@ def _macro_reader(io_obj, existing, metadata):
     code = root.text
     if code is not None:
         macro.trait_set(code=base64.b64decode(code).decode('utf-8'))
-    macro.initialized = True
+    macro.initialized = True  # Do this last to avoid triggering `modified`
 
     return macro
 
@@ -233,7 +233,8 @@ def _project_reader(io_obj, existing, metadata):
     project_hash = hsh[PROJECT_DB_TYPE_PROJECT]
     traits.update({k: _get_items(project_hash, k)
                    for k in PROJECT_OBJECT_CATEGORIES})
-    project.trait_set(initialized=True, **traits)
+    project.trait_set(**traits)
+    project.initialized = True  # Do this last to avoid triggering `modified`
     return project
 
 
@@ -252,7 +253,7 @@ def _scene_reader(io_obj, existing, metadata):
     existing.width = scene.width
     existing.height = scene.height
     existing.children[:] = scene.children[:]
-    existing.initialized = True
+    existing.initialized = True  # Do this last to avoid triggering `modified`
 
     return existing
 
