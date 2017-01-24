@@ -8,8 +8,8 @@ from PyQt4.QtGui import QItemSelectionModel, QStandardItemModel
 from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender
 )
-from karabo_gui.project.model.shadow import (
-    create_project_model_shadow, destroy_project_model_shadow
+from karabo_gui.project.api import (
+    create_project_controller, destroy_project_controller
 )
 from karabo_gui.singletons.api import get_topology
 
@@ -26,7 +26,7 @@ class ProjectViewItemModel(QStandardItemModel):
         self.q_selection_model = QItemSelectionModel(self, self)
 
         self._traits_model = None
-        self._shadow_model = None
+        self._controller = None
 
         self.setHorizontalHeaderLabels(TABLE_HEADER_LABELS)
 
@@ -54,9 +54,9 @@ class ProjectViewItemModel(QStandardItemModel):
     def traits_data_model(self, model):
         """ Set the ProjectModel instance that we're presenting to Qt
         """
-        # Clean up any previously created shadow models
-        if self._shadow_model is not None:
-            destroy_project_model_shadow(self._shadow_model)
+        # Clean up any previously created controllers
+        if self._controller is not None:
+            destroy_project_controller(self._controller)
             get_topology().clear_project_devices()
             self.clear()
             # Need to reset header data after clear()
@@ -66,5 +66,5 @@ class ProjectViewItemModel(QStandardItemModel):
 
         self._traits_model = model
         if model is not None:
-            self._shadow_model = create_project_model_shadow(model)
-            self.invisibleRootItem().appendRow(self._shadow_model.qt_item)
+            self._controller = create_project_controller(model)
+            self.invisibleRootItem().appendRow(self._controller.qt_item)
