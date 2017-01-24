@@ -10,13 +10,13 @@ from PyQt4.QtGui import QAction, QMenu, QStandardItem
 from traits.api import Instance, Property, on_trait_change, String
 
 from karabo.common.project.api import DeviceConfigurationModel
-from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.utils import save_object
-from .bases import BaseProjectTreeItem
+from .bases import BaseProjectController
 
 
-class DeviceConfigurationModelItem(BaseProjectTreeItem):
-    """ A wrapper for DeviceConfigurationModel objects
+class DeviceConfigurationController(BaseProjectController):
+    """ A controller for DeviceConfigurationModel objects
     """
     # Redefine model with the correct type
     model = Instance(DeviceConfigurationModel)
@@ -31,7 +31,7 @@ class DeviceConfigurationModelItem(BaseProjectTreeItem):
 
     def create_qt_item(self):
         item = QStandardItem()
-        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
+        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         item.setEditable(False)
         self.set_qt_item_text(item, self._ui_name)
         return item

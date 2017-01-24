@@ -10,19 +10,19 @@ from traits.api import Instance, List, on_trait_change
 
 from karabo.common.project.api import ProjectModel
 from karabo_gui import icons
-from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
-from .bases import BaseProjectTreeItem
-from .project_groups import ProjectSubgroupItem
+from .bases import BaseProjectController
+from .project_groups import ProjectSubgroupController
 
 
-class ProjectModelItem(BaseProjectTreeItem):
-    """ A wrapper for ProjectModel objects
+class ProjectController(BaseProjectController):
+    """ A controller for ProjectModel objects
     """
     # Redefine model with the correct type
     model = Instance(ProjectModel)
     # The subgroups of this project
-    children = List(Instance(ProjectSubgroupItem))
+    children = List(Instance(ProjectSubgroupController))
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
@@ -38,7 +38,7 @@ class ProjectModelItem(BaseProjectTreeItem):
 
     def create_qt_item(self):
         item = QStandardItem()
-        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
+        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         item.setIcon(icons.folder)
         item.setEditable(False)
         for child in self.children:

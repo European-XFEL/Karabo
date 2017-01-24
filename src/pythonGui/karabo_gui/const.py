@@ -48,4 +48,4 @@ METRIC_PREFIX_SYMBOL = Qt.UserRole + 17
 ENUMERATION = Qt.UserRole + 18
 
 # Project item properties
-PROJECT_ITEM_MODEL_REF = Qt.UserRole
+PROJECT_CONTROLLER_REF = Qt.UserRole

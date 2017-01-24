@@ -3,11 +3,11 @@ from karabo.common.project.api import (
     PROJECT_OBJECT_CATEGORIES
 )
 from karabo.common.scenemodel.api import SceneModel
-from ..scene import SceneModelItem
-from ..shadow import (
-    create_device_server_model_shadow, create_project_model_shadow,
-    create_macro_model_shadow, destroy_project_model_shadow
+from ..controller.build import (
+    create_device_server_controller, create_project_controller,
+    create_macro_controller, destroy_project_controller
 )
+from ..controller.scene import SceneController
 
 
 def assert_no_notification_handlers(proj_model):
@@ -33,7 +33,7 @@ def assert_no_notification_handlers(proj_model):
         assert_no_notification_handlers(sub)
 
 
-def test_project_model_shadowing():
+def test_project_controller():
     macros = [MacroModel()]
     scenes = [SceneModel()]
     dev0 = DeviceInstanceModel(instance_id='dev0')
@@ -44,10 +44,10 @@ def test_project_model_shadowing():
     proj = ProjectModel(macros=macros, scenes=scenes, servers=servers,
                         subprojects=subprojects)
 
-    creators = (create_macro_model_shadow, SceneModelItem,
-                create_device_server_model_shadow, create_project_model_shadow)
-    item_model = create_project_model_shadow(proj)
-    for subgroup, creator in zip(item_model.children, creators):
+    creators = (create_macro_controller, SceneController,
+                create_device_server_controller, create_project_controller)
+    controller = create_project_controller(proj)
+    for subgroup, creator in zip(controller.children, creators):
         assert subgroup.child_create is creator
         assert len(subgroup.children) == 1
 
@@ -59,14 +59,14 @@ def test_project_model_shadowing():
     assert serv.devices[1].instance_id == 'dev1'
 
     subproj = proj.subprojects.pop()
-    assert len(item_model.children[-1].children) == 0
+    assert len(controller.children[-1].children) == 0
     assert_no_notification_handlers(subproj)
 
-    destroy_project_model_shadow(item_model)
+    destroy_project_controller(controller)
     assert_no_notification_handlers(proj)
 
 
-def test_device_server_shadowing():
+def test_device_server_controller():
     sc0 = SceneModel()
     dev0 = DeviceInstanceModel(instance_id='dev0')
     dev1 = DeviceInstanceModel(instance_id='dev1')
@@ -78,11 +78,11 @@ def test_device_server_shadowing():
     proj = ProjectModel(scenes=[sc0], servers=[devServ0],
                         subprojects=subprojects)
 
-    proj_item_model = create_project_model_shadow(proj)
+    proj_controller = create_project_controller(proj)
     proj_groups = ['macros', 'scenes', 'servers', 'subprojects']
 
-    assert len(proj_groups) == len(proj_item_model.children)
-    for child in proj_item_model.children:
+    assert len(proj_groups) == len(proj_controller.children)
+    for child in proj_controller.children:
         if child.trait_name == proj_groups[1]:
             assert len(child.children) == 1
             proj.scenes.pop()

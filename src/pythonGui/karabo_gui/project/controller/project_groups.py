@@ -15,23 +15,23 @@ from karabo.common.project.api import (DeviceServerModel, MacroModel,
 from karabo.common.scenemodel.api import SceneModel
 from karabo.middlelayer import read_macro, read_scene
 from karabo_gui import icons
-from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.util import getOpenFileName
-from .bases import BaseProjectGroupItem
+from .bases import BaseProjectGroupController
 
 
-class ProjectSubgroupItem(BaseProjectGroupItem):
-    """ A wrapper for ProjectModel subgroups (devices, scenes, macros, etc.)
+class ProjectSubgroupController(BaseProjectGroupController):
+    """ A controller for ProjectModel subgroups (devices, scenes, macros, etc.)
     """
     # Redefine model with the correct type
     model = Instance(ProjectModel)
     # The name of the group shown in the GUI
     group_name = String
-    # The name of the trait on ``model`` which is shadowed by ``children``
+    # The name of the trait on ``model`` which is controlled by ``children``
     trait_name = String
 
     def context_menu(self, parent_project, parent=None):
@@ -48,7 +48,7 @@ class ProjectSubgroupItem(BaseProjectGroupItem):
 
     def create_qt_item(self):
         item = QStandardItem(self.group_name)
-        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
+        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         item.setIcon(icons.folder)
         item.setEditable(False)
         for child in self.children:

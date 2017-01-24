@@ -17,7 +17,7 @@ from karabo.common.project.api import (
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
-from karabo_gui.const import PROJECT_ITEM_MODEL_REF
+from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
                                KaraboEventSender)
 from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
@@ -26,10 +26,10 @@ from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import save_object
 from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.topology.api import ProjectDeviceInstance
-from .bases import BaseProjectGroupItem
+from .bases import BaseProjectGroupController
 
 
-class DeviceInstanceModelItem(BaseProjectGroupItem):
+class DeviceInstanceController(BaseProjectGroupController):
     """ A wrapper for DeviceInstanceModel objects
     """
     # Redefine model with the correct type
@@ -72,7 +72,7 @@ class DeviceInstanceModelItem(BaseProjectGroupItem):
 
     def create_qt_item(self):
         item = QStandardItem()
-        item.setData(weakref.ref(self), PROJECT_ITEM_MODEL_REF)
+        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         # Get current status of device
         configuration = self.project_device.current_configuration
         status_enum = DeviceStatus(configuration.status)
