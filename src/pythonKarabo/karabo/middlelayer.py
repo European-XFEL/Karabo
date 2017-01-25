@@ -4,7 +4,9 @@ into the Karabo package, as the internals may change.
 """
 from .common.alarm_conditions import AlarmCondition
 from .common.project.api import (
-    ProjectModel, MacroModel, read_macro, write_macro)
+    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
+    MacroModel, ProjectModel
+)
 from .common.scenemodel.api import SceneModel, read_scene, write_scene
 from .common.states import State, StateSignifier
 
@@ -37,6 +39,9 @@ from .middlelayer_api.hash import (
     VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
     VectorUInt64, VectorUInt8, XMLWriter, XMLParser, BinaryWriter, BinaryParser
+)
+from .middlelayer_api.project.api import (
+    convert_old_project, OldProject, read_project_model, write_project_model
 )
 from .middlelayer_api.macro import Macro, Monitor
 from .middlelayer_api.device import Device
