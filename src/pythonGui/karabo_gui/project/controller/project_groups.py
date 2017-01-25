@@ -95,8 +95,9 @@ def _add_macro(project):
     dialog = MacroHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        macro = MacroModel(simple_name=dialog.simple_name, initialized=True,
-                           modified=True)
+        macro = MacroModel(simple_name=dialog.simple_name)
+        # Set initialized and modified last to avoid bumping revision number
+        macro.initialized = macro.modified = True
         project.macros.append(macro)
 
 
@@ -118,8 +119,9 @@ def _add_scene(project):
     dialog = SceneHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        scene = SceneModel(simple_name=dialog.simple_name, initialized=True,
-                           modified=True)
+        scene = SceneModel(simple_name=dialog.simple_name)
+        # Set initialized and modified last to avoid bumping revision number
+        scene.initialized = scene.modified = True
         project.scenes.append(scene)
 
 
@@ -143,11 +145,11 @@ def _add_server(project):
         traits = {
             'server_id': dialog.server_id,
             'host': dialog.host,
-            'description': dialog.description,
-            'initialized': True,
-            'modified': True,
+            'description': dialog.description
         }
         server = DeviceServerModel(**traits)
+        # Set initialized and modified last to avoid bumping revision number
+        server.initialized = server.modified = True
         project.servers.append(server)
 
 
@@ -157,6 +159,7 @@ def _add_project(project):
     dialog = NewProjectDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
-        model = ProjectModel(simple_name=dialog.simple_name, initialized=True,
-                             modified=True)
+        model = ProjectModel(simple_name=dialog.simple_name)
+        # Set initialized and modified last to avoid bumping revision number
+        model.initialized = model.modified = True
         project.subprojects.append(model)

@@ -142,8 +142,10 @@ class DeviceServerController(BaseProjectGroupController):
             config_model = DeviceConfigurationModel(
                 class_id=dialog.class_id, configuration=Hash(),
                 simple_name=dialog.alias, alias=dialog.alias,
-                description=dialog.description, initialized=True, modified=True
+                description=dialog.description
             )
+            # Set initialized and modified last to avoid bumping revision
+            config_model.initialized = config_model.modified = True
             active_config_ref = (config_model.uuid, config_model.revision)
             traits = {
                 'class_id': dialog.class_id,
@@ -151,10 +153,10 @@ class DeviceServerController(BaseProjectGroupController):
                 'if_exists': dialog.if_exists,
                 'configs': [config_model],
                 'active_config_ref': active_config_ref,
-                'initialized': True,
-                'modified': True,
             }
             device = DeviceInstanceModel(**traits)
+            # Set initialized and modified last to avoid bumping revision
+            device.initialized = device.modified = True
             self.model.devices.append(device)
 
     def _delete_all_devices(self):

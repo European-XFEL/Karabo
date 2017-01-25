@@ -7,7 +7,6 @@
 from PyQt4.QtCore import QObject
 
 from karabo.common.project.api import get_user_cache, read_lazy_object
-from karabo.common.savable import set_modified_flag
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
@@ -137,8 +136,6 @@ class ProjectDatabaseConnection(QObject):
                 obj = self._waiting_for_read.pop(key)
                 read_lazy_object(domain, uuid, revision, self,
                                  read_project_model, existing=obj)
-                # Loading will cause the modified flag to flip!
-                set_modified_flag(obj, value=False)
 
     def _items_saved(self, items):
         """ A bunch of items were just saved

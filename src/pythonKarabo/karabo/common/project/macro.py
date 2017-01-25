@@ -41,7 +41,7 @@ def read_macro(filename_or_fileobj):
         macro_code = filename_or_fileobj.read()
 
     model = MacroModel(code=macro_code)
-    model.initialized = True
+    model.initialized = True  # Do this last to avoid triggering `modified`
     return model
 
 
