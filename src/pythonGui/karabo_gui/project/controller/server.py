@@ -141,7 +141,8 @@ class DeviceServerController(BaseProjectGroupController):
         if result == QDialog.Accepted:
             config_model = DeviceConfigurationModel(
                 class_id=dialog.class_id, configuration=Hash(),
-                simple_name=dialog.alias, alias=dialog.alias,
+                simple_name=dialog.configuration_name,
+                alias=dialog.configuration_name,
                 description=dialog.description
             )
             # Set initialized and modified last to avoid bumping revision

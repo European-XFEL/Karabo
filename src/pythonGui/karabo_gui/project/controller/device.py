@@ -233,8 +233,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         config_menu.addAction(add_action)
         active_uuid, active_rev = self.model.active_config_ref
         for dev_conf in self.model.configs:
-            text = '{} <{}>'.format(dev_conf.alias, dev_conf.revision)
-            conf_action = QAction(text, config_menu)
+            conf_action = QAction(dev_conf.simple_name, config_menu)
             conf_action.setCheckable(True)
             callback = partial(self._active_config_changed, dev_conf)
             conf_action.triggered.connect(callback)
@@ -288,7 +287,8 @@ class DeviceInstanceController(BaseProjectGroupController):
         if result == QDialog.Accepted:
             config_model = DeviceConfigurationModel(
                 class_id=dialog.class_id, configuration=Hash(),
-                simple_name=dialog.alias, alias=dialog.alias,
+                simple_name=dialog.configuration_name,
+                alias=dialog.configuration_name,
                 description=dialog.description
             )
             # Set initialized and modified last to avoid bumping revision
