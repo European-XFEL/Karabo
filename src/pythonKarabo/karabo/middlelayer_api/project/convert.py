@@ -15,10 +15,10 @@ def convert_old_project(old_project):
         simple_name=old_project.name,
         macros=old_project.macros,
         scenes=_convert_scenes(old_project, old_project.scenes),
-        servers=_convert_devices(old_project.devices),
-        initialized=True
+        servers=_convert_devices(old_project.devices)
     )
-
+    # Set initialized and modified last to avoid bumping revision number
+    project.initialized = project.modified = True
     return project
 
 # -----------------------------------------------------------------------------
@@ -36,18 +36,24 @@ def _convert_devices(old_devices):
             continue  # Skip DeviceGroup objects
 
         config_model = DeviceConfigurationModel(class_id=dev.classId,
-                                                configuration=dev.initConfig,
-                                                initialized=True)
+                                                configuration=dev.initConfig)
+        # Set initialized and modified last to avoid bumping revision number
+        config_model.initialized = config_model.modified = True
         uuid, rev = config_model.uuid, config_model.revision
         instance_model = DeviceInstanceModel(
             class_id=dev.classId, instance_id=dev.filename.split('.')[0],
             if_exists=dev.ifexists, configs=[config_model],
-            active_config_ref=(uuid, rev), initialized=True)
+            active_config_ref=(uuid, rev))
+        # Set initialized and modified last to avoid bumping revision number
+        instance_model.initialized = instance_model.modified = True
         dev_instances[dev.serverId].append(instance_model)
 
-    servers = [DeviceServerModel(server_id=server_id, devices=instances,
-                                 initialized=True)
+    servers = [DeviceServerModel(server_id=server_id, devices=instances)
                for server_id, instances in dev_instances.items()]
+
+    # Set initialized and modified last to avoid bumping revision number
+    for serv in servers:
+        serv.initialized = serv.modified = True
 
     return servers
 

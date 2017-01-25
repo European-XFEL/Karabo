@@ -7,8 +7,8 @@ from nose.tools import assert_raises
 from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 
 from karabo.common.project.api import (
-    MacroModel, ProjectDBCache, ProjectModel, read_lazy_object,
-    recursive_save_object, walk_traits_object
+    BaseProjectObjectModel, MacroModel, ProjectDBCache, ProjectModel,
+    read_lazy_object, recursive_save_object, walk_traits_object
 )
 from karabo.common.savable import set_modified_flag
 from ..api import (
@@ -176,3 +176,29 @@ def test_existing_obj_mismatch():
     xml = write_project_model(model)
     with assert_raises(AssertionError):
         read_project_model(StringIO(xml), existing=existing)
+
+
+def test_modified_after_read():
+    def _loaded_checker(model):
+        if isinstance(model, BaseProjectObjectModel):
+            assert model.initialized
+            assert not model.modified
+            # XXX: Set the expected revision to '1' when version bumping is
+            # re-enabled!
+            assert model.revision == 0
+
+    old_project = _get_old_project()
+    project = convert_old_project(old_project)
+
+    with _project_storage() as storage:
+        _write_project(project, storage)
+        rt_project = ProjectModel(uuid=project.uuid, revision=project.revision)
+        rt_project = read_lazy_object(TEST_DOMAIN, project.uuid,
+                                      project.revision, storage,
+                                      read_project_model, existing=rt_project)
+
+    # Make sure the following is true of freshly loaded projects:
+    # - The `modified` flag is False on all objects
+    # - The `initialized` flag is True
+    # - The `revision` of objects has not been bumped
+    walk_traits_object(rt_project, _loaded_checker)
