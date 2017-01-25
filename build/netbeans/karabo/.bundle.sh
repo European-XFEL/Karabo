@@ -118,6 +118,8 @@ if [ "$OS" = "Darwin" ]; then
     #install_name_tool -add_rpath "$PACKAGEDIR/lib" karathon.so
     #install_name_tool -add_rpath "$PACKAGEDIR/extern/lib" karathon.so
     cp karathon* $SITE_PACKAGES/
+    ln -s $SITE_PACKAGES/karathon.dylib $PACKAGEDIR/lib/libkarathon.dylib
+    ln -sf $PACKAGEDIR/lib/libkarathon.dylib $PACKAGEDIR/lib/libkarathon.so 
     cd -
 
 else
@@ -126,6 +128,7 @@ else
     SITE_PACKAGES=`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`
 
     cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $SITE_PACKAGES/ # <-- karathon.so
+    ln -s $SITE_PACKAGES/karathon.so $PACKAGEDIR/lib/libkarathon.so
 
     [ -d $PACKAGEDIR/extern/include/python3.4m ]  && (cd $PACKAGEDIR/extern/include; rm -f python3.4; ln -s python3.4m python3.4)
 fi
