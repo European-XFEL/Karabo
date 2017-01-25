@@ -7,7 +7,7 @@ from functools import partial
 import weakref
 
 from PyQt4.QtGui import QAction, QMenu, QStandardItem
-from traits.api import Instance, Property, on_trait_change, String
+from traits.api import Instance, on_trait_change
 
 from karabo.common.project.api import DeviceConfigurationModel
 from karabo_gui.const import PROJECT_CONTROLLER_REF
@@ -20,7 +20,6 @@ class DeviceConfigurationController(BaseProjectController):
     """
     # Redefine model with the correct type
     model = Instance(DeviceConfigurationModel)
-    _ui_name = Property(String)
 
     def context_menu(self, parent_project, parent=None):
         menu = QMenu(parent)
@@ -33,11 +32,8 @@ class DeviceConfigurationController(BaseProjectController):
         item = QStandardItem()
         item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         item.setEditable(False)
-        self.set_qt_item_text(item, self._ui_name)
+        self.set_qt_item_text(item, self.model.simple_name)
         return item
-
-    def _get__ui_name(self):
-        return '{} <{}>'.format(self.model.alias, self.model.revision)
 
     @on_trait_change("model.modified")
     def update_ui_label(self):
@@ -46,4 +42,4 @@ class DeviceConfigurationController(BaseProjectController):
         """
         if not self.is_ui_initialized():
             return
-        self.set_qt_item_text(self.qt_item, self._ui_name)
+        self.set_qt_item_text(self.qt_item, self.model.simple_name)
