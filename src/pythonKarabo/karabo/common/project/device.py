@@ -76,19 +76,22 @@ class DeviceInstanceModel(BaseProjectObjectModel):
             # Handle our active configuration leaving!
             if (config_model.uuid, config_model.revision) == active_ref:
                 self.active_config_ref = ('', 0)
-            # Remove listener for ``revision`` change event
+            # Remove listeners for ``uuid``/``revision`` change event
             config_model.on_trait_change(self._update_active_revision,
                                          'revision', remove=True)
+            config_model.on_trait_change(self._update_active_uuid,
+                                         'uuid', remove=True)
 
         rejects = []
         for config_model in added:
             # Reject incompatible configurations
             if self.class_id and config_model.class_id != self.class_id:
                 rejects.append(config_model)
-            # Add listener for ``revision`` change event
+            # Add listeners for ``uuid``/``revision`` change event
             config_model.on_trait_change(self._update_active_revision,
                                          'revision')
-
+            config_model.on_trait_change(self._update_active_uuid,
+                                         'uuid')
         if rejects:
             # Remove the incompatible configurations!
             # This is recursive, but in each call `added` will be empty
@@ -111,6 +114,20 @@ class DeviceInstanceModel(BaseProjectObjectModel):
         uuid, revision = self.active_config_ref
         if (obj.uuid == uuid) and (revision == old):
             self.active_config_ref = uuid, new
+
+    def _update_active_uuid(self, obj, name, old, new):
+        """ Whenever the UUID of a ``DeviceConfigurationModel`` is changed
+        the ``active_config_ref`` might refer to it and needs to be updated
+
+        :param obj: The ``DeviceInstanceModel`` object which revision was
+                    changed
+        :param name: The name of the trait
+        :param old: The old value of the trait
+        :param new: The new value of the trait
+        """
+        uuid, revision = self.active_config_ref
+        if uuid == old:
+            self.active_config_ref = new, revision
 
 
 def read_device(io_obj):
