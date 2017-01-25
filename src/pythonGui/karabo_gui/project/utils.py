@@ -6,11 +6,10 @@
 from types import MethodType
 import weakref
 
-from PyQt4.QtGui import QDialog, QMessageBox
+from PyQt4.QtGui import QMessageBox
 
-from karabo.common.project.api import (
-    BaseProjectObjectModel, recursive_save_object, walk_traits_object)
-from karabo_gui.project.dialog.object_handle import ObjectSaveDialog
+from karabo.common.project.api import recursive_save_object
+
 from karabo_gui.singletons.api import get_db_conn
 
 
@@ -49,18 +48,14 @@ def save_object(obj):
     """
     from karabo_gui.project.api import TEST_DOMAIN
 
-    def set_alias(root, alias):
-        def _visitor(model):
-            if isinstance(model, BaseProjectObjectModel) and model.modified:
-                model.alias = alias
+    ask = 'Do you really want to save \"<b>{}</b>\"?'.format(obj.simple_name)
+    reply = QMessageBox.question(None, 'Save object', ask,
+                                 QMessageBox.Yes | QMessageBox.No,
+                                 QMessageBox.No)
+    if reply == QMessageBox.No:
+        return
 
-        walk_traits_object(root, _visitor)
-
-    dialog = ObjectSaveDialog(alias=obj.alias)
-    if dialog.exec() == QDialog.Accepted:
-        # XXX: Set same alias for each sub-item
-        set_alias(obj, dialog.alias)
-        recursive_save_object(obj, get_db_conn(), TEST_DOMAIN)
+    recursive_save_object(obj, get_db_conn(), TEST_DOMAIN)
 
 
 def show_save_project_message(project):
