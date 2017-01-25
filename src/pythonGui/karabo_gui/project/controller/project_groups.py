@@ -10,10 +10,9 @@ import weakref
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance, String
 
-from karabo.common.project.api import (DeviceServerModel, MacroModel,
-                                       ProjectModel)
-from karabo.common.scenemodel.api import SceneModel
-from karabo.middlelayer import read_macro, read_scene
+from karabo.common.project.api import (
+    DeviceServerModel, MacroModel, ProjectModel, read_macro)
+from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog

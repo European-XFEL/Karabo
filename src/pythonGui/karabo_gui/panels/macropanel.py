@@ -13,7 +13,8 @@ try:
 except ImportError:
     from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
 
-from karabo.middlelayer import Hash, write_macro
+from karabo.common.project.api import write_macro
+from karabo.middlelayer import Hash
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
