@@ -14,8 +14,8 @@ online.
 
 
 
-Starting a Command Line
-=======================
+Starting the command line
+=========================
 
 Having Karabo installed properly type::
 
@@ -30,5 +30,11 @@ For Karabo framework developers another command line interface exists::
 
 This command line is slightly different in API and completely differs in 
 the way it is implemented (namely through using the C++ code under the hood).
+
+.. warning::
+
+   This API is **not** officially supported anymore, use it at your own risk.
+
+
 
 
