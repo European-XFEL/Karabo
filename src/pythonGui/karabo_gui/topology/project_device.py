@@ -4,10 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from traits.api import HasStrictTraits, Bool, Event, Instance, Property
+from traits.api import HasStrictTraits, Bool, Event, Instance, Property, String
 
 from karabo.middlelayer import Hash
 from karabo_gui.configuration import Configuration
+from karabo_gui.singletons.api import get_topology
 from .util import clear_configuration_instance
 
 
@@ -17,6 +18,9 @@ class ProjectDeviceInstance(HasStrictTraits):
     ``Configuration`` object which is valid and associated with the same
     device id.
     """
+    # The current device id. Can be monitored for changes.
+    device_id = String
+
     # The current configuration for this device
     current_configuration = Property(Instance(Configuration))
 
@@ -35,23 +39,11 @@ class ProjectDeviceInstance(HasStrictTraits):
     _offline_dev_config = Instance(Configuration)
     _online_dev_config = Instance(Configuration)
 
-    def __init__(self, online_device, offline_device, class_config, init_hash):
+    def __init__(self, device_id, class_id, server_id, init_hash):
         super(ProjectDeviceInstance, self).__init__()
 
-        self.online = online_device.isOnline()
         self._initial_config_hash = init_hash
-        self._class_config = class_config
-        self._offline_dev_config = offline_device
-        self._online_dev_config = online_device
-
-        # Connect to signals
-        class_config.signalNewDescriptor.connect(self._descriptor_change_slot)
-        online_device.signalStatusChanged.connect(self._status_change_slot)
-        online_device.signalBoxChanged.connect(self._config_change_slot)
-        offline_device.signalBoxChanged.connect(self._config_change_slot)
-
-        if class_config.descriptor is not None:
-            self._descriptor_change_slot(class_config)
+        self._init_object_state(device_id, class_id, server_id)
 
     def destroy(self):
         """Disconnect slots which are connected to this object's methods
@@ -65,6 +57,16 @@ class ProjectDeviceInstance(HasStrictTraits):
         self._offline_dev_config.signalBoxChanged.disconnect(config_changed)
 
         clear_configuration_instance(self._offline_dev_config)
+
+    def rename(self, device_id='', class_id='', server_id=''):
+        """Assign a new device_id, class_id, or server_id.
+        """
+        device_id = device_id or self._offline_dev_config.id
+        class_id = class_id or self._offline_dev_config.classId
+        server_id = server_id or self._offline_dev_config.serverId
+
+        self.destroy()
+        self._init_object_state(device_id, class_id, server_id)
 
     def set_project_config_hash(self, config_hash):
         """Forcibly set the offline configuration Hash of the device.
@@ -121,3 +123,33 @@ class ProjectDeviceInstance(HasStrictTraits):
         online
         """
         self.online = self._online_dev_config.isOnline()
+
+    # ---------------------------------------------------------------------
+    # utils
+
+    def _init_object_state(self, device_id, class_id, server_id):
+        """Initialize the object for a given device_id/server_id/class_id.
+        """
+        topology = get_topology()
+        class_config = topology.get_class(server_id, class_id)
+        online_device = topology.get_device(device_id)
+        offline_device = Configuration(device_id, 'projectClass')
+        offline_device.serverId = server_id
+        offline_device.classId = class_id
+
+        self.online = online_device.isOnline()
+        self._class_config = class_config
+        self._online_dev_config = online_device
+        self._offline_dev_config = offline_device
+
+        # Connect to signals
+        class_config.signalNewDescriptor.connect(self._descriptor_change_slot)
+        online_device.signalStatusChanged.connect(self._status_change_slot)
+        online_device.signalBoxChanged.connect(self._config_change_slot)
+        offline_device.signalBoxChanged.connect(self._config_change_slot)
+
+        if class_config.descriptor is not None:
+            self._descriptor_change_slot(class_config)
+
+        # Remember the device_id (also notifies the outside world of changes)
+        self.device_id = device_id
