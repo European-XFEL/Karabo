@@ -25,7 +25,7 @@ from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
 from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
-from karabo_gui.project.utils import save_object
+from karabo_gui.project.utils import check_device_instance_exists, save_object
 from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.topology.api import ProjectDeviceInstance
 from .bases import BaseProjectGroupController
@@ -277,6 +277,9 @@ class DeviceInstanceController(BaseProjectGroupController):
                                     model=device)
         result = dialog.exec()
         if result == QDialog.Accepted:
+            # Check for existing device
+            if check_device_instance_exists(dialog.instance_id):
+                return
             device.instance_id = dialog.instance_id
             device.if_exists = dialog.if_exists
 
@@ -326,6 +329,9 @@ class DeviceInstanceController(BaseProjectGroupController):
         if dialog.exec() == QDialog.Accepted:
             xml = write_project_model(active_config)
             for simple_name in dialog.duplicate_names:
+                # Check for existing device
+                if check_device_instance_exists(simple_name):
+                    continue
                 dupe_dev_conf = read_project_model(StringIO(xml))
                 # Set a new UUID and revision
                 dupe_dev_conf.trait_set(uuid=str(uuid4()), revision=0)
