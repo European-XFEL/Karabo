@@ -7,10 +7,11 @@ from karabo_gui.project.topo_listener import SystemTopologyListener
 from .device import DeviceInstanceController
 from .device_config import DeviceConfigurationController
 from .macro import MacroController, MacroInstanceController
-from .scene import SceneController
-from .server import DeviceServerController
 from .project import ProjectController
 from .project_groups import ProjectSubgroupController
+from .scene import SceneController
+from .server import DeviceServerController
+from .subproject import SubprojectController
 
 
 def create_device_server_controller(model):
@@ -131,23 +132,21 @@ def create_project_controller(model=None):
     and must be detached later with a call to ``destroy_project_controller``
     """
     details = (
-        # (list name, group label, item create, item destroy)
-        ('macros', 'Macros', create_macro_controller,
-         destroy_macro_controller),
-        ('scenes', 'Scenes', SceneController, lambda x: None),
-        ('servers', 'Device Servers', create_device_server_controller,
-         destroy_device_server_controller),
-        ('subprojects', 'Subprojects', create_project_controller,
-         destroy_project_controller),
+        # (list name, group label, group class, item create, item destroy)
+        ('macros', 'Macros', ProjectSubgroupController,
+         create_macro_controller, destroy_macro_controller),
+        ('scenes', 'Scenes', ProjectSubgroupController,
+         SceneController, lambda x: None),
+        ('servers', 'Device Servers', ProjectSubgroupController,
+         create_device_server_controller, destroy_device_server_controller),
+        ('subprojects', 'Subprojects', SubprojectController,
+         create_project_controller, destroy_project_controller),
     )
 
     controller = ProjectController(model=model)
-    for name, label, creator, destroyer in details:
-        child = ProjectSubgroupController(model=model,
-                                          group_name=label,
-                                          trait_name=name,
-                                          child_create=creator,
-                                          child_destroy=destroyer)
+    for name, label, klass, creator, destroyer in details:
+        child = klass(model=model, group_name=label, trait_name=name,
+                      child_create=creator, child_destroy=destroyer)
         model.on_trait_change(child.items_assigned, name)
         model.on_trait_change(child.items_mutated, name + '_items')
 
