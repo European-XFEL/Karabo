@@ -1,6 +1,7 @@
 from traits.api import HasTraits, Instance, List
 
 from .bases import BaseProjectObjectModel
+from .device import DeviceInstanceModel
 
 
 def find_parent_object(model, ancestor_model, search_klass):
@@ -29,6 +30,22 @@ def find_parent_object(model, ancestor_model, search_klass):
     visitor = _Visitor()
     walk_traits_object(ancestor_model, visitor)
     return visitor.parent
+
+
+def device_instance_exists(project, instance_id):
+    """Check whether the incoming ``project`` already has a device of the given
+    ``instance_id``
+    """
+    found = False
+
+    def visitor(obj):
+        nonlocal found
+        if isinstance(obj, DeviceInstanceModel):
+            if obj.instance_id == instance_id:
+                found = True
+
+    walk_traits_object(project, visitor)
+    return found
 
 
 def recursive_save_object(root, storage, domain):
