@@ -7,20 +7,18 @@ from functools import partial
 
 from PyQt4.QtGui import QAction, QDialog, QStackedLayout, QWidget
 
-from karabo.common.project.api import ProjectModel, read_lazy_object
+from karabo.common.project.api import ProjectModel
 from karabo.common.savable import set_modified_flag
-from karabo.middlelayer_api.project.api import (
-    OldProject, convert_old_project, read_project_model)
+from karabo.middlelayer import OldProject, convert_old_project
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 import karabo_gui.icons as icons
 from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.project.api import ProjectView
-from karabo_gui.project.dialog.project_handle import (
-    LoadProjectDialog, NewProjectDialog)
-from karabo_gui.project.utils import maybe_save_modified_project, save_object
-from karabo_gui.singletons.api import get_db_conn
+from karabo_gui.project.dialog.project_handle import NewProjectDialog
+from karabo_gui.project.utils import (
+    load_project, maybe_save_modified_project, save_object)
 from karabo_gui.util import getOpenFileName
 
 
@@ -128,17 +126,9 @@ def _project_load_handler(item_model):
     if not maybe_save_modified_project(traits_data_model):
         return
 
-    dialog = LoadProjectDialog()
-    result = dialog.exec()
-    if result == QDialog.Accepted:
-        uuid, revision = dialog.selected_item()
-        if uuid is not None and revision is not None:
-            db_conn = get_db_conn()
-            model = ProjectModel(uuid=uuid, revision=revision)
-            read_lazy_object(TEST_DOMAIN, uuid, revision, db_conn,
-                             read_project_model, existing=model)
-            set_modified_flag(model, value=False)
-            item_model.traits_data_model = model
+    project = load_project(TEST_DOMAIN)
+    if project is not None:
+        item_model.traits_data_model = project
 
 
 def _old_project_load_handler(item_model):
