@@ -10,7 +10,8 @@ from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox, QStandardItem
 from traits.api import Instance, on_trait_change
 
 from karabo.common.project.api import (
-    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel)
+    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel
+)
 from karabo.middlelayer import Hash
 from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.events import (register_for_broadcasts,
@@ -19,7 +20,7 @@ from karabo_gui.indicators import DeviceStatus, get_project_server_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
-from karabo_gui.project.utils import save_object
+from karabo_gui.project.utils import check_device_instance_exists, save_object
 from karabo_gui.singletons.api import get_manager, get_topology
 from .bases import BaseProjectGroupController
 
@@ -139,6 +140,10 @@ class DeviceServerController(BaseProjectGroupController):
         dialog = DeviceHandleDialog(server_id=self.model.server_id)
         result = dialog.exec()
         if result == QDialog.Accepted:
+            # Check for existing device
+            if check_device_instance_exists(dialog.instance_id):
+                return
+
             config_model = DeviceConfigurationModel(
                 class_id=dialog.class_id, configuration=Hash(),
                 simple_name=dialog.configuration_name,
