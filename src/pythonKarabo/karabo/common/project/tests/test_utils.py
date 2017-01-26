@@ -78,6 +78,7 @@ def test_device_instance_exists():
     proj.servers.append(serv1)
     assert device_instance_exists(proj, 'barDevice')
     assert not device_instance_exists(proj, 'blahDevice')
+    assert device_instance_exists(proj, ('barDevice', 'blahDevice'))
 
     dev0 = DeviceConfigurationModel(class_id='BazClass')
     blah = DeviceInstanceModel(class_id='BazClass', instance_id='blahDevice',
