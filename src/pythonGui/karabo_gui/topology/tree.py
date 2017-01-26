@@ -157,7 +157,8 @@ class SystemTree(HasStrictTraits):
         """
         with self.update_context:
             self._handle_server_data(system_hash)
-            self._handle_device_data(system_hash)
+            self._handle_device_data('device', system_hash)
+            self._handle_device_data('macro', system_hash)
 
     # ------------------------------------------------------------------
 
@@ -216,14 +217,16 @@ class SystemTree(HasStrictTraits):
                     server_node.children.append(class_node)
                 class_node.visibility = AccessLevel(vis)
 
-    def _handle_device_data(self, system_hash):
+    def _handle_device_data(self, device_type, system_hash):
         """Put the contents of Hash `system_hash` into the internal tree
         structure.
         """
-        if 'device' not in system_hash:
+        assert device_type in ('device', 'macro')
+
+        if device_type not in system_hash:
             return
 
-        for device_id, _, attrs in system_hash['device'].iterall():
+        for device_id, _, attrs in system_hash[device_type].iterall():
             if len(attrs) == 0:
                 continue
 
@@ -255,7 +258,7 @@ class SystemTree(HasStrictTraits):
             # Class node
             class_node = server_node.child(class_id)
             if class_node is None:
-                if server_id == "__none__":
+                if server_id == "__none__" or device_type == 'macro':
                     path = "{}.{}".format(server_id, class_id)
                     class_node = SystemTreeNode(display_name=class_id,
                                                 path=path,
