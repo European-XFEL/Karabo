@@ -8,6 +8,7 @@ from io import StringIO
 from uuid import uuid4
 import weakref
 
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
 from traits.api import Instance, Property, on_trait_change
 
@@ -87,6 +88,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         item.setEditable(False)
         for child in self.children:
             item.appendRow(child.qt_item)
+        self._update_children_check_state()
         self.set_qt_item_text(item, self.model.instance_id)
         return item
 
@@ -157,6 +159,8 @@ class DeviceInstanceController(BaseProjectGroupController):
         if not self.project_device.online:
             self._broadcast_item_click()
 
+        self._update_children_check_state()
+
     @on_trait_change('project_device:schema_updated,project_device:online')
     def _device_schema_changed(self):
         """Called when a new Schema arrives for `project_device` or it changes
@@ -207,6 +211,15 @@ class DeviceInstanceController(BaseProjectGroupController):
         configuration = self.project_device.current_configuration
         configuration.fromHash(config_model.configuration)
         device.active_config_ref = (config_model.uuid, config_model.revision)
+
+    def _update_children_check_state(self):
+        """Update the CheckState of the child items
+        """
+        active_ref = self.model.active_config_ref
+        for child in self.children:
+            config_ref = (child.model.uuid, child.model.revision)
+            check = Qt.Checked if config_ref == active_ref else Qt.Unchecked
+            child.qt_item.setCheckState(check)
 
     def _broadcast_item_click(self):
         # XXX the configurator expects the clicked configuration before
