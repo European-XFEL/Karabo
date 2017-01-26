@@ -185,7 +185,7 @@ class DeviceHandleDialog(QDialog):
         return revision
 
     @property
-    def alias(self):
+    def configuration_name(self):
         return self.cbConfig.currentText()
 
     @property
