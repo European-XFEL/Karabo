@@ -95,6 +95,9 @@ class MacroController(BaseProjectGroupController):
         item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         item.setIcon(icons.file)
         item.setEditable(False)
+        self.model.instances = _get_macro_instances(self.model.instance_id)
+        for child in self.children:
+            item.appendRow(child.qt_item)
         self.set_qt_item_text(item, self.model.simple_name)
         return item
 
@@ -221,3 +224,14 @@ class MacroController(BaseProjectGroupController):
 
         with open(fn, 'w') as fout:
             fout.write(write_macro(macro))
+
+
+# ----------------------------------------------------------------------
+
+def _get_macro_instances(macro_id):
+    def filter(dev_id, attributes):
+        if attributes.get('type') == 'macro' and dev_id.startswith(macro_id):
+            return dev_id
+        return False
+
+    return get_topology().search_system_tree('macro', filter)
