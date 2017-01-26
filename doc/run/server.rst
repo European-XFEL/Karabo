@@ -1,3 +1,5 @@
+.. _run/servers:
+
 ***********************
 Starting device servers
 ***********************
@@ -12,7 +14,7 @@ servers are needed (C++, Python, and Middle-Layer).
 Despite some small differences, all servers share the following, most important
 configurations:
 
-1. Message Broker URL
+1. **Message Broker URL**
 
    Every server needs a connection to the central broker. This address must be
    given in the format::
@@ -27,7 +29,7 @@ configurations:
   
    This tries to connect to a broker running locally on port 7777.
 
-2. Message Broker Topic
+2. **Message Broker Topic**
 
    Each Karabo installation must use a single topic name under which all 
    devices and servers are talking with each other. Think about a topic
@@ -41,7 +43,7 @@ configurations:
      
      export KARABO_BROKER_TOPIC=myTopic
 
-3. Server-ID
+3. **Server ID**
 
    Within a Karabo installation (i.e. under the same broker host and topic)
    each server needs a unique ID to be identified.
@@ -51,18 +53,18 @@ configurations:
 
      karabo-<API>server serverId=MyServer
      
-   With `<API>` being either `cpp`, `pyhon` or `middlelayer`.
+   With `<API>` being either `cpp`, `python` or `middlelayer`.
 
    The serverId can be skipped, in this case Karabo will generate a unique 
    (but cryptic) one, which will also be different for consecutive server starts.
    It is hence strongly recommended to *always* assign a serverId 
    
        
-4. Device Classes
+4. **Device Classes**
 
    Any server knows about all respective plugins (i.e. device classes), 
    which are installed to the Karabo framework. Sometimes you want to 
-   explicitely steer which classes should be loaded by a given server.
+   explicitly steer which classes should be loaded by a given server.
    This can be achieved by an additional commandline argument::
      
      karabo-<API>server deviceClasses=MyDeviceClass
@@ -72,14 +74,31 @@ configurations:
      karabo-<API>server deviceClasses="MyDeviceClass1,MyDeviceClass2"
         
 
+General notes
+=============
+
+Run Directory
+-------------
+
+Once Karabo is activated, servers can be started from anywhere in the filesystem.
+While being started from anywhere the run-directory always 
+is ``<path-to-karabo>/var/data``. This for example means that a file created within
+a device process will be placed in ``<path-to-karabo/var/data`` if not specifed
+otherwise.
+
+Log Files
+---------
+
+Log-files are written out to ``std::out`` and to file. All logfiles are placed
+in ``<path-to-karabo>/var/log``.
+
+Processes vs. threads
+---------------------
+
+The C++ and Middlelayer servers run devices as threads/coroutines, whereas 
+the (bound) Python server starts each device in an own process.
 
 
-C++ Server
-==========
-
-In order to start a minimal C++ server, simply type::
-
-  karabo-cppserver
 
 
 

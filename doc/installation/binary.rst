@@ -1,4 +1,4 @@
-.. _installation-binary:
+.. _installation/binary:
 
 **************************
  Binary download for Linux
@@ -32,14 +32,21 @@ Change permissions and extract it using the following commands::
 The script will install a single ``karabo`` folder, containing everything needed (including dependencies)
 to get going with Karabo.
 
+Source the activate script be able to run all karabo applications and use the correct (shipped)
+Python environment::
+
+  cd <path-to-karabo>
+  source activate
+
 .. note::
 
-   Before using Karabo you always have to source the ``activate`` script which is
-   available in Karabo's root folder.
+   Before using Karabo in a new shell you **always** have to source 
+   the ``activate`` script.
 
-Once ``activate`` is sourced, your environment is ready and you should be able to e.g. run:
+Once ``activate`` is sourced, your environment is ready and you should be 
+able to e.g. run::
 
-``karabo-gui``
+  karabo-gui
 
 
 
