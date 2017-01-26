@@ -1,6 +1,6 @@
 from karabo.common.project.api import (
-    DeviceInstanceModel, DeviceServerModel, MacroModel, ProjectModel,
-    find_parent_object
+    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
+    MacroModel, ProjectModel, device_instance_exists, find_parent_object
 )
 from nose.tools import assert_raises
 
@@ -58,3 +58,33 @@ def test_find_parent_project_degenerate():
 
     with assert_raises(RuntimeError):
         find_parent_object(mac, proj, ProjectModel)
+
+
+def test_device_instance_exists():
+    dev0 = DeviceConfigurationModel(class_id='BazClass')
+    foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
+                              configs=[dev0])
+    serv0 = DeviceServerModel(server_id='fooServer', host='serverserverFoo',
+                              devices=[foo])
+    dev1 = DeviceConfigurationModel(class_id='QuxClass')
+    bar = DeviceInstanceModel(class_id='QuxClass', instance_id='barDevice',
+                              configs=[dev1])
+    serv1 = DeviceServerModel(server_id='barServer', host='serverserverFoo',
+                              devices=[bar])
+
+    proj = ProjectModel(servers=[serv0])
+    assert device_instance_exists(proj, 'fooDevice')
+    assert not device_instance_exists(proj, 'barDevice')
+    proj.servers.append(serv1)
+    assert device_instance_exists(proj, 'barDevice')
+    assert not device_instance_exists(proj, 'blahDevice')
+
+    dev0 = DeviceConfigurationModel(class_id='BazClass')
+    blah = DeviceInstanceModel(class_id='BazClass', instance_id='blahDevice',
+                               configs=[dev0])
+    serv0 = DeviceServerModel(server_id='blahServer', host='serverserverBlah',
+                              devices=[blah])
+    sub_proj = ProjectModel(servers=[serv0])
+    proj.subprojects.append(sub_proj)
+    assert device_instance_exists(sub_proj, 'blahDevice')
+    assert device_instance_exists(proj, 'blahDevice')
