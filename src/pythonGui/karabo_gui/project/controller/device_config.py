@@ -32,6 +32,9 @@ class DeviceConfigurationController(BaseProjectController):
         item = QStandardItem()
         item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
         item.setEditable(False)
+        item.setCheckable(True)
+        # Currently disable changing CheckState
+        item.setEnabled(False)
         self.set_qt_item_text(item, self.model.simple_name)
         return item
 
