@@ -16,7 +16,6 @@ from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
-from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.util import getOpenFileName
@@ -38,7 +37,6 @@ class ProjectSubgroupController(BaseProjectGroupController):
             'macros': _fill_macros_menu,
             'scenes': _fill_scenes_menu,
             'servers': _fill_servers_menu,
-            'subprojects': _fill_subprojects_menu,
         }
         filler = menu_fillers.get(self.trait_name)
         menu = QMenu(parent)
@@ -76,12 +74,6 @@ def _fill_scenes_menu(menu, parent_project):
 def _fill_servers_menu(menu, parent_project):
     add_action = QAction('Add server', menu)
     add_action.triggered.connect(partial(_add_server, parent_project))
-    menu.addAction(add_action)
-
-
-def _fill_subprojects_menu(menu, parent_project):
-    add_action = QAction('Add project', menu)
-    add_action.triggered.connect(partial(_add_project, parent_project))
     menu.addAction(add_action)
 
 
@@ -151,15 +143,3 @@ def _add_server(project):
         # Set initialized and modified last to avoid bumping revision number
         server.initialized = server.modified = True
         project.servers.append(server)
-
-
-def _add_project(project):
-    """ Add a new subproject to the associated project
-    """
-    dialog = NewProjectDialog()
-    if dialog.exec() == QDialog.Accepted:
-        # XXX: TODO check for existing
-        model = ProjectModel(simple_name=dialog.simple_name)
-        # Set initialized and modified last to avoid bumping revision number
-        model.initialized = model.modified = True
-        project.subprojects.append(model)
