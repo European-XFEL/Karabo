@@ -14,7 +14,7 @@ Contents:
    whatsnew/1.4
    whatsnew/1.5
    whatsnew/2.0
-   :maxdepth: 2
+   :maxdepth: 1
 
 
 

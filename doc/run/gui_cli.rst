@@ -14,20 +14,28 @@ online.
 
 
 
-Starting a Command Line
-=======================
+Starting the command line
+=========================
 
 Having Karabo installed properly type::
 
-  karabo-cli
-
-or::
-
   ikarabo
 
-depending on what you want. Both commands provide a Python command line,
-but with slightly different syntax.
-
 Using the command line interface is described :ref:`here <concepts-ikarabo>`.
+
+
+For Karabo framework developers another command line interface exists::
+
+  karabo-cli
+
+This command line is slightly different in API and completely differs in 
+the way it is implemented (namely through using the C++ code under the hood).
+
+.. warning::
+   
+   This API is not officially supported anymore, and only maintained for 
+   development and debugging purposes. You should never use it for scripting of 
+   devices in a production environment!
+
 
 

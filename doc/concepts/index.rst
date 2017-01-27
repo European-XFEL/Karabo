@@ -13,7 +13,7 @@ You should also look here: :ref:`Karabo documentation <karabo:fundamentals>`
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    introduction
    general_concepts
@@ -56,18 +56,4 @@ Contents:
    run_configuration
    policies
 
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-ToDos
-=====
-
-.. todoList::
 
