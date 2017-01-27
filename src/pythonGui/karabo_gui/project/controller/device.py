@@ -75,21 +75,11 @@ class DeviceInstanceController(BaseProjectGroupController):
     def create_qt_item(self):
         item = QStandardItem()
         item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
-        # Get current status of device
-        if self.model.initialized:
-            # But only if our model is initialized!
-            configuration = self.project_device.current_configuration
-            status_enum = DeviceStatus(configuration.status)
-        else:
-            # Otherwise show the instance as offline
-            status_enum = DeviceStatus('offline')
-        icon = get_project_device_status_icon(status_enum)
-        item.setIcon(icon)
+        self._update_icon_and_label(item)
         item.setEditable(False)
         for child in self.children:
             item.appendRow(child.qt_item)
         self._update_children_check_state()
-        self.set_qt_item_text(item, self.model.instance_id)
         return item
 
     def single_click(self, parent_project, parent=None):
@@ -137,13 +127,13 @@ class DeviceInstanceController(BaseProjectGroupController):
         # Reuse the traits default initializer
         self.project_device = self._project_device_default()
 
-    @on_trait_change("model.modified,model.instance_id")
+    @on_trait_change("model.modified,model:initialized,model:instance_id")
     def _update_ui_label(self):
         """ Whenever the project is modified it should be visible to the user
         """
         if not self.is_ui_initialized():
             return
-        self.set_qt_item_text(self.qt_item, self.model.instance_id)
+        self._update_icon_and_label(self.qt_item)
 
     @on_trait_change("model:active_config_ref")
     def _active_config_ref_change(self):
@@ -220,6 +210,19 @@ class DeviceInstanceController(BaseProjectGroupController):
             config_ref = (child.model.uuid, child.model.revision)
             check = Qt.Checked if config_ref == active_ref else Qt.Unchecked
             child.qt_item.setCheckState(check)
+
+    def _update_icon_and_label(self, qt_item):
+        # Get current status of device
+        if self.model.initialized:
+            # But only if our model is initialized!
+            configuration = self.project_device.current_configuration
+            status_enum = DeviceStatus(configuration.status)
+        else:
+            # Otherwise show the instance as offline
+            status_enum = DeviceStatus('offline')
+        icon = get_project_device_status_icon(status_enum)
+        qt_item.setIcon(icon)
+        self.set_qt_item_text(qt_item, self.model.instance_id)
 
     def _broadcast_item_click(self):
         # XXX the configurator expects the clicked configuration before
