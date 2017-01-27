@@ -66,14 +66,10 @@ class DeviceServerController(BaseProjectGroupController):
     def create_qt_item(self):
         item = QStandardItem(self.model.server_id)
         item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
-        # Get current status of server
-        self.model.status = _get_server_status(self.model.server_id)
-        icon = get_project_server_status_icon(DeviceStatus(self.model.status))
-        item.setIcon(icon)
+        self._update_icon_and_label(item)
         item.setEditable(False)
         for child in self.children:
             item.appendRow(child.qt_item)
-        self.set_qt_item_text(item, self.model.simple_name)
         return item
 
     def system_topology_callback(self, devices, servers):
@@ -87,13 +83,13 @@ class DeviceServerController(BaseProjectGroupController):
     # ----------------------------------------------------------------------
     # traits notification handlers
 
-    @on_trait_change("model.modified,model.simple_name")
+    @on_trait_change("model.modified,model:server_id")
     def update_ui_label(self):
         """ Whenever the project is modified it should be visible to the user
         """
         if not self.is_ui_initialized():
             return
-        self.set_qt_item_text(self.qt_item, self.model.simple_name)
+        self._update_icon_and_label(self.qt_item)
 
     @on_trait_change("model.status")
     def status_change(self):
@@ -111,6 +107,16 @@ class DeviceServerController(BaseProjectGroupController):
             unregister_from_broadcasts(old)
         if new is not None:
             register_for_broadcasts(new)
+
+    # ----------------------------------------------------------------------
+    # Util methods
+
+    def _update_icon_and_label(self, qt_item):
+        # Get current status of server
+        self.model.status = _get_server_status(self.model.server_id)
+        icon = get_project_server_status_icon(DeviceStatus(self.model.status))
+        qt_item.setIcon(icon)
+        self.set_qt_item_text(qt_item, self.model.server_id)
 
     # ----------------------------------------------------------------------
     # action handlers
