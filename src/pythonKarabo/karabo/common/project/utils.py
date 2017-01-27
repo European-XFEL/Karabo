@@ -32,16 +32,20 @@ def find_parent_object(model, ancestor_model, search_klass):
     return visitor.parent
 
 
-def device_instance_exists(project, instance_id):
-    """Check whether the incoming ``project`` already has a device of the given
-    ``instance_id`` and return ``True`` or ``False``
+def device_instance_exists(project, instance_ids):
+    """Check whether the a ``project`` already has a device[s] with the given
+    ``instance_ids`` and return ``True`` or ``False``
     """
     found = False
+
+    # Allow one or more instance ids
+    if isinstance(instance_ids, str):
+        instance_ids = (instance_ids,)
 
     def visitor(obj):
         nonlocal found
         if isinstance(obj, DeviceInstanceModel):
-            if obj.instance_id == instance_id:
+            if obj.instance_id in instance_ids:
                 found = True
 
     walk_traits_object(project, visitor)
