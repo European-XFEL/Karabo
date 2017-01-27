@@ -278,12 +278,15 @@ class DeviceInstanceController(BaseProjectGroupController):
         server_model = find_parent_object(device, project,
                                           DeviceServerModel)
         dialog = DeviceHandleDialog(server_id=server_model.server_id,
-                                    model=device)
+                                    model=device,
+                                    is_online=self.project_device.online)
         result = dialog.exec()
         if result == QDialog.Accepted:
             # Check for existing device
-            if check_device_instance_exists(dialog.instance_id):
+            renamed = device.instance_id != dialog.instance_id
+            if renamed and check_device_instance_exists(dialog.instance_id):
                 return
+
             device.instance_id = dialog.instance_id
             device.if_exists = dialog.if_exists
 
