@@ -8,9 +8,11 @@ import weakref
 
 from PyQt4.QtGui import QMessageBox
 
-from karabo.common.project.api import recursive_save_object
+from karabo.common.project.api import (
+    device_instance_exists, recursive_save_object
+)
 
-from karabo_gui.singletons.api import get_db_conn
+from karabo_gui.singletons.api import get_db_conn, get_project_model
 
 
 class WeakMethodRef(object):
@@ -88,3 +90,17 @@ def maybe_save_modified_project(project):
         save_object(project)
 
     return True
+
+
+def check_device_instance_exists(instance_id):
+    """Check whether the incoming ``instance_id`` already exists in the current
+    projects and return ``True`` if that is the case else ``False``.
+    """
+    root_project = get_project_model().traits_data_model
+    if device_instance_exists(root_project, instance_id):
+        msg = ('Another device with the same device ID \"<b>{}</b>\" '
+                '<br>already exists! Therefore it will not be '
+                'added!').format(instance_id)
+        QMessageBox.warning(None, 'Device already exists', msg)
+        return True
+    return False

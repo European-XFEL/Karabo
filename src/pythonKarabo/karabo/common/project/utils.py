@@ -34,7 +34,7 @@ def find_parent_object(model, ancestor_model, search_klass):
 
 def device_instance_exists(project, instance_id):
     """Check whether the incoming ``project`` already has a device of the given
-    ``instance_id``
+    ``instance_id`` and return ``True`` or ``False``
     """
     found = False
 
