@@ -32,9 +32,10 @@ This command line is slightly different in API and completely differs in
 the way it is implemented (namely through using the C++ code under the hood).
 
 .. warning::
-
-   This API is **not** officially supported anymore, use it at your own risk.
-
+   
+   This API is not officially supported anymore, and only maintained for 
+   development and debugging purposes. You should never use it for scripting of 
+   devices in a production environment!
 
 
 
