@@ -4,12 +4,12 @@
 Starting device servers
 ***********************
 
-Karabo servers are managing the lifetime of Karabo devices. Once a server has
+Karabo servers manage the lifetime of Karabo devices. Once a server has
 loaded a device class (as plugin) it can start and stop one or more instances
-of that device and provide it for distributed (remote) access.
+of that device and provide distributed (remote) access to it.
 
-As Karabo provides three different APIs for devices also three different 
-servers are needed (C++, Python, and Middle-Layer).
+As Karabo provides three different APIs for device implementation 
+also three different servers are needed (C++, Python, and Middle-Layer).
 
 Despite some small differences, all servers share the following, most important
 configurations:
@@ -62,9 +62,9 @@ configurations:
        
 4. **Device Classes**
 
-   Any server knows about all respective plugins (i.e. device classes), 
-   which are installed to the Karabo framework. Sometimes you want to 
-   explicitly steer which classes should be loaded by a given server.
+   Any server knows about all respective plugins (i.e. device classes) of its
+   API type, which are installed to the Karabo framework on a given host. 
+   Sometimes you want to explicitly steer which classes should be loaded by a given server.
    This can be achieved by an additional commandline argument::
      
      karabo-<API>server deviceClasses=MyDeviceClass
@@ -81,10 +81,10 @@ Run Directory
 -------------
 
 Once Karabo is activated, servers can be started from anywhere in the filesystem.
-While being started from anywhere the run-directory always 
-is ``<path-to-karabo>/var/data``. This for example means that a file created within
-a device process will be placed in ``<path-to-karabo/var/data`` if not specifed
-otherwise.
+The run-directory for servers however always is ``<path-to-karabo>/var/data``.
+This for example means that a file created within a device process will be 
+placed in ``<path-to-karabo/var/data`` if no different explicit path selector 
+is provided.
 
 Log Files
 ---------

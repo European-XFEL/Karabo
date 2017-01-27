@@ -4,11 +4,11 @@
 Starting a full Karabo system all local
 ***************************************
 
-Here we describe how you can bring up a small local Karabo system on your computer. 
+Here we describe how you can bring up a basic Karabo system on a single host. 
 Make sure you have understood the :ref:`fundamental concepts <fundamentals>` before proceeding here.
 
 Lets go step by step. The only prerequisit is, that you have installed and 
-activated Karabo as described :ref:`here <installation/binary>`.
+**activated** Karabo as described :ref:`here <installation/binary>`.
 
 Step 1: Local Message Broker
 ============================
@@ -37,9 +37,22 @@ Similar to the broker start a local database by typing::
 
   karabo-startconfigdb
 
+To initialize the data-base (**which you need to do only once**) do the following:
+
+1. start a python prompt, we will be using ipython here::
+
+     ipython
+
+2. import the init script and run it::
+
+     from karabo.project_db.util import init_local_db
+     init_local_db()
+
+
 To stop the database type::
 
   karabo-stopconfigdb
+
 
 Step 3: Edit the configuration file
 ===================================
@@ -66,5 +79,5 @@ and stop it with::
 
   karabo-stop
 
-If you succeeded up to know you are ready to start additional servers, develop
+If you succeeded up to now you are ready to start additional servers, develop
 you own device plugins etc.
