@@ -59,11 +59,11 @@ def parse_commandline():
                             help='The name of the new device package')
 
     parser_new.add_argument('api',
-                            type=str,
+                            type=str.lower,
                             metavar='api',
-                            choices=['cpp', 'python', 'middleLayer'],
+                            choices=['cpp', 'python', 'middlelayer'],
                             help='The API of the new device {cpp|python|'
-                                 'middleLayer}')
+                                 'middlelayer}')
 
     parser_new.add_argument('-f', '--force',
                             action='store_true',
