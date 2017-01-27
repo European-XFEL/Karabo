@@ -6,12 +6,13 @@
 from types import MethodType
 import weakref
 
-from PyQt4.QtGui import QMessageBox
+from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.common.project.api import (
-    device_instance_exists, recursive_save_object
-)
-
+    ProjectModel, device_instance_exists, recursive_save_object,
+    read_lazy_object)
+from karabo.middlelayer import read_project_model
+from karabo_gui.project.dialog.project_handle import LoadProjectDialog
 from karabo_gui.singletons.api import get_db_conn, get_project_model
 
 
@@ -41,6 +42,48 @@ class WeakMethodRef(object):
 
     def _owner_deleted(self, ref):
         self.obj = None
+
+
+def check_device_instance_exists(instance_id):
+    """Check whether the incoming ``instance_id`` already exists in the current
+    projects and return ``True`` if that is the case else ``False``.
+    """
+    root_project = get_project_model().traits_data_model
+    if device_instance_exists(root_project, instance_id):
+        msg = ('Another device with the same device ID \"<b>{}</b>\" '
+               '<br>already exists! Therefore it will not be '
+               'added!').format(instance_id)
+        QMessageBox.warning(None, 'Device already exists', msg)
+        return True
+    return False
+
+
+def load_project(domain):
+    """Load a project from the project database.
+    """
+    dialog = LoadProjectDialog()
+    result = dialog.exec()
+    if result == QDialog.Accepted:
+        uuid, revision = dialog.selected_item()
+        if uuid is not None and revision is not None:
+            db_conn = get_db_conn()
+            model = ProjectModel(uuid=uuid, revision=revision)
+            read_lazy_object(domain, uuid, revision, db_conn,
+                             read_project_model, existing=model)
+            return model
+    return None
+
+
+def maybe_save_modified_project(project):
+    """Check modified flag of the ``project`` and offer saving via dialog
+    """
+    if project is None:
+        return True
+
+    if show_save_project_message(project):
+        save_object(project)
+
+    return True
 
 
 def save_object(obj):
@@ -77,30 +120,4 @@ def show_save_project_message(project):
 
         if reply == QMessageBox.Save:
             return True
-    return False
-
-
-def maybe_save_modified_project(project):
-    """Check modified flag of the ``project`` and offer saving via dialog
-    """
-    if project is None:
-        return True
-
-    if show_save_project_message(project):
-        save_object(project)
-
-    return True
-
-
-def check_device_instance_exists(instance_id):
-    """Check whether the incoming ``instance_id`` already exists in the current
-    projects and return ``True`` if that is the case else ``False``.
-    """
-    root_project = get_project_model().traits_data_model
-    if device_instance_exists(root_project, instance_id):
-        msg = ('Another device with the same device ID \"<b>{}</b>\" '
-                '<br>already exists! Therefore it will not be '
-                'added!').format(instance_id)
-        QMessageBox.warning(None, 'Device already exists', msg)
-        return True
     return False
