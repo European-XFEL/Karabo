@@ -25,6 +25,7 @@ from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.loggingpanel import LoggingPanel
 from karabo_gui.panels.macropanel import MacroPanel
+from karabo_gui.messagebox import MessageBox
 from karabo_gui.panels.navigationpanel import NavigationPanel
 from karabo_gui.panels.notificationpanel import NotificationPanel
 from karabo_gui.panels.placeholderpanel import PlaceholderPanel
@@ -33,7 +34,9 @@ from karabo_gui.panels.runconfigpanel import RunConfigPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
 from karabo_gui.sceneview.api import SceneView
-from karabo_gui.singletons.api import get_network, get_project_model
+from karabo_gui.singletons.api import (
+    get_db_conn, get_network, get_project_model
+)
 
 
 class MainWindow(QMainWindow):
@@ -103,6 +106,8 @@ class MainWindow(QMainWindow):
                 self.addRunConfigPanel(data.get('instanceIds'))
             elif sender is KaraboEventSender.RemoveRunConfigurator:
                 self.removeRunConfigPanels(data.get('instanceIds'))
+            elif sender is KaraboEventSender.DatabaseIsBusy:
+                self._database_is_processing(data.get('is_processing'))
             return False
         return super(MainWindow, self).eventFilter(obj, event)
 
@@ -256,7 +261,12 @@ class MainWindow(QMainWindow):
         self._addPlaceholderMiddlePanel(False)
 
     def _quit(self):
-        # XXX: Check for project changes
+        # Make sure there are no pending writing things in the pipe
+        if get_db_conn().is_writing():
+            msg = ('There is currently data fetched from or sent to the <br>'
+                   '<b>project database</b>. Please wait until this is done!')
+            MessageBox.showWarning(msg, 'Database connection active')
+            return False
         self.signalQuitApplication.emit()
 
         return True
@@ -469,6 +479,26 @@ class MainWindow(QMainWindow):
             scene_view = getattr(divWidget.dockableWidget, 'scene_view', None)
             if scene_view is not None and scene_view.isVisible():
                 scene_view.update()
+
+    def _enable_toolbar(self, enable):
+        self.acServerConnect.setEnabled(enable)
+        self.tbAccessLevel.setEnabled(enable)
+
+    def _database_is_processing(self, is_processing):
+        """This method gets called whenever the database is switching its
+        processing mode.
+        """
+        enable = not is_processing
+        # Update toolbar
+        self._enable_toolbar(enable)
+
+        # Update all open scenes and macros
+        for divWidget in self.middleTab.divWidgetList:
+            divWidget.dockableWidget.setEnabled(enable)
+
+        # Update configuration panel
+        for divWidget in self.configurationTab.divWidgetList:
+            divWidget.dockableWidget.setEnabled(enable)
 
     @pyqtSlot()
     def onExit(self):

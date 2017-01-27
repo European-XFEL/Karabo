@@ -55,7 +55,7 @@ def _build_getter(key, modulename, klassname):
 
 
 # This is where all the singletons are defined
-get_db_conn = _build_getter('db_conn', '.project.db_connection',
+get_db_conn = _build_getter('db_conn', '.singletons.db_connection',
                             'ProjectDatabaseConnection')
 get_project_model = _build_getter('project_model', '.singletons.project_model',
                                   'ProjectViewItemModel')
