@@ -11,7 +11,9 @@ from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
 from karabo_gui.events import (
-    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+    broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
+    register_for_broadcasts
+)
 from karabo_gui.singletons.api import get_network
 
 
@@ -85,13 +87,7 @@ class ProjectDatabaseConnection(QObject):
 
         obj = self.cache.retrieve(domain, uuid, revision, existing=existing)
         if obj is None:
-            key = (uuid, revision)
-            if key not in self._waiting_for_read:
-                items = [Hash('domain', domain, 'uuid', uuid,
-                              'revision', revision)]
-                self.network.onProjectLoadItems(self.project_manager, items)
-                if existing is not None:
-                    self._waiting_for_read[key] = existing
+            self._push_reading(domain, uuid, revision, existing)
         return obj
 
     def store(self, domain, uuid, revision, obj):
@@ -100,17 +96,16 @@ class ProjectDatabaseConnection(QObject):
         # XXX: Please don't keep this here!
         self._ensure_login()
 
-        key = (uuid, revision)
+        self._push_writing(domain, uuid, revision, obj)
 
-        # Don't ask the GUI server if you're already waiting for this object
-        if key not in self._waiting_for_write:
-            self._waiting_for_write[key] = obj
-            # Project DB expects xml as string
-            xml = write_project_model(obj)
-            # XXX overwrite everytime until handled
-            items = [Hash('domain', domain, 'uuid', uuid, 'revision', revision,
-                          'xml', xml, 'overwrite', True)]
-            self.network.onProjectSaveItems(self.project_manager, items)
+    def is_reading(self):
+        return len(self._waiting_for_read) > 0
+
+    def is_writing(self):
+        return len(self._waiting_for_write) > 0
+
+    def is_processing(self):
+        return self.is_reading() or self.is_writing()
 
     # -------------------------------------------------------------------
     # Broadcast event handlers
@@ -131,11 +126,7 @@ class ProjectDatabaseConnection(QObject):
             domain = item['domain']
             uuid = item['uuid']
             revision = item['revision']
-            key = (uuid, revision)
-            if key in self._waiting_for_read:
-                obj = self._waiting_for_read.pop(key)
-                read_lazy_object(domain, uuid, revision, self,
-                                 read_project_model, existing=obj)
+            self._pop_reading(domain, uuid, revision)
 
     def _items_saved(self, items):
         """ A bunch of items were just saved
@@ -144,20 +135,8 @@ class ProjectDatabaseConnection(QObject):
             domain = item['domain']
             uuid = item['uuid']
             revision = item['revision']
-            if item['success']:
-                key = (uuid, revision)
-                obj = self._waiting_for_write.pop(key)
-
-                # Write to the local cache
-                data = write_project_model(obj)
-                self.cache.store(domain, uuid, revision, data)
-                # No longer dirty!
-                obj.modified = False
-            else:
-                # XXX: Make some noise.
-                # Right now, only the modified flag doesn't get updated.
-                key = (uuid, revision)
-                self._waiting_for_write.pop(key)
+            success = item['success']
+            self._pop_writing(domain, uuid, revision, success)
 
     # -------------------------------------------------------------------
     # private interface
@@ -166,3 +145,75 @@ class ProjectDatabaseConnection(QObject):
         if not self._have_logged_in:
             self.network.onProjectBeginSession(self.project_manager)
             self._have_logged_in = True
+
+    def _broadcast_is_processing(self, previous_processing):
+        """Create broadcast event and send to all registered ``QObjects``
+        """
+        # Check current processing state against previous one
+        if self.is_processing() == previous_processing:
+            return
+
+        data = {'is_processing': self.is_processing()}
+        # Create KaraboBroadcastEvent
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.DatabaseIsBusy, data))
+
+    def _push_reading(self, domain, uuid, revision, existing):
+        # Store previous processing state
+        is_processing = self.is_processing()
+
+        key = (uuid, revision)
+        if key not in self._waiting_for_read:
+            items = [Hash('domain', domain, 'uuid', uuid,
+                          'revision', revision)]
+            self.network.onProjectLoadItems(self.project_manager, items)
+            assert existing is not None
+            self._waiting_for_read[key] = existing
+
+        self._broadcast_is_processing(is_processing)
+
+    def _pop_reading(self, domain, uuid, revision):
+        # Store previous processing state
+        is_processing = self.is_processing()
+
+        key = (uuid, revision)
+        if key in self._waiting_for_read:
+            obj = self._waiting_for_read.pop(key)
+            read_lazy_object(domain, uuid, revision, self,
+                             read_project_model, existing=obj)
+
+        self._broadcast_is_processing(is_processing)
+
+    def _push_writing(self, domain, uuid, revision, obj):
+        # Store previous processing state
+        is_processing = self.is_processing()
+
+        key = (uuid, revision)
+        # Don't ask the GUI server if you're already waiting for this object
+        if key not in self._waiting_for_write:
+            self._waiting_for_write[key] = obj
+            # Project DB expects xml as string
+            xml = write_project_model(obj)
+            # XXX overwrite everytime until handled
+            items = [Hash('domain', domain, 'uuid', uuid, 'revision', revision,
+                          'xml', xml, 'overwrite', True)]
+            self.network.onProjectSaveItems(self.project_manager, items)
+
+        self._broadcast_is_processing(is_processing)
+
+    def _pop_writing(self, domain, uuid, revision, success):
+        # Store previous processing state
+        is_processing = self.is_processing()
+
+        key = (uuid, revision)
+        obj = self._waiting_for_write.pop(key)
+
+        # Write to the local cache
+        data = write_project_model(obj)
+        self.cache.store(domain, uuid, revision, data)
+
+        if success:
+            # No longer dirty!
+            obj.modified = False
+
+        self._broadcast_is_processing(is_processing)

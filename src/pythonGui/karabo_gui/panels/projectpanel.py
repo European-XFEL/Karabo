@@ -48,6 +48,8 @@ class ProjectPanel(Dockable, QWidget):
         if isinstance(event, KaraboBroadcastEvent):
             if event.sender is KaraboEventSender.NetworkConnectStatus:
                 self._handle_network_status_change(event.data['status'])
+            elif event.sender is KaraboEventSender.DatabaseIsBusy:
+                self._enable_toolbar(not event.data['is_processing'])
             return False
         return super(ProjectPanel, self).eventFilter(obj, event)
 
@@ -109,8 +111,11 @@ class ProjectPanel(Dockable, QWidget):
             # Don't show projects when there's no server connection
             self.project_view.destroy()
 
+        self._enable_toolbar(status)
+
+    def _enable_toolbar(self, enable):
         for qaction in self._toolbar_actions:
-            qaction.setEnabled(status)
+            qaction.setEnabled(enable)
 
 
 def _project_load_handler(item_model):
