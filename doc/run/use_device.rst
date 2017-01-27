@@ -4,19 +4,19 @@
 Working with devices
 ********************
 
-After installation Karabo is still "empty" (similar to a smartphone without any
-apps installed). Things get interesting once you are equipping Karabo with devices.
+After installation Karabo is still "empty".
+Things get interesting once you are equipping Karabo with devices.
 
 Using Karabo's plugin technology, so-called ``device packages`` can be added
 to extend the core system. 
 
-A device package is an own software project (managed as a git repository) 
+A device package is a separate software project (managed as a git repository) 
 which typically contains a single device class.
 
 However, device packages can also contain several karabo classes or even Karabo
 unrelated code that serves as a dependency to one or more Karabo device(s).
 
-All device packages are maintained in remote git repositories made easily 
+All device packages are maintained in remote git repositories and are easily 
 accessible via a GitLab server under::
 
   https://git.xfel.eu/gitlab/karaboDevices
@@ -84,10 +84,10 @@ If you intention is to create a new device the command::
 
   karabo new myFancyDevice <API>
 
-is for you, where <API> must be one of the three ``cpp``, ``pyhton`` or
-``middleLayer``.
+is for you, where <API> must be one of the three ``cpp``, ``python`` or
+``middlelayer``.
 
-Once executed a run-able, though "empty" device code is placed in the ``devices``
+Once executed an executable, though "empty" device code is placed in the ``devices``
 folder. Use ``karabo develop myFancyDevice`` (see above) to let Karabo now about
 it. 
 
@@ -95,7 +95,7 @@ it.
 
    Initially, the device code is wrapped into a git repository existing
    only locally. However, everything is prepared to allow a 
-   ``git push -u orign master`` for adding this device to Karabo's central device
+   ``git push -u origin master`` for adding this device to Karabo's central device
    storage.
 
 
