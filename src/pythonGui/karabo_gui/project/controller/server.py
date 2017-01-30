@@ -9,18 +9,14 @@ import weakref
 from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox, QStandardItem
 from traits.api import Instance, on_trait_change
 
-from karabo.common.project.api import (
-    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel
-)
-from karabo.middlelayer import Hash
+from karabo.common.project.api import DeviceServerModel
 from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.events import (register_for_broadcasts,
                                unregister_from_broadcasts)
 from karabo_gui.indicators import DeviceStatus, get_project_server_status_icon
-from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
-from karabo_gui.project.utils import check_device_instance_exists, save_object
+from karabo_gui.project.utils import add_device_to_server, save_object
 from karabo_gui.singletons.api import get_manager, get_topology
 from .bases import BaseProjectGroupController
 
@@ -45,7 +41,7 @@ class DeviceServerController(BaseProjectGroupController):
         shutdown_action = QAction('Shutdown', menu)
         shutdown_action.triggered.connect(self._shutdown_server)
         add_action = QAction('Add device', menu)
-        add_action.triggered.connect(self._add_device)
+        add_action.triggered.connect(partial(add_device_to_server, self.model))
         instantiate_all_action = QAction('Instantiate all devices', menu)
         instantiate_all_action.triggered.connect(self._instantiate_devices)
         shutdown_all_action = QAction('Shutdown all devices', menu)
@@ -139,37 +135,6 @@ class DeviceServerController(BaseProjectGroupController):
     def _shutdown_server(self):
         server = self.model
         get_manager().shutdownServer(server.server_id)
-
-    def _add_device(self):
-        """ Add a device to this server
-        """
-        dialog = DeviceHandleDialog(server_id=self.model.server_id)
-        result = dialog.exec()
-        if result == QDialog.Accepted:
-            # Check for existing device
-            if check_device_instance_exists(dialog.instance_id):
-                return
-
-            config_model = DeviceConfigurationModel(
-                class_id=dialog.class_id, configuration=Hash(),
-                simple_name=dialog.configuration_name,
-                alias=dialog.configuration_name,
-                description=dialog.description
-            )
-            # Set initialized and modified last to avoid bumping revision
-            config_model.initialized = config_model.modified = True
-            active_config_ref = (config_model.uuid, config_model.revision)
-            traits = {
-                'class_id': dialog.class_id,
-                'instance_id': dialog.instance_id,
-                'if_exists': dialog.if_exists,
-                'configs': [config_model],
-                'active_config_ref': active_config_ref,
-            }
-            device = DeviceInstanceModel(**traits)
-            # Set initialized and modified last to avoid bumping revision
-            device.initialized = device.modified = True
-            self.model.devices.append(device)
 
     def _delete_all_devices(self):
         server = self.model
