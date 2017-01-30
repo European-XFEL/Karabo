@@ -6,6 +6,8 @@
 """ This module contains a class which represents a model to display a
 hierarchical navigation in a treeview."""
 
+import json
+
 from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
                           Qt, pyqtSignal)
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
@@ -265,9 +267,19 @@ class NavigationTreeModel(QAbstractItemModel):
             return {}
         return index.internalPointer().info()
 
-    def mimeData(self, nodes):
+    def mimeData(self, indices):
+        """Reimplemented function of QAbstractItemModel.
+
+        Provide data for Drag & Drop operations.
+        """
+        # Get one selection per row
+        nodes = {idx.row(): idx.internalPointer() for idx in indices
+                 if idx.isValid()}
+        # Extract info() dictionaries from SystemTreeNode instances
+        data = [n.info() for n in nodes.values()]
+
         mimeData = QMimeData()
-        mimeData.setData("sourceType", "NavigationTreeView")
+        mimeData.setData('treeItems', json.dumps(data))
         return mimeData
 
     def onSelectionChanged(self, selected, deselected):
