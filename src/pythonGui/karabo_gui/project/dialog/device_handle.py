@@ -16,7 +16,7 @@ from karabo_gui.singletons.api import get_topology
 
 class DeviceHandleDialog(QDialog):
     def __init__(self, server_id=None, model=None, add_config=False,
-                 parent=None):
+                 is_online=False, parent=None):
         """ A dialog to configure device configurations
 
         :param server_id: The ID of the server the device configuration belongs
@@ -24,6 +24,8 @@ class DeviceHandleDialog(QDialog):
         :param model: The ``DeviceInstanceModel`` object
         :param add_config: A boolean which describes whether a new
                            ``DeviceConfigurationModel`` should be added
+        :param is_online: A boolean which is True if the device being edited
+                          is currently online.
         :param parent: The parent of the dialog
         """
         super(DeviceHandleDialog, self).__init__(parent)
@@ -31,13 +33,16 @@ class DeviceHandleDialog(QDialog):
                            'device_handle.ui')
         uic.loadUi(filepath, self)
 
-        self._initUI(server_id, model, add_config)
+        self._initUI(server_id, model, add_config, is_online)
 
-    def _initUI(self, server_id, model, add_config):
+    def _initUI(self, server_id, model, add_config, is_online):
         # Get available plugins from systemTopology
         for class_id in self._get_available_plugins(server_id):
             self.cbClass.addItem(class_id)
         self.leServerId.setText(server_id)
+
+        # Disable the instance_id editor when the device is online
+        self.leTitle.setEnabled(not is_online)
 
         if model is None:
             title = 'Add device configuration'
@@ -68,6 +73,7 @@ class DeviceHandleDialog(QDialog):
             self.leTitle.setText(model.instance_id)
             index = self.cbIfExists.findText(model.if_exists)
             self.cbIfExists.setCurrentIndex(index)
+
         self.setWindowTitle(title)
         self.leTitle.textChanged.connect(self._update_button_box)
         self.cbConfig.editTextChanged.connect(self._update_button_box)
