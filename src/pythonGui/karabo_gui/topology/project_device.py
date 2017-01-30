@@ -20,18 +20,19 @@ class ProjectDeviceInstance(HasStrictTraits):
     """
     # The current device id. Can be monitored for changes.
     device_id = String
-
+    # Binary online/offline state of the device
+    online = Bool
+    # Current status of the online device (never the offline device)
+    status = String
     # The current configuration for this device
     current_configuration = Property(Instance(Configuration))
 
-    # An event which is triggered whenever the class schema changes
-    schema_updated = Event
-
+    # An event which is triggered whenever the Configuration objects change
+    boxes_updated = Event
     # An event which is triggered whenever the configuration is updated
     configuration_updated = Event
-
-    # Binary online/offline state of the device
-    online = Bool
+    # An event which is triggered whenever the class schema changes
+    schema_updated = Event
 
     # The online/offline configurations
     _initial_config_hash = Instance(Hash)
@@ -118,11 +119,12 @@ class ProjectDeviceInstance(HasStrictTraits):
         # Let the world know
         self.schema_updated = True
 
-    def _status_change_slot(self, status, error_flag):
+    def _status_change_slot(self, box, status, error_flag):
         """The `_online_dev_config` trait has changed its status. Check if it's
         online
         """
         self.online = self._online_dev_config.isOnline()
+        self.status = status
 
     # ---------------------------------------------------------------------
     # utils
@@ -138,6 +140,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         offline_device.classId = class_id
 
         self.online = online_device.isOnline()
+        self.status = online_device.status
         self._class_config = class_config
         self._online_dev_config = online_device
         self._offline_dev_config = offline_device
@@ -153,3 +156,6 @@ class ProjectDeviceInstance(HasStrictTraits):
 
         # Remember the device_id (also notifies the outside world of changes)
         self.device_id = device_id
+
+        # Notify listeners
+        self.boxes_updated = True

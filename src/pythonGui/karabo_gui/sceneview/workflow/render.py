@@ -28,9 +28,9 @@ class WorkflowOverlay(QWidget):
             for channel in workflow_model.channels:
                 with save_painter_state(painter):
                     _draw_channel(painter, channel)
-            for device_status in workflow_model.device_states:
+            for device in workflow_model.devices:
                 with save_painter_state(painter):
-                    _draw_device_state(painter, device_status)
+                    _draw_device_state(painter, device)
 
 
 def _draw_channel(painter, channel):
@@ -60,9 +60,11 @@ def _draw_connection(painter, connection):
     painter.drawPath(curve)
 
 
-def _draw_device_state(painter, device_state):
+def _draw_device_state(painter, device):
     """ Draw a pixmap which reflects the state the connected device is in.
     """
-    pixmap = get_device_status_pixmap(device_state.status, device_state.error)
+    project_device = device.device
+    error = project_device.current_configuration.error
+    pixmap = get_device_status_pixmap(project_device.status, error)
     if pixmap is not None:
-        painter.drawPixmap(device_state.position, pixmap)
+        painter.drawPixmap(device.position, pixmap)
