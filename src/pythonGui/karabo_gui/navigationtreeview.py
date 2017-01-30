@@ -194,6 +194,3 @@ class NavigationTreeView(QTreeView):
     def onSaveToFile(self):
         if self._current_configuration is not None:
             saveConfigurationToFile(self._current_configuration)
-
-    def mimeData(self, items):
-        return self.model().mimeData(items)
