@@ -115,21 +115,25 @@ class DeviceInstanceController(BaseProjectGroupController):
             None if config is None else config.configuration
         )
 
-    @on_trait_change("model:instance_id")
+    @on_trait_change("model:instance_id,model:server_id,model:class_id")
     def _forced_project_device_change(self):
-        """Just to make life difficult, the instance_id changed. The
-        `project_device` trait needs to be reinitialized.
+        """When instance_id/server_id/class_id changes, the project device
+        needs to be notified
         """
         # Watch for incomplete model initialization
         if not self.model.initialized:
             return
 
-        # Reuse the traits default initializer
-        self.project_device = self._project_device_default()
+        # Tell the project device
+        self.project_device.rename(
+            device_id=self.model.instance_id,
+            server_id=self.model.server_id,
+            class_id=self.model.class_id
+        )
 
     @on_trait_change("model.modified,model:initialized,model:instance_id")
     def _update_ui_label(self):
-        """ Whenever the project is modified it should be visible to the user
+        """ Whenever the object is modified it should be visible to the user
         """
         if not self.is_ui_initialized():
             return
@@ -277,12 +281,15 @@ class DeviceInstanceController(BaseProjectGroupController):
         server_model = find_parent_object(device, project,
                                           DeviceServerModel)
         dialog = DeviceHandleDialog(server_id=server_model.server_id,
-                                    model=device)
+                                    model=device,
+                                    is_online=self.project_device.online)
         result = dialog.exec()
         if result == QDialog.Accepted:
             # Check for existing device
-            if check_device_instance_exists(dialog.instance_id):
+            renamed = device.instance_id != dialog.instance_id
+            if renamed and check_device_instance_exists(dialog.instance_id):
                 return
+
             device.instance_id = dialog.instance_id
             device.if_exists = dialog.if_exists
 
