@@ -4,7 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from traits.api import HasStrictTraits, Bool, Dict, Instance, Property
+from traits.api import (HasStrictTraits, Bool, Dict, Instance, Property,
+                        on_trait_change)
 
 from karabo.middlelayer import Hash, Schema
 from karabo_gui.configuration import BulkNotifications, Configuration
@@ -36,9 +37,8 @@ class SystemTopology(HasStrictTraits):
 
     # Mapping of device_id -> Configuration
     _online_devices = Dict
-    _offline_devices = Dict
 
-    # Mapping of device_id -> ProjectDeviceConfiguration
+    # Mapping of device_id -> ProjectDeviceInstance
     _project_devices = Dict
 
     # A Hash instance holding the entire current topology
@@ -60,13 +60,10 @@ class SystemTopology(HasStrictTraits):
         self._online_devices = {}
 
     def clear_project_devices(self):
-        """Clear all saved devices and classes
-        """
         for dev in self._project_devices.values():
             dev.destroy()
 
         self._project_devices = {}
-        self._offline_devices = {}
 
     def get_attributes(self, topology_path):
         """Return the attributes of a given node in the `_system_hash`.
@@ -122,15 +119,7 @@ class SystemTopology(HasStrictTraits):
                        'project?')
                 raise RuntimeError(msg.format(device_id))
 
-            offline_device = Configuration(device_id, 'projectClass')
-            offline_device.serverId = server_id
-            offline_device.classId = class_id
-            self._offline_devices[device_id] = offline_device
-
-            class_configuration = self.get_class(server_id, class_id)
-            online_device = self.get_device(device_id)
-            instance = ProjectDeviceInstance(online_device, offline_device,
-                                             class_configuration,
+            instance = ProjectDeviceInstance(device_id, class_id, server_id,
                                              init_config)
             self._project_devices[device_id] = instance
 
@@ -169,6 +158,18 @@ class SystemTopology(HasStrictTraits):
         will instantiate the once instance of this object.
         """
         return SystemTree()
+
+    @on_trait_change('_project_devices:device_id')
+    def _project_device_instance_id_changed(self, obj, name, old, new):
+        """React to the device id of a project device changing.
+        """
+        msg = ('ProjectDeviceInstance changed its instance_id to a name which '
+               'is already used by another device!')
+        assert new not in self._project_devices, msg
+
+        proj_device = self._project_devices.pop(old, None)
+        if proj_device is not None:
+            self._project_devices[new] = proj_device
 
     # ---------------------------------------------------------------------
     # Handlers for GUI Server Messages
