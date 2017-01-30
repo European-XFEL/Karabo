@@ -39,6 +39,7 @@ Dropping on a non-string cell or on an empty region will add a row in which the
 first string-type column encountered is pre-filled with the deviceID.
 """
 import copy
+import json
 
 from PyQt4.QtCore import (Qt, QAbstractTableModel, QModelIndex, QObject,
                           SIGNAL, SLOT, pyqtSlot)
@@ -495,39 +496,38 @@ class KaraboTableView(QTableView):
                 self.firstStringColumn = c
                 break
 
-    def checkAcceptance(self, e):
-        if e.mimeData().data(
-                "sourceType") == "NavigationTreeView" or e.mimeData().data(
-            "sourceType") == "internal":
-            idx = self.indexAt(e.pos())
+    def checkAcceptance(self, event):
+        itemsData = event.mimeData().data('treeItems').data()
+        if len(itemsData) == 0:
+            event.ignore()
+            return False, None, False, ''
 
-            valueType = self.columnSchema.getValueType(
-                self.cKeys[idx.column()])()
-            source = e.source()
-            itemInfo = source.indexInfo(source.currentIndex())
-            type = itemInfo.get('type')
-            isDeviceFromProject = 'deviceId' in itemInfo and itemInfo.get(
-                'deviceId') != ""
+        items = json.loads(itemsData.decode())
+        item = items[0]
+        idx = self.indexAt(event.pos())
+        navigationType = item.get('type')
+        deviceId = item.get('deviceId', '')
+        fromProject = deviceId != ''
+        usable = (navigationType == NavigationItemTypes.DEVICE or fromProject)
 
-            # drop in empty area is also okay but must trigger newRow
-            if not idx.isValid() and (
-                    type == NavigationItemTypes.DEVICE or isDeviceFromProject):
-                e.accept()
-                return True, idx, True
+        # drop in empty area is also okay but must trigger newRow
+        if not idx.isValid() and usable:
+            event.accept()
+            return True, idx, True, deviceId
 
-            if not isinstance(valueType, schema.String) and (
-                    type == NavigationItemTypes.DEVICE or isDeviceFromProject):
-                e.accept()
-                return True, idx, True
+        columnKey = self.cKeys[idx.column()]
+        valueType = self.columnSchema.getValueType(columnKey)()
+        if not isinstance(valueType, schema.String) and usable:
+            event.accept()
+            return True, idx, True, deviceId
 
-            # drop onto existing cell
-            if isinstance(valueType, schema.String) and (
-                    type == NavigationItemTypes.DEVICE or isDeviceFromProject):
-                e.accept()
-                return True, idx, False
+        # drop onto existing cell
+        if isinstance(valueType, schema.String) and usable:
+            event.accept()
+            return True, idx, False, deviceId
 
-        e.ignore()
-        return False, None, None
+        event.ignore()
+        return False, None, False, deviceId
 
     def dragEnterEvent(self, e):
         self.checkAcceptance(e)
@@ -536,14 +536,9 @@ class KaraboTableView(QTableView):
         self.checkAcceptance(e)
 
     def dropEvent(self, e):
-        acceptable, index, newRow = self.checkAcceptance(e)
+        acceptable, index, newRow, deviceId = self.checkAcceptance(e)
 
         if acceptable:
-            source = e.source()
-
-            itemInfo = source.indexInfo(source.currentIndex())
-            deviceId = itemInfo.get('deviceId')
-
             if newRow:
                 if self.firstStringColumn is not None:
                     self.model().insertRows(self.model().rowCount(None), 1,
@@ -554,7 +549,7 @@ class KaraboTableView(QTableView):
 
                     # scroll to the end and pad with new whitespace to drop
                     # next item
-                    self.scrollToBottom();
+                    self.scrollToBottom()
 
                 else:
                     return
