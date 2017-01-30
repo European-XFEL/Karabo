@@ -56,10 +56,18 @@ def add_device_to_server(server, class_id=''):
     :return: The device id of the newly added device, or an empty string if
              no device was added.
     """
-    if not isinstance(server, DeviceServerModel):
+    server_model = None
+    if isinstance(server, str):
         server_model = get_device_server_model(server)
-    else:
+    elif isinstance(server, DeviceServerModel):
         server_model = server
+
+    if server_model is None:
+        msg = ('A device server with the ID "<b>{}</b>"<br>'
+               'needs to be added to the current project before<br>'
+               'a device can be added').format(server)
+        QMessageBox.warning(None, 'Server doesn\'t exist', msg)
+        return ''
 
     dialog = DeviceHandleDialog(server_id=server_model.server_id,
                                 class_id=class_id)
