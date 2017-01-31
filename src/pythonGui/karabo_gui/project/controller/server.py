@@ -41,7 +41,7 @@ class DeviceServerController(BaseProjectGroupController):
         shutdown_action = QAction('Shutdown', menu)
         shutdown_action.triggered.connect(self._shutdown_server)
         add_action = QAction('Add device', menu)
-        add_action.triggered.connect(partial(add_device_to_server, self.model))
+        add_action.triggered.connect(self._add_device)
         instantiate_all_action = QAction('Instantiate all devices', menu)
         instantiate_all_action.triggered.connect(self._instantiate_devices)
         shutdown_all_action = QAction('Shutdown all devices', menu)
@@ -116,6 +116,13 @@ class DeviceServerController(BaseProjectGroupController):
 
     # ----------------------------------------------------------------------
     # action handlers
+
+    def _add_device(self):
+        """Add a device instance to the server
+        """
+        # NOTE: This can't be connected to the QAction signal, because then
+        # a boolean will be passed as the class_id argument
+        add_device_to_server(self.model)
 
     def _delete_server(self, project):
         """ Remove the macro associated with this item from its project
