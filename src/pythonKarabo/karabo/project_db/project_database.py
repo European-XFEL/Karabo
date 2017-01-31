@@ -263,9 +263,7 @@ class ProjectDatabase(ContextDecorator):
         let $rev := "{revision}"
         let $collection := "{path}"
 
-        for $doc in collection($collection)
-            where $doc//@uuid = $uuid and $doc//@revision = $rev
-            return $doc
+        return collection($collection)/xml[@uuid = $uuid and @revision = $rev]
         """.format(uuid=item, revision=revision, path=path)
 
         try:
@@ -296,15 +294,14 @@ class ProjectDatabase(ContextDecorator):
         let $path := "{path}"
         {maybe_let}
         return <items>{{
-        for $doc in collection($path)
-        let $uuid := $doc/*/@uuid
-        let $simple_name := $doc/*/@simple_name
-        let $item_type := $doc/*/@item_type
-        let $revs := $doc/*/@revision
-        let $aliases := $doc/*/@alias
-        let $dates := $doc/*/@date
-        let $users := $doc/*/@user
-        {maybe_where}
+        for $doc in collection($path)/xml{maybe_where}
+        let $uuid := $doc/@uuid
+        let $simple_name := $doc/@simple_name
+        let $item_type := $doc/@item_type
+        let $revs := $doc/@revision
+        let $aliases := $doc/@alias
+        let $dates := $doc/@date
+        let $users := $doc/@user
         group by $uuid, $simple_name, $item_type
         return <item uuid="{{$uuid}}"
                      simple_name="{{$simple_name}}"
@@ -324,11 +321,12 @@ class ProjectDatabase(ContextDecorator):
         if item_types is not None:
             maybe_let_tmp = "let $item_types := ('{}')"
             maybe_let = maybe_let_tmp.format("','".join(item_types))
-            maybe_where = 'where $doc/*/@item_type = $item_types'
+            maybe_where = '[@item_type=$item_types]'
 
         query = query.format(maybe_let=maybe_let,
                              maybe_where=maybe_where,
                              path=path)
+        print(query)
         try:
             res = self.dbhandle.query(query)
             return [{'uuid': r.attrib['uuid'],
