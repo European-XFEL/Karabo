@@ -16,7 +16,7 @@ from karabo_gui.singletons.api import get_topology
 
 class DeviceHandleDialog(QDialog):
     def __init__(self, server_id=None, model=None, add_config=False,
-                 is_online=False, parent=None):
+                 is_online=False, class_id='', parent=None):
         """ A dialog to configure device configurations
 
         :param server_id: The ID of the server the device configuration belongs
@@ -26,6 +26,8 @@ class DeviceHandleDialog(QDialog):
                            ``DeviceConfigurationModel`` should be added
         :param is_online: A boolean which is True if the device being edited
                           is currently online.
+        :param class_id: A string containing the class_id of the class which
+                         must be used by the device.
         :param parent: The parent of the dialog
         """
         super(DeviceHandleDialog, self).__init__(parent)
@@ -33,12 +35,12 @@ class DeviceHandleDialog(QDialog):
                            'device_handle.ui')
         uic.loadUi(filepath, self)
 
-        self._initUI(server_id, model, add_config, is_online)
+        self._initUI(server_id, model, add_config, class_id, is_online)
 
-    def _initUI(self, server_id, model, add_config, is_online):
+    def _initUI(self, server_id, model, add_config, class_id, is_online):
         # Get available plugins from systemTopology
-        for class_id in self._get_available_plugins(server_id):
-            self.cbClass.addItem(class_id)
+        for cls_id in self._get_available_plugins(server_id):
+            self.cbClass.addItem(cls_id)
         self.leServerId.setText(server_id)
 
         # Disable the instance_id editor when the device is online
@@ -48,6 +50,11 @@ class DeviceHandleDialog(QDialog):
             title = 'Add device configuration'
             self._update_widgets_to_add_config()
             self.cbConfig.lineEdit().setText('default')
+
+            # If we already know the class, select it and disable editing.
+            if class_id != '':
+                self._update_plugin_widget(class_id)
+                self.cbClass.setEnabled(False)
         else:
             active_uuid, active_rev = model.active_config_ref
             active_dev_conf = model.select_config(active_uuid, active_rev)
