@@ -9,9 +9,12 @@ import weakref
 from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.common.project.api import (
+    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     ProjectModel, device_instance_exists, recursive_save_object,
-    read_lazy_object)
-from karabo.middlelayer import read_project_model
+    read_lazy_object, walk_traits_object
+)
+from karabo.middlelayer import Hash, read_project_model
+from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.project_handle import LoadProjectDialog
 from karabo_gui.singletons.api import get_db_conn, get_project_model
 
@@ -44,6 +47,62 @@ class WeakMethodRef(object):
         self.obj = None
 
 
+def add_device_to_server(server, class_id=''):
+    """ Add a new device to a server
+
+    :param server: A DeviceServerModel object, OR string containing a server id
+    :param class_id: An optional parameter containing the class_id to use for
+                     the newly created device.
+    :return: The device id of the newly added device, or an empty string if
+             no device was added.
+    """
+    server_model = None
+    if isinstance(server, str):
+        server_model = get_device_server_model(server)
+    elif isinstance(server, DeviceServerModel):
+        server_model = server
+
+    if server_model is None:
+        msg = ('A device server with the ID "<b>{}</b>"<br>'
+               'needs to be added to the current project before<br>'
+               'a device can be added').format(server)
+        QMessageBox.warning(None, 'Server doesn\'t exist', msg)
+        return ''
+
+    dialog = DeviceHandleDialog(server_id=server_model.server_id,
+                                class_id=class_id)
+    result = dialog.exec()
+    if result == QDialog.Accepted:
+        # Check for existing device
+        if check_device_instance_exists(dialog.instance_id):
+            return ''
+
+        config_model = DeviceConfigurationModel(
+            class_id=dialog.class_id, configuration=Hash(),
+            simple_name=dialog.configuration_name,
+            alias=dialog.configuration_name,
+            description=dialog.description
+        )
+        # Set initialized and modified last to avoid bumping revision
+        config_model.initialized = config_model.modified = True
+
+        device = DeviceInstanceModel(
+            class_id=dialog.class_id,
+            instance_id=dialog.instance_id,
+            if_exists=dialog.if_exists,
+            configs=[config_model],
+            active_config_ref=(config_model.uuid, config_model.revision),
+        )
+        # Set initialized and modified last to avoid bumping revision
+        device.initialized = device.modified = True
+
+        server_model.devices.append(device)
+        return device.instance_id
+
+    # No device was added!
+    return ''
+
+
 def check_device_instance_exists(instance_id):
     """Check whether the incoming ``instance_id`` already exists in the current
     projects and return ``True`` if that is the case else ``False``.
@@ -56,6 +115,24 @@ def check_device_instance_exists(instance_id):
         QMessageBox.warning(None, 'Device already exists', msg)
         return True
     return False
+
+
+def get_device_server_model(server_id):
+    """Given a string containing a server id, return the corresponding
+    ``DeviceServerModel`` object in the current project, or None if one does
+    not exist.
+    """
+    server_model = None
+
+    def visitor(model):
+        nonlocal server_model
+        if (isinstance(model, DeviceServerModel) and
+                model.server_id == server_id):
+            server_model = model
+
+    root_project = get_project_model().traits_data_model
+    walk_traits_object(root_project, visitor)
+    return server_model
 
 
 def load_project(domain):
