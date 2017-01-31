@@ -48,10 +48,10 @@ class MacroInstanceController(BaseProjectController):
         return item
 
     def single_click(self, parent_project, parent=None):
-        macro_inst = get_topology().get_device(self.instance_id)
-        data = {'configuration': macro_inst}
+        instance_configuration = get_topology().get_device(self.instance_id)
+        data = {'configuration': instance_configuration}
         broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.TreeItemSingleClick, data))
+            KaraboEventSender.ShowConfiguration, data))
 
     # ----------------------------------------------------------------------
     # action handlers
