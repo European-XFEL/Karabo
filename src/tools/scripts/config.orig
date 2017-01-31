@@ -1,13 +1,13 @@
 ############################################################
-# config contains configuration definitions to manage 
+# config contains configuration definitions to manage
 # servers and applications used in a localhost device setup
 #
-# management scripts: 
+# management scripts:
 # 1. karabo-start   - to start karabo processes defined by the START environmental
 #                     karabo-start has a single optional parameter "-nox" which controls whether
 #	       	      the processes are started as individual xterms or accumulated as background jobs
 # 2. karabo-stop    - to stop started processes
-# 3. karabo-check   - to check the definitions used by test system scripts 
+# 3. karabo-check   - to check the definitions used by test system scripts
 #              	      this script is the only check made of the definitions used
 # 4. karabo-restart - to restart any "missing" applications
 #                     a candidate to a missing application is the gui which was closed at
@@ -64,14 +64,12 @@ START[2]="karabo-cppserver serverId=karabo/dataLogger deviceClasses=DataLogger,D
 
 START[3]="karabo-cppserver serverId=karabo/dataLoggerManager deviceClasses=DataLoggerManager autoStart[0].DataLoggerManager.serverList=\"karabo/dataLogger\" visibility=4 $logger"
 
-START[4]="karabo-cppserver serverId=karabo/projectManager deviceClasses=ProjectManager autoStart[0].ProjectManager visibility=4 $logger"
-
-START[5]="karabo-cppserver serverId=karabo/alarmServer deviceClasses=AlarmService autoStart[0].AlarmService visibility=4 $logger"
+START[4]="karabo-cppserver serverId=karabo/alarmServer deviceClasses=AlarmService autoStart[0].AlarmService visibility=4 $logger"
 
 # karabo/macroServer is hard-coded in the GUI
-START[6]="karabo-middlelayerserver serverId=karabo/macroServer visibility=4"
+START[5]="karabo-middlelayerserver serverId=karabo/macroServer visibility=4"
 
-START[7]="karabo-pythonserver serverId=karabo/projectDBServer deviceClasses=ProjectManager \"autoStart[0]={ProjectManager.host=$KARABO_PROJECT_DB_HOST ProjectManager.deviceId=KaraboProjectDB}\" visibility=4 $logger"
+START[6]="karabo-pythonserver serverId=karabo/projectDBServer deviceClasses=ProjectManager \"autoStart[0]={ProjectManager.host=$KARABO_PROJECT_DB_HOST ProjectManager.deviceId=KaraboProjectDB}\" visibility=4 $logger"
 
 ##############
 # Server C++ #
