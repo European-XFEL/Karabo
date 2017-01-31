@@ -43,7 +43,7 @@ class KaraboEventSender(Enum):
     StartMonitoringDevice = "Start listening to device updates"
     StopMonitoringDevice = "Stop listening to device updates"
     SystemTopologyUpdate = "System topology updated"
-    TreeItemSingleClick = "Tree item single click"
+    UpdateDeviceConfigurator = "Update device in configurator"
 
 
 class KaraboBroadcastEvent(QEvent):

@@ -192,6 +192,10 @@ class SystemTopology(HasStrictTraits):
 
         conf = self._class_configurations[key]
         if conf.descriptor is not None:
+            # If the class schema has already arrived in the past, then we
+            # should take no further action. We don't expect the schema of a
+            # class on a running server to change. Device _instances_, however,
+            # will change, but anyhow don't arrive in this handler.
             return None
 
         if len(schema.hash) > 0:
@@ -237,6 +241,10 @@ class SystemTopology(HasStrictTraits):
         # Schema already existent -> schema injected
         if conf.status in ('alive', 'monitoring'):
             get_network().onGetDeviceConfiguration(conf)
+
+        # Clear the configuration editor
+        # NOTE: This also clears configuration.descriptor!
+        clear_configuration_instance(conf)
 
         # Add configuration with schema to device data
         conf.setSchema(schema)
