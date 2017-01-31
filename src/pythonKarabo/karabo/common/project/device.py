@@ -31,8 +31,6 @@ class DeviceInstanceModel(BaseProjectObjectModel):
     configs = List(Instance(DeviceConfigurationModel))
     # UUID/Rev of the currently active configuration
     active_config_ref = Tuple(String, Int)
-    # The current status of the device
-    status = String('offline', transient=True)
 
     def select_config(self, uuid, revision):
         """ Find the `DeviceConfigurationModel` matching the given `uuid` and

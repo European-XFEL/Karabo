@@ -177,13 +177,12 @@ class DeviceInstanceController(BaseProjectGroupController):
         if config is not None:
             config.configuration = hsh
 
-    @on_trait_change("project_device.online")
+    @on_trait_change("project_device.status")
     def status_change(self):
         if not self.is_ui_initialized():
             return
 
-        configuration = self.project_device.current_configuration
-        status_enum = DeviceStatus(configuration.status)
+        status_enum = DeviceStatus(self.project_device.status)
         icon = get_project_device_status_icon(status_enum)
         if icon is not None:
             self.qt_item.setIcon(icon)
@@ -219,8 +218,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         # Get current status of device
         if self.model.initialized:
             # But only if our model is initialized!
-            configuration = self.project_device.current_configuration
-            status_enum = DeviceStatus(configuration.status)
+            status_enum = DeviceStatus(self.project_device.status)
         else:
             # Otherwise show the instance as offline
             status_enum = DeviceStatus('offline')
