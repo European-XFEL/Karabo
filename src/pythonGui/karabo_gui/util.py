@@ -8,6 +8,7 @@ from PyQt4.QtGui import QDialog, QFileDialog
 from karabo.middlelayer import Hash, MetricPrefix, Unit
 import karabo_gui.globals as globals
 from karabo_gui.messagebox import MessageBox
+from karabo_gui.singletons.api import get_db_conn
 
 
 class SignalBlocker(object):
@@ -174,3 +175,16 @@ def temp_file(suffix='', prefix='tmp', dir=None):
     finally:
         os.close(fd)
         os.unlink(filename)
+
+
+def is_database_processing():
+    """Return whether database is currently processing something. A message box
+    is shown if the processing is active.
+    """
+    # Make sure there are not pending DB things in the pipe
+    if get_db_conn().is_processing():
+        msg = ('There is currently data fetched from or sent to the <br>'
+               '<b>project database</b>. Please wait until this is done!')
+        MessageBox.showWarning(msg, 'Database connection active')
+        return True
+    return False
