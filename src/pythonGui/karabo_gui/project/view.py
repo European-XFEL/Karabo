@@ -12,6 +12,7 @@ from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.utils import maybe_save_modified_project, save_object
 from karabo_gui.singletons.api import get_project_model, get_selection_tracker
+from karabo_gui.util import is_database_processing
 from .controller.project import ProjectController
 from .controller.project_groups import ProjectSubgroupController
 
@@ -88,6 +89,10 @@ class ProjectView(QTreeView):
     def _show_context_menu(self):
         """ Show a context menu for the currently selected item.
         """
+        # Make sure there are not pending DB things in the pipe
+        if is_database_processing():
+            return
+
         selected_controller = self._get_selected_controller()
         if selected_controller is not None:
             parent_project = self._parent_project(selected_controller)
