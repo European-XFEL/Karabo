@@ -326,7 +326,6 @@ class ProjectDatabase(ContextDecorator):
         query = query.format(maybe_let=maybe_let,
                              maybe_where=maybe_where,
                              path=path)
-        print(query)
         try:
             res = self.dbhandle.query(query)
             return [{'uuid': r.attrib['uuid'],
