@@ -163,18 +163,20 @@ class WorkflowConnectionTool(BaseSceneTool):
 def connect_channels(start_channel, end_channel):
     """ Establish a connection between two channels.
     """
-    if isinstance(end_channel.box.value.connectedOutputChannels, Dummy):
+    configuration = end_channel.box.configuration
+    if configuration is None or configuration.isOnline():
         return
 
-    path = ".".join(start_channel.box.path)
     if not end_channel.box.boxvalue.connectedOutputChannels.hasValue():
         end_channel.box.value.connectedOutputChannels = []
 
+    path = ".".join(start_channel.box.path)
     paths = ["{}:{}".format(id, path) for id in start_channel.device_ids]
     old_connections = end_channel.box.value.connectedOutputChannels
     new_connections = [c for c in paths if c not in old_connections]
     end_channel.box.value.connectedOutputChannels.extend(new_connections)
     end_channel.box.boxvalue.connectedOutputChannels.update()
+    configuration.signalBoxChanged.emit()
 
 
 def disconnect_channels(start_channel, end_channel):
