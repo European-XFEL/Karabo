@@ -35,12 +35,12 @@ class DeviceHandleDialog(QDialog):
                            'device_handle.ui')
         uic.loadUi(filepath, self)
 
-        self._initUI(server_id, model, add_config, is_online)
+        self._initUI(server_id, model, add_config, class_id, is_online)
 
-    def _initUI(self, server_id, model, add_config, is_online):
+    def _initUI(self, server_id, model, add_config, class_id, is_online):
         # Get available plugins from systemTopology
-        for class_id in self._get_available_plugins(server_id):
-            self.cbClass.addItem(class_id)
+        for cls_id in self._get_available_plugins(server_id):
+            self.cbClass.addItem(cls_id)
         self.leServerId.setText(server_id)
 
         # Disable the instance_id editor when the device is online
