@@ -13,6 +13,7 @@ def clear_configuration_instance(configuration):
 
     if configuration.parameterEditor is not None:
         configuration.parameterEditor.clear()
+        configuration.parameterEditor = None
 
     if configuration.descriptor is not None:
         configuration.redummy()

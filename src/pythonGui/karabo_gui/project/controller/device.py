@@ -83,9 +83,14 @@ class DeviceInstanceController(BaseProjectGroupController):
         return item
 
     def single_click(self, parent_project, parent=None):
-        config = self.active_config
-        if config is not None:
-            self._broadcast_item_click()
+        if not self.model.initialized:
+            return
+
+        active_config = self.active_config
+        if active_config is None:
+            return
+
+        self._broadcast_item_click()
 
     # ----------------------------------------------------------------------
     # Traits handlers
@@ -162,7 +167,9 @@ class DeviceInstanceController(BaseProjectGroupController):
         """
         if not self.is_ui_initialized():
             return
-        self._broadcast_item_click()
+
+        # Show the device's configuration, iff it was already showing
+        self._update_configurator()
 
     @on_trait_change('project_device:configuration_updated')
     def _active_config_changed_in_configurator(self):
@@ -187,8 +194,8 @@ class DeviceInstanceController(BaseProjectGroupController):
         if icon is not None:
             self.qt_item.setIcon(icon)
 
-        # XXX: If we are currently showing in the configuration panel, then
-        # The view there should get our now online/offline configuration
+        # Show the device's configuration, iff it was already showing
+        self._update_configurator()
 
     # ----------------------------------------------------------------------
     # Util methods
@@ -204,6 +211,13 @@ class DeviceInstanceController(BaseProjectGroupController):
         configuration = self.project_device.current_configuration
         configuration.fromHash(config_model.configuration)
         device.active_config_ref = (config_model.uuid, config_model.revision)
+
+    def _broadcast_item_click(self):
+        configuration = self.project_device.current_configuration
+        if configuration.descriptor is not None:
+            data = {'configuration': configuration}
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.ShowConfiguration, data))
 
     def _update_children_check_state(self):
         """Update the CheckState of the child items
@@ -226,20 +240,12 @@ class DeviceInstanceController(BaseProjectGroupController):
         qt_item.setIcon(icon)
         self.set_qt_item_text(qt_item, self.model.instance_id)
 
-    def _broadcast_item_click(self):
-        # XXX the configurator expects the clicked configuration before
-        # it can show the actual configuration
-
-        if not self.model.initialized:
-            return
-
+    def _update_configurator(self):
         configuration = self.project_device.current_configuration
         if configuration.descriptor is not None:
             data = {'configuration': configuration}
             broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.ShowConfiguration, data))
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.TreeItemSingleClick, data))
+                KaraboEventSender.UpdateDeviceConfigurator, data))
 
     def _create_sub_menu(self, parent_menu, parent_project):
         """ Create sub menu for parent menu and return it
