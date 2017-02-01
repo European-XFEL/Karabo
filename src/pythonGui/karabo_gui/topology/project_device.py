@@ -62,6 +62,11 @@ class ProjectDeviceInstance(HasStrictTraits):
     def rename(self, device_id='', class_id='', server_id=''):
         """Assign a new device_id, class_id, or server_id.
         """
+        if (device_id == self._offline_dev_config.id
+                and class_id == self._offline_dev_config.classId
+                and server_id == self._offline_dev_config.serverId):
+            return
+
         device_id = device_id or self._offline_dev_config.id
         class_id = class_id or self._offline_dev_config.classId
         server_id = server_id or self._offline_dev_config.serverId
