@@ -128,12 +128,6 @@ class Manager(QObject):
         if not isConnected:
             self._topology.clear()
 
-    def onShowConfiguration(self, conf):
-        # Notify listeners
-        data = {'configuration': conf}
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.ShowConfiguration, data))
-
     def handle_log(self, messages):
         data = {'messages': messages}
         broadcast_event(KaraboBroadcastEvent(
@@ -235,6 +229,11 @@ class Manager(QObject):
             # This was formerly handled by the old ProjectModel class
             pass
 
+        # Once everything has calmed down, tell the configurator to clear
+        # NOTE: Doing this last avoids resetting displayed project devices
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.ClearConfigurator, {'deviceId': instanceId}))
+
     def handle_attributesUpdated(self, reply):
         instanceId = reply["instanceId"]
         schema = reply["updatedSchema"]
@@ -245,9 +244,6 @@ class Manager(QObject):
         if conf is None:
             return
 
-        # Notify ConfigurationPanel
-        # XXX: This causes a lot of stress on the GUI. Is it needed?
-        self.onShowConfiguration(conf)
         # Trigger update scenes
         self._device_data_received()
 
@@ -260,7 +256,11 @@ class Manager(QObject):
         box_signal = conf.boxvalue.state.signalUpdateComponent
         box_signal.connect(handle_device_state_change)
 
-        self.onShowConfiguration(conf)
+        # Refresh the configurator iff this configuration is already showing
+        data = {'configuration': conf}
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.UpdateDeviceConfigurator, data))
+
         # Trigger update scenes
         self._device_data_received()
 
