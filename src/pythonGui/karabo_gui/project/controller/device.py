@@ -84,7 +84,7 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     def single_click(self, parent_project, parent=None):
         config = self.active_config
-        if config is not None and config.configuration is not None:
+        if config is not None:
             self._broadcast_item_click()
 
     # ----------------------------------------------------------------------
