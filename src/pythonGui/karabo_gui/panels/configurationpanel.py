@@ -205,25 +205,29 @@ class ConfigurationPanel(Dockable, QWidget):
         """ Router for incoming broadcasts
         """
         if isinstance(event, KaraboBroadcastEvent):
+            data = event.data
             if event.sender is KaraboEventSender.ShowConfiguration:
-                configuration = event.data.get('configuration')
+                configuration = data.get('configuration')
                 self.showConfiguration(configuration)
             elif event.sender is KaraboEventSender.UpdateDeviceConfigurator:
-                configuration = event.data.get('configuration')
-                self.onUpdateDisplayedConfiguration(configuration)
+                configuration = data.get('configuration')
+                self.updateDisplayedConfiguration(configuration)
+            elif event.sender is KaraboEventSender.ClearConfigurator:
+                deviceId = data.get('deviceId', '')
+                self.removeDepartedConfiguration(deviceId)
             elif event.sender is KaraboEventSender.ShowNavigationItem:
-                device_path = event.data.get('device_path')
+                device_path = data.get('device_path')
                 self.onSelectNewNavigationItem(device_path)
             elif event.sender is KaraboEventSender.DeviceStateChanged:
-                configuration = event.data.get('configuration')
-                is_changing = event.data.get('is_changing')
+                configuration = data.get('configuration')
+                is_changing = data.get('is_changing')
                 self.onChangingState(configuration, is_changing)
             elif event.sender is KaraboEventSender.DeviceErrorChanged:
-                configuration = event.data.get('configuration')
-                is_changing = event.data.get('is_changing')
+                configuration = data.get('configuration')
+                is_changing = data.get('is_changing')
                 self.onErrorState(configuration, is_changing)
             elif event.sender is KaraboEventSender.NetworkConnectStatus:
-                if not event.data['status']:
+                if not data['status']:
                     self._resetPanel()
             return False
         return super(ConfigurationPanel, self).eventFilter(obj, event)
@@ -338,6 +342,17 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acResetAll.setStatusTip(description)
         self.acResetAll.setToolTip(text)
 
+    def removeDepartedConfiguration(self, deviceId):
+        """Clear the configuration panel when a device goes away
+        """
+        config = self.prevConfiguration
+        if config is None:
+            return
+
+        acceptable_types = ('class', 'projectClass', 'deviceGroupClass')
+        if deviceId == config.id and config.type not in acceptable_types:
+            self.showConfiguration(None)
+
     def showConfiguration(self, configuration):
         """Show a Configuration object in the panel
         """
@@ -364,6 +379,14 @@ class ConfigurationPanel(Dockable, QWidget):
         # This is the configuration we're viewing now
         self._setParameterEditorIndex(index)
         self._setConfiguration(configuration)
+
+    def updateDisplayedConfiguration(self, configuration):
+        if self.prevConfiguration is None:
+            return
+
+        currentDeviceId = self.prevConfiguration.id
+        if configuration.id == currentDeviceId:
+            self.showConfiguration(configuration)
 
     def _createNewParameterPage(self, configuration):
         twParameterEditor = ParameterTreeWidget(configuration)
@@ -526,7 +549,7 @@ class ConfigurationPanel(Dockable, QWidget):
         """Adapt to the Configuration which is currently showing
         """
         # Update buttons
-        if configuration is not None and configuration.descriptor is None:
+        if configuration is None or configuration.descriptor is None:
             self._hideAllButtons()
         else:
             vis_types = ('class', 'projectClass')
@@ -561,14 +584,6 @@ class ConfigurationPanel(Dockable, QWidget):
 
     def onSelectNewNavigationItem(self, devicePath):
         self.twNavigation.selectItem(devicePath)
-
-    def onUpdateDisplayedConfiguration(self, configuration):
-        if self.prevConfiguration is None:
-            return
-
-        currentDeviceId = self.prevConfiguration.id
-        if configuration.id == currentDeviceId:
-            self.showConfiguration(configuration)
 
     def onDeviceItemChanged(self, item_type, configuration):
         # Navigation view change. Show the configuration
