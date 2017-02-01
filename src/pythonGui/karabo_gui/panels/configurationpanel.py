@@ -80,6 +80,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.__swParameterEditor.addWidget(waitWidget)
 
         self.prevConfiguration = None
+        self._awaitingSchema = None
 
         topWidget = QWidget(self)
 
@@ -204,25 +205,29 @@ class ConfigurationPanel(Dockable, QWidget):
         """ Router for incoming broadcasts
         """
         if isinstance(event, KaraboBroadcastEvent):
+            data = event.data
             if event.sender is KaraboEventSender.ShowConfiguration:
-                configuration = event.data.get('configuration')
-                self.onShowConfiguration(configuration)
-            elif event.sender is KaraboEventSender.TreeItemSingleClick:
-                configuration = event.data.get('configuration')
-                self.onDeviceItemChanged(configuration.type, configuration)
+                configuration = data.get('configuration')
+                self.showConfiguration(configuration)
+            elif event.sender is KaraboEventSender.UpdateDeviceConfigurator:
+                configuration = data.get('configuration')
+                self.updateDisplayedConfiguration(configuration)
+            elif event.sender is KaraboEventSender.ClearConfigurator:
+                deviceId = data.get('deviceId', '')
+                self.removeDepartedConfiguration(deviceId)
             elif event.sender is KaraboEventSender.ShowNavigationItem:
-                device_path = event.data.get('device_path')
+                device_path = data.get('device_path')
                 self.onSelectNewNavigationItem(device_path)
             elif event.sender is KaraboEventSender.DeviceStateChanged:
-                configuration = event.data.get('configuration')
-                is_changing = event.data.get('is_changing')
+                configuration = data.get('configuration')
+                is_changing = data.get('is_changing')
                 self.onChangingState(configuration, is_changing)
             elif event.sender is KaraboEventSender.DeviceErrorChanged:
-                configuration = event.data.get('configuration')
-                is_changing = event.data.get('is_changing')
+                configuration = data.get('configuration')
+                is_changing = data.get('is_changing')
                 self.onErrorState(configuration, is_changing)
             elif event.sender is KaraboEventSender.NetworkConnectStatus:
-                if not event.data['status']:
+                if not data['status']:
                     self._resetPanel()
             return False
         return super(ConfigurationPanel, self).eventFilter(obj, event)
@@ -336,6 +341,52 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acResetAll.setText(description)
         self.acResetAll.setStatusTip(description)
         self.acResetAll.setToolTip(text)
+
+    def removeDepartedConfiguration(self, deviceId):
+        """Clear the configuration panel when a device goes away
+        """
+        config = self.prevConfiguration
+        if config is None:
+            return
+
+        acceptable_types = ('class', 'projectClass', 'deviceGroupClass')
+        if deviceId == config.id and config.type not in acceptable_types:
+            self.showConfiguration(None)
+
+    def showConfiguration(self, configuration):
+        """Show a Configuration object in the panel
+        """
+        if configuration is None:
+            # There is no configuration to show
+            index = 0
+        elif configuration.descriptor is None:
+            # The configuration is not ready to be shown (no Schema)
+            index = 1
+        elif configuration.index is None:
+            # The configuration has never been shown before
+            configuration.index = self._createNewParameterPage(configuration)
+            index = configuration.index
+        elif configuration.parameterEditor is None:
+            # The configuration needs its editor rebuilt
+            index = configuration.index
+            twParameterEditor = self.__swParameterEditor.widget(index)
+            twParameterEditor.clear()
+            configuration.fillWidget(twParameterEditor)
+        else:
+            # Everything is ready to go!
+            index = configuration.index
+
+        # This is the configuration we're viewing now
+        self._setParameterEditorIndex(index)
+        self._setConfiguration(configuration)
+
+    def updateDisplayedConfiguration(self, configuration):
+        if self.prevConfiguration is None:
+            return
+
+        currentDeviceId = self.prevConfiguration.id
+        if configuration.id == currentDeviceId:
+            self.showConfiguration(configuration)
 
     def _createNewParameterPage(self, configuration):
         twParameterEditor = ParameterTreeWidget(configuration)
@@ -462,25 +513,6 @@ class ConfigurationPanel(Dockable, QWidget):
         self.acResetAll.setVisible(not visible)
     updateButtonsVisibility = property(fset=_updateButtonsVisibility)
 
-    def showParameterPage(self, configuration):
-        """Show the parameters for configuration
-        """
-        if configuration is None:
-            self._setParameterEditorIndex(0)
-        else:
-            index = configuration.index
-            if configuration.index is None:
-                cindex = self._createNewParameterPage(configuration)
-                configuration.index = cindex
-                index = 1  # Show waiting page
-            self._setParameterEditorIndex(index)
-
-        if (configuration not in (None, self.prevConfiguration) and
-                configuration.type in ("device", "deviceGroup")):
-            configuration.addVisible()
-
-        self.prevConfiguration = configuration
-
     def _removeParameterEditorPage(self, twParameterEditor):
         """The ``twParameterEditor`` is remove from StackedWidget and all
         registered components get unregistered.
@@ -513,50 +545,58 @@ class ConfigurationPanel(Dockable, QWidget):
             page = self.__swParameterEditor.widget(index)
             self._removeParameterEditorPage(page)
 
-    # -----------------------------------------------------------------------
-    # slots
-
-    def onSelectNewNavigationItem(self, devicePath):
-        self.twNavigation.selectItem(devicePath)
-
-    def onShowConfiguration(self, configuration):
-        if configuration.index is None:
-            configuration.index = self._createNewParameterPage(configuration)
-        else:
-            index = configuration.index
-            twParameterEditor = self.__swParameterEditor.widget(index)
-            twParameterEditor.clear()
-            configuration.fillWidget(twParameterEditor)
-
-        currentIndex = self.__swParameterEditor.currentIndex()
-        if (currentIndex == 1) and (self.prevConfiguration is configuration):
-            # Waiting page is shown
-            self._setParameterEditorIndex(configuration.index)
-
-        if self.__swParameterEditor.currentIndex() == configuration.index:
-            hidden_types = ("other", "deviceGroupClass", "deviceGroup")
-            if configuration.type in hidden_types:
-                self._hideAllButtons()
-            elif configuration.descriptor is not None:
-                vis_types = ('class', 'projectClass')
-                self.updateButtonsVisibility = configuration.type in vis_types
-
-    def onDeviceItemChanged(self, item_type, configuration):
+    def _setConfiguration(self, configuration):
+        """Adapt to the Configuration which is currently showing
+        """
         # Update buttons
-        if (item_type in ("other", "deviceGroupClass", "deviceGroup") or
-                (configuration is not None and
-                 configuration.descriptor is None)):
+        if configuration is None or configuration.descriptor is None:
             self._hideAllButtons()
         else:
             vis_types = ('class', 'projectClass')
             self.updateButtonsVisibility = (configuration is not None and
                                             configuration.type in vis_types)
 
+        # Toggle device updates
+        visible_types = ('device', 'deviceGroup')
         if (self.prevConfiguration not in (None, configuration) and
-                self.prevConfiguration.type in ("device", "deviceGroup")):
+                self.prevConfiguration.type in visible_types):
             self.prevConfiguration.removeVisible()
 
-        self.showParameterPage(configuration)
+        if (configuration not in (None, self.prevConfiguration) and
+                configuration.type in visible_types):
+            configuration.addVisible()
+
+        # Cancel notification of arriving schema
+        if self._awaitingSchema is not None:
+            conf = self._awaitingSchema
+            conf.signalNewDescriptor.disconnect(self.onSchemaArrival)
+
+        # Handle configurations which await a schema
+        if configuration is not None and configuration.descriptor is None:
+            self._awaitingSchema = configuration
+            configuration.signalNewDescriptor.connect(self.onSchemaArrival)
+
+        # Finally, set prevConfiguration
+        self.prevConfiguration = configuration
+
+    # -----------------------------------------------------------------------
+    # slots
+
+    def onSelectNewNavigationItem(self, devicePath):
+        self.twNavigation.selectItem(devicePath)
+
+    def onDeviceItemChanged(self, item_type, configuration):
+        # Navigation view change. Show the configuration
+        self.showConfiguration(configuration)
+
+    def onSchemaArrival(self, configuration):
+        # A schema we wanted arrived
+        assert configuration is self._awaitingSchema
+        self._awaitingSchema = None
+        configuration.signalNewDescriptor.disconnect(self.onSchemaArrival)
+
+        if self.prevConfiguration is configuration:
+            self.showConfiguration(configuration)
 
     def onChangingState(self, conf, isChanging):
         if not hasattr(conf, "timer"):
