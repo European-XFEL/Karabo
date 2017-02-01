@@ -229,6 +229,11 @@ class Manager(QObject):
             # This was formerly handled by the old ProjectModel class
             pass
 
+        # Once everything has calmed down, tell the configurator to clear
+        # NOTE: Doing this last avoids resetting displayed project devices
+        broadcast_event(KaraboBroadcastEvent(
+            KaraboEventSender.ClearConfigurator, {'deviceId': instanceId}))
+
     def handle_attributesUpdated(self, reply):
         instanceId = reply["instanceId"]
         schema = reply["updatedSchema"]
