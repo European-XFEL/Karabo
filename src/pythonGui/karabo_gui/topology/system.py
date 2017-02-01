@@ -122,6 +122,11 @@ class SystemTopology(HasStrictTraits):
             instance = ProjectDeviceInstance(device_id, class_id, server_id,
                                              init_config)
             self._project_devices[device_id] = instance
+        else:
+            instance = self._project_devices[device_id]
+            instance.rename(
+                device_id=device_id, class_id=class_id, server_id=server_id
+            )
 
         return self._project_devices[device_id]
 
