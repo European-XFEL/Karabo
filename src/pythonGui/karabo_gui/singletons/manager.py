@@ -43,7 +43,8 @@ def handle_device_state_change(box, value, timestamp):
                                        data))
 
         # Then a regular state change notification
-        data['is_changing'] = False
+        data = {'configuration': configuration,
+                'is_changing': False}
         broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceStateChanged,
                                        data))
 
