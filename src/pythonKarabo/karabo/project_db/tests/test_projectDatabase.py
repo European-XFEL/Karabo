@@ -13,7 +13,7 @@ def _gen_uuid():
 
 def create_hierarchy(db):
     uuid = _gen_uuid()
-    xml = ('<project revision="0" item_type="{atype}" '
+    xml = ('<xml revision="0" item_type="{atype}" '
            'uuid="{uuid}" alias = "{alias}" '
            'simple_name="{name}">').format(uuid=uuid, atype='project',
                                            alias=uuid, name=uuid)
@@ -23,16 +23,16 @@ def create_hierarchy(db):
     # create some scenes
     for i in range(4):
         sub_uuid = _gen_uuid()
-        xml += ('<scene item_type="{atype}" uuid="{uuid}"'
+        xml += ('<xml item_type="{atype}" uuid="{uuid}"'
                 ' alias = "{alias}" revision="0"'
                 ' simple_name="{name}" />').format(uuid=sub_uuid,
                                                    atype='scene',
                                                    alias=sub_uuid,
                                                    name=sub_uuid)
 
-        scene_xml = ('<scene item_type="{atype}" uuid="{uuid}"'
+        scene_xml = ('<xml item_type="{atype}" uuid="{uuid}"'
                      ' alias = "{alias}" revision="0"'
-                     ' simple_name="{name}" >foo</scene>'
+                     ' simple_name="{name}" >foo</xml>'
                      .format(uuid=sub_uuid, atype='scene',
                              alias=uuid, name=sub_uuid))
 
@@ -41,23 +41,23 @@ def create_hierarchy(db):
     # create some device_servers
     for i in range(4):
         sub_uuid = _gen_uuid()
-        xml += ('<device_server item_type="{atype}" uuid="{uuid}"'
+        xml += ('<xml item_type="{atype}" uuid="{uuid}"'
                 ' alias = "{alias}" revision="0"'
                 ' simple_name="{name}" />').format(uuid=sub_uuid,
                                                    atype='device_server',
                                                    alias=uuid,
                                                    name=sub_uuid)
 
-        ds_xml = ('<device_server item_type="{atype}" uuid="{uuid}"'
+        ds_xml = ('<xml item_type="{atype}" uuid="{uuid}"'
                   ' alias = "{alias}" revision="0"'
-                  ' simple_name="{name}" >foo</device_server>'
+                  ' simple_name="{name}" >foo</xml>'
                   .format(uuid=sub_uuid, atype='device_server',
                           alias=uuid, name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, ds_xml)
 
     xml += "</children>"
-    xml += "</project>"
+    xml += "</xml>"
     db.save_item("LOCAL", uuid, xml)
     return uuid
 
@@ -109,11 +109,11 @@ class TestProjectDatabase(TestCase):
 
             with self.subTest(msg='test_get_versioning_info'):
                 xml_rep = """
-                <test uuid="{uuid}"
+                <xml uuid="{uuid}"
                       revision="2"
                       date="the day after tomorrow"
                       user="bob"
-                      alias="test">foo</test>
+                      alias="test">foo</xml>
                 """.format(uuid=testproject)
 
                 # db.save_project('LOCAL', testproject, ret)
@@ -146,7 +146,7 @@ class TestProjectDatabase(TestCase):
             with self.subTest(msg='load_item'):
                 item = db.load_item('LOCAL', testproject, 2)
                 itemxml = db._make_xml_if_needed(item)
-                self.assertEqual(itemxml.tag, 'test')
+                self.assertEqual(itemxml.tag, 'xml')
                 self.assertEqual(itemxml.text, 'foo')
 
             with self.subTest(msg='test_list_items'):
