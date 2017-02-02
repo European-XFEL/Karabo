@@ -155,6 +155,15 @@ class SceneView(QWidget):
             if self.current_tool.visible:
                 self.current_tool.draw(painter)
 
+    def resizeEvent(self, event):
+        model = self.scene_model
+        if model is None:
+            return
+
+        size = event.size()
+        model.width = size.width()
+        model.height = size.height()
+
     def event(self, event):
         """ This needs to be reimplemented to show tooltips not only in control
             mode but also in design mode.
@@ -214,8 +223,7 @@ class SceneView(QWidget):
         # Set scene model
         self._set_scene_model(scene_model)
         # Set width and height
-        self.resize(max(self.scene_model.width, SCENE_MIN_WIDTH),
-                    max(self.scene_model.height, SCENE_MIN_HEIGHT))
+        self.resize(self.scene_model.width, self.scene_model.height)
 
         self._scene_obj_cache = {}
         fill_root_layout(self.layout, self.scene_model, self.inner,
