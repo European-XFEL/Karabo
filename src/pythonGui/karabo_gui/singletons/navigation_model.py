@@ -219,7 +219,7 @@ class NavigationTreeModel(QAbstractItemModel):
         hierarchyLevel = node.level()
 
         if column == 0 and role == Qt.DisplayRole:
-            return node.display_name
+            return node.node_id
         elif column == 0 and role == Qt.DecorationRole:
             if hierarchyLevel == 0:
                 return icons.host
@@ -304,12 +304,12 @@ class NavigationTreeModel(QAbstractItemModel):
             conf = None
             item_type = "server"
         if level == 2:
-            classId = node.display_name
-            serverId = node.parent.display_name
+            classId = node.node_id
+            serverId = node.parent.node_id
             conf = get_topology().get_class(serverId, classId)
             item_type = conf.type
         elif level == 3:
-            deviceId = node.display_name
+            deviceId = node.node_id
             conf = get_topology().get_device(deviceId)
             item_type = conf.type
 
