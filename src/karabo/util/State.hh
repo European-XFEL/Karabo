@@ -136,6 +136,8 @@ namespace karabo {
             static const State ROTATING;
             static const State MOVING;
             static const State SWITCHING;
+            static const State OPENING;
+            static const State CLOSING;
             static const State HEATING;
             static const State MOVING_RIGHT;
             static const State MOVING_UP;
