@@ -229,9 +229,13 @@ class MacroController(BaseProjectGroupController):
 # ----------------------------------------------------------------------
 
 def _get_macro_instances(macro_id):
-    def filter(dev_id, attributes):
-        if attributes.get('type') == 'macro' and dev_id.startswith(macro_id):
-            return dev_id
-        return False
+    instances = set()
 
-    return get_topology().search_system_tree('macro', filter)
+    def visitor(node):
+        attrs = node.attributes
+        if (attrs.get('type') == 'macro' and
+                node.node_id.startswith(macro_id)):
+            instances.add(node.node_id)
+
+    get_topology().visit_system_tree(visitor)
+    return list(instances)
