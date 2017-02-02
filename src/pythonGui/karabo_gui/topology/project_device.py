@@ -20,15 +20,15 @@ class ProjectDeviceInstance(HasStrictTraits):
     """
     # The current device id. Can be monitored for changes.
     device_id = String
+    class_id = String
+    server_id = String
     # Binary online/offline state of the device
     online = Bool
     # Current status of the online device (never the offline device)
-    status = String
+    status = String('offline')
     # The current configuration for this device
     current_configuration = Property(Instance(Configuration))
 
-    # An event which is triggered whenever the Configuration objects change
-    boxes_updated = Event
     # An event which is triggered whenever the configuration is updated
     configuration_updated = Event
     # An event which is triggered whenever the class schema changes
@@ -51,6 +51,8 @@ class ProjectDeviceInstance(HasStrictTraits):
         """
         new_descriptor = self._descriptor_change_slot
         self._class_config.signalNewDescriptor.disconnect(new_descriptor)
+        new_descriptor = self._online_descriptor_change_slot
+        self._online_dev_config.signalNewDescriptor.disconnect(new_descriptor)
         status_changed = self._status_change_slot
         self._online_dev_config.signalStatusChanged.disconnect(status_changed)
         config_changed = self._config_change_slot
@@ -62,14 +64,14 @@ class ProjectDeviceInstance(HasStrictTraits):
     def rename(self, device_id='', class_id='', server_id=''):
         """Assign a new device_id, class_id, or server_id.
         """
-        if (device_id == self._offline_dev_config.id
-                and class_id == self._offline_dev_config.classId
-                and server_id == self._offline_dev_config.serverId):
-            return
+        device_id = device_id or self.device_id
+        class_id = class_id or self.class_id
+        server_id = server_id or self.server_id
 
-        device_id = device_id or self._offline_dev_config.id
-        class_id = class_id or self._offline_dev_config.classId
-        server_id = server_id or self._offline_dev_config.serverId
+        # First check to see if anything is changing!
+        if (device_id == self.device_id and class_id == self.class_id
+                and server_id == self.server_id):
+            return
 
         self.destroy()
         self._init_object_state(device_id, class_id, server_id)
@@ -124,6 +126,15 @@ class ProjectDeviceInstance(HasStrictTraits):
         # Let the world know
         self.schema_updated = True
 
+    def _online_descriptor_change_slot(self, config):
+        """The online device has received a new schema.
+        """
+        if self._online_dev_config.descriptor is None:
+            self._online_dev_config.descriptor = config.descriptor
+
+        # Let the world know
+        self.schema_updated = True
+
     def _status_change_slot(self, box, status, error_flag):
         """The `_online_dev_config` trait has changed its status. Check if it's
         online
@@ -144,14 +155,14 @@ class ProjectDeviceInstance(HasStrictTraits):
         offline_device.serverId = server_id
         offline_device.classId = class_id
 
-        self.online = online_device.isOnline()
-        self.status = online_device.status
         self._class_config = class_config
         self._online_dev_config = online_device
         self._offline_dev_config = offline_device
 
         # Connect to signals
         class_config.signalNewDescriptor.connect(self._descriptor_change_slot)
+        online_device.signalNewDescriptor.connect(
+            self._online_descriptor_change_slot)
         online_device.signalStatusChanged.connect(self._status_change_slot)
         online_device.signalBoxChanged.connect(self._config_change_slot)
         offline_device.signalBoxChanged.connect(self._config_change_slot)
@@ -159,8 +170,10 @@ class ProjectDeviceInstance(HasStrictTraits):
         if class_config.descriptor is not None:
             self._descriptor_change_slot(class_config)
 
-        # Remember the device_id (also notifies the outside world of changes)
+        # Remember the IDs (also notifies the outside world of changes)
         self.device_id = device_id
+        self.class_id = class_id
+        self.server_id = server_id
 
-        # Notify listeners
-        self.boxes_updated = True
+        # Update the online flag
+        self.online = online_device.isOnline()
