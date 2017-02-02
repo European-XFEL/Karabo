@@ -22,10 +22,6 @@ WARN_COLOR = (255, 102, 0)  # orange
 ALARM_COLOR = (255, 0, 0)  # red
 INTERLOCK_COLOR = (51, 51, 255)  # blue
 
-# Scene dimensions
-SCENE_MIN_WIDTH = 1024
-SCENE_MIN_HEIGHT = 768
-
 # Parameter item properties
 INTERNAL_KEY = Qt.UserRole
 VALUE_TYPE = Qt.UserRole + 1
