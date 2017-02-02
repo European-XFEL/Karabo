@@ -17,7 +17,7 @@ from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
                                KaraboEventSender)
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
-from karabo_gui.project.utils import save_object
+from karabo_gui.project.utils import save_object, show_no_configuration
 from karabo_gui.util import getSaveFileName
 from .bases import BaseProjectController
 
@@ -57,6 +57,9 @@ class SceneController(BaseProjectController):
         item.setEditable(False)
         self.set_qt_item_text(item, self.model.simple_name)
         return item
+
+    def single_click(self, parent_project, parent=None):
+        show_no_configuration()
 
     def double_click(self, parent_project, parent=None):
         data = {'model': self.model}
