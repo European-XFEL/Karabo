@@ -14,6 +14,7 @@ from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
     register_for_broadcasts
 )
+from karabo_gui.messagebox import MessageBox
 from karabo_gui.singletons.api import get_network
 
 
@@ -44,11 +45,13 @@ class ProjectDatabaseConnection(QObject):
         """ Router for incoming broadcasts
         """
         if isinstance(event, KaraboBroadcastEvent):
+            data = event.data
             if event.sender is KaraboEventSender.ProjectItemsLoaded:
-                items = event.data.get('items', [])
-                self._items_loaded(items)
+                success = data.get('success')
+                items = data.get('items', [])
+                self._items_loaded(items, success)
             elif event.sender is KaraboEventSender.ProjectItemsSaved:
-                items = event.data.get('items', [])
+                items = data.get('items', [])
                 self._items_saved(items)
             return False
         return super(ProjectDatabaseConnection, self).eventFilter(obj, event)
@@ -110,23 +113,24 @@ class ProjectDatabaseConnection(QObject):
     # -------------------------------------------------------------------
     # Broadcast event handlers
 
-    def _items_loaded(self, items):
+    def _items_loaded(self, items, success):
         """ A bunch of data just arrived from the network.
         """
-        # Cache everything locally first
-        for item in items:
-            domain = item['domain']
-            uuid = item['uuid']
-            revision = item['revision']
-            data = item['xml']
-            self.cache.store(domain, uuid, revision, data)
+        if success:
+            # Cache everything locally first only if loading from DB successful
+            for item in items:
+                domain = item['domain']
+                uuid = item['uuid']
+                revision = item['revision']
+                data = item['xml']
+                self.cache.store(domain, uuid, revision, data)
 
         # Then go back through and load any waiting objects
         for item in items:
             domain = item['domain']
             uuid = item['uuid']
             revision = item['revision']
-            self._pop_reading(domain, uuid, revision)
+            self._pop_reading(domain, uuid, revision, success)
 
     def _items_saved(self, items):
         """ A bunch of items were just saved
@@ -136,6 +140,8 @@ class ProjectDatabaseConnection(QObject):
             uuid = item['uuid']
             revision = item['revision']
             success = item['success']
+            if not success:
+                MessageBox.showError(item['reason'])
             self._pop_writing(domain, uuid, revision, success)
 
     # -------------------------------------------------------------------
@@ -172,15 +178,17 @@ class ProjectDatabaseConnection(QObject):
 
         self._broadcast_is_processing(is_processing)
 
-    def _pop_reading(self, domain, uuid, revision):
+    def _pop_reading(self, domain, uuid, revision, success):
         # Store previous processing state
         is_processing = self.is_processing()
 
         key = (uuid, revision)
         if key in self._waiting_for_read:
             obj = self._waiting_for_read.pop(key)
-            read_lazy_object(domain, uuid, revision, self,
-                             read_project_model, existing=obj)
+            if success:
+                # Only try to read if reading from DB was successful
+                read_lazy_object(domain, uuid, revision, self,
+                                 read_project_model, existing=obj)
 
         self._broadcast_is_processing(is_processing)
 
@@ -208,11 +216,10 @@ class ProjectDatabaseConnection(QObject):
         key = (uuid, revision)
         obj = self._waiting_for_write.pop(key)
 
-        # Write to the local cache
-        data = write_project_model(obj)
-        self.cache.store(domain, uuid, revision, data)
-
         if success:
+            # Write to the local cache
+            data = write_project_model(obj)
+            self.cache.store(domain, uuid, revision, data)
             # No longer dirty!
             obj.modified = False
 
