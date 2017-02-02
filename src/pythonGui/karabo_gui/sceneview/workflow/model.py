@@ -115,7 +115,7 @@ class WorkflowDeviceModel(HasStrictTraits):
 
         self.device = get_topology().get_project_device(self.model.device_id)
 
-    @on_trait_change('device.online,device.boxes_updated')
+    @on_trait_change('device.online,device.schema_updated')
     def _refresh_channels(self):
         """When the project device changes, or it changes between
         online/offline states: refresh the workflow channels.
