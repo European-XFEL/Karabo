@@ -1,7 +1,7 @@
 from PyQt4.QtCore import QPoint
 from traits.api import (
-    HasStrictTraits, Dict, Enum, Event, Instance, Int, List, Property, String,
-    cached_property, on_trait_change
+    HasStrictTraits, Bool, Dict, Enum, Event, Instance, Int, List, Property,
+    String, cached_property, on_trait_change
 )
 
 from karabo.common.scenemodel.api import WorkflowItemModel
@@ -32,9 +32,10 @@ class WorkflowChannelModel(HasStrictTraits):
                         depends_on=['model.x', 'model.y', 'model.height',
                                     'model.width'])
 
-    def toggle_box_notifications(self, state):
-        """ Register/Unregister for box notifications. """
-        if state:
+    def toggle_box_notifications(self, visible):
+        """Register/Unregister for box notifications.
+        """
+        if visible:
             self.box.addVisible()
         else:
             self.box.removeVisible()
@@ -181,6 +182,9 @@ class SceneWorkflowModel(HasStrictTraits):
     _workflow_items = List(Instance(WorkflowItemModel))
     _device_map = Dict  # WorkflowItemModel -> WorkflowDeviceModel
 
+    # Are we visible?
+    _scene_visible = Bool(False)
+
     # --------------------------------------------
     # Public interface
 
@@ -208,6 +212,15 @@ class SceneWorkflowModel(HasStrictTraits):
         # Cause a single items_changed notification. The handler will clean up
         # the channels.
         self._workflow_items[:] = []
+
+    def set_visible(self, visible):
+        """Subscribe/Unsubscribe from device updates on boxes
+        """
+        for ch in self.channels:
+            ch.toggle_box_notifications(visible)
+
+        # Keep the state for later adds/removes
+        self._scene_visible = visible
 
     # --------------------------------------------
     # Traits handlers
@@ -250,20 +263,24 @@ class SceneWorkflowModel(HasStrictTraits):
 
     def _add_device_channels(self, inputs, outputs):
         for ch in inputs:
-            ch.toggle_box_notifications(True)
+            if self._scene_visible:
+                ch.toggle_box_notifications(True)
             self._subscribe_to_input_changes(ch)
         for ch in outputs:
-            ch.toggle_box_notifications(True)
+            if self._scene_visible:
+                ch.toggle_box_notifications(True)
         self.input_channels.extend(inputs)
         self.output_channels.extend(outputs)
 
     def _remove_device_channels(self, inputs, outputs):
         for ch in inputs:
-            ch.toggle_box_notifications(False)
+            if self._scene_visible:
+                ch.toggle_box_notifications(False)
             self._unsubscribe_from_input_changes(ch)
             self.input_channels.remove(ch)
         for ch in outputs:
-            ch.toggle_box_notifications(False)
+            if self._scene_visible:
+                ch.toggle_box_notifications(False)
             self.output_channels.remove(ch)
 
     def _connected_outputs_cb(self, box, value, timestamp):
