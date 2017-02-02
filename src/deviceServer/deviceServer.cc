@@ -45,6 +45,7 @@ int main(int argc, char** argv) {
             t.join(); // Blocking central event loop
         }
 
+        std::cout << "\n" << argv[0] << " is done!\n" << std::endl;
         return EXIT_SUCCESS;
 
     } catch (const Exception& e) {
