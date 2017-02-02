@@ -14,6 +14,8 @@ from karabo.common.project.api import (
     read_lazy_object, walk_traits_object
 )
 from karabo.middlelayer import Hash, read_project_model
+from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
+                               KaraboEventSender)
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.project_handle import LoadProjectDialog
 from karabo_gui.singletons.api import get_db_conn, get_project_model
@@ -198,3 +200,11 @@ def show_save_project_message(project):
         if reply == QMessageBox.Save:
             return True
     return False
+
+
+def show_no_configuration():
+    """Broadcast event to show no configuration in configuration panel
+    """
+    data = {'configuration': None}
+    broadcast_event(KaraboBroadcastEvent(
+        KaraboEventSender.ShowConfiguration, data))

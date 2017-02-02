@@ -12,6 +12,7 @@ from traits.api import (ABCHasStrictTraits, Callable, Dict, Instance, List,
 
 from karabo.common.project.api import BaseProjectObjectModel
 from karabo_gui.const import PROJECT_CONTROLLER_REF
+from karabo_gui.project.utils import show_no_configuration
 
 
 class BaseProjectController(ABCHasStrictTraits):
@@ -97,6 +98,9 @@ class BaseProjectGroupController(BaseProjectController):
     # Child controllers
     children = List(Instance(BaseProjectController))
     _child_map = Dict  # dictionary for fast lookups during removal
+
+    def single_click(self, parent_project, parent=None):
+        show_no_configuration()
 
     def items_assigned(self, obj, name, old, new):
         """ Handles assignment to a list trait and passes the notification
