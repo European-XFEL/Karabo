@@ -86,9 +86,10 @@ def parse_commandline():
     parser_chk.add_argument('-c', '--config',
                             type=str,
                             metavar='',
-                            choices=['Debug', 'Release'],
+                            choices=['Debug', 'Release', 'Simulation'],
                             default='Debug',
-                            help='Build configuration {Debug|Release}')
+                            help='Build configuration {Debug|Release|'
+                                 'Simulation}')
 
     parser_ins = sps.add_parser('install',
                                 help='Installs an existing device')
@@ -105,9 +106,10 @@ def parse_commandline():
     parser_ins.add_argument('-c', '--config',
                             type=str,
                             metavar='',
-                            choices=['Debug', 'Release'],
+                            choices=['Debug', 'Release', 'Simulation'],
                             default='Debug',
-                            help='Build configuration {Debug|Release}')
+                            help='Build configuration {Debug|Release|'
+                                 'Simulation}')
 
     parser_insf = sps.add_parser('install-file',
                                  help='Installs devices given in the '
@@ -121,9 +123,10 @@ def parse_commandline():
     parser_insf.add_argument('-c', '--config',
                              type=str,
                              metavar='',
-                             choices=['Debug', 'Release'],
+                             choices=['Debug', 'Release', 'Simulation'],
                              default='Debug',
-                             help='Build configuration {Debug|Release}')
+                             help='Build configuration {Debug|Release|'
+                                  'Simulation}')
 
     parser_uins = sps.add_parser('uninstall',
                                  help='Uninstalls an existing device')
@@ -154,9 +157,10 @@ def parse_commandline():
     parser_dev.add_argument('-c', '--config',
                             type=str,
                             metavar='',
-                            choices=['Debug', 'Release'],
+                            choices=['Debug', 'Release', 'Simulation'],
                             default='Debug',
-                            help='Build configuration {Debug|Release}')
+                            help='Build configuration {Debug|Release|'
+                                 'Simulation}')
 
     parser_udev = sps.add_parser('undevelop',
                                  help='Deactivates develop mode for a given'
@@ -175,7 +179,7 @@ def parse_commandline():
     parser.add_argument('-j', '--jobs',
                         type=int,
                         default=multiprocessing.cpu_count(),
-                        help='Specifies  the  number of make jobs (commands) '
+                        help='Specifies the number of make jobs (commands) '
                              'to run simultaneously.')
 
     args = parser.parse_args()
@@ -246,7 +250,7 @@ def install(args):
         if os.path.isfile('DEPENDS'):
             install_dependencies(args)
         if os.path.isfile('Makefile'):
-            print('Compiling... [please wait] ', end='', flush=True)
+            print('Compiling, please wait... ', end='', flush=True)
             run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
             print('done.')
             if os.path.isdir('dist'):
@@ -308,7 +312,7 @@ def develop(args):
         if os.path.isfile('DEPENDS'):
             install_dependencies(args)
         if os.path.isfile('Makefile'):
-            print('Compiling... [please wait] ', end='', flush=True)
+            print('Compiling, please wait... ', end='', flush=True)
             run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
             print('done.')
             os.chdir(os.path.join('..', '..', 'plugins'))
@@ -326,6 +330,10 @@ def install_dependencies(args):
     devices = parse_configuration_file('DEPENDS')
     dep_names = ', '.join('{} ({})'.format(e[0], e[1]) for e in devices)
     print('Found dependencies:', dep_names)
+    if args.config == 'Simulation':
+        print('Skipped automatic installation as building in Simulation '
+              'configuration. Consider manual installation if needed.')
+        return
     print('Automatically installing now.')
     for item in devices:
         args.device = item[0]
