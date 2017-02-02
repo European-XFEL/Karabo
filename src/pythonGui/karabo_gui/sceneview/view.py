@@ -203,6 +203,7 @@ class SceneView(QWidget):
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
                 obj.set_visible(visible)
+        self.workflow_model.set_visible(visible)
 
         self.tab_visible = visible
 
