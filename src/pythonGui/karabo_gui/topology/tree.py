@@ -14,7 +14,7 @@ from karabo_gui.enums import NavigationItemTypes
 class SystemTreeNode(HasStrictTraits):
     """A node in the SystemTree
     """
-    display_name = String
+    node_id = String
     path = String
     visibility = Enum(*list(AccessLevel))
     status = String
@@ -25,9 +25,9 @@ class SystemTreeNode(HasStrictTraits):
     parent = WeakRef('SystemTreeNode')
     children = List(Instance('SystemTreeNode'))
 
-    def child(self, display_name):
+    def child(self, node_id):
         for child in self.children:
-            if child.display_name == display_name:
+            if child.node_id == node_id:
                 return child
         return None
 
@@ -37,16 +37,16 @@ class SystemTreeNode(HasStrictTraits):
             return {'type': NavigationItemTypes.HOST}
         elif level == 1:
             return {'type': NavigationItemTypes.SERVER,
-                    'serverId': self.display_name}
+                    'serverId': self.node_id}
         elif level == 2:
             return {'type': NavigationItemTypes.CLASS,
-                    'serverId': self.parent.display_name,
-                    'classId': self.display_name,
+                    'serverId': self.parent.node_id,
+                    'classId': self.node_id,
                     'deviceId': ''}
         elif level == 3:
             return {'type': NavigationItemTypes.DEVICE,
-                    'classId': self.parent.display_name,
-                    'deviceId': self.display_name}
+                    'classId': self.parent.node_id,
+                    'deviceId': self.node_id}
 
     def level(self):
         level = -1
@@ -143,7 +143,7 @@ class SystemTree(HasStrictTraits):
             parent = node.parent
             # There are children, if server
             for child in node.children:
-                key = (node.display_name, child.display_name)
+                key = (node.node_id, child.node_id)
                 server_class_keys.append(key)
             parent.children.remove(node)
 
@@ -194,14 +194,14 @@ class SystemTree(HasStrictTraits):
             # Create node for host
             host_node = self.root.child(host)
             if host_node is None:
-                host_node = SystemTreeNode(display_name=host, path=host,
+                host_node = SystemTreeNode(node_id=host, path=host,
                                            parent=self.root)
                 self.root.children.append(host_node)
 
             # Create node for server
             server_node = host_node.child(server_id)
             if server_node is None:
-                server_node = SystemTreeNode(display_name=server_id,
+                server_node = SystemTreeNode(node_id=server_id,
                                              path=server_id, parent=host_node)
                 host_node.children.append(server_node)
             server_node.visibility = visibility
@@ -212,7 +212,7 @@ class SystemTree(HasStrictTraits):
                 path = '{}.{}'.format(server_id, class_id)
                 class_node = server_node.child(class_id)
                 if class_node is None:
-                    class_node = SystemTreeNode(display_name=class_id,
+                    class_node = SystemTreeNode(node_id=class_id,
                                                 path=path, parent=server_node)
                     server_node.children.append(class_node)
                 class_node.visibility = AccessLevel(vis)
@@ -240,7 +240,7 @@ class SystemTree(HasStrictTraits):
             # Host node
             host_node = self.root.child(host)
             if host_node is None:
-                host_node = SystemTreeNode(display_name=host, path=host,
+                host_node = SystemTreeNode(node_id=host, path=host,
                                            parent=self.root)
                 self.root.children.append(host_node)
 
@@ -248,7 +248,7 @@ class SystemTree(HasStrictTraits):
             server_node = host_node.child(server_id)
             if server_node is None:
                 if server_id == "__none__":
-                    server_node = SystemTreeNode(display_name=server_id,
+                    server_node = SystemTreeNode(node_id=server_id,
                                                  path=server_id,
                                                  parent=host_node)
                     host_node.children.append(server_node)
@@ -260,8 +260,7 @@ class SystemTree(HasStrictTraits):
             if class_node is None:
                 if server_id == "__none__" or device_type == 'macro':
                     path = "{}.{}".format(server_id, class_id)
-                    class_node = SystemTreeNode(display_name=class_id,
-                                                path=path,
+                    class_node = SystemTreeNode(node_id=class_id, path=path,
                                                 parent=server_node)
                     server_node.children.append(class_node)
                 else:
@@ -270,8 +269,8 @@ class SystemTree(HasStrictTraits):
             # Device node
             device_node = class_node.child(device_id)
             if device_node is None:
-                device_node = SystemTreeNode(display_name=device_id,
-                                             path=device_id, parent=class_node)
+                device_node = SystemTreeNode(node_id=device_id, path=device_id,
+                                             parent=class_node)
                 class_node.children.append(device_node)
                 device_node.monitoring = False
             device_node.status = status
