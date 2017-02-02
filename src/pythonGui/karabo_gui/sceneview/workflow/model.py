@@ -243,6 +243,8 @@ class SceneWorkflowModel(HasStrictTraits):
             self._remove_device_channels([], old)
             self._add_device_channels([], new)
 
+        self._refresh_connections()
+
     def __workflow_items_items_changed(self, event):
         """ A trait notification handler for the `_workflow_items` list.
         """
@@ -257,6 +259,8 @@ class SceneWorkflowModel(HasStrictTraits):
             if device is not None:
                 self.devices.remove(device)
                 self._remove_device_channels(device.inputs, device.outputs)
+
+        self._refresh_connections()
 
     # --------------------------------------------
     # Private interface
