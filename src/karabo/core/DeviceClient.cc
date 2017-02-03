@@ -891,6 +891,7 @@ namespace karabo {
                         m_loggerMapCached = true;
                         return true;
                     } catch (const TimeoutException&) {
+                        Exception::clearTrace();
                         return false;
                     }
                 } else {
@@ -941,6 +942,7 @@ namespace karabo {
                 p->request(dataLogReader, "slotGetPropertyHistory", deviceId, property, args)
                         .timeout(10 * m_internalTimeout).receive(dummy1, dummy2, result);
             } catch (const TimeoutException&) {
+                Exception::clearTrace();
                 KARABO_LOG_FRAMEWORK_ERROR << "Request to DataLogReader '" << dataLogReader
                         << "' timed out for device.property '" << deviceId << "." << property << "'.";
             }
@@ -969,6 +971,7 @@ namespace karabo {
                         p->request(util::DATALOGMANAGER_ID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(localLogMap);
                     } catch (const TimeoutException&) {
                         // Will fail below due to empty map...
+                        Exception::clearTrace();
                     }
                     if (localLogMap.has(loggerId)) {
                         dataLogServer = localLogMap.get<std::string>(loggerId);
@@ -1005,6 +1008,7 @@ namespace karabo {
                 p->request(dataLogReader, "slotGetConfigurationFromPast", deviceId, timepoint)
                         .timeout(10 * m_internalTimeout).receive(hash, schema);
             } catch (const TimeoutException&) {
+                Exception::clearTrace();
                 KARABO_LOG_FRAMEWORK_ERROR << "Request to DataLogReader '" << dataLogReader
                         << "' timed out for configuration at '" << timepoint << "'.";
             }
