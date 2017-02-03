@@ -12,7 +12,7 @@ from PyQt4.QtGui import (QDialogButtonBox, QColorDialog, QComboBox, QDialog,
                          QTableWidgetItem)
 
 from karabo.common.project.api import walk_traits_object
-from karabo.common.scenemodel.api import SceneModel
+from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabo_gui.singletons.api import get_project_model
 
 
@@ -176,7 +176,7 @@ class PenStyleComboBox(QComboBox):
 
 
 class SceneLinkDialog(QDialog):
-    def __init__(self, target, parent=None):
+    def __init__(self, model, parent=None):
         super(SceneLinkDialog, self).__init__(parent=parent)
         uic.loadUi(path.join(path.dirname(__file__), 'scenelink.ui'), self)
 
@@ -186,11 +186,20 @@ class SceneLinkDialog(QDialog):
         for scene in self._sceneTargets:
             sceneCombo.addItem(scene)
 
-        targetIndex = sceneCombo.findText(target)
+        targetIndex = sceneCombo.findText(model.target)
         if targetIndex > -1:
             self._selectedScene = targetIndex
 
         sceneCombo.setCurrentIndex(self._selectedScene)
+
+        self._selectedTargetWin = model.target_window
+        radioButtons = {
+            SceneTargetWindow.MainWindow: self.mainRadio,
+            SceneTargetWindow.Dialog: self.dialogRadio
+        }
+        button = radioButtons.get(self._selectedTargetWin)
+        if button:
+            button.setChecked(True)
 
     def _get_scenelink_targets(self):
         project = get_project_model().traits_data_model
@@ -213,9 +222,23 @@ class SceneLinkDialog(QDialog):
     def selectedScene(self):
         return self._sceneTargets[self._selectedScene]
 
+    @property
+    def selectedTargetWindow(self):
+        return self._selectedTargetWin
+
     @pyqtSlot(int)
     def on_sceneSelectCombo_currentIndexChanged(self, index):
         self._selectedScene = index
+
+    @pyqtSlot(bool)
+    def on_dialogRadio_clicked(self, checked=False):
+        if checked:
+            self._selectedTargetWin = SceneTargetWindow.Dialog
+
+    @pyqtSlot(bool)
+    def on_mainRadio_clicked(self, checked=False):
+        if checked:
+            self._selectedTargetWin = SceneTargetWindow.MainWindow
 
 
 class ReplaceDialog(QDialog):
