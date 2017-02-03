@@ -14,7 +14,7 @@ from PyQt4.QtGui import (QAction, QActionGroup, QColor, QMainWindow, QMenu,
 
 import karabo_gui.icons as icons
 from karabo.common.project.api import walk_traits_object
-from karabo.common.scenemodel.api import SceneModel
+from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabo.middlelayer import AccessLevel
 from karabo_gui import globals
 from karabo_gui.const import ALARM_COLOR
@@ -81,10 +81,13 @@ class MainWindow(QMainWindow):
             if sender is KaraboEventSender.DeviceDataReceived:
                 self._updateScenes()
             elif sender is KaraboEventSender.OpenSceneView:
-                self.addSceneView(data.get('model'))
+                self.addSceneView(data.get('model'),
+                                  SceneTargetWindow.MainWindow)
             elif sender is KaraboEventSender.OpenSceneLink:
                 target = data.get('target')
-                self.addSceneView(self._load_scene_model(*target))
+                target_window = data.get('target_window')
+                self.addSceneView(self._load_scene_model(*target),
+                                  target_window)
             elif sender is KaraboEventSender.RemoveSceneView:
                 self.removeMiddlePanel('scene_model', data.get('model'))
             elif sender is KaraboEventSender.RenameSceneView:
@@ -441,7 +444,7 @@ class MainWindow(QMainWindow):
             panel.close()
             self.configurationTab.removeDockableTab(panel)
 
-    def addSceneView(self, sceneModel):
+    def addSceneView(self, sceneModel, target_window):
         """ Add a scene view to show the content of the given `sceneModel in
             the GUI.
         """
@@ -451,14 +454,21 @@ class MainWindow(QMainWindow):
         self.checkAndRemovePlaceholderMiddlePanel()
         if self.focusExistingTabWindow(
                 self.middleTab, 'scene_model', sceneModel):
-            return
+            # XXX: we need the divWidget
+            divWidget = self._getDivWidget(self.middleTab, 'scene_model',
+                                           sceneModel)
+        else:
+            # Add scene view to tab widget
+            sceneView = SceneView(model=sceneModel, parent=self)
+            server_connected = self.acServerConnect.isChecked()
+            scenePanel = ScenePanel(sceneView, server_connected)
+            divWidget = self.middleTab.addDockableTab(
+                scenePanel, sceneModel.simple_name, self)
+            self.selectTabWindow(self.middleTab, divWidget)
 
-        # Add scene view to tab widget
-        sceneView = SceneView(model=sceneModel, parent=self)
-        scenePanel = ScenePanel(sceneView, self.acServerConnect.isChecked())
-        divWidget = self.middleTab.addDockableTab(
-            scenePanel, sceneModel.simple_name, self)
-        self.selectTabWindow(self.middleTab, divWidget)
+        # If it's a dialog, make sure it's undocked
+        if target_window == SceneTargetWindow.Dialog:
+            divWidget.onUndock()
 
     def addMacro(self, macroModel):
         """ Add a macro pane to show the content of the given `macroModel in
