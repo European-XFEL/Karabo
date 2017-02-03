@@ -10,6 +10,8 @@ from PyQt4.QtGui import QBoxLayout
 # A handy limit for things measured in pixels
 SCREEN_MAX_VALUE = 100000
 
+SCENE_BORDER_WIDTH = 10
+
 # For convenience association of strings to Qt cursors
 QT_CURSORS = {
     'arrow': Qt.ArrowCursor,
