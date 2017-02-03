@@ -2,7 +2,10 @@ from xml.etree.ElementTree import SubElement
 
 from traits.api import Constant, Dict, Float, Instance, Int, List, String
 
+# avoid karabo.common.project.api due to circular imports...
 from karabo.common.project.bases import BaseProjectObjectModel
+from karabo.common.project.utils import walk_traits_object
+from karabo.common.savable import BaseSavableModel
 from .bases import BaseSceneObjectData
 from .const import (NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT,
                     SCENE_FILE_VERSION)
@@ -69,7 +72,13 @@ def __scene_reader(read_func, element):
     for child in element:
         scene.children.append(read_func(child))
 
-    scene.initialized = True
+    def visitor(model):
+        if isinstance(model, BaseSavableModel):
+            model.initialized = True
+
+    # Mark everything as initialized, otherwise `modified` won't work.
+    walk_traits_object(scene, visitor)
+
     return scene
 
 
