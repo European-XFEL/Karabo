@@ -141,9 +141,9 @@ class SystemTopology(HasStrictTraits):
         each item.
         """
         def _iter_tree_node(node):
+            yield node
             for child in node.children:
                 yield from _iter_tree_node(child)
-            yield node
 
         for t_node in _iter_tree_node(self.system_tree.root):
             visitor(t_node)
