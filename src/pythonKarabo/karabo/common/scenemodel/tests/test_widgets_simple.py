@@ -7,8 +7,8 @@ from ..api import (BitfieldModel, CheckBoxModel, ChoiceElementModel,
                    EditableSpinBoxModel, FileInModel, FileOutModel,
                    HexadecimalModel, IntLineEditModel, KnobModel, LabelModel,
                    LineEditModel, PopUpModel, SceneLinkModel,
-                   SceneWriterException, SliderModel, WorkflowItemModel,
-                   XYPlotModel)
+                   SceneTargetWindow, SceneWriterException, SliderModel,
+                   WorkflowItemModel, XYPlotModel)
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
 
@@ -92,10 +92,12 @@ def test_label_model():
 def test_scene_link_model():
     traits = _geometry_traits()
     traits['target'] = 'other.svg'
+    traits['target_window'] = SceneTargetWindow.Dialog
     model = SceneLinkModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.target == 'other.svg'
+    assert read_model.target_window == SceneTargetWindow.Dialog
 
 
 def test_workflowitem_model():

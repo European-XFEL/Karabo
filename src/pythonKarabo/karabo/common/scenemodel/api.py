@@ -2,7 +2,7 @@
 from .bases import (BaseLayoutData, BaseLayoutModel, BaseSceneObjectData,
                     BaseShapeObjectData, BaseWidgetObjectData)
 from .const import (NS_KARABO, NS_SVG, SCENE_FILE_VERSION, SCENE_MIN_HEIGHT,
-                    SCENE_MIN_WIDTH)
+                    SCENE_MIN_WIDTH, SceneTargetWindow)
 from .exceptions import SceneReaderException, SceneWriterException
 from .io import read_scene, write_scene, write_single_model
 from .layouts import (BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
