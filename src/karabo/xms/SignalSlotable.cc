@@ -875,6 +875,7 @@ namespace karabo {
             try {
                 this->request(instanceId, "slotPing", instanceId, 1, false).timeout(200).receive(instanceInfo);
             } catch (const karabo::util::TimeoutException&) {
+                Exception::clearTrace();
                 return std::make_pair(false, hostname);
             }
             if (instanceInfo.has("host")) instanceInfo.get("host", hostname);
