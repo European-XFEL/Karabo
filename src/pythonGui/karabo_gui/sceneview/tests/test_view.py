@@ -7,8 +7,7 @@
 import os.path as op
 
 from karabo.middlelayer import read_scene, SceneModel
-from karabo.common.scenemodel.api import (
-    UnknownXMLDataModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+from karabo.common.scenemodel.api import UnknownXMLDataModel
 import karabo.common.scenemodel.tests as sm
 from karabo_gui.sceneview.api import SceneView
 from karabo_gui.sceneview.layout.api import GroupLayout
@@ -38,10 +37,8 @@ class TestSceneView(GuiTestCase):
         scene_model.children.append(UNKNOWN_XML_MODEL)
         self.view.update_model(scene_model)
         self.assertIsInstance(self.view.scene_model, SceneModel)
-        self.assertEqual(max(self.view.scene_model.width, SCENE_MIN_WIDTH),
-                         self.view.width())
-        self.assertEqual(max(self.view.scene_model.height, SCENE_MIN_HEIGHT),
-                         self.view.height())
+        self.assertEqual(self.view.scene_model.width, self.view.width())
+        self.assertEqual(self.view.scene_model.height, self.view.height())
 
     def test_loading_karabo_svg(self):
         """ Test the view loading a karabo SVG file"""
