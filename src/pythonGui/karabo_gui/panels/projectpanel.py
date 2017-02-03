@@ -5,7 +5,8 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtGui import QAction, QDialog, QStackedLayout, QWidget
+from PyQt4.QtCore import QSize
+from PyQt4.QtGui import QAction, QDialog, QSizePolicy, QStackedLayout, QWidget
 
 from karabo.common.project.api import ProjectModel
 from karabo.common.savable import set_modified_flag
@@ -19,7 +20,7 @@ from karabo_gui.project.api import ProjectView
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.utils import (
     load_project, maybe_save_modified_project, save_object)
-from karabo_gui.util import getOpenFileName
+from karabo_gui.util import getOpenFileName, get_spin_widget
 
 
 class ProjectPanel(Dockable, QWidget):
@@ -46,10 +47,14 @@ class ProjectPanel(Dockable, QWidget):
         """ Router for incoming broadcasts
         """
         if isinstance(event, KaraboBroadcastEvent):
+            data = event.data
             if event.sender is KaraboEventSender.NetworkConnectStatus:
-                self._handle_network_status_change(event.data['status'])
+                self._handle_network_status_change(data['status'])
             elif event.sender is KaraboEventSender.DatabaseIsBusy:
-                self._enable_toolbar(not event.data['is_processing'])
+                is_processing = data['is_processing']
+                self._enable_toolbar(not is_processing)
+                # Show or hide spin widget
+                self.spin_action.setVisible(is_processing)
             return False
         return super(ProjectPanel, self).eventFilter(obj, event)
 
@@ -99,6 +104,16 @@ class ProjectPanel(Dockable, QWidget):
         self._toolbar_actions = self._create_actions()
         for ac in self._toolbar_actions:
             toolbar.addAction(ac)
+
+        # Add a spinner which is visible whenever database is processing
+        spin_widget = get_spin_widget(scaled_size=QSize(20, 20),
+                                      parent=toolbar)
+        spin_widget.setVisible(False)
+
+        spacer = QWidget(toolbar)
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        toolbar.addWidget(spacer)
+        self.spin_action = toolbar.addWidget(spin_widget)
 
     def onDock(self):
         pass

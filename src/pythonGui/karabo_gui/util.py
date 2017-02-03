@@ -1,12 +1,15 @@
 from contextlib import contextmanager
 import os
+import os.path as op
 from tempfile import mkstemp
 from uuid import uuid4
 
-from PyQt4.QtGui import QDialog, QFileDialog
+from PyQt4.QtCore import QSize
+from PyQt4.QtGui import QDialog, QFileDialog, QLabel, QMovie
 
 from karabo.middlelayer import Hash, MetricPrefix, Unit
 import karabo_gui.globals as globals
+import karabo_gui.icons as icons
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.singletons.api import get_db_conn
 
@@ -188,3 +191,14 @@ def is_database_processing():
         MessageBox.showWarning(msg, 'Database connection active')
         return True
     return False
+
+
+def get_spin_widget(scaled_size=QSize(), parent=None):
+    """Return a ``QLabel`` containing a spinning icon.
+    """
+    spin_widget = QLabel(parent)
+    movie = QMovie(op.join(op.abspath(op.dirname(icons.__file__)), 'wait'))
+    movie.setScaledSize(scaled_size)
+    spin_widget.setMovie(movie)
+    movie.start()
+    return spin_widget
