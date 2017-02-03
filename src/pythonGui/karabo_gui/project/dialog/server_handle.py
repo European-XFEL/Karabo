@@ -66,7 +66,7 @@ class ServerHandleDialog(QDialog):
                 available_hosts.add(host)
 
         get_topology().visit_system_tree(visitor)
-        return available_hosts, available_servers
+        return sorted(available_hosts), sorted(available_servers)
 
     @property
     def server_id(self):
