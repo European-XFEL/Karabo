@@ -110,22 +110,23 @@ class DeviceHandleDialog(QDialog):
         self.cbConfig.currentIndexChanged[int].connect(self.config_changed)
 
     def _get_available_plugins(self, device_server_id):
-        """ Get all available plugins of `systemTopology` for the given
-        ``device_server_id``"""
+        """Get all available plugins of `systemTopology` for the given
+        ``device_server_id``
+        """
         available_plugins = set()
 
-        def filter(server_id, attrs):
-            if device_server_id != server_id:
-                return False
+        def visitor(node):
+            if device_server_id != node.node_id:
+                return
+            attrs = node.attributes
             for class_id, visibility in zip(attrs.get('deviceClasses', []),
                                             attrs.get('visibilities', [])):
                 # Only show accessible plugins depending on global access level
                 if AccessLevel(visibility) >= krb_globals.GLOBAL_ACCESS_LEVEL:
                     continue
                 available_plugins.add(class_id)
-            return False
 
-        get_topology().search_system_tree('server', filter)
+        get_topology().visit_system_tree(visitor)
         return list(available_plugins)
 
     def _update_widgets_to_add_config(self):

@@ -411,13 +411,17 @@ class FromPropertyPopUp(QDialog):
         return super(FromPropertyPopUp, self).eventFilter(obj, event)
 
     def getCurrentDeviceInstances(self):
-        def filter(dev_id, attributes):
-            if attributes.get('type') == 'device':
-                return ("Gui" not in dev_id and "Log" not in dev_id
-                        and "ProjectManager" not in dev_id)
-            return False
+        instance_ids = set()
 
-        return get_topology().search_system_tree('device', filter)
+        def visitor(node):
+            dev_id = node.node_id
+            if (node.attributes.get('type') == 'device' and
+                    "Gui" not in dev_id and "Log" not in dev_id
+                    and "ProjectManager" not in dev_id):
+                instance_ids.add(dev_id)
+
+        get_topology().visit_system_tree(visitor)
+        return list(instance_ids)
 
     def deviceIdSelectionChanged(self, deviceId):
         self.propertyCombo.clear()
