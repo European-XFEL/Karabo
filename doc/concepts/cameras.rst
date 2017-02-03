@@ -351,14 +351,14 @@ Before you can start the C++ device server, you need to set-up the
 environment for eBUS. This is done by sourcing the set_puregev_env
 bash script.
 
-If you use the allStart script to start your devices, it is sufficient
+If you use the karabo-start script to start your devices, it is sufficient
 that you add the line
 
 .. code-block:: bash
 
     source $KARABO/extern/lib/ebus_sdk/4/bin/set_puregev_env
 
-to the allInfo script, at the beginning of the C++ Device Server
+to the config script, at the beginning of the C++ Device Server
 section.
 
 
