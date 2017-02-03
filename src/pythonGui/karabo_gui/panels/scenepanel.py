@@ -5,12 +5,13 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt4.QtCore import pyqtSlot, QEvent, QSize, Qt
 from PyQt4.QtGui import (QAction, QActionGroup, QApplication, QKeySequence,
                          QMenu, QPalette, QScrollArea, QSizePolicy, QWidget)
 
 from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
+from karabo_gui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabo_gui.sceneview.tools.api import (
     BoxVSceneAction, BoxHSceneAction, CreateToolAction,
     CreateWorkflowConnectionToolAction, GroupEntireSceneAction,
@@ -31,15 +32,98 @@ class ScenePanel(Dockable, QScrollArea):
         self.scene_model = scene_view.scene_model
         self.setWidget(self.scene_view)
 
+        # Handle resizing of the scene view
+        self._resizing = False
+        self._resize_type = ''
+        self.setMouseTracking(True)
+        self.scene_view.installEventFilter(self)
+
         self.setupActions(connected_to_server)
 
         self.setBackgroundRole(QPalette.Dark)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
+    # ----------------------------
+    # Qt Methods
+
     def closeEvent(self, event):
         self.scene_view.destroy()
         event.accept()
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Enter:
+            # Unset cursor when mouse is over child
+            self.unsetCursor()
+        return super(ScenePanel, self).eventFilter(obj, event)
+
+    def mouseMoveEvent(self, event):
+        if not event.buttons():
+            mouse_pos = event.pos()
+            size = self.scene_view.size()
+            dx = mouse_pos.x() - size.width()
+            dy = mouse_pos.y() - size.height()
+            right = 0 < dx < SCENE_BORDER_WIDTH
+            bottom = 0 < dy < SCENE_BORDER_WIDTH
+            if bottom and right:
+                cursor = 'resize-diagonal-tlbr'
+                self._resize_type = 'br'
+            elif bottom and dx <= 0:
+                cursor = 'resize-vertical'
+                self._resize_type = 'b'
+            elif right and dy <= 0:
+                cursor = 'resize-horizontal'
+                self._resize_type = 'r'
+            else:
+                cursor = 'arrow'
+                self._resize_type = ''
+            self.setCursor(QT_CURSORS[cursor])
+        elif self._resizing:
+            mouse_pos = event.pos()
+            size = QSize(self.scene_view.size())
+            if "b" in self._resize_type:
+                size.setHeight(mouse_pos.y())
+            if "r" in self._resize_type:
+                size.setWidth(mouse_pos.x())
+            if (size.width() < SCENE_BORDER_WIDTH or
+                    size.height() < SCENE_BORDER_WIDTH):
+                return
+            self.scene_view.resize(size)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton and self._resize_type != '':
+            self._resizing = True
+            event.accept()
+
+    def mouseReleaseEvent(self, event):
+        if self._resizing:
+            self._resizing = False
+            self._resize_type = ''
+            self.unsetCursor()
+
+    # ----------------------------
+    # Dockable Methods
+
+    def notifyTabVisible(self, visible):
+        self.scene_view.set_tab_visible(visible)
+
+    def onUndock(self):
+        self.scene_view.set_tab_visible(True)
+        osize = self.scene_view.size()
+        screen_rect = QApplication.desktop().screenGeometry()
+        if (osize.width() < screen_rect.width() and
+                osize.height() < screen_rect.height()):
+            # Enlarge the scene widget to its actual size
+            self.setWidgetResizable(True)
+            # Resize parent
+            self.parent().resize(osize - self.scene_view.size() +
+                                 self.parent().size())
+
+    def onDock(self):
+        self.setWidgetResizable(False)
+
+    # ----------------------------
+    # other methods
 
     def design_mode_text(self, is_design_mode):
         if is_design_mode:
@@ -243,21 +327,3 @@ class ScenePanel(Dockable, QScrollArea):
         q_action = QAction(self)
         q_action.setSeparator(True)
         return q_action
-
-    def notifyTabVisible(self, visible):
-        self.scene_view.set_tab_visible(visible)
-
-    def onUndock(self):
-        self.scene_view.set_tab_visible(True)
-        osize = self.scene_view.size()
-        screen_rect = QApplication.desktop().screenGeometry()
-        if (osize.width() < screen_rect.width() and
-                osize.height() < screen_rect.height()):
-            # Enlarge the scene widget to its actual size
-            self.setWidgetResizable(True)
-            # Resize parent
-            self.parent().resize(osize - self.scene_view.size() +
-                                 self.parent().size())
-
-    def onDock(self):
-        self.setWidgetResizable(False)
