@@ -2,10 +2,12 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include "karabo/util/StackTrace.hh"
+#include "karabo/util/Exception.hh"
 #include "karabo/core/DeviceServer.hh"
 #include "karabo/core/Runner.hh"
+#include "karabo/log/Logger.hh"
 
+#include <iostream>
 
 using namespace karabo::util;
 using namespace karabo::log;
@@ -20,7 +22,7 @@ int main(int argc, char** argv) {
         // We always change the directory to $KARABO/var/data
         boost::filesystem::current_path(boost::filesystem::path(Version::getPathToKaraboInstallation() + "/var/data"));
 
-        // Let the factory now about all available plugins.
+        // Let the factory know about all available plugins.
         // It is important to load plugins even before having a device server
         // instance, as this allows the help function to correctly show available
         // devices and enabling the server to autoStart them if needed.
@@ -43,16 +45,20 @@ int main(int argc, char** argv) {
             deviceServer->finalizeInternalInitialization();
 
             t.join(); // Blocking central event loop
+        } else {
+            throw KARABO_INIT_EXCEPTION("Failed to instantiate DeviceServer.");
         }
 
+        Logger::logInfo() << argv[0] << " has exited!\n";
         return EXIT_SUCCESS;
 
-    } catch (const Exception& e) {
-        std::cerr << "Exception caught: " << e << std::endl;
     } catch (const std::exception& e) {
-        std::cerr << "Standard exception caught: " << e.what() << std::endl;
-    } catch (...) {
-        std::cerr << "Encountered unknown exception" << std::endl;
+        std::string msg(argv[0]);
+        (msg += " has exited after catching an exception: ") += e.what();
+        Logger::logError() << msg << "\n";
+        std::cerr << msg << std::endl; // in case logger could not be established
     }
+    // else: Don't care about insane exceptions.
+
     return EXIT_FAILURE;
 }
