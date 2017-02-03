@@ -7,6 +7,7 @@
 #include "karabo/core/Runner.hh"
 #include "karabo/log/Logger.hh"
 
+#include <iostream>
 
 using namespace karabo::util;
 using namespace karabo::log;
@@ -21,7 +22,7 @@ int main(int argc, char** argv) {
         // We always change the directory to $KARABO/var/data
         boost::filesystem::current_path(boost::filesystem::path(Version::getPathToKaraboInstallation() + "/var/data"));
 
-        // Let the factory now about all available plugins.
+        // Let the factory know about all available plugins.
         // It is important to load plugins even before having a device server
         // instance, as this allows the help function to correctly show available
         // devices and enabling the server to autoStart them if needed.
@@ -54,8 +55,8 @@ int main(int argc, char** argv) {
     } catch (const std::exception& e) {
         std::string msg(argv[0]);
         (msg += " has exited after catching an exception: ") += e.what();
-        Logger::logError() << msg;
-        std::cerr << msg; // in case logger could not be established
+        Logger::logError() << msg << "\n";
+        std::cerr << msg << std::endl; // in case logger could not be established
     }
     // else: Don't care about insane exceptions.
 
