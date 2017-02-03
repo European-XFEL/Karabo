@@ -73,8 +73,14 @@ class GroupLayout(BaseLayout, QLayout):
         return QSize(w, h)
 
     def setGeometry(self, rect):
+        curr_geometry = self.geometry()
+        if rect == curr_geometry:
+            # NOTE: If we don't bail out here, Qt will continue to call us!
+            # I have no idea why that is, but it will eat your CPU!
+            return
+
         # Translate all children by the amount our origin moved
-        offset = rect.topLeft() - self.geometry().topLeft()
+        offset = rect.topLeft() - curr_geometry.topLeft()
         for item in self:
             if isinstance(item, QWidgetItem):
                 item.widget().translate(offset)
