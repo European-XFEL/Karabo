@@ -127,7 +127,7 @@ class DeviceHandleDialog(QDialog):
                 available_plugins.add(class_id)
 
         get_topology().visit_system_tree(visitor)
-        return list(available_plugins)
+        return sorted(available_plugins)
 
     def _update_widgets_to_add_config(self):
         """ Whenever a ``DeviceConfigurationModel`` is added, configuration
