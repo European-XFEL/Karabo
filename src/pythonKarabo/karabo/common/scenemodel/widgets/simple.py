@@ -3,7 +3,7 @@ from xml.etree.ElementTree import SubElement
 from traits.api import Enum, Int, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
-from karabo.common.scenemodel.const import NS_KARABO, NS_SVG
+from karabo.common.scenemodel.const import NS_KARABO, NS_SVG, SceneTargetWindow
 from karabo.common.scenemodel.io_utils import (
     get_numbers, set_numbers, read_base_widget_data,
     read_empty_display_editable_widget, write_base_widget_data)
@@ -128,6 +128,8 @@ class SceneLinkModel(BaseWidgetObjectData):
     """
     # What scene is being linked to?
     target = String
+    # Where should the target be opened?
+    target_window = Enum(*list(SceneTargetWindow))
 
 
 class SliderModel(BaseWidgetObjectData):
@@ -201,6 +203,9 @@ def __label_writer(write_func, model, parent):
 def __scene_link_reader(read_func, element):
     traits = _read_geometry_data(element)
     traits['target'] = element.get(NS_KARABO + 'target')
+    # If unspecified, the default is 'mainwin'
+    target_window = element.get(NS_KARABO + 'target_window', 'mainwin')
+    traits['target_window'] = SceneTargetWindow(target_window)
     return SceneLinkModel(**traits)
 
 
@@ -209,6 +214,7 @@ def __scene_link_writer(write_func, model, parent):
     element = SubElement(parent, NS_SVG + 'rect')
     _write_class_and_geometry(model, element, 'SceneLink')
     element.set(NS_KARABO + 'target', model.target)
+    element.set(NS_KARABO + 'target_window', model.target_window.value)
     return element
 
 
@@ -283,6 +289,7 @@ def _build_empty_display_editable_readers_and_writers():
         register_scene_reader('Display' + file_name, version=1)(reader)
         register_scene_reader('Editable' + file_name, version=1)(reader)
         register_scene_writer(klass)(_writer_func)
+
 
 # Call the builders to register all the readers and writers
 _build_empty_widget_readers_and_writers()

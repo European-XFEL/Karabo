@@ -112,7 +112,8 @@ class SceneLinkWidget(QPushButton):
 
             # UUID, revision
             target = (parts[1], int(parts[2]))
-            data = {'target': target}
+            target_window = self.model.target_window
+            data = {'target': target, 'target_window': target_window}
             # Create KaraboBroadcastEvent
             broadcast_event(KaraboBroadcastEvent(
                 KaraboEventSender.OpenSceneLink, data))
@@ -137,11 +138,12 @@ class SceneLinkWidget(QPushButton):
         self.move(new_pos)
 
     def edit(self, scene_view):
-        dialog = SceneLinkDialog(self.model.target, parent=scene_view)
+        dialog = SceneLinkDialog(self.model, parent=scene_view)
         if dialog.exec() == QDialog.Rejected:
             return
 
         self.model.target = dialog.selectedScene
+        self.model.target_window = dialog.selectedTargetWindow
 
 
 class UnknownSvgWidget(QWidget):
