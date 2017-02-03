@@ -3,12 +3,8 @@
 # Created on November 3, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-from os.path import abspath, dirname, join
-
 from PyQt4.QtCore import Qt, QTimer
-from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
-                         QMovie, QPalette, QPushButton,
+from PyQt4.QtGui import (QAction, QHBoxLayout, QMenu, QPalette, QPushButton,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
 
@@ -20,7 +16,9 @@ from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.parametertreewidget import ParameterTreeWidget
 from karabo_gui.project.view import ProjectView
 from karabo_gui.singletons.api import get_manager
-from karabo_gui.util import loadConfigurationFromFile, saveConfigurationToFile
+from karabo_gui.util import (
+    get_spin_widget, loadConfigurationFromFile, saveConfigurationToFile
+)
 
 
 class ConfigurationPanel(Dockable, QWidget):
@@ -70,14 +68,11 @@ class ConfigurationPanel(Dockable, QWidget):
         self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
 
         # Wait page
-        waitWidget = QLabel()
-        waitWidget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        waitWidget.setAutoFillBackground(True)
-        waitWidget.setBackgroundRole(QPalette.Base)
-        movie = QMovie(join(abspath(dirname(icons.__file__)), "wait"))
-        waitWidget.setMovie(movie)
-        movie.start()
-        self.__swParameterEditor.addWidget(waitWidget)
+        wait_widget = get_spin_widget(parent=self)
+        wait_widget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        wait_widget.setAutoFillBackground(True)
+        wait_widget.setBackgroundRole(QPalette.Base)
+        self.__swParameterEditor.addWidget(wait_widget)
 
         self.prevConfiguration = None
         self._awaitingSchema = None
