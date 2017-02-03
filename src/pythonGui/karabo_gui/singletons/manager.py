@@ -415,11 +415,16 @@ class Manager(QObject):
         function. If the transformed list has a length > 0, broadcast an event
         containing the remaining IDs.
         """
-        def filter(dev_id, attrs):
-            dev_class_id = attrs.get('classId', 'UNKNOWN')
-            return dev_class_id == class_id
+        instance_ids = set()
 
-        instance_ids = self._topology.search_system_tree('device', filter)
+        def visitor(node):
+            attrs = node.attributes
+            dev_class_id = attrs.get('classId', 'UNKNOWN')
+            if attrs.get('type') == 'device' and dev_class_id == class_id:
+                instance_ids.add(node.node_id)
+
+        self._topology.visit_system_tree(visitor)
+        instance_ids = list(instance_ids)
         if transform is not None:
             transform(instance_ids)
         if instance_ids:

@@ -53,17 +53,19 @@ class ServerHandleDialog(QDialog):
         available_hosts = set()
         available_servers = set()
 
-        def filter(server_id, attrs):
-            visibility = AccessLevel(attrs['visibility'])
-            if visibility < krb_globals.GLOBAL_ACCESS_LEVEL:
-                available_servers.add(server_id)
+        def visitor(node):
+            if node.attributes.get('type') != 'server':
+                return
 
-            host = attrs.get('host', '')
+            visibility = AccessLevel(node.attributes['visibility'])
+            if visibility < krb_globals.GLOBAL_ACCESS_LEVEL:
+                available_servers.add(node.node_id)
+
+            host = node.attributes.get('host', '')
             if host:
                 available_hosts.add(host)
-            return False
 
-        get_topology().search_system_tree('server', filter)
+        get_topology().visit_system_tree(visitor)
         return available_hosts, available_servers
 
     @property

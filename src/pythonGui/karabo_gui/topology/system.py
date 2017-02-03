@@ -136,19 +136,17 @@ class SystemTopology(HasStrictTraits):
         key = (server_id, class_id)
         return self._class_schemas.get(key)
 
-    def search_system_tree(self, root_path, filter):
-        """Iterate over part of the `_system_hash` Hash and run a `filter`
-        function on each item.
-
-        Returns a list of instance IDs for each item where the `filter`
-        function returned `True`.
+    def visit_system_tree(self, visitor):
+        """Walk every node in the system tree and run a `visitor` function on
+        each item.
         """
-        instance_ids = []
-        if root_path in self._system_hash:
-            for inst_id, _, attrs in self._system_hash[root_path].iterall():
-                if filter(inst_id, attrs):
-                    instance_ids.append(inst_id)
-        return instance_ids
+        def _iter_tree_node(node):
+            for child in node.children:
+                yield from _iter_tree_node(child)
+            yield node
+
+        for t_node in _iter_tree_node(self.system_tree.root):
+            visitor(t_node)
 
     # ---------------------------------------------------------------------
     # Traits Handlers
