@@ -1,4 +1,4 @@
-.. _buildFromSources:
+.. _installation/sources:
 
 ******************
 Build from sources
@@ -43,7 +43,7 @@ Get and install the Karabo framework (quick - no details)
 
     ./auto_build_all.sh Release
 
-4. (Updated) If you failed building the external dependencies, try and
+4. If you failed building the external dependencies, try and
    fix the error in the dependency and compile again. For reference,
    this file:
 
@@ -53,6 +53,18 @@ Get and install the Karabo framework (quick - no details)
 
   contains a list of packages installed successfully on your
   machine.
+
+5. Before running the freshly compiled Karabo, you have to activate it:
+
+  .. code-block:: bash
+
+     source ./karabo/activate
+
+  To undo the environment parameter settings introduced by that, just do:
+
+  .. code-block:: bash
+
+     deactivate
 
 Tips for re-compilation of karaboFramework if you have already your
 local working copy.
@@ -304,12 +316,14 @@ MacOS X (currently unmaintained, use with care)
 
 Executing Unit Tests
 ====================
+Besides regular unit tests, testing Karabo includes also more advanced
+integration tests.
 
 The simplest way to run all tests is:
 
 .. code-block:: bash
 
-  ./auto_build_all.sh Debug --runTests
+  ./auto_build_all.sh Debug --runTests --runIntegrationTests
   
 
 Karabo (C++)
@@ -325,10 +339,18 @@ installed karaboFramework folder and execute the following scripts:
 
   cd build/netbeans/karabo
   make test
- 
-To run the unit tests using Netbeans:
 
-* Go to Karabo project
+To run the integration unit tests, do the following:
+
+.. code-block:: bash
+
+  cd build/netbeans/integrationTests
+  make test
+ 
+To run the tests using Netbeans:
+
+* Go to Karabo project (for the unit tests) or to integrationTests project
+  (for the extended tests)
 * Right-click on the "Test Files" folder or any of its logic sub-folders
 * Select "Test"
 
@@ -487,6 +509,7 @@ following structure of files and sources:
     Which creates a ready to use bundle under 
 
     .. code-block:: bash
+
       package/<Configuration>/<OS>/<Version>/<Arch>/karabo
                   
     and also updates the $HOME/.karabo/karaboFramework file pointing
