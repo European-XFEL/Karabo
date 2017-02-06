@@ -67,7 +67,7 @@ To add, remove, or update a dependency in Karabo, create a new feature branch
 and make your changes. Build and install the dependency (or dependencies)
 that you are currently concerned with.
 
-Building all of Karabo is explained in :ref:`buildFromSources`. But if you
+Building all of Karabo is explained in :ref:`installation/sources`. But if you
 only want to know how to build a single extern. Here is the command:
 
 .. code-block:: bash

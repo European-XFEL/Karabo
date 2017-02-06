@@ -123,6 +123,8 @@ Available flags:
   --bundle     - Installs Karabo and creates the software bundle. Default: no bundle is created!
   --pyDevelop  - Install Python packages in development mode rather than from wheels
   --runTests   - Run unit tests after building (useful for Debug|Release)
+  --runIntegrationTests
+               - Run integration tests after building (for Debug|Release)
   --numJobs N  - Specify the number of jobs that make should use to run simultaneously
   --noDbInit   - do not initialize the project database locally
 

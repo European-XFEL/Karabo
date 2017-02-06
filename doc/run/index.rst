@@ -12,3 +12,10 @@ Contents:
    :maxdepth: 1
 
 
+Before you can run any of the Karabo applications, you have to **activate**
+the installation as described for
+:ref:`binary installation <installation/binary>`
+and
+:ref:`installation from source <installation/sources>`,
+respectively.
+
