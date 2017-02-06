@@ -217,6 +217,7 @@ class ProjectManager(PythonDevice):
                 except ProjectDBError as e:
                     exceptionReason = str(e)
                     success = False
+                    loadedItems.append(item)
 
         self.reply(Hash('items', loadedItems,
                         'success', success,
