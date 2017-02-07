@@ -135,6 +135,7 @@ class SignalSlotable(Configurable):
         super().__init__(configuration)
         self.deviceId = self._deviceId_
         self._devices = weakref.WeakValueDictionary()
+        self._device_futures = {}
         self.__initialized = False
         self._new_device_futures = {}
 
