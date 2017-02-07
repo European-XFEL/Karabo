@@ -40,6 +40,8 @@ class SceneView(QWidget):
         # tools to get the mouse events. Out of design mode, we re-enable mouse
         # handling for all of the scene's children.
         self.layout = GroupLayout(layout_model, parent=self)
+        self.setContentsMargins(0, 0, 0, 0)
+
         self.inner = QWidget(self)
         self.inner.setLayout(self.layout)
         # Also create an overlay for the workflow connections
@@ -172,12 +174,11 @@ class SceneView(QWidget):
             ``WA_TransparentForMouseEvents`` is set to ``False`` which prevents
             the forwarding of the events to the actual widgets.
         """
-        result = super(SceneView, self).event(event)
         if event.type() == QEvent.ToolTip:
             widget = self.widget_at_position(event.pos())
             if widget is not None:
                 return widget.event(event)
-        return result
+        return super(SceneView, self).event(event)
 
     def contextMenuEvent(self, event):
         """ Show scene view specific context menu. """

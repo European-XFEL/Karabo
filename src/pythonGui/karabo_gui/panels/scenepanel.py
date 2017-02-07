@@ -22,6 +22,10 @@ from karabo_gui.sceneview.tools.api import (
     SceneSendToBackAction, SceneSelectionTool)
 from karabo_gui.toolbar import ToolBar
 
+# NOTE: This is the amount of padding added by ScenePanel's QFrame parent
+# We need to take it into account when undocking!!
+QFRAME_PADDING = 4
+
 
 class ScenePanel(Dockable, QScrollArea):
     def __init__(self, scene_view, connected_to_server):
@@ -43,6 +47,7 @@ class ScenePanel(Dockable, QScrollArea):
         self.setBackgroundRole(QPalette.Dark)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.setContentsMargins(0, 0, 0, 0)
 
     # ----------------------------
     # Qt Methods
@@ -107,19 +112,21 @@ class ScenePanel(Dockable, QScrollArea):
     def notifyTabVisible(self, visible):
         self.scene_view.set_tab_visible(visible)
 
-    def onUndock(self):
+    def undock(self, div):
         self.scene_view.set_tab_visible(True)
-        osize = self.scene_view.size()
+
+        tb_height = div.toolBar.height()
+        frame_width = self.scene_model.width + QFRAME_PADDING
+        frame_height = self.scene_model.height + tb_height + QFRAME_PADDING
         screen_rect = QApplication.desktop().screenGeometry()
-        if (osize.width() < screen_rect.width() and
-                osize.height() < screen_rect.height()):
+        if (frame_width < screen_rect.width() and
+                frame_height < screen_rect.height()):
+            # Resize parent (divWidget)
+            div.resize(frame_width, frame_height)
             # Enlarge the scene widget to its actual size
             self.setWidgetResizable(True)
-            # Resize parent
-            self.parent().resize(osize - self.scene_view.size() +
-                                 self.parent().size())
 
-    def onDock(self):
+    def dock(self, div):
         self.setWidgetResizable(False)
 
     # ----------------------------
