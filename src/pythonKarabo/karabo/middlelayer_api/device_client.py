@@ -566,22 +566,35 @@ def _createProxyDict(hash, prefix):
 @synchronize
 def _getDevice(deviceId, sync, Proxy=Proxy):
     instance = get_instance()
-    ret = instance._devices.get(deviceId)
+    ret = instance._proxies.get(deviceId)
     if ret is not None:
         yield from ret
         return ret
 
-    schema, _ = yield from instance._call_once_alive(deviceId, "slotGetSchema",
-                                                     False)
+    futures = instance._proxy_futures
+    future = futures.get(deviceId)
+    if future is not None:
+        return (yield from future)
 
-    dict = _createProxyDict(schema.hash, "")
-    Cls = type(schema.name, (Proxy,), dict)
+    @asyncio.coroutine
+    def create():
+        try:
+            schema, _ = yield from instance._call_once_alive(
+                deviceId, "slotGetSchema", False)
 
-    ret = Cls(instance, deviceId, sync)
-    ret._schema_hash = schema.hash
-    instance._devices[deviceId] = ret
-    yield from ret
-    return ret
+            namespace = _createProxyDict(schema.hash, "")
+            Cls = type(schema.name, (Proxy,), namespace)
+
+            ret = Cls(instance, deviceId, sync)
+            ret._schema_hash = schema.hash
+            instance._proxies[deviceId] = ret
+        finally:
+            del futures[deviceId]
+        yield from ret
+        return ret
+    future = asyncio.shield(create())
+    futures[deviceId] = future
+    return (yield from future)
 
 
 def getDevice(deviceId, *, sync=None, timeout=5):
