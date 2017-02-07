@@ -83,8 +83,8 @@ def _fill_servers_menu(menu, parent_project):
 _macro_template = """\
 from karabo.middlelayer import *
 
-class {}(Macro):
-    name = String()
+class {0}(Macro):
+    name = String(defaultValue="{0}")
 
     @Slot()
     def greet(self):
