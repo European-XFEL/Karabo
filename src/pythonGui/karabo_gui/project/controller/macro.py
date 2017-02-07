@@ -20,7 +20,7 @@ from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
-from karabo_gui.project.utils import save_object
+from karabo_gui.project.utils import save_object, run_macro
 from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.util import getSaveFileName
 from .bases import BaseProjectGroupController, BaseProjectController
@@ -82,12 +82,16 @@ class MacroController(BaseProjectGroupController):
         save_action.triggered.connect(partial(save_object, self.model))
         save_as_action = QAction('Save As...', menu)
         save_as_action.triggered.connect(self._save_macro_to_file)
+        run_action = QAction('Run', menu)
+        run_action.triggered.connect(self._run_macro)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
         menu.addSeparator()
         menu.addAction(save_action)
         menu.addAction(save_as_action)
+        menu.addSeparator()
+        menu.addAction(run_action)
         return menu
 
     def create_qt_item(self):
@@ -224,6 +228,9 @@ class MacroController(BaseProjectGroupController):
 
         with open(fn, 'w') as fout:
             fout.write(write_macro(macro))
+
+    def _run_macro(self):
+        run_macro(self.model)
 
 
 # ----------------------------------------------------------------------
