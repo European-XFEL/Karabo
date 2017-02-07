@@ -585,8 +585,8 @@ namespace karabo {
                             } else {
                                 KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Miss globally called slot " << slotFunction;
                             }
-                        } catch (const Exception& e) {
-                            const std::string msg(e.detailedMsg());
+                        } catch (const std::exception& e) {
+                            const std::string msg(e.what());
                             KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '"
                                     << slotFunction << "': " << msg;
                             replyException(*header, msg);
@@ -1538,8 +1538,8 @@ namespace karabo {
                     }
                 }
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "letInstanceSlowlyDieWithoutHeartbeat triggered an exception: " << e;
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "letInstanceSlowlyDieWithoutHeartbeat triggered an exception: " << e.what();
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << "letInstanceSlowlyDieWithoutHeartbeat triggered an unknown exception";
             }
@@ -1556,6 +1556,10 @@ namespace karabo {
 
             for (Hash::iterator it = m_trackedInstances.begin(); it != m_trackedInstances.end(); ++it) {
                 Hash& entry = it->getValue<Hash>();
+                if (!entry.has("countdown")) { // How can that happen?
+                  KARABO_LOG_FRAMEWORK_ERROR << "Tracked instance '" << it->getKey() << "' has no countdown, will set to 60. Hash:\n " << entry;
+                  entry.set<int>("countdown", 60);
+		}
                 int& countdown = entry.get<int>("countdown");
                 countdown--; // Regular count down
 
