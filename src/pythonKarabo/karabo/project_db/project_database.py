@@ -246,37 +246,57 @@ class ProjectDatabase(ContextDecorator):
         meta['revision'] = revision
         return meta
 
-    def load_item(self, domain, item, revision):
+    def load_item(self, domain, items, revisions):
         """
-        Load an item from `domain`
+        Load an item or items from `domain`
         :param domain: a domain to load from
-        :param item: the name of the item to load
-        :param revision: revision number of item
+        :param item: the name of the item(s) to load
+        :param revision: revision number(s) of each item. Same order as items
         :return:
         """
         # path to where the possible entries are located
         path = "{}/{}".format(self.root, domain)
-        query = """
-        xquery version "3.0";
 
-        let $uuid := "{uuid}"
-        let $rev := "{revision}"
-        let $collection := "{path}"
+        assert isinstance(items, (list, tuple))
+        assert isinstance(revisions, (list, tuple))
+        assert len(items) == len(revisions)
 
-        return collection($collection)/xml[@uuid = $uuid and @revision = $rev]
-        """.format(uuid=item, revision=revision, path=path)
+        results = []
+        revisions = [str(r) for r in revisions]
 
-        try:
-            res = self.dbhandle.query(query)
-            valid = [r for r in res.results
-                     if r.get('uuid') == item
-                     and r.get('revision') == str(revision)]
-            return self._make_str_if_needed(valid[0])
-        except ExistDBException as e:
-            raise ProjectDBError(e)
-        except IndexError:
-            msg = "Project object not found! (UUID: {}, revision: {})"
-            raise ProjectDBError(msg.format(item, revision))
+        n_items = len(items)
+        n = 50 # empirical number, somewhat magic
+
+        for i in range(0, n_items, n):
+            max_idx = min(i+n, n_items)
+            c_items = items[i:max_idx]
+            c_revs = revisions[i:max_idx]
+            query = """
+            xquery version "3.0";
+
+            let $uuids := {uuid}
+            let $rev := {revision}
+            let $col := "{path}"
+
+            for $uuid at $idx in $uuids
+            return collection($col)/xml[@uuid = $uuid][@revision = $rev[$idx]]
+
+            """.format(uuid='("{}")'.format('","'.join(c_items)),
+                       revision='("{}")'.format('","'.join(c_revs)),
+                       path=path)
+
+            try:
+                res = self.dbhandle.query(query, how_many=n)
+                for r in res.results:
+                    results.append({'uuid': r.get('uuid'),
+                                    'revision': int(r.get('revision')),
+                                    'xml': self._make_str_if_needed(r)})
+            except ExistDBException as e:
+                raise ProjectDBError(e)
+            except IndexError:
+                ms = "Project objects not found! (UUIDs: {}, revisions: {})"
+                raise ProjectDBError(ms.format(c_items, c_revs))
+        return results
 
     def list_items(self, domain, item_types=None):
         """
