@@ -5,6 +5,7 @@
 #############################################################################
 from functools import partial
 import os.path as op
+from textwrap import dedent
 import weakref
 
 from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
@@ -90,6 +91,18 @@ def _add_macro(project):
         macro = MacroModel(simple_name=dialog.simple_name)
         # Set initialized and modified last to avoid bumping revision number
         macro.initialized = macro.modified = True
+        classname = dialog.simple_name.title()
+        classname = "".join(c for c in classname if c.isalpha())
+        macro.code = dedent("""\
+            from karabo.middlelayer import *
+
+            class {}(Macro):
+                name = String()
+
+                @Slot()
+                def greet(self):
+                    print("Hello {{}}!".format(self.name))
+        """).format(classname)
         project.macros.append(macro)
 
 
