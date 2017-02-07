@@ -1,5 +1,5 @@
-from asyncio import (async, coroutine, Future, get_event_loop, sleep, wait_for,
-                     TimeoutError)
+from asyncio import (async, coroutine, Future, gather, get_event_loop, sleep,
+                     wait_for, TimeoutError)
 from contextlib import contextmanager
 from datetime import datetime
 from unittest import main
@@ -866,6 +866,11 @@ class Tests(DeviceTest):
         self.assertFalse(ah["toAdd"])
         self.assertEqual(ah["toClear.alarm"], ["warnLow"])
         self.remote.signalAlarmUpdate.disconnect("local", "slotAlarmUpdate")
+
+    @async_tst
+    def test_double_getDevice(self):
+        a, b = yield from gather(getDevice("remote"), getDevice("remote"))
+        self.assertIs(a, b)
 
 
 if __name__ == "__main__":

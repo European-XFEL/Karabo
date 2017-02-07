@@ -134,7 +134,8 @@ class SignalSlotable(Configurable):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
         super().__init__(configuration)
         self.deviceId = self._deviceId_
-        self._devices = weakref.WeakValueDictionary()
+        self._proxies = weakref.WeakValueDictionary()
+        self._proxy_futures = {}
         self.__initialized = False
         self._new_device_futures = {}
 
@@ -304,7 +305,7 @@ class SignalSlotable(Configurable):
 
     @slot
     def slotChanged(self, configuration, deviceId):
-        d = self._devices.get(deviceId)
+        d = self._proxies.get(deviceId)
         if d is not None:
             d._onChanged(configuration)
         loop = get_event_loop()
@@ -314,7 +315,7 @@ class SignalSlotable(Configurable):
 
     @coslot
     def slotSchemaUpdated(self, schema, deviceId):
-        d = self._devices.get(deviceId)
+        d = self._proxies.get(deviceId)
         if d is not None:
             yield from d._onSchemaUpdated(schema)
 
@@ -347,7 +348,7 @@ class SignalSlotable(Configurable):
 
     @slot
     def slotInstanceGone(self, instanceId, info):
-        device = self._devices.get(instanceId)
+        device = self._proxies.get(instanceId)
         if device is not None:
             device._notify_gone()
 
