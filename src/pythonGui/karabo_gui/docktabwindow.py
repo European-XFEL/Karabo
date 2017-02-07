@@ -21,10 +21,10 @@ from PyQt4.QtGui import (QAction, QCursor, QFrame, QHBoxLayout,
 
 
 class Dockable:
-    def onDock(self):
+    def dock(self, div):
         pass
 
-    def onUndock(self):
+    def undock(self, div):
         pass
 
     def setupToolBars(self, toolbar, widget):
@@ -104,7 +104,7 @@ class DockTabWindow(QTabWidget):
         self.updateTabsClosable()
 
 
-    def onUndock(self, div):
+    def undock(self, div):
         if div.parent() is not None:
             self.removeTab(div.index)
             div.setParent(None)
@@ -114,7 +114,7 @@ class DockTabWindow(QTabWidget):
             if self.count() == 0:
                 self.hide()
 
-    def onDock(self, div):
+    def dock(self, div):
         if div.parent() is None:
             if div.hasIcon():
                 index = self.insertTab(div.index, div, div.icon, div.title)
@@ -164,18 +164,18 @@ class DivWidget(QFrame):
         self.setupToolBar()
 
         self.toolBarLayout = QHBoxLayout()
+        self.addToolBar(self.toolBar)
         self.toolBarLayout.setContentsMargins(0, 0, 0, 0)
         self.toolBarLayout.setSpacing(0)
-        self.addToolBar(self.toolBar)
 
         vLayout = QVBoxLayout(self)
-        vLayout.setContentsMargins(0,0,0,0)
         vLayout.addLayout(self.toolBarLayout)
         vLayout.addWidget(self.dockableWidget)
-
+        vLayout.setContentsMargins(0, 0, 0, 0)
+        vLayout.setSpacing(0)
         # Add custom actions to toolbar
         self.dockableWidget.setupToolBars(self.toolBar, self)
-        
+
         if mainWindow is not None:
             self.signalTabMaximize.connect(mainWindow.onTabMaximized)
             self.signalTabMinimize.connect(mainWindow.onTabMinimized)
@@ -251,14 +251,14 @@ class DivWidget(QFrame):
         if self.icon is not None:
             self.setWindowIcon(self.icon)
         self.setWindowTitle(self.title)
-        self.dockWindow.onUndock(self)
-        self.dockableWidget.onUndock()
+        self.dockWindow.undock(self)
+        self.dockableWidget.undock(self)
 
     def onDock(self):
         self.acDock.setVisible(False)
         self.acUndock.setVisible(True)
-        self.dockableWidget.onDock()
-        self.dockWindow.onDock(self)
+        self.dockableWidget.dock(self)
+        self.dockWindow.dock(self)
 
     def onMaximize(self):
         self.acMinimize.setVisible(True)
