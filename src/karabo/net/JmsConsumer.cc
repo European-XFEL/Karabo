@@ -154,6 +154,8 @@ namespace karabo {
             ConsumerDestinations::const_iterator it = m_consumerDestinations.find(topic);
             if (it != m_consumerDestinations.end()) return it->second;
 
+            m_connection->waitForConnectionAvailable();
+
             MQSessionHandle sessionHandle = this->ensureConsumerSessionAvailable(topic, selector);
             MQDestinationHandle destinationHandle;
 

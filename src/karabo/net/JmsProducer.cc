@@ -58,9 +58,6 @@ namespace karabo {
                                      const int priority,
                                      const int timeToLive) {
 
-            // This function will block in case no connection is available and return immediately otherwise
-            //            m_connection->waitForConnectionAvailable();
-
             std::vector<char> buffer;
             m_binarySerializer->save(body, buffer);
 
