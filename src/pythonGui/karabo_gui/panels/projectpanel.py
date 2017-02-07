@@ -115,12 +115,6 @@ class ProjectPanel(Dockable, QWidget):
         toolbar.addWidget(spacer)
         self.spin_action = toolbar.addWidget(spin_widget)
 
-    def onDock(self):
-        pass
-
-    def onUndock(self):
-        pass
-
     def _handle_network_status_change(self, status):
         if not status:
             # Don't show projects when there's no server connection
