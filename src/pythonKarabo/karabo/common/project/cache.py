@@ -15,6 +15,13 @@ class ProjectDBCache(object):
     def __init__(self, dirpath):
         self.dirpath = dirpath
 
+    def flush(self):
+        """Flush any pending reads or writes.
+
+        For this class, this is a no-op. In the GUI ProjectDatabaseConnection
+        it makes sense to buffer reads and writes.
+        """
+
     def store(self, domain, uuid, revision, data):
         """ Add an object to the cache
         """

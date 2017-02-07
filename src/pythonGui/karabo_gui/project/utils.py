@@ -149,6 +149,7 @@ def load_project(domain):
             model = ProjectModel(uuid=uuid, revision=revision)
             read_lazy_object(domain, uuid, revision, db_conn,
                              read_project_model, existing=model)
+            db_conn.flush()
             return model
     return None
 
@@ -179,7 +180,9 @@ def save_object(obj):
     if reply == QMessageBox.No:
         return
 
-    recursive_save_object(obj, get_db_conn(), TEST_DOMAIN)
+    db_conn = get_db_conn()
+    recursive_save_object(obj, db_conn, TEST_DOMAIN)
+    db_conn.flush()
 
 
 def show_save_project_message(project):
