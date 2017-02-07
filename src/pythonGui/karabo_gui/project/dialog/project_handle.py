@@ -10,7 +10,8 @@ from operator import attrgetter
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
-from PyQt4.QtGui import (QComboBox, QDialog, QDialogButtonBox, QPixmap, QStyle,
+from PyQt4.QtGui import (QComboBox, QDialog, QDialogButtonBox,
+                         QItemSelectionModel, QPixmap, QStyle,
                          QStyledItemDelegate)
 
 from karabo_gui.events import (
@@ -103,7 +104,9 @@ class ProjectHandleDialog(QDialog):
 
     @property
     def simple_name(self):
-        return self.leTitle.text()
+        rows = self.twProjects.selectionModel().selectedRows()
+        if rows:
+            return rows[0].data()
 
     @pyqtSlot(object, object)
     def _selectionChanged(self, selected, deselected):
@@ -111,16 +114,19 @@ class ProjectHandleDialog(QDialog):
         need to be updated
         """
         rows = self.twProjects.selectionModel().selectedRows()
-        if rows:
-            with SignalBlocker(self.leTitle):
-                self.leTitle.setText(rows[0].data())
         enable = True if rows else False
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
     @pyqtSlot(object)
     def _titleChanged(self, text):
-        if not self.twProjects.model().hasProject(text):
-            with SignalBlocker(self.twProjects):
+        index = self.twProjects.model().projectIndex(text)
+        with SignalBlocker(self.twProjects):
+            if index is not None:
+                selection_flag = (QItemSelectionModel.ClearAndSelect
+                                  | QItemSelectionModel.Rows)
+                self.twProjects.selectionModel().setCurrentIndex(
+                    index, selection_flag)
+            else:
                 self.twProjects.selectionModel().clearSelection()
         enable = True if text else False
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
@@ -203,15 +209,17 @@ class TableModel(QAbstractTableModel):
         # Sort by simple name when table got filled
         self.sort(get_column_index(SIMPLE_NAME))
 
-    def hasProject(self, uuid):
-        """ Check whether the given ``uuid`` exists in the current model.
+    def projectIndex(self, simple_name):
+        """Return the `QModelIndex` which ``simple_name`` exists in the current
+        model
 
-        :return: True if it exists, false otherwise
+        :return: A ``QModelIndex`` which was found, otherwise a ``NoneType``
+        returned
         """
-        for entry in self.entries:
-            if entry.uuid == uuid:
-                return True
-        return False
+        if simple_name:
+            for index, entry in enumerate(self.entries):
+                if entry.simple_name.startswith(simple_name):
+                    return self.index(index, get_column_index(SIMPLE_NAME))
 
     def rowCount(self, parent=None):
         return len(self.entries)
