@@ -18,7 +18,8 @@ from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
                                KaraboEventSender)
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.project_handle import LoadProjectDialog
-from karabo_gui.singletons.api import get_db_conn, get_project_model
+from karabo_gui.singletons.api import (get_db_conn, get_project_model,
+                                       get_network)
 
 
 class WeakMethodRef(object):
@@ -208,3 +209,12 @@ def show_no_configuration():
     data = {'configuration': None}
     broadcast_event(KaraboBroadcastEvent(
         KaraboEventSender.ShowConfiguration, data))
+
+
+def run_macro(macro_model):
+    instance_id = macro_model.instance_id
+    h = Hash("code", macro_model.code,
+             "module", macro_model.simple_name,
+             "uuid", macro_model.uuid)
+    get_network().onInitDevice("karabo/macroServer", "MetaMacro",
+                               instance_id, h)
