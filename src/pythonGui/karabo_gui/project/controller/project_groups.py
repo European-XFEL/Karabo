@@ -80,14 +80,28 @@ def _fill_servers_menu(menu, parent_project):
 # ----------------------------------------------------------------------
 # action handlers
 
+_macro_template = """\
+from karabo.middlelayer import Macro, Slot, String
+
+class {0}(Macro):
+    name = String(defaultValue="{0}")
+
+    @Slot()
+    def execute(self):
+        print("Hello {{}}!".format(self.name))
+"""
+
 
 def _add_macro(project):
     """ Add a macro to the associated project
     """
     dialog = MacroHandleDialog()
     if dialog.exec() == QDialog.Accepted:
+        classname = dialog.simple_name.title()
+        classname = "".join(c for c in classname if c.isalpha())
         # XXX: TODO check for existing
-        macro = MacroModel(simple_name=dialog.simple_name)
+        macro = MacroModel(simple_name=dialog.simple_name,
+                           code=_macro_template.format(classname))
         # Set initialized and modified last to avoid bumping revision number
         macro.initialized = macro.modified = True
         project.macros.append(macro)
