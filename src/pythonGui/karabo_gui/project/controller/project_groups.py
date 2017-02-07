@@ -81,13 +81,13 @@ def _fill_servers_menu(menu, parent_project):
 # action handlers
 
 _macro_template = """\
-from karabo.middlelayer import *
+from karabo.middlelayer import Macro, Slot, String
 
 class {0}(Macro):
     name = String(defaultValue="{0}")
 
     @Slot()
-    def greet(self):
+    def execute(self):
         print("Hello {{}}!".format(self.name))
 """
 
