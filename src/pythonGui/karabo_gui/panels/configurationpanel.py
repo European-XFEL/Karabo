@@ -701,12 +701,12 @@ class ConfigurationPanel(Dockable, QWidget):
             if isinstance(twParameterEditor, ParameterTreeWidget):
                 twParameterEditor.globalAccessLevelChanged()
 
-    def onUndock(self):
+    def undock(self, div):
         self.navSplitter.show()
         self.twNavigation.show()
         self.twProject.show()
 
-    def onDock(self):
+    def dock(self, div):
         self.navSplitter.hide()
         self.twNavigation.hide()
         self.twProject.hide()
