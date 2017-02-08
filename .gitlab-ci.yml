@@ -1,3 +1,5 @@
+# Templates for each build category
+
 .deps_build_template: &deps_build
   script:
     - pushd extern
@@ -30,12 +32,6 @@
     - branches
 
 .mr_test_template: &mr_test_build
-  before_script:
-    - locale-gen en_US.UTF-8
-    - update-locale LANG=en_US.UTF-8
-    # Start X11 so that GUI tests can runTests
-    - export DISPLAY=:99.0
-    - start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
   script:
     - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
     - bash ./auto_build_all.sh Debug --runTests
@@ -44,15 +40,48 @@
   except:
     - master
 
-.integration_test_template: &integration_test_build
+.centos_mr_test_template: &centos_mr_test_build
+  <<: *mr_test_build
+  before_script:
+    - localedef -c -i en_US -f UTF-8 en_US.utf8
+    - export LANG=en_US.UTF-8
+    - export DISPLAY=:99.0
+    - /usr/bin/Xvfb $DISPLAY &
+
+.ubuntu_mr_test_template: &ubuntu_mr_test_build
+  <<: *mr_test_build
   before_script:
     - locale-gen en_US.UTF-8
     - update-locale LANG=en_US.UTF-8
+    - export DISPLAY=:99.0
+    - start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
+
+.integration_test_template: &integration_test_build
   script:
     - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
     - bash ./auto_build_all.sh Debug --runIntegrationTests
   only:
     - master
+
+.centos_integration_test_template: &centos_integration_test_build
+  <<: *integration_test_build
+  before_script:
+    - localedef -c -i en_US -f UTF-8 en_US.utf8
+    - export LANG=en_US.UTF-8
+
+.ubuntu_integration_test_template: &ubuntu_integration_test_build
+  <<: *integration_test_build
+  before_script:
+    - locale-gen en_US.UTF-8
+    - update-locale LANG=en_US.UTF-8
+
+#########################################################################
+
+# Deps builds
+
+deps:centos7:
+  <<: *deps_build
+  image: jwiggins/karabo-containers:centos-7
 
 deps:ubuntu14:
   <<: *deps_build
@@ -62,17 +91,35 @@ deps:ubuntu16:
   <<: *deps_build
   image: jwiggins/karabo-containers:ubuntu-16
 
-deps:centos7:
-  <<: *deps_build
+# MR test builds
+
+test:centos7:
+  <<: *centos_mr_test_build
   image: jwiggins/karabo-containers:centos-7
 
 test:ubuntu14:
-  <<: *mr_test_build
+  <<: *ubuntu_mr_test_build
   image: jwiggins/karabo-containers:ubuntu-14
 
+test:ubuntu16:
+  <<: *ubuntu_mr_test_build
+  image: jwiggins/karabo-containers:ubuntu-16
+
+# Post-merge integration test builds
+
+integration:centos7:
+  <<: *centos_integration_test_build
+  image: jwiggins/karabo-containers:centos-7
+
 integration:ubuntu14:
-  <<: *integration_test_build
+  <<: *ubuntu_integration_test_build
   image: jwiggins/karabo-containers:ubuntu-14
+
+integration:ubuntu16:
+  <<: *ubuntu_integration_test_build
+  image: jwiggins/karabo-containers:ubuntu-16
+
+# Release builders
 
 release:ubuntu14:
   <<: *release_build
