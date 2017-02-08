@@ -202,38 +202,25 @@ class ProjectManager(PythonDevice):
 
         self._checkDbInitialized(token)
 
-
         exceptionReason = ""
         success = True
-        loadedItems = items
+        loadedItems = []
         with self.user_db_sessions[token] as db_session:
             # first sort items by domain
-            domain = None
-            uuids = []
-            revs = []
-            keys = []
-            for item in items:
-
-                if domain is None:
-                    domain = item.get("domain")
-                assert domain == item.get("domain")
-                uuid = item.get("uuid")
-                uuids.append(uuid)
-                rev = item.get("revision")
-                revs.append(rev)
-                keys.append((uuid, rev))
+            domain = items[0].get("domain")
+            keys = [(it.get('uuid'), it.get('revision')) for it in items
+                    if it.get('domain') == domain]
+            assert len(keys) == len(items), "Incorrect domain given!"
+            uuids, revs = zip(*keys)
 
             try:
-
                 items = db_session.load_item(domain, uuids, revs)
                 for item in items:
-                    # preserve query order
-                    uuid = item["uuid"]
-                    rev = item["revision"]
-                    h = Hash("domain", domain, "uuid", uuid, "revision", rev,
+                    h = Hash("domain", domain,
+                             "uuid", item["uuid"],
+                             "revision", item["revision"],
                              "xml", item["xml"])
-                    key = (uuid, rev)
-                    loadedItems[keys.index(key)] = h
+                    loadedItems.append(h)
 
             except ProjectDBError as e:
                 exceptionReason = str(e)
