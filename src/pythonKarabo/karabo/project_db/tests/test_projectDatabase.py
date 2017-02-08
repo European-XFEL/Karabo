@@ -136,7 +136,7 @@ class TestProjectDatabase(TestCase):
                 <xml uuid="{uuid}" revision="42">foo</xml>
                 """.format(uuid=testproject2)
 
-                meta= db.save_item('LOCAL', testproject2, xml_rep)
+                meta = db.save_item('LOCAL', testproject2, xml_rep)
 
                 path = "{}/LOCAL/{}_42".format(db.root, testproject2)
                 self.assertTrue(db.dbhandle.hasDocument(path))
@@ -148,7 +148,7 @@ class TestProjectDatabase(TestCase):
 
             with self.subTest(msg='load_items'):
                 items = [testproject, testproject2]
-                revisions = [2,42]
+                revisions = [2, 42]
                 res = db.load_item('LOCAL', items, revisions)
                 for r in res:
                     itemxml = db._make_xml_if_needed(r["xml"])

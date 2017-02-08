@@ -237,7 +237,9 @@ class ProjectDatabase(ContextDecorator):
                 raise ExistDBException("Versioning conflict. Document exists!")
             success = self.dbhandle.load(item_xml, path)
         except ExistDBException as e:
-            raise ProjectDBError
+            raise ProjectDBError(e)
+        if not success:
+            raise ProjectDBError("Saving item failed!")
 
         meta = {}
         meta['versioning_info'] = self.get_versioning_info(domain, uuid)
@@ -265,10 +267,12 @@ class ProjectDatabase(ContextDecorator):
         revisions = [str(r) for r in revisions]
 
         n_items = len(items)
-        n = 50 # empirical number, somewhat magic
+        # we re-chunk the request for querying. Through trial 50 seems a
+        # reasonable size
+        req_cnk_size = 50
 
-        for i in range(0, n_items, n):
-            max_idx = min(i+n, n_items)
+        for i in range(0, n_items, req_cnk_size):
+            max_idx = min(i+req_cnk_size, n_items)
             c_items = items[i:max_idx]
             c_revs = revisions[i:max_idx]
             query = """
@@ -279,14 +283,14 @@ class ProjectDatabase(ContextDecorator):
             let $col := "{path}"
 
             for $uuid at $idx in $uuids
-            return collection($col)/xml[@uuid = $uuid][@revision = $rev[$idx]]
+            return collection($col)/xml[@uuid = $uuid][@revision = $rev[$idx]][last()]
 
             """.format(uuid='("{}")'.format('","'.join(c_items)),
                        revision='("{}")'.format('","'.join(c_revs)),
                        path=path)
 
             try:
-                res = self.dbhandle.query(query, how_many=n)
+                res = self.dbhandle.query(query, how_many=req_cnk_size)
                 for r in res.results:
                     results.append({'uuid': r.get('uuid'),
                                     'revision': int(r.get('revision')),
@@ -362,7 +366,6 @@ class ProjectDatabase(ContextDecorator):
                  'date': c.get('date'),
                  'alias': c.get('alias', c.get('revision'))}
                 for c in revs]
-
 
     def list_domains(self):
         """
