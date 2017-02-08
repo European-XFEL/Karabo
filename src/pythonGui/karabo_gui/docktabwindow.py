@@ -3,21 +3,12 @@
 # Created on November 4, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
-"""This module contains a class which represents a tab widget for un/dockable
-   widgets.
-"""
-
-__all__ = ["DockTabWindow", "Dockable"]
-
+from PyQt4.QtCore import pyqtSignal, pyqtSlot
+from PyQt4.QtGui import (QAction, QCursor, QFrame, QHBoxLayout, QTabWidget,
+                         QVBoxLayout)
 
 import karabo_gui.icons as icons
 from karabo_gui.toolbar import ToolBar
-
-from PyQt4.QtCore import pyqtSignal, pyqtSlot
-from PyQt4.QtGui import (QAction, QCursor, QFrame, QHBoxLayout,
-                         QTabWidget, QVBoxLayout)
 
 
 class Dockable:
@@ -43,12 +34,6 @@ class DockTabWindow(QTabWidget):
         self.lastWidget = None
         self.currentChanged.connect(self.onCurrentChanged)
         self.tabCloseRequested.connect(self.onCloseTab)
-
-#        self.setStyleSheet("QTabWidget {border-style: solid;"
-#                                       "border: 1px solid gray;"
-#                                       "border-radius: 3px;"
-#                                       "}")
-
 
     def addDockableTab(self, dockWidget, label, mainWindow=None, icon=None):
         """
@@ -87,23 +72,6 @@ class DockTabWindow(QTabWidget):
         elif self.count() == 1:
             self.setTabsClosable(False)
 
-### slots ###
-    def onCloseTab(self, index):
-        if self.count() == 1:
-            return
-
-        # Get widget, which is about to be closed
-        widget = self.widget(index)
-        # Close widget (if possible) before removing it from tab
-        if not widget.forceClose():
-            return
-        # Remove widget from tab
-        self.removeTab(index)
-        widget.setParent(None)
-        self.divWidgetList.remove(widget)
-        self.updateTabsClosable()
-
-
     def undock(self, div):
         if div.parent() is not None:
             self.removeTab(div.index)
@@ -128,6 +96,25 @@ class DockTabWindow(QTabWidget):
             self.setCurrentIndex(index)
             self.show()
 
+    # ----------------------------------------------------------------------
+    # slots
+
+    @pyqtSlot(int)
+    def onCloseTab(self, index):
+        if self.count() == 1:
+            return
+
+        # Get widget, which is about to be closed
+        widget = self.widget(index)
+        # Close widget (if possible) before removing it from tab
+        if not widget.forceClose():
+            return
+        # Remove widget from tab
+        self.removeTab(index)
+        widget.setParent(None)
+        self.divWidgetList.remove(widget)
+        self.updateTabsClosable()
+
     @pyqtSlot(int)
     def onCurrentChanged(self, index):
         cw = self.currentWidget()
@@ -142,12 +129,13 @@ class DockTabWindow(QTabWidget):
 
 
 class DivWidget(QFrame):
-    # Signals to send to MainWindow
-    signalTabMaximize = pyqtSignal(object) # object - tabWidget
-    signalTabMinimize = pyqtSignal(object) # object - tabWidget
+    # Signals to send to MainWindow. Both emit DockTabWindow instances.
+    signalTabMaximize = pyqtSignal(object)
+    signalTabMinimize = pyqtSignal(object)
 
-    def __init__(self, dockWindow, dockableWidget, title, mainWindow=None, icon=None):
-        super(DivWidget, self).__init__()
+    def __init__(self, dockWindow, dockableWidget, title, mainWindow=None,
+                 icon=None):
+        super(DivWidget, self).__init__(parent=None)
 
         self.setFrameStyle(QFrame.Box | QFrame.Plain)
         self.setLineWidth(1)
@@ -155,8 +143,8 @@ class DivWidget(QFrame):
         self.index = -1
         self.title = title
         self.doesDockOnClose = True
-        self.dockableWidget = dockableWidget # panel
-        self.dockWindow = dockWindow # tab widget
+        self.dockableWidget = dockableWidget  # panel
+        self.dockWindow = dockWindow  # tab widget
 
         self.icon = icon
 
@@ -188,7 +176,6 @@ class DivWidget(QFrame):
         self.doesDockOnClose = False
         return self.close()
 
-
     def closeEvent(self, event):
         if self.doesDockOnClose:
             self.onDock()
@@ -198,7 +185,6 @@ class DivWidget(QFrame):
                 event.accept()
             else:
                 event.ignore()
-
 
     def setupActions(self):
         text = "Unpin as individual window"
@@ -227,14 +213,12 @@ class DivWidget(QFrame):
         self.acMinimize.triggered.connect(self.onMinimize)
         self.acMinimize.setVisible(False)
 
-
     def setupToolBar(self):
         self.toolBar = ToolBar("Standard")
         self.toolBar.addAction(self.acUndock)
         self.toolBar.addAction(self.acDock)
         self.toolBar.addAction(self.acMaximize)
         self.toolBar.addAction(self.acMinimize)
-
 
     def addToolBar(self, toolBar):
         self.toolBarLayout.addWidget(toolBar)
@@ -263,7 +247,7 @@ class DivWidget(QFrame):
     def onMaximize(self):
         self.acMinimize.setVisible(True)
         self.acMaximize.setVisible(False)
-        
+
         i = self.dockWindow.count()
         while i > -1:
             i -= 1
@@ -279,7 +263,7 @@ class DivWidget(QFrame):
         for w in self.dockWindow.divWidgetList:
             if w == self:
                 continue
-            
+
             if w.hasIcon():
                 self.dockWindow.insertTab(w.index, w, w.icon, w.title)
             else:
