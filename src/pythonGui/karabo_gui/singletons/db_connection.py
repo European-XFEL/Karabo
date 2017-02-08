@@ -34,6 +34,9 @@ class ProjectDatabaseConnection(QObject):
         # Dictionaries to hold items which are awaiting network replies
         self._waiting_for_read = {}
         self._waiting_for_write = {}
+        # Lists of Hashes which are buffered before sending to the GUI server
+        self._read_items_buffer = []
+        self._write_items_buffer = []
 
         # XXX: Temporary
         self.project_manager = 'KaraboProjectDB'
@@ -58,6 +61,18 @@ class ProjectDatabaseConnection(QObject):
 
     # -------------------------------------------------------------------
     # User interface
+
+    def flush(self):
+        """Flush any pending reads or writes.
+        """
+        if len(self._read_items_buffer) > 0:
+            items = self._read_items_buffer
+            self.network.onProjectLoadItems(self.project_manager, items)
+            self._read_items_buffer = []
+        if len(self._write_items_buffer) > 0:
+            items = self._write_items_buffer
+            self.network.onProjectSaveItems(self.project_manager, items)
+            self._write_items_buffer = []
 
     def get_uuids_of_type(self, domain, obj_type):
         """ Find out what's available
@@ -132,6 +147,9 @@ class ProjectDatabaseConnection(QObject):
             revision = item['revision']
             self._pop_reading(domain, uuid, revision, success)
 
+        # Make a single request to the GUI server
+        self.flush()
+
     def _items_saved(self, items):
         """ A bunch of items were just saved
         """
@@ -170,11 +188,10 @@ class ProjectDatabaseConnection(QObject):
 
         key = (uuid, revision)
         if key not in self._waiting_for_read:
-            items = [Hash('domain', domain, 'uuid', uuid,
-                          'revision', revision)]
-            self.network.onProjectLoadItems(self.project_manager, items)
             assert existing is not None
             self._waiting_for_read[key] = existing
+            item = Hash('domain', domain, 'uuid', uuid, 'revision', revision)
+            self._read_items_buffer.append(item)
 
         self._broadcast_is_processing(is_processing)
 
@@ -203,9 +220,9 @@ class ProjectDatabaseConnection(QObject):
             # Project DB expects xml as string
             xml = write_project_model(obj)
             # XXX overwrite everytime until handled
-            items = [Hash('domain', domain, 'uuid', uuid, 'revision', revision,
-                          'xml', xml, 'overwrite', True)]
-            self.network.onProjectSaveItems(self.project_manager, items)
+            item = Hash('domain', domain, 'uuid', uuid, 'revision', revision,
+                        'xml', xml, 'overwrite', True)
+            self._write_items_buffer.append(item)
 
         self._broadcast_is_processing(is_processing)
 
