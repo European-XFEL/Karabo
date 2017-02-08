@@ -14,14 +14,14 @@ except ImportError:
     from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
 
 from karabo.common.project.api import write_macro
-from karabo.middlelayer import Hash
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
     unregister_from_broadcasts)
 import karabo_gui.icons as icons
-from karabo_gui.singletons.api import get_network, get_topology
+from karabo_gui.singletons.api import get_topology
 from karabo_gui.util import getSaveFileName
+from karabo_gui.project.utils import run_macro
 
 
 class MacroPanel(Dockable, QSplitter):
@@ -117,13 +117,7 @@ class MacroPanel(Dockable, QSplitter):
                                 e.msg, e.text, " " * e.offset, e.filename,
                                 e.lineno))
         else:
-            instance_id = self.macro_model.instance_id
-            get_topology().get_device(instance_id)
-            h = Hash("code", self.macro_model.code,
-                     "module", self.macro_model.simple_name,
-                     "uuid", self.macro_model.uuid)
-            get_network().onInitDevice("karabo/macroServer", "MetaMacro",
-                                       instance_id, h)
+            run_macro(self.macro_model)
 
     def onSave(self):
         fn = getSaveFileName(
