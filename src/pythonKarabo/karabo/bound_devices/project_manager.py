@@ -206,7 +206,7 @@ class ProjectManager(PythonDevice):
         success = True
         loadedItems = []
         with self.user_db_sessions[token] as db_session:
-            # first sort items by domain
+            # verify that items belong to single domain
             domain = items[0].get("domain")
             keys = [(it.get('uuid'), it.get('revision')) for it in items
                     if it.get('domain') == domain]
