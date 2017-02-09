@@ -3,6 +3,7 @@ import traceback
 from PyQt4.QtGui import QAction, QInputDialog, QLineEdit, QMessageBox
 
 from karabo.middlelayer import String, Simple
+from karabo_gui.const import WIDGET_MIN_HEIGHT
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 
@@ -18,7 +19,7 @@ class Evaluator(DisplayWidget):
         super(Evaluator, self).__init__(box)
 
         self.widget = QLineEdit(parent)
-        self.widget.setMinimumHeight(21)
+        self.widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self.widget.setReadOnly(True)
         self.text = "x"
         self.value = None
