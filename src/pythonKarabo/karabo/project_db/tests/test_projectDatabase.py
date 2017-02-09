@@ -132,22 +132,28 @@ class TestProjectDatabase(TestCase):
                 self.assertEqual(first_rev['user'], 'bob')
 
             with self.subTest(msg='test_save_item'):
-                xml_rep = '<test revision="42">foo</test>'
-                meta= db.save_item('LOCAL', testproject2, xml_rep)
+                xml_rep = """
+                <xml uuid="{uuid}" revision="42">foo</xml>
+                """.format(uuid=testproject2)
+
+                meta = db.save_item('LOCAL', testproject2, xml_rep)
 
                 path = "{}/LOCAL/{}_42".format(db.root, testproject2)
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 decoded = db.dbhandle.getDoc(path).decode('utf-8')
-                self.assertEqual(decoded, xml_rep)
+                self.assertEqual(decoded, xml_rep.replace("\n", "").strip())
                 self.assertTrue('versioning_info' in meta)
                 self.assertTrue('domain' in meta)
                 self.assertTrue('uuid' in meta)
 
-            with self.subTest(msg='load_item'):
-                item = db.load_item('LOCAL', testproject, 2)
-                itemxml = db._make_xml_if_needed(item)
-                self.assertEqual(itemxml.tag, 'xml')
-                self.assertEqual(itemxml.text, 'foo')
+            with self.subTest(msg='load_items'):
+                items = [testproject, testproject2]
+                revisions = [2, 42]
+                res = db.load_item('LOCAL', items, revisions)
+                for r in res:
+                    itemxml = db._make_xml_if_needed(r["xml"])
+                    self.assertEqual(itemxml.tag, 'xml')
+                    self.assertEqual(itemxml.text, 'foo')
 
             with self.subTest(msg='test_list_items'):
                 create_hierarchy(db)

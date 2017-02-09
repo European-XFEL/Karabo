@@ -202,23 +202,29 @@ class ProjectManager(PythonDevice):
 
         self._checkDbInitialized(token)
 
-        loadedItems = []
         exceptionReason = ""
         success = True
+        loadedItems = []
         with self.user_db_sessions[token] as db_session:
-            for item in items:
-                domain = item.get("domain")
-                uuid = item.get("uuid")
-                revision = item.get("revision")
-                try:
-                    xml = db_session.load_item(domain, uuid, revision)
-                    item.set("xml", xml)
-                    loadedItems.append(item)
-                except ProjectDBError as e:
-                    exceptionReason = str(e)
-                    success = False
-                    loadedItems.append(item)
+            # verify that items belong to single domain
+            domain = items[0].get("domain")
+            keys = [(it.get('uuid'), it.get('revision')) for it in items
+                    if it.get('domain') == domain]
+            assert len(keys) == len(items), "Incorrect domain given!"
+            uuids, revs = zip(*keys)
 
+            try:
+                items = db_session.load_item(domain, uuids, revs)
+                for item in items:
+                    h = Hash("domain", domain,
+                             "uuid", item["uuid"],
+                             "revision", item["revision"],
+                             "xml", item["xml"])
+                    loadedItems.append(h)
+
+            except ProjectDBError as e:
+                exceptionReason = str(e)
+                success = False
         self.reply(Hash('items', loadedItems,
                         'success', success,
                         'reason', exceptionReason))
