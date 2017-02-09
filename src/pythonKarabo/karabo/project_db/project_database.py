@@ -267,8 +267,9 @@ class ProjectDatabase(ContextDecorator):
         revisions = [str(r) for r in revisions]
 
         n_items = len(items)
-        # we re-chunk the request for querying. Through trial 50 seems a
-        # reasonable size
+        # we re-chunk the request for querying as everything ends up in a
+        # single get call to the restful API. Through  trial 50 seems a
+        # reasonable trade-off between size of query and return value size.
         req_cnk_size = 50
 
         for i in range(0, n_items, req_cnk_size):
