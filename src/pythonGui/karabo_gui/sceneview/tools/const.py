@@ -6,13 +6,21 @@ from karabo.common.scenemodel.api import (
     DisplayStateColorModel, DoubleLineEditModel, EditableListElementModel,
     EditableListModel, EditableSpinBoxModel, EvaluatorModel, FileInModel,
     FileOutModel, FloatSpinBoxModel, HexadecimalModel, IntLineEditModel,
-    KnobModel, LineEditModel, LinePlotModel, MonitorModel, PopUpModel,
-    ScientificImageModel, SelectionIconsModel, SingleBitModel, SliderModel,
-    TableElementModel, TextIconsModel, VacuumWidgetModel, WebcamImageModel,
+    KnobModel, LampModel, LineEditModel, LinePlotModel, MonitorModel,
+    PopUpModel, ScientificImageModel, SelectionIconsModel, SingleBitModel,
+    SliderModel, TableElementModel, TextIconsModel, WebcamImageModel,
     XYPlotModel, StatefulIconWidgetModel
 )
 
 
+# This is a mapping of Widget class names -> scene model classes
+# It is used in situations where ``Widget`` is asked for a list of classes
+# which can work together with a ``Box`` object. The class name is used to
+# fetch a scene model which can be added to the scene which will result in a
+# widget which works with a box.
+# Examples:
+# * Switching widgets for a device property
+# * Adding a default widget when a property is dropped on the scene
 WIDGET_FACTORIES = {
     'Bitfield': BitfieldModel,
     'DisplayCheckBox': CheckBoxModel,
@@ -46,6 +54,7 @@ WIDGET_FACTORIES = {
     'IntLineEdit': IntLineEditModel,
     'Slider': SliderModel,
     'Knob': KnobModel,
+    'LampWidget': LampModel,
     'XYPlot': XYPlotModel,
     'XYVector': LinePlotModel,
     'DisplayTrendline': LinePlotModel,
@@ -59,21 +68,6 @@ WIDGET_FACTORIES = {
     'SelectionIcons': SelectionIconsModel,
     'Monitor': MonitorModel,
     'SingleBit': SingleBitModel,
-    'AgilentIonWidget': VacuumWidgetModel,
-    'CryoCoolerWidget': VacuumWidgetModel,
-    'HydraulicValveWidget': VacuumWidgetModel,
-    'LampWidget': VacuumWidgetModel,
-    'MaxiGaugeWidget': VacuumWidgetModel,
-    'MembranePumpWidget': VacuumWidgetModel,
-    'MotorWidget': VacuumWidgetModel,
-    'PressureGaugeWidget': VacuumWidgetModel,
-    'PressureSwitchWidget': VacuumWidgetModel,
-    'RightAngleValveWidget': VacuumWidgetModel,
-    'ShutOffValveWidget': VacuumWidgetModel,
-    'TemperatureProbeWidget': VacuumWidgetModel,
-    'TurboPumpWidget': VacuumWidgetModel,
-    'ValveWidget': VacuumWidgetModel,
     'PopUp': PopUpModel,
     'StatefulIconWidget': StatefulIconWidgetModel,
 }
-

@@ -9,7 +9,7 @@ from karabo.common.scenemodel.api import (
     EditableListElementModel, EditableListModel, EditableSpinBoxModel,
     EvaluatorModel, FileInModel, FileOutModel, FixedLayoutModel,
     FloatSpinBoxModel, GridLayoutModel, HexadecimalModel, IntLineEditModel,
-    KnobModel, LabelModel, LineEditModel, LineModel, LinePlotModel,
+    KnobModel, LabelModel, LampModel, LineEditModel, LineModel, LinePlotModel,
     MonitorModel, PathModel, PopUpModel, RectangleModel, SceneLinkModel,
     ScientificImageModel, SelectionIconsModel, SingleBitModel, SliderModel,
     StatefulIconWidgetModel, TableElementModel, TextIconsModel,
@@ -27,7 +27,7 @@ from .widget.api import (
     GenericWidgetContainer, IconsContainer, LabelWidget, LinePlotContainer,
     MonitorContainer, SceneLinkWidget, SimpleImageWidgetContainer,
     SingleBitContainer, StatefulIconContainer, TableElementContainer,
-    UnknownSvgWidget, VacuumWidgetContainer, WorkflowItemWidget
+    UnknownSvgWidget, VacuumWidgetPlaceholder, WorkflowItemWidget
 )
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
@@ -63,6 +63,7 @@ _SCENE_OBJ_FACTORIES = {
     IntLineEditModel: GenericWidgetContainer,
     PopUpModel: GenericWidgetContainer,
     KnobModel: GenericWidgetContainer,
+    LampModel: GenericWidgetContainer,
     SliderModel: GenericWidgetContainer,
     XYPlotModel: GenericWidgetContainer,
     CheckBoxModel: DisplayEditableWidgetContainer,
@@ -76,7 +77,7 @@ _SCENE_OBJ_FACTORIES = {
     DigitIconsModel: IconsContainer,
     SelectionIconsModel: IconsContainer,
     TextIconsModel: IconsContainer,
-    VacuumWidgetModel: VacuumWidgetContainer,
+    VacuumWidgetModel: VacuumWidgetPlaceholder,
     EvaluatorModel: EvaluatorContainer,
     FloatSpinBoxModel: FloatSpinBoxContainer,
     SingleBitModel: SingleBitContainer,
