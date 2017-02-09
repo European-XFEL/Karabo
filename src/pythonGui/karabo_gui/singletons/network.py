@@ -5,6 +5,7 @@
 #############################################################################
 
 from functools import partial
+import os.path as op
 import socket
 from struct import calcsize, pack, unpack
 
@@ -14,6 +15,7 @@ from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
 from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.authenticator import Authenticator
+from karabo.common.shell_namespace import ShellNamespaceWrapper
 from karabo.middlelayer import Hash, BinaryWriter, AccessLevel
 from karabo_gui import background
 from karabo_gui.dialogs.logindialog import LoginDialog
@@ -30,11 +32,6 @@ class Network(QObject):
         super(Network, self).__init__(parent=parent)
 
         self.authenticator = None
-        self.username = None
-        self.password = None
-        self.provider = None
-        self.hostname = None
-        self.port = None
 
         self.brokerHost = ""
         self.brokerPort = ""
@@ -43,6 +40,11 @@ class Network(QObject):
 
         self.tcpSocket = None
         self.requestQueue = []
+
+        self.username = None
+        self.password = None
+        self.provider = None
+        self.hostname, self.port = self.load_last_settings()
 
     def connectToServer(self):
         """
@@ -55,18 +57,47 @@ class Network(QObject):
                              provider=self.provider,
                              hostname=self.hostname,
                              port=self.port)
+
         if dialog.exec_() == QDialog.Accepted:
-            self.startServerConnection(dialog.username,
-                                       dialog.password,
-                                       dialog.provider,
-                                       dialog.hostname,
-                                       dialog.port)
+            self.save_settings(dialog.username,
+                               dialog.password,
+                               dialog.provider,
+                               dialog.hostname,
+                               dialog.port)
+
+            self.startServerConnection()
             isConnected = True
-        else:
-            isConnected = False
 
         # Update MainWindow toolbar
         self.signalServerConnectionChanged.emit(isConnected)
+
+    def load_last_settings(self):
+
+        hostname = None
+        port = None
+
+        if op.exists(globals.CONFIG_FILE):
+            config = ShellNamespaceWrapper(globals.CONFIG_FILE)
+            if "KARABO_GUI_HOST" in config:
+                hostname = config["KARABO_GUI_HOST"]
+            if "KARABO_GUI_PORT" in config:
+                port = config["KARABO_GUI_PORT"]
+
+        return (hostname, port)
+
+    def save_settings(self, username, password, provider, hostname, port):
+
+        self.username = username
+        self.password = password
+        self.provider = provider
+        self.hostname = hostname
+        self.port = port
+
+        config = ShellNamespaceWrapper(globals.CONFIG_FILE)
+        config["KARABO_GUI_HOST"] = self.hostname
+        config["KARABO_GUI_PORT"] = self.port
+
+        config.write()
 
     def disconnectFromServer(self):
         """
@@ -76,16 +107,11 @@ class Network(QObject):
         self.signalServerConnectionChanged.emit(False)
         self.endServerConnection()
 
-    def startServerConnection(self, username, password, provider, hostname, port):
+    def startServerConnection(self):
         """
         Attempt to connect to host on given port and save user specific data
         for later authentification.
         """
-        self.username = username
-        self.password = password
-        self.provider = provider
-        self.hostname = hostname
-        self.port = port
 
         self.tcpSocket = QTcpSocket(self)
         self.tcpSocket.connected.connect(self.onConnected)
@@ -93,7 +119,7 @@ class Network(QObject):
         self.tcpSocket.disconnected.connect(self.onDisconnected)
         self.tcpSocket.error.connect(self.onSocketError)
 
-        self.tcpSocket.connectToHost(hostname, port)
+        self.tcpSocket.connectToHost(self.hostname, self.port)
 
     def endServerConnection(self):
         """
