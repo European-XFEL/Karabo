@@ -108,9 +108,7 @@ if __name__ == '__main__':
         'package_data': {
             "karabo_gui.dialogs": ["*.ui"],
             "karabo_gui.displaywidgets": ["*.ui", "*.svg"],
-            "karabo_gui.icons": ["*.*", "vacuum/*.*",
-                                 "statefulicons/iconset/*.svg",
-                                 "vacuum/bigger/*.*"],
+            "karabo_gui.icons": ["*.*", "statefulicons/iconset/*.svg"],
             "karabo_gui.project.dialog": ["*.ui"],
 
         }

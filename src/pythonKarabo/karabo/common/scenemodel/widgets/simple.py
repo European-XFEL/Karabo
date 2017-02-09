@@ -112,6 +112,10 @@ class LabelModel(BaseWidgetObjectData):
     frame_width = Int(0)
 
 
+class LampModel(BaseWidgetObjectData):
+    """ A model for LampWidget"""
+
+
 class LineEditModel(BaseWidgetObjectData):
     """ A model for DisplayLineEdit/EditableLineEdit
     """
@@ -256,8 +260,8 @@ def _build_empty_widget_readers_and_writers():
     names = ('BitfieldModel', 'DisplayCommandModel', 'DisplayLabelModel',
              'DisplayPlotModel', 'DoubleLineEditModel', 'EditableListModel',
              'EditableListElementModel', 'EditableSpinBoxModel',
-             'HexadecimalModel', 'IntLineEditModel', 'KnobModel', 'PopUpModel',
-             'SliderModel', 'XYPlotModel')
+             'HexadecimalModel', 'IntLineEditModel', 'KnobModel', 'LampModel',
+             'PopUpModel', 'SliderModel', 'XYPlotModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]

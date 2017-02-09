@@ -13,4 +13,4 @@ from .singlebit import SingleBitContainer
 from .statecolor import DisplayStateColorContainer
 from .statefulicon import StatefulIconContainer
 from .tableelement import TableElementContainer
-from .vacuum import VacuumWidgetContainer
+from .vacuum import VacuumWidgetPlaceholder
