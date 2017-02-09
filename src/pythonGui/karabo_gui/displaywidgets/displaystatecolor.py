@@ -1,7 +1,7 @@
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (QAction, QInputDialog, QFrame, QLabel)
 
-from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
+from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA, WIDGET_MIN_HEIGHT
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
@@ -21,7 +21,7 @@ class DisplayStateColor(DisplayWidget):
         self.widget.setAutoFillBackground(True)
         self.widget.setAlignment(Qt.AlignCenter)
         self.widget.setMinimumWidth(32)
-        self.widget.setMinimumHeight(24)
+        self.widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self.widget.setWordWrap(True)
         self.widget.setFrameStyle(QFrame.Box | QFrame.Plain)
 
