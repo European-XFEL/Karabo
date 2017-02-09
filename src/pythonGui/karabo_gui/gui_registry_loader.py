@@ -4,4 +4,3 @@
 # to be done very early, so this module is imported from gui.init()
 from karabo_gui.displaywidgets import *
 from karabo_gui.editablewidgets import *
-from karabo_gui.vacuumwidgets import *
