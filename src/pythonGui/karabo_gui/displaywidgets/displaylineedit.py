@@ -6,6 +6,7 @@
 
 
 from karabo.middlelayer import String
+from karabo_gui.const import WIDGET_MIN_HEIGHT
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 
@@ -21,7 +22,7 @@ class DisplayLineEdit(DisplayWidget):
         super(DisplayLineEdit, self).__init__(box)
 
         self.widget = QLineEdit(parent)
-        self.widget.setMinimumHeight(21)
+        self.widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self.widget.setReadOnly(True)
 
 
