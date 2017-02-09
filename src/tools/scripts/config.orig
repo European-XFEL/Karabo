@@ -13,6 +13,12 @@
 #                     a candidate to a missing application is the gui which was closed at
 #                     the end of the last session with all other applications left running.
 
+################
+#  Karabo Gui  #
+################
+
+KARABO_GUI_HOST=localhost
+KARABO_GUI_PORT=44444
 
 ##################
 #  Broker Hosts  #
