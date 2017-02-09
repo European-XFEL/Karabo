@@ -4,28 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-"""This module contains a class which represents a factory class to create
-   display widgets.
-
-.. autoclass:: Widget
-   :members:
-
-.. autoclass:: DisplayWidget
-
-.. autoclass:: EditableWidget
-"""
-
-import os.path
-
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
-from PyQt4.QtGui import QLabel, QPixmap
 
-from karabo.common.states import State
-from karabo.middlelayer import String
 from karabo_gui import background
-from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 from karabo_gui.registry import Registry
-from karabo_gui.util import generateObjectName
 import karabo_gui.gui as gui
 
 
@@ -163,55 +145,6 @@ class DisplayWidget(Widget):
 
     def updateState(self):
         pass
-
-
-class VacuumWidget(DisplayWidget):
-    menu = "Change vacuum widget"
-    category = String
-
-    def __init__(self, box, parent):
-        DisplayWidget.__init__(self, box)
-
-        self.widget = QLabel(parent)
-
-        objectName = generateObjectName(self)
-        self._styleSheet = ("QLabel#{}".format(objectName) +
-                            " {{ background-color : rgba{}; }}")
-        self.widget.setObjectName(objectName)
-        self.widget.setScaledContents(True)
-        self.setErrorState(False)
-
-    value = None
-
-    @classmethod
-    def isCompatible(cls, box, readonly):
-        return box.path == ("state",) and super().isCompatible(box, readonly)
-
-    def _setPixmap(self, name):
-        p = QPixmap(os.path.join(os.path.dirname(__file__),
-                    "icons", "vacuum", name))
-        self.widget.setPixmap(p)
-        self.widget.setMaximumWidth(p.width())
-        self.widget.setMaximumHeight(p.height())
-
-    def setErrorState(self, isError):
-        color = ERROR_COLOR_ALPHA if isError else OK_COLOR
-        ss = self._styleSheet.format(color)
-        self.widget.setStyleSheet(ss)
-
-    def valueChanged(self, box, value, timestamp=None):
-        if State(value).isDerivedFrom(State.CHANGING):
-            self._setPixmap(self.statePixmapName[State.CHANGING])
-        elif State(value).isDerivedFrom(State.ACTIVE):
-            self._setPixmap(self.statePixmapName[State.ACTIVE])
-        elif State(value).isDerivedFrom(State.PASSIVE):
-            self._setPixmap(self.statePixmapName[State.PASSIVE])
-        elif State(value).isDerivedFrom(State.NORMAL):
-            self._setPixmap(self.statePixmapName[State.NORMAL])
-        elif State(value) is State.ERROR:
-            self._setPixmap(self.statePixmapName[State.ERROR])
-        else:
-            self._setPixmap(self.statePixmapName[State.UNKNOWN])
 
 
 class EditableWidget(Widget):

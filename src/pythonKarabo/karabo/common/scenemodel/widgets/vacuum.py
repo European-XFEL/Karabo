@@ -9,6 +9,14 @@ from karabo.common.scenemodel.io_utils import (
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# !! NOTE: Vacuum widgets are deprecated! This code remains in place to enable
+# !! reading and writing of existing scene data. The GUI code no longer gives
+# !! the option to create vacuum widgets in scenes.
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 VACUUM_WIDGETS = (
     'AgilentIonWidget', 'CryoCoolerWidget', 'HydraulicValveWidget',
     'LampWidget', 'MaxiGaugeWidget', 'MembranePumpWidget',
@@ -19,7 +27,7 @@ VACUUM_WIDGETS = (
 
 
 class VacuumWidgetModel(BaseWidgetObjectData):
-    """ A model for VacuumWidget objects"""
+    """A model for VacuumWidget objects."""
     # The actual type of the widget
     klass = Enum(*VACUUM_WIDGETS)
 
@@ -40,6 +48,7 @@ def _build_vacuum_widget_readers():
 
     for widget in VACUUM_WIDGETS:
         register_scene_reader(widget, version=1)(_reader)
+
 
 # Call the builder to register all the vacuum widget readers and writers
 _build_vacuum_widget_readers()

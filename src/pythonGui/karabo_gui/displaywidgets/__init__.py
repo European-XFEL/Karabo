@@ -27,6 +27,7 @@ __all__ = [
     "displaytrendline",
     "eval",
     "icons",
+    "lampwidget",
     "monitor",
     "popup",
     "xyplot",
