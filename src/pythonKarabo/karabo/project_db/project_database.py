@@ -298,9 +298,7 @@ class ProjectDatabase(ContextDecorator):
                                     'xml': self._make_str_if_needed(r)})
             except ExistDBException as e:
                 raise ProjectDBError(e)
-            except IndexError:
-                ms = "Project objects not found! (UUIDs: {}, revisions: {})"
-                raise ProjectDBError(ms.format(c_items, c_revs))
+            
         return results
 
     def list_items(self, domain, item_types=None):
