@@ -45,3 +45,6 @@ ENUMERATION = Qt.UserRole + 18
 
 # Project item properties
 PROJECT_CONTROLLER_REF = Qt.UserRole
+
+# WIDGET PROPERTIES
+WIDGET_MIN_HEIGHT = 21
