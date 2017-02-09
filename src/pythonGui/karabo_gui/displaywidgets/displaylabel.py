@@ -12,7 +12,7 @@ from numpy import log10, ndarray, number
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLabel
 
-from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
+from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA, WIDGET_MIN_HEIGHT
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 from karabo.middlelayer import (Double, Float, String, Simple, Type, HashType,
@@ -39,7 +39,7 @@ class DisplayLabel(DisplayWidget):
         self.widget = QLabel(parent)
         self.widget.setAutoFillBackground(True)
         self.widget.setAlignment(Qt.AlignCenter)
-        self.widget.setMinimumHeight(21)
+        self.widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self.widget.setWordWrap(True)
 
         objectName = generateObjectName(self)
