@@ -18,7 +18,7 @@ class Evaluator(DisplayWidget):
         super(Evaluator, self).__init__(box)
 
         self.widget = QLineEdit(parent)
-        self.widget.setMinimumSize(160, 24)
+        self.widget.setMinimumHeight(21)
         self.widget.setReadOnly(True)
         self.text = "x"
         self.value = None
