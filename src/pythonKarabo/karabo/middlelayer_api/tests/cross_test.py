@@ -124,7 +124,6 @@ class Tests(DeviceTest):
             self.assertEqual(proxy.table[0]["s"], "african")
 
             yield from proxy.injectSchema()
-            yield from sleep(0.1)
             self.assertEqual(proxy.word1, "Hello")
             self.assertEqual(proxy.word1.descriptor.description, "The word")
 
