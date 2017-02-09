@@ -313,11 +313,11 @@ class SignalSlotable(Configurable):
             f.set_result(None)
         loop.changedFutures = set()
 
-    @coslot
+    @slot
     def slotSchemaUpdated(self, schema, deviceId):
         d = self._proxies.get(deviceId)
         if d is not None:
-            yield from d._onSchemaUpdated(schema)
+            d._onSchemaUpdated(schema)
 
     @slot
     def slotInstanceNew(self, instanceId, info):

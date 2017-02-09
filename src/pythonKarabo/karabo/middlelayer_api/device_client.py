@@ -155,13 +155,9 @@ class Proxy(object):
         for q in self._queues[None]:
             q.put_nowait(hash)
 
-    @asyncio.coroutine
     def _onSchemaUpdated(self, schema):
-        conf, _ = yield from self._device.call(self._deviceId,
-                                               "slotGetConfiguration")
         namespace = _createProxyDict(schema.hash, "")
         self.__class__ = type(schema.name, (Proxy,), namespace)
-        self._onChanged(conf)
 
     def setValue(self, desc, value):
         self._use()
