@@ -5,21 +5,6 @@
 #############################################################################
 
 
-"""This module contains a class which represents a widget plugin for attributes
-   and is created by the factory class DisplayWidget.
-   
-   Each plugin needs to implement the following interface:
-   
-   def getCategoryAliasClassName():
-       pass
-   
-    class Maker:
-        def make(self, **params):
-            return Attribute*(**params)
-"""
-
-__all__ = ["DisplayLabel"]
-
 from enum import Enum
 from numbers import Number
 
@@ -54,8 +39,7 @@ class DisplayLabel(DisplayWidget):
         self.widget = QLabel(parent)
         self.widget.setAutoFillBackground(True)
         self.widget.setAlignment(Qt.AlignCenter)
-        self.widget.setMinimumWidth(160)
-        self.widget.setMinimumHeight(32)
+        self.widget.setMinimumHeight(21)
         self.widget.setWordWrap(True)
 
         objectName = generateObjectName(self)
