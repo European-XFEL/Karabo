@@ -48,7 +48,7 @@ class ShellNamespaceWrapper(Mapping):
         if key not in self._vars and not self._growable:
             msg = 'Attempted variable addition to a fixed namespace!'
             raise RuntimeError(msg)
-        self._vars[key] = value
+        self._vars[key] = str(value)
 
     def write(self):
         """Write the file, replacing any variables with those found in the
