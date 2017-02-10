@@ -6,6 +6,7 @@ _LEADING_WHITESPACE_REGEX = re.compile(r'^\s+.*')
 
 
 def _format_shell_variable(name, value):
+    print(value)
     return '{0}={1}\n'.format(name, shlex.quote(value))
 
 
@@ -48,7 +49,7 @@ class ShellNamespaceWrapper(Mapping):
         if key not in self._vars and not self._growable:
             msg = 'Attempted variable addition to a fixed namespace!'
             raise RuntimeError(msg)
-        self._vars[key] = value
+        self._vars[key] = str(value)
 
     def write(self):
         """Write the file, replacing any variables with those found in the
