@@ -48,6 +48,7 @@ namespace karabo {
         class DeviceServer : public karabo::xms::SignalSlotable {
 
             krb_log4cpp::Category* m_log;
+            karabo::log::Logger::Pointer m_logger;
 
             karabo::util::PluginLoader::Pointer m_pluginLoader;
             boost::asio::deadline_timer m_scanPluginsTimer;
