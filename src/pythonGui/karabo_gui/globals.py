@@ -25,6 +25,13 @@ else:
 # Project folder
 KARABO_PROJECT_FOLDER = path.join(HIDDEN_KARABO_FOLDER, "projects")
 
+if platform.startswith("win"):
+    KARABO_CONFIG_FOLDER = HIDDEN_KARABO_FOLDER
+else:
+    KARABO_CONFIG_FOLDER = path.join(environ['KARABO'], "var", "config")
+
+CONFIG_FILE = path.join(KARABO_CONFIG_FOLDER, "config")
+
 
 MAX_INT8 = (2**7)-1
 MIN_INT8 = -(2**7)
