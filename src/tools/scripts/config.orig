@@ -15,13 +15,13 @@
 
 
 #####################ATTENTION######################
-# THIS IS NOT A SCRIPT BUT A CONFIGURATION FILE.
-# DO NOT BASH SCRIPT HERE.
-#
-#The ONLY VALID SYNTAX is:
-#
-#               variable=value
-#
+# THIS IS NOT A SCRIPT BUT A CONFIGURATION FILE.   #
+# DO NOT BASH SCRIPT HERE.                         #
+#                                                  #
+# The ONLY VALID SYNTAX is:                        #
+#                                                  #
+#               variable=value                     #
+#                                                  #
 ####################################################
 
 ################
