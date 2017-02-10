@@ -13,6 +13,7 @@ from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.utils import maybe_save_modified_project, save_object
 from karabo_gui.singletons.api import get_project_model, get_selection_tracker
 from karabo_gui.util import is_database_processing
+from .controller.bases import BaseProjectGroupController
 from .controller.project import ProjectController
 from .controller.project_groups import ProjectSubgroupController
 
@@ -25,11 +26,20 @@ class ProjectView(QTreeView):
 
         project_model = get_project_model()
         self.setModel(project_model)
+        project_model.rowsInserted.connect(self._items_added)
         self.setSelectionModel(project_model.q_selection_model)
         self.selectionModel().selectionChanged.connect(self._selection_change)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
+
+    # ----------------------------
+    # Public methods
+
+    def destroy(self):
+        """ Unset project's data model before death.
+        """
+        self.model().traits_data_model = None
 
     # ----------------------------
     # Qt methods
@@ -44,35 +54,30 @@ class ProjectView(QTreeView):
             parent_project = self._parent_project(selected_controller)
             selected_controller.double_click(parent_project, parent=self)
 
-    # ----------------------------
-    # Public methods
-
-    def destroy(self):
-        """ Unset project's data model before death.
-        """
-        self.model().traits_data_model = None
+            if isinstance(selected_controller, BaseProjectGroupController):
+                # Double clicks expand groups
+                indices = self.selectionModel().selectedIndexes()
+                self.expand(indices[0])
 
     # ----------------------------
-    # Private methods
+    # Slots
 
-    def _get_selected_controller(self):
-        """ Return the currently selected controller.
+    def _items_added(self, parent_index, start, end):
+        """React to the addition of an item (or items).
         """
-        indices = self.selectionModel().selectedIndexes()
-        if not indices:
-            return None
+        # Bail immediately if not the first item
+        if start != 0:
+            return
 
-        first_index = indices[0]
-        controller_ref = first_index.data(PROJECT_CONTROLLER_REF)
-        return controller_ref()
+        controller_ref = parent_index.data(PROJECT_CONTROLLER_REF)
+        if controller_ref is None:
+            return
 
-    def _parent_project(self, controller):
-        """ Find the parent project model of a given controller
-        """
-        if isinstance(controller, ProjectSubgroupController):
-            return controller.model
-        root_project = self.model().traits_data_model
-        return find_parent_object(controller.model, root_project, ProjectModel)
+        controller = controller_ref()
+        if (controller is not None and
+                isinstance(controller, BaseProjectGroupController)):
+            # If a group just added its first item, expand it
+            self.expand(parent_index)
 
     def _selection_change(self, selected, deselected):
         """ Notify controller objects when their Qt list item object is
@@ -112,6 +117,28 @@ class ProjectView(QTreeView):
                 menu.addAction(close_action)
 
             menu.exec(QCursor.pos())
+
+    # ----------------------------
+    # Private methods
+
+    def _get_selected_controller(self):
+        """ Return the currently selected controller.
+        """
+        indices = self.selectionModel().selectedIndexes()
+        if not indices:
+            return None
+
+        first_index = indices[0]
+        controller_ref = first_index.data(PROJECT_CONTROLLER_REF)
+        return controller_ref()
+
+    def _parent_project(self, controller):
+        """ Find the parent project model of a given controller
+        """
+        if isinstance(controller, ProjectSubgroupController):
+            return controller.model
+        root_project = self.model().traits_data_model
+        return find_parent_object(controller.model, root_project, ProjectModel)
 
     def _close_project(self, project, parent_project):
         """ Close the given `project`
