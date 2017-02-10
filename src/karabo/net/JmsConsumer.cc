@@ -114,7 +114,6 @@ namespace karabo {
                     { // Invalidate handles and re-post
                         // This function may be called concurrently, hence its thread-safe
                         this->clearConsumerHandles();
-                        m_connection->waitForConnectionAvailable();
                         m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
                                                   handler, topic, selector));
                         break;
