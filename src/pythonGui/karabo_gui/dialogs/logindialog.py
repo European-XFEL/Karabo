@@ -65,19 +65,6 @@ class LoginDialog(QDialog):
             self.__cbProvider.setCurrentIndex(index)
         formLayout.addRow("Provider:", self.__cbProvider)
         
-        if not hostname:
-            hostname = "localhost"
-        self.__leHostname = QLineEdit(hostname)
-        formLayout.addRow("Hostname:", self.__leHostname)
-        
-        if port is None:
-            port = "44444"
-        else:
-            port = str(port)
-        self.__lePort = QLineEdit(port)
-        self.__lePort.setValidator(QIntValidator(None))
-        formLayout.addRow("Port:", self.__lePort)
-        
         self.__pbOk = QPushButton("Connect")
         self.__pbOk.clicked.connect(self.accept)
         self.__pbCancel = QPushButton("Cancel")
@@ -106,16 +93,6 @@ class LoginDialog(QDialog):
     @property
     def provider(self):
         return self.__cbProvider.currentText()
-
-
-    @property
-    def hostname(self):
-        return self.__leHostname.text()
-
-
-    @property
-    def port(self):
-        return int(self.__lePort.text())
 
 
     def _showConnectionSelection(self, show):
