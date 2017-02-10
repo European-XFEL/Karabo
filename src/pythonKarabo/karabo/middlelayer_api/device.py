@@ -52,8 +52,7 @@ class Device(AlarmMixin, SignalSlotable):
         displayedName="Host",
         description="The name of the host where this device runs",
         requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.READONLY,
-        defaultValue=socket.gethostname().partition('.')[0])
+        accessMode=AccessMode.READONLY)
 
     state = String(
         displayedName="State", enum=State,
@@ -96,7 +95,7 @@ class Device(AlarmMixin, SignalSlotable):
         if not isSet(self.serverId):
             self.serverId = self._serverId_
 
-        self.hostname, _, self.domainname = socket.gethostname().partition('.')
+        self.hostName, _, self.domainname = socket.gethostname().partition('.')
         self.classId = type(self).__name__
 
     def _initInfo(self):
@@ -106,7 +105,7 @@ class Device(AlarmMixin, SignalSlotable):
         info["serverId"] = self.serverId.value
         info["visibility"] = self.visibility.value
         info["compatibility"] = self.__class__.__version__
-        info["host"] = self.hostname
+        info["host"] = self.hostName
         info["status"] = "ok"
         info["archive"] = self.archive.value
         return info
