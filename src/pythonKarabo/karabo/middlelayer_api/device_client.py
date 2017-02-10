@@ -155,13 +155,9 @@ class Proxy(object):
         for q in self._queues[None]:
             q.put_nowait(hash)
 
-    @asyncio.coroutine
     def _onSchemaUpdated(self, schema):
-        conf, _ = yield from self._device.call(self._deviceId,
-                                               "slotGetConfiguration")
         namespace = _createProxyDict(schema.hash, "")
         self.__class__ = type(schema.name, (Proxy,), namespace)
-        self._onChanged(conf)
 
     def setValue(self, desc, value):
         self._use()
@@ -240,8 +236,6 @@ class Proxy(object):
                                      self._device.slotChanged)
             self._device._ss.connect(self._deviceId, "signalStateChanged",
                                      self._device.slotChanged)
-            self._device._ss.connect(self._deviceId, "signalSchemaUpdated",
-                                     self._device.slotSchemaUpdated)
         return self
 
     def __exit__(self, a, b, c):
@@ -251,10 +245,10 @@ class Proxy(object):
                                         self._device.slotChanged)
             self._device._ss.disconnect(self._deviceId, "signalStateChanged",
                                         self._device.slotChanged)
-            self._device._ss.disconnect(self._deviceId, "signalSchemaUpdated",
-                                        self._device.slotSchemaUpdated)
 
     def __del__(self):
+        self._device._ss.disconnect(self._deviceId, "signalSchemaUpdated",
+                                    self._device.slotSchemaUpdated)
         if self._used > 0:
             self._used = 1
             self.__exit__(None, None, None)
@@ -590,6 +584,8 @@ def _getDevice(deviceId, sync, Proxy=Proxy):
             instance._proxies[deviceId] = ret
         finally:
             del futures[deviceId]
+        instance._ss.connect(deviceId, "signalSchemaUpdated",
+                             instance.slotSchemaUpdated)
         yield from ret
         return ret
     future = asyncio.shield(create())
