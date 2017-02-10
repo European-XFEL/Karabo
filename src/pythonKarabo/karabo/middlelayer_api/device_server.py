@@ -101,26 +101,6 @@ class DeviceServer(SignalSlotable):
         self.pid = os.getpid()
         self.seqnum = 0
 
-        # legacy devices need the following information
-        self.loggerConfiguration = Hash(
-            "categories", [Hash("Category", Hash(
-                "name", "karabo", "additivity", False,
-                "appenders", [Hash("RollingFile", Hash(
-                    "layout", Hash("Pattern", Hash(
-                        "format", "%d{%F %H:%M:%S} %p  %c  : %m%n")),
-                    "filename", "device-server.log"))]))],
-            "appenders", [
-                Hash("Ostream", Hash("layout", Hash(
-                    "Pattern", Hash("format", "%p %c  : %m%n")))),
-                Hash("RollingFile", Hash(
-                    "layout",
-                    Hash("Pattern", Hash("format",
-                                         "%d{%F %H:%M:%S} %p  %c  : %m%n")),
-                    "filename", "device-server.log")),
-                # network appender has fixed layout => nothing to specify here
-                Hash("Network", Hash())
-            ])
-
     def _initInfo(self):
         info = super(DeviceServer, self)._initInfo()
         info["type"] = "server"
@@ -220,8 +200,6 @@ class DeviceServer(SignalSlotable):
             config['_deviceId_'] = self._generateDefaultDeviceInstanceId(
                                                                     classid)
 
-        # Add logger configuration from DeviceServer:
-        config['Logger'] = copy.copy(self.loggerConfiguration)
         return classid, config['_deviceId_'], config
 
     def parseOld(self, hash):
@@ -238,8 +216,6 @@ class DeviceServer(SignalSlotable):
             deviceid = self._generateDefaultDeviceInstanceId(classid)
 
         configuration["_deviceId_"] = deviceid
-        # Add logger configuration from DeviceServer:
-        configuration["Logger"] = copy.copy(self.loggerConfiguration)
         return classid, deviceid, configuration
 
     def deviceClassesHash(self):
