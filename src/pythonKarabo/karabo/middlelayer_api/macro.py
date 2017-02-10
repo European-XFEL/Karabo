@@ -246,8 +246,9 @@ class Macro(Device):
         if "deviceId" in args:
             args["_deviceId_"] = args["deviceId"]
         else:
+            bareHostName = socket.gethostname().partition('.')[0]
             args["_deviceId_"] = "{}_{}_{}".format(
-                cls.__name__, socket.gethostname(), os.getpid())
+                cls.__name__, bareHostName, os.getpid())
 
         macro = cls(args)
 
