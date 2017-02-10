@@ -216,7 +216,6 @@ namespace karabo {
                         .description("The name of the host where this device runs")
                         .expertAccess()
                         .readOnly()
-                        .initialValue(net::bareHostName())
                         .commit();
 
                 STATE_ELEMENT(expected).key("state")
@@ -353,6 +352,7 @@ namespace karabo {
                 // This is a hack until a better solution is found
                 // Will remove a potential JmsConnection::Pointer instance from the m_parameters
                 m_parameters.set("_connection_", karabo::util::Hash());
+                m_parameters.set("hostName", net::bareHostName());
 
                 m_timeId = 0;
                 m_timeSec = 0;
