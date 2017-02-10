@@ -1311,11 +1311,20 @@ namespace karabo {
 
 
         void SignalSlotable::addTrackedInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            const boost::optional<const Hash::Node&> beatsNode = instanceInfo.find("heartbeatInterval");
+            std::string sanifiedInstanceId(instanceId);
+            sanifyInstanceId(sanifiedInstanceId);
+            if (!beatsNode || sanifiedInstanceId != instanceId) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Cannot track '" << instanceId << "' since its instanceId is invalid or "
+                        << "its instanceInfo lacks the 'heartbeatInterval': " << instanceInfo;
+                return;
+            }
+
             boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
             Hash h;
             h.set("instanceInfo", instanceInfo);
             // Initialize countdown with the heartbeat interval
-            h.set("countdown", instanceInfo.get<int>("heartbeatInterval"));
+            h.set("countdown", beatsNode->getValue<int>());
             m_trackedInstances.set(instanceId, h);
         }
 
@@ -1556,10 +1565,6 @@ namespace karabo {
 
             for (Hash::iterator it = m_trackedInstances.begin(); it != m_trackedInstances.end(); ++it) {
                 Hash& entry = it->getValue<Hash>();
-                if (!entry.has("countdown")) { // How can that happen?
-                  KARABO_LOG_FRAMEWORK_ERROR << "Tracked instance '" << it->getKey() << "' has no countdown, will set to 60. Hash:\n " << entry;
-                  entry.set<int>("countdown", 60);
-		}
                 int& countdown = entry.get<int>("countdown");
                 countdown--; // Regular count down
 
