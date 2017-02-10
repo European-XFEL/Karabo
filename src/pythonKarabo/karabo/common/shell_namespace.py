@@ -6,7 +6,6 @@ _LEADING_WHITESPACE_REGEX = re.compile(r'^\s+.*')
 
 
 def _format_shell_variable(name, value):
-    print(value)
     return '{0}={1}\n'.format(name, shlex.quote(value))
 
 
