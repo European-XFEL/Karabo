@@ -13,15 +13,10 @@ class PluginLoader(Configurable):
         assignment=Assignment.OPTIONAL, defaultValue="plugins",
         displayType="directory", requiredAccessLevel=AccessLevel.EXPERT)
 
-    pluginNamespace = String(
-        displayedName="Plugin Namespace",
-        description="Namespace to search for plugins",
-        assignment=Assignment.OPTIONAL,
-        defaultValue="karabo.middlelayer_device",
-        requiredAccessLevel=AccessLevel.EXPERT)
-
     @coroutine
     def update(self):
         yield from get_event_loop().run_in_executor(
             None, pkg_resources.working_set.add_entry, self.pluginDirectory)
-        return list(pkg_resources.iter_entry_points(self.pluginNamespace))
+
+    def list_plugins(self, namespace):
+        return list(pkg_resources.iter_entry_points(namespace))
