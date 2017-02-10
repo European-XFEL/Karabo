@@ -120,7 +120,6 @@ class PythonDevice(NoFsm):
                     .description("The name of the host where this device runs")
                     .expertAccess()
                     .readOnly()
-                    .initialValue(socket.gethostname().partition('.')[0])
                     .commit(),
 
             STATE_ELEMENT(expected).key("state")
@@ -240,6 +239,7 @@ class PythonDevice(NoFsm):
         if configuration is None:
             raise ValueError("Configuration must be Hash object, not None")
 
+        configuration.set("hostName", socket.gethostname().partition('.')[0])
         super(PythonDevice, self).__init__(configuration)
 
         self.parameters = configuration
