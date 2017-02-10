@@ -1,9 +1,11 @@
-from asyncio import (async, coroutine, get_event_loop, set_event_loop, sleep,
-                     wait)
+from asyncio import (async, coroutine, create_subprocess_exec, Future, gather,
+                     get_event_loop, set_event_loop, sleep, TimeoutError, wait,
+                     wait_for)
 import copy
 import os
 import sys
 import socket
+from subprocess import PIPE
 
 import numpy
 
@@ -49,9 +51,16 @@ class DeviceServer(SignalSlotable):
 
     pluginNamespace = String(
         displayedName="Plugin Namespace",
-        description="Namespace to search for plugins",
+        description="Namespace to search for middle layer plugins",
         assignment=Assignment.OPTIONAL,
         defaultValue="karabo.middlelayer_device",
+        requiredAccessLevel=AccessLevel.EXPERT)
+
+    boundNamespace = String(
+        displayedName="Bound Namespace",
+        description="Namespace to search for bound API plugins",
+        assignment=Assignment.OPTIONAL,
+        defaultValue="karabo.bound_device",
         requiredAccessLevel=AccessLevel.EXPERT)
 
     deviceClasses = VectorString(
@@ -87,6 +96,7 @@ class DeviceServer(SignalSlotable):
     def __init__(self, configuration):
         super().__init__(configuration)
         self.deviceInstanceMap = {}
+        self.newDeviceFutures = {}
         self.hostname, _, self.domainname = socket.gethostname().partition('.')
         self.needScanPlugins = True
         if not hasattr(self, 'serverId'):
@@ -97,7 +107,12 @@ class DeviceServer(SignalSlotable):
         self.pluginLoader = PluginLoader(
             Hash("pluginNamespace", self.pluginNamespace,
                  "pluginDirectory", self.pluginDirectory))
+        self.boundLoader = PluginLoader(
+            Hash("pluginNamespace", self.boundNamespace,
+                 "pluginDirectory", self.pluginDirectory))
         self.plugins = {}
+        self.processes = {}
+        self.bounds = {}
         self.pid = os.getpid()
         self.seqnum = 0
 
@@ -113,14 +128,19 @@ class DeviceServer(SignalSlotable):
 
     @coroutine
     def _run(self, **kwargs):
-        yield from self.scanPluginsOnce()
         yield from super(DeviceServer, self)._run(**kwargs)
-
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
 
-        self.log.INFO("Starting Karabo DeviceServer on host: {}".
-                      format(self.hostname))
+        yield from self.pluginLoader.update()
+        if self.pluginNamespace:
+            yield from self.scanPluginsOnce()
+        if self.boundNamespace:
+            yield from self.scanBoundsOnce()
+        self.updateInstanceInfo(self.deviceClassesHash())
+
+        self.logger.info("Starting Karabo DeviceServer on host: %s",
+                         self.hostname)
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
 
@@ -131,7 +151,10 @@ class DeviceServer(SignalSlotable):
     def scanPluginsLoop(self):
         """every 3 s, check whether there are new entry points"""
         while True:
-            if (yield from self.scanPluginsOnce()):
+            yield from self.pluginLoader.update()
+            if (self.pluginNamespace and (yield from self.scanPluginsOnce())
+                    or self.boundNamespace and (
+                        yield from self.scanBoundsOnce())):
                 self.updateInstanceInfo(self.deviceClassesHash())
             yield from sleep(3)
 
@@ -140,7 +163,7 @@ class DeviceServer(SignalSlotable):
         """load all available entry points, return whether new plugin found"""
         changes = False
         classes = set(self.deviceClasses)
-        entrypoints = yield from self.pluginLoader.update()
+        entrypoints = self.pluginLoader.list_plugins(self.pluginNamespace)
         for ep in entrypoints:
             if ep.name in self.plugins or (classes and ep.name not in classes):
                 continue
@@ -149,8 +172,33 @@ class DeviceServer(SignalSlotable):
                                          run_in_executor(None, ep.load))
                 changes = True
             except Exception:
-                self.logger.exception('Cannot load plugin "%s"', ep.name)
+                self.logger.exception('Cannot load middle layer plugin "%s"',
+                                      ep.name)
         return changes
+
+    @coroutine
+    def scanBoundsOnce(self):
+        changes = False
+        classes = set(self.deviceClasses)
+        entrypoints = self.pluginLoader.list_plugins(self.boundNamespace)
+        for ep in entrypoints:
+            if ep.name in self.bounds or (classes and ep.name not in classes):
+                continue
+            try:
+                env = dict(os.environ)
+                env["PYTHONPATH"] = self.pluginDirectory
+                process = yield from create_subprocess_exec(
+                    sys.executable, "-m", "karabo.bound_api.launcher",
+                    "schema", self.boundNamespace, ep.name,
+                    env=env, stdout=PIPE)
+                schema = yield from process.stdout.read()
+                yield from process.wait()
+                self.bounds[ep.name] = Hash.decode(schema, "XML")[ep.name]
+                changes = True
+            except Exception:
+                self.logger.exception('Cannot load bound plugin "%s"', ep.name)
+        return changes
+
 
     def errorFoundAction(self, m1, m2):
         self.log.ERROR("{} -- {}".format(m1, m2))
@@ -166,18 +214,36 @@ class DeviceServer(SignalSlotable):
             classId, deviceId, config = self.parseNew(hash)
         else:
             classId, deviceId, config = self.parseOld(hash)
-        config["Logger"] = self.loggerConfiguration
 
-        try:
-            cls = self.plugins[classId]
-            obj = cls(config)
-            task = obj.startInstance(self)
-            yield from task
-            return True, '"{}" started'.format(deviceId)
-        except Exception as e:
-            e.logmessage = ('could not start device "%s" of class "%s"',
-                            deviceId, classId)
-            raise
+        if classId in self.plugins:
+            try:
+                cls = self.plugins[classId]
+                obj = cls(config)
+                task = obj.startInstance(self)
+                yield from task
+                return True, '"{}" started'.format(deviceId)
+            except Exception as e:
+                e.logmessage = ('could not start device "%s" of class "%s"',
+                                deviceId, classId)
+                raise
+        elif classId in self.bounds:
+            try:
+                env = dict(os.environ)
+                env["PYTHONPATH"] = self.pluginDirectory
+                future = self.newDeviceFutures.setdefault(deviceId, Future())
+                process = yield from create_subprocess_exec(
+                    sys.executable, "-m", "karabo.bound_api.launcher",
+                    "run", self.boundNamespace, classId,
+                    env=env, stdin=PIPE)
+                self.processes[deviceId] = process
+                process.stdin.write(config.encode("XML"))
+                process.stdin.close()
+                yield from future
+                return True, '"{}" started'.format(deviceId)
+            except Exception as e:
+                e.logmessage = ('could not start device "%s" of class "%s"',
+                                deviceId, classId)
+                raise
 
     def addChild(self, deviceId, child):
         self.deviceInstanceMap[deviceId] = child
@@ -219,13 +285,19 @@ class DeviceServer(SignalSlotable):
         return classid, deviceid, configuration
 
     def deviceClassesHash(self):
+        visibilities = ([c.visibility.defaultValue.value
+                         for c in self.plugins.values()]
+                        + [c.hash["visibility", "defaultValue"]
+                           for c in self.bounds.values()])
         return Hash(
-            "deviceClasses", list(self.plugins.keys()),
-            "visibilities", numpy.array([c.visibility.defaultValue.value
-                                         for c in self.plugins.values()]))
+            "deviceClasses",
+            list(self.plugins.keys()) + list(self.bounds.keys()),
+            "visibilities", numpy.array(visibilities))
 
     @coslot
     def slotKillServer(self):
+        for device in self.processes:
+            self._ss.emit("call", {device: ["slotKillDevice"]})
         if self.deviceInstanceMap:
             done, pending = yield from wait(
                 [d.slotKillDevice() for d in self.deviceInstanceMap.values()],
@@ -233,10 +305,25 @@ class DeviceServer(SignalSlotable):
 
             if pending:
                 self.logger.warning("some devices could not be killed")
+        try:
+            yield from wait_for(
+                gather(*(p.wait() for p in self.processes.values())),
+                timeout=10)
+        except TimeoutError:
+            self.logger.exception("some processes did not finish in time")
+            for p in self.processes.values():
+                p.kill()
         yield from self.slotKillDevice()
         self.stopEventLoop()
         self._ss.emit("call", {"*": ["slotDeviceServerInstanceGone"]},
                       self.serverId)
+
+    @slot
+    def slotInstanceNew(self, instanceId, info):
+        future = self.newDeviceFutures.get(instanceId)
+        if future is not None:
+            future.set_result(info)
+        super(DeviceServer, self).slotInstanceNew(instanceId, info)
 
     @slot
     def slotInstanceGone(self, id, info):
@@ -245,8 +332,12 @@ class DeviceServer(SignalSlotable):
 
     @slot
     def slotGetClassSchema(self, classid):
-        cls = self.plugins[classid]
-        return cls.getClassSchema(), classid, self.serverId
+        if classid in self.plugins:
+            cls = self.plugins[classid]
+            return cls.getClassSchema(), classid, self.serverId
+        elif classid in self.bounds:
+            return self.bounds[classid], classid, self.serverId
+        raise RuntimeError("Unknown class {}".format(classid))
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cnt = self.instanceCountPerDeviceServer.setdefault(self.serverId, 0)
