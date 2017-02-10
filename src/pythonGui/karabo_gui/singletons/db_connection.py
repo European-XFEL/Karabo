@@ -17,6 +17,9 @@ from karabo_gui.events import (
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.singletons.api import get_network
 
+# This matches the batch size used in the project database
+MAX_BUFFER_ITEMS = 50
+
 
 class ProjectDatabaseConnection(QObject):
     """ An object which handles requests/replies from the GUI server which
@@ -192,6 +195,8 @@ class ProjectDatabaseConnection(QObject):
             self._waiting_for_read[key] = existing
             item = Hash('domain', domain, 'uuid', uuid, 'revision', revision)
             self._read_items_buffer.append(item)
+            if len(self._read_items_buffer) >= MAX_BUFFER_ITEMS:
+                self.flush()
 
         self._broadcast_is_processing(is_processing)
 
@@ -223,6 +228,8 @@ class ProjectDatabaseConnection(QObject):
             item = Hash('domain', domain, 'uuid', uuid, 'revision', revision,
                         'xml', xml, 'overwrite', True)
             self._write_items_buffer.append(item)
+            if len(self._write_items_buffer) >= MAX_BUFFER_ITEMS:
+                self.flush()
 
         self._broadcast_is_processing(is_processing)
 
