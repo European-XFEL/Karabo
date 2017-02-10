@@ -119,13 +119,13 @@ namespace karabo {
                                 if (libHandle == 0) {
                                     // Exceptionally using plain output here as KARABO_LOG_[...] is potentially
                                     // not active at the time this message is generated
-                                    cout << "ERROR  Trouble loading plugin "
+                                    cerr << "ERROR Trouble loading plugin "
                                             << it->path().filename()
                                             << ":\n\t" << string(dlerror()) << endl; // dlerror() != 0 since dlopen above failed
                                     m_failedPlugins.push_back(plugin);
                                 } else {
                                     m_loadedPlugins[it->path()] = libHandle;
-                                    cout << "INFO  Successfully loaded plugin: "
+                                    cerr << "INFO  Successfully loaded plugin: "
                                             << it->path().filename() << endl;
                                     hasNewPlugins = true;
                                 }
