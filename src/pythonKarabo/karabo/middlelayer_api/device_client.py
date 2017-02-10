@@ -312,8 +312,25 @@ class ProxyNode(Descriptor):
 class SubProxy(object):
     _parent = Weak()
 
-    def __getattr__(self, attr):
-        return getattr(self._parent, attr)
+    def _use(self):
+        return self._parent._use()
+
+    def setValue(self, desc, value):
+        return self._parent.setValue(desc, value)
+
+    def _raise_on_death(self, future):
+        return self._parent._raise_on_death(future)
+
+    def _update(self):
+        return self._parent._update()
+
+    @property
+    def _device(self):
+        return self._parent._device
+
+    @property
+    def _deviceId(self):
+        return self._parent._deviceId
 
     @classmethod
     def __dir__(cls):
