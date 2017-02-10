@@ -76,6 +76,7 @@ class TestDevice(PythonDevice):
         self.registerSlot(self.setA)
         self.registerSlot(self.backfire)
         self.registerSlot(self.injectSchema)
+        self.word_no = 1
 
     def initialize(self):
         pass
@@ -95,14 +96,15 @@ class TestDevice(PythonDevice):
         schema = Schema()
 
         (
-            STRING_ELEMENT(schema).key("word")
-            .displayedName("Word")
+            STRING_ELEMENT(schema).key("word{}".format(self.word_no))
+            .displayedName("Word #{}".format(self.word_no))
             .description("The word")
             .assignmentOptional().defaultValue("Hello")
             .reconfigurable()
             .commit()
         )
         self.updateSchema(schema)
+        self.word_no += 1
 
 
 if __name__ == "__main__":
