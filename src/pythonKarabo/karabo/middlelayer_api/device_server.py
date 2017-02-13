@@ -152,9 +152,9 @@ class DeviceServer(SignalSlotable):
         """every 3 s, check whether there are new entry points"""
         while True:
             yield from self.pluginLoader.update()
-            if (self.pluginNamespace and (yield from self.scanPluginsOnce())
-                    or self.boundNamespace and (
-                        yield from self.scanBoundsOnce())):
+            if ((self.pluginNamespace and (yield from self.scanPluginsOnce()))
+                    or (self.boundNamespace and (
+                        yield from self.scanBoundsOnce()))):
                 self.updateInstanceInfo(self.deviceClassesHash())
             yield from sleep(3)
 
