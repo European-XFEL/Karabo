@@ -64,7 +64,7 @@ namespace karabo {
             // Hide the loggers from the standard view in clients
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
-                    .commit();            
+                    .commit();
 
             // Slow beats
             OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
