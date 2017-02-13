@@ -70,7 +70,9 @@ class Tests(DeviceTest):
             stdout=PIPE)
         schema = yield from self.process.stdout.read()
         yield from self.process.wait()
-        self.assertEqual(adler32(schema), 1095563987)
+        self.assertEqual(adler32(schema), 1095563987,
+            "The generated schema changed. If this is desired, change the "
+            "checksum in the code.")
 
     @async_tst
     def test_cross(self):

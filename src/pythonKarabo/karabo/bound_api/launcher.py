@@ -11,12 +11,14 @@ _, command, namespace, name = sys.argv
 entrypoint = next(working_set.iter_entry_points(namespace, name))
 
 if command == "schema":
+    # print the schema of a device class to stdout
     schema = entrypoint.load().getSchema(entrypoint.name)
     h = Hash()
     h[name] = schema
     ser = TextSerializerHash.create("Xml")
     print(ser.save(h))
 elif command == "run":
+    # run a device class. The configuration is read from stdin.
     config = sys.stdin.read()
     ser = TextSerializerHash.create("Xml")
     config = ser.load(config)
