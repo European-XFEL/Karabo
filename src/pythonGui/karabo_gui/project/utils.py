@@ -85,10 +85,9 @@ def add_device_to_server(server, class_id=''):
         config_model = DeviceConfigurationModel(
             class_id=dialog.class_id, configuration=Hash(),
             simple_name=dialog.configuration_name,
-            alias=dialog.configuration_name,
             description=dialog.description
         )
-        # Set initialized and modified last to avoid bumping revision
+        # Set initialized and modified last
         config_model.initialized = config_model.modified = True
 
         device = DeviceInstanceModel(
@@ -96,9 +95,9 @@ def add_device_to_server(server, class_id=''):
             instance_id=dialog.instance_id,
             if_exists=dialog.if_exists,
             configs=[config_model],
-            active_config_ref=(config_model.uuid, config_model.revision),
+            active_config_ref=config_model.uuid,
         )
-        # Set initialized and modified last to avoid bumping revision
+        # Set initialized and modified last
         device.initialized = device.modified = True
 
         server_model.devices.append(device)
@@ -146,12 +145,12 @@ def load_project(domain):
     dialog = LoadProjectDialog()
     result = dialog.exec()
     if result == QDialog.Accepted:
-        uuid, revision = dialog.selected_item()
-        if uuid is not None and revision is not None:
+        uuid = dialog.selected_item()
+        if uuid is not None:
             db_conn = get_db_conn()
-            model = ProjectModel(uuid=uuid, revision=revision)
-            read_lazy_object(domain, uuid, revision, db_conn,
-                             read_project_model, existing=model)
+            model = ProjectModel(uuid=uuid)
+            read_lazy_object(domain, uuid, db_conn, read_project_model,
+                             existing=model)
             db_conn.flush()
             return model
     return None

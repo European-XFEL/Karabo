@@ -173,8 +173,6 @@ namespace karabo {
              *      projectEndUserSession       onProjectEndUserSession
              *      projectSaveItems            onProjectSaveItems
              *      projectLoadItems            onProjectLoadItems
-             *      projectLoadItemsAndSubs     onProjectLoadItemsAndSubs
-             *      projectGetVersionInfo       onProjectGetVersionInfo
              *      projectListProjectManagers  onProjectListProjectManagers
              *      projectListItems            onProjectListItems
              *      projectListDomains          onProjectListDomains
@@ -729,36 +727,6 @@ namespace karabo {
              */
             void onProjectLoadItems(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-
-            /**
-             * Load items from project database and also batch load direct descendents
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - projectManager: project manager device to forward request to
-             *          - token: token of the database user - identifies the session
-             *          - items: a vector of Hashes where each Hash is of the form:
-             *                   - uuid: uuid of the item
-             *                   - revision (optional): revision to load. If not given the newest revision will be returned
-             *                   - domain: to load this item from.
-             *                   - list_tags: list of enclosing tags under which child items are located, e.g. <projects>...</projects>,
-             *                                where "project" is as list_tag
-             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
-             */
-            void onProjectLoadItemsAndSubs(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
-
-
-            /**
-             * Request version information for items from the database
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - projectManager: project manager device to forward request to
-             *          - token: token of the database user - identifies the session
-             *          - items: a vector of Hashes where each Hash is of the form:
-             *                   - uuid: uuid of the item
-             *                   - domain: to load this item from.
-             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
-             */
-            void onProjectGetVersionInfo(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             /**
              * Request the list of project manager devices known to the GUI server

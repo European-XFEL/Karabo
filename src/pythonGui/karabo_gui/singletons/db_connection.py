@@ -100,24 +100,24 @@ class ProjectDatabaseConnection(QObject):
         # Call locally as well
         return self.cache.get_available_project_data(domain, obj_type)
 
-    def retrieve(self, domain, uuid, revision, existing=None):
+    def retrieve(self, domain, uuid, existing=None):
         """Read an object from the database.
         """
         # XXX: Please don't keep this here!
         self._ensure_login()
 
-        obj = self.cache.retrieve(domain, uuid, revision, existing=existing)
+        obj = self.cache.retrieve(domain, uuid, existing=existing)
         if obj is None:
-            self._push_reading(domain, uuid, revision, existing)
+            self._push_reading(domain, uuid, existing)
         return obj
 
-    def store(self, domain, uuid, revision, obj):
+    def store(self, domain, uuid, obj):
         """Write an object to the database
         """
         # XXX: Please don't keep this here!
         self._ensure_login()
 
-        self._push_writing(domain, uuid, revision, obj)
+        self._push_writing(domain, uuid, obj)
 
     def is_reading(self):
         return len(self._waiting_for_read) > 0
@@ -139,16 +139,14 @@ class ProjectDatabaseConnection(QObject):
             for item in items:
                 domain = item['domain']
                 uuid = item['uuid']
-                revision = item['revision']
                 data = item['xml']
-                self.cache.store(domain, uuid, revision, data)
+                self.cache.store(domain, uuid, data)
 
         # Then go back through and load any waiting objects
         for item in items:
             domain = item['domain']
             uuid = item['uuid']
-            revision = item['revision']
-            self._pop_reading(domain, uuid, revision, success)
+            self._pop_reading(domain, uuid, success)
 
         # Make a single request to the GUI server
         self.flush()
@@ -159,11 +157,10 @@ class ProjectDatabaseConnection(QObject):
         for item in items:
             domain = item['domain']
             uuid = item['uuid']
-            revision = item['revision']
             success = item['success']
             if not success:
                 MessageBox.showError(item['reason'])
-            self._pop_writing(domain, uuid, revision, success)
+            self._pop_writing(domain, uuid, success)
 
     # -------------------------------------------------------------------
     # private interface
@@ -185,65 +182,61 @@ class ProjectDatabaseConnection(QObject):
         broadcast_event(KaraboBroadcastEvent(
             KaraboEventSender.DatabaseIsBusy, data))
 
-    def _push_reading(self, domain, uuid, revision, existing):
+    def _push_reading(self, domain, uuid, existing):
         # Store previous processing state
         is_processing = self.is_processing()
 
-        key = (uuid, revision)
-        if key not in self._waiting_for_read:
+        if uuid not in self._waiting_for_read:
             assert existing is not None
-            self._waiting_for_read[key] = existing
-            item = Hash('domain', domain, 'uuid', uuid, 'revision', revision)
+            self._waiting_for_read[uuid] = existing
+            item = Hash('domain', domain, 'uuid', uuid)
             self._read_items_buffer.append(item)
             if len(self._read_items_buffer) >= MAX_BUFFER_ITEMS:
                 self.flush()
 
         self._broadcast_is_processing(is_processing)
 
-    def _pop_reading(self, domain, uuid, revision, success):
+    def _pop_reading(self, domain, uuid, success):
         # Store previous processing state
         is_processing = self.is_processing()
 
-        key = (uuid, revision)
-        if key in self._waiting_for_read:
-            obj = self._waiting_for_read.pop(key)
+        if uuid in self._waiting_for_read:
+            obj = self._waiting_for_read.pop(uuid)
             if success:
                 # Only try to read if reading from DB was successful
-                read_lazy_object(domain, uuid, revision, self,
-                                 read_project_model, existing=obj)
+                read_lazy_object(domain, uuid, self, read_project_model,
+                                 existing=obj)
 
         self._broadcast_is_processing(is_processing)
 
-    def _push_writing(self, domain, uuid, revision, obj):
+    def _push_writing(self, domain, uuid, obj):
         # Store previous processing state
         is_processing = self.is_processing()
 
-        key = (uuid, revision)
         # Don't ask the GUI server if you're already waiting for this object
-        if key not in self._waiting_for_write:
-            self._waiting_for_write[key] = obj
+        if uuid not in self._waiting_for_write:
+            self._waiting_for_write[uuid] = obj
             # Project DB expects xml as string
             xml = write_project_model(obj)
             # XXX overwrite everytime until handled
-            item = Hash('domain', domain, 'uuid', uuid, 'revision', revision,
-                        'xml', xml, 'overwrite', True)
+            item = Hash('domain', domain, 'uuid', uuid, 'xml', xml,
+                        'overwrite', True)
             self._write_items_buffer.append(item)
             if len(self._write_items_buffer) >= MAX_BUFFER_ITEMS:
                 self.flush()
 
         self._broadcast_is_processing(is_processing)
 
-    def _pop_writing(self, domain, uuid, revision, success):
+    def _pop_writing(self, domain, uuid, success):
         # Store previous processing state
         is_processing = self.is_processing()
 
-        key = (uuid, revision)
-        obj = self._waiting_for_write.pop(key)
+        obj = self._waiting_for_write.pop(uuid)
 
         if success:
             # Write to the local cache
             data = write_project_model(obj)
-            self.cache.store(domain, uuid, revision, data)
+            self.cache.store(domain, uuid, data)
             # No longer dirty!
             obj.modified = False
 
