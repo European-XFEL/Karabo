@@ -404,14 +404,6 @@ class Network(QObject):
         h.set("token", "admin")
         self._tcpWriteHash(h)
 
-    def onProjectGetVersionInfo(self, project_manager, items):
-        h = Hash("type", "projectGetVersionInfo")
-        h.set("projectManager", project_manager)
-        # XXX: Don't leave token hardcoded!
-        h.set("token", "admin")
-        h.set("items", items)
-        self._tcpWriteHash(h)
-
     def onProjectListItems(self, project_manager, domain, item_type):
         h = Hash("type", "projectListItems")
         h.set("projectManager", project_manager)

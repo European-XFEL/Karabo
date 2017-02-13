@@ -310,10 +310,6 @@ class Manager(QObject):
         event = KaraboBroadcastEvent(KaraboEventSender.ProjectManagersList, d)
         broadcast_event(event)
 
-    def handle_projectGetVersionInfo(self, reply):
-        # ``reply`` is a Hash of uuid -> version info
-        pass
-
     def handle_projectLoadItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
         success = reply.get('success', True)

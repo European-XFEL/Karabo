@@ -48,7 +48,7 @@ class DeviceHandleDialog(QDialog):
 
         if model is None:
             title = 'Add device configuration'
-            self._update_widgets_to_add_config()
+            self.cbConfig.setEditable(True)
             self.cbConfig.lineEdit().setText('default')
 
             # If we already know the class, select it and disable editing.
@@ -56,11 +56,10 @@ class DeviceHandleDialog(QDialog):
                 self._update_plugin_widget(class_id)
                 self.cbClass.setEnabled(False)
         else:
-            active_uuid, active_rev = model.active_config_ref
-            active_dev_conf = model.select_config(active_uuid, active_rev)
+            active_dev_conf = model.select_config(model.active_config_ref)
             if add_config:
                 title = 'Add device configuration'
-                self._update_widgets_to_add_config()
+                self.cbConfig.setEditable(True)
 
                 # These widgets belong to a ``DeviceInstanceModel`` and
                 # should not be changed in case a configuration is added
@@ -73,7 +72,7 @@ class DeviceHandleDialog(QDialog):
                 self._init_config_widgets(model)
                 if active_dev_conf is not None:
                     self._update_config_widgets(active_dev_conf)
-                    index = self.cbConfig.findText(active_dev_conf.alias)
+                    index = self.cbConfig.findText(active_dev_conf.simple_name)
                     self.cbConfig.setCurrentIndex(index)
 
             self.cbClass.setEnabled(False)
@@ -92,21 +91,13 @@ class DeviceHandleDialog(QDialog):
 
         :param dev_inst_model: The ``DeviceInstanceModel`` object
         """
-        # Map UUIDs to list of available DeviceConfigurationModels
-        uuid_configs = {}
         for config in dev_inst_model.configs:
-            key = (config.uuid, config.alias)
-            uuid_configs.setdefault(key, []).append(config)
-
-        for key, configs in uuid_configs.items():
-            uuid, alias = key
-            # Add alias to combobox and add tuple of uuid and list of
-            # device configs
-            self.cbConfig.addItem(alias, (uuid, configs))
+            # Add simple_name to combobox and add uuid of config
+            self.cbConfig.addItem(config.simple_name, config)
 
         # Make sure the signal is triggered when setting the index below
         self.cbConfig.setCurrentIndex(-1)
-        # Update revisions combobox if configuration changes
+        # Update if configuration changes
         self.cbConfig.currentIndexChanged[int].connect(self.config_changed)
 
     def _get_available_plugins(self, device_server_id):
@@ -129,14 +120,6 @@ class DeviceHandleDialog(QDialog):
         get_topology().visit_system_tree(visitor)
         return sorted(available_plugins)
 
-    def _update_widgets_to_add_config(self):
-        """ Whenever a ``DeviceConfigurationModel`` is added, configuration
-        related widgets need to be made editable or hidden.
-        """
-        self.cbConfig.setEditable(True)
-        self.laVersion.setVisible(False)
-        self.cbVersion.setVisible(False)
-
     def _update_config_widgets(self, dev_config_model):
         """ Update all relevant widgets which show `DeviceConfigurationModel`
         information
@@ -146,33 +129,23 @@ class DeviceHandleDialog(QDialog):
         """
         self._update_plugin_widget(dev_config_model.class_id)
         self.teDescription.setPlainText(dev_config_model.description)
-        index = self.cbVersion.findData(dev_config_model.revision)
-        self.cbVersion.setCurrentIndex(index)
 
     def _update_plugin_widget(self, class_id):
         index = self.cbClass.findText(class_id)
         self.cbClass.setCurrentIndex(index)
 
     def _update_button_box(self, text):
-        """ Only enable Ok button, if title and configuration alias is set"""
+        """Only enable Ok button, if title and configuration is set
+        """
         enabled = (len(self.leTitle.text()) > 0 and
                    len(self.cbConfig.currentText()) > 0)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
     @pyqtSlot(int)
     def config_changed(self, index):
-        uuid, configs = self.cbConfig.itemData(index)
-        self.cbVersion.clear()
-        for conf in configs:
-            alias = conf.alias
-            revision = conf.revision
-            alias = conf.alias
-            self.cbVersion.addItem('{} <{}>'.format(alias, revision), revision)
-
-        if configs:
-            # Update dialog to active configuration data
-            active_config = configs[-1]
-            self._update_config_widgets(active_config)
+        config_model = self.cbConfig.itemData(index)
+        # Update dialog to active configuration data
+        self._update_config_widgets(config_model)
 
     @property
     def instance_id(self):
@@ -189,14 +162,8 @@ class DeviceHandleDialog(QDialog):
     @property
     def active_uuid(self):
         index = self.cbConfig.currentIndex()
-        uuid, configs = self.cbConfig.itemData(index)
-        return uuid
-
-    @property
-    def active_revision(self):
-        index = self.cbVersion.currentIndex()
-        revision = self.cbVersion.itemData(index)
-        return revision
+        config_model = self.cbConfig.itemData(index)
+        return config_model.uuid
 
     @property
     def configuration_name(self):

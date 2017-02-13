@@ -120,8 +120,6 @@ def _db_metadata_reader(metadata):
     """
     attrs = {
         'uuid': metadata['uuid'],
-        'revision': int(metadata['revision']),
-        'alias': metadata['alias'],
         'simple_name': metadata['simple_name'],
         'description': metadata['description'],
     }
@@ -139,8 +137,7 @@ def _check_preexisting(existing, klass, traits):
                'Expected: {}, Got: {}').format(klass, type(existing))
         raise AssertionError(msg)
 
-    if (existing.uuid != traits['uuid'] or
-            existing.revision != traits['revision']):
+    if existing.uuid != traits['uuid']:
         raise AssertionError('Object does not match one read from database!')
 
     existing.trait_set(**traits)
@@ -222,9 +219,7 @@ def _project_reader(io_obj, existing, metadata):
     def _get_items(hsh, type_name):
         klass = _PROJECT_ITEM_TYPES[type_name]
         entries = hsh[type_name]
-        return [klass(uuid=h['uuid'], revision=h['revision'],
-                      initialized=False)
-                for h in entries]
+        return [klass(uuid=h['uuid'], initialized=False) for h in entries]
 
     traits = _db_metadata_reader(metadata)
     project = _check_preexisting(existing, ProjectModel, traits)
@@ -265,8 +260,6 @@ def _model_db_metadata(model):
     """
     attrs = {}
     attrs['uuid'] = model.uuid
-    attrs['revision'] = str(model.revision)
-    attrs['alias'] = model.alias
     attrs['simple_name'] = model.simple_name
     attrs['description'] = model.description
     return attrs
@@ -294,8 +287,7 @@ def _project_writer(model):
     project = Hash()
     for item_type in PROJECT_OBJECT_CATEGORIES:
         objects = getattr(model, item_type)
-        project[item_type] = [Hash('uuid', obj.uuid, 'revision', obj.revision)
-                              for obj in objects]
+        project[item_type] = [Hash('uuid', obj.uuid) for obj in objects]
 
     hsh = Hash(PROJECT_DB_TYPE_PROJECT, project)
     return hsh.encode('XML').decode()
