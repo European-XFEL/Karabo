@@ -585,8 +585,8 @@ namespace karabo {
                             } else {
                                 KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Miss globally called slot " << slotFunction;
                             }
-                        } catch (const Exception& e) {
-                            const std::string msg(e.detailedMsg());
+                        } catch (const std::exception& e) {
+                            const std::string msg(e.what());
                             KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '"
                                     << slotFunction << "': " << msg;
                             replyException(*header, msg);
@@ -1311,11 +1311,20 @@ namespace karabo {
 
 
         void SignalSlotable::addTrackedInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            const boost::optional<const Hash::Node&> beatsNode = instanceInfo.find("heartbeatInterval");
+            std::string sanifiedInstanceId(instanceId);
+            sanifyInstanceId(sanifiedInstanceId);
+            if (!beatsNode || sanifiedInstanceId != instanceId) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Cannot track '" << instanceId << "' since its instanceId is invalid or "
+                        << "its instanceInfo lacks the 'heartbeatInterval': " << instanceInfo;
+                return;
+            }
+
             boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
             Hash h;
             h.set("instanceInfo", instanceInfo);
             // Initialize countdown with the heartbeat interval
-            h.set("countdown", instanceInfo.get<int>("heartbeatInterval"));
+            h.set("countdown", beatsNode->getValue<int>());
             m_trackedInstances.set(instanceId, h);
         }
 
@@ -1538,8 +1547,8 @@ namespace karabo {
                     }
                 }
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "letInstanceSlowlyDieWithoutHeartbeat triggered an exception: " << e;
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "letInstanceSlowlyDieWithoutHeartbeat triggered an exception: " << e.what();
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << "letInstanceSlowlyDieWithoutHeartbeat triggered an unknown exception";
             }
