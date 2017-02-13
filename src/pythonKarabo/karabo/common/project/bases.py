@@ -7,7 +7,7 @@ import uuid
 
 from traits.api import Int, String
 
-from karabo.common.savable import BaseSavableModel
+from karabo.common.api import BaseSavableModel
 from .const import EXISTDB_INITIAL_VERSION
 
 

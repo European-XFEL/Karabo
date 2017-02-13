@@ -8,8 +8,8 @@ from enum import Enum
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QIcon, QPainter, QPixmap
 
+from karabo.common.api import State
 from . import icons
-from karabo.common.states import State
 
 # --------------------------------------------------------------------------
 # Alarms

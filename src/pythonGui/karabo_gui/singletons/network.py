@@ -15,7 +15,7 @@ from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
 from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.authenticator import Authenticator
-from karabo.common.shell_namespace import ShellNamespaceWrapper
+from karabo.common.api import ShellNamespaceWrapper
 from karabo.middlelayer import Hash, BinaryWriter, AccessLevel
 from karabo_gui import background
 from karabo_gui.dialogs.logindialog import LoginDialog

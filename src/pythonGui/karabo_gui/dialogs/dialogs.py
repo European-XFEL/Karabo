@@ -11,7 +11,7 @@ from PyQt4.QtGui import (QDialogButtonBox, QColorDialog, QComboBox, QDialog,
                          QFormLayout, QIcon, QPainter, QPen, QPixmap,
                          QTableWidgetItem)
 
-from karabo.common.project.api import walk_traits_object
+from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabo_gui.singletons.api import get_project_model
 
