@@ -8,10 +8,11 @@ import weakref
 
 from PyQt4.QtGui import QDialog, QMessageBox
 
+from karabo.common.api import walk_traits_object
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     ProjectModel, device_instance_exists, recursive_save_object,
-    read_lazy_object, walk_traits_object
+    read_lazy_object
 )
 from karabo.middlelayer import Hash, read_project_model
 from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,

@@ -1,6 +1,6 @@
 from traits.api import Enum, Instance, Int, Float, List, Range, String
 
-from karabo.common.savable import BaseSavableModel
+from karabo.common.api import BaseSavableModel
 
 
 class BaseLayoutData(BaseSavableModel):

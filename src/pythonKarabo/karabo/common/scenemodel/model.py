@@ -2,10 +2,9 @@ from xml.etree.ElementTree import SubElement
 
 from traits.api import Constant, Dict, Float, Instance, Int, List, String
 
+from karabo.common.api import BaseSavableModel, walk_traits_object
 # avoid karabo.common.project.api due to circular imports...
 from karabo.common.project.bases import BaseProjectObjectModel
-from karabo.common.project.utils import walk_traits_object
-from karabo.common.savable import BaseSavableModel
 from .bases import BaseSceneObjectData
 from .const import (NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT,
                     SCENE_FILE_VERSION)

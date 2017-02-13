@@ -16,7 +16,7 @@ from datetime import datetime
 from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QMessageBox
 
-from karabo.common.states import State
+from karabo.common.api import State
 from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.messagebox import MessageBox

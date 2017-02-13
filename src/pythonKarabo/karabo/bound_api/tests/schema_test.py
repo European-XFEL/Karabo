@@ -6,13 +6,12 @@ from karabo.bound import (
     METER, MICRO, MANDATORY, READ, WRITE, INIT,
     AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
     Hash, Logger, MetricPrefix, NodeType, Schema, Types, Unit, Validator,
-    AlarmCondition
+    AlarmCondition, State
 )
 from .configuration_example_classes import (
     Base, GraphicsRenderer, GraphicsRenderer1, Shape, SomeClass, TestStruct1,
     ArrayContainer
 )
-from karabo.common.states import State
 
 class  Schema_TestCase(unittest.TestCase):
     #def setUp(self):
