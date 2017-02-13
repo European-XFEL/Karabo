@@ -7,9 +7,10 @@ from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import (HasStrictTraits, Bool, Event, Instance, List, Property,
                         on_trait_change)
 
+from karabo.common.api import walk_traits_object
 from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceInstanceModel, ProjectModel,
-    device_instance_exists, walk_traits_object)
+    device_instance_exists)
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.utils import load_project
 from karabo_gui.singletons.api import get_project_model

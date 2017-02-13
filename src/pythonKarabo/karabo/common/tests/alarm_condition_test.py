@@ -1,6 +1,6 @@
 import unittest
 
-from karabo.common.alarm_conditions import AlarmCondition
+from karabo.common.api import AlarmCondition
 
 
 class AlarmCondition_TestCase(unittest.TestCase):
