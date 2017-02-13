@@ -168,6 +168,8 @@ namespace karabo {
 
         DeviceServer::~DeviceServer() {
             stopDeviceServer();
+            KARABO_LOG_FRAMEWORK_TRACE << "DeviceServer::~DeviceServer() dtor : m_logger.use_count()=" << m_logger.use_count();
+            m_logger.reset();
         }
 
 
@@ -184,8 +186,6 @@ namespace karabo {
                 // If not specified, use the local topic for log messages
                 config.set("network.topic", m_topic);
             }
-            // Force injection of connection instead of creating an extra one for the logger
-            config.set("network.connection", m_connection);
 
             Logger::configure(config);
 
