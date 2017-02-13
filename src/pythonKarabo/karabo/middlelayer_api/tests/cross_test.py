@@ -126,10 +126,12 @@ class Tests(DeviceTest):
             yield from proxy.injectSchema()
             self.assertEqual(proxy.word1, "Hello")
             self.assertEqual(proxy.word1.descriptor.description, "The word")
+            self.assertEqual(proxy.injectedNode.number1, 1)
 
         yield from proxy.injectSchema()
         yield from proxy
         self.assertEqual(proxy.word2, "Hello")
+        self.assertEqual(proxy.injectedNode.number2, 2)
 
         yield from proxy.backfire()
         self.assertEqual(self.device.value, 99)
