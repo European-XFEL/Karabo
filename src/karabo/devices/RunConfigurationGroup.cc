@@ -18,6 +18,10 @@ namespace karabo {
 
         void RunControlDataSource::expectedParameters(karabo::util::Schema& expected) {
 
+            OVERWRITE_ELEMENT(expected).key("visibility")
+                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
+                    .commit();
+
             STRING_ELEMENT(expected).key("source")
                     .displayedName("Source")
                     .description("Data source's full name, like SASE1/SPB/SAMP/INJ_CAM_1")
@@ -72,6 +76,10 @@ namespace karabo {
             OVERWRITE_ELEMENT(expected).key("state")
                     .setNewOptions(State::INIT, State::NORMAL, State::ERROR)
                     .setNewDefaultValue(State::INIT)
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("visibility")
+                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
                     .commit();
 
             NODE_ELEMENT(expected).key("group")

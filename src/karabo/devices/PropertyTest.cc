@@ -56,6 +56,10 @@ namespace karabo {
                     .setNewDefaultValue(State::INIT)
                     .commit();
 
+            OVERWRITE_ELEMENT(expected).key("visibility")
+                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
+                    .commit();
+
             BOOL_ELEMENT(expected).key("boolProperty")
                     .displayedName("Bool property")
                     .description("A bool property")
