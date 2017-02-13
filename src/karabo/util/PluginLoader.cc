@@ -117,14 +117,16 @@ namespace karabo {
                             if (m_loadedPlugins.find(plugin) == m_loadedPlugins.end()) {
                                 void* libHandle = dlopen(plugin.c_str(), RTLD_NOW);
                                 if (libHandle == 0) {
-                                    KARABO_LOG_FRAMEWORK_ERROR << "Trouble loading plugin "
+                                    // Exceptionally using plain output here as KARABO_LOG_[...] is potentially
+                                    // not active at the time this message is generated
+                                    cerr << "ERROR Trouble loading plugin "
                                             << it->path().filename()
-                                            << ":\n\t" << string(dlerror()); // dlerror() != 0 since dlopen above failed
+                                            << ":\n\t" << string(dlerror()) << endl; // dlerror() != 0 since dlopen above failed
                                     m_failedPlugins.push_back(plugin);
                                 } else {
                                     m_loadedPlugins[it->path()] = libHandle;
-                                    KARABO_LOG_FRAMEWORK_INFO << "Successfully loaded plugin: "
-                                            << it->path().filename();
+                                    cerr << "INFO  Successfully loaded plugin: "
+                                            << it->path().filename() << endl;
                                     hasNewPlugins = true;
                                 }
                             } else {
