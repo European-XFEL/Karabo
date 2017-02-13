@@ -40,6 +40,10 @@ namespace karabo {
                     .commit();
             //device elements
 
+            OVERWRITE_ELEMENT(expected).key("visibility")
+                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
+                    .commit();
+
             PATH_ELEMENT(expected).key("storagePath")
                     .displayedName("Storage path")
                     .description("Path under which this device will persist its data for recovery")
