@@ -65,8 +65,6 @@ class ProjectManager(PythonDevice):
         self.registerSlot(self.slotEndUserSession)
         self.registerSlot(self.slotSaveItems)
         self.registerSlot(self.slotLoadItems)
-        self.registerSlot(self.slotLoadItemsAndSubs)
-        self.registerSlot(self.slotGetVersionInfo)
         self.registerSlot(self.slotListItems)
         self.registerInitialFunction(self.initialization)
         self.user_db_sessions = {}
@@ -144,7 +142,7 @@ class ProjectManager(PythonDevice):
 
                       - xml: xml of item
                       - uuid: uuid of item
-                      - overwrite: behavior in case of revision conflict
+                      - overwrite: behavior in case of conflict
                       - domain: to write to
 
         :raises: `ProjectDBError` in case of database (connection) problems
@@ -188,8 +186,6 @@ class ProjectManager(PythonDevice):
                       to load. Each list entry should be a Hash containing
 
                       - uuid: the uuid of the item
-                      - revision (optional): the revision to load. Leave empty
-                          if the newest is to be loaded
                       - domain: domain to load item from
 
         :return: a Hash where the keys are the item uuids and values are the
@@ -208,17 +204,15 @@ class ProjectManager(PythonDevice):
         with self.user_db_sessions[token] as db_session:
             # verify that items belong to single domain
             domain = items[0].get("domain")
-            keys = [(it.get('uuid'), it.get('revision')) for it in items
+            keys = [it.get('uuid') for it in items
                     if it.get('domain') == domain]
             assert len(keys) == len(items), "Incorrect domain given!"
-            uuids, revs = zip(*keys)
 
             try:
-                items = db_session.load_item(domain, uuids, revs)
+                items = db_session.load_item(domain, keys)
                 for item in items:
                     h = Hash("domain", domain,
                              "uuid", item["uuid"],
-                             "revision", item["revision"],
                              "xml", item["xml"])
                     loadedItems.append(h)
 
@@ -228,74 +222,6 @@ class ProjectManager(PythonDevice):
         self.reply(Hash('items', loadedItems,
                         'success', success,
                         'reason', exceptionReason))
-
-    def slotLoadItemsAndSubs(self, token, items):
-        """
-        Loads items from the database - including any sub items.
-
-        :param token: database user token
-        :param items: list of Hashes containing information on which items
-                      to load. Each list entry should be a Hash containing
-
-                      - uuid: the uuid of the item
-                      - revision (optional): the revision to load. Leave empty
-                          if the newest is to be loaded
-                      - domain: domain to load item from
-
-        :return: a Hash where the keys are the item uuids and values are the
-                 item XML. If the load failed the value for this uuid is set
-                 to False
-        """
-
-        self.log.DEBUG("Loading multiple: {}"
-                       .format([i.get("uuid") for i in items]))
-
-        self._checkDbInitialized(token)
-
-        loadedItems = []
-        self.reply(Hash('items', loadedItems))
-
-    def slotGetVersionInfo(self, token, items):
-        """
-        Retrieve versioning information from the database for a list of items
-
-        :param token: database user token
-        :param domain: the item is to be found at
-        :param items: list of Hashes containing information on which items
-                      to load. Each list entry should be a Hash containing
-
-                      - uuid: the uuid of the item
-                      - domain: domain to load item from
-
-        :return: A Hash where the keys are the uuid of the item and the values
-                 are Hashes holding the versioning information for this item.
-                 These Hashes are of the form:
-
-                - document: the path of the document
-                - revisions: a list of revisions, where each entry is a dict
-                            with:
-                            * revision: the revision number
-                            * date: the date this revision was added
-                            * user: the user that added this revision
-                            * alias: an alias for the revision. Will return the
-                                     revision number if none is set.
-        """
-
-        self.log.DEBUG("Retrieving version info: {}"
-                       .format([i.get("uuid") for i in items]))
-
-        self._checkDbInitialized(token)
-
-        versionInfos = Hash()
-        with self.user_db_sessions[token] as db_session:
-            for item in items:
-                domain = item.get("domain")
-                uuid = item.get("uuid")
-                vers = db_session.get_versioning_info(domain, uuid)
-                # now convert the dict into a Hash
-                versionInfos.set(uuid, dictToHash(vers))
-
-        self.reply(versionInfos)
 
     def slotListItems(self, token, domain, item_types=None):
         """
@@ -317,9 +243,7 @@ class ProjectManager(PythonDevice):
             try:
                 res = db_session.list_items(domain, item_types)
                 for r in res:
-                    revisions = [dictToHash(rev) for rev in r['revisions']]
                     h = Hash('uuid', r['uuid'],
-                             'revisions', revisions,
                              'item_type', r['item_type'],
                              'simple_name', r['simple_name'])
                     resHashes.append(h)

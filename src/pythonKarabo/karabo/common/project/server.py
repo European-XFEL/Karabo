@@ -58,7 +58,6 @@ def read_device_server(io_obj):
     def _read_device(element, server_id):
         traits = {
             'uuid': element.get('uuid'),
-            'revision': int(element.get('revision')),
             'server_id': server_id,  # Actually transient!
             'initialized': False
         }
@@ -85,7 +84,6 @@ def write_device_server(model):
     def _write_device(obj, parent):
         element = SubElement(parent, PROJECT_DB_TYPE_DEVICE_INSTANCE)
         element.set('uuid', obj.uuid)
-        element.set('revision', str(obj.revision))
 
     root = Element(PROJECT_DB_TYPE_DEVICE_SERVER)
     root.set('server_id', model.server_id)
