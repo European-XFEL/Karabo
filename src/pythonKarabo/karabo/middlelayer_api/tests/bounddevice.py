@@ -8,7 +8,6 @@ from karabo.bound import (
     KILO, METER, MILLI, NODE_ELEMENT, PythonDevice, Schema, SLOT_ELEMENT,
     State, STRING_ELEMENT, TABLE_ELEMENT, Timestamp, Trainstamp, EventLoop)
 
-import threading
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
 class TestDevice(PythonDevice):
@@ -101,9 +100,19 @@ class TestDevice(PythonDevice):
             .description("The word")
             .assignmentOptional().defaultValue("Hello")
             .reconfigurable()
+            .commit(),
+
+            NODE_ELEMENT(schema).key("injectedNode")
+            .commit(),
+
+            DOUBLE_ELEMENT(schema)
+            .key("injectedNode.number{}".format(self.word_no))
+            .assignmentOptional()
+            .noDefaultValue()
             .commit()
         )
         self.updateSchema(schema)
+        self.set("injectedNode.number{}".format(self.word_no), self.word_no)
         self.word_no += 1
 
 

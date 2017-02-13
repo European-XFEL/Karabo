@@ -155,9 +155,21 @@ class Proxy(object):
         for q in self._queues[None]:
             q.put_nowait(hash)
 
+    def _onSchemaUpdated_r(self, cls, instance):
+        instance.__class__ = cls
+        for key in dir(cls):
+            descriptor = getattr(cls, key)
+            if isinstance(descriptor, ProxyNode):
+                value = getattr(instance, key, None)
+                if isinstance(value, SubProxy):
+                    self._onSchemaUpdated_r(descriptor.cls, value)
+                else:
+                    value.__dict__.pop(key, None)
+
     def _onSchemaUpdated(self, schema):
         namespace = _createProxyDict(schema.hash, "")
-        self.__class__ = type(schema.name, (Proxy,), namespace)
+        cls = type(schema.name, (Proxy,), namespace)
+        self._onSchemaUpdated_r(cls, self)
 
     def setValue(self, desc, value):
         self._use()
