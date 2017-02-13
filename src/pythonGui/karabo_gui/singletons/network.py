@@ -44,7 +44,7 @@ class Network(QObject):
         self.username = None
         self.password = None
         self.provider = None
-        self.hostname, self.port = self.load_last_settings()
+        self.hostname, self.port = self.load_settings()
 
     def connectToServer(self):
         """
@@ -54,50 +54,30 @@ class Network(QObject):
 
         dialog = LoginDialog(username=self.username,
                              password=self.password,
-                             provider=self.provider,
-                             hostname=self.hostname,
-                             port=self.port)
+                             provider=self.provider)
 
         if dialog.exec_() == QDialog.Accepted:
-            self.save_settings(dialog.username,
-                               dialog.password,
-                               dialog.provider,
-                               dialog.hostname,
-                               dialog.port)
-
+            self.username = dialog.username
+            self.password = dialog.password
+            self.provider = dialog.provider
             self.startServerConnection()
             isConnected = True
 
         # Update MainWindow toolbar
         self.signalServerConnectionChanged.emit(isConnected)
 
-    def load_last_settings(self):
+    def load_settings(self):
 
-        hostname = None
-        port = None
+        hostname = "localhost"
+        port = 44444
 
         if op.exists(globals.CONFIG_FILE):
             config = ShellNamespaceWrapper(globals.CONFIG_FILE)
             if "KARABO_GUI_HOST" in config:
                 hostname = config["KARABO_GUI_HOST"]
             if "KARABO_GUI_PORT" in config:
-                port = config["KARABO_GUI_PORT"]
-
+                port = int(config["KARABO_GUI_PORT"])
         return (hostname, port)
-
-    def save_settings(self, username, password, provider, hostname, port):
-
-        self.username = username
-        self.password = password
-        self.provider = provider
-        self.hostname = hostname
-        self.port = port
-
-        config = ShellNamespaceWrapper(globals.CONFIG_FILE)
-        config["KARABO_GUI_HOST"] = self.hostname
-        config["KARABO_GUI_PORT"] = self.port
-
-        config.write()
 
     def disconnectFromServer(self):
         """
@@ -118,7 +98,6 @@ class Network(QObject):
         self.tcpSocket.readyRead.connect(self.onReadServerData)
         self.tcpSocket.disconnected.connect(self.onDisconnected)
         self.tcpSocket.error.connect(self.onSocketError)
-
         self.tcpSocket.connectToHost(self.hostname, self.port)
 
     def endServerConnection(self):
