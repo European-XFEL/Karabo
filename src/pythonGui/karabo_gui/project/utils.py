@@ -16,6 +16,7 @@ from karabo.common.project.api import (
 from karabo.middlelayer import Hash, read_project_model
 from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
                                KaraboEventSender)
+import karabo_gui.globals as krb_globals 
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.project_handle import LoadProjectDialog
 from karabo_gui.singletons.api import (get_db_conn, get_project_model,
@@ -219,5 +220,5 @@ def run_macro(macro_model):
     h = Hash("code", macro_model.code,
              "module", macro_model.simple_name,
              "uuid", macro_model.uuid)
-    get_network().onInitDevice("karabo/macroServer", "MetaMacro",
+    get_network().onInitDevice(krb_globals.MACRO_SERVER, "MetaMacro",
                                instance_id, h)

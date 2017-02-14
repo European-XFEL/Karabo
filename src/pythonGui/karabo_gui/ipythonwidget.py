@@ -3,7 +3,6 @@
 # Created on July 9, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 import os
 import pickle
 import socket
@@ -18,8 +17,8 @@ except ImportError:
         as RichJupyterWidget
     from IPython.qt import kernel_mixins, inprocess
 
-
 from karabo.middlelayer import Hash, State
+import karabo_gui.globals as krb_globals
 from karabo_gui.singletons.api import get_network, get_topology
 
 
@@ -63,8 +62,8 @@ class KernelManager(kernel_mixins.QtKernelManagerMixin):
         hostname = socket.gethostname().replace(".", "_")
         network = get_network()
         self.name = "CLI-{}-{}".format(hostname, os.getpid())
-        network.onInitDevice("karabo/macroServer", "IPythonKernel", self.name,
-                             Hash())
+        network.onInitDevice(krb_globals.MACRO_SERVER, "IPythonKernel",
+                             self.name, Hash())
 
     def shutdown_kernel(self):
         network = get_network()

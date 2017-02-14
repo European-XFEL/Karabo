@@ -19,7 +19,7 @@ from karabo.common.shell_namespace import ShellNamespaceWrapper
 from karabo.middlelayer import Hash, BinaryWriter, AccessLevel
 from karabo_gui import background
 from karabo_gui.dialogs.logindialog import LoginDialog
-from karabo_gui import globals
+import karabo_gui.globals as krb_globals
 
 
 class Network(QObject):
@@ -67,16 +67,14 @@ class Network(QObject):
         self.signalServerConnectionChanged.emit(isConnected)
 
     def load_settings(self):
-
         hostname = "localhost"
         port = 44444
 
-        if op.exists(globals.CONFIG_FILE):
-            config = ShellNamespaceWrapper(globals.CONFIG_FILE)
-            if "KARABO_GUI_HOST" in config:
-                hostname = config["KARABO_GUI_HOST"]
-            if "KARABO_GUI_PORT" in config:
-                port = int(config["KARABO_GUI_PORT"])
+        if op.exists(krb_globals.CONFIG_FILE):
+            config = ShellNamespaceWrapper(krb_globals.CONFIG_FILE)
+            hostname = config.get(krb_globals.KARABO_GUI_HOST, hostname)
+            port = int(config.get(krb_globals.KARABO_GUI_PORT, port))
+
         return (hostname, port)
 
     def disconnectFromServer(self):
@@ -129,9 +127,9 @@ class Network(QObject):
             md5 = QCryptographicHash.hash(str(self.password), QCryptographicHash.Md5).toHex()
             if md5 == "39d676ecced45b02da1fb45731790b4c":
                 print("Entering god mode...")
-                globals.GLOBAL_ACCESS_LEVEL = AccessLevel.GOD
+                krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.GOD
             else:
-                globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+                krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
 
         else:
             # Construct Authenticator class
@@ -150,7 +148,7 @@ class Network(QObject):
                 ok = self.authenticator.login()
             except Exception as e:
                 # TODO Fall back to inbuild access level
-                globals.GLOBAL_ACCESS_LEVEL = globals.KARABO_DEFAULT_ACCESS_LEVEL
+                krb_globals.GLOBAL_ACCESS_LEVEL = krb_globals.KARABO_DEFAULT_ACCESS_LEVEL
                 print("Login problem. Please verify, if service is running. " + str(e))
 
                 # Inform the mainwindow to change correspondingly the allowed level-downgrade
@@ -160,12 +158,12 @@ class Network(QObject):
                 return
 
             if ok:
-                globals.GLOBAL_ACCESS_LEVEL = \
-                    AccessLevel(self.authenticator.defaultAccessLevelId)
+                krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel(
+                    self.authenticator.defaultAccessLevelId)
             else:
                 print("Login failed")
                 self.onSocketError(QAbstractSocket.ConnectionRefusedError)
-                # globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+                # krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
                 return
 
         # Inform the mainwindow to change correspondingly the allowed level-downgrade
@@ -526,7 +524,7 @@ class Network(QObject):
         loginInfo.set("sessionToken", sessionToken)
         loginInfo.set("host", socket.gethostname())
         loginInfo.set("pid", QCoreApplication.applicationPid())
-        loginInfo.set("version", globals.GUI_VERSION)
+        loginInfo.set("version", krb_globals.GUI_VERSION)
         self._tcpWriteHash(loginInfo)
 
     def _handleBrokerInformation(self, host, port, topic):
