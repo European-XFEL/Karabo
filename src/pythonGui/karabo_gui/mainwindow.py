@@ -13,7 +13,7 @@ from PyQt4.QtGui import (QAction, QActionGroup, QColor, QMainWindow, QMenu,
                          QSplitter, QToolButton, qApp)
 
 import karabo_gui.icons as icons
-from karabo.common.project.api import walk_traits_object
+from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabo.middlelayer import AccessLevel
 from karabo_gui import globals
