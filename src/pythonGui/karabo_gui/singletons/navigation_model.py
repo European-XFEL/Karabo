@@ -13,7 +13,7 @@ from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 from traits.api import HasStrictTraits, String, WeakRef
 
-from karabo.common.states import State
+from karabo.common.api import State
 from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
                                register_for_broadcasts)
 import karabo_gui.globals as krb_globals

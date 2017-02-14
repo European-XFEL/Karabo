@@ -3,7 +3,7 @@ import hashlib
 
 from traits.api import Instance
 
-from karabo.common.savable import BaseSavableModel
+from karabo.common.api import BaseSavableModel
 
 # Hey Code Reviewers! Be sure to ask questions when this value changes!
 EXPECTED_HASH = "ffd6fab585e5e54d842b410ab2b1d8c30ee13f9339a592404da268a9c48aab1b"  # noqa

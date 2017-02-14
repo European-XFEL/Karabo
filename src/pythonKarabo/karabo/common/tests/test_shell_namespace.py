@@ -1,7 +1,7 @@
 from nose.tools import assert_raises
 
+from karabo.common.api import ShellNamespaceWrapper
 from karabo.testing.utils import temp_xml_file
-from ..shell_namespace import ShellNamespaceWrapper
 
 SHELL_SCRIPT = """
 #! /usr/bin/sh

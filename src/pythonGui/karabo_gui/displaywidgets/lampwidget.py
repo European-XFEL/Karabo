@@ -3,8 +3,7 @@ import os.path
 
 from PyQt4.QtGui import QLabel, QPixmap
 
-from karabo.common.states import State
-from karabo.middlelayer import String
+from karabo.middlelayer import State, String
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 from karabo_gui import icons
 from karabo_gui.util import generateObjectName

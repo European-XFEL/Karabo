@@ -9,8 +9,7 @@ from PyQt4.QtGui import (QPixmap, QDialog, QListView, QStandardItemModel,
                          QStandardItem, QIcon)
 from PyQt4.QtSvg import QSvgWidget
 
-from karabo.common.states import State
-from karabo.middlelayer import String
+from karabo.middlelayer import State, String
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget

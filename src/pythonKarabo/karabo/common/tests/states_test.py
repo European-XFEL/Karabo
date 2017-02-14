@@ -1,6 +1,6 @@
 import unittest
 
-from karabo.common.states import State, StateSignifier
+from karabo.common.api import State, StateSignifier
 
 
 class States_TestCase(unittest.TestCase):

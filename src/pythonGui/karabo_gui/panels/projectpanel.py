@@ -8,8 +8,8 @@ from functools import partial
 from PyQt4.QtCore import QSize
 from PyQt4.QtGui import QAction, QDialog, QSizePolicy, QStackedLayout, QWidget
 
+from karabo.common.api import set_modified_flag
 from karabo.common.project.api import ProjectModel
-from karabo.common.savable import set_modified_flag
 from karabo.middlelayer import OldProject, convert_old_project
 from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (

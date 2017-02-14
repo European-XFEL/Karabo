@@ -1,6 +1,5 @@
-from karabo.common.project.api import (
-    MacroModel, ProjectModel, walk_traits_object
-)
+from karabo.common.api import walk_traits_object
+from karabo.common.project.api import MacroModel, ProjectModel
 
 
 def test_project_modified_obj_check():

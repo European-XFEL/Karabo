@@ -5,8 +5,8 @@
 #############################################################################
 from io import StringIO
 
+from karabo.common.api import walk_traits_object
 from .bases import BaseProjectObjectModel
-from .utils import walk_traits_object
 
 
 def read_lazy_object(domain, uuid, revision, db_iface, reader, existing=None):
