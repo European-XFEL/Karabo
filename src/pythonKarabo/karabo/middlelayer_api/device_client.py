@@ -155,9 +155,23 @@ class Proxy(object):
         for q in self._queues[None]:
             q.put_nowait(hash)
 
+    def _onSchemaUpdated_r(self, cls, instance):
+        instance.__class__ = cls
+        for key in dir(cls):
+            descriptor = getattr(cls, key)
+            if isinstance(descriptor, ProxyNode):
+                value = getattr(instance, key, None)
+                if isinstance(value, SubProxy):
+                    self._onSchemaUpdated_r(descriptor.cls, value)
+                else:
+                    # something became a Node which wasn't one before.
+                    # simply delete it to start anew at the next change
+                    value.__dict__.pop(key, None)
+
     def _onSchemaUpdated(self, schema):
         namespace = _createProxyDict(schema.hash, "")
-        self.__class__ = type(schema.name, (Proxy,), namespace)
+        cls = type(schema.name, (Proxy,), namespace)
+        self._onSchemaUpdated_r(cls, self)
 
     def setValue(self, desc, value):
         self._use()
@@ -312,8 +326,25 @@ class ProxyNode(Descriptor):
 class SubProxy(object):
     _parent = Weak()
 
-    def __getattr__(self, attr):
-        return getattr(self._parent, attr)
+    def _use(self):
+        return self._parent._use()
+
+    def setValue(self, desc, value):
+        return self._parent.setValue(desc, value)
+
+    def _raise_on_death(self, future):
+        return self._parent._raise_on_death(future)
+
+    def _update(self):
+        return self._parent._update()
+
+    @property
+    def _device(self):
+        return self._parent._device
+
+    @property
+    def _deviceId(self):
+        return self._parent._deviceId
 
     @classmethod
     def __dir__(cls):
