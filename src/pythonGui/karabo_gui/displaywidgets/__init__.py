@@ -30,6 +30,7 @@ __all__ = [
     "lampwidget",
     "monitor",
     "popup",
+    "singlebit",
     "xyplot",
     "xyvectors",
     "imagewidgets",
