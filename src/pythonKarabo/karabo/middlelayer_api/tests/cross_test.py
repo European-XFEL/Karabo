@@ -8,6 +8,7 @@ import os.path
 from subprocess import PIPE
 import sys
 from unittest import main
+from zlib import adler32
 
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, background, Configurable, Device,
@@ -62,10 +63,26 @@ class Tests(DeviceTest):
             self.fail("process didn't properly go down")
 
     @async_tst
+    def test_schema(self):
+        self.process = yield from create_subprocess_exec(
+            sys.executable, "-m", "karabo.bound_api.launcher",
+            "schema", "karabo.bound_device_test", "TestDevice",
+            stdout=PIPE)
+        schema = yield from self.process.stdout.read()
+        yield from self.process.wait()
+        self.assertEqual(adler32(schema), 1095563987,
+            "The generated schema changed. If this is desired, change the "
+            "checksum in the code.")
+
+    @async_tst
     def test_cross(self):
         # it takes typically 2 s for the bound device to start
         self.process = yield from create_subprocess_exec(
-             sys.executable, "bounddevice.py")
+            sys.executable, "-m", "karabo.bound_api.launcher",
+            "run", "karabo.bound_device_test", "TestDevice",
+            stdin=PIPE)
+        self.process.stdin.write(b"<_deviceId_>boundDevice</_deviceId_>")
+        self.process.stdin.close()
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
                          "didn't receive initial value from bound device")

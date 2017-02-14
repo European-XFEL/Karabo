@@ -127,6 +127,9 @@ if __name__ == '__main__':
             'karabo.middlelayer_device': [
                 'IPythonKernel=karabo.middlelayer_api.ipython:IPythonKernel',
                 'MetaMacro=karabo.middlelayer_api.metamacro:MetaMacro'
+            ],
+            'karabo.bound_device_test': [
+                'TestDevice=karabo.middlelayer_api.tests.bounddevice:TestDevice'
             ]
         },
     )
