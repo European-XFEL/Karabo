@@ -5,7 +5,8 @@
 #############################################################################
 
 from PyQt4.QtCore import pyqtSignal, QMimeData, QPoint, QRect, Qt
-from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
+from PyQt4.QtGui import (QAbstractItemView, QCursor, QHeaderView, QMenu,
+                         QTreeWidget)
 
 from karabo_gui.components import (BaseComponent, EditableApplyLaterComponent,
                                    EditableNoApplyComponent)
@@ -36,6 +37,8 @@ class ParameterTreeWidget(QTreeWidget):
 
         self.model().setSupportedDragActions(Qt.CopyAction)
         self.setDragEnabled(True)
+
+        self.header().setResizeMode(QHeaderView.ResizeToContents)
 
     def clear(self):
         """The components in the tree are children of this widget.
