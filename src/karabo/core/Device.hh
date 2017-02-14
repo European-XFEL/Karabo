@@ -465,13 +465,7 @@ namespace karabo {
              * @param data Hash with the data
              */
             void writeChannel(const std::string& channelName, const karabo::util::Hash& data) {
-                using namespace karabo::xms;
-                OutputChannel::Pointer channel = this->getOutputChannel(channelName);
-                // Provide proper meta data information, as well as correct train- and timestamp
-                OutputChannel::MetaData meta(/*source*/ m_instanceId + ":" + channelName,
-                                             /*timestamp*/ getActualTimestamp());
-                channel->write(data, meta);
-                channel->update();
+                this->writeChannel(channelName, data, this->getActualTimestamp());
             }
 
             /**
