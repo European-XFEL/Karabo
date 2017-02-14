@@ -83,7 +83,7 @@ class MacroController(BaseProjectGroupController):
         save_as_action = QAction('Save As...', menu)
         save_as_action.triggered.connect(self._save_macro_to_file)
         run_action = QAction('Run', menu)
-        run_action.triggered.connect(self._run_macro)
+        run_action.triggered.connect(partial(run_macro, self.model))
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
@@ -228,9 +228,6 @@ class MacroController(BaseProjectGroupController):
 
         with open(fn, 'w') as fout:
             fout.write(write_macro(macro))
-
-    def _run_macro(self):
-        run_macro(self.model)
 
 
 # ----------------------------------------------------------------------
