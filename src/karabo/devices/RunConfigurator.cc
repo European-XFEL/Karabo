@@ -20,6 +20,10 @@ namespace karabo {
 
         void RunConfigurator::expectedParameters(Schema& expected) {
 
+            OVERWRITE_ELEMENT(expected).key("visibility")
+                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
+                    .commit();
+
             SLOT_ELEMENT(expected).key("buildConfigurationInUse")
                     .displayedName("Push to DAQ")
                     .description("Push current configuration structure to the DAQ Run controller.")
