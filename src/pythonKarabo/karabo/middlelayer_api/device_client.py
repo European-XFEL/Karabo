@@ -164,6 +164,8 @@ class Proxy(object):
                 if isinstance(value, SubProxy):
                     self._onSchemaUpdated_r(descriptor.cls, value)
                 else:
+                    # something became a Node which wasn't one before.
+                    # simply delete it to start anew at the next change
                     value.__dict__.pop(key, None)
 
     def _onSchemaUpdated(self, schema):
