@@ -5,6 +5,7 @@ from PyQt4.QtGui import QAction, QCheckBox, QInputDialog
 
 from karabo.middlelayer import Integer
 from karabo_gui.widget import DisplayWidget
+from .unitlabel import add_unit_label
 
 
 class SingleBit(DisplayWidget):
@@ -13,14 +14,15 @@ class SingleBit(DisplayWidget):
 
     def __init__(self, box, parent):
         super(SingleBit, self).__init__(box)
-        self.widget = QCheckBox(parent)
+        self._internal_widget = QCheckBox(parent)
+        self.widget = add_unit_label(box, self._internal_widget, parent=parent)
         action = QAction("Change Bit...", self.widget)
         action.triggered.connect(self.onChangeBit)
         self.widget.addAction(action)
         self.bit = 0
 
     def setReadOnly(self, ro):
-        self.widget.setEnabled(not ro)
+        self._internal_widget.setEnabled(not ro)
 
     @pyqtSlot()
     def onChangeBit(self):
@@ -40,7 +42,8 @@ class SingleBit(DisplayWidget):
             self.valueChanged(self.boxes[0], self.boxes[0].value)
 
     def valueChanged(self, box, value, timestamp=None):
-        self.widget.setChecked((value >> self.bit) & 1 != 0)
+        self.widget.updateLabel(box)
+        self._internal_widget.setChecked((value >> self.bit) & 1 != 0)
 
     def _setBit(self, bit):
         """ Give derived classes a place to respond to changes. """
