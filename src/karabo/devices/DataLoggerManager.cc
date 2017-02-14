@@ -68,7 +68,7 @@ namespace karabo {
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue(4)
+                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("archive")
