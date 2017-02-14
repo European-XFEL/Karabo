@@ -1,6 +1,6 @@
 from traits.api import HasTraits, HasStrictTraits, Dict, Instance, List
 
-from karabo.common.savable import BaseSavableModel, set_modified_flag
+from karabo.common.api import BaseSavableModel, set_modified_flag
 
 
 class Plain(HasStrictTraits):

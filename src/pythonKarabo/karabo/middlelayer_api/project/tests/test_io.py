@@ -6,11 +6,11 @@ from tempfile import TemporaryDirectory
 from nose.tools import assert_raises
 from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 
+from karabo.common.api import set_modified_flag, walk_traits_object
 from karabo.common.project.api import (
     BaseProjectObjectModel, MacroModel, ProjectDBCache, ProjectModel,
-    read_lazy_object, recursive_save_object, walk_traits_object
+    read_lazy_object, recursive_save_object
 )
-from karabo.common.savable import set_modified_flag
 from ..api import (
     convert_old_project, OldProject, read_project_model, write_project_model
 )

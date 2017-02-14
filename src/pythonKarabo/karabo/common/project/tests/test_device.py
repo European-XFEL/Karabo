@@ -2,9 +2,10 @@ from uuid import uuid4
 
 from traits.api import pop_exception_handler, push_exception_handler
 
+from karabo.common.api import walk_traits_object
 from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
-    read_device, write_device, walk_traits_object
+    read_device, write_device
 )
 from karabo.testing.utils import temp_xml_file, xml_is_equal
 
