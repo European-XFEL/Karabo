@@ -10,28 +10,31 @@ from sys import platform
 from karabo.middlelayer import AccessLevel
 from ._version import version as GUI_VERSION, full_version as GUI_VERSION_LONG
 
-# TODO Karabo will support an global access level and an excpetion list which is deviceId specific
-# This requires a function like in SignalSlotable: getAccessLevel(deviceId) in the end
+# TODO Karabo will support an global access level and an exception list which
+# is deviceId specific.
+# This requires a function like in SignalSlotable: getAccessLevel(deviceId) in
+# the end
+
+KARABO_GUI_HOST = 'KARABO_GUI_HOST'
+KARABO_GUI_PORT = 'KARABO_GUI_PORT'
 
 GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
-#KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.OBSERVER  # Inside XFEL
+# KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.OBSERVER  # Inside XFEL
 KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.ADMIN  # Outside XFEL
 
 # Hidden karabo folder which includes certain karabo related files
-if platform.startswith("win"):
-    HIDDEN_KARABO_FOLDER = path.join(environ['APPDATA'], "karabo")
-else:
-    HIDDEN_KARABO_FOLDER = path.join(environ['HOME'], ".karabo")
-# Project folder
-KARABO_PROJECT_FOLDER = path.join(HIDDEN_KARABO_FOLDER, "projects")
-
-if platform.startswith("win"):
+if platform.startswith('win'):
+    HIDDEN_KARABO_FOLDER = path.join(environ['APPDATA'], 'karabo')
     KARABO_CONFIG_FOLDER = HIDDEN_KARABO_FOLDER
 else:
-    KARABO_CONFIG_FOLDER = path.join(environ['KARABO'], "var", "config")
+    HIDDEN_KARABO_FOLDER = path.join(environ['HOME'], '.karabo')
+    KARABO_CONFIG_FOLDER = path.join(environ['KARABO'], 'var', 'config')
+# Project folder
+KARABO_PROJECT_FOLDER = path.join(HIDDEN_KARABO_FOLDER, 'projects')
 
-CONFIG_FILE = path.join(KARABO_CONFIG_FOLDER, "config")
+CONFIG_FILE = path.join(KARABO_CONFIG_FOLDER, 'config')
 
+MACRO_SERVER = 'karabo/macroServer'
 
 MAX_INT8 = (2**7)-1
 MIN_INT8 = -(2**7)
@@ -43,13 +46,12 @@ MIN_INT16 = -(2**15)
 
 MAX_UINT16 = (2**16)-1
 
-MAX_INT32 = (2**31)-1 # 0x7fffffff
-MIN_INT32 = -(2**31) # -0x80000000
+MAX_INT32 = (2**31)-1  # 0x7fffffff
+MIN_INT32 = -(2**31)  # -0x80000000
 
-MAX_UINT32 = (2**32)-1 # 0xffffffff
+MAX_UINT32 = (2**32)-1  # 0xffffffff
 
 MAX_INT64 = (2**63)-1
 MIN_INT64 = -(2**63)
 
 MAX_UINT64 = (2**64)-1
-
