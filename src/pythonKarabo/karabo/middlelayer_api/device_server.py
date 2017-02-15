@@ -69,6 +69,12 @@ class DeviceServer(SignalSlotable):
         assignment=Assignment.OPTIONAL, defaultValue="",
         requiredAccessLevel=AccessLevel.EXPERT)
 
+    bannedClasses = VectorString(
+        displayedName="Banned Classes",
+        description="Device classes banned from scanning "
+                     "as they made problems",
+        defaultValue=[], requiredAccessLevel=AccessLevel.EXPERT)
+
     scanPluginsTask = None
 
     @Bool(
@@ -180,11 +186,11 @@ class DeviceServer(SignalSlotable):
     def scanBoundsOnce(self):
         changes = False
         classes = set(self.deviceClasses)
-        self.class_ban = set()
+        class_ban = set(self.bannedClasses.value)
         entrypoints = self.pluginLoader.list_plugins(self.boundNamespace)
         for ep in entrypoints:
             if (ep.name in self.bounds or (classes and ep.name not in classes)
-                  or ep.name in self.class_ban):
+                  or ep.name in class_ban):
                 continue
             try:
                 env = dict(os.environ)
@@ -202,10 +208,10 @@ class DeviceServer(SignalSlotable):
                 self.bounds[ep.name] = Hash.decode(schema, "XML")[ep.name]
                 changes = True
             except Exception:
-                self.class_ban.add(ep.name)
+                class_ban.add(ep.name)
                 self.logger.exception('Cannot load bound plugin "%s"', ep.name)
+        self.bannedClasses = list(class_ban)
         return changes
-
 
     def errorFoundAction(self, m1, m2):
         self.log.ERROR("{} -- {}".format(m1, m2))
