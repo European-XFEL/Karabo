@@ -147,7 +147,8 @@ class AlarmModel(QAbstractTableModel):
                 else:
                     self.allEntries.append(alarmEntry)
             elif upType in REMOVE_ALARM_TYPES:
-                self.allEntries.pop(entryIndex)
+                if self.allEntries:
+                    self.allEntries.pop(entryIndex)
         self.updateFilter()
 
     def updateFilter(self, **params):

@@ -13,12 +13,12 @@ from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 from traits.api import HasStrictTraits, String, WeakRef
 
-from karabo.common.api import State
 from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
                                register_for_broadcasts)
 import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
-from karabo_gui.indicators import ALARM_ICONS, get_state_icon, NONE
+from karabo_gui.indicators import (get_alarm_icon,
+                                   get_state_icon_for_status)
 from karabo_gui.singletons.api import get_topology
 
 
@@ -236,13 +236,10 @@ class NavigationTreeModel(QAbstractItemModel):
                     return icons.deviceInstance
         elif column == 1 and role == Qt.DecorationRole:
             if hierarchyLevel == 3:
-                state = State.ERROR if node.status == 'error' else State.ACTIVE
-                # XXX: Maybe show more color options in the future
-                return get_state_icon(state)
+                return get_state_icon_for_status(node.status)
         elif column == 2 and role == Qt.DecorationRole:
             if hierarchyLevel == 3:
-                if node.alarm_type is not None and node.alarm_type != NONE:
-                    return ALARM_ICONS[node.alarm_type].icon
+                return get_alarm_icon(node.alarm_type)
 
     def flags(self, index):
         """Reimplemented function of QAbstractItemModel.
@@ -320,11 +317,11 @@ class NavigationTreeModel(QAbstractItemModel):
         if index is not None and index.isValid():
             assert index.internalPointer().monitoring != monitoring
             index.internalPointer().monitoring = monitoring
-            self.dataChanged.emit(index, index)
+            self.layoutChanged.emit()
 
     def _updateAlarmIndicators(self, device_id, alarm_type):
         index = self.findIndex(device_id)
         if index is not None and index.isValid():
             node = index.internalPointer()
             node.alarm_type = alarm_type
-            self.dataChanged.emit(index, index)
+            self.layoutChanged.emit()
