@@ -42,6 +42,26 @@ ALARM_ICONS = {
 }
 
 
+def get_alarm_icon(alarm_type):
+    """A `QIcon` for the given `alarm_type` is returned.
+    """
+    alarm_icon = ALARM_ICONS.get(alarm_type)
+    if alarm_icon is not None:
+        return alarm_icon.icon
+
+
+def get_alarm_pixmap(alarm_type, extent=16):
+    """A `QPixmap` for the given `alarm_type` is returned.
+
+    `extent` sets the size of the pixmap. The pixmap might be smaller than
+    requested, but never larger.
+    """
+    if alarm_type is not None and alarm_type != NONE:
+        icon = get_alarm_icon(alarm_type)
+        if icon is not None:
+            return icon.pixmap(extent)
+
+
 # --------------------------------------------------------------------------
 # Mapping states to colors
 
@@ -130,6 +150,25 @@ def _create_state_icon(color):
         painter.setPen(pen)
         painter.drawRect(0, 0, width-pen_width, height-pen_width)
         return QIcon(pix)
+
+
+def get_state_icon_for_status(status_str):
+    """Return a state icon which reflects the given ``status_str``
+    """
+    unknown_statuses = (DeviceStatus.STATUS_OFFLINE.value,
+                        DeviceStatus.STATUS_REQUESTED.value,
+                        DeviceStatus.STATUS_DEAD.value,
+                        DeviceStatus.STATUS_NOSERVER.value,
+                        DeviceStatus.STATUS_NOPLUGIN.value,
+                        DeviceStatus.STATUS_INCOMPATIBLE.value,
+                        DeviceStatus.STATUS_MISSING.value)
+    if status_str in unknown_statuses:
+        return None
+
+    error = DeviceStatus.STATUS_ERROR.value
+    state = State.ERROR if status_str == error else State.ACTIVE
+    # XXX: Maybe show more color options in the future
+    return get_state_icon(state)
 
 
 # --------------------------------------------------------------------------
