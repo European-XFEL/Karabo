@@ -12,11 +12,12 @@ from numpy import log10, ndarray, number
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLabel
 
+from karabo.middlelayer import (Double, Float, String, Simple, Type, HashType,
+                                VectorDouble, VectorFloat, VectorHash)
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA, WIDGET_MIN_HEIGHT
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
-from karabo.middlelayer import (Double, Float, String, Simple, Type, HashType,
-                                VectorDouble, VectorFloat, VectorHash)
+from .unitlabel import add_unit_label
 
 
 class ErrorState(Enum):
@@ -30,20 +31,21 @@ class ErrorState(Enum):
 class DisplayLabel(DisplayWidget):
     category = String, Simple
     alias = "Value Field"
-  
+
     def __init__(self, box, parent):
         super(DisplayLabel, self).__init__(box)
 
         self.value = None
 
-        self.widget = QLabel(parent)
-        self.widget.setAutoFillBackground(True)
-        self.widget.setAlignment(Qt.AlignCenter)
-        self.widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        self.widget.setWordWrap(True)
+        self._internal_widget = QLabel(parent)
+        self._internal_widget.setAutoFillBackground(False)
+        self._internal_widget.setAlignment(Qt.AlignCenter)
+        self._internal_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        self._internal_widget.setWordWrap(True)
+        self.widget = add_unit_label(box, self._internal_widget, parent=parent)
 
         objectName = generateObjectName(self)
-        self._styleSheet = ("QLabel#{}".format(objectName) +
+        self._styleSheet = ("QWidget#{}".format(objectName) +
                             " {{ background-color : rgba{}; }}")
         self.widget.setObjectName(objectName)
         self.inError = False
@@ -62,8 +64,8 @@ class DisplayLabel(DisplayWidget):
         else:
             state = self.errorState
 
-        ss = self._styleSheet.format(state.value)
-        self.widget.setStyleSheet(ss)
+        sheet = self._styleSheet.format(state.value)
+        self.widget.setStyleSheet(sheet)
 
     def __checkAlarms(self, desc, value):
         if ((desc.alarmLow is not None and value < desc.alarmLow) or
@@ -77,13 +79,14 @@ class DisplayLabel(DisplayWidget):
         self.setBackground()
 
     def valueChanged(self, box, value, timestamp=None):
-        desc = box.descriptor
+        self.widget.updateLabel(box)
 
+        desc = box.descriptor
         self.__checkAlarms(desc, value)
 
         if (not isinstance(desc, Type)
-            or isinstance(desc, (HashType, VectorHash))):
-            return # only simple types can be shown here
+                or isinstance(desc, (HashType, VectorHash))):
+            return  # only simple types can be shown here
 
         if value is None:
             return
@@ -93,7 +96,7 @@ class DisplayLabel(DisplayWidget):
         if isinstance(value, str):
             # Make sure that long binary data (e.g. image) is not shown,
             # Otherwise slowness is the case
-            self.widget.setText(value[:255])
+            self._internal_widget.setText(value[:255])
             return
         elif isinstance(value, bytes):
             return
@@ -104,9 +107,10 @@ class DisplayLabel(DisplayWidget):
         except (TypeError, KeyError):
             abserr = desc.absoluteError
             relerr = desc.relativeError
-            if relerr is not None and (abserr is None or
+            if (relerr is not None and
+                    (abserr is None or
                      not isinstance(value, (Number, number)) or
-                     relerr * value > abserr):
+                     relerr * value > abserr)):
                 format = "{{:.{}g}}".format(
                             -int(log10(desc.relativeError)))
             elif abserr is not None:
@@ -134,4 +138,4 @@ class DisplayLabel(DisplayWidget):
         else:
             ret = format.format(value)
 
-        self.widget.setText(ret)
+        self._internal_widget.setText(ret)

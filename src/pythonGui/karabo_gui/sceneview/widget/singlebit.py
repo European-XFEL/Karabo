@@ -1,4 +1,4 @@
-from karabo_gui.editablewidgets.singlebit import SingleBit
+from karabo_gui.displaywidgets.singlebit import SingleBit
 from .base import BaseWidgetContainer
 
 
