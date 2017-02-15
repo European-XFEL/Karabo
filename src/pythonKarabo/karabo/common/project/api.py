@@ -5,7 +5,7 @@ from .const import (
     PROJECT_DB_TYPE_DEVICE_INSTANCE, PROJECT_DB_TYPE_DEVICE_CONFIG,
     PROJECT_DB_TYPE_DEVICE_SERVER, PROJECT_DB_TYPE_MACRO,
     PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
-    PROJECT_OBJECT_CATEGORIES, EXISTDB_INITIAL_VERSION
+    PROJECT_OBJECT_CATEGORIES
 )
 from .device import DeviceInstanceModel, read_device, write_device
 from .device_config import DeviceConfigurationModel

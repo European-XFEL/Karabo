@@ -5,10 +5,9 @@
 #############################################################################
 import uuid
 
-from traits.api import Int, String
+from traits.api import String
 
 from karabo.common.api import BaseSavableModel
-from .const import EXISTDB_INITIAL_VERSION
 
 
 class BaseProjectObjectModel(BaseSavableModel):
@@ -22,18 +21,7 @@ class BaseProjectObjectModel(BaseSavableModel):
     description = String
 
     # Version and unique id
-    revision = Int(EXISTDB_INITIAL_VERSION, transient=True)
     uuid = String
-    # Per-revision alias (for the humans!)
-    alias = String(transient=True)
-
-    def _modified_changed(self):
-        """When an object is modified, increment its revision number. Ignore
-        modified flips if `initialized` is not yet True.
-        """
-        # XXX: This is temporarily disabled to avoid problems with versioning!
-        # if self.initialized and self.modified:
-        #     self.revision += 1
 
     def _uuid_default(self):
         """If a uuid isn't supplied, generate one
@@ -53,8 +41,7 @@ class BaseProjectObjectModel(BaseSavableModel):
             self.uuid = old
             raise
 
-    def reset_uuid_and_version(self):
-        """Reset the ``uuid`` and ``revision``
+    def reset_uuid(self):
+        """Reset the ``uuid``
         """
-        self.revision = EXISTDB_INITIAL_VERSION
         self.uuid = str(uuid.uuid4())

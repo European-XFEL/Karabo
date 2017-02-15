@@ -258,10 +258,6 @@ namespace karabo {
                         onProjectSaveItems(channel, info);
                     } else if (type == "projectLoadItems") {
                         onProjectLoadItems(channel, info);
-                    } else if (type == "projectLoadItemsAndSubs") {
-                        onProjectLoadItemsAndSubs(channel, info);
-                    } else if (type == "projectGetVersionInfo") {
-                        onProjectGetVersionInfo(channel, info);
                     } else if (type == "projectListProjectManagers") {
                         onProjectListProjectManagers(channel, info);
                     } else if (type == "projectListItems") {
@@ -1348,36 +1344,6 @@ namespace karabo {
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectLoadItems", _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectLoadItems(): " << e.userFriendlyMsg();
-            }
-        }
-
-
-        void GuiServerDevice::onProjectLoadItemsAndSubs(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectLoadItemsAndSubs : info ...\n" << info;
-                const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectLoadItemsAndSubs")) return;
-                const std::string& token = info.get<std::string>("token");
-                const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
-                request(projectManager, "slotLoadItemsAndSubs", token, items)
-                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectLoadItemsAndSubs", _1));
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectLoadItemsAndSubs(): " << e.userFriendlyMsg();
-            }
-        }
-
-
-        void GuiServerDevice::onProjectGetVersionInfo(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectGetVersionInfo : info ...\n" << info;
-                const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectGetVersionInfo")) return;
-                const std::string& token = info.get<std::string>("token");
-                const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
-                request(projectManager, "slotGetVersionInfo", token, items)
-                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectGetVersionInfo", _1));
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectGetVersionInfo(): " << e.userFriendlyMsg();
             }
         }
 

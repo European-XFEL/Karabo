@@ -1,7 +1,9 @@
 import os
-from unittest import TestCase
+from multiprocessing import Process
 from threading import Thread
 from time import sleep
+from unittest import TestCase
+from uuid import uuid4
 
 from karabo.bound import (EventLoop, Hash, DeviceServer, DeviceClient,
                           SignalSlotable)
@@ -9,7 +11,7 @@ from karabo.common.states import State
 from karabo.project_db.project_database import ProjectDatabase
 from karabo.project_db.tests.test_projectDatabase import create_hierarchy
 
-from multiprocessing import Process
+UUIDS = [str(uuid4()) for i in range(5)]
 
 
 class TestProjectManager(TestCase):
@@ -23,47 +25,24 @@ class TestProjectManager(TestCase):
         with ProjectDatabase(self._user, self._password, server='localhost',
                              test_mode=True) as db:
             # create a device server and multiple config entries
-            xml_reps = ['<test uuid="0">foo</test>',
-                        '<test uuid="1">goo</test>',
-                        '<test uuid="2">hoo</test>',
-                        '<test uuid="3">nope</test>']
+            xml_reps = ['<test uuid="{0}">foo</test>'.format(UUIDS[0]),
+                        '<test uuid="{0}">goo</test>'.format(UUIDS[1]),
+                        '<test uuid="{0}">hoo</test>'.format(UUIDS[2]),
+                        '<test uuid="{0}">nope</test>'.format(UUIDS[3])]
 
-            for i, rep in enumerate(xml_reps):
-                success, meta = db.save_item('LOCAL', 'testconfig{}'
-                                             .format(i), rep)
+            for rep, uuid in zip(xml_reps, UUIDS):
+                success, meta = db.save_item('LOCAL', uuid, rep)
                 self.assertTrue(success)
 
-            # we do this twice to have revision info ready
-            for i, rep in enumerate(xml_reps):
-                success, meta = db.save_item('LOCAL', 'testconfig{}'
-                                             .format(i), rep)
-                self.assertTrue(success)
-
-            # get version info for what we inserted
-            revisions = []
-            for i in range(3):
-                path = "{}/LOCAL/testconfig{}"\
-                        .format(db.root, i)
-                v = db.get_versioning_info(path)
-                revisions.append(v['revisions'][-1]['revision'])
-
-            xml_serv = """
-                      <testserver uuid='testserver_m'>
-                      <configs>
-                      """
+            xml_serv = '<testserver uuid="{0}"><configs>'.format(UUIDS[4])
 
             for i in range(3):
-                xml_serv += '<configuration uuid="{}" revision="{}"/>'\
-                            .format(i, revisions[i])
+                xml_serv += '<configuration uuid="{0}" />'.format(UUIDS[i])
             xml_serv += " </configs></testserver>"
 
-            success, meta = db.save_item('LOCAL', 'testserver_m', xml_serv)
+            success, meta = db.save_item('LOCAL', UUIDS[4], xml_serv)
             self.assertTrue(success)
-
-            # again twice to have a revision number
-            success, meta = db.save_item('LOCAL', 'testserver_m', xml_serv)
-            self.assertTrue(success)
-            create_hierarchy(db, "hierarchy_test", 0, 0)
+            create_hierarchy(db)
 
     def _cleanDataBase(self):
         with ProjectDatabase(self._user, self._password, server='localhost',
@@ -98,8 +77,7 @@ class TestProjectManager(TestCase):
         config = Hash()
         config.set("serverId", "testServerProject")
 
-        config.set("pluginDirectory", "")
-        config.set("pluginNames", "")
+        config.set("deviceClasses", ["ProjectManager"])
         config.set("Logger.priority", "ERROR")
         config.set("visibility", 1)
         config.set("connection", Hash())
@@ -188,10 +166,11 @@ class TestProjectManager(TestCase):
             self.assertTrue(ret[0].get("success"))
 
         with self.subTest(msg="Test saving data"):
-            xml = '<test uuid="5">foobar</test>'
+            uuid = str(uuid4())
+            xml = '<test uuid="{0}">foobar</test>'.format(uuid)
             item = Hash()
             item.set("xml", xml)
-            item.set("uuid", "testdevice1")
+            item.set("uuid", uuid)
             item.set("overwrite", False)
             item.set("domain", "LOCAL")
             items = [item, ]
@@ -199,49 +178,22 @@ class TestProjectManager(TestCase):
                                   'admin', items).waitForReply(5000)
             items = ret[0].get("items")
             item = items[0]
-            self.assertEqual(item.get('entry.uuid'), "testdevice1")
+            self.assertEqual(item.get('entry.uuid'), uuid)
             self.assertTrue(item.get("success"))
 
         with self.subTest(msg="Test loading data"):
-            items = [Hash("uuid", "testconfig0", "domain", "LOCAL"),
-                     Hash("uuid", "testconfig1", "domain", "LOCAL")]
+            items = [Hash("uuid", UUIDS[0], "domain", "LOCAL"),
+                     Hash("uuid", UUIDS[1], "domain", "LOCAL")]
             ret = self.ss.request("projManTest", "slotLoadItems",
                                   'admin', items).waitForReply(5000)
             ret = ret[0]  # returns tuple
             items = {it['uuid']: it for it in ret['items']}
-            self.assertTrue('testconfig0' in items)
-            self.assertTrue('testconfig1' in items)
-            cmp = 'v:path="/krb_test/LOCAL/testconfig0">foo</test>'
-            self.assertTrue(cmp in items['testconfig0'].get('xml'))
-            cmp = 'v:path="/krb_test/LOCAL/testconfig1">goo</test>'
-            self.assertTrue(cmp in items['testconfig1'].get('xml'))
-
-        with self.subTest(msg="Test loading multiple data"):
-
-            items = [Hash("uuid", "testserver_m", "domain", "LOCAL",
-                          "list_tags", ["configs"]), ]
-            ret = self.ss.request("projManTest", "slotLoadItemsAndSubs",
-                                  'admin', items).waitForReply(5000)
-            ret = ret[0]  # returns tuple
-            items = {it['uuid']: it for it in ret['items']}
-            self.assertTrue('testserver_m' in items)
-            self.assertTrue('0' in items)
-            self.assertTrue('foo' in items['0'].get('xml'))
-            self.assertTrue('1' in items)
-            self.assertTrue('goo' in items['1'].get('xml'))
-            self.assertTrue('2' in items)
-            self.assertTrue('hoo' in items['2'].get('xml'))
-
-        with self.subTest(msg="Test get versioning info"):
-            items = [Hash("uuid", "testserver_m", "domain", "LOCAL"), ]
-            ret = self.ss.request("projManTest", "slotGetVersionInfo",
-                                  'admin', items).waitForReply(5000)
-            ret = ret[0]  # returns tuple
-            self.assertTrue(ret.has("testserver_m"))
-            document = ret.get("testserver_m").get("document")
-            self.assertEqual(document, "/db/krb_test/LOCAL/testserver_m")
-            revisions = ret.get("testserver_m").get("revisions")
-            self.assertGreater(len(revisions), 0)
+            self.assertTrue(UUIDS[0] in items)
+            self.assertTrue(UUIDS[1] in items)
+            cmp = 'v:path="/krb_test/LOCAL/{}">foo</test>'.format(UUIDS[0])
+            self.assertTrue(cmp in items[UUIDS[0]].get('xml'))
+            cmp = 'v:path="/krb_test/LOCAL/{}">goo</test>'.format(UUIDS[1])
+            self.assertTrue(cmp in items[UUIDS[1]].get('xml'))
 
         with self.subTest(msg="Test list items"):
             queryItems = ['project', 'scene']

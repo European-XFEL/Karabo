@@ -22,10 +22,10 @@ class ProjectDBCache(object):
         it makes sense to buffer reads and writes.
         """
 
-    def store(self, domain, uuid, revision, data):
+    def store(self, domain, uuid, data):
         """ Add an object to the cache
         """
-        path = self._generate_filepath(domain, uuid, revision)
+        path = self._generate_filepath(domain, uuid)
 
         domain_dir = op.dirname(path)
         if not op.exists(domain_dir):
@@ -34,10 +34,10 @@ class ProjectDBCache(object):
         with open(path, mode='w') as fp:
             fp.write(data)
 
-    def retrieve(self, domain, uuid, revision, existing=None):
+    def retrieve(self, domain, uuid, existing=None):
         """ Read an object from the cache.
         """
-        path = self._generate_filepath(domain, uuid, revision)
+        path = self._generate_filepath(domain, uuid)
         if not op.exists(path):
             return None
 
@@ -56,9 +56,8 @@ class ProjectDBCache(object):
             return []
 
         uuid_list = []
-        for fn in os.listdir(domain_dir):
-            uuid, revision = self._uuid_revision_from_filename(fn)
-            xml = self.retrieve(domain, uuid, revision)
+        for uuid in os.listdir(domain_dir):
+            xml = self.retrieve(domain, uuid)
             root = fromstring(xml)
             root_type = root.attrib.get('item_type')
             if root_type == obj_type:
@@ -73,7 +72,6 @@ class ProjectDBCache(object):
         :param obj_type: A string which describes the object type
         :return: A list of Hashes for the given ``obj_type`` containing:
                      - 'uuid' - The unique ID of the Project
-                     - 'revisions' - A list of revisions for the given project
                      - 'simple_name' - The name for displaying
                      - 'item_type' - Should be project in that case
         """
@@ -81,48 +79,20 @@ class ProjectDBCache(object):
         if not op.exists(domain_dir):
             return []
 
-        uuid_revs = {}
-        for fn in os.listdir(domain_dir):
-            uuid, revision = self._uuid_revision_from_filename(fn)
-            xml = self.retrieve(domain, uuid, revision)
+        proj_data = []
+        for uuid in os.listdir(domain_dir):
+            xml = self.retrieve(domain, uuid)
             root = fromstring(xml)
             root_type = root.attrib.get('item_type')
             if root_type == obj_type:
-                rev_str = root.attrib.get('revision')
-                alias = root.attrib.get('alias')
-                revHash = {uuid: (int(rev_str), alias),
-                           'simple_name': root.attrib.get('simple_name')}
-                uuid_revs.setdefault(uuid, []).append(revHash)
+                simple_name = root.attrib.get('simple_name')
+                proj_data.append({'uuid': uuid,
+                                  'simple_name': simple_name})
 
-        proj_data = []
-        for uuid, value in uuid_revs.items():
-            simple_name = ''
-            revisions = []
-            for v in value:
-                simple_name = v.get('simple_name', '')
-                rev, alias = v.get(uuid, (0, ''))
-                revisions.append({'revision': rev,
-                                  'alias': alias,
-                                  'user': '',
-                                  'date': ''})
-            proj_data.append({'uuid': uuid,
-                              'revisions': revisions,
-                              'simple_name': simple_name})
         return proj_data
 
-    def _generate_filepath(self, domain, uuid, revision):
-        leafname = '{}_{}'.format(uuid, revision)
-        return op.join(self.dirpath, domain, leafname)
-
-    def _uuid_revision_from_filename(self, filename):
-        """ Return tuple of ``UUID`` and ``Revision`` from the given
-        ``filename``
-
-        :param filename: The file name of an cached object
-        :return: A tuple of ``UUID`` and ``Revision`` number
-        """
-        uuid, revision = filename.split('_')
-        return (uuid, revision)
+    def _generate_filepath(self, domain, uuid):
+        return op.join(self.dirpath, domain, uuid)
 
 
 def get_user_cache():

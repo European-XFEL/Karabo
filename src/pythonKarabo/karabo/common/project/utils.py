@@ -87,4 +87,4 @@ def recursive_save_object(root, storage, domain):
 
     for leaf in _tree_iter(root):
         if leaf.modified:
-            storage.store(domain, leaf.uuid, leaf.revision, leaf)
+            storage.store(domain, leaf.uuid, leaf)

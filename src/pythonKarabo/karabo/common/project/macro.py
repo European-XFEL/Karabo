@@ -12,8 +12,7 @@ class MacroModel(BaseProjectObjectModel):
     """ An object representing the data for a Karabo Python macro.
     """
     # The instance ID of the running macro
-    instance_id = Property(String, depends_on=['simple_name', 'uuid',
-                                               'revision'])
+    instance_id = Property(String, depends_on=['simple_name', 'uuid'])
     # The instance names of all active macros
     instances = List(String, transient=True)
     # The actual macro source
@@ -21,8 +20,7 @@ class MacroModel(BaseProjectObjectModel):
 
     @cached_property
     def _get_instance_id(self):
-        return "Macro-{}-{}-{}".format(self.simple_name, self.uuid,
-                                       self.revision)
+        return "Macro-{}-{}".format(self.simple_name, self.uuid)
 
 
 def read_macro(filename_or_fileobj):

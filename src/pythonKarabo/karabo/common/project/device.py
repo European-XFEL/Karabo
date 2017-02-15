@@ -5,7 +5,7 @@
 #############################################################################
 from xml.etree.ElementTree import Element, parse, SubElement, tostring
 
-from traits.api import Enum, Instance, Int, List, String, Tuple
+from traits.api import Enum, Instance, List, String
 
 from .bases import BaseProjectObjectModel
 from .const import (
@@ -29,19 +29,17 @@ class DeviceInstanceModel(BaseProjectObjectModel):
     if_exists = Enum('ignore', 'restart')
     # A list of references to possible configurations
     configs = List(Instance(DeviceConfigurationModel))
-    # UUID/Rev of the currently active configuration
-    active_config_ref = Tuple(String, Int)
+    # UUID of the currently active configuration
+    active_config_ref = String
 
-    def select_config(self, uuid, revision):
-        """ Find the `DeviceConfigurationModel` matching the given `uuid` and
-        `revision`.
+    def select_config(self, uuid):
+        """ Find the `DeviceConfigurationModel` matching the given `uuid`
 
         :param uuid: A UUID as a String
-        :param revision: A revision number as Int
         :return: The `DeviceConfigurationModel` object, if found, else `None`
         """
         for dev_config in self.configs:
-            if (dev_config.uuid, dev_config.revision) == (uuid, revision):
+            if dev_config.uuid == uuid:
                 return dev_config
 
     def _class_id_changed(self):
@@ -72,11 +70,9 @@ class DeviceInstanceModel(BaseProjectObjectModel):
         active_ref = self.active_config_ref
         for config_model in removed:
             # Handle our active configuration leaving!
-            if (config_model.uuid, config_model.revision) == active_ref:
-                self.active_config_ref = ('', 0)
-            # Remove listeners for ``uuid``/``revision`` change event
-            config_model.on_trait_change(self._update_active_revision,
-                                         'revision', remove=True)
+            if config_model.uuid == active_ref:
+                self.active_config_ref = ''
+            # Remove listeners for ``uuid`` change event
             config_model.on_trait_change(self._update_active_uuid,
                                          'uuid', remove=True)
 
@@ -85,9 +81,7 @@ class DeviceInstanceModel(BaseProjectObjectModel):
             # Reject incompatible configurations
             if self.class_id and config_model.class_id != self.class_id:
                 rejects.append(config_model)
-            # Add listeners for ``uuid``/``revision`` change event
-            config_model.on_trait_change(self._update_active_revision,
-                                         'revision')
+            # Add listeners for ``uuid`` change event
             config_model.on_trait_change(self._update_active_uuid,
                                          'uuid')
         if rejects:
@@ -99,33 +93,18 @@ class DeviceInstanceModel(BaseProjectObjectModel):
             # Wait until we've made ourself consistent before raising
             raise ValueError("Incompatible configuration(s) added to device!")
 
-    def _update_active_revision(self, obj, name, old, new):
-        """ Whenever the revision of a ``DeviceConfigurationModel`` is changed
-        the ``active_config_ref`` might refer to it and needs to be updated
-
-        :param obj: The ``DeviceInstanceModel`` object which revision was
-                    changed
-        :param name: The name of the trait
-        :param old: The old value of the trait
-        :param new: The new value of the trait
-        """
-        uuid, revision = self.active_config_ref
-        if (obj.uuid == uuid) and (revision == old):
-            self.active_config_ref = uuid, new
-
     def _update_active_uuid(self, obj, name, old, new):
         """ Whenever the UUID of a ``DeviceConfigurationModel`` is changed
         the ``active_config_ref`` might refer to it and needs to be updated
 
-        :param obj: The ``DeviceInstanceModel`` object which revision was
+        :param obj: The ``DeviceInstanceModel`` object on which ``uuid`` was
                     changed
         :param name: The name of the trait
         :param old: The old value of the trait
         :param new: The new value of the trait
         """
-        uuid, revision = self.active_config_ref
-        if uuid == old:
-            self.active_config_ref = new, revision
+        if self.active_config_ref == old:
+            self.active_config_ref = new
 
 
 def read_device(io_obj):
@@ -135,7 +114,6 @@ def read_device(io_obj):
         traits = {
             'class_id': element.get('class_id'),
             'uuid': element.get('uuid'),
-            'revision': int(element.get('revision')),
         }
         return DeviceConfigurationModel(**traits)
 
@@ -148,8 +126,7 @@ def read_device(io_obj):
         'instance_id': root.get('instance_id'),
         'if_exists': root.get('if_exists'),
         'configs': configs,
-        'active_config_ref': (root.get('active_uuid'),
-                              int(root.get('active_rev'))),
+        'active_config_ref': root.get('active_uuid'),
     }
     model = DeviceInstanceModel(**traits)
     model.initialized = True  # Do this last to avoid triggering `modified`
@@ -163,15 +140,12 @@ def write_device(model):
         element = SubElement(parent, PROJECT_DB_TYPE_DEVICE_CONFIG)
         element.set('class_id', obj.class_id)
         element.set('uuid', obj.uuid)
-        element.set('revision', str(obj.revision))
 
     root = Element(PROJECT_DB_TYPE_DEVICE_INSTANCE)
-    active_uuid, active_rev = model.active_config_ref
     root.set('class_id', model.class_id)
     root.set('instance_id', model.instance_id)
     root.set('if_exists', model.if_exists)
-    root.set('active_uuid', active_uuid)
-    root.set('active_rev', str(active_rev))
+    root.set('active_uuid', model.active_config_ref)
     for config in model.configs:
         _write_config(config, root)
 

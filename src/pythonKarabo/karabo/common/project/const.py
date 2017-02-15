@@ -13,5 +13,3 @@ PROJECT_DB_TYPE_SCENE = 'scene'
 PROJECT_OBJECT_CATEGORIES = (
     'macros', 'scenes', 'servers', 'subprojects'
 )
-
-EXISTDB_INITIAL_VERSION = 0

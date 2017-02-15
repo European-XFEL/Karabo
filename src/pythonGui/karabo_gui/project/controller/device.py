@@ -5,7 +5,6 @@
 #############################################################################
 from functools import partial
 from io import StringIO
-from uuid import uuid4
 import weakref
 
 from PyQt4.QtCore import Qt
@@ -99,12 +98,10 @@ class DeviceInstanceController(BaseProjectGroupController):
         """Traits Property getter for the active device configuration object
 
         :return If a `DeviceConfigurationModel` for the `DeviceInstanceModel`s
-        active `uuid` and `revision` can be found, otherwise a `NoneType` is
-        returned
+        active `uuid` can be found, otherwise a `NoneType` is returned
         """
         device = self.model
-        uuid, revision = device.active_config_ref
-        return device.select_config(uuid, revision)
+        return device.select_config(device.active_config_ref)
 
     def _project_device_default(self):
         """Traits default initializer for `project_device`.
@@ -210,7 +207,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         device = self.model
         configuration = self.project_device.current_configuration
         configuration.fromHash(config_model.configuration)
-        device.active_config_ref = (config_model.uuid, config_model.revision)
+        device.active_config_ref = config_model.uuid
 
     def _broadcast_item_click(self):
         configuration = self.project_device.current_configuration
@@ -224,7 +221,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         """
         active_ref = self.model.active_config_ref
         for child in self.children:
-            config_ref = (child.model.uuid, child.model.revision)
+            config_ref = child.model.uuid
             check = Qt.Checked if config_ref == active_ref else Qt.Unchecked
             child.qt_item.setCheckState(check)
 
@@ -255,14 +252,12 @@ class DeviceInstanceController(BaseProjectGroupController):
         add_action.triggered.connect(partial(self._add_configuration,
                                              parent_project))
         config_menu.addAction(add_action)
-        active_uuid, active_rev = self.model.active_config_ref
         for dev_conf in self.model.configs:
             conf_action = QAction(dev_conf.simple_name, config_menu)
             conf_action.setCheckable(True)
             callback = partial(self._active_config_changed, dev_conf)
             conf_action.triggered.connect(callback)
-            dev_conf_ref = (dev_conf.uuid, dev_conf.revision)
-            is_active = self.model.active_config_ref == dev_conf_ref
+            is_active = self.model.active_config_ref == dev_conf.uuid
             conf_action.setChecked(is_active)
             config_menu.addAction(conf_action)
 
@@ -298,12 +293,9 @@ class DeviceInstanceController(BaseProjectGroupController):
             device.if_exists = dialog.if_exists
 
             # Look for existing DeviceConfigurationModel
-            dev_conf = device.select_config(dialog.active_uuid,
-                                            dialog.active_revision)
+            dev_conf = device.select_config(dialog.active_uuid)
             if dev_conf is not None:
-                active_config_ref = (dialog.active_uuid,
-                                     dialog.active_revision)
-                device.active_config_ref = active_config_ref
+                device.active_config_ref = dialog.active_uuid
                 dev_conf.class_id = dialog.class_id
                 dev_conf.description = dialog.description
 
@@ -318,14 +310,12 @@ class DeviceInstanceController(BaseProjectGroupController):
             config_model = DeviceConfigurationModel(
                 class_id=dialog.class_id, configuration=Hash(),
                 simple_name=dialog.configuration_name,
-                alias=dialog.configuration_name,
                 description=dialog.description
             )
-            # Set initialized and modified last to avoid bumping revision
+            # Set initialized and modified last
             config_model.initialized = config_model.modified = True
-            active_config_ref = (config_model.uuid, config_model.revision)
             device.configs.append(config_model)
-            device.active_config_ref = active_config_ref
+            device.active_config_ref = config_model.uuid
 
     def _duplicate_device(self, project):
         """ Duplicate the active device configuration of the model
@@ -347,19 +337,15 @@ class DeviceInstanceController(BaseProjectGroupController):
                 if check_device_instance_exists(simple_name):
                     continue
                 dupe_dev_conf = read_project_model(StringIO(xml))
-                # Set a new UUID and revision
-                dupe_dev_conf.trait_set(uuid=str(uuid4()), revision=0)
-                dupe_dev_conf.alias = '{}-{}'.format(active_config.alias,
-                                                     simple_name)
-                config_ref = (dupe_dev_conf.uuid, dupe_dev_conf.revision)
+                dupe_dev_conf.reset_uuid()
                 dev_inst = DeviceInstanceModel(
                     class_id=device.class_id,
                     instance_id=simple_name,
                     if_exists=device.if_exists,
-                    active_config_ref=config_ref,
+                    active_config_ref=dupe_dev_conf.uuid,
                     configs=[dupe_dev_conf]
                 )
-                # Set initialized and modified last to avoid bumping revision
+                # Set initialized and modified last
                 dev_inst.initialized = dev_inst.modified = True
                 server_model.devices.append(dev_inst)
 
@@ -373,8 +359,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         :param server: The server this device belongs to
         """
         device = self.model
-        uuid, revision = device.active_config_ref
-        dev_conf = device.select_config(uuid, revision)
+        dev_conf = device.select_config(device.active_config_ref)
         if dev_conf is not None:
             get_manager().initDevice(server.server_id, dev_conf.class_id,
                                      device.instance_id,
