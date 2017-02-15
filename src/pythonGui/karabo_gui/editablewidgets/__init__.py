@@ -22,5 +22,4 @@ __all__ = [
     "hexoct",
     "numberlineedit",
     "qwtwidgets",
-    "singlebit",
 ]
