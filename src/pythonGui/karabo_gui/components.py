@@ -14,7 +14,7 @@ import numbers
 
 import numpy
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer
-from PyQt4.QtGui import QAction, QHBoxLayout, QLabel, QToolButton, QWidget
+from PyQt4.QtGui import QAction, QHBoxLayout, QToolButton, QWidget
 
 from . import icons
 from .messagebox import MessageBox
@@ -129,10 +129,6 @@ class EditableNoApplyComponent(BaseComponent):
         self.widgetFactory.setReadOnly(False)
         hLayout.addWidget(self.widgetFactory.widget)
 
-        unitLabel = box.unitLabel()
-        if unitLabel:
-            hLayout.addWidget(QLabel(unitLabel))
-
     def connectWidget(self, box):
         BaseComponent.connectWidget(self, box)
         if box.hasValue():
@@ -196,10 +192,6 @@ class EditableApplyLaterComponent(BaseComponent):
         hLayout.addWidget(self.widgetFactory.widget)
 
         self.box = box
-        unitLabel = box.unitLabel()
-        if unitLabel:
-            hLayout.addWidget(QLabel(unitLabel))
-
         self.hasConflict = False
 
         text = "Apply"

@@ -1,14 +1,13 @@
-
-
-from karabo_gui.widget import DisplayWidget, EditableWidget
-from karabo.middlelayer import Integer
-
 from PyQt4.QtCore import QSize, Qt, pyqtSignal
 from PyQt4.QtGui import QWidget, QPainter
 
+from karabo.middlelayer import Integer
+from karabo_gui.widget import DisplayWidget, EditableWidget
+from .unitlabel import add_unit_label
+
+
 class BitfieldWidget(QWidget):
     valueChanged = pyqtSignal(int)
-
 
     def __init__(self, parent):
         QWidget.__init__(self, parent)
@@ -16,10 +15,8 @@ class BitfieldWidget(QWidget):
         self.value = 0
         self.readonly = False
 
-
     def sizeHint(self):
         return QSize(self.size * 5 // 4, 20)
-
 
     def mousePressEvent(self, event):
         if self.readonly:
@@ -31,12 +28,10 @@ class BitfieldWidget(QWidget):
         self.valueChanged.emit(self.value)
         self.update()
 
-
     def _getwh(self):
         w = self.geometry().width() * 4 // self.size
         h = self.geometry().height() // 4
         return w, h
-
 
     def paintEvent(self, event):
         w, h = self._getwh()
@@ -49,7 +44,6 @@ class BitfieldWidget(QWidget):
         finally:
             p.end()
 
-
     def setValue(self, value):
         self.value = value
         self.update()
@@ -61,29 +55,26 @@ class Bitfield(EditableWidget, DisplayWidget):
 
     def __init__(self, box, parent):
         super(Bitfield, self).__init__(box)
-        self.widget = BitfieldWidget(parent)
-
+        self._internal_widget = BitfieldWidget(parent)
+        self.widget = add_unit_label(box, self._internal_widget, parent=parent)
 
     def typeChanged(self, box):
-        self.widget.size = box.descriptor.numpy().nbytes * 8
+        self._internal_widget.size = box.descriptor.numpy().nbytes * 8
         self.widget.update()
 
-
     def setReadOnly(self, ro):
-        self.widget.readonly = ro
-
+        self._internal_widget.readonly = ro
 
     @property
     def value(self):
-        return self.widget.value
-
+        return self._internal_widget.value
 
     def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = 0
-        self.widget.value = value
+        self._internal_widget.value = value
+        self.widget.updateLabel(box)
         self.widget.update()
-
 
     def onEditingFinished(self, value):
         self.signalEditingFinished.emit(self.boxes[0], value)
