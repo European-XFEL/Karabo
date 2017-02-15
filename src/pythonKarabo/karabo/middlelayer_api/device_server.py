@@ -180,9 +180,11 @@ class DeviceServer(SignalSlotable):
     def scanBoundsOnce(self):
         changes = False
         classes = set(self.deviceClasses)
+        self.class_ban = set()
         entrypoints = self.pluginLoader.list_plugins(self.boundNamespace)
         for ep in entrypoints:
-            if ep.name in self.bounds or (classes and ep.name not in classes):
+            if (ep.name in self.bounds or (classes and ep.name not in classes)
+                  or ep.name in self.class_ban):
                 continue
             try:
                 env = dict(os.environ)
@@ -191,11 +193,16 @@ class DeviceServer(SignalSlotable):
                     sys.executable, "-m", "karabo.bound_api.launcher",
                     "schema", self.boundNamespace, ep.name,
                     env=env, stdout=PIPE)
-                schema = yield from process.stdout.read()
-                yield from process.wait()
+                try:
+                    schema = yield from process.stdout.read()
+                    yield from process.wait()
+                except:
+                    process.kill()
+                    raise
                 self.bounds[ep.name] = Hash.decode(schema, "XML")[ep.name]
                 changes = True
             except Exception:
+                self.class_ban.add(ep.name)
                 self.logger.exception('Cannot load bound plugin "%s"', ep.name)
         return changes
 
