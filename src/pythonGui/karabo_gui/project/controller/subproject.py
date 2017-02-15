@@ -43,7 +43,7 @@ class SubprojectController(ProjectSubgroupController):
         if dialog.exec() == QDialog.Accepted:
             # XXX: TODO check for existing
             project = ProjectModel(simple_name=dialog.simple_name)
-            # Set initialized and modified last to avoid bumping revision
+            # Set initialized and modified last
             project.initialized = project.modified = True
             self.model.subprojects.append(project)
 

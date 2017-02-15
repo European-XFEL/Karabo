@@ -3,16 +3,14 @@
 # Created on October 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os.path as op
 
 from collections import OrderedDict, namedtuple
 from operator import attrgetter
+import os.path as op
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
-from PyQt4.QtGui import (QComboBox, QDialog, QDialogButtonBox,
-                         QItemSelectionModel, QPixmap, QStyle,
-                         QStyledItemDelegate)
+from PyQt4.QtGui import QDialog, QDialogButtonBox, QItemSelectionModel
 
 from karabo_gui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
@@ -24,7 +22,6 @@ from karabo_gui.util import SignalBlocker
 SIMPLE_NAME = 'simple_name'
 UUID = 'uuid'
 AUTHOR = 'author'
-REVISIONS = 'revisions'
 PUBLISHED = 'published'
 DESCRIPTION = 'description'
 DOCUMENTATION = 'documentation'
@@ -33,7 +30,6 @@ PROJECT_DATA = OrderedDict()
 PROJECT_DATA[SIMPLE_NAME] = 'Name'
 PROJECT_DATA[UUID] = 'UUID'
 PROJECT_DATA[AUTHOR] = 'Author'
-PROJECT_DATA[REVISIONS] = 'Version'
 PROJECT_DATA[PUBLISHED] = 'Published'
 PROJECT_DATA[DESCRIPTION] = 'Description'
 PROJECT_DATA[DOCUMENTATION] = 'Documentation'
@@ -95,11 +91,8 @@ class ProjectHandleDialog(QDialog):
         selection_model = self.twProjects.selectionModel()
         uuid_index = get_column_index(UUID)
         uuid_entry = selection_model.selectedRows(uuid_index)
-        rev_index = get_column_index(REVISIONS)
-        rev_entry = selection_model.selectedRows(rev_index)
-        if uuid_entry and rev_entry:
-            revision, alias = rev_entry[0].data(Qt.UserRole)
-            return (uuid_entry[0].data(), int(revision))
+        if uuid_entry:
+            return uuid_entry[0].data()
         return None
 
     @property
@@ -179,7 +172,6 @@ class TableModel(QAbstractTableModel):
 
         :param data: A `HashList` with the keys per entry:
                      - 'uuid' - The unique ID of the Project
-                     - 'revisions' - A list of revisions for the given project
                      - 'simple_name' - The name for displaying
                      - 'item_type' - Should be project in that case
         """
@@ -188,18 +180,11 @@ class TableModel(QAbstractTableModel):
         try:
             self.entries = []
             for it in data:
-                rev_list = it.get('revisions')
-                # XXX: intermediate solution to only display latest revision
-                # NOTE: The list is sorted - last entry is latest version
-                latest_rev = rev_list[-1]
-                rev_data = (latest_rev.get('revision', ''),
-                            latest_rev.get('alias', ''))
                 entry = ProjectEntry(
                     simple_name=it.get('simple_name'),
                     uuid=it.get('uuid'),
-                    author=rev_list[0].get('user') if rev_list else '',
-                    revisions=rev_data,
-                    published=rev_list[0].get('date') if rev_list else '',
+                    author='',
+                    published='',
                     description='description',
                     documentation='documentation',
                     )
@@ -232,9 +217,6 @@ class TableModel(QAbstractTableModel):
             return None
         entry = self.entries[index.row()]
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
-            if index.column() == get_column_index(REVISIONS):
-                revision, alias = entry[index.column()]
-                return '{} <{}>'.format(alias, revision)
             return entry[index.column()]
         elif role == Qt.UserRole:
             return entry[index.column()]
@@ -250,116 +232,3 @@ class TableModel(QAbstractTableModel):
                           reverse=bool(order))
         self.layoutChanged.emit()
         super(TableModel, self).sort(column, order)
-
-
-class ComboBoxDelegate(QStyledItemDelegate):
-    def __init__(self, parent=None):
-        super(ComboBoxDelegate, self).__init__(parent)
-        # Fake combobox used for later rendering
-        self.cbSelection = QComboBox(parent)
-        self.cbSelection.hide()
-        self.current_selection = 0
-        parent.clicked.connect(self.cellClicked)
-        self.cellEditMode = False
-        self.currentCellIndex = None  # QPersistentModelIndex
-
-    def selectedItem(self):
-        return self.cbSelection.itemData(self.current_selection)
-
-    def _isRelevantColumn(self, index):
-        """ This methods checks whether the column of the given ``index``
-            belongs to the revision column.
-
-            Returns tuple:
-            [0] - states whether this is a relevant column
-            [1] - the list of revisions which needs to be shown in the combobox
-            Otherwise ``False`` and an empty string is returned.
-        """
-        column = index.column()
-        if column == get_column_index(REVISIONS):
-            revisions = index.data()
-            return (True, revisions)
-        return (False, [])
-
-    def _updateWidget(self, combo, index, revisions):
-        """ Put given ``revisions`` in combobox
-
-        :param combo: The `QComboBox` which should be updated
-        :param index: A `QModelIndex` of the view
-        :param revisions: A list with all available revisions and mapped aliases
-                          as tuple
-        """
-        column = index.column()
-        if column == get_column_index(REVISIONS):
-            revisions = index.data()
-            if not revisions:
-                return
-            revisions.sort(key=lambda t: t[0], reverse=True)
-            with SignalBlocker(combo):
-                combo.clear()
-                for rev, alias in revisions:
-                    combo.addItem('{} <{}>'.format(alias, rev), rev)
-                combo.setCurrentIndex(self.current_selection)
-
-    def createEditor(self, parent, option, index):
-        """ This method is called whenever the delegate is in edit mode."""
-        isRelevant, revisions = self._isRelevantColumn(index)
-        if isRelevant:
-            # This combobox is for the highlighting effect when clicking/
-            # editing the index, is deleted whenever `closePersistentEditor` is
-            # called
-            combo = QComboBox(parent)
-            combo.currentIndexChanged.connect(self.currentIndexChanged)
-            self._updateWidget(combo, index, revisions)
-            return combo
-        else:
-            return super(ComboBoxDelegate, self).createEditor(parent, option,
-                                                              index)
-
-    def setEditorData(self, combo, index):
-        isRelevant, revisions = self._isRelevantColumn(index)
-        if isRelevant:
-            self._updateWidget(combo, index, revisions)
-        else:
-            super(ComboBoxDelegate, self).setEditorData(combo, index)
-
-    def paint(self, painter, option, index):
-        isRelevant, revisions = self._isRelevantColumn(index)
-        if isRelevant:
-            self.cbSelection.setGeometry(option.rect)
-            self._updateWidget(self.cbSelection, index, revisions)
-            if option.state == QStyle.State_Selected:
-                painter.fillRect(option.rect, option.palette.highlight())
-            pixmap = QPixmap.grabWidget(self.cbSelection)
-            painter.drawPixmap(option.rect.x(), option.rect.y(), pixmap)
-        else:
-            super(ComboBoxDelegate, self).paint(painter, option, index)
-
-    def updateEditorGeometry(self, combo, option, index):
-        isRelevant, revisions = self._isRelevantColumn(index)
-        if isRelevant:
-            combo.setGeometry(option.rect)
-            self._updateWidget(combo, index, revisions)
-
-    def currentIndexChanged(self, index):
-        self.current_selection = index
-
-    @pyqtSlot(object)
-    def cellClicked(self, index):
-        isRelevant, revisions = self._isRelevantColumn(index)
-        if isRelevant:
-            if self.cellEditMode:
-                # Remove old persistent model index
-                self.parent().closePersistentEditor(self.currentCellIndex)
-            # Current model index is stored and added to stay persistent until
-            # editing mode is done
-            self.currentCellIndex = index
-            # If no editor exists, the delegate will create a new editor which
-            # means that here ``createEditor`` is called
-            self.parent().openPersistentEditor(self.currentCellIndex)
-            self.cellEditMode = True
-        else:
-            if self.cellEditMode:
-                self.cellEditMode = False
-                # Persistent model index and data namely QComboBox cleaned up
-                self.parent().closePersistentEditor(self.currentCellIndex)

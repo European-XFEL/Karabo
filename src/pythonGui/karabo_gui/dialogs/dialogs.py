@@ -211,8 +211,7 @@ class SceneLinkDialog(QDialog):
         def visitor(obj):
             nonlocal collected
             if isinstance(obj, SceneModel):
-                target = "{}:{}:{}".format(obj.simple_name, obj.uuid,
-                                           obj.revision)
+                target = "{}:{}".format(obj.simple_name, obj.uuid)
                 collected.add(target)
 
         walk_traits_object(project, visitor)

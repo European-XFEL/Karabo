@@ -86,7 +86,7 @@ class MainWindow(QMainWindow):
             elif sender is KaraboEventSender.OpenSceneLink:
                 target = data.get('target')
                 target_window = data.get('target_window')
-                self.addSceneView(self._load_scene_model(*target),
+                self.addSceneView(self._load_scene_model(target),
                                   target_window)
             elif sender is KaraboEventSender.RemoveSceneView:
                 self.removeMiddlePanel('scene_model', data.get('model'))
@@ -274,13 +274,13 @@ class MainWindow(QMainWindow):
 
         return True
 
-    def _load_scene_model(self, uuid, revision):
+    def _load_scene_model(self, uuid):
         found = None
 
         def visitor(obj):
             nonlocal found
             if isinstance(obj, SceneModel):
-                if obj.uuid == uuid and obj.revision == revision:
+                if obj.uuid == uuid:
                     found = obj
 
         project = get_project_model().traits_data_model

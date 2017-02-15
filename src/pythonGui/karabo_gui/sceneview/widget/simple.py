@@ -107,11 +107,11 @@ class SceneLinkWidget(QPushButton):
     def _handle_click(self):
         if len(self.model.target) > 0:
             parts = self.model.target.split(':')
-            if len(parts) != 3:
+            if len(parts) != 2:
                 return
 
-            # UUID, revision
-            target = (parts[1], int(parts[2]))
+            # target format => "simple_name:UUID"
+            target = parts[1]
             target_window = self.model.target_window
             data = {'target': target, 'target_window': target_window}
             # Create KaraboBroadcastEvent

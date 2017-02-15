@@ -27,15 +27,8 @@ def test_uuid():
 def test_modified_flag():
     model = BaseProjectObjectModel(initialized=True)
 
-    model.revision = 2
-    assert not model.modified
-
-    model.uuid = uuid.uuid4().hex
+    model.reset_uuid()
     assert model.modified
-    # Modifications bump the revision number
-    # assert model.revision == 3
-    # XXX: revision bumping is currently disabled!
-    assert model.revision == 2
 
     model.modified = False
     assert not model.modified

@@ -1,3 +1,4 @@
+from time import gmtime, strftime, time
 from unittest import TestCase
 from uuid import uuid4
 
@@ -13,10 +14,9 @@ def _gen_uuid():
 
 def create_hierarchy(db):
     uuid = _gen_uuid()
-    xml = ('<xml revision="0" item_type="{atype}" '
-           'uuid="{uuid}" alias = "{alias}" '
+    xml = ('<xml item_type="{atype}" uuid="{uuid}" '
            'simple_name="{name}">').format(uuid=uuid, atype='project',
-                                           alias=uuid, name=uuid)
+                                           name=uuid)
 
     xml += "<children>"
 
@@ -24,17 +24,13 @@ def create_hierarchy(db):
     for i in range(4):
         sub_uuid = _gen_uuid()
         xml += ('<xml item_type="{atype}" uuid="{uuid}"'
-                ' alias = "{alias}" revision="0"'
                 ' simple_name="{name}" />').format(uuid=sub_uuid,
                                                    atype='scene',
-                                                   alias=sub_uuid,
                                                    name=sub_uuid)
 
         scene_xml = ('<xml item_type="{atype}" uuid="{uuid}"'
-                     ' alias = "{alias}" revision="0"'
                      ' simple_name="{name}" >foo</xml>'
-                     .format(uuid=sub_uuid, atype='scene',
-                             alias=uuid, name=sub_uuid))
+                     .format(uuid=sub_uuid, atype='scene', name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, scene_xml)
 
@@ -42,17 +38,13 @@ def create_hierarchy(db):
     for i in range(4):
         sub_uuid = _gen_uuid()
         xml += ('<xml item_type="{atype}" uuid="{uuid}"'
-                ' alias = "{alias}" revision="0"'
                 ' simple_name="{name}" />').format(uuid=sub_uuid,
                                                    atype='device_server',
-                                                   alias=uuid,
                                                    name=sub_uuid)
 
         ds_xml = ('<xml item_type="{atype}" uuid="{uuid}"'
-                  ' alias = "{alias}" revision="0"'
                   ' simple_name="{name}" >foo</xml>'
-                  .format(uuid=sub_uuid, atype='device_server',
-                          alias=uuid, name=sub_uuid))
+                  .format(uuid=sub_uuid, atype='device_server', name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, ds_xml)
 
@@ -107,49 +99,25 @@ class TestProjectDatabase(TestCase):
                 db.add_domain("LOCAL_TEST")
                 self.assertTrue(db.domain_exists("LOCAL_TEST"))
 
-            with self.subTest(msg='test_get_versioning_info'):
-                xml_rep = """
-                <xml uuid="{uuid}"
-                      revision="2"
-                      date="the day after tomorrow"
-                      user="bob"
-                      alias="test">foo</xml>
-                """.format(uuid=testproject)
-
-                # db.save_project('LOCAL', testproject, ret)
-                path = "{}/{}/{}_2".format(db.root, 'LOCAL', testproject)
-                db.dbhandle.load(xml_rep, path)
-
-                vers = db.get_versioning_info('LOCAL', testproject)
-                self.assertEqual(vers['document'],
-                                 '/krb_test/LOCAL/{}'.format(testproject))
-                # depends on how often tests were run
-                self.assertGreaterEqual(len(vers['revisions']), 1)
-                first_rev = vers['revisions'][0]
-                self.assertTrue('revision' in first_rev)
-                self.assertTrue('date' in first_rev)
-                self.assertTrue('alias' in first_rev)
-                self.assertEqual(first_rev['user'], 'bob')
-
             with self.subTest(msg='test_save_item'):
                 xml_rep = """
-                <xml uuid="{uuid}" revision="42">foo</xml>
+                <xml uuid="{uuid}">foo</xml>
                 """.format(uuid=testproject2)
 
                 meta = db.save_item('LOCAL', testproject2, xml_rep)
 
-                path = "{}/LOCAL/{}_42".format(db.root, testproject2)
+                path = "{}/LOCAL/{}".format(db.root, testproject2)
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 decoded = db.dbhandle.getDoc(path).decode('utf-8')
-                self.assertEqual(decoded, xml_rep.replace("\n", "").strip())
-                self.assertTrue('versioning_info' in meta)
+                doctree = etree.fromstring(decoded)
+                self.assertEqual(doctree.get('uuid'), testproject2)
+                self.assertEqual(doctree.text, 'foo')
                 self.assertTrue('domain' in meta)
                 self.assertTrue('uuid' in meta)
 
             with self.subTest(msg='load_items'):
                 items = [testproject, testproject2]
-                revisions = [2, 42]
-                res = db.load_item('LOCAL', items, revisions)
+                res = db.load_item('LOCAL', items)
                 for r in res:
                     itemxml = db._make_xml_if_needed(r["xml"])
                     self.assertEqual(itemxml.tag, 'xml')
@@ -169,5 +137,42 @@ class TestProjectDatabase(TestCase):
                 items = db.list_domains()
                 for it in items:
                     self.assertTrue(it in ['LOCAL_TEST', 'REPO', 'LOCAL'])
+
+            with self.subTest(msg='test_old_versioned_data'):
+                versioned_uuid = _gen_uuid()
+                xml_rep = """
+                <xml uuid="{uuid}" revision="{revision}" date="{date}"
+                     user="sue">foo</xml>
+                """
+                MAX_REV = 3
+                earlier = time() - 5.0
+                # Save three consecutive versions
+                for i in range(MAX_REV, 0, -1):
+                    # consecutive dates beginning a few seconds ago
+                    date = strftime("%Y-%m-%d %H:%M:%S", gmtime(earlier+i))
+                    xml = xml_rep.format(uuid=versioned_uuid, revision=i,
+                                         date=date)
+                    path = "{}/{}/{}_{}".format(db.root, 'LOCAL',
+                                                versioned_uuid, i)
+                    # Save directly without engaging save_item()
+                    db.dbhandle.load(xml, path)
+
+                # Read it back, no revision given
+                res = db.load_item('LOCAL', [versioned_uuid])
+                self.assertEqual(len(res), 1)
+                itemxml = db._make_xml_if_needed(res[0]['xml'])
+                self.assertEqual(int(itemxml.get('revision')), MAX_REV)
+
+                # Write it back with save_item
+                date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+                xml_rep = """
+                <xml uuid="{uuid}" date="{date}" user="sue">foo</xml>
+                """.format(uuid=versioned_uuid, date=date)
+                meta = db.save_item('LOCAL', versioned_uuid, xml_rep)
+
+                # Make sure there's a revision of 0 (auto-added)
+                res = db.load_item('LOCAL', [versioned_uuid])
+                itemxml = db._make_xml_if_needed(res[0]['xml'])
+                self.assertEqual(itemxml.get('revision'), '0')
 
             stop_database()

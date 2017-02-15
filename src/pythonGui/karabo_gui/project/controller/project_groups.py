@@ -102,7 +102,7 @@ def _add_macro(project):
         # XXX: TODO check for existing
         macro = MacroModel(simple_name=dialog.simple_name,
                            code=_macro_template.format(classname))
-        # Set initialized and modified last to avoid bumping revision number
+        # Set initialized and modified last
         macro.initialized = macro.modified = True
         project.macros.append(macro)
 
@@ -126,7 +126,7 @@ def _add_scene(project):
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
         scene = SceneModel(simple_name=dialog.simple_name)
-        # Set initialized and modified last to avoid bumping revision number
+        # Set initialized and modified last
         scene.initialized = scene.modified = True
         project.scenes.append(scene)
 
@@ -154,6 +154,6 @@ def _add_server(project):
             'description': dialog.description
         }
         server = DeviceServerModel(**traits)
-        # Set initialized and modified last to avoid bumping revision number
+        # Set initialized and modified last
         server.initialized = server.modified = True
         project.servers.append(server)
