@@ -562,7 +562,7 @@ def waitUntil(condition):
     condition are connected while we are waiting (so typically they appear
     in a with statement)"""
     loop = get_event_loop()
-    yield from loop.waitForChanges()
+    yield  # assure the event loop gets a chance to run, esp. in a busy loop
     while not condition():
         yield from loop.waitForChanges()
 
