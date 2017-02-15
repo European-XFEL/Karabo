@@ -6,7 +6,6 @@ from eulexistdb.db import ExistDB
 from eulexistdb.exceptions import ExistDBException
 from lxml import etree
 
-from karabo.common.project.api import EXISTDB_INITIAL_VERSION
 from .util import assure_running, ProjectDBError
 from .dbsettings import DbSettings
 
@@ -124,62 +123,6 @@ class ProjectDatabase(ContextDecorator):
 
         raise AttributeError("Cannot handle type {}".format(type(xml_rep)))
 
-    def get_versioning_info(self, domain, item):
-        """
-        Returns a dict object containing the versioning info for a given
-        path.
-        :param domain: domain of ``item``
-        :param item: UUID of the item for which versioning information is to be
-                     extracted
-        :return: a dict with the following entries:
-                document: the path of the document
-                revisions: a list of revisions, where each entry is a dict
-                with:
-                    revision: the revision number
-                    date: the date this revision was added
-                    user: the user that added this revision
-                    alias: an alias for the revision. If none is set the
-                           revision number is returned
-
-
-        :raises: ExistDBException if user is not authorized for this
-                 transaction or the versioning query to the database failed
-                 otherwise.
-                 RuntimeError: if versioning information could not be extracted
-                 from the query results.
-        """
-        # path to where the possible entries are located
-        path = "{}/{}".format(self.root, domain)
-        query = """
-        xquery version "3.0";
-
-        let $uuid := "{uuid}"
-        let $path := "{path}"
-
-        return <versions>{{for $doc in collection($path)
-                           where $doc/*/@uuid = $uuid
-                           return <version revision="{{$doc/*/@revision}}"
-                                           user= "{{$doc/*/@user}}"
-                                           date="{{$doc/*/@date}}"
-                                           alias="{{$doc/*/@alias}}" />
-                           }}</versions>
-        """.format(uuid=item, path=path)
-
-        try:
-            res = self.dbhandle.query(query)
-            rxml = res.results[0]
-        except ExistDBException as e:
-            raise ProjectDBError(e)
-
-        doc = self._make_xml_if_needed(rxml)
-        revisions = [{'revision': int(c.get('revision')),
-                      'user': c.get('user'),
-                      'date': c.get('date'),
-                      'alias': c.get('alias', c.get('revision'))}
-                     for c in doc.getchildren()]
-        return {'document': "{}/{}".format(path, item),
-                'revisions': revisions}
-
     def save_item(self, domain, uuid, item_xml, overwrite=False):
         """
         Saves a item xml file into the domain. It will
@@ -221,16 +164,17 @@ class ProjectDatabase(ContextDecorator):
         if not self.domain_exists(domain):
             self.add_domain(domain)
 
-        # Extraction the revision number as provided
+        # Extract some information
         item_tree = self._make_xml_if_needed(item_xml)
-        revision = int(item_tree.get('revision', EXISTDB_INITIAL_VERSION))
         if 'user' not in item_tree.attrib:
             item_tree.attrib['user'] = 'Karabo User'
         if 'date' not in item_tree.attrib:
             item_tree.attrib['date'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        # XXX: Add a revision to keep old code from blowing up
+        item_tree.attrib['revision'] = '0'
 
-        item_xml = self._make_str_if_needed(item_xml)
-        path = "{}/{}/{}_{}".format(self.root, domain, uuid, revision)
+        item_xml = self._make_str_if_needed(item_tree)
+        path = "{}/{}/{}".format(self.root, domain, uuid)
 
         try:
             if self.dbhandle.hasDocument(path) and not overwrite:
@@ -242,63 +186,55 @@ class ProjectDatabase(ContextDecorator):
             raise ProjectDBError("Saving item failed!")
 
         meta = {}
-        meta['versioning_info'] = self.get_versioning_info(domain, uuid)
         meta['domain'] = domain
         meta['uuid'] = uuid
-        meta['revision'] = revision
         return meta
 
-    def load_item(self, domain, items, revisions):
+    def load_item(self, domain, items):
         """
         Load an item or items from `domain`
         :param domain: a domain to load from
         :param item: the name of the item(s) to load
-        :param revision: revision number(s) of each item. Same order as items
         :return:
         """
         # path to where the possible entries are located
         path = "{}/{}".format(self.root, domain)
 
         assert isinstance(items, (list, tuple))
-        assert isinstance(revisions, (list, tuple))
-        assert len(items) == len(revisions)
 
         results = []
-        revisions = [str(r) for r in revisions]
-
         n_items = len(items)
         # we re-chunk the request for querying as everything ends up in a
-        # single get call to the restful API. Through  trial 50 seems a
+        # single get call to the restful API. Through trial 50 seems a
         # reasonable trade-off between size of query and return value size.
         req_cnk_size = 50
 
         for i in range(0, n_items, req_cnk_size):
             max_idx = min(i+req_cnk_size, n_items)
-            c_items = items[i:max_idx]
-            c_revs = revisions[i:max_idx]
+            uuids = '","'.join(items[i:max_idx])
             query = """
             xquery version "3.0";
 
-            let $uuids := {uuid}
-            let $rev := {revision}
-            let $col := "{path}"
+            let $uuids := {uuids}
+            let $path := "{path}"
 
-            for $uuid at $idx in $uuids
-            return collection($col)/xml[@uuid = $uuid][@revision = $rev[$idx]][last()]
+            for $uuid in $uuids
+            let $sorted-docs :=
+                for $doc in collection($path)/xml[@uuid = $uuid]
+                order by $doc/@date
+                return $doc
+            return $sorted-docs[last()]
 
-            """.format(uuid='("{}")'.format('","'.join(c_items)),
-                       revision='("{}")'.format('","'.join(c_revs)),
-                       path=path)
+            """.format(uuids='("{}")'.format(uuids), path=path)
 
             try:
                 res = self.dbhandle.query(query, how_many=req_cnk_size)
                 for r in res.results:
                     results.append({'uuid': r.get('uuid'),
-                                    'revision': int(r.get('revision')),
                                     'xml': self._make_str_if_needed(r)})
             except ExistDBException as e:
                 raise ProjectDBError(e)
-            
+
         return results
 
     def list_items(self, domain, item_types=None):
@@ -321,23 +257,10 @@ class ProjectDatabase(ContextDecorator):
         let $uuid := $doc/@uuid
         let $simple_name := $doc/@simple_name
         let $item_type := $doc/@item_type
-        let $revs := $doc/@revision
-        let $aliases := $doc/@alias
-        let $dates := $doc/@date
-        let $users := $doc/@user
         group by $uuid, $simple_name, $item_type
         return <item uuid="{{$uuid}}"
                      simple_name="{{$simple_name}}"
-                     item_type="{{$item_type}}">
-                           {{
-                           for $rev in $revs
-                           let $idx := index-of($revs, $rev)
-                           return <version revision="{{$rev}}"
-                               user= "{{$users[$idx]}}"
-                               date="{{$dates[$idx]}}"
-                               alias="{{$aliases[$idx]}}" />
-                           }}
-                     </item>
+                     item_type="{{$item_type}}" />
         }}</items>
         """
         maybe_let, maybe_where = '', ''
@@ -352,19 +275,11 @@ class ProjectDatabase(ContextDecorator):
         try:
             res = self.dbhandle.query(query)
             return [{'uuid': r.attrib['uuid'],
-                     'revisions': self._get_rev_info(r.getchildren()),
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name']}
                     for r in res.results[0].getchildren()]
         except ExistDBException as e:
                 raise ProjectDBError(e)
-
-    def _get_rev_info(self, revs):
-        return [{'revision': int(c.get('revision')),
-                 'user': c.get('user'),
-                 'date': c.get('date'),
-                 'alias': c.get('alias', c.get('revision'))}
-                for c in revs]
 
     def list_domains(self):
         """

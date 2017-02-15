@@ -10,18 +10,17 @@ from karabo.common.project.api import (
 from karabo.testing.utils import temp_xml_file, xml_is_equal
 
 
-UUID = str(uuid4())
+UUIDS = [str(uuid4()) for i in range(3)]
 DEVICE_XML = """
 <device_instance class_id='BazClass'
                  instance_id='fooDevice'
                  if_exists='ignore'
-                 active_uuid='{uuid}'
-                 active_rev='1'>
-    <device_config uuid='{uuid}' revision='0' class_id='BazClass' />
-    <device_config uuid='{uuid}' revision='1' class_id='BazClass' />
-    <device_config uuid='{uuid}' revision='2' class_id='BazClass' />
+                 active_uuid='{uuids[0]}'>
+    <device_config uuid='{uuids[0]}' class_id='BazClass' />
+    <device_config uuid='{uuids[1]}' class_id='BazClass' />
+    <device_config uuid='{uuids[2]}' class_id='BazClass' />
 </device_instance>
-""".format(uuid=UUID)
+""".format(uuids=UUIDS)
 
 
 def setUp():
@@ -39,21 +38,17 @@ def test_reading():
     assert device.class_id == 'BazClass'
     assert device.instance_id == 'fooDevice'
     assert device.if_exists == 'ignore'
-    assert device.active_config_ref == (UUID, 1)
+    assert device.active_config_ref == UUIDS[0]
 
 
 def test_writing():
-    conf0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUID,
-                                     revision=0)
-    conf1 = DeviceConfigurationModel(class_id='BazClass', uuid=UUID,
-                                     revision=1)
-    conf2 = DeviceConfigurationModel(class_id='BazClass', uuid=UUID,
-                                     revision=2)
+    conf0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[0])
+    conf1 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[1])
+    conf2 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[2])
     foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
                               if_exists='ignore',
                               configs=[conf0, conf1, conf2],
-                              active_config_ref=(UUID, 1), uuid=UUID,
-                              revision=0)
+                              active_config_ref=UUIDS[0])
 
     xml = write_device(foo)
     assert xml_is_equal(DEVICE_XML, xml)
@@ -68,49 +63,41 @@ def test_simple_round_trip():
 
 
 def test_child_finding():
-    conf0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUID,
-                                     revision=0)
-    conf1 = DeviceConfigurationModel(class_id='BazClass', uuid=UUID,
-                                     revision=1)
-    conf2 = DeviceConfigurationModel(class_id='BazClass', uuid=UUID,
-                                     revision=2)
+    conf0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[0])
+    conf1 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[1])
     foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                              configs=[conf0, conf1, conf2],
-                              active_config_ref=(UUID, 0), uuid=UUID,
-                              revision=0)
-    conf = foo.select_config(UUID, 1)
+                              configs=[conf0, conf1],
+                              active_config_ref=UUIDS[0])
+    conf = foo.select_config(UUIDS[1])
     assert conf == conf1
 
-    conf = foo.select_config(UUID, 3)
+    conf = foo.select_config(UUIDS[2])
     assert conf is None
 
 
-def test_uuid_revision_update():
+def test_uuid_update():
     def _visitor(model):
         if isinstance(model, BaseProjectObjectModel):
-            model.uuid = str(uuid4())
-            model.revision = 0
+            model.reset_uuid()
 
     conf0_uuid = str(uuid4())
     conf1_uuid = str(uuid4())
     dev_uuid = str(uuid4())
-    conf0 = DeviceConfigurationModel(class_id='BarClass', uuid=conf0_uuid,
-                                     revision=42)
-    conf1 = DeviceConfigurationModel(class_id='BarClass', uuid=conf1_uuid,
-                                     revision=123)
+    conf0 = DeviceConfigurationModel(class_id='BarClass', uuid=conf0_uuid)
+    conf1 = DeviceConfigurationModel(class_id='BarClass', uuid=conf1_uuid)
     dev = DeviceInstanceModel(class_id='BarClass', instance_id='fooDevice',
                               configs=[conf0, conf1],
-                              active_config_ref=(conf0_uuid, 42),
-                              uuid=dev_uuid, revision=1)
+                              active_config_ref=conf0_uuid,
+                              uuid=dev_uuid)
 
-    selected_conf = dev.select_config(conf0_uuid, 42)
+    selected_conf = dev.select_config(conf0_uuid)
     assert selected_conf is conf0
 
     walk_traits_object(dev, _visitor)
     assert conf0.uuid != conf0_uuid
     assert conf1.uuid != conf1_uuid
     assert dev.uuid != dev_uuid
-    assert dev.active_config_ref == (conf0.uuid, 0)
+    assert dev.active_config_ref == conf0.uuid
 
-    selected_conf = dev.select_config(conf0.uuid, 0)
+    selected_conf = dev.select_config(conf0.uuid)
     assert selected_conf is conf0

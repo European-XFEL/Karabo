@@ -25,9 +25,9 @@ class _StorageWrapper(object):
     def __init__(self, storage):
         self._storage = storage
 
-    def store(self, domain, uuid, revision, obj):
+    def store(self, domain, uuid, obj):
         data = write_project_model(obj)
-        self._storage.store(domain, uuid, revision, data)
+        self._storage.store(domain, uuid, data)
 
 
 def _compare_projects(proj0, proj1):
@@ -102,9 +102,9 @@ def test_simple_read():
 def test_invalid_read():
     with _project_storage() as storage:
         # Try to read something which is NOT THERE
-        project = ProjectModel(revision=5)
-        obj = read_lazy_object(TEST_DOMAIN, project.uuid, project.revision,
-                               storage, read_project_model, existing=project)
+        project = ProjectModel()
+        obj = read_lazy_object(TEST_DOMAIN, project.uuid, storage,
+                               read_project_model, existing=project)
         assert obj is project
         assert not obj.initialized
 
@@ -132,9 +132,8 @@ def test_project_round_trip():
 
     with _project_storage() as storage:
         _write_project(project, storage)
-        rt_project = ProjectModel(uuid=project.uuid, revision=project.revision)
-        rt_project = read_lazy_object(TEST_DOMAIN, project.uuid,
-                                      project.revision, storage,
+        rt_project = ProjectModel(uuid=project.uuid)
+        rt_project = read_lazy_object(TEST_DOMAIN, project.uuid, storage,
                                       read_project_model, existing=rt_project)
 
     _compare_projects(project, rt_project)
@@ -151,7 +150,6 @@ def test_project_cache():
         assert project_uuids[0] == project.uuid
         proj_data = storage.get_available_project_data(TEST_DOMAIN, 'project')
         assert proj_data[0]['uuid'] == project.uuid
-        assert len(proj_data[0]['revisions']) == 1
         assert proj_data[0]['simple_name'] == project.simple_name
 
 
@@ -183,22 +181,17 @@ def test_modified_after_read():
         if isinstance(model, BaseProjectObjectModel):
             assert model.initialized
             assert not model.modified
-            # XXX: Set the expected revision to '1' when version bumping is
-            # re-enabled!
-            assert model.revision == 0
 
     old_project = _get_old_project()
     project = convert_old_project(old_project)
 
     with _project_storage() as storage:
         _write_project(project, storage)
-        rt_project = ProjectModel(uuid=project.uuid, revision=project.revision)
-        rt_project = read_lazy_object(TEST_DOMAIN, project.uuid,
-                                      project.revision, storage,
+        rt_project = ProjectModel(uuid=project.uuid)
+        rt_project = read_lazy_object(TEST_DOMAIN, project.uuid, storage,
                                       read_project_model, existing=rt_project)
 
     # Make sure the following is true of freshly loaded projects:
     # - The `modified` flag is False on all objects
     # - The `initialized` flag is True
-    # - The `revision` of objects has not been bumped
     walk_traits_object(rt_project, _loaded_checker)
