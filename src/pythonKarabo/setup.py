@@ -116,7 +116,7 @@ if __name__ == '__main__':
             'console_scripts': [
                 'karabo=karabo.interactive.karabo:main',
                 'karabo-pythonserver=karabo.bound_api.device_server:main',
-                'karabo-middlelayerserver=karabo.middlelayer_api.device_server:main',
+                'karabo-middlelayerserver=karabo.middlelayer_api.device_server:DeviceServer.main',
                 'karabo-cli=karabo.interactive.ideviceclient:main',
                 'ikarabo=karabo.interactive.ikarabo:main',
                 'convert-karabo-device=karabo.interactive.convert_device_project:main',
