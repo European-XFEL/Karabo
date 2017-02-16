@@ -255,8 +255,8 @@ class DeviceServer(SignalSlotable):
 
     def parse(self, hash):
         classid = hash['classId']
-        self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n{}".format(hash))
+        self.logger.info("Trying to start %s...", classid)
+        self.logger.debug("with the following configuration:\n%s", hash)
 
         # Get configuration
         config = copy.copy(hash['configuration'])
