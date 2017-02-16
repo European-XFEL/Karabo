@@ -128,7 +128,6 @@ class Tests(DeviceTest):
         self.remote.done = False
         with getDevice("remote") as d:
             d.doit()
-        time.sleep(0.01)
         self.assertTrue(self.remote.done)
 
     @sync_tst
@@ -137,7 +136,6 @@ class Tests(DeviceTest):
         self.remote.value = 7
         with getDevice("remote") as d:
             d.changeit()
-        time.sleep(0.01)
         self.assertEqual(self.remote.value, 3)
 
     @sync_tst
@@ -147,7 +145,6 @@ class Tests(DeviceTest):
         executeNoWait(d, "count")
         time.sleep(0.1)
         self.assertEqual(d.counter, -1)
-        time.sleep(0.1)
         with updateDevice(d):
             self.assertNotEqual(d.counter, -1)
             self.assertNotEqual(d.counter, 29)
@@ -169,7 +166,6 @@ class Tests(DeviceTest):
             time.sleep(0.1)
             self.assertEqual(d.value, 10)
             d.changeit()
-            time.sleep(0.1)
             self.assertEqual(d.value, 6)
 
     @sync_tst
@@ -178,7 +174,6 @@ class Tests(DeviceTest):
         self.remote.value = 7
         d = getDevice("remote")
         d.generic()
-        time.sleep(0.1)
         self.assertEqual(self.remote.value, 22)
 
     @sync_tst
