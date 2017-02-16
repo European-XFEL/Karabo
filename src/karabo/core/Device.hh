@@ -385,9 +385,6 @@ namespace karabo {
              * The destructor will reset the DeviceClient attached to this device.
              */
             virtual ~Device() {
-                KARABO_LOG_FRAMEWORK_TRACE << "Device::~Device() dtor : m_deviceClient.use_count()="
-                        << m_deviceClient.use_count() << "\n"
-                        << karabo::util::StackTrace();
                 m_deviceClient.reset();
             };
 
