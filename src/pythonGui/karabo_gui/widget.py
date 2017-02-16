@@ -8,7 +8,7 @@ from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from karabo_gui import background
 from karabo_gui.registry import Registry
-import karabo_gui.gui as gui
+from karabo_gui.singletons.api import get_panel_wrangler
 
 
 class Widget(Registry, QObject):
@@ -158,7 +158,9 @@ class EditableWidget(Widget):
         Widget.__init__(self, box)
         box.configuration.boxvalue.state.signalUpdateComponent.connect(
             self.updateStateSlot)
-        gui.window.signalGlobalAccessLevelChanged.connect(self.updateStateSlot)
+
+        main_win = get_panel_wrangler().main_window
+        main_win.signalGlobalAccessLevelChanged.connect(self.updateStateSlot)
 
     @staticmethod
     def getClasses(box):
@@ -166,7 +168,7 @@ class EditableWidget(Widget):
                 if v.isCompatible(box, False)]
 
     def setReadOnly(self, ro):
-        assert not ro, "combined Editable and Display widgets: set setReadOnly!"
+        assert not ro, "combined Editable and Display widgets: set setReadOnly"
 
     def onEditingFinished(self, value):
         self.signalEditingFinished.emit(self.boxes[0], value)
