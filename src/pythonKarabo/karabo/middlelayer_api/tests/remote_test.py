@@ -486,6 +486,9 @@ class Tests(DeviceTest):
         self.remote.counter = None
         with (yield from getDevice("remote")) as d:
             d.counter = 0
+            # we test that d.counter is still None (it must be, no yield from
+            # since last line). This asserts that waitUntilNew also works
+            # with uninitialized values, which had been a bug before.
             self.assertEqual(d.counter, None)
             yield from waitUntilNew(d.counter)
             task = async(d.count())
