@@ -171,7 +171,6 @@ class Tests(DeviceTest):
         self.remote.done = False
         with (yield from getDevice("remote")) as d:
             yield from d.doit()
-        yield from sleep(0.1)
         self.assertTrue(self.remote.done)
 
     @async_tst
@@ -334,7 +333,6 @@ class Tests(DeviceTest):
         self.remote.value = 7
         with (yield from getDevice("remote")) as d:
             yield from d.changeit()
-        yield from sleep(0.1)
         self.assertEqual(self.remote.value, 3)
 
     @async_tst
@@ -381,7 +379,6 @@ class Tests(DeviceTest):
             yield from sleep(0.1)
             self.assertEqual(d.value, 10)
             yield from d.changeit()
-            yield from sleep(0.1)
             self.assertEqual(d.value, 6)
 
     @async_tst
@@ -390,7 +387,6 @@ class Tests(DeviceTest):
         self.remote.value = 7
         d = yield from getDevice("remote")
         yield from d.generic()
-        yield from sleep(0.1)
         self.assertEqual(self.remote.value, 22)
 
     @async_tst
@@ -400,7 +396,6 @@ class Tests(DeviceTest):
         d = yield from getDevice("remote")
         d.generic_int = 33
         yield from d
-        yield from sleep(0.1)
         self.assertEqual(self.remote.value, 66)
 
     @async_tst
@@ -648,7 +643,6 @@ class Tests(DeviceTest):
             with (yield from getDevice("local")) as d, \
                     self.assertRaises(KaraboError):
                 yield from d.error()
-            yield from sleep(0.1)
         self.assertTrue(self.remote.done)
         self.remote.done = False
         self.assertIs(self.local.exc_slot, Local.error)
@@ -666,7 +660,6 @@ class Tests(DeviceTest):
             with (yield from getDevice("local")) as d, \
                     self.assertRaises(KaraboError):
                 yield from d.error_in_error()
-            yield from sleep(0.1)
         self.assertEqual(logs.records[-1].msg, "error in error handler")
         self.assertFalse(self.remote.done)
         self.assertIs(self.local.exc_slot, Local.error_in_error)
@@ -744,7 +737,6 @@ class Tests(DeviceTest):
                 self.assertTrue(self.remote.done)
                 d.dn.value = 22
                 yield from d.dn.changeit()
-                yield from sleep(0.02)
                 self.assertEqual(d.dn.value, 18)
                 self.assertEqual(a.dn.value, 18)
 
