@@ -20,6 +20,8 @@ class KaraboEventSender(Enum):
     DeviceErrorChanged = "Device error state changed"
     DeviceStateChanged = "Device state changed"
     LogMessages = "Log messages"
+    MaximizeTab = "Maximize a tab"
+    MinimizeTab = "Minimize a tab"
     NetworkConnectStatus = "Network connection changed"
     NotificationMessage = "Notification message"
     OpenMacro = "Open macro"
