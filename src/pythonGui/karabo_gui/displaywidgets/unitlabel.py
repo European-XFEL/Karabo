@@ -10,7 +10,10 @@ def add_unit_label(box, widget, parent=None):
     The `updateLabel` function is attached to the returned widget as a
     workaround...
     """
-    unit_label = box.unitLabel()
+    unit_label = ''
+    if box is not None:
+        unit_label = box.unitLabel()
+
     widget_group = QWidget(parent)
     layout = QHBoxLayout(widget_group)
     layout.setSizeConstraint(QHBoxLayout.SetMinimumSize)
@@ -29,6 +32,9 @@ def add_unit_label(box, widget, parent=None):
 def _updater(label, box):
     """A clean way to update unit labels
     """
+    if box is None:
+        return
+
     unit_label = box.unitLabel()
     if unit_label != label.text():
         label.setText(unit_label)
