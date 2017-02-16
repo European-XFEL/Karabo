@@ -1,7 +1,8 @@
+from functools import partial
 import os.path as op
 import sys
 
-from PyQt4.QtGui import QApplication, QFrame, QHBoxLayout, QVBoxLayout
+from PyQt4.QtGui import QApplication
 
 from karabo.common.scenemodel.api import read_scene
 from .api import SceneView
@@ -9,32 +10,16 @@ from .api import SceneView
 
 def load_panel(scene_view):
     import karabo_gui.icons as icons
+    from karabo_gui.panels.container import PanelContainer
     from karabo_gui.panels.scenepanel import ScenePanel
-    from karabo_gui.toolbar import ToolBar
-
-    class _Frame(QFrame):
-        def __init__(self, panel):
-            super(_Frame, self).__init__()
-            self.toolbar = ToolBar()
-            self.dockableWidget = panel
-
-            self.toolBarLayout = QHBoxLayout()
-            self.toolBarLayout.setContentsMargins(0, 0, 0, 0)
-            self.toolBarLayout.setSpacing(0)
-            self.addToolBar(self.toolbar)
-
-            vLayout = QVBoxLayout(self)
-            vLayout.setContentsMargins(0, 0, 0, 0)
-            vLayout.addLayout(self.toolBarLayout)
-            vLayout.addWidget(self.dockableWidget)
-
-            self.dockableWidget.setupToolBars(self.toolbar, self)
-
-        def addToolBar(self, toolbar):
-            self.toolBarLayout.addWidget(toolbar)
 
     icons.init()  # Very important!
-    return _Frame(ScenePanel(scene_view, True))
+
+    title = scene_view.scene_model.simple_name
+    container = PanelContainer(title, None)
+    factory = partial(ScenePanel, scene_view, True)
+    container.addPanel(factory, title)
+    return container
 
 
 def main():
