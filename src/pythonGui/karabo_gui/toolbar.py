@@ -9,8 +9,8 @@ from PyQt4.QtGui import QToolBar
 
 
 class ToolBar(QToolBar):
-    def __init__(self, title=""):
-        super(ToolBar, self).__init__(title)
+    def __init__(self, title="", parent=None):
+        super(ToolBar, self).__init__(title, parent=parent)
 
         self.setStyleSheet("QToolBar {"
                            "background-color: rgb(180,180,180);"
