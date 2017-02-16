@@ -339,7 +339,9 @@ class Descriptor(object):
         else:
             instance._use()
             if self.key not in instance.__dict__:
-                return basetypes.NoneValue(descriptor=self)
+                ret = basetypes.NoneValue(descriptor=self)
+                ret._parent = instance
+                return ret
             return instance.__dict__[self.key]
 
     def __set__(self, instance, value):

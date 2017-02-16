@@ -478,10 +478,16 @@ class Tests(DeviceTest):
     @async_tst
     def test_waituntilnew_new(self):
         """test the waitUntilNew coroutine for properties"""
+        self.remote.counter = None
         with (yield from getDevice("remote")) as d:
             d.counter = 0
-            yield from sleep(0.1)
+            # we test that d.counter is still None (it must be, no yield from
+            # since last line). This asserts that waitUntilNew also works
+            # with uninitialized values, which had been a bug before.
+            self.assertEqual(d.counter, None)
+            yield from waitUntilNew(d.counter)
             task = async(d.count())
+            yield from waitUntilNew(d.counter)
             try:
                 for i in range(30):
                     j = yield from waitUntilNew(d.counter)
