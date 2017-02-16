@@ -9,6 +9,7 @@ from subprocess import PIPE
 
 import numpy
 
+from .basetypes import isSet
 from .enums import AccessLevel, AccessMode, Assignment
 from .eventloop import EventLoop
 from .hash import Bool, Hash, Int32, String, VectorString
@@ -105,7 +106,7 @@ class DeviceServer(SignalSlotable):
         self.newDeviceFutures = {}
         self.hostname, _, self.domainname = socket.gethostname().partition('.')
         self.needScanPlugins = True
-        if not hasattr(self, 'serverId'):
+        if not isSet(self.serverId):
             self.serverId = self._generateDefaultServerId()
 
         self.deviceId = self._deviceId_ = self.serverId
@@ -213,20 +214,11 @@ class DeviceServer(SignalSlotable):
         self.bannedClasses = list(class_ban)
         return changes
 
-    def errorFoundAction(self, m1, m2):
-        self.log.ERROR("{} -- {}".format(m1, m2))
-
-    def endErrorAction(self):
-        pass
-
     @coslot
     def slotStartDevice(self, hash):
         config = Hash()
 
-        if 'classId' in hash:
-            classId, deviceId, config = self.parseNew(hash)
-        else:
-            classId, deviceId, config = self.parseOld(hash)
+        classId, deviceId, config = self.parse(hash)
 
         if classId in self.plugins:
             try:
@@ -261,7 +253,7 @@ class DeviceServer(SignalSlotable):
     def addChild(self, deviceId, child):
         self.deviceInstanceMap[deviceId] = child
 
-    def parseNew(self, hash):
+    def parse(self, hash):
         classid = hash['classId']
         self.log.INFO("Trying to start {}...".format(classid))
         self.log.DEBUG("with the following configuration:\n{}".format(hash))
@@ -280,22 +272,6 @@ class DeviceServer(SignalSlotable):
                                                                     classid)
 
         return classid, config['_deviceId_'], config
-
-    def parseOld(self, hash):
-        # Input 'config' parameter comes from GUI or DeviceClient
-        classid = next(iter(hash))
-        self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n{}".format(hash))
-        configuration = copy.copy(hash[classid])
-        configuration["_serverId_"] = self.serverId
-        deviceid = str()
-        if "deviceId" in configuration:
-            deviceid = configuration["deviceId"]
-        else:
-            deviceid = self._generateDefaultDeviceInstanceId(classid)
-
-        configuration["_deviceId_"] = deviceid
-        return classid, deviceid, configuration
 
     def deviceClassesHash(self):
         visibilities = ([c.visibility.defaultValue.value
