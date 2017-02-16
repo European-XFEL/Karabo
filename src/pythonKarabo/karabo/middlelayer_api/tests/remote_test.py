@@ -10,9 +10,9 @@ from pint import DimensionalityError
 
 from karabo.middlelayer import (
     AlarmCondition, Bool, Configurable, connectDevice, Device, DeviceNode,
-    execute, Float, getDevice, Hash, isSet, Int32, KaraboError, lock,
-    MetricPrefix, Node, setNoWait, setWait, Slot, slot, State, String, unit,
-    Unit, VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
+    execute, Float, getDevice, Hash, isSet, Injectable, Int32, KaraboError,
+    lock, MetricPrefix, Node, setNoWait, setWait, Slot, slot, State, String,
+    unit, Unit, VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
     waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.device_client import Queue
@@ -41,7 +41,7 @@ class Nested(Configurable):
     nestnest = Node(NestNest)
 
 
-class Remote(Device):
+class Remote(Injectable, Device):
     done = Bool()
     value = Int32(description="The Value", defaultValue=7, tags={"whatever"})
     counter = Int32(defaultValue=-1)
@@ -884,6 +884,19 @@ class Tests(DeviceTest):
         a, b = yield from gather(getDevice("remote"), getDevice("remote"))
         self.assertIs(a, b)
 
+    @async_tst
+    def test_inject(self):
+        with (yield from getDevice("remote")) as d:
+            self.remote.__class__.injected = String()
+            with self.assertRaises(TimeoutError):
+                yield from wait_for(waitUntil(lambda: hasattr(d, "injected")),
+                                    timeout=0.1)
+            self.remote.publishInjectedParameters()
+            yield from waitUntil(lambda: hasattr(d, "injected"))
+            self.remote.injected = "bla"
+            yield from waitUntil(lambda: d.injected == "bla")
+            d.injected = "donald"
+            yield from waitUntil(lambda: self.remote.injected == "donald")
 
 if __name__ == "__main__":
     main()

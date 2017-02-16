@@ -45,6 +45,7 @@ from .middlelayer_api.project.api import (
 )
 from .middlelayer_api.macro import Macro, Monitor
 from .middlelayer_api.device import Device
+from .middlelayer_api.injectable import Injectable
 from .middlelayer_api.registry import MetaRegistry, Registry
 from .middlelayer_api.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes
