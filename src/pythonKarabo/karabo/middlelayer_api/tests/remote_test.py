@@ -444,11 +444,25 @@ class Tests(DeviceTest):
                 with self.assertRaises(TimeoutError):
                     yield from wait_for(waitUntil(lambda: d.counter > 10),
                                         timeout=0.1)
+
                 yield from waitUntil(lambda: d.counter > 10)
                 self.assertEqual(d.counter, 11)
+
+                # there are many "while True:" busy loops out there.
+                # assure we don't get stuck if the condition is always true
+                # it is important to have no other yield from except the
+                # waitUntil in the loop to test that it actually gives the
+                # event loop a chance to run. This test, if succeeding, is
+                # fast, but if failing would kill the entire test suite,
+                # that's why there is an upper time limit for it.
+                t0 = time.time()
+                while d.counter < 15 and time.time() - t0 < 1:
+                    yield from waitUntil(lambda: True)
+                self.assertLess(time.time() - t0, 1)
+
                 with self.assertRaises(TimeoutError):
                     yield from wait_for(waitUntil(lambda: d.counter > 40),
-                                        timeout=1)
+                                        timeout=0.01)
             finally:
                 yield from task
 
