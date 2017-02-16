@@ -4,7 +4,7 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
 
 from karabo_gui import icons
 from karabo_gui.indicators import DeviceStatus, get_device_status_pixmap
-from karabo_gui.singletons.api import get_network
+from karabo_gui.singletons.api import get_network, get_panel_wrangler
 from .utils import get_box, determine_if_value_unchanged
 
 
@@ -66,8 +66,7 @@ class BaseWidgetContainer(QWidget):
     def destroy(self):
         """ Disconnect the box signals
         """
-        from karabo_gui import gui
-
+        main_window = get_panel_wrangler().main_window
         widget = self.old_style_widget
         if self.model.parent_component == 'EditableApplyLaterComponent':
             box = self.boxes[0]
@@ -75,7 +74,7 @@ class BaseWidgetContainer(QWidget):
             # These are connected in `EditableWidget.__init__`
             box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
                 widget.updateStateSlot)
-            gui.window.signalGlobalAccessLevelChanged.disconnect(
+            main_window.signalGlobalAccessLevelChanged.disconnect(
                 widget.updateStateSlot)
 
         for box in self.boxes:
