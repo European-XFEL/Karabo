@@ -1,6 +1,6 @@
 from PyQt4.QtCore import pyqtSignal
 
-from karabo_gui import gui
+from karabo_gui.singletons.api import get_panel_wrangler
 from karabo_gui.widget import Widget
 
 
@@ -16,7 +16,9 @@ class AttributeWidget(Widget):
         self._attributeName = attributeName
         box.configuration.boxvalue.state.signalUpdateComponent.connect(
             self.updateStateSlot)
-        gui.window.signalGlobalAccessLevelChanged.connect(self.updateStateSlot)
+
+        main_win = get_panel_wrangler().main_window
+        main_win.signalGlobalAccessLevelChanged.connect(self.updateStateSlot)
 
     def onEditingFinished(self, value):
         self.signalEditingFinished.emit(self.boxes[0], value)

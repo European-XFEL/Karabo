@@ -13,8 +13,7 @@ from PyQt4.QtGui import (QAction, QActionGroup, QColor, QMainWindow, QMenu,
                          QSplitter, QToolButton, qApp)
 
 import karabo_gui.icons as icons
-from karabo.common.api import walk_traits_object
-from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
+from karabo.common.scenemodel.api import SceneTargetWindow
 from karabo.middlelayer import AccessLevel
 from karabo_gui import globals
 from karabo_gui.const import ALARM_COLOR
@@ -35,7 +34,7 @@ from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
 from karabo_gui.sceneview.api import SceneView
 from karabo_gui.singletons.api import (
-    get_db_conn, get_network, get_project_model
+    get_db_conn, get_network
 )
 
 
@@ -80,35 +79,6 @@ class MainWindow(QMainWindow):
             data = event.data
             if sender is KaraboEventSender.DeviceDataReceived:
                 self._updateScenes()
-            elif sender is KaraboEventSender.OpenSceneView:
-                self.addSceneView(data.get('model'),
-                                  SceneTargetWindow.MainWindow)
-            elif sender is KaraboEventSender.OpenSceneLink:
-                target = data.get('target')
-                target_window = data.get('target_window')
-                self.addSceneView(self._load_scene_model(target),
-                                  target_window)
-            elif sender is KaraboEventSender.RemoveSceneView:
-                self.removeMiddlePanel('scene_model', data.get('model'))
-            elif sender is KaraboEventSender.RenameSceneView:
-                self.renameMiddlePanel('scene_model', data.get('model'))
-            elif sender is KaraboEventSender.OpenMacro:
-                self.addMacro(data.get('model'))
-            elif sender is KaraboEventSender.RemoveMacro:
-                self.removeMiddlePanel('macro_model', data.get('model'))
-            elif sender is KaraboEventSender.RenameMacro:
-                self.renameMiddlePanel('macro_model', data.get('model'))
-            elif sender is KaraboEventSender.ShowAlarmServices:
-                self.showAlarmServicePanels(data.get('instanceIds'))
-            elif sender in (KaraboEventSender.AlarmInitReply,
-                            KaraboEventSender.AlarmUpdate):
-                self.showAlarmServicePanels([data.get('instanceId')])
-            elif sender is KaraboEventSender.RemoveAlarmServices:
-                self.removeAlarmServicePanels(data.get('instanceIds'))
-            elif sender is KaraboEventSender.AddRunConfigurator:
-                self.addRunConfigPanel(data.get('instanceIds'))
-            elif sender is KaraboEventSender.RemoveRunConfigurator:
-                self.removeRunConfigPanels(data.get('instanceIds'))
             elif sender is KaraboEventSender.DatabaseIsBusy:
                 self._database_is_processing(data.get('is_processing'))
             return False
@@ -273,21 +243,6 @@ class MainWindow(QMainWindow):
         self.signalQuitApplication.emit()
 
         return True
-
-    def _load_scene_model(self, uuid):
-        found = None
-
-        def visitor(obj):
-            nonlocal found
-            if isinstance(obj, SceneModel):
-                if obj.uuid == uuid:
-                    found = obj
-
-        project = get_project_model().traits_data_model
-        if project is None:
-            return None
-        walk_traits_object(project, visitor)
-        return found
 
     def _addPlaceholderMiddlePanel(self, connectedToServer):
         """The placholder for the middle panel is added.
