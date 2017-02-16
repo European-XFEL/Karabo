@@ -5,18 +5,20 @@
 #############################################################################
 
 from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QToolBar
+from PyQt4.QtGui import QSizePolicy, QToolBar, QWidget
 
 
 class ToolBar(QToolBar):
     def __init__(self, title="", parent=None):
         super(ToolBar, self).__init__(title, parent=parent)
 
-        self.setStyleSheet("QToolBar {"
-                           "background-color: rgb(180,180,180);"
-                           "margin-bottom: 0px;"
-                           "}")
         iconSize = QSize(32, 32)
         iconSize *= 0.6
         self.setIconSize(iconSize)
 
+    def add_expander(self):
+        """Add an empty widget to the toolbar which absorbs horizontal space.
+        """
+        expander = QWidget()
+        expander.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.addWidget(expander)

@@ -7,9 +7,8 @@ from functools import partial
 
 from PyQt4.QtCore import pyqtSlot, QEvent, QSize, Qt
 from PyQt4.QtGui import (QAction, QActionGroup, QApplication, QKeySequence,
-                         QMenu, QPalette, QScrollArea, QSizePolicy, QWidget)
+                         QMenu, QPalette, QScrollArea)
 
-from karabo_gui.docktabwindow import Dockable
 import karabo_gui.icons as icons
 from karabo_gui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabo_gui.sceneview.tools.api import (
@@ -21,33 +20,80 @@ from karabo_gui.sceneview.tools.api import (
     ScenePasteAction, ScenePasteReplaceAction, SceneSelectAllAction,
     SceneSendToBackAction, SceneSelectionTool)
 from karabo_gui.toolbar import ToolBar
+from .base import BasePanelWidget
 
 # NOTE: This is the amount of padding added by ScenePanel's QFrame parent
 # We need to take it into account when undocking!!
 QFRAME_PADDING = 4
 
 
-class ScenePanel(Dockable, QScrollArea):
-    def __init__(self, scene_view, connected_to_server):
-        super(ScenePanel, self).__init__()
-
-        # Reference to underlying scene view
+class ScenePanel(BasePanelWidget):
+    def __init__(self, scene_view, connected_to_server, container, title):
         self.scene_view = scene_view
+        self.connected_to_server_at_init = connected_to_server
+        super(ScenePanel, self).__init__(container, title)
+
+        # cache a reference to the scene model
         self.scene_model = scene_view.scene_model
-        self.setWidget(self.scene_view)
 
-        # Handle resizing of the scene view
-        self._resizing = False
-        self._resize_type = ''
-        self.setMouseTracking(True)
-        self.scene_view.installEventFilter(self)
+    # ----------------------------
+    # BasePanelWidget Methods
 
-        self.setupActions(connected_to_server)
+    def get_content_widget(self):
+        """Returns a QWidget containing the main content of the panel.
+        """
+        self.scroll_widget = ResizableScrollArea(self.scene_view, parent=self)
+        self.scroll_widget.setWidget(self.scene_view)
+        self.scroll_widget.setBackgroundRole(QPalette.Dark)
+        self.scroll_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.scroll_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.scroll_widget.setContentsMargins(0, 0, 0, 0)
+        return self.scroll_widget
 
-        self.setBackgroundRole(QPalette.Dark)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.setContentsMargins(0, 0, 0, 0)
+    def dock(self):
+        """Called when this panel is docked into the main window.
+        """
+        self.scroll_widget.setWidgetResizable(False)
+
+    def undock(self):
+        """Called when this panel is undocked from the main window.
+        """
+        tb_height = self.toolbar.height()
+        frame_width = self.scene_model.width + QFRAME_PADDING
+        frame_height = self.scene_model.height + tb_height + QFRAME_PADDING
+        screen_rect = QApplication.desktop().screenGeometry()
+        if (frame_width < screen_rect.width() and
+                frame_height < screen_rect.height()):
+            # Resize panel
+            self.resize(frame_width, frame_height)
+            # Enlarge the scene widget to its actual size
+            self.scroll_widget.setWidgetResizable(True)
+
+    def toolbars(self):
+        """This should create and return one or more `ToolBar` instances needed
+        by this panel.
+        """
+        self.create_toolbar_actions(self.connected_to_server_at_init)
+
+        always_visible_tb = ToolBar(parent=self)
+        always_visible_tb.addAction(self.ac_design_mode)
+        always_visible_tb.add_expander()
+
+        tool_bar = ToolBar("Drawing", parent=self)
+        tool_bar.setVisible(self.scene_view.design_mode)
+        self.scene_view.setFocusProxy(tool_bar)
+        tool_bar.setFocusPolicy(Qt.StrongFocus)
+
+        tool_bar.addSeparator()
+        for action in self.qactions:
+            tool_bar.addAction(action)
+
+        self.drawing_tool_bar = tool_bar
+
+        # Add placeholder widget to toolbar
+        self.drawing_tool_bar.add_expander()
+
+        return [always_visible_tb, self.drawing_tool_bar]
 
     # ----------------------------
     # Qt Methods
@@ -56,90 +102,24 @@ class ScenePanel(Dockable, QScrollArea):
         self.scene_view.destroy()
         event.accept()
 
-    def eventFilter(self, obj, event):
-        if event.type() == QEvent.Enter:
-            # Unset cursor when mouse is over child
-            self.unsetCursor()
-        return super(ScenePanel, self).eventFilter(obj, event)
+    def hideEvent(self, event):
+        self.scene_view.set_tab_visible(False)
 
-    def mouseMoveEvent(self, event):
-        if not event.buttons():
-            mouse_pos = event.pos()
-            size = self.scene_view.size()
-            dx = mouse_pos.x() - size.width()
-            dy = mouse_pos.y() - size.height()
-            right = 0 < dx < SCENE_BORDER_WIDTH
-            bottom = 0 < dy < SCENE_BORDER_WIDTH
-            if bottom and right:
-                cursor = 'resize-diagonal-tlbr'
-                self._resize_type = 'br'
-            elif bottom and dx <= 0:
-                cursor = 'resize-vertical'
-                self._resize_type = 'b'
-            elif right and dy <= 0:
-                cursor = 'resize-horizontal'
-                self._resize_type = 'r'
-            else:
-                cursor = 'arrow'
-                self._resize_type = ''
-            self.setCursor(QT_CURSORS[cursor])
-        elif self._resizing:
-            mouse_pos = event.pos()
-            size = QSize(self.scene_view.size())
-            if "b" in self._resize_type:
-                size.setHeight(mouse_pos.y())
-            if "r" in self._resize_type:
-                size.setWidth(mouse_pos.x())
-            if (size.width() < SCENE_BORDER_WIDTH or
-                    size.height() < SCENE_BORDER_WIDTH):
-                return
-            self.scene_view.resize(size)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton and self._resize_type != '':
-            self._resizing = True
-            event.accept()
-
-    def mouseReleaseEvent(self, event):
-        if self._resizing:
-            self._resizing = False
-            self._resize_type = ''
-            self.unsetCursor()
-
-    # ----------------------------
-    # Dockable Methods
-
-    def notifyTabVisible(self, visible):
-        self.scene_view.set_tab_visible(visible)
-
-    def undock(self, div):
+    def showEvent(self, event):
         self.scene_view.set_tab_visible(True)
-
-        tb_height = div.toolBar.height()
-        frame_width = self.scene_model.width + QFRAME_PADDING
-        frame_height = self.scene_model.height + tb_height + QFRAME_PADDING
-        screen_rect = QApplication.desktop().screenGeometry()
-        if (frame_width < screen_rect.width() and
-                frame_height < screen_rect.height()):
-            # Resize parent (divWidget)
-            div.resize(frame_width, frame_height)
-            # Enlarge the scene widget to its actual size
-            self.setWidgetResizable(True)
-
-    def dock(self, div):
-        self.setWidgetResizable(False)
 
     # ----------------------------
     # other methods
 
-    def design_mode_text(self, is_design_mode):
-        if is_design_mode:
-            return "Change to control mode"
-
-        return "Change to design mode"
-
-    def setupActions(self, connected_to_server):
-        self.create_design_mode_action(connected_to_server)
+    def create_toolbar_actions(self, connected_to_server):
+        text = self.design_mode_text(self.scene_view.design_mode)
+        self.ac_design_mode = QAction(icons.transform, text, self)
+        self.ac_design_mode.setToolTip(text)
+        self.ac_design_mode.setStatusTip(text)
+        self.ac_design_mode.setCheckable(True)
+        self.ac_design_mode.setChecked(self.scene_view.design_mode)
+        self.ac_design_mode.setEnabled(connected_to_server)
+        self.ac_design_mode.toggled.connect(self.design_mode_changed)
 
         self.qactions = []
         mode_qactions = self.create_mode_qactions()
@@ -167,25 +147,11 @@ class ScenePanel(Dockable, QScrollArea):
         self.qactions.extend(self._build_qaction(a)
                              for a in self.create_order_actions())
 
-    def setupToolBars(self, standardToolBar, parent):
-        standardToolBar.addAction(self.ac_design_mode)
+    def design_mode_text(self, is_design_mode):
+        if is_design_mode:
+            return "Change to control mode"
 
-        tool_bar = ToolBar("Drawing")
-        tool_bar.setVisible(self.scene_view.design_mode)
-        parent.addToolBar(tool_bar)
-        self.scene_view.setFocusProxy(tool_bar)
-        tool_bar.setFocusPolicy(Qt.StrongFocus)
-
-        tool_bar.addSeparator()
-        for action in self.qactions:
-            tool_bar.addAction(action)
-
-        self.drawing_tool_bar = tool_bar
-
-        # Add placeholder widget to toolbar
-        widget = QWidget()
-        widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.drawing_tool_bar.addWidget(widget)
+        return "Change to design mode"
 
     @pyqtSlot(bool)
     def design_mode_changed(self, is_checked):
@@ -195,17 +161,6 @@ class ScenePanel(Dockable, QScrollArea):
         self.ac_design_mode.setStatusTip(text)
         self.ac_selection_tool.setChecked(is_checked)
         self.scene_view.design_mode = is_checked
-
-    def create_design_mode_action(self, connected_to_server):
-        """ Switch for design and control mode """
-        text = self.design_mode_text(self.scene_view.design_mode)
-        self.ac_design_mode = QAction(icons.transform, text, self)
-        self.ac_design_mode.setToolTip(text)
-        self.ac_design_mode.setStatusTip(text)
-        self.ac_design_mode.setCheckable(True)
-        self.ac_design_mode.setChecked(self.scene_view.design_mode)
-        self.ac_design_mode.setEnabled(connected_to_server)
-        self.ac_design_mode.toggled.connect(self.design_mode_changed)
 
     def create_mode_qactions(self):
         """ Create mode QActions and return list of them"""
@@ -334,3 +289,67 @@ class ScenePanel(Dockable, QScrollArea):
         q_action = QAction(self)
         q_action.setSeparator(True)
         return q_action
+
+
+class ResizableScrollArea(QScrollArea):
+    """A QScrollArea which enables resizing of its child widget via mouse
+    interaction
+    """
+    def __init__(self, child_widget, parent=None):
+        super(ResizableScrollArea, self).__init__(parent=parent)
+
+        self._resizing = False
+        self._resize_type = ''
+        self._child_widget = child_widget
+        self._child_widget.installEventFilter(self)
+        self.setMouseTracking(True)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Enter:
+            # Unset cursor when mouse is over child
+            self.unsetCursor()
+        return super(ResizableScrollArea, self).eventFilter(obj, event)
+
+    def mouseMoveEvent(self, event):
+        if not event.buttons():
+            mouse_pos = event.pos()
+            size = self._child_widget.size()
+            dx = mouse_pos.x() - size.width()
+            dy = mouse_pos.y() - size.height()
+            right = 0 < dx < SCENE_BORDER_WIDTH
+            bottom = 0 < dy < SCENE_BORDER_WIDTH
+            if bottom and right:
+                cursor = 'resize-diagonal-tlbr'
+                self._resize_type = 'br'
+            elif bottom and dx <= 0:
+                cursor = 'resize-vertical'
+                self._resize_type = 'b'
+            elif right and dy <= 0:
+                cursor = 'resize-horizontal'
+                self._resize_type = 'r'
+            else:
+                cursor = 'arrow'
+                self._resize_type = ''
+            self.setCursor(QT_CURSORS[cursor])
+        elif self._resizing:
+            mouse_pos = event.pos()
+            size = QSize(self._child_widget.size())
+            if "b" in self._resize_type:
+                size.setHeight(mouse_pos.y())
+            if "r" in self._resize_type:
+                size.setWidth(mouse_pos.x())
+            if (size.width() < SCENE_BORDER_WIDTH or
+                    size.height() < SCENE_BORDER_WIDTH):
+                return
+            self._child_widget.resize(size)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton and self._resize_type != '':
+            self._resizing = True
+            event.accept()
+
+    def mouseReleaseEvent(self, event):
+        if self._resizing:
+            self._resizing = False
+            self._resize_type = ''
+            self.unsetCursor()

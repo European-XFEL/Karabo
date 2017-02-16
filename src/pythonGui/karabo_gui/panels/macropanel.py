@@ -14,50 +14,62 @@ except ImportError:
     from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
 
 from karabo.common.project.api import write_macro
-from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (
     KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
     unregister_from_broadcasts)
 import karabo_gui.icons as icons
-from karabo_gui.singletons.api import get_topology
-from karabo_gui.util import getSaveFileName
 from karabo_gui.project.utils import run_macro
+from karabo_gui.singletons.api import get_topology
+from karabo_gui.toolbar import ToolBar
+from karabo_gui.util import getSaveFileName
+from .base import BasePanelWidget
 
 
-class MacroPanel(Dockable, QSplitter):
+class MacroPanel(BasePanelWidget):
+    def __init__(self, model, container, title):
+        self.model = model
 
-    def __init__(self, macro_model):
-        QSplitter.__init__(self, Qt.Vertical)
+        super(MacroPanel, self).__init__(container, title)
 
-        self.macro_model = macro_model
-
-        self.teEditor = QTextEdit(self)
-        self.teEditor.installEventFilter(self)
-        self.teEditor.setAcceptRichText(False)
-        self.teEditor.setStyleSheet("font-family: monospace")
-        self.teEditor.setPlainText(write_macro(self.macro_model))
-
-        PygmentsHighlighter(self.teEditor.document())
-        self.addWidget(self.teEditor)
-        self.teEditor.setLineWrapMode(QTextEdit.NoWrap)
-        self.teEditor.textChanged.connect(self.onMacroChanged)
-
-        self.console = QPlainTextEdit(self)
-        self.console.setReadOnly(True)
-        self.console.setStyleSheet("font-family: monospace")
-        self.addWidget(self.console)
         self.already_connected = set()
 
         # Register to KaraboBroadcastEvent
         register_for_broadcasts(self)
 
         # Connect all running macros
-        for instance in macro_model.instances:
+        for instance in model.instances:
             self.connect(instance)
 
-    def setupToolBars(self, tb, parent):
-        tb.addAction(icons.start, "Run", self.onRun)
-        tb.addAction(icons.save, "Save", self.onSave)
+    def get_content_widget(self):
+        """Returns a QWidget containing the main content of the panel.
+        """
+        widget = QSplitter(Qt.Vertical, parent=self)
+        self.teEditor = QTextEdit(widget)
+        self.teEditor.installEventFilter(self)
+        self.teEditor.setAcceptRichText(False)
+        self.teEditor.setStyleSheet("font-family: monospace")
+        self.teEditor.setPlainText(write_macro(self.model))
+
+        PygmentsHighlighter(self.teEditor.document())
+        widget.addWidget(self.teEditor)
+        self.teEditor.setLineWrapMode(QTextEdit.NoWrap)
+        self.teEditor.textChanged.connect(self.onMacroChanged)
+
+        self.console = QPlainTextEdit(widget)
+        self.console.setReadOnly(True)
+        self.console.setStyleSheet("font-family: monospace")
+        widget.addWidget(self.console)
+
+        return widget
+
+    def toolbars(self):
+        """This should create and return one or more `ToolBar` instances needed
+        by this panel.
+        """
+        toolbar = ToolBar(parent=self)
+        toolbar.addAction(icons.start, "Run", self.onRun)
+        toolbar.addAction(icons.save, "Save", self.onSave)
+        return [toolbar]
 
     def eventFilter(self, object, event):
         if event.type() == QEvent.KeyPress:
@@ -66,18 +78,16 @@ class MacroPanel(Dockable, QSplitter):
                 return True
         elif isinstance(event, KaraboBroadcastEvent):
             sender = event.sender
+            data = event.data
             if sender is KaraboEventSender.ConnectMacroInstance:
-                data = event.data
-                macro_model = data.get('model')
-                if macro_model is self.macro_model:
+                model = data.get('model')
+                if model is self.model:
                     self.connect(data.get('instance'))
-                    return False
             elif sender is KaraboEventSender.DeviceInitReply:
-                data = event.data
                 macro_instance = data.get('device')
-                if macro_instance.id in self.macro_model.instance_id:
+                if macro_instance.id in self.model.instance_id:
                     self.initReply(data.get('success'), data.get('message'))
-                    return False
+            return False
         return False
 
     def closeEvent(self, event):
@@ -104,9 +114,9 @@ class MacroPanel(Dockable, QSplitter):
     def onRun(self):
         self.console.clear()
         try:
-            compile(self.macro_model.code, self.macro_model.simple_name, "exec")
+            compile(self.model.code, self.model.simple_name, "exec")
         except SyntaxError as e:
-            if e.filename[7:-3] == self.macro_model.simple_name:
+            if e.filename[7:-3] == self.model.simple_name:
                 c = self.teEditor.textCursor()
                 c.movePosition(c.Start)
                 c.movePosition(c.Down, n=e.lineno - 1)
@@ -117,19 +127,19 @@ class MacroPanel(Dockable, QSplitter):
                                 e.msg, e.text, " " * e.offset, e.filename,
                                 e.lineno))
         else:
-            run_macro(self.macro_model)
+            run_macro(self.model)
 
     def onSave(self):
         fn = getSaveFileName(
                 caption="Save macro to file",
                 filter="Python files (*.py)",
                 suffix="py",
-                selectFile=self.macro_model.simple_name + ".py")
+                selectFile=self.model.simple_name + ".py")
         if not fn:
             return
 
         with open(fn, "w") as out:
-            out.write(write_macro(self.macro_model))
+            out.write(write_macro(self.model))
 
     def onMacroChanged(self):
-        self.macro_model.code = self.teEditor.toPlainText()
+        self.model.code = self.teEditor.toPlainText()

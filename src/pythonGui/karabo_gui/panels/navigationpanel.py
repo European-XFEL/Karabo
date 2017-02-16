@@ -3,30 +3,25 @@
 # Created on November 30, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtGui import QVBoxLayout, QWidget
-
-from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.navigationtreeview import NavigationTreeView
+from .base import BasePanelWidget
 
 
-class NavigationPanel(Dockable, QWidget):
-    def __init__(self):
-        super(NavigationPanel, self).__init__()
+class NavigationPanel(BasePanelWidget):
+    def __init__(self, container, title):
+        super(NavigationPanel, self).__init__(container, title)
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.
         register_for_broadcasts(self)
 
-        title = "Navigation"
-        self.setWindowTitle(title)
-
+    def get_content_widget(self):
+        """Returns a QWidget containing the main content of the panel.
+        """
         self.twNavigation = NavigationTreeView(self)
-
-        mainLayout = QVBoxLayout(self)
-        mainLayout.setContentsMargins(5, 5, 5, 5)
-        mainLayout.addWidget(self.twNavigation)
+        return self.twNavigation
 
     def eventFilter(self, obj, event):
         """ Router for incoming broadcasts
