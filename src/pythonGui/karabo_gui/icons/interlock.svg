@@ -14,7 +14,7 @@
    viewBox="0 0 31.999999 31.999999"
    id="svg6338"
    version="1.1"
-   inkscape:version="0.91 r13725"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="interlock.svg">
   <defs
      id="defs6340">
@@ -83,16 +83,16 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="11.2"
-     inkscape:cx="17.737206"
-     inkscape:cy="0.85573122"
+     inkscape:cx="2.0229203"
+     inkscape:cy="33.942228"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1920"
-     inkscape:window-height="1138"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1"
+     inkscape:window-width="721"
+     inkscape:window-height="415"
+     inkscape:window-x="375"
+     inkscape:window-y="369"
+     inkscape:window-maximized="0"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
@@ -106,7 +106,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -116,18 +116,18 @@
      id="layer1"
      transform="translate(-283.41602,-117.39189)">
     <g
-       id="g3360">
+       id="g3769">
       <path
          sodipodi:nodetypes="cccc"
          inkscape:connector-curvature="0"
          id="path6474"
          d="m 284.85155,147.53679 29.2752,0 -14.6376,-27.85804 z"
-         style="fill:#800080;fill-rule:evenodd;stroke:#000000;stroke-width:1.41589856;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+         style="fill:#cb64ff;fill-rule:evenodd;stroke:#000000;stroke-width:1.41589856000000003;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;fill-opacity:1" />
       <path
          inkscape:connector-curvature="0"
          id="path6476"
          d="m 299.40519,132.40388 0,12.59485"
-         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+         style="fill:#f9f9f9;stroke:#ffffff;stroke-width:1.99999993999999992;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
     </g>
   </g>
 </svg>
