@@ -309,13 +309,14 @@ class SignalSlotable(Configurable):
         if d is not None:
             d._onChanged(configuration)
         loop = get_event_loop()
-        loop.notifyChanged()
+        for f in loop.changedFutures:
+            f.set_result(None)
+        loop.changedFutures = set()
 
     @slot
     def slotSchemaUpdated(self, schema, deviceId):
         d = self._proxies.get(deviceId)
         if d is not None:
-            get_event_loop().notifyChanged()
             d._onSchemaUpdated(schema)
 
     @slot
