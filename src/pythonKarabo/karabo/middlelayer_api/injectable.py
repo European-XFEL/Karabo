@@ -25,3 +25,4 @@ class Injectable(Configurable):
         seen = set(cls._allattrs)
         cls._allattrs.extend(attr for attr in cls._attrs if attr not in seen)
         self._notifyNewSchema()
+        self.signalChanged(self.configurationAsHash(), self.deviceId)

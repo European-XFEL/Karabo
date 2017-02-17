@@ -888,11 +888,13 @@ class Tests(DeviceTest):
     def test_inject(self):
         with (yield from getDevice("remote")) as d:
             self.remote.__class__.injected = String()
+            self.remote.injected = "spicer"
             with self.assertRaises(TimeoutError):
                 yield from wait_for(waitUntil(lambda: hasattr(d, "injected")),
                                     timeout=0.1)
             self.remote.publishInjectedParameters()
             yield from waitUntil(lambda: hasattr(d, "injected"))
+            yield from waitUntil(lambda: d.injected == "spicer")
             self.remote.injected = "bla"
             yield from waitUntil(lambda: d.injected == "bla")
             d.injected = "donald"
