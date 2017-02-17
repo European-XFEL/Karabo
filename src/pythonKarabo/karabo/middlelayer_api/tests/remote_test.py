@@ -158,6 +158,14 @@ class Local(Device):
 
 
 class Tests(DeviceTest):
+    """The tests in this class run on behalf of the device "local".
+    As they also have a reference to the remote device "remote", they
+    can also modify attributes of "remote" directly, as if "remote" had
+    done it itself.
+
+    The tests then typically call the remote device via a proxy, which is
+    generated, if needed, in every test.
+    """
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
