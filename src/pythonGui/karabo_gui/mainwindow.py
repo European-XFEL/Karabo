@@ -6,7 +6,6 @@
 """This module contains a class which represents the main window of the
     application and includes all relevant panels and the main toolbar.
 """
-from functools import partial
 import os.path
 
 from PyQt4.QtCore import Qt, pyqtSignal, pyqtSlot
@@ -33,7 +32,6 @@ from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.runconfigpanel import RunConfigPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
-from karabo_gui.sceneview.api import SceneView
 from karabo_gui.singletons.api import (
     get_db_conn, get_network
 )
@@ -191,14 +189,15 @@ class MainWindow(QMainWindow):
 
         self.leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.navigationTab = PanelContainer("Navigation", self.leftArea)
-        self.navigationPanel = self.navigationTab.addPanel(NavigationPanel,
-                                                           "Navigation")
+        self.navigationPanel = NavigationPanel()
+        self.navigationTab.addPanel(self.navigationPanel)
         self.signalGlobalAccessLevelChanged.connect(
             self.navigationPanel.onGlobalAccessLevelChanged)
         self.leftArea.setStretchFactor(0, 2)
 
         self.projectTab = PanelContainer("Projects", self.leftArea)
-        self.projectPanel = self.projectTab.addPanel(ProjectPanel, "Projects")
+        self.projectPanel = ProjectPanel()
+        self.projectTab.addPanel(self.projectPanel)
         self.leftArea.setStretchFactor(1, 1)
 
         self.middleArea = QSplitter(Qt.Vertical, mainSplitter)
@@ -212,17 +211,18 @@ class MainWindow(QMainWindow):
         self.runConfigPanels = {}
 
         self.outputTab = PanelContainer("Output", self.middleArea)
-        self.loggingPanel = self.outputTab.addPanel(LoggingPanel, "Log")
-        self.scriptingPanel = self.outputTab.addPanel(ScriptingPanel,
-                                                      "Console")
-        self.notificationPanel = self.outputTab.addPanel(NotificationPanel,
-                                                         "Notifications")
+        self.loggingPanel = LoggingPanel()
+        self.scriptingPanel = ScriptingPanel()
+        self.notificationPanel = NotificationPanel()
+        self.outputTab.addPanel(self.loggingPanel)
+        self.outputTab.addPanel(self.scriptingPanel)
+        self.outputTab.addPanel(self.notificationPanel)
         self.middleArea.setStretchFactor(1, 1)
 
         self.rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.configurationTab = PanelContainer("Configuration", self.rightArea)
-        self.configurationPanel = self.configurationTab.addPanel(
-            ConfigurationPanel, "Configuration Editor")
+        self.configurationPanel = ConfigurationPanel()
+        self.configurationTab.addPanel(self.configurationPanel)
         self.signalGlobalAccessLevelChanged.connect(
             self.configurationPanel.onGlobalAccessLevelChanged)
 
@@ -274,8 +274,8 @@ class MainWindow(QMainWindow):
             self._removePlaceholderMiddlePanel()
 
     def _createPlaceholderMiddlePanel(self):
-        self.placeholderPanel = self.middleTab.addPanel(PlaceholderPanel,
-                                                        "Start Page")
+        self.placeholderPanel = PlaceholderPanel()
+        self.middleTab.addPanel(self.placeholderPanel)
 
     def _getPanel(self, panelContainer, child_type, model):
         """ The associated panel of the given ``panelContainer`` for the given
@@ -321,7 +321,7 @@ class MainWindow(QMainWindow):
         if panel is not None:
             index = self.middleTab.indexOf(panel)
             # Update title - important for undocked widgets
-            panel.updateTitle(model.simple_name)
+            panel.setWindowTitle(model.simple_name)
             if index > -1:
                 self.middleTab.setTabText(index, model.simple_name)
 
@@ -355,9 +355,9 @@ class MainWindow(QMainWindow):
             # Check whether there is already an alarm panel for
             # this ``instanceId``
             if instId not in self.alarmPanels:
-                factory = partial(AlarmPanel, instId)
                 title = "Alarms for {}".format(instId)
-                panel = self.outputTab.addPanel(factory, title)
+                panel = AlarmPanel(instId, title)
+                self.outputTab.addPanel(panel)
                 self.selectPanel(self.outputTab, panel)
                 tabBar = self.outputTab.tabBar()
                 tabBar.setTabTextColor(
@@ -376,11 +376,11 @@ class MainWindow(QMainWindow):
     def addRunConfigPanel(self, instanceIds):
         for instId in instanceIds:
             if instId not in self.runConfigPanels:
-                factory = partial(RunConfigPanel, instId)
                 title = "Run configuration at {}".format(instId)
                 if len(self.runConfigPanels) == 0:
                     title = "RunConfig"
-                panel = self.configurationTab.addPanel(factory, title)
+                panel = RunConfigPanel(instId, title)
+                self.configurationTab.addPanel(panel)
                 self.selectPanel(self.outputTab, panel)
                 self.runConfigPanels[instId] = panel
 
@@ -409,10 +409,9 @@ class MainWindow(QMainWindow):
             panel = self._getPanel(self.middleTab, 'scene_model', sceneModel)
         else:
             # Add scene view to tab widget
-            sceneView = SceneView(model=sceneModel, parent=self)
             server_connected = self.acServerConnect.isChecked()
-            factory = partial(ScenePanel, sceneView, server_connected)
-            panel = self.middleTab.addPanel(factory, sceneModel.simple_name)
+            panel = ScenePanel(sceneModel, server_connected)
+            self.middleTab.addPanel(panel)
             self.selectPanel(self.middleTab, panel)
 
         # If it's a dialog, make sure it's undocked
@@ -427,8 +426,8 @@ class MainWindow(QMainWindow):
         if self.focusExistingPanel(self.middleTab, 'macro_model', macroModel):
             return
 
-        factory = partial(MacroPanel, macroModel)
-        panel = self.middleTab.addPanel(factory, macroModel.simple_name)
+        panel = MacroPanel(macroModel)
+        self.middleTab.addPanel(panel)
         self.selectPanel(self.middleTab, panel)
 
     def _updateScenes(self):
