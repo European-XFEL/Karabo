@@ -9,8 +9,8 @@ from .base import BasePanelWidget
 
 
 class PlaceholderPanel(BasePanelWidget):
-    def __init__(self, container, title):
-        super(PlaceholderPanel, self).__init__(container, title)
+    def __init__(self):
+        super(PlaceholderPanel, self).__init__("Start Page")
         self.doesDockOnClose = False
 
     def get_content_widget(self):

@@ -13,8 +13,8 @@ from .base import BasePanelWidget
 
 
 class ScriptingPanel(BasePanelWidget):
-    def __init__(self, container, title):
-        super(ScriptingPanel, self).__init__(container, title)
+    def __init__(self):
+        super(ScriptingPanel, self).__init__("Console")
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
