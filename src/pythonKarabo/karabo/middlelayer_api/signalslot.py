@@ -6,6 +6,7 @@ import random
 import sys
 import weakref
 import inspect
+import re
 
 from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
@@ -104,6 +105,7 @@ class SignalSlotable(Configurable):
 
         class Spam(SignalSlotable):
             signalHam = Signal(String(), Int())"""
+    naming_regex = re.compile("[A-Za-z0-9_/-]+")
     signalChanged = Signal(HashType(), String())
 
     _deviceId_ = String(
@@ -133,6 +135,10 @@ class SignalSlotable(Configurable):
             if isinstance(getattr(self, k, None), Signal):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
         super().__init__(configuration)
+        if not self.naming_regex.fullmatch(self._deviceId_):
+            raise RuntimeError(
+                'Device name "{}" does not follow naming convention'
+                .format(self._deviceId_))
         self.deviceId = self._deviceId_
         self._proxies = weakref.WeakValueDictionary()
         self._proxy_futures = {}
