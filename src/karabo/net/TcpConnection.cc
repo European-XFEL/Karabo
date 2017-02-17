@@ -204,14 +204,13 @@ namespace karabo {
                                 m_port = le.port();
                             }
                         } catch (const std::exception& e) {
-                            std::string errorMsg = e.what();
                             if (m_acceptor.is_open()) {
                                 m_acceptor.cancel();
                                 m_acceptor.close();
                             }
                             if (m_port != 0) {
-                                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("bind with port "
-                                        + toString(m_port) + " failed. OS: '" + errorMsg + "'"));
+                                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("bind with port "
+                                        + toString(m_port) + " failed. OS: '" + e.what() + "'"));
                             }
                         }
                     } while (m_port == 0);
