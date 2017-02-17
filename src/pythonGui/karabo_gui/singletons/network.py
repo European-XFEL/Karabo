@@ -140,7 +140,9 @@ class Network(QObject):
                     self.username, self.password, self.provider, ipAddress,
                     self.brokerHost, self.brokerPort, self.brokerTopic)
             except Exception as e:
-                print("Authenticator not available.", str(e))
+                QMessageBox.warning(None, 'Authenticator not available',
+                                    str(e))
+                return
 
             # Execute Login
             ok = False
@@ -224,35 +226,37 @@ class Network(QObject):
         self.disconnectFromServer()
 
         if socketError == QAbstractSocket.ConnectionRefusedError:
+            msg = ('The connection to GUI server <b>{}[:{}]</b> '
+                   'failed.').format(self.hostname, self.port)
             reply = QMessageBox.question(
-                None, 'Server connection refused',
-                "The connection to the server was refused <BR> by the peer "
-                "(or timed out).",
+                None, 'Server connection refused', msg,
                 QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
 
             if reply == QMessageBox.Cancel:
                 return
         elif socketError == QAbstractSocket.RemoteHostClosedError:
+            msg = ('The remote host <b>{}[:{}]</b> closed the connection'
+                   '.').format(self.hostname, self.port)
             reply = QMessageBox.question(
-                None, 'Connection closed',
-                "The remote host closed the connection.",
+                None, 'Connection closed', msg,
                 QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
 
             if reply == QMessageBox.Cancel:
                 return
         elif socketError == QAbstractSocket.HostNotFoundError:
+            msg = 'The host address <b>{}</b> was not found.'.format(
+                self.hostname)
             reply = QMessageBox.question(
-                None, 'Host address error',
-                "The host address was not found.",
+                None, 'Host address error', msg,
                 QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
 
             if reply == QMessageBox.Cancel:
                 return
         elif socketError == QAbstractSocket.NetworkError:
+            msg = ('An error occurred with the network (e.g., <br>the network '
+                   'cable was accidentally plugged out).')
             reply = QMessageBox.question(
-                None, 'Network error',
-                "An error occurred with the network (e.g., <BR> "
-                "the network cable was accidentally plugged out).",
+                None, 'Network error', msg,
                 QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
 
             if reply == QMessageBox.Cancel:
