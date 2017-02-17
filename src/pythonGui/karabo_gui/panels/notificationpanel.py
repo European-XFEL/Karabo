@@ -11,8 +11,8 @@ from .base import BasePanelWidget
 
 
 class NotificationPanel(BasePanelWidget):
-    def __init__(self, container, title):
-        super(NotificationPanel, self).__init__(container, title)
+    def __init__(self):
+        super(NotificationPanel, self).__init__("Notifications")
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.

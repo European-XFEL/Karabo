@@ -14,8 +14,8 @@ from .base import BasePanelWidget
 
 
 class LoggingPanel(BasePanelWidget):
-    def __init__(self, container, title):
-        super(LoggingPanel, self).__init__(container, title)
+    def __init__(self):
+        super(LoggingPanel, self).__init__("Log")
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.

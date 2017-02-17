@@ -18,8 +18,8 @@ from .base import BasePanelWidget
 
 
 class RunConfigPanel(BasePanelWidget):
-    def __init__(self, instanceId, container, title):
-        super(RunConfigPanel, self).__init__(container, title)
+    def __init__(self, instanceId, title):
+        super(RunConfigPanel, self).__init__(title)
 
         self.instanceId = instanceId
         self.availableGroups = {}

@@ -16,17 +16,17 @@ class PanelContainer(QTabWidget):
         self.panel_set = set()
         self.tabCloseRequested.connect(self.onCloseTab)
 
-    def addPanel(self, factory, label):
-        """This function gets a panel factory, a label and optionally an icon,
-        adds a new panel to the tab and returns it.
+    def addPanel(self, panel):
+        """This function gets a panel and adds it to this container.
         """
-        panel = factory(self, label)
-        index = self.addTab(panel, label)
+        index = self.addTab(panel, panel.windowTitle())
         panel.index = index
 
         # Store panel in set to keep it alive for un/dock event!!!
         self.panel_set.add(panel)
-        return panel
+
+        # XXX: Circular references hurrah!
+        panel.attach_to_container(self)
 
     def removePanel(self, panel):
         index = self.indexOf(panel)
@@ -59,7 +59,7 @@ class PanelContainer(QTabWidget):
 
     def dock(self, panel):
         if panel.parent() is None:
-            index = self.insertTab(panel.index, panel, panel.title)
+            index = self.insertTab(panel.index, panel, panel.windowTitle())
 
             for i in range(self.count()):
                 if self.widget(i) is not None:
