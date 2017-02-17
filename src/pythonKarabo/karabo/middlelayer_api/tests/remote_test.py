@@ -171,7 +171,6 @@ class Tests(DeviceTest):
         self.remote.done = False
         with (yield from getDevice("remote")) as d:
             yield from d.doit()
-        yield from sleep(0.1)
         self.assertTrue(self.remote.done)
 
     @async_tst
@@ -334,7 +333,6 @@ class Tests(DeviceTest):
         self.remote.value = 7
         with (yield from getDevice("remote")) as d:
             yield from d.changeit()
-        yield from sleep(0.1)
         self.assertEqual(self.remote.value, 3)
 
     @async_tst
@@ -381,7 +379,6 @@ class Tests(DeviceTest):
             yield from sleep(0.1)
             self.assertEqual(d.value, 10)
             yield from d.changeit()
-            yield from sleep(0.1)
             self.assertEqual(d.value, 6)
 
     @async_tst
@@ -390,7 +387,6 @@ class Tests(DeviceTest):
         self.remote.value = 7
         d = yield from getDevice("remote")
         yield from d.generic()
-        yield from sleep(0.1)
         self.assertEqual(self.remote.value, 22)
 
     @async_tst
@@ -400,7 +396,6 @@ class Tests(DeviceTest):
         d = yield from getDevice("remote")
         d.generic_int = 33
         yield from d
-        yield from sleep(0.1)
         self.assertEqual(self.remote.value, 66)
 
     @async_tst
@@ -444,11 +439,25 @@ class Tests(DeviceTest):
                 with self.assertRaises(TimeoutError):
                     yield from wait_for(waitUntil(lambda: d.counter > 10),
                                         timeout=0.1)
+
                 yield from waitUntil(lambda: d.counter > 10)
                 self.assertEqual(d.counter, 11)
+
+                # there are many "while True:" busy loops out there.
+                # assure we don't get stuck if the condition is always true
+                # it is important to have no other yield from except the
+                # waitUntil in the loop to test that it actually gives the
+                # event loop a chance to run. This test, if succeeding, is
+                # fast, but if failing would kill the entire test suite,
+                # that's why there is an upper time limit for it.
+                t0 = time.time()
+                while d.counter < 15 and time.time() - t0 < 1:
+                    yield from waitUntil(lambda: True)
+                self.assertLess(time.time() - t0, 1)
+
                 with self.assertRaises(TimeoutError):
                     yield from wait_for(waitUntil(lambda: d.counter > 40),
-                                        timeout=1)
+                                        timeout=0.01)
             finally:
                 yield from task
 
@@ -469,10 +478,16 @@ class Tests(DeviceTest):
     @async_tst
     def test_waituntilnew_new(self):
         """test the waitUntilNew coroutine for properties"""
+        self.remote.counter = None
         with (yield from getDevice("remote")) as d:
             d.counter = 0
-            yield from sleep(0.1)
+            # we test that d.counter is still None (it must be, no yield from
+            # since last line). This asserts that waitUntilNew also works
+            # with uninitialized values, which had been a bug before.
+            self.assertEqual(d.counter, None)
+            yield from waitUntilNew(d.counter)
             task = async(d.count())
+            yield from waitUntilNew(d.counter)
             try:
                 for i in range(30):
                     j = yield from waitUntilNew(d.counter)
@@ -634,7 +649,6 @@ class Tests(DeviceTest):
             with (yield from getDevice("local")) as d, \
                     self.assertRaises(KaraboError):
                 yield from d.error()
-            yield from sleep(0.1)
         self.assertTrue(self.remote.done)
         self.remote.done = False
         self.assertIs(self.local.exc_slot, Local.error)
@@ -652,7 +666,6 @@ class Tests(DeviceTest):
             with (yield from getDevice("local")) as d, \
                     self.assertRaises(KaraboError):
                 yield from d.error_in_error()
-            yield from sleep(0.1)
         self.assertEqual(logs.records[-1].msg, "error in error handler")
         self.assertFalse(self.remote.done)
         self.assertIs(self.local.exc_slot, Local.error_in_error)
@@ -730,7 +743,6 @@ class Tests(DeviceTest):
                 self.assertTrue(self.remote.done)
                 d.dn.value = 22
                 yield from d.dn.changeit()
-                yield from sleep(0.02)
                 self.assertEqual(d.dn.value, 18)
                 self.assertEqual(a.dn.value, 18)
 

@@ -13,7 +13,6 @@ import numpy
 import pint
 
 from .enums import MetricPrefix, Unit
-from .registry import Registry
 from .weak import Weak
 
 
@@ -332,6 +331,10 @@ class TableValue(KaraboValue):
 
     def __getattr__(self, attr):
         return getattr(self.value, attr)
+
+    def __iter__(self):
+        for row in self.value:
+            yield TableValue(row, self.units, timestamp=self.timestamp)
 
 
 # Pint is based on the concept of a unit registry. For each unit registry,
