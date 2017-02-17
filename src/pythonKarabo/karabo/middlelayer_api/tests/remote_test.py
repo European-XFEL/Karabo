@@ -496,7 +496,6 @@ class Tests(DeviceTest):
             self.assertEqual(d.counter, None)
             yield from waitUntilNew(d.counter)
             task = async(d.count())
-            yield from waitUntilNew(d.counter)
             try:
                 for i in range(30):
                     j = yield from waitUntilNew(d.counter)
