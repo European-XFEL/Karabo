@@ -916,8 +916,8 @@ the device we are working on.
 Once we inherited from :class:`~karabo.middlelayer.Injectable`, we can
 freely modify ``self.__class__``. Once we have done those
 modifications,
-:meth:`~karabo.middlelayer.Injectable.publishInjectedParameters`. As
-an example::
+:meth:`~karabo.middlelayer.Injectable.publishInjectedParameters` needs
+to be called to publish the changes. As an example::
 
     class MyDevice(Injectable, Device):
 	def inject_something(self):
