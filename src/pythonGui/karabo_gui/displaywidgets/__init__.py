@@ -27,11 +27,12 @@ __all__ = [
     "displaytrendline",
     "eval",
     "icons",
+    "imagewidgets",
     "lampwidget",
     "monitor",
     "popup",
     "singlebit",
+    "statefuliconwidget",
     "xyplot",
     "xyvectors",
-    "imagewidgets",
 ]

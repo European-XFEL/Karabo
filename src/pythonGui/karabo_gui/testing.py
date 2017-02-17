@@ -1,6 +1,5 @@
 import sys
 import unittest
-import unittest.mock
 
 from PyQt4.QtGui import QApplication
 
@@ -18,9 +17,3 @@ class GuiTestCase(unittest.TestCase):
         self.app = app
 
         icons.init()
-
-        # Mock the stupid global mainwindow object
-        window = unittest.mock.patch('karabo_gui.gui.window')
-        self.gui_window = window.start()
-        self.gui_window.signalGlobalAccessLevelChanged.connect()
-        self.gui_window.signalGlobalAccessLevelChanged.disconnect()

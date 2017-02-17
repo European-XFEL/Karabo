@@ -26,6 +26,8 @@ class Tests(TestCase):
         self.assertEqual(s.timestamp, 3)
         self.assertEqual(s.value, s)
         self.assertIs(type(s.value), str)
+        self.assertEqual(next(iter(s)), "a")
+        self.assertIs(next(iter(s)).timestamp, 3)
 
         s2 = StringValue(s)
         self.assertTrue(s == s2)
@@ -42,6 +44,8 @@ class Tests(TestCase):
         self.assertEqual(b.timestamp, 2)
         self.assertEqual(b.value, b)
         self.assertIs(type(b.value), bytes)
+        self.assertEqual(next(iter(b)), 97)
+        self.assertEqual(next(iter(b)).timestamp, 2)
 
         b2 = VectorCharValue(b)
         self.assertEqual(b, b2)
@@ -207,12 +211,17 @@ class Tests(TestCase):
         self.assertEqual(a[e], 4)
 
     def test_stringlist(self):
-        l = VectorStringValue(["a", "b", "c"], descriptor=3, timestamp=self.t2)
-        self.assertEqual(l, ["a", "b", "c"])
+        l = VectorStringValue(["abc", "b", "c"],
+                              descriptor=3, timestamp=self.t2)
+        self.assertEqual(l, ["abc", "b", "c"])
         self.assertEqual(l[1], "b")
         self.assertEqual(l[1].timestamp, self.t2)
         self.assertEqual(l.descriptor, 3)
         self.assertEqual(l.timestamp, self.t2)
+        self.assertEqual(next(iter(l)), "abc")
+        self.assertIs(next(iter(l)).timestamp, self.t2)
+        self.assertIn("b", set(l))
+        self.assertNotIn("k", set(l))
 
         for s in l:
             self.assertEqual(s.timestamp, self.t2)
@@ -255,6 +264,10 @@ class Tests(TestCase):
         self.assertEqual(t[2]["object"].timestamp, self.t2)
         self.assertEqual(t[3]["object"], bytearray())
         self.assertEqual(t[3]["object"].timestamp, self.t2)
+
+        self.assertEqual(next(iter(t))["integer"], 3 * unit.millimeter)
+        self.assertEqual(next(iter(t["integer"])), 3 * unit.millimeter)
+        self.assertEqual(next(iter(t)).timestamp, self.t2)
 
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
@@ -396,6 +409,11 @@ class Tests(TestCase):
         self.assertEqual(numpy.sin(c).timestamp, self.t2)
         self.assertEqual(numpy.arctan2(d, c).timestamp, self.t1)
         self.assertEqual(numpy.arctan2(c, d).timestamp, self.t1)
+
+    def test_vector(self):
+        v = QuantityValue([2, 3, 4], "m", timestamp=self.t1)
+        self.assertEqual(next(iter(v)), 2 * unit.m)
+        self.assertIs(next(iter(v)).timestamp, self.t1)
 
 if __name__ == "__main__":
     main()
