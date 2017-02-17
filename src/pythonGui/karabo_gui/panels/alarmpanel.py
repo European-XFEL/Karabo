@@ -13,34 +13,60 @@ from PyQt4.QtGui import (QButtonGroup, QComboBox, QHBoxLayout, QLabel,
 from karabo_gui.alarm_model import (ACKNOWLEDGE, ALARM_DATA, ALARM_ID,
                                     ALARM_TYPE, DEVICE_ID, PROPERTY,
                                     SHOW_DEVICE, AlarmModel, getAlarmKeyIndex)
-from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (
     KaraboBroadcastEvent, KaraboEventSender, broadcast_event,
     register_for_broadcasts, unregister_from_broadcasts)
 from karabo_gui.singletons.api import get_network
+from .base import BasePanelWidget
 
 
-class AlarmPanel(Dockable, QWidget):
-    def __init__(self, instanceId):
-        super(AlarmPanel, self).__init__()
+class AlarmPanel(BasePanelWidget):
+    def __init__(self, instanceId, container, title):
+        self.instanceId = instanceId
 
-        self.bgFilter = QButtonGroup()
+        # Important: call the BasePanelWidget initializer
+        super(AlarmPanel, self).__init__(container, title)
+
+        # Register for KaraboBroadcastEvent
+        # NOTE: unregister_from_broadcasts will be called by closeEvent()
+        register_for_broadcasts(self)
+
+    def eventFilter(self, obj, event):
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.AlarmInitReply:
+                data = event.data
+                self._initAlarms(data.get('instanceId'), data.get('rows'))
+                return False
+            elif event.sender is KaraboEventSender.AlarmUpdate:
+                data = event.data
+                self._updateAlarms(data.get('instanceId'), data.get('rows'))
+                return False
+        return super(AlarmPanel, self).eventFilter(obj, event)
+
+    def closeEvent(self, event):
+        unregister_from_broadcasts(self)
+
+    def get_content_widget(self):
+        """Returns a QWidget containing the main content of the panel.
+        """
+        widget = QWidget(self)
+        self.bgFilter = QButtonGroup(parent=widget)
         self.bgFilter.buttonClicked.connect(self.filterToggled)
-        self.pbDefaultView = QPushButton("Default view")
+        self.pbDefaultView = QPushButton("Default view", parent=widget)
         self.pbDefaultView.setCheckable(True)
         self.pbDefaultView.setChecked(True)
         self.bgFilter.addButton(self.pbDefaultView)
-        self.pbAcknowledgeOnly = QPushButton("Acknowledge only")
+        self.pbAcknowledgeOnly = QPushButton("Acknowledge only", parent=widget)
         self.pbAcknowledgeOnly.setCheckable(True)
         self.bgFilter.addButton(self.pbAcknowledgeOnly)
 
-        self.laFilterOptions = QLabel("Filter options")
-        self.cbFilterType = QComboBox()
+        self.laFilterOptions = QLabel("Filter options", parent=widget)
+        self.cbFilterType = QComboBox(parent=widget)
         self.cbFilterType.addItem(ALARM_DATA[DEVICE_ID], DEVICE_ID)
         self.cbFilterType.addItem(ALARM_DATA[PROPERTY], PROPERTY)
         self.cbFilterType.addItem(ALARM_DATA[ALARM_TYPE], ALARM_TYPE)
-        self.leFilterText = QLineEdit()
-        self.pbCustomFilter = QPushButton("Filter")
+        self.leFilterText = QLineEdit(parent=widget)
+        self.pbCustomFilter = QPushButton("Filter", parent=widget)
         self.pbCustomFilter.setCheckable(True)
         self.bgFilter.addButton(self.pbCustomFilter)
         self._enableCustomFilter(False)
@@ -60,46 +86,22 @@ class AlarmPanel(Dockable, QWidget):
         filterLayout.addWidget(self.pbCustomFilter)
         filterLayout.addStretch()
 
-        self.twAlarm = QTableView()
+        self.twAlarm = QTableView(parent=widget)
         self.twAlarm.setWordWrap(True)
         self.twAlarm.setAlternatingRowColors(True)
         self.twAlarm.resizeColumnsToContents()
         self.twAlarm.horizontalHeader().setStretchLastSection(True)
-        alarm_model = AlarmModel(instanceId, self.twAlarm)
+        alarm_model = AlarmModel(self.instanceId, self.twAlarm)
         self.twAlarm.setModel(alarm_model)
-        btn_delegate = ButtonDelegate(self.twAlarm)
+        btn_delegate = ButtonDelegate(parent=self.twAlarm)
         self.twAlarm.setItemDelegate(btn_delegate)
 
-        main_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(widget)
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.addLayout(filterLayout)
         main_layout.addWidget(self.twAlarm)
 
-        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
-        # not necessary for self due to the fact that the singleton mediator
-        # object and `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
-
-    def eventFilter(self, obj, event):
-        if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.AlarmInitReply:
-                data = event.data
-                self._initAlarms(data.get('instanceId'), data.get('rows'))
-                return False
-            elif event.sender is KaraboEventSender.AlarmUpdate:
-                data = event.data
-                self._updateAlarms(data.get('instanceId'), data.get('rows'))
-                return False
-        return super(AlarmPanel, self).eventFilter(obj, event)
-
-    def closeEvent(self, event):
-        unregister_from_broadcasts(self)
-
-    def setupActions(self):
-        pass
-
-    def setupToolBars(self, toolBar, parent):
-        pass
+        return widget
 
     def _initAlarms(self, instanceId, rows):
         self.alarm_model.initAlarms(instanceId, rows)

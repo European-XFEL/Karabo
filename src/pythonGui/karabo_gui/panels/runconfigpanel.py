@@ -9,25 +9,33 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QStandardItemModel, QVBoxLayout, QWidget,
                          QStandardItem, QLabel, QPushButton, QTreeView)
 
-from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
                                register_for_broadcasts,
                                unregister_from_broadcasts)
-from karabo_gui.singletons.api import get_network
 from karabo_gui.schema import Dummy
+from karabo_gui.singletons.api import get_network
+from .base import BasePanelWidget
 
 
-class RunConfigPanel(Dockable, QWidget):
-    def __init__(self, instanceId):
-        super(RunConfigPanel, self).__init__()
+class RunConfigPanel(BasePanelWidget):
+    def __init__(self, instanceId, container, title):
+        super(RunConfigPanel, self).__init__(container, title)
 
         self.instanceId = instanceId
         self.availableGroups = {}
         self.groupBox = None
         self.sendBox = None
 
-        self.groupList = QTreeView()
+        # Register for broadcasts
+        # NOTE: unregister_from_broadcasts is called by closeEvent()
+        register_for_broadcasts(self)
 
+    def get_content_widget(self):
+        """Returns a QWidget containing the main content of the panel.
+        """
+        widget = QWidget(self)
+
+        self.groupList = QTreeView(parent=widget)
         self.headers = ['source', 'type', 'behavior', 'monitor', 'access']
         self.groupModel = QStandardItemModel(0, len(self.headers),
                                              self.groupList)
@@ -37,19 +45,16 @@ class RunConfigPanel(Dockable, QWidget):
         self.groupModel.itemChanged.connect(self.onGroupItemChanged)
         self.groupList.setModel(self.groupModel)
 
-        self.pbSend = QPushButton("Send to DAQ")
+        self.pbSend = QPushButton("Send to DAQ", parent=widget)
         self.pbSend.clicked.connect(self.onPushToDaq)
 
-        main_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(widget)
         # main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.addWidget(QLabel("Run config. groups"))
         main_layout.addWidget(self.groupList)
         main_layout.addWidget(self.pbSend)
 
-        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
-        # not necessary for self due to the fact that the singleton mediator
-        # object and `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
+        return widget
 
     def closeEvent(self, event):
         unregister_from_broadcasts(self)

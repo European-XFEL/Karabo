@@ -6,6 +6,7 @@
 """This module contains a class which represents the main window of the
     application and includes all relevant panels and the main toolbar.
 """
+from functools import partial
 import os.path
 
 from PyQt4.QtCore import Qt, pyqtSignal, pyqtSlot
@@ -17,11 +18,11 @@ from karabo.common.scenemodel.api import SceneTargetWindow
 from karabo.middlelayer import AccessLevel
 from karabo_gui import globals
 from karabo_gui.const import ALARM_COLOR
-from karabo_gui.docktabwindow import DockTabWindow
 from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
                                register_for_broadcasts)
 from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
+from karabo_gui.panels.container import PanelContainer
 from karabo_gui.panels.loggingpanel import LoggingPanel
 from karabo_gui.panels.macropanel import MacroPanel
 from karabo_gui.messagebox import MessageBox
@@ -81,6 +82,10 @@ class MainWindow(QMainWindow):
                 self._updateScenes()
             elif sender is KaraboEventSender.DatabaseIsBusy:
                 self._database_is_processing(data.get('is_processing'))
+            elif sender is KaraboEventSender.MaximizeTab:
+                self._tabMaximized(data.get('tab'))
+            elif sender is KaraboEventSender.MinimizeTab:
+                self._tabMinimized(data.get('tab'))
             return False
         return super(MainWindow, self).eventFilter(obj, event)
 
@@ -184,22 +189,20 @@ class MainWindow(QMainWindow):
         mainSplitter = QSplitter(Qt.Horizontal)
         mainSplitter.setContentsMargins(5, 5, 5, 5)
 
-        self.navigationPanel = NavigationPanel()
         self.leftArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.navigationTab = DockTabWindow("Navigation", self.leftArea)
-        self.navigationTab.addDockableTab(self.navigationPanel,
-                                          "Navigation", self)
+        self.navigationTab = PanelContainer("Navigation", self.leftArea)
+        self.navigationPanel = self.navigationTab.addPanel(NavigationPanel,
+                                                           "Navigation")
         self.signalGlobalAccessLevelChanged.connect(
             self.navigationPanel.onGlobalAccessLevelChanged)
         self.leftArea.setStretchFactor(0, 2)
 
-        self.projectPanel = ProjectPanel()
-        self.projectTab = DockTabWindow("Projects", self.leftArea)
-        self.projectTab.addDockableTab(self.projectPanel, "Projects", self)
+        self.projectTab = PanelContainer("Projects", self.leftArea)
+        self.projectPanel = self.projectTab.addPanel(ProjectPanel, "Projects")
         self.leftArea.setStretchFactor(1, 1)
 
         self.middleArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.middleTab = DockTabWindow("Custom view", self.middleArea)
+        self.middleTab = PanelContainer("Custom view", self.middleArea)
         self.placeholderPanel = None
         self.middleArea.setStretchFactor(0, 6)
 
@@ -208,21 +211,18 @@ class MainWindow(QMainWindow):
         # Container for all current run configuration panels
         self.runConfigPanels = {}
 
-        self.loggingPanel = LoggingPanel()
-        self.scriptingPanel = ScriptingPanel()
-        self.notificationPanel = NotificationPanel()
-        self.outputTab = DockTabWindow("Output", self.middleArea)
-        self.outputTab.addDockableTab(self.loggingPanel, "Log", self)
-        self.outputTab.addDockableTab(self.scriptingPanel, "Console", self)
-        self.outputTab.addDockableTab(self.notificationPanel,
-                                      "Notifications", self)
+        self.outputTab = PanelContainer("Output", self.middleArea)
+        self.loggingPanel = self.outputTab.addPanel(LoggingPanel, "Log")
+        self.scriptingPanel = self.outputTab.addPanel(ScriptingPanel,
+                                                      "Console")
+        self.notificationPanel = self.outputTab.addPanel(NotificationPanel,
+                                                         "Notifications")
         self.middleArea.setStretchFactor(1, 1)
 
-        self.configurationPanel = ConfigurationPanel()
         self.rightArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.configurationTab = DockTabWindow("Configuration", self.rightArea)
-        self.configurationTab.addDockableTab(self.configurationPanel,
-                                             "Configurator", self)
+        self.configurationTab = PanelContainer("Configuration", self.rightArea)
+        self.configurationPanel = self.configurationTab.addPanel(
+            ConfigurationPanel, "Configuration Editor")
         self.signalGlobalAccessLevelChanged.connect(
             self.configurationPanel.onGlobalAccessLevelChanged)
 
@@ -263,7 +263,7 @@ class MainWindow(QMainWindow):
     def _removePlaceholderMiddlePanel(self):
         """The placeholder for the middle panel is removed.
         """
-        self.middleTab.removeDockableTab(self.placeholderPanel)
+        self.middleTab.removePanel(self.placeholderPanel)
         self.placeholderPanel = None
 
     def checkAndRemovePlaceholderMiddlePanel(self):
@@ -274,39 +274,38 @@ class MainWindow(QMainWindow):
             self._removePlaceholderMiddlePanel()
 
     def _createPlaceholderMiddlePanel(self):
-        self.placeholderPanel = PlaceholderPanel()
-        self.middleTab.addDockableTab(self.placeholderPanel,
-                                      "Start Page", self)
+        self.placeholderPanel = self.middleTab.addPanel(PlaceholderPanel,
+                                                        "Start Page")
 
-    def _getDivWidget(self, tabWindow, child_type, model):
-        """ The associated divWidget of the given ``tabWindow`` for the given
+    def _getPanel(self, panelContainer, child_type, model):
+        """ The associated panel of the given ``panelContainer`` for the given
             ``model`` is returned, if available.
             ``child_type`` can be 'macro_model' or 'scene_model' or
             'alarm_model'.
         """
-        for divWidget in tabWindow.divWidgetList:
-            panel_model = getattr(divWidget.dockableWidget, child_type, None)
+        for panel in panelContainer.panel_set:
+            panel_model = getattr(panel, child_type, None)
             if panel_model is model:
-                return divWidget
+                return panel
 
-    def focusExistingTabWindow(self, tabWindow, child_type, model):
-        """ This method checks whether a given ``tabWindow`` for the given
-            ``model`` already exists.
-            ``child_type`` can be either 'macro_model' or ''scene_model' or
-            'alarm_model'.
+    def focusExistingPanel(self, panelContainer, child_type, model):
+        """This method checks whether a given panel for the given ``model``
+           already exists.
+           ``child_type`` can be either 'macro_model' or 'scene_model' or
+           'alarm_model'.
 
-            The method returns ``True``, if panel already open else ``False``.
-            Note that in case the panel is already there, it is pushed to the
-            top of the focus stack.
+           The method returns ``True``, if panel already open else ``False``.
+           Note that in case the panel is already there, it is pushed to the
+           top of the focus stack.
         """
-        divWidget = self._getDivWidget(tabWindow, child_type, model)
-        if divWidget is not None:
-            index = tabWindow.indexOf(divWidget)
+        panel = self._getPanel(panelContainer, child_type, model)
+        if panel is not None:
+            index = panelContainer.indexOf(panel)
             if index > -1:
-                tabWindow.setCurrentIndex(index)
+                panelContainer.setCurrentIndex(index)
             else:
-                divWidget.activateWindow()
-                divWidget.raise_()
+                panel.activateWindow()
+                panel.raise_()
             return True
 
         return False
@@ -318,11 +317,11 @@ class MainWindow(QMainWindow):
             The title of the panel was already changed in the project panel
             and needs to be updated.
         """
-        divWidget = self._getDivWidget(self.middleTab, child_type, model)
-        if divWidget is not None:
-            index = self.middleTab.indexOf(divWidget)
+        panel = self._getPanel(self.middleTab, child_type, model)
+        if panel is not None:
+            index = self.middleTab.indexOf(panel)
             # Update title - important for undocked widgets
-            divWidget.updateTitle(model.simple_name)
+            panel.updateTitle(model.simple_name)
             if index > -1:
                 self.middleTab.setTabText(index, model.simple_name)
 
@@ -330,24 +329,24 @@ class MainWindow(QMainWindow):
         """ The middle panel for the given ``model`` is removed.
             ``child_type`` can be either 'macro_model' or scene_model'.
         """
-        divWidget = self._getDivWidget(self.middleTab, child_type, model)
-        if divWidget is not None:
-            self.middleTab.removeDockableTab(divWidget.dockableWidget)
+        panel = self._getPanel(self.middleTab, child_type, model)
+        if panel is not None:
+            self.middleTab.removePanel(panel)
         # If tabwidget is empty - show start page instead
         if self.middleTab.count() < 1:
             self._createPlaceholderMiddlePanel()
 
-    def selectTabWindow(self, tabWindow, divWidget):
-        if tabWindow.count() > 1:
-            tabWindow.updateTabsClosable()
-        tabWindow.setCurrentWidget(divWidget)
+    def selectPanel(self, panelContainer, panel):
+        if panelContainer.count() > 1:
+            panelContainer.updateTabsClosable()
+        panelContainer.setCurrentWidget(panel)
 
     def _removeAlarmPanel(self, instanceId):
         if instanceId in self.alarmPanels:
             panel = self.alarmPanels[instanceId]
             # Call closeEvent to unregister from broadcast events
             panel.close()
-            self.outputTab.removeDockableTab(panel)
+            self.outputTab.removePanel(panel)
             del self.alarmPanels[instanceId]
 
     def showAlarmServicePanels(self, instanceIds):
@@ -356,18 +355,18 @@ class MainWindow(QMainWindow):
             # Check whether there is already an alarm panel for
             # this ``instanceId``
             if instId not in self.alarmPanels:
-                panel = AlarmPanel(instId)
+                factory = partial(AlarmPanel, instId)
                 title = "Alarms for {}".format(instId)
-                divWidget = self.outputTab.addDockableTab(panel, title, self)
-                self.selectTabWindow(self.outputTab, divWidget)
+                panel = self.outputTab.addPanel(factory, title)
+                self.selectPanel(self.outputTab, panel)
                 tabBar = self.outputTab.tabBar()
                 tabBar.setTabTextColor(
                     self.outputTab.count()-1, QColor(*ALARM_COLOR))
                 self.alarmPanels[instId] = panel
             else:
                 panel = self.alarmPanels[instId]
-                self.focusExistingTabWindow(self.outputTab, 'alarm_model',
-                                            panel.alarm_model)
+                self.focusExistingPanel(self.outputTab, 'alarm_model',
+                                        panel.alarm_model)
 
     def removeAlarmServicePanels(self, instanceIds):
         """ Remove alarm panels for the given ``instanceIds``."""
@@ -377,14 +376,12 @@ class MainWindow(QMainWindow):
     def addRunConfigPanel(self, instanceIds):
         for instId in instanceIds:
             if instId not in self.runConfigPanels:
-                panel = RunConfigPanel(instId)
-
+                factory = partial(RunConfigPanel, instId)
                 title = "Run configuration at {}".format(instId)
                 if len(self.runConfigPanels) == 0:
                     title = "RunConfig"
-                divWidget = self.configurationTab.addDockableTab(panel, title,
-                                                                 self)
-                self.selectTabWindow(self.outputTab, divWidget)
+                panel = self.configurationTab.addPanel(factory, title)
+                self.selectPanel(self.outputTab, panel)
                 self.runConfigPanels[instId] = panel
 
     def removeRunConfigPanels(self, instanceIds):
@@ -397,7 +394,7 @@ class MainWindow(QMainWindow):
             panel = self.runConfigPanels[instanceId]
             # Call closeEvent to unregister from broadcast events
             panel.close()
-            self.configurationTab.removeDockableTab(panel)
+            self.configurationTab.removePanel(panel)
 
     def addSceneView(self, sceneModel, target_window):
         """ Add a scene view to show the content of the given `sceneModel in
@@ -407,41 +404,36 @@ class MainWindow(QMainWindow):
             return
 
         self.checkAndRemovePlaceholderMiddlePanel()
-        if self.focusExistingTabWindow(
-                self.middleTab, 'scene_model', sceneModel):
-            # XXX: we need the divWidget
-            divWidget = self._getDivWidget(self.middleTab, 'scene_model',
-                                           sceneModel)
+        if self.focusExistingPanel(self.middleTab, 'scene_model', sceneModel):
+            # XXX: we need the panel
+            panel = self._getPanel(self.middleTab, 'scene_model', sceneModel)
         else:
             # Add scene view to tab widget
             sceneView = SceneView(model=sceneModel, parent=self)
             server_connected = self.acServerConnect.isChecked()
-            scenePanel = ScenePanel(sceneView, server_connected)
-            divWidget = self.middleTab.addDockableTab(
-                scenePanel, sceneModel.simple_name, self)
-            self.selectTabWindow(self.middleTab, divWidget)
+            factory = partial(ScenePanel, sceneView, server_connected)
+            panel = self.middleTab.addPanel(factory, sceneModel.simple_name)
+            self.selectPanel(self.middleTab, panel)
 
         # If it's a dialog, make sure it's undocked
         if target_window == SceneTargetWindow.Dialog:
-            divWidget.onUndock()
+            panel.onUndock()
 
     def addMacro(self, macroModel):
         """ Add a macro pane to show the content of the given `macroModel in
             the GUI.
         """
         self.checkAndRemovePlaceholderMiddlePanel()
-        if self.focusExistingTabWindow(
-                self.middleTab, 'macro_model', macroModel):
+        if self.focusExistingPanel(self.middleTab, 'macro_model', macroModel):
             return
 
-        macroPanel = MacroPanel(macroModel)
-        divWidget = self.middleTab.addDockableTab(
-            macroPanel, macroModel.simple_name, self)
-        self.selectTabWindow(self.middleTab, divWidget)
+        factory = partial(MacroPanel, macroModel)
+        panel = self.middleTab.addPanel(factory, macroModel.simple_name)
+        self.selectPanel(self.middleTab, panel)
 
     def _updateScenes(self):
-        for divWidget in self.middleTab.divWidgetList:
-            scene_view = getattr(divWidget.dockableWidget, 'scene_view', None)
+        for panel in self.middleTab.panel_set:
+            scene_view = getattr(panel, 'scene_view', None)
             if scene_view is not None and scene_view.isVisible():
                 scene_view.update()
 
@@ -458,12 +450,32 @@ class MainWindow(QMainWindow):
         self._enable_toolbar(enable)
 
         # Update all open scenes and macros
-        for divWidget in self.middleTab.divWidgetList:
-            divWidget.dockableWidget.setEnabled(enable)
+        for panel in self.middleTab.panel_set:
+            panel.setEnabled(enable)
 
         # Update configuration panel
-        for divWidget in self.configurationTab.divWidgetList:
-            divWidget.dockableWidget.setEnabled(enable)
+        for panel in self.configurationTab.panel_set:
+            panel.setEnabled(enable)
+
+    def _tabMaximized(self, tabWidget):
+        """The given /tabWidget is about to be maximized.
+        """
+        areas = (self.rightArea, self.middleArea, self.leftArea)
+        for area in areas:
+            for i in range(area.count()):
+                w = area.widget(i)
+                if w != tabWidget:
+                    w.hide()
+
+    def _tabMinimized(self, tabWidget):
+        """The given /tabWidget is about to be minimized.
+        """
+        areas = (self.rightArea, self.middleArea, self.leftArea)
+        for area in areas:
+            for i in range(area.count()):
+                w = area.widget(i)
+                if w != tabWidget:
+                    w.show()
 
     @pyqtSlot()
     def onExit(self):
@@ -539,27 +551,3 @@ class MainWindow(QMainWindow):
             self.acOperator.setChecked(False)
             self.acUser.setChecked(False)
             self.acObserver.setChecked(False)
-
-    @pyqtSlot(object)
-    def onTabMaximized(self, tabWidget):
-        """
-        The given /tabWidget is about to be maximized.
-        """
-        areas = (self.rightArea, self.middleArea, self.leftArea)
-        for area in areas:
-            for i in range(area.count()):
-                w = area.widget(i)
-                if w != tabWidget:
-                    w.hide()
-
-    @pyqtSlot(object)
-    def onTabMinimized(self, tabWidget):
-        """
-        The given /tabWidget is about to be minimized.
-        """
-        areas = (self.rightArea, self.middleArea, self.leftArea)
-        for area in areas:
-            for i in range(area.count()):
-                w = area.widget(i)
-                if w != tabWidget:
-                    w.show()
