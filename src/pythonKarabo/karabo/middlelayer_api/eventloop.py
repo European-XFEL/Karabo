@@ -569,12 +569,6 @@ class EventLoop(SelectorEventLoop):
         except AttributeError:
             return None
 
-    def notifyChanged(self):
-        """notify that something changed"""
-        for fut in self.changedFutures:
-            fut.set_result(None)
-        self.changedFutures = set()
-
     @coroutine
     def waitForChanges(self):
         f = Future(loop=self)
