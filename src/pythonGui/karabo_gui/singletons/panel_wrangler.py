@@ -51,6 +51,9 @@ class PanelWrangler(QObject):
                 main_win.renameMiddlePanel('scene_model', data.get('model'))
             elif sender is KaraboEventSender.OpenMacro:
                 main_win.addMacro(data.get('model'))
+                # XXX: I have no idea why, but this event causes an infinite
+                # loop if it's not 'handled' here.
+                return True
             elif sender is KaraboEventSender.RemoveMacro:
                 main_win.removeMiddlePanel('macro_model', data.get('model'))
             elif sender is KaraboEventSender.RenameMacro:

@@ -6,31 +6,41 @@
 
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
-from karabo_gui.docktabwindow import Dockable
 from karabo_gui.ipythonwidget import IPythonWidget
 from karabo_gui.singletons.api import get_network
+from karabo_gui.toolbar import ToolBar
+from .base import BasePanelWidget
 
 
-class ScriptingPanel(Dockable, QWidget):
-    def __init__(self):
-        super(ScriptingPanel, self).__init__()
+class ScriptingPanel(BasePanelWidget):
+    def __init__(self, container, title):
+        super(ScriptingPanel, self).__init__(container, title)
+
+    def get_content_widget(self):
+        """Returns a QWidget containing the main content of the panel.
+        """
+        widget = QWidget()
 
         self.console = None
-
-        self._setupActions()
-
-        self.mainLayout = QVBoxLayout(self)
+        self.mainLayout = QVBoxLayout(widget)
         self.mainLayout.setContentsMargins(5, 5, 5, 5)
 
-    def _setupActions(self):
+        return widget
+
+    def toolbars(self):
+        """This should create and return one or more `ToolBar` instances needed
+        by this panel.
+        """
+        toolbar = ToolBar(parent=self)
+
         text = "Start IPython console"
-        self.acStartIPython = QAction("IP[y]:", self)
+        self.acStartIPython = QAction("IP[y]:", toolbar)
         self.acStartIPython.setToolTip(text)
         self.acStartIPython.setStatusTip(text)
         self.acStartIPython.triggered.connect(self.onStartIPython)
+        toolbar.addAction(self.acStartIPython)
 
-    def setupToolBars(self, toolBar, parent):
-        toolBar.addAction(self.acStartIPython)
+        return [toolbar]
 
     def onStartIPython(self, isChecked):
         if self.console:

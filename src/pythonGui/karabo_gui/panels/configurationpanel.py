@@ -8,7 +8,6 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QMenu, QPalette, QPushButton,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
 
-from karabo_gui.docktabwindow import Dockable
 from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 import karabo_gui.icons as icons
@@ -16,41 +15,43 @@ from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.parametertreewidget import ParameterTreeWidget
 from karabo_gui.project.view import ProjectView
 from karabo_gui.singletons.api import get_manager
+from karabo_gui.toolbar import ToolBar
 from karabo_gui.util import (
     get_spin_widget, loadConfigurationFromFile, saveConfigurationToFile
 )
+from .base import BasePanelWidget
 
 
-class ConfigurationPanel(Dockable, QWidget):
-    def __init__(self, parent=None):
-        super(ConfigurationPanel, self).__init__(parent=parent)
+class ConfigurationPanel(BasePanelWidget):
+    def __init__(self, container, title):
+        super(ConfigurationPanel, self).__init__(container, title)
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.
         register_for_broadcasts(self)
 
-        self.__toolBar = None
-
-        title = "Configuration Editor"
-        self.setWindowTitle(title)
-
         # map = { deviceId, timer }
         self.__changingTimerDeviceIdMap = dict()
 
-        mainLayout = QVBoxLayout(self)
+    def get_content_widget(self):
+        """Returns a QWidget containing the main content of the panel.
+        """
+        widget = QWidget(self)
+
+        mainLayout = QVBoxLayout(widget)
         mainLayout.setContentsMargins(5, 5, 5, 5)
 
         # Layout for navigation and project tree
         self.navSplitter = QSplitter(Qt.Vertical)
         # Navigation tree
-        self.twNavigation = NavigationTreeView(self)
+        self.twNavigation = NavigationTreeView(widget)
         self.twNavigation.model().signalItemChanged.connect(
             self.onDeviceItemChanged)
         self.twNavigation.hide()
         self.navSplitter.addWidget(self.twNavigation)
 
         # Project tree
-        self.twProject = ProjectView(parent=self)
+        self.twProject = ProjectView(parent=widget)
         self.twProject.hide()
         self.navSplitter.addWidget(self.twProject)
 
@@ -68,7 +69,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
 
         # Wait page
-        wait_widget = get_spin_widget(parent=self)
+        wait_widget = get_spin_widget(parent=widget)
         wait_widget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         wait_widget.setAutoFillBackground(True)
         wait_widget.setBackgroundRole(QPalette.Base)
@@ -77,7 +78,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.prevConfiguration = None
         self._awaitingSchema = None
 
-        topWidget = QWidget(self)
+        topWidget = QWidget(widget)
 
         splitTopPanes = QSplitter(Qt.Horizontal, topWidget)
         splitTopPanes.addWidget(self.navSplitter)
@@ -109,7 +110,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.pbKillInstance.setVisible(False)
         self.pbKillInstance.setMinimumSize(140, 32)
         # use action for button to reuse
-        self.acKillInstance = QAction(icons.kill, text, self)
+        self.acKillInstance = QAction(icons.kill, text, widget)
         self.acKillInstance.setStatusTip(text)
         self.acKillInstance.setToolTip(text)
         self.acKillInstance.triggered.connect(self.onKillInstance)
@@ -127,7 +128,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.pbApplyAll.setEnabled(False)
         self.pbApplyAll.setMinimumSize(140, 32)
         # use action for button to reuse
-        self.acApplyAll = QAction(icons.apply, text, self)
+        self.acApplyAll = QAction(icons.apply, text, widget)
         self.acApplyAll.setStatusTip(text)
         self.acApplyAll.setToolTip(text)
         self.acApplyAll.setEnabled(False)
@@ -135,26 +136,26 @@ class ConfigurationPanel(Dockable, QWidget):
         self.pbApplyAll.clicked.connect(self.acApplyAll.triggered)
 
         text = "Apply all my changes"
-        self.acApplyLocalChanges = QAction(text, self)
+        self.acApplyLocalChanges = QAction(text, widget)
         self.acApplyLocalChanges.setStatusTip(text)
         self.acApplyLocalChanges.setToolTip(text)
         self.acApplyLocalChanges.triggered.connect(self.onApplyAll)
 
         text = "Adjust to current values on device"
-        self.acApplyRemoteChanges = QAction(text, self)
+        self.acApplyRemoteChanges = QAction(text, widget)
         self.acApplyRemoteChanges.setStatusTip(text)
         self.acApplyRemoteChanges.setToolTip(text)
         self.acApplyRemoteChanges.triggered.connect(
             self.onApplyAllRemoteChanges)
 
         text = "Apply selected local changes"
-        self.acApplySelectedChanges = QAction(text, self)
+        self.acApplySelectedChanges = QAction(text, widget)
         self.acApplySelectedChanges.setStatusTip(text)
         self.acApplySelectedChanges.setToolTip(text)
         self.acApplySelectedChanges.triggered.connect(self.onApplyAll)
 
         text = "Accept selected remote changes"
-        self.acApplySelectedRemoteChanges = QAction(text, self)
+        self.acApplySelectedRemoteChanges = QAction(text, widget)
         self.acApplySelectedRemoteChanges.setStatusTip(text)
         self.acApplySelectedRemoteChanges.setToolTip(text)
         self.acApplySelectedRemoteChanges.triggered.connect(
@@ -180,7 +181,7 @@ class ConfigurationPanel(Dockable, QWidget):
         self.pbResetAll.setEnabled(False)
         self.pbResetAll.setMinimumSize(140, 32)
         # use action for button to reuse
-        self.acResetAll = QAction(icons.no, text, self)
+        self.acResetAll = QAction(icons.no, text, widget)
         self.acResetAll.setStatusTip(text)
         self.acResetAll.setToolTip(text)
         self.acResetAll.setEnabled(False)
@@ -190,11 +191,69 @@ class ConfigurationPanel(Dockable, QWidget):
         hLayout.addWidget(self.pbResetAll)
         hLayout.addStretch()
         vLayout.addLayout(hLayout)
-
         mainLayout.addWidget(topWidget)
+        widget.setLayout(mainLayout)
 
-        self.setupActions()
-        self.setLayout(mainLayout)
+        return widget
+
+    def dock(self):
+        """Called when this panel is docked into the main window.
+        """
+        self.navSplitter.hide()
+        self.twNavigation.hide()
+        self.twProject.hide()
+
+    def undock(self):
+        """Called when this panel is undocked from the main window.
+        """
+        self.navSplitter.show()
+        self.twNavigation.show()
+        self.twProject.show()
+
+    def toolbars(self):
+        """This should create and return one or more `ToolBar` instances needed
+        by this panel.
+        """
+        toolbar = ToolBar(parent=self)
+
+        text = "Open configuration from file (*.xml)"
+        self.acOpenFromFile = QAction(icons.load, text, toolbar)
+        self.acOpenFromFile.setStatusTip(text)
+        self.acOpenFromFile.setToolTip(text)
+        self.acOpenFromFile.triggered.connect(self.onOpenFromFile)
+
+        self.openMenu = QMenu()
+        self.openMenu.addAction(self.acOpenFromFile)
+        text = "Open configuration"
+        self.tbOpenConfig = QToolButton()
+        self.tbOpenConfig.setIcon(icons.load)
+        self.tbOpenConfig.setStatusTip(text)
+        self.tbOpenConfig.setToolTip(text)
+        self.tbOpenConfig.setVisible(False)
+        self.tbOpenConfig.setPopupMode(QToolButton.InstantPopup)
+        self.tbOpenConfig.setMenu(self.openMenu)
+
+        text = "Save configuration to file (*.xml)"
+        self.acSaveToFile = QAction(icons.saveAs, text, toolbar)
+        self.acSaveToFile.setStatusTip(text)
+        self.acSaveToFile.setToolTip(text)
+        self.acSaveToFile.triggered.connect(self.onSaveToFile)
+
+        self.saveMenu = QMenu()
+        self.saveMenu.addAction(self.acSaveToFile)
+        text = "Save configuration"
+        self.tbSaveConfig = QToolButton()
+        self.tbSaveConfig.setIcon(icons.saveAs)
+        self.tbSaveConfig.setStatusTip(text)
+        self.tbSaveConfig.setToolTip(text)
+        self.tbSaveConfig.setVisible(False)
+        self.tbSaveConfig.setPopupMode(QToolButton.InstantPopup)
+        self.tbSaveConfig.setMenu(self.saveMenu)
+
+        self.acOpenConfig = toolbar.addWidget(self.tbOpenConfig)
+        self.acSaveConfig = toolbar.addWidget(self.tbSaveConfig)
+
+        return [toolbar]
 
     def eventFilter(self, obj, event):
         """ Router for incoming broadcasts
@@ -226,46 +285,6 @@ class ConfigurationPanel(Dockable, QWidget):
                     self._resetPanel()
             return False
         return super(ConfigurationPanel, self).eventFilter(obj, event)
-
-    def setupActions(self):
-        text = "Open configuration from file (*.xml)"
-        self.acOpenFromFile = QAction(icons.load, text, self)
-        self.acOpenFromFile.setStatusTip(text)
-        self.acOpenFromFile.setToolTip(text)
-        self.acOpenFromFile.triggered.connect(self.onOpenFromFile)
-
-        self.openMenu = QMenu()
-        self.openMenu.addAction(self.acOpenFromFile)
-        text = "Open configuration"
-        self.tbOpenConfig = QToolButton()
-        self.tbOpenConfig.setIcon(icons.load)
-        self.tbOpenConfig.setStatusTip(text)
-        self.tbOpenConfig.setToolTip(text)
-        self.tbOpenConfig.setVisible(False)
-        self.tbOpenConfig.setPopupMode(QToolButton.InstantPopup)
-        self.tbOpenConfig.setMenu(self.openMenu)
-
-        text = "Save configuration to file (*.xml)"
-        self.acSaveToFile = QAction(icons.saveAs, text, self)
-        self.acSaveToFile.setStatusTip(text)
-        self.acSaveToFile.setToolTip(text)
-        self.acSaveToFile.triggered.connect(self.onSaveToFile)
-
-        self.saveMenu = QMenu()
-        self.saveMenu.addAction(self.acSaveToFile)
-        text = "Save configuration"
-        self.tbSaveConfig = QToolButton()
-        self.tbSaveConfig.setIcon(icons.saveAs)
-        self.tbSaveConfig.setStatusTip(text)
-        self.tbSaveConfig.setToolTip(text)
-        self.tbSaveConfig.setVisible(False)
-        self.tbSaveConfig.setPopupMode(QToolButton.InstantPopup)
-        self.tbSaveConfig.setMenu(self.saveMenu)
-
-    def setupToolBars(self, toolBar, parent):
-        # Save action to member variables to make setVisible work later
-        self.acOpenConfig = toolBar.addWidget(self.tbOpenConfig)
-        self.acSaveConfig = toolBar.addWidget(self.tbSaveConfig)
 
     def updateApplyAllActions(self, configuration):
         index = configuration.index
@@ -700,13 +719,3 @@ class ConfigurationPanel(Dockable, QWidget):
             twParameterEditor = self.__swParameterEditor.widget(index)
             if isinstance(twParameterEditor, ParameterTreeWidget):
                 twParameterEditor.globalAccessLevelChanged()
-
-    def undock(self, div):
-        self.navSplitter.show()
-        self.twNavigation.show()
-        self.twProject.show()
-
-    def dock(self, div):
-        self.navSplitter.hide()
-        self.twNavigation.hide()
-        self.twProject.hide()
