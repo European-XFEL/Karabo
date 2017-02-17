@@ -144,7 +144,7 @@ class Device(AlarmMixin, SignalSlotable):
         if msg is not None:
             raise KaraboError(msg)
         yield from super(Device, self).slotReconfigure(reconfiguration)
-        self.signalChanged(self.configurationAsHash(), self.deviceId)
+        self.update()
 
     slotReconfigure = coslot(slotReconfigure, passMessage=True)
 
