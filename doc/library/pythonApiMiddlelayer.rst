@@ -79,6 +79,9 @@ Writing a device
 
 .. autoclass:: karabo.middlelayer.DeviceClientBase
 
+.. autoclass:: karabo.middlelayer.Injectable
+   :members:
+
 .. autoexception:: karabo.middlelayer.KaraboError
 
 

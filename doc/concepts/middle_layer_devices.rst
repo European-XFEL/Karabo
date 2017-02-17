@@ -899,6 +899,36 @@ defined, safe state. This can be done by overwriting the following device method
 The ``slot`` is the slot that had been executed.
 
 
+Injecting Parameters
+====================
+
+Sometimes it is necessary to inject new parameters while the device is
+already running. This should be used with care: injected parameters
+obviously cannot be pre-configured, and data logging may be hard to
+comprehend if the data fields constantly change.
+
+Devices which wish to change their parameters need to inherit from
+:class:`~karabo.middlelayer.Injectable`. This mixin class assures that a
+brand-new class is created for every instance. This is necessary, as
+we do not want to modify the class for every instance, but only for
+the device we are working on.
+
+Once we inherited from :class:`~karabo.middlelayer.Injectable`, we can
+freely modify ``self.__class__``. Once we have done those
+modifications,
+:meth:`~karabo.middlelayer.Injectable.publishInjectedParameters` needs
+to be called to publish the changes. As an example::
+
+    class MyDevice(Injectable, Device):
+	def inject_something(self):
+	    # inject a new property into our personal class:
+	    self.__class__.injected_string = String()
+	    self.publishInjectedParameters()
+
+	    # use the property as any other property:
+	    self.injected_string = "whatever"
+
+
 Programming Policies
 ====================
 
