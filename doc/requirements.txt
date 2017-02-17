@@ -5,3 +5,4 @@ breathe
 numpy
 matplotlib
 git+https://github.com/enthought/traits.git
+lxml
