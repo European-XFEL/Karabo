@@ -777,6 +777,8 @@ class ChoiceOfNodes(Schema):
         assert self.defaultValue is None or self.defaultValue in self.dict, \
             'the default value "{}" is not in {} for node {}'.format(
                 self.defaultValue, list(hash.keys()), key)
+        self.metricPrefixSymbol = ''
+        self.unitSymbol = ''
         return self
 
 
@@ -894,7 +896,10 @@ class ChoiceOfNodes(Schema):
 class ListOfNodes(hashmod.Descriptor):
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
-        return ListOfNodes()
+        descr = ListOfNodes()
+        descr.metricPrefixSymbol = ''
+        descr.unitSymbol = ''
+        return descr
 
 
     def setDefault(self, box):
