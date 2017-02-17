@@ -10,7 +10,24 @@ class MetaInjectable(MetaConfigurable):
 
 
 class Injectable(Configurable):
-    """This is a mixin class for all classes that want to inject parameters"""
+    """This is a mixin class for all classes that want to inject parameters
+
+    A parameter injection is a modification of the class of an object. Since
+    we do not want to modify the classes of all instances, we generate a
+    fresh class for every object, which inherits from our class. This new
+    class is completely empty, so we can modify it at will. Once we have done
+    that, call
+    :meth:`~karabo.middlelayer.Injectable.publishInjectedParameters`::
+
+        class MyDevice(Injectable, Device):
+            def inject_something(self):
+                # inject a new property into our personal class:
+                self.__class__.injected_string = String()
+                self.publishInjectedParameters()
+
+                # use the property as any other property:
+                self.injected_string = "whatever"
+    """
     def __new__(cls, configuration={}, parent=None, key=None):
         """each object gets its own personal class, that it may modify"""
         newtype = MetaInjectable(cls.__name__, (cls,), {})
