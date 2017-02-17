@@ -194,8 +194,9 @@ namespace karabo {
                         try {
                             ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
                             m_acceptor.open(endpoint.protocol());
-                            if (m_port > 0)
+                            if (m_port > 0) {
                                 m_acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
+                            }
                             m_acceptor.set_option(ip::tcp::acceptor::enable_connection_aborted(true));
                             m_acceptor.bind(endpoint); // <=== here exception possible: port in use
                             m_acceptor.listen();
