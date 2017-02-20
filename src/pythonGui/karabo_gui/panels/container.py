@@ -10,10 +10,11 @@ from PyQt4.QtGui import QCursor, QTabWidget
 class PanelContainer(QTabWidget):
     """A container for ``BasePanelWidget`` instances
     """
-    def __init__(self, title, parent):
+    def __init__(self, title, parent, allow_closing=False):
         super(PanelContainer, self).__init__(parent)
         self.setWindowTitle(title)
         self.panel_set = set()
+        self.allow_closing = allow_closing
         self.tabCloseRequested.connect(self.onCloseTab)
 
     def addPanel(self, panel):
@@ -43,13 +44,14 @@ class PanelContainer(QTabWidget):
 
     def updateTabsClosable(self):
         if self.count() > 1 and not self.tabsClosable():
-            self.setTabsClosable(True)
+            self.setTabsClosable(self.allow_closing)
         elif self.count() == 1:
             self.setTabsClosable(False)
 
     def undock(self, panel):
         if panel.parent() is not None:
             self.removeTab(panel.index)
+            panel.is_docked = False
             panel.setParent(None)
             panel.move(QCursor.pos())
             panel.show()
@@ -60,6 +62,7 @@ class PanelContainer(QTabWidget):
     def dock(self, panel):
         if panel.parent() is None:
             index = self.insertTab(panel.index, panel, panel.windowTitle())
+            panel.is_docked = True
 
             for i in range(self.count()):
                 if self.widget(i) is not None:
@@ -79,7 +82,7 @@ class PanelContainer(QTabWidget):
         # Get panel, which is about to be closed
         panel = self.widget(index)
         # Close panel (if possible) before removing it from tab
-        if not panel.forceClose():
+        if not panel.force_close():
             return
         # Remove panel from tab
         self.removeTab(index)
