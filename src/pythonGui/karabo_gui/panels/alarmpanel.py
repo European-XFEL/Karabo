@@ -44,7 +44,9 @@ class AlarmPanel(BasePanelWidget):
         return super(AlarmPanel, self).eventFilter(obj, event)
 
     def closeEvent(self, event):
-        unregister_from_broadcasts(self)
+        super(AlarmPanel, self).closeEvent(event)
+        if event.isAccepted():
+            unregister_from_broadcasts(self)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -91,8 +93,7 @@ class AlarmPanel(BasePanelWidget):
         self.twAlarm.setAlternatingRowColors(True)
         self.twAlarm.resizeColumnsToContents()
         self.twAlarm.horizontalHeader().setStretchLastSection(True)
-        alarm_model = AlarmModel(self.instanceId, self.twAlarm)
-        self.twAlarm.setModel(alarm_model)
+        self.model = AlarmModel(self.instanceId, self.twAlarm)
         btn_delegate = ButtonDelegate(parent=self.twAlarm)
         self.twAlarm.setItemDelegate(btn_delegate)
 
@@ -104,33 +105,37 @@ class AlarmPanel(BasePanelWidget):
         return widget
 
     def _initAlarms(self, instanceId, rows):
-        self.alarm_model.initAlarms(instanceId, rows)
+        self.model.initAlarms(instanceId, rows)
 
     def _updateAlarms(self, instanceId, rows):
-        self.alarm_model.updateAlarms(instanceId, rows)
+        self.model.updateAlarms(instanceId, rows)
 
     def _enableCustomFilter(self, enable):
         self.cbFilterType.setEnabled(enable)
         self.leFilterText.setEnabled(enable)
 
     @property
-    def alarm_model(self):
+    def model(self):
         return self.twAlarm.model()
+
+    @model.setter
+    def model(self, model):
+        self.twAlarm.setModel(model)
 
     @pyqtSlot(object)
     def filterToggled(self, button):
         """ The filter ``button`` was activated. Update filtering needed."""
         if button is self.pbDefaultView:
             self._enableCustomFilter(False)
-            self.alarm_model.updateFilter(filterType=None)
+            self.model.updateFilter(filterType=None)
         elif button is self.pbAcknowledgeOnly:
             self._enableCustomFilter(False)
-            self.alarm_model.updateFilter(filterType=ACKNOWLEDGE)
+            self.model.updateFilter(filterType=ACKNOWLEDGE)
         elif button is self.pbCustomFilter:
             self._enableCustomFilter(True)
             data = self.cbFilterType.itemData(self.cbFilterType.currentIndex())
             filterText = self.leFilterText.text()
-            self.alarm_model.updateFilter(filterType=data, text=filterText)
+            self.model.updateFilter(filterType=data, text=filterText)
 
 
 class ButtonDelegate(QStyledItemDelegate):

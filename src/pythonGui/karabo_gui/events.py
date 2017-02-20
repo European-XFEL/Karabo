@@ -31,8 +31,6 @@ class KaraboEventSender(Enum):
     RemoveRunConfigurator = "Remove run configurator"
     RemoveMacro = "Remove macro"
     RemoveSceneView = "Remove scene view"
-    RenameSceneView = "Rename scene view"
-    RenameMacro = "Rename macro"
     ProjectDomainsList = "Project domains list"
     ProjectItemsList = "Project items list"
     ProjectManagersList = "Project managers list"

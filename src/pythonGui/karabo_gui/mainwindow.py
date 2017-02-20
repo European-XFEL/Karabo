@@ -201,7 +201,8 @@ class MainWindow(QMainWindow):
         self.leftArea.setStretchFactor(1, 1)
 
         self.middleArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.middleTab = PanelContainer("Custom view", self.middleArea)
+        self.middleTab = PanelContainer("Custom view", self.middleArea,
+                                        allow_closing=True)
         self.placeholderPanel = None
         self.middleArea.setStretchFactor(0, 6)
 
@@ -277,28 +278,24 @@ class MainWindow(QMainWindow):
         self.placeholderPanel = PlaceholderPanel()
         self.middleTab.addPanel(self.placeholderPanel)
 
-    def _getPanel(self, panelContainer, child_type, model):
+    def _getPanel(self, panelContainer, model):
         """ The associated panel of the given ``panelContainer`` for the given
             ``model`` is returned, if available.
-            ``child_type`` can be 'macro_model' or 'scene_model' or
-            'alarm_model'.
         """
         for panel in panelContainer.panel_set:
-            panel_model = getattr(panel, child_type, None)
+            panel_model = getattr(panel, 'model', None)
             if panel_model is model:
                 return panel
 
-    def focusExistingPanel(self, panelContainer, child_type, model):
+    def focusExistingPanel(self, panelContainer, model):
         """This method checks whether a given panel for the given ``model``
            already exists.
-           ``child_type`` can be either 'macro_model' or 'scene_model' or
-           'alarm_model'.
 
            The method returns ``True``, if panel already open else ``False``.
            Note that in case the panel is already there, it is pushed to the
            top of the focus stack.
         """
-        panel = self._getPanel(panelContainer, child_type, model)
+        panel = self._getPanel(panelContainer, model)
         if panel is not None:
             index = panelContainer.indexOf(panel)
             if index > -1:
@@ -310,14 +307,13 @@ class MainWindow(QMainWindow):
 
         return False
 
-    def renameMiddlePanel(self, child_type, model):
+    def renameMiddlePanel(self, model):
         """ Adapt tab text of corresponding ``model``.
-            ``child_type`` can be 'macro_model' or 'scene_model'.
 
             The title of the panel was already changed in the project panel
             and needs to be updated.
         """
-        panel = self._getPanel(self.middleTab, child_type, model)
+        panel = self._getPanel(self.middleTab, model)
         if panel is not None:
             index = self.middleTab.indexOf(panel)
             # Update title - important for undocked widgets
@@ -325,12 +321,12 @@ class MainWindow(QMainWindow):
             if index > -1:
                 self.middleTab.setTabText(index, model.simple_name)
 
-    def removeMiddlePanel(self, child_type, model):
+    def removeMiddlePanel(self, model):
         """ The middle panel for the given ``model`` is removed.
-            ``child_type`` can be either 'macro_model' or scene_model'.
         """
-        panel = self._getPanel(self.middleTab, child_type, model)
+        panel = self._getPanel(self.middleTab, model)
         if panel is not None:
+            panel.force_close()
             self.middleTab.removePanel(panel)
         # If tabwidget is empty - show start page instead
         if self.middleTab.count() < 1:
@@ -345,7 +341,7 @@ class MainWindow(QMainWindow):
         if instanceId in self.alarmPanels:
             panel = self.alarmPanels[instanceId]
             # Call closeEvent to unregister from broadcast events
-            panel.close()
+            panel.force_close()
             self.outputTab.removePanel(panel)
             del self.alarmPanels[instanceId]
 
@@ -365,8 +361,7 @@ class MainWindow(QMainWindow):
                 self.alarmPanels[instId] = panel
             else:
                 panel = self.alarmPanels[instId]
-                self.focusExistingPanel(self.outputTab, 'alarm_model',
-                                        panel.alarm_model)
+                self.focusExistingPanel(self.outputTab, panel.model)
 
     def removeAlarmServicePanels(self, instanceIds):
         """ Remove alarm panels for the given ``instanceIds``."""
@@ -393,7 +388,7 @@ class MainWindow(QMainWindow):
         if instanceId in self.runConfigPanels:
             panel = self.runConfigPanels[instanceId]
             # Call closeEvent to unregister from broadcast events
-            panel.close()
+            panel.force_close()
             self.configurationTab.removePanel(panel)
 
     def addSceneView(self, sceneModel, target_window):
@@ -404,9 +399,9 @@ class MainWindow(QMainWindow):
             return
 
         self.checkAndRemovePlaceholderMiddlePanel()
-        if self.focusExistingPanel(self.middleTab, 'scene_model', sceneModel):
+        if self.focusExistingPanel(self.middleTab, sceneModel):
             # XXX: we need the panel
-            panel = self._getPanel(self.middleTab, 'scene_model', sceneModel)
+            panel = self._getPanel(self.middleTab, sceneModel)
         else:
             # Add scene view to tab widget
             server_connected = self.acServerConnect.isChecked()
@@ -423,7 +418,7 @@ class MainWindow(QMainWindow):
             the GUI.
         """
         self.checkAndRemovePlaceholderMiddlePanel()
-        if self.focusExistingPanel(self.middleTab, 'macro_model', macroModel):
+        if self.focusExistingPanel(self.middleTab, macroModel):
             return
 
         panel = MacroPanel(macroModel)
