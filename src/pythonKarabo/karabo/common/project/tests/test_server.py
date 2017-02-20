@@ -15,6 +15,11 @@ SERVER_XML = """
     <device_instance uuid='{uuids[1]}' />
 </device_server>
 """.format(uuids=UUIDS)
+INCOMPLETE_XML = """
+<device_server uuid='{uuids[0]}'>
+    <device_instance uuid='{uuids[1]}' />
+</device_server>
+""".format(uuids=UUIDS)
 
 
 def setUp():
@@ -40,6 +45,19 @@ def test_reading():
     dev1 = server.devices[1]
     assert dev1.uuid == UUIDS[1]
     assert not dev1.initialized
+
+
+def test_reading_incomplete():
+    with temp_xml_file(INCOMPLETE_XML) as fn:
+        server = read_device_server(fn)
+
+    assert server.server_id == ''
+    assert server.host == ''
+    assert len(server.devices) == 1
+
+    dev0 = server.devices[0]
+    assert dev0.uuid == UUIDS[1]
+    assert not dev0.initialized
 
 
 def test_writing():

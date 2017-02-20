@@ -170,8 +170,9 @@ class ProjectDatabase(ContextDecorator):
             item_tree.attrib['user'] = 'Karabo User'
         if 'date' not in item_tree.attrib:
             item_tree.attrib['date'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        # XXX: Add a revision to keep old code from blowing up
+        # XXX: Add a revision/alias to keep old code from blowing up
         item_tree.attrib['revision'] = '0'
+        item_tree.attrib['alias'] = 'default'
 
         item_xml = self._make_str_if_needed(item_tree)
         path = "{}/{}/{}".format(self.root, domain, uuid)

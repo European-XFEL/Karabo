@@ -21,6 +21,11 @@ DEVICE_XML = """
     <device_config uuid='{uuids[2]}' class_id='BazClass' />
 </device_instance>
 """.format(uuids=UUIDS)
+INCOMPLETE_XML = """
+<device_instance>
+    <device_config uuid='{uuids[0]}' />
+</device_instance>
+""".format(uuids=UUIDS)
 
 
 def setUp():
@@ -39,6 +44,16 @@ def test_reading():
     assert device.instance_id == 'fooDevice'
     assert device.if_exists == 'ignore'
     assert device.active_config_ref == UUIDS[0]
+
+
+def test_reading_incomplete():
+    with temp_xml_file(INCOMPLETE_XML) as fn:
+        device = read_device(fn)
+
+    assert device.class_id == ''
+    assert device.instance_id == ''
+    assert device.if_exists == 'ignore'
+    assert device.active_config_ref == ''
 
 
 def test_writing():
