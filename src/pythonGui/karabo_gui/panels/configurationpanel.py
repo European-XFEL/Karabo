@@ -23,8 +23,8 @@ from .base import BasePanelWidget
 
 
 class ConfigurationPanel(BasePanelWidget):
-    def __init__(self, container, title):
-        super(ConfigurationPanel, self).__init__(container, title)
+    def __init__(self):
+        super(ConfigurationPanel, self).__init__("Configuration Editor")
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.

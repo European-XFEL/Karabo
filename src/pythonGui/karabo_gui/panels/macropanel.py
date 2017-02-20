@@ -26,10 +26,10 @@ from .base import BasePanelWidget
 
 
 class MacroPanel(BasePanelWidget):
-    def __init__(self, model, container, title):
+    def __init__(self, model):
         self.model = model
 
-        super(MacroPanel, self).__init__(container, title)
+        super(MacroPanel, self).__init__(model.simple_name)
 
         self.already_connected = set()
 

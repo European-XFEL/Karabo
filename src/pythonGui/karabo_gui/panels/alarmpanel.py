@@ -21,11 +21,11 @@ from .base import BasePanelWidget
 
 
 class AlarmPanel(BasePanelWidget):
-    def __init__(self, instanceId, container, title):
+    def __init__(self, instanceId, title):
         self.instanceId = instanceId
 
         # Important: call the BasePanelWidget initializer
-        super(AlarmPanel, self).__init__(container, title)
+        super(AlarmPanel, self).__init__(title)
 
         # Register for KaraboBroadcastEvent
         # NOTE: unregister_from_broadcasts will be called by closeEvent()
