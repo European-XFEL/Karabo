@@ -27,9 +27,8 @@ from .base import BasePanelWidget
 class ProjectPanel(BasePanelWidget):
     """ A dockable panel which contains a view of the project
     """
-    def __init__(self, container, title):
-        self.project_view = ProjectView()
-        super(ProjectPanel, self).__init__(container, title)
+    def __init__(self):
+        super(ProjectPanel, self).__init__("Projects")
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.
@@ -38,6 +37,7 @@ class ProjectPanel(BasePanelWidget):
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
         """
+        self.project_view = ProjectView()
         return self.project_view
 
     def toolbars(self):

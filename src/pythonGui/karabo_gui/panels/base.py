@@ -11,6 +11,7 @@ from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
 import karabo_gui.icons as icons
 from karabo_gui.toolbar import ToolBar
 from karabo_gui.util import generateObjectName
+from .container import PanelContainer
 
 
 class BasePanelWidget(QFrame):
@@ -18,16 +19,15 @@ class BasePanelWidget(QFrame):
     independent top-level windows or tabs within the main window of the Karabo
     gui.
     """
-    def __init__(self, container, title):
+    def __init__(self, title):
         super(BasePanelWidget, self).__init__(parent=None)
-
+        self.setWindowTitle(title)
         self.setFrameStyle(QFrame.Box | QFrame.Plain)
         self.setLineWidth(1)
 
         self.index = -1
         self.doesDockOnClose = True
-        self.panel_container = container  # tab widget
-        self.updateTitle(title)
+        self.panel_container = None
 
         self._fill_panel()
 
@@ -56,6 +56,19 @@ class BasePanelWidget(QFrame):
     # --------------------------------------
     # public methods
 
+    def attach_to_container(self, container):
+        if container is not None:
+            msg = ('The parent widget of a `BasePanelWidget` must be a '
+                   '`PanelContainer` or None!')
+            assert isinstance(container, PanelContainer), msg
+
+            # Dock to the container
+            container.dock(self)
+
+        self.panel_container = container
+        # Set the toolbar visibility based on whether we're attached or not
+        self._standard_toolbar.setVisible(container is not None)
+
     def forceClose(self):
         """
         This function sets the member variable to False which decides whether
@@ -64,17 +77,11 @@ class BasePanelWidget(QFrame):
         self.doesDockOnClose = False
         return self.close()
 
-    def updateTitle(self, title):
-        """ The title of the widget changed and needs to be updated.
-        """
-        self.title = title
-        self.setWindowTitle(self.title)
-
     # --------------------------------------
     # Qt slots and callbacks
 
     def closeEvent(self, event):
-        if self.doesDockOnClose:
+        if self.doesDockOnClose and self.panel_container is not None:
             self.onDock()
             event.ignore()
         else:
@@ -86,7 +93,6 @@ class BasePanelWidget(QFrame):
     def onUndock(self):
         self.acDock.setVisible(True)
         self.acUndock.setVisible(False)
-        self.setWindowTitle(self.title)
         self.undock()
         self.panel_container.undock(self)
 
@@ -118,7 +124,7 @@ class BasePanelWidget(QFrame):
             if w == self:
                 continue
 
-            self.panel_container.insertTab(w.index, w, w.title)
+            self.panel_container.insertTab(w.index, w, w.windowTitle())
 
         d = {'tab': self.panel_container}
         broadcast_event(KaraboBroadcastEvent(KaraboEventSender.MinimizeTab, d))
@@ -127,13 +133,15 @@ class BasePanelWidget(QFrame):
     # private methods
 
     def _fill_panel(self):
-        # Do this first
+        # Create the content widget first
         main_content = self.get_content_widget()
+        # Then the standard toolbar
+        self._build_standard_toolbar()
 
-        # Then build the toolbar container
+        # Build the toolbar container
         toolbar = QWidget(self)
         toolbar_layout = QHBoxLayout(toolbar)
-        all_toolbars = [self._standard_toolbar()] + self.toolbars()
+        all_toolbars = [self._standard_toolbar] + self.toolbars()
         for tb in all_toolbars:
             toolbar_layout.addWidget(tb)
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
@@ -157,8 +165,9 @@ class BasePanelWidget(QFrame):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-    def _standard_toolbar(self):
-        """This toolbar is added to all panels
+    def _build_standard_toolbar(self):
+        """This toolbar is shown by all panels which are attached to a
+        container.
         """
         text = "Unpin as individual window"
         self.acUndock = QAction(icons.undock, "&Undock", self)
@@ -186,9 +195,11 @@ class BasePanelWidget(QFrame):
         self.acMinimize.triggered.connect(self.onMinimize)
         self.acMinimize.setVisible(False)
 
-        toolbar = ToolBar("Standard", parent=self)
-        toolbar.addAction(self.acUndock)
-        toolbar.addAction(self.acDock)
-        toolbar.addAction(self.acMaximize)
-        toolbar.addAction(self.acMinimize)
-        return toolbar
+        self._standard_toolbar = ToolBar("Standard", parent=self)
+        self._standard_toolbar.addAction(self.acUndock)
+        self._standard_toolbar.addAction(self.acDock)
+        self._standard_toolbar.addAction(self.acMaximize)
+        self._standard_toolbar.addAction(self.acMinimize)
+
+        # Hidden by default
+        self._standard_toolbar.setVisible(False)
