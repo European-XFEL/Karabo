@@ -59,6 +59,9 @@ class LabelWidget(QLabel):
     def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
+    def update_alarm_symbol(self, device_id, alarm_type):
+        """ Satisfy the informal widget interface. """
+
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
@@ -127,6 +130,9 @@ class SceneLinkWidget(QPushButton):
     def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
+    def update_alarm_symbol(self, device_id, alarm_type):
+        """ Satisfy the informal widget interface. """
+
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
@@ -187,6 +193,9 @@ class UnknownSvgWidget(QWidget):
     def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
+    def update_alarm_symbol(self, device_id, alarm_type):
+        """ Satisfy the informal widget interface. """
+
     def set_geometry(self, rect):
         self.setGeometry(rect)
 
@@ -237,6 +246,9 @@ class WorkflowItemWidget(QWidget):
         """ Satisfy the informal widget interface. """
 
     def set_visible(self, visible):
+        """ Satisfy the informal widget interface. """
+
+    def update_alarm_symbol(self, device_id, alarm_type):
         """ Satisfy the informal widget interface. """
 
     def set_geometry(self, rect):

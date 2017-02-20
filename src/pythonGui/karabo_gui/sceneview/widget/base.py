@@ -3,7 +3,8 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
                          QToolButton, QWidget)
 
 from karabo_gui import icons
-from karabo_gui.indicators import DeviceStatus, get_device_status_pixmap
+from karabo_gui.indicators import (DeviceStatus, get_alarm_pixmap,
+                                   get_device_status_pixmap)
 from karabo_gui.singletons.api import get_network, get_panel_wrangler
 from .utils import get_box, determine_if_value_unchanged
 
@@ -23,16 +24,22 @@ class BaseWidgetContainer(QWidget):
         self.status_symbol.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.layout.addWidget(self.status_symbol)
 
+        self.alarm_symbol = QLabel("", self)
+
         self.old_style_widget = self._create_widget(self.boxes)
         for box in self.boxes:
             self._make_box_connections(box)
         if self.model.parent_component == 'EditableApplyLaterComponent':
             layout = self._add_edit_widgets()
-            edit_widgets = QWidget()
-            edit_widgets.setLayout(layout)
+            edit_widgets = self._add_alarm_symbol(layout)
             self.layout.addWidget(edit_widgets)
         else:
-            self.layout.addWidget(self.old_style_widget.widget)
+            layout = QHBoxLayout()
+            layout.addWidget(self.old_style_widget.widget)
+            disp_widgets = self._add_alarm_symbol(layout)
+            self.layout.addWidget(disp_widgets)
+            layout.setContentsMargins(0, 0, 0, 0)
+
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
         self.setToolTip(", ".join(self.model.keys))
 
@@ -98,6 +105,17 @@ class BaseWidgetContainer(QWidget):
             for box in self.boxes:
                 box.removeVisible()
 
+    def update_alarm_symbol(self, device_id, alarm_type):
+        """Update the alarm symbol with a pixmap matching the given
+        ``alarm_type``
+        """
+        pixmap = get_alarm_pixmap(alarm_type)
+        if pixmap is not None:
+            self.alarm_symbol.setPixmap(pixmap)
+            self.alarm_symbol.show()
+        else:
+            self.alarm_symbol.hide()
+
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
@@ -130,6 +148,15 @@ class BaseWidgetContainer(QWidget):
         device = box.configuration
         device.signalStatusChanged.connect(self._device_status_changed)
         self._device_status_changed(device, device.status, device.error)
+
+    def _add_alarm_symbol(self, layout):
+        """ Add alarm symbol to the given ``layout`` and return the widget this
+        layout then belongs to
+        """
+        layout.addWidget(self.alarm_symbol)
+        layout_widget = QWidget()
+        layout_widget.setLayout(layout)
+        return layout_widget
 
     # ---------------------------------------------------------------------
     # Edit buttons related code
