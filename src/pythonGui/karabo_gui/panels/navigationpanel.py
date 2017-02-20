@@ -10,8 +10,8 @@ from .base import BasePanelWidget
 
 
 class NavigationPanel(BasePanelWidget):
-    def __init__(self, container, title):
-        super(NavigationPanel, self).__init__(container, title)
+    def __init__(self):
+        super(NavigationPanel, self).__init__("Navigation")
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.

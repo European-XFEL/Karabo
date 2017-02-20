@@ -10,6 +10,7 @@ from PyQt4.QtGui import (QAction, QActionGroup, QApplication, QKeySequence,
                          QMenu, QPalette, QScrollArea)
 
 import karabo_gui.icons as icons
+from karabo_gui.sceneview.api import SceneView
 from karabo_gui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabo_gui.sceneview.tools.api import (
     BoxVSceneAction, BoxHSceneAction, CreateToolAction,
@@ -28,13 +29,11 @@ QFRAME_PADDING = 4
 
 
 class ScenePanel(BasePanelWidget):
-    def __init__(self, scene_view, connected_to_server, container, title):
-        self.scene_view = scene_view
-        self.connected_to_server_at_init = connected_to_server
-        super(ScenePanel, self).__init__(container, title)
-
+    def __init__(self, model, connected_to_server):
         # cache a reference to the scene model
-        self.scene_model = scene_view.scene_model
+        self.scene_model = model
+        self.connected_to_server_at_init = connected_to_server
+        super(ScenePanel, self).__init__(model.simple_name)
 
     # ----------------------------
     # BasePanelWidget Methods
@@ -42,6 +41,7 @@ class ScenePanel(BasePanelWidget):
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
         """
+        self.scene_view = SceneView(model=self.scene_model, parent=self)
         self.scroll_widget = ResizableScrollArea(self.scene_view, parent=self)
         self.scroll_widget.setWidget(self.scene_view)
         self.scroll_widget.setBackgroundRole(QPalette.Dark)
