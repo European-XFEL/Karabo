@@ -112,7 +112,7 @@ def read_device(io_obj):
     """
     def _read_device_config(element):
         traits = {
-            'class_id': element.get('class_id'),
+            'class_id': element.get('class_id', ''),
             'uuid': element.get('uuid'),
         }
         return DeviceConfigurationModel(**traits)
@@ -121,13 +121,14 @@ def read_device(io_obj):
     root = document.getroot()
     configs = [_read_device_config(e)
                for e in root.findall(PROJECT_DB_TYPE_DEVICE_CONFIG)]
-    traits = {
-        'class_id': root.get('class_id'),
-        'instance_id': root.get('instance_id'),
-        'if_exists': root.get('if_exists'),
-        'configs': configs,
-        'active_config_ref': root.get('active_uuid'),
-    }
+    traits = {'configs': configs}
+    # Read traits in a way which is resilient against missing data
+    trait_names = {'class_id': 'class_id',
+                   'instance_id': 'instance_id',
+                   'if_exists': 'if_exists',
+                   'active_config_ref': 'active_uuid'}
+    traits.update({key: root.get(xmlkey) for key, xmlkey in trait_names.items()
+                   if root.get(xmlkey) is not None})
     model = DeviceInstanceModel(**traits)
     model.initialized = True  # Do this last to avoid triggering `modified`
     return model
@@ -140,12 +141,16 @@ def write_device(model):
         element = SubElement(parent, PROJECT_DB_TYPE_DEVICE_CONFIG)
         element.set('class_id', obj.class_id)
         element.set('uuid', obj.uuid)
+        # XXX: Protect old code. Remove this when domains are implemented.
+        element.set('revision', '0')
 
     root = Element(PROJECT_DB_TYPE_DEVICE_INSTANCE)
     root.set('class_id', model.class_id)
     root.set('instance_id', model.instance_id)
     root.set('if_exists', model.if_exists)
     root.set('active_uuid', model.active_config_ref)
+    # XXX: Protect old code. Remove this when domains are implemented.
+    root.set('active_rev', '0')
     for config in model.configs:
         _write_config(config, root)
 
