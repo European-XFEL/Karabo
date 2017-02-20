@@ -28,13 +28,15 @@ from .base import BasePanelWidget
 class MacroPanel(BasePanelWidget):
     def __init__(self, model):
         self.model = model
-
         super(MacroPanel, self).__init__(model.simple_name)
 
         self.already_connected = set()
 
         # Register to KaraboBroadcastEvent
         register_for_broadcasts(self)
+
+        # Hook up a trait handler for the panel window title
+        self.model.on_trait_change(self.set_title, 'simple_name')
 
         # Connect all running macros
         for instance in model.instances:
@@ -91,9 +93,13 @@ class MacroPanel(BasePanelWidget):
         return False
 
     def closeEvent(self, event):
-        # Unregister to KaraboBroadcastEvent
-        unregister_from_broadcasts(self)
-        event.accept()
+        super(MacroPanel, self).closeEvent(event)
+        if event.isAccepted():
+            # Unregister to KaraboBroadcastEvent
+            unregister_from_broadcasts(self)
+            # Unregister the trait handler too
+            self.model.on_trait_change(self.set_title, 'simple_name',
+                                       remove=True)
 
     def connect(self, macro_instance):
         if macro_instance not in self.already_connected:

@@ -45,19 +45,14 @@ class PanelWrangler(QObject):
                 target_window = data.get('target_window')
                 main_win.addSceneView(_find_scene_model(target),
                                       target_window)
-            elif sender is KaraboEventSender.RemoveSceneView:
-                main_win.removeMiddlePanel('scene_model', data.get('model'))
-            elif sender is KaraboEventSender.RenameSceneView:
-                main_win.renameMiddlePanel('scene_model', data.get('model'))
+            elif sender in (KaraboEventSender.RemoveSceneView,
+                            KaraboEventSender.RemoveMacro):
+                main_win.removeMiddlePanel(data.get('model'))
             elif sender is KaraboEventSender.OpenMacro:
                 main_win.addMacro(data.get('model'))
                 # XXX: I have no idea why, but this event causes an infinite
                 # loop if it's not 'handled' here.
                 return True
-            elif sender is KaraboEventSender.RemoveMacro:
-                main_win.removeMiddlePanel('macro_model', data.get('model'))
-            elif sender is KaraboEventSender.RenameMacro:
-                main_win.renameMiddlePanel('macro_model', data.get('model'))
             elif sender is KaraboEventSender.ShowAlarmServices:
                 main_win.showAlarmServicePanels(data.get('instanceIds'))
             elif sender in (KaraboEventSender.AlarmInitReply,

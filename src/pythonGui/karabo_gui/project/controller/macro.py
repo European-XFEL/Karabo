@@ -156,15 +156,6 @@ class MacroController(BaseProjectGroupController):
             return
         self.set_qt_item_text(self.qt_item, self.model.simple_name)
 
-    @on_trait_change("model.simple_name")
-    def on_model_name_change(self):
-        """ New macro name should appear in the middle panel """
-        if not self.is_ui_initialized():
-            return
-        data = {'model': self.model}
-        broadcast_event(KaraboBroadcastEvent(KaraboEventSender.RenameMacro,
-                                             data))
-
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
 
