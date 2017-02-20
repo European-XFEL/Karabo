@@ -65,12 +65,12 @@ def read_device_server(io_obj):
 
     document = parse(io_obj)
     root = document.getroot()
-    server_id = root.get('server_id')
+    server_id = root.get('server_id', '')
     devices = [_read_device(e, server_id)
                for e in root.findall(PROJECT_DB_TYPE_DEVICE_INSTANCE)]
     traits = {
         'server_id': server_id,
-        'host': root.get('host'),
+        'host': root.get('host', ''),
         'devices': devices,
     }
     model = DeviceServerModel(**traits)
@@ -84,6 +84,8 @@ def write_device_server(model):
     def _write_device(obj, parent):
         element = SubElement(parent, PROJECT_DB_TYPE_DEVICE_INSTANCE)
         element.set('uuid', obj.uuid)
+        # XXX: Protect old code. Remove this when domains are implemented.
+        element.set('revision', '0')
 
     root = Element(PROJECT_DB_TYPE_DEVICE_SERVER)
     root.set('server_id', model.server_id)
