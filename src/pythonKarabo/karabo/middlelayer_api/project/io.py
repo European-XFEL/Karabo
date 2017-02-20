@@ -120,8 +120,8 @@ def _db_metadata_reader(metadata):
     """
     attrs = {
         'uuid': metadata['uuid'],
-        'simple_name': metadata['simple_name'],
-        'description': metadata['description'],
+        'simple_name': metadata.get('simple_name', ''),
+        'description': metadata.get('description', ''),
     }
     return attrs
 
@@ -218,7 +218,7 @@ def _project_reader(io_obj, existing, metadata):
     """
     def _get_items(hsh, type_name):
         klass = _PROJECT_ITEM_TYPES[type_name]
-        entries = hsh[type_name]
+        entries = hsh.get(type_name, [])
         return [klass(uuid=h['uuid'], initialized=False) for h in entries]
 
     traits = _db_metadata_reader(metadata)
@@ -287,7 +287,9 @@ def _project_writer(model):
     project = Hash()
     for item_type in PROJECT_OBJECT_CATEGORIES:
         objects = getattr(model, item_type)
-        project[item_type] = [Hash('uuid', obj.uuid) for obj in objects]
+        # XXX: Keep adding 'revision' to protect code that people don't upgrade
+        project[item_type] = [Hash('uuid', obj.uuid, 'revision', 0)
+                              for obj in objects]
 
     hsh = Hash(PROJECT_DB_TYPE_PROJECT, project)
     return hsh.encode('XML').decode()

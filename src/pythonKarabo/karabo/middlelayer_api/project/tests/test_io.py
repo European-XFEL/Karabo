@@ -2,15 +2,18 @@ from contextlib import contextmanager
 from io import StringIO
 import os.path as op
 from tempfile import TemporaryDirectory
+from uuid import uuid4
 
 from nose.tools import assert_raises
 from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 
 from karabo.common.api import set_modified_flag, walk_traits_object
 from karabo.common.project.api import (
+    PROJECT_DB_TYPE_PROJECT,
     BaseProjectObjectModel, MacroModel, ProjectDBCache, ProjectModel,
     read_lazy_object, recursive_save_object
 )
+from karabo.middlelayer import Hash
 from ..api import (
     convert_old_project, OldProject, read_project_model, write_project_model
 )
@@ -107,6 +110,19 @@ def test_invalid_read():
                                read_project_model, existing=project)
         assert obj is project
         assert not obj.initialized
+
+
+def test_reading_incomplete():
+    from ..io import _wrap_child_element_xml
+
+    # Create XML which looks like a project but lacks certain data
+    hsh = Hash(PROJECT_DB_TYPE_PROJECT, Hash())
+    xml = hsh.encode('XML').decode()
+    meta = {'item_type': PROJECT_DB_TYPE_PROJECT, 'uuid': str(uuid4())}
+    xml = _wrap_child_element_xml(xml, meta)
+    # Then make sure it can still be read
+    model = read_project_model(StringIO(xml), existing=None)
+    assert isinstance(model, ProjectModel)
 
 
 def test_save_project():
