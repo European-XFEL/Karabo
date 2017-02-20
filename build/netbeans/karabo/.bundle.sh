@@ -158,6 +158,11 @@ cd ../tools/brokerRates
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 cd ../
 
+# shell scripts - copy directly from src
+cd $BASEDIR/src/tools/scripts/
+cp -f * $PACKAGEDIR/bin
+cd -
+
 # Correct python interpreter path for scripts in 'bin' directory
 # <-- replace 1st line by "/usr/bin/env python3" and set PATH
 safeRunCommand "$PYTHON_FIXER_SCRIPT" $PACKAGEDIR
