@@ -19,7 +19,7 @@ namespace karabo {
 
     namespace core {
 
-        
+
         DeviceServer::Pointer Runner::instantiate(int argc, char** argv) {
 
             const std::string classId("DeviceServer");
@@ -69,8 +69,38 @@ namespace karabo {
                 }
 
                 vector<string> args, resolved;
+                
+                // Fix 'args' to take into account braces (whitespace inside braces!)
+                int braces = 0;
+                string arg = "";
                 for (int i = 1; i < argc; ++i) {
-                    args.push_back(argv[i]);
+                    size_t found = std::string::npos;
+                    size_t pos = 0;
+                    string a(argv[i]);
+                    
+                    do {
+                        found = a.find_first_of("{}", pos);
+                        if (found == std::string::npos) break;
+                        pos = found;
+                        if (a[pos] == '{') {
+                            ++braces;
+                        } else if (a[pos] == '}') {
+                            --braces;
+                        }
+                        ++pos;
+                    } while (found != std::string::npos);
+                    
+                    arg = arg.empty()? a : (arg + " " + a);
+                    if (braces == 0) {
+                        args.push_back(arg);
+                        arg = "";
+                    }
+                }
+                
+                if (braces > 0) {
+                    throw KARABO_PARAMETER_EXCEPTION("CLI Error: missing " + toString(braces) + " closing brace(s)");
+                } else if (braces < 0) {
+                    throw KARABO_PARAMETER_EXCEPTION("CLI Error: missing " + toString(-braces) + " opening brace(s)");
                 }
 
                 resolveTokens(args, resolved);
@@ -106,7 +136,7 @@ namespace karabo {
                 }
 
                 flatConfiguration.unflatten(configuration);
-
+                
                 return true;
 
             } catch (const Exception& e) {
@@ -241,7 +271,7 @@ namespace karabo {
             token += args[start];
             int argc = args.size();
             boost::trim(token);
-
+            
             size_t pos = token.find_first_of("=");
             string key, value;
             if (pos == std::string::npos) {

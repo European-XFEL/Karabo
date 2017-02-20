@@ -2,6 +2,7 @@ __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ = "$May 24, 2013 11:36:55 AM$"
 
 import os
+import re
 
 from karathon import Hash, loadFromFile
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
@@ -45,9 +46,37 @@ class Runner(object):
                 self.processOption(firstArg[1:], args)
                 return False, Hash()
 
+            # fix 'args' to take into account braces
+            pars = []
+            braces = 0
+            arg = ''
+            for a in args:
+                pos = 0
+                while True:
+                    m = re.search('[{}]', a[pos:])
+                    if m is None:
+                        break
+                    else:
+                        pos = m.start()
+                        if a[pos] == '{':
+                            braces += 1
+                        elif a[pos] == '}':
+                            braces -= 1
+                        pos = m.end()
+                if braces == 0:
+                    pars.append((arg + ' ' + a).strip())
+                    arg = ''
+                else:
+                    arg += ' ' + a
+                    
+            if braces > 0:
+                raise ValueError("CLI Error: missing {} closing brace(s)".format(braces))
+            elif braces < 0:
+                raise ValueError("CLI Error: missing {} opening brace(s)".format(-braces))
+                
             configuration = Hash()
 
-            for a in args[1:]:
+            for a in pars[1:]:
                 tmp = Hash()
                 self.readToken(a, tmp)
                 configuration += tmp
