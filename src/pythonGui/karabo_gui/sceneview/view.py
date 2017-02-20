@@ -10,6 +10,10 @@ from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
 
 from karabo.common.scenemodel.api import (
     FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+from karabo_gui.events import (
+    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
+    unregister_from_broadcasts
+)
 from .bases import BaseSceneTool
 from .builder import (bring_object_to_front, create_object_from_model,
                       fill_root_layout, find_top_level_model, is_widget,
@@ -78,6 +82,8 @@ class SceneView(QWidget):
         self.resize(SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 
         self.update_model(model)
+
+        register_for_broadcasts(self)
 
     @property
     def design_mode(self):
@@ -180,6 +186,15 @@ class SceneView(QWidget):
                 return widget.event(event)
         return super(SceneView, self).event(event)
 
+    def eventFilter(self, obj, event):
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.AlarmDeviceUpdate:
+                device_id = event.data.get('deviceId')
+                alarm_type = event.data.get('alarm_type')
+                self._update_alarm_symbols(device_id, alarm_type)
+            return False
+        return super(SceneView, self).eventFilter(obj, event)
+
     def contextMenuEvent(self, event):
         """ Show scene view specific context menu. """
         if self.design_mode:
@@ -202,6 +217,8 @@ class SceneView(QWidget):
             if is_widget(obj):
                 obj.destroy()
         self.workflow_model.destroy()
+
+        unregister_from_broadcasts(self)
 
     def set_tab_visible(self, visible):
         """ Sets whether this scene is visible
@@ -404,3 +421,10 @@ class SceneView(QWidget):
         """ Remove WorkflowItemModel instances from the workflow model. """
         items = [m for m in models if isinstance(m, WorkflowItemModel)]
         self.workflow_model.remove_items(items)
+
+    def _update_alarm_symbols(self, device_id, alarm_type):
+        """ Update alarm indicators of widgets in need
+        """
+        for obj in self._scene_obj_cache.values():
+            if is_widget(obj):
+                obj.update_alarm_symbol(device_id, alarm_type)
