@@ -86,7 +86,7 @@ START[4]="karabo-cppserver serverId=karabo/alarmServer deviceClasses=AlarmServic
 # karabo/macroServer is hard-coded in the GUI
 START[5]="karabo-middlelayerserver serverId=karabo/macroServer visibility=4"
 
-START[6]="karabo-pythonserver serverId=karabo/projectDBServer deviceClasses=ProjectManager autoStart[0].ProjectManager.host=$KARABO_PROJECT_DB_HOST autoStart[0].ProjectManager.deviceId=KaraboProjectDB visibility=4 $logger"
+START[6]="karabo-pythonserver serverId=karabo/projectDBServer deviceClasses=ProjectManager \"autoStart[0]={ProjectManager.host=$KARABO_PROJECT_DB_HOST ProjectManager.deviceId=KaraboProjectDB}\" visibility=4 $logger"
 
 ##############
 # Server C++ #

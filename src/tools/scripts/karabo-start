@@ -117,7 +117,7 @@ do
         if [ "$nox" == "true" ]; then
             # No xterms should be used, disregard stdout and stderr
             echo "INFO Starting: $target > /dev/null 2>&1 &"
-            $target > /dev/null 2>&1 &
+            eval $target > /dev/null 2>&1 &
         else
             echo "INFO Starting: xterm $options $display -e bash -c \"$target\" &"
             xterm $options $icon $display -e bash -c "$target" &
