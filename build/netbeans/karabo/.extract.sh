@@ -110,11 +110,9 @@ if [ "x${interactive}x" = "xTRUEx" ]; then
 	    echo " Installation aborted."
 	    echo
 	    exit 0
-	fi	
+	fi
     fi
 fi
-
-
 
 echo -n " Extracting files, please wait..."
 # searches for the line number where finish the script and start the tar.gz
@@ -136,6 +134,19 @@ safeRunCommand "$KARABO/bin/.fix-python-scripts.sh" $KARABO
 # add the config file to var/config in case not existing yet
 if [ ! -e "$KARABO/var/config/config" ]; then    
     cp $KARABO/bin/config.orig $KARABO/var/config/config
+fi
+
+# Install and initialize the local project database
+if [ ! -d "$KARABO/extern/eXistDB/db" ]; then
+    echo -n " Activating local project database, please wait..."
+    source $KARABO/activate
+    $KARABO/extern/eXistDB/doInstall.sh $KARABO > /dev/null 2> /dev/null
+    python > /dev/null 2> /dev/null <<EOF
+from karabo.project_db.util import assure_running, stop_database
+assure_running()
+stop_database()
+EOF
+echo " done"
 fi
 
 # change sipconfig.py
