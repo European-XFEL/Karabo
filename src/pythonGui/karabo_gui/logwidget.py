@@ -15,8 +15,7 @@ from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QLabel, QLineEdit, QPushButton, QTableView,
                          QToolButton, QVBoxLayout, QWidget)
 
-from karabo_gui.events import (
-    broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.events import broadcast_event, KaraboEventSender
 import karabo_gui.icons as icons
 from karabo_gui.util import getSaveFileName
 
@@ -378,9 +377,8 @@ class LogWidget(QWidget):
         value = index.data()
         if value is None:
             return
-        data = {'device_path': value}
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.ShowNavigationItem, data))
+        broadcast_event(KaraboEventSender.ShowNavigationItem,
+                        {'device_path': value})
 
     def onSaveToFile(self):
         """ Write current database content to a file """

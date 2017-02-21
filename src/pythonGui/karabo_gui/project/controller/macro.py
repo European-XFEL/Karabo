@@ -15,7 +15,7 @@ from karabo_gui import icons
 from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
-    KaraboBroadcastEvent, KaraboEventSender)
+    KaraboEventSender)
 from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
@@ -49,9 +49,8 @@ class MacroInstanceController(BaseProjectController):
 
     def single_click(self, parent_project, parent=None):
         instance_configuration = get_topology().get_device(self.instance_id)
-        data = {'configuration': instance_configuration}
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.ShowConfiguration, data))
+        broadcast_event(KaraboEventSender.ShowConfiguration,
+                        {'configuration': instance_configuration})
 
     # ----------------------------------------------------------------------
     # action handlers
@@ -106,9 +105,8 @@ class MacroController(BaseProjectGroupController):
         return item
 
     def double_click(self, parent_project, parent=None):
-        data = {'model': self.model}
-        broadcast_event(KaraboBroadcastEvent(KaraboEventSender.OpenMacro,
-                                             data))
+        broadcast_event(KaraboEventSender.OpenMacro,
+                        {'model': self.model})
 
     def item_handler(self, added, removed):
         """ Called when instances are added/removed
@@ -141,8 +139,8 @@ class MacroController(BaseProjectGroupController):
                     running_instances.append(dev_id)
                     data['instance'] = dev_id
                     # Create KaraboBroadcastEvent
-                    broadcast_event(KaraboBroadcastEvent(
-                        KaraboEventSender.ConnectMacroInstance, data))
+                    broadcast_event(KaraboEventSender.ConnectMacroInstance,
+                                    data)
 
     # ----------------------------------------------------------------------
     # traits notification handlers
@@ -186,8 +184,7 @@ class MacroController(BaseProjectGroupController):
         if macro in project.macros:
             project.macros.remove(macro)
 
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.RemoveMacro, {'model': macro}))
+        broadcast_event(KaraboEventSender.RemoveMacro, {'model': macro})
 
     def _edit_macro(self):
         dialog = MacroHandleDialog(self.model)
