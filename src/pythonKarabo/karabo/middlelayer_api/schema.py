@@ -264,13 +264,12 @@ class ListOfNodes(Node):
         old = instance.__dict__.get(self.key, [])
         for obj in old:
             obj._parents.pop(self, None)
+        ret = []
         for obj in new:
             obj._parents[self] = self.key
+            ret += obj._initializers
+            del obj._initializers
         instance.__dict__[self.key] = new
-        ret = []
-        for o in new:
-            ret += o._initializers
-            del o._initializers
         return ret
 
     def toDataAndAttrs(self, instance):
