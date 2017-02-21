@@ -31,9 +31,12 @@ QFRAME_PADDING = 4
 class ScenePanel(BasePanelWidget):
     def __init__(self, model, connected_to_server):
         # cache a reference to the scene model
-        self.scene_model = model
+        self.model = model
         self.connected_to_server_at_init = connected_to_server
         super(ScenePanel, self).__init__(model.simple_name)
+
+        # Add a handler for the window title. Don't forget to remove it later!
+        self.model.on_trait_change(self.set_title, 'simple_name')
 
     # ----------------------------
     # BasePanelWidget Methods
@@ -41,7 +44,7 @@ class ScenePanel(BasePanelWidget):
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
         """
-        self.scene_view = SceneView(model=self.scene_model, parent=self)
+        self.scene_view = SceneView(model=self.model, parent=self)
         self.scroll_widget = ResizableScrollArea(self.scene_view, parent=self)
         self.scroll_widget.setWidget(self.scene_view)
         self.scroll_widget.setBackgroundRole(QPalette.Dark)
@@ -59,8 +62,8 @@ class ScenePanel(BasePanelWidget):
         """Called when this panel is undocked from the main window.
         """
         tb_height = self.toolbar.height()
-        frame_width = self.scene_model.width + QFRAME_PADDING
-        frame_height = self.scene_model.height + tb_height + QFRAME_PADDING
+        frame_width = self.model.width + QFRAME_PADDING
+        frame_height = self.model.height + tb_height + QFRAME_PADDING
         screen_rect = QApplication.desktop().screenGeometry()
         if (frame_width < screen_rect.width() and
                 frame_height < screen_rect.height()):
@@ -99,8 +102,13 @@ class ScenePanel(BasePanelWidget):
     # Qt Methods
 
     def closeEvent(self, event):
-        self.scene_view.destroy()
-        event.accept()
+        super(ScenePanel, self).closeEvent(event)
+        if event.isAccepted():
+            # Tell the scene view to destruct
+            self.scene_view.destroy()
+            # Remove the window title handler
+            self.model.on_trait_change(self.set_title, 'simple_name',
+                                       remove=True)
 
     def hideEvent(self, event):
         self.scene_view.set_tab_visible(False)

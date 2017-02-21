@@ -57,7 +57,9 @@ class RunConfigPanel(BasePanelWidget):
         return widget
 
     def closeEvent(self, event):
-        unregister_from_broadcasts(self)
+        super(RunConfigPanel, self).closeEvent(event)
+        if event.isAccepted():
+            unregister_from_broadcasts(self)
 
     def eventFilter(self, obj, event):
         """ Router for incoming broadcasts

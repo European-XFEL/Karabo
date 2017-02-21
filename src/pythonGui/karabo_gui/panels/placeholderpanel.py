@@ -17,3 +17,10 @@ class PlaceholderPanel(BasePanelWidget):
         """Returns a QWidget containing the main content of the panel.
         """
         return QLabel(self)
+
+    def attach_to_container(self, container):
+        """We override this method to make sure the standard toolbar stays
+        hidden for this panel.
+        """
+        super(PlaceholderPanel, self).attach_to_container(container)
+        self.standard_toolbar.setVisible(False)
