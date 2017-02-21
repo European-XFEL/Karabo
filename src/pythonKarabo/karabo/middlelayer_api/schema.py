@@ -1,13 +1,13 @@
 from asyncio import coroutine, gather
 from collections import OrderedDict
-from enum import Enum
+from weakref import WeakKeyDictionary
 
+from karabo.common.alarm_conditions import AlarmCondition
 from .basetypes import KaraboValue, isSet
 from .enums import NodeType
 from .hash import Attribute, Descriptor, Hash, Schema, HashList
 from .registry import Registry
 from .timestamp import Timestamp
-from .weak import Weak
 
 
 class MetaConfigurable(type(Registry)):
@@ -29,10 +29,9 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             eggs = String()
     """
     _subclasses = { }
-    __parent = Weak()
     schema = None
 
-    def __init__(self, configuration={}, parent=None, key=None):
+    def __init__(self, configuration={}):
         """Initialize this object with the configuration
 
         :param configuration: a :class:`dict` or a
@@ -51,8 +50,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         another class.
         """
 
-        self.__parent = parent
-        self.__key = key
+        self._parents = WeakKeyDictionary()
         self._initializers = []
         for k in self._allattrs:
             t = getattr(type(self), k)
@@ -125,11 +123,16 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             value.timestamp = Timestamp()
         if isSet(value):
             self.setChildValue(descriptor.key, value, descriptor)
+        old = self.__dict__.get(descriptor.key)
+        if isinstance(old, Configurable):
+            del old._parents[self]
+        if isinstance(value, Configurable):
+            value._parents[self] = descriptor.key
         self.__dict__[descriptor.key] = value
 
     def setChildValue(self, key, value, desc):
-        if self.__parent is not None:
-            self.__parent.setChildValue(self.__key + "." + key, value, desc)
+        for parent, parentkey in self._parents.items():
+            parent.setChildValue("{}.{}".format(parentkey, key), value, desc)
 
     @coroutine
     def slotReconfigure(self, config):
@@ -182,8 +185,8 @@ class Node(Descriptor):
         return self.cls.getClassSchema(device, state).hash, attrs
 
     def _initialize(self, instance, value):
-        node = self.cls(value, instance, self.key)
-        instance.__dict__[self.key] = node
+        node = self.cls(value)
+        instance.setValue(self, node)
         ret = node._initializers
         del node._initializers
         return ret
@@ -202,6 +205,9 @@ class Node(Descriptor):
                 r[k] = value
                 r[k, ...].update(attrs)
         return r, {}
+
+    def alarmCondition(self, value):
+        return AlarmCondition.NONE
 
 
 class ChoiceOfNodes(Node):
@@ -252,14 +258,17 @@ class ListOfNodes(Node):
 
     def _initialize(self, instance, value):
         if isinstance(value, Hash):
-            l = [self.cls._subclasses[k](v, instance, self.key)
-                 for k, v in value.items()]
+            new = [self.cls._subclasses[k](v) for k, v in value.items()]
         else:
-            l = [self.cls._subclasses[k](Hash(), instance, self.key)
-                 for k in value]
-        instance.__dict__[self.key] = l
+            new = [self.cls._subclasses[k](Hash()) for k in value]
+        old = instance.__dict__.get(self.key, [])
+        for obj in old:
+            obj._parents.pop(self, None)
+        for obj in new:
+            obj._parents[self] = self.key
+        instance.__dict__[self.key] = new
         ret = []
-        for o in l:
+        for o in new:
             ret += o._initializers
             del o._initializers
         return ret
