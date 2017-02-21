@@ -1,5 +1,6 @@
 import os
 from contextlib import ContextDecorator
+from textwrap import dedent
 from time import gmtime, strftime
 
 from eulexistdb.db import ExistDB
@@ -298,3 +299,109 @@ class ProjectDatabase(ContextDecorator):
             return [r.text for r in res.results]
         except ExistDBException:
             return []
+
+    def sanitize_database(self, domain):
+        """ This function (attempts to) sanitize all items in a domain
+
+        It inserts the minimally expected attributes if missing! A backup of
+        the collection is created prior to the operation!
+        """
+
+        domain = domain.rstrip('/')
+        tstamp = strftime("%Y-%m-%d_%H%M%S", gmtime())
+        base = '/'.join(domain.split('/')[:-1])+"/"
+        source = domain.split('/')[-1]
+        bck = "{}_{}_backup".format(source, tstamp)
+        tmp = "tmp_{}".format(tstamp)
+
+        query = """
+            xquery version "3.0";
+            import module namespace xmldb="http://exist-db.org/xquery/xmldb";
+
+            let $base := "{base}"
+            let $col1 := "{source}"
+            let $tmp := "{tmp}"
+            let $col2 := "{dest}"
+
+            let $res := xmldb:create-collection($base, $tmp)
+            let $cpy_res := xmldb:copy(concat($base,$col1), concat($base,$tmp))
+            let $rnm_res := xmldb:rename(concat($base,$tmp,"/",$col1), $col2)
+            let $mv_res := xmldb:move(concat($base,$tmp,"/",$col2), $base)
+            return xmldb:remove(concat($base,$tmp))
+
+        """.format(base=base, source=source, tmp=tmp, dest=bck)
+
+        print("Creating backup of domain {} at {}{}".format(domain, base, bck))
+        try:
+            res = self.dbhandle.query(query)
+        except ExistDBException as e:
+            raise("Failed creating backup: {}".format(e))
+
+        print("Sucessfully created backup, now proceeding with sanitizing")
+
+        query = """
+            xquery version "3.0";
+
+            let $col := "{domain}"
+
+            (: This query updates root elements missing aliases :)
+            let $root_updates := for $doc in collection($col)/xml[not(@alias)]
+            let $update := update insert attribute alias {{'default'}} into $doc
+            return $doc
+
+            (: This query updates project elements missing revisions :)
+            let $docs := for $doc in collection($col)/xml[@item_type='project']
+            where exists($doc/*/*/KRB_Item) and (not(exists($doc/*/*/KRB_Item/revision)))
+            return $doc
+
+            let $project_updates := for $doc in $docs
+            let $update := update insert <revision KRB_Type="INT32">0</revision> into $doc/*/*/KRB_Item
+            return $doc
+
+
+            (: This query updates device server elements missing revisions :)
+            let $device_server_updates := for $doc in collection($col)/xml[@item_type='device_server']/device_server/device_instance[not(@revision)]
+            let $update := update insert attribute revision {{'0'}} into $doc
+            return $doc
+
+
+            (: These queries updates device config elements missing revisions :)
+            let $config_updates_1 := for $doc in collection($col)/xml[@item_type='device_instance']/device_instance/device_config[not(@revision)]
+            let $update := update insert attribute revision {{'0'}} into $doc
+            return $doc
+
+            let $config_updates_2 := for $doc in collection($col)/xml[@item_type='device_instance'][not(@active_rev)]
+            let $update := update insert attribute active_rev {{'0'}} into $doc
+            return $doc
+
+            return <updates>
+                <root_updates>{{count($root_updates)}}</root_updates>
+                <project_updates>{{count($project_updates)}}</project_updates>
+                <device_server_updates>{{count($device_server_updates)}}</device_server_updates>
+                <config_updates_1>{{count($config_updates_1)}}</config_updates_1>
+                <config_updates_2>{{count($config_updates_2)}}</config_updates_2>
+                </updates>
+
+            """.format(domain=domain)
+
+        try:
+            res = self.dbhandle.query(query).results[0]
+        except ExistDBException as e:
+            raise("Failed sanitizing: {}".format(e))
+
+        msg = dedent("""
+            Sanitized database:
+            -------------------
+            Root elements updated:                   {root_updates}
+            Project elements updated:                {project_updates}
+            Device server elements updated:          {device_server_updates}
+            Configuration elements updated (root):   {config_updates_1}
+            Configuration elements updated (child):  {config_updates_2}
+        """.format(root_updates=res[0].text,
+                   project_updates=res[1].text,
+                   device_server_updates=res[2].text,
+                   config_updates_1=res[3].text,
+                   config_updates_2=res[4].text))
+        print(msg)
+
+
