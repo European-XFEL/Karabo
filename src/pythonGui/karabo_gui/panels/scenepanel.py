@@ -10,6 +10,8 @@ from PyQt4.QtGui import (QAction, QActionGroup, QApplication, QKeySequence,
                          QMenu, QPalette, QScrollArea)
 
 import karabo_gui.icons as icons
+from karabo_gui.events import (
+    broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
 from karabo_gui.sceneview.api import SceneView
 from karabo_gui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabo_gui.sceneview.tools.api import (
@@ -109,6 +111,10 @@ class ScenePanel(BasePanelWidget):
             # Remove the window title handler
             self.model.on_trait_change(self.set_title, 'simple_name',
                                        remove=True)
+            # Tell the world we're closing
+            data = {'model': self.model}
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.MiddlePanelClosed, data))
 
     def hideEvent(self, event):
         self.scene_view.set_tab_visible(False)
