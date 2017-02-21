@@ -124,21 +124,22 @@ namespace karathon {
 
     void SlotWrap::rethrowPythonException() {
         PyObject *e, *v, *t;
-         // get the error indicators
+        // get the error indicators
         PyErr_Fetch(&e, &v, &t); // ref count incremented
-
+        PyErr_NormalizeException(&e, &v, &t);
+        
         std::string pythonErrorMessage;
 
         // Try to extract full traceback
         PyObject* moduleName = PyUnicode_FromString("traceback");
         PyObject* pythonModule = PyImport_Import(moduleName);
         Py_DECREF(moduleName);
-        
+
         if (pythonModule != 0) {
             PyObject* pythonFunction = PyObject_GetAttrString(pythonModule, "format_exception");
             if (pythonFunction && PyCallable_Check(pythonFunction)) {
                 PyObject* pythonValue = PyObject_CallFunctionObjArgs(pythonFunction, e, v, t, 0);
-                if(pythonValue){
+                if (pythonValue) {
                     if (PyList_Check(pythonValue)) {
                         pythonErrorMessage.append("Python reports ...\n\n");
                         Py_ssize_t size = PyList_Size(pythonValue);
