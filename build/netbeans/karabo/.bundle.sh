@@ -158,12 +158,9 @@ cd ../tools/brokerRates
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 cd ../
 
-#shell scripts - copy directly from src
+# shell scripts - copy directly from src
 cd $BASEDIR/src/tools/scripts/
 cp -f * $PACKAGEDIR/bin
-if [ ! -e "$PACKAGEDIR/var/config/config" ]; then
-    cp config.orig $PACKAGEDIR/var/config/config
-fi
 cd -
 
 # Correct python interpreter path for scripts in 'bin' directory
