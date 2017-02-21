@@ -141,11 +141,6 @@ if [ ! -d "$KARABO/extern/eXistDB/db" ]; then
     echo -n " Activating local project database, please wait..."
     source $KARABO/activate
     $KARABO/extern/eXistDB/doInstall.sh $KARABO > /dev/null 2> /dev/null
-    python > /dev/null 2> /dev/null <<EOF
-from karabo.project_db.util import assure_running, stop_database
-assure_running()
-stop_database()
-EOF
 echo " done"
 fi
 

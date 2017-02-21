@@ -21,4 +21,11 @@ if [ ! -d "$EXIST_HOME" ]; then
 	./install $JAVA
 fi
 
+#initialize the database
+python > /dev/null 2> /dev/null <<EOF
+from karabo.project_db.util import assure_running, stop_database
+assure_running()
+stop_database()
+EOF
+
 cd $CURRENT_DIR
