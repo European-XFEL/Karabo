@@ -18,8 +18,8 @@ class _Filter(logging.Filter):
 
 
 class Filter(Configurable):
-    def __init__(self, config, parent, key):
-        super().__init__(config, parent, key)
+    def __init__(self, config):
+        super().__init__(config)
         self.filter = _Filter(self)
 
 
@@ -29,12 +29,11 @@ class Handler(Configurable):
                           displayedName="Filters",
                           defaultValue=[])
 
-    def __init__(self, config, parent, key):
-        super().__init__(config, parent, key)
+    def __init__(self, config):
+        super().__init__(config)
         self.handler = _Handler(self)
         for f in self.filters:
             self.handler.addFilter(f.filter)
-        self.parent = parent
 
 
 class _Handler(logging.Handler):
@@ -90,6 +89,7 @@ class Logger(Configurable):
         have a connection to the broker, and should stop once we loose it."""
         self.logger = logging.getLogger(broker.deviceId)
         for h in self.handlers:
+            h.parent = self
             self.logger.addHandler(h.handler)
         for f in self.filters:
             self.logger.addFilter(f.filter)
