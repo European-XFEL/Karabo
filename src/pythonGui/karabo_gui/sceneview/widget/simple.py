@@ -12,8 +12,7 @@ from PyQt4.QtSvg import QSvgRenderer
 from karabo.common.scenemodel.api import write_single_model
 from karabo_gui.dialogs.dialogs import SceneLinkDialog
 from karabo_gui.dialogs.textdialog import TextDialog
-from karabo_gui.events import (
-    broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.sceneview.utils import calc_rect_from_text
 
 LIGHT_BLUE = (224, 240, 255)
@@ -116,10 +115,9 @@ class SceneLinkWidget(QPushButton):
             # target format => "simple_name:UUID"
             target = parts[1]
             target_window = self.model.target_window
+            # Broadcast an event
             data = {'target': target, 'target_window': target_window}
-            # Create KaraboBroadcastEvent
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.OpenSceneLink, data))
+            broadcast_event(KaraboEventSender.OpenSceneLink, data)
 
     def add_boxes(self, boxes):
         """ Satisfy the informal widget interface. """
