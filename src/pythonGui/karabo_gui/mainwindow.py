@@ -6,6 +6,7 @@
 """This module contains a class which represents the main window of the
     application and includes all relevant panels and the main toolbar.
 """
+from collections import OrderedDict
 from enum import Enum
 import os.path
 
@@ -15,7 +16,7 @@ from PyQt4.QtGui import (QAction, QActionGroup, QMainWindow, QMenu, QSplitter,
 
 import karabo_gui.icons as icons
 from karabo.middlelayer import AccessLevel
-from karabo_gui import globals
+import karabo_gui.globals as krb_globals
 from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
                                register_for_broadcasts)
 from karabo_gui.messagebox import MessageBox
@@ -27,6 +28,13 @@ from karabo_gui.panels.notificationpanel import NotificationPanel
 from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
 from karabo_gui.singletons.api import get_db_conn, get_network
+
+ACCESS_LEVELS = OrderedDict()
+ACCESS_LEVELS['Admin'] = AccessLevel.ADMIN
+ACCESS_LEVELS['Expert'] = AccessLevel.EXPERT
+ACCESS_LEVELS['Operator'] = AccessLevel.OPERATOR
+ACCESS_LEVELS['User'] = AccessLevel.USER
+ACCESS_LEVELS['Observer'] = AccessLevel.OBSERVER
 
 
 class PanelAreaEnum(Enum):
@@ -47,8 +55,8 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         # Create projects folder, if not exists
-        if not os.path.exists(globals.KARABO_PROJECT_FOLDER):
-            os.makedirs(globals.KARABO_PROJECT_FOLDER, exist_ok=True)
+        if not os.path.exists(krb_globals.KARABO_PROJECT_FOLDER):
+            os.makedirs(krb_globals.KARABO_PROJECT_FOLDER, exist_ok=True)
 
         self._setupActions()
         self._setupMenuBar()
@@ -59,7 +67,7 @@ class MainWindow(QMainWindow):
         self._setupPanelAreas()
         self._addFixedPanels()
 
-        title = "European XFEL - Karabo GUI " + globals.GUI_VERSION_LONG
+        title = "European XFEL - Karabo GUI " + krb_globals.GUI_VERSION_LONG
         self.setWindowTitle(title)
         self.resize(1200, 800)
 
@@ -136,43 +144,18 @@ class MainWindow(QMainWindow):
         self.tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
         self.tbAccessLevel.setEnabled(False)
 
-        text = "Admin"
-        self.acAdmin = QAction(text, self)
-        self.acAdmin.setStatusTip(text)
-        self.acAdmin.setToolTip(text)
-        self.acAdmin.setCheckable(True)
-
-        text = "Expert"
-        self.acExpert = QAction(text, self)
-        self.acExpert.setStatusTip(text)
-        self.acExpert.setToolTip(text)
-        self.acExpert.setCheckable(True)
-
-        text = "Operator"
-        self.acOperator = QAction(text, self)
-        self.acOperator.setStatusTip(text)
-        self.acOperator.setToolTip(text)
-        self.acOperator.setCheckable(True)
-
-        text = "User"
-        self.acUser = QAction(text, self)
-        self.acUser.setStatusTip(text)
-        self.acUser.setToolTip(text)
-        self.acUser.setCheckable(True)
-
-        text = "Observer"
-        self.acObserver = QAction(text, self)
-        self.acObserver.setStatusTip(text)
-        self.acObserver.setToolTip(text)
-        self.acObserver.setCheckable(True)
-
         self.agAccessLevel = QActionGroup(self)
-        self.agAccessLevel.addAction(self.acAdmin)
-        self.agAccessLevel.addAction(self.acExpert)
-        self.agAccessLevel.addAction(self.acOperator)
-        self.agAccessLevel.addAction(self.acUser)
-        self.agAccessLevel.addAction(self.acObserver)
         self.agAccessLevel.triggered.connect(self.onChangeAccessLevel)
+
+        self.access_level_actions = {}
+        for name, level in ACCESS_LEVELS.items():
+            action = QAction(name, self)
+            action.setStatusTip(text)
+            action.setToolTip(text)
+            action.setCheckable(True)
+            action.setData(level)
+            self.agAccessLevel.addAction(action)
+            self.access_level_actions[level] = action
 
         self.mAccessLevel = QMenu()
         self.onUpdateAccessLevel()
@@ -346,16 +329,9 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(object)
     def onChangeAccessLevel(self, action):
-        if action is self.acObserver:
-            globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
-        elif action is self.acUser:
-            globals.GLOBAL_ACCESS_LEVEL = AccessLevel.USER
-        elif action is self.acOperator:
-            globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
-        elif action is self.acExpert:
-            globals.GLOBAL_ACCESS_LEVEL = AccessLevel.EXPERT
-        elif action is self.acAdmin:
-            globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
+        level = action.data()
+        assert isinstance(level, AccessLevel), 'Garbage access level value!'
+        krb_globals.GLOBAL_ACCESS_LEVEL = level
 
         self.signalGlobalAccessLevelChanged.emit()
 
@@ -377,30 +353,19 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def onUpdateAccessLevel(self):
-        self.mAccessLevel.clear()
-        if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.EXPERT:
-            self.mAccessLevel.addAction(self.acAdmin)
-        if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.OPERATOR:
-            self.mAccessLevel.addAction(self.acExpert)
-        if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.USER:
-            self.mAccessLevel.addAction(self.acOperator)
-        if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.OBSERVER:
-            self.mAccessLevel.addAction(self.acUser)
-        self.mAccessLevel.addAction(self.acObserver)
+        global_access_level = krb_globals.GLOBAL_ACCESS_LEVEL
 
-        if globals.GLOBAL_ACCESS_LEVEL == AccessLevel.ADMIN:
-            self.acAdmin.setChecked(True)
-        elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.EXPERT:
-            self.acExpert.setChecked(True)
-        elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.OPERATOR:
-            self.acOperator.setChecked(True)
-        elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.USER:
-            self.acUser.setChecked(True)
-        elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.OBSERVER:
-            self.acObserver.setChecked(True)
-        else:
-            self.acAdmin.setChecked(False)
-            self.acExpert.setChecked(False)
-            self.acOperator.setChecked(False)
-            self.acUser.setChecked(False)
-            self.acObserver.setChecked(False)
+        # Build the access level menu
+        self.mAccessLevel.clear()
+        for level in ACCESS_LEVELS.values():
+            if global_access_level >= level:
+                action = self.access_level_actions[level]
+                self.mAccessLevel.addAction(action)
+
+        # Show a check next to the current access level
+        for action in self.access_level_actions.values():
+            action.setChecked(False)
+
+        checked_action = self.access_level_actions.get(global_access_level)
+        if checked_action is not None:
+            checked_action.setChecked(True)
