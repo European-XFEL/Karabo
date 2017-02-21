@@ -88,6 +88,9 @@ namespace karabo {
                             --braces;
                         }
                         ++pos;
+                        if (braces < 0) {
+                            throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: '}' encounters before corresponding '{'");
+                        }
                     } while (found != std::string::npos);
                     
                     arg = arg.empty()? a : (arg + " " + a);
@@ -98,9 +101,9 @@ namespace karabo {
                 }
                 
                 if (braces > 0) {
-                    throw KARABO_PARAMETER_EXCEPTION("CLI Error: missing " + toString(braces) + " closing brace(s)");
+                    throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: missing " + toString(braces) + " closing brace(s)");
                 } else if (braces < 0) {
-                    throw KARABO_PARAMETER_EXCEPTION("CLI Error: missing " + toString(-braces) + " opening brace(s)");
+                    throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: missing " + toString(-braces) + " opening brace(s)");
                 }
 
                 resolveTokens(args, resolved);

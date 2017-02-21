@@ -79,7 +79,7 @@ START[1]="karabo-cppserver serverId=karabo/logAggregator deviceClasses=CentralLo
 
 START[2]="karabo-cppserver serverId=karabo/dataLogger deviceClasses=DataLogger,DataLogReader visibility=4 $logger"
 
-START[3]="karabo-cppserver serverId=karabo/dataLoggerManager deviceClasses=DataLoggerManager autoStart[0]={DataLoggerManager.serverList=karabo/dataLogger DataLoggerManager.maximumFileSize=200} visibility=4 $logger"
+START[3]="karabo-cppserver serverId=karabo/dataLoggerManager deviceClasses=DataLoggerManager autoStart[0]={DataLoggerManager.serverList=karabo/dataLogger} visibility=4 $logger"
 
 START[4]="karabo-cppserver serverId=karabo/alarmServer deviceClasses=AlarmService autoStart[0].AlarmService visibility=4 $logger"
 

@@ -63,6 +63,8 @@ class Runner(object):
                         elif a[pos] == '}':
                             braces -= 1
                         pos = m.end()
+                        if braces < 0:
+                            raise SyntaxError("CLI Syntax Error: '}' encounters before corresponding '{'")
                 if braces == 0:
                     pars.append((arg + ' ' + a).strip())
                     arg = ''
@@ -70,9 +72,9 @@ class Runner(object):
                     arg += ' ' + a
                     
             if braces > 0:
-                raise ValueError("CLI Error: missing {} closing brace(s)".format(braces))
+                raise SyntaxError("CLI Syntax Error: missing {} closing brace(s)".format(braces))
             elif braces < 0:
-                raise ValueError("CLI Error: missing {} opening brace(s)".format(-braces))
+                raise SyntaxError("CLI Syntax Error: missing {} opening brace(s)".format(-braces))
                 
             configuration = Hash()
 
