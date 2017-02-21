@@ -177,10 +177,9 @@ class ProjectDatabaseConnection(QObject):
         if self.is_processing() == previous_processing:
             return
 
-        data = {'is_processing': self.is_processing()}
-        # Create KaraboBroadcastEvent
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.DatabaseIsBusy, data))
+        # Tell the world
+        broadcast_event(KaraboEventSender.DatabaseIsBusy,
+                        {'is_processing': self.is_processing()})
 
     def _push_reading(self, domain, uuid, existing):
         # Store previous processing state

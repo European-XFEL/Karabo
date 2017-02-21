@@ -243,11 +243,8 @@ class ButtonDelegate(QStyledItemDelegate):
             self.cellEditMode = True
             if text == ALARM_DATA[SHOW_DEVICE]:
                 # Send signal to show device
-                deviceId = index.data()
-                data = {'deviceId': deviceId}
-                # Create KaraboBroadcastEvent
-                broadcast_event(KaraboBroadcastEvent(
-                    KaraboEventSender.ShowDevice, data))
+                broadcast_event(KaraboEventSender.ShowDevice,
+                                {'deviceId': index.data()})
             else:
                 # Send signal to acknowledge alarm
                 id_index = getAlarmKeyIndex(ALARM_ID)

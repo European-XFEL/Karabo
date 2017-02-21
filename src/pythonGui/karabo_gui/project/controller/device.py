@@ -19,8 +19,7 @@ from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
 from karabo_gui.const import PROJECT_CONTROLLER_REF
-from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
-                               KaraboEventSender)
+from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
@@ -212,9 +211,8 @@ class DeviceInstanceController(BaseProjectGroupController):
     def _broadcast_item_click(self):
         configuration = self.project_device.current_configuration
         if configuration.descriptor is not None:
-            data = {'configuration': configuration}
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.ShowConfiguration, data))
+            broadcast_event(KaraboEventSender.ShowConfiguration,
+                            {'configuration': configuration})
 
     def _update_children_check_state(self):
         """Update the CheckState of the child items
@@ -240,9 +238,8 @@ class DeviceInstanceController(BaseProjectGroupController):
     def _update_configurator(self):
         configuration = self.project_device.current_configuration
         if configuration.descriptor is not None:
-            data = {'configuration': configuration}
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.UpdateDeviceConfigurator, data))
+            broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
+                            {'configuration': configuration})
 
     def _create_sub_menu(self, parent_menu, parent_project):
         """ Create sub menu for parent menu and return it
