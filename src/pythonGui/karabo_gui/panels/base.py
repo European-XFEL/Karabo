@@ -28,6 +28,7 @@ class BasePanelWidget(QFrame):
         self.index = -1
         self.doesDockOnClose = True
         self.panel_container = None
+        self.is_docked = False
 
         self._fill_panel()
 
@@ -62,20 +63,32 @@ class BasePanelWidget(QFrame):
                    '`PanelContainer` or None!')
             assert isinstance(container, PanelContainer), msg
 
-            # Dock to the container
-            container.dock(self)
+            self.is_docked = True
+        else:
+            self.is_docked = False
 
         self.panel_container = container
         # Set the toolbar visibility based on whether we're attached or not
-        self._standard_toolbar.setVisible(container is not None)
+        self.standard_toolbar.setVisible(container is not None)
 
-    def forceClose(self):
+    def force_close(self):
         """
         This function sets the member variable to False which decides whether
         this widget should be closed on dockonevent and calls closeEvent.
         """
         self.doesDockOnClose = False
         return self.close()
+
+    def set_title(self, name):
+        """Set the title of this panel whether its docked or undocked.
+        """
+        # Set the window title
+        self.setWindowTitle(name)
+        # And (maybe) the tab label
+        if self.is_docked:
+            panel = self.panel_container.widget(self.index)
+            if panel is self:
+                self.panel_container.setTabText(self.index, name)
 
     # --------------------------------------
     # Qt slots and callbacks
@@ -141,7 +154,7 @@ class BasePanelWidget(QFrame):
         # Build the toolbar container
         toolbar = QWidget(self)
         toolbar_layout = QHBoxLayout(toolbar)
-        all_toolbars = [self._standard_toolbar] + self.toolbars()
+        all_toolbars = [self.standard_toolbar] + self.toolbars()
         for tb in all_toolbars:
             toolbar_layout.addWidget(tb)
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
@@ -195,11 +208,11 @@ class BasePanelWidget(QFrame):
         self.acMinimize.triggered.connect(self.onMinimize)
         self.acMinimize.setVisible(False)
 
-        self._standard_toolbar = ToolBar("Standard", parent=self)
-        self._standard_toolbar.addAction(self.acUndock)
-        self._standard_toolbar.addAction(self.acDock)
-        self._standard_toolbar.addAction(self.acMaximize)
-        self._standard_toolbar.addAction(self.acMinimize)
+        self.standard_toolbar = ToolBar("Standard", parent=self)
+        self.standard_toolbar.addAction(self.acUndock)
+        self.standard_toolbar.addAction(self.acDock)
+        self.standard_toolbar.addAction(self.acMaximize)
+        self.standard_toolbar.addAction(self.acMinimize)
 
         # Hidden by default
-        self._standard_toolbar.setVisible(False)
+        self.standard_toolbar.setVisible(False)
