@@ -81,6 +81,7 @@ echo
 
 installDir=$HOME
 runDir=$HOME
+upgrade="n"
 if [ "x${install_prefix_dir}x" != "xx" ]; then
     installDir="${install_prefix_dir}"
     runDir=0
@@ -95,8 +96,26 @@ if [ "x${interactive}x" = "xTRUEx" ]; then
 	    mkdir -p  ${dir} ||  echo_exit "Cannot create directory $dir"
 	fi
 	installDir=`cd "${dir}"; pwd`
-    fi    
+    fi
+    # Check for any previous karabo installation
+    if [ -e "$installDir/karabo/VERSION" ]; then
+	echo 
+	echo " WARN: Found an existing Karabo installation ($(cat $installDir/karabo/VERSION))"
+	echo "       Continuing will upgrade the core," 
+	echo "       but leave config, log and history files untouched."
+	upgrade="y"
+	read -e -p "       Continue? [Y/n]: " upgrade
+	if [ "x${upgrade}x" != "xyx" -a "x${upgrade}x" != "xYx" ]; then
+	    echo
+	    echo " Installation aborted."
+	    echo
+	    exit 0
+	fi	
+    fi
 fi
+
+
+
 echo -n " Extracting files, please wait..."
 # searches for the line number where finish the script and start the tar.gz
 SKIP=`awk '/^__TARFILE_FOLLOWS__/ { print NR + 1; exit 0; }' $0`
@@ -113,6 +132,11 @@ mkdir -p $HOME/.karabo
 
 # fix the shebang line of Python entry-points
 safeRunCommand "$KARABO/bin/.fix-python-scripts.sh" $KARABO
+
+# add the config file to var/config in case not existing yet
+if [ ! -e "$KARABO/var/config/config" ]; then    
+    cp $KARABO/bin/config.orig $KARABO/var/config/config
+fi
 
 # change sipconfig.py
 #
