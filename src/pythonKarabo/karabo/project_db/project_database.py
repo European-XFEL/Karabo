@@ -306,8 +306,7 @@ class ProjectDatabase(ContextDecorator):
         the collection is created prior to the operation!
         """
 
-        if domain[-1] == "/":
-            domain = domain[:-1]
+        domain = domain.rstrip('/')
         tstamp = strftime("%Y-%m-%d_%H%M%S", gmtime())
         base = '/'.join(domain.split('/')[:-1])+"/"
         source = domain.split('/')[-1]
