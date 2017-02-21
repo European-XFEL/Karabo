@@ -6,30 +6,22 @@ from karabo.middlelayer import (
     Node, String, Unit, unit, VectorHash)
 
 
-class DummyConfigurable(Configurable):
-    dummy_value = None
-    dummy_child = None
+class StoreChanges(Configurable):
+    """This test class keeps all changes for later inspection"""
+    values_set = None
+    children_set = None
 
     def setValue(self, desc, value):
         super().setValue(desc, value)
-        assert self.dummy_value is None
-        self.dummy_value = value
-
-    def assertValue(self, value):
-        assert value == self.dummy_value
-        self.dummy_value = None
+        if self.values_set is None:
+            self.values_set = []
+        self.values_set.append((desc, value))
 
     def setChildValue(self, key, value, desc):
         super().setChildValue(key, value, desc)
-        if "." in key:
-            assert self.dummy_child is None
-            self.key = key
-            self.dummy_child = value
-
-    def assertChild(self, key, value):
-        assert value == self.dummy_child
-        assert key == self.key
-        self.dummy_child = None
+        if self.children_set is None:
+            self.children_set = []
+        self.children_set.append((key, value, desc))
 
 
 def rehash(**kwargs):
@@ -50,122 +42,176 @@ class Tests(TestCase):
 
     def test_nodefault(self):
         class B(Configurable):
-            value = Int32(unitSymbol=Unit.METER)
+            bvalue = Int32(unitSymbol=Unit.METER)
 
-        class A(DummyConfigurable):
+        class A(StoreChanges):
             value = Int32(unitSymbol=Unit.METER)
             node = Node(B)
 
         a = A()
         self.assertFalse(isSet(a.value))
-        self.assertFalse(isSet(a.node.value))
-        a = A(rehash(value=7, node=Hash("value", 3)))
+        self.assertFalse(isSet(a.node.bvalue))
+        self.assertEqual(a.values_set, [(A.value, None), (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("node", a.node, A.node) ])
+        a.children_set = []
+        a = A(rehash(value=7, node=Hash("bvalue", 3)))
         self.assertEqual(a.value, 7 * unit.meter)
-        self.assertEqual(a.node.value, 3 * unit.meter)
-        a.assertValue(7 * unit.meter)
-        a.assertChild("node.value", 3 * unit.meter)
+        self.assertEqual(a.node.bvalue, 3 * unit.meter)
+        self.assertEqual(a.values_set,
+                         [(A.value, 7 * unit.meter), (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set,
+                         [("value", 7 * unit.meter, A.value),
+                          ("node", a.node, A.node)])
+        a.children_set = []
         a.value = 9 * unit.meter
-        a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
-        self.assertEqual(a.node.value, 4 * unit.meter)
-        a.assertValue(9 * unit.meter)
-        a.assertChild("node.value", 4 * unit.meter)
-        run_coro(a.slotReconfigure(rehash(value=10, node=Hash("value", 5))))
+        self.assertEqual(a.values_set, [(A.value, 9 * unit.meter)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 9 * unit.meter, A.value)])
+        a.children_set = []
+        a.node.bvalue = 4 * unit.meter
+        self.assertEqual(a.node.bvalue, 4 * unit.meter)
+        self.assertEqual(a.values_set, [])
+        self.assertEqual(a.children_set,
+                         [("node.bvalue", 4 * unit.meter, B.bvalue)])
+        a.children_set = []
+        run_coro(a.slotReconfigure(rehash(value=10, node=Hash("bvalue", 5))))
         self.assertEqual(a.value, 10 * unit.meter)
-        self.assertEqual(a.node.value, 5 * unit.meter)
+        self.assertEqual(a.node.bvalue, 5 * unit.meter)
 
     def test_default(self):
         class B(Configurable):
-            value = Int32(unitSymbol=Unit.METER, defaultValue=33)
+            bvalue = Int32(unitSymbol=Unit.METER, defaultValue=33)
 
-        class A(DummyConfigurable):
+        class A(StoreChanges):
             value = Int32(unitSymbol=Unit.METER, defaultValue=22)
             node = Node(B)
 
         a = A()
         self.assertEqual(a.value, 22 * unit.meter)
-        self.assertEqual(a.node.value, 33 * unit.meter)
-        a = A(rehash(value=7, node=Hash("value", 3)))
+        self.assertEqual(a.node.bvalue, 33 * unit.meter)
+        self.assertEqual(a.values_set, [(A.value, 22 * unit.meter),
+                                        (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 22 * unit.meter, A.value),
+                                          ("node", a.node, A.node)])
+        a.children_set = []
+        a = A(rehash(value=7, node=Hash("bvalue", 3)))
         self.assertEqual(a.value, 7 * unit.meter)
-        self.assertEqual(a.node.value, 3 * unit.meter)
-        a.assertValue(7 * unit.meter)
-        a.assertChild("node.value", 3 * unit.meter)
+        self.assertEqual(a.node.bvalue, 3 * unit.meter)
+        self.assertEqual(a.values_set,
+                         [(A.value, 7 * unit.meter), (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set,
+                         [("value", 7 * unit.meter, A.value),
+                          ("node", a.node, A.node)])
+        a.children_set = []
         a.value = 9 * unit.meter
-        a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
-        self.assertEqual(a.node.value, 4 * unit.meter)
-        a.assertValue(9 * unit.meter)
-        a.assertChild("node.value", 4 * unit.meter)
-        run_coro(a.slotReconfigure(rehash(value=10, node=Hash("value", 5))))
+        self.assertEqual(a.values_set, [(A.value, 9 * unit.meter)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 9 * unit.meter, A.value)])
+        a.children_set = []
+        a.node.bvalue = 4 * unit.meter
+        self.assertEqual(a.node.bvalue, 4 * unit.meter)
+        self.assertEqual(a.values_set, [])
+        self.assertEqual(a.children_set,
+                         [("node.bvalue", 4 * unit.meter, B.bvalue)])
+        a.children_set = []
+        run_coro(a.slotReconfigure(rehash(value=10, node=Hash("bvalue", 5))))
         self.assertEqual(a.value, 10 * unit.meter)
-        self.assertEqual(a.node.value, 5 * unit.meter)
+        self.assertEqual(a.node.bvalue, 5 * unit.meter)
 
     def test_mandatory(self):
         class B(Configurable):
-            value = Int32(assignment=Assignment.MANDATORY,
-                          unitSymbol=Unit.METER)
+            bvalue = Int32(assignment=Assignment.MANDATORY,
+                           unitSymbol=Unit.METER)
 
-        class A(DummyConfigurable):
+        class A(StoreChanges):
             value = Int32(assignment=Assignment.MANDATORY,
                           unitSymbol=Unit.METER)
             node = Node(B)
 
         with self.assertRaises(KaraboError):
-            a = A(rehash(node=Hash("value", 3)))
+            a = A(rehash(node=Hash("bvalue", 3)))
         with self.assertRaises(KaraboError):
             a = A(rehash(value=7))
 
-        a = A(rehash(value=7, node=Hash("value", 3)))
+        a = A(rehash(value=7, node=Hash("bvalue", 3)))
         self.assertEqual(a.value, 7 * unit.meter)
-        self.assertEqual(a.node.value, 3 * unit.meter)
-        a.assertValue(7 * unit.meter)
-        a.assertChild("node.value", 3 * unit.meter)
+        self.assertEqual(a.node.bvalue, 3 * unit.meter)
+        self.assertEqual(a.values_set,
+                         [(A.value, 7 * unit.meter), (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set,
+                         [("value", 7 * unit.meter, A.value),
+                          ("node", a.node, A.node)])
+        a.children_set = []
         a.value = 9 * unit.meter
-        a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
-        self.assertEqual(a.node.value, 4 * unit.meter)
-        a.assertValue(9 * unit.meter)
-        a.assertChild("node.value", 4 * unit.meter)
-        run_coro(a.slotReconfigure(rehash(value=10, node=Hash("value", 5))))
+        self.assertEqual(a.values_set, [(A.value, 9 * unit.meter)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 9 * unit.meter, A.value)])
+        a.children_set = []
+        a.node.bvalue = 4 * unit.meter
+        self.assertEqual(a.node.bvalue, 4 * unit.meter)
+        self.assertEqual(a.values_set, [])
+        self.assertEqual(a.children_set,
+                         [("node.bvalue", 4 * unit.meter, B.bvalue)])
+        a.children_set = []
+        run_coro(a.slotReconfigure(rehash(value=10, node=Hash("bvalue", 5))))
         self.assertEqual(a.value, 10 * unit.meter)
-        self.assertEqual(a.node.value, 5 * unit.meter)
+        self.assertEqual(a.node.bvalue, 5 * unit.meter)
 
     def test_readonly(self):
         class B(Configurable):
-            value = Int32(accessMode=AccessMode.READONLY,
-                          unitSymbol=Unit.METER)
+            bvalue = Int32(accessMode=AccessMode.READONLY,
+                           unitSymbol=Unit.METER)
 
-        class A(DummyConfigurable):
+        class A(StoreChanges):
             value = Int32(accessMode=AccessMode.READONLY,
                           unitSymbol=Unit.METER)
             node = Node(B)
 
         a = A()
         self.assertFalse(isSet(a.value))
-        self.assertFalse(isSet(a.node.value))
-        a = A(rehash(value=7, node=Hash("value", 3)))
+        self.assertFalse(isSet(a.node.bvalue))
+        self.assertEqual(a.values_set, [(A.value, None), (A.node, a.node)])
+        self.assertEqual(a.children_set, [("node", a.node, A.node)])
+        a = A(rehash(value=7, node=Hash("bvalue", 3)))
         # we ignore read only parameters in configuration
         self.assertFalse(isSet(a.value))
-        self.assertFalse(isSet(a.node.value))
-        a.assertValue(None)
+        self.assertFalse(isSet(a.node.bvalue))
+        self.assertEqual(a.values_set, [(A.value, None), (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("node", a.node, A.node)])
+        a.children_set = []
         a.value = 9 * unit.meter
-        a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
-        self.assertEqual(a.node.value, 4 * unit.meter)
-        a.assertValue(9 * unit.meter)
-        a.assertChild("node.value", 4 * unit.meter)
+        self.assertEqual(a.values_set, [(A.value, 9 * unit.meter)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 9 * unit.meter, A.value)])
+        a.children_set = []
+        a.node.bvalue = 4 * unit.meter
+        self.assertEqual(a.node.bvalue, 4 * unit.meter)
+        self.assertEqual(a.values_set, [])
+        self.assertEqual(a.children_set,
+                         [("node.bvalue", 4 * unit.meter, B.bvalue)])
+        a.children_set = []
         with self.assertRaises(KaraboError):
-            run_coro(a.slotReconfigure(rehash(node=Hash("value", 5))))
+            run_coro(a.slotReconfigure(rehash(node=Hash("bvalue", 5))))
         with self.assertRaises(KaraboError):
             run_coro(a.slotReconfigure(rehash(value=10)))
 
     def test_readonly_default(self):
         class B(Configurable):
-            value = Int32(defaultValue=9,
-                          accessMode=AccessMode.READONLY,
-                          unitSymbol=Unit.METER)
+            bvalue = Int32(defaultValue=9,
+                           accessMode=AccessMode.READONLY,
+                           unitSymbol=Unit.METER)
 
-        class A(DummyConfigurable):
+        class A(StoreChanges):
             value = Int32(defaultValue=5,
                           accessMode=AccessMode.READONLY,
                           unitSymbol=Unit.METER)
@@ -173,114 +219,167 @@ class Tests(TestCase):
 
         a = A()
         self.assertEqual(a.value, 5 * unit.meter)
-        self.assertEqual(a.node.value, 9 * unit.meter)
-        a = A(rehash(value=7, node=Hash("value", 3)))
+        self.assertEqual(a.node.bvalue, 9 * unit.meter)
+        self.assertEqual(a.values_set, [(A.value, 5 * unit.meter),
+                                        (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 5 * unit.meter, A.value),
+                                          ("node", a.node, A.node)])
+        a.children_set = []
+        a = A(rehash(value=7, node=Hash("bvalue", 3)))
         # we ignore read only parameters in configuration
-        self.assertEqual(a.value, 5 * unit.meter)
-        self.assertEqual(a.node.value, 9 * unit.meter)
-        a.assertValue(5 * unit.meter)
-        a.assertChild("node.value", 9 * unit.meter)
+        self.assertEqual(a.values_set, [(A.value, 5 * unit.meter),
+                                        (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 5 * unit.meter, A.value),
+                                          ("node", a.node, A.node)])
+        a.children_set = []
         a.value = 9 * unit.meter
-        a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
-        self.assertEqual(a.node.value, 4 * unit.meter)
-        a.assertValue(9 * unit.meter)
-        a.assertChild("node.value", 4 * unit.meter)
+        self.assertEqual(a.values_set, [(A.value, 9 * unit.meter)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 9 * unit.meter, A.value)])
+        a.children_set = []
+        a.node.bvalue = 4 * unit.meter
+        self.assertEqual(a.node.bvalue, 4 * unit.meter)
+        self.assertEqual(a.values_set, [])
+        self.assertEqual(a.children_set,
+                         [("node.bvalue", 4 * unit.meter, B.bvalue)])
+        a.children_set = []
         with self.assertRaises(KaraboError):
-            run_coro(a.slotReconfigure(rehash(node=Hash("value", 5))))
+            run_coro(a.slotReconfigure(rehash(node=Hash("bvalue", 5))))
         with self.assertRaises(KaraboError):
             run_coro(a.slotReconfigure(rehash(value=10)))
 
     def test_init_nodefault(self):
         class B(Configurable):
-            value = Int32(accessMode=AccessMode.INITONLY,
-                          unitSymbol=Unit.METER)
+            bvalue = Int32(accessMode=AccessMode.INITONLY,
+                           unitSymbol=Unit.METER)
 
-        class A(DummyConfigurable):
+        class A(StoreChanges):
             value = Int32(accessMode=AccessMode.INITONLY,
                           unitSymbol=Unit.METER)
             node = Node(B)
 
         a = A()
         self.assertFalse(isSet(a.value))
-        self.assertFalse(isSet(a.node.value))
-        a = A(rehash(value=7, node=Hash("value", 3)))
+        self.assertFalse(isSet(a.node.bvalue))
+        self.assertEqual(a.values_set, [(A.value, None), (A.node, a.node)])
+        self.assertEqual(a.children_set, [("node", a.node, A.node)])
+        a = A(rehash(value=7, node=Hash("bvalue", 3)))
         self.assertEqual(a.value, 7 * unit.meter)
-        self.assertEqual(a.node.value, 3 * unit.meter)
-        a.assertValue(7 * unit.meter)
-        a.assertChild("node.value", 3 * unit.meter)
+        self.assertEqual(a.node.bvalue, 3 * unit.meter)
+        self.assertEqual(a.values_set,
+                         [(A.value, 7 * unit.meter), (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set,
+                         [("value", 7 * unit.meter, A.value),
+                          ("node", a.node, A.node)])
+        a.children_set = []
         a.value = 9 * unit.meter
-        a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
-        self.assertEqual(a.node.value, 4 * unit.meter)
-        a.assertValue(9 * unit.meter)
-        a.assertChild("node.value", 4 * unit.meter)
+        self.assertEqual(a.values_set, [(A.value, 9 * unit.meter)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 9 * unit.meter, A.value)])
+        a.children_set = []
+        a.node.bvalue = 4 * unit.meter
+        self.assertEqual(a.node.bvalue, 4 * unit.meter)
+        self.assertEqual(a.values_set, [])
+        self.assertEqual(a.children_set,
+                         [("node.bvalue", 4 * unit.meter, B.bvalue)])
+        a.children_set = []
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(node=Hash("bvalue", 5))))
         with self.assertRaises(KaraboError):
             run_coro(a.slotReconfigure(rehash(value=10)))
-        with self.assertRaises(KaraboError):
-            run_coro(a.slotReconfigure(rehash(node=Hash("value", 5))))
 
     def test_init_default(self):
         class B(Configurable):
-            value = Int32(accessMode=AccessMode.INITONLY,
+            bvalue = Int32(accessMode=AccessMode.INITONLY,
                           unitSymbol=Unit.METER, defaultValue=33)
 
-        class A(DummyConfigurable):
+        class A(StoreChanges):
             value = Int32(accessMode=AccessMode.INITONLY,
                           unitSymbol=Unit.METER, defaultValue=22)
             node = Node(B)
 
         a = A()
         self.assertEqual(a.value, 22 * unit.meter)
-        self.assertEqual(a.node.value, 33 * unit.meter)
-        a = A(rehash(value=7, node=Hash("value", 3)))
-        self.assertEqual(a.value, 7 * unit.meter)
-        self.assertEqual(a.node.value, 3 * unit.meter)
-        a.assertValue(7 * unit.meter)
-        a.assertChild("node.value", 3 * unit.meter)
+        self.assertEqual(a.node.bvalue, 33 * unit.meter)
+        self.assertEqual(a.values_set, [(A.value, 22 * unit.meter),
+                                        (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 22 * unit.meter, A.value),
+                                          ("node", a.node, A.node)])
+        a.children_set = []
+        a = A(rehash(value=7, node=Hash("bvalue", 3)))
+        self.assertEqual(a.values_set, [(A.value, 7 * unit.meter),
+                                        (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 7 * unit.meter, A.value),
+                                          ("node", a.node, A.node)])
+        a.children_set = []
         a.value = 9 * unit.meter
-        a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
-        self.assertEqual(a.node.value, 4 * unit.meter)
-        a.assertValue(9 * unit.meter)
-        a.assertChild("node.value", 4 * unit.meter)
+        self.assertEqual(a.values_set, [(A.value, 9 * unit.meter)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 9 * unit.meter, A.value)])
+        a.children_set = []
+        a.node.bvalue = 4 * unit.meter
+        self.assertEqual(a.node.bvalue, 4 * unit.meter)
+        self.assertEqual(a.values_set, [])
+        self.assertEqual(a.children_set,
+                         [("node.bvalue", 4 * unit.meter, B.bvalue)])
+        a.children_set = []
+        with self.assertRaises(KaraboError):
+            run_coro(a.slotReconfigure(rehash(node=Hash("bvalue", 5))))
         with self.assertRaises(KaraboError):
             run_coro(a.slotReconfigure(rehash(value=10)))
-        with self.assertRaises(KaraboError):
-            run_coro(a.slotReconfigure(rehash(node=Hash("value", 5))))
+
 
     def test_init_mandatory(self):
         class B(Configurable):
-            value = Int32(accessMode=AccessMode.INITONLY,
-                          assignment=Assignment.MANDATORY,
-                          unitSymbol=Unit.METER)
+            bvalue = Int32(accessMode=AccessMode.INITONLY,
+                           assignment=Assignment.MANDATORY,
+                           unitSymbol=Unit.METER)
 
-        class A(DummyConfigurable):
+        class A(StoreChanges):
             value = Int32(accessMode=AccessMode.INITONLY,
                           assignment=Assignment.MANDATORY,
                           unitSymbol=Unit.METER)
             node = Node(B)
 
         with self.assertRaises(KaraboError):
-            a = A(rehash(node=Hash("value", 3)))
+            a = A(rehash(node=Hash("bvalue", 3)))
         with self.assertRaises(KaraboError):
             a = A(rehash(value=7))
 
-        a = A(rehash(value=7, node=Hash("value", 3)))
+        a = A(rehash(value=7, node=Hash("bvalue", 3)))
         self.assertEqual(a.value, 7 * unit.meter)
-        self.assertEqual(a.node.value, 3 * unit.meter)
-        a.assertValue(7 * unit.meter)
-        a.assertChild("node.value", 3 * unit.meter)
+        self.assertEqual(a.node.bvalue, 3 * unit.meter)
+        self.assertEqual(a.values_set,
+                         [(A.value, 7 * unit.meter), (A.node, a.node)])
+        a.values_set = []
+        self.assertEqual(a.children_set,
+                         [("value", 7 * unit.meter, A.value),
+                          ("node", a.node, A.node)])
+        a.children_set = []
         a.value = 9 * unit.meter
-        a.node.value = 4 * unit.meter
         self.assertEqual(a.value, 9 * unit.meter)
-        self.assertEqual(a.node.value, 4 * unit.meter)
-        a.assertValue(9 * unit.meter)
-        a.assertChild("node.value", 4 * unit.meter)
+        self.assertEqual(a.values_set, [(A.value, 9 * unit.meter)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("value", 9 * unit.meter, A.value)])
+        a.children_set = []
+        a.node.bvalue = 4 * unit.meter
+        self.assertEqual(a.node.bvalue, 4 * unit.meter)
+        self.assertEqual(a.values_set, [])
+        self.assertEqual(a.children_set,
+                         [("node.bvalue", 4 * unit.meter, B.bvalue)])
+        a.children_set = []
         with self.assertRaises(KaraboError):
             run_coro(a.slotReconfigure(rehash(value=10)))
         with self.assertRaises(KaraboError):
-            run_coro(a.slotReconfigure(rehash(node=Hash("value", 5))))
+            run_coro(a.slotReconfigure(rehash(node=Hash("bvalue", 5))))
 
     def test_setter(self):
         setter_value = init_value = 0
@@ -429,19 +528,25 @@ class Tests(TestCase):
         class B(Configurable):
             nested = Node(C)
 
-        class A(DummyConfigurable):
+        class A(StoreChanges):
             nested = Node(B)
 
         a = A()
-        a.assertChild("nested.nested.value", 3)
+        self.assertEqual(a.values_set, [(A.nested, a.nested)])
+        a.values_set = []
+        self.assertEqual(a.children_set, [("nested", a.nested, A.nested)])
+        a.children_set = []
         self.assertEqual(a.nested.nested.value, 3)
         a.nested.nested.value = 5
-        a.assertChild("nested.nested.value", 5)
+        self.assertEqual(a.values_set, [])
+        self.assertEqual(a.children_set, [("nested.nested.value", 5, C.value)])
+        a.children_set = []
         self.assertEqual(a.nested.nested.value, 5)
         run_coro(a.slotReconfigure(rehash(
             nested=Hash("nested", Hash("value", 7)))))
         self.assertEqual(a.nested.nested.value, 7)
-        a.assertChild("nested.nested.value", 7)
+        self.assertEqual(a.values_set, [])
+        self.assertEqual(a.children_set, [("nested.nested.value", 7, C.value)])
 
     def test_table(self):
         class Row(Configurable):
