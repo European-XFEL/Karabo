@@ -50,7 +50,7 @@ namespace karabo {
              */
             static DeviceServer::Pointer instantiate(int argc, char** argv);
 
-        private:
+        protected:
 
             static bool parseCommandLine(int argc, char** argv, karabo::util::Hash& configuration);
 
