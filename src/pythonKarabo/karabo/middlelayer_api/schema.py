@@ -209,6 +209,12 @@ class Node(Descriptor):
     def alarmCondition(self, value):
         return AlarmCondition.NONE
 
+    def allDescriptors(self, prefix=""):
+        yield from super().allDescriptors(prefix)
+        for key in self.cls._allattrs:
+            yield from getattr(self.cls, key).allDescriptors(
+                "{}{}.".format(prefix, self.key))
+
 
 class ChoiceOfNodes(Node):
     defaultValue = Attribute()
