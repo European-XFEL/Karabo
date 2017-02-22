@@ -35,7 +35,7 @@ void Runner_Test::testRunnerSuccess() {
                    "visibility=5", "Logger.priority=DEBUG"};
     int argc = 7;
     Hash configuration;
-    RunnerDerived::parseCmd(argc, argv, configuration);
+    CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
     //std::clog << "**** configuration ...\n" << configuration << std::endl;
     CPPUNIT_ASSERT(configuration.get<std::string>("serverId") == "foo");
     CPPUNIT_ASSERT(configuration.get<std::string>("autostart[0].DataLoggerManager.serverList") == "dls1,dls2,dls3,dls4");
@@ -75,8 +75,8 @@ void Runner_Test::testRunnerFailure3() {
 
 void Runner_Test::testRunnerFailure4() {
     using namespace karabo::util;
-    char *argv[] = {"AnotherExecutable4", "serverId=bang", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}}"};
-    const int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    char *argv[] = {"AnotherExecutable4", "serverId=bang", "a={{b=1}", "c=2", "d=3", "e={x=15", "y=88}}"};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
     CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
 }

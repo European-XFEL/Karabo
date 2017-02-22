@@ -51,101 +51,94 @@ namespace karabo {
         bool Runner::parseCommandLine(int argc, char** argv, karabo::util::Hash & configuration) {
             using namespace std;
             using namespace karabo::util;
-            try {
+            std::string firstArg;
+            if (argc > 1) {
+                firstArg = argv[1];
+            }
 
-                std::string firstArg;
-                if (argc > 1) {
-                    firstArg = argv[1];
-                }
-
-                if (firstArg.substr(0, 2) == "--") {
-                    processOption(firstArg.substr(2), argc, argv);
-                    return false;
-                }
-
-                if (firstArg.substr(0, 1) == "-") {
-                    processOption(firstArg.substr(1), argc, argv);
-                    return false;
-                }
-
-                vector<string> args, resolved;
-                
-                // Fix 'args' to take into account braces (whitespace inside braces!)
-                int braces = 0;
-                string arg = "";
-                for (int i = 1; i < argc; ++i) {
-                    size_t found = std::string::npos;
-                    size_t pos = 0;
-                    string a(argv[i]);
-                    
-                    do {
-                        found = a.find_first_of("{}", pos);
-                        if (found == std::string::npos) break;
-                        pos = found;
-                        if (a[pos] == '{') {
-                            ++braces;
-                        } else if (a[pos] == '}') {
-                            --braces;
-                        }
-                        ++pos;
-                        if (braces < 0) {
-                            throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: '}' encounters before corresponding '{'");
-                        }
-                    } while (found != std::string::npos);
-                    
-                    arg = arg.empty()? a : (arg + " " + a);
-                    if (braces == 0) {
-                        args.push_back(arg);
-                        arg = "";
-                    }
-                }
-                
-                if (braces > 0) {
-                    throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: missing " + toString(braces) + " closing brace(s)");
-                } else if (braces < 0) {
-                    throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: missing " + toString(-braces) + " opening brace(s)");
-                }
-
-                resolveTokens(args, resolved);
-
-                std::vector<std::string> tokenList;
-                for (size_t i = 0; i < resolved.size(); ++i) {
-                    parseToken("", resolved[i], tokenList);
-                }
-
-                karabo::util::Hash flatConfiguration;
-                Hash tmp;
-                for (size_t i = 0; i < tokenList.size(); ++i) {
-                    readToken(tokenList[i], tmp);
-                    for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
-                        std::string key = it->getKey();
-                        if (flatConfiguration.has(key, ';')) {
-                            flatConfiguration.erase(key, ';');
-                        }
-
-                        const Hash::Node tmpNode = tmp.getNode(key, ';');
-                        if (tmpNode.getType() != Types::VECTOR_HASH) {
-                            flatConfiguration.set(tmpNode.getKey(), tmpNode.getValueAsAny(), ';');
-                        } else {
-                            flatConfiguration.unflatten(configuration);
-                            if (configuration.has(tmpNode.getKey())) {
-                                configuration.erase(tmpNode.getKey());
-                            }
-                            flatConfiguration.clear();
-                            configuration.flatten(flatConfiguration);
-                            configuration.clear();
-                        }
-                    }
-                }
-
-                flatConfiguration.unflatten(configuration);
-                
-                return true;
-
-            } catch (const Exception& e) {
-                cout << endl << e.userFriendlyMsg() << endl;
+            if (firstArg.substr(0, 2) == "--") {
+                processOption(firstArg.substr(2), argc, argv);
                 return false;
             }
+
+            if (firstArg.substr(0, 1) == "-") {
+                processOption(firstArg.substr(1), argc, argv);
+                return false;
+            }
+
+            vector<string> args, resolved;
+
+            // Fix 'args' to take into account braces (whitespace inside braces!)
+            int braces = 0;
+            string arg = "";
+            for (int i = 1; i < argc; ++i) {
+                size_t found = std::string::npos;
+                size_t pos = 0;
+                string a(argv[i]);
+
+                do {
+                    found = a.find_first_of("{}", pos);
+                    if (found == std::string::npos) break;
+                    pos = found;
+                    if (a[pos] == '{') {
+                        ++braces;
+                    } else if (a[pos] == '}') {
+                        --braces;
+                    }
+                    ++pos;
+                    if (braces < 0) {
+                        throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: '}' encounters before corresponding '{'");
+                    }
+                } while (found != std::string::npos);
+
+                arg = arg.empty() ? a : (arg + " " + a);
+                if (braces == 0) {
+                    args.push_back(arg);
+                    arg = "";
+                }
+            }
+
+            if (braces > 0) {
+                throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: missing " + toString(braces) + " closing brace(s)");
+            } else if (braces < 0) {
+                throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: missing " + toString(-braces) + " opening brace(s)");
+            }
+
+            resolveTokens(args, resolved);
+
+            std::vector<std::string> tokenList;
+            for (size_t i = 0; i < resolved.size(); ++i) {
+                parseToken("", resolved[i], tokenList);
+            }
+
+            karabo::util::Hash flatConfiguration;
+            Hash tmp;
+            for (size_t i = 0; i < tokenList.size(); ++i) {
+                readToken(tokenList[i], tmp);
+                for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+                    std::string key = it->getKey();
+                    if (flatConfiguration.has(key, ';')) {
+                        flatConfiguration.erase(key, ';');
+                    }
+
+                    const Hash::Node tmpNode = tmp.getNode(key, ';');
+                    if (tmpNode.getType() != Types::VECTOR_HASH) {
+                        flatConfiguration.set(tmpNode.getKey(), tmpNode.getValueAsAny(), ';');
+                    } else {
+                        flatConfiguration.unflatten(configuration);
+                        if (configuration.has(tmpNode.getKey())) {
+                            configuration.erase(tmpNode.getKey());
+                        }
+                        flatConfiguration.clear();
+                        configuration.flatten(flatConfiguration);
+                        configuration.clear();
+                    }
+                }
+            }
+
+            flatConfiguration.unflatten(configuration);
+
+            return true;
         }
 
 
@@ -274,7 +267,7 @@ namespace karabo {
             token += args[start];
             int argc = args.size();
             boost::trim(token);
-            
+
             size_t pos = token.find_first_of("=");
             string key, value;
             if (pos == std::string::npos) {
@@ -299,6 +292,10 @@ namespace karabo {
                 value = token.substr(pos + 1);
                 boost::trim(value);
                 start++;
+                if (key[0] == '{' || key[0] == '}') {
+                    throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line: the key '"
+                                                     + key +"' starts with invalid symbol '" + key[0] + "'!");
+                }
                 if (value.empty()) {
                     if (start < argc) {
                         if (*(args[start].begin()) != '=') {
