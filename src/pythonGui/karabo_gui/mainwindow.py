@@ -83,9 +83,7 @@ class MainWindow(QMainWindow):
         if isinstance(event, KaraboBroadcastEvent):
             sender = event.sender
             data = event.data
-            if sender is KaraboEventSender.DeviceDataReceived:
-                self._updateScenes()
-            elif sender is KaraboEventSender.DatabaseIsBusy:
+            if sender is KaraboEventSender.DatabaseIsBusy:
                 self._database_is_processing(data.get('is_processing'))
             elif sender is KaraboEventSender.MaximizePanel:
                 self._panelContainerMaximized(data.get('container'))
@@ -287,13 +285,6 @@ class MainWindow(QMainWindow):
         self.signalQuitApplication.emit()
         return True
 
-    def _updateScenes(self):
-        container = self._panel_areas[PanelAreaEnum.MiddleTop]
-        for panel in container.panel_set:
-            scene_view = getattr(panel, 'scene_view', None)
-            if scene_view is not None and scene_view.isVisible():
-                scene_view.update()
-
     def _enable_toolbar(self, enable):
         self.acServerConnect.setEnabled(enable)
         self.tbAccessLevel.setEnabled(enable)
@@ -301,6 +292,9 @@ class MainWindow(QMainWindow):
     def _database_is_processing(self, is_processing):
         """This method gets called whenever the database is switching its
         processing mode.
+
+        Scenes, Macros, and Configurations should not be editable while the
+        project DB is saving data.
         """
         enable = not is_processing
         # Update toolbar

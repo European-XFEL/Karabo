@@ -50,7 +50,11 @@ class PanelWrangler(QObject):
         if isinstance(event, KaraboBroadcastEvent):
             sender = event.sender
             data = event.data
-            if sender is KaraboEventSender.OpenSceneView:
+
+            if sender is KaraboEventSender.DeviceDataReceived:
+                self._update_scenes()
+
+            elif sender is KaraboEventSender.OpenSceneView:
                 target_window = SceneTargetWindow.MainWindow
                 model = data.get('model')
                 self._open_scene(model, target_window)
@@ -174,6 +178,15 @@ class PanelWrangler(QObject):
         else:
             self.main_window.addPanel(panel, PanelAreaEnum.MiddleTop)
             self._project_item_panels[model] = panel
+
+    def _update_scenes(self):
+        for model, panel in self._project_item_panels.items():
+            if not isinstance(model, SceneModel):
+                continue
+
+            scene_view = panel.scene_view
+            if scene_view is not None and scene_view.isVisible():
+                scene_view.update()
 
 
 def _find_scene_model(uuid):
