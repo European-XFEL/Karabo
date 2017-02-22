@@ -2,6 +2,7 @@ __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ = "$May 24, 2013 11:36:55 AM$"
 
 import os
+import re
 
 from karathon import Hash, loadFromFile
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
@@ -45,17 +46,46 @@ class Runner(object):
                 self.processOption(firstArg[1:], args)
                 return False, Hash()
 
+            # fix 'args' to take into account braces
+            pars = []
+            braces = 0
+            arg = ''
+            for a in args:
+                pos = 0
+                while pos < len(a):
+                    m = re.search("[{}]", a[pos:])
+                    if m is None:
+                        break
+                    else:
+                        pos += m.start()
+                        if a[pos] == '{':
+                            braces += 1
+                        elif a[pos] == '}':
+                            braces -= 1
+                        pos += 1
+                        if braces < 0:
+                            raise SyntaxError("CLI Syntax Error: '}' encounters before corresponding '{'")
+                if braces == 0:
+                    pars.append((arg + ' ' + a).strip())
+                    arg = ''
+                else:
+                    arg += ' ' + a
+
+            if braces > 0:
+                raise SyntaxError("CLI Syntax Error: missing {} closing brace(s)".format(braces))
+            elif braces < 0:
+                raise SyntaxError("CLI Syntax Error: missing {} opening brace(s)".format(-braces))
+
             configuration = Hash()
 
-            for a in args[1:]:
+            for a in pars[1:]:
                 tmp = Hash()
                 self.readToken(a, tmp)
                 configuration += tmp
             return True, configuration
 
-        except Exception as e:
-            print(str(e))
-            return False, Hash()
+        except SyntaxError:
+            raise
 
     def processOption(self, option, args):
         lowerOption = option.lower()
@@ -98,7 +128,9 @@ class Runner(object):
                 value = token[pos+1:].strip()
                 if value != "" and value[0] == "{" and value[-1] == "}":
                     value = value[1:-1].strip()
-                    tokens = value.split(" ")
+                    if value[0] == '{' or value[0] == '}':
+                        raise SyntaxError("The 'key' starts with invalid symbol: '{}'".format(value[0]))
+                    tokens = value.split(" ", 1)
                     config.set(key, Hash())
                     for subtok in tokens:
                         subtok = subtok.strip()
