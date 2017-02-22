@@ -10,7 +10,7 @@ import re
 
 from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
-from .hash import Hash, HashType, Int32, String
+from .hash import Descriptor, Hash, HashType, Int32, Slot, String
 from .p2p import NetworkOutput
 from .schema import Configurable
 
@@ -220,13 +220,21 @@ class SignalSlotable(Configurable):
         """return the info hash at initialization time"""
         return Hash("heartbeatInterval", self.heartbeatInterval.value)
 
+    def _register_slots(self):
+        for k in dir(self.__class__):
+            value = getattr(self, k, None)
+            desc = getattr(self.__class__, k, None)
+            if callable(value) and hasattr(value, "slot"):
+                self._ss.register_slot(k, value)
+            elif isinstance(desc, Descriptor):
+                for name, slot in desc.allDescriptors():
+                    if isinstance(slot, Slot):
+                        self._ss.register_slot(name, slot)
+
     @coroutine
     def _run(self, server=None, **kwargs):
         try:
-            for k in dir(self.__class__):
-                v = getattr(self, k, None)
-                if callable(v) and hasattr(v, "slot"):
-                    self._ss.register_slot(k, v)
+            self._register_slots()
             async(self._ss.main(self))
             yield from self._assert_name_unique()
             self._ss.notify_network(self._initInfo())
