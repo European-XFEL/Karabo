@@ -6,35 +6,37 @@
 """This module contains a class which represents the main window of the
     application and includes all relevant panels and the main toolbar.
 """
+from enum import Enum
 import os.path
 
 from PyQt4.QtCore import Qt, pyqtSignal, pyqtSlot
-from PyQt4.QtGui import (QAction, QActionGroup, QColor, QMainWindow, QMenu,
-                         QSplitter, QToolButton, qApp)
+from PyQt4.QtGui import (QAction, QActionGroup, QMainWindow, QMenu, QSplitter,
+                         QToolButton, qApp)
 
 import karabo_gui.icons as icons
-from karabo.common.scenemodel.api import SceneTargetWindow
 from karabo.middlelayer import AccessLevel
 from karabo_gui import globals
-from karabo_gui.const import ALARM_COLOR
 from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
                                register_for_broadcasts)
-from karabo_gui.panels.alarmpanel import AlarmPanel
+from karabo_gui.messagebox import MessageBox
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.container import PanelContainer
 from karabo_gui.panels.loggingpanel import LoggingPanel
-from karabo_gui.panels.macropanel import MacroPanel
-from karabo_gui.messagebox import MessageBox
 from karabo_gui.panels.navigationpanel import NavigationPanel
 from karabo_gui.panels.notificationpanel import NotificationPanel
-from karabo_gui.panels.placeholderpanel import PlaceholderPanel
 from karabo_gui.panels.projectpanel import ProjectPanel
-from karabo_gui.panels.runconfigpanel import RunConfigPanel
-from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
-from karabo_gui.singletons.api import (
-    get_db_conn, get_network
-)
+from karabo_gui.singletons.api import get_db_conn, get_network
+
+
+class PanelAreaEnum(Enum):
+    """The different panel areas in the main window
+    """
+    LeftBottom = 0
+    LeftTop = 1
+    MiddleBottom = 2
+    MiddleTop = 3
+    Right = 4
 
 
 class MainWindow(QMainWindow):
@@ -53,7 +55,9 @@ class MainWindow(QMainWindow):
         self._setupToolBar()
         self._setupStatusBar()
 
-        self._setupPanels()
+        self._panel_areas = {}
+        self._setupPanelAreas()
+        self._addFixedPanels()
 
         title = "European XFEL - Karabo GUI " + globals.GUI_VERSION_LONG
         self.setWindowTitle(title)
@@ -63,6 +67,9 @@ class MainWindow(QMainWindow):
         # not necessary for self due to the fact that the singleton mediator
         # object and `self` are being destroyed when the GUI exists
         register_for_broadcasts(self)
+
+    # --------------------------------------
+    # Qt virtual methods
 
     def closeEvent(self, event):
         if not self._quit():
@@ -80,12 +87,43 @@ class MainWindow(QMainWindow):
                 self._updateScenes()
             elif sender is KaraboEventSender.DatabaseIsBusy:
                 self._database_is_processing(data.get('is_processing'))
-            elif sender is KaraboEventSender.MaximizeTab:
-                self._tabMaximized(data.get('tab'))
-            elif sender is KaraboEventSender.MinimizeTab:
-                self._tabMinimized(data.get('tab'))
+            elif sender is KaraboEventSender.MaximizePanel:
+                self._panelContainerMaximized(data.get('container'))
+            elif sender is KaraboEventSender.MinimizePanel:
+                self._panelContainerMinimized(data.get('container'))
             return False
         return super(MainWindow, self).eventFilter(obj, event)
+
+    # --------------------------------------
+    # public methods
+
+    def addPanel(self, panel, area_enum):
+        """Add a panel to an area's container in this window
+        """
+        container = self._panel_areas[area_enum]
+        container.addPanel(panel)
+        container.setCurrentWidget(panel)
+
+    def removePanel(self, panel, area_enum):
+        """Remove a panel from a container in this window
+        """
+        container = self._panel_areas[area_enum]
+        container.removePanel(panel)
+
+    def selectPanel(self, panel, area_enum):
+        """This method raises a panel to the top of the focus stack, regardless
+        of its current docked/undocked status.
+        """
+        container = self._panel_areas[area_enum]
+        index = container.indexOf(panel)
+        if index > -1:
+            container.setCurrentIndex(index)
+        else:
+            panel.activateWindow()
+            panel.raise_()
+
+    # --------------------------------------
+    # private methods
 
     def _setupActions(self):
         network = get_network()
@@ -182,57 +220,61 @@ class MainWindow(QMainWindow):
     def _setupStatusBar(self):
         self.statusBar().showMessage('Ready...')
 
-    def _setupPanels(self):
+    def _addFixedPanels(self):
+        """Add panels which only need to be created once
+        """
+        # Left
+        navigation = NavigationPanel()
+        self.signalGlobalAccessLevelChanged.connect(
+            navigation.onGlobalAccessLevelChanged)
+        self.addPanel(navigation, PanelAreaEnum.LeftTop)
+        self.addPanel(ProjectPanel(), PanelAreaEnum.LeftBottom)
 
+        # Middle
+        self.addPanel(LoggingPanel(), PanelAreaEnum.MiddleBottom)
+        self.addPanel(ScriptingPanel(), PanelAreaEnum.MiddleBottom)
+        self.addPanel(NotificationPanel(), PanelAreaEnum.MiddleBottom)
+
+        # Right
+        configuration = ConfigurationPanel()
+        self.signalGlobalAccessLevelChanged.connect(
+            configuration.onGlobalAccessLevelChanged)
+        self.addPanel(configuration, PanelAreaEnum.Right)
+
+    def _setupPanelAreas(self):
+        """Build the main splitter structure of the main window
+        """
+        # Create a main splitter with left, middle, and right areas
         mainSplitter = QSplitter(Qt.Horizontal)
         mainSplitter.setContentsMargins(5, 5, 5, 5)
-
-        self.leftArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.navigationTab = PanelContainer("Navigation", self.leftArea)
-        self.navigationPanel = NavigationPanel()
-        self.navigationTab.addPanel(self.navigationPanel)
-        self.signalGlobalAccessLevelChanged.connect(
-            self.navigationPanel.onGlobalAccessLevelChanged)
-        self.leftArea.setStretchFactor(0, 2)
-
-        self.projectTab = PanelContainer("Projects", self.leftArea)
-        self.projectPanel = ProjectPanel()
-        self.projectTab.addPanel(self.projectPanel)
-        self.leftArea.setStretchFactor(1, 1)
-
-        self.middleArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.middleTab = PanelContainer("Custom view", self.middleArea,
-                                        allow_closing=True)
-        self.placeholderPanel = None
-        self.middleArea.setStretchFactor(0, 6)
-
-        # Container for all current alarm panels
-        self.alarmPanels = {}
-        # Container for all current run configuration panels
-        self.runConfigPanels = {}
-
-        self.outputTab = PanelContainer("Output", self.middleArea)
-        self.loggingPanel = LoggingPanel()
-        self.scriptingPanel = ScriptingPanel()
-        self.notificationPanel = NotificationPanel()
-        self.outputTab.addPanel(self.loggingPanel)
-        self.outputTab.addPanel(self.scriptingPanel)
-        self.outputTab.addPanel(self.notificationPanel)
-        self.middleArea.setStretchFactor(1, 1)
-
-        self.rightArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.configurationTab = PanelContainer("Configuration", self.rightArea)
-        self.configurationPanel = ConfigurationPanel()
-        self.configurationTab.addPanel(self.configurationPanel)
-        self.signalGlobalAccessLevelChanged.connect(
-            self.configurationPanel.onGlobalAccessLevelChanged)
-
+        left_area = QSplitter(Qt.Vertical, mainSplitter)
+        middle_area = QSplitter(Qt.Vertical, mainSplitter)
+        right_area = QSplitter(Qt.Vertical, mainSplitter)
         mainSplitter.setStretchFactor(0, 2)
         mainSplitter.setStretchFactor(1, 2)
         mainSplitter.setStretchFactor(2, 2)
-
         self.setCentralWidget(mainSplitter)
-        self._addPlaceholderMiddlePanel(False)
+
+        # Set up the left area
+        left_top = PanelContainer("Navigation", left_area)
+        left_bottom = PanelContainer("Projects", left_area)
+        self._panel_areas[PanelAreaEnum.LeftTop] = left_top
+        self._panel_areas[PanelAreaEnum.LeftBottom] = left_bottom
+        left_area.setStretchFactor(0, 2)
+        left_area.setStretchFactor(1, 1)
+
+        # Set up the middle area
+        middle_top = PanelContainer("Custom view", middle_area,
+                                    allow_closing=True, handle_empty=True)
+        middle_bottom = PanelContainer("Output", middle_area)
+        self._panel_areas[PanelAreaEnum.MiddleTop] = middle_top
+        self._panel_areas[PanelAreaEnum.MiddleBottom] = middle_bottom
+        middle_area.setStretchFactor(0, 6)
+        middle_area.setStretchFactor(1, 1)
+
+        # Set up the right area
+        right = PanelContainer("Configuration", right_area)
+        self._panel_areas[PanelAreaEnum.Right] = right
 
     def _quit(self):
         # Make sure there are no pending writing things in the pipe
@@ -241,192 +283,13 @@ class MainWindow(QMainWindow):
                    '<b>project database</b>. Please wait until this is done!')
             MessageBox.showWarning(msg, 'Database connection active')
             return False
-        self.signalQuitApplication.emit()
 
+        self.signalQuitApplication.emit()
         return True
 
-    def _addPlaceholderMiddlePanel(self, connectedToServer):
-        """The placholder for the middle panel is added.
-
-        ``connectedToServer`` states whether panels, which only work with an
-        active GuiServer connection are enabled.
-        """
-        if self.placeholderPanel is None:
-            # Add startup page
-            self._createPlaceholderMiddlePanel()
-
-        # Remove all alarm panels
-        if not connectedToServer:
-            rm_keys = list(self.alarmPanels.keys())
-            while rm_keys:
-                self._removeAlarmPanel(rm_keys.pop())
-
-    def _removePlaceholderMiddlePanel(self):
-        """The placeholder for the middle panel is removed.
-        """
-        self.middleTab.removePanel(self.placeholderPanel)
-        self.placeholderPanel = None
-
-    def checkAndRemovePlaceholderMiddlePanel(self):
-        """ Remove placeholder from middle panel in case it makes sense.
-        """
-        if self.middleTab.count() == 1 and self.placeholderPanel is not None:
-            # Remove start up page
-            self._removePlaceholderMiddlePanel()
-
-    def _createPlaceholderMiddlePanel(self):
-        self.placeholderPanel = PlaceholderPanel()
-        self.middleTab.addPanel(self.placeholderPanel)
-
-    def _getPanel(self, panelContainer, model):
-        """ The associated panel of the given ``panelContainer`` for the given
-            ``model`` is returned, if available.
-        """
-        for panel in panelContainer.panel_set:
-            panel_model = getattr(panel, 'model', None)
-            if panel_model is model:
-                return panel
-
-    def focusExistingPanel(self, panelContainer, model):
-        """This method checks whether a given panel for the given ``model``
-           already exists.
-
-           The method returns ``True``, if panel already open else ``False``.
-           Note that in case the panel is already there, it is pushed to the
-           top of the focus stack.
-        """
-        panel = self._getPanel(panelContainer, model)
-        if panel is not None:
-            index = panelContainer.indexOf(panel)
-            if index > -1:
-                panelContainer.setCurrentIndex(index)
-            else:
-                panel.activateWindow()
-                panel.raise_()
-            return True
-
-        return False
-
-    def renameMiddlePanel(self, model):
-        """ Adapt tab text of corresponding ``model``.
-
-            The title of the panel was already changed in the project panel
-            and needs to be updated.
-        """
-        panel = self._getPanel(self.middleTab, model)
-        if panel is not None:
-            index = self.middleTab.indexOf(panel)
-            # Update title - important for undocked widgets
-            panel.setWindowTitle(model.simple_name)
-            if index > -1:
-                self.middleTab.setTabText(index, model.simple_name)
-
-    def removeMiddlePanel(self, model):
-        """ The middle panel for the given ``model`` is removed.
-        """
-        panel = self._getPanel(self.middleTab, model)
-        if panel is not None:
-            panel.force_close()
-            self.middleTab.removePanel(panel)
-        # If tabwidget is empty - show start page instead
-        if self.middleTab.count() < 1:
-            self._createPlaceholderMiddlePanel()
-
-    def selectPanel(self, panelContainer, panel):
-        if panelContainer.count() > 1:
-            panelContainer.updateTabsClosable()
-        panelContainer.setCurrentWidget(panel)
-
-    def _removeAlarmPanel(self, instanceId):
-        if instanceId in self.alarmPanels:
-            panel = self.alarmPanels[instanceId]
-            # Call closeEvent to unregister from broadcast events
-            panel.force_close()
-            self.outputTab.removePanel(panel)
-            del self.alarmPanels[instanceId]
-
-    def showAlarmServicePanels(self, instanceIds):
-        """ Show alarm panels for the given ``instanceIds``."""
-        for instId in instanceIds:
-            # Check whether there is already an alarm panel for
-            # this ``instanceId``
-            if instId not in self.alarmPanels:
-                title = "Alarms for {}".format(instId)
-                panel = AlarmPanel(instId, title)
-                self.outputTab.addPanel(panel)
-                self.selectPanel(self.outputTab, panel)
-                tabBar = self.outputTab.tabBar()
-                tabBar.setTabTextColor(
-                    self.outputTab.count()-1, QColor(*ALARM_COLOR))
-                self.alarmPanels[instId] = panel
-            else:
-                panel = self.alarmPanels[instId]
-                self.focusExistingPanel(self.outputTab, panel.model)
-
-    def removeAlarmServicePanels(self, instanceIds):
-        """ Remove alarm panels for the given ``instanceIds``."""
-        for instId in instanceIds:
-            self._removeAlarmPanel(instId)
-
-    def addRunConfigPanel(self, instanceIds):
-        for instId in instanceIds:
-            if instId not in self.runConfigPanels:
-                title = "Run configuration at {}".format(instId)
-                if len(self.runConfigPanels) == 0:
-                    title = "RunConfig"
-                panel = RunConfigPanel(instId, title)
-                self.configurationTab.addPanel(panel)
-                self.selectPanel(self.outputTab, panel)
-                self.runConfigPanels[instId] = panel
-
-    def removeRunConfigPanels(self, instanceIds):
-        """ Remove run config panels for the given ``instanceIds``."""
-        for instId in instanceIds:
-            self._removeRunConfigPanel(instId)
-
-    def _removeRunConfigPanel(self, instanceId):
-        if instanceId in self.runConfigPanels:
-            panel = self.runConfigPanels[instanceId]
-            # Call closeEvent to unregister from broadcast events
-            panel.force_close()
-            self.configurationTab.removePanel(panel)
-
-    def addSceneView(self, sceneModel, target_window):
-        """ Add a scene view to show the content of the given `sceneModel in
-            the GUI.
-        """
-        if sceneModel is None:
-            return
-
-        self.checkAndRemovePlaceholderMiddlePanel()
-        if self.focusExistingPanel(self.middleTab, sceneModel):
-            # XXX: we need the panel
-            panel = self._getPanel(self.middleTab, sceneModel)
-        else:
-            # Add scene view to tab widget
-            server_connected = self.acServerConnect.isChecked()
-            panel = ScenePanel(sceneModel, server_connected)
-            self.middleTab.addPanel(panel)
-            self.selectPanel(self.middleTab, panel)
-
-        # If it's a dialog, make sure it's undocked
-        if target_window == SceneTargetWindow.Dialog:
-            panel.onUndock()
-
-    def addMacro(self, macroModel):
-        """ Add a macro pane to show the content of the given `macroModel in
-            the GUI.
-        """
-        self.checkAndRemovePlaceholderMiddlePanel()
-        if self.focusExistingPanel(self.middleTab, macroModel):
-            return
-
-        panel = MacroPanel(macroModel)
-        self.middleTab.addPanel(panel)
-        self.selectPanel(self.middleTab, panel)
-
     def _updateScenes(self):
-        for panel in self.middleTab.panel_set:
+        container = self._panel_areas[PanelAreaEnum.MiddleTop]
+        for panel in container.panel_set:
             scene_view = getattr(panel, 'scene_view', None)
             if scene_view is not None and scene_view.isVisible():
                 scene_view.update()
@@ -444,32 +307,31 @@ class MainWindow(QMainWindow):
         self._enable_toolbar(enable)
 
         # Update all open scenes and macros
-        for panel in self.middleTab.panel_set:
+        container = self._panel_areas[PanelAreaEnum.MiddleTop]
+        for panel in container.panel_set:
             panel.setEnabled(enable)
 
-        # Update configuration panel
-        for panel in self.configurationTab.panel_set:
+        # Update configuration panels
+        container = self._panel_areas[PanelAreaEnum.Right]
+        for panel in container.panel_set:
             panel.setEnabled(enable)
 
-    def _tabMaximized(self, tabWidget):
-        """The given /tabWidget is about to be maximized.
+    def _panelContainerMaximized(self, panel_container):
+        """The given `panel_container` is about to be maximized.
         """
-        areas = (self.rightArea, self.middleArea, self.leftArea)
-        for area in areas:
-            for i in range(area.count()):
-                w = area.widget(i)
-                if w != tabWidget:
-                    w.hide()
+        for area_enum, area_container in self._panel_areas.items():
+            if area_container is not panel_container:
+                area_container.hide()
 
-    def _tabMinimized(self, tabWidget):
-        """The given /tabWidget is about to be minimized.
+    def _panelContainerMinimized(self, panel_container):
+        """The given `panel_container` is about to be minimized.
         """
-        areas = (self.rightArea, self.middleArea, self.leftArea)
-        for area in areas:
-            for i in range(area.count()):
-                w = area.widget(i)
-                if w != tabWidget:
-                    w.show()
+        for area_enum, area_container in self._panel_areas.items():
+            if area_container is not panel_container:
+                area_container.show()
+
+    # --------------------------------------
+    # Qt slots
 
     @pyqtSlot()
     def onExit(self):
@@ -512,9 +374,6 @@ class MainWindow(QMainWindow):
         self.acServerConnect.blockSignals(False)
 
         self.tbAccessLevel.setEnabled(isConnected)
-
-        # Adapt middle panel
-        self._addPlaceholderMiddlePanel(isConnected)
 
     @pyqtSlot()
     def onUpdateAccessLevel(self):
