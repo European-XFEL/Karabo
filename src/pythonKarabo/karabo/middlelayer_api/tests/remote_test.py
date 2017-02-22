@@ -41,6 +41,11 @@ class Nested(Configurable):
     val = Int32(unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MILLI)
     nestnest = Node(NestNest)
 
+    @Slot()
+    @coroutine
+    def nestedSlot(self):
+        self.val *= 2
+
 
 class Remote(Injectable, Device):
     done = Bool()
@@ -645,8 +650,9 @@ class Tests(DeviceTest):
             self.assertEqual(d.nested.nestnest.value.timestamp, ts2)
             d.nested.val = 4 * unit.second
             d.nested.nestnest.value = 5 * unit.meter
-            yield from waitUntilNew(d)
-        self.assertEqual(self.remote.nested.val, 4 * unit.second)
+            yield from d.nested.nestedSlot()
+            # nestedSlot doubles the nested.val
+        self.assertEqual(self.remote.nested.val, 8 * unit.second)
         self.assertEqual(self.remote.nested.nestnest.value, 5 * unit.meter)
 
     @async_tst
@@ -896,15 +902,32 @@ class Tests(DeviceTest):
     def test_inject(self):
         with (yield from getDevice("remote")) as d:
             self.remote.__class__.injected = String()
+            self.remote.__class__.injected_node = Node(Nested)
+
+            @Slot()
+            def slot(self):
+                nonlocal slotdata
+                slotdata = 44
+            slotdata = None
+            self.remote.__class__.injected_slot = slot
+
             self.remote.injected = "spicer"
             with self.assertRaises(TimeoutError):
                 yield from wait_for(waitUntil(lambda: hasattr(d, "injected")),
                                     timeout=0.1)
             self.remote.publishInjectedParameters()
+            self.remote.injected_node = Nested({})
             yield from waitUntil(lambda: hasattr(d, "injected"))
             yield from waitUntil(lambda: d.injected == "spicer")
             self.remote.injected = "bla"
             yield from waitUntil(lambda: d.injected == "bla")
+            yield from d.injected_slot()
+            self.assertEqual(slotdata, 44)
+
+            d.injected_node.val = 10
+            yield from d.injected_node.nestedSlot()
+            self.assertEqual(d.injected_node.val, 20 * unit.millisecond)
+
             d.injected = "donald"
             yield from waitUntil(lambda: self.remote.injected == "donald")
 
