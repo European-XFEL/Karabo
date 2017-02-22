@@ -6,13 +6,14 @@
 from functools import partial
 
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (QButtonGroup, QComboBox, QHBoxLayout, QLabel,
+from PyQt4.QtGui import (QButtonGroup, QComboBox, QColor, QHBoxLayout, QLabel,
                          QLineEdit, QPixmap, QPushButton, QStyle,
                          QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
 
 from karabo_gui.alarm_model import (ACKNOWLEDGE, ALARM_DATA, ALARM_ID,
                                     ALARM_TYPE, DEVICE_ID, PROPERTY,
                                     SHOW_DEVICE, AlarmModel, getAlarmKeyIndex)
+from karabo_gui.const import ALARM_COLOR
 from karabo_gui.events import (
     KaraboBroadcastEvent, KaraboEventSender, broadcast_event,
     register_for_broadcasts, unregister_from_broadcasts)
@@ -103,6 +104,15 @@ class AlarmPanel(BasePanelWidget):
         main_layout.addWidget(self.twAlarm)
 
         return widget
+
+    def tab_text_color(self):
+        """Returns a QColor containing the color to be used for the label on
+        the panel container's tab for this panel.
+
+        This method only needs to be overridden if a panel wants a special
+        color for its tabs.
+        """
+        return QColor(*ALARM_COLOR)
 
     def _initAlarms(self, instanceId, rows):
         self.model.initAlarms(instanceId, rows)

@@ -11,7 +11,6 @@ from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
 import karabo_gui.icons as icons
 from karabo_gui.toolbar import ToolBar
 from karabo_gui.util import generateObjectName
-from .container import PanelContainer
 
 
 class BasePanelWidget(QFrame):
@@ -48,6 +47,14 @@ class BasePanelWidget(QFrame):
         """Called when this panel is undocked from the main window.
         """
 
+    def tab_text_color(self):
+        """Returns a QColor containing the color to be used for the label on
+        the panel container's tab for this panel.
+
+        This method only needs to be overridden if a panel wants a special
+        color for its tabs.
+        """
+
     def toolbars(self):
         """This should create and return a list of `ToolBar` instances needed
         by this panel.
@@ -59,10 +66,6 @@ class BasePanelWidget(QFrame):
 
     def attach_to_container(self, container):
         if container is not None:
-            msg = ('The parent widget of a `BasePanelWidget` must be a '
-                   '`PanelContainer` or None!')
-            assert isinstance(container, PanelContainer), msg
-
             self.is_docked = True
         else:
             self.is_docked = False
@@ -126,24 +129,28 @@ class BasePanelWidget(QFrame):
             if w != self:
                 self.panel_container.removeTab(i)
 
-        d = {'tab': self.panel_container}
-        broadcast_event(KaraboBroadcastEvent(KaraboEventSender.MaximizeTab, d))
+        self._broadcast_panel_event(KaraboEventSender.MaximizePanel)
 
     def onMinimize(self):
         self.acMinimize.setVisible(False)
         self.acMaximize.setVisible(True)
 
-        for w in self.panel_container.panel_set:
-            if w == self:
-                continue
-
+        self.panel_container.removeTab(0)
+        # Add the tabs back to the container in sorted order
+        panels = sorted(self.panel_container.panel_set, key=lambda x: x.index)
+        for w in panels:
             self.panel_container.insertTab(w.index, w, w.windowTitle())
 
-        d = {'tab': self.panel_container}
-        broadcast_event(KaraboBroadcastEvent(KaraboEventSender.MinimizeTab, d))
+        self.panel_container.setCurrentIndex(self.index)
+
+        self._broadcast_panel_event(KaraboEventSender.MinimizePanel)
 
     # --------------------------------------
     # private methods
+
+    def _broadcast_panel_event(self, sender):
+        d = {'container': self.panel_container}
+        broadcast_event(KaraboBroadcastEvent(sender, d))
 
     def _fill_panel(self):
         # Create the content widget first

@@ -15,8 +15,8 @@ except ImportError:
 
 from karabo.common.project.api import write_macro
 from karabo_gui.events import (
-    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
-    unregister_from_broadcasts)
+    KaraboBroadcastEvent, KaraboEventSender, broadcast_event,
+    register_for_broadcasts, unregister_from_broadcasts)
 import karabo_gui.icons as icons
 from karabo_gui.project.utils import run_macro
 from karabo_gui.singletons.api import get_topology
@@ -100,6 +100,10 @@ class MacroPanel(BasePanelWidget):
             # Unregister the trait handler too
             self.model.on_trait_change(self.set_title, 'simple_name',
                                        remove=True)
+            # Tell the world we're closing
+            data = {'model': self.model}
+            broadcast_event(KaraboBroadcastEvent(
+                KaraboEventSender.MiddlePanelClosed, data))
 
     def connect(self, macro_instance):
         if macro_instance not in self.already_connected:
