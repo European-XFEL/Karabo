@@ -32,7 +32,7 @@ def _log_exception(func, device, message):
 
 
 def slot(f):
-    def inner(func, device, message, args):
+    def inner(func, device, name, message, args):
         try:
             device._ss.reply(message, func(*args))
         except Exception as e:
@@ -45,7 +45,7 @@ def slot(f):
 def coslot(f, passMessage=False):
     f = coroutine(f)
 
-    def outer(func, device, message, args):
+    def outer(func, device, name, message, args):
         broker = device._ss
 
         @coroutine
@@ -190,7 +190,7 @@ class SignalSlotable(Configurable):
             self._ss.emit("call", {instanceId: ["slotPingAnswer"]},
                           self.deviceId, self._ss.info)
 
-    def inner(func, device, message, args):
+    def inner(func, device, name, message, args):
         ret = func(*args)
         # In contrast to normal slots, let slotPing not send an empty reply.
         if ret is not None:
