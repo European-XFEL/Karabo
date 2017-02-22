@@ -140,7 +140,7 @@ fi
 if [ ! -d "$KARABO/extern/eXistDB/db" ]; then
     echo -n " Activating local project database, please wait..."
     source $KARABO/activate
-    $KARABO/extern/eXistDB/doInstall.sh $KARABO > /dev/null 2> /dev/null
+    $KARABO/extern/eXistDB/doInstall.sh $KARABO &> /dev/null
 echo " done"
 fi
 
