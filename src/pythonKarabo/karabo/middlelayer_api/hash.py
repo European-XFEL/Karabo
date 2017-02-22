@@ -473,7 +473,7 @@ class Slot(Descriptor):
         wrapper.slot = self.slot
         return wrapper.__get__(instance, owner)
 
-    def slot(self, func, device, message, args):
+    def slot(self, func, device, name, message, args):
         msg = device._checkLocked(message)
         if msg is not None:
             device._ss.reply(message, msg, error=True)
@@ -486,6 +486,10 @@ class Slot(Descriptor):
             device._ss.reply(message, msg, error=True)
             device.logger.warning(msg)
             return
+
+        func = device
+        for n in name.split("."):
+            func = getattr(func, n)
 
         coro = get_event_loop().run_coroutine_or_thread(func)
 

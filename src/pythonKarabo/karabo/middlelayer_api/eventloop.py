@@ -192,16 +192,16 @@ class Broker:
                 if device is None:
                     continue
                 try:
-                    slots = [self.slots[s]
+                    slots = [(self.slots[s], s)
                              for s in slots.get(self.deviceId, [])] + \
-                            [self.slots[s] for s in slots.get("*", [])
+                            [(self.slots[s], s) for s in slots.get("*", [])
                              if s in self.slots]
                 except KeyError:
                     self.logger.exception("Slot does not exist")
                     continue
                 try:
-                    for slot in slots:
-                        slot.slot(slot, device, message, params)
+                    for slot, name in slots:
+                        slot.slot(slot, device, name, message, params)
                 except Exception:
                     # the slot.slot wrapper should already catch all exceptions
                     # all exceptions raised additionally are a bug in Karabo
