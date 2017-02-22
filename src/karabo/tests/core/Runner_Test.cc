@@ -49,58 +49,34 @@ void Runner_Test::testRunnerSuccess() {
 void Runner_Test::testRunnerFailure1() {
     using namespace karabo::util;
     char *argv[] = {"AnotherExecutable", "serverId=bar", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}"};
-    int argc = 7;
+    const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
-    try {
-        RunnerDerived::parseCmd(argc, argv, configuration);
-        CPPUNIT_ASSERT(false);
-    } catch (const ParameterException& e) {
-        std::clog << e << std::endl;
-        CPPUNIT_ASSERT(true);
-    }
+    CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
 }
 
 
 void Runner_Test::testRunnerFailure2() {
     using namespace karabo::util;
     char *argv[] = {"AnotherExecutable2", "serverId=bar", "a=}b=1", "c=2", "d=3", "e={x=15", "y=88}"};
-    int argc = 7;
+    const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
-    try {
-        RunnerDerived::parseCmd(argc, argv, configuration);
-        CPPUNIT_ASSERT(false);
-    } catch (const ParameterException& e) {
-        std::clog << e << std::endl;
-        CPPUNIT_ASSERT(true);
-    }
+    CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
 }
 
 
 void Runner_Test::testRunnerFailure3() {
     using namespace karabo::util;
     char *argv[] = {"AnotherExecutable3", "serverId=bla", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}}}"};
-    int argc = 7;
+    const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
-    try {
-        RunnerDerived::parseCmd(argc, argv, configuration);
-        CPPUNIT_ASSERT(false);
-    } catch (const Exception& e) {
-        std::clog << e << std::endl;
-        CPPUNIT_ASSERT(true);
-    }
+    CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
 }
 
 
 void Runner_Test::testRunnerFailure4() {
     using namespace karabo::util;
     char *argv[] = {"AnotherExecutable4", "serverId=bang", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}}"};
-    int argc = 6;
+    const int argc = sizeof(argv) / sizeof(argv[0]) - 1;
     Hash configuration;
-    try {
-        RunnerDerived::parseCmd(argc, argv, configuration);
-        CPPUNIT_ASSERT(false);
-    } catch (const Exception& e) {
-        std::clog << e << std::endl;
-        CPPUNIT_ASSERT(true);
-    }
+    CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
 }
