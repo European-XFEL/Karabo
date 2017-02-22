@@ -191,6 +191,13 @@ class Node(Descriptor):
         del node._initializers
         return ret
 
+    def __set__(self, instance, value):
+        if not isinstance(value, self.cls):
+            raise RuntimeError('node "{}" must be of type "{}" not "{}"'
+                               .format(self.key, self.cls.__name__,
+                                       type(value).__name__))
+        instance.setValue(self, value)
+
     def _setter(self, instance, value):
         props = ((getattr(self.cls, k), v) for k, v in value.items())
         parent = getattr(instance, self.key)
