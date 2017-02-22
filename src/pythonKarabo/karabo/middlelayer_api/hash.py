@@ -437,6 +437,9 @@ class Descriptor(object):
         """
         raise NotImplementedError
 
+    def allDescriptors(self, prefix=""):
+        yield prefix + self.key, self
+
 
 class Slot(Descriptor):
     '''Define a slot callable from the outside
