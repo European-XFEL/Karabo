@@ -437,6 +437,9 @@ class Descriptor(object):
         """
         raise NotImplementedError
 
+    def allDescriptors(self, prefix=""):
+        yield prefix + self.key, self
+
 
 class Slot(Descriptor):
     '''Define a slot callable from the outside
@@ -470,26 +473,26 @@ class Slot(Descriptor):
         @wraps(self.method)
         def wrapper(device):
             return self.method(device)
-        wrapper.slot = partial(self.slot, weakref.ref(instance))
+        wrapper.slot = self.slot
         return wrapper.__get__(instance, owner)
 
-    def slot(self, weakinstance, func, device, message, args):
-        instance = weakinstance()
-        if instance is None:
-            return
-
+    def slot(self, func, device, name, message, args):
         msg = device._checkLocked(message)
         if msg is not None:
             device._ss.reply(message, msg, error=True)
             return
 
         if (self.allowedStates is not None and
-                instance.state not in self.allowedStates):
+                device.state not in self.allowedStates):
             msg = 'Calling slot "{}" not allowed in state "{}"'.format(
-                self.key, instance.state)
+                self.key, device.state)
             device._ss.reply(message, msg, error=True)
             device.logger.warning(msg)
             return
+
+        func = device
+        for n in name.split("."):
+            func = getattr(func, n)
 
         coro = get_event_loop().run_coroutine_or_thread(func)
 
@@ -501,7 +504,7 @@ class Slot(Descriptor):
                 device._ss.reply(message, ret)
             except Exception as e:
                 _, exc, tb = sys.exc_info()
-                yield from instance._onException(self, exc, tb)
+                yield from device._onException(self, exc, tb)
                 device._ss.replyException(message, e)
         return async(wrapper())
 
