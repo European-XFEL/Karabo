@@ -101,9 +101,8 @@ class MacroPanel(BasePanelWidget):
             self.model.on_trait_change(self.set_title, 'simple_name',
                                        remove=True)
             # Tell the world we're closing
-            data = {'model': self.model}
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.MiddlePanelClosed, data))
+            broadcast_event(KaraboEventSender.MiddlePanelClosed,
+                            {'model': self.model})
 
     def connect(self, macro_instance):
         if macro_instance not in self.already_connected:

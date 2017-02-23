@@ -60,10 +60,13 @@ class KaraboBroadcastEvent(QEvent):
         self.data = data or {}  # Includes the data which is sent
 
 
-def broadcast_event(event):
+def broadcast_event(sender_enum, data):
     """ Broadcast the given `event`.
     """
+    assert isinstance(sender_enum, KaraboEventSender)
+
     mediator = get_mediator()
+    event = KaraboBroadcastEvent(sender=sender_enum, data=data)
     QApplication.postEvent(mediator, event)
 
 

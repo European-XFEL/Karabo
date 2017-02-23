@@ -5,9 +5,7 @@
 #############################################################################
 from PyQt4.QtGui import QItemSelectionModel, QStandardItemModel
 
-from karabo_gui.events import (
-    broadcast_event, KaraboBroadcastEvent, KaraboEventSender
-)
+from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.project.api import (
     create_project_controller, destroy_project_controller
 )
@@ -37,12 +35,11 @@ class ProjectViewItemModel(QStandardItemModel):
             return
 
         for scene in self._traits_model.scenes:
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.RemoveSceneView, {'model': scene}))
+            broadcast_event(KaraboEventSender.RemoveSceneView,
+                            {'model': scene})
 
         for macro in self._traits_model.macros:
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.RemoveMacro, {'model': macro}))
+            broadcast_event(KaraboEventSender.RemoveMacro, {'model': macro})
 
     @property
     def traits_data_model(self):

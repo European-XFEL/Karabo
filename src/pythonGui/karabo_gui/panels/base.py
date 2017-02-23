@@ -6,8 +6,7 @@
 from PyQt4.QtGui import (QAction, QFrame, QHBoxLayout, QSizePolicy,
                          QVBoxLayout, QWidget)
 
-from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
-                               broadcast_event)
+from karabo_gui.events import KaraboEventSender, broadcast_event
 import karabo_gui.icons as icons
 from karabo_gui.toolbar import ToolBar
 from karabo_gui.util import generateObjectName
@@ -129,7 +128,8 @@ class BasePanelWidget(QFrame):
             if w != self:
                 self.panel_container.removeTab(i)
 
-        self._broadcast_panel_event(KaraboEventSender.MaximizePanel)
+        broadcast_event(KaraboEventSender.MaximizePanel,
+                        {'container': self.panel_container})
 
     def onMinimize(self):
         self.acMinimize.setVisible(False)
@@ -143,14 +143,11 @@ class BasePanelWidget(QFrame):
 
         self.panel_container.setCurrentIndex(self.index)
 
-        self._broadcast_panel_event(KaraboEventSender.MinimizePanel)
+        broadcast_event(KaraboEventSender.MinimizePanel,
+                        {'container': self.panel_container})
 
     # --------------------------------------
     # private methods
-
-    def _broadcast_panel_event(self, sender):
-        d = {'container': self.panel_container}
-        broadcast_event(KaraboBroadcastEvent(sender, d))
 
     def _fill_panel(self):
         # Create the content widget first

@@ -6,8 +6,7 @@
 
 from PyQt4.QtCore import pyqtSignal
 
-from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
-                               broadcast_event)
+from karabo_gui.events import KaraboEventSender, broadcast_event
 from karabo_gui.schema import Schema, Box
 from karabo_gui.singletons.api import get_manager, get_network, get_topology
 
@@ -184,17 +183,13 @@ def _start_device_monitoring(device_id):
     """Initiate device monitoring
     """
     get_network().onStartMonitoringDevice(device_id)
-    broadcast_event(KaraboBroadcastEvent(
-        KaraboEventSender.StartMonitoringDevice,
-        data={'device_id': device_id})
-    )
+    broadcast_event(KaraboEventSender.StartMonitoringDevice,
+                    {'device_id': device_id})
 
 
 def _stop_device_monitoring(device_id):
     """Cease device monitoring
     """
     get_network().onStopMonitoringDevice(device_id)
-    broadcast_event(KaraboBroadcastEvent(
-        KaraboEventSender.StopMonitoringDevice,
-        data={'device_id': device_id})
-    )
+    broadcast_event(KaraboEventSender.StopMonitoringDevice,
+                    {'device_id': device_id})
