@@ -17,8 +17,7 @@ from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QMessageBox
 
 from karabo.common.api import State
-from karabo_gui.events import (
-    broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.singletons.api import get_network, get_topology
 from karabo_gui.util import getSchemaAttributeUpdates
@@ -27,26 +26,22 @@ from karabo_gui.util import getSchemaAttributeUpdates
 def handle_device_state_change(box, value, timestamp):
     """This forwards a device descriptor's state to the configuration panel
     """
-    broadcast = broadcast_event
     configuration = box.configuration
 
     if State(value).isDerivedFrom(State.CHANGING):
         # Only a state change
         data = {'configuration': configuration, 'is_changing': True}
-        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceStateChanged,
-                                       data))
+        broadcast_event(KaraboEventSender.DeviceStateChanged, data)
     else:
         # First the error state
         data = {'configuration': configuration,
                 'is_changing': State(value) is State.ERROR}
-        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceErrorChanged,
-                                       data))
+        broadcast_event(KaraboEventSender.DeviceErrorChanged, data)
 
         # Then a regular state change notification
         data = {'configuration': configuration,
                 'is_changing': False}
-        broadcast(KaraboBroadcastEvent(KaraboEventSender.DeviceStateChanged,
-                                       data))
+        broadcast_event(KaraboEventSender.DeviceStateChanged, data)
 
 
 class Manager(QObject):
@@ -122,17 +117,15 @@ class Manager(QObject):
         """If the server connection is changed, the model needs an update.
         """
         # Broadcast event to all panels which need a reset
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.NetworkConnectStatus, {'status': isConnected}))
+        broadcast_event(KaraboEventSender.NetworkConnectStatus,
+                        {'status': isConnected})
 
         # Clear the system topology
         if not isConnected:
             self._topology.clear()
 
     def handle_log(self, messages):
-        data = {'messages': messages}
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.LogMessages, data))
+        broadcast_event(KaraboEventSender.LogMessages, {'messages': messages})
 
     def handle_brokerInformation(self, **kwargs):
         get_network()._handleBrokerInformation(**kwargs)
@@ -148,9 +141,8 @@ class Manager(QObject):
 
         # Tell the world about new devices/servers
         devices, servers = _extract_topology_devices(systemTopology)
-        data = {'devices': devices, 'servers': servers}
-        broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.SystemTopologyUpdate, data))
+        broadcast_event(KaraboEventSender.SystemTopologyUpdate,
+                        {'devices': devices, 'servers': servers})
 
     def handle_systemVersion(self, version):
         """ Handle the version number reply from the GUI server.
@@ -179,9 +171,8 @@ class Manager(QObject):
 
         devices, servers = _extract_topology_devices(topologyEntry)
         # Broadcast the change to listeners
-        data = {'devices': devices, 'servers': servers}
-        broadcast_event(KaraboBroadcastEvent(
-                        KaraboEventSender.SystemTopologyUpdate, data))
+        broadcast_event(KaraboEventSender.SystemTopologyUpdate,
+                        {'devices': devices, 'servers': servers})
 
         # Tell the GUI about various devices or servers that are alive
         self._broadcast_about_instances('AlarmService',
@@ -218,9 +209,8 @@ class Manager(QObject):
         devices, servers = self._topology.instance_gone(instanceId,
                                                         instanceType)
         # Broadcast the change to listeners
-        data = {'devices': devices, 'servers': servers}
-        broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.SystemTopologyUpdate, data))
+        broadcast_event(KaraboEventSender.SystemTopologyUpdate,
+                        {'devices': devices, 'servers': servers})
 
         if instanceType == 'server':
             # Clear corresponding parameter pages
@@ -232,8 +222,8 @@ class Manager(QObject):
 
         # Once everything has calmed down, tell the configurator to clear
         # NOTE: Doing this last avoids resetting displayed project devices
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.ClearConfigurator, {'deviceId': instanceId}))
+        broadcast_event(KaraboEventSender.ClearConfigurator,
+                        {'deviceId': instanceId})
 
     def handle_attributesUpdated(self, reply):
         instanceId = reply["instanceId"]
@@ -258,9 +248,8 @@ class Manager(QObject):
         box_signal.connect(handle_device_state_change)
 
         # Refresh the configurator iff this configuration is already showing
-        data = {'configuration': conf}
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.UpdateDeviceConfigurator, data))
+        broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
+                        {'configuration': conf})
 
         # Trigger update scenes
         self._device_data_received()
@@ -290,9 +279,8 @@ class Manager(QObject):
 
     def handle_projectListDomains(self, reply):
         # ``reply`` is a Hash containing a list of domain names
-        d = {'items': reply['domains']}
-        event = KaraboBroadcastEvent(KaraboEventSender.ProjectDomainsList, d)
-        broadcast_event(event)
+        broadcast_event(KaraboEventSender.ProjectDomainsList,
+                        {'items': reply['domains']})
 
     def handle_projectListItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
@@ -300,15 +288,13 @@ class Manager(QObject):
         if not success:
             MessageBox.showError(reply['reason'])
             return
-        d = {'items': reply['items']}
-        event = KaraboBroadcastEvent(KaraboEventSender.ProjectItemsList, d)
-        broadcast_event(event)
+        broadcast_event(KaraboEventSender.ProjectItemsList,
+                        {'items': reply['items']})
 
     def handle_projectListProjectManagers(self, reply):
         # ``reply`` is a list of strings
-        d = {'items': reply}
-        event = KaraboBroadcastEvent(KaraboEventSender.ProjectManagersList, d)
-        broadcast_event(event)
+        broadcast_event(KaraboEventSender.ProjectManagersList,
+                        {'items': reply})
 
     def handle_projectLoadItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
@@ -316,14 +302,12 @@ class Manager(QObject):
         if not success:
             MessageBox.showError(reply['reason'])
         d = {'success': success, 'items': reply['items']}  # Hash -> dict
-        event = KaraboBroadcastEvent(KaraboEventSender.ProjectItemsLoaded, d)
-        broadcast_event(event)
+        broadcast_event(KaraboEventSender.ProjectItemsLoaded, d)
 
     def handle_projectSaveItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
-        d = {'items': reply['items']}  # Hash -> dict
-        event = KaraboBroadcastEvent(KaraboEventSender.ProjectItemsSaved, d)
-        broadcast_event(event)
+        broadcast_event(KaraboEventSender.ProjectItemsSaved, 
+                        {'items': reply['items']})
 
     # ---------------------------------------------------------------------
     # Legacy Project Interface
@@ -355,8 +339,7 @@ class Manager(QObject):
                 'message_type': message,
                 'short_msg': short,
                 'detailed_msg': detailed}
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.NotificationMessage, data))
+        broadcast_event(KaraboEventSender.NotificationMessage, data)
 
     def handle_networkData(self, name, data):
         device_id, prop_path = name.split(":")
@@ -369,20 +352,17 @@ class Manager(QObject):
         if device is not None:
             data = {'device': device, 'success': success, 'message': message}
             # Create KaraboBroadcastEvent
-            broadcast_event(KaraboBroadcastEvent(
-                KaraboEventSender.DeviceInitReply, data))
+            broadcast_event(KaraboEventSender.DeviceInitReply, data)
 
     def handle_alarmInit(self, instanceId, rows):
-        data = {'instanceId': instanceId, 'rows': rows}
         # Create KaraboBroadcastEvent
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.AlarmInitReply, data))
+        broadcast_event(KaraboEventSender.AlarmInitReply,
+                        {'instanceId': instanceId, 'rows': rows})
 
     def handle_alarmUpdate(self, instanceId, rows):
-        data = {'instanceId': instanceId, 'rows': rows}
         # Create KaraboBroadcastEvent
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.AlarmUpdate, data))
+        broadcast_event(KaraboEventSender.AlarmUpdate,
+                        {'instanceId': instanceId, 'rows': rows})
 
         for hsh in rows.values():
             # Get data of hash
@@ -390,12 +370,10 @@ class Manager(QObject):
                 # Fetch only deviceId and type to broadcast this
                 data = {'deviceId': aHash.get('deviceId'),
                         'alarm_type': aHash.get('type')}
-                broadcast_event(KaraboBroadcastEvent(
-                    KaraboEventSender.AlarmDeviceUpdate, data))
+                broadcast_event(KaraboEventSender.AlarmDeviceUpdate, data)
 
     def handle_runConfigSourcesInGroup(self, reply):
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.RunConfigSourcesUpdate, reply))
+        broadcast_event(KaraboEventSender.RunConfigSourcesUpdate, reply)
 
     # ------------------------------------------------------------------
     # Private methods
@@ -419,16 +397,14 @@ class Manager(QObject):
         if transform is not None:
             transform(instance_ids)
         if instance_ids:
-            data = {'instanceIds': instance_ids}
             # Tell the world
-            broadcast_event(KaraboBroadcastEvent(event_type, data))
+            broadcast_event(event_type, {'instanceIds': instance_ids})
 
     def _device_data_received(self):
         """Notify all listeners that some (class, schema, or config) data was
         received.
         """
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.DeviceDataReceived, {}))
+        broadcast_event(KaraboEventSender.DeviceDataReceived, {})
 
 
 # ------------------------------------------------------------------
