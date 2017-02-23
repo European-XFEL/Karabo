@@ -31,7 +31,8 @@ int main(int argc, char** argv) {
 
         // Instantiate device server
         DeviceServer::Pointer deviceServer = Runner::instantiate(argc, argv);
-
+        
+        // Empty pointer will be returned in case of "-h" or "--help"
         if (deviceServer) {
 
             boost::thread t(boost::bind(&EventLoop::work));
@@ -45,8 +46,6 @@ int main(int argc, char** argv) {
             deviceServer->finalizeInternalInitialization();
 
             t.join(); // Blocking central event loop
-        } else {
-            throw KARABO_INIT_EXCEPTION("Failed to instantiate DeviceServer.");
         }
 
         Logger::logInfo() << argv[0] << " has exited!\n";

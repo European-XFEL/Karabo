@@ -38,3 +38,8 @@ class  Schema_TestCase(unittest.TestCase):
         with self.assertRaises(SyntaxError):
             res, parsed = self.runner.parseCommandLine(
                 ['foo', 'serverId=bar', 'autoStart[0]=}a.b=c', 'x={y=12', 'a.c=1}}'])
+
+    def test_argument_parser_failure4(self):
+        with self.assertRaises(SyntaxError):
+            res, parsed = self.runner.parseCommandLine(
+                ['foo', 'serverId=bar', 'autoStart[0]={{a.b=c}', 'x={y=12', 'a.c=1}}'])
