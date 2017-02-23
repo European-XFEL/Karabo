@@ -106,7 +106,7 @@ class TestProjectDatabase(TestCase):
 
                 meta = db.save_item('LOCAL', testproject2, xml_rep)
 
-                path = "{}/LOCAL/{}".format(db.root, testproject2)
+                path = "{}/LOCAL/{}_0".format(db.root, testproject2)
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 decoded = db.dbhandle.getDoc(path).decode('utf-8')
                 doctree = etree.fromstring(decoded)

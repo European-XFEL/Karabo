@@ -176,7 +176,8 @@ class ProjectDatabase(ContextDecorator):
         item_tree.attrib['alias'] = 'default'
 
         item_xml = self._make_str_if_needed(item_tree)
-        path = "{}/{}/{}".format(self.root, domain, uuid)
+        # XXX: Add a '_0' suffix to keep old code from wetting its pants
+        path = "{}/{}/{}_0".format(self.root, domain, uuid)
 
         try:
             if self.dbhandle.hasDocument(path) and not overwrite:
@@ -403,5 +404,3 @@ class ProjectDatabase(ContextDecorator):
                    config_updates_1=res[3].text,
                    config_updates_2=res[4].text))
         print(msg)
-
-
