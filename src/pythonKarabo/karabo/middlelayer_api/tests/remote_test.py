@@ -493,7 +493,7 @@ class Tests(DeviceTest):
             # we test that d.counter is still None (it must be, no yield from
             # since last line). This asserts that waitUntilNew also works
             # with uninitialized values, which had been a bug before.
-            self.assertEqual(d.counter, None) # FIXME
+            self.assertEqual(d.counter, None)
             yield from waitUntilNew(d.counter)
             task = async(d.count())
             try:
@@ -548,7 +548,7 @@ class Tests(DeviceTest):
                 yield from sleep(0.02)
             with self.assertRaises(KaraboError):
                 # this raises the error from above
-                d.value = 8 # FIXME GF!
+                d.value = 8
             with self.assertLogs(logger="remote", level="WARNING") as log,\
                     self.assertRaises(KaraboError):
                 d.disallowed_int = 333
