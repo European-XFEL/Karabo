@@ -29,7 +29,7 @@ def create_hierarchy(db):
                                                    name=sub_uuid)
 
         scene_xml = ('<xml item_type="{atype}" uuid="{uuid}"'
-                     ' simple_name="{name}" >foo</xml>'
+                     ' simple_name="{name}" >中文</xml>'
                      .format(uuid=sub_uuid, atype='scene', name=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, scene_xml)
