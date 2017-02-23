@@ -35,24 +35,15 @@ KARABO_GUI_PORT=44444
 #  Broker Hosts  #
 ##################
 
-# If you are using Karabo at home and run a local broker you can you use directly
-#export KARABO_BROKER="tcp://localhost:7777"
-
-# If you are at the European XFEL GmbH you may use this settings
-export KARABO_BROKER="tcp://exfl-broker:7777"
-
-# This setting is the default, it will try the XFEL broker first and failover to a local if unsuccessful
-#export KARABO_BROKER="tcp://exfl-broker:7777,tcp://localhost:7777"
+# The address to the central message broker
+KARABO_BROKER="tcp://exfl-broker:7777" # for local broker use: "tcp://localhost:7777"
 
 #################
 # Broker Topic  #
 #################
 
-# By default your username will become your topic name
-
-# You may want to fix it using:
-
-#export KARABO_BROKER_TOPIC=karabo
+# If not defined your username will become your topic name
+#KARABO_BROKER_TOPIC=karabo
 
 ################
 # Project DB   #
@@ -73,15 +64,15 @@ KARABO_KILL_SIGNAL=15
 # Default log level
 logger=Logger.priority=INFO
 
-START[0]="karabo-cppserver serverId=karabo/guiServer deviceClasses=GuiServerDevice autoStart[0].GuiServerDevice.port=44444 visibility=4 $logger"
+START[0]="karabo-cppserver serverId=karabo/guiServer deviceClasses=GuiServerDevice autoStart[0]={GuiServerDevice.port=44444} visibility=4 $logger"
 
-START[1]="karabo-cppserver serverId=karabo/logAggregator deviceClasses=CentralLogging autoStart[0].CentralLogging visibility=4 $logger"
+START[1]="karabo-cppserver serverId=karabo/logAggregator deviceClasses=CentralLogging autoStart[0]={CentralLogging} visibility=4 $logger"
 
 START[2]="karabo-cppserver serverId=karabo/dataLogger deviceClasses=DataLogger,DataLogReader visibility=4 $logger"
 
 START[3]="karabo-cppserver serverId=karabo/dataLoggerManager deviceClasses=DataLoggerManager autoStart[0]={DataLoggerManager.serverList=karabo/dataLogger} visibility=4 $logger"
 
-START[4]="karabo-cppserver serverId=karabo/alarmServer deviceClasses=AlarmService autoStart[0].AlarmService visibility=4 $logger"
+START[4]="karabo-cppserver serverId=karabo/alarmServer deviceClasses=AlarmService autoStart[0]={AlarmService} visibility=4 $logger"
 
 # karabo/macroServer is hard-coded in the GUI
 START[5]="karabo-middlelayerserver serverId=karabo/macroServer visibility=4"
@@ -92,22 +83,24 @@ START[6]="karabo-pythonserver serverId=karabo/projectDBServer deviceClasses=Proj
 # Server C++ #
 ##############
 
-START[10]="karabo-cppserver serverId=cppServer/1 Logger.priority=INFO"
+#START[10]="karabo-cppserver serverId=cppServer/1 Logger.priority=INFO"
 
 #################
 # Server Python #
 #################
 
-START[20]="karabo-pythonserver serverId=pythonServer/1 Logger.priority=INFO"
+#START[20]="karabo-pythonserver serverId=pythonServer/1 Logger.priority=INFO"
 
 ######################
 # Server MiddleLayer #
 ######################
 
-START[30]="karabo-middlelayerserver serverId=middlelayerServer/1"
+#START[30]="karabo-middlelayerserver serverId=middlelayerServer/1"
 
 ###################
 # User Interfaces #
 ###################
 
-START[40]="karabo-gui"
+#START[40]="karabo-gui"
+
+#START[50]="ikarabo"
