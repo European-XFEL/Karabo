@@ -10,7 +10,7 @@ import re
 
 from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
-from .hash import Hash, HashType, Int32, String
+from .hash import Descriptor, Hash, HashType, Int32, Slot, String
 from .p2p import NetworkOutput
 from .schema import Configurable
 
@@ -32,7 +32,7 @@ def _log_exception(func, device, message):
 
 
 def slot(f):
-    def inner(func, device, message, args):
+    def inner(func, device, name, message, args):
         try:
             device._ss.reply(message, func(*args))
         except Exception as e:
@@ -45,7 +45,7 @@ def slot(f):
 def coslot(f, passMessage=False):
     f = coroutine(f)
 
-    def outer(func, device, message, args):
+    def outer(func, device, name, message, args):
         broker = device._ss
 
         @coroutine
@@ -190,7 +190,7 @@ class SignalSlotable(Configurable):
             self._ss.emit("call", {instanceId: ["slotPingAnswer"]},
                           self.deviceId, self._ss.info)
 
-    def inner(func, device, message, args):
+    def inner(func, device, name, message, args):
         ret = func(*args)
         # In contrast to normal slots, let slotPing not send an empty reply.
         if ret is not None:
@@ -220,13 +220,21 @@ class SignalSlotable(Configurable):
         """return the info hash at initialization time"""
         return Hash("heartbeatInterval", self.heartbeatInterval.value)
 
+    def _register_slots(self):
+        for k in dir(self.__class__):
+            value = getattr(self, k, None)
+            desc = getattr(self.__class__, k, None)
+            if callable(value) and hasattr(value, "slot"):
+                self._ss.register_slot(k, value)
+            elif isinstance(desc, Descriptor):
+                for name, slot in desc.allDescriptors():
+                    if isinstance(slot, Slot):
+                        self._ss.register_slot(name, slot)
+
     @coroutine
     def _run(self, server=None, **kwargs):
         try:
-            for k in dir(self.__class__):
-                v = getattr(self, k, None)
-                if callable(v) and hasattr(v, "slot"):
-                    self._ss.register_slot(k, v)
+            self._register_slots()
             async(self._ss.main(self))
             yield from self._assert_name_unique()
             self._ss.notify_network(self._initInfo())
