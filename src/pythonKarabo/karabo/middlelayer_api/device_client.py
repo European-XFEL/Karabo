@@ -14,7 +14,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from decimal import Decimal
 import time
-from weakref import WeakSet
+from weakref import ref, WeakSet
 
 import dateutil.parser
 import dateutil.tz
@@ -127,6 +127,7 @@ class Proxy(object):
         self._alive = True
         self._running_tasks = set()
         self._last_update_task = None
+        self._schemaUpdateConnected = False
 
     @classmethod
     def __dir__(cls):
@@ -260,9 +261,27 @@ class Proxy(object):
             self._device._ss.disconnect(self._deviceId, "signalStateChanged",
                                         self._device.slotChanged)
 
-    def __del__(self):
-        self._device._ss.disconnect(self._deviceId, "signalSchemaUpdated",
+    @contextmanager
+    def _connectSchemaUpdated(self):
+        self._device._ss.connect(self._deviceId, "signalSchemaUpdated",
                                     self._device.slotSchemaUpdated)
+        self._schemaUpdateConnected = True
+        self = ref(self)
+        try:
+            yield
+        finally:
+            self = self()
+            if self is not None:
+                self._disconnectSchemaUpdated()
+
+    def _disconnectSchemaUpdated(self):
+        if self._schemaUpdateConnected:
+            self._device._ss.disconnect(self._deviceId, "signalSchemaUpdated",
+                                        self._device.slotSchemaUpdated)
+        self._schemaUpdateConnected = False
+
+    def __del__(self):
+        self._disconnectSchemaUpdated()
         if self._used > 0:
             self._used = 1
             self.__exit__(None, None, None)
@@ -616,8 +635,7 @@ def _getDevice(deviceId, sync, Proxy=Proxy):
             instance._proxies[deviceId] = ret
         finally:
             del futures[deviceId]
-        instance._ss.connect(deviceId, "signalSchemaUpdated",
-                             instance.slotSchemaUpdated)
+        instance._ss.enter_context(ret._connectSchemaUpdated())
         yield from ret
         return ret
     future = asyncio.shield(create())
