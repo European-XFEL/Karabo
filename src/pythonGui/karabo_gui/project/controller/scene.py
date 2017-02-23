@@ -13,8 +13,7 @@ from traits.api import Instance, on_trait_change
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo_gui import icons
 from karabo_gui.const import PROJECT_CONTROLLER_REF
-from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
-                               KaraboEventSender)
+from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.utils import save_object, show_no_configuration
@@ -62,9 +61,7 @@ class SceneController(BaseProjectController):
         show_no_configuration()
 
     def double_click(self, parent_project, parent=None):
-        data = {'model': self.model}
-        broadcast_event(KaraboBroadcastEvent(KaraboEventSender.OpenSceneView,
-                                             data))
+        broadcast_event(KaraboEventSender.OpenSceneView, {'model': self.model})
 
     @on_trait_change("model.modified, model.simple_name")
     def modified_change(self):
@@ -86,8 +83,7 @@ class SceneController(BaseProjectController):
         if scene in project.scenes:
             project.scenes.remove(scene)
 
-        broadcast_event(KaraboBroadcastEvent(
-            KaraboEventSender.RemoveSceneView, {'model': scene}))
+        broadcast_event(KaraboEventSender.RemoveSceneView, {'model': scene})
 
     def _edit_scene(self):
         dialog = SceneHandleDialog(self.model)
