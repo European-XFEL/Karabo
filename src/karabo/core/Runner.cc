@@ -42,8 +42,7 @@ namespace karabo {
                     return DeviceServer::Pointer();
                 }
             } catch (const karabo::util::Exception& e) {
-                std::cout << e.userFriendlyMsg() << std::endl;
-                return DeviceServer::Pointer();
+                KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("Failed to instantiate DeviceServer. " + e.userFriendlyMsg()));
             }
         }
 
