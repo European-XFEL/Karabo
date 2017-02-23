@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from asyncio import (async, CancelledError, coroutine, FIRST_COMPLETED, Future,
+from asyncio import (async, CancelledError, coroutine, Future,
                      get_event_loop, sleep, TimeoutError, wait, wait_for)
 import logging
 import random
@@ -13,6 +13,7 @@ from .enums import AccessLevel, Assignment, AccessMode
 from .hash import Descriptor, Hash, HashType, Int32, Slot, String
 from .p2p import NetworkOutput
 from .schema import Configurable
+from .synchronization import firstCompleted
 
 
 class Signal(object):
@@ -342,16 +343,15 @@ class SignalSlotable(Configurable):
     @coroutine
     def _call_once_alive(self, deviceId, slot, *args):
         """try to call slot, wait until device becomes alive if needed"""
-        newdevice = self._new_device_futures.setdefault(deviceId, Future())
-        call = async(self.call(deviceId, slot, *args))
-        done, pending = yield from wait([newdevice, call],
-                                        return_when=FIRST_COMPLETED)
-        for p in pending:
+        done, pending = yield from firstCompleted(
+            newdevice=self._new_device_futures.setdefault(deviceId, Future()),
+            call=self.call(deviceId, slot, *args))
+        for p in pending.values():
             p.cancel()
         self._new_device_futures.pop(deviceId, None)
-        if call in done:
-            return call.result()
-        elif newdevice in done:
+        if "call" in done:
+            return done["call"]
+        elif "newdevice" in done:
             return (yield from self.call(deviceId, slot, *args))
         else:
             raise AssertionError("this should not happen")
