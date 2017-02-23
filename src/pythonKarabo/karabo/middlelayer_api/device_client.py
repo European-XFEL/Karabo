@@ -26,6 +26,7 @@ from .eventloop import synchronize
 from .exceptions import KaraboError
 from .hash import Hash, Slot, Type, Descriptor
 from .signalslot import slot
+from .synchronization import firstCompleted
 from .timestamp import Timestamp
 from .weak import Weak
 
@@ -382,15 +383,18 @@ class _WaitUntilNew_old:
 
 
 @synchronize
-def _waitUntilNew_new(prop):
+def _waitUntilNew_new(*props):
     # _new means since 1.5
-    proxy = prop._parent
-    future = OneShotQueue(loop=proxy._device._ss.loop)
-    proxy._queues[prop.descriptor.longkey].add(future)
-    return (yield from future)
+    futures = []
+    for prop in props:
+        proxy = prop._parent
+        future = OneShotQueue(loop=proxy._device._ss.loop)
+        proxy._queues[prop.descriptor.longkey].add(future)
+        futures.append(future)
+    yield from firstCompleted(*futures)
 
 
-def waitUntilNew(prop, **kwargs):
+def waitUntilNew(prop, *props, **kwargs):
     """wait until a new value for a property is available
 
     this function waits until a specific property of a device changes::
@@ -403,7 +407,7 @@ def waitUntilNew(prop, **kwargs):
     if isinstance(prop, Proxy):
         return _WaitUntilNew_old(prop)
     else:
-        return _waitUntilNew_new(prop, **kwargs)
+        return _waitUntilNew_new(prop, *props, **kwargs)
 
 def _parse_date(date):
     d = dateutil.parser.parse(date)
