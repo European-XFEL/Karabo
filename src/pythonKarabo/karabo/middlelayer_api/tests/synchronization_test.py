@@ -1,10 +1,11 @@
-from asyncio import CancelledError, coroutine, TimeoutError
+from asyncio import CancelledError, coroutine, Future, TimeoutError
 from pint import DimensionalityError
 from unittest import main
 import time
 
 from .eventloop import async_tst, DeviceTest, sync_tst
-from karabo.middlelayer import background, gather, sleep, synchronous, unit
+from karabo.middlelayer import (background, firstCompleted, gather, sleep,
+                                synchronous, unit)
 
 
 class Tests(DeviceTest):
@@ -206,6 +207,30 @@ class Tests(DeviceTest):
         done = False
         f(7)
         self.assertTrue(done)
+
+    @sync_tst
+    def test_firstCompleted_sync(self):
+        slow = background(sleep, 1000)
+        fast = background(sleep, 0.001, "some result")
+        done, pending = firstCompleted(slow=slow, fast=fast)
+        self.assertEqual(done, {"fast": "some result"})
+        self.assertEqual(list(pending.keys()), ["slow"])
+        self.assertIs(pending["slow"], slow)
+        pending["slow"].cancel()
+
+    @async_tst
+    def test_firstCompleted_async(self):
+        done, pending = yield from firstCompleted(slow=sleep(1000),
+                                                  fast=sleep(0.001, "result"))
+        self.assertEqual(done, {"fast": "result"})
+        self.assertEqual(list(pending.keys()), ["slow"])
+        self.assertIsInstance(pending["slow"], Future)
+        pending["slow"].cancel()
+        try:
+            yield from pending["slow"]
+            self.fail()
+        except CancelledError:
+            pass
 
 
 if __name__ == "__main__":
