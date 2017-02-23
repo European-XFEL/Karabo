@@ -911,14 +911,14 @@ class Tests(DeviceTest):
             slotdata = None
             self.remote.__class__.injected_slot = slot
 
-            self.remote.injected = "spicer"
+            self.remote.injected = "smthng"
             with self.assertRaises(TimeoutError):
                 yield from wait_for(waitUntil(lambda: hasattr(d, "injected")),
                                     timeout=0.1)
             self.remote.publishInjectedParameters()
             self.remote.injected_node = Nested({})
             yield from waitUntil(lambda: hasattr(d, "injected"))
-            yield from waitUntil(lambda: d.injected == "spicer")
+            yield from waitUntil(lambda: d.injected == "smthng")
             self.remote.injected = "bla"
             yield from waitUntil(lambda: d.injected == "bla")
             yield from d.injected_slot()
@@ -928,8 +928,8 @@ class Tests(DeviceTest):
             yield from d.injected_node.nestedSlot()
             self.assertEqual(d.injected_node.val, 20 * unit.millisecond)
 
-            d.injected = "donald"
-            yield from waitUntil(lambda: self.remote.injected == "donald")
+            d.injected = "whatever"
+            yield from waitUntil(lambda: self.remote.injected == "whatever")
 
 if __name__ == "__main__":
     main()
