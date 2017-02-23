@@ -5,14 +5,12 @@
 #############################################################################
 from functools import partial
 from io import StringIO
-import weakref
 
-from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
-from traits.api import Instance, String, on_trait_change
+from PyQt4.QtGui import QAction, QDialog, QMenu
+from traits.api import Instance, String
 
 from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabo_gui import icons
-from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
     KaraboEventSender)
@@ -23,7 +21,8 @@ from karabo_gui.project.topo_listener import SystemTopologyListener
 from karabo_gui.project.utils import save_object, run_macro
 from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.util import getSaveFileName
-from .bases import BaseProjectGroupController, BaseProjectController
+from .bases import (BaseProjectGroupController, BaseProjectController,
+                    ProjectControllerUiData)
 
 
 class MacroInstanceController(BaseProjectController):
@@ -39,18 +38,19 @@ class MacroInstanceController(BaseProjectController):
         menu.addAction(shutdown_action)
         return menu
 
-    def create_qt_item(self):
-        item = QStandardItem(self.instance_id)
-        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
+    def create_ui_data(self):
         icon = get_project_device_status_icon(DeviceStatus.STATUS_ONLINE)
-        item.setIcon(icon)
-        item.setEditable(False)
-        return item
+        return ProjectControllerUiData(icon=icon)
 
     def single_click(self, parent_project, parent=None):
         instance_configuration = get_topology().get_device(self.instance_id)
         broadcast_event(KaraboEventSender.ShowConfiguration,
                         {'configuration': instance_configuration})
+
+    def _get_display_name(self):
+        """Traits property getter for ``display_name``
+        """
+        return self.instance_id
 
     # ----------------------------------------------------------------------
     # action handlers
@@ -93,16 +93,9 @@ class MacroController(BaseProjectGroupController):
         menu.addAction(run_action)
         return menu
 
-    def create_qt_item(self):
-        item = QStandardItem(self.model.simple_name)
-        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
-        item.setIcon(icons.file)
-        item.setEditable(False)
+    def create_ui_data(self):
         self.model.instances = _get_macro_instances(self.model.instance_id)
-        for child in self.children:
-            item.appendRow(child.qt_item)
-        self.set_qt_item_text(item, self.model.simple_name)
-        return item
+        return ProjectControllerUiData(icon=icons.file)
 
     def double_click(self, parent_project, parent=None):
         broadcast_event(KaraboEventSender.OpenMacro,
@@ -111,19 +104,20 @@ class MacroController(BaseProjectGroupController):
     def item_handler(self, added, removed):
         """ Called when instances are added/removed
         """
-        removals = []
         for inst_id in removed:
-            item_model = self._child_map[inst_id]
-            self.children.remove(item_model)
-            self.child_destroy(item_model)
-            removals.append(item_model)
+            controller = self._child_map[inst_id]
+            self._qt_model.remove_controller(controller)
+            self.children.remove(controller)
+            self.child_destroy(controller)
 
-        additions = [self.child_create(model=self.model, instance_id=inst_id)
+        additions = [self.child_create(model=self.model, parent=self,
+                                       _qt_model=self._qt_model,
+                                       instance_id=inst_id)
                      for inst_id in added]
         self.children.extend(additions)
 
         # Synchronize the GUI with the Traits model
-        self._update_ui_children(additions, removals)
+        self._update_ui_children(additions)
 
     def system_topology_callback(self, devices, servers):
         """ This callback is called by the ``SystemTopologyListener`` object
@@ -144,15 +138,6 @@ class MacroController(BaseProjectGroupController):
 
     # ----------------------------------------------------------------------
     # traits notification handlers
-    @on_trait_change("model.modified, model.simple_name")
-    def modified_change(self):
-        """ Whenever the project is modified it should be visible.
-
-        The macro name is modified in the project panel.
-        """
-        if not self.is_ui_initialized():
-            return
-        self.set_qt_item_text(self.qt_item, self.model.simple_name)
 
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
@@ -160,11 +145,11 @@ class MacroController(BaseProjectGroupController):
         This is a static notification handler which is connected automatically
         by Traits.
         """
-        for item_model in event.removed:
-            del self._child_map[item_model.instance_id]
+        for controller in event.removed:
+            del self._child_map[controller.instance_id]
 
-        for item_model in event.added:
-            self._child_map[item_model.instance_id] = item_model
+        for controller in event.added:
+            self._child_map[controller.instance_id] = controller
 
     def _topo_listener_changed(self, name, old, new):
         """Handle broadcast event registration/unregistration here.
