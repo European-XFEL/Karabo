@@ -4,13 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from functools import partial
-import weakref
 
-from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox, QStandardItem
+from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, on_trait_change
 
 from karabo.common.project.api import DeviceServerModel
-from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.events import (register_for_broadcasts,
                                unregister_from_broadcasts)
 from karabo_gui.indicators import DeviceStatus, get_project_server_status_icon
@@ -18,7 +16,7 @@ from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
 from karabo_gui.project.utils import add_device_to_server, save_object
 from karabo_gui.singletons.api import get_manager, get_topology
-from .bases import BaseProjectGroupController
+from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 
 class DeviceServerController(BaseProjectGroupController):
@@ -59,14 +57,10 @@ class DeviceServerController(BaseProjectGroupController):
         menu.addAction(remove_all_action)
         return menu
 
-    def create_qt_item(self):
-        item = QStandardItem(self.model.server_id)
-        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
-        self._update_icon_and_label(item)
-        item.setEditable(False)
-        for child in self.children:
-            item.appendRow(child.qt_item)
-        return item
+    def create_ui_data(self):
+        ui_data = ProjectControllerUiData()
+        self._update_icon(ui_data)
+        return ui_data
 
     def system_topology_callback(self, devices, servers):
         """ This callback is called by the ``SystemTopologyListener`` object
@@ -76,6 +70,11 @@ class DeviceServerController(BaseProjectGroupController):
             if self.model.server_id == server_id and self.model.host == host:
                 self.model.status = status
 
+    def _get_display_name(self):
+        """Traits property getter for ``display_name``
+        """
+        return self.model.server_id
+
     # ----------------------------------------------------------------------
     # traits notification handlers
 
@@ -83,18 +82,14 @@ class DeviceServerController(BaseProjectGroupController):
     def update_ui_label(self):
         """ Whenever the project is modified it should be visible to the user
         """
-        if not self.is_ui_initialized():
-            return
-        self._update_icon_and_label(self.qt_item)
+        self._update_icon(self.ui_data)
 
     @on_trait_change("model.status")
     def status_change(self):
-        if not self.is_ui_initialized():
-            return
         status_enum = DeviceStatus(self.model.status)
         icon = get_project_server_status_icon(status_enum)
         if icon is not None:
-            self.qt_item.setIcon(icon)
+            self.ui_data.icon = icon
 
     def _topo_listener_changed(self, name, old, new):
         """Handle broadcast event registration/unregistration here.
@@ -107,12 +102,11 @@ class DeviceServerController(BaseProjectGroupController):
     # ----------------------------------------------------------------------
     # Util methods
 
-    def _update_icon_and_label(self, qt_item):
+    def _update_icon(self, ui_data):
         # Get current status of server
         self.model.status = _get_server_status(self.model.server_id)
         icon = get_project_server_status_icon(DeviceStatus(self.model.status))
-        qt_item.setIcon(icon)
-        self.set_qt_item_text(qt_item, self.model.server_id)
+        ui_data.icon = icon
 
     # ----------------------------------------------------------------------
     # action handlers

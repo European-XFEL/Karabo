@@ -3,17 +3,14 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import weakref
-
-from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
-from traits.api import Instance, List, on_trait_change
+from PyQt4.QtGui import QAction, QDialog, QFont, QMenu
+from traits.api import Instance, List
 
 from karabo.common.project.api import ProjectModel
 from karabo_gui import icons
-from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from .bases import BaseProjectController
-from .project_groups import ProjectSubgroupController
+from .project_groups import ProjectSubgroupController, ProjectControllerUiData
 
 
 class ProjectController(BaseProjectController):
@@ -36,27 +33,24 @@ class ProjectController(BaseProjectController):
 
         return menu
 
-    def create_qt_item(self):
-        item = QStandardItem()
-        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
-        item.setIcon(icons.folder)
-        item.setEditable(False)
-        for child in self.children:
-            item.appendRow(child.qt_item)
-
-        font = item.font()
+    def create_ui_data(self):
+        font = QFont()
         font.setBold(True)
-        item.setFont(font)
-        self.set_qt_item_text(item, self.model.simple_name)
-        return item
+        return ProjectControllerUiData(font=font, icon=icons.folder)
 
-    @on_trait_change("model.modified,model.simple_name")
-    def update_ui_label(self):
-        """ Whenever the project is modified it should be visible to the user
+    def child(self, index):
+        """Returns a child of this controller.
+
+        :param index: An index into the list of this controller's children
+        :returns: A BaseProjectController instance or None
         """
-        if not self.is_ui_initialized():
-            return
-        self.set_qt_item_text(self._qt_item, self.model.simple_name)
+        return self.children[index]
+
+    def rows(self):
+        """Returns the number of rows 'under' this controller in the project
+        tree view.
+        """
+        return len(self.children)
 
     # ----------------------------------------------------------------------
     # action handlers

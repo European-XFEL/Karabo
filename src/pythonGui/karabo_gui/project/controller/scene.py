@@ -5,20 +5,18 @@
 #############################################################################
 from functools import partial
 from io import StringIO
-import weakref
 
-from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
-from traits.api import Instance, on_trait_change
+from PyQt4.QtGui import QAction, QDialog, QMenu
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo_gui import icons
-from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.utils import save_object, show_no_configuration
 from karabo_gui.util import getSaveFileName
-from .bases import BaseProjectController
+from .bases import BaseProjectController, ProjectControllerUiData
 
 
 class SceneController(BaseProjectController):
@@ -49,29 +47,14 @@ class SceneController(BaseProjectController):
         menu.addAction(save_as_action)
         return menu
 
-    def create_qt_item(self):
-        item = QStandardItem(self.model.simple_name)
-        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
-        item.setIcon(icons.image)
-        item.setEditable(False)
-        self.set_qt_item_text(item, self.model.simple_name)
-        return item
+    def create_ui_data(self):
+        return ProjectControllerUiData(icon=icons.image)
 
     def single_click(self, parent_project, parent=None):
         show_no_configuration()
 
     def double_click(self, parent_project, parent=None):
         broadcast_event(KaraboEventSender.OpenSceneView, {'model': self.model})
-
-    @on_trait_change("model.modified, model.simple_name")
-    def modified_change(self):
-        """ Whenever the project is modified it should be visible.
-
-        The scene name is modified in the project panel.
-        """
-        if not self.is_ui_initialized():
-            return
-        self.set_qt_item_text(self.qt_item, self.model.simple_name)
 
     # ----------------------------------------------------------------------
     # action handlers
