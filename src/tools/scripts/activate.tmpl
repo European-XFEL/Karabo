@@ -37,15 +37,9 @@ deactivate () {
         unset _OLD_KARABO_PYTHONHOME
     fi
 
-    if [ -n "$KARABO_BROKER" ]; then
-        unset KARABO_BROKER
-    fi
+    unset KARABO_BROKER
+    unset KARABO_BROKER_TOPIC
 
-    if [ -n "$KARABO_BROKER_TOPIC" ]; then
-        unset KARABO_BROKER_TOPIC
-    fi
-    
-    
     # remove .karabo/karaboFramework file
     if [ -e "$HOME/.karabo/karaboFramework" ] ; then
         rm -f "$HOME/.karabo/karaboFramework"
@@ -74,12 +68,8 @@ export KARABO
 # source the config file
 if [ -e $KARABO/var/config/config ]; then
    source $KARABO/var/config/config
-   if [ -n "$KARABO_BROKER" ]; then
-      export KARABO_BROKER=$KARABO_BROKER
-   fi
-   if [ -n "$KARABO_BROKER_TOPIC" ]; then
-      export KARABO_BROKER_TOPIC=$KARABO_BROKER_TOPIC
-   fi
+   export KARABO_BROKER
+   export KARABO_BROKER_TOPIC
 fi
 
 _OLD_KARABO_PATH="$PATH"

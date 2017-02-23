@@ -64,15 +64,15 @@ KARABO_KILL_SIGNAL=15
 # Default log level
 logger=Logger.priority=INFO
 
-START[0]="karabo-cppserver serverId=karabo/guiServer deviceClasses=GuiServerDevice autoStart[0].GuiServerDevice.port=44444 visibility=4 $logger"
+START[0]="karabo-cppserver serverId=karabo/guiServer deviceClasses=GuiServerDevice autoStart[0]={GuiServerDevice.port=44444} visibility=4 $logger"
 
-START[1]="karabo-cppserver serverId=karabo/logAggregator deviceClasses=CentralLogging autoStart[0].CentralLogging visibility=4 $logger"
+START[1]="karabo-cppserver serverId=karabo/logAggregator deviceClasses=CentralLogging autoStart[0]={CentralLogging} visibility=4 $logger"
 
 START[2]="karabo-cppserver serverId=karabo/dataLogger deviceClasses=DataLogger,DataLogReader visibility=4 $logger"
 
 START[3]="karabo-cppserver serverId=karabo/dataLoggerManager deviceClasses=DataLoggerManager autoStart[0]={DataLoggerManager.serverList=karabo/dataLogger} visibility=4 $logger"
 
-START[4]="karabo-cppserver serverId=karabo/alarmServer deviceClasses=AlarmService autoStart[0].AlarmService visibility=4 $logger"
+START[4]="karabo-cppserver serverId=karabo/alarmServer deviceClasses=AlarmService autoStart[0]={AlarmService} visibility=4 $logger"
 
 # karabo/macroServer is hard-coded in the GUI
 START[5]="karabo-middlelayerserver serverId=karabo/macroServer visibility=4"
