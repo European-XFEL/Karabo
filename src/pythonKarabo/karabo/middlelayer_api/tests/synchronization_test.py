@@ -220,12 +220,13 @@ class Tests(DeviceTest):
 
     @async_tst
     def test_firstCompleted_async(self):
-        done, pending = yield from firstCompleted(slow=sleep(1000),
-                                                  fast=sleep(0.001, "result"))
+        done, pending = yield from firstCompleted(
+            sleep(100), slow=sleep(1000), fast=sleep(0.001, "result"))
         self.assertEqual(done, {"fast": "result"})
-        self.assertEqual(list(pending.keys()), ["slow"])
+        self.assertEqual(set(pending.keys()), {0, "slow"})
         self.assertIsInstance(pending["slow"], Future)
         pending["slow"].cancel()
+        pending[0].cancel()
         try:
             yield from pending["slow"]
             self.fail()
