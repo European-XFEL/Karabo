@@ -181,7 +181,8 @@ class ProjectDatabase(ContextDecorator):
         try:
             if self.dbhandle.hasDocument(path) and not overwrite:
                 raise ExistDBException("Versioning conflict. Document exists!")
-            success = self.dbhandle.load(item_xml, path)
+            # NOTE: The underlying HTTP code needs bytes here...
+            success = self.dbhandle.load(item_xml.encode('utf8'), path)
         except ExistDBException as e:
             raise ProjectDBError(e)
         if not success:
