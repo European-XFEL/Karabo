@@ -4,7 +4,8 @@ import threading
 
 from pkg_resources import working_set
 
-from karabo.bound import EventLoop, Hash, TextSerializerHash
+from karabo.bound import (EventLoop, Hash, TextSerializerHash,
+                          BinarySerializerHash)
 
 _, command, namespace, name = sys.argv
 
@@ -15,8 +16,8 @@ if command == "schema":
     schema = entrypoint.load().getSchema(entrypoint.name)
     h = Hash()
     h[name] = schema
-    ser = TextSerializerHash.create("Xml")
-    print(ser.save(h))
+    ser = BinarySerializerHash.create("Bin")
+    sys.stdout.buffer.write(ser.save(h))
 elif command == "run":
     # run a device class. The configuration is read from stdin.
     config = sys.stdin.read()
