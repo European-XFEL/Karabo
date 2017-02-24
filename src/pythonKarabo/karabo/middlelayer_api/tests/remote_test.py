@@ -707,8 +707,8 @@ class Tests(DeviceTest):
 
     @async_tst
     def test_connectDevice(self):
+        d = yield from connectDevice("remote")
         try:
-            d = yield from connectDevice("remote")
             self.assertNotEqual(d.value, 123)
             self.remote.value = 123
             yield from sleep(0.02)
