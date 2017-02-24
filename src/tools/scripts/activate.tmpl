@@ -37,9 +37,6 @@ deactivate () {
         unset _OLD_KARABO_PYTHONHOME
     fi
 
-    unset KARABO_BROKER
-    unset KARABO_BROKER_TOPIC
-
     # remove .karabo/karaboFramework file
     if [ -e "$HOME/.karabo/karaboFramework" ] ; then
         rm -f "$HOME/.karabo/karaboFramework"
@@ -55,6 +52,8 @@ deactivate () {
     unset KARABO
     if [ ! "$1" = "nondestructive" ] ; then
         # Self destruct!
+        unset KARABO_BROKER
+        unset KARABO_BROKER_TOPIC
         unset -f deactivate
     fi
 }
