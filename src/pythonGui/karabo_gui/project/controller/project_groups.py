@@ -5,21 +5,19 @@
 #############################################################################
 from functools import partial
 import os.path as op
-import weakref
 
-from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
-from traits.api import Instance, String
+from PyQt4.QtGui import QAction, QDialog, QMenu
+from traits.api import Instance, Property, String
 
 from karabo.common.project.api import (
     DeviceServerModel, MacroModel, ProjectModel, read_macro)
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabo_gui import icons
-from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.util import getOpenFileName
-from .bases import BaseProjectGroupController
+from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 
 class ProjectSubgroupController(BaseProjectGroupController):
@@ -32,6 +30,9 @@ class ProjectSubgroupController(BaseProjectGroupController):
     # The name of the trait on ``model`` which is controlled by ``children``
     trait_name = String
 
+    # NOTE: We're overriding the base class here
+    ui_data = Property(Instance(ProjectControllerUiData))
+
     def context_menu(self, parent_project, parent=None):
         menu_fillers = {
             'macros': _fill_macros_menu,
@@ -43,14 +44,30 @@ class ProjectSubgroupController(BaseProjectGroupController):
         filler(menu, parent_project)
         return menu
 
-    def create_qt_item(self):
-        item = QStandardItem(self.group_name)
-        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
-        item.setIcon(icons.folder)
-        item.setEditable(False)
-        for child in self.children:
-            item.appendRow(child.qt_item)
-        return item
+    def create_ui_data(self):
+        """Satisfy the ABC
+        """
+        return None
+
+    def ui_item_text(self):
+        """The name for this controller's item in the GUI view
+
+        NOTE: We are overriding this here to avoid the addition of a '*' when
+        the project object is in a modified state.
+        """
+        return self.display_name
+
+    def _get_display_name(self):
+        """Traits property getter for ``display_name``
+        """
+        return self.group_name
+
+    def _get_ui_data(self):
+        return ProjectControllerUiData(icon=icons.folder)
+
+    def _set_ui_data(self, value):
+        """Explicitly ignore assignment to the ``ui_data`` trait.
+        """
 
 
 def _fill_macros_menu(menu, parent_project):

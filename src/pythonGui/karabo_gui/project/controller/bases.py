@@ -5,14 +5,26 @@
 #############################################################################
 from abc import abstractmethod
 
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QStandardItem
-from traits.api import (ABCHasStrictTraits, Callable, Dict, Instance, List,
-                        Property)
+from PyQt4.QtCore import QAbstractItemModel, Qt
+from PyQt4.QtGui import QBrush, QFont, QIcon
+from traits.api import (
+    ABCHasStrictTraits, HasStrictTraits, Bool, Callable, Dict, Instance, Int,
+    List, Property, String, WeakRef, on_trait_change
+)
 
 from karabo.common.project.api import BaseProjectObjectModel
-from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.utils import show_no_configuration
+
+
+class ProjectControllerUiData(HasStrictTraits):
+    """ A data class which contains all necessary data for the Qt item to
+    display
+    """
+    icon = Instance(QIcon, args=())
+    font = Instance(QFont, args=())
+    brush = Instance(QBrush, args=())
+    checkable = Bool(False)
+    check_state = Int(Qt.Unchecked)
 
 
 class BaseProjectController(ABCHasStrictTraits):
@@ -22,11 +34,17 @@ class BaseProjectController(ABCHasStrictTraits):
     # The project model object controlled here
     model = Instance(BaseProjectObjectModel)
 
-    # The QStandardItem representing this object
-    qt_item = Property(Instance(QStandardItem))
-    # This is where the ``qt_item`` is actually stored.
-    # The Traits property caching mechanism is explicitly being avoided here.
-    _qt_item = Instance(QStandardItem, allow_none=True)
+    # A back-reference to our parent controller
+    parent = WeakRef('BaseProjectController', allow_none=True)
+
+    # Name to be displayed in the item view
+    display_name = Property(String)
+
+    # Easy access display data for model item
+    ui_data = Instance(ProjectControllerUiData)
+
+    # Reference the QAbstractItemModel
+    _qt_model = WeakRef(QAbstractItemModel)
 
     @abstractmethod
     def context_menu(self, parent_project, parent=None):
@@ -39,8 +57,10 @@ class BaseProjectController(ABCHasStrictTraits):
         """
 
     @abstractmethod
-    def create_qt_item(self):
-        """ Requests a QStandardItem which represents this object
+    def create_ui_data(self):
+        """Must be implemented by derived classes to return a
+        `ProjectControllerUiData` instance representing this controller. The
+        result will be stored in the ``ui_data`` trait.
         """
 
     def double_click(self, parent_project, parent=None):
@@ -59,33 +79,56 @@ class BaseProjectController(ABCHasStrictTraits):
         :param parent: A QObject which can be passed as a Qt object parent.
         """
 
-    def is_ui_initialized(self):
-        """ Returns True if ``create_qt_item()`` has been called.
+    def child(self, index):
+        """Returns a child of this controller.
+
+        :param index: An index into the list of this controller's children
+        :returns: A BaseProjectController instance or None
         """
-        return self._qt_item is not None
+        return None
 
-    def _get_qt_item(self):
-        """ Traits Property getter for ``qt_item``. Caches the result of
-        calling ``self.create_qt_item()`` for later access.
-
-        NOTE: The @cached_property decorator is explicitly avoided here so that
-        we maintain direct access to the cached object!
+    def rows(self):
+        """Returns the number of rows 'under' this controller in the project
+        tree view.
         """
-        if self._qt_item is None:
-            self._qt_item = self.create_qt_item()
-        return self._qt_item
+        return -1
 
-    def set_qt_item_text(self, qt_item, text):
-        brush = qt_item.foreground()
+    def ui_item_text(self):
+        """The name for this controller's item in the GUI view
+        """
         if self.model.modified:
-            # Change color to blue
-            brush.setColor(Qt.blue)
-            qt_item.setText("*{}".format(text))
+            return '*{}'.format(self.display_name)
         else:
-            # Change color to black
-            brush.setColor(Qt.black)
-            qt_item.setText("{}".format(text))
-        qt_item.setForeground(brush)
+            return self.display_name
+
+    @on_trait_change('model.modified')
+    def _update_label_style(self):
+        if self.model.modified:
+            self.ui_data.brush.setColor(Qt.blue)
+        else:
+            self.ui_data.brush.setColor(Qt.black)
+
+    @on_trait_change("model.simple_name")
+    def _update_label(self):
+        """ Whenever ``simple_name`` is modified the UI should repaint
+        """
+        if self._qt_model is not None:
+            self._qt_model.layoutChanged.emit()
+
+    @on_trait_change('ui_data.icon,ui_data.brush,ui_data.check_state')
+    def _request_repaint(self):
+        if self._qt_model is not None:
+            self._qt_model.layoutChanged.emit()
+
+    def _get_display_name(self):
+        """Traits property getter for ``display_name``
+        """
+        return self.model.simple_name
+
+    def _ui_data_default(self):
+        """Traits default initializer for `ui_data`
+        """
+        return self.create_ui_data()
 
 
 class BaseProjectGroupController(BaseProjectController):
@@ -98,6 +141,16 @@ class BaseProjectGroupController(BaseProjectController):
     # Child controllers
     children = List(Instance(BaseProjectController))
     _child_map = Dict  # dictionary for fast lookups during removal
+
+    def child(self, index):
+        """Return child at given ``index``
+        """
+        return self.children[index]
+
+    def rows(self):
+        """Return number of rows
+        """
+        return len(self.children)
 
     def single_click(self, parent_project, parent=None):
         show_no_configuration()
@@ -117,18 +170,19 @@ class BaseProjectGroupController(BaseProjectController):
     def item_handler(self, added, removed):
         """ Called for List-trait events on ``model``
         """
-        removals = []
         for model in removed:
-            item_model = self._child_map[model]
-            self.children.remove(item_model)
-            self.child_destroy(item_model)
-            removals.append(item_model)
+            controller = self._child_map[model]
+            self._qt_model.remove_controller(controller)
+            self.children.remove(controller)
+            self.child_destroy(controller)
 
-        additions = [self.child_create(model=model) for model in added]
+        additions = [self.child_create(model=model, parent=self,
+                                       _qt_model=self._qt_model)
+                     for model in added]
         self.children.extend(additions)
 
         # Synchronize the GUI with the Traits model
-        self._update_ui_children(additions, removals)
+        self._update_ui_children(additions)
 
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
@@ -136,31 +190,14 @@ class BaseProjectGroupController(BaseProjectController):
         This is a static notification handler which is connected automatically
         by Traits.
         """
-        for item_model in event.removed:
-            del self._child_map[item_model.model]
+        for controller in event.removed:
+            del self._child_map[controller.model]
 
-        for item_model in event.added:
-            self._child_map[item_model.model] = item_model
+        for controller in event.added:
+            self._child_map[controller.model] = controller
 
-    def _update_ui_children(self, additions, removals):
+    def _update_ui_children(self, additions):
         """ Propagate changes from the Traits model to the Qt item model.
         """
-        def _find_child_qt_item(item_model):
-            for i in range(self.qt_item.rowCount()):
-                row_child = self.qt_item.child(i)
-                row_model = row_child.data(PROJECT_CONTROLLER_REF)()
-                if row_model is item_model:
-                    return i
-            return -1
-
-        # Stop immediately if the UI is not yet initialized
-        if not self.is_ui_initialized():
-            return
-
-        for item in removals:
-            index = _find_child_qt_item(item)
-            if index >= 0:
-                self.qt_item.removeRow(index)
-
         for item in additions:
-            self.qt_item.appendRow(item.qt_item)
+            self._qt_model.insert_controller(item)

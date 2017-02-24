@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from karabo_gui.project.topo_listener import SystemTopologyListener
+from karabo_gui.project.utils import update_check_state
 from .device import DeviceInstanceController
 from .device_config import DeviceConfigurationController
 from .macro import MacroController, MacroInstanceController
@@ -14,7 +15,7 @@ from .server import DeviceServerController
 from .subproject import SubprojectController
 
 
-def create_device_server_controller(model):
+def create_device_server_controller(model=None, parent=None, _qt_model=None):
     """Creates a DeviceServerController and its associated children to control
     a DeviceServerModel instance for the purpose of interfacing with a Qt item
     model.
@@ -24,14 +25,15 @@ def create_device_server_controller(model):
     ``destroy_device_server_controller``
     """
     controller = DeviceServerController(
-        model=model,
+        model=model, parent=parent, _qt_model=_qt_model,
         child_create=create_device_instance_controller,
         child_destroy=destroy_device_instance_controller
     )
     model.on_trait_change(controller.items_assigned, 'devices')
     model.on_trait_change(controller.items_mutated, 'devices_items')
     for device in model.devices:
-        child = controller.child_create(model=device)
+        child = controller.child_create(model=device, parent=controller,
+                                        _qt_model=_qt_model)
         controller.children.append(child)
 
     # Attach the topology listener
@@ -54,7 +56,7 @@ def destroy_device_server_controller(controller):
     controller.topo_listener = None
 
 
-def create_device_instance_controller(model):
+def create_device_instance_controller(model=None, parent=None, _qt_model=None):
     """Creates a DeviceInstanceController and its associated children to
     control a DeviceInstanceModel instance for the purpose of interfacing with
     a Qt item model.
@@ -64,15 +66,17 @@ def create_device_instance_controller(model):
     ``destroy_device_instance_controller``
     """
     controller = DeviceInstanceController(
-        model=model,
+        model=model, parent=parent, _qt_model=_qt_model,
         child_create=DeviceConfigurationController,
         child_destroy=lambda x: None
     )
     model.on_trait_change(controller.items_assigned, 'configs')
     model.on_trait_change(controller.items_mutated, 'configs_items')
     for conf in model.configs:
-        child = controller.child_create(model=conf)
+        child = controller.child_create(model=conf, parent=controller,
+                                        _qt_model=_qt_model)
         controller.children.append(child)
+    update_check_state(controller)
 
     return controller
 
@@ -87,21 +91,24 @@ def destroy_device_instance_controller(controller):
                           remove=True)
 
 
-def create_macro_controller(model):
+def create_macro_controller(model=None, parent=None, _qt_model=None):
     """Creates a MacroController to control a MacroModel instance for the
     purpose of interfacing with a Qt item model.
 
     Traits notification handlers are attached to the passed ``model`` object
     and must be detached later with a call to ``destroy_macro_controller``
     """
-    controller = MacroController(model=model,
+    controller = MacroController(model=model, parent=parent,
+                                 _qt_model=_qt_model,
                                  child_create=MacroInstanceController,
                                  child_destroy=lambda x: None)
     model.on_trait_change(controller.items_assigned, 'instances')
     model.on_trait_change(controller.items_mutated, 'instances_items')
 
     for inst in model.instances:
-        child = controller.child_create(model=model, instance_id=inst)
+        child = controller.child_create(model=model, parent=controller,
+                                        _qt_model=_qt_model,
+                                        instance_id=inst)
         controller.children.append(child)
 
     # Attach the topology listener
@@ -124,7 +131,7 @@ def destroy_macro_controller(controller):
     controller.topo_listener = None
 
 
-def create_project_controller(model=None):
+def create_project_controller(model=None, parent=None, _qt_model=None):
     """Creates a ProjectController and its associated children to control a
     ProjectModel instance for the purpose of interfacing with a Qt item model.
 
@@ -143,15 +150,19 @@ def create_project_controller(model=None):
          create_project_controller, destroy_project_controller),
     )
 
-    controller = ProjectController(model=model)
+    controller = ProjectController(model=model, parent=parent,
+                                   _qt_model=_qt_model)
     for name, label, klass, creator, destroyer in details:
-        child = klass(model=model, group_name=label, trait_name=name,
-                      child_create=creator, child_destroy=destroyer)
+        child = klass(model=model, parent=controller, _qt_model=_qt_model,
+                      group_name=label, trait_name=name, child_create=creator,
+                      child_destroy=destroyer)
         model.on_trait_change(child.items_assigned, name)
         model.on_trait_change(child.items_mutated, name + '_items')
 
         subchildren = getattr(model, name)
-        subitemchildren = [creator(model=submodel) for submodel in subchildren]
+        subitemchildren = [creator(model=submodel, parent=child,
+                                   _qt_model=_qt_model)
+                           for submodel in subchildren]
         # Using extend (or append) calls _children_items_changed
         child.children.extend(subitemchildren)
         controller.children.append(child)
