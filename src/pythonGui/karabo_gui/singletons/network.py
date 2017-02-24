@@ -140,9 +140,7 @@ class Network(QObject):
                     self.username, self.password, self.provider, ipAddress,
                     self.brokerHost, self.brokerPort, self.brokerTopic)
             except Exception as e:
-                QMessageBox.warning(None, 'Authenticator not available',
-                                    str(e))
-                return
+                print("Authenticator not available.", str(e))
 
             # Execute Login
             ok = False
