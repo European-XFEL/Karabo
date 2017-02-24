@@ -397,11 +397,11 @@ def _waitUntilNew_new(*props):
 def waitUntilNew(prop, *props, **kwargs):
     """wait until a new value for a property is available
 
-    this function waits until a specific property of a device changes::
+    this function waits until any of the given properties of a device changes::
 
-        waitUntilNew(someDevice.someProperty)
+        waitUntilNew(someDevice.someProperty, otherDevice.otherProperty)
 
-    If you want to wait for something to reach a certain value, use
+    If you want to wait for something to reach a certain value, you may use
     :func:`waitUntil`. If you want to get all updates of a property, use
     :class:`Queue`."""
     if isinstance(prop, Proxy):
