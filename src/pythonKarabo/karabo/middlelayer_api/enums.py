@@ -73,7 +73,7 @@ class MetricPrefix(Enum):
 @unique
 class Unit(Enum):
     """ A fair collections of units from the SI system """
-    NUMBER = "№"
+    NUMBER = ""
     COUNT = "#"
     METER = "m"
     GRAM = "g"

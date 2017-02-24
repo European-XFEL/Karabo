@@ -530,7 +530,7 @@ class Type(Descriptor, Registry):
     All basic Karabo types are described by a Type.
     """
 
-    unitSymbol = Attribute(Unit.NOT_ASSIGNED)
+    unitSymbol = Attribute(Unit.NUMBER)
     metricPrefixSymbol = Attribute(MetricPrefix.NONE)
     enum = None
 
