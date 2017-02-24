@@ -3,9 +3,11 @@
 # Created on November 3, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import os.path as op
 
 from PyQt4.QtCore import QObject
 
+from karabo.common.api import ShellNamespaceWrapper
 from karabo.common.project.api import get_user_cache, read_lazy_object
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
@@ -14,6 +16,7 @@ from karabo_gui.events import (
     broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
     register_for_broadcasts
 )
+import karabo_gui.globals as krb_globals
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.singletons.api import get_network
 
@@ -43,6 +46,8 @@ class ProjectDatabaseConnection(QObject):
 
         # XXX: Temporary
         self.project_manager = 'KaraboProjectDB'
+
+        self.default_domain = self.load_default_domain()
 
         # XXX: This is really asinine right now!
         self._have_logged_in = False
@@ -88,6 +93,17 @@ class ProjectDatabaseConnection(QObject):
         # Call locally as well
         cached = self.cache.get_uuids_of_type(domain, obj_type)
         return cached
+
+    def get_available_domains(self):
+        """ Find out which domains are available
+        """
+        # XXX: Please don't keep this here!
+        self._ensure_login()
+
+        # Fire and "forget". An event will be broadcast with the reply
+        self.network.onListProjectDomains(self.project_manager)
+        # Call locally as well
+        return self.cache.get_available_domains()
 
     def get_available_project_data(self, domain, obj_type):
         """ Find out what's available
@@ -169,6 +185,18 @@ class ProjectDatabaseConnection(QObject):
         if not self._have_logged_in:
             self.network.onProjectBeginSession(self.project_manager)
             self._have_logged_in = True
+
+    def load_default_domain(self):
+        """ Load default domain from our `config` file and return it
+        """
+        default_domain = 'CAS_INTERNAL'
+
+        if op.exists(krb_globals.CONFIG_FILE):
+            config = ShellNamespaceWrapper(krb_globals.CONFIG_FILE)
+            default_domain = config.get(krb_globals.KARABO_PROJECT_DB_DOMAIN,
+                                        default_domain)
+
+        return default_domain
 
     def _broadcast_is_processing(self, previous_processing):
         """Create broadcast event and send to all registered ``QObjects``

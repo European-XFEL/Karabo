@@ -51,13 +51,19 @@ class ProjectHandleDialog(QDialog):
                            'project_handle.ui')
         uic.loadUi(filepath, self)
 
-        self.set_dialog_texts(title, btn_text)
+        self._set_dialog_texts(title, btn_text)
 
         # Tableview
         self.twProjects.setModel(TableModel(parent=self))
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
         self.twProjects.doubleClicked.connect(self.accept)
+
+        # Domain combobox
+        db_conn = get_db_conn()
+        self.default_domain = db_conn.default_domain
+        self._domains_updated(db_conn.get_available_domains())
+
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.leTitle.textChanged.connect(self._titleChanged)
         self.leTitle.setText(simple_name)
@@ -71,13 +77,26 @@ class ProjectHandleDialog(QDialog):
 
     def eventFilter(self, obj, event):
         if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.ProjectItemsList:
-                items = event.data.get('items', [])
+            sender = event.sender
+            data = event.data
+            if sender is KaraboEventSender.ProjectItemsList:
+                items = data.get('items', [])
                 self.twProjects.model().add_project_manager_data(items)
+            elif sender is KaraboEventSender.ProjectDomainsList:
+                self._domains_updated(data.get('items', []))
             return False
         return super(ProjectHandleDialog, self).eventFilter(obj, event)
 
-    def set_dialog_texts(self, title, btn_text):
+    def _domains_updated(self, domains):
+        # Domain combobox
+        with SignalBlocker(self.cbDomain):
+            self.cbDomain.clear()
+            self.cbDomain.addItems(sorted(domains))
+        # Select default domain
+        index = self.cbDomain.findText(self.default_domain)
+        self.cbDomain.setCurrentIndex(index if index > -1 else 0)
+
+    def _set_dialog_texts(self, title, btn_text):
         """ This method sets the ``title`` and the ``btn_text`` of the ok
         button.
 
@@ -88,12 +107,14 @@ class ProjectHandleDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setText(btn_text)
 
     def selected_item(self):
+        """Return selected domain and project
+        """
         selection_model = self.twProjects.selectionModel()
         uuid_index = get_column_index(UUID)
         uuid_entry = selection_model.selectedRows(uuid_index)
         if uuid_entry:
-            return uuid_entry[0].data()
-        return None
+            return self.cbDomain.currentText(), uuid_entry[0].data()
+        return None, None
 
     @property
     def simple_name(self):
@@ -124,6 +145,11 @@ class ProjectHandleDialog(QDialog):
         enable = True if text else False
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
+    @pyqtSlot(str)
+    def on_cbDomain_currentIndexChanged(self, domain):
+        if domain:
+            self.twProjects.model().request_data(domain)
+
 
 class NewProjectDialog(QDialog):
     def __init__(self, model=None, parent=None):
@@ -151,6 +177,50 @@ class LoadProjectDialog(ProjectHandleDialog):
                                                 parent)
 
 
+class SaveProjectDialog(QDialog):
+    def __init__(self, model=None, parent=None):
+        super(SaveProjectDialog, self).__init__(parent)
+        filepath = op.join(op.abspath(op.dirname(__file__)), 'project_save.ui')
+        uic.loadUi(filepath, self)
+
+        # Domain combobox
+        db_conn = get_db_conn()
+        self.default_domain = db_conn.default_domain
+        self._fill_domain_combo_box(db_conn.get_available_domains())
+
+        self.setWindowTitle('Save {}'.format(model.simple_name))
+        register_for_broadcasts(self)
+
+    def closeEvent(self, event):
+        """Stop listening for broadcast events
+        """
+        unregister_from_broadcasts(self)
+        event.accept()
+
+    def eventFilter(self, obj, event):
+        if isinstance(event, KaraboBroadcastEvent):
+            sender = event.sender
+            data = event.data
+            if sender is KaraboEventSender.ProjectDomainsList:
+                self._fill_domain_combo_box(data.get('items', []))
+            return False
+        return super(ProjectHandleDialog, self).eventFilter(obj, event)
+
+    @property
+    def domain(self):
+        return self.cbDomain.currentText()
+
+    def _fill_domain_combo_box(self, domains):
+        """Put the given list of ``domains`` into the given ``domain_combo``
+        """
+        with SignalBlocker(self.cbDomain):
+            self.cbDomain.clear()
+            self.cbDomain.addItems(sorted(domains))
+        # Select default domain
+        index = self.cbDomain.findText(self.default_domain)
+        self.cbDomain.setCurrentIndex(index if index > -1 else 0)
+
+
 class TableModel(QAbstractTableModel):
     headers = [value for value in PROJECT_DATA.values()]
 
@@ -158,13 +228,12 @@ class TableModel(QAbstractTableModel):
         super(TableModel, self).__init__(parent)
         self.entries = []
         self.db_conn = get_db_conn()
-        self._extractData()
 
-    def _extractData(self):
-        from karabo_gui.project.api import TEST_DOMAIN
-
+    def request_data(self, domain):
+        """Request data for the given ``domain``
+        """
         project_data = self.db_conn.get_available_project_data(
-            TEST_DOMAIN, 'project')
+            domain, 'project')
         self.add_project_manager_data(project_data)
 
     def add_project_manager_data(self, data):
