@@ -48,7 +48,6 @@ class PanelAreaEnum(Enum):
 
 
 class MainWindow(QMainWindow):
-    signalQuitApplication = pyqtSignal()
     signalGlobalAccessLevelChanged = pyqtSignal()
 
     def __init__(self):
@@ -70,6 +69,12 @@ class MainWindow(QMainWindow):
         title = "European XFEL - Karabo GUI " + krb_globals.GUI_VERSION_LONG
         self.setWindowTitle(title)
         self.resize(1200, 800)
+
+        # Connect to some important network signals
+        network = get_network()
+        network.signalServerConnectionChanged.connect(
+            self.onServerConnectionChanged)
+        network.signalUserChanged.connect(self.onUpdateAccessLevel)
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary for self due to the fact that the singleton mediator
@@ -265,7 +270,6 @@ class MainWindow(QMainWindow):
             MessageBox.showWarning(msg, 'Database connection active')
             return False
 
-        self.signalQuitApplication.emit()
         return True
 
     def _enable_toolbar(self, enable):

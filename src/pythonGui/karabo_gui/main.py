@@ -5,6 +5,7 @@ from traceback import print_exception, format_exception
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QApplication, QMessageBox, QPixmap, QSplashScreen
 
+from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.gui import init_gui
 from karabo_gui.singletons.api import get_network, get_panel_wrangler
 
@@ -39,9 +40,13 @@ def run_gui(args):
     splash.showMessage(" ")
     app.processEvents()
 
-    init_gui(app)
+    # some final initialization
+    init_gui(app, splash)
 
-    splash.finish(get_panel_wrangler().main_window)
+    # Make the main window
+    broadcast_event(KaraboEventSender.CreateMainWindow, {})
+
+    # then start the event loop
     sys.exit(app.exec_())
 
 

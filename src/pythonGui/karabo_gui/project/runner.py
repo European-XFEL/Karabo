@@ -9,7 +9,8 @@ from PyQt4.QtGui import QApplication
 
 import karabo_gui.icons as icons
 from karabo_gui.panels.projectpanel import ProjectPanel
-from karabo_gui.singletons.api import get_manager, get_network
+from karabo_gui.singletons.api import (
+    get_manager, get_network, get_panel_wrangler)
 
 
 def main():
@@ -23,6 +24,7 @@ def main():
 
     # XXX: Just a hack to connect to the GUI Server for testing
     get_manager()
+    get_panel_wrangler()
     get_network().connectToServer()
 
     app.exec_()
