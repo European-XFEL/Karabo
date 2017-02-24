@@ -35,57 +35,56 @@ class Runner(object):
             return None
 
     def parseCommandLine(self, args):
-        try:
-            firstArg = ""
-            if len(args) > 1:
-                firstArg = args[1]
-            if firstArg[0:2] == "--":
-                self.processOption(firstArg[2:], args)
-                return False, Hash()
-            if firstArg[0:1] == "-":
-                self.processOption(firstArg[1:], args)
-                return False, Hash()
+        firstArg = ""
+        if len(args) > 1:
+            firstArg = args[1]
+        if firstArg[0:2] == "--":
+            self.processOption(firstArg[2:], args)
+            return False, Hash()
+        if firstArg[0:1] == "-":
+            self.processOption(firstArg[1:], args)
+            return False, Hash()
 
-            # fix 'args' to take into account braces
-            pars = []
-            braces = 0
-            arg = ''
-            for a in args:
-                pos = 0
-                while pos < len(a):
-                    m = re.search("[{}]", a[pos:])
-                    if m is None:
-                        break
-                    else:
-                        pos += m.start()
-                        if a[pos] == '{':
-                            braces += 1
-                        elif a[pos] == '}':
-                            braces -= 1
-                        pos += 1
-                        if braces < 0:
-                            raise SyntaxError("CLI Syntax Error: '}' encounters before corresponding '{'")
-                if braces == 0:
-                    pars.append((arg + ' ' + a).strip())
-                    arg = ''
+        pars = self.join_args_in_braces(args)
+        configuration = Hash()
+        self.readTokens('', pars[1:], configuration)
+        return True, configuration
+
+    def readTokens(self, prefix, args, configuration):
+        for a in args:
+            self.readToken(prefix, a, configuration)
+
+    def join_args_in_braces(self, args):
+        # fix 'args' to take into account braces
+        pars = []
+        braces = 0
+        arg = ''
+        for a in args:
+            pos = 0
+            while pos < len(a):
+                m = re.search("[{}]", a[pos:])
+                if m is None:
+                    break
                 else:
-                    arg += ' ' + a
+                    pos += m.start()
+                    if a[pos] == '{':
+                        braces += 1
+                    elif a[pos] == '}':
+                        braces -= 1
+                    pos += 1
+                    if braces < 0:
+                        raise SyntaxError("CLI Syntax Error: '}' encounters before corresponding '{'")
+            if braces == 0:
+                pars.append((arg + ' ' + a).strip())
+                arg = ''
+            else:
+                arg += ' ' + a
 
-            if braces > 0:
-                raise SyntaxError("CLI Syntax Error: missing {} closing brace(s)".format(braces))
-            elif braces < 0:
-                raise SyntaxError("CLI Syntax Error: missing {} opening brace(s)".format(-braces))
-
-            configuration = Hash()
-
-            for a in pars[1:]:
-                tmp = Hash()
-                self.readToken(a, tmp)
-                configuration += tmp
-            return True, configuration
-
-        except SyntaxError:
-            raise
+        if braces > 0:
+            raise SyntaxError("CLI Syntax Error: missing {} closing brace(s)".format(braces))
+        elif braces < 0:
+            raise SyntaxError("CLI Syntax Error: missing {} opening brace(s)".format(-braces))
+        return pars
 
     def processOption(self, option, args):
         lowerOption = option.lower()
@@ -116,32 +115,30 @@ class Runner(object):
             self.deviceServer.getSchema('DeviceServer').help(what)
         print("")
 
-    def readToken(self, token, config):
-        if os.path.exists(token):
-            loadFromFile(config, token)
-        else:
+    def readToken(self, prefix, token, configuration):
+        if prefix == '' and os.path.exists(token):
+            loadFromFile(configuration, token)
+            return
+        if token[0] == '{':
+            raise SyntaxError("Key cannot start with opening brace ==> '{}'".format(token))
+        pos = token.find("={")
+        if pos > 0:
+            key=prefix + token[:pos] + '.'
+            if token[-1] != '}':
+                raise SyntaxError("Missing closing brace '}'")
+            value = token[pos+2:-1].strip()
+            args = value.split()
+            pars = self.join_args_in_braces(args)
+            self.readTokens(key, pars, configuration)
+        elif pos == 0:
+            raise SyntaxError("Missing the key before '={'")
+        else:    # pos == -1 ... not found
             pos = token.find("=")
-            if pos == -1:
-                config[token] = Hash()
+            if pos > 0:
+                key=token[:pos]
+                value=token[pos+1:]
+                configuration.set(prefix+key,value)
+            elif pos==0:
+                raise SyntaxError("Missing the key before '='")
             else:
-                key = token[0:pos].strip()
-                value = token[pos+1:].strip()
-                if value != "" and value[0] == "{" and value[-1] == "}":
-                    value = value[1:-1].strip()
-                    if value[0] == '{' or value[0] == '}':
-                        raise SyntaxError("The 'key' starts with invalid symbol: '{}'".format(value[0]))
-                    tokens = value.split(" ", 1)
-                    config.set(key, Hash())
-                    for subtok in tokens:
-                        subtok = subtok.strip()
-                        if subtok != "":
-                            if "[" in key and "]" in key:
-                                keyToks = key.split("[")
-                                skey = keyToks[0]
-                                index = int(keyToks[1][:-1])
-                                self.readToken(subtok, config[skey][index])
-                            else:
-                                self.readToken(subtok, config[key])
-                else:
-                    config.set(key, value)
-
+                configuration.set(prefix + token, Hash())

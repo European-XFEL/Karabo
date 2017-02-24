@@ -46,6 +46,21 @@ void Runner_Test::testRunnerSuccess() {
 }
 
 
+void Runner_Test::testRunnerSuccess2() {
+    using namespace karabo::util;
+    char *argv[] = {"AnotherExecutable5", "serverId=bingo", "a[0].b=1", "a[0].c=2", "a[0].e={x=15", "y=88}"};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    Hash configuration;
+    CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
+    //std::clog << "\n********** The configuration is ...\n" << configuration << std::endl;
+    CPPUNIT_ASSERT(configuration.get<std::string>("serverId") == "bingo");
+    CPPUNIT_ASSERT(configuration.get<std::string>("a[0].b") == "1");
+    CPPUNIT_ASSERT(configuration.get<std::string>("a[0].c") == "2");
+    CPPUNIT_ASSERT(configuration.get<std::string>("a[0].e.x") == "15");
+    CPPUNIT_ASSERT(configuration.get<std::string>("a[0].e.y") == "88");
+}
+
+
 void Runner_Test::testRunnerFailure1() {
     using namespace karabo::util;
     char *argv[] = {"AnotherExecutable", "serverId=bar", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}"};
