@@ -181,6 +181,11 @@ class Broker:
                 except openmq.Error as e:
                     if e.status == 2103:  # timeout
                         continue
+                    elif e.status == 3120:  # message dropped
+                        self.logger.warning(
+                            'consumer of device "%s" dropped messages',
+                            self.deviceId)
+                        continue
                     else:
                         raise
                 finally:
