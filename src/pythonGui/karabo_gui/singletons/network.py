@@ -12,7 +12,7 @@ from struct import calcsize, pack, unpack
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
                           QCryptographicHash, QObject)
-from PyQt4.QtGui import QDialog, QMessageBox
+from PyQt4.QtGui import QDialog, QMessageBox, qApp
 
 from karabo.authenticator import Authenticator
 from karabo.common.api import ShellNamespaceWrapper
@@ -45,6 +45,9 @@ class Network(QObject):
         self.password = None
         self.provider = None
         self.hostname, self.port = self.load_settings()
+
+        # Listen for the quit notification
+        qApp.aboutToQuit.connect(self.onQuitApplication)
 
     def connectToServer(self):
         """

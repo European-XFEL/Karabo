@@ -28,9 +28,7 @@ class PanelWrangler(QObject):
     def __init__(self, parent=None):
         super(PanelWrangler, self).__init__(parent=parent)
 
-        # XXX: Currently `karabo_gui.gui` is reponsible for showing our window!
-        self.main_window = MainWindow()
-
+        self.main_window = None
         self.connected_to_server = False
 
         # Panel containers
@@ -45,6 +43,21 @@ class PanelWrangler(QObject):
         # not necessary due to the fact that the singleton mediator object and
         # `self` are being destroyed when the GUI exists
         register_for_broadcasts(self)
+
+    # -------------------------------------------------------------------
+    # public interface
+
+    def use_splash_screen(self, splash):
+        """Attach a QSplashScreen instance which will be closed when the first
+        window appears.
+        """
+        if self.main_window is not None:
+            splash.finish(self.main_window)
+
+        self.splash = splash
+
+    # -------------------------------------------------------------------
+    # Qt callbacks
 
     def eventFilter(self, obj, event):
         if isinstance(event, KaraboBroadcastEvent):
@@ -110,30 +123,54 @@ class PanelWrangler(QObject):
                     for inst_id in alarm_ids:
                         self._close_alarm_panel(inst_id)
 
+            elif sender is KaraboEventSender.CreateMainWindow:
+                self._create_main_window()
+
             return False
         return super(PanelWrangler, self).eventFilter(obj, event)
+
+    # -------------------------------------------------------------------
+    # private interface
 
     def _close_alarm_panel(self, instance_id):
         panel = self._alarm_panels.get(instance_id)
         if panel is None:
             return
-        self.main_window.removePanel(panel, PanelAreaEnum.MiddleBottom)
         del self._alarm_panels[instance_id]
+        if self.main_window is not None:
+            self.main_window.removePanel(panel, PanelAreaEnum.MiddleBottom)
 
     def _close_run_configurator(self, instance_id):
         panel = self._run_config_panels.get(instance_id)
         if panel is None:
             return
-        self.main_window.removePanel(panel, PanelAreaEnum.Right)
         del self._run_config_panels[instance_id]
+        if self.main_window is not None:
+            self.main_window.removePanel(panel, PanelAreaEnum.Right)
 
     def _close_project_item_panel(self, model):
         panel = self._project_item_panels.get(model)
         if panel is None:
             return
-        self.main_window.removePanel(panel, PanelAreaEnum.MiddleTop)
+        if self.main_window is None:
+            panel.force_close()
+        else:
+            self.main_window.removePanel(panel, PanelAreaEnum.MiddleTop)
+
+    def _create_main_window(self):
+        if self.main_window is not None:
+            return
+
+        self.main_window = MainWindow()
+        if self.splash is not None:
+            self.splash.finish(self.main_window)
+
+        self.main_window.show()
 
     def _open_alarm_panel(self, instance_id):
+        if self.main_window is None:
+            return
+
         main_win = self.main_window
         panel = self._alarm_panels.get(instance_id)
         if panel is None:
@@ -145,6 +182,9 @@ class PanelWrangler(QObject):
             main_win.selectPanel(panel, PanelAreaEnum.MiddleBottom)
 
     def _open_run_configurator(self, instance_id):
+        if self.main_window is None:
+            return
+
         main_win = self.main_window
         panel = self._run_config_panels.get(instance_id)
         if panel is None:
@@ -167,17 +207,28 @@ class PanelWrangler(QObject):
             panel = ScenePanel(model, self.connected_to_server)
         self._show_project_item_panel(model, panel)
 
+        if self.main_window is None:
+            return
+
         if target_window is SceneTargetWindow.MainWindow:
             panel.onDock()
         elif target_window is SceneTargetWindow.Dialog:
             panel.onUndock()
 
     def _show_project_item_panel(self, model, panel):
-        if model in self._project_item_panels:
+        new_panel = model in self._project_item_panels
+        self._project_item_panels[model] = panel
+
+        if self.splash is not None:
+            self.splash.close()
+            self.splash = None
+
+        if self.main_window is None:
+            panel.show()
+        elif new_panel:
             self.main_window.selectPanel(panel, PanelAreaEnum.MiddleTop)
         else:
             self.main_window.addPanel(panel, PanelAreaEnum.MiddleTop)
-            self._project_item_panels[model] = panel
 
     def _update_scenes(self):
         for model, panel in self._project_item_panels.items():
