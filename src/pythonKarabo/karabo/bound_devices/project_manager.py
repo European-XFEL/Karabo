@@ -66,6 +66,7 @@ class ProjectManager(PythonDevice):
         self.registerSlot(self.slotSaveItems)
         self.registerSlot(self.slotLoadItems)
         self.registerSlot(self.slotListItems)
+        self.registerSlot(self.slotListDomains)
         self.registerInitialFunction(self.initialization)
         self.user_db_sessions = {}
 
