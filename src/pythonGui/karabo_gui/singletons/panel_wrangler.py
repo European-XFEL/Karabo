@@ -29,6 +29,7 @@ class PanelWrangler(QObject):
         super(PanelWrangler, self).__init__(parent=parent)
 
         self.main_window = None
+        self.splash = None
         self.connected_to_server = False
 
         # Panel containers

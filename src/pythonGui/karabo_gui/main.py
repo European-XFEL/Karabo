@@ -7,7 +7,7 @@ from PyQt4.QtGui import QApplication, QMessageBox, QPixmap, QSplashScreen
 
 from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.gui import init_gui
-from karabo_gui.singletons.api import get_network, get_panel_wrangler
+from karabo_gui.singletons.api import get_network
 
 
 def excepthook(exc_type, value, traceback):

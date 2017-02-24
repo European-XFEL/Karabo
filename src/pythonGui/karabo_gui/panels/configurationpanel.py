@@ -283,6 +283,9 @@ class ConfigurationPanel(BasePanelWidget):
             elif event.sender is KaraboEventSender.NetworkConnectStatus:
                 if not data['status']:
                     self._resetPanel()
+            elif event.sender is KaraboEventSender.AccessLevelChanged:
+                self.onGlobalAccessLevelChanged()
+
             return False
         return super(ConfigurationPanel, self).eventFilter(obj, event)
 
