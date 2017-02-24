@@ -25,6 +25,8 @@ class ProjectControllerUiData(HasStrictTraits):
     brush = Instance(QBrush, args=())
     checkable = Bool(False)
     check_state = Int(Qt.Unchecked)
+    alarm_type = String
+    status = String
 
 
 class BaseProjectController(ABCHasStrictTraits):
@@ -117,7 +119,8 @@ class BaseProjectController(ABCHasStrictTraits):
         if self._qt_model is not None:
             self._qt_model.layoutChanged.emit()
 
-    @on_trait_change('ui_data.icon,ui_data.brush,ui_data.check_state')
+    @on_trait_change('ui_data.icon,ui_data.brush,ui_data.check_state,'
+                     'ui_data.status,ui_data.alarm_type')
     def _request_repaint(self):
         if self._qt_model is not None:
             self._qt_model.layoutChanged.emit()
