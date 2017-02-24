@@ -15,10 +15,10 @@ from karabo_gui.events import (
     register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
 import karabo_gui.icons as icons
 from karabo_gui.actions import KaraboAction, build_qaction
-from karabo_gui.project.api import ProjectView
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.utils import (
     load_project, maybe_save_modified_project, save_object)
+from karabo_gui.project.view import ProjectView
 from karabo_gui.toolbar import ToolBar
 from karabo_gui.util import getOpenFileName, get_spin_widget
 from .base import BasePanelWidget
