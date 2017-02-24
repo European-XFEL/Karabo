@@ -21,7 +21,7 @@ from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import (
-    update_check_state, check_device_instance_exists, save_object)
+    update_check_state, check_device_instance_exists)
 from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.topology.api import ProjectDeviceInstance
 from .bases import BaseProjectGroupController, ProjectControllerUiData
@@ -50,8 +50,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
                                                 parent_project))
-        save_action = QAction('Save', menu)
-        save_action.triggered.connect(partial(save_object, self.model))
         instantiate_action = QAction('Instantiate', menu)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      parent_project))
@@ -62,7 +60,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         menu.addSeparator()
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
-        menu.addAction(save_action)
         menu.addSeparator()
         menu.addAction(instantiate_action)
         menu.addAction(shutdown_action)
