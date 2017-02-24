@@ -68,6 +68,9 @@ class SystemTopology(HasStrictTraits):
     def get_attributes(self, topology_path):
         """Return the attributes of a given node in the `_system_hash`.
         """
+        if self._system_hash is None:
+            return None
+
         try:
             return self._system_hash[topology_path, ...]
         except KeyError:

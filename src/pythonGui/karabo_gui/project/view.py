@@ -9,7 +9,6 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
 
 from karabo.common.project.api import ProjectModel, find_parent_object
-from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.utils import maybe_save_modified_project, save_object
 from karabo_gui.singletons.api import get_project_model, get_selection_tracker
 from karabo_gui.util import is_database_processing
@@ -62,22 +61,18 @@ class ProjectView(QTreeView):
     # ----------------------------
     # Slots
 
-    def _items_added(self, parent_index, start, end):
+    def _items_added(self, index, start, end):
         """React to the addition of an item (or items).
         """
         # Bail immediately if not the first item
         if start != 0:
             return
 
-        controller_ref = parent_index.data(PROJECT_CONTROLLER_REF)
-        if controller_ref is None:
-            return
-
-        controller = controller_ref()
+        controller = self.model().controller_ref(index)
         if (controller is not None and
                 isinstance(controller, BaseProjectGroupController)):
             # If a group just added its first item, expand it
-            self.expand(parent_index)
+            self.expand(index.parent())
 
     def _selection_change(self, selected, deselected):
         """ Notify controller objects when their Qt list item object is
@@ -129,8 +124,7 @@ class ProjectView(QTreeView):
             return None
 
         first_index = indices[0]
-        controller_ref = first_index.data(PROJECT_CONTROLLER_REF)
-        return controller_ref()
+        return self.model().controller_ref(first_index)
 
     def _parent_project(self, controller):
         """ Find the parent project model of a given controller

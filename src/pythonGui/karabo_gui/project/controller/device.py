@@ -5,10 +5,8 @@
 #############################################################################
 from functools import partial
 from io import StringIO
-import weakref
 
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QAction, QDialog, QMenu, QStandardItem
+from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance, Property, on_trait_change
 
 from karabo.common.project.api import (
@@ -18,15 +16,15 @@ from karabo.common.project.api import (
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
-from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
-from karabo_gui.project.utils import check_device_instance_exists, save_object
+from karabo_gui.project.utils import (
+    update_check_state, check_device_instance_exists, save_object)
 from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.topology.api import ProjectDeviceInstance
-from .bases import BaseProjectGroupController
+from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 
 class DeviceInstanceController(BaseProjectGroupController):
@@ -70,15 +68,10 @@ class DeviceInstanceController(BaseProjectGroupController):
         menu.addAction(shutdown_action)
         return menu
 
-    def create_qt_item(self):
-        item = QStandardItem()
-        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
-        self._update_icon_and_label(item)
-        item.setEditable(False)
-        for child in self.children:
-            item.appendRow(child.qt_item)
-        self._update_children_check_state()
-        return item
+    def create_ui_data(self):
+        ui_data = ProjectControllerUiData()
+        self._update_icon(ui_data)
+        return ui_data
 
     def single_click(self, parent_project, parent=None):
         if not self.model.initialized:
@@ -89,6 +82,11 @@ class DeviceInstanceController(BaseProjectGroupController):
             return
 
         self._broadcast_item_click()
+
+    def _get_display_name(self):
+        """Traits property getter for ``display_name``
+        """
+        return self.model.instance_id
 
     # ----------------------------------------------------------------------
     # Traits handlers
@@ -132,18 +130,16 @@ class DeviceInstanceController(BaseProjectGroupController):
             class_id=self.model.class_id
         )
 
-    @on_trait_change("model.modified,model:initialized,model:instance_id")
+    @on_trait_change("model:initialized,model:instance_id")
     def _update_ui_label(self):
         """ Whenever the object is modified it should be visible to the user
         """
-        if not self.is_ui_initialized():
-            return
-        self._update_icon_and_label(self.qt_item)
+        self._update_icon(self.ui_data)
 
     @on_trait_change("model:active_config_ref")
     def _active_config_ref_change(self):
         # Watch for incomplete model and view initialization
-        if not (self.model.initialized and self.is_ui_initialized()):
+        if not self.model.initialized:
             return
 
         model = self._get_active_config()
@@ -154,16 +150,13 @@ class DeviceInstanceController(BaseProjectGroupController):
         if not self.project_device.online:
             self._broadcast_item_click()
 
-        self._update_children_check_state()
+        update_check_state(self)
 
     @on_trait_change('project_device:schema_updated,project_device:online')
     def _device_schema_changed(self):
         """Called when a new Schema arrives for `project_device` or it changes
         between online <-> offline.
         """
-        if not self.is_ui_initialized():
-            return
-
         # Show the device's configuration, iff it was already showing
         self._update_configurator()
 
@@ -182,13 +175,10 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     @on_trait_change("project_device.status")
     def status_change(self):
-        if not self.is_ui_initialized():
-            return
-
         status_enum = DeviceStatus(self.project_device.status)
         icon = get_project_device_status_icon(status_enum)
         if icon is not None:
-            self.qt_item.setIcon(icon)
+            self.ui_data.icon = icon
 
         # Show the device's configuration, iff it was already showing
         self._update_configurator()
@@ -214,16 +204,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             broadcast_event(KaraboEventSender.ShowConfiguration,
                             {'configuration': configuration})
 
-    def _update_children_check_state(self):
-        """Update the CheckState of the child items
-        """
-        active_ref = self.model.active_config_ref
-        for child in self.children:
-            config_ref = child.model.uuid
-            check = Qt.Checked if config_ref == active_ref else Qt.Unchecked
-            child.qt_item.setCheckState(check)
-
-    def _update_icon_and_label(self, qt_item):
+    def _update_icon(self, ui_data):
         # Get current status of device
         if self.model.initialized:
             # But only if our model is initialized!
@@ -231,9 +212,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         else:
             # Otherwise show the instance as offline
             status_enum = DeviceStatus('offline')
-        icon = get_project_device_status_icon(status_enum)
-        qt_item.setIcon(icon)
-        self.set_qt_item_text(qt_item, self.model.instance_id)
+        ui_data.icon = get_project_device_status_icon(status_enum)
 
     def _update_configurator(self):
         configuration = self.project_device.current_configuration

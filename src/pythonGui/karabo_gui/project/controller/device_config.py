@@ -4,15 +4,14 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from functools import partial
-import weakref
 
-from PyQt4.QtGui import QAction, QMenu, QStandardItem
-from traits.api import Instance, on_trait_change
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QAction, QMenu
+from traits.api import Instance
 
 from karabo.common.project.api import DeviceConfigurationModel
-from karabo_gui.const import PROJECT_CONTROLLER_REF
 from karabo_gui.project.utils import save_object
-from .bases import BaseProjectController
+from .bases import BaseProjectController, ProjectControllerUiData
 
 
 class DeviceConfigurationController(BaseProjectController):
@@ -28,21 +27,5 @@ class DeviceConfigurationController(BaseProjectController):
         menu.addAction(save_action)
         return menu
 
-    def create_qt_item(self):
-        item = QStandardItem()
-        item.setData(weakref.ref(self), PROJECT_CONTROLLER_REF)
-        item.setEditable(False)
-        item.setCheckable(True)
-        # Currently disable changing CheckState
-        item.setEnabled(False)
-        self.set_qt_item_text(item, self.model.simple_name)
-        return item
-
-    @on_trait_change("model.modified")
-    def update_ui_label(self):
-        """ Whenever the configuration is modified it should be visible to the
-        user
-        """
-        if not self.is_ui_initialized():
-            return
-        self.set_qt_item_text(self.qt_item, self.model.simple_name)
+    def create_ui_data(self):
+        return ProjectControllerUiData(checkable=True, check_state=Qt.Checked)
