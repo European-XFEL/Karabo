@@ -8,13 +8,20 @@ from weakref import WeakValueDictionary
 from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt4.QtGui import QItemSelectionModel
 
-from karabo_gui.events import broadcast_event, KaraboEventSender
-from karabo_gui.project.api import (
-    create_project_controller, destroy_project_controller
-)
+from karabo.common.api import walk_traits_object
+from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
+                               KaraboEventSender, register_for_broadcasts)
+from karabo_gui.indicators import get_alarm_icon, get_state_icon_for_status
+from karabo_gui.project.controller.build import (
+    create_project_controller, destroy_project_controller)
+from karabo_gui.project.controller.device import DeviceInstanceController
 from karabo_gui.singletons.api import get_topology
 
-TABLE_HEADER_LABELS = ["Projects"]
+TABLE_HEADER_LABELS = ["Projects", "", ""]
+
+PROJECT_COLUMN = 0
+STATUS_COLUMN = 1
+ALARM_COLUMN = 2
 
 
 class ProjectViewItemModel(QAbstractItemModel):
@@ -29,6 +36,11 @@ class ProjectViewItemModel(QAbstractItemModel):
         self._traits_model = None
         self._controller = None
         self._model_index_refs = WeakValueDictionary()
+
+        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
+        # not necessary for self due to the fact that the singleton mediator
+        # object and `self` are being destroyed when the GUI exists
+        register_for_broadcasts(self)
 
     def controller_ref(self, model_index):
         """Get the controller object for a ``QModelIndex``. This is essentially
@@ -121,8 +133,35 @@ class ProjectViewItemModel(QAbstractItemModel):
         else:
             return parent_controller.children.index(controller)
 
+    def _update_alarm_type(self, device_id, alarm_type):
+        """Update alarm qt item for the given ``device_id``
+        """
+        # Walk tree to find DeviceInstanceController with given ``device_id``
+        device_controller = None
+
+        def visitor(obj):
+            nonlocal device_controller
+            if (isinstance(obj, DeviceInstanceController) and
+                    obj.model.instance_id == device_id):
+                device_controller = obj
+
+        walk_traits_object(self._controller, visitor)
+
+        if device_controller is not None:
+            device_controller.ui_data.alarm_type = alarm_type
+
     # ----------------------------
     # Qt methods
+
+    def eventFilter(self, obj, event):
+        if isinstance(event, KaraboBroadcastEvent):
+            if event.sender is KaraboEventSender.AlarmDeviceUpdate:
+                data = event.data
+                device_id = data.get('deviceId')
+                alarm_type = data.get('alarm_type')
+                self._update_alarm_type(device_id, alarm_type)
+            return False
+        return super(ProjectViewItemModel, self).eventFilter(obj, event)
 
     def createIndex(self, row, column, controller):
         """Prophalaxis for QModelIndex.internalPointer...
@@ -159,18 +198,25 @@ class ProjectViewItemModel(QAbstractItemModel):
         if controller is None:
             return
 
+        column = index.column()
         ui_data = controller.ui_data
-        if role == Qt.DisplayRole:
-            return controller.ui_item_text()
-        elif role == Qt.DecorationRole:
-            return ui_data.icon
-        elif role == Qt.ForegroundRole:
-            return ui_data.brush
-        elif role == Qt.FontRole:
-            return ui_data.font
-        elif role == Qt.CheckStateRole:
-            if ui_data.checkable:
-                return ui_data.check_state
+        if column == PROJECT_COLUMN:
+            if role == Qt.DisplayRole:
+                return controller.ui_item_text()
+            elif role == Qt.DecorationRole:
+                return ui_data.icon
+            elif role == Qt.ForegroundRole:
+                return ui_data.brush
+            elif role == Qt.FontRole:
+                return ui_data.font
+            elif role == Qt.CheckStateRole:
+                if ui_data.checkable:
+                    return ui_data.check_state
+        elif isinstance(controller, DeviceInstanceController):
+            if column == ALARM_COLUMN and role == Qt.DecorationRole:
+                return get_alarm_icon(ui_data.alarm_type)
+            elif column == STATUS_COLUMN and role == Qt.DecorationRole:
+                return get_state_icon_for_status(ui_data.status)
 
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -182,7 +228,7 @@ class ProjectViewItemModel(QAbstractItemModel):
             return QModelIndex()
 
         if not parent.isValid():
-            return self.createIndex(0, 0, self._controller)
+            return self.createIndex(row, column, self._controller)
         else:
             parent_controller = self.controller_ref(parent)
 
@@ -212,8 +258,8 @@ class ProjectViewItemModel(QAbstractItemModel):
         if parent_controller is None:
             return QModelIndex()
 
-        return self.createIndex(self._controller_row(parent_controller), 0,
-                                parent_controller)
+        return self.createIndex(self._controller_row(parent_controller),
+                                PROJECT_COLUMN, parent_controller)
 
     def headerData(self, section, orientation, role):
         """Reimplemented function of QAbstractItemModel.
@@ -229,6 +275,7 @@ class ProjectViewItemModel(QAbstractItemModel):
     def rowCount(self, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
         """
+        # Only column 0 has children
         if self._controller is None or parent.column() > 0:
             return 0
 

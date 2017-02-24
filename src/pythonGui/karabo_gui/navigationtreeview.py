@@ -8,15 +8,15 @@
    class/instance.
 """
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QHeaderView,
-                         QMenu, QTreeView)
+from PyQt4.QtGui import QAbstractItemView, QAction, QCursor, QMenu, QTreeView
 
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.singletons.api import (get_manager, get_selection_tracker,
                                        get_navigation_model)
 from karabo_gui.treewidgetitems.popupwidget import PopupWidget
-from karabo_gui.util import loadConfigurationFromFile, saveConfigurationToFile
+from karabo_gui.util import (
+    loadConfigurationFromFile, saveConfigurationToFile, set_treeview_header)
 
 
 class NavigationTreeView(QTreeView):
@@ -30,15 +30,7 @@ class NavigationTreeView(QTreeView):
         model.modelReset.connect(self.expandAll)
         model.signalItemChanged.connect(self.onSelectionChanged)
 
-        self.header().setResizeMode(0, QHeaderView.ResizeToContents)
-        self.header().setResizeMode(1, QHeaderView.Fixed)
-        self.header().setResizeMode(2, QHeaderView.Fixed)
-        self.setColumnWidth(1, 20)
-        self.setColumnWidth(2, 20)
-        # NOTE: Since QTreeView always displays the expander in column 0 the
-        # additional columns are moved to the front
-        self.header().moveSection(1, 0)
-        self.header().moveSection(2, 0)
+        set_treeview_header(self)
 
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)

@@ -14,7 +14,7 @@ from karabo.common.scenemodel.api import (
     BoxLayoutModel, LabelModel, WorkflowItemModel
 )
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.project.api import add_device_to_server
+from karabo_gui.project.utils import add_device_to_server
 from karabo_gui.schema import ChoiceOfNodes
 from karabo_gui.singletons.api import get_topology
 from karabo_gui.widget import DisplayWidget, EditableWidget
