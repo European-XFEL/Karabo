@@ -821,7 +821,7 @@ class Tests(DeviceTest):
             'metricPrefixSymbol': '',
             'accessMode': 4,
             'description': 'The Value',
-            'unitSymbol': 'N_A',
+            'unitSymbol': '',
             'assignment': 0,
             'nodeType': 0,
             'defaultValue': 7,

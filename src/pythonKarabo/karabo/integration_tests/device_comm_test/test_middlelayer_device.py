@@ -96,7 +96,7 @@ class Tests(TestCase):
             'metricPrefixSymbol': '',
             'nodeType': 0,
             'requiredAccessLevel': 0,
-            'unitSymbol': 'N_A',
+            'unitSymbol': '',
             'valueType': 'INT32'})
 
         self.assertIn("testServer", getServers())
