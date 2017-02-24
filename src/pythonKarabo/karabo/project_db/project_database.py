@@ -293,12 +293,15 @@ class ProjectDatabase(ContextDecorator):
 
         query = """
                 xquery version "3.0";
-                xmldb:get-child-collections("{}")
+                <collections>{{
+                for $c in xmldb:get-child-collections("{}")
+                return <item>{{$c}}</item>}}
+                </collections>
                 """.format(self.root)
 
         try:
             res = self.dbhandle.query(query)
-            return [r.text for r in res.results]
+            return [r.text for r in res.results[0]]
         except ExistDBException:
             return []
 
