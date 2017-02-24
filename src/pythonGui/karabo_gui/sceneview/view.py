@@ -192,6 +192,8 @@ class SceneView(QWidget):
                 device_id = event.data.get('deviceId')
                 alarm_type = event.data.get('alarm_type')
                 self._update_alarm_symbols(device_id, alarm_type)
+            if event.sender is KaraboEventSender.AccessLevelChanged:
+                self._update_widget_states()
             return False
         return super(SceneView, self).eventFilter(obj, event)
 
@@ -428,3 +430,11 @@ class SceneView(QWidget):
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
                 obj.update_alarm_symbol(device_id, alarm_type)
+
+    def _update_widget_states(self):
+        """The global access level has changed. Notify all widgets in the
+        scene.
+        """
+        for obj in self._scene_obj_cache.values():
+            if is_widget(obj):
+                obj.update_global_access_level()

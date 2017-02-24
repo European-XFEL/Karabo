@@ -212,6 +212,10 @@ class ParameterTreeWidget(QTreeWidget):
         else:
             item.setHidden(False)
 
+        if item.editableComponent is not None:
+            # Let editable widgets make their own adjustments
+            item.editableComponent.widgetFactory.updateState()
+
         if not item.isChoiceElement and not item.isListElement:
             for i in range(item.childCount()):
                 self._r_globalAccessLevelChanged(item.child(i))

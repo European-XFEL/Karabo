@@ -27,14 +27,14 @@ class NavigationPanel(BasePanelWidget):
         """ Router for incoming broadcasts
         """
         if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.NetworkConnectStatus:
+            sender = event.sender
+            if sender is KaraboEventSender.NetworkConnectStatus:
                 if not event.data['status']:
                     self.twNavigation.clear()
+            elif sender is KaraboEventSender.AccessLevelChanged:
+                self.twNavigation.model().globalAccessLevelChanged()
             return False
         return super(NavigationPanel, self).eventFilter(obj, event)
 
     def onSelectNewNavigationItem(self, devicePath):
         self.twNavigation.selectItem(devicePath)
-
-    def onGlobalAccessLevelChanged(self):
-        self.twNavigation.model().globalAccessLevelChanged()
