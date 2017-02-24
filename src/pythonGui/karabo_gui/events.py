@@ -8,6 +8,7 @@ from karabo_gui.singletons.api import get_mediator
 
 # Enum for karabo broadcast event senders
 class KaraboEventSender(Enum):
+    AccessLevelChanged = "Global Access Level changed"
     AddRunConfigurator = "Add run configurator"
     AlarmInitReply = "Alarm init reply"
     AlarmUpdate = "Alarm update"
@@ -20,6 +21,7 @@ class KaraboEventSender(Enum):
     DeviceInitReply = "Device instantiate reply"
     DeviceErrorChanged = "Device error state changed"
     DeviceStateChanged = "Device state changed"
+    LoginUserChanged = "User changed"
     LogMessages = "Log messages"
     MaximizePanel = "Maximize a panel"
     MinimizePanel = "Minimize a panel"

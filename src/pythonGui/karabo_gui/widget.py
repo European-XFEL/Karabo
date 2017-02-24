@@ -8,7 +8,6 @@ from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from karabo_gui import background
 from karabo_gui.registry import Registry
-from karabo_gui.singletons.api import get_panel_wrangler
 
 
 class Widget(Registry, QObject):
@@ -158,9 +157,6 @@ class EditableWidget(Widget):
         Widget.__init__(self, box)
         box.configuration.boxvalue.state.signalUpdateComponent.connect(
             self.updateStateSlot)
-
-        main_win = get_panel_wrangler().main_window
-        main_win.signalGlobalAccessLevelChanged.connect(self.updateStateSlot)
 
     @staticmethod
     def getClasses(box):
