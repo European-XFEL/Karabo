@@ -123,15 +123,12 @@ def _project_load_handler(item_model):
 
     :param item_model: The `ProjectViewItemModel` of the `ProjectView`
     """
-    # XXX: Hardcoding of the domain must be replaced with user selection!
-    from karabo_gui.project.api import TEST_DOMAIN
-
     # Check for modififications before showing dialog
     traits_data_model = item_model.traits_data_model
     if not maybe_save_modified_project(traits_data_model):
         return
 
-    project = load_project(TEST_DOMAIN)
+    project = load_project()
     if project is not None:
         item_model.traits_data_model = project
 

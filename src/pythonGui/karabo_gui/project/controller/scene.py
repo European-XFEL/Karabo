@@ -14,7 +14,7 @@ from karabo_gui import icons
 from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
-from karabo_gui.project.utils import save_object, show_no_configuration
+from karabo_gui.project.utils import show_no_configuration
 from karabo_gui.util import getSaveFileName
 from .bases import BaseProjectController, ProjectControllerUiData
 
@@ -35,15 +35,12 @@ class SceneController(BaseProjectController):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_scene,
                                                 parent_project))
-        save_action = QAction('Save', menu)
-        save_action.triggered.connect(partial(save_object, self.model))
         save_as_action = QAction('Save As...', menu)
         save_as_action.triggered.connect(self._save_scene_to_file)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
         menu.addSeparator()
-        menu.addAction(save_action)
         menu.addAction(save_as_action)
         return menu
 
