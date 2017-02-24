@@ -346,7 +346,7 @@ class Tests(TestCase):
         self.assertIs(d.assignment, Assignment.OPTIONAL)
         self.assertIs(d.requiredAccessLevel, AccessLevel.OBSERVER)
         self.assertIsNone(d.displayType)
-        self.assertIs(d.unitSymbol, Unit.NOT_ASSIGNED)
+        self.assertIs(d.unitSymbol, Unit.NUMBER)
         self.assertIs(d.metricPrefixSymbol, MetricPrefix.NONE)
         self.assertIsNone(d.options)
 
