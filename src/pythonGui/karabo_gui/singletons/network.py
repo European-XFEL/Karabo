@@ -132,19 +132,12 @@ class Network(QObject):
                 krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
 
         else:
-            # Construct Authenticator class
-            try:
-                # TODO: adapt Authenticator constructor for unicode parameters
-                # instead of string
-                self.authenticator = Authenticator(
-                    self.username, self.password, self.provider, ipAddress,
-                    self.brokerHost, self.brokerPort, self.brokerTopic)
-            except Exception as e:
-                print("Authenticator not available.", str(e))
-
             # Execute Login
             ok = False
             try:
+                self.authenticator = Authenticator(
+                    self.username, self.password, self.provider, ipAddress,
+                    self.brokerHost, self.brokerPort, self.brokerTopic)
                 ok = self.authenticator.login()
             except Exception as e:
                 # TODO Fall back to inbuild access level
