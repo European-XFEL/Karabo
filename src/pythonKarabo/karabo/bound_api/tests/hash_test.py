@@ -762,8 +762,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertFalse(h1.has("c.b.d"))
         self.assertTrue(h1.has("c.b[0]"))
         self.assertTrue(h1.has("c.b[1]"))
-        self.assertTrue(h1.has("c.b[2]"))
-        self.assertEqual(h1.get("c.b[2].d"), 24) # vector<Hash> are appended
+        self.assertEqual(h1.get("c.b[1].d"), 24)
         self.assertTrue(h1.has("c.c[0].d"))
         self.assertTrue(h1.has("c.c[1].a.b.c"))
         self.assertTrue(h1.has("d.e"))
@@ -880,8 +879,8 @@ class Hash_TestCase(unittest.TestCase):
                          "e[1].3"]
         hashTargetB.merge(hashSourceBCD, HashMergePolicy.MERGE_ATTRIBUTES, selectedPaths)
         self.assertTrue(hashTargetB.has("a[1].b"))
-        self.assertTrue(hashTargetB.has("a[4].a"))
-        self.assertTrue(hashTargetB.has("a[4].b"))
+        self.assertTrue(hashTargetB.has("a[2].a"))
+        self.assertTrue(hashTargetB.has("a[2].b"))
         self.assertFalse(hashTargetB.has("a[5]"))
         self.assertTrue(hashTargetB.has("c[0]"))
         self.assertFalse(hashTargetB.has("c[0].k"))
@@ -919,6 +918,14 @@ class Hash_TestCase(unittest.TestCase):
         self.assertTrue(similar(copyD, hashTargetD),
                         "Selecting only invalid indices changed something")
 
+        h = Hash('a[0].a.b.c',1,'a[1].a.b.d',2)
+        g=Hash('a[0].x.y.w',77,'a[0].a.c',33,'a[2].abc',12)
+        h+=g
+        self.assertTrue(h['a[0].a.b.c'] == 1)
+        self.assertTrue(h['a[0].x.y.w'] == 77)
+        self.assertTrue(h['a[0].a.c']   == 33)
+        self.assertTrue(h['a[1].a.b.d'] == 2)
+        self.assertTrue(h['a[2].abc']   == 12)
             
     def test_subtract(self):
         try:
@@ -943,8 +950,6 @@ class Hash_TestCase(unittest.TestCase):
             self.assertFalse("a" in h1)
             self.assertTrue(h1["b"].empty())
             self.assertEqual(h1["c.b[0].g"], 3)
-            self.assertEqual(h1["c.b[1].key"], "value")
-            self.assertEqual(h1["c.b[2].d"], 24)
             self.assertEqual(h1["c.c[0].d"], 4)
             self.assertEqual(h1["c.c[1].a.b.c"], 6)
             self.assertEqual(h1["d.e"], 7)

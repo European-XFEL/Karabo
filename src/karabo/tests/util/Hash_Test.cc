@@ -906,8 +906,8 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(!h1.has("c.b.d"));
     CPPUNIT_ASSERT(h1.has("c.b[0]"));
     CPPUNIT_ASSERT(h1.has("c.b[1]"));
-    CPPUNIT_ASSERT(h1.has("c.b[2]"));
-    CPPUNIT_ASSERT(h1.get<int>("c.b[2].d") == 24); // vector<Hash> are appended
+    CPPUNIT_ASSERT(!h1.has("c.b[2]"));
+    CPPUNIT_ASSERT(h1.get<int>("c.b[1].d") == 24);
     CPPUNIT_ASSERT(h1.has("c.c[0].d"));
     CPPUNIT_ASSERT(h1.has("c.c[1].a.b.c"));
     CPPUNIT_ASSERT(h1.has("d.e"));
@@ -1023,8 +1023,8 @@ void Hash_Test::testMerge() {
     selectedPaths.insert("e[1].3");
     hashTargetB.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths);
     CPPUNIT_ASSERT(hashTargetB.has("a[1].b"));
-    CPPUNIT_ASSERT(hashTargetB.has("a[4].a"));
-    CPPUNIT_ASSERT(hashTargetB.has("a[4].b"));
+    CPPUNIT_ASSERT(hashTargetB.has("a[2].a"));
+    CPPUNIT_ASSERT(hashTargetB.has("a[2].b"));
     CPPUNIT_ASSERT(!hashTargetB.has("a[5]"));
     CPPUNIT_ASSERT(hashTargetB.has("c[0]"));
     CPPUNIT_ASSERT(!hashTargetB.has("c[0].k"));
@@ -1083,8 +1083,8 @@ void Hash_Test::testSubtract() {
     CPPUNIT_ASSERT(h1.has("a") == false);
     CPPUNIT_ASSERT(h1.get<Hash>("b").empty() == true);
     CPPUNIT_ASSERT(h1.get<int>("c.b[0].g") == 3);
-    CPPUNIT_ASSERT(h1.get<string>("c.b[1].key") == "value");
-    CPPUNIT_ASSERT(h1.get<int>("c.b[2].d") == 24);
+    CPPUNIT_ASSERT(h1.has("c.b[1]"));
+    CPPUNIT_ASSERT(!h1.has("c.b[2]"));
     CPPUNIT_ASSERT(h1.get<int>("c.c[0].d") == 4);
     CPPUNIT_ASSERT(h1.get<int>("c.c[1].a.b.c") == 6);
     CPPUNIT_ASSERT(h1.get<int>("d.e") == 7);
