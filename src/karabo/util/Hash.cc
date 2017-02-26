@@ -617,8 +617,11 @@ namespace karabo {
 
             // Append Hashes for ordinary vector<Hash>
             if (selectedIndices.empty()) {
-                // There cannot be sub-path selections here.
-                targetVec.insert(targetVec.end(), sourceVec.begin(), sourceVec.end());
+                for (size_t i = 0; i < sourceVec.size(); ++i) {
+                    if (i == targetVec.size()) targetVec.push_back(Hash());
+                    // There cannot be sub-path selections here.
+                    targetVec[i].merge(sourceVec[i], policy, std::set<std::string>(), separator);
+                }
             } else {
                 // But only the selected ones:
                 unsigned int hashCounter = 0;
