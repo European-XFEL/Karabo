@@ -74,6 +74,40 @@ def sleep(delay, result=None):
     return asyncio.sleep(delay, result)
 
 
+@synchronize
+def firstCompleted(*args, **kwargs):
+    """wait for the first of futures to return
+
+    Wait for the first future given as keyword argument to return. It returns
+    two dicts: one with the names of the done futures and their results, and
+    one mapping the name of the pending futures to them, as an example::
+
+        work = background(do_some_work)
+        party = background(partey)
+        done, pending = firstCompleted(work=work, party=party)
+
+    the result will then be something like ``{"work": 5}`` and
+    ``{"party": Future()}``.
+
+    You may also give futures as positional parameters, they will be returned
+    by their number::
+
+        done, pending = firstCompleted(work, party)
+
+    will return something like ``{0: 5}`` and ``{1: Future}``.
+    """
+    kwargs.update(enumerate(args))
+    futures = {k: f if isinstance(f, KaraboFuture) else asyncio.async(f)
+               for k, f in kwargs.items()}
+    names = {
+        f.future if isinstance(f, KaraboFuture) else f: k
+        for k, f in futures.items()}
+    done, pending = yield from asyncio.wait(
+        names, return_when=asyncio.FIRST_COMPLETED)
+    return ({names[f]: f.result() for f in done},
+            {names[f]: futures[names[f]] for f in pending})
+
+
 def synchronous(func):
     """Decorate a function to declare it synchronous
 
