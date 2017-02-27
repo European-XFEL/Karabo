@@ -618,6 +618,7 @@ namespace karabo {
             // Append Hashes for ordinary vector<Hash>
             if (selectedIndices.empty()) {
                 for (size_t i = 0; i < sourceVec.size(); ++i) {
+                    // Align the target vector size with the source one
                     if (i == targetVec.size()) targetVec.push_back(Hash());
                     // There cannot be sub-path selections here.
                     targetVec[i].merge(sourceVec[i], policy, std::set<std::string>(), separator);
@@ -651,25 +652,29 @@ namespace karabo {
             if (candidates.empty()) return;
             std::set<std::string> myset;
             getPaths(myset, separator);
+            // Go through the list in reverse order to avoid
             for (std::vector<std::string>::const_reverse_iterator it = candidates.rbegin();
                     it != candidates.rend(); ++it) {
+                // keep unrelated entries or empty "vector<Hash>" items
                 if (myset.find(*it) == myset.end() || (*it).back() == ']') continue;
                 this->erase(*it, separator);
             }
+            
+            // Remove possible vector<Hash>'s empty tails if we need this functionality
             myset.clear();
             getPaths(myset, separator);
             std::string lastPath;
             for (std::set<std::string>::const_reverse_iterator it = myset.rbegin();
                     it != myset.rend(); ++it) {
                 size_t pos = (*it).rfind("[");
-                if (pos == std::string::npos) continue;
-                const std::string& path = (*it).substr(0,pos);
-                if ((*it).back() == ']') {
-                    if (lastPath.find(path) == std::string::npos) {
+                if (pos == std::string::npos) continue;                // skip "not-an-array" paths 
+                const std::string& path = (*it).substr(0,pos);         // path to vector<Hash>
+                if ((*it).back() == ']') {                             // vector<Hash>[...] is empty
+                    if (lastPath.find(path) == std::string::npos) {    // select empty tails only
                         this->erase(*it, separator);
                     }
                 } else {
-                    lastPath = path;
+                    lastPath = path;                                   // "not empty" entry encountered
                 }
             }
         }
