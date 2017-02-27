@@ -15,6 +15,7 @@ from karabo_gui.util import is_database_processing
 from .controller.bases import BaseProjectGroupController
 from .controller.project import ProjectController
 from .controller.project_groups import ProjectSubgroupController
+from .utils import show_no_configuration
 
 
 class ProjectView(QTreeView):
@@ -86,6 +87,8 @@ class ProjectView(QTreeView):
 
             # Grab control of the global selection
             get_selection_tracker().grab_selection(self.selectionModel())
+        else:
+            show_no_configuration()
 
     def _show_context_menu(self):
         """ Show a context menu for the currently selected item.
