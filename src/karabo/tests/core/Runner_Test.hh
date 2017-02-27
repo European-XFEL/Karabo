@@ -23,6 +23,7 @@ class Runner_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(Runner_Test);
     CPPUNIT_TEST(testRunnerSuccess);
+    CPPUNIT_TEST(testRunnerSuccess2);
     CPPUNIT_TEST(testRunnerFailure1);
     CPPUNIT_TEST(testRunnerFailure2);
     CPPUNIT_TEST(testRunnerFailure3);
@@ -38,6 +39,7 @@ public:
 private:
     RunnerDerived* m_runner;
     void testRunnerSuccess();
+    void testRunnerSuccess2();
     void testRunnerFailure1();
     void testRunnerFailure2();
     void testRunnerFailure3();
