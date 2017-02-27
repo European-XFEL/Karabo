@@ -9,7 +9,7 @@ import weakref
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QDialog, QMessageBox
 
-from karabo.common.api import walk_traits_object
+from karabo.common.api import set_modified_flag, walk_traits_object
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     ProjectModel, device_instance_exists, recursive_save_object,
@@ -19,7 +19,8 @@ from karabo.middlelayer import Hash, read_project_model
 from karabo_gui.events import broadcast_event, KaraboEventSender
 import karabo_gui.globals as krb_globals
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
-from karabo_gui.project.dialog.project_handle import LoadProjectDialog
+from karabo_gui.project.dialog.project_handle import (
+    LoadProjectDialog, SaveProjectDialog)
 from karabo_gui.singletons.api import (get_db_conn, get_project_model,
                                        get_network)
 
@@ -139,18 +140,19 @@ def get_device_server_model(server_id):
     return server_model
 
 
-def load_project(domain):
+def load_project():
     """Load a project from the project database.
     """
     dialog = LoadProjectDialog()
     result = dialog.exec()
     if result == QDialog.Accepted:
-        uuid = dialog.selected_item()
-        if uuid is not None:
+        domain, uuid = dialog.selected_item()
+        if domain is not None and uuid is not None:
             db_conn = get_db_conn()
             model = ProjectModel(uuid=uuid)
             read_lazy_object(domain, uuid, db_conn, read_project_model,
                              existing=model)
+            db_conn.default_domain = domain
             db_conn.flush()
             return model
     return None
@@ -169,22 +171,22 @@ def maybe_save_modified_project(project):
 
 
 def save_object(obj):
-    """ Save individual `obj` in project database
+    """ Save individual `obj` recursively into the project database
 
     :param obj A project model object
     """
-    from karabo_gui.project.api import TEST_DOMAIN
-
-    ask = 'Do you really want to save \"<b>{}</b>\"?'.format(obj.simple_name)
-    reply = QMessageBox.question(None, 'Save object', ask,
-                                 QMessageBox.Yes | QMessageBox.No,
-                                 QMessageBox.No)
-    if reply == QMessageBox.No:
-        return
-
-    db_conn = get_db_conn()
-    recursive_save_object(obj, db_conn, TEST_DOMAIN)
-    db_conn.flush()
+    dialog = SaveProjectDialog(model=obj)
+    result = dialog.exec()
+    if result == QDialog.Accepted:
+        db_conn = get_db_conn()
+        domain = dialog.domain
+        if domain != db_conn.default_domain:
+            # Set all child object of the given ``obj`` to modified to actually
+            # save the complete tree to the new domain
+            set_modified_flag(obj, value=True)
+        recursive_save_object(obj, db_conn, domain)
+        db_conn.default_domain = domain
+        db_conn.flush()
 
 
 def show_save_project_message(project):

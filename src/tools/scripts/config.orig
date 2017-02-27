@@ -30,6 +30,7 @@
 
 KARABO_GUI_HOST=localhost
 KARABO_GUI_PORT=44444
+KARABO_PROJECT_DB_DOMAIN=CAS_INTERNAL
 
 ##################
 #  Broker Hosts  #

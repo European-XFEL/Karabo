@@ -14,7 +14,7 @@ from karabo_gui.events import (register_for_broadcasts,
 from karabo_gui.indicators import DeviceStatus, get_project_server_status_icon
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
-from karabo_gui.project.utils import add_device_to_server, save_object
+from karabo_gui.project.utils import add_device_to_server
 from karabo_gui.singletons.api import get_manager, get_topology
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
@@ -34,8 +34,6 @@ class DeviceServerController(BaseProjectGroupController):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_server,
                                                 parent_project))
-        save_action = QAction('Save', menu)
-        save_action.triggered.connect(partial(save_object, self.model))
         shutdown_action = QAction('Shutdown', menu)
         shutdown_action.triggered.connect(self._shutdown_server)
         add_action = QAction('Add device', menu)
@@ -48,7 +46,6 @@ class DeviceServerController(BaseProjectGroupController):
         remove_all_action.triggered.connect(self._delete_all_devices)
         menu.addAction(edit_action)
         menu.addAction(delete_action)
-        menu.addAction(save_action)
         menu.addAction(shutdown_action)
         menu.addSeparator()
         menu.addAction(add_action)

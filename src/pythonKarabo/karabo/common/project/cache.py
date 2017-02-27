@@ -64,6 +64,14 @@ class ProjectDBCache(object):
                 uuid_list.append(uuid)
         return uuid_list
 
+    def get_available_domains(self):
+        """ Return a list of strings including available domains
+        """
+        avail_domains = []
+        for domain in os.listdir(self.dirpath):
+            avail_domains.append(domain)
+        return avail_domains
+
     def get_available_project_data(self, domain, obj_type):
         """ Return list of Hashes including available project data of all
         objects of ``obj_type`` in cache

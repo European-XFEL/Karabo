@@ -102,10 +102,7 @@ class SubprojectController(ProjectSubgroupController):
     def _load_project(self):
         """ Add an existing project as a subproject.
         """
-        # XXX: Hardcoding of the domain must be replaced with user selection!
-        from karabo_gui.project.api import TEST_DOMAIN
-
-        project = load_project(TEST_DOMAIN)
+        project = load_project()
         if project is None:
             return
 
