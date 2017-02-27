@@ -52,7 +52,7 @@ class Label(QLabel):
         event.acceptProposedAction()
 
     def dropEvent(self, event):
-        self.newMime.emit(mime.mimeData())
+        self.newMime.emit(event.mimeData())
 
     def setPixmap(self, pixmap):
         if pixmap is None:
