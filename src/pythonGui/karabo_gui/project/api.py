@@ -7,6 +7,3 @@ from .utils import (
     maybe_save_modified_project, save_object, show_save_project_message
 )
 from .view import ProjectView
-
-# XXX: This is only until the Gui Server is in shape
-TEST_DOMAIN = 'CAS_INTERNAL'
