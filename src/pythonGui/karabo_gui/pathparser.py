@@ -104,9 +104,9 @@ class Parser(object):
             self.lastcontrol = self.pos
         a = 2 * self.pos - self.lastcontrol
         for b in self.points(relative):
-            self.path.cubicTo(a, b)
-            a = 2 * c - b
-        self.lastcontrol = a
+            self.path.quadTo(a, b)
+            a = 2 * b - a
+        self.lastcontrol = b
 
     def a(self, relative):
         for rx, ry, phi, fa, fs, x, y in zip(*(self,) * 7):
