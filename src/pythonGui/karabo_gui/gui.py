@@ -4,12 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from karabo_gui.singletons.api import (
-    get_manager, get_network, get_panel_wrangler
-)
+from karabo_gui.singletons.api import get_manager, get_panel_wrangler
 
 
-def init_gui(app):
+def init_gui(app, splash):
     """ Initialize the GUI.
 
     Imports are being done inside this function to avoid delaying the display
@@ -28,12 +26,5 @@ def init_gui(app):
 
     # Initialize the Manager singleton
     get_manager()
-    network = get_network()
-    # Initialize the PanelWrangler to get the main window
-    main_window = get_panel_wrangler().main_window
-
-    main_window.signalQuitApplication.connect(network.onQuitApplication)
-    network.signalServerConnectionChanged.connect(
-        main_window.onServerConnectionChanged)
-    network.signalUserChanged.connect(main_window.onUpdateAccessLevel)
-    main_window.show()
+    # Initialize the PanelWrangler and attach the splash screen
+    get_panel_wrangler().use_splash_screen(splash)
