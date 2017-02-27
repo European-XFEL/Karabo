@@ -649,8 +649,28 @@ namespace karabo {
             std::vector<std::string> candidates;
             getPaths(other, candidates, "", separator); // may be optimized to avoid list creation 
             if (candidates.empty()) return;
-            for (std::vector<std::string>::const_iterator it = candidates.begin(); it != candidates.end(); ++it) {
+            std::set<std::string> myset;
+            getPaths(myset, separator);
+            for (std::vector<std::string>::const_reverse_iterator it = candidates.rbegin();
+                    it != candidates.rend(); ++it) {
+                if (myset.find(*it) == myset.end() || (*it).back() == ']') continue;
                 this->erase(*it, separator);
+            }
+            myset.clear();
+            getPaths(myset, separator);
+            std::string lastPath;
+            for (std::set<std::string>::const_reverse_iterator it = myset.rbegin();
+                    it != myset.rend(); ++it) {
+                size_t pos = (*it).rfind("[");
+                if (pos == std::string::npos) continue;
+                const std::string& path = (*it).substr(0,pos);
+                if ((*it).back() == ']') {
+                    if (lastPath.find(path) == std::string::npos) {
+                        this->erase(*it, separator);
+                    }
+                } else {
+                    lastPath = path;
+                }
             }
         }
 

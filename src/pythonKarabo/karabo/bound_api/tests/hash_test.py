@@ -967,9 +967,9 @@ class Hash_TestCase(unittest.TestCase):
             h4 = Hash("a.b", Hash(), "c", Hash())
             h3 -= h4
             
-            self.assertFalse("a.b" in h3)
-            self.assertTrue(h3["a"].empty())
-            self.assertFalse("c" in h3)
+            self.assertTrue("a.b" in h3)
+            self.assertFalse(h3["a"].empty())
+            self.assertTrue("c" in h3)
             self.assertTrue(h3["b.c.d"] == 22)
             
         except Exception as e:
