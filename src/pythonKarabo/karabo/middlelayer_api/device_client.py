@@ -14,7 +14,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from decimal import Decimal
 import time
-from weakref import WeakSet
+from weakref import ref, WeakSet
 
 import dateutil.parser
 import dateutil.tz
@@ -128,6 +128,7 @@ class Proxy(object):
         self._alive = True
         self._running_tasks = set()
         self._last_update_task = None
+        self._schemaUpdateConnected = False
 
     @classmethod
     def __dir__(cls):
@@ -261,9 +262,14 @@ class Proxy(object):
             self._device._ss.disconnect(self._deviceId, "signalStateChanged",
                                         self._device.slotChanged)
 
+    def _disconnectSchemaUpdated(self):
+        if self._schemaUpdateConnected:
+            self._device._ss.disconnect(self._deviceId, "signalSchemaUpdated",
+                                        self._device.slotSchemaUpdated)
+        self._schemaUpdateConnected = False
+
     def __del__(self):
-        self._device._ss.disconnect(self._deviceId, "signalSchemaUpdated",
-                                    self._device.slotSchemaUpdated)
+        self._disconnectSchemaUpdated()
         if self._used > 0:
             self._used = 1
             self.__exit__(None, None, None)
@@ -596,10 +602,10 @@ def _createProxyDict(hash, prefix):
 @synchronize
 def _getDevice(deviceId, sync, Proxy=Proxy):
     instance = get_instance()
-    ret = instance._proxies.get(deviceId)
-    if ret is not None:
-        yield from ret
-        return ret
+    proxy = instance._proxies.get(deviceId)
+    if proxy is not None:
+        yield from proxy
+        return proxy
 
     futures = instance._proxy_futures
     future = futures.get(deviceId)
@@ -615,15 +621,37 @@ def _getDevice(deviceId, sync, Proxy=Proxy):
             namespace = _createProxyDict(schema.hash, "")
             Cls = type(schema.name, (Proxy,), namespace)
 
-            ret = Cls(instance, deviceId, sync)
-            ret._schema_hash = schema.hash
-            instance._proxies[deviceId] = ret
+            proxy = Cls(instance, deviceId, sync)
+            proxy._schema_hash = schema.hash
+            instance._proxies[deviceId] = proxy
         finally:
             del futures[deviceId]
-        instance._ss.connect(deviceId, "signalSchemaUpdated",
-                             instance.slotSchemaUpdated)
-        yield from ret
-        return ret
+
+        # the following is pure black magic. Originally, (git blame should
+        # show you where exactly) the following context manager was simply
+        # a method of Proxy. Unfortunately, context managers (IMHO
+        # illegally) hold a hidden reference to their call attributes,
+        # including self, meaning that they cannot be collected. This
+        # is why we sneak the proxy into method using a closure.
+        closure_proxy = proxy
+        @contextmanager
+        def connectSchemaUpdated():
+            nonlocal closure_proxy
+            closure_proxy._device._ss.connect(
+                closure_proxy._deviceId, "signalSchemaUpdated",
+                closure_proxy._device.slotSchemaUpdated)
+            closure_proxy._schemaUpdateConnected = True
+            closure_proxy = ref(closure_proxy)
+            try:
+                yield
+            finally:
+                closure_proxy = closure_proxy()
+                if closure_proxy is not None:
+                    closure_proxy._disconnectSchemaUpdated()
+
+        instance._ss.enter_context(connectSchemaUpdated())
+        yield from proxy
+        return proxy
     future = asyncio.shield(create())
     futures[deviceId] = future
     return (yield from future)
