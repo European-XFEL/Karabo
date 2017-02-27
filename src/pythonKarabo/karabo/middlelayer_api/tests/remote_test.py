@@ -499,12 +499,12 @@ class Tests(DeviceTest):
             # since last line). This asserts that waitUntilNew also works
             # with uninitialized values, which had been a bug before.
             self.assertEqual(d.counter, None)
-            yield from waitUntilNew(d.counter)
+            yield from waitUntilNew(d.value, d.counter)
             task = async(d.count())
             try:
                 for i in range(30):
-                    j = yield from waitUntilNew(d.counter)
-                    self.assertEqual(i, j)
+                    yield from waitUntilNew(d.counter, d.value)
+                    self.assertEqual(i, d.counter)
             finally:
                 yield from task
 
