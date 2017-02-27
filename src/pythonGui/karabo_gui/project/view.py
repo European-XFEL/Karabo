@@ -68,11 +68,12 @@ class ProjectView(QTreeView):
         if start != 0:
             return
 
-        controller = self.model().controller_ref(index)
+        parent_index = index.parent()
+        controller = self.model().controller_ref(parent_index)
         if (controller is not None and
                 isinstance(controller, BaseProjectGroupController)):
             # If a group just added its first item, expand it
-            self.expand(index.parent())
+            self.expand(parent_index)
 
     def _selection_change(self, selected, deselected):
         """ Notify controller objects when their Qt list item object is

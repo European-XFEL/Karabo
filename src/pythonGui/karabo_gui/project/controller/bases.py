@@ -103,12 +103,14 @@ class BaseProjectController(ABCHasStrictTraits):
 
     @on_trait_change('model.modified')
     def _update_label_style(self):
+        brush = QBrush(self.ui_data.brush)
         if self.model.modified:
-            self.ui_data.brush.setColor(Qt.blue)
+            brush.setColor(Qt.blue)
         else:
-            self.ui_data.brush.setColor(Qt.black)
+            brush.setColor(Qt.black)
+        self.ui_data.brush = brush
 
-    @on_trait_change("model.simple_name")
+    @on_trait_change('model.simple_name')
     def _update_label(self):
         """ Whenever ``simple_name`` is modified the UI should repaint
         """
