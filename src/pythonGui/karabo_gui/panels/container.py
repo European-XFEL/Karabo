@@ -35,11 +35,11 @@ class PanelContainer(QTabWidget):
             if isinstance(first_panel, PlaceholderPanel):
                 self.removeTab(0)
 
-        index = self.addTab(panel, panel.windowTitle())
-        panel.index = index
-
         # XXX: Circular references hurrah!
         panel.attach_to_container(self)
+
+        index = self.addTab(panel, panel.windowTitle())
+        panel.index = index
 
         # Store panel in set to keep it alive for un/dock event!!!
         self.panel_set.add(panel)

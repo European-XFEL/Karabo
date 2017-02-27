@@ -19,12 +19,14 @@ def main():
     icons.init()  # Very important!
 
     widget = ProjectPanel()
+    # XXX: A hack to keep the toolbar visible
+    widget.toolbar.setVisible(True)
     widget.show()
     widget.resize(300, 500)
 
-    # XXX: Just a hack to connect to the GUI Server for testing
     get_manager()
     get_panel_wrangler()
+    # XXX: A hack to connect to the GUI Server for testing
     get_network().connectToServer()
 
     app.exec_()
