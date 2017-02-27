@@ -1083,7 +1083,7 @@ void Hash_Test::testSubtract() {
     CPPUNIT_ASSERT(h1.has("a") == false);
     CPPUNIT_ASSERT(h1.get<Hash>("b").empty() == true);
     CPPUNIT_ASSERT(h1.get<int>("c.b[0].g") == 3);
-    CPPUNIT_ASSERT(h1.has("c.b[1]"));
+    CPPUNIT_ASSERT(!h1.has("c.b[1]"));
     CPPUNIT_ASSERT(!h1.has("c.b[2]"));
     CPPUNIT_ASSERT(h1.get<int>("c.c[0].d") == 4);
     CPPUNIT_ASSERT(h1.get<int>("c.c[1].a.b.c") == 6);
@@ -1099,8 +1099,8 @@ void Hash_Test::testSubtract() {
     Hash h4("a.b", Hash(),
             "c", Hash());
     h3 -= h4;
-    CPPUNIT_ASSERT(h3.has("a.b") == false);
-    CPPUNIT_ASSERT(h3.has("c") == false);
+    CPPUNIT_ASSERT(h3.has("a.b") == true);
+    CPPUNIT_ASSERT(h3.has("c") == true);
     CPPUNIT_ASSERT(h3.get<int>("a.c.d") == 22);
     CPPUNIT_ASSERT(h3.get<int>("b.c.d") == 33);
 }
