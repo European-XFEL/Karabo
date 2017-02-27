@@ -64,6 +64,10 @@ class DisplayCommand(DisplayWidget):
                 item.action.setText(box.descriptor.displayedName)
                 item.value = box.descriptor.displayedName
 
+    def updateState(self):
+        super(DisplayCommand, self).updateState()
+        self.update()
+
     @pyqtSlot()
     def update(self):
         for item in self.actions:

@@ -12,20 +12,20 @@ from struct import calcsize, pack, unpack
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
                           QCryptographicHash, QObject)
-from PyQt4.QtGui import QDialog, QMessageBox
+from PyQt4.QtGui import QDialog, QMessageBox, qApp
 
 from karabo.authenticator import Authenticator
 from karabo.common.api import ShellNamespaceWrapper
 from karabo.middlelayer import Hash, BinaryWriter, AccessLevel
 from karabo_gui import background
 from karabo_gui.dialogs.logindialog import LoginDialog
+from karabo_gui.events import broadcast_event, KaraboEventSender
 import karabo_gui.globals as krb_globals
 
 
 class Network(QObject):
     # signals
     signalServerConnectionChanged = pyqtSignal(bool)
-    signalUserChanged = pyqtSignal()
     signalReceivedData = pyqtSignal(object)
 
     def __init__(self, parent=None):
@@ -45,6 +45,9 @@ class Network(QObject):
         self.password = None
         self.provider = None
         self.hostname, self.port = self.load_settings()
+
+        # Listen for the quit notification
+        qApp.aboutToQuit.connect(self.onQuitApplication)
 
     def connectToServer(self):
         """
@@ -144,8 +147,8 @@ class Network(QObject):
                 krb_globals.GLOBAL_ACCESS_LEVEL = krb_globals.KARABO_DEFAULT_ACCESS_LEVEL
                 print("Login problem. Please verify, if service is running. " + str(e))
 
-                # Inform the mainwindow to change correspondingly the allowed level-downgrade
-                self.signalUserChanged.emit()
+                # Inform the GUI to change correspondingly the allowed level-downgrade
+                broadcast_event(KaraboEventSender.LoginUserChanged, {})
                 self._sendLoginInformation(self.username, self.password,
                                            self.provider, self.sessionToken)
                 return
@@ -159,8 +162,8 @@ class Network(QObject):
                 # krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
                 return
 
-        # Inform the mainwindow to change correspondingly the allowed level-downgrade
-        self.signalUserChanged.emit()
+        # Inform the GUI to change correspondingly the allowed level-downgrade
+        broadcast_event(KaraboEventSender.LoginUserChanged, {})
         self._sendLoginInformation(self.username, self.password, self.provider,
                                    self.sessionToken)
 

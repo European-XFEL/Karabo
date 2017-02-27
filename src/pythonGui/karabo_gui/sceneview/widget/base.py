@@ -5,7 +5,7 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
 from karabo_gui import icons
 from karabo_gui.indicators import (DeviceStatus, get_alarm_pixmap,
                                    get_device_status_pixmap)
-from karabo_gui.singletons.api import get_network, get_panel_wrangler
+from karabo_gui.singletons.api import get_network
 from .utils import get_box, determine_if_value_unchanged
 
 
@@ -73,15 +73,12 @@ class BaseWidgetContainer(QWidget):
     def destroy(self):
         """ Disconnect the box signals
         """
-        main_window = get_panel_wrangler().main_window
         widget = self.old_style_widget
         if self.model.parent_component == 'EditableApplyLaterComponent':
             box = self.boxes[0]
             widget.signalEditingFinished.disconnect(self._on_editing_finished)
             # These are connected in `EditableWidget.__init__`
             box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
-                widget.updateStateSlot)
-            main_window.signalGlobalAccessLevelChanged.disconnect(
                 widget.updateStateSlot)
 
         for box in self.boxes:
@@ -115,6 +112,11 @@ class BaseWidgetContainer(QWidget):
             self.alarm_symbol.show()
         else:
             self.alarm_symbol.hide()
+
+    def update_global_access_level(self):
+        """Update the widget based on a new global access level.
+        """
+        self.old_style_widget.updateState()
 
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),

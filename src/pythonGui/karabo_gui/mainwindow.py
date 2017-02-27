@@ -3,22 +3,21 @@
 # Created on November 3, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-"""This module contains a class which represents the main window of the
-    application and includes all relevant panels and the main toolbar.
-"""
+
 from collections import OrderedDict
 from enum import Enum
 import os.path
 
-from PyQt4.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (QAction, QActionGroup, QMainWindow, QMenu, QSplitter,
                          QToolButton, qApp)
 
 import karabo_gui.icons as icons
 from karabo.middlelayer import AccessLevel
 import karabo_gui.globals as krb_globals
-from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
-                               register_for_broadcasts)
+from karabo_gui.events import (
+    KaraboBroadcastEvent, KaraboEventSender, broadcast_event,
+    register_for_broadcasts)
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.container import PanelContainer
@@ -48,9 +47,9 @@ class PanelAreaEnum(Enum):
 
 
 class MainWindow(QMainWindow):
-    signalQuitApplication = pyqtSignal()
-    signalGlobalAccessLevelChanged = pyqtSignal()
-
+    """The main window of the application which includes all relevant panels
+    and the main toolbar.
+    """
     def __init__(self):
         super(MainWindow, self).__init__()
 
@@ -70,6 +69,11 @@ class MainWindow(QMainWindow):
         title = "European XFEL - Karabo GUI " + krb_globals.GUI_VERSION_LONG
         self.setWindowTitle(title)
         self.resize(1200, 800)
+
+        # Connect to some important network signals
+        network = get_network()
+        network.signalServerConnectionChanged.connect(
+            self.onServerConnectionChanged)
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary for self due to the fact that the singleton mediator
@@ -97,6 +101,8 @@ class MainWindow(QMainWindow):
                 self._panelContainerMaximized(data.get('container'))
             elif sender is KaraboEventSender.MinimizePanel:
                 self._panelContainerMinimized(data.get('container'))
+            elif sender is KaraboEventSender.LoginUserChanged:
+                self.onUpdateAccessLevel()
             return False
         return super(MainWindow, self).eventFilter(obj, event)
 
@@ -206,8 +212,6 @@ class MainWindow(QMainWindow):
         """
         # Left
         navigation = NavigationPanel()
-        self.signalGlobalAccessLevelChanged.connect(
-            navigation.onGlobalAccessLevelChanged)
         self.addPanel(navigation, PanelAreaEnum.LeftTop)
         self.addPanel(ProjectPanel(), PanelAreaEnum.LeftBottom)
 
@@ -218,8 +222,6 @@ class MainWindow(QMainWindow):
 
         # Right
         configuration = ConfigurationPanel()
-        self.signalGlobalAccessLevelChanged.connect(
-            configuration.onGlobalAccessLevelChanged)
         self.addPanel(configuration, PanelAreaEnum.Right)
 
     def _setupPanelAreas(self):
@@ -265,7 +267,6 @@ class MainWindow(QMainWindow):
             MessageBox.showWarning(msg, 'Database connection active')
             return False
 
-        self.signalQuitApplication.emit()
         return True
 
     def _enable_toolbar(self, enable):
@@ -327,7 +328,8 @@ class MainWindow(QMainWindow):
         assert isinstance(level, AccessLevel), 'Garbage access level value!'
         krb_globals.GLOBAL_ACCESS_LEVEL = level
 
-        self.signalGlobalAccessLevelChanged.emit()
+        # Tell the world
+        broadcast_event(KaraboEventSender.AccessLevelChanged, {})
 
     @pyqtSlot(bool)
     def onServerConnectionChanged(self, isConnected):
