@@ -205,7 +205,7 @@ class DeviceServer(SignalSlotable):
                 except:
                     process.kill()
                     raise
-                self.bounds[ep.name] = Hash.decode(schema, "XML")[ep.name]
+                self.bounds[ep.name] = Hash.decode(schema, "Bin")[ep.name]
                 changes = True
             except Exception:
                 class_ban.add(ep.name)
