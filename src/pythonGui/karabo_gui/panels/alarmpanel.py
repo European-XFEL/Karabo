@@ -15,8 +15,8 @@ from karabo_gui.alarm_model import (ACKNOWLEDGE, ALARM_DATA, ALARM_ID,
                                     SHOW_DEVICE, AlarmModel, getAlarmKeyIndex)
 from karabo_gui.const import ALARM_COLOR
 from karabo_gui.events import (
-    KaraboBroadcastEvent, KaraboEventSender, broadcast_event,
-    register_for_broadcasts, unregister_from_broadcasts)
+    KaraboEventSender, broadcast_event, register_for_broadcasts,
+    unregister_from_broadcasts)
 from karabo_gui.singletons.api import get_network
 from .base import BasePanelWidget
 
@@ -32,17 +32,15 @@ class AlarmPanel(BasePanelWidget):
         # NOTE: unregister_from_broadcasts will be called by closeEvent()
         register_for_broadcasts(self)
 
-    def eventFilter(self, obj, event):
-        if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.AlarmInitReply:
-                data = event.data
-                self._initAlarms(data.get('instanceId'), data.get('rows'))
-                return False
-            elif event.sender is KaraboEventSender.AlarmUpdate:
-                data = event.data
-                self._updateAlarms(data.get('instanceId'), data.get('rows'))
-                return False
-        return super(AlarmPanel, self).eventFilter(obj, event)
+    def karaboBroadcastEvent(self, event):
+        if event.sender is KaraboEventSender.AlarmInitReply:
+            data = event.data
+            self._initAlarms(data.get('instanceId'), data.get('rows'))
+            return False
+        elif event.sender is KaraboEventSender.AlarmUpdate:
+            data = event.data
+            self._updateAlarms(data.get('instanceId'), data.get('rows'))
+            return False
 
     def closeEvent(self, event):
         super(AlarmPanel, self).closeEvent(event)

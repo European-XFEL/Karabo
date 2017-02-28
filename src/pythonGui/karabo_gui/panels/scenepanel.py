@@ -10,8 +10,7 @@ from PyQt4.QtGui import (QAction, QActionGroup, QApplication, QKeySequence,
                          QMenu, QPalette, QScrollArea)
 
 import karabo_gui.icons as icons
-from karabo_gui.events import (
-    broadcast_event, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.sceneview.api import SceneView
 from karabo_gui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabo_gui.sceneview.tools.api import (
