@@ -615,25 +615,19 @@ namespace karabo {
             const std::set<unsigned int> selectedIndices(Hash::selectIndicesOfKey(sourceVec.size(), selectedPaths,
                                                                                   source.getKey(), separator));
 
-            // Append Hashes for ordinary vector<Hash>
-            if (selectedIndices.empty()) {
-                for (size_t i = 0; i < sourceVec.size(); ++i) {
-                    // Align the target vector size with the source one
-                    if (i == targetVec.size()) targetVec.push_back(Hash());
+            // Merge Hashes for ordinary vector<Hash>
+            for (size_t i = 0; i < sourceVec.size(); ++i) {
+                // If this is not our index -> don't merge!
+                if (!selectedIndices.empty() && selectedIndices.find(i) == selectedIndices.end()) continue;
+                // Align the target vector size with the source one
+                if (i == targetVec.size()) targetVec.push_back(Hash());
+                if (selectedIndices.empty()) {
                     // There cannot be sub-path selections here.
                     targetVec[i].merge(sourceVec[i], policy, std::set<std::string>(), separator);
-                }
-            } else {
-                // But only the selected ones:
-                unsigned int hashCounter = 0;
-                for (std::vector<Hash>::const_iterator it = sourceVec.begin(); it != sourceVec.end(); ++it, ++hashCounter) {
-                    if (selectedIndices.find(hashCounter) != selectedIndices.end()) {
-                        // Extract sub-paths
-                        const std::string indexedKey((source.getKey() + '[') += util::toString(hashCounter) += ']');
-                        const std::set<std::string> paths(Hash::selectChildPaths(selectedPaths, indexedKey, separator));
-                        targetVec.push_back(Hash());
-                        targetVec.back().merge(*it, policy, paths, separator);
-                    }
+                } else {
+                    const std::string indexedKey((source.getKey() + '[') += util::toString(i) += ']');
+                    const std::set<std::string> paths(Hash::selectChildPaths(selectedPaths, indexedKey, separator));
+                    targetVec[i].merge(sourceVec[i], policy, paths, separator);
                 }
             }
         }
