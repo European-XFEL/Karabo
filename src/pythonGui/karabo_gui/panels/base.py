@@ -72,6 +72,7 @@ class BasePanelWidget(QFrame):
         self.panel_container = container
         # Set the toolbar visibility based on whether we're attached or not
         self.standard_toolbar.setVisible(container is not None)
+        self.toolbar.setVisible(container is not None)
 
     def force_close(self):
         """
@@ -165,6 +166,7 @@ class BasePanelWidget(QFrame):
         toolbar_layout.setSpacing(0)
         # Make the last toolbar expand to fill all horizontal space
         toolbar_layout.setStretch(toolbar_layout.count()-1, 1)
+        toolbar.setVisible(False)
 
         # Setup some visual characteristics of the toolbar container
         stylesheet = 'QWidget#{} {{background-color: rgb(180,180,180); }}'
