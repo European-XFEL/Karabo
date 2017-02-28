@@ -63,14 +63,11 @@ class ScenePanel(BasePanelWidget):
     def undock(self):
         """Called when this panel is undocked from the main window.
         """
-        tb_height = self.toolbar.height()
-        frame_width = self.model.width + QFRAME_PADDING
-        frame_height = self.model.height + tb_height + QFRAME_PADDING
+        width, height = self._compute_panel_size()
         screen_rect = QApplication.desktop().screenGeometry()
-        if (frame_width < screen_rect.width() and
-                frame_height < screen_rect.height()):
+        if (width < screen_rect.width() and height < screen_rect.height()):
             # Resize panel
-            self.resize(frame_width, frame_height)
+            self.resize(width, height)
             # Enlarge the scene widget to its actual size
             self.scroll_widget.setWidgetResizable(True)
 
@@ -120,6 +117,12 @@ class ScenePanel(BasePanelWidget):
 
     def showEvent(self, event):
         self.scene_view.set_tab_visible(True)
+
+        # When undocked, make sure our panel has an appropriate size
+        if not self.is_docked:
+            width, height = self._compute_panel_size()
+            self.resize(width, height)
+            self.scroll_widget.setWidgetResizable(True)
 
     # ----------------------------
     # other methods
@@ -302,6 +305,14 @@ class ScenePanel(BasePanelWidget):
         q_action = QAction(self)
         q_action.setSeparator(True)
         return q_action
+
+    def _compute_panel_size(self):
+        tb_height = 0
+        if self.toolbar.isVisible():
+            tb_height = self.toolbar.height()
+        frame_width = self.model.width + QFRAME_PADDING
+        frame_height = self.model.height + tb_height + QFRAME_PADDING
+        return (frame_width, frame_height)
 
 
 class ResizableScrollArea(QScrollArea):
