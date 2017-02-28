@@ -212,10 +212,18 @@ class ProjectManager(PythonDevice):
             try:
                 items = db_session.load_item(domain, keys)
                 for item in items:
+                    uuid = item["uuid"]
                     h = Hash("domain", domain,
-                             "uuid", item["uuid"],
+                             "uuid", uuid,
                              "xml", item["xml"])
                     loadedItems.append(h)
+                    # Remove from the list of requested keys
+                    keys.remove(uuid)
+
+                # Any keys left were not in the database
+                if len(keys) > 0:
+                    success = False
+                    exceptionReason = 'Items "{}" not found!'.format(keys)
 
             except ProjectDBError as e:
                 exceptionReason = str(e)
