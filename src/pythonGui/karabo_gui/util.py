@@ -5,7 +5,7 @@ from tempfile import mkstemp
 from uuid import uuid4
 
 from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QDialog, QFileDialog, QLabel, QMovie
+from PyQt4.QtGui import QDialog, QFileDialog, QHeaderView, QLabel, QMovie
 
 from karabo.middlelayer import Hash, MetricPrefix, Unit
 import karabo_gui.globals as globals
@@ -202,3 +202,19 @@ def get_spin_widget(scaled_size=QSize(), parent=None):
     spin_widget.setMovie(movie)
     movie.start()
     return spin_widget
+
+
+def set_treeview_header(tree_view):
+    """This function is used by the ``QTreeView`` used for the navigation and
+    the projects and sets its header correctly.
+    """
+    # NOTE: Since QTreeView always displays the expander in column 0 the
+    # additional columns are moved to the front
+    tree_view.header().moveSection(1, 0)
+    tree_view.header().moveSection(2, 0)
+
+    tree_view.header().setResizeMode(0, QHeaderView.ResizeToContents)
+    tree_view.header().setResizeMode(1, QHeaderView.Fixed)
+    tree_view.header().setResizeMode(2, QHeaderView.Fixed)
+    tree_view.setColumnWidth(1, 20)
+    tree_view.setColumnWidth(2, 20)

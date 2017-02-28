@@ -11,7 +11,7 @@ from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
 from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo_gui.project.utils import maybe_save_modified_project, save_object
 from karabo_gui.singletons.api import get_project_model, get_selection_tracker
-from karabo_gui.util import is_database_processing
+from karabo_gui.util import is_database_processing, set_treeview_header
 from .controller.bases import BaseProjectGroupController
 from .controller.project import ProjectController
 from .controller.project_groups import ProjectSubgroupController
@@ -29,6 +29,8 @@ class ProjectView(QTreeView):
         project_model.rowsInserted.connect(self._items_added)
         self.setSelectionModel(project_model.q_selection_model)
         self.selectionModel().selectionChanged.connect(self._selection_change)
+
+        set_treeview_header(self)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
