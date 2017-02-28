@@ -73,7 +73,7 @@ class DeviceServer(SignalSlotable):
     bannedClasses = VectorString(
         displayedName="Banned Classes",
         description="Device classes banned from scanning "
-                     "as they made problems",
+                    "as they made problems",
         defaultValue=[], requiredAccessLevel=AccessLevel.EXPERT)
 
     scanPluginsTask = None
@@ -191,7 +191,7 @@ class DeviceServer(SignalSlotable):
         entrypoints = self.pluginLoader.list_plugins(self.boundNamespace)
         for ep in entrypoints:
             if (ep.name in self.bounds or (classes and ep.name not in classes)
-                  or ep.name in class_ban):
+                    or ep.name in class_ban):
                 continue
             try:
                 env = dict(os.environ)
@@ -268,8 +268,8 @@ class DeviceServer(SignalSlotable):
         if 'deviceId' in hash and hash['deviceId']:
             config['_deviceId_'] = hash['deviceId']
         else:
-            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(
-                                                                    classid)
+            config['_deviceId_'] = \
+                self._generateDefaultDeviceInstanceId(classid)
 
         return classid, config['_deviceId_'], config
 
