@@ -268,8 +268,7 @@ class DeviceServer(SignalSlotable):
         if 'deviceId' in hash and hash['deviceId']:
             config['_deviceId_'] = hash['deviceId']
         else:
-            config['_deviceId_'] = \
-                self._generateDefaultDeviceInstanceId(classid)
+            config['_deviceId_'] = self._generateDefaultDeviceId(classid)
 
         return classid, config['_deviceId_'], config
 
@@ -328,7 +327,7 @@ class DeviceServer(SignalSlotable):
             return self.bounds[classid], classid, self.serverId
         raise RuntimeError("Unknown class {}".format(classid))
 
-    def _generateDefaultDeviceInstanceId(self, devClassId):
+    def _generateDefaultDeviceId(self, devClassId):
         cnt = self.instanceCountPerDeviceServer.setdefault(self.serverId, 0)
         self.instanceCountPerDeviceServer[self.serverId] += 1
         tokens = self.serverId.split("_")
