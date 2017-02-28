@@ -78,6 +78,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         if self._controller is not None:
             destroy_project_controller(self._controller)
             get_topology().clear_project_devices()
+            self.q_selection_model.clearSelection()
 
         self._cleanup_project()
 
