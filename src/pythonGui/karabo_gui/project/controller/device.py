@@ -176,6 +176,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         icon = get_project_device_status_icon(status_enum)
         if icon is not None:
             self.ui_data.icon = icon
+            self.ui_data.status = self.project_device.status
 
         # Show the device's configuration, iff it was already showing
         self._update_configurator()
@@ -210,6 +211,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             # Otherwise show the instance as offline
             status_enum = DeviceStatus('offline')
         ui_data.icon = get_project_device_status_icon(status_enum)
+        ui_data.status = self.project_device.status
 
     def _update_configurator(self):
         configuration = self.project_device.current_configuration
