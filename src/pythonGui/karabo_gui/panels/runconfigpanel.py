@@ -9,9 +9,8 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QStandardItemModel, QVBoxLayout, QWidget,
                          QStandardItem, QLabel, QPushButton, QTreeView)
 
-from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
-                               register_for_broadcasts,
-                               unregister_from_broadcasts)
+from karabo_gui.events import (
+    KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
 from karabo_gui.schema import Dummy
 from karabo_gui.singletons.api import get_network
 from .base import BasePanelWidget
@@ -61,28 +60,26 @@ class RunConfigPanel(BasePanelWidget):
         if event.isAccepted():
             unregister_from_broadcasts(self)
 
-    def eventFilter(self, obj, event):
+    def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
-        if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.DeviceStateChanged:
-                configuration = event.data.get('configuration')
-                classId = configuration.classId
-                cid = configuration.id
-                if (classId == "RunConfigurator" and self.instanceId == cid):
-                    self.updateConfig(configuration)
-            elif event.sender is KaraboEventSender.RunConfigSourcesUpdate:
-                senderId = event.data.get('instanceId')
-                if senderId != self.instanceId:
-                    return False
-                group = event.data.get('group')
-                sources = event.data.get('sources')
-                self._updateDetails(group, sources)
-            elif event.sender is KaraboEventSender.NetworkConnectStatus:
-                if not event.data['status']:
-                    self.groupList.destroy()
-            return False
-        return super(RunConfigPanel, self).eventFilter(obj, event)
+        if event.sender is KaraboEventSender.DeviceStateChanged:
+            configuration = event.data.get('configuration')
+            classId = configuration.classId
+            cid = configuration.id
+            if (classId == "RunConfigurator" and self.instanceId == cid):
+                self.updateConfig(configuration)
+        elif event.sender is KaraboEventSender.RunConfigSourcesUpdate:
+            senderId = event.data.get('instanceId')
+            if senderId != self.instanceId:
+                return False
+            group = event.data.get('group')
+            sources = event.data.get('sources')
+            self._updateDetails(group, sources)
+        elif event.sender is KaraboEventSender.NetworkConnectStatus:
+            if not event.data['status']:
+                self.groupList.destroy()
+        return False
 
     def updateConfig(self, config):
         """

@@ -15,8 +15,8 @@ except ImportError:
 
 from karabo.common.project.api import write_macro
 from karabo_gui.events import (
-    KaraboBroadcastEvent, KaraboEventSender, broadcast_event,
-    register_for_broadcasts, unregister_from_broadcasts)
+    KaraboEventSender, broadcast_event, register_for_broadcasts,
+    unregister_from_broadcasts)
 import karabo_gui.icons as icons
 from karabo_gui.project.utils import run_macro
 from karabo_gui.singletons.api import get_topology
@@ -73,23 +73,24 @@ class MacroPanel(BasePanelWidget):
         toolbar.addAction(icons.save, "Save", self.onSave)
         return [toolbar]
 
-    def eventFilter(self, object, event):
+    def eventFilter(self, obj, event):
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Tab:
                 self.teEditor.textCursor().insertText(" " * 4)
                 return True
-        elif isinstance(event, KaraboBroadcastEvent):
-            sender = event.sender
-            data = event.data
-            if sender is KaraboEventSender.ConnectMacroInstance:
-                model = data.get('model')
-                if model is self.model:
-                    self.connect(data.get('instance'))
-            elif sender is KaraboEventSender.DeviceInitReply:
-                macro_instance = data.get('device')
-                if macro_instance.id in self.model.instance_id:
-                    self.initReply(data.get('success'), data.get('message'))
-            return False
+        return False
+
+    def karaboBroadcastEvent(self, event):
+        sender = event.sender
+        data = event.data
+        if sender is KaraboEventSender.ConnectMacroInstance:
+            model = data.get('model')
+            if model is self.model:
+                self.connect(data.get('instance'))
+        elif sender is KaraboEventSender.DeviceInitReply:
+            macro_instance = data.get('device')
+            if macro_instance.id in self.model.instance_id:
+                self.initReply(data.get('success'), data.get('message'))
         return False
 
     def closeEvent(self, event):

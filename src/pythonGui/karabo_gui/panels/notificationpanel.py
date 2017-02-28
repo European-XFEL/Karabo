@@ -4,8 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from karabo_gui.events import (
-    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.events import register_for_broadcasts, KaraboEventSender
 from karabo_gui.logwidget import LogWidget
 from .base import BasePanelWidget
 
@@ -24,16 +23,14 @@ class NotificationPanel(BasePanelWidget):
         self.logWidget = LogWidget(self, False)
         return self.logWidget
 
-    def eventFilter(self, obj, event):
+    def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
-        if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.NotificationMessage:
-                device_id = event.data['device_id']
-                message_type = event.data['message_type']
-                short_msg = event.data['short_msg']
-                detailed_msg = event.data['detailed_msg']
-                handler = self.logWidget.onNotificationAvailable
-                handler(device_id, message_type, short_msg, detailed_msg)
-            return False
-        return super(NotificationPanel, self).eventFilter(obj, event)
+        if event.sender is KaraboEventSender.NotificationMessage:
+            device_id = event.data['device_id']
+            message_type = event.data['message_type']
+            short_msg = event.data['short_msg']
+            detailed_msg = event.data['detailed_msg']
+            handler = self.logWidget.onNotificationAvailable
+            handler(device_id, message_type, short_msg, detailed_msg)
+        return False
