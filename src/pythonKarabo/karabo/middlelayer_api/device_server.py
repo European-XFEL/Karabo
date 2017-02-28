@@ -9,6 +9,7 @@ from subprocess import PIPE
 
 import numpy
 
+from .basetypes import isSet
 from .enums import AccessLevel, AccessMode, Assignment
 from .eventloop import EventLoop
 from .hash import Bool, Hash, Int32, String, VectorString
@@ -72,7 +73,7 @@ class DeviceServer(SignalSlotable):
     bannedClasses = VectorString(
         displayedName="Banned Classes",
         description="Device classes banned from scanning "
-                     "as they made problems",
+                    "as they made problems",
         defaultValue=[], requiredAccessLevel=AccessLevel.EXPERT)
 
     scanPluginsTask = None
@@ -105,7 +106,7 @@ class DeviceServer(SignalSlotable):
         self.newDeviceFutures = {}
         self.hostname, _, self.domainname = socket.gethostname().partition('.')
         self.needScanPlugins = True
-        if not hasattr(self, 'serverId'):
+        if not isSet(self.serverId):
             self.serverId = self._generateDefaultServerId()
 
         self.deviceId = self._deviceId_ = self.serverId
@@ -190,7 +191,7 @@ class DeviceServer(SignalSlotable):
         entrypoints = self.pluginLoader.list_plugins(self.boundNamespace)
         for ep in entrypoints:
             if (ep.name in self.bounds or (classes and ep.name not in classes)
-                  or ep.name in class_ban):
+                    or ep.name in class_ban):
                 continue
             try:
                 env = dict(os.environ)
@@ -213,20 +214,11 @@ class DeviceServer(SignalSlotable):
         self.bannedClasses = list(class_ban)
         return changes
 
-    def errorFoundAction(self, m1, m2):
-        self.log.ERROR("{} -- {}".format(m1, m2))
-
-    def endErrorAction(self):
-        pass
-
     @coslot
     def slotStartDevice(self, hash):
         config = Hash()
 
-        if 'classId' in hash:
-            classId, deviceId, config = self.parseNew(hash)
-        else:
-            classId, deviceId, config = self.parseOld(hash)
+        classId, deviceId, config = self.parse(hash)
 
         if classId in self.plugins:
             try:
@@ -261,10 +253,10 @@ class DeviceServer(SignalSlotable):
     def addChild(self, deviceId, child):
         self.deviceInstanceMap[deviceId] = child
 
-    def parseNew(self, hash):
+    def parse(self, hash):
         classid = hash['classId']
-        self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n{}".format(hash))
+        self.logger.info("Trying to start %s...", classid)
+        self.logger.debug("with the following configuration:\n%s", hash)
 
         # Get configuration
         config = copy.copy(hash['configuration'])
@@ -276,26 +268,9 @@ class DeviceServer(SignalSlotable):
         if 'deviceId' in hash and hash['deviceId']:
             config['_deviceId_'] = hash['deviceId']
         else:
-            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(
-                                                                    classid)
+            config['_deviceId_'] = self._generateDefaultDeviceId(classid)
 
         return classid, config['_deviceId_'], config
-
-    def parseOld(self, hash):
-        # Input 'config' parameter comes from GUI or DeviceClient
-        classid = next(iter(hash))
-        self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n{}".format(hash))
-        configuration = copy.copy(hash[classid])
-        configuration["_serverId_"] = self.serverId
-        deviceid = str()
-        if "deviceId" in configuration:
-            deviceid = configuration["deviceId"]
-        else:
-            deviceid = self._generateDefaultDeviceInstanceId(classid)
-
-        configuration["_deviceId_"] = deviceid
-        return classid, deviceid, configuration
 
     def deviceClassesHash(self):
         visibilities = ([c.visibility.defaultValue.value
@@ -352,7 +327,7 @@ class DeviceServer(SignalSlotable):
             return self.bounds[classid], classid, self.serverId
         raise RuntimeError("Unknown class {}".format(classid))
 
-    def _generateDefaultDeviceInstanceId(self, devClassId):
+    def _generateDefaultDeviceId(self, devClassId):
         cnt = self.instanceCountPerDeviceServer.setdefault(self.serverId, 0)
         self.instanceCountPerDeviceServer[self.serverId] += 1
         tokens = self.serverId.split("_")
