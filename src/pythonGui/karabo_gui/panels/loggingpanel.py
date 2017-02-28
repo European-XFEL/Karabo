@@ -5,8 +5,7 @@
 #############################################################################
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
-from karabo_gui.events import (
-    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.events import register_for_broadcasts, KaraboEventSender
 import karabo_gui.icons as icons
 from karabo_gui.logwidget import LogWidget
 from karabo_gui.toolbar import ToolBar
@@ -54,12 +53,10 @@ class LoggingPanel(BasePanelWidget):
         toolBar.addAction(self.__acClearLog)
         return [toolBar]
 
-    def eventFilter(self, obj, event):
+    def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
-        if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.LogMessages:
-                messages = event.data.get('messages', [])
-                self.__logWidget.onLogDataAvailable(messages)
-            return False
-        return super(LoggingPanel, self).eventFilter(obj, event)
+        if event.sender is KaraboEventSender.LogMessages:
+            messages = event.data.get('messages', [])
+            self.__logWidget.onLogDataAvailable(messages)
+        return False

@@ -11,8 +11,7 @@ from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
 from karabo.common.scenemodel.api import (
     FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from karabo_gui.events import (
-    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
-    unregister_from_broadcasts
+    KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts
 )
 from .bases import BaseSceneTool
 from .builder import (bring_object_to_front, create_object_from_model,
@@ -186,16 +185,14 @@ class SceneView(QWidget):
                 return widget.event(event)
         return super(SceneView, self).event(event)
 
-    def eventFilter(self, obj, event):
-        if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.AlarmDeviceUpdate:
-                device_id = event.data.get('deviceId')
-                alarm_type = event.data.get('alarm_type')
-                self._update_alarm_symbols(device_id, alarm_type)
-            if event.sender is KaraboEventSender.AccessLevelChanged:
-                self._update_widget_states()
-            return False
-        return super(SceneView, self).eventFilter(obj, event)
+    def karaboBroadcastEvent(self, event):
+        if event.sender is KaraboEventSender.AlarmDeviceUpdate:
+            device_id = event.data.get('deviceId')
+            alarm_type = event.data.get('alarm_type')
+            self._update_alarm_symbols(device_id, alarm_type)
+        elif event.sender is KaraboEventSender.AccessLevelChanged:
+            self._update_widget_states()
+        return False
 
     def contextMenuEvent(self, event):
         """ Show scene view specific context menu. """

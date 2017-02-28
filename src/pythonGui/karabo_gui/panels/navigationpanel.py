@@ -3,8 +3,7 @@
 # Created on November 30, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from karabo_gui.events import (
-    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.events import register_for_broadcasts, KaraboEventSender
 from karabo_gui.navigationtreeview import NavigationTreeView
 from .base import BasePanelWidget
 
@@ -23,18 +22,16 @@ class NavigationPanel(BasePanelWidget):
         self.twNavigation = NavigationTreeView(self)
         return self.twNavigation
 
-    def eventFilter(self, obj, event):
+    def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
-        if isinstance(event, KaraboBroadcastEvent):
-            sender = event.sender
-            if sender is KaraboEventSender.NetworkConnectStatus:
-                if not event.data['status']:
-                    self.twNavigation.clear()
-            elif sender is KaraboEventSender.AccessLevelChanged:
-                self.twNavigation.model().globalAccessLevelChanged()
-            return False
-        return super(NavigationPanel, self).eventFilter(obj, event)
+        sender = event.sender
+        if sender is KaraboEventSender.NetworkConnectStatus:
+            if not event.data['status']:
+                self.twNavigation.clear()
+        elif sender is KaraboEventSender.AccessLevelChanged:
+            self.twNavigation.model().globalAccessLevelChanged()
+        return False
 
     def onSelectNewNavigationItem(self, devicePath):
         self.twNavigation.selectItem(devicePath)

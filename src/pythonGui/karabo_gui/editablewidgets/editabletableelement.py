@@ -52,8 +52,7 @@ from karabo_gui.widget import DisplayWidget, EditableWidget
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.events import (
-    KaraboBroadcastEvent, KaraboEventSender, register_for_broadcasts,
-    unregister_from_broadcasts)
+    KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
 from karabo_gui.singletons.api import get_topology
 import karabo_gui.schema as schema
 
@@ -401,14 +400,12 @@ class FromPropertyPopUp(QDialog):
         super(FromPropertyPopUp, self).closeEvent(event)
         unregister_from_broadcasts(self)
 
-    def eventFilter(self, obj, event):
+    def karaboBroadcastEvent(self, event):
         """Router for incoming broadcasts
         """
-        if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.DeviceDataReceived:
-                self.delayedSchema()
-            return False
-        return super(FromPropertyPopUp, self).eventFilter(obj, event)
+        if event.sender is KaraboEventSender.DeviceDataReceived:
+            self.delayedSchema()
+        return False
 
     def getCurrentDeviceInstances(self):
         instance_ids = set()
