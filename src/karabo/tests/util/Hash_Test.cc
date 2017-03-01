@@ -989,7 +989,7 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(h1c.has("b.c"));
     CPPUNIT_ASSERT(h1c.has("g.h.i"));
     CPPUNIT_ASSERT(h1c.has("h.i"));
-    CPPUNIT_ASSERT(h1c.has("i[0].k.l"));
+    CPPUNIT_ASSERT(h1c.has("i[2].k.l"));
     // But not the other ones from h2:
     CPPUNIT_ASSERT(!h1c.has("c.b[0].key")); // neither at old position of h2
     CPPUNIT_ASSERT(!h1c.has("c.b[2]"));     // nor an extended vector<Hash> at all
@@ -1025,17 +1025,15 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(hashTargetB.has("a[1].b"));
     CPPUNIT_ASSERT(hashTargetB.has("a[2].a"));
     CPPUNIT_ASSERT(hashTargetB.has("a[2].b"));
-    CPPUNIT_ASSERT(!hashTargetB.has("a[5]"));
+    CPPUNIT_ASSERT(!hashTargetB.has("a[3]"));
     CPPUNIT_ASSERT(hashTargetB.has("c[0]"));
     CPPUNIT_ASSERT(!hashTargetB.has("c[0].k"));
-    CPPUNIT_ASSERT(hashTargetB.has("c[0].l"));
-    CPPUNIT_ASSERT(!hashTargetB.has("c[1]"));
+    CPPUNIT_ASSERT(hashTargetB.has("c[1].l"));
     CPPUNIT_ASSERT(hashTargetB.has("d[2].b"));
     CPPUNIT_ASSERT(!hashTargetB.has("d[3]"));
-    CPPUNIT_ASSERT(!hashTargetB.has("e[0].1"));
-    CPPUNIT_ASSERT(hashTargetB.has("e[0].2"));
-    CPPUNIT_ASSERT(hashTargetB.has("e[0].3"));
-    CPPUNIT_ASSERT(!hashTargetB.has("e[1]"));
+    CPPUNIT_ASSERT(hashTargetB.has("e[0]"));
+    CPPUNIT_ASSERT(hashTargetB.has("e[1].2"));
+    CPPUNIT_ASSERT(hashTargetB.has("e[1].3"));
 
     selectedPaths.clear();
     selectedPaths.insert("a[0]");
@@ -1043,9 +1041,8 @@ void Hash_Test::testMerge() {
     selectedPaths.insert("c"); // trigger overwriting with complete vector
     hashTargetC.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths);
     CPPUNIT_ASSERT(hashTargetC.has("a[1].b"));
-    CPPUNIT_ASSERT(!hashTargetC.has("a[3].a"));
-    CPPUNIT_ASSERT(hashTargetC.has("a[3].b"));
-    CPPUNIT_ASSERT(!hashTargetC.has("a[4]"));
+    CPPUNIT_ASSERT(!hashTargetC.has("a[3]"));
+    CPPUNIT_ASSERT(hashTargetC.has("a[2].b"));
     CPPUNIT_ASSERT(hashTargetC.has("c[1].k"));
     CPPUNIT_ASSERT(hashTargetC.has("c[1].l"));
     CPPUNIT_ASSERT(hashTargetC.has("c[2].b"));
@@ -1084,7 +1081,6 @@ void Hash_Test::testSubtract() {
     CPPUNIT_ASSERT(h1.get<Hash>("b").empty() == true);
     CPPUNIT_ASSERT(h1.get<int>("c.b[0].g") == 3);
     CPPUNIT_ASSERT(!h1.has("c.b[1]"));
-    CPPUNIT_ASSERT(!h1.has("c.b[2]"));
     CPPUNIT_ASSERT(h1.get<int>("c.c[0].d") == 4);
     CPPUNIT_ASSERT(h1.get<int>("c.c[1].a.b.c") == 6);
     CPPUNIT_ASSERT(h1.get<int>("d.e") == 7);
