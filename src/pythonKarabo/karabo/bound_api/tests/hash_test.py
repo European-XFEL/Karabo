@@ -842,7 +842,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertTrue(h1c.has("b.c"))
         self.assertTrue(h1c.has("g.h.i"))
         self.assertTrue(h1c.has("h.i"))
-        self.assertTrue(h1c.has("i[0].k.l"))
+        self.assertTrue(h1c.has("i[2].k.l"))
         # But not the other ones from h2:
         self.assertFalse(h1c.has("c.b[0].key")) # neither at old position of h2
         self.assertFalse(h1c.has("c.b[2]"))     # nor an extended vector<Hash> at all
@@ -884,14 +884,12 @@ class Hash_TestCase(unittest.TestCase):
         self.assertFalse(hashTargetB.has("a[5]"))
         self.assertTrue(hashTargetB.has("c[0]"))
         self.assertFalse(hashTargetB.has("c[0].k"))
-        self.assertTrue(hashTargetB.has("c[0].l"))
-        self.assertFalse(hashTargetB.has("c[1]"))
+        self.assertTrue(hashTargetB.has("c[1].l"))
         self.assertTrue(hashTargetB.has("d[2].b"))
         self.assertFalse(hashTargetB.has("d[3]"))
         self.assertFalse(hashTargetB.has("e[0].1"))
-        self.assertTrue(hashTargetB.has("e[0].2"))
-        self.assertTrue(hashTargetB.has("e[0].3"))
-        self.assertFalse(hashTargetB.has("e[1]"))
+        self.assertTrue(hashTargetB.has("e[1].2"))
+        self.assertTrue(hashTargetB.has("e[1].3"))
 
 
         selectedPaths = ("a[0]",
@@ -899,9 +897,9 @@ class Hash_TestCase(unittest.TestCase):
                          "c")      # trigger overwriting with complete vector
         hashTargetC.merge(hashSourceBCD, HashMergePolicy.MERGE_ATTRIBUTES, selectedPaths)
         self.assertTrue(hashTargetC.has("a[1].b"))
-        self.assertFalse(hashTargetC.has("a[3].a"))
-        self.assertTrue(hashTargetC.has("a[3].b"))
-        self.assertFalse(hashTargetC.has("a[4]"))
+        self.assertFalse(hashTargetC.has("a[2].a"))
+        self.assertTrue(hashTargetC.has("a[2].b"))
+        self.assertFalse(hashTargetC.has("a[3]"))
         self.assertTrue(hashTargetC.has("c[1].k"))
         self.assertTrue(hashTargetC.has("c[1].l"))
         self.assertTrue(hashTargetC.has("c[2].b"))
