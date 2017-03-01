@@ -225,7 +225,7 @@ def checkout(args):
             print('INFO The device package already exists, skipped checkout')
         else:
             print('Downloading {}... '.format(args.device), end='', flush=True)
-            run_cmd('git clone {}/karaboDevices/{} {}'.format(args.git,
+            run_cmd('git clone {}/karaboDevices/{}.git {}'.format(args.git,
                                                               args.device,
                                                               path))
             print('done.')
@@ -242,7 +242,7 @@ def install(args):
             run_cmd('rm -rf {}'.format(path))
         os.makedirs(path, exist_ok=True)
         print('Downloading {}... '.format(args.device), end='', flush=True)
-        run_cmd('git clone {}/karaboDevices/{} --depth 1 -b {}\
+        run_cmd('git clone {}/karaboDevices/{}.git --depth 1 -b {}\
                 --single-branch {}'
                 .format(args.git, args.device, args.tag, path))
         print('done.')
