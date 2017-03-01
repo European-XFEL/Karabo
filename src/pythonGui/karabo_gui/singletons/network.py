@@ -5,6 +5,7 @@
 #############################################################################
 
 from functools import partial
+import os
 import os.path as op
 import socket
 from struct import calcsize, pack, unpack
@@ -41,9 +42,9 @@ class Network(QObject):
         self.tcpSocket = None
         self.requestQueue = []
 
-        self.username = None
-        self.password = None
-        self.provider = None
+        self.username = ''
+        self.password = ''
+        self.provider = ''
         self.hostname, self.port = self.load_settings()
 
         # Listen for the quit notification
@@ -57,12 +58,16 @@ class Network(QObject):
 
         dialog = LoginDialog(username=self.username,
                              password=self.password,
-                             provider=self.provider)
+                             provider=self.provider,
+                             hostname=self.hostname,
+                             port=self.port)
 
         if dialog.exec_() == QDialog.Accepted:
             self.username = dialog.username
             self.password = dialog.password
             self.provider = dialog.provider
+            self.hostname = dialog.hostname
+            self.port = dialog.port
             self.startServerConnection()
             isConnected = True
 
@@ -70,13 +75,19 @@ class Network(QObject):
         self.signalServerConnectionChanged.emit(isConnected)
 
     def load_settings(self):
-        hostname = "localhost"
-        port = 44444
+        # Try to load from the environment variables first
+        hostname = os.environ.get(krb_globals.KARABO_GUI_HOST, None)
+        port = os.environ.get(krb_globals.KARABO_GUI_PORT, None)
+        if hostname is not None and port is not None:
+            return (hostname, port)
 
         if op.exists(krb_globals.CONFIG_FILE):
             config = ShellNamespaceWrapper(krb_globals.CONFIG_FILE)
-            hostname = config.get(krb_globals.KARABO_GUI_HOST, hostname)
-            port = int(config.get(krb_globals.KARABO_GUI_PORT, port))
+            # Only read from config file if values are not found in environment
+            if hostname is None:
+                hostname = config.get(krb_globals.KARABO_GUI_HOST, 'localhost')
+            if port is None:
+                port = int(config.get(krb_globals.KARABO_GUI_PORT, 44444))
 
         return (hostname, port)
 
