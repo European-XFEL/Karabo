@@ -10,6 +10,7 @@ class DbSettings:
                                           self.server_uri)
         self.root_collection = "/krb_config"
         self.root_collection_test = "/krb_test"
+        self.root_collection_backup = "/krb_backup"
 
 
 class ProbeDbSettings(DbSettings):

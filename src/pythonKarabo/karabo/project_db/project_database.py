@@ -308,13 +308,21 @@ class ProjectDatabase(ContextDecorator):
     def sanitize_database(self, domain):
         """ This function (attempts to) sanitize all items in a domain
 
+        NOTE: to run it
+        from karabo.project_db.project_database import ProjectDatabase
+        db = ProjectDatabase("karabo", "karabo", server="exflst105")
+        with db as db:
+            r = db.sanitize_database("/db/krb_config/CAS_INTERNAL")
+
         It inserts the minimally expected attributes if missing! A backup of
         the collection is created prior to the operation!
         """
 
         domain = domain.rstrip('/')
         tstamp = strftime("%Y-%m-%d_%H%M%S", gmtime())
-        base = '/'.join(domain.split('/')[:-1])+"/"
+        origin_base = '/'.join(domain.split('/')[:-1])+"/"
+        base = '{}{}/'.format('/'.join(domain.split('/')[:-2]),
+                              self.settings.root_collection_backup)
         source = domain.split('/')[-1]
         bck = "{}_{}_backup".format(source, tstamp)
         tmp = "tmp_{}".format(tstamp)
@@ -323,18 +331,20 @@ class ProjectDatabase(ContextDecorator):
             xquery version "3.0";
             import module namespace xmldb="http://exist-db.org/xquery/xmldb";
 
+            let $origin_base := "{origin_base}"
             let $base := "{base}"
             let $col1 := "{source}"
             let $tmp := "{tmp}"
             let $col2 := "{dest}"
 
             let $res := xmldb:create-collection($base, $tmp)
-            let $cpy_res := xmldb:copy(concat($base,$col1), concat($base,$tmp))
+            let $cpy_res := xmldb:copy(concat($origin_base,$col1), concat($base,$tmp))
             let $rnm_res := xmldb:rename(concat($base,$tmp,"/",$col1), $col2)
             let $mv_res := xmldb:move(concat($base,$tmp,"/",$col2), $base)
             return xmldb:remove(concat($base,$tmp))
 
-        """.format(base=base, source=source, tmp=tmp, dest=bck)
+        """.format(origin_base=origin_base, base=base, source=source, tmp=tmp,
+                   dest=bck)
 
         print("Creating backup of domain {} at {}{}".format(domain, base, bck))
         try:
