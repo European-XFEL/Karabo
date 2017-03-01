@@ -177,3 +177,7 @@ class ProjectDeviceInstance(HasStrictTraits):
 
         # Update the online flag
         self.online = online_device.isOnline()
+        # Update the status
+        attributes = topology.get_attributes('device.{}'.format(device_id))
+        if attributes is not None:
+            self.status = attributes.get('status', 'ok')
