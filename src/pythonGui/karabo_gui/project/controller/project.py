@@ -25,7 +25,7 @@ class ProjectController(BaseProjectController):
         menu = QMenu(parent)
 
         # If this project is the top of the hierarchy, its parent must be None
-        # In that case, do NOT add a 'Delete' action
+        # In that case, do NOT add an 'Edit' action
         if parent_project is not None:
             edit_action = QAction('Edit', menu)
             edit_action.triggered.connect(self._edit_project)

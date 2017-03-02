@@ -113,9 +113,20 @@ class ProjectView(QTreeView):
                 close_action = QAction('Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
                                                        project_model,
+                                                       parent_project, True))
+                is_trashed = project_model.is_trashed
+                if is_trashed:
+                    text = 'Restore from trash'
+                else:
+                    text = 'Move to trash'
+                trash_action = QAction(text, menu)
+                trash_action.triggered.connect(partial(self._update_is_trashed,
+                                                       project_model,
                                                        parent_project))
                 menu.addAction(save_action)
                 menu.addAction(close_action)
+                menu.addSeparator()
+                menu.addAction(trash_action)
 
             menu.exec(QCursor.pos())
 
@@ -140,28 +151,55 @@ class ProjectView(QTreeView):
         root_project = self.model().traits_data_model
         return find_parent_object(controller.model, root_project, ProjectModel)
 
-    def _close_project(self, project, parent_project):
+    def _close_project(self, project, parent_project, show_dialog):
         """ Close the given `project`
         """
-        ask = 'Do you really want to close the project \"<b>{}</b>\"?'.format(
-            project.simple_name)
-        reply = QMessageBox.question(None, 'Close project', ask,
-                                     QMessageBox.Yes | QMessageBox.No,
-                                     QMessageBox.No)
-        if reply == QMessageBox.No:
-            return
+        if show_dialog:
+            ask = ('Do you really want to close the project \"<b>{}</b>\"'
+                   '?').format(project.simple_name)
+            reply = QMessageBox.question(None, 'Close project', ask,
+                                         QMessageBox.Yes | QMessageBox.No,
+                                         QMessageBox.No)
+            if reply == QMessageBox.No:
+                return
 
         if parent_project is not None:
             # Check for modififications before closing
-            if not maybe_save_modified_project(project):
-                return
+            if show_dialog:
+                if not maybe_save_modified_project(project):
+                    return
             # A subproject
             if project in parent_project.subprojects:
                 parent_project.subprojects.remove(project)
         else:
             # Check for modififications before closing
             model = self.model().traits_data_model
-            if not maybe_save_modified_project(model):
-                return
+            if show_dialog:
+                if not maybe_save_modified_project(model):
+                    return
             # The master project
             self.model().traits_data_model = None
+
+    def _update_is_trashed(self, project, parent_project):
+        """ Mark the given `project` as (un-)trashed
+        """
+        if project.is_trashed:
+            title = 'Restore from trash'
+            text = ('Do you really want to restore this project <br><b>{}</b>'
+                    ' from trash?').format(project.simple_name)
+        else:
+            title = 'Move to trash'
+            text = ('Do you really want to move this project <br><b>{}</b>'
+                    ' to trash and close it?').format(project.simple_name)
+
+        result = QMessageBox.question(None, title, text,
+                                      QMessageBox.Yes | QMessageBox.No)
+        if result == QMessageBox.No:
+            return
+
+        project.is_trashed = not project.is_trashed
+        # Always save afterwards
+        save_object(project, show_dialog=False)
+        if project.is_trashed:
+            # Close project
+            self._close_project(project, parent_project, show_dialog=False)
