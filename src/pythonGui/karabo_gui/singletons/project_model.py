@@ -136,6 +136,9 @@ class ProjectViewItemModel(QAbstractItemModel):
     def _update_alarm_type(self, device_id, alarm_type):
         """Update alarm qt item for the given ``device_id``
         """
+        if self._controller is None:
+            return
+
         # Walk tree to find DeviceInstanceController with given ``device_id``
         device_controller = None
 
