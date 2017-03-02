@@ -3,7 +3,7 @@
 # Created on October 12, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from traits.api import Instance, List
+from traits.api import Bool, Instance, List
 
 from karabo.common.scenemodel.api import SceneModel
 from .bases import BaseProjectObjectModel
@@ -18,6 +18,9 @@ class ProjectModel(BaseProjectObjectModel):
     macros = List(Instance(MacroModel))
     scenes = List(Instance(SceneModel))
     servers = List(Instance(DeviceServerModel))
+
+    # Flag which can be set to enable the user to delete a project
+    is_trashed = Bool(False)
 
 
 # This is outside the class because `ProjectModel` isn't available until here

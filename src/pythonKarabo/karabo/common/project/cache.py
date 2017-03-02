@@ -94,8 +94,10 @@ class ProjectDBCache(object):
             root_type = root.attrib.get('item_type')
             if root_type == obj_type:
                 simple_name = root.attrib.get('simple_name')
+                is_trashed = root.attrib.get('is_trashed', False)
                 proj_data.append({'uuid': uuid,
-                                  'simple_name': simple_name})
+                                  'simple_name': simple_name,
+                                  'is_trashed': is_trashed})
 
         return proj_data
 
