@@ -149,6 +149,12 @@ class ProjectHandleDialog(QDialog):
         if domain:
             self.twProjects.model().request_data(domain)
 
+    @pyqtSlot(bool)
+    def on_cbShowTrash_toggled(self, is_checked):
+        model = self.twProjects.model()
+        model.show_trashed = is_checked
+        model.request_data(self.cbDomain.currentText())
+
 
 class NewProjectDialog(QDialog):
     def __init__(self, model=None, parent=None):
@@ -219,10 +225,11 @@ class SaveProjectDialog(QDialog):
 class TableModel(QAbstractTableModel):
     headers = [value for value in PROJECT_DATA.values()]
 
-    def __init__(self, parent=None):
+    def __init__(self, show_trashed=False, parent=None):
         super(TableModel, self).__init__(parent)
         self.entries = []
         self.db_conn = get_db_conn()
+        self.show_trashed = show_trashed
 
     def request_data(self, domain):
         """Request data for the given ``domain``
@@ -244,6 +251,8 @@ class TableModel(QAbstractTableModel):
         try:
             self.entries = []
             for it in data:
+                if (it.get('is_trashed') == 'true') != self.show_trashed:
+                    continue
                 entry = ProjectEntry(
                     simple_name=it.get('simple_name'),
                     uuid=it.get('uuid'),
