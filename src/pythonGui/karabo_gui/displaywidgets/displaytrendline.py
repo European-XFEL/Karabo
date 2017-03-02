@@ -413,8 +413,6 @@ class DisplayTrendline(DisplayWidget):
         self.legend = None
         self.addBox(box)
 
-
-
     def _initUI(self, parent):
         """ Setup all widgets correctly.
         """
