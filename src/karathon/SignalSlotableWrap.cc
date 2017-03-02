@@ -291,11 +291,11 @@ namespace karathon {
     }
 
 
-    void SignalSlotableWrap::proxySlotCallGuardHandler(const bp::object& handler, const std::string& slotFunction) {
+    void SignalSlotableWrap::proxySlotCallGuardHandler(const bp::object& handler, const std::string& slotFunction, const std::string& callee) {
         ScopedGILAcquire gil;
         try {
             if (handler)
-                handler(bp::object(slotFunction));
+                handler(bp::object(slotFunction), bp::object(callee));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) PyErr_Print();
             throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
