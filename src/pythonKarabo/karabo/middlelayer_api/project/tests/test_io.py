@@ -148,7 +148,7 @@ def test_project_round_trip():
 
     with _project_storage() as storage:
         _write_project(project, storage)
-        rt_project = ProjectModel(uuid=project.uuid)
+        rt_project = ProjectModel(uuid=project.uuid, is_trashed=True)
         rt_project = read_lazy_object(TEST_DOMAIN, project.uuid, storage,
                                       read_project_model, existing=rt_project)
 
