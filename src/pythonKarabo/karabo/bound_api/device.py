@@ -143,6 +143,13 @@ class PythonDevice(NoFsm):
                         .initialValue(AlarmCondition.NONE)
                         .commit(),
 
+            STRING_ELEMENT(expected).key("lockedBy")
+                        .displayedName("Locked by")
+                        .reconfigurable()
+                        .assignmentOptional().defaultValue("")
+                        .expertAccess()
+                        .commit(),
+
             STRING_ELEMENT(expected).key("lastCommand")
                     .displayedName("Last command")
                     .description("The last slot called.")
@@ -1047,6 +1054,7 @@ class PythonDevice(NoFsm):
         # timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
         self._ss.registerSlot(self.slotLoggerPriority)
+        self._ss.registerSlot(self.slotClearLock)
 
     def initChannels(self, topLevel=""):
         # Keys under topLevel, without leading "topLevel.":
@@ -1145,11 +1153,17 @@ class PythonDevice(NoFsm):
             raise AttributeError(
                 "Number of command parameters should not exceed 4")
 
-    def slotCallGuard(self, slotName):
+    def slotCallGuard(self, slotName, callee):
         # Check whether the slot is mentioned in the expectedParameters
         # as the call guard only works on those and will ignore all others
         if slotName not in self.fullSchema:
             return
+
+        # Check whether the slot can be called given the current locking state
+        isSchemaSlot = self.fullSchema.has(slotName)
+        lockableSlot = isSchemaSlot or slotName == "slotReconfigure"
+        if self.allowLock() and lockableSlot and slotName != "slotClearLock":
+            self._ensureSlotIsValidUnderCurrentLock(slotName, callee)
 
         if self.fullSchema.hasAllowedStates(slotName):
             allowedStates = self.fullSchema.getAllowedStates(slotName)
@@ -1162,6 +1176,27 @@ class PythonDevice(NoFsm):
 
         # Log the call of this slot by setting a parameter of the device
         self.set("lastCommand", slotName)
+
+    def allowLock(self):
+        """
+        Overwrite this function for service devices that cannot be locked
+        :return:
+        """
+        return True
+
+    def slotClearLock(self):
+        """ Clear the lock on this device
+        """
+        self.set("lockedBy", "")
+
+    def _ensureSlotIsValidUnderCurrentLock(self, slotName, callee):
+        lockHolder = self["lockedBy"]
+        if lockHolder:
+            msg = "{} is locked by {} and called by {}"
+            self.log.DEBUG(msg.format(self.deviceid, lockHolder, callee))
+            if callee != "unknown" and callee != lockHolder:
+                msg = "Command {} is not allowed as device is locked by {}"
+                raise RuntimeError(msg.format(slotName, lockHolder))
 
     def slotGetConfiguration(self):
         self._ss.reply(self.parameters, self.deviceid)
