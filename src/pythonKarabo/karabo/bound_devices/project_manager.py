@@ -85,6 +85,10 @@ class ProjectManager(PythonDevice):
         except ProjectDBError:
             self.updateState(State.ERROR)
 
+    def allowLock(self):
+        # this service device cannot be locked
+        return False
+
     def reset(self):
         """
         Resetting the device brings it into `State.INIT`
