@@ -222,6 +222,7 @@ def _project_reader(io_obj, existing, metadata):
         return [klass(uuid=h['uuid'], initialized=False) for h in entries]
 
     traits = _db_metadata_reader(metadata)
+    traits['is_trashed'] = (metadata.get('is_trashed') == 'true')
     project = _check_preexisting(existing, ProjectModel, traits)
 
     hsh = Hash.decode(io_obj.read(), 'XML')
@@ -262,6 +263,10 @@ def _model_db_metadata(model):
     attrs['uuid'] = model.uuid
     attrs['simple_name'] = model.simple_name
     attrs['description'] = model.description
+
+    if isinstance(model, ProjectModel):
+        # This attribute currently only applies to the project model
+        attrs['is_trashed'] = str(model.is_trashed).lower()
     return attrs
 
 

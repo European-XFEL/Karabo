@@ -254,6 +254,11 @@ class ProjectDatabase(ContextDecorator):
         path = "{}/{}".format(self.root, domain)
         query = """
         xquery version "3.0";
+        declare namespace functx = "http://www.functx.com";
+        declare function functx:if-absent(
+            $arg as item()* , $value as item()*)  as item()*
+        {{ if (exists($arg)) then $arg else $value }};
+
         let $path := "{path}"
         {maybe_let}
         return <items>{{
@@ -261,10 +266,12 @@ class ProjectDatabase(ContextDecorator):
         let $uuid := $doc/@uuid
         let $simple_name := $doc/@simple_name
         let $item_type := $doc/@item_type
-        group by $uuid, $simple_name, $item_type
+        let $is_trashed := functx:if-absent($doc/@is_trashed, 'false')
+        group by $uuid, $simple_name, $item_type, $is_trashed
         return <item uuid="{{$uuid}}"
-                     simple_name="{{$simple_name}}"
-                     item_type="{{$item_type}}" />
+                simple_name="{{$simple_name}}"
+                item_type="{{$item_type}}"
+                is_trashed="{{$is_trashed}}" />
         }}</items>
         """
         maybe_let, maybe_where = '', ''
@@ -280,7 +287,8 @@ class ProjectDatabase(ContextDecorator):
             res = self.dbhandle.query(query)
             return [{'uuid': r.attrib['uuid'],
                      'item_type': r.attrib['item_type'],
-                     'simple_name': r.attrib['simple_name']}
+                     'simple_name': r.attrib['simple_name'],
+                     'is_trashed': r.attrib['is_trashed']}
                     for r in res.results[0].getchildren()]
         except ExistDBException as e:
                 raise ProjectDBError(e)
