@@ -245,7 +245,7 @@ namespace karathon {
         }
 
         void registerSlotCallGuardHandlerPy(const bp::object& handler) {
-            registerSlotCallGuardHandler(boost::bind(&SignalSlotableWrap::proxySlotCallGuardHandler, this, handler, _1));
+            registerSlotCallGuardHandler(boost::bind(&SignalSlotableWrap::proxySlotCallGuardHandler, this, handler, _1, _2));
         }
 
         void registerPerformanceStatisticsHandlerPy(const bp::object& handler) {
@@ -304,7 +304,7 @@ namespace karathon {
 
         void proxyExceptionHandler(const bp::object& handler, const karabo::util::Exception& e);
 
-        void proxySlotCallGuardHandler(const bp::object&, const std::string&);
+        void proxySlotCallGuardHandler(const bp::object&, const std::string&, const std::string&);
 
         void proxyUpdatePerformanceStatisticsHandler(const bp::object&, float, unsigned int);
 
