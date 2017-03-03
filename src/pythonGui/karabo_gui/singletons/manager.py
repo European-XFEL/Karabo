@@ -138,6 +138,8 @@ class Manager(QObject):
                                         KaraboEventSender.ShowAlarmServices)
         self._broadcast_about_instances('RunConfigurator',
                                         KaraboEventSender.AddRunConfigurator)
+        self._broadcast_about_instances('RunConfigurationGroup',
+                                        KaraboEventSender.AddRunConfigGroup)
 
         # Tell the world about new devices/servers
         devices, servers = _extract_topology_devices(systemTopology)
@@ -179,6 +181,8 @@ class Manager(QObject):
                                         KaraboEventSender.ShowAlarmServices)
         self._broadcast_about_instances('RunConfigurator',
                                         KaraboEventSender.AddRunConfigurator)
+        self._broadcast_about_instances('RunConfigurationGroup',
+                                        KaraboEventSender.AddRunConfigGroup)
 
     def handle_instanceUpdated(self, topologyEntry):
         self._topology.instance_updated(topologyEntry)
@@ -203,6 +207,9 @@ class Manager(QObject):
             transform=_instance_finder)
         self._broadcast_about_instances(
             'RunConfigurator', KaraboEventSender.RemoveRunConfigurator,
+            transform=_instance_finder)
+        self._broadcast_about_instances(
+            'RunConfigurationGroup', KaraboEventSender.RemoveRunConfigGroup,
             transform=_instance_finder)
 
         # Update the system topology
@@ -413,6 +420,7 @@ class Manager(QObject):
 
 
 # ------------------------------------------------------------------
+
 
 def _extract_topology_devices(topo_hash):
     """Get all the devices and their classes out of a system topology update.
