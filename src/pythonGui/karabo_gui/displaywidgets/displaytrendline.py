@@ -472,24 +472,21 @@ class DisplayTrendline(DisplayWidget):
         self.leDetailRange.textChanged.connect(self._detail_range_changed)
         self.laDetailRange = QLabel("%")
 
+        y_axis_btns_layout.addWidget(self.y_axis_str_btns[FULL_RANGE])
         y_axis_btns_layout.addWidget(self.y_axis_str_btns[DETAIL_RANGE])
         y_axis_btns_layout.addWidget(self.leDetailRange)
         y_axis_btns_layout.addWidget(self.laDetailRange)
 
-        yLayout = QVBoxLayout()
-        yLayout.addWidget(self.y_axis_str_btns[FULL_RANGE])
-        yLayout.addWidget(y_axis_buttons_widget)
-        yLayout.addStretch()
         self._sel_y_axis_btn = None
 
         xLayout = QVBoxLayout()
+        xLayout.addWidget(y_axis_buttons_widget)
         xLayout.addWidget(self.curveWidget)
         xLayout.addWidget(self.date_time_widget)
         xLayout.addWidget(x_axis_btns_widget)
 
         self.widget = QWidget()
         self.layout = QHBoxLayout(self.widget)
-        self.layout.addLayout(yLayout)
         self.layout.addLayout(xLayout)
 
     def edit_axis_parameters(self, axis_id):
