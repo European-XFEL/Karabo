@@ -10,6 +10,7 @@ from karabo_gui.singletons.api import get_mediator
 class KaraboEventSender(Enum):
     AccessLevelChanged = "Global Access Level changed"
     AddRunConfigurator = "Add run configurator"
+    AddRunConfigGroup = "Add run configuration group"
     AlarmInitReply = "Alarm init reply"
     AlarmUpdate = "Alarm update"
     AlarmDeviceUpdate = "Alarm device update"
@@ -33,6 +34,7 @@ class KaraboEventSender(Enum):
     OpenSceneView = "Open scene view"
     RemoveAlarmServices = "Remove alarm services"
     RemoveRunConfigurator = "Remove run configurator"
+    RemoveRunConfigGroup = "Remove run config group"
     RemoveMacro = "Remove macro"
     RemoveSceneView = "Remove scene view"
     ProjectDomainsList = "Project domains list"

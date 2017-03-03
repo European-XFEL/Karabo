@@ -9,10 +9,12 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QStandardItemModel, QVBoxLayout, QWidget,
                          QStandardItem, QLabel, QPushButton, QTreeView)
 
+
 from karabo_gui.events import (
     KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
+import karabo_gui.icons as icons
 from karabo_gui.schema import Dummy
-from karabo_gui.singletons.api import get_network
+from karabo_gui.singletons.api import get_network, get_topology
 from .base import BasePanelWidget
 
 
@@ -24,10 +26,15 @@ class RunConfigPanel(BasePanelWidget):
         self.availableGroups = {}
         self.groupBox = None
         self.sendBox = None
+        self.title = title
+        self.setWindowIcon(icons.runconfig)
+        self._setIconAndTooltip()
 
         # Register for broadcasts
         # NOTE: unregister_from_broadcasts is called by closeEvent()
         register_for_broadcasts(self)
+
+        get_topology().get_device(instanceId)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -55,6 +62,20 @@ class RunConfigPanel(BasePanelWidget):
 
         return widget
 
+    def _setIconAndTooltip(self):
+        if self.is_docked:
+            self.panel_container.setTabIcon(self.index, icons.runconfig)
+            self.panel_container.setTabToolTip(self.index, self.title)
+
+    def showEvent(self, event):
+        super(RunConfigPanel, self).showEvent(event)
+        self._setIconAndTooltip()
+        get_network().onStartMonitoringDevice(self.instanceId)
+
+    def hideEvent(self, event):
+        super(RunConfigPanel, self).hideEvent(event)
+        get_network().onStopMonitoringDevice(self.instanceId)
+
     def closeEvent(self, event):
         super(RunConfigPanel, self).closeEvent(event)
         if event.isAccepted():
@@ -63,21 +84,23 @@ class RunConfigPanel(BasePanelWidget):
     def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
-        if event.sender is KaraboEventSender.DeviceStateChanged:
-            configuration = event.data.get('configuration')
-            classId = configuration.classId
-            cid = configuration.id
-            if (classId == "RunConfigurator" and self.instanceId == cid):
+        sender = event.sender
+        data = event.data
+        if sender is KaraboEventSender.DeviceStateChanged:
+            configuration = data.get('configuration')
+            check_class_id = configuration.classId == 'RunConfigurator'
+            check_instance_id = self.instanceId == configuration.id
+            if (check_class_id and check_instance_id):
                 self.updateConfig(configuration)
-        elif event.sender is KaraboEventSender.RunConfigSourcesUpdate:
-            senderId = event.data.get('instanceId')
+        elif sender is KaraboEventSender.RunConfigSourcesUpdate:
+            senderId = data.get('instanceId')
             if senderId != self.instanceId:
                 return False
-            group = event.data.get('group')
-            sources = event.data.get('sources')
+            group = data.get('group')
+            sources = data.get('sources')
             self._updateDetails(group, sources)
-        elif event.sender is KaraboEventSender.NetworkConnectStatus:
-            if not event.data['status']:
+        elif sender is KaraboEventSender.NetworkConnectStatus:
+            if not data['status']:
                 self.groupList.destroy()
         return False
 
@@ -126,10 +149,19 @@ class RunConfigPanel(BasePanelWidget):
                 existingSources = []
             for source in sources:
                 attrs = ['source', 'type', 'behavior', 'monitored', 'access']
-                row = [QStandardItem(str(source.get(a))) for a in attrs]
-                if source.get('source') not in existingSources:
+                src = source.get('source')
+                if src not in existingSources:
+                    row = [QStandardItem(str(source.get(a))) for a in attrs]
                     item.appendRow(row)
-                    existingSources.append(source.get('source'))
+                    existingSources.append(src)
+                else:
+                    for row in range(item.rowCount()):
+                        child = item.child(row)
+                        if child.text() != src:
+                            continue
+                        for column, a in enumerate(attrs):
+                            new_item = QStandardItem(str(source.get(a)))
+                            item.setChild(row, column, new_item)
             item.setData(existingSources, Qt.UserRole+1)
 
     def onGroupItemChanged(self, item):
