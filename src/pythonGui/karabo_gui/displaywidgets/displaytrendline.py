@@ -535,7 +535,7 @@ class DisplayTrendline(DisplayWidget):
         curve = make.curve([], [], box.key(), color=color, linestyle=style)
         self._addCurve(box, curve)
         if self._curve_count == 2:
-            # show the item panel if we have more than on curve
+            # show the item panel if we have more than one curve
             self.curveWidget.get_itemlist_panel().show()
             # also show a legend
             self.legend = make.legend("TL")
