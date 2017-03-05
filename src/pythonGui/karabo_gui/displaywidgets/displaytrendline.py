@@ -358,7 +358,7 @@ class DisplayTrendline(DisplayWidget):
     datetimeedit_style_sheet = ("QDateTimeEdit {}".format(style))
     lineedit_style_sheet = ("QLineEdit {}".format(style))
 
-    curve_colors = ['k', 'g', 'b', 'pink', 'brown', 'orange']
+    curve_colors = ['b', 'orange', 'k', 'g', 'pink', 'brown']
     curve_styles = ['-', '--', ':', '-.']
 
     def __init__(self, box, parent):
