@@ -31,7 +31,7 @@ class LinePlotModel(BaseWidgetObjectData):
     """ A model for line plot objects
     """
     # The actual type of the widget
-    klass = Enum('DisplayTrendline', 'XYVector')
+    klass = Enum('DisplaySparkline', 'DisplayTrendline', 'XYVector')
     # The plots for this object
     boxes = List(Instance(PlotCurveModel))
 
@@ -55,6 +55,7 @@ class LinePlotModel(BaseWidgetObjectData):
                     self.boxes.remove(model)
 
 
+@register_scene_reader('DisplaySparkline', version=3)
 @register_scene_reader('DisplayTrendline', version=1)
 @register_scene_reader('XYVector', version=1)
 def _line_plot_reader(read_func, element):

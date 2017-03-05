@@ -22,6 +22,7 @@ __all__ = [
     "displaylabel",
     "displaylineedit",
     "displayplot",
+    "displaysparkline",
     "displaystatecolor",
     "displaytableelement",
     "displaytrendline",
