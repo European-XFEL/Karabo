@@ -358,6 +358,9 @@ class DisplayTrendline(DisplayWidget):
     datetimeedit_style_sheet = ("QDateTimeEdit {}".format(style))
     lineedit_style_sheet = ("QLineEdit {}".format(style))
 
+    curve_colors = ['b', 'orange', 'k', 'g', 'pink', 'brown']
+    curve_styles = ['-', '--', ':', '-.']
+
     def __init__(self, box, parent):
         super(DisplayTrendline, self).__init__(None)
         self._initUI(parent)
@@ -406,6 +409,8 @@ class DisplayTrendline(DisplayWidget):
         self.plot.setAxisLabelAlignment(QwtPlot.xBottom,
                                         Qt.AlignRight | Qt.AlignBottom)
         self.destroyed.connect(self.destroy)
+        self._curve_count = 0
+        self.legend = None
         self.addBox(box)
 
     def _initUI(self, parent):
@@ -467,24 +472,21 @@ class DisplayTrendline(DisplayWidget):
         self.leDetailRange.textChanged.connect(self._detail_range_changed)
         self.laDetailRange = QLabel("%")
 
+        y_axis_btns_layout.addWidget(self.y_axis_str_btns[FULL_RANGE])
         y_axis_btns_layout.addWidget(self.y_axis_str_btns[DETAIL_RANGE])
         y_axis_btns_layout.addWidget(self.leDetailRange)
         y_axis_btns_layout.addWidget(self.laDetailRange)
 
-        yLayout = QVBoxLayout()
-        yLayout.addWidget(self.y_axis_str_btns[FULL_RANGE])
-        yLayout.addWidget(y_axis_buttons_widget)
-        yLayout.addStretch()
         self._sel_y_axis_btn = None
 
         xLayout = QVBoxLayout()
+        xLayout.addWidget(y_axis_buttons_widget)
         xLayout.addWidget(self.curveWidget)
         xLayout.addWidget(self.date_time_widget)
         xLayout.addWidget(x_axis_btns_widget)
 
         self.widget = QWidget()
         self.layout = QHBoxLayout(self.widget)
-        self.layout.addLayout(yLayout)
         self.layout.addLayout(xLayout)
 
     def edit_axis_parameters(self, axis_id):
@@ -512,9 +514,29 @@ class DisplayTrendline(DisplayWidget):
     def typeChanged(self, box):
         self.plot.setAxisTitle(QwtPlot.yLeft, box.axisLabel())
 
+    def _getNewCurveColorAndStyle(self):
+        """ Return a combination of color and style for the next curve
+
+        Will continue to return unique color style combinations until
+        len(self.curve_colors) * len(self.curve_styles) curves have been
+        added, then wrap around
+        """
+        n_colors =  len(self.curve_colors)
+        color_idx = self._curve_count % n_colors
+        style_idx = (self._curve_count // n_colors) % len(self.curve_styles)
+        self._curve_count += 1
+        return self.curve_colors[color_idx], self.curve_styles[style_idx]
+
     def addBox(self, box):
-        curve = make.curve([], [], box.key(), "r")
+        color, style = self._getNewCurveColorAndStyle()
+        curve = make.curve([], [], box.key(), color=color, linestyle=style)
         self._addCurve(box, curve)
+        if self._curve_count == 2:
+            # show the item panel if we have more than one curve
+            self.curveWidget.get_itemlist_panel().show()
+            # also show a legend
+            self.legend = make.legend("TL")
+            self.plot.add_item(self.legend)
         return True
 
     @pyqtSlot(object)
