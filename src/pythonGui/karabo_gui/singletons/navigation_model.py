@@ -13,8 +13,7 @@ from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 from traits.api import HasStrictTraits, String, WeakRef
 
-from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
-                               register_for_broadcasts)
+from karabo_gui.events import KaraboEventSender, register_for_broadcasts
 import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
 from karabo_gui.indicators import (get_alarm_icon,
@@ -63,22 +62,20 @@ class NavigationTreeModel(QAbstractItemModel):
         # object and `self` are being destroyed when the GUI exists
         register_for_broadcasts(self)
 
-    def eventFilter(self, obj, event):
-        if isinstance(event, KaraboBroadcastEvent):
-            sender = event.sender
-            data = event.data
-            if sender is KaraboEventSender.StartMonitoringDevice:
-                self._toggleMonitoring(data.get('device_id', ''), True)
-            elif sender is KaraboEventSender.StopMonitoringDevice:
-                self._toggleMonitoring(data.get('device_id', ''), False)
-            elif event.sender is KaraboEventSender.ShowDevice:
-                self.selectPath(data.get('deviceId'))
-            elif event.sender is KaraboEventSender.AlarmDeviceUpdate:
-                device_id = data.get('deviceId')
-                alarm_type = data.get('alarm_type')
-                self._updateAlarmIndicators(device_id, alarm_type)
-            return False
-        return super(NavigationTreeModel, self).eventFilter(obj, event)
+    def karaboBroadcastEvent(self, event):
+        sender = event.sender
+        data = event.data
+        if sender is KaraboEventSender.StartMonitoringDevice:
+            self._toggleMonitoring(data.get('device_id', ''), True)
+        elif sender is KaraboEventSender.StopMonitoringDevice:
+            self._toggleMonitoring(data.get('device_id', ''), False)
+        elif event.sender is KaraboEventSender.ShowDevice:
+            self.selectPath(data.get('deviceId'))
+        elif event.sender is KaraboEventSender.AlarmDeviceUpdate:
+            device_id = data.get('deviceId')
+            alarm_type = data.get('alarm_type')
+            self._updateAlarmIndicators(device_id, alarm_type)
+        return False
 
     def currentSelectionPath(self):
         """Returns the current selection path, or '' if nothing is selected.

@@ -8,8 +8,7 @@ from PyQt4.QtCore import QObject
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
-from karabo_gui.events import (KaraboBroadcastEvent, KaraboEventSender,
-                               register_for_broadcasts)
+from karabo_gui.events import KaraboEventSender, register_for_broadcasts
 from karabo_gui.mainwindow import MainWindow, PanelAreaEnum
 from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.macropanel import MacroPanel
@@ -60,75 +59,70 @@ class PanelWrangler(QObject):
     # -------------------------------------------------------------------
     # Qt callbacks
 
-    def eventFilter(self, obj, event):
-        if isinstance(event, KaraboBroadcastEvent):
-            sender = event.sender
-            data = event.data
+    def karaboBroadcastEvent(self, event):
+        sender = event.sender
+        data = event.data
 
-            if sender is KaraboEventSender.DeviceDataReceived:
-                self._update_scenes()
+        if sender is KaraboEventSender.DeviceDataReceived:
+            self._update_scenes()
 
-            elif sender is KaraboEventSender.OpenSceneView:
-                target_window = SceneTargetWindow.MainWindow
-                model = data.get('model')
-                self._open_scene(model, target_window)
+        elif sender is KaraboEventSender.OpenSceneView:
+            target_window = SceneTargetWindow.MainWindow
+            model = data.get('model')
+            self._open_scene(model, target_window)
 
-            elif sender is KaraboEventSender.OpenSceneLink:
-                target_window = data.get('target_window')
-                model = _find_scene_model(data.get('target'))
-                self._open_scene(model, target_window)
+        elif sender is KaraboEventSender.OpenSceneLink:
+            target_window = data.get('target_window')
+            model = _find_scene_model(data.get('target'))
+            self._open_scene(model, target_window)
 
-            elif sender in (KaraboEventSender.RemoveSceneView,
-                            KaraboEventSender.RemoveMacro):
-                self._close_project_item_panel(data.get('model'))
+        elif sender in (KaraboEventSender.RemoveSceneView,
+                        KaraboEventSender.RemoveMacro):
+            self._close_project_item_panel(data.get('model'))
 
-            elif sender is KaraboEventSender.MiddlePanelClosed:
-                model = data.get('model')
-                if model in self._project_item_panels:
-                    self._project_item_panels.pop(model)
+        elif sender is KaraboEventSender.MiddlePanelClosed:
+            model = data.get('model')
+            if model in self._project_item_panels:
+                self._project_item_panels.pop(model)
 
-            elif sender is KaraboEventSender.OpenMacro:
-                self._open_macro(data.get('model'))
-                # XXX: I have no idea why, but this event causes an infinite
-                # loop if it's not 'handled' here.
-                return True
+        elif sender is KaraboEventSender.OpenMacro:
+            self._open_macro(data.get('model'))
 
-            elif sender is KaraboEventSender.ShowAlarmServices:
-                instance_ids = data.get('instanceIds')
-                for inst_id in instance_ids:
-                    self._open_alarm_panel(inst_id)
+        elif sender is KaraboEventSender.ShowAlarmServices:
+            instance_ids = data.get('instanceIds')
+            for inst_id in instance_ids:
+                self._open_alarm_panel(inst_id)
 
-            elif sender in (KaraboEventSender.AlarmInitReply,
-                            KaraboEventSender.AlarmUpdate):
-                self._open_alarm_panel(data.get('instanceId'))
+        elif sender in (KaraboEventSender.AlarmInitReply,
+                        KaraboEventSender.AlarmUpdate):
+            self._open_alarm_panel(data.get('instanceId'))
 
-            elif sender is KaraboEventSender.AddRunConfigurator:
-                instance_ids = data.get('instanceIds')
-                for inst_id in instance_ids:
-                    self._open_run_configurator(inst_id)
+        elif sender is KaraboEventSender.AddRunConfigurator:
+            instance_ids = data.get('instanceIds')
+            for inst_id in instance_ids:
+                self._open_run_configurator(inst_id)
 
-            elif sender is KaraboEventSender.RemoveAlarmServices:
-                instance_ids = data.get('instanceIds')
-                for inst_id in instance_ids:
+        elif sender is KaraboEventSender.RemoveAlarmServices:
+            instance_ids = data.get('instanceIds')
+            for inst_id in instance_ids:
+                self._close_alarm_panel(inst_id)
+
+        elif sender is KaraboEventSender.RemoveRunConfigurator:
+            instance_ids = data.get('instanceIds')
+            for inst_id in instance_ids:
+                self._close_run_configurator(inst_id)
+
+        elif sender is KaraboEventSender.NetworkConnectStatus:
+            self.connected_to_server = data.get('status', False)
+            if not self.connected_to_server:
+                alarm_ids = list(self._alarm_panels.keys())
+                for inst_id in alarm_ids:
                     self._close_alarm_panel(inst_id)
 
-            elif sender is KaraboEventSender.RemoveRunConfigurator:
-                instance_ids = data.get('instanceIds')
-                for inst_id in instance_ids:
-                    self._close_run_configurator(inst_id)
+        elif sender is KaraboEventSender.CreateMainWindow:
+            self._create_main_window()
 
-            elif sender is KaraboEventSender.NetworkConnectStatus:
-                self.connected_to_server = data.get('status', False)
-                if not self.connected_to_server:
-                    alarm_ids = list(self._alarm_panels.keys())
-                    for inst_id in alarm_ids:
-                        self._close_alarm_panel(inst_id)
-
-            elif sender is KaraboEventSender.CreateMainWindow:
-                self._create_main_window()
-
-            return False
-        return super(PanelWrangler, self).eventFilter(obj, event)
+        return False
 
     # -------------------------------------------------------------------
     # private interface
