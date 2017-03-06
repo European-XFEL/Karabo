@@ -14,7 +14,6 @@ from PyQt4.QtGui import QDialog, QDialogButtonBox, QItemSelectionModel
 
 from karabo_gui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
-    KaraboBroadcastEvent
 )
 from karabo_gui.singletons.api import get_db_conn
 from karabo_gui.util import SignalBlocker
@@ -77,17 +76,15 @@ class ProjectHandleDialog(QDialog):
         unregister_from_broadcasts(self)
         event.accept()
 
-    def eventFilter(self, obj, event):
-        if isinstance(event, KaraboBroadcastEvent):
-            sender = event.sender
-            data = event.data
-            if sender is KaraboEventSender.ProjectItemsList:
-                items = data.get('items', [])
-                self.twProjects.model().add_project_manager_data(items)
-            elif sender is KaraboEventSender.ProjectDomainsList:
-                self._domains_updated(data.get('items', []))
-            return False
-        return super(ProjectHandleDialog, self).eventFilter(obj, event)
+    def karaboBroadcastEvent(self, event):
+        sender = event.sender
+        data = event.data
+        if sender is KaraboEventSender.ProjectItemsList:
+            items = data.get('items', [])
+            self.twProjects.model().add_project_manager_data(items)
+        elif sender is KaraboEventSender.ProjectDomainsList:
+            self._domains_updated(data.get('items', []))
+        return False
 
     def _domains_updated(self, domains):
         # Domain combobox
@@ -199,14 +196,10 @@ class SaveProjectDialog(QDialog):
         unregister_from_broadcasts(self)
         event.accept()
 
-    def eventFilter(self, obj, event):
-        if isinstance(event, KaraboBroadcastEvent):
-            sender = event.sender
-            data = event.data
-            if sender is KaraboEventSender.ProjectDomainsList:
-                self._fill_domain_combo_box(data.get('items', []))
-            return False
-        return super(ProjectHandleDialog, self).eventFilter(obj, event)
+    def karaboBroadcastEvent(self, event):
+        if event.sender is KaraboEventSender.ProjectDomainsList:
+            self._fill_domain_combo_box(event.data.get('items', []))
+        return False
 
     @property
     def domain(self):

@@ -8,8 +8,7 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QMenu, QPalette, QPushButton,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
 
-from karabo_gui.events import (
-    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.events import register_for_broadcasts, KaraboEventSender
 import karabo_gui.icons as icons
 from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.parametertreewidget import ParameterTreeWidget
@@ -255,39 +254,37 @@ class ConfigurationPanel(BasePanelWidget):
 
         return [toolbar]
 
-    def eventFilter(self, obj, event):
+    def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
-        if isinstance(event, KaraboBroadcastEvent):
-            data = event.data
-            if event.sender is KaraboEventSender.ShowConfiguration:
-                configuration = data.get('configuration')
-                self.showConfiguration(configuration)
-            elif event.sender is KaraboEventSender.UpdateDeviceConfigurator:
-                configuration = data.get('configuration')
-                self.updateDisplayedConfiguration(configuration)
-            elif event.sender is KaraboEventSender.ClearConfigurator:
-                deviceId = data.get('deviceId', '')
-                self.removeDepartedConfiguration(deviceId)
-            elif event.sender is KaraboEventSender.ShowNavigationItem:
-                device_path = data.get('device_path')
-                self.onSelectNewNavigationItem(device_path)
-            elif event.sender is KaraboEventSender.DeviceStateChanged:
-                configuration = data.get('configuration')
-                is_changing = data.get('is_changing')
-                self.onChangingState(configuration, is_changing)
-            elif event.sender is KaraboEventSender.DeviceErrorChanged:
-                configuration = data.get('configuration')
-                is_changing = data.get('is_changing')
-                self.onErrorState(configuration, is_changing)
-            elif event.sender is KaraboEventSender.NetworkConnectStatus:
-                if not data['status']:
-                    self._resetPanel()
-            elif event.sender is KaraboEventSender.AccessLevelChanged:
-                self.onGlobalAccessLevelChanged()
+        data = event.data
+        if event.sender is KaraboEventSender.ShowConfiguration:
+            configuration = data.get('configuration')
+            self.showConfiguration(configuration)
+        elif event.sender is KaraboEventSender.UpdateDeviceConfigurator:
+            configuration = data.get('configuration')
+            self.updateDisplayedConfiguration(configuration)
+        elif event.sender is KaraboEventSender.ClearConfigurator:
+            deviceId = data.get('deviceId', '')
+            self.removeDepartedConfiguration(deviceId)
+        elif event.sender is KaraboEventSender.ShowNavigationItem:
+            device_path = data.get('device_path')
+            self.onSelectNewNavigationItem(device_path)
+        elif event.sender is KaraboEventSender.DeviceStateChanged:
+            configuration = data.get('configuration')
+            is_changing = data.get('is_changing')
+            self.onChangingState(configuration, is_changing)
+        elif event.sender is KaraboEventSender.DeviceErrorChanged:
+            configuration = data.get('configuration')
+            is_changing = data.get('is_changing')
+            self.onErrorState(configuration, is_changing)
+        elif event.sender is KaraboEventSender.NetworkConnectStatus:
+            if not data['status']:
+                self._resetPanel()
+        elif event.sender is KaraboEventSender.AccessLevelChanged:
+            self.onGlobalAccessLevelChanged()
 
-            return False
-        return super(ConfigurationPanel, self).eventFilter(obj, event)
+        return False
 
     def updateApplyAllActions(self, configuration):
         index = configuration.index

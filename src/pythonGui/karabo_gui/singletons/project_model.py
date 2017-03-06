@@ -9,8 +9,8 @@ from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt4.QtGui import QItemSelectionModel
 
 from karabo.common.api import walk_traits_object
-from karabo_gui.events import (broadcast_event, KaraboBroadcastEvent,
-                               KaraboEventSender, register_for_broadcasts)
+from karabo_gui.events import (broadcast_event, KaraboEventSender,
+                               register_for_broadcasts)
 from karabo_gui.indicators import get_alarm_icon, get_state_icon_for_status
 from karabo_gui.project.controller.build import (
     create_project_controller, destroy_project_controller)
@@ -156,15 +156,13 @@ class ProjectViewItemModel(QAbstractItemModel):
     # ----------------------------
     # Qt methods
 
-    def eventFilter(self, obj, event):
-        if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.AlarmDeviceUpdate:
-                data = event.data
-                device_id = data.get('deviceId')
-                alarm_type = data.get('alarm_type')
-                self._update_alarm_type(device_id, alarm_type)
-            return False
-        return super(ProjectViewItemModel, self).eventFilter(obj, event)
+    def karaboBroadcastEvent(self, event):
+        if event.sender is KaraboEventSender.AlarmDeviceUpdate:
+            data = event.data
+            device_id = data.get('deviceId')
+            alarm_type = data.get('alarm_type')
+            self._update_alarm_type(device_id, alarm_type)
+        return False
 
     def createIndex(self, row, column, controller):
         """Prophalaxis for QModelIndex.internalPointer...

@@ -16,8 +16,7 @@ import karabo_gui.icons as icons
 from karabo.middlelayer import AccessLevel
 import karabo_gui.globals as krb_globals
 from karabo_gui.events import (
-    KaraboBroadcastEvent, KaraboEventSender, broadcast_event,
-    register_for_broadcasts)
+    KaraboEventSender, broadcast_event, register_for_broadcasts)
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.container import PanelContainer
@@ -91,20 +90,18 @@ class MainWindow(QMainWindow):
         event.accept()
         QMainWindow.closeEvent(self, event)
 
-    def eventFilter(self, obj, event):
-        if isinstance(event, KaraboBroadcastEvent):
-            sender = event.sender
-            data = event.data
-            if sender is KaraboEventSender.DatabaseIsBusy:
-                self._database_is_processing(data.get('is_processing'))
-            elif sender is KaraboEventSender.MaximizePanel:
-                self._panelContainerMaximized(data.get('container'))
-            elif sender is KaraboEventSender.MinimizePanel:
-                self._panelContainerMinimized(data.get('container'))
-            elif sender is KaraboEventSender.LoginUserChanged:
-                self.onUpdateAccessLevel()
-            return False
-        return super(MainWindow, self).eventFilter(obj, event)
+    def karaboBroadcastEvent(self, event):
+        sender = event.sender
+        data = event.data
+        if sender is KaraboEventSender.DatabaseIsBusy:
+            self._database_is_processing(data.get('is_processing'))
+        elif sender is KaraboEventSender.MaximizePanel:
+            self._panelContainerMaximized(data.get('container'))
+        elif sender is KaraboEventSender.MinimizePanel:
+            self._panelContainerMinimized(data.get('container'))
+        elif sender is KaraboEventSender.LoginUserChanged:
+            self.onUpdateAccessLevel()
+        return False
 
     # --------------------------------------
     # public methods

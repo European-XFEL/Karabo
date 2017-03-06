@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt4.QtCore import QObject
 
-from karabo_gui.events import KaraboBroadcastEvent, KaraboEventSender
+from karabo_gui.events import KaraboEventSender
 from .utils import WeakMethodRef
 
 
@@ -18,13 +18,11 @@ class SystemTopologyListener(QObject):
         # Hold a weak reference to a callback bound method
         self.callback = WeakMethodRef(notification_cb, num_args=2)
 
-    def eventFilter(self, obj, event):
+    def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
-        if isinstance(event, KaraboBroadcastEvent):
-            if event.sender is KaraboEventSender.SystemTopologyUpdate:
-                devices = event.data.get('devices', [])
-                servers = event.data.get('servers', [])
-                self.callback(devices, servers)
-            return False
-        return super(SystemTopologyListener, self).eventFilter(obj, event)
+        if event.sender is KaraboEventSender.SystemTopologyUpdate:
+            devices = event.data.get('devices', [])
+            servers = event.data.get('servers', [])
+            self.callback(devices, servers)
+        return False
