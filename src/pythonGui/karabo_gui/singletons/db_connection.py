@@ -13,8 +13,7 @@ from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
 from karabo_gui.events import (
-    broadcast_event, KaraboBroadcastEvent, KaraboEventSender,
-    register_for_broadcasts
+    broadcast_event, KaraboEventSender, register_for_broadcasts
 )
 import karabo_gui.globals as krb_globals
 from karabo_gui.messagebox import MessageBox
@@ -52,20 +51,18 @@ class ProjectDatabaseConnection(QObject):
         # XXX: This is really asinine right now!
         self._have_logged_in = False
 
-    def eventFilter(self, obj, event):
+    def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
-        if isinstance(event, KaraboBroadcastEvent):
-            data = event.data
-            if event.sender is KaraboEventSender.ProjectItemsLoaded:
-                success = data.get('success')
-                items = data.get('items', [])
-                self._items_loaded(items, success)
-            elif event.sender is KaraboEventSender.ProjectItemsSaved:
-                items = data.get('items', [])
-                self._items_saved(items)
-            return False
-        return super(ProjectDatabaseConnection, self).eventFilter(obj, event)
+        data = event.data
+        if event.sender is KaraboEventSender.ProjectItemsLoaded:
+            success = data.get('success')
+            items = data.get('items', [])
+            self._items_loaded(items, success)
+        elif event.sender is KaraboEventSender.ProjectItemsSaved:
+            items = data.get('items', [])
+            self._items_saved(items)
+        return False
 
     # -------------------------------------------------------------------
     # User interface

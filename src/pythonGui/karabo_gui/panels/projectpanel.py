@@ -11,8 +11,7 @@ from PyQt4.QtGui import QAction, QDialog
 from karabo.common.api import set_modified_flag
 from karabo.common.project.api import ProjectModel
 from karabo.middlelayer import OldProject, convert_old_project
-from karabo_gui.events import (
-    register_for_broadcasts, KaraboBroadcastEvent, KaraboEventSender)
+from karabo_gui.events import register_for_broadcasts, KaraboEventSender
 import karabo_gui.icons as icons
 from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
@@ -91,20 +90,18 @@ class ProjectPanel(BasePanelWidget):
 
         return [toolbar]
 
-    def eventFilter(self, obj, event):
+    def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
-        if isinstance(event, KaraboBroadcastEvent):
-            data = event.data
-            if event.sender is KaraboEventSender.NetworkConnectStatus:
-                self._handle_network_status_change(data['status'])
-            elif event.sender is KaraboEventSender.DatabaseIsBusy:
-                is_processing = data['is_processing']
-                self._enable_toolbar(not is_processing)
-                # Show or hide spin widget
-                self.spin_action.setVisible(is_processing)
-            return False
-        return super(ProjectPanel, self).eventFilter(obj, event)
+        data = event.data
+        if event.sender is KaraboEventSender.NetworkConnectStatus:
+            self._handle_network_status_change(data['status'])
+        elif event.sender is KaraboEventSender.DatabaseIsBusy:
+            is_processing = data['is_processing']
+            self._enable_toolbar(not is_processing)
+            # Show or hide spin widget
+            self.spin_action.setVisible(is_processing)
+        return False
 
     def _handle_network_status_change(self, status):
         if not status:
