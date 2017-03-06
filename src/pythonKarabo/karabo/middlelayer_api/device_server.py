@@ -138,7 +138,14 @@ class DeviceServerBase(SignalSlotable):
 
     @coroutine
     def scanPluginsOnce(self):
-        """load all available entry points, return whether new plugin found"""
+        """load all available entry points, return whether new plugin found
+
+        This is an endpoint for multiple inheritance. Specializations should
+        try to load their plugins, and return whether a new plugin was found.
+        They should then call ``super()``, as another specialization may
+        also need to find new plugins. The default implementation returns
+        `False`, as it can never load a plugin.
+        """
         return False
 
     @coslot
@@ -153,7 +160,13 @@ class DeviceServerBase(SignalSlotable):
 
     @coroutine
     def startDevice(self, classId, deviceId, config):
-        raise RuntimeError('Unknown class')  # details see slotStartDevice
+        """Start the device `deviceId`
+
+        This is an endpoint of multiple inheritance. Every specialization
+        should start a device if it can, or otherwise call super(). This is
+        the failback that just raises an error.
+        """
+        raise RuntimeError('Unknown class')
 
     def parse(self, hash):
         classId = hash['classId']
@@ -184,6 +197,13 @@ class DeviceServerBase(SignalSlotable):
             return Hash()
 
     def getVisibilities(self):
+        """return a dictionary of class visibility.
+
+        This is an endpoint for multiple inheritance. This method should
+        return a dictionary that maps the names of all available classes
+        to their visibilities. The default implementation returns an empty
+        dict, all specializations should add their classes to it.
+        """
         return {}
 
     @coslot
@@ -202,6 +222,12 @@ class DeviceServerBase(SignalSlotable):
 
     @slot
     def slotGetClassSchema(self, classId):
+        """Return the schema of class `classId`
+
+        This is an endpoint for multiple inheritance. Any specialization
+        should return the schema for `classId`, or call super(). This fail
+        back implementation just raises an error.
+        """
         raise RuntimeError('Unknown class "{}"'.format(classId))
 
     def _generateDefaultDeviceId(self, devClassId):
