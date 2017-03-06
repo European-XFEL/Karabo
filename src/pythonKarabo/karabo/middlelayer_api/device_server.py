@@ -288,10 +288,6 @@ class MiddleLayerDeviceServer(DeviceServerBase):
         self.deviceInstanceMap = {}
 
     @coroutine
-    def _run(self, **kwargs):
-        yield from super(MiddleLayerDeviceServer, self)._run(**kwargs)
-
-    @coroutine
     def scanPluginsOnce(self):
         changes = yield from super(
             MiddleLayerDeviceServer, self).scanPluginsOnce()
