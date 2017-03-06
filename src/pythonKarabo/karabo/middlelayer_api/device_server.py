@@ -265,7 +265,7 @@ class DeviceServerBase(SignalSlotable):
 
         # The fromstring function takes over proper type conversion
         params = Hash({k: get(k).fromstring(v)
-                       for k, v in (a.split("=", 2) for a in argv[1:])})
+                       for k, v in (a.split("=", 1) for a in argv[1:])})
         server = cls(params)
         if server:
             server.startInstance()
