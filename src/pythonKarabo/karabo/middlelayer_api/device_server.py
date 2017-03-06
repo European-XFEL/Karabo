@@ -156,8 +156,8 @@ class DeviceServerBase(SignalSlotable):
         raise RuntimeError('Unknown class')  # details see slotStartDevice
 
     def parse(self, hash):
-        classid = hash['classId']
-        self.logger.info("Trying to start %s...", classid)
+        classId = hash['classId']
+        self.logger.info("Trying to start %s...", classId)
         self.logger.debug("with the following configuration:\n%s", hash)
 
         # Get configuration
@@ -170,9 +170,9 @@ class DeviceServerBase(SignalSlotable):
         if 'deviceId' in hash and hash['deviceId']:
             config['_deviceId_'] = hash['deviceId']
         else:
-            config['_deviceId_'] = self._generateDefaultDeviceId(classid)
+            config['_deviceId_'] = self._generateDefaultDeviceId(classId)
 
-        return classid, config['_deviceId_'], config
+        return classId, config['_deviceId_'], config
 
     def deviceClassesHash(self):
         visibilities = self.getVisibilities()
@@ -201,8 +201,8 @@ class DeviceServerBase(SignalSlotable):
         super(DeviceServerBase, self).slotInstanceNew(instanceId, info)
 
     @slot
-    def slotGetClassSchema(self, classid):
-        raise RuntimeError('Unknown class "{}"'.format(classid))
+    def slotGetClassSchema(self, classId):
+        raise RuntimeError('Unknown class "{}"'.format(classId))
 
     def _generateDefaultDeviceId(self, devClassId):
         cnt = self.instanceCountPerDeviceServer.setdefault(self.serverId, 0)
@@ -292,11 +292,11 @@ class MiddleLayerDeviceServer(DeviceServerBase):
         return visibilities
 
     @slot
-    def slotGetClassSchema(self, classid):
-        cls = self.plugins.get(classid)
+    def slotGetClassSchema(self, classId):
+        cls = self.plugins.get(classId)
         if cls is not None:
-            return cls.getClassSchema(), classid, self.serverId
-        return super(MiddleLayerDeviceServer, self).slotGetClassSchema(classid)
+            return cls.getClassSchema(), classId, self.serverId
+        return super(MiddleLayerDeviceServer, self).slotGetClassSchema(classId)
 
     @coroutine
     def startDevice(self, classId, deviceId, config):
@@ -383,11 +383,11 @@ class BoundDeviceServer(DeviceServerBase):
         return visibilities
 
     @slot
-    def slotGetClassSchema(self, classid):
-        schema = self.bounds.get(classid)
+    def slotGetClassSchema(self, classId):
+        schema = self.bounds.get(classId)
         if schema is not None:
-            return schema, classid, self.serverId
-        return super(BoundDeviceServer, self).slotGetClassSchema(classid)
+            return schema, classId, self.serverId
+        return super(BoundDeviceServer, self).slotGetClassSchema(classId)
 
     @coroutine
     def startDevice(self, classId, deviceId, config):
