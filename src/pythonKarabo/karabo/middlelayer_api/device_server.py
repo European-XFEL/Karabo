@@ -78,7 +78,7 @@ class DeviceServerBase(SignalSlotable):
                displayedName="Logger",
                requiredAccessLevel=AccessLevel.EXPERT)
 
-    instanceCountPerDeviceServer = {}
+    instanceCount = 1
 
     def __init__(self, configuration):
         super().__init__(configuration)
@@ -231,14 +231,14 @@ class DeviceServerBase(SignalSlotable):
         raise RuntimeError('Unknown class "{}"'.format(classId))
 
     def _generateDefaultDeviceId(self, devClassId):
-        cnt = self.instanceCountPerDeviceServer.setdefault(self.serverId, 0)
-        self.instanceCountPerDeviceServer[self.serverId] += 1
+        self.instanceCount += 1
         tokens = self.serverId.split("_")
-        if tokens[-1] == "{}".format(os.getpid()):
+        if tokens[-1] == str(self.pid):
             return "{}-{}_{}_{}".format(tokens[0], tokens[-2],
-                                        devClassId, cnt + 1)
+                                        devClassId, self.instanceCount)
         else:
-            return "{}_{}_{}".format(self.serverId, devClassId, cnt + 1)
+            return "{}_{}_{}".format(self.serverId, devClassId,
+                                     self.instanceCount)
 
     @classmethod
     def main(cls, argv=None):
