@@ -23,16 +23,40 @@ safeRunCommand() {
 
 checkCppUnitTestResults() {
     local testDir="$1"
-    for i in $testDir/testresults/*.xml; do
+    local testNames="$2"
+    for name in $testNames; do
+        local path=$(printf "%s/testresults/%sTest.xml" $testDir $name)
+        if [ ! -e $path ]; then
+            echo "Expected test results file: $path not found!"
+            echo
+            echo
+            exit 1
+        fi
         # xmllint is distributed with Karabo
-        local fails=$(xmllint --xpath '/TestRun/Statistics/FailuresTotal/text()' $i)
+        local fails=$(xmllint --xpath '/TestRun/Statistics/FailuresTotal/text()' $path)
         if [ $fails != "0" ]; then
-            echo "Test failure found in results file: $i"
+            echo "Test failure found in results file: $path"
             echo
             echo
             exit 1
         fi
     done
+
+    # Fail when new test suites are added and we don't expect them
+    pushd $testDir/testresults/ &> /dev/null
+    local actualNames=$(ls *.xml | cut -d'.' -f1 | tr '\n' ' ')
+    popd &> /dev/null
+
+    local expectedCount=$(echo $testNames | wc -w)
+    local actualCount=$(echo $actualNames | wc -w)
+    if [ "$expectedCount" != "$actualCount" ]; then
+        echo "Test result files in '$testDir/testresults' don't match expectation:"
+        echo "    Expected: $testNames"
+        echo "    Got: $actualNames"
+        echo
+        echo
+        exit 1
+    fi
 }
 
 runIntegrationTests() {
@@ -40,17 +64,19 @@ runIntegrationTests() {
         source $scriptDir/karabo/activate
     fi
 
+    local testNames="AlarmService_ DeviceServerRunner_ LockTest_ PipelinedProcessing_ PropertyTest_ RunTimeSchemaAttributes_"
     local testDir=$scriptDir/build/netbeans/integrationTests
 
     echo
     echo Running Karabo integration tests ...
     echo
     cd $testDir
+    rm -rf testresults/
     safeRunCommand "make CONF=$CONF -j$NUM_JOBS test"
     cd $scriptDir
 
     # Parse the XML test outputs
-    checkCppUnitTestResults "$testDir"
+    checkCppUnitTestResults "$testDir" "$testNames"
 }
 
 runUnitTests() {
@@ -58,17 +84,19 @@ runUnitTests() {
         source $scriptDir/karabo/activate
     fi
 
+    local testNames=$(ls $scriptDir/src/karabo/tests)
     local testDir=$scriptDir/build/netbeans/karabo
 
     echo
     echo Running Karabo unit tests ...
     echo
     cd $testDir
+    rm -rf testresults/
     safeRunCommand "make CONF=$CONF -j$NUM_JOBS test"
     cd $scriptDir
 
     # Parse the XML test outputs
-    checkCppUnitTestResults "$testDir"
+    checkCppUnitTestResults "$testDir" "$testNames"
 
     echo
     echo Running pythonKarabo tests
