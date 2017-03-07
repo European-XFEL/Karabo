@@ -70,4 +70,5 @@ WIDGET_FACTORIES = {
     'SingleBit': SingleBitModel,
     'PopUp': PopUpModel,
     'StatefulIconWidget': StatefulIconWidgetModel,
+    'DisplaySparkline': LinePlotModel,
 }
