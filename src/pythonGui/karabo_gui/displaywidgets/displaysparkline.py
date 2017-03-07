@@ -75,12 +75,16 @@ class SparkRenderer(QWidget):
             painter.setPen(self.pen)
 
             painter.setPen(self.pen)
-            painter.drawPath(self.painter_path)
+            if self.painter_path is not None:
+                painter.drawPath(self.painter_path)
 
             pen = QPen(Qt.gray, 1, Qt.SolidLine)
             painter.setPen(pen)
-            painter.drawPath(self.painter_path_min)
-            painter.drawPath(self.painter_path_max)
+
+            if self.painter_path_min is not None:
+                painter.drawPath(self.painter_path_min)
+            if self.painter_path_max is not None:
+                painter.drawPath(self.painter_path_max)
 
             # draw available alarm indicators
             for alarm_type, val in self.alarms.items():
