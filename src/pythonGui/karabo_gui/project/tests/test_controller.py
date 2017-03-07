@@ -1,4 +1,5 @@
 from PyQt4.QtGui import QStandardItemModel
+from traits.api import push_exception_handler, pop_exception_handler
 
 from karabo.common.project.api import (
     DeviceServerModel, DeviceInstanceModel, MacroModel, ProjectModel,
@@ -46,6 +47,14 @@ class MockQtItemModel(QStandardItemModel):
 
 
 class ControllerTestCase(GuiTestCase):
+
+    def setUp(self):
+        super(ControllerTestCase, self).setUp()
+        push_exception_handler(lambda *args: None, reraise_exceptions=True)
+
+    def tearDown(self):
+        super(ControllerTestCase, self).tearDown()
+        pop_exception_handler()
 
     def test_project_controller(self):
         macros = [MacroModel()]
