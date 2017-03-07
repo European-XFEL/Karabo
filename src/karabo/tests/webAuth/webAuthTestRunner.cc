@@ -40,7 +40,7 @@ int main() {
     outputter.write();
 
     // Output ML for Jenkins CPPunit plugin
-    std::ofstream xmlFileOut("testresults/webTest.xml");
+    std::ofstream xmlFileOut("testresults/webAuthTest.xml");
     CPPUNIT_NS::XmlOutputter xmlOut(&result, xmlFileOut);
     xmlOut.write();
 
