@@ -206,12 +206,12 @@ class DeviceInstanceController(BaseProjectGroupController):
         # Get current status of device
         if self.model.initialized:
             # But only if our model is initialized!
-            status_enum = DeviceStatus(self.project_device.status)
+            status = self.project_device.status
         else:
             # Otherwise show the instance as offline
-            status_enum = DeviceStatus('offline')
-        ui_data.icon = get_project_device_status_icon(status_enum)
-        ui_data.status = self.project_device.status
+            status = 'offline'
+        ui_data.icon = get_project_device_status_icon(DeviceStatus(status))
+        ui_data.status = status
 
     def _update_configurator(self):
         configuration = self.project_device.current_configuration
