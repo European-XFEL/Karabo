@@ -1,12 +1,12 @@
 from collections import OrderedDict
 import hashlib
 
-from traits.api import Instance
+from traits.api import Enum, Instance
 
 from karabo.common.api import BaseSavableModel
 
 # Hey Code Reviewers! Be sure to ask questions when this value changes!
-EXPECTED_HASH = "ffd6fab585e5e54d842b410ab2b1d8c30ee13f9339a592404da268a9c48aab1b"  # noqa
+EXPECTED_HASH = "362b8455e39e6951dc1682fbbdc89d9d53e9a2a574ca3ce03e44b2e2a0db3492"  # noqa
 FAILURE_MSG = """
 ##############################################################################
                             !!! WARNING !!!
@@ -68,6 +68,9 @@ def _trait_sig(trait):
         else:
             # klass is a string
             sig += trait_type.klass
+    elif isinstance(trait_type, Enum):
+        values = ','.join([str(v) for v in trait_type.values])
+        sig += '({})'.format(values)
     sig += ''.join([_trait_sig(sub) for sub in trait_type.inner_traits()])
     return sig
 
