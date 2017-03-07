@@ -54,6 +54,16 @@ def create_hierarchy(db):
     return uuid
 
 
+def create_trashed_project(db, is_trashed=True):
+    uuid = _gen_uuid()
+    xml = ('<xml item_type="project" uuid="{uuid}" '
+           'simple_name="{name}" is_trashed="{is_trashed}"></xml>').format(
+               uuid=uuid, name=uuid, is_trashed=str(is_trashed).lower())
+
+    db.save_item("LOCAL", uuid, xml)
+    return uuid
+
+
 class TestProjectDatabase(TestCase):
     user = "admin"
     password = "karabo"
@@ -131,7 +141,18 @@ class TestProjectDatabase(TestCase):
                 for i in items:
                     if i["item_type"] == "scene":
                         scenecnt += 1
+                    self.assertTrue(i["is_trashed"] == 'false')
                 self.assertGreaterEqual(scenecnt, 4)
+
+            with self.subTest(msg='test_trashed_projects'):
+                create_trashed_project(db)
+                items = db.list_items('LOCAL', ['project'])
+                self.assertEqual(len(items), 2)
+                nb_is_trashed = 0
+                for it in items:
+                    if it["is_trashed"] == 'true':
+                        nb_is_trashed += 1
+                self.assertEqual(nb_is_trashed, 1)
 
             with self.subTest(msg='test_list_domains'):
                 items = db.list_domains()
