@@ -51,6 +51,7 @@ class SparkRenderer(QWidget):
         self.painter_path_max = None
 
         self.then = time.time()
+        self.alarms = None
 
     def _scale_y(self, val, height):
 
@@ -68,6 +69,9 @@ class SparkRenderer(QWidget):
 
     def paintEvent(self, event):
 
+        if self.painter_path is None:
+            return
+
         width = self.width()
         height = self._plot_frac * self.height()
 
@@ -75,29 +79,28 @@ class SparkRenderer(QWidget):
             painter.setPen(self.pen)
 
             painter.setPen(self.pen)
-            if self.painter_path is not None:
-                painter.drawPath(self.painter_path)
+            painter.drawPath(self.painter_path)
 
             pen = QPen(Qt.gray, 1, Qt.SolidLine)
             painter.setPen(pen)
 
-            if self.painter_path_min is not None:
-                painter.drawPath(self.painter_path_min)
-            if self.painter_path_max is not None:
-                painter.drawPath(self.painter_path_max)
+
+            painter.drawPath(self.painter_path_min)
+            painter.drawPath(self.painter_path_max)
 
             # draw available alarm indicators
-            for alarm_type, val in self.alarms.items():
-                if val is None:
-                    continue
-                if WARN_GLOBAL in alarm_type:
-                    pen = QPen(QColor(*WARN_COLOR), 1, Qt.DashLine)
-                else:
-                    pen = QPen(QColor(*ALARM_COLOR), 1, Qt.SolidLine)
+            if self.alarms is not None:
+                for alarm_type, val in self.alarms.items():
+                    if val is None:
+                        continue
+                    if WARN_GLOBAL in alarm_type:
+                        pen = QPen(QColor(*WARN_COLOR), 1, Qt.DashLine)
+                    else:
+                        pen = QPen(QColor(*ALARM_COLOR), 1, Qt.SolidLine)
 
-                painter.setPen(pen)
-                val = self._scale_y(val, height)
-                painter.drawLine(0, val, width, val)
+                    painter.setPen(pen)
+                    val = self._scale_y(val, height)
+                    painter.drawLine(0, val, width, val)
 
     def _createPainterPath(self, x, y):
         path = QPainterPath()
@@ -204,7 +207,8 @@ class SparkRenderer(QWidget):
         # the y range which simply needs to scale to new maxima and minima
         if self.yrange is None:
             # initially only single value
-            self.yrange = 0.9*value, 1.1*value
+            self.yrange = (min(0.9*value, 1.1*value),
+                           max(0.9*value, 1.1*value))
         else:
             self.yrange = min(value, *self.yrange), max(value, *self.yrange)
 
