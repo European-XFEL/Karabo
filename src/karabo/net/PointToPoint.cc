@@ -445,41 +445,42 @@ namespace karabo {
 
             boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
 
-            ConnectedInstances::iterator it = m_connectedInstances.find(signalInstanceId);
-            if (it == m_connectedInstances.end()) return; // Done! ... nothing to disconnect
+            // An iterator pointing to a pair of a connection string and SlotInstanceIds
+            ConnectedInstances::iterator itConnectStringSlotIds = m_connectedInstances.find(signalInstanceId);
+            if (itConnectStringSlotIds == m_connectedInstances.end()) return; // Done! ... nothing to disconnect
 
-            const string& signalConnectionString = it->second.first;
+            KARABO_LOG_FRAMEWORK_INFO << "Disconnect signalId '" << signalInstanceId
+                    << "' from slotId '" << slotInstanceId << "'.";
+
+            const string& signalConnectionString = itConnectStringSlotIds->second.first;
 
             // un-subscribe from producer
-            Connection::Pointer connection = m_openConnections[signalConnectionString].first;
-            Channel::Pointer channel = m_openConnections[signalConnectionString].second;
-            channel->write(slotInstanceId + " UNSUBSCRIBE");
+            auto& connectionChannelPair = m_openConnections[signalConnectionString];
+            connectionChannelPair.second->write(slotInstanceId + " UNSUBSCRIBE");
 
-            SlotInstanceIds& slotInstanceIds = it->second.second;
-            SlotInstanceIds::iterator i = slotInstanceIds.find(slotInstanceId);
-            if (i != slotInstanceIds.end()) slotInstanceIds.erase(i);
+            // Remove handler for the slotInstanceId
+            SlotInstanceIds& slotInstanceIds = itConnectStringSlotIds->second.second;
+            slotInstanceIds.erase(slotInstanceId);
 
-            // It may happen that signalInstanceId entry will be erased...
-            if (slotInstanceIds.empty()) m_connectedInstances.erase(it);
-
-            if (m_openConnections.find(signalConnectionString) == m_openConnections.end()) return;
-
-            // Check if TCP connection should be closed .... try to find signalConnectionString in connectedInstances.
+            // Check if TCP connection should be closed:
+            // Try to find signalConnectionString among _other_ connectedInstances.
             bool found = false;
-            for (ConnectedInstances::iterator i = m_connectedInstances.begin(); i != m_connectedInstances.end(); ++i) {
-                if (i->second.first == signalConnectionString) {
+            for (auto i = m_connectedInstances.begin(); i != m_connectedInstances.end(); ++i) {
+                if (i != itConnectStringSlotIds && i->second.first == signalConnectionString) {
                     found = true;
                     break;
                 }
             }
-            KARABO_LOG_FRAMEWORK_WARN << "Disconnect signal \"" << signalInstanceId << "\" from slot \"" << slotInstanceId << "\".";
             if (!found) {
-                KARABO_LOG_FRAMEWORK_WARN << "Close open TCP channel for signal connection : \"" << signalConnectionString << "\".";
-                channel->close();
-                connection->stop();
+                KARABO_LOG_FRAMEWORK_INFO << "Close TCP channel/connection to: '" << signalConnectionString << "'.";
+                connectionChannelPair.second->close();
+                connectionChannelPair.first->stop();
                 m_openConnections.erase(signalConnectionString);
             }
 
+            // If no slotInstanceIds left for that signalConnectionString, we erase the complete entry.
+            // (Do that at the very end since there are references to things belonging to 'itConnectStringSlotIds'.)
+            if (slotInstanceIds.empty()) m_connectedInstances.erase(itConnectStringSlotIds);
         }
 
 
