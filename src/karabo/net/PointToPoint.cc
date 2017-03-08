@@ -479,7 +479,7 @@ namespace karabo {
             }
 
             // If no slotInstanceIds left for that signalConnectionString, we erase the complete entry.
-            // (Do that at the very end since there are references to things belonging to 'it'.)
+            // (Do that at the very end since there are references to things belonging to 'itConnectStringSlotIds'.)
             if (slotInstanceIds.empty()) m_connectedInstances.erase(itConnectStringSlotIds);
         }
 
