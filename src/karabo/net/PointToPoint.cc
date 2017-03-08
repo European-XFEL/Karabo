@@ -445,27 +445,28 @@ namespace karabo {
 
             boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
 
-            ConnectedInstances::iterator it = m_connectedInstances.find(signalInstanceId);
-            if (it == m_connectedInstances.end()) return; // Done! ... nothing to disconnect
+            // An iterator pointing to a pair of a connection string and SlotInstanceIds
+            ConnectedInstances::iterator itConnectStringSlotIds = m_connectedInstances.find(signalInstanceId);
+            if (itConnectStringSlotIds == m_connectedInstances.end()) return; // Done! ... nothing to disconnect
 
             KARABO_LOG_FRAMEWORK_INFO << "Disconnect signalId '" << signalInstanceId
                     << "' from slotId '" << slotInstanceId << "'.";
 
-            const string& signalConnectionString = it->second.first;
+            const string& signalConnectionString = itConnectStringSlotIds->second.first;
 
             // un-subscribe from producer
             auto& connectionChannelPair = m_openConnections[signalConnectionString];
             connectionChannelPair.second->write(slotInstanceId + " UNSUBSCRIBE");
 
             // Remove handler for the slotInstanceId
-            SlotInstanceIds& slotInstanceIds = it->second.second;
+            SlotInstanceIds& slotInstanceIds = itConnectStringSlotIds->second.second;
             slotInstanceIds.erase(slotInstanceId);
 
             // Check if TCP connection should be closed:
             // Try to find signalConnectionString among _other_ connectedInstances.
             bool found = false;
-            for (ConnectedInstances::iterator i = m_connectedInstances.begin(); i != m_connectedInstances.end(); ++i) {
-                if (i != it && i->second.first == signalConnectionString) {
+            for (auto i = m_connectedInstances.begin(); i != m_connectedInstances.end(); ++i) {
+                if (i != itConnectStringSlotIds && i->second.first == signalConnectionString) {
                     found = true;
                     break;
                 }
@@ -479,7 +480,7 @@ namespace karabo {
 
             // If no slotInstanceIds left for that signalConnectionString, we erase the complete entry.
             // (Do that at the very end since there are references to things belonging to 'it'.)
-            if (slotInstanceIds.empty()) m_connectedInstances.erase(it);
+            if (slotInstanceIds.empty()) m_connectedInstances.erase(itConnectStringSlotIds);
         }
 
 
