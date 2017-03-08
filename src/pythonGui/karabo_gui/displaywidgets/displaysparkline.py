@@ -84,7 +84,6 @@ class SparkRenderer(QWidget):
             pen = QPen(Qt.gray, 1, Qt.SolidLine)
             painter.setPen(pen)
 
-
             painter.drawPath(self.painter_path_min)
             painter.drawPath(self.painter_path_max)
 
