@@ -350,7 +350,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInitDevice(): " << e.userFriendlyMsg();
             }
             // NOTE: This sleep() is a rate limiter for device instantiations
-            boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(500));
         }
 
 
