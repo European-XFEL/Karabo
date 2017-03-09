@@ -67,14 +67,6 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         self.treeWidget().resizeColumnToContents(2)
     editableComponent = property(fget=_editableComponent, fset=_setEditableComponent)
 
-
-    def updateState(self, state):
-        if not self.allowedStates:
-            return
-
-        state = state in self.allowedStates
-
-
     def showContextMenu(self):
         if self.mItem is None:
             return
