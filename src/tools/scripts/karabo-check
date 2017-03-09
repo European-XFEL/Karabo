@@ -59,7 +59,7 @@ test -r $foo || { echo "ERROR cannot read definitions file $foo";  exit 1;}
 
 # required environmental
 source config
-test -n "$START" || { echo "ERROR START array does not exist"; exit 3;} 
+test -n "${START[-1]}" || { echo "ERROR START empty or not existing"; exit 3;}
 
 # check already running xterms
     foo=.config
