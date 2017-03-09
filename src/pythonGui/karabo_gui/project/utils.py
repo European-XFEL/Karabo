@@ -170,23 +170,28 @@ def maybe_save_modified_project(project):
     return True
 
 
-def save_object(obj):
+def save_object(obj, show_dialog=True):
     """ Save individual `obj` recursively into the project database
 
     :param obj A project model object
     """
-    dialog = SaveProjectDialog(model=obj)
-    result = dialog.exec()
-    if result == QDialog.Accepted:
-        db_conn = get_db_conn()
+    if show_dialog:
+        dialog = SaveProjectDialog(model=obj)
+        result = dialog.exec()
+        if result == QDialog.Rejected:
+            return
         domain = dialog.domain
-        if domain != db_conn.default_domain:
-            # Set all child object of the given ``obj`` to modified to actually
-            # save the complete tree to the new domain
-            set_modified_flag(obj, value=True)
-        recursive_save_object(obj, db_conn, domain)
-        db_conn.default_domain = domain
-        db_conn.flush()
+    else:
+        domain = get_db_conn().default_domain
+
+    db_conn = get_db_conn()
+    if domain != db_conn.default_domain:
+        # Set all child object of the given ``obj`` to modified to actually
+        # save the complete tree to the new domain
+        set_modified_flag(obj, value=True)
+    recursive_save_object(obj, db_conn, domain)
+    db_conn.default_domain = domain
+    db_conn.flush()
 
 
 def show_save_project_message(project):
