@@ -73,25 +73,15 @@ class ProjectDBCache(object):
         with open(path, mode='r') as fp:
             return fp.read()
 
-    def get_uuids_of_type(self, domain, obj_type):
-        """ Return ``UUID`` of all objects of ``obj_type`` in cache
-
-        :param domain: A string which describes the domain to search
-        :param obj_type: A string which describes the object type
-        :return: A list of ``UUID`s for the given ``obj_type``
+    def remove(self, domain, uuid):
+        """ Remove an object from cache.
         """
-        domain_dir = op.join(self.dirpath, domain)
-        if not op.exists(domain_dir):
-            return []
+        path = self._generate_filepath(domain, uuid)
+        if not op.exists(path):
+            return
 
-        uuid_list = []
-        for uuid in os.listdir(domain_dir):
-            xml = self.retrieve(domain, uuid)
-            root = fromstring(xml)
-            root_type = root.attrib.get('item_type')
-            if root_type == obj_type:
-                uuid_list.append(uuid)
-        return uuid_list
+        # XXX TODO Recurse to remove all references
+        os.remove(path)
 
     def get_available_domains(self):
         """ Return a list of strings including available domains

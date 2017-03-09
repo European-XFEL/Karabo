@@ -149,6 +149,10 @@ def load_project():
         domain, uuid = dialog.selected_item()
         if domain is not None and uuid is not None:
             db_conn = get_db_conn()
+            if dialog.ignore_cache:
+                # Remove cache first
+                db_conn.remove_from_cache(domain, uuid)
+            db_conn = get_db_conn()
             model = ProjectModel(uuid=uuid)
             read_lazy_object(domain, uuid, db_conn, read_project_model,
                              existing=model)
