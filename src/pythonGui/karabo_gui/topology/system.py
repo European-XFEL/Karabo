@@ -219,7 +219,7 @@ class SystemTopology(HasStrictTraits):
         Returns the ``Configuration`` object associated with `device_id`, if
         one exists and is initialized.
         """
-        device = self._online_devices[device_id]
+        device = self._online_devices.get(device_id, None)
         if device is None or device.descriptor is None:
             return None
 
