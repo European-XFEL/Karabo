@@ -104,18 +104,6 @@ class ProjectDatabaseConnection(QObject):
             self.network.onProjectSaveItems(self.project_manager, items)
             self._write_items_buffer = []
 
-    def get_uuids_of_type(self, domain, obj_type):
-        """ Find out what's available
-        """
-        # XXX: Please don't keep this here!
-        self._ensure_login()
-
-        # Fire and "forget". An event will be broadcast with the reply
-        self.network.onProjectListItems(self.project_manager, domain, obj_type)
-        # Call locally as well
-        cached = self.cache.get_uuids_of_type(domain, obj_type)
-        return cached
-
     def get_available_domains(self):
         """ Find out which domains are available
         """
@@ -134,8 +122,9 @@ class ProjectDatabaseConnection(QObject):
         self._ensure_login()
 
         # Fire and "forget". An event will be broadcast with the reply
-        self.network.onProjectListItems(self.project_manager, domain, obj_type)
-        # Call locally as well
+        self.network.onProjectListItems(self.project_manager, domain,
+                                        obj_type)
+        # Call locally only if necessary
         return self.cache.get_available_project_data(domain, obj_type)
 
     def update_attribute(self, domain, item_type, uuid, attr_name, attr_value):
@@ -149,16 +138,21 @@ class ProjectDatabaseConnection(QObject):
         # XXX: TODO send project items
         self.network.onProjectUpdateAttribute(self.project_manager, [item])
 
+    def remove_from_cache(self, domain, uuid):
+        """Remove a file from the cache
+        """
+        self.cache.remove(domain, uuid)
+
     def retrieve(self, domain, uuid, existing=None):
         """Read an object from the database.
         """
         # XXX: Please don't keep this here!
         self._ensure_login()
 
-        obj = self.cache.retrieve(domain, uuid, existing=existing)
-        if obj is None:
+        data = self.cache.retrieve(domain, uuid, existing=existing)
+        if data is None:
             self._push_reading(domain, uuid, existing)
-        return obj
+        return data
 
     def store(self, domain, uuid, obj):
         """Write an object to the database
