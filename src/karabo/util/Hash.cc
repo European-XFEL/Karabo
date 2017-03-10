@@ -355,7 +355,7 @@ namespace karabo {
                     char separators[] = {separator, 0};
                     currentKey = prefix + separators + currentKey;
                 }
-                if (it->is<Hash > ()) { // Recursion
+                if (it->is<Hash > () && ! it->hasAttribute(KARABO_HASH_CLASS_ID)) { // Recursion, but no hash sub classes
                     getPaths(it->getValue<Hash > (), result, currentKey, separator);
                 } else {
                     if (it->is<std::vector<Hash> > ()) { // Recursion for vector
