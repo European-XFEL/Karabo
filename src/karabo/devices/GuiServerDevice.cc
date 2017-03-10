@@ -77,7 +77,6 @@ namespace karabo {
                     .assignmentOptional().defaultValue(1500)
                     .reconfigurable()
                     .minExc(500).maxInc(5000)
-                    .init()
                     .commit();
 
         }
@@ -117,7 +116,7 @@ namespace karabo {
                 trackAllInstances();
 
                 // Protect clients from too frequent updates of a single property:
-                remote().setDeviceMonitorInterval(this->get<int>("propertyUpdateInterval"));
+                remote().setDeviceMonitorInterval(get<int>("propertyUpdateInterval"));
 
                 remote().getSystemInformation();
 
@@ -360,7 +359,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInitDevice(): " << e.userFriendlyMsg();
             }
             // NOTE: This sleep() is a rate limiter for device instantiations
-            boost::this_thread::sleep(boost::posix_time::milliseconds(this->get<int>("waitInitDevice")));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(get<int>("waitInitDevice")));
         }
 
 
