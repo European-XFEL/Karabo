@@ -11,16 +11,16 @@ from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.common.api import set_modified_flag, walk_traits_object
 from karabo.common.project.api import (
-    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
-    ProjectModel, device_instance_exists, recursive_save_object,
-    read_lazy_object
+    BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
+    DeviceServerModel, ProjectModel, device_instance_exists,
+    recursive_save_object, read_lazy_object
 )
 from karabo.middlelayer import Hash, read_project_model
 from karabo_gui.events import broadcast_event, KaraboEventSender
 import karabo_gui.globals as krb_globals
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.project_handle import (
-    LoadProjectDialog, SaveProjectDialog)
+    LoadProjectDialog, NewProjectDialog)
 from karabo_gui.singletons.api import (get_db_conn, get_project_model,
                                        get_network)
 
@@ -170,25 +170,35 @@ def maybe_save_modified_project(project):
     return True
 
 
-def save_object(obj, show_dialog=True):
+def save_as_object(obj):
+    """ Save copy of individual `obj` recursively into the project database
+
+    :param obj A project model object
+    """
+    def _visitor(model):
+        if isinstance(model, BaseProjectObjectModel):
+            model.reset_uuid()
+
+    assert isinstance(obj, ProjectModel)
+    dialog = NewProjectDialog(model=obj)
+    if dialog.exec() == QDialog.Accepted:
+        obj.simple_name = dialog.simple_name
+        walk_traits_object(obj, _visitor)
+        save_object(obj, dialog.domain)
+
+
+def save_object(obj, domain=None):
     """ Save individual `obj` recursively into the project database
 
     :param obj A project model object
     """
-    if show_dialog:
-        dialog = SaveProjectDialog(model=obj)
-        result = dialog.exec()
-        if result == QDialog.Rejected:
-            return
-        domain = dialog.domain
-    else:
-        domain = get_db_conn().default_domain
-
     db_conn = get_db_conn()
-    if domain != db_conn.default_domain:
-        # Set all child object of the given ``obj`` to modified to actually
-        # save the complete tree to the new domain
-        set_modified_flag(obj, value=True)
+    if domain is None:
+        domain = db_conn.default_domain
+
+    # Set all child object of the given ``obj`` to modified to actually
+    # save the complete tree to the new domain
+    set_modified_flag(obj, value=True)
     recursive_save_object(obj, db_conn, domain)
     db_conn.default_domain = domain
     db_conn.flush()

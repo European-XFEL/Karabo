@@ -158,35 +158,10 @@ class ProjectHandleDialog(QDialog):
 
 
 class NewProjectDialog(QDialog):
-    def __init__(self, model=None, parent=None):
+    def __init__(self, model=None, is_rename=False, parent=None):
         super(NewProjectDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'project_new.ui')
-        uic.loadUi(filepath, self)
-
-        if model is None:
-            title = 'New project'
-        else:
-            title = 'Edit project'
-            self.leTitle.setText(model.simple_name)
-        self.setWindowTitle(title)
-
-    @property
-    def simple_name(self):
-        return self.leTitle.text()
-
-
-class LoadProjectDialog(ProjectHandleDialog):
-    def __init__(self, simple_name='', title="Load project", btn_text="Load",
-                 parent=None):
-        super(LoadProjectDialog, self).__init__(simple_name, title, btn_text,
-                                                parent)
-
-
-class SaveProjectDialog(QDialog):
-    def __init__(self, model=None, parent=None):
-        super(SaveProjectDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)), 'project_save.ui')
         uic.loadUi(filepath, self)
 
         # Domain combobox
@@ -194,7 +169,23 @@ class SaveProjectDialog(QDialog):
         self.default_domain = db_conn.default_domain
         self._fill_domain_combo_box(db_conn.get_available_domains())
 
-        self.setWindowTitle('Save {}'.format(model.simple_name))
+        if model is None:
+            title = 'New project'
+        else:
+            if is_rename:
+                title = 'Rename project'
+                text = model.simple_name
+                # Hide domain related widgets
+                self.laDomain.hide()
+                self.cbDomain.hide()
+                self.adjustSize()
+            else:
+                title = 'Save project as...'
+                text = '{}_copy'.format(model.simple_name)
+            self.leTitle.setText(text)
+        self.setWindowTitle(title)
+        self.leTitle.setFocus()
+        self.leTitle.selectAll()
 
         register_for_broadcasts(self)
 
@@ -204,7 +195,11 @@ class SaveProjectDialog(QDialog):
         Stop listening for broadcast events
         """
         unregister_from_broadcasts(self)
-        super(SaveProjectDialog, self).done(result)
+        super(NewProjectDialog, self).done(result)
+
+    @property
+    def simple_name(self):
+        return self.leTitle.text()
 
     def karaboBroadcastEvent(self, event):
         if event.sender is KaraboEventSender.ProjectDomainsList:
@@ -224,6 +219,13 @@ class SaveProjectDialog(QDialog):
         # Select default domain
         index = self.cbDomain.findText(self.default_domain)
         self.cbDomain.setCurrentIndex(index if index > -1 else 0)
+
+
+class LoadProjectDialog(ProjectHandleDialog):
+    def __init__(self, simple_name='', title="Load project", btn_text="Load",
+                 parent=None):
+        super(LoadProjectDialog, self).__init__(simple_name, title, btn_text,
+                                                parent)
 
 
 class TableModel(QAbstractTableModel):

@@ -16,9 +16,10 @@ import karabo_gui.icons as icons
 from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.utils import (
-    load_project, maybe_save_modified_project, save_object)
+    load_project, maybe_save_modified_project, save_as_object, save_object)
 from karabo_gui.project.view import ProjectView
 from karabo_gui.toolbar import ToolBar
+from karabo_gui.singletons.api import get_db_conn
 from karabo_gui.util import getOpenFileName, get_spin_widget
 from .base import BasePanelWidget
 
@@ -59,13 +60,18 @@ class ProjectPanel(BasePanelWidget):
             tooltip="Save Project Snapshot",
             triggered=_project_save_handler,
         )
+        save_as = KaraboAction(
+            icon=icons.saveAs, text="&Save Project as",
+            tooltip="Create a copy of the project",
+            triggered=_project_save_as_handler,
+        )
         load_old = KaraboAction(
             icon=icons.load, text="&Load Legacy Project",
             tooltip="Load a Legacy Project",
             triggered=_old_project_load_handler,
         )
 
-        for k_action in (new, load, save, None, load_old):
+        for k_action in (new, load, save, save_as, None, load_old):
             if k_action is None:
                 q_ac = QAction(self)
                 q_ac.setSeparator(True)
@@ -166,6 +172,8 @@ def _project_new_handler(item_model):
 
     dialog = NewProjectDialog()
     if dialog.exec() == QDialog.Accepted:
+        # Set domain
+        get_db_conn().default_domain = dialog.domain
         # This overwrites the current model
         model = ProjectModel(simple_name=dialog.simple_name, initialized=True,
                              modified=True)
@@ -180,3 +188,13 @@ def _project_save_handler(item_model):
     traits_model = item_model.traits_data_model
     if traits_model is not None:
         save_object(traits_model)
+
+
+def _project_save_as_handler(item_model):
+    """ Save the project model as a copy of the given `item_model`
+
+    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
+    """
+    traits_model = item_model.traits_data_model
+    if traits_model is not None:
+        save_as_object(traits_model)
