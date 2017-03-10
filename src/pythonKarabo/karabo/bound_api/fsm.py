@@ -407,7 +407,7 @@ class StateMachine(_State):
             if current.ismachine and current.process_event(o):
                 return True
         if self.fsm is None:
-            self.no_transition()
+            self.no_transition(self.get_state(), o.__class__.__name__)
         return False
 
     def get_state(self):
