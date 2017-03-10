@@ -309,9 +309,10 @@ namespace karabo {
             typedef VLArray<unsigned long long > UInt64VLArrayElement;
             typedef VLArray<double> DoubleVLArrayElement;
             typedef VLArray<float> FloatVLArrayElement;
-            typedef VLArray<std::string> StringVLArrayElement;
-            typedef VLArray<bool> BoolVLArrayElement;
 
+            // NOTE: Do not typedef complex types here (std::string, std::complex)
+            // As the writing code assumes that bare pointers to objects of type T
+            // can be handed directly to the HDF5 C-API.
 
         }
     }

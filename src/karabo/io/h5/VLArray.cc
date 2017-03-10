@@ -23,7 +23,6 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt16VLArrayElement)
             KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt32VLArrayElement)
             KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt64VLArrayElement)
-            //    KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, BoolArrayElement)
             KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, FloatVLArrayElement)
             KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, DoubleVLArrayElement)
 
