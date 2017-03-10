@@ -98,6 +98,9 @@ namespace karabo {
             template<typename T>
             void serializeNodeSequence(const karabo::util::Hash::Node& node, hid_t group);
 
+            template<typename T>
+            herr_t wrappedSequenceNodeWrite(const hid_t dsId, const hid_t ntid, const hid_t spaceId, const std::vector<T>& value);
+
             void serializeNodeSequenceBool(const karabo::util::Hash::Node& node, hid_t group);
 
             template<class U>
@@ -124,6 +127,9 @@ namespace karabo {
 
             template<typename T>
             void writeSequenceAttribute(hid_t group, const std::vector<T>& value, const std::string& key);
+
+            template<typename T>
+            herr_t wrappedSequenceAttributeWrite(const hid_t attrId, const hid_t ntid, const std::vector<T>& value);
 
             void writeSequenceAttribute(hid_t group, const std::vector<char>& value, const std::string& key);
 
@@ -242,7 +248,7 @@ namespace karabo {
                 hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<T>();
                 hid_t dsId = H5Dcreate2(group, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(dsId);
-                KARABO_CHECK_HDF5_STATUS(H5Dwrite(dsId, ntid, spaceId, spaceId, H5P_DEFAULT, &value[0]));
+                KARABO_CHECK_HDF5_STATUS(wrappedSequenceNodeWrite(dsId, ntid, spaceId, value));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(ntid));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
@@ -251,6 +257,22 @@ namespace karabo {
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
             }
+        }
+
+        template<typename T>
+        inline herr_t HashHdf5Serializer::wrappedSequenceNodeWrite(const hid_t dsId, const hid_t ntid, const hid_t spaceId, const std::vector<T>& value) {
+            return H5Dwrite(dsId, ntid, spaceId, spaceId, H5P_DEFAULT, &value[0]);
+        }
+
+        template<>
+        inline herr_t HashHdf5Serializer::wrappedSequenceNodeWrite(const hid_t dsId, const hid_t ntid, const hid_t spaceId, const std::vector<std::string>& value) {
+            // std::string is NOT guaranteed to look like a C-style string in memory. Copy pointers to the strings before writing.
+            size_t len = value.size();
+            std::vector<const char *> converted(len, NULL);
+            for (size_t i=0; i < len; ++i) {
+                converted[i] = value[i].c_str();
+            }
+            return H5Dwrite(dsId, ntid, spaceId, spaceId, H5P_DEFAULT, &converted[0]);
         }
 
         template<class U>
@@ -308,7 +330,7 @@ namespace karabo {
                 hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<T>();
                 hid_t dsId = H5Acreate2(group, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(dsId);
-                KARABO_CHECK_HDF5_STATUS(H5Awrite(dsId, ntid, &value[0]));
+                KARABO_CHECK_HDF5_STATUS(wrappedSequenceAttributeWrite(dsId, ntid, value));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(ntid));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
@@ -316,6 +338,22 @@ namespace karabo {
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize sequence attribute" + key));
             }
+        }
+
+        template<typename T>
+        herr_t HashHdf5Serializer::wrappedSequenceAttributeWrite(const hid_t attrId, const hid_t ntid, const std::vector<T>& value) {
+            return H5Awrite(attrId, ntid, &value[0]);
+        }
+
+        template<>
+        herr_t HashHdf5Serializer::wrappedSequenceAttributeWrite(const hid_t attrId, const hid_t ntid, const std::vector<std::string>& value) {
+            // std::string is NOT guaranteed to look like a C-style string in memory. Copy pointers to the strings before writing.
+            size_t len = value.size();
+            std::vector<const char*> converted(len, NULL);
+            for (size_t i=0; i < len; ++i) {
+                converted[i] = value[i].c_str();
+            }
+            return H5Awrite(attrId, ntid, &converted[0]);
         }
 
 
