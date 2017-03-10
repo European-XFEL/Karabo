@@ -70,6 +70,16 @@ namespace karabo {
                     .init()
                     .commit();
 
+            INT32_ELEMENT(expected).key("waitInitDevice")
+                    .displayedName("Instantiate wait time")
+                    .description("Time interval between the instantiation of devices.")
+                    .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
+                    .assignmentOptional().defaultValue(1500)
+                    .reconfigurable()
+                    .minExc(500).maxInc(5000)
+                    .init()
+                    .commit();
+
         }
 
 
@@ -350,7 +360,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInitDevice(): " << e.userFriendlyMsg();
             }
             // NOTE: This sleep() is a rate limiter for device instantiations
-            boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(this->get<int>("waitInitDevice")));
         }
 
 
