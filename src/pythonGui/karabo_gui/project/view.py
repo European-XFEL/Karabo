@@ -6,10 +6,12 @@
 from functools import partial
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QAction, QCursor, QMessageBox, QTreeView
+from PyQt4.QtGui import QAction, QDialog, QCursor, QMessageBox, QTreeView
 
 from karabo.common.project.api import ProjectModel, find_parent_object
-from karabo_gui.project.utils import maybe_save_modified_project, save_object
+from karabo_gui.project.dialog.project_handle import NewProjectDialog
+from karabo_gui.project.utils import (
+    maybe_save_modified_project, save_as_object, save_object)
 from karabo_gui.singletons.api import get_project_model, get_selection_tracker
 from karabo_gui.util import is_database_processing, set_treeview_header
 from .controller.bases import BaseProjectGroupController
@@ -107,9 +109,15 @@ class ProjectView(QTreeView):
             is_project = isinstance(selected_controller, ProjectController)
             if parent_project is None or is_project:
                 project_model = selected_controller.model
+                rename_action = QAction('Rename', menu)
+                rename_action.triggered.connect(partial(self._rename_project,
+                                                        project_model))
                 save_action = QAction('Save', menu)
                 save_action.triggered.connect(partial(save_object,
                                                       project_model))
+                save_as_action = QAction('Save as...', menu)
+                save_as_action.triggered.connect(partial(save_as_object,
+                                                         project_model))
                 close_action = QAction('Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
                                                        project_model,
@@ -123,7 +131,10 @@ class ProjectView(QTreeView):
                 trash_action.triggered.connect(partial(self._update_is_trashed,
                                                        project_model,
                                                        parent_project))
+                menu.addAction(rename_action)
+                menu.addSeparator()
                 menu.addAction(save_action)
+                menu.addAction(save_as_action)
                 menu.addAction(close_action)
                 menu.addSeparator()
                 menu.addAction(trash_action)
@@ -150,6 +161,14 @@ class ProjectView(QTreeView):
             return controller.model
         root_project = self.model().traits_data_model
         return find_parent_object(controller.model, root_project, ProjectModel)
+
+    def _rename_project(self, project):
+        """ Change the ``simple_name`` of the given ``project``
+        """
+        dialog = NewProjectDialog(model=project, is_rename=True)
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            project.simple_name = dialog.simple_name
 
     def _close_project(self, project, parent_project, show_dialog):
         """ Close the given `project`
@@ -199,7 +218,7 @@ class ProjectView(QTreeView):
 
         project.is_trashed = not project.is_trashed
         # Always save afterwards
-        save_object(project, show_dialog=False)
+        save_object(project)
         if project.is_trashed:
             # Close project
             self._close_project(project, parent_project, show_dialog=False)
