@@ -140,16 +140,15 @@ class Box(QObject):
     def hasValue(self):
         return self.initialized
 
-
     def isAllowed(self):
         """return whether the user may change the value, based on
         device's state"""
-
+        if not self.configuration.isOnline():
+            return False
         return (self.descriptor is None or
                 self.descriptor.allowedStates is None or
-                self.configuration.value.state in
-                    self.descriptor.allowedStates)
-
+                self.configuration.value.state
+                in self.descriptor.allowedStates)
 
     def isAccessible(self):
         """return whether the user may change the value, based on
