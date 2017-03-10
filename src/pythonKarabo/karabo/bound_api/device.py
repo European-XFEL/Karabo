@@ -991,14 +991,15 @@ class PythonDevice(NoFsm):
         self._ss.emit("signalNotification", "EXCEPTION", shortMessage,
                       detailedMessage, self.deviceid)
 
-    def noStateTransition(self):
+    def noStateTransition(self, currentState, currentEvent):
         """
         This function is called if a requested state transition is not allowed
         in the current context. Usually, this means you have an error in your
         state machine.
         """
 
-        self.log.WARN("Device \"{}\" does not allow the transition for this event.".format(self.deviceid))
+        self.log.WARN("Device \"{}\" being in state '{}' does not allow the transition for event '{}'."
+                      .format(self.deviceid, currentState, currentEvent))
 
     def onTimeUpdate(self, id, sec, frac, period):
         """

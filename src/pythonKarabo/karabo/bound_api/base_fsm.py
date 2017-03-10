@@ -75,6 +75,6 @@ class BaseFsm(NoFsm):
                     self.exceptionFound("Exception while processing event ="
                                         " '{0}'".format(event.__class__.
                                                         __name__), str(e))
-                    return
-                state = fsm.get_state()
-                self.updateState(state)
+                finally:                                        
+                    state = fsm.get_state()
+                    self.updateState(state)
