@@ -62,19 +62,20 @@ class ProjectHandleDialog(QDialog):
         db_conn = get_db_conn()
         self.default_domain = db_conn.default_domain
         self._domains_updated(db_conn.get_available_domains())
-        # Explicitly call the method to get the correct update in the view
-        self.on_cbDomain_currentIndexChanged(self.default_domain)
 
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.leTitle.textChanged.connect(self._titleChanged)
         self.leTitle.setText(simple_name)
+
         register_for_broadcasts(self)
 
-    def closeEvent(self, event):
-        """Stop listening for broadcast events
+    def done(self, result):
+        """ Reimplement ``QDialog`` virtual slot
+
+        Stop listening for broadcast events
         """
         unregister_from_broadcasts(self)
-        event.accept()
+        super(ProjectHandleDialog, self).done(result)
 
     def karaboBroadcastEvent(self, event):
         sender = event.sender
@@ -194,13 +195,16 @@ class SaveProjectDialog(QDialog):
         self._fill_domain_combo_box(db_conn.get_available_domains())
 
         self.setWindowTitle('Save {}'.format(model.simple_name))
+
         register_for_broadcasts(self)
 
-    def closeEvent(self, event):
-        """Stop listening for broadcast events
+    def done(self, result):
+        """ Reimplement ``QDialog`` virtual slot
+
+        Stop listening for broadcast events
         """
         unregister_from_broadcasts(self)
-        event.accept()
+        super(SaveProjectDialog, self).done(result)
 
     def karaboBroadcastEvent(self, event):
         if event.sender is KaraboEventSender.ProjectDomainsList:
