@@ -261,7 +261,12 @@ namespace karabo {
                 void writeNodeAttribute(const karabo::util::Element<std::string>& node, hid_t attribute) {
                     try {
                         hid_t tid = getNativeTypeId();
-                        KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, &(node.getValue<std::vector<std::string> >())[0]));
+                        const std::vector<std::string>& value = node.getValue<std::vector<std::string> >();
+                        std::vector<const char*> value_copy(value.size(), NULL);
+                        for (size_t i = 0; i < value.size(); ++i) {
+                            value_copy[i] = value[i].c_str();
+                        }
+                        KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, &value_copy[0]));
                         KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " + this->m_key + " to dataset /"));
