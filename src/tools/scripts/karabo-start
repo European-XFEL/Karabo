@@ -10,7 +10,7 @@ if [ ${#@} -gt 0 ]; then
         echo
         echo "karabo-start - start applications as defined in config file"
         echo
-        echo "  karabo-start [-h|--help|-nox|--nox|-iconize|--iconize]"
+        echo "  karabo-start [-h|--help|-n|--nox|-i|--iconize]"
         echo
         echo "If any of the help options is given, print this help."
         echo
