@@ -7,7 +7,7 @@ from uuid import uuid4
 from PyQt4.QtCore import QSize
 from PyQt4.QtGui import QDialog, QFileDialog, QHeaderView, QLabel, QMovie
 
-from karabo.middlelayer import Hash, MetricPrefix, Unit
+from karabo.middlelayer import decodeXML, Hash, MetricPrefix, Unit, writeXML
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
 from karabo_gui.messagebox import MessageBox
@@ -131,7 +131,7 @@ def loadConfigurationFromFile(configuration):
         return
 
     with open(filename, 'rb') as fp:
-        config = Hash.decode(fp.read(), 'XML')
+        config = decodeXML(fp.read())
 
     classId = configuration.classId
     if classId not in config:
@@ -159,8 +159,8 @@ def saveConfigurationToFile(configuration):
     config[classId, ...] = attrs
 
     # Save configuration to file
-    with open(filename, 'wb') as fp:
-        fp.write(config.encode('XML'))
+    with open(filename, 'w') as fp:
+        writeXML(config, fp)
 
 
 @contextmanager
