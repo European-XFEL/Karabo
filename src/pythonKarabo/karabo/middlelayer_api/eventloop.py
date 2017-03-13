@@ -23,6 +23,7 @@ from . import openmq
 from .basetypes import KaraboValue, unit_registry as unit
 from .exceptions import KaraboError
 from .hash import Hash
+from .serializers import decodeBinary, encodeBinary
 
 
 class Broker:
@@ -48,7 +49,7 @@ class Broker:
         for i, a in enumerate(args):
             hash['a{}'.format(i + 1)] = a
         m = openmq.BytesMessage()
-        m.data = hash.encode("Bin")
+        m.data = encodeBinary(hash)
         p['signalInstanceId'] = self.deviceId
         p['__format'] = 'Bin'
         m.properties = p
@@ -60,7 +61,7 @@ class Broker:
         h["a2"] = interval
         h["a3"] = self.info
         m = openmq.BytesMessage()
-        m.data = h.encode("Bin")
+        m.data = encodeBinary(h)
         p = openmq.Properties()
         p["signalFunction"] = "signalHeartbeat"
         p["__format"] = "Bin"
@@ -118,7 +119,7 @@ class Broker:
         p = openmq.Properties()
         p["target"] = "log"
         m = openmq.BytesMessage()
-        m.data = Hash("messages", [message]).encode("Bin")
+        m.data = encodeBinary(Hash("messages", [message]))
         m.properties = p
         self.producer.send(m, 1, 4, 100000)
 
@@ -280,7 +281,7 @@ class Broker:
         :returns: a dictionary that maps the device id of slots to be called
             to a list of slots to be called on that device
         """
-        hash = Hash.decode(message.data, "Bin")
+        hash = decodeBinary(message.data)
         params = []
         for i in count(1):
             try:
