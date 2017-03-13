@@ -382,7 +382,7 @@ namespace karabo {
                         currentKey = prefix + separators + currentKey;
                     }
 
-                    if (it->is<Hash > ()) { // Recursion
+                    if (it->is<Hash > () && ! it->hasAttribute(KARABO_HASH_CLASS_ID)) { // Recursion, but no hash sub classes
                         flatten(it->getValue<Hash > (), flat, currentKey, separator);
                     } else {
                         if (it->is<std::vector<Hash> > ()) { // Recursion for vector
@@ -842,7 +842,7 @@ namespace karabo {
                 const Hash::Node& ele = *iter;
                 partial_count++;
 
-                if (ele.is<Hash > ()) {
+                if (ele.is<Hash > () && ! ele.hasAttribute(KARABO_HASH_CLASS_ID)) { // Recursion, but no hash sub classes
                     partial_count += counter(ele.getValue<Hash > ());
                 } else {
                     if (ele.is<std::vector<Hash> >()) {
@@ -866,7 +866,7 @@ namespace karabo {
                 const Hash::Node& ele = *iter;
                 partial_count += ((ele.getType() == type) ? 1 : 0);
 
-                if (ele.is<Hash > ()) {
+                if (ele.is<Hash > () && ! ele.hasAttribute(KARABO_HASH_CLASS_ID)) { // Recursion, but no hash sub classes
                     partial_count += counter(ele.getValue<Hash > (), type);
                 } else {
                     if (ele.is<std::vector<Hash> >()) {
