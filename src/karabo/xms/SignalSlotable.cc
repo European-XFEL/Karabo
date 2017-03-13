@@ -409,11 +409,13 @@ namespace karabo {
                 if (slot) {
                     slot->callRegisteredSlotFunctions(*header, *body);
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": An error happened within a reply callback: \n" << e;
-                // TODO Repair exception handling for std::exception
-            } catch (const std::exception& se) {
-                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": An error happened within a reply callback: " << se.what();
+            } catch (const std::exception& e) {
+                boost::optional<Hash::Node&> signalIdNode = header->find("signalInstanceId");
+                const std::string& signalId = (signalIdNode && signalIdNode->is<std::string>() ?
+                                              "'" + signalIdNode->getValue<std::string>() + "'" :
+                                              " unspecified sender");
+                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception when handling reply from "
+                        << signalId << ": " << e.what();
             }
             removeSlot(replyId);
             // Now check whether someone is synchronously waiting for us and if yes wake him up
