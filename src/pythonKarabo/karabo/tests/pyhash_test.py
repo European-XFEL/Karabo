@@ -7,7 +7,8 @@ from numpy.testing import assert_equal
 from karabo.bound import (BinarySerializerHash, TextSerializerHash,
                           Hash as BoundHash, VectorHash)
 from karabo.middlelayer import (
-    Hash, NodeType, Schema, HashList, Int64, decodeBinary, encodeBinary)
+    Hash, NodeType, Schema, HashList, Int64, decodeBinary, decodeXML,
+    encodeBinary, encodeXML)
 from karabo.middlelayer_api.hash import _Byte
 
 
@@ -217,14 +218,14 @@ class Hash_TestCase(unittest.TestCase):
 
 
     def test_xml(self):
-        s = self.create_hash().encode("XML")
-        self.check_hash(Hash.decode(s, "XML"))
+        s = encodeXML(self.create_hash())
+        self.check_hash(decodeXML(s))
 
         # hash XML encoding is pretty different if there is only
         # one key on the first level
         h = Hash("bla", self.create_hash())
-        s = h.encode("XML")
-        self.check_hash(Hash.decode(s, "XML")["bla"])
+        s = encodeXML(h)
+        self.check_hash(decodeXML(s)["bla"])
 
 
     def test_binary(self):
@@ -243,11 +244,11 @@ class Hash_TestCase(unittest.TestCase):
 
 
     def test_cpp_xml(self):
-        s = self.create_hash().encode("XML")
+        s = encodeXML(self.create_hash())
         ser = TextSerializerHash.create("Xml")
         h = ser.load(s)
         self.check_hash_simple(h)
-        ret = Hash.decode(ser.save(h), "XML")
+        ret = decodeXML(ser.save(h))
         self.check_hash(ret)
 
     def test_ndarray(self):

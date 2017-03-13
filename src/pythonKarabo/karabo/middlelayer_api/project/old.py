@@ -12,7 +12,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import read_scene
-from karabo.middlelayer_api.hash import Hash, XMLParser, XMLWriter
+from karabo.middlelayer_api.hash import Hash
+from karabo.middlelayer_api.serializers import decodeXML, encodeXML
 
 
 class Project(object):
@@ -128,10 +129,10 @@ class ProjectConfiguration(object):
         self.hash = hash
 
     def fromXml(self, xmlString):
-        self.hash = XMLParser().read(xmlString)
+        self.hash = decodeXML(xmlString)
 
     def toXml(self):
-        return XMLWriter().write(self.hash)
+        return encodeXML(self.hash)
 
 
 class BaseDevice(object):
@@ -175,10 +176,10 @@ class Monitor(object):
         self.filename = "{}.xml".format(name)
 
     def fromXml(self, xmlString):
-        self.config = XMLParser().read(xmlString)
+        self.config = decodeXML(xmlString)
 
     def toXml(self):
-        return XMLWriter().write(self.config)
+        return encodeXML(self.config)
 
 
 # -----------------------------------------------------------------------------
@@ -357,4 +358,4 @@ def _read_scenes(zf, projectConfig):
 def _read_xml_hash(zf, path):
     """ Read a Hash object (serialized as XML) from a zipfile.
     """
-    return Hash.decode(zf.read(path), 'XML')
+    return decodeXML(zf.read(path))
