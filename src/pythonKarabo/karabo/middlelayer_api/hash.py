@@ -1570,13 +1570,13 @@ class Handler(ContentHandler):
 
     def parseHash(self):
         ret = Hash()
-        while True:
-            try:
+        try:
+            while True:
                 name, value, attrs = yield from self.parseOne()
-            except EndElement:
-                return ret
-            ret[name] = value
-            ret[name, ...] = attrs
+                ret[name] = value
+                ret[name, ...] = attrs
+        except EndElement:
+            return ret
 
     def parseOne(self):
         name, attrs = yield "Start"
@@ -1600,21 +1600,21 @@ class Handler(ContentHandler):
 
     def parseVectorHash(self):
         ret = HashList()
-        while True:
-            try:
+        try:
+            while True:
                 name, _ = yield "Start"
-            except EndElement:
-                return ret
-            assert name == "KRB_Item"
-            ret.append((yield from self.parseHash()))
+                assert name == "KRB_Item"
+                ret.append((yield from self.parseHash()))
+        except EndElement:
+            return ret
 
     def parseString(self, typename):
         ret = []
-        while True:
-            try:
+        try:
+            while True:
                 ret.append((yield "Chars"))
-            except EndElement:
-                return Type.fromname[typename].fromstring("".join(ret))
+        except EndElement:
+            return Type.fromname[typename].fromstring("".join(ret))
 
     def startElement(self, name, attrs):
         assert self.last == "Start"
