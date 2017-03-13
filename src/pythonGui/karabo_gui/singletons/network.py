@@ -17,7 +17,7 @@ from PyQt4.QtGui import QDialog, QMessageBox, qApp
 
 from karabo.authenticator import Authenticator
 from karabo.common.api import ShellNamespaceWrapper
-from karabo.middlelayer import Hash, BinaryWriter, AccessLevel
+from karabo.middlelayer import Hash, decodeBinary, encodeBinary, AccessLevel
 from karabo_gui import background
 from karabo_gui.dialogs.logindialog import LoginDialog
 from karabo_gui.events import broadcast_event, KaraboEventSender
@@ -223,7 +223,7 @@ class Network(QObject):
 
     def parseInput(self, data):
         """parse the data and emit the signalReceivedData"""
-        self.signalReceivedData.emit(Hash.decode(data, "Bin"))
+        self.signalReceivedData.emit(decodeBinary(data))
 
     def onSocketError(self, socketError):
         print("onSocketError", self.tcpSocket.errorString(), socketError)
@@ -511,8 +511,7 @@ class Network(QObject):
             return
 
         stream = QByteArray()
-        writer = BinaryWriter()
-        dataBytes = writer.write(h)
+        dataBytes = encodeBinary(h)
         stream.push_back(QByteArray(pack('I', len(dataBytes))))
         stream.push_back(dataBytes)
         self.tcpSocket.write(stream)
