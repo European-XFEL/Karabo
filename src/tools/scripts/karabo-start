@@ -10,7 +10,7 @@ if [ ${#@} -gt 0 ]; then
         echo
         echo "karabo-start - start applications as defined in config file"
         echo
-        echo "  karabo-start [-h|--help|-nox|--nox|-iconize|--iconize]"
+        echo "  karabo-start [-h|--help|-n|--nox|-i|--iconize]"
         echo
         echo "If any of the help options is given, print this help."
         echo
@@ -97,8 +97,7 @@ fi
 
 for key in "${!START[@]}"
 do
-    value=${START[$key]}
-    exe=$(echo $value | awk -F ":" '{print $1}')
+    exe=${START[$key]}
 
     # the match is too indescriminant and fails to identify all cases! Correct solution use pid chain?
     job=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep -F "$exe")
