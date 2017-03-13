@@ -144,9 +144,9 @@ class RunConfigPanel(BasePanelWidget):
         """
         items = self.groupModel.findItems(group)
         for item in items:
-            existingSources = item.data(Qt.UserRole+1)
-            if existingSources is None:
-                existingSources = []
+            if item.rowCount():
+                item.removeRows(0, item.rowCount())
+            existingSources = []
             for source in sources:
                 attrs = ['source', 'type', 'behavior', 'monitored', 'access']
                 src = source.get('source')
