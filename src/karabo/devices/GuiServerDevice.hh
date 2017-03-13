@@ -90,7 +90,7 @@ namespace karabo {
 
         private: // Functions
             /** Called if configuration changed from outside. */
-            void postReconfigure();
+            virtual void postReconfigure();
 
             /**
              * writes a message  to the specified channel with the given priority
