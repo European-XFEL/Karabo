@@ -17,6 +17,7 @@ from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
 from .schema import Node
+from .serializers import decodeBinary
 from .signalslot import SignalSlotable, slot, coslot
 
 
@@ -390,7 +391,7 @@ class BoundDeviceServer(DeviceServerBase):
                 except:
                     process.kill()
                     raise
-                self.bounds[ep.name] = Hash.decode(schema, "Bin")[ep.name]
+                self.bounds[ep.name] = decodeBinary(schema)[ep.name]
                 changes = True
             except Exception:
                 class_ban.add(ep.name)

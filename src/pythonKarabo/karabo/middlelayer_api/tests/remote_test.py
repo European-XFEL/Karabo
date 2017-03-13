@@ -9,8 +9,8 @@ import weakref
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    AlarmCondition, Bool, Configurable, connectDevice, Device, DeviceNode,
-    execute, Float, getDevice, Hash, isSet, Int32, KaraboError,
+    AlarmCondition, Bool, Configurable, connectDevice, decodeBinary, Device,
+    DeviceNode, execute, Float, getDevice, Hash, isSet, Int32, KaraboError,
     lock, MetricPrefix, Node, setNoWait, setWait, Slot, slot, State, String,
     unit, Unit, VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
     waitUntilNew)
@@ -590,7 +590,7 @@ class Tests(DeviceTest):
             yield from sleep(0.1)
             self.local.logger.warning("this is an info")
             yield from t
-        hash = Hash.decode(self.remote.logmessage, "Bin")
+        hash = decodeBinary(self.remote.logmessage)
         hash = hash["messages"][0]
         self.assertEqual(hash["message"], "this is an info")
         self.assertEqual(hash["type"], "WARN")
@@ -605,7 +605,7 @@ class Tests(DeviceTest):
             except Exception:
                 self.local.logger.exception("expected exception")
             yield from t
-        hash = Hash.decode(self.remote.logmessage, "Bin")
+        hash = decodeBinary(self.remote.logmessage)
         hash = hash["messages"][0]
         self.assertEqual(hash["message"], "expected exception")
         self.assertEqual(hash["type"], "ERROR")
