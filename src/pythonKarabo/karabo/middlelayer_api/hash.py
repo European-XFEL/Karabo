@@ -1555,53 +1555,80 @@ class HashMergePolicy:
     REPLACE_ATTRIBUTES = "replace"
 
 
+class EndElement(Exception):
+    pass
+
+
 class Handler(ContentHandler):
     def __init__(self):
         super().__init__()
-        self.typenames = ["HASH"]
-        self.hashes = [Hash()]
-        self.attrs = []
+        self.parser = self.parseAll()
+        self.last = self.parser.send(None)
+
+    def parseAll(self):
+        self.name, self.value, self.hashattrs = yield from self.parseOne()
+
+    def parseHash(self):
+        ret = Hash()
+        while True:
+            try:
+                name, value, attrs = yield from self.parseOne()
+            except EndElement:
+                return ret
+            ret[name] = value
+            ret[name, ...] = attrs
+
+    def parseOne(self):
+        name, attrs = yield "Start"
+        hashattrs = {}
+        for key, value in attrs.items():
+            value = unescape(value)
+            hashattrs[key] = value
+            if value.startswith("KRB_") and ":" in value:
+                dtype, svalue = value.split(":", 1)
+                dtype = Type.fromname.get(dtype[4:], None)
+                if dtype is not None:
+                    hashattrs[key] = dtype.fromstring(svalue)
+        typename = hashattrs.pop("KRB_Type", "HASH")
+        if typename == "HASH":
+            value = yield from self.parseHash()
+        elif typename == "VECTOR_HASH":
+            value = yield from self.parseVectorHash()
+        else:
+            value = yield from self.parseString(typename)
+        return name, value, hashattrs
+
+    def parseVectorHash(self):
+        ret = HashList()
+        while True:
+            try:
+                name, _ = yield "Start"
+            except EndElement:
+                return ret
+            assert name == "KRB_Item"
+            ret.append((yield from self.parseHash()))
+
+    def parseString(self, typename):
+        ret = []
+        while True:
+            try:
+                ret.append((yield "Chars"))
+            except EndElement:
+                return Type.fromname[typename].fromstring("".join(ret))
 
     def startElement(self, name, attrs):
-        if self.typenames[-1] == "VECTOR_HASH":
-            assert name == "KRB_Item"
-            self.typenames.append("ITEM")
-            self.hashes.append(Hash())
-        else:
-            hashattrs = {}
-            for key, value in attrs.items():
-                value = unescape(value)
-                hashattrs[key] = value
-                if value.startswith("KRB_") and ":" in value:
-                    dtype, svalue = value.split(":", 1)
-                    dtype = Type.fromname.get(dtype[4:], None)
-                    if dtype is not None:
-                        hashattrs[key] = dtype.fromstring(svalue)
-            self.typenames.append(hashattrs.pop("KRB_Type", "HASH"))
-            self.attrs.append(hashattrs)
-            if self.typenames[-1] == "HASH":
-                self.hashes.append(Hash())
-            elif self.typenames[-1] == "VECTOR_HASH":
-                self.hashes.append(HashList())
-            self.chars = []
+        assert self.last == "Start"
+        self.last = self.parser.send((name, attrs))
 
     def characters(self, content):
-        self.chars.append(content)
+        if self.last == "Chars":
+            self.parser.send(content)
 
     def endElement(self, name):
-        ktype = self.typenames.pop()
-        if ktype in {"HASH", "VECTOR_HASH", "ITEM"}:
-            result = self.hashes.pop()
-        else:
-            result = Type.fromname[ktype].fromstring("".join(self.chars))
-        if self.typenames[-1] in {"HASH", "ITEM"}:
-            assert isinstance(self.hashes[-1], Hash)
-            self.hashes[-1][name] = result
-            self.hashes[-1][name, ...] = self.attrs.pop()
-        elif self.typenames[-1] == "VECTOR_HASH":
-            assert name == "KRB_Item"
-            assert isinstance(self.hashes[-1], list)
-            self.hashes[-1].append(result)
+        try:
+            self.last = self.parser.throw(EndElement())
+        except StopIteration:
+            pass
 
 
 class XMLParser(object):
@@ -1613,11 +1640,12 @@ class XMLParser(object):
         parser.setContentHandler(handler)
         parser.feed(data)
         parser.close()
-        result, = handler.hashes
-        if "root" in result and "KRB_Artificial" in result["root", ...]:
-            return result["root"]
+        if handler.name == "root" and "KRB_Artificial" in handler.hashattrs:
+            return handler.value
         else:
-            return result
+            ret = Hash(handler.name, handler.value)
+            ret[handler.name, ...] = handler.hashattrs
+            return ret
 
 
 class Writer(object):
