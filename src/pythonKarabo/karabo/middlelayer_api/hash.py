@@ -15,7 +15,6 @@ import logging
 import numbers
 from struct import pack, unpack, calcsize
 import sys
-import weakref
 from xml.sax import make_parser
 from xml.sax.saxutils import escape, quoteattr
 from xml.sax.handler import ContentHandler
@@ -618,6 +617,7 @@ class Type(Descriptor, Registry):
 
     @classmethod
     def yieldXML(cls, data):
+        """iterating over this yields the XML representation of `data`"""
         yield escape(cls.toString(data))
 
 
@@ -1556,29 +1556,29 @@ class HashMergePolicy:
 class Handler(ContentHandler):
     def __init__(self):
         super().__init__()
-        self.ktypes = ["HASH"]
+        self.typenames = ["HASH"]
         self.hashes = [Hash()]
         self.attrs = []
 
     def startElement(self, name, attrs):
-        if self.ktypes[-1] == "VECTOR_HASH":
+        if self.typenames[-1] == "VECTOR_HASH":
             assert name == "KRB_Item"
-            self.ktypes.append("ITEM")
+            self.typenames.append("ITEM")
             self.hashes.append(Hash())
         else:
-            kattrs = {}
+            hashattrs = {}
             for key, value in attrs.items():
-                kattrs[key] = value
+                hashattrs[key] = value
                 if value.startswith("KRB_") and ":" in value:
                     dtype, svalue = value.split(":", 1)
                     dtype = Type.fromname.get(dtype[4:], None)
                     if dtype is not None:
-                        kattrs[key] = dtype.fromstring(svalue)
-            self.ktypes.append(kattrs.pop("KRB_Type", "HASH"))
-            self.attrs.append(kattrs)
-            if self.ktypes[-1] == "HASH":
+                        hashattrs[key] = dtype.fromstring(svalue)
+            self.typenames.append(hashattrs.pop("KRB_Type", "HASH"))
+            self.attrs.append(hashattrs)
+            if self.typenames[-1] == "HASH":
                 self.hashes.append(Hash())
-            elif self.ktypes[-1] == "VECTOR_HASH":
+            elif self.typenames[-1] == "VECTOR_HASH":
                 self.hashes.append(HashList())
             self.chars = []
 
@@ -1586,16 +1586,16 @@ class Handler(ContentHandler):
         self.chars.append(content)
 
     def endElement(self, name):
-        ktype = self.ktypes.pop()
+        ktype = self.typenames.pop()
         if ktype in {"HASH", "VECTOR_HASH", "ITEM"}:
             result = self.hashes.pop()
         else:
             result = Type.fromname[ktype].fromstring("".join(self.chars))
-        if self.ktypes[-1] in {"HASH", "ITEM"}:
+        if self.typenames[-1] in {"HASH", "ITEM"}:
             assert isinstance(self.hashes[-1], Hash)
             self.hashes[-1][name] = result
             self.hashes[-1][name, ...] = self.attrs.pop()
-        elif self.ktypes[-1] == "VECTOR_HASH":
+        elif self.typenames[-1] == "VECTOR_HASH":
             assert name == "KRB_Item"
             assert isinstance(self.hashes[-1], list)
             self.hashes[-1].append(result)
