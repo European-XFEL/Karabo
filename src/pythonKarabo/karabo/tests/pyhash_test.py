@@ -137,7 +137,7 @@ class Hash_TestCase(unittest.TestCase):
         h = Hash()
         h["bool"] = True
         h["int"] = 4
-        h["string"] = "bla"
+        h["string"] = "bla ä < / \\ \"' > ]]> & <![CDATA[ =_! (|}"
         h["complex"] = complex(1.0, 0.42)
         h["stringlist"] = ["bla", "blub"]
         h["chars"] = b"bla"
@@ -154,7 +154,7 @@ class Hash_TestCase(unittest.TestCase):
         h["int", "float"] = 7.3
         h["hash", "int"] = 3
         h["string", "chars"] = b"blub"
-        h["chars", "string"] = "laber"
+        h["chars", "string"] = "laber &quot; ö \\ \"' ]]> <![CDATA[ (|}"
         h["vector", "complex"] = complex(1.0, 2.0)
         sh = Hash()
         sh["a"] = Hash()
@@ -174,7 +174,8 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(list(h.keys()), keys)
         self.assertIs(h["bool"], True)
         self.assertEqual(h["int"], 4)
-        self.assertEqual(h["string"], "bla")
+        self.assertEqual(h["string"],
+                         "bla ä < / \\ \"' > ]]> & <![CDATA[ =_! (|}")
         self.assertTrue(isinstance(h["string"], str))
         self.assertEqual(h["complex"], complex(1.0, 0.42))
         self.assertEqual(h["stringlist"], ["bla", "blub"])
@@ -204,7 +205,8 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(h["hash", "int"], 3)
         self.assertEqual(h["string", "chars"], b"blub")
         self.assertTrue(isinstance(h["string", "chars"], bytes))
-        self.assertEqual(h["chars", "string"], "laber")
+        self.assertEqual(h["chars", "string"],
+                         "laber &quot; ö \\ \"' ]]> <![CDATA[ (|}")
         self.assertEqual(h["vector", "complex"], complex(1.0, 2.0))
         self.assertTrue(isinstance(h["chars", "string"], str))
         self.assertEqual(h["schema"].name, "blub")
@@ -227,7 +229,7 @@ class Hash_TestCase(unittest.TestCase):
     def test_binary(self):
         s = self.create_hash().encode("Bin")
         self.check_hash(Hash.decode(s, "Bin"))
-        self.assertEqual(adler32(s), 1828411983)
+        self.assertEqual(adler32(s), 963145160)
 
 
     def test_cpp_bin(self):
