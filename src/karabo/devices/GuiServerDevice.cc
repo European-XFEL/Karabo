@@ -56,9 +56,10 @@ namespace karabo {
                     .displayedName("Delay on Input channel")
                     .description("Some delay before informing output channel about readiness for next data.")
                     .assignmentOptional().defaultValue(500)
+                    .reconfigurable()
+                    .minInc(200) // => not faster than 5 Hz, but allow as slow as desired
                     .unit(Unit::SECOND)
                     .metricPrefix(MetricPrefix::MILLI)
-                    .init()
                     .commit();
 
             INT32_ELEMENT(expected).key("propertyUpdateInterval")
@@ -66,8 +67,8 @@ namespace karabo {
                     .description("Minimum interval between subsequent property updates forwarded to clients.")
                     .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(500)
-                    .minExc(100).maxInc(1000) // not faster than 10 Hz, 1 Hz is already slow
-                    .init()
+                    .reconfigurable()
+                    .minInc(100).maxInc(10000) // => roughly between 10 Hz and 0.1 Hz
                     .commit();
 
             INT32_ELEMENT(expected).key("waitInitDevice")
@@ -162,6 +163,15 @@ namespace karabo {
             }
         }
 
+
+        void GuiServerDevice::postReconfigure() {
+            remote().setDeviceMonitorInterval(get<int>("propertyUpdateInterval"));
+
+            // One might also want to react on possible changes of "delayOnInput",
+            // i.e. change delay value for existing input channels.
+            // For now, changing "delayOnInput" will only affect new InputChannels, i.e. _all_ GUI clients requesting
+            // data of a specific output channel have to dis- and then reconnect to see the new delay.
+        }
 
         void GuiServerDevice::onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
             if (e) return;
