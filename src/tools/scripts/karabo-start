@@ -97,8 +97,7 @@ fi
 
 for key in "${!START[@]}"
 do
-    value=${START[$key]}
-    exe=$(echo $value | awk -F ":" '{print $1}')
+    exe=${START[$key]}
 
     # the match is too indescriminant and fails to identify all cases! Correct solution use pid chain?
     job=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep -F "$exe")
