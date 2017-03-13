@@ -412,9 +412,10 @@ namespace karabo {
             } catch (const std::exception& e) {
                 boost::optional<Hash::Node&> signalIdNode = header->find("signalInstanceId");
                 const std::string& signalId = (signalIdNode && signalIdNode->is<std::string>() ?
-                                               signalIdNode->getValue<std::string>() : "unknown");
-                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception when handling reply from '"
-                        << signalId << "': " << e.what();
+                                              "'" + signalIdNode->getValue<std::string>() + "'" :
+                                              " unspecified sender");
+                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception when handling reply from "
+                        << signalId << ": " << e.what();
             }
             removeSlot(replyId);
             // Now check whether someone is synchronously waiting for us and if yes wake him up
