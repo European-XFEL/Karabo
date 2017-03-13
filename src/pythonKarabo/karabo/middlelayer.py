@@ -38,7 +38,7 @@ from .middlelayer_api.hash import (
     VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
     VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
-    VectorUInt64, VectorUInt8, XMLWriter, XMLParser
+    VectorUInt64, VectorUInt8
 )
 from .middlelayer_api.project.api import (
     convert_old_project, OldProject, read_project_model, write_project_model
@@ -50,7 +50,7 @@ from .middlelayer_api.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes
 )
 from .middlelayer_api.serializers import (
-    decodeBinary, encodeBinary, writeBinary
+    decodeBinary, decodeXML, encodeBinary, encodeXML, writeBinary, writeXML
 )
 from .middlelayer_api.signalslot import Signal, SignalSlotable, slot, coslot
 from .middlelayer_api.synchronization import (
