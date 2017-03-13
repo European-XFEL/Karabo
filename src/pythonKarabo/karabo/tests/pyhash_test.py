@@ -6,7 +6,8 @@ from numpy.testing import assert_equal
 
 from karabo.bound import (BinarySerializerHash, TextSerializerHash,
                           Hash as BoundHash, VectorHash)
-from karabo.middlelayer import Hash, NodeType, Schema, HashList, Int64
+from karabo.middlelayer import (
+    Hash, NodeType, Schema, HashList, Int64, decodeBinary, encodeBinary)
 from karabo.middlelayer_api.hash import _Byte
 
 
@@ -227,17 +228,17 @@ class Hash_TestCase(unittest.TestCase):
 
 
     def test_binary(self):
-        s = self.create_hash().encode("Bin")
-        self.check_hash(Hash.decode(s, "Bin"))
+        s = encodeBinary(self.create_hash())
+        self.check_hash(decodeBinary(s))
         self.assertEqual(adler32(s), 963145160)
 
 
     def test_cpp_bin(self):
-        s = self.create_hash().encode("Bin")
+        s = encodeBinary(self.create_hash())
         ser = BinarySerializerHash.create("Bin")
         h = ser.load(s)
         self.check_hash_simple(h)
-        ret = Hash.decode(ser.save(h), "Bin")
+        ret = decodeBinary(ser.save(h))
         self.check_hash(ret)
 
 
@@ -254,12 +255,12 @@ class Hash_TestCase(unittest.TestCase):
         arr = numpy.arange(12).reshape((3, 4))
         bh.set("array", arr)
         ser = BinarySerializerHash.create("Bin")
-        h = Hash.decode(ser.save(bh), "Bin")
+        h = decodeBinary(ser.save(bh))
         self.assertEqual(h["array", "__classId"], "NDArray")
         assert_equal(h["array"]["shape"], [3, 4])
         self.assertEqual(h["array"]["type"], Int64.number)
         self.assertEqual(len(h["array"]["data"]), arr.nbytes)
-        bh = ser.load(h.encode("Bin"))
+        bh = ser.load(encodeBinary(h))
         assert_equal(bh["array"], arr)
 
 
