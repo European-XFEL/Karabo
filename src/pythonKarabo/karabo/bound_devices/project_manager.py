@@ -67,6 +67,7 @@ class ProjectManager(PythonDevice):
         self.registerSlot(self.slotLoadItems)
         self.registerSlot(self.slotListItems)
         self.registerSlot(self.slotListDomains)
+        self.registerSlot(self.slotUpdateAttribute)
         self.registerInitialFunction(self.initialization)
         self.user_db_sessions = {}
 
@@ -280,3 +281,44 @@ class ProjectManager(PythonDevice):
         with self.user_db_sessions[token] as db_session:
             res = db_session.list_domains()
             self.reply(Hash('domains', res))
+
+    def slotUpdateAttribute(self, token, items):
+        """
+        Update any attribute of given ``items`` in the database
+
+        :param token: database user token
+        :param items: list of Hashes containing information on which items
+                      to update. Each list entry should be a Hash containing
+
+                      - domain: domain the item resides at
+                      - uuid: the uuid of the item
+                      - item_type: indicate type of item which attribute should
+                                   be changed
+                      - attr_name: name of attribute which should be changed
+                      - attr_value: value of attribute which should be changed
+
+        :return: a list of Hashes where each entry has keys: domain, item_type,
+                 uuid, attr_name, attr_value
+        """
+
+        self._checkDbInitialized(token)
+
+        with self.user_db_sessions[token] as db_session:
+            exceptionReason = ""
+            success = True
+            resHashes = []
+            try:
+                res = db_session.update_attributes(items)
+                for r in res:
+                    h = Hash('domain', r['domain'],
+                             'item_type', r['item_type'],
+                             'uuid', r['uuid'],
+                             'attr_name', r['attr_name'],
+                             'attr_value', r['attr_value'])
+                    resHashes.append(h)
+            except ProjectDBError as e:
+                exceptionReason = str(e)
+                success = False
+            self.reply(Hash('items', resHashes,
+                            'success', success,
+                            'reason', exceptionReason))
