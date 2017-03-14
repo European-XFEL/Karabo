@@ -2,8 +2,8 @@ import asyncio
 from unittest import TestCase, main
 
 from karabo.middlelayer import (
-    AccessMode, Assignment, Configurable, Hash, Int32, isSet, KaraboError,
-    Node, String, Unit, unit, VectorHash)
+    AccessMode, Assignment, Configurable, decodeBinary, encodeBinary, Hash,
+    Int32, isSet, KaraboError, Node, String, Unit, unit, VectorHash)
 
 
 class StoreChanges(Configurable):
@@ -27,7 +27,7 @@ class StoreChanges(Configurable):
 def rehash(**kwargs):
     """assure hashes look exactly like they came over the network"""
     h = Hash(kwargs)
-    return Hash.decode(h.encode("Bin"), "Bin")
+    return decodeBinary(encodeBinary(h))
 
 
 def run_coro(coro):
