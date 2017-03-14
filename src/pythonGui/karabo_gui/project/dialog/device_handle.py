@@ -114,7 +114,7 @@ class DeviceHandleDialog(QDialog):
             for class_id, visibility in zip(attrs.get('deviceClasses', []),
                                             attrs.get('visibilities', [])):
                 # Only show accessible plugins depending on global access level
-                if AccessLevel(visibility) >= krb_globals.GLOBAL_ACCESS_LEVEL:
+                if AccessLevel(visibility) > krb_globals.GLOBAL_ACCESS_LEVEL:
                     continue
                 available_plugins.add(class_id)
 
