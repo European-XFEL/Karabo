@@ -10,25 +10,22 @@ on the deviceId, without going through the hazzle of creating a device
 proxy. """
 import asyncio
 from asyncio import get_event_loop
-from collections import defaultdict
 from contextlib import contextmanager
 from decimal import Decimal
-import time
-from weakref import ref, WeakSet
+from weakref import ref
 
 import dateutil.parser
 import dateutil.tz
 
 from .basetypes import KaraboValue
 from .device import Device
-from .enums import NodeType
 from .eventloop import synchronize
 from .exceptions import KaraboError
-from .hash import Hash, Slot, Type, Descriptor
+from .hash import Hash, Type
+from .proxy import (AbstractProxy, AutoDisconnectProxyFactory,
+                    DeviceClientProxyFactory)
 from .signalslot import slot
 from .synchronization import firstCompleted
-from .timestamp import Timestamp
-from .weak import Weak
 
 
 class DeviceClientBase(Device):
@@ -76,286 +73,6 @@ class DeviceClientBase(Device):
         ret[type][instanceId, ...] = dict(info.items())
         self.systemTopology.merge(ret)
         return ret
-
-
-class ProxySlot(Slot):
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self
-        key = self.longkey
-
-        @synchronize
-        def method(self):
-            @asyncio.coroutine
-            def inner():
-                yield from self._update()
-                self._device._use()
-                return (yield from self._device.call(self._deviceId, key))
-            return (yield from self._raise_on_death(inner()))
-        method.__doc__ = self.description
-        return method.__get__(instance, owner)
-
-
-class Proxy(object):
-    """A proxy for a remote device
-
-    This proxy represents a real device somewhere in the karabo system.
-    It is typically created by :func:`getDevice`, do not create it yourself.
-
-    Properties and slots may be accessed as if one would access the actual
-    device object, as in::
-
-        device = getDevice("someDevice")
-        device.speed = 7
-        device.start()
-
-    Note that in order to reduce network traffic, the proxy device is initially
-    not *connected*, meaning that it does not receive updates of properties
-    from the device. There are two ways to change that: you can call
-    :func:`updateDevice` to get the current configuration once, or you may use
-    the proxy in a with statment, which will connect the device during the
-    execution of that statement, as in::
-
-        with getDevice("someDevice") as device:
-            print(device.speed)"""
-    def __init__(self, device, deviceId, sync):
-        self._device = device
-        self._queues = defaultdict(WeakSet)
-        self._deviceId = deviceId
-        self._used = 0
-        self._sethash = Hash()
-        self._sync = sync
-        self._alive = True
-        self._running_tasks = set()
-        self._last_update_task = None
-        self._schemaUpdateConnected = False
-
-    @classmethod
-    def __dir__(cls):
-        return cls._allattrs
-
-    def _use(self):
-        pass
-
-    def _onChanged_r(self, hash, instance, parent):
-        """the recursive part of _onChanged"""
-        for k, v, a in hash.iterall():
-            d = getattr(type(instance), k, None)
-            if d is not None:
-                if isinstance(d, ProxyNode):
-                    self._onChanged_r(v, getattr(instance, d.key), parent)
-                elif not isinstance(d, ProxySlot):
-                    converted = d.toKaraboValue(v, strict=False)
-                    converted.timestamp = Timestamp.fromHashAttributes(a)
-                    converted._parent = self
-                    instance.__dict__[d.key] = converted
-                    for q in parent._queues[d.longkey]:
-                        q.put_nowait(converted)
-
-    def _onChanged(self, hash):
-        self._onChanged_r(hash, self, self)
-        for q in self._queues[None]:
-            q.put_nowait(hash)
-
-    def _onSchemaUpdated_r(self, cls, instance):
-        instance.__class__ = cls
-        for key in dir(cls):
-            descriptor = getattr(cls, key)
-            if isinstance(descriptor, ProxyNode):
-                value = getattr(instance, key, None)
-                if isinstance(value, SubProxy):
-                    self._onSchemaUpdated_r(descriptor.cls, value)
-                else:
-                    # something became a Node which wasn't one before.
-                    # simply delete it to start anew at the next change
-                    value.__dict__.pop(key, None)
-
-    def _onSchemaUpdated(self, schema):
-        namespace = _createProxyDict(schema.hash, "")
-        cls = type(schema.name, (Proxy,), namespace)
-        self._onSchemaUpdated_r(cls, self)
-
-    def setValue(self, desc, value):
-        self._use()
-        loop = get_event_loop()
-        assert isinstance(value, KaraboValue)
-        if loop.sync_set:
-            h = Hash()
-            h[desc.longkey], _ = desc.toDataAndAttrs(value)
-            loop.sync(self._raise_on_death(self._device.call(
-                self._deviceId, "slotReconfigure", h)), timeout=-1, wait=True)
-        elif (self._last_update_task is not None and
-              self._last_update_task.done() and
-              self._last_update_task.exception() is not None):
-            task = self._last_update_task
-            self._last_update_task = None
-            task.result()  # raise the exception
-        else:
-            update = not self._sethash
-            self._sethash[desc.longkey], _ = desc.toDataAndAttrs(value)
-            if update:
-                self._last_update_task = asyncio.async(
-                    self._update(self._last_update_task))
-
-    @asyncio.coroutine
-    def _update(self, task=False):
-        """assure all properties are properly set
-
-        property settings are cached in self._sethash. This method
-        will assure they have properly been sent to the device, or it will
-        send it itself. An error is raised if that fails.
-
-        :param task: is an already running update task, if supplied.
-        self._last_update_task is checked otherwise.
-        """
-        if task is False:
-            task = self._last_update_task
-            self._last_update_task = None
-        if task is not None:
-            yield from task
-        if self._sethash:
-            sethash, self._sethash = self._sethash, Hash()
-            yield from self._device._ss.request(
-                self._deviceId, "slotReconfigure", sethash)
-
-    def _notify_gone(self):
-        """The underlying device has gone"""
-        self._alive = False
-        for task in self._running_tasks:
-            task.cancel()
-
-    @asyncio.coroutine
-    def _raise_on_death(self, coro):
-        """execute *coro* but raise KaraboError if proxy is orphaned
-
-        This coroutine executes the coroutine *coro*. If the device connected
-        to this proxy dies while the *coro* is executed, a KaraboError is
-        raised.
-        """
-        if not self._alive:
-            raise KaraboError('device "{}" died'.format(self._deviceId))
-        task = asyncio.async(coro)
-        self._running_tasks.add(task)
-        task.add_done_callback(lambda fut: self._running_tasks.discard(fut))
-        try:
-            return (yield from task)
-        except asyncio.CancelledError:
-            if self._alive:
-                raise
-            else:
-                raise KaraboError('device "{}" died'.format(self._deviceId))
-
-    def __enter__(self):
-        self._used += 1
-        if self._used == 1:
-            self._device._ss.connect(self._deviceId, "signalChanged",
-                                     self._device.slotChanged)
-            self._device._ss.connect(self._deviceId, "signalStateChanged",
-                                     self._device.slotChanged)
-        return self
-
-    def __exit__(self, a, b, c):
-        self._used -= 1
-        if self._used == 0:
-            self._device._ss.disconnect(self._deviceId, "signalChanged",
-                                        self._device.slotChanged)
-            self._device._ss.disconnect(self._deviceId, "signalStateChanged",
-                                        self._device.slotChanged)
-
-    def _disconnectSchemaUpdated(self):
-        if self._schemaUpdateConnected:
-            self._device._ss.disconnect(self._deviceId, "signalSchemaUpdated",
-                                        self._device.slotSchemaUpdated)
-        self._schemaUpdateConnected = False
-
-    def __del__(self):
-        self._disconnectSchemaUpdated()
-        if self._used > 0:
-            self._used = 1
-            self.__exit__(None, None, None)
-
-    def __iter__(self):
-        yield from self._update()
-        conf, _ = yield from self._device.call(self._deviceId,
-                                               "slotGetConfiguration")
-        self._onChanged(conf)
-        return self
-
-
-class AutoDisconnectProxy(Proxy):
-    def __init__(self, device, deviceId, sync):
-        super().__init__(device, deviceId, sync)
-        self._interval = 1
-        self._lastused = time.time()
-        self._task = asyncio.async(self._connector())
-
-    def _use(self):
-        self._lastused = time.time()
-        if self._task.done():
-            self._connect()
-
-    @synchronize
-    def _connect(self):
-        if self._task.done():
-            yield from self
-            self._task = asyncio.async(self._connector())
-
-    @asyncio.coroutine
-    def _connector(self):
-        with self:
-            while True:
-                delta = self._interval - time.time() + self._lastused
-                if delta < 0:
-                    return
-                yield from asyncio.sleep(delta)
-
-
-class ProxyNode(Descriptor):
-    def __init__(self, cls, **kwargs):
-        super(ProxyNode, self).__init__(**kwargs)
-        self.cls = cls
-
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self
-        ret = instance.__dict__.get(self.key, None)
-        if ret is not None:
-            return ret
-        sub = self.cls()
-        if isinstance(instance, SubProxy):
-            sub._parent = instance._parent
-        else:
-            sub._parent = instance
-        instance.__dict__[self.key] = sub
-        return sub
-
-
-class SubProxy(object):
-    _parent = Weak()
-
-    def _use(self):
-        return self._parent._use()
-
-    def setValue(self, desc, value):
-        return self._parent.setValue(desc, value)
-
-    def _raise_on_death(self, future):
-        return self._parent._raise_on_death(future)
-
-    def _update(self):
-        return self._parent._update()
-
-    @property
-    def _device(self):
-        return self._parent._device
-
-    @property
-    def _deviceId(self):
-        return self._parent._deviceId
-
-    @classmethod
-    def __dir__(cls):
-        return cls._allattrs
 
 
 class OneShotQueue(asyncio.Future):
@@ -410,7 +127,7 @@ def waitUntilNew(prop, *props, **kwargs):
     If you want to wait for something to reach a certain value, you may use
     :func:`waitUntil`. If you want to get all updates of a property, use
     :class:`Queue`."""
-    if isinstance(prop, Proxy):
+    if isinstance(prop, AbstractProxy):
         return _WaitUntilNew_old(prop)
     else:
         return _waitUntilNew_new(prop, *props, **kwargs)
@@ -441,7 +158,7 @@ class _getHistory_old:
         # this method contains a lot of hard-coded strings. It follows
         # GuiServerDevice::onGetPropertyHistory. One day we should
         # de-hard-code both.
-        if isinstance(self.proxy, Proxy):
+        if isinstance(self.proxy, AbstractProxy):
             # does the attribute actually exist?
             assert isinstance(getattr(type(self.proxy), attr), Type)
             deviceId = self.proxy._deviceId
@@ -527,7 +244,8 @@ def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
     # GuiServerDevice::onGetPropertyHistory. One day we should
     # de-hard-code both.
 
-    if isinstance(prop, Proxy) or isinstance(prop, str) and "." not in prop:
+    if (isinstance(prop, AbstractProxy) or isinstance(prop, str)
+           and "." not in prop):
         assert wait
         return _getHistory_old(prop, begin, end, maxNumData, timeout)
     else:
@@ -577,34 +295,12 @@ def waitUntil(condition):
         yield from loop.waitForChanges()
 
 
-def _createProxyDict(hash, prefix):
-    dict = {}
-    for k, v, a in hash.iterall():
-        nodeType = NodeType(a["nodeType"])
-        if nodeType is NodeType.Leaf:
-            d = Type.fromname[a["valueType"]](strict=False, key=k, **a)
-            d.longkey = prefix + k
-            dict[k] = d
-        elif nodeType is NodeType.Node:
-            if a.get("displayType") == "Slot":
-                dict[k] = ProxySlot()
-            else:
-                sub = _createProxyDict(v, prefix + k + ".")
-                Cls = type(k, (SubProxy,), sub)
-                dict[k] = ProxyNode(Cls, strict=False, **a)
-            dict[k].key = k
-            dict[k].longkey = prefix + k
-            dict[k].description = a.get("description")
-    dict["_allattrs"] = list(hash)
-    return dict
-
-
 @synchronize
-def _getDevice(deviceId, sync, Proxy=Proxy):
+def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
     instance = get_instance()
     proxy = instance._proxies.get(deviceId)
     if proxy is not None:
-        if not isinstance(proxy, Proxy):
+        if not isinstance(proxy, factory.Proxy):
             raise KaraboError(
                 "do not mix getDevice with connectDevice!\n"
                 '(deleting the old proxy with "del proxy" may help)')
@@ -622,10 +318,8 @@ def _getDevice(deviceId, sync, Proxy=Proxy):
             schema, _ = yield from instance._call_once_alive(
                 deviceId, "slotGetSchema", False)
 
-            namespace = _createProxyDict(schema.hash, "")
-            Cls = type(schema.name, (Proxy,), namespace)
-
-            proxy = Cls(instance, deviceId, sync)
+            cls = factory.createProxy(schema)
+            proxy = cls(instance, deviceId, sync)
             proxy._schema_hash = schema.hash
             instance._proxies[deviceId] = proxy
         finally:
@@ -694,17 +388,17 @@ def connectDevice(device, *, autodisconnect=None, timeout=5):
 
     If the device is needed only within a specific block, it is nicer
     tu use instead a with statement as described in :func:`getDevice`."""
-    if isinstance(device, Proxy):
+    if isinstance(device, AbstractProxy):
         if autodisconnect is not None:
             raise RuntimeError(
                 "autodisconnect can only be set at proxy creation time")
     else:
         if autodisconnect is None:
-            P = Proxy
+            factory = DeviceClientProxyFactory
         else:
-            P = AutoDisconnectProxy
+            factory = AutoDisconnectProxyFactory
         device = yield from _getDevice(device, sync=get_event_loop().sync_set,
-                                       timeout=timeout, Proxy=P)
+                                       timeout=timeout, factory=factory)
     if autodisconnect is None:
         ret = device.__enter__()
     else:
@@ -842,7 +536,7 @@ def shutdown(device):
     """shut down the given device
 
     :param deviceId: may be a device proxy, or just the id of a device"""
-    if isinstance(device, Proxy):
+    if isinstance(device, AbstractProxy):
         device = device._deviceId
     ok = yield from get_instance().call(device, "slotKillDevice")
     return ok
@@ -852,7 +546,7 @@ def shutdownNoWait(device):
     """shut down the given device
 
     not waiting version of :func:`shutdown`"""
-    if isinstance(device, Proxy):
+    if isinstance(device, AbstractProxy):
         device = device._deviceId
     get_instance()._ss.emit("call", {device: ["slotKillDevice"]})
 
@@ -875,7 +569,7 @@ def setWait(device, **kwargs):
 
     the function waits until the device has acknowledged that the values
     have been set."""
-    if isinstance(device, Proxy):
+    if isinstance(device, AbstractProxy):
         yield from device._update()
         device = device._deviceId
     h = Hash()
@@ -889,7 +583,7 @@ def setWait(device, **kwargs):
 
 def setNoWait(device, **kwargs):
     """Same as :func:`setWait`, but don't wait for acknowledgement"""
-    if isinstance(device, Proxy):
+    if isinstance(device, AbstractProxy):
         device = device._deviceId
     h = Hash()
     for k, v in kwargs.items():
@@ -914,7 +608,7 @@ def executeNoWait(device, slot):
 
     but then we wait until the device has finished with the operation. If
     this is not desired, use executeNoWait."""
-    if isinstance(device, Proxy):
+    if isinstance(device, AbstractProxy):
         device = device._deviceId
     get_instance()._ss.emit("call", {device: [slot]})
 
@@ -922,7 +616,7 @@ def executeNoWait(device, slot):
 @synchronize
 def execute(device, slot):
     """execute a slot and wait until it finishes"""
-    if isinstance(device, Proxy):
+    if isinstance(device, AbstractProxy):
         device = device._deviceId
     assert isinstance(slot, str)
     return (yield from get_instance().call(device, slot))
@@ -940,5 +634,5 @@ def updateDevice(device):
 
 def isAlive(proxy):
     """Check whether a device represented by a proxy is still running"""
-    assert isinstance(proxy, Proxy)
+    assert isinstance(proxy, AbstractProxy)
     return proxy._alive
