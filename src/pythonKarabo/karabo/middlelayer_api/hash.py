@@ -13,7 +13,7 @@ from functools import partial, wraps
 from io import BytesIO
 import logging
 import numbers
-from struct import pack, unpack, calcsize
+from struct import pack
 import sys
 from xml.sax import make_parser
 from xml.sax.saxutils import escape, quoteattr, unescape
@@ -28,6 +28,12 @@ from .enums import (AccessLevel, AccessMode, Assignment, MetricPrefix,
                     NodeType, Unit)
 from .exceptions import KaraboError
 from .registry import Registry
+
+
+def yieldKey(key):
+    key = key.encode('utf8')
+    yield pack('B', len(key))
+    yield key
 
 
 class Attribute(object):
@@ -122,8 +128,8 @@ class Simple(object):
         return cls.numpy(s)
 
     @classmethod
-    def write(cls, file, data):
-        file.writeFormat(cls.format, data)
+    def yieldBinary(cls, data):
+        yield pack(cls.format, data)
 
     def cast(self, other):
         if self.enum is not None:
@@ -616,6 +622,11 @@ class Type(Descriptor, Registry):
         return self
 
     @classmethod
+    def yieldBinary(cls, data):
+        """iterating over this yields the binary serialization of `data`"""
+        raise NotImplementedError
+
+    @classmethod
     def yieldXML(cls, data):
         """iterating over this yields the XML representation of `data`"""
         yield escape(cls.toString(data))
@@ -635,10 +646,10 @@ class Vector(Type):
         return (cls.basetype.read(file) for i in range(size))
 
     @classmethod
-    def write(cls, file, data):
-        file.writeFormat('I', len(data))
+    def yieldBinary(cls, data):
+        yield pack('I', len(data))
         for d in data:
-            cls.basetype.write(file, d)
+            yield from cls.basetype.yieldBinary(d)
 
 
 class NumpyVector(Vector):
@@ -688,6 +699,11 @@ class NumpyVector(Vector):
             data.descriptor = self
         return data
 
+    @classmethod
+    def yieldBinary(cls, data):
+        yield pack('I', len(data))
+        yield data.data
+
 
 class Bool(Type):
     """This describes a boolean: ``True`` or ``False``"""
@@ -699,8 +715,8 @@ class Bool(Type):
         return bool(Int8.read(file) != 0)
 
     @classmethod
-    def write(cls, file, data):
-        Int8.write(file, 1 if data else 0)
+    def yieldBinary(cls, data):
+        yield from Int8.yieldBinary(1 if data else 0)
 
     @staticmethod
     def fromstring(s):
@@ -748,9 +764,9 @@ class Char(Simple, Type):
         return s
 
     @classmethod
-    def write(cls, file, data):
+    def yieldBinary(cls, data):
         assert len(data) == 1
-        file.file.write(data.encode("ascii"))
+        yield data.encode("ascii")
 
     def cast(self, other):
         try:
@@ -804,9 +820,9 @@ class VectorChar(Vector):
         return base64.b64decode(s)
 
     @classmethod
-    def write(cls, file, data):
-        file.writeFormat('I', len(data))
-        file.file.write(data)
+    def yieldBinary(cls, data):
+        yield pack('I', len(data))
+        yield data
 
     def cast(self, other):
         if isinstance(other, bytes):
@@ -840,9 +856,9 @@ class ByteArray(Vector):
         return base64.b64decode(s)
 
     @classmethod
-    def write(cls, file, data):
-        file.writeFormat('I', len(data))
-        file.file.write(data)
+    def yieldBinary(cls, data):
+        yield pack('I', len(data))
+        yield data
 
     def cast(self, other):
         if isinstance(other, bytearray):
@@ -978,8 +994,8 @@ class ComplexFloat(Number, Type):
         return "({},{})".format(data.real, data.imag)
 
     @classmethod
-    def write(cls, file, data):
-        file.writeFormat(cls.format, data.real, data.imag)
+    def yieldBinary(cls, data):
+        yield pack(cls.format, data.real, data.imag)
 
 
 class VectorComplexFloat(NumpyVector):
@@ -1001,8 +1017,8 @@ class ComplexDouble(Number, Type):
         return "({},{})".format(data.real, data.imag)
 
     @classmethod
-    def write(cls, file, data):
-        file.writeFormat(cls.format, data.real, data.imag)
+    def yieldBinary(cls, data):
+        yield pack(cls.format, data.real, data.imag)
 
 
 class VectorComplexDouble(NumpyVector):
@@ -1028,8 +1044,8 @@ class String(Enumable, Type):
         return str(s)
 
     @classmethod
-    def write(cls, file, data):
-        VectorChar.write(file, data.encode('utf8'))
+    def yieldBinary(cls, data):
+        yield from VectorChar.yieldBinary(data.encode('utf8'))
 
     def cast(self, other):
         if self.enum is not None:
@@ -1097,17 +1113,19 @@ class HashType(Type):
         return ret
 
     @classmethod
-    def write(cls, file, data):
-        file.writeFormat('I', len(data))
+    def yieldBinary(cls, data):
+        yield pack('I', len(data))
         for k, v in data.items():
-            file.writeKey(k)
-            file.writeType(v)
-            file.writeFormat('I', len(data[k, ...]))
-            for ak, av in data[k, ...].items():
-                file.writeKey(ak)
-                file.writeType(av)
-                file.writeData(av)
-            file.writeData(v)
+            yield from yieldKey(k)
+            hashtype = _gettype(v)
+            attrs = data[k, ...]
+            yield pack('II', hashtype.number, len(attrs))
+            for ak, av in attrs.items():
+                atype = _gettype(av)
+                yield from yieldKey(ak)
+                yield pack('I', atype.number)
+                yield from atype.yieldBinary(av)
+            yield from hashtype.yieldBinary(v)
 
     def cast(self, other):
         if other.hashtype is type(self):
@@ -1230,7 +1248,7 @@ class SchemaHashType(HashType):
         return Schema(name, hash=ret)
 
     @classmethod
-    def write(cls, file, data):
+    def yieldBinary(cls, data):
         for p in data.hash.paths():
             nodeType = NodeType(data.hash[p, "nodeType"])
             if nodeType is NodeType.Leaf:
@@ -1238,13 +1256,11 @@ class SchemaHashType(HashType):
             else:
                 assert isinstance(data.hash[p], Hash), \
                     "no proper node: {}".format(p)
-        writer = BinaryWriter()
-        h = writer.write(data.hash)
+        binary = b''.join(HashType.yieldBinary(data.hash))
         s = data.name.encode('utf8')
-        file.writeFormat('I', len(h) + len(s) + 1)
-        file.writeFormat('B', len(s))
-        file.file.write(s)
-        file.file.write(h)
+        yield pack('IB', len(binary) + len(s) + 1, len(s))
+        yield s
+        yield binary
 
     @classmethod
     def toString(cls, data):
@@ -1318,8 +1334,8 @@ class None_(Type):
         return None
 
     @classmethod
-    def write(cls, file, data):
-        file.writeFormat('I', 0)
+    def yieldBinary(cls, data):
+        yield pack('I', 0)
 
     def cast(self, other):
         if other is not None:
@@ -1328,7 +1344,7 @@ class None_(Type):
 
 def _gettype(data):
     try:
-        if isinstance(data, np.ndarray) and data.ndim == 1:
+        if data.ndim == 1 and isinstance(data, np.ndarray):
             return NumpyVector.vstrs[data.dtype.str]
         else:
             return Type.strs[data.dtype.str]
@@ -1337,9 +1353,7 @@ def _gettype(data):
             return data.hashtype
         elif isinstance(data, (bool, basetypes.BoolValue)):
             return Bool
-        elif isinstance(data, Enum):
-            return Int32
-        elif isinstance(data, numbers.Integral):
+        elif isinstance(data, (Enum, numbers.Integral)):
             return Int32
         elif isinstance(data, numbers.Real):
             return Double
@@ -1542,12 +1556,12 @@ class Hash(OrderedDict):
         return len(self) == 0
 
     def encode(self, format):
-        writer = {"XML": XMLWriter, "Bin": BinaryWriter}.get(format, format)()
+        writer = {"XML": XMLWriter}.get(format, format)()
         return writer.write(self)
 
     @staticmethod
     def decode(data, format):
-        reader = {"XML": XMLParser, "Bin": BinaryParser}.get(format, format)()
+        reader = {"XML": XMLParser}.get(format, format)()
         return reader.read(data)
 
 class HashMergePolicy:
@@ -1671,52 +1685,6 @@ class XMLWriter(Writer):
             yield '<root KRB_Artificial="">'
             yield from HashType.yieldXML(hash)
             yield '</root>'
-
-
-class BinaryParser(object):
-    def readFormat(self, fmt):
-        fmt = fmt.encode("ascii")
-        size = calcsize(fmt)
-        self.pos += size
-        return unpack(fmt, self.data[self.pos - size:self.pos])
-
-
-    def readKey(self):
-        size, = self.readFormat('B')
-        self.pos += size
-        return self.data[self.pos - size:self.pos].decode("ascii")
-
-
-    def read(self, data):
-        self.pos = 0
-        self.data = data
-        return HashType.read(self)
-
-
-class BinaryWriter(Writer):
-    def writeFormat(self, fmt, *data):
-        s = pack(fmt, *data)
-        self.file.write(s)
-
-    def writeKey(self, key):
-        key = key.encode('utf8')
-        self.writeFormat('B', len(key))
-        self.file.write(key)
-
-
-    def writeType(self, data):
-        type = _gettype(data)
-        self.writeFormat('I', type.number)
-
-
-    def writeData(self, data):
-        type = _gettype(data)
-        type.write(self, data)
-
-
-    def writeToFile(self, data, file):
-        self.file = file
-        HashType.write(self, data)
 
 
 def saveToFile(hash, fn):

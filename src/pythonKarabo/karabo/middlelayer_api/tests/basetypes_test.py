@@ -5,7 +5,7 @@ from unittest import TestCase, main
 import pint
 import numpy
 
-from karabo.middlelayer import unit
+from karabo.middlelayer import decodeBinary, encodeBinary, unit
 from karabo.middlelayer_api.enums import Unit, MetricPrefix
 from karabo.middlelayer_api.basetypes import (
     NoneValue, QuantityValue, isSet, StringValue, VectorCharValue, BoolValue,
@@ -95,7 +95,7 @@ class Tests(TestCase):
         self.assertEqual(repr(f), "False")
 
         # BoolValue isn't a bool, assure we can still serialize
-        Hash("t", t, "f", f).encode("Bin")
+        encodeBinary(Hash("t", t, "f", f))
 
         c = BoolValue(f)
         self.assertFalse(c)
@@ -118,7 +118,7 @@ class Tests(TestCase):
         self.assertEqual(str(n), "None")
         self.assertEqual(repr(n), "None")
 
-        Hash("n", n).encode("Bin")
+        encodeBinary(Hash("n", n))
 
         nn = NoneValue(n)
         self.assertEqual(nn.timestamp, 22)
