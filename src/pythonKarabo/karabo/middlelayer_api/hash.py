@@ -699,6 +699,11 @@ class NumpyVector(Vector):
             data.descriptor = self
         return data
 
+    @classmethod
+    def yieldBinary(cls, data):
+        yield pack('I', len(data))
+        yield data.data
+
 
 class Bool(Type):
     """This describes a boolean: ``True`` or ``False``"""
@@ -1113,8 +1118,9 @@ class HashType(Type):
         for k, v in data.items():
             yield from yieldKey(k)
             hashtype = _gettype(v)
-            yield pack('II', hashtype.number, len(data[k, ...]))
-            for ak, av in data[k, ...].items():
+            attrs = data[k, ...]
+            yield pack('II', hashtype.number, len(attrs))
+            for ak, av in attrs.items():
                 atype = _gettype(av)
                 yield from yieldKey(ak)
                 yield pack('I', atype.number)
@@ -1338,7 +1344,7 @@ class None_(Type):
 
 def _gettype(data):
     try:
-        if isinstance(data, np.ndarray) and data.ndim == 1:
+        if data.ndim == 1 and isinstance(data, np.ndarray):
             return NumpyVector.vstrs[data.dtype.str]
         else:
             return Type.strs[data.dtype.str]
@@ -1347,9 +1353,7 @@ def _gettype(data):
             return data.hashtype
         elif isinstance(data, (bool, basetypes.BoolValue)):
             return Bool
-        elif isinstance(data, Enum):
-            return Int32
-        elif isinstance(data, numbers.Integral):
+        elif isinstance(data, (Enum, numbers.Integral)):
             return Int32
         elif isinstance(data, numbers.Real):
             return Double
