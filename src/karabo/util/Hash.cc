@@ -355,7 +355,7 @@ namespace karabo {
                     char separators[] = {separator, 0};
                     currentKey = prefix + separators + currentKey;
                 }
-                if (it->is<Hash > ()) { // Recursion
+                if (it->is<Hash > () && ! it->hasAttribute(KARABO_HASH_CLASS_ID)) { // Recursion, but no hash sub classes
                     getPaths(it->getValue<Hash > (), result, currentKey, separator);
                 } else {
                     if (it->is<std::vector<Hash> > ()) { // Recursion for vector
@@ -382,7 +382,7 @@ namespace karabo {
                         currentKey = prefix + separators + currentKey;
                     }
 
-                    if (it->is<Hash > ()) { // Recursion
+                    if (it->is<Hash > () && ! it->hasAttribute(KARABO_HASH_CLASS_ID)) { // Recursion, but no hash sub classes
                         flatten(it->getValue<Hash > (), flat, currentKey, separator);
                     } else {
                         if (it->is<std::vector<Hash> > ()) { // Recursion for vector
@@ -436,7 +436,7 @@ namespace karabo {
                 boost::optional<Hash::Node&> thisNode = this->find(key);
                 if (!thisNode) {
                     // No node yet - create one with appropriate type or simply copy over and go on with next key.
-                    if (otherNode.is<Hash>()) {
+                    if (otherNode.is<Hash>() && ! otherNode.hasAttribute(KARABO_HASH_CLASS_ID)) {
                         thisNode = this->set(key, Hash());
                     } else if (otherNode.is<std::vector<Hash> >()) {
                         thisNode = this->set(key, std::vector<Hash>());
@@ -448,7 +448,7 @@ namespace karabo {
                 } else {
                     // Take care that node has proper type if it requires further treatment
                     // or just take over and go on with next key if not.
-                    if (otherNode.is<Hash>()) {
+                    if (otherNode.is<Hash>() && !otherNode.hasAttribute(KARABO_HASH_CLASS_ID)) {
                         if (!thisNode->is<Hash>()) {
                             thisNode->setValue(Hash());
                         }
@@ -470,6 +470,7 @@ namespace karabo {
                     const std::set<std::string>& subPaths =
                             (selectedPaths.empty() ? selectedPaths : Hash::selectChildPaths(selectedPaths, key, sep));
                     thisNode->getValue<Hash>().merge(otherNode.getValue<Hash>(), policy, subPaths, sep);
+                    
                 } else { // Both nodes are vector<Hash>
                     // Note that thisNode's attributes are already copied from otherNode!
                     if (thisNode->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)) {
@@ -842,7 +843,7 @@ namespace karabo {
                 const Hash::Node& ele = *iter;
                 partial_count++;
 
-                if (ele.is<Hash > ()) {
+                if (ele.is<Hash > () && ! ele.hasAttribute(KARABO_HASH_CLASS_ID)) { // Recursion, but no hash sub classes
                     partial_count += counter(ele.getValue<Hash > ());
                 } else {
                     if (ele.is<std::vector<Hash> >()) {
@@ -866,7 +867,7 @@ namespace karabo {
                 const Hash::Node& ele = *iter;
                 partial_count += ((ele.getType() == type) ? 1 : 0);
 
-                if (ele.is<Hash > ()) {
+                if (ele.is<Hash > () && ! ele.hasAttribute(KARABO_HASH_CLASS_ID)) { // Recursion, but no hash sub classes
                     partial_count += counter(ele.getValue<Hash > (), type);
                 } else {
                     if (ele.is<std::vector<Hash> >()) {

@@ -151,8 +151,9 @@ void Hash_Test::testConstructors() {
 
     {
         Hash h("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long> (5, 5), "F.f.f.f.f", Hash("x.y.z", 99));
+        h.set("foo.array", NDArray(Dims(5,5)));
         CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 6);
+        CPPUNIT_ASSERT(h.size() == 7);
         CPPUNIT_ASSERT(h.get<int>("a.b.c") == 1);
         CPPUNIT_ASSERT(h.get<double>("b.c") == 2.0);
         CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
@@ -160,25 +161,27 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<std::vector<unsigned long long> >("e.f.g.h")[0] == 5);
         CPPUNIT_ASSERT(h.get<Hash > ("F.f.f.f.f").get<int>("x.y.z") == 99);
         CPPUNIT_ASSERT(h.get<int>("F.f.f.f.f.x.y.z") == 99);
+        CPPUNIT_ASSERT(h.getType("foo.array") == karabo::util::Types::HASH);
 
         // Check 'flatten'
         Hash flat;
         Hash::flatten(h, flat);
 
         CPPUNIT_ASSERT(flat.empty() == false);
-        CPPUNIT_ASSERT(flat.size() == 6);
+        CPPUNIT_ASSERT(flat.size() == 7);
         CPPUNIT_ASSERT(flat.get<int>("a.b.c", 0) == 1);
         CPPUNIT_ASSERT(flat.get<double>("b.c", 0) == 2.0);
         CPPUNIT_ASSERT(flat.get<float>("c", 0) == 3.0);
         CPPUNIT_ASSERT(flat.get<string > ("d.e", 0) == "4");
         CPPUNIT_ASSERT(flat.get<std::vector<unsigned long long> >("e.f.g.h", 0)[0] == 5);
         CPPUNIT_ASSERT(flat.get<int>("F.f.f.f.f.x.y.z", 0) == 99);
+        CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::util::Types::HASH);
 
         Hash tree;
         flat.unflatten(tree);
 
         CPPUNIT_ASSERT(tree.empty() == false);
-        CPPUNIT_ASSERT(tree.size() == 6);
+        CPPUNIT_ASSERT(tree.size() == 7);
         CPPUNIT_ASSERT(tree.get<int>("a.b.c") == 1);
         CPPUNIT_ASSERT(tree.get<double>("b.c") == 2.0);
         CPPUNIT_ASSERT(tree.get<float>("c") == 3.0);
@@ -186,6 +189,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(tree.get<std::vector<unsigned long long> >("e.f.g.h")[0] == 5);
         CPPUNIT_ASSERT(tree.get<Hash > ("F.f.f.f.f").get<int>("x.y.z") == 99);
         CPPUNIT_ASSERT(tree.get<int>("F.f.f.f.f.x.y.z") == 99);
+        CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::util::Types::HASH);
 
     }
     
@@ -805,9 +809,12 @@ void Hash_Test::testIteration() {
 void Hash_Test::testGetPaths() {
     {
         Hash h;
+        h.set("a", 1);
+        h.set("b.c", "foo");
+        h.set("array", NDArray(Dims(10,10)));
         std::vector<std::string> paths;
         h.getPaths(paths);
-        CPPUNIT_ASSERT(paths.size() == 0);
+        CPPUNIT_ASSERT(paths.size() == 3);
     }
 }
 
@@ -828,6 +835,7 @@ void Hash_Test::testMerge() {
     h1.setAttribute("c.b", "attrKey2", 3);
     h1.setAttribute("c.b[0].g", "attrKey3", 4.);
     h1.setAttribute("f", "attrKey6", std::string("buaah!"));
+    h1.set("array2", NDArray(Dims(1,1)));
 
     Hash h1b(h1);
     Hash h1c(h1);
@@ -848,6 +856,8 @@ void Hash_Test::testMerge() {
     h2.set("i[1].j", 200);
     h2.set("i[2]", Hash("k.l", 5.));
     h2.set("j", Hash("k", 5.));
+    h2.set("array", NDArray(Dims(5,5)));
+    h2.set("array2", NDArray(Dims(5,5)));
     h2.setAttribute("a", "attrKey", "Really just a number");
     h2.setAttribute("e", "attrKey4", -1);
     h2.setAttribute("e", "attrKey5", -11.f);
@@ -910,6 +920,12 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(h1.has("i[2].k.l"));
     CPPUNIT_ASSERT(h1.has("i[3]"));
     CPPUNIT_ASSERT(h1.has("j.k"));
+    CPPUNIT_ASSERT(h1.has("array"));
+    CPPUNIT_ASSERT(h1.has("array.data"));
+    CPPUNIT_ASSERT(h1.has("array2"));
+    CPPUNIT_ASSERT(h1.has("array2.data"));
+    
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Array size changed through merge", 25ull, h1.get<NDArray>("array2").getShape().size());
 
     // Just add attributes with leaf (identical for REPLACE or MERGE)
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on leaf added", 2ul, h1.getAttributes("e").size());
@@ -1922,4 +1938,16 @@ void Hash_Test::testPack() {
     unpack(h, s, x);
     CPPUNIT_ASSERT(s == "bla");
     CPPUNIT_ASSERT(x == 2.5);
+}
+
+void Hash_Test::testCounter(){
+    Hash h("a", true, "b", int(0), "c", NDArray(Dims(5,5)), "d", std::vector<int>(3,0));
+    h.set("e", std::vector<NDArray>(3,NDArray(Dims(5,5))));
+    // if counter were not to skip over Hash derived classes the ND-Array internal reference type of type
+    // INT32 would be counted leading to a count of 8
+    CPPUNIT_ASSERT(karabo::util::counter(h, karabo::util::Types::INT32) == 4);
+    // if counter were not to skip over Hash derived classes the ND-Array internal is big endian of type
+    // BOOL would be counted leading to a count of 5
+    CPPUNIT_ASSERT(karabo::util::counter(h, karabo::util::Types::BOOL) == 1);
+    CPPUNIT_ASSERT(karabo::util::counter(h, karabo::util::Types::HASH) == 1);
 }
