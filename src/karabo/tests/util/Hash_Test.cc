@@ -835,6 +835,7 @@ void Hash_Test::testMerge() {
     h1.setAttribute("c.b", "attrKey2", 3);
     h1.setAttribute("c.b[0].g", "attrKey3", 4.);
     h1.setAttribute("f", "attrKey6", std::string("buaah!"));
+    h1.set("array2", NDArray(Dims(1,1)));
 
     Hash h1b(h1);
     Hash h1c(h1);
@@ -855,6 +856,8 @@ void Hash_Test::testMerge() {
     h2.set("i[1].j", 200);
     h2.set("i[2]", Hash("k.l", 5.));
     h2.set("j", Hash("k", 5.));
+    h2.set("array", NDArray(Dims(5,5)));
+    h2.set("array2", NDArray(Dims(5,5)));
     h2.setAttribute("a", "attrKey", "Really just a number");
     h2.setAttribute("e", "attrKey4", -1);
     h2.setAttribute("e", "attrKey5", -11.f);
@@ -917,6 +920,12 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(h1.has("i[2].k.l"));
     CPPUNIT_ASSERT(h1.has("i[3]"));
     CPPUNIT_ASSERT(h1.has("j.k"));
+    CPPUNIT_ASSERT(h1.has("array"));
+    CPPUNIT_ASSERT(h1.has("array.data"));
+    CPPUNIT_ASSERT(h1.has("array2"));
+    CPPUNIT_ASSERT(h1.has("array2.data"));
+    
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Array size changed through merge", 25ull, h1.get<NDArray>("array2").getShape().size());
 
     // Just add attributes with leaf (identical for REPLACE or MERGE)
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on leaf added", 2ul, h1.getAttributes("e").size());
