@@ -1,4 +1,5 @@
 from struct import calcsize, unpack
+
 from .hash import _gettype, HashType
 
 
