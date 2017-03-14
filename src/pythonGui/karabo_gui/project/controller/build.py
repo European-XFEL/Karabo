@@ -181,6 +181,5 @@ def destroy_project_controller(controller):
         model.on_trait_change(child.items_mutated, name + '_items',
                               remove=True)
         # Recurse!
-        if child.child_create is create_project_controller:
-            for subchild in child.children:
-                destroy_project_controller(subchild)
+        for subchild in child.children:
+            child.child_destroy(subchild)
