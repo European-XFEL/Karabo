@@ -99,6 +99,9 @@ class EndElement(Exception):
 
 
 class XMLParser(ContentHandler):
+    """This SAX parser sends all the parsed elements into a generator.
+    The generators yield "Start" if they expect the start of an element,
+    or "Chars" if they expect a string to be read."""
     def __init__(self):
         super().__init__()
         self.parser = self.parseAll()
