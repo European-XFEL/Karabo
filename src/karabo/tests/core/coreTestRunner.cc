@@ -36,7 +36,7 @@ int main() {
     outputter.write();
 
     // Output ML for Jenkins CPPunit plugin
-    std::ofstream xmlFileOut("testresults/ioTest.xml");
+    std::ofstream xmlFileOut("testresults/coreTest.xml");
     CPPUNIT_NS::XmlOutputter xmlOut(&result, xmlFileOut);
     xmlOut.write();
 
