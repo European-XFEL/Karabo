@@ -764,6 +764,22 @@ namespace karabo {
             void onProjectListDomains(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             /**
+             * Update item attributes in the project database
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *          - projectManager: project manager device to forward request to
+             *          - token: token of the database user - identifies the session
+             *          - items: a vector of Hashes where each Hash is of the form:
+             *                   - domain: to load this item from
+             *                   - uuid: uuid of the item
+             *                   - item_type: indicate type of item which attribute should be changed
+             *                   - attr_name: name of attribute which should be changed
+             *                   - attr_value: value of attribute which should be changed
+             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
+             */
+            void onProjectUpdateAttribute(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+            /**
              * Forward a reply from a remote slot call to a requesting GUI channel.
              * @param channel to forward reply to
              * @param replyType type of reply
