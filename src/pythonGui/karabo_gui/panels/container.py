@@ -41,6 +41,10 @@ class PanelContainer(QTabWidget):
         index = self.addTab(panel, panel.windowTitle())
         panel.index = index
 
+        # The container might have been hidden
+        if self.count() == 1:
+            self.show()
+
         # Store panel in set to keep it alive for un/dock event!!!
         self.panel_set.add(panel)
         self._update_tabs_closable()
@@ -84,6 +88,7 @@ class PanelContainer(QTabWidget):
                     self.widget(i).index = i
 
             self.setCurrentIndex(index)
+            self._update_tabs_closable()
             self.show()
 
     # --------------------------------------
