@@ -47,6 +47,7 @@ class Camera_interface_TestCase(unittest.TestCase):
         self.assertTrue(expected.has('state'))
         states = expected.getOptions('state')
         self.assertTrue('INIT' in states)
+        self.assertTrue('UNKNOWN' in states)
         self.assertTrue('ERROR' in states)
         self.assertTrue('ACQUIRING' in states)
         self.assertTrue('ACTIVE' in states)

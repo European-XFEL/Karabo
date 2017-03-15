@@ -30,7 +30,7 @@ namespace karabo {
 
                 
                 OVERWRITE_ELEMENT(expected).key("state")
-                        .setNewOptions(State::INIT, State::ERROR, State::ACQUIRING, State::ACTIVE)
+                        .setNewOptions(State::INIT, State::UNKNOWN, State::ERROR, State::ACQUIRING, State::ACTIVE)
                         .setNewDefaultValue(State::INIT)
                         .commit();
 
@@ -140,23 +140,23 @@ namespace karabo {
                 KARABO_SLOT(resetHardware);
             }
 
-            /* Initializing, none, Ready
-             * Ready, acquire, Acquiring
-             * Acquiring, stop, Ready
-             * Acquiring, trigger, None
-             * HardwareError, reset, Initializing
-             
-             * From any state we may be driven to hardwareError
+            /* INIT, none, ACTIVE or UNKNOWN
+             * UNKNOWN, none, INIT
+             * ACTIVE, acquire, ACQUIRING
+             * ACQUIRING, stop, ACTIVE
+             * ACQUIRING, trigger, None
+             * ACTIVE or ACQUIRING, errorFound, ERROR
+             * ERROR, reset, ACTIVE
              */
 
             /**
-             * In the end call: updateState("Initializing")
+             * In the end call: updateState(State::ACTIVE)
              */
             virtual void resetHardware() = 0;
 
 
             /**
-             * Should end in "Acquiring"
+             * Should end in State::ACQUIRING
              */
             virtual void acquire() = 0;
 
