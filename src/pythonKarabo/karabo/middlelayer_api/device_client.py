@@ -876,7 +876,10 @@ def setWait(device, **kwargs):
         device = device._deviceId
     h = Hash()
     for k, v in kwargs.items():
-        h[k] = v
+        if isinstance(v, KaraboValue):
+            h[k] = v.value
+        else:
+            h[k] = v
     yield from get_instance().call(device, "slotReconfigure", h)
 
 
@@ -886,7 +889,10 @@ def setNoWait(device, **kwargs):
         device = device._deviceId
     h = Hash()
     for k, v in kwargs.items():
-        h[k] = v
+        if isinstance(v, KaraboValue):
+            h[k] = v.value
+        else:
+            h[k] = v
     get_instance()._ss.emit("call", {device: ["slotReconfigure"]}, h)
 
 
