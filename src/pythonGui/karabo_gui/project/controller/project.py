@@ -3,12 +3,11 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtGui import QAction, QDialog, QFont, QMenu
+from PyQt4.QtGui import QFont, QMenu
 from traits.api import Instance, List
 
 from karabo.common.project.api import ProjectModel
 from karabo_gui import icons
-from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from .bases import BaseProjectController
 from .project_groups import ProjectSubgroupController, ProjectControllerUiData
 
@@ -22,16 +21,7 @@ class ProjectController(BaseProjectController):
     children = List(Instance(ProjectSubgroupController))
 
     def context_menu(self, parent_project, parent=None):
-        menu = QMenu(parent)
-
-        # If this project is the top of the hierarchy, its parent must be None
-        # In that case, do NOT add an 'Edit' action
-        if parent_project is not None:
-            edit_action = QAction('Edit', menu)
-            edit_action.triggered.connect(self._edit_project)
-            menu.addAction(edit_action)
-
-        return menu
+        return QMenu(parent)
 
     def create_ui_data(self):
         font = QFont()
@@ -51,12 +41,3 @@ class ProjectController(BaseProjectController):
         tree view.
         """
         return len(self.children)
-
-    # ----------------------------------------------------------------------
-    # action handlers
-
-    def _edit_project(self):
-        dialog = NewProjectDialog(self.model)
-        result = dialog.exec()
-        if result == QDialog.Accepted:
-            self.model.simple_name = dialog.simple_name
