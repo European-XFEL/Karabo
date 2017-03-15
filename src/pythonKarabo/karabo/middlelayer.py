@@ -50,7 +50,8 @@ from .middlelayer_api.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes
 )
 from .middlelayer_api.serializers import (
-    decodeBinary, decodeXML, encodeBinary, encodeXML, writeBinary, writeXML
+    decodeBinary, decodeXML, encodeBinary, encodeXML, writeBinary, writeXML,
+    XMLParser, XMLWriter
 )
 from .middlelayer_api.signalslot import Signal, SignalSlotable, slot, coslot
 from .middlelayer_api.synchronization import (
