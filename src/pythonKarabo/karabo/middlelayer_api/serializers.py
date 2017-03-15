@@ -42,6 +42,11 @@ def writeBinary(data, file):
         file.write(d)
 
 
+# XML is parsed using a SAX parser. This SAX parser sends all the parsed
+# elements into a generator, which are the following functions whose names
+# start with "parse". They yield "Start" if they expect the start
+# of an element, or "Chars" if they expect a string to be read.
+
 def parseHash():
     ret = Hash()
     try:
@@ -99,9 +104,6 @@ class EndElement(Exception):
 
 
 class XMLParser(ContentHandler):
-    """This SAX parser sends all the parsed elements into a generator.
-    The generators yield "Start" if they expect the start of an element,
-    or "Chars" if they expect a string to be read."""
     def __init__(self):
         super().__init__()
         self.parser = self.parseAll()
