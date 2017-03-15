@@ -13,6 +13,7 @@ from karabo.common.project.api import (
 )
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.hash import Hash
+from karabo.middlelayer_api.serializers import decodeXML, encodeXML
 
 _ITEM_TYPES = {
     DeviceConfigurationModel: PROJECT_DB_TYPE_DEVICE_CONFIG,
@@ -170,7 +171,7 @@ def _device_config_reader(io_obj, existing, metadata):
     traits = _db_metadata_reader(metadata)
     dev = _check_preexisting(existing, DeviceConfigurationModel, traits)
 
-    hsh = Hash.decode(io_obj.read(), 'XML')
+    hsh = decodeXML(io_obj.read())
     for class_id, configuration in hsh.items():
         break
 
@@ -225,7 +226,7 @@ def _project_reader(io_obj, existing, metadata):
     traits['is_trashed'] = (metadata.get('is_trashed') == 'true')
     project = _check_preexisting(existing, ProjectModel, traits)
 
-    hsh = Hash.decode(io_obj.read(), 'XML')
+    hsh = decodeXML(io_obj.read())
     project_hash = hsh[PROJECT_DB_TYPE_PROJECT]
     traits.update({k: _get_items(project_hash, k)
                    for k in PROJECT_OBJECT_CATEGORIES})
@@ -274,7 +275,7 @@ def _device_config_writer(model):
     """ A writer for device configurations
     """
     hsh = Hash(model.class_id, model.configuration)
-    return hsh.encode('XML').decode()
+    return encodeXML(hsh)
 
 
 def _macro_writer(model):
@@ -297,4 +298,4 @@ def _project_writer(model):
                               for obj in objects]
 
     hsh = Hash(PROJECT_DB_TYPE_PROJECT, project)
-    return hsh.encode('XML').decode()
+    return encodeXML(hsh)

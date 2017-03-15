@@ -9,6 +9,7 @@ import numpy
 from .enums import Assignment, AccessMode
 from .hash import Hash, VectorString, String
 from .schema import Configurable
+from .serializers import decodeBinary, decodeXML, encodeBinary, encodeXML
 
 
 class Channel:
@@ -27,12 +28,12 @@ class Channel:
         return (yield from self.reader.readexactly(size))
 
     @coroutine
-    def readHash(self, encoding):
+    def readHash(self):
         r = yield from self.readBytes()
-        return Hash.decode(r, encoding)
+        return decodeXML(r)
 
-    def writeHash(self, hash, encoding):
-        data = hash.encode(encoding)
+    def writeHash(self, hsh):
+        data = encodeXML(hsh)
         self.writeSize(len(data))
         self.writer.write(data)
 
@@ -83,7 +84,7 @@ class NetworkOutput(Configurable):
         channel = Channel(reader, writer)
 
         while True:
-            message = yield from channel.readHash("XML")
+            message = yield from channel.readHash()
             reason = message["reason"]
 
             if reason == "hello":
@@ -98,10 +99,10 @@ class NetworkOutput(Configurable):
                 self.availability = Future()
             chunk = yield from self.queuedChunks.get()
             self.availableInputs -= 1
-            encoded = [h.encode("Bin") for h in chunk]
+            encoded = [encodeBinary(h) for h in chunk]
             sizes = numpy.array([len(d) for d in encoded], dtype=numpy.uint32)
             h = Hash("nData", numpy.uint32(len(chunk)), "byteSizes", sizes)
-            channel.writeHash(h, "XML")
+            channel.writeHash(h)
             channel.writeSize(sizes.sum())
             for e in encoded:
                 channel.writer.write(e)
@@ -181,14 +182,14 @@ class NetworkInput(Configurable):
                      "memoryLocation", "remote",
                      "dataDistribution", self.dataDistribution,
                      "onSlowness", self.onSlowness)
-            channel.writeHash(h, "XML")
-            r = yield from channel.readHash("XML")
+            channel.writeHash(h)
+            r = yield from channel.readHash()
             if "endOfStream" in r:
                 return
             bt = yield from channel.readBytes()
             pos = 0
             for l in r["byteSizes"]:
-                yield from self.queue.put(Hash.decode(bt[pos:pos + l], "Bin"))
+                yield from self.queue.put(decodeBinary(bt[pos:pos + l]))
                 pos += l
 
     @coroutine
