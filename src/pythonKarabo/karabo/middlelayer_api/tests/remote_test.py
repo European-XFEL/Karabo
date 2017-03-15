@@ -424,7 +424,7 @@ class Tests(DeviceTest):
     def test_setwait(self):
         """test the setWait coroutine"""
         d = yield from getDevice("remote")
-        yield from setWait(d, value=200, counter=300)
+        yield from setWait(d, value=200 * unit.mm, counter=300)
         self.assertEqual(self.remote.value, 200)
         self.assertEqual(self.remote.counter, 300)
 
@@ -434,7 +434,7 @@ class Tests(DeviceTest):
         self.remote.value = 0
         self.remote.counter = 0
         d = yield from getDevice("remote")
-        setNoWait(d, value=200, counter=300)
+        setNoWait(d, value=200, counter=300 * unit.mm)
         self.assertEqual(self.remote.value, 0)
         self.assertEqual(self.remote.counter, 0)
         yield from sleep(0.1)
