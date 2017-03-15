@@ -184,6 +184,9 @@ def save_as_object(obj):
     if dialog.exec() == QDialog.Accepted:
         obj.simple_name = dialog.simple_name
         walk_traits_object(obj, _visitor)
+        # Set all child object of the given ``obj`` to modified to actually
+        # save the complete tree to the new domain
+        set_modified_flag(obj, value=True)
         save_object(obj, dialog.domain)
 
 
@@ -196,9 +199,6 @@ def save_object(obj, domain=None):
     if domain is None:
         domain = db_conn.default_domain
 
-    # Set all child object of the given ``obj`` to modified to actually
-    # save the complete tree to the new domain
-    set_modified_flag(obj, value=True)
     recursive_save_object(obj, db_conn, domain)
     db_conn.default_domain = domain
     db_conn.flush()
