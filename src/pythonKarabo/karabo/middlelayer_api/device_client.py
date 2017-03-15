@@ -604,6 +604,8 @@ def _getDevice(deviceId, sync, Proxy=Proxy):
     instance = get_instance()
     proxy = instance._proxies.get(deviceId)
     if proxy is not None:
+        if not isinstance(proxy, Proxy):
+            raise KaraboError("do not mix getDevice with connectDevice!")
         yield from proxy
         return proxy
 
