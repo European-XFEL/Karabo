@@ -10,14 +10,11 @@ import base64
 from collections import OrderedDict
 from enum import Enum
 from functools import partial, wraps
-from io import BytesIO
 import logging
 import numbers
 from struct import pack
 import sys
-from xml.sax import make_parser
-from xml.sax.saxutils import escape, quoteattr, unescape
-from xml.sax.handler import ContentHandler
+from xml.sax.saxutils import escape, quoteattr
 
 import numpy as np
 
@@ -1264,12 +1261,13 @@ class SchemaHashType(HashType):
 
     @classmethod
     def toString(cls, data):
-        return data.name + ":" + data.hash.encode("XML").decode("utf8")
+        return data.name + ":" + "".join(Hash.yieldXML(data.hash))
 
     @classmethod
     def fromstring(cls, s):
+        from .serializers import decodeXML
         name, xml = s.split(":", 1)
-        return Schema(name, hash=Hash.decode(xml, "XML"))
+        return Schema(name, hash=decodeXML(xml))
 
     @classmethod
     def hashname(cls):
@@ -1555,139 +1553,7 @@ class Hash(OrderedDict):
     def empty(self):
         return len(self) == 0
 
-    def encode(self, format):
-        writer = {"XML": XMLWriter}.get(format, format)()
-        return writer.write(self)
-
-    @staticmethod
-    def decode(data, format):
-        reader = {"XML": XMLParser}.get(format, format)()
-        return reader.read(data)
 
 class HashMergePolicy:
     MERGE_ATTRIBUTES = "merge"
     REPLACE_ATTRIBUTES = "replace"
-
-
-class EndElement(Exception):
-    pass
-
-
-class Handler(ContentHandler):
-    def __init__(self):
-        super().__init__()
-        self.parser = self.parseAll()
-        self.last = self.parser.send(None)
-
-    def parseAll(self):
-        self.name, self.value, self.hashattrs = yield from self.parseOne()
-
-    def parseHash(self):
-        ret = Hash()
-        try:
-            while True:
-                name, value, attrs = yield from self.parseOne()
-                ret[name] = value
-                ret[name, ...] = attrs
-        except EndElement:
-            return ret
-
-    def parseOne(self):
-        name, attrs = yield "Start"
-        hashattrs = {}
-        for key, value in attrs.items():
-            value = unescape(value)
-            hashattrs[key] = value
-            if value.startswith("KRB_") and ":" in value:
-                dtype, svalue = value.split(":", 1)
-                dtype = Type.fromname.get(dtype[4:], None)
-                if dtype is not None:
-                    hashattrs[key] = dtype.fromstring(svalue)
-        typename = hashattrs.pop("KRB_Type", "HASH")
-        if typename == "HASH":
-            value = yield from self.parseHash()
-        elif typename == "VECTOR_HASH":
-            value = yield from self.parseVectorHash()
-        else:
-            value = yield from self.parseString(typename)
-        return name, value, hashattrs
-
-    def parseVectorHash(self):
-        ret = HashList()
-        try:
-            while True:
-                name, _ = yield "Start"
-                assert name == "KRB_Item"
-                ret.append((yield from self.parseHash()))
-        except EndElement:
-            return ret
-
-    def parseString(self, typename):
-        ret = []
-        try:
-            while True:
-                ret.append((yield "Chars"))
-        except EndElement:
-            return Type.fromname[typename].fromstring("".join(ret))
-
-    def startElement(self, name, attrs):
-        assert self.last == "Start"
-        self.last = self.parser.send((name, attrs))
-
-    def characters(self, content):
-        if self.last == "Chars":
-            self.parser.send(content)
-
-    def endElement(self, name):
-        try:
-            self.last = self.parser.throw(EndElement())
-        except StopIteration:
-            pass
-
-
-class XMLParser(object):
-    last = None
-
-    def read(self, data):
-        parser = make_parser()
-        handler = Handler()
-        parser.setContentHandler(handler)
-        parser.feed(data)
-        parser.close()
-        if handler.name == "root" and "KRB_Artificial" in handler.hashattrs:
-            return handler.value
-        else:
-            ret = Hash(handler.name, handler.value)
-            ret[handler.name, ...] = handler.hashattrs
-            return ret
-
-
-class Writer(object):
-    def write(self, data):
-        """Return the written data as a string"""
-        self.file = BytesIO()
-        try:
-            self.writeToFile(data, self.file)
-            return self.file.getvalue()
-        finally:
-            self.file.close()
-
-
-class XMLWriter(Writer):
-    def writeToFile(self, hash, file):
-        for s in self.writer(hash):
-            file.write(s.encode("utf8"))
-
-    def writer(self, hash):
-        if len(hash) == 1 and isinstance(next(iter(hash.values())), Hash):
-            yield from HashType.yieldXML(hash)
-        else:
-            yield '<root KRB_Artificial="">'
-            yield from HashType.yieldXML(hash)
-            yield '</root>'
-
-
-def saveToFile(hash, fn):
-    w = XMLWriter()
-    with open(fn, 'wb') as out:
-        w.writeToFile(hash, out)
