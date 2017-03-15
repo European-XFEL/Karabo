@@ -17,7 +17,7 @@ from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
 from .schema import Node
-from .serializers import decodeBinary
+from .serializers import decodeBinary, encodeXML
 from .signalslot import SignalSlotable, slot, coslot
 
 
@@ -425,7 +425,7 @@ class BoundDeviceServer(DeviceServerBase):
             "run", self.boundNamespace, classId,
             env=env, stdin=PIPE)
         self.processes[deviceId] = process
-        process.stdin.write(config.encode("XML"))
+        process.stdin.write(encodeXML(config))
         process.stdin.close()
         yield from future
         return True, '"{}" started'.format(deviceId)

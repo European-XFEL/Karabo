@@ -13,7 +13,7 @@ from karabo.common.project.api import (
     BaseProjectObjectModel, MacroModel, ProjectDBCache, ProjectModel,
     read_lazy_object, recursive_save_object
 )
-from karabo.middlelayer import Hash
+from karabo.middlelayer import encodeXML, Hash
 from ..api import (
     convert_old_project, OldProject, read_project_model, write_project_model
 )
@@ -117,7 +117,7 @@ def test_reading_incomplete():
 
     # Create XML which looks like a project but lacks certain data
     hsh = Hash(PROJECT_DB_TYPE_PROJECT, Hash())
-    xml = hsh.encode('XML').decode()
+    xml = encodeXML(hsh)
     meta = {'item_type': PROJECT_DB_TYPE_PROJECT, 'uuid': str(uuid4())}
     xml = _wrap_child_element_xml(xml, meta)
     # Then make sure it can still be read
