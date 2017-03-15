@@ -1,4 +1,5 @@
 from struct import calcsize, unpack
+import warnings
 from xml.sax import make_parser
 from xml.sax.saxutils import unescape
 from xml.sax.handler import ContentHandler
@@ -126,6 +127,14 @@ class XMLParser(ContentHandler):
         except StopIteration:
             pass
 
+    # legacy API, has nothing to do with rest of class
+    @staticmethod
+    def read(data):
+        warnings.warn(
+            "The XMLParser class is deprecated, use decodeXML instead",
+            DeprecationWarning)
+        return decodeXML(data)
+
 
 def decodeXML(data):
     parser = make_parser()
@@ -157,3 +166,13 @@ def encodeXML(data):
 def writeXML(data, file):
     for d in yieldXML(data):
         file.write(d)
+
+
+# legacy API
+class XMLWriter(object):
+    @staticmethod
+    def write(data):
+        warnings.warn(
+            "The XMLWriter class is deprecated, use encodeXML instead",
+            DeprecationWarning)
+        return encodeXML(data)

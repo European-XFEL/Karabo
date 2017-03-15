@@ -8,7 +8,7 @@ from karabo.bound import (BinarySerializerHash, TextSerializerHash,
                           Hash as BoundHash, VectorHash)
 from karabo.middlelayer import (
     Hash, NodeType, Schema, HashList, Int64, decodeBinary, decodeXML,
-    encodeBinary, encodeXML)
+    encodeBinary, encodeXML, XMLWriter, XMLParser)
 from karabo.middlelayer_api.hash import _Byte
 
 
@@ -216,6 +216,12 @@ class Hash_TestCase(unittest.TestCase):
         self.assertFalse(sh["a"].keys())
         self.assertEqual(sh["a", "nodeType"], NodeType.Leaf)
 
+
+    def test_xml_old(self):
+        writer = XMLWriter()
+        parser = XMLParser()
+        s = writer.write(self.create_hash())
+        self.check_hash(parser.read(s))
 
     def test_xml(self):
         s = encodeXML(self.create_hash())
