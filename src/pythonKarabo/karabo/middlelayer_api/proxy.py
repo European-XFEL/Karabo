@@ -101,10 +101,12 @@ class DeviceClientProxyFactory(ProxyFactory):
             def method(self):
                 @asyncio.coroutine
                 def inner():
-                    yield from self._update()
-                    self._device._use()
-                    return (yield from self._device.call(self._deviceId, key))
-                return (yield from self._raise_on_death(inner()))
+                    yield from self._parent._update()
+                    device = self._parent._device
+                    device._use()
+                    return (yield from device.call(
+                        self._parent._deviceId, key))
+                return (yield from self._parent._raise_on_death(inner()))
             method.__doc__ = self.description
             return method.__get__(instance, owner)
 
@@ -133,6 +135,8 @@ class DeviceClientProxyFactory(ProxyFactory):
             with getDevice("someDevice") as device:
                 print(device.speed)
         """
+        _parent = Weak()
+
         def __init__(self, device, deviceId, sync):
             self._device = device
             self._queues = defaultdict(WeakSet)
@@ -144,6 +148,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._running_tasks = set()
             self._last_update_task = None
             self._schemaUpdateConnected = False
+            self._parent = self
 
         def _use(self):
             pass
@@ -158,7 +163,7 @@ class DeviceClientProxyFactory(ProxyFactory):
                     elif not isinstance(d, ProxySlotBase):
                         converted = d.toKaraboValue(v, strict=False)
                         converted.timestamp = Timestamp.fromHashAttributes(a)
-                        converted._parent = self
+                        converted._parent = parent
                         instance.__dict__[d.key] = converted
                         for q in parent._queues[d.longkey]:
                             q.put_nowait(converted)
@@ -315,24 +320,10 @@ class DeviceClientProxyFactory(ProxyFactory):
         _parent = Weak()
 
         def _use(self):
-            return self._parent._use()
+            self._parent._use()
 
         def setValue(self, desc, value):
             return self._parent.setValue(desc, value)
-
-        def _raise_on_death(self, future):
-            return self._parent._raise_on_death(future)
-
-        def _update(self):
-            return self._parent._update()
-
-        @property
-        def _device(self):
-            return self._parent._device
-
-        @property
-        def _deviceId(self):
-            return self._parent._deviceId
 
 
 class AutoDisconnectProxyFactory(DeviceClientProxyFactory):
