@@ -2,13 +2,9 @@ from unittest import TestCase, main
 from subprocess import PIPE, Popen
 import sys
 
-from karabo.middlelayer import (decodeBinary, ProxyNode, ProxySlot, State,
-                                SubProxy, Unit)
+from karabo.middlelayer import (decodeBinary, isSet, ProxyNode, ProxySlot,
+                                State, SubProxy, Unit)
 from karabo.middlelayer_api.proxy import ProxyFactory
-
-
-class TestProxyFactory(ProxyFactory):
-    pass
 
 
 class Tests(TestCase):
@@ -34,6 +30,11 @@ class Tests(TestCase):
         self.assertEqual(cls.node.cls.b.longkey, "node.b")
 
         self.assertIsInstance(cls.setA, ProxySlot)
+
+        obj = cls()
+        self.assertFalse(isSet(obj.a))
+        self.assertIs(obj.a.descriptor, cls.a)
+        self.assertFalse(isSet(obj.node.b))
 
 
 if __name__ == "__main__":
