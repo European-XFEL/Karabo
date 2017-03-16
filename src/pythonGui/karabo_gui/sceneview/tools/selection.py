@@ -1,6 +1,7 @@
 from PyQt4.QtCore import Qt, QRect, QPoint
 from traits.api import HasStrictTraits, Any, Enum, Instance, String
 
+from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.sceneview.bases import BaseSceneTool
 from karabo_gui.sceneview.utils import save_painter_state
 
@@ -183,3 +184,29 @@ class SceneSelectionTool(BaseSceneTool):
             return
 
         self._hover_item.set_geometry(g)
+
+
+class BoxSelectionTool(BaseSceneTool):
+    """ A tool for the selection of widgets in the SceneView which are derived
+    from ``BaseWidgetContainer`` and bound to boxes.
+    """
+    def mouse_down(self, scene_view, event):
+        """ A callback which is fired whenever the user clicks in the
+        SceneView.
+        """
+        # Show configuration in configuration panel if available
+        # Only widgets might have boxes
+        widget = scene_view.widget_at_position(event.pos())
+        if widget is not None and hasattr(widget, 'boxes'):
+            boxes = widget.boxes
+            if boxes:
+                # Just the first entry
+                configuration = boxes[0].configuration
+                broadcast_event(KaraboEventSender.ShowConfiguration,
+                                {'configuration': configuration})
+
+    def mouse_move(self, scene_view, event):
+        pass
+
+    def mouse_up(self, scene_view, event):
+        pass
