@@ -21,8 +21,9 @@ from .builder import (bring_object_to_front, create_object_from_model,
 from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
-from .tools.api import (ConfigurationDropHandler, NavigationDropHandler,
-                        SceneSelectionTool, WidgetSceneHandler)
+from .tools.api import (BoxSelectionTool, ConfigurationDropHandler,
+                        NavigationDropHandler, SceneSelectionTool,
+                        WidgetSceneHandler)
 from .utils import save_painter_state
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 
@@ -92,10 +93,16 @@ class SceneView(QWidget):
     @design_mode.setter
     def design_mode(self, value):
         # Toggle mouse handling in the inner view
-        self.inner.setAttribute(Qt.WA_TransparentForMouseEvents, value)
+        self.enable_mouse_event_handling(value)
         if not value:
             self.selection_model.clear_selection()
             self.set_tool(None)
+
+    def enable_mouse_event_handling(self, enable):
+        """ Set whether delivery of mouse events to the widget and its children
+        is either enabled or disabled.
+        """
+        self.inner.setAttribute(Qt.WA_TransparentForMouseEvents, enable)
 
     # ----------------------------
     # Qt Methods
@@ -131,6 +138,18 @@ class SceneView(QWidget):
                 item.edit(self)
                 self.update()
             event.accept()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Shift:
+            self.set_cursor('pointing-hand')
+            self.enable_mouse_event_handling(True)
+            self.set_tool(BoxSelectionTool())
+
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Shift:
+            self.set_cursor('none')
+            self.enable_mouse_event_handling(False)
+            self.set_tool(None)
 
     def dragEnterEvent(self, event):
         if not self.design_mode:
