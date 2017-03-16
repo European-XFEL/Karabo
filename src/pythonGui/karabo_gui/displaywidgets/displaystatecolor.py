@@ -15,11 +15,16 @@ class DisplayStateColor(DisplayWidget):
     def __init__(self, box, parent):
         super(DisplayStateColor, self).__init__(box)
         self.widget = QLabel(parent)
+        objectName = generateObjectName(self)
+        self.widget.setObjectName(objectName)
+        self._staticText = ""
+        textAction = QAction("Edit Static Text...", self.widget)
+        textAction.triggered.connect(self._onChangeStaticText)
+        self.widget.addAction(textAction)
 
     def typeChanged(self, box):
         desc = box.descriptor
-        objectName = generateObjectName(self)
-        self.widget.setObjectName(objectName)
+        objectName = self.widget.objectName()
 
         if isinstance(desc, String):
             self.widget.setAutoFillBackground(True)
@@ -27,10 +32,6 @@ class DisplayStateColor(DisplayWidget):
             self.widget.setMinimumWidth(32)
             self.widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
             self.widget.setWordWrap(True)
-            self._staticText = ""
-            textAction = QAction("Edit Static Text...", self.widget)
-            textAction.triggered.connect(self._onChangeStaticText)
-            self.widget.addAction(textAction)
             self._styleSheet = ("QLabel#{}".format(objectName) +
                                 " {{ background-color : rgba{};"
                                 "border: 2px solid black; }}")
@@ -60,6 +61,9 @@ class DisplayStateColor(DisplayWidget):
                 bgColor = STATE_COLORS[State.ERROR]
             else:
                 bgColor = STATE_COLORS[State.UNKNOWN]
+                
+            if self.widget.text() != self._staticText:
+                self.widget.setText(self._staticText)
         elif isinstance(desc, Bool):
             if value:
                 bgColor = STATE_COLORS[State.ACTIVE]
@@ -67,9 +71,6 @@ class DisplayStateColor(DisplayWidget):
                 bgColor = STATE_COLORS[State.PASSIVE]
 
         self._setColor(bgColor)
-
-        if self.widget.text() != self._staticText:
-            self.widget.setText(self._staticText)
 
     @pyqtSlot()
     def _onChangeStaticText(self):
