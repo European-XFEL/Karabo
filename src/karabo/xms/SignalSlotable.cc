@@ -60,20 +60,19 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::Requestor::receiveAsync(const boost::function<void () >& replyCallback) {
+        void SignalSlotable::Requestor::receiveAsync(const boost::function<void () >& replyCallback, const boost::function<void()>& timeoutHandler) {
             m_signalSlotable->registerSlot(replyCallback, m_replyId);
-            registerDeadlineTimer();
+            registerDeadlineTimer(timeoutHandler);
             sendRequest();
         }
 
-
-        void SignalSlotable::Requestor::registerDeadlineTimer() {
+        void SignalSlotable::Requestor::registerDeadlineTimer(const boost::function<void()>& timeoutHandler) {
             if (m_timeout > 0) {
                 // Register a deadline timer into map
                 auto timer = boost::make_shared<boost::asio::deadline_timer>(EventLoop::getIOService());
                 timer->expires_from_now(boost::posix_time::milliseconds(m_timeout));
                 timer->async_wait(bind_weak(&SignalSlotable::receiveAsyncTimeoutHandler, m_signalSlotable,
-                                            boost::asio::placeholders::error, m_replyId));
+                                            boost::asio::placeholders::error, m_replyId, timeoutHandler));
                 m_signalSlotable->addReceiveAsyncTimer(m_replyId, timer);
             }
         }
@@ -2005,11 +2004,16 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::receiveAsyncTimeoutHandler(const boost::system::error_code& e, const std::string& replyId) {
+        void SignalSlotable::receiveAsyncTimeoutHandler(const boost::system::error_code& e, const std::string& replyId,
+                                                        const boost::function<void()>& timeoutCallback) {
             if (e) return;
             // Remove the slot with function name replyId, as the message took too long
             removeSlot(replyId);
-            KARABO_LOG_FRAMEWORK_ERROR << "Asynchronous request with id \"" << replyId << "\" timed out";
+            if (timeoutCallback) {
+                timeoutCallback();
+            } else {
+                KARABO_LOG_FRAMEWORK_ERROR << "Asynchronous request with id \"" << replyId << "\" timed out";
+            }
         }
 
 
