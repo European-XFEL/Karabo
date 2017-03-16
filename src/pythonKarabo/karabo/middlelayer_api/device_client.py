@@ -22,7 +22,7 @@ from .device import Device
 from .eventloop import synchronize
 from .exceptions import KaraboError
 from .hash import Hash, Type
-from .proxy import (AbstractProxy, AutoDisconnectProxyFactory,
+from .proxy import (ProxyBase, AutoDisconnectProxyFactory,
                     DeviceClientProxyFactory)
 from .signalslot import slot
 from .synchronization import firstCompleted
@@ -127,7 +127,7 @@ def waitUntilNew(prop, *props, **kwargs):
     If you want to wait for something to reach a certain value, you may use
     :func:`waitUntil`. If you want to get all updates of a property, use
     :class:`Queue`."""
-    if isinstance(prop, AbstractProxy):
+    if isinstance(prop, ProxyBase):
         return _WaitUntilNew_old(prop)
     else:
         return _waitUntilNew_new(prop, *props, **kwargs)
@@ -158,7 +158,7 @@ class _getHistory_old:
         # this method contains a lot of hard-coded strings. It follows
         # GuiServerDevice::onGetPropertyHistory. One day we should
         # de-hard-code both.
-        if isinstance(self.proxy, AbstractProxy):
+        if isinstance(self.proxy, ProxyBase):
             # does the attribute actually exist?
             assert isinstance(getattr(type(self.proxy), attr), Type)
             deviceId = self.proxy._deviceId
@@ -244,7 +244,7 @@ def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
     # GuiServerDevice::onGetPropertyHistory. One day we should
     # de-hard-code both.
 
-    if (isinstance(prop, AbstractProxy) or isinstance(prop, str)
+    if (isinstance(prop, ProxyBase) or isinstance(prop, str)
            and "." not in prop):
         assert wait
         return _getHistory_old(prop, begin, end, maxNumData, timeout)
@@ -388,7 +388,7 @@ def connectDevice(device, *, autodisconnect=None, timeout=5):
 
     If the device is needed only within a specific block, it is nicer
     tu use instead a with statement as described in :func:`getDevice`."""
-    if isinstance(device, AbstractProxy):
+    if isinstance(device, ProxyBase):
         if autodisconnect is not None:
             raise RuntimeError(
                 "autodisconnect can only be set at proxy creation time")
@@ -536,7 +536,7 @@ def shutdown(device):
     """shut down the given device
 
     :param deviceId: may be a device proxy, or just the id of a device"""
-    if isinstance(device, AbstractProxy):
+    if isinstance(device, ProxyBase):
         device = device._deviceId
     ok = yield from get_instance().call(device, "slotKillDevice")
     return ok
@@ -546,7 +546,7 @@ def shutdownNoWait(device):
     """shut down the given device
 
     not waiting version of :func:`shutdown`"""
-    if isinstance(device, AbstractProxy):
+    if isinstance(device, ProxyBase):
         device = device._deviceId
     get_instance()._ss.emit("call", {device: ["slotKillDevice"]})
 
@@ -569,7 +569,7 @@ def setWait(device, **kwargs):
 
     the function waits until the device has acknowledged that the values
     have been set."""
-    if isinstance(device, AbstractProxy):
+    if isinstance(device, ProxyBase):
         yield from device._update()
         device = device._deviceId
     h = Hash()
@@ -583,7 +583,7 @@ def setWait(device, **kwargs):
 
 def setNoWait(device, **kwargs):
     """Same as :func:`setWait`, but don't wait for acknowledgement"""
-    if isinstance(device, AbstractProxy):
+    if isinstance(device, ProxyBase):
         device = device._deviceId
     h = Hash()
     for k, v in kwargs.items():
@@ -608,7 +608,7 @@ def executeNoWait(device, slot):
 
     but then we wait until the device has finished with the operation. If
     this is not desired, use executeNoWait."""
-    if isinstance(device, AbstractProxy):
+    if isinstance(device, ProxyBase):
         device = device._deviceId
     get_instance()._ss.emit("call", {device: [slot]})
 
@@ -616,7 +616,7 @@ def executeNoWait(device, slot):
 @synchronize
 def execute(device, slot):
     """execute a slot and wait until it finishes"""
-    if isinstance(device, AbstractProxy):
+    if isinstance(device, ProxyBase):
         device = device._deviceId
     assert isinstance(slot, str)
     return (yield from get_instance().call(device, slot))
@@ -634,5 +634,5 @@ def updateDevice(device):
 
 def isAlive(proxy):
     """Check whether a device represented by a proxy is still running"""
-    assert isinstance(proxy, AbstractProxy)
+    assert isinstance(proxy, ProxyBase)
     return proxy._alive

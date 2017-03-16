@@ -1,4 +1,3 @@
-from abc import ABC
 import asyncio
 from collections import defaultdict
 import time
@@ -13,49 +12,55 @@ from .timestamp import Timestamp
 from .weak import Weak
 
 
-class AbstractProxy(ABC):
+class ProxyBase(object):
+    @classmethod
+    def __dir__(cls):
+        return cls._allattrs
+
+
+class ProxySlotBase(Slot):
     pass
 
 
-class AbstractProxySlot(Slot, ABC):
-    pass
+class ProxyNodeBase(Descriptor):
+    def __init__(self, cls, **kwargs):
+        super().__init__(**kwargs)
+        self.cls = cls
 
 
-class AbstractProxyNode(Descriptor, ABC):
-    pass
+class SubProxyBase(object):
+    @classmethod
+    def __dir__(cls):
+        return cls._allattrs
 
 
-class AbstractSubProxy(ABC):
-    pass
-
-
-class AbstractProxyFactory(ABC):
+class ProxyFactory(object):
     """Create a proxy for Karabo devices
 
-    This is an abstract factory class to create proxies for Karabo devices.
-    This class is abstract as it misses the base classes for the proxies.
-    Specializations of this class should contain three classes:
+    This is an customizable factory class to create proxies for Karabo
+    devices. You can customize which classes are used in the proxy
+    building process by setting the following class attributes:
 
     Proxy
         This is the base class for all proxies. It should inherit from
-        :class:`AbstractProxy`.
+        :class:`ProxyBase`.
 
     ProxySlot
         This is the base class for all slots of a device. It should inherit
-        from :class:`AbstractProxySlot`.
+        from :class:`ProxySlotBase`.
 
     ProxyNode
         The base class for all descriptors of nodes. Should inherit
-        from :class:`AbstractProxyNode`.
+        from :class:`ProxyNodeBase`.
 
     SubProxy
         This is the base class for all the node values in a proxy.
-        It should inherit from :class:`AbstractSubProxy`.
+        It should inherit from :class:`SubProxyBase`.
     """
-    Proxy = AbstractProxy
-    ProxySlot = AbstractProxySlot
-    ProxyNode = AbstractProxyNode
-    SubProxy = AbstractSubProxy
+    Proxy = ProxyBase
+    ProxySlot = ProxySlotBase
+    ProxyNode = ProxyNodeBase
+    SubProxy = SubProxyBase
 
     @classmethod
     def createNamespace(cls, schema, prefix=""):
@@ -85,8 +90,8 @@ class AbstractProxyFactory(ABC):
         return type(schema.name, (cls.Proxy,), namespace)
 
 
-class DeviceClientProxyFactory(AbstractProxyFactory):
-    class ProxySlot(AbstractProxySlot):
+class DeviceClientProxyFactory(ProxyFactory):
+    class ProxySlot(ProxySlotBase):
         def __get__(self, instance, owner):
             if instance is None:
                 return self
@@ -103,7 +108,7 @@ class DeviceClientProxyFactory(AbstractProxyFactory):
             method.__doc__ = self.description
             return method.__get__(instance, owner)
 
-    class Proxy(AbstractProxy):
+    class Proxy(ProxyBase):
         """A proxy for a remote device
 
         This proxy represents a real device somewhere in the karabo
@@ -140,10 +145,6 @@ class DeviceClientProxyFactory(AbstractProxyFactory):
             self._last_update_task = None
             self._schemaUpdateConnected = False
 
-        @classmethod
-        def __dir__(cls):
-            return cls._allattrs
-
         def _use(self):
             pass
 
@@ -152,9 +153,9 @@ class DeviceClientProxyFactory(AbstractProxyFactory):
             for k, v, a in hash.iterall():
                 d = getattr(type(instance), k, None)
                 if d is not None:
-                    if isinstance(d, AbstractProxyNode):
+                    if isinstance(d, ProxyNodeBase):
                         self._onChanged_r(v, getattr(instance, d.key), parent)
-                    elif not isinstance(d, AbstractProxySlot):
+                    elif not isinstance(d, ProxySlotBase):
                         converted = d.toKaraboValue(v, strict=False)
                         converted.timestamp = Timestamp.fromHashAttributes(a)
                         converted._parent = self
@@ -171,9 +172,9 @@ class DeviceClientProxyFactory(AbstractProxyFactory):
             instance.__class__ = cls
             for key in dir(cls):
                 descriptor = getattr(cls, key)
-                if isinstance(descriptor, AbstractProxyNode):
+                if isinstance(descriptor, ProxyNodeBase):
                     value = getattr(instance, key, None)
-                    if isinstance(value, AbstractSubProxy):
+                    if isinstance(value, SubProxyBase):
                         self._onSchemaUpdated_r(descriptor.cls, value)
                     else:
                         # something became a Node which wasn't one before.
@@ -295,11 +296,7 @@ class DeviceClientProxyFactory(AbstractProxyFactory):
             self._onChanged(conf)
             return self
 
-    class ProxyNode(AbstractProxyNode):
-        def __init__(self, cls, **kwargs):
-            super().__init__(**kwargs)
-            self.cls = cls
-
+    class ProxyNode(ProxyNodeBase):
         def __get__(self, instance, owner):
             if instance is None:
                 return self
@@ -307,14 +304,14 @@ class DeviceClientProxyFactory(AbstractProxyFactory):
             if ret is not None:
                 return ret
             sub = self.cls()
-            if isinstance(instance, AbstractSubProxy):
+            if isinstance(instance, SubProxyBase):
                 sub._parent = instance._parent
             else:
                 sub._parent = instance
             instance.__dict__[self.key] = sub
             return sub
 
-    class SubProxy(AbstractSubProxy):
+    class SubProxy(SubProxyBase):
         _parent = Weak()
 
         def _use(self):
@@ -336,10 +333,6 @@ class DeviceClientProxyFactory(AbstractProxyFactory):
         @property
         def _deviceId(self):
             return self._parent._deviceId
-
-        @classmethod
-        def __dir__(cls):
-            return cls._allattrs
 
 
 class AutoDisconnectProxyFactory(DeviceClientProxyFactory):
