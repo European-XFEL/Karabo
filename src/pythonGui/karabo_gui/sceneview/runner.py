@@ -16,6 +16,8 @@ def main():
 
     model = read_scene(filename)
     panel = ScenePanel(model, True)
+    # XXX: A hack to keep the toolbar visible
+    panel.toolbar.setVisible(True)
     panel.show()
     panel.resize(1024, 768)
     app.exec_()
