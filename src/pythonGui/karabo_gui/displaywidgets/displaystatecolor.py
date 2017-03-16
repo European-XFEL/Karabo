@@ -1,5 +1,5 @@
 from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import (QAction, QInputDialog, QLabel)
+from PyQt4.QtGui import QAction, QInputDialog, QLabel
 
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA, WIDGET_MIN_HEIGHT
 from karabo_gui.indicators import STATE_COLORS
@@ -14,34 +14,32 @@ class DisplayStateColor(DisplayWidget):
 
     def __init__(self, box, parent):
         super(DisplayStateColor, self).__init__(box)
-
-        self._staticText = ""
-
         self.widget = QLabel(parent)
-        objectName = generateObjectName(self)
-        self.widget.setObjectName(objectName)
-
-        textAction = QAction("Edit Static Text...", self.widget)
-        textAction.triggered.connect(self._onChangeStaticText)
-        self.widget.addAction(textAction)
 
     def typeChanged(self, box):
         desc = box.descriptor
+        objectName = generateObjectName(self)
+        self.widget.setObjectName(objectName)
+
         if isinstance(desc, String):
             self.widget.setAutoFillBackground(True)
             self.widget.setAlignment(Qt.AlignCenter)
             self.widget.setMinimumWidth(32)
             self.widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
             self.widget.setWordWrap(True)
-
-            self._styleSheet = ("background-color: rgba{}; "
-                                "border: 2px solid black;")
-
+            self._staticText = ""
+            textAction = QAction("Edit Static Text...", self.widget)
+            textAction.triggered.connect(self._onChangeStaticText)
+            self.widget.addAction(textAction)
+            self._styleSheet = ("QLabel#{}".format(objectName) +
+                                " {{ background-color : rgba{};"
+                                "border: 2px solid black; }}")
         elif isinstance(desc, Bool):
             self.widget.setFixedSize(24, 24)
-            self._styleSheet = ("background-color: rgba{}; "
-                                "border: 2px solid black;"
-                                "border-radius: 12px;")
+            self._styleSheet = ("QLabel#{}".format(objectName) +
+                                " {{ background-color : rgba{};"
+                                "border: 2px solid black; "
+                                "border-radius: 12px; }}")
 
     def setErrorState(self, isError):
         color = ERROR_COLOR_ALPHA if isError else OK_COLOR
