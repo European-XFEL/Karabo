@@ -204,10 +204,10 @@ class UnknownSvgWidget(QWidget):
         """ Satisfy the informal widget interface. """
 
     def set_geometry(self, rect):
-        self.setGeometry(rect)
+        """ Satisfy the informal widget interface. """
 
     def translate(self, offset):
-        self.move(self.pos() + offset)
+        """ Satisfy the informal widget interface. """
 
 
 class WorkflowItemWidget(QWidget):
