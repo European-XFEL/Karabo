@@ -762,8 +762,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertFalse(h1.has("c.b.d"))
         self.assertTrue(h1.has("c.b[0]"))
         self.assertTrue(h1.has("c.b[1]"))
-        self.assertTrue(h1.has("c.b[2]"))
-        self.assertEqual(h1.get("c.b[2].d"), 24) # vector<Hash> are appended
+        self.assertEqual(h1.get("c.b[1].d"), 24)
         self.assertTrue(h1.has("c.c[0].d"))
         self.assertTrue(h1.has("c.c[1].a.b.c"))
         self.assertTrue(h1.has("d.e"))
@@ -843,7 +842,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertTrue(h1c.has("b.c"))
         self.assertTrue(h1c.has("g.h.i"))
         self.assertTrue(h1c.has("h.i"))
-        self.assertTrue(h1c.has("i[0].k.l"))
+        self.assertTrue(h1c.has("i[2].k.l"))
         # But not the other ones from h2:
         self.assertFalse(h1c.has("c.b[0].key")) # neither at old position of h2
         self.assertFalse(h1c.has("c.b[2]"))     # nor an extended vector<Hash> at all
@@ -880,19 +879,17 @@ class Hash_TestCase(unittest.TestCase):
                          "e[1].3"]
         hashTargetB.merge(hashSourceBCD, HashMergePolicy.MERGE_ATTRIBUTES, selectedPaths)
         self.assertTrue(hashTargetB.has("a[1].b"))
-        self.assertTrue(hashTargetB.has("a[4].a"))
-        self.assertTrue(hashTargetB.has("a[4].b"))
+        self.assertTrue(hashTargetB.has("a[2].a"))
+        self.assertTrue(hashTargetB.has("a[2].b"))
         self.assertFalse(hashTargetB.has("a[5]"))
         self.assertTrue(hashTargetB.has("c[0]"))
         self.assertFalse(hashTargetB.has("c[0].k"))
-        self.assertTrue(hashTargetB.has("c[0].l"))
-        self.assertFalse(hashTargetB.has("c[1]"))
+        self.assertTrue(hashTargetB.has("c[1].l"))
         self.assertTrue(hashTargetB.has("d[2].b"))
         self.assertFalse(hashTargetB.has("d[3]"))
         self.assertFalse(hashTargetB.has("e[0].1"))
-        self.assertTrue(hashTargetB.has("e[0].2"))
-        self.assertTrue(hashTargetB.has("e[0].3"))
-        self.assertFalse(hashTargetB.has("e[1]"))
+        self.assertTrue(hashTargetB.has("e[1].2"))
+        self.assertTrue(hashTargetB.has("e[1].3"))
 
 
         selectedPaths = ("a[0]",
@@ -900,9 +897,9 @@ class Hash_TestCase(unittest.TestCase):
                          "c")      # trigger overwriting with complete vector
         hashTargetC.merge(hashSourceBCD, HashMergePolicy.MERGE_ATTRIBUTES, selectedPaths)
         self.assertTrue(hashTargetC.has("a[1].b"))
-        self.assertFalse(hashTargetC.has("a[3].a"))
-        self.assertTrue(hashTargetC.has("a[3].b"))
-        self.assertFalse(hashTargetC.has("a[4]"))
+        self.assertFalse(hashTargetC.has("a[2].a"))
+        self.assertTrue(hashTargetC.has("a[2].b"))
+        self.assertFalse(hashTargetC.has("a[3]"))
         self.assertTrue(hashTargetC.has("c[1].k"))
         self.assertTrue(hashTargetC.has("c[1].l"))
         self.assertTrue(hashTargetC.has("c[2].b"))
@@ -919,6 +916,14 @@ class Hash_TestCase(unittest.TestCase):
         self.assertTrue(similar(copyD, hashTargetD),
                         "Selecting only invalid indices changed something")
 
+        h = Hash('a[0].a.b.c',1,'a[1].a.b.d',2)
+        g=Hash('a[0].x.y.w',77,'a[0].a.c',33,'a[2].abc',12)
+        h+=g
+        self.assertTrue(h['a[0].a.b.c'] == 1)
+        self.assertTrue(h['a[0].x.y.w'] == 77)
+        self.assertTrue(h['a[0].a.c']   == 33)
+        self.assertTrue(h['a[1].a.b.d'] == 2)
+        self.assertTrue(h['a[2].abc']   == 12)
             
     def test_subtract(self):
         try:
@@ -943,8 +948,6 @@ class Hash_TestCase(unittest.TestCase):
             self.assertFalse("a" in h1)
             self.assertTrue(h1["b"].empty())
             self.assertEqual(h1["c.b[0].g"], 3)
-            self.assertEqual(h1["c.b[1].key"], "value")
-            self.assertEqual(h1["c.b[2].d"], 24)
             self.assertEqual(h1["c.c[0].d"], 4)
             self.assertEqual(h1["c.c[1].a.b.c"], 6)
             self.assertEqual(h1["d.e"], 7)
@@ -962,9 +965,9 @@ class Hash_TestCase(unittest.TestCase):
             h4 = Hash("a.b", Hash(), "c", Hash())
             h3 -= h4
             
-            self.assertFalse("a.b" in h3)
-            self.assertTrue(h3["a"].empty())
-            self.assertFalse("c" in h3)
+            self.assertTrue("a.b" in h3)
+            self.assertFalse(h3["a"].empty())
+            self.assertTrue("c" in h3)
             self.assertTrue(h3["b.c.d"] == 22)
             
         except Exception as e:

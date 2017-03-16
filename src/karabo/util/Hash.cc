@@ -612,24 +612,32 @@ namespace karabo {
 
             std::vector<Hash>& targetVec = target.getValue<std::vector<Hash> > ();
             const std::vector<Hash>& sourceVec = source.getValue<std::vector<Hash> > ();
-            const std::set<unsigned int> selectedIndices(Hash::selectIndicesOfKey(sourceVec.size(), selectedPaths,
-                                                                                  source.getKey(), separator));
-
-            // Append Hashes for ordinary vector<Hash>
-            if (selectedIndices.empty()) {
-                // There cannot be sub-path selections here.
-                targetVec.insert(targetVec.end(), sourceVec.begin(), sourceVec.end());
-            } else {
-                // But only the selected ones:
-                unsigned int hashCounter = 0;
-                for (std::vector<Hash>::const_iterator it = sourceVec.begin(); it != sourceVec.end(); ++it, ++hashCounter) {
-                    if (selectedIndices.find(hashCounter) != selectedIndices.end()) {
-                        // Extract sub-paths
-                        const std::string indexedKey((source.getKey() + '[') += util::toString(hashCounter) += ']');
-                        const std::set<std::string> paths(Hash::selectChildPaths(selectedPaths, indexedKey, separator));
-                        targetVec.push_back(Hash());
-                        targetVec.back().merge(*it, policy, paths, separator);
-                    }
+            std::set<unsigned int> selectedIndices(Hash::selectIndicesOfKey(sourceVec.size(), selectedPaths,
+                                                                            source.getKey(), separator));
+            
+            // Merge Hashes for ordinary vector<Hash>
+            std::set<unsigned int>::const_iterator it = selectedIndices.begin();
+            for (size_t i = 0; i < sourceVec.size(); ++i) {
+                if (!selectedIndices.empty()) {
+                    // Check if the left indices are out of range ...
+                    if (it == selectedIndices.end() || *it >= sourceVec.size()) break;
+                }
+                if (i == targetVec.size()) {
+                    // Align the target vector size with the source one
+                    targetVec.push_back(Hash());
+                }
+                if (selectedIndices.empty()) {
+                    // There cannot be sub-path selections here.
+                    targetVec[i].merge(sourceVec[i], policy, std::set<std::string>(), separator);
+                } else if (selectedIndices.find(i) == selectedIndices.end()) {
+                    // this is not our index -> don't merge!
+                    continue;
+                } else {
+                    // sub-path selection
+                    const std::string indexedKey((source.getKey() + '[') += util::toString(i) += ']');
+                    const std::set<std::string> paths(Hash::selectChildPaths(selectedPaths, indexedKey, separator));
+                    targetVec[i].merge(sourceVec[i], policy, paths, separator);
+                    ++it;
                 }
             }
         }
@@ -646,8 +654,32 @@ namespace karabo {
             std::vector<std::string> candidates;
             getPaths(other, candidates, "", separator); // may be optimized to avoid list creation 
             if (candidates.empty()) return;
-            for (std::vector<std::string>::const_iterator it = candidates.begin(); it != candidates.end(); ++it) {
+            std::set<std::string> myset;
+            getPaths(myset, separator);
+            // Go through the list in reverse order to avoid
+            for (std::vector<std::string>::const_reverse_iterator it = candidates.rbegin();
+                    it != candidates.rend(); ++it) {
+                // keep unrelated entries or empty "vector<Hash>" items
+                if (myset.find(*it) == myset.end() || (*it).back() == ']') continue;
                 this->erase(*it, separator);
+            }
+            
+            // Remove possible vector<Hash>'s empty tails if we need this functionality
+            myset.clear();
+            getPaths(myset, separator);
+            std::string lastPath;
+            for (std::set<std::string>::const_reverse_iterator it = myset.rbegin();
+                    it != myset.rend(); ++it) {
+                size_t pos = (*it).rfind("[");
+                if (pos == std::string::npos) continue;                // skip "not-an-array" paths 
+                const std::string& path = (*it).substr(0,pos);         // path to vector<Hash>
+                if ((*it).back() == ']') {                             // vector<Hash>[...] is empty
+                    if (lastPath.find(path) == std::string::npos) {    // select empty tails only
+                        this->erase(*it, separator);
+                    }
+                } else {
+                    lastPath = path;                                   // "not empty" entry encountered
+                }
             }
         }
 
