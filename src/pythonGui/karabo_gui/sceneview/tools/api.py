@@ -8,7 +8,7 @@ from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,
                         SceneSelectAllAction)
 from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,
                       TextSceneTool)
-from .selection import SceneSelectionTool
+from .selection import BoxSelectionTool, SceneSelectionTool
 from .scenedndhandler import ConfigurationDropHandler, NavigationDropHandler
 from .widgethandler import WidgetSceneHandler
 from .workflow import (CreateWorkflowConnectionToolAction,
