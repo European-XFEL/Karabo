@@ -23,8 +23,8 @@ def test_merge():
     assert not h1.has("c.b.d")
     assert h1.has("c.b[0]")
     assert h1.has("c.b[1]")
-    assert h1.has("c.b[2]")
-    assert h1.get("c.b[2].d") == 24
+    assert not h1.has("c.b[2]")
+    assert h1.get("c.b[1].d") == 24
     assert h1.has("c.c[0].d")
     assert h1.has("c.c[1].a.b.c")
     assert h1.has("d.e")
