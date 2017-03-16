@@ -94,6 +94,9 @@ class ProjectHandleDialog(QDialog):
             self.cbDomain.addItems(sorted(domains))
         # Select default domain
         index = self.cbDomain.findText(self.default_domain)
+        if index == self.cbDomain.currentIndex():
+            # Make sure the signal is triggered when setting the index below
+            self.cbDomain.setCurrentIndex(-1)
         self.cbDomain.setCurrentIndex(index if index > -1 else 0)
 
     def _set_dialog_texts(self, title, btn_text):
