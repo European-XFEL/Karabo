@@ -17,6 +17,9 @@ class ProxyBase(object):
     def __dir__(cls):
         return cls._allattrs
 
+    def _use(self):
+        pass
+
 
 class ProxySlotBase(Slot):
     pass
@@ -27,11 +30,33 @@ class ProxyNodeBase(Descriptor):
         super().__init__(**kwargs)
         self.cls = cls
 
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        ret = instance.__dict__.get(self.key, None)
+        if ret is not None:
+            return ret
+        sub = self.cls()
+        if isinstance(instance, SubProxyBase):
+            sub._parent = instance._parent
+        else:
+            sub._parent = instance
+        instance.__dict__[self.key] = sub
+        return sub
+
 
 class SubProxyBase(object):
+    _parent = Weak()
+
     @classmethod
     def __dir__(cls):
         return cls._allattrs
+
+    def _use(self):
+        self._parent._use()
+
+    def setValue(self, desc, value):
+        return self._parent.setValue(desc, value)
 
 
 class ProxyFactory(object):
@@ -149,9 +174,6 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._last_update_task = None
             self._schemaUpdateConnected = False
             self._parent = self
-
-        def _use(self):
-            pass
 
         def _onChanged_r(self, hash, instance, parent):
             """the recursive part of _onChanged"""
@@ -300,30 +322,6 @@ class DeviceClientProxyFactory(ProxyFactory):
                                                    "slotGetConfiguration")
             self._onChanged(conf)
             return self
-
-    class ProxyNode(ProxyNodeBase):
-        def __get__(self, instance, owner):
-            if instance is None:
-                return self
-            ret = instance.__dict__.get(self.key, None)
-            if ret is not None:
-                return ret
-            sub = self.cls()
-            if isinstance(instance, SubProxyBase):
-                sub._parent = instance._parent
-            else:
-                sub._parent = instance
-            instance.__dict__[self.key] = sub
-            return sub
-
-    class SubProxy(SubProxyBase):
-        _parent = Weak()
-
-        def _use(self):
-            self._parent._use()
-
-        def setValue(self, desc, value):
-            return self._parent.setValue(desc, value)
 
 
 class AutoDisconnectProxyFactory(DeviceClientProxyFactory):
