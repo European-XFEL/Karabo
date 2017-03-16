@@ -17,8 +17,8 @@ from .middlelayer_api.device_client import (
     getServers, execute, executeNoWait, updateDevice
 )
 from .middlelayer_api.proxy import (
-    AbstractProxy as Proxy, AbstractProxySlot as ProxySlot,
-    AbstractProxyNode as ProxyNode, AbstractSubProxy as SubProxy
+    ProxyBase as Proxy, ProxySlotBase as ProxySlot,
+    ProxyNodeBase as ProxyNode, SubProxyBase as SubProxy
 )
 from .middlelayer_api.enums import (
     AccessLevel, AccessMode, Assignment, EncodingType, MetricPrefix, NodeType,
