@@ -283,6 +283,8 @@ namespace karabo {
                         onProjectListItems(channel, info);
                     } else if (type == "projectListDomains") {
                         onProjectListDomains(channel, info);
+                    } else if (type == "projectUpdateAttribute") {
+                        onProjectUpdateAttribute(channel, info);
                     } else if (type == "runConfigSourcesInGroup") {
                         onRunConfigSourcesInGroup(channel, info);
                     }
@@ -1402,7 +1404,22 @@ namespace karabo {
                 request(projectManager, "slotListDomains", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListDomains", _1));
             } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListItems(): " << e.userFriendlyMsg();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListDomains(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onProjectUpdateAttribute(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectUpdateAttribute : info ...\n" << info;
+                const std::string& projectManager = info.get<std::string>("projectManager");
+                if (!checkProjectManagerId(channel, projectManager, "projectUpdateAttribute")) return;
+                const std::string& token = info.get<std::string>("token");
+                const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
+                request(projectManager, "slotUpdateAttribute", token, items)
+                        .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectUpdateAttribute", _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectUpdateAttribute(): " << e.userFriendlyMsg();
             }
         }
 

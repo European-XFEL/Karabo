@@ -426,3 +426,57 @@ class ProjectDatabase(ContextDecorator):
                    config_updates_1=res[3].text,
                    config_updates_2=res[4].text))
         print(msg)
+
+    def update_attributes(self, items):
+        """ Update attribute for the given ``items``
+
+        :param items: list of Hashes containing information on which items
+                      to update. Each list entry should be a Hash containing
+
+                      - domain: domain the item resides at
+                      - uuid: the uuid of the item
+                      - item_type: indicate type of item which attribute should
+                                   be changed
+                      - attr_name: name of attribute which should be changed
+                      - attr_value: value of attribute which should be changed
+
+        :return: a list of dicts where each entry has keys: domain, uuid,
+                 item_type, attr_name, attr_value
+        """
+        res_items = []
+        for it in items:
+            domain = it.get('domain')
+            item_type = it.get('item_type')
+            uuid = it.get('uuid')
+            attr_name = it.get('attr_name')
+            attr_value = it.get('attr_value')
+            # XXX: Add a '_0' suffix to keep old code from wetting its pants
+            path = "{}/{}/{}_0".format(self.root, domain, uuid)
+            query = """
+                xquery version "3.0";
+
+                let $doc := doc("{path}")/xml[@item_type="{item_type}"]
+                let $cond :=
+                    if (exists($doc/@{attr_name}))
+                    then update value $doc/@{attr_name} with "{attr_value}"
+                    else update insert attribute {attr_name} {{"{attr_value}"}}
+                         into $doc
+
+                return <doc uuid="{{$doc/@uuid}}"
+                        item_type="{{$doc/@item_type}}"
+                        attr_name="{attr_name}"
+                        attr_value="{{$doc/@{attr_name}}}"/>
+                    """.format(path=path, item_type=item_type,
+                               attr_name=attr_name, attr_value=attr_value)
+
+            try:
+                res = self.dbhandle.query(query)
+                root = res.results[0]
+                res_items.append({'domain': domain,
+                                  'uuid': root.attrib['uuid'],
+                                  'item_type': root.attrib['item_type'],
+                                  'attr_name': root.attrib['attr_name'],
+                                  'attr_value': root.attrib['attr_value']})
+            except ExistDBException as e:
+                raise("Failed updating attribute: {}".format(e))
+        return res_items
