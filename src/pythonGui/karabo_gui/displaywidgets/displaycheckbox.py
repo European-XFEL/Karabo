@@ -5,22 +5,6 @@
 #############################################################################
 
 
-"""This module contains a class which represents a widget plugin for attributes
-   and is created by the factory class DisplayWidget.
-   
-   Each plugin needs to implement the following interface:
-   
-   def getCategoryAliasClassName():
-       pass
-   
-    class Maker:
-        def make(self, **params):
-            return Attribute*(**params)
-"""
-
-__all__ = ["DisplayCheckBox"]
-
-
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 
@@ -33,19 +17,17 @@ from PyQt4.QtGui import QCheckBox
 class DisplayCheckBox(DisplayWidget):
     category = Bool
     alias = "Toggle Field"
+    priority = 10
 
-    
     def __init__(self, box, parent):
         super(DisplayCheckBox, self).__init__(box)
-        
+
         self.widget = QCheckBox(parent)
         self.widget.setEnabled(False)
-
 
     @property
     def value(self):
         return self.widget.checkState() == Qt.Checked
-
 
     def valueChanged(self, box, value, timestamp=None):
         with SignalBlocker(self.widget):
