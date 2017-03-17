@@ -343,27 +343,30 @@ class PythonDevice(NoFsm):
         # Register updateLatencies handler
         self._ss.registerPerformanceStatisticsHandler(self.updateLatencies)
 
+
+    def _finalizeInternalInitialization(self):
         # Start - after all settings/registrations done:
         # Communication (incl. system registration) starts and thus parallelism!
+        # This is done here and not yet in __init__ to be sure that inheriting
+        # devices can register in their __init__ after super(..).__init__(..)
         try:
             self._ss.start()
         except RuntimeError as e:
             raise RuntimeError("PythonDevice.__init__: "
                                "SignalSlotable Exception -- {0}".format(str(e)))
 
+        self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
+                      "on server '{0.serverid}'.".format(self))
+
         # Connect input channels
         self._ss.connectInputChannels()
+
+        self.startFsm()
 
         if self.get("useTimeserver"):
             self.log.DEBUG("Connecting to time server")
             self._ss.connect("Karabo_TimeServer", "signalTimeTick",
                              "", "slotTimeTick")
-
-    def _finalizeInternalInitialization(self):
-        self.startFsm()
-
-        self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
-                      "on server '{0.serverid}'.".format(self))
 
 
     @property
