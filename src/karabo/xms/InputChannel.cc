@@ -156,6 +156,7 @@ namespace karabo {
 
 
         std::map<std::string, karabo::util::Hash> InputChannel::getConnectedOutputChannels() {
+            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             return m_connectedOutputChannels;
         }
 
