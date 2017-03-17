@@ -306,7 +306,12 @@ class Manager(QObject):
 
     def handle_projectSaveItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
-        broadcast_event(KaraboEventSender.ProjectItemsSaved, 
+        broadcast_event(KaraboEventSender.ProjectItemsSaved,
+                        {'items': reply['items']})
+
+    def handle_projectUpdateAttribute(self, reply):
+        # ``reply`` is a Hash containing a list of item hashes
+        broadcast_event(KaraboEventSender.ProjectAttributeUpdated,
                         {'items': reply['items']})
 
     # ---------------------------------------------------------------------

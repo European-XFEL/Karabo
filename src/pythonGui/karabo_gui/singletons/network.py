@@ -438,6 +438,14 @@ class Network(QObject):
         h.set("items", items)
         self._tcpWriteHash(h)
 
+    def onProjectUpdateAttribute(self, project_manager, items):
+        h = Hash("type", "projectUpdateAttribute")
+        h.set("projectManager", project_manager)
+        # XXX: Don't leave token hardcoded!
+        h.set("token", "admin")
+        h.set("items", items)
+        self._tcpWriteHash(h)
+
     # ---------------------------------------------------------------------
     # Legacy Project Interface
 

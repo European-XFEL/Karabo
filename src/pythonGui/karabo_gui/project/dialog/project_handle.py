@@ -5,16 +5,19 @@
 #############################################################################
 
 from collections import OrderedDict, namedtuple
+from functools import partial
 from operator import attrgetter
 import os.path as op
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
-from PyQt4.QtGui import QDialog, QDialogButtonBox, QItemSelectionModel
+from PyQt4.QtGui import (
+    QAction, QCursor, QDialog, QDialogButtonBox, QItemSelectionModel, QMenu)
 
 from karabo_gui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
 )
+from karabo_gui.messagebox import MessageBox
 from karabo_gui.singletons.api import get_db_conn
 from karabo_gui.util import SignalBlocker
 
@@ -57,6 +60,9 @@ class ProjectHandleDialog(QDialog):
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
         self.twProjects.doubleClicked.connect(self.accept)
+        self.twProjects.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.twProjects.customContextMenuRequested.connect(
+            self._show_context_menu)
 
         # Domain combobox
         db_conn = get_db_conn()
@@ -85,6 +91,8 @@ class ProjectHandleDialog(QDialog):
             self.twProjects.model().add_project_manager_data(items)
         elif sender is KaraboEventSender.ProjectDomainsList:
             self._domains_updated(data.get('items', []))
+        elif sender is KaraboEventSender.ProjectAttributeUpdated:
+            self._is_trashed_updated(data.get('items', []))
         return False
 
     def _domains_updated(self, domains):
@@ -98,6 +106,17 @@ class ProjectHandleDialog(QDialog):
             # Make sure the signal is triggered when setting the index below
             self.cbDomain.setCurrentIndex(-1)
         self.cbDomain.setCurrentIndex(index if index > -1 else 0)
+
+    def _is_trashed_updated(self, items):
+        for it in items:
+            if (it.get('attr_name') != 'is_trashed'
+                    and it.get('item_type') != 'project'):
+                continue
+            if not it.get('success', True):
+                MessageBox.showError(it['reason'])
+                break
+            domain = it.get('domain')
+            self.on_cbDomain_currentIndexChanged(domain)
 
     def _set_dialog_texts(self, title, btn_text):
         """ This method sets the ``title`` and the ``btn_text`` of the ok
@@ -116,7 +135,7 @@ class ProjectHandleDialog(QDialog):
         uuid_index = get_column_index(UUID)
         uuid_entry = selection_model.selectedRows(uuid_index)
         if uuid_entry:
-            return self.cbDomain.currentText(), uuid_entry[0].data()
+            return self.domain, uuid_entry[0].data()
         return None, None
 
     @property
@@ -124,6 +143,10 @@ class ProjectHandleDialog(QDialog):
         rows = self.twProjects.selectionModel().selectedRows()
         if rows:
             return rows[0].data()
+
+    @property
+    def domain(self):
+        return self.cbDomain.currentText()
 
     @pyqtSlot(object, object)
     def _selectionChanged(self, selected, deselected):
@@ -157,7 +180,37 @@ class ProjectHandleDialog(QDialog):
     def on_cbShowTrash_toggled(self, is_checked):
         model = self.twProjects.model()
         model.show_trashed = is_checked
-        model.request_data(self.cbDomain.currentText())
+        model.request_data(self.domain)
+
+    @pyqtSlot()
+    def _show_context_menu(self):
+        """ Show a context menu for the currently selected project
+        """
+        selection_model = self.twProjects.selectionModel()
+        # Get all indexes for selected row (single selection)
+        indexes = selection_model.selectedIndexes()
+        if indexes:
+            uuid, is_trashed = indexes[get_column_index(UUID)].data(Qt.UserRole)
+            if is_trashed:
+                text = 'Restore from trash'
+            else:
+                text = 'Move to trash'
+            menu = QMenu(self)
+            trash_action = QAction(text, menu)
+            trash_action.triggered.connect(partial(self._update_is_trashed,
+                                                   self.domain, uuid,
+                                                   not is_trashed))
+            menu.addAction(trash_action)
+            menu.exec(QCursor.pos())
+
+    @pyqtSlot(str, str, bool)
+    def _update_is_trashed(self, domain, uuid, is_trashed):
+        """ Change ``is_trashed`` attribute of project with given ``uuid``
+        """
+        db_conn = get_db_conn()
+        db_conn.update_attribute(domain, 'project', uuid, 'is_trashed',
+                                 str(is_trashed).lower())
+        self.twProjects.model().request_data(domain)
 
 
 class NewProjectDialog(QDialog):
@@ -254,17 +307,19 @@ class TableModel(QAbstractTableModel):
                      - 'uuid' - The unique ID of the Project
                      - 'simple_name' - The name for displaying
                      - 'item_type' - Should be project in that case
+                     - 'is_trashed' - Flag if project is marked as trashed
         """
         # XXX: this only works if the sent list of uuids is complete
         self.beginResetModel()
         try:
             self.entries = []
             for it in data:
-                if (it.get('is_trashed') == 'true') != self.show_trashed:
+                is_trashed = (it.get('is_trashed') == 'true')
+                if is_trashed != self.show_trashed:
                     continue
                 entry = ProjectEntry(
                     simple_name=it.get('simple_name'),
-                    uuid=it.get('uuid'),
+                    uuid=(it.get('uuid'), is_trashed),
                     author='',
                     published='',
                     description='description',
@@ -298,10 +353,15 @@ class TableModel(QAbstractTableModel):
         if not index.isValid():
             return None
         entry = self.entries[index.row()]
+        column = index.column()
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
-            return entry[index.column()]
+            if column == get_column_index(UUID):
+                # Only display uuid here, ignore is_trashed
+                uuid, _ = entry[column]
+                return uuid
+            return entry[column]
         elif role == Qt.UserRole:
-            return entry[index.column()]
+            return entry[column]
         return None
 
     def headerData(self, section, orientation, role):
