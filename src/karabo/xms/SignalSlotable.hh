@@ -350,17 +350,13 @@ namespace karabo {
 
             /**
              * Connects an input channel to those as defined on the input channel's configuration.
-             * The function is synchronous and blocks until a connection is established.
+             * The function is asynchronous
              */
-            void connectInputChannel(const InputChannel::Pointer& channel, int trails = 8, int sleep = 1);
+            void connectInputChannel(const InputChannel::Pointer& channel, int trails = 8);
 
             // TODO This function seems to be called only internally, private candidate?
             void connectInputToOutputChannel(const InputChannel::Pointer& channel,
-                                             const std::string& outputChannelString, int trails = 8, int sleep = 1);
-
-            // TODO Not used see what will happen
-            void connectInputChannelAsync(const InputChannel::Pointer& channel,
-                                          const boost::function<void()>& handler);
+                                             const std::string& outputChannelString, int trails = 8);
 
             void connectInputChannels();
 
@@ -770,6 +766,12 @@ namespace karabo {
             // IO channel related
             void slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
 
+            void connectInputChannelHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
+                                            bool outChannelExists, const karabo::util::Hash& outChannelInfo);
+
+            void connectInputChannelTimeoutHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
+                                                   int trials, unsigned int nextTimeout);
+
             // Thread-safe, locks m_signalSlotInstancesMutex
             bool hasSlot(const std::string& unmangledSlotFunction) const;
 
@@ -803,11 +805,6 @@ namespace karabo {
                                               karabo::util::Hash::Pointer& body, int timeout);
 
             long long getEpochMillis() const;
-
-            void onInputChannelConnectInfo(const InputChannel::Pointer& channel,
-                                           const boost::function<void()>& handler,
-                                           const std::string& instanceId, const std::string& channelId,
-                                           bool channelExists, const karabo::util::Hash& info);
 
             bool tryToCallDirectly(const std::string& slotInstanceId,
                                    const karabo::util::Hash::Pointer& header,
