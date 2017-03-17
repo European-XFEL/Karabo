@@ -140,13 +140,14 @@ namespace karabo {
                 KARABO_SLOT(resetHardware);
             }
 
-            /* INIT, none, ACTIVE or UNKNOWN
-             * UNKNOWN, none, INIT
+            /* INIT, none, UNKNOWN
+             * UNKNOWN, connect, ACTIVE
              * ACTIVE, acquire, ACQUIRING
              * ACQUIRING, stop, ACTIVE
              * ACQUIRING, trigger, None
              * ACTIVE or ACQUIRING, errorFound, ERROR
              * ERROR, reset, ACTIVE
+             * ACTIVE or ACQUIRING or ERROR, disconnect, UNKNOWN
              */
 
             /**
