@@ -1,6 +1,6 @@
 # flake8: noqa
 from .bases import BaseProjectObjectModel
-from .cache import ProjectDBCache, get_user_cache
+from .cache import MemCacheWrapper, ProjectDBCache, get_user_cache
 from .const import (
     PROJECT_DB_TYPE_DEVICE_INSTANCE, PROJECT_DB_TYPE_DEVICE_CONFIG,
     PROJECT_DB_TYPE_DEVICE_SERVER, PROJECT_DB_TYPE_MACRO,
