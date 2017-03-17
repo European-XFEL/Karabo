@@ -54,8 +54,8 @@ class ProjectHandleDialog(QDialog):
         uic.loadUi(filepath, self)
 
         db_conn = get_db_conn()
-        self.rbFromRemote.setChecked(db_conn.ignore_cache)
-        self.rbFromRemote.setChecked(not db_conn.ignore_cache)
+        self.rbFromRemote.setChecked(db_conn.ignore_local_cache)
+        self.rbFromCache.setChecked(not db_conn.ignore_local_cache)
         self.load_from_group = QButtonGroup(self)
         self.load_from_group.addButton(self.rbFromRemote)
         self.load_from_group.addButton(self.rbFromCache)
@@ -186,13 +186,13 @@ class ProjectHandleDialog(QDialog):
     def on_cbDomain_currentIndexChanged(self, domain):
         if domain:
 
-            self.twProjects.model().request_data(domain)
+            self.twProjects.model().request_data(domain, self.ignore_cache)
 
     @pyqtSlot(bool)
     def on_cbShowTrash_toggled(self, is_checked):
         model = self.twProjects.model()
         model.show_trashed = is_checked
-        model.request_data(self.domain)
+        model.request_data(self.domain, self.ignore_cache)
 
     @pyqtSlot()
     def _show_context_menu(self):
@@ -202,7 +202,8 @@ class ProjectHandleDialog(QDialog):
         # Get all indexes for selected row (single selection)
         indexes = selection_model.selectedIndexes()
         if indexes:
-            uuid, is_trashed = indexes[get_column_index(UUID)].data(Qt.UserRole)
+            col_index = get_column_index(UUID)
+            uuid, is_trashed = indexes[col_index].data(Qt.UserRole)
             if is_trashed:
                 text = 'Restore from trash'
             else:
@@ -222,13 +223,13 @@ class ProjectHandleDialog(QDialog):
         db_conn = get_db_conn()
         db_conn.update_attribute(domain, 'project', uuid, 'is_trashed',
                                  str(is_trashed).lower())
-        self.twProjects.model().request_data(domain)
+        self.twProjects.model().request_data(domain, self.ignore_cache)
 
     @pyqtSlot(object)
     def _openFromChanged(self, button):
         # Update view
         self.twProjects.model().request_data(self.cbDomain.currentText(),
-                                             button == self.rbFromRemote)
+                                             self.ignore_cache)
 
 
 class NewProjectDialog(QDialog):
@@ -311,11 +312,12 @@ class TableModel(QAbstractTableModel):
         self.db_conn = get_db_conn()
         self.show_trashed = show_trashed
 
-    def request_data(self, domain):
+    def request_data(self, domain, ignore_cache):
         """Request data for the given ``domain``
         """
-        project_data = self.db_conn.get_available_project_data(
-            domain, 'project', self.db_conn.ignore_cache)
+        self.db_conn.ignore_local_cache = ignore_cache
+        project_data = self.db_conn.get_available_project_data(domain,
+                                                               'project')
         self.add_project_manager_data(project_data)
 
     def add_project_manager_data(self, data):

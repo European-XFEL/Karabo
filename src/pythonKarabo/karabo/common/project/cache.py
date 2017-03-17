@@ -73,16 +73,6 @@ class ProjectDBCache(object):
         with open(path, mode='r') as fp:
             return fp.read()
 
-    def remove(self, domain, uuid):
-        """ Remove an object from cache.
-        """
-        path = self._generate_filepath(domain, uuid)
-        if not op.exists(path):
-            return
-
-        # XXX TODO Recurse to remove all references
-        os.remove(path)
-
     def get_available_domains(self):
         """ Return a list of strings including available domains
         """
