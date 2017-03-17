@@ -8,7 +8,8 @@ import os.path as op
 from PyQt4.QtCore import QObject
 
 from karabo.common.api import ShellNamespaceWrapper
-from karabo.common.project.api import get_user_cache, read_lazy_object
+from karabo.common.project.api import (
+    MemCacheWrapper, get_user_cache, read_lazy_object)
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
@@ -26,6 +27,30 @@ MAX_BUFFER_ITEMS = 50
 class ProjectDatabaseConnection(QObject):
     """ An object which handles requests/replies from the GUI server which
     pertain to project data.
+
+    NOTE: Concerning the Cache
+    The cache is fundamental to the operation of this database connection. Due
+    to the asynchronous nature of reading project data, a cache was
+    incorporated to "smooth" things out a bit. In the end, this means that data
+    is always delivered to deserialization code from the cache. Structuring
+    things this way is a bit complex, but it enables recursively reading
+    (with `read_lazy_object`) a project where at any point you might read
+    data which is not locally available.
+
+    Just to be clear, the way this works is:
+        * An empty object is created with a valid UUID
+        * An attempt is made to initialize that object with `read_lazy_object`,
+          which is passed a "storage" object which can be a `ProjectDBCache`,
+          or an instance of this connection class, or a `MemCacheWrapper` which
+          forwards misses to some other storage object.
+        * Data which is not immediately available in the storage object is
+          requested from the network.
+        * Sometime later, data is received asynchronously and written to either
+          a memory or disk cache.
+        * Objects for which data arrived are read again using
+          `read_lazy_object` and this time more of the reads succeed, but yet
+          more reads might be generated as well for children of the objects
+          which were deserialized.
     """
 
     def __init__(self, parent=None):
@@ -158,6 +183,8 @@ class ProjectDatabaseConnection(QObject):
     def _items_loaded(self, items, success):
         """ A bunch of data just arrived from the network.
         """
+        # To be passed to _pop_reading
+        storage = self
         if success:
             # Cache everything locally first only if loading from DB successful
             for item in items:
@@ -165,12 +192,13 @@ class ProjectDatabaseConnection(QObject):
                 uuid = item['uuid']
                 data = item['xml']
                 self.cache.store(domain, uuid, data)
+            storage = self._build_memcache(items)
 
         # Then go back through and load any waiting objects
         for item in items:
             domain = item['domain']
             uuid = item['uuid']
-            self._pop_reading(domain, uuid, success)
+            self._pop_reading(domain, uuid, success, storage)
 
         # Make a single request to the GUI server
         self.flush()
@@ -188,6 +216,13 @@ class ProjectDatabaseConnection(QObject):
 
     # -------------------------------------------------------------------
     # private interface
+
+    def _build_memcache(self, items):
+        data = {}
+        for item in items:
+            domain_data = data.setdefault(item['domain'], {})
+            domain_data[item['uuid']] = item['xml']
+        return MemCacheWrapper(data, self)
 
     def _ensure_login(self):
         if not self._have_logged_in:
@@ -231,7 +266,7 @@ class ProjectDatabaseConnection(QObject):
 
         self._broadcast_is_processing(is_processing)
 
-    def _pop_reading(self, domain, uuid, success):
+    def _pop_reading(self, domain, uuid, success, storage):
         # Store previous processing state
         is_processing = self.is_processing()
 
@@ -239,7 +274,7 @@ class ProjectDatabaseConnection(QObject):
             obj = self._waiting_for_read.pop(uuid)
             if success:
                 # Only try to read if reading from DB was successful
-                read_lazy_object(domain, uuid, self, read_project_model,
+                read_lazy_object(domain, uuid, storage, read_project_model,
                                  existing=obj)
 
         self._broadcast_is_processing(is_processing)

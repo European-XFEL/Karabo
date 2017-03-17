@@ -9,6 +9,35 @@ from sys import platform
 from xml.etree.ElementTree import fromstring
 
 
+class MemCacheWrapper(object):
+    """In-memory storage for project objects which forwards to another object
+    on cache misses.
+    """
+    def __init__(self, data, miss_handler):
+        self._data = data
+        self._miss_handler = miss_handler
+
+    def flush(self):
+        """Satisfy the project storage interface."""
+
+    def store(self, domain, uuid, data):
+        """Satisfy the project storage interface."""
+        domain_data = self._data.setdefault(domain, {})
+        domain_data[uuid] = data
+
+    def retrieve(self, domain, uuid, existing=None):
+        """Read an object."""
+        domain_data = self._data.get(domain)
+        if domain_data is None:
+            return self._miss_handler.retrieve(domain, uuid, existing=existing)
+
+        data = domain_data.get(uuid)
+        if data is None:
+            return self._miss_handler.retrieve(domain, uuid, existing=existing)
+
+        return data
+
+
 class ProjectDBCache(object):
     """ Local storage for project objects retrieved from the project database.
     """
