@@ -68,10 +68,10 @@ class ProjectDatabaseConnection(QObject):
         self._read_items_buffer = []
         self._write_items_buffer = []
 
-        # XXX: Temporary
-        self.project_manager = 'KaraboProjectDB'
-
+        self.project_manager = 'KaraboProjectDB'  # XXX: Temporary
         self.default_domain = self.load_default_domain()
+
+        self._ignore_cache = True
 
         # XXX: This is really asinine right now!
         self._have_logged_in = False
@@ -121,11 +121,36 @@ class ProjectDatabaseConnection(QObject):
         # XXX: Please don't keep this here!
         self._ensure_login()
 
-        # Fire and "forget". An event will be broadcast with the reply
-        self.network.onProjectListItems(self.project_manager, domain,
-                                        obj_type)
+        if self._ignore_cache:
+            # Fire and "forget". An event will be broadcast with the reply
+            self.network.onProjectListItems(self.project_manager, domain,
+                                            obj_type)
+            return []
+
         # Call locally only if necessary
         return self.cache.get_available_project_data(domain, obj_type)
+
+    def retrieve(self, domain, uuid, existing=None):
+        """Read an object from the database.
+        """
+        # XXX: Please don't keep this here!
+        self._ensure_login()
+
+        data = None
+        if not self._ignore_cache:
+            data = self.cache.retrieve(domain, uuid, existing=existing)
+
+        if data is None:
+            self._push_reading(domain, uuid, existing)
+        return data
+
+    def store(self, domain, uuid, obj):
+        """Write an object to the database
+        """
+        # XXX: Please don't keep this here!
+        self._ensure_login()
+
+        self._push_writing(domain, uuid, obj)
 
     def update_attribute(self, domain, item_type, uuid, attr_name, attr_value):
         """ Update any attribute of the of the object
@@ -138,29 +163,13 @@ class ProjectDatabaseConnection(QObject):
         # XXX: TODO send project items
         self.network.onProjectUpdateAttribute(self.project_manager, [item])
 
-    def remove_from_cache(self, domain, uuid):
-        """Remove a file from the cache
-        """
-        self.cache.remove(domain, uuid)
+    @property
+    def ignore_local_cache(self):
+        return self._ignore_cache
 
-    def retrieve(self, domain, uuid, existing=None):
-        """Read an object from the database.
-        """
-        # XXX: Please don't keep this here!
-        self._ensure_login()
-
-        data = self.cache.retrieve(domain, uuid, existing=existing)
-        if data is None:
-            self._push_reading(domain, uuid, existing)
-        return data
-
-    def store(self, domain, uuid, obj):
-        """Write an object to the database
-        """
-        # XXX: Please don't keep this here!
-        self._ensure_login()
-
-        self._push_writing(domain, uuid, obj)
+    @ignore_local_cache.setter
+    def ignore_local_cache(self, value):
+        self._ignore_cache = value
 
     def is_reading(self):
         return len(self._waiting_for_read) > 0

@@ -172,6 +172,7 @@ def test_inmemory_cache():
     project = convert_old_project(old_project)
     with _project_storage() as storage:
         memcache = MemCacheWrapper(cache_data, storage)
+        _write_project(project, storage)
         _write_project(project, memcache)
 
         # remove one item (exercises more branches in MemCacheWrapper)
@@ -180,6 +181,8 @@ def test_inmemory_cache():
         rt_project = ProjectModel(uuid=project.uuid)
         read_lazy_object(TEST_DOMAIN, project.uuid, memcache,
                          read_project_model, existing=rt_project)
+
+    _compare_projects(project, rt_project)
 
 
 def test_empty_inmemory_cache():
@@ -191,6 +194,8 @@ def test_empty_inmemory_cache():
         rt_project = ProjectModel(uuid=project.uuid)
         read_lazy_object(TEST_DOMAIN, project.uuid, memcache,
                          read_project_model, existing=rt_project)
+
+    _compare_projects(project, rt_project)
 
 
 def test_uninitialized_save():
