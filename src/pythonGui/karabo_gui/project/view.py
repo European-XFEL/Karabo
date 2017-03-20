@@ -114,7 +114,8 @@ class ProjectView(QTreeView):
                                                         project_model))
                 save_action = QAction('Save', menu)
                 save_action.triggered.connect(partial(save_object,
-                                                      project_model))
+                                                      project_model,
+                                                      domain=None))
                 save_as_action = QAction('Save as...', menu)
                 save_as_action.triggered.connect(partial(save_as_object,
                                                          project_model))
