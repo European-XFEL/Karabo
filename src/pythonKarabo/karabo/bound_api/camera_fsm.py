@@ -1,6 +1,3 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
-
 __author__="andrea.parenti@xfel.eu"
 __date__ ="August  7, 2013"
 
@@ -31,44 +28,44 @@ class CameraFsm(base.BaseFsm):
     respond to triggers anymore. Finally, reset is used to bring the camera
     back into an active state after hardware errors have occured.
     """
-    
+
     @staticmethod
     def expectedParameters(expected):
         (
-        SLOT_ELEMENT(expected).key("connectCamera")
-        .displayedName("Connect")
-        .description("Connects to the hardware")
-            .allowedStates(State.UNKNOWN)
-        .commit()
-        ,
-        SLOT_ELEMENT(expected).key("acquire")
-        .displayedName("Acquire")
-        .description("Instructs camera to go into acquisition state")
-        .allowedStates(State.ACTIVE)
-        .commit()
-        ,
-        SLOT_ELEMENT(expected).key("trigger")
-        .displayedName("Trigger")
-        .description("Sends a software trigger to the camera")
-        .allowedStates(State.ACQUIRING)
-        .commit()
-        ,
-        SLOT_ELEMENT(expected).key("stop")
-        .displayedName("Stop")
-        .description("Instructs camera to stop current acquisition")
-        .allowedStates(State.ACQUIRING)
-        .commit()
-        ,
-        SLOT_ELEMENT(expected).key("reset")
-        .displayedName("Reset")
-        .description("Resets the camera in case of an error")
-        .allowedStates(State.ERROR)
-        .commit()
+            SLOT_ELEMENT(expected).key("connectCamera")
+                .displayedName("Connect")
+                .description("Connects to the hardware")
+                .allowedStates(State.UNKNOWN)
+                .commit(),
+
+            SLOT_ELEMENT(expected).key("acquire")
+                .displayedName("Acquire")
+                .description("Instructs camera to go into acquisition state")
+                .allowedStates(State.ACTIVE)
+                .commit(),
+
+            SLOT_ELEMENT(expected).key("trigger")
+                .displayedName("Trigger")
+                .description("Sends a software trigger to the camera")
+                .allowedStates(State.ACQUIRING)
+                .commit(),
+
+            SLOT_ELEMENT(expected).key("stop")
+                .displayedName("Stop")
+                .description("Instructs camera to stop current acquisition")
+                .allowedStates(State.ACQUIRING)
+                .commit(),
+
+            SLOT_ELEMENT(expected).key("reset")
+                .displayedName("Reset")
+                .description("Resets the camera in case of an error")
+                .allowedStates(State.ERROR)
+                .commit()
         )
-    
+
     def __init__(self, configuration):
         super(CameraFsm, self).__init__(configuration)
-        
+
         #**************************************************************
         #*                        Events                              *
         #**************************************************************
@@ -88,7 +85,7 @@ class CameraFsm(base.BaseFsm):
         KARABO_FSM_STATE_EE(State.UNKNOWN, self.unknownStateOnEntry, self.unknownStateOnExit)
         KARABO_FSM_STATE_EE(State.ACQUIRING, self.acquisitionStateOnEntry, self.acquisitionStateOnExit)
         KARABO_FSM_STATE_EE(State.ACTIVE, self.readyStateOnEntry, self.readyStateOnExit)
-        
+
         #**************************************************************
         #*                    Transition Actions                      *
         #**************************************************************
@@ -102,7 +99,7 @@ class CameraFsm(base.BaseFsm):
         KARABO_FSM_ACTION0('TriggerAction',  self.triggerAction)
 
         KARABO_FSM_GUARD0('ConnectGuard', self.connectGuard)
-        
+
         #**************************************************************
         #*                       Ok State Machine                     *
         #**************************************************************
@@ -138,10 +135,10 @@ class CameraFsm(base.BaseFsm):
         #                         Name      Transition-Table  Initial-State
         KARABO_FSM_STATE_MACHINE('CameraMachine', cameraStt, State.INIT)
         self.fsm = KARABO_FSM_CREATE_MACHINE('CameraMachine')
-        
+
     def getFsm(self):
         return self.fsm
-    
+
     def initFsmSlots(self, sigslot):
         sigslot.registerSlot(self.connectCamera)
         sigslot.registerSlot(self.acquire)
@@ -149,34 +146,34 @@ class CameraFsm(base.BaseFsm):
         sigslot.registerSlot(self.stop)
         sigslot.registerSlot(self.reset)
         sigslot.registerSlot(self.errorFound)
-        
+
     def initializationStateOnEntry(self):
         """Actions executed on entry to 'Initialization' state"""
-        
+
     def initializationStateOnExit(self):
         """Actions executed on exit from 'Initialization' state"""
 
     def unknownStateOnEntry(self):
         """Actions executed on entry to 'Initialization' state"""
-        
+
     def unknownStateOnExit(self):
         """Actions executed on exit from 'Initialization' state"""
 
     def errorStateOnEntry(self):
         """Actions executed on entry to 'Error' state"""
-        
+
     def errorStateOnExit(self):
         """Actions executed on exit from 'Error' state"""
-        
+
     def acquisitionStateOnEntry(self):
         """Actions executed on entry to 'Acquisition' state"""
-        
+
     def acquisitionStateOnExit(self):
         """Actions executed on exit from 'Acquisition' state"""
-        
+
     def readyStateOnEntry(self):
         """Actions executed on entry to 'Ready' state"""
-        
+
     def readyStateOnExit(self):
         """Actions executed on exit from 'Ready' state"""
 
@@ -188,10 +185,10 @@ class CameraFsm(base.BaseFsm):
 
     def acquireAction(self):
         """Actions executed at 'acquire' event"""
-        
+
     def stopAction(self):
         """Actions executed at 'stop' event"""
-        
+
     def triggerAction(self):
         """Actions executed at 'trigger' event"""
 
