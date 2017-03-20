@@ -10,6 +10,7 @@ from .decorators import KARABO_CLASSINFO
 from .fsm import (
     KARABO_FSM_EVENT0, KARABO_FSM_EVENT2,
     KARABO_FSM_ACTION0, KARABO_FSM_ACTION2,
+    KARABO_FSM_GUARD0,
     KARABO_FSM_STATE_EE, KARABO_FSM_STATE_MACHINE,
     KARABO_FSM_CREATE_MACHINE)
 
@@ -34,6 +35,12 @@ class CameraFsm(base.BaseFsm):
     @staticmethod
     def expectedParameters(expected):
         (
+        SLOT_ELEMENT(expected).key("connectCamera")
+        .displayedName("Connect")
+        .description("Connects to the hardware")
+            .allowedStates(State.UNKNOWN)
+        .commit()
+        ,
         SLOT_ELEMENT(expected).key("acquire")
         .displayedName("Acquire")
         .description("Instructs camera to go into acquisition state")
@@ -66,6 +73,8 @@ class CameraFsm(base.BaseFsm):
         #*                        Events                              *
         #**************************************************************
         KARABO_FSM_EVENT2(self, 'ErrorFoundEvent', 'errorFound')
+        KARABO_FSM_EVENT0(self, 'ConnectEvent',    'connectCamera')
+        KARABO_FSM_EVENT0(self, 'DisconnectEvent', 'disconnectCamera')
         KARABO_FSM_EVENT0(self, 'ResetEvent',      'reset')
         KARABO_FSM_EVENT0(self, 'AcquireEvent',    'acquire')
         KARABO_FSM_EVENT0(self, 'StopEvent',       'stop')
@@ -76,6 +85,7 @@ class CameraFsm(base.BaseFsm):
         #**************************************************************
         KARABO_FSM_STATE_EE(State.ERROR, self.errorStateOnEntry, self.errorStateOnExit)
         KARABO_FSM_STATE_EE(State.INIT, self.initializationStateOnEntry, self.initializationStateOnExit)
+        KARABO_FSM_STATE_EE(State.UNKNOWN, self.unknownStateOnEntry, self.unknownStateOnExit)
         KARABO_FSM_STATE_EE(State.ACQUIRING, self.acquisitionStateOnEntry, self.acquisitionStateOnExit)
         KARABO_FSM_STATE_EE(State.ACTIVE, self.readyStateOnEntry, self.readyStateOnExit)
         
@@ -84,10 +94,14 @@ class CameraFsm(base.BaseFsm):
         #**************************************************************
         #KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)    
         KARABO_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
+        KARABO_FSM_ACTION0('ConnectAction', self.connectAction)
+        KARABO_FSM_ACTION0('DisconnectAction', self.disconnectAction)
         KARABO_FSM_ACTION0('ResetAction', self.resetAction)
         KARABO_FSM_ACTION0('AcquireAction', self.acquireAction)
         KARABO_FSM_ACTION0('StopAction',  self.stopAction)
         KARABO_FSM_ACTION0('TriggerAction',  self.triggerAction)
+
+        KARABO_FSM_GUARD0('ConnectGuard', self.connectGuard)
         
         #**************************************************************
         #*                       Ok State Machine                     *
@@ -100,15 +114,26 @@ class CameraFsm(base.BaseFsm):
         ]
         #                        Name  Transition-Table  Initial-State
         KARABO_FSM_STATE_MACHINE(State.NORMAL, okStt, State.ACTIVE)
-        
+
+        #**************************************************************
+        #*                      Known Machine                         *
+        #**************************************************************
+        knownStt=[
+        # Source-State   Event             Target-State   Action              Guard
+        (State.NORMAL,  'ErrorFoundEvent', State.ERROR,   'ErrorFoundAction', 'none'),
+        (State.ERROR,   'ResetEvent',      State.NORMAL,  'none',             'none')
+        ]
+        #                         Name      Transition-Table  Initial-State
+        KARABO_FSM_STATE_MACHINE(State.KNOWN, knownStt, State.NORMAL)
+
         #**************************************************************
         #*                       Top Machine                          *
         #**************************************************************
         cameraStt=[
-        # Source-State   Event             Target-State   Action              Guard
-        (State.INIT,    'none',            State.NORMAL,  'none',             'none'),
-        (State.NORMAL,  'ErrorFoundEvent', State.ERROR,   'ErrorFoundAction', 'none'),
-        (State.ERROR,   'ResetEvent',      State.NORMAL,  'none',             'none')
+        # Source-State   Event             Target-State   Action               Guard
+        (State.INIT,    'none',            State.UNKNOWN, 'none',             'none'),
+        (State.UNKNOWN, 'ConnectEvent',    State.KNOWN,   'ConnectAction',    'ConnectGuard'),
+        (State.KNOWN,   'DisconnectEvent', State.UNKNOWN, 'DisconnectAction', 'none')
         ]
         #                         Name      Transition-Table  Initial-State
         KARABO_FSM_STATE_MACHINE('CameraMachine', cameraStt, State.INIT)
@@ -118,6 +143,7 @@ class CameraFsm(base.BaseFsm):
         return self.fsm
     
     def initFsmSlots(self, sigslot):
+        sigslot.registerSlot(self.connectCamera)
         sigslot.registerSlot(self.acquire)
         sigslot.registerSlot(self.trigger)
         sigslot.registerSlot(self.stop)
@@ -129,7 +155,13 @@ class CameraFsm(base.BaseFsm):
         
     def initializationStateOnExit(self):
         """Actions executed on exit from 'Initialization' state"""
+
+    def unknownStateOnEntry(self):
+        """Actions executed on entry to 'Initialization' state"""
         
+    def unknownStateOnExit(self):
+        """Actions executed on exit from 'Initialization' state"""
+
     def errorStateOnEntry(self):
         """Actions executed on entry to 'Error' state"""
         
@@ -147,7 +179,13 @@ class CameraFsm(base.BaseFsm):
         
     def readyStateOnExit(self):
         """Actions executed on exit from 'Ready' state"""
-        
+
+    def connectAction(self):
+        """Actions executed at 'connect' event"""
+
+    def disconnectAction(self):
+        """Actions executed at 'disconnect' event"""
+
     def acquireAction(self):
         """Actions executed at 'acquire' event"""
         
@@ -159,3 +197,6 @@ class CameraFsm(base.BaseFsm):
 
     def resetAction(self):
         """Action to execute upon reset event"""
+
+    def connectGuard(self):
+        """Guard for UNKNOWN -> KNOWN transition"""
