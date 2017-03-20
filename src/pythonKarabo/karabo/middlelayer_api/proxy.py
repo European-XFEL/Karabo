@@ -15,7 +15,7 @@ from .weak import Weak
 class ProxyBase(object):
     """The base for proxies to a Karabo device
 
-    The :class:`ProxyFactory` will create a child of this class and add
+    The :class:`ProxyFactory` will subclass this class and add
     the necessary descriptors.
     """
     _parent = Weak()
