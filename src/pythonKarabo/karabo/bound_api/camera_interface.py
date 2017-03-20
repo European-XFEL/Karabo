@@ -150,7 +150,13 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
         """
         This method is called when 'startFsm()' function is called.
         """
-    
+
+    @abstractmethod
+    def connectCamera(self):
+        """
+        The method is called as a result of processing "connect" Event.
+        """
+
     @abstractmethod
     def acquire(self):
         """
