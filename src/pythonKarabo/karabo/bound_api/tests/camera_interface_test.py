@@ -14,6 +14,9 @@ class CameraUser(CameraInterface):
     def initialize(self):
         pass
 
+    def connectCamera(self):
+        pass
+
     def acquire(self):
         pass
 
