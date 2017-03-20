@@ -1,9 +1,7 @@
 from unittest import TestCase, main
-from subprocess import PIPE, Popen
-import sys
 
-from karabo.middlelayer import (decodeBinary, Hash, isSet, Proxy, ProxyNode,
-                                ProxySlot, Schema, State, SubProxy, Unit)
+from karabo.middlelayer import (Hash, isSet, Proxy, ProxyNode,
+                                ProxySlot, Schema, State, SubProxy, Unit, unit)
 from karabo.middlelayer_api.enums import NodeType
 from karabo.middlelayer_api.proxy import ProxyFactory
 
@@ -14,35 +12,21 @@ class Tests(TestCase):
             class Proxy(Proxy):
                 def setValue(self, desc, value):
                     calls.append((desc, value))
-        h = Hash("node", Hash("b", None), "a", None)
+        h = Hash("node", Hash("b", None), "a", None, "setA", None)
         h["node", "nodeType"] = NodeType.Node.value
         h["node.b", "nodeType"] = NodeType.Leaf.value
         h["node.b", "valueType"] = "STRING"
         h["a", "nodeType"] = NodeType.Leaf.value
         h["a", "valueType"] = "INT32"
+        h["a", "description"] = "a's description"
+        h["a", "allowedStates"] = ["INIT", "UNKNOWN"]
+        h["a", "unitSymbol"] = "A"
+        h["a", "defaultValue"] = 22.5
+        h["setA", "nodeType"] = NodeType.Node.value
+        h["setA", "displayType"] = "Slot"
         schema = Schema("test", hash=h)
         cls = TestFactory.createProxy(schema)
 
-        proxy = cls()
-        calls = []
-        self.assertFalse(isSet(proxy.a))
-        proxy.a = 5
-        self.assertEqual(calls, [(cls.a, 5)])
-        self.assertFalse(isSet(proxy.a))
-
-        calls = []
-        self.assertFalse(isSet(proxy.node.b))
-        proxy.node.b = "hallo"
-        self.assertEqual(calls, [(cls.node.cls.b, "hallo")])
-        self.assertFalse(isSet(proxy.node.b))
-
-    def test_bound(self):
-        process = Popen([sys.executable, "-m", "karabo.bound_api.launcher",
-                         "schema", "karabo.bound_device_test", "TestDevice"],
-                        stdout=PIPE)
-        stdout, stderr = process.communicate()
-        schema = decodeBinary(stdout)
-        cls = ProxyFactory.createProxy(schema["TestDevice"])
         self.assertLess({"a", "node", "setA"}, set(dir(cls)))
         self.assertIsInstance(cls.node, ProxyNode)
         self.assertTrue(issubclass(cls.node.cls, SubProxy))
@@ -63,6 +47,19 @@ class Tests(TestCase):
         self.assertFalse(isSet(obj.a))
         self.assertIs(obj.a.descriptor, cls.a)
         self.assertFalse(isSet(obj.node.b))
+
+        proxy = cls()
+        calls = []
+        self.assertFalse(isSet(proxy.a))
+        proxy.a = 5
+        self.assertEqual(calls, [(cls.a, 5 * unit.ampere)])
+        self.assertFalse(isSet(proxy.a))
+
+        calls = []
+        self.assertFalse(isSet(proxy.node.b))
+        proxy.node.b = "hallo"
+        self.assertEqual(calls, [(cls.node.cls.b, "hallo")])
+        self.assertFalse(isSet(proxy.node.b))
 
 
 if __name__ == "__main__":
