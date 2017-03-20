@@ -2,12 +2,40 @@ from unittest import TestCase, main
 from subprocess import PIPE, Popen
 import sys
 
-from karabo.middlelayer import (decodeBinary, isSet, ProxyNode, ProxySlot,
-                                State, SubProxy, Unit)
+from karabo.middlelayer import (decodeBinary, Hash, isSet, Proxy, ProxyNode,
+                                ProxySlot, Schema, State, SubProxy, Unit)
+from karabo.middlelayer_api.enums import NodeType
 from karabo.middlelayer_api.proxy import ProxyFactory
 
 
 class Tests(TestCase):
+    def test_setvalue(self):
+        class TestFactory(ProxyFactory):
+            class Proxy(Proxy):
+                def setValue(self, desc, value):
+                    calls.append((desc, value))
+        h = Hash("node", Hash("b", None), "a", None)
+        h["node", "nodeType"] = NodeType.Node.value
+        h["node.b", "nodeType"] = NodeType.Leaf.value
+        h["node.b", "valueType"] = "STRING"
+        h["a", "nodeType"] = NodeType.Leaf.value
+        h["a", "valueType"] = "INT32"
+        schema = Schema("test", hash=h)
+        cls = TestFactory.createProxy(schema)
+
+        proxy = cls()
+        calls = []
+        self.assertFalse(isSet(proxy.a))
+        proxy.a = 5
+        self.assertEqual(calls, [(cls.a, 5)])
+        self.assertFalse(isSet(proxy.a))
+
+        calls = []
+        self.assertFalse(isSet(proxy.node.b))
+        proxy.node.b = "hallo"
+        self.assertEqual(calls, [(cls.node.cls.b, "hallo")])
+        self.assertFalse(isSet(proxy.node.b))
+
     def test_bound(self):
         process = Popen([sys.executable, "-m", "karabo.bound_api.launcher",
                          "schema", "karabo.bound_device_test", "TestDevice"],
