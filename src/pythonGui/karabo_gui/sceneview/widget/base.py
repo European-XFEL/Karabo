@@ -106,6 +106,14 @@ class BaseWidgetContainer(QWidget):
         """Update the alarm symbol with a pixmap matching the given
         ``alarm_type``
         """
+        # Check whether device_id is related to these boxes
+        for b in self.boxes:
+            conf_dev_id = b.configuration.id
+            if b.configuration.id == device_id:
+                break
+        else:
+            return
+
         pixmap = get_alarm_pixmap(alarm_type)
         if pixmap is not None:
             self.alarm_symbol.setPixmap(pixmap)
