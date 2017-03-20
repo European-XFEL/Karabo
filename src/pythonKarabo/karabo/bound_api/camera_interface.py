@@ -24,6 +24,12 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .setNewDefaultValue(State.INIT)
                 .commit(),
 
+        SLOT_ELEMENT(expected).key("connectCamera")
+                .displayedName("Connect")
+                .description("Connects to the hardware")
+                .allowedStates(State.UNKNOWN)
+                .commit(),
+
         SLOT_ELEMENT(expected).key("acquire")
                 .displayedName("Acquire")
                 .description("Instructs camera to go into acquisition state")
@@ -133,6 +139,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
 
     def initFsmSlots(self, sigslot):
         #sigslot.setNumberOfThreads(1)
+        sigslot.registerSlot(self.connectCamera)
         sigslot.registerSlot(self.acquire)
         sigslot.registerSlot(self.trigger)
         sigslot.registerSlot(self.stop)

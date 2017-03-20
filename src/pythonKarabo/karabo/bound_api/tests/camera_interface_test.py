@@ -51,6 +51,7 @@ class Camera_interface_TestCase(unittest.TestCase):
         self.assertTrue('ERROR' in states)
         self.assertTrue('ACQUIRING' in states)
         self.assertTrue('ACTIVE' in states)
+        self.assertTrue(expected.has('connectCamera'))
         self.assertTrue(expected.has('acquire'))
         self.assertTrue(expected.has('trigger'))
         self.assertTrue(expected.has('stop'))

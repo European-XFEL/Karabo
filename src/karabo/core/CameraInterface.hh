@@ -34,6 +34,12 @@ namespace karabo {
                         .setNewDefaultValue(State::INIT)
                         .commit();
 
+                SLOT_ELEMENT(expected).key("connectCamera")
+                        .displayedName("Connect")
+                        .description("Connects to the hardware")
+                        .allowedStates(State::UNKNOWN)
+                        .commit();
+
                 SLOT_ELEMENT(expected).key("acquire")
                         .displayedName("Acquire")
                         .description("Instructs camera to go into acquisition state")
@@ -134,6 +140,7 @@ namespace karabo {
             }
 
             void initFsmSlots() {
+                KARABO_SLOT(connectCamera);
                 KARABO_SLOT(acquire);
                 KARABO_SLOT(trigger);
                 KARABO_SLOT(stop);
@@ -155,6 +162,10 @@ namespace karabo {
              */
             virtual void resetHardware() = 0;
 
+            /**
+             * Should end in State::ACTIVE
+             */
+            virtual void connectCamera() = 0;
 
             /**
              * Should end in State::ACQUIRING
