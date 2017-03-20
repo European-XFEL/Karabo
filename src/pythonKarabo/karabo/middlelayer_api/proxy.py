@@ -13,6 +13,16 @@ from .weak import Weak
 
 
 class ProxyBase(object):
+    """The base for proxies to a Karabo device
+
+    The :class:`ProxyFactory` will create a child of this class and add
+    the necessary descriptors.
+    """
+    _parent = Weak()
+
+    def __init__(self):
+        self._parent = self
+
     @classmethod
     def __dir__(cls):
         return cls._allattrs
@@ -21,12 +31,24 @@ class ProxyBase(object):
         pass
 
 
-class ProxySlotBase(Slot):
-    pass
+class ProxyDescriptor(Descriptor):
+    """A descriptor in a Proxy
+
+    All descriptors in Proxies know where they are in the hierarchy,
+    their attribute `longkey` contains the full name.
+    """
+    def __init__(self, *, longkey, **kwargs):
+        super().__init__(**kwargs)
+        self.longkey = longkey
 
 
-class ProxyNodeBase(Descriptor):
-    def __init__(self, cls, **kwargs):
+class ProxyNodeBase(ProxyDescriptor):
+    """The base class for all nodes in a Proxy
+
+    This is the :class:`Descriptor` for a node in the class. The actual
+    data's base class is :class:`SubProxyBase`.
+    """
+    def __init__(self, *, cls, **kwargs):
         super().__init__(**kwargs)
         self.cls = cls
 
@@ -45,7 +67,13 @@ class ProxyNodeBase(Descriptor):
         return sub
 
 
+class ProxySlotBase(Slot, ProxyDescriptor):
+    """The base class for Slots in proxies"""
+    pass
+
+
 class SubProxyBase(object):
+    """The base class for nodes in a Proxy"""
     _parent = Weak()
 
     @classmethod
@@ -99,13 +127,12 @@ class ProxyFactory(object):
                 namespace[k] = descriptor
             elif nodeType is NodeType.Node:
                 if a.get("displayType") == "Slot":
-                    namespace[k] = cls.ProxySlot()
+                    namespace[k] = cls.ProxySlot(key=k, longkey=prefix + k)
                 else:
                     sub = cls.createNamespace(v, "{}{}.".format(prefix, k))
                     Cls = type(k, (cls.SubProxy,), sub)
-                    namespace[k] = cls.ProxyNode(Cls, strict=False, **a)
-                namespace[k].key = k
-                namespace[k].longkey = prefix + k
+                    namespace[k] = cls.ProxyNode(key=k, longkey=prefix + k,
+                                                 cls=Cls, strict=False, **a)
         namespace["_allattrs"] = list(schema)
         return namespace
 
@@ -160,9 +187,8 @@ class DeviceClientProxyFactory(ProxyFactory):
             with getDevice("someDevice") as device:
                 print(device.speed)
         """
-        _parent = Weak()
-
         def __init__(self, device, deviceId, sync):
+            super().__init__()
             self._device = device
             self._queues = defaultdict(WeakSet)
             self._deviceId = deviceId
@@ -173,7 +199,6 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._running_tasks = set()
             self._last_update_task = None
             self._schemaUpdateConnected = False
-            self._parent = self
 
         def _onChanged_r(self, hash, instance, parent):
             """the recursive part of _onChanged"""
