@@ -21,6 +21,7 @@ class ProxyBase(object):
     _parent = Weak()
 
     def __init__(self):
+        super().__init__()
         self._parent = self
 
     @classmethod
