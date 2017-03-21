@@ -138,7 +138,8 @@ class ProxyFactory(object):
                 namespace[k] = descriptor
             elif nodeType is NodeType.Node:
                 if a.get("displayType") == "Slot":
-                    namespace[k] = cls.ProxySlot(key=k, longkey=prefix + k)
+                    namespace[k] = cls.ProxySlot(key=k, longkey=prefix + k,
+                                                 strict=False, **a)
                 else:
                     sub = cls.createNamespace(v, "{}{}.".format(prefix, k))
                     Cls = type(k, (cls.SubProxy,), sub)
