@@ -543,8 +543,6 @@ namespace karabo {
 
             void slotLoggerMap(const karabo::util::Hash& loggerMap);
 
-            void onInputChannelConnected(const karabo::xms::InputChannel::Pointer& input, const karabo::net::Channel::Pointer& channel, const std::string& channelName);
-
             /**
              * Called from instanceNewHandler to handle schema attribute updates which
              * were received at initialization time. The slotUpdateSchemaAttributes slot
