@@ -20,14 +20,20 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
     def expectedParameters(expected):
         (
         OVERWRITE_ELEMENT(expected).key("state")
-                .setNewOptions(State.INIT, State.ERROR, State.ACQUIRING, State.CHANGING, State.ACTIVE)
+                .setNewOptions(State.INIT, State.UNKNOWN, State.ERROR, State.ACQUIRING, State.CHANGING, State.STOPPED)
                 .setNewDefaultValue(State.INIT)
+                .commit(),
+
+        SLOT_ELEMENT(expected).key("connectCamera")
+                .displayedName("Connect")
+                .description("Connects to the hardware")
+                .allowedStates(State.UNKNOWN)
                 .commit(),
 
         SLOT_ELEMENT(expected).key("acquire")
                 .displayedName("Acquire")
                 .description("Instructs camera to go into acquisition state")
-                .allowedStates(State.ACTIVE)
+                .allowedStates(State.STOPPED)
                 .commit(),
 
         SLOT_ELEMENT(expected).key("trigger")
@@ -79,7 +85,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .description("Save images while acquiring.")
                 .assignmentOptional().defaultValue(False)
                 .reconfigurable()
-                .allowedStates(State.ACTIVE)
+                .allowedStates(State.STOPPED)
                 .commit(),
 
         PATH_ELEMENT(expected).key("imageStorage.filePath")
@@ -88,7 +94,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .isDirectory()
                 .assignmentOptional().defaultValue("/tmp")
                 .reconfigurable()
-                .allowedStates(State.ACTIVE)
+                .allowedStates(State.STOPPED)
                 .commit(),
 
         STRING_ELEMENT(expected).key("imageStorage.fileName")
@@ -97,7 +103,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .assignmentOptional().defaultValue("image")
                 .reconfigurable()
 
-                .allowedStates(State.ACTIVE)
+                .allowedStates(State.STOPPED)
                 .commit(),
 
         STRING_ELEMENT(expected).key("imageStorage.fileType")
@@ -106,7 +112,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .assignmentOptional().defaultValue("tif")
                 .options("tif jpg png")
                 .reconfigurable()
-                .allowedStates(State.ACTIVE)
+                .allowedStates(State.STOPPED)
                 .commit(),
 
         STRING_ELEMENT(expected).key("imageStorage.lastSaved")
@@ -122,7 +128,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .minInc(1)
                 .assignmentOptional().defaultValue(10)
                 .reconfigurable()
-                .allowedStates(State.ACTIVE, State.ACQUIRING, State.ERROR)
+                .allowedStates(State.STOPPED, State.ACQUIRING, State.ERROR)
                 .commit(),
 
         )
@@ -133,6 +139,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
 
     def initFsmSlots(self, sigslot):
         #sigslot.setNumberOfThreads(1)
+        sigslot.registerSlot(self.connectCamera)
         sigslot.registerSlot(self.acquire)
         sigslot.registerSlot(self.trigger)
         sigslot.registerSlot(self.stop)
@@ -143,7 +150,13 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
         """
         This method is called when 'startFsm()' function is called.
         """
-    
+
+    @abstractmethod
+    def connectCamera(self):
+        """
+        The method is called as a result of processing "connect" Event.
+        """
+
     @abstractmethod
     def acquire(self):
         """
