@@ -24,12 +24,12 @@ namespace karabo {
          * @brief A finite state machine designed to be used for camera-type devices
          * 
          * A finite state machine designed to be used for camera-type devices. It uses
-         * an ERROR-NORMAL top state machine (karabo::core::OkErrorFsm type). 
+         * an ERROR-NORMAL state machine (karabo::core::OkErrorFsm type). 
          * In the NORMAL region the following state transition table is used:
          * 
-         * STOPPED (AcquireEvent) -> (AcquireAction) STARTED
-         * STARTED (StopEvent) -> (StopAction) STOPPED 
-         * STARTED (TriggerEvent) -> (TriggerAction) STARTED 
+         * STOPPED (AcquireEvent) -> (AcquireAction) ACQUIRING
+         * ACQUIRING (StopEvent) -> (StopAction) STOPPED 
+         * ACQUIRING (TriggerEvent) -> (TriggerAction) ACQUIRING 
          */
         class CameraFsm : public BaseFsm {
 
@@ -41,6 +41,11 @@ namespace karabo {
                 using namespace karabo::xms;
                 using namespace karabo::util;
 
+                SLOT_ELEMENT(expected).key("connectCamera")
+                        .displayedName("Connect")
+                        .description("Connects to the hardware")
+                        .allowedStates(State::UNKNOWN)
+                        .commit();
 
                 SLOT_ELEMENT(expected).key("acquire")
                         .displayedName("Acquire")
@@ -51,13 +56,13 @@ namespace karabo {
                 SLOT_ELEMENT(expected).key("trigger")
                         .displayedName("Trigger")
                         .description("Sends a software trigger to the camera")
-                        .allowedStates(State::STARTED)
+                        .allowedStates(State::ACQUIRING)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("stop")
                         .displayedName("Stop")
                         .description("Instructs camera to stop current acquisition")
-                        .allowedStates(State::STARTED)
+                        .allowedStates(State::ACQUIRING)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("reset")
@@ -68,6 +73,7 @@ namespace karabo {
             }
 
             void initFsmSlots() {
+                KARABO_SLOT(connectCamera);
                 KARABO_SLOT(acquire);
                 KARABO_SLOT(trigger);
                 KARABO_SLOT(stop);
@@ -87,6 +93,10 @@ namespace karabo {
 
             KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, errorFound, std::string, std::string)
 
+            KARABO_FSM_EVENT0(m_fsm, ConnectEvent, connectCamera)
+
+            KARABO_FSM_EVENT0(m_fsm, DisconnectEvent, disconnectCamera)
+
             KARABO_FSM_EVENT0(m_fsm, ResetEvent, reset)
 
             KARABO_FSM_EVENT0(m_fsm, AcquireEvent, acquire)
@@ -103,7 +113,9 @@ namespace karabo {
 
             KARABO_FSM_STATE_VE_EE(INIT, initializationStateOnEntry, initializationStateOnExit)
 
-            KARABO_FSM_STATE_VE_EE(STARTED, acquisitionStateOnEntry, acquisitionStateOnExit)
+            KARABO_FSM_STATE_VE_EE(UNKNOWN, unknownStateOnEntry, unknownStateOnExit)
+
+            KARABO_FSM_STATE_VE_EE(ACQUIRING, acquisitionStateOnEntry, acquisitionStateOnExit)
 
             KARABO_FSM_STATE_VE_EE(STOPPED, readyStateOnEntry, readyStateOnExit)
 
@@ -115,25 +127,44 @@ namespace karabo {
 
             KARABO_FSM_VE_ACTION0(ResetAction, resetAction)
 
+            KARABO_FSM_VE_ACTION0(ConnectAction, connectAction)
+
+            KARABO_FSM_VE_ACTION0(DisconnectAction, disconnectAction)
+
             KARABO_FSM_VE_ACTION0(AcquireAction, acquireAction)
 
             KARABO_FSM_VE_ACTION0(StopAction, stopAction)
 
             KARABO_FSM_VE_ACTION0(TriggerAction, triggerAction)
 
+            KARABO_FSM_VE_GUARD0(ConnectGuard, connectGuard)
+
             /**************************************************************/
-            /*                      OkState Machine                    */
+            /*                       OkState Machine                      */
             /**************************************************************/
 
             KARABO_FSM_TABLE_BEGIN(OkStateTransitionTable)
             // Source-State, Event, Target-State, Action, Guard
-            Row< STOPPED, AcquireEvent, STARTED, AcquireAction, none >,
-            Row< STARTED, StopEvent, STOPPED, StopAction, none >,
-            Row< STARTED, TriggerEvent, none, TriggerAction, none >
+            Row< STOPPED, AcquireEvent, ACQUIRING, AcquireAction, none >,
+            Row< ACQUIRING, StopEvent, STOPPED, StopAction, none >,
+            Row< ACQUIRING, TriggerEvent, none, TriggerAction, none >
             KARABO_FSM_TABLE_END
 
             // Name, Transition-Table, Initial-State, Context
             KARABO_FSM_STATE_MACHINE(NORMAL, OkStateTransitionTable, STOPPED, Self)
+
+            /**************************************************************/
+            /*                     KnownState Machine                     */
+            /**************************************************************/
+
+            // Source-State, Event, Target-State, Action, Guard
+            KARABO_FSM_TABLE_BEGIN(KnownTransitionTable)
+            Row< NORMAL, ErrorFoundEvent, ERROR, ErrorFoundAction, none >,
+            Row< ERROR, ResetEvent, NORMAL, ResetAction, none >
+            KARABO_FSM_TABLE_END
+
+            // Name, Transition-Table, Initial-State, Context
+            KARABO_FSM_STATE_MACHINE(KNOWN, KnownTransitionTable, NORMAL, Self)
 
             /**************************************************************/
             /*                      Top Machine                         */
@@ -141,9 +172,9 @@ namespace karabo {
 
             // Source-State, Event, Target-State, Action, Guard
             KARABO_FSM_TABLE_BEGIN(TransitionTable)
-            Row< INIT, none, NORMAL, none, none >,
-            Row< NORMAL, ErrorFoundEvent, ERROR, ErrorFoundAction, none >,
-            Row< ERROR, ResetEvent, NORMAL, ResetAction, none >
+            Row< INIT, none, UNKNOWN, none, none >,
+            Row< UNKNOWN, ConnectEvent, KNOWN, ConnectAction, ConnectGuard >,
+            Row< KNOWN, DisconnectEvent, UNKNOWN, DisconnectAction, none >
             KARABO_FSM_TABLE_END
 
 
@@ -153,9 +184,10 @@ namespace karabo {
 
             void startFsm() {
 
-                KARABO_FSM_CREATE_MACHINE(StateMachine, m_fsm);
+                KARABO_FSM_CREATE_MACHINE(StateMachine, m_fsm)
                 KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
-                KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, NORMAL)
+                KARABO_FSM_SET_CONTEXT_SUB1(this, m_fsm, KNOWN)
+                KARABO_FSM_SET_CONTEXT_SUB2(this, m_fsm, KNOWN, NORMAL)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
 
