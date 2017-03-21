@@ -1,7 +1,8 @@
 from unittest import TestCase, main
+from weakref import ref
 
-from karabo.middlelayer import (Hash, isSet, Proxy, ProxyNode,
-                                ProxySlot, Schema, State, SubProxy, Unit, unit)
+from karabo.middlelayer import (Hash, isSet, Proxy, ProxyNode, ProxySlot,
+                                Schema, State, SubProxy, Timestamp, Unit, unit)
 from karabo.middlelayer_api.enums import NodeType
 from karabo.middlelayer_api.proxy import ProxyFactory
 
@@ -83,6 +84,41 @@ class Tests(TestCase):
         proxy = cls()
         proxy.setA()
         self.assertEqual(calls, [cls.setA])
+
+    def test_onchanged(self):
+        class TestFactory(ProxyFactory):
+            class Proxy(Proxy):
+                def _notifyChanged(self, descriptor, value):
+                    calls.append((descriptor, value))
+
+        cls = TestFactory.createProxy(self.schema)
+        proxy = cls()
+
+        calls = []
+        proxy._onChanged(Hash("a", 7))
+        self.assertEqual(proxy.a, 7 * unit.A)
+        self.assertEqual(calls, [(cls.a, 7 * unit.A)])
+
+        calls = []
+        proxy._onChanged(Hash("node", Hash("b", "whatever")))
+        self.assertEqual(proxy.node.b, "whatever")
+        self.assertEqual(calls, [(cls.node.cls.b, "whatever")])
+
+        calls = []
+        proxy._onChanged(Hash("setA", 22, "inexistent", 33))
+        self.assertEqual(calls, [])
+
+        h = Hash("a", 8)
+        ts = Timestamp("2017-03-11")
+        h["a", ...] = ts.toDict()
+        proxy._onChanged(h)
+        self.assertEqual(proxy.a.timestamp, ts)
+
+        # _onChanged used to leak a cyclic reference to the proxy.
+        weakproxy = ref(proxy)
+        del proxy
+        self.assertIsNone(weakproxy())
+
 
 
 if __name__ == "__main__":

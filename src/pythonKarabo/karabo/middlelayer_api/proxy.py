@@ -1,7 +1,7 @@
 import asyncio
 from collections import defaultdict
 import time
-from weakref import WeakSet
+from weakref import ref, WeakSet
 
 from .basetypes import KaraboValue
 from .enums import NodeType
@@ -33,6 +33,32 @@ class ProxyBase(object):
 
     def _callSlot(self, descriptor):
         """this gets called once the user calls a slot"""
+
+    def _onChanged(self, change):
+        """call this when the remote device changed
+
+        :change: is the Hash with the changes
+        """
+        def recurse(change, instance):
+            for k, v, a in change.iterall():
+                descr = getattr(type(instance), k, None)
+                if descr is not None:
+                    if isinstance(descr, ProxyNodeBase):
+                        weakrecurse()(v, getattr(instance, descr.key))
+                    elif not isinstance(descr, ProxySlotBase):
+                        converted = descr.toKaraboValue(v, strict=False)
+                        converted.timestamp = Timestamp.fromHashAttributes(a)
+                        converted._parent = self
+                        instance.__dict__[descr.key] = converted
+                        self._notifyChanged(descr, converted)
+        # it is a bit ridiculous that we need a weak reference here, but
+        # otherwise CPython creates a cyclic reference... I consider that a
+        # bug in CPython
+        weakrecurse = ref(recurse)
+        recurse(change, self)
+
+    def _notifyChanged(self, descriptor, value):
+        """this is called by _onChanged for each change"""
 
 
 class ProxyDescriptor(Descriptor):
@@ -193,25 +219,14 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._last_update_task = None
             self._schemaUpdateConnected = False
 
-        def _onChanged_r(self, hash, instance, parent):
-            """the recursive part of _onChanged"""
-            for k, v, a in hash.iterall():
-                d = getattr(type(instance), k, None)
-                if d is not None:
-                    if isinstance(d, ProxyNodeBase):
-                        self._onChanged_r(v, getattr(instance, d.key), parent)
-                    elif not isinstance(d, ProxySlotBase):
-                        converted = d.toKaraboValue(v, strict=False)
-                        converted.timestamp = Timestamp.fromHashAttributes(a)
-                        converted._parent = parent
-                        instance.__dict__[d.key] = converted
-                        for q in parent._queues[d.longkey]:
-                            q.put_nowait(converted)
+        def _notifyChanged(self, descriptor, value):
+            for q in self._queues[descriptor.longkey]:
+                q.put_nowait(value)
 
-        def _onChanged(self, hash):
-            self._onChanged_r(hash, self, self)
+        def _onChanged(self, change):
+            super()._onChanged(change)
             for q in self._queues[None]:
-                q.put_nowait(hash)
+                q.put_nowait(change)
 
         def _onSchemaUpdated_r(self, cls, instance):
             instance.__class__ = cls
