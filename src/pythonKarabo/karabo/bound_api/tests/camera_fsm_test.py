@@ -20,7 +20,19 @@ class CameraUser(CameraFsm):
         
     def updateState(self, currentState):
         self.log.DEBUG("-- CameraUser.updateState to '{}'".format(currentState))
-    
+
+    def initializationStateOnEntry(self):
+        self.log.DEBUG("-- CameraUser.initializationStateOnEntry")
+
+    def initializationStateOnExit(self):
+        self.log.DEBUG("-- CameraUser.initializationStateOnExit")
+
+    def unknownStateOnEntry(self):
+        self.log.DEBUG("-- CameraUser.unknownStateOnEntry")
+
+    def unknownStateOnExit(self):
+        self.log.DEBUG("-- CameraUser.unknownStateOnExit")
+
     def errorStateOnEntry(self):
         self.log.DEBUG("-- CameraUser.errorStateOnEntry")
 
@@ -54,6 +66,9 @@ class CameraUser(CameraFsm):
     def resetAction(self):
         self.log.DEBUG("-- CameraUser.resetAction")
 
+    def connectGuard(self):
+        return True
+
 class  Camera_fsm_TestCase(unittest.TestCase):
     def setUp(self):
         self.camera = CameraUser(None)
@@ -64,24 +79,29 @@ class  Camera_fsm_TestCase(unittest.TestCase):
     def test_camera_fsm_(self):
         fsm = self.camera.fsm
         fsm.start()
-        self.assertIs(fsm.get_state(), State.ACTIVE)
-        self.camera.log.DEBUG ("*** State 'ACTIVE' reached")
+        self.assertIs(fsm.get_state(), State.UNKNOWN)
+        self.camera.log.DEBUG("*** State 'UNKNOWN' reached")
+        self.camera.connectCamera()
+        self.assertIs(fsm.get_state(), State.STOPPED)
+        self.camera.log.DEBUG("*** State 'STOPPED' reached")
         self.camera.acquire()
         self.assertIs(fsm.get_state(), State.ACQUIRING)
-        self.camera.log.DEBUG ("*** State 'ACQUIRING' reached")
+        self.camera.log.DEBUG("*** State 'ACQUIRING' reached")
         self.camera.trigger()
         self.assertIs(fsm.get_state(), State.ACQUIRING)
-        self.camera.log.DEBUG ("*** Trigger sent. Remain in state 'ACQUIRING'")
+        self.camera.log.DEBUG("*** Trigger sent. Remain in state 'ACQUIRING'")
         self.camera.stop()
-        self.assertIs(fsm.get_state(), State.ACTIVE)
-        self.camera.log.DEBUG ("*** State 'ACTIVE' reached")
+        self.assertIs(fsm.get_state(), State.STOPPED)
+        self.camera.log.DEBUG("*** State 'STOPPED' reached")
         self.camera.errorFound("user error message", "detailed error message")
         self.assertIs(fsm.get_state(), State.ERROR)
-        self.camera.log.DEBUG ("*** State 'ERROR' reached")
+        self.camera.log.DEBUG("*** State 'ERROR' reached")
         self.camera.reset()
-        self.assertIs(fsm.get_state(), State.ACTIVE)
-        self.camera.log.DEBUG ("*** State 'ACTIVE' reached")
-
+        self.assertIs(fsm.get_state(), State.STOPPED)
+        self.camera.log.DEBUG("*** State 'STOPPED' reached")
+        self.camera.disconnectCamera()
+        self.assertIs(fsm.get_state(), State.UNKNOWN)
+        self.camera.log.DEBUG("*** State 'UNKNOWN' reached")
 
 if __name__ == '__main__':
     unittest.main()
