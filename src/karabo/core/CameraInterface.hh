@@ -30,14 +30,20 @@ namespace karabo {
 
                 
                 OVERWRITE_ELEMENT(expected).key("state")
-                        .setNewOptions(State::INIT, State::ERROR, State::ACQUIRING, State::ACTIVE)
+                        .setNewOptions(State::INIT, State::UNKNOWN, State::ERROR, State::ACQUIRING, State::STOPPED)
                         .setNewDefaultValue(State::INIT)
+                        .commit();
+
+                SLOT_ELEMENT(expected).key("connectCamera")
+                        .displayedName("Connect")
+                        .description("Connects to the hardware")
+                        .allowedStates(State::UNKNOWN)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("acquire")
                         .displayedName("Acquire")
                         .description("Instructs camera to go into acquisition state")
-                        .allowedStates(State::ACTIVE)
+                        .allowedStates(State::STOPPED)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("trigger")
@@ -86,7 +92,7 @@ namespace karabo {
                         .description("Save images while acquiring.")
                         .assignmentOptional().defaultValue(false)
                         .reconfigurable()
-                        .allowedStates(State::ACTIVE)
+                        .allowedStates(State::STOPPED)
                         .commit();
 
                 PATH_ELEMENT(expected).key("imageStorage.filePath")
@@ -95,7 +101,7 @@ namespace karabo {
                         .isDirectory()
                         .assignmentOptional().defaultValue("/tmp")
                         .reconfigurable()
-                        .allowedStates(State::ACTIVE)
+                        .allowedStates(State::STOPPED)
                         .commit();
 
                 STRING_ELEMENT(expected).key("imageStorage.fileName")
@@ -103,7 +109,7 @@ namespace karabo {
                         .description("The name for saving images to file")
                         .assignmentOptional().defaultValue("image")
                         .reconfigurable()
-                        .allowedStates(State::ACTIVE)
+                        .allowedStates(State::STOPPED)
                         .commit();
 
                 STRING_ELEMENT(expected).key("imageStorage.fileType")
@@ -112,7 +118,7 @@ namespace karabo {
                         .assignmentOptional().defaultValue("tif")
                         .options("tif jpg png")
                         .reconfigurable()
-                        .allowedStates(State::ACTIVE)
+                        .allowedStates(State::STOPPED)
                         .commit();
 
                 STRING_ELEMENT(expected).key("imageStorage.lastSaved")
@@ -128,35 +134,41 @@ namespace karabo {
                         .minInc(1)
                         .assignmentOptional().defaultValue(10)
                         .reconfigurable()
-                        .allowedStates(State::ERROR, State::ACTIVE, State::ACQUIRING)
+                        .allowedStates(State::ERROR, State::STOPPED, State::ACQUIRING)
                         .commit();
 
             }
 
             void initFsmSlots() {
+                KARABO_SLOT(connectCamera);
                 KARABO_SLOT(acquire);
                 KARABO_SLOT(trigger);
                 KARABO_SLOT(stop);
                 KARABO_SLOT(resetHardware);
             }
 
-            /* Initializing, none, Ready
-             * Ready, acquire, Acquiring
-             * Acquiring, stop, Ready
-             * Acquiring, trigger, None
-             * HardwareError, reset, Initializing
-             
-             * From any state we may be driven to hardwareError
+            /* INIT, none, UNKNOWN
+             * UNKNOWN, connect, STOPPED
+             * STOPPED, acquire, ACQUIRING
+             * ACQUIRING, stop, STOPPED
+             * ACQUIRING, trigger, None
+             * STOPPED or ACQUIRING, errorFound, ERROR
+             * ERROR, reset, STOPPED
+             * STOPPED or ACQUIRING or ERROR, disconnect, UNKNOWN
              */
 
             /**
-             * In the end call: updateState("Initializing")
+             * In the end call: updateState(State::STOPPED)
              */
             virtual void resetHardware() = 0;
 
+            /**
+             * Should end in State::STOPPED
+             */
+            virtual void connectCamera() = 0;
 
             /**
-             * Should end in "Acquiring"
+             * Should end in State::ACQUIRING
              */
             virtual void acquire() = 0;
 

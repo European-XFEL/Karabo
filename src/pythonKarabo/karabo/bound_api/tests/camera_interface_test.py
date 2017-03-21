@@ -14,6 +14,9 @@ class CameraUser(CameraInterface):
     def initialize(self):
         pass
 
+    def connectCamera(self):
+        pass
+
     def acquire(self):
         pass
 
@@ -47,9 +50,11 @@ class Camera_interface_TestCase(unittest.TestCase):
         self.assertTrue(expected.has('state'))
         states = expected.getOptions('state')
         self.assertTrue('INIT' in states)
+        self.assertTrue('UNKNOWN' in states)
         self.assertTrue('ERROR' in states)
         self.assertTrue('ACQUIRING' in states)
-        self.assertTrue('ACTIVE' in states)
+        self.assertTrue('STOPPED' in states)
+        self.assertTrue(expected.has('connectCamera'))
         self.assertTrue(expected.has('acquire'))
         self.assertTrue(expected.has('trigger'))
         self.assertTrue(expected.has('stop'))
