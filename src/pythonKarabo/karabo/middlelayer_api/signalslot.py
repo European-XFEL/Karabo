@@ -12,6 +12,7 @@ from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
 from .hash import Descriptor, Hash, HashType, Int32, Slot, String
 from .p2p import NetworkOutput
+from .proxy import DeviceClientProxyFactory
 from .schema import Configurable
 from .synchronization import firstCompleted
 
@@ -332,7 +333,7 @@ class SignalSlotable(Configurable):
     def slotSchemaUpdated(self, schema, deviceId):
         d = self._proxies.get(deviceId)
         if d is not None:
-            d._onSchemaUpdated(schema)
+            DeviceClientProxyFactory.updateSchema(d, schema)
 
     @slot
     def slotInstanceNew(self, instanceId, info):
