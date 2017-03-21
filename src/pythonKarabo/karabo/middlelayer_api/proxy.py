@@ -179,6 +179,25 @@ class ProxyFactory(object):
         namespace = cls.createNamespace(schema.hash)
         return type(schema.name, (cls.Proxy,), namespace)
 
+    @classmethod
+    def updateSchema(cls, proxy, schema):
+        """update the schema of proxy"""
+        def recurse(newcls, instance):
+            instance.__class__ = newcls
+            for key in dir(newcls):
+                descriptor = getattr(newcls, key)
+                if isinstance(descriptor, ProxyNodeBase):
+                    value = getattr(instance, key, None)
+                    if isinstance(value, SubProxyBase):
+                        weakrecurse()(descriptor.cls, value)
+                    else:
+                        # something became a Node which wasn't one before.
+                        # simply delete it to start anew at the next change
+                        instance.__dict__.pop(key, None)
+        weakrecurse = ref(recurse)
+        newcls = cls.createProxy(schema)
+        recurse(newcls, proxy)
+
 
 class DeviceClientProxyFactory(ProxyFactory):
     class Proxy(ProxyBase):
@@ -227,23 +246,6 @@ class DeviceClientProxyFactory(ProxyFactory):
             super()._onChanged(change)
             for q in self._queues[None]:
                 q.put_nowait(change)
-
-        def _onSchemaUpdated_r(self, cls, instance):
-            instance.__class__ = cls
-            for key in dir(cls):
-                descriptor = getattr(cls, key)
-                if isinstance(descriptor, ProxyNodeBase):
-                    value = getattr(instance, key, None)
-                    if isinstance(value, SubProxyBase):
-                        self._onSchemaUpdated_r(descriptor.cls, value)
-                    else:
-                        # something became a Node which wasn't one before.
-                        # simply delete it to start anew at the next change
-                        value.__dict__.pop(key, None)
-
-        def _onSchemaUpdated(self, schema):
-            cls = DeviceClientProxyFactory.createProxy(schema)
-            self._onSchemaUpdated_r(cls, self)
 
         def setValue(self, desc, value):
             self._use()
