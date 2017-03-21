@@ -62,7 +62,7 @@ class ParameterTreeWidget(QTreeWidget):
 
         # Make sure the event was on a valid item
         if not item:
-           return
+            return
 
         # Get the tree widget's x position
         treeX = self.header().sectionViewportPosition(0)
