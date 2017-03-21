@@ -20,6 +20,7 @@ class Tests(TestCase):
         h["a", "defaultValue"] = 22.5
         h["setA", "nodeType"] = NodeType.Node.value
         h["setA", "displayType"] = "Slot"
+        h["setA", "description"] = "setA's description"
         self.schema = Schema("test", hash=h)
 
     def test_class(self):
@@ -40,6 +41,7 @@ class Tests(TestCase):
         self.assertEqual(cls.node.cls.b.longkey, "node.b")
 
         self.assertIsInstance(cls.setA, ProxySlot)
+        self.assertEqual(cls.setA.description, "setA's description")
 
     def test_object(self):
         cls = ProxyFactory.createProxy(self.schema)
@@ -48,6 +50,7 @@ class Tests(TestCase):
         self.assertFalse(isSet(obj.a))
         self.assertIs(obj.a.descriptor, cls.a)
         self.assertFalse(isSet(obj.node.b))
+        self.assertEqual(obj.setA.__doc__, "setA's description")
 
     def test_setvalue(self):
         class TestFactory(ProxyFactory):
