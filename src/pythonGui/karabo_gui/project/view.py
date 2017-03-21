@@ -17,7 +17,6 @@ from karabo_gui.util import is_database_processing, set_treeview_header
 from .controller.bases import BaseProjectGroupController
 from .controller.project import ProjectController
 from .controller.project_groups import ProjectSubgroupController
-from .utils import show_no_configuration
 
 
 class ProjectView(QTreeView):
@@ -84,6 +83,12 @@ class ProjectView(QTreeView):
         """ Notify controller objects when their Qt list item object is
         selected.
         """
+        # NOTE: There are two project views at all items, because the
+        # configurator has a $%@#ing hidden navigation/project pair.
+        # Avoid doing double the work...
+        if not self.hasFocus():
+            return
+
         selected_controller = self._get_selected_controller()
         if selected_controller is not None:
             parent_project = self._parent_project(selected_controller)
@@ -91,8 +96,6 @@ class ProjectView(QTreeView):
 
             # Grab control of the global selection
             get_selection_tracker().grab_selection(self.selectionModel())
-        else:
-            show_no_configuration()
 
     def _show_context_menu(self):
         """ Show a context menu for the currently selected item.
