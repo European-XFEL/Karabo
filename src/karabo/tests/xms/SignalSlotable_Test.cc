@@ -184,9 +184,21 @@ void SignalSlotable_Test::testReceiveAsyncTimeout() {
         result = answer;
     });
 
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200)); // ensure reply could be delivered (though not in time)
 
     CPPUNIT_ASSERT(result == "");
+
+    // Now the same, but test timeout handler
+    result = "some";
+    bool caughtTimeout = false;
+    greeter->request("responder", "slotAnswer", "Hello").timeout(50)
+        .receiveAsync<std::string>([&result](const std::string & answer) { result = answer;},
+                                   [&caughtTimeout]() { caughtTimeout = true;});
+
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200)); // ensure reply could be delivered (though not in time)
+
+    CPPUNIT_ASSERT(result == "some");
+    CPPUNIT_ASSERT(caughtTimeout);
 }
 
 
