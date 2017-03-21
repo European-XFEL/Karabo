@@ -119,6 +119,30 @@ class Tests(TestCase):
         del proxy
         self.assertIsNone(weakproxy())
 
+    def test_schemaupdate(self):
+        h = Hash("node", Hash("c", None), "a", Hash("c", None), "setB", None)
+        h["node", "nodeType"] = NodeType.Node.value
+        h["node.c", "nodeType"] = NodeType.Leaf.value
+        h["node.c", "valueType"] = "STRING"
+        h["a", "nodeType"] = NodeType.Node.value
+        h["a.c", "nodeType"] = NodeType.Leaf.value
+        h["a.c", "valueType"] = "STRING"
+        h["setB", "nodeType"] = NodeType.Node.value
+        h["setB", "displayType"] = "Slot"
+        h["setB", "description"] = "setA's description"
+        schema = Schema("test", hash=h)
+
+        cls = ProxyFactory.createProxy(self.schema)
+        proxy = cls()
+        proxy._onChanged(Hash("node", Hash("b", "whatever"), "a", 3))
+        self.assertEqual(proxy.a, 3 * unit.A)
+        self.assertEqual(proxy.node.b, "whatever")
+
+        ProxyFactory.updateSchema(proxy, schema)
+        proxy._onChanged(Hash("node", Hash("c", "whatever"),
+                              "a", Hash("c", "bla")))
+        self.assertEqual(proxy.a.c, "bla")
+        self.assertEqual(proxy.node.c, "whatever")
 
 
 if __name__ == "__main__":
