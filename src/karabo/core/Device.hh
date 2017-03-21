@@ -1230,11 +1230,30 @@ namespace karabo {
                 using namespace karabo::util;
                 using namespace karabo::net;
 
+                //
+                // First set all parameters (which could not yet be set in constructor) and init the SignalSlotable
+                //
 
-                // This initializations or done here and not in the constructor 
+                // These initializations or done here and not in the constructor
                 // as they involve virtual function calls
                 this->initClassId();
                 this->initSchema();
+
+                {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    // ClassId
+                    m_parameters.set("classId", m_classId);
+                    // DeviceId
+                    m_parameters.set("deviceId", m_deviceId);
+                    // ServerId
+                    m_parameters.set("serverId", m_serverId);
+
+                    // The following lines of code are needed to initially inject timestamps to the parameters
+                    karabo::util::Hash validated;
+                    std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, getActualTimestamp());
+                    if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
+                    m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
+                }
 
                 // Prepare some info further describing this particular instance
                 karabo::util::Hash instanceInfo;
@@ -1249,7 +1268,10 @@ namespace karabo {
 
                 // Initialize the SignalSlotable instance
                 init(m_deviceId, m_connection, m_parameters.get<int>("heartbeatInterval"), instanceInfo);
-                SignalSlotable::start();
+
+                //
+                // Now do all registrations etc. (Note that it is safe to register slots in the constructor)
+                //
 
                 // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
                 this->initFsmSlots(); // requires template CONCEPT
@@ -1264,35 +1286,28 @@ namespace karabo {
                 this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies,
                                                                        this, _1, _2));
 
+                // Instantiate all channels
+                this->initChannels();
+
+                //
+                // Then start SignalSlotable: communication (incl. system registration) starts and thus parallelism!
+                //
+                SignalSlotable::start();
+
                 KARABO_LOG_INFO << "'" << m_classId << "' with deviceId: '" << this->getInstanceId() << "' got started"
                         << " on server '" << this->getServerId() << "'.";
 
-                // ClassId
-                m_parameters.set("classId", m_classId);
-                // DeviceId
-                m_parameters.set("deviceId", m_deviceId);
-                // ServerId
-                m_parameters.set("serverId", m_serverId);
+                //
+                // Finally do everything that requires full participation in the system
+                //
 
-                // Validate first time to assign timestamps
-                {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-
-                    // The following lines of code are needed to initially inject timestamps to the parameters
-                    karabo::util::Hash validated;
-                    std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, getActualTimestamp());
-                    if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
-                    m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
-                }
-
-                // Instantiate all channels
-                this->initChannels();
+                // Connect input channels - requires SignalSlotable to be started
                 this->connectInputChannels();
 
-                // Start the state machine
+                // Start the state machine (call initialization methods in case of noFsm)
                 this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
 
-                if (m_parameters.get<bool>("useTimeserver")) {
+                if (get<bool>("useTimeserver")) {
                     KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": Connecting to time server";
                     connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick");
                 }
