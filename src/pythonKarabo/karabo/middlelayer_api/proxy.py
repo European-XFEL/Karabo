@@ -31,6 +31,9 @@ class ProxyBase(object):
     def _use(self):
         pass
 
+    def _callSlot(self, descriptor):
+        """this gets called once the user calls a slot"""
+
 
 class ProxyDescriptor(Descriptor):
     """A descriptor in a Proxy
@@ -70,7 +73,14 @@ class ProxyNodeBase(ProxyDescriptor):
 
 class ProxySlotBase(Slot, ProxyDescriptor):
     """The base class for Slots in proxies"""
-    pass
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+
+        def method(myself, *args, **kwargs):
+            return myself._parent._callSlot(self, *args, **kwargs)
+        method.__doc__ = self.description
+        return method.__get__(instance, owner)
 
 
 class SubProxyBase(object):
@@ -144,25 +154,6 @@ class ProxyFactory(object):
 
 
 class DeviceClientProxyFactory(ProxyFactory):
-    class ProxySlot(ProxySlotBase):
-        def __get__(self, instance, owner):
-            if instance is None:
-                return self
-            key = self.longkey
-
-            @synchronize
-            def method(self):
-                @asyncio.coroutine
-                def inner():
-                    yield from self._parent._update()
-                    device = self._parent._device
-                    device._use()
-                    return (yield from device.call(
-                        self._parent._deviceId, key))
-                return (yield from self._parent._raise_on_death(inner()))
-            method.__doc__ = self.description
-            return method.__get__(instance, owner)
-
     class Proxy(ProxyBase):
         """A proxy for a remote device
 
@@ -260,6 +251,16 @@ class DeviceClientProxyFactory(ProxyFactory):
                 if update:
                     self._last_update_task = asyncio.async(
                         self._update(self._last_update_task))
+
+        def _callSlot(self, descriptor, timeout=-1, wait=True):
+            @asyncio.coroutine
+            def inner():
+                yield from self._update()
+                self._device._use()
+                return (yield from self._device.call(self._deviceId,
+                                                     descriptor.longkey))
+            return asyncio.get_event_loop().sync(
+                self._raise_on_death(inner()), timeout, wait)
 
         @asyncio.coroutine
         def _update(self, task=False):
