@@ -24,12 +24,12 @@ namespace karabo {
          * @brief A finite state machine designed to be used for camera-type devices
          * 
          * A finite state machine designed to be used for camera-type devices. It uses
-         * an ERROR-NORMAL top state machine (karabo::core::OkErrorFsm type). 
+         * an ERROR-NORMAL state machine (karabo::core::OkErrorFsm type). 
          * In the NORMAL region the following state transition table is used:
          * 
-         * STOPPED (AcquireEvent) -> (AcquireAction) STARTED
-         * STARTED (StopEvent) -> (StopAction) STOPPED 
-         * STARTED (TriggerEvent) -> (TriggerAction) STARTED 
+         * STOPPED (AcquireEvent) -> (AcquireAction) ACQUIRING
+         * ACQUIRING (StopEvent) -> (StopAction) STOPPED 
+         * ACQUIRING (TriggerEvent) -> (TriggerAction) ACQUIRING 
          */
         class CameraFsm : public BaseFsm {
 
@@ -56,13 +56,13 @@ namespace karabo {
                 SLOT_ELEMENT(expected).key("trigger")
                         .displayedName("Trigger")
                         .description("Sends a software trigger to the camera")
-                        .allowedStates(State::STARTED)
+                        .allowedStates(State::ACQUIRING)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("stop")
                         .displayedName("Stop")
                         .description("Instructs camera to stop current acquisition")
-                        .allowedStates(State::STARTED)
+                        .allowedStates(State::ACQUIRING)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("reset")
@@ -115,7 +115,7 @@ namespace karabo {
 
             KARABO_FSM_STATE_VE_EE(UNKNOWN, unknownStateOnEntry, unknownStateOnExit)
 
-            KARABO_FSM_STATE_VE_EE(STARTED, acquisitionStateOnEntry, acquisitionStateOnExit)
+            KARABO_FSM_STATE_VE_EE(ACQUIRING, acquisitionStateOnEntry, acquisitionStateOnExit)
 
             KARABO_FSM_STATE_VE_EE(STOPPED, readyStateOnEntry, readyStateOnExit)
 
@@ -145,9 +145,9 @@ namespace karabo {
 
             KARABO_FSM_TABLE_BEGIN(OkStateTransitionTable)
             // Source-State, Event, Target-State, Action, Guard
-            Row< STOPPED, AcquireEvent, STARTED, AcquireAction, none >,
-            Row< STARTED, StopEvent, STOPPED, StopAction, none >,
-            Row< STARTED, TriggerEvent, none, TriggerAction, none >
+            Row< STOPPED, AcquireEvent, ACQUIRING, AcquireAction, none >,
+            Row< ACQUIRING, StopEvent, STOPPED, StopAction, none >,
+            Row< ACQUIRING, TriggerEvent, none, TriggerAction, none >
             KARABO_FSM_TABLE_END
 
             // Name, Transition-Table, Initial-State, Context
