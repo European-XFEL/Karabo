@@ -16,8 +16,9 @@ def print_stack_trace(num_frames=0):
     """Print a stack trace, without requiring an exception to have been thrown.
     """
     frames = inspect.stack()
-    num_frames = num_frames if num_frames != 0 else (len(frames) - 1)
-    frames_subset = frames[1:1+num_frames]
+    IGNORED = 2  # The frames including this function and inspect.stack()
+    num_frames = num_frames if num_frames != 0 else (len(frames) - IGNORED)
+    frames_subset = frames[IGNORED:IGNORED+num_frames]
     try:
         print()
         for tup in frames_subset[::-1]:

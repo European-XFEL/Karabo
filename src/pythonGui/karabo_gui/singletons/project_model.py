@@ -15,6 +15,7 @@ from karabo_gui.indicators import get_alarm_icon, get_state_icon_for_status
 from karabo_gui.project.controller.build import (
     create_project_controller, destroy_project_controller)
 from karabo_gui.project.controller.device import DeviceInstanceController
+from karabo_gui.project.utils import show_no_configuration
 from karabo_gui.singletons.api import get_topology
 
 TABLE_HEADER_LABELS = ["Projects", "", ""]
@@ -91,6 +92,7 @@ class ProjectViewItemModel(QAbstractItemModel):
             destroy_project_controller(self._controller)
             get_topology().clear_project_devices()
             self.q_selection_model.clearSelection()
+            show_no_configuration()
 
         self._cleanup_project()
 

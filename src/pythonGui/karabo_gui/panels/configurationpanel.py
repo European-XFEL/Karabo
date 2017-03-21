@@ -584,6 +584,7 @@ class ConfigurationPanel(BasePanelWidget):
         if self._awaitingSchema is not None:
             conf = self._awaitingSchema
             conf.signalNewDescriptor.disconnect(self.onSchemaArrival)
+            self._awaitingSchema = None
 
         # Handle configurations which await a schema
         if configuration is not None and configuration.descriptor is None:
