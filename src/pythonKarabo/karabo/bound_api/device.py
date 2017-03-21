@@ -294,8 +294,22 @@ class PythonDevice(NoFsm):
         self.validatorExtern.setValidationRules(rules)
         self.globalAlarmCondition = AlarmCondition.NONE
 
+        # Initialize regular expression object
+        self.errorRegex = re.compile(".*error.*", re.IGNORECASE)
+
         self.initClassId()
         self.initSchema()
+
+        with self._stateChangeLock:
+            self.parameters.set("classId", self.classid)
+            self.parameters.set("deviceId", self.deviceid)
+            self.parameters.set("serverId", self.serverid)
+
+            # Validate first time to assign timestamps
+            validated = self.validatorIntern.validate(self.fullSchema,
+                                                      self.parameters,
+                                                      self._getActualTimestamp())
+            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
 
         # Create 'info' hash
         info = Hash("type", "device")
@@ -307,30 +321,21 @@ class PythonDevice(NoFsm):
         info["status"] = "ok"
         info["archive"] = self.get("archive")
 
-        # Instantiate and start SignalSlotable object
+        # Instantiate SignalSlotable object
         self._ss = SignalSlotable(self.deviceid, "JmsConnection",
                                   self.parameters["_connection_"], 20, info)
+
+        # Setup device logger (needs self._ss)
+        self.loadLogger(configuration)
+        self.log = Logger.getCategory(self.deviceid)
+
         # Initialize FSM slots if defined
         if hasattr(self, 'initFsmSlots'):
             self.initFsmSlots(self._ss)
 
-        # Initialize Device slots
+        # Initialize Device slots and instantiate all channels
         self._initDeviceSlots()
-
-        # We start after registering slots to avoid that device slots
-        # are not available yet when instanceNew has been signaled.
-        try:
-            self._ss.start()
-        except RuntimeError as e:
-            raise RuntimeError("PythonDevice.__init__: "
-                               "SignalSlotable Exception -- {0}".format(str(e)))
-
-        # Setup device logger
-        self.loadLogger(configuration)
-        self.log = Logger.getCategory(self.deviceid)
-
-        # Initialize regular expression object
-        self.errorRegex = re.compile(".*error.*", re.IGNORECASE)
+        self.initChannels()
 
         # Register guard for slot calls
         self._ss.registerSlotCallGuardHandler(self.slotCallGuard)
@@ -338,30 +343,30 @@ class PythonDevice(NoFsm):
         # Register updateLatencies handler
         self._ss.registerPerformanceStatisticsHandler(self.updateLatencies)
 
-        self.parameters.set("classId", self.classid)
-        self.parameters.set("deviceId", self.deviceid)
-        self.parameters.set("serverId", self.serverid)
-
-        with self._stateChangeLock:
-            validated = self.validatorIntern.validate(self.fullSchema,
-                                                      self.parameters,
-                                                      self._getActualTimestamp())
-            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-
-        # Instantiate all channels
-        self.initChannels()
-        self._ss.connectInputChannels()
-
-        if self.parameters.get("useTimeserver"):
-            self.log.DEBUG("Connecting to time server")
-            self._ss.connect("Karabo_TimeServer", "signalTimeTick",
-                             "", "slotTimeTick")
 
     def _finalizeInternalInitialization(self):
-        self.startFsm()
+        # Start - after all settings/registrations done:
+        # Communication (incl. system registration) starts and thus parallelism!
+        # This is done here and not yet in __init__ to be sure that inheriting
+        # devices can register in their __init__ after super(..).__init__(..)
+        try:
+            self._ss.start()
+        except RuntimeError as e:
+            raise RuntimeError("PythonDevice.__init__: "
+                               "SignalSlotable Exception -- {0}".format(str(e)))
 
         self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
                       "on server '{0.serverid}'.".format(self))
+
+        # Connect input channels
+        self._ss.connectInputChannels()
+
+        self.startFsm()
+
+        if self.get("useTimeserver"):
+            self.log.DEBUG("Connecting to time server")
+            self._ss.connect("Karabo_TimeServer", "signalTimeTick",
+                             "", "slotTimeTick")
 
 
     @property
