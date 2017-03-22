@@ -37,6 +37,10 @@ class Tests(TestCase):
         os.chdir(this_dir)
         self.loop = setEventLoop()
 
+        self.dc = DeviceClient(dict(_deviceId_="dc"))
+        self.dc.startInstance()
+
+
     def tearDown(self):
         self.loop.close()
         try:
@@ -74,8 +78,8 @@ class Tests(TestCase):
         yield from sleep(0.1)
 
     @coroutine
-    def check_server_topology(self, dc):
-        schema, classId, serverId = yield from dc.call(
+    def check_server_topology(self):
+        schema, classId, serverId = yield from self.dc.call(
             "testServer", "slotGetClassSchema", "MiddleLayerTestDevice")
         self.assertEqual(serverId, "testServer")
         self.assertEqual(classId, "MiddleLayerTestDevice")
@@ -116,9 +120,6 @@ class Tests(TestCase):
           * checks everything is cleaned up afterwards
           * kills the device server
         """
-        dc = DeviceClient(dict(_deviceId_="dc"))
-        dc.startInstance()
-
         server = DeviceServer(
             dict(serverId="testServer",
                  pluginDirectory=os.path.dirname(__file__)))
@@ -130,7 +131,7 @@ class Tests(TestCase):
         self.assertEqual(proxy.counter, 12345,
                          "initialization parameter was not honored")
 
-        self.run_async(dc, self.check_server_topology(dc))
+        self.run_async(self.dc, self.check_server_topology())
         self.assertIn("other", server.deviceInstanceMap)
         r = weakref.ref(server.deviceInstanceMap["other"])
         with proxy:
@@ -140,7 +141,7 @@ class Tests(TestCase):
             self.assertFalse(isAlive(proxy))
             gc.collect()
             self.assertIsNone(r())
-            async(dc.slotKillDevice())
+            async(self.dc.slotKillDevice())
             self.loop.run_until_complete(server.slotKillServer())
             self.assertEqual(proxy.something, 111)
         self.loop.run_forever()
@@ -157,15 +158,13 @@ class Tests(TestCase):
 
     def test_appearing_plugin(self):
         """test that new plugins appear in device server"""
-        dc = DeviceClient(dict(_deviceId_="dc"))
-        dc.startInstance()
         dirname = os.path.dirname(__file__)
         server = DeviceServer(
             dict(serverId="testServer", pluginDirectory=dirname))
         self.loop.run_until_complete(server.startInstance())
         with self.assertRaises(KaraboError):
-            self.run_async(dc, instantiate("testServer",
-                                           "SomeDevice", "someName"))
+            self.run_async(self.dc, instantiate("testServer",
+                                                "SomeDevice", "someName"))
 
         dirname = os.path.join(dirname, "Temporary.egg-info")
         os.mkdir(dirname)
@@ -186,8 +185,8 @@ class Tests(TestCase):
                     License: None
                 """)
             with entry_points, pkg_info:
-                self.run_async(dc, sleep(5))
-                self.run_async(dc, instantiate("testServer",
-                                               "SomeDevice", "someName"))
+                self.run_async(self.dc, sleep(5))
+                self.run_async(self.dc, instantiate("testServer",
+                                                    "SomeDevice", "someName"))
         finally:
             os.rmdir(dirname)
