@@ -40,6 +40,10 @@ class Tests(TestCase):
         self.dc = DeviceClient(dict(_deviceId_="dc"))
         self.dc.startInstance()
 
+        dirname = os.path.dirname(__file__)
+        self.server = DeviceServer(
+            dict(serverId="testServer", pluginDirectory=dirname))
+        self.loop.run_until_complete(self.server.startInstance())
 
     def tearDown(self):
         self.loop.close()
@@ -55,7 +59,7 @@ class Tests(TestCase):
             self.loop.create_task(coro, device))
 
     @coroutine
-    def init_server(self, server):
+    def init_server(self):
         """initialize the device server and a device on it
 
         the device on the device server is started from within a
@@ -120,11 +124,7 @@ class Tests(TestCase):
           * checks everything is cleaned up afterwards
           * kills the device server
         """
-        server = DeviceServer(
-            dict(serverId="testServer",
-                 pluginDirectory=os.path.dirname(__file__)))
-        self.loop.run_until_complete(server.startInstance())
-        proxy = self.run_async(server, self.init_server(server))
+        proxy = self.run_async(self.server, self.init_server())
         self.assertEqual(proxy.something, 222,
                          "MiddleLayerTestDevice.onInitialization "
                          "did not run properly")
@@ -132,17 +132,17 @@ class Tests(TestCase):
                          "initialization parameter was not honored")
 
         self.run_async(self.dc, self.check_server_topology())
-        self.assertIn("other", server.deviceInstanceMap)
-        r = weakref.ref(server.deviceInstanceMap["other"])
+        self.assertIn("other", self.server.deviceInstanceMap)
+        r = weakref.ref(self.server.deviceInstanceMap["other"])
         with proxy:
             self.assertTrue(isAlive(proxy))
-            self.run_async(server, self.shutdown_server())
-            self.assertNotIn("other", server.deviceInstanceMap)
+            self.run_async(self.server, self.shutdown_server())
+            self.assertNotIn("other", self.server.deviceInstanceMap)
             self.assertFalse(isAlive(proxy))
             gc.collect()
             self.assertIsNone(r())
             async(self.dc.slotKillDevice())
-            self.loop.run_until_complete(server.slotKillServer())
+            self.loop.run_until_complete(self.server.slotKillServer())
             self.assertEqual(proxy.something, 111)
         self.loop.run_forever()
 
@@ -158,15 +158,11 @@ class Tests(TestCase):
 
     def test_appearing_plugin(self):
         """test that new plugins appear in device server"""
-        dirname = os.path.dirname(__file__)
-        server = DeviceServer(
-            dict(serverId="testServer", pluginDirectory=dirname))
-        self.loop.run_until_complete(server.startInstance())
         with self.assertRaises(KaraboError):
             self.run_async(self.dc, instantiate("testServer",
                                                 "SomeDevice", "someName"))
 
-        dirname = os.path.join(dirname, "Temporary.egg-info")
+        dirname = os.path.join(os.path.dirname(__file__), "Temporary.egg-info")
         os.mkdir(dirname)
         try:
             entry_points = self.temp_file(
