@@ -189,12 +189,11 @@ class ProxyFactory(object):
                 if isinstance(descriptor, ProxyNodeBase):
                     value = getattr(instance, key, None)
                     if isinstance(value, SubProxyBase):
-                        weakrecurse()(descriptor.cls, value)
+                        recurse(descriptor.cls, value)
                     else:
                         # something became a Node which wasn't one before.
                         # simply delete it to start anew at the next change
                         instance.__dict__.pop(key, None)
-        weakrecurse = ref(recurse)
         newcls = cls.createProxy(schema)
         recurse(newcls, proxy)
 
