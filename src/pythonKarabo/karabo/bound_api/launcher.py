@@ -39,7 +39,11 @@ elif command == "run":
     # Load the module containing classid so that it gets registered.
     t = threading.Thread(target=EventLoop.work)
     t.start()
-
-    device = entrypoint.load().create(name, config)
-    device._finalizeInternalInitialization()
-    t.join()
+    try:
+        device = entrypoint.load().create(name, config)
+        device._finalizeInternalInitialization()
+    except:
+        EventLoop.stop()
+        raise
+    finally:
+        t.join()

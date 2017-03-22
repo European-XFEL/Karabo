@@ -156,6 +156,14 @@ class Tests(TestCase):
         finally:
             os.remove(path)
 
+    def test_bound(self):
+        with self.assertRaises(KaraboError):
+            self.run_async(self.dc, instantiate("testServer", "CommTestDevice",
+                                                "commtestdevice"))
+        self.run_async(self.dc, instantiate("testServer", "CommTestDevice",
+                                            "commtestdevice", remote="asdf"))
+        self.run_async(self.dc, shutdown("commtestdevice"))
+
     def test_appearing_plugin(self):
         """test that new plugins appear in device server"""
         with self.assertRaises(KaraboError):
