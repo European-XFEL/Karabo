@@ -34,28 +34,25 @@ class ProxyBase(object):
     def _callSlot(self, descriptor):
         """this gets called once the user calls a slot"""
 
+    def _onChanged_r(self, change, instance):
+        for k, v, a in change.iterall():
+            descr = getattr(type(instance), k, None)
+            if descr is not None:
+                if isinstance(descr, ProxyNodeBase):
+                    self._onChanged_r(v, getattr(instance, descr.key))
+                elif not isinstance(descr, ProxySlotBase):
+                    converted = descr.toKaraboValue(v, strict=False)
+                    converted.timestamp = Timestamp.fromHashAttributes(a)
+                    converted._parent = self
+                    instance.__dict__[descr.key] = converted
+                    self._notifyChanged(descr, converted)
+
     def _onChanged(self, change):
         """call this when the remote device changed
 
         :change: is the Hash with the changes
         """
-        def recurse(change, instance):
-            for k, v, a in change.iterall():
-                descr = getattr(type(instance), k, None)
-                if descr is not None:
-                    if isinstance(descr, ProxyNodeBase):
-                        weakrecurse()(v, getattr(instance, descr.key))
-                    elif not isinstance(descr, ProxySlotBase):
-                        converted = descr.toKaraboValue(v, strict=False)
-                        converted.timestamp = Timestamp.fromHashAttributes(a)
-                        converted._parent = self
-                        instance.__dict__[descr.key] = converted
-                        self._notifyChanged(descr, converted)
-        # it is a bit ridiculous that we need a weak reference here, but
-        # otherwise CPython creates a cyclic reference... I consider that a
-        # bug in CPython
-        weakrecurse = ref(recurse)
-        recurse(change, self)
+        self._onChanged_r(change, self)
 
     def _notifyChanged(self, descriptor, value):
         """this is called by _onChanged for each change"""
