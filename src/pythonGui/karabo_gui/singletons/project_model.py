@@ -54,14 +54,13 @@ class ProjectViewItemModel(QAbstractItemModel):
         key = model_index.internalId()
         return self._model_index_refs.get(key)
 
-    def insert_controller(self, controller):
+    def insert_controller(self, controller, row):
         """Insert a ``QModelIndex`` for the given ``controller``
         """
-        row = self._controller_row(controller)
         index = self.createIndex(row, 0, controller)
         if index.isValid():
             try:
-                self.beginInsertRows(index, 0, controller.rows()-1)
+                self.beginInsertRows(index, row, row)
             finally:
                 self.endInsertRows()
 
@@ -73,7 +72,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         index = self.createIndex(row, 0, controller)
         if index.isValid():
             try:
-                self.beginRemoveRows(index, 0, controller.rows()-1)
+                self.beginRemoveRows(index, row, row)
             finally:
                 self.endRemoveRows()
 

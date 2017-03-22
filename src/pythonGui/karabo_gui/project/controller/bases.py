@@ -181,12 +181,10 @@ class BaseProjectGroupController(BaseProjectController):
             self.children.remove(controller)
             self.child_destroy(controller)
 
+        # Synchronize the GUI with the Traits model
         additions = [self.child_create(model=model, parent=self,
                                        _qt_model=self._qt_model)
                      for model in added]
-        self.children.extend(additions)
-
-        # Synchronize the GUI with the Traits model
         self._update_ui_children(additions)
 
     def _children_items_changed(self, event):
@@ -205,4 +203,7 @@ class BaseProjectGroupController(BaseProjectController):
         """ Propagate changes from the Traits model to the Qt item model.
         """
         for item in additions:
-            self._qt_model.insert_controller(item)
+            # NOTE: `insert_controller` must be called BEFORE adding to the
+            # backing data store. See QAbstractItemModel.beginInsertRows
+            self._qt_model.insert_controller(item, len(self.children))
+            self.children.append(item)
