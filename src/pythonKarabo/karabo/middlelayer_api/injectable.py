@@ -1,10 +1,17 @@
+from asyncio import coroutine, gather
+
 from .hash import Descriptor
 from .schema import Configurable, MetaConfigurable
 
 
 class MetaInjectable(MetaConfigurable):
+    def __init__(self, name, bases, namespace):
+        self._added_attrs = []
+        super().__init__(name, bases, namespace)
+
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
+        self._added_attrs.append(name)
         if isinstance(value, Descriptor):
             value.key = name
 
@@ -28,12 +35,13 @@ class Injectable(Configurable):
                 # use the property as any other property:
                 self.injected_string = "whatever"
     """
-    def __new__(cls, configuration={}, parent=None, key=None):
+    def __new__(cls, configuration={}):
         """each object gets its own personal class, that it may modify"""
         newtype = MetaInjectable(cls.__name__, (cls,), {})
         return super(Configurable, cls).__new__(newtype)
 
-    def publishInjectedParameters(self):
+    @coroutine
+    def publishInjectedParameters(self, **kwargs):
         """Publish all changes in the parameters of this object"""
         cls = self.__class__
         cls._attrs = [attr for attr, value in cls.__dict__.items()
@@ -42,5 +50,16 @@ class Injectable(Configurable):
         seen = set(cls._allattrs)
         cls._allattrs.extend(attr for attr in cls._attrs if attr not in seen)
         self._register_slots()
+
+        _initializers = []
+        for k in self._added_attrs:
+            print(k, "IN ADDED ATTRS")
+            t = getattr(type(self), k)
+            init = t.checkedInit(self, kwargs.get(k))
+            _initializers.extend(init)
+        self._added_attrs = []
+
+        yield from gather(*_initializers)
+
         self._notifyNewSchema()
         self.signalChanged(self.configurationAsHash(), self.deviceId)
