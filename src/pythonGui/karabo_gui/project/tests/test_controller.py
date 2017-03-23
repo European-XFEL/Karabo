@@ -42,6 +42,8 @@ def assert_no_notification_handlers(proj_model):
 
 @contextmanager
 def qt_model_context():
+    """A context manager to handle unregistering from broadcast events.
+    """
     try:
         model = ProjectViewItemModel(parent=None)
         yield model
