@@ -9,6 +9,35 @@ from sys import platform
 from xml.etree.ElementTree import fromstring
 
 
+class MemCacheWrapper(object):
+    """In-memory storage for project objects which forwards to another object
+    on cache misses.
+    """
+    def __init__(self, data, miss_handler):
+        self._data = data
+        self._miss_handler = miss_handler
+
+    def flush(self):
+        """Satisfy the project storage interface."""
+
+    def store(self, domain, uuid, data):
+        """Satisfy the project storage interface."""
+        domain_data = self._data.setdefault(domain, {})
+        domain_data[uuid] = data
+
+    def retrieve(self, domain, uuid, existing=None):
+        """Read an object."""
+        domain_data = self._data.get(domain)
+        if domain_data is None:
+            return self._miss_handler.retrieve(domain, uuid, existing=existing)
+
+        data = domain_data.get(uuid)
+        if data is None:
+            return self._miss_handler.retrieve(domain, uuid, existing=existing)
+
+        return data
+
+
 class ProjectDBCache(object):
     """ Local storage for project objects retrieved from the project database.
     """
@@ -43,26 +72,6 @@ class ProjectDBCache(object):
 
         with open(path, mode='r') as fp:
             return fp.read()
-
-    def get_uuids_of_type(self, domain, obj_type):
-        """ Return ``UUID`` of all objects of ``obj_type`` in cache
-
-        :param domain: A string which describes the domain to search
-        :param obj_type: A string which describes the object type
-        :return: A list of ``UUID`s for the given ``obj_type``
-        """
-        domain_dir = op.join(self.dirpath, domain)
-        if not op.exists(domain_dir):
-            return []
-
-        uuid_list = []
-        for uuid in os.listdir(domain_dir):
-            xml = self.retrieve(domain, uuid)
-            root = fromstring(xml)
-            root_type = root.attrib.get('item_type')
-            if root_type == obj_type:
-                uuid_list.append(uuid)
-        return uuid_list
 
     def get_available_domains(self):
         """ Return a list of strings including available domains
