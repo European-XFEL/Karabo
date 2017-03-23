@@ -10,8 +10,8 @@ from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 from karabo.common.api import set_modified_flag, walk_traits_object
 from karabo.common.project.api import (
     PROJECT_DB_TYPE_PROJECT,
-    BaseProjectObjectModel, MacroModel, ProjectDBCache, ProjectModel,
-    read_lazy_object, recursive_save_object
+    BaseProjectObjectModel, MacroModel, MemCacheWrapper, ProjectDBCache,
+    ProjectModel, read_lazy_object, recursive_save_object
 )
 from karabo.middlelayer import encodeXML, Hash
 from ..api import (
@@ -161,12 +161,41 @@ def test_project_cache():
 
     with _project_storage() as storage:
         _write_project(project, storage)
-        project_uuids = storage.get_uuids_of_type(TEST_DOMAIN, 'project')
-        assert len(project_uuids) == 1
-        assert project_uuids[0] == project.uuid
         proj_data = storage.get_available_project_data(TEST_DOMAIN, 'project')
         assert proj_data[0]['uuid'] == project.uuid
         assert proj_data[0]['simple_name'] == project.simple_name
+
+
+def test_inmemory_cache():
+    cache_data = {}
+    old_project = _get_old_project()
+    project = convert_old_project(old_project)
+    with _project_storage() as storage:
+        memcache = MemCacheWrapper(cache_data, storage)
+        _write_project(project, storage)
+        _write_project(project, memcache)
+
+        # remove one item (exercises more branches in MemCacheWrapper)
+        del cache_data[TEST_DOMAIN][project.scenes[0].uuid]
+
+        rt_project = ProjectModel(uuid=project.uuid)
+        read_lazy_object(TEST_DOMAIN, project.uuid, memcache,
+                         read_project_model, existing=rt_project)
+
+    _compare_projects(project, rt_project)
+
+
+def test_empty_inmemory_cache():
+    old_project = _get_old_project()
+    project = convert_old_project(old_project)
+    with _project_storage() as storage:
+        _write_project(project, storage)
+        memcache = MemCacheWrapper({}, storage)
+        rt_project = ProjectModel(uuid=project.uuid)
+        read_lazy_object(TEST_DOMAIN, project.uuid, memcache,
+                         read_project_model, existing=rt_project)
+
+    _compare_projects(project, rt_project)
 
 
 def test_uninitialized_save():
