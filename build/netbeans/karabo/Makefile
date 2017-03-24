@@ -129,7 +129,7 @@ bundle: build
 	cd ../karathon; $(MAKE) CONF=$(CONF)
 	cd ../deviceServer; $(MAKE) CONF=$(CONF)
 	cd ../brokerMessageLogger; $(MAKE) CONF=$(CONF)
-#cd ../tools/brokerRates; $(MAKE) CONF=$(CONF)
+	cd ../tools/brokerRates; $(MAKE) CONF=$(CONF)
 	cd ../tools/dataLoggerIndex/idxview; $(MAKE) CONF=$(CONF)
 	cd ../tools/dataLoggerIndex/idxbuild; $(MAKE) CONF=$(CONF)
 
@@ -152,6 +152,7 @@ bundle-clean: clean
 	cd ../deviceServer; $(MAKE) clean CONF=$(CONF)
 	cd ../integrationTests; $(MAKE) clean CONF=$(CONF)
 	cd ../brokerMessageLogger; $(MAKE) clean CONF=$(CONF)
+	cd ../tools/brokerRates; $(MAKE) clean CONF=$(CONF)
 	cd ../tools/dataLoggerIndex/idxview; $(MAKE) clean CONF=$(CONF)
 	cd ../tools/dataLoggerIndex/idxbuild; $(MAKE) clean CONF=$(CONF)
 
