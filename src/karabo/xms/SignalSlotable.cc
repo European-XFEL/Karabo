@@ -1746,17 +1746,17 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, int trails, int sleep) {
+        void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, int trails) {
             // Loop connected outputs
             const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
             for (std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
                 const string& outputChannelString = it->first;
-                connectInputToOutputChannel(channel, outputChannelString, trails, sleep);
+                connectInputToOutputChannel(channel, outputChannelString, trails);
             }
         }
 
 
-        void SignalSlotable::connectInputToOutputChannel(const InputChannel::Pointer& channel, const std::string& outputChannelString, int trials, int sleep) {
+        void SignalSlotable::connectInputToOutputChannel(const InputChannel::Pointer& channel, const std::string& outputChannelString, int trials) {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "connectInputToOutputChannel  on \"" << m_instanceId << "\"  : outputChannelString is \"" << outputChannelString << "\"";
 
@@ -1769,7 +1769,6 @@ namespace karabo {
 
             bool channelExists = !it->second.empty();
             if (!channelExists) {
-                karabo::util::Hash reply;
 
                 std::vector<std::string> v;
                 boost::split(v, outputChannelString, boost::is_any_of("@:"));
@@ -1777,77 +1776,61 @@ namespace karabo {
                 const std::string& instanceId = v[0];
                 const std::string& channelId = v[1];
 
-                while ((trials--) > 0) {
-                    try {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "connectInputToOutputChannel  on \"" << m_instanceId << "\"  :  "
-                                << "request \"" << instanceId << "\", slotGetOutputChannelInformation, channelId=" << channelId;
-
-                        this->request(instanceId, "slotGetOutputChannelInformation", channelId,
-                                      static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
-                    } catch (karabo::util::TimeoutException&) {
-                        karabo::util::Exception::clearTrace();
-                        KARABO_LOG_FRAMEWORK_INFO << "Could not find instanceId \"" + instanceId + "\" for IO connection";
-                        KARABO_LOG_FRAMEWORK_INFO << "Trying again in " << sleep << " seconds.";
-                        boost::this_thread::sleep(boost::posix_time::seconds(sleep));
-                        sleep += 2;
-                        continue;
-                    }
-                    // Use all attempts if failed to get channel existing...
-                    if (!channelExists) {
-                        boost::this_thread::sleep(boost::posix_time::seconds(sleep));
-                        sleep += 2;
-                        continue;
-                    } else {
-                        ostringstream oss;
-                        oss << reply.get<string>("connectionType") << "://" << reply.get<string>("hostname")
-                                << ":" << reply.get<unsigned int>("port");
-                        reply.set("connectionString", oss.str());
-                        reply.set("outputChannelString", outputChannelString);
-                        channel->updateOutputChannelConfiguration(outputChannelString, reply);
-                        outputChannels = channel->getConnectedOutputChannels(); // update outputChannels with new copy
-                    }
-                    break;
-                }
-            }
-            if (channelExists) {
-                channel->connect(outputChannels[outputChannelString]); // Synchronous
-            } else {
-                KARABO_LOG_FRAMEWORK_WARN << "Could not find outputChannel \"" << outputChannelString
-                        << "\". Perhaps device with output channel is not online yet.";
-            }
-        }
-
-
-        void SignalSlotable::connectInputChannelAsync(const InputChannel::Pointer& channel, const boost::function<void() >& handler) {
-            // Loop connected outputs
-            const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
-            for (std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
-                const std::string& outputChannelString = it->first;
-
-                std::vector<std::string> v;
-                boost::split(v, outputChannelString, boost::is_any_of("@:"));
-
-                const std::string& instanceId = v[0];
-                const std::string& channelId = v[1];
-
+                const unsigned int timeout = 1000; // in ms
+                auto successHandler = util::bind_weak(&SignalSlotable::connectInputChannelHandler, this, channel, outputChannelString, _1, _2);
+                auto timeoutHandler = util::bind_weak(&SignalSlotable::connectInputChannelTimeoutHandler, this, channel, outputChannelString,
+                                                      trials, timeout + 2000);
                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
-                        .receiveAsync<bool, karabo::util::Hash > (boost::bind(&SignalSlotable::onInputChannelConnectInfo,
-                                                                              this, channel, handler,
-                                                                              instanceId, channelId, _1, _2));
+                          .timeout(timeout)
+                          .receiveAsync<bool, karabo::util::Hash> (successHandler, timeoutHandler);
+            } else {
+                // Everything is already there!
+                channel->connect(it->second); // asynchronous
             }
-
         }
 
 
-        void SignalSlotable::onInputChannelConnectInfo(const InputChannel::Pointer& channel,
-                                                       const boost::function<void() >& handler,
-                                                       const std::string& instanceId, const std::string& channelId,
-                                                       bool channelExists, const karabo::util::Hash& info) {
-            if (channelExists) {
-                channel->connect(info); // Synchronous
-                handler();
+        void SignalSlotable::connectInputChannelHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
+                                                        bool outChannelExists, const karabo::util::Hash& outChannelInfo) {
+            if (outChannelExists) {
+                Hash allInfo(outChannelInfo);
+                const std::string connectionString(outChannelInfo.get<string>("connectionType") + "://"
+                                                   + outChannelInfo.get<string>("hostname") + ":"
+                                                   + toString(outChannelInfo.get<unsigned int>("port")));
+                allInfo.set("connectionString", connectionString);
+                allInfo.set("outputChannelString", outputChannelString);
+                inChannel->updateOutputChannelConfiguration(outputChannelString, allInfo);
+                inChannel->connect(allInfo); // asynchronous
             } else {
-                KARABO_LOG_FRAMEWORK_ERROR << "Could not find outputChannel \"" << channelId << "\" on instanceId \"" << instanceId << "\"";
+                // Could happen from reconnectInputChannels (from slotInstanceNew) if the new instance registers its
+                // OutputChannel after sending its "I am alive!" signal. But that is a bug on that side!
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << " could not connect outputChannel '" << outputChannelString
+                        << "' since its instance has no such channel.";
+            }
+        }
+
+
+        void SignalSlotable::connectInputChannelTimeoutHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
+                                                               int trials, unsigned int nextTimeout) {
+            if (trials-- > 0) {
+                KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << " did not find instance of channel '" << outputChannelString
+                        << "', try again for " << nextTimeout << " ms (and then " << trials << " more times).";
+
+                std::vector<std::string> v;
+                boost::split(v, outputChannelString, boost::is_any_of("@:"));
+
+                const std::string& instanceId = v[0];
+                const std::string& channelId = v[1];
+
+                auto successHandler = util::bind_weak(&SignalSlotable::connectInputChannelHandler, this, inChannel, outputChannelString, _1, _2);
+                auto timeoutHandler = util::bind_weak(&SignalSlotable::connectInputChannelTimeoutHandler, this, inChannel, outputChannelString,
+                                                      trials, nextTimeout + 2000);
+                this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
+                          .timeout(nextTimeout)
+                          .receiveAsync<bool, karabo::util::Hash> (successHandler, timeoutHandler);
+            } else {
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << " finally gives up to find instance of channel '"
+                        << outputChannelString << "', maybe it is not yet online (will try again if it gets online).";
             }
         }
 
