@@ -155,9 +155,11 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
         // rates.
         if (!m_start.getSeconds()) m_start.now();
 
+        // Since we told the consumer to skip serialisation, we can get the total size in bytes:
+        const unsigned int bodySize = body->get<unsigned int>("totalSizeInBytes");
         // Register for per sender and per (intended) receiver:
-        this->registerPerSignal(header, body->size()); // FIXME: byte size of body?
-        this->registerPerSlot(header, body->size()); // FIXME: dito
+        this->registerPerSignal(header, bodySize);
+        this->registerPerSlot(header, bodySize);
 
         // Now it might be time to print and reset.
         // Since it is done inside registerMessage, one does not get any printout if
@@ -317,11 +319,11 @@ void printHelp(const char* name) {
         nameStr.replace(0, lastSlashPos + 1, "");
     }
     std::cout << "\n  " << nameStr << " [-h|--help] [interValSec]\n\n"
-            << "Prints the rate and average size of all signals sent to the " // FIXME: not size!
+            << "Prints the rate and average size of all signals sent to the "
             << "broker and of\n"
             << "the intended calls of the slots that receive the signals.\n"
             << "Broker host and topic are read from the usual environment "
-            << "variables\nKARABO_BROKER_HOST and KARABO_BROKER_TOPIC or, if "
+            << "variables\nKARABO_BROKER and KARABO_BROKER_TOPIC or, if "
             << "these are not defined, use\nthe usual defaults.\n"
             << "Optional argument is the time (in seconds) for averaging "
             << "(default: 20).\n"
@@ -374,7 +376,8 @@ int main(int argc, char** argv) {
         connection->connect();
 
         std::string selector; // Could be made configurable as in broker MessageLogger.
-        net::JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector);
+        // 3rd argument true: skip serialisation (but get access to raw message size)!
+        net::JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector, true);
 
         std::cout << "\nStart monitoring signal and slot rates of \n   topic     '"
                 << topic << "'\n   on broker '"
