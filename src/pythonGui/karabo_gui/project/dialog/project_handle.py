@@ -18,6 +18,7 @@ from karabo_gui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
 )
 from karabo_gui.messagebox import MessageBox
+from karabo_gui.project.utils import show_trash_project_message
 from karabo_gui.singletons.api import get_db_conn
 from karabo_gui.util import SignalBlocker
 
@@ -222,18 +223,22 @@ class ProjectHandleDialog(QDialog):
             trash_action = QAction(text, menu)
             trash_action.triggered.connect(partial(self._update_is_trashed,
                                                    self.domain, uuid,
-                                                   not is_trashed))
+                                                   is_trashed))
             menu.addAction(trash_action)
             menu.exec(QCursor.pos())
 
     @pyqtSlot(str, str, bool)
-    def _update_is_trashed(self, domain, uuid, is_trashed):
+    def _update_is_trashed(self, domain, uuid, current_is_trashed):
         """ Change ``is_trashed`` attribute of project with given ``uuid``
+
+        NOTE: ``current_is_trashed`` is the current value of the selected
+        project which should be toggled here
         """
-        db_conn = get_db_conn()
-        db_conn.update_attribute(domain, 'project', uuid, 'is_trashed',
-                                 str(is_trashed).lower())
-        self.update_view()
+        if show_trash_project_message(current_is_trashed):
+            db_conn = get_db_conn()
+            db_conn.update_attribute(domain, 'project', uuid, 'is_trashed',
+                                     str(not current_is_trashed).lower())
+            self.update_view()
 
     @pyqtSlot(object)
     def _openFromChanged(self, button):
