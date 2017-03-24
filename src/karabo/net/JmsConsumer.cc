@@ -23,13 +23,13 @@ namespace karabo {
 
 
         JmsConsumer::JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
-                                 const std::string& selector) :
+                                 const std::string& selector, bool skipSerialisation) :
             m_connection(connection),
+            m_binarySerializer(skipSerialisation ? nullptr : BinarySerializer<Hash>::create("Bin")),
             m_mqStrand(EventLoop::getIOService()),
             m_notifyStrand(EventLoop::getIOService()),
             m_topic(topic),
             m_selector(selector) {
-            m_binarySerializer = BinarySerializer<Hash>::create("Bin");
             EventLoop::addThread();
         }
 
@@ -96,7 +96,11 @@ namespace karabo {
 
                         MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
                         this->parseHeader(messageHandle, *header);
-                        m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                        if (m_binarySerializer) {
+                            m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                        } else {
+                            body->set("totalSizeInBytes", static_cast<unsigned int> (nBytes));
+                        }
                         m_notifyStrand.post(boost::bind(handler, header, body));
                         break;
                     }

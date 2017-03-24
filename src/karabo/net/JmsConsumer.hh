@@ -69,9 +69,13 @@ namespace karabo {
             virtual ~JmsConsumer();
 
         private:
-
+            // The 'skipSerialisation' flag is for expert use: Instead of deserialising the message body, the body
+            // provided to the JmsConsumer::MessageHandler will be a Hash with a single key "totalSizeInBytes"
+            // containing an unsigned int with the number of bytes of the serialised message.
+            // This is used in karabo-brokerrates to speed up (it digests all messages of a topic!) and to provide
+            // information on the message sizes.
             JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
-                        const std::string& selector);
+                        const std::string& selector, bool skipSerialisation = false);
 
             void asyncConsumeMessage(const MessageHandler handler, const std::string& topic, const std::string& selector);
 
