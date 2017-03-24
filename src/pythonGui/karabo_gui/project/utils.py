@@ -18,9 +18,6 @@ from karabo.common.project.api import (
 from karabo.middlelayer import Hash, read_project_model
 from karabo_gui.events import broadcast_event, KaraboEventSender
 import karabo_gui.globals as krb_globals
-from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
-from karabo_gui.project.dialog.project_handle import (
-    LoadProjectDialog, NewProjectDialog)
 from karabo_gui.singletons.api import (get_db_conn, get_project_model,
                                        get_network)
 
@@ -62,6 +59,8 @@ def add_device_to_server(server, class_id=''):
     :return: The device id of the newly added device, or an empty string if
              no device was added.
     """
+    from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
+
     server_model = None
     if isinstance(server, str):
         server_model = get_device_server_model(server)
@@ -143,6 +142,8 @@ def get_device_server_model(server_id):
 def load_project():
     """Load a project from the project database.
     """
+    from karabo_gui.project.dialog.project_handle import LoadProjectDialog
+
     dialog = LoadProjectDialog()
     result = dialog.exec()
     if result == QDialog.Accepted:
@@ -175,6 +176,8 @@ def save_as_object(obj):
 
     :param obj A project model object
     """
+    from karabo_gui.project.dialog.project_handle import NewProjectDialog
+
     def _visitor(model):
         if isinstance(model, BaseProjectObjectModel):
             model.reset_uuid()
@@ -221,6 +224,29 @@ def show_save_project_message(project):
 
         if reply == QMessageBox.Save:
             return True
+    return False
+
+
+def show_trash_project_message(is_trashed, simple_name=''):
+    """Check whether the given ``is_trashed`` should be toggled and show a
+    messagebox to allow the user to confirm moving to trash or restoring from
+    trash or cancel
+
+    :return Whether the user wants to change the ``is_trashed`` attribute
+    """
+    if is_trashed:
+        title = 'Restore from trash'
+        text = ('Do you really want to <b>restore</b> this project <br><b>{}'
+                '</b> from trash?').format(simple_name)
+    else:
+        title = 'Move to trash'
+        text = ('Do you really want to <b>move</b> this project <br><b>{}</b>'
+                ' to trash?').format(simple_name)
+
+    result = QMessageBox.question(None, title, text,
+                                  QMessageBox.Yes | QMessageBox.No)
+    if result == QMessageBox.Yes:
+        return True
     return False
 
 
