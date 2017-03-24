@@ -655,31 +655,15 @@ namespace karabo {
                 input->setInstanceId(m_instanceId);
                 input->registerInputHandler(boost::bind(&GuiServerDevice::onNetworkData, this, _1));
 
-                // TODO: This is a synchronous connect (using request-receive-with-timeout) and it may take ages
-                // attempting to connect to non-existing device ... 
-                // But it may fail if network or broker is so busy that cannot reply in time ...
-                // ... maybe we need asynchronous connect here
-                connectInputChannel(input, 1); // 1 attempt
+                connectInputChannel(input); // asynchronous
                 NetworkConnection nc;
                 nc.name = channelName;
                 nc.channel = channel;
                 m_networkConnections.insert(NetworkMap::value_type(input, nc));
 
-                //connectInputChannelAsync(input, boost::bind(&GuiServerDevice::onInputChannelConnected, this, input, channel, channelName));
-            } catch (const Exception &e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSubscribeNetwork(): " << e.userFriendlyMsg();
+            } catch (const std::exception &e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSubscribeNetwork(): " << e.what();
             }
-        }
-
-
-        void GuiServerDevice::onInputChannelConnected(const InputChannel::Pointer& input, const Channel::Pointer& channel, const std::string& channelName) {
-            boost::mutex::scoped_lock lock(m_networkMutex);
-            // TODO: Revise the code below ... avoid double insertion because of asynchrony.
-            NetworkConnection nc;
-            nc.name = channelName;
-            nc.channel = channel;
-
-            m_networkConnections.insert(NetworkMap::value_type(input, nc));
         }
 
 
