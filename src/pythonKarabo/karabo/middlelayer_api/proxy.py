@@ -1,7 +1,7 @@
 import asyncio
 from collections import defaultdict
 import time
-from weakref import WeakSet
+from weakref import ref, WeakSet
 
 from .basetypes import KaraboValue
 from .enums import NodeType
@@ -33,6 +33,29 @@ class ProxyBase(object):
 
     def _callSlot(self, descriptor):
         """this gets called once the user calls a slot"""
+
+    def _onChanged_r(self, change, instance):
+        for k, v, a in change.iterall():
+            descr = getattr(type(instance), k, None)
+            if descr is not None:
+                if isinstance(descr, ProxyNodeBase):
+                    self._onChanged_r(v, getattr(instance, descr.key))
+                elif not isinstance(descr, ProxySlotBase):
+                    converted = descr.toKaraboValue(v, strict=False)
+                    converted.timestamp = Timestamp.fromHashAttributes(a)
+                    converted._parent = self
+                    instance.__dict__[descr.key] = converted
+                    self._notifyChanged(descr, converted)
+
+    def _onChanged(self, change):
+        """call this when the remote device changed
+
+        :change: is the Hash with the changes
+        """
+        self._onChanged_r(change, self)
+
+    def _notifyChanged(self, descriptor, value):
+        """this is called by _onChanged for each change"""
 
 
 class ProxyDescriptor(Descriptor):
@@ -138,7 +161,8 @@ class ProxyFactory(object):
                 namespace[k] = descriptor
             elif nodeType is NodeType.Node:
                 if a.get("displayType") == "Slot":
-                    namespace[k] = cls.ProxySlot(key=k, longkey=prefix + k)
+                    namespace[k] = cls.ProxySlot(key=k, longkey=prefix + k,
+                                                 strict=False, **a)
                 else:
                     sub = cls.createNamespace(v, "{}{}.".format(prefix, k))
                     Cls = type(k, (cls.SubProxy,), sub)
@@ -151,6 +175,24 @@ class ProxyFactory(object):
     def createProxy(cls, schema):
         namespace = cls.createNamespace(schema.hash)
         return type(schema.name, (cls.Proxy,), namespace)
+
+    @classmethod
+    def updateSchema(cls, proxy, schema):
+        """update the schema of proxy"""
+        def recurse(newcls, instance):
+            instance.__class__ = newcls
+            for key in dir(newcls):
+                descriptor = getattr(newcls, key)
+                if isinstance(descriptor, ProxyNodeBase):
+                    value = getattr(instance, key, None)
+                    if isinstance(value, SubProxyBase):
+                        recurse(descriptor.cls, value)
+                    else:
+                        # something became a Node which wasn't one before.
+                        # simply delete it to start anew at the next change
+                        instance.__dict__.pop(key, None)
+        newcls = cls.createProxy(schema)
+        recurse(newcls, proxy)
 
 
 class DeviceClientProxyFactory(ProxyFactory):
@@ -192,42 +234,14 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._last_update_task = None
             self._schemaUpdateConnected = False
 
-        def _onChanged_r(self, hash, instance, parent):
-            """the recursive part of _onChanged"""
-            for k, v, a in hash.iterall():
-                d = getattr(type(instance), k, None)
-                if d is not None:
-                    if isinstance(d, ProxyNodeBase):
-                        self._onChanged_r(v, getattr(instance, d.key), parent)
-                    elif not isinstance(d, ProxySlotBase):
-                        converted = d.toKaraboValue(v, strict=False)
-                        converted.timestamp = Timestamp.fromHashAttributes(a)
-                        converted._parent = parent
-                        instance.__dict__[d.key] = converted
-                        for q in parent._queues[d.longkey]:
-                            q.put_nowait(converted)
+        def _notifyChanged(self, descriptor, value):
+            for q in self._queues[descriptor.longkey]:
+                q.put_nowait(value)
 
-        def _onChanged(self, hash):
-            self._onChanged_r(hash, self, self)
+        def _onChanged(self, change):
+            super()._onChanged(change)
             for q in self._queues[None]:
-                q.put_nowait(hash)
-
-        def _onSchemaUpdated_r(self, cls, instance):
-            instance.__class__ = cls
-            for key in dir(cls):
-                descriptor = getattr(cls, key)
-                if isinstance(descriptor, ProxyNodeBase):
-                    value = getattr(instance, key, None)
-                    if isinstance(value, SubProxyBase):
-                        self._onSchemaUpdated_r(descriptor.cls, value)
-                    else:
-                        # something became a Node which wasn't one before.
-                        # simply delete it to start anew at the next change
-                        value.__dict__.pop(key, None)
-
-        def _onSchemaUpdated(self, schema):
-            cls = DeviceClientProxyFactory.createProxy(schema)
-            self._onSchemaUpdated_r(cls, self)
+                q.put_nowait(change)
 
         def setValue(self, desc, value):
             self._use()
