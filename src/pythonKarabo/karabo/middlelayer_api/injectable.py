@@ -6,14 +6,15 @@ from .schema import Configurable, MetaConfigurable
 
 class MetaInjectable(MetaConfigurable):
     def __init__(self, name, bases, namespace):
-        self._added_attrs = []
         super().__init__(name, bases, namespace)
+        self._added_attrs = []
 
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
         self._added_attrs.append(name)
         if isinstance(value, Descriptor):
             value.key = name
+
 
 
 class Injectable(Configurable):
@@ -53,7 +54,6 @@ class Injectable(Configurable):
 
         _initializers = []
         for k in self._added_attrs:
-            print(k, "IN ADDED ATTRS")
             t = getattr(type(self), k)
             init = t.checkedInit(self, kwargs.get(k))
             _initializers.extend(init)
