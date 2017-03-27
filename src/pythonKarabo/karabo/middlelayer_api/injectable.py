@@ -6,8 +6,9 @@ from .schema import Configurable, MetaConfigurable
 
 class MetaInjectable(MetaConfigurable):
     def __init__(self, name, bases, namespace):
-        super().__init__(name, bases, namespace)
         self._added_attrs = []
+        super().__init__(name, bases, namespace)
+        self._added_attrs.clear()
 
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
@@ -45,6 +46,7 @@ class Injectable(Configurable):
     def publishInjectedParameters(self, **kwargs):
         """Publish all changes in the parameters of this object"""
         cls = self.__class__
+        added_attrs = list(cls._added_attrs)
         cls._attrs = [attr for attr, value in cls.__dict__.items()
                       if isinstance(value, Descriptor)]
         cls._allattrs = list(super(cls, cls)._allattrs)
@@ -53,7 +55,7 @@ class Injectable(Configurable):
         self._register_slots()
 
         _initializers = []
-        for k in self._added_attrs:
+        for k in added_attrs:
             t = getattr(type(self), k)
             init = t.checkedInit(self, kwargs.get(k))
             _initializers.extend(init)
@@ -63,3 +65,4 @@ class Injectable(Configurable):
 
         self._notifyNewSchema()
         self.signalChanged(self.configurationAsHash(), self.deviceId)
+        cls._added_attrs.clear()
