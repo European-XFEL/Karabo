@@ -1147,12 +1147,26 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getTags' should be a string");
     }
 
+    struct ConvertOptions {
+        const string& m_path;
+        const Schema& m_schema;
+        bp::object result;
+
+        inline ConvertOptions(const string& path, const Schema& schema) : m_path(path), m_schema(schema) { }
+
+        template <class T>
+        inline operator T*() {
+            result = karathon::Wrapper::fromStdVectorToPyArray<T>(m_schema.getOptions<T>(m_path));
+        }
+
+    };
 
     bp::object getOptions(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
-            const vector<string>& v = schema.getOptions(path);
-            return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
+            ConvertOptions convertOptions(path, schema);
+            templatize(schema.getValueType(path), convertOptions);
+            return convertOptions.result;
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getOptions' should be a string");
     }
@@ -2058,6 +2072,7 @@ void exportPyUtilSchema() {
     // In Python : PATH_ELEMENT
     {
         bp::implicitly_convertible< Schema &, PathElement >();
+        typedef std::string EType;
         bp::class_<PathElement> ("PATH_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
                 KARABO_PYTHON_COMMON_ATTRIBUTES(PathElement)
                 KARABO_PYTHON_OPTIONS_NONVECTOR(PathElement)
