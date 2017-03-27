@@ -5,10 +5,12 @@ from traits.api import Constant, Dict, Float, Instance, Int, List, String
 from karabo.common.api import BaseSavableModel, walk_traits_object
 # avoid karabo.common.project.api due to circular imports...
 from karabo.common.project.bases import BaseProjectObjectModel
-from .bases import BaseSceneObjectData
-from .const import (NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT,
-                    SCENE_FILE_VERSION)
-from .io_utils import set_numbers
+from .bases import BaseSceneObjectData, BaseWidgetObjectData
+from .const import (
+    NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT, SCENE_FILE_VERSION,
+    UNKNOWN_WIDGET_CLASS, WIDGET_ELEMENT_TAG)
+from .io_utils import (read_empty_display_editable_widget, set_numbers,
+                       write_base_widget_data)
 from .registry import register_scene_reader, register_scene_writer
 
 
@@ -25,6 +27,20 @@ class SceneModel(BaseProjectObjectModel):
     height = Float(SCENE_MIN_HEIGHT)
     # All the objects in the scene
     children = List(Instance(BaseSceneObjectData))
+
+
+class UnknownWidgetDataModel(BaseWidgetObjectData):
+    """A model object for widgets from the future!
+
+    As new widgets are added in the future, code which has not yet been
+    upgraded needs to be able to read and write them without blowing up.
+    """
+    # The value of the `krb:widget` attribute
+    klass = String
+    # Attributes which are not part of `BaseWidgetObjectData`
+    attributes = Dict
+    # The data of the SVG element, if there is any
+    data = String
 
 
 class UnknownXMLDataModel(BaseSceneObjectData):
@@ -104,8 +120,8 @@ def __unknown_xml_data_reader(read_func, element):
 
 
 @register_scene_writer(UnknownXMLDataModel)
-def __unknown_xml_data_writer(write_func, model, root):
-    element = SubElement(root, model.tag)
+def __unknown_xml_data_writer(write_func, model, parent):
+    element = SubElement(parent, model.tag)
     if model.data:
         element.text = model.data
     for name, value in model.attributes.items():
@@ -113,4 +129,26 @@ def __unknown_xml_data_writer(write_func, model, root):
     for child in model.children:
         write_func(child, element)
 
+    return element
+
+
+@register_scene_reader(UNKNOWN_WIDGET_CLASS)
+def __unknown_widget_data_reader(read_func, element):
+    traits = read_empty_display_editable_widget(element)
+    attributes = {k: element.get(k) for k in element.attrib if k not in traits}
+    return UnknownWidgetDataModel(
+        attributes=attributes,
+        data=element.text or '',
+        **traits
+    )
+
+
+@register_scene_writer(UnknownWidgetDataModel)
+def __unknown_widget_data_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, model.klass)
+    if model.data:
+        element.text = model.data
+    for name, value in model.attributes.items():
+        element.set(name, value)
     return element

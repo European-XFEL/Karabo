@@ -30,6 +30,7 @@ def test_display_state_color_widget():
     assert_base_traits(read_model)
     assert read_model.text == 'foo'
 
+
 def test_evaluator_widget():
     traits = base_widget_traits(parent='DisplayComponent')
     traits['expression'] = 'x'

@@ -1,7 +1,8 @@
 import enum
 from xml.etree.ElementTree import register_namespace
 
-# The version number for files which are written
+# The current version of the scene file format.
+# New files will always be written with the current version.
 SCENE_FILE_VERSION = 2
 
 # Scene default dimensions
@@ -31,3 +32,7 @@ XML_NAMESPACES = {
 
 for prefix, ns in XML_NAMESPACES.items():
     register_namespace(prefix, ns.strip('{}'))
+
+# Every widget has the same tag and is differentiated with attributes
+WIDGET_ELEMENT_TAG = NS_SVG + 'rect'
+UNKNOWN_WIDGET_CLASS = 'UnknownWidget'

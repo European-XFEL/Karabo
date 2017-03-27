@@ -7,7 +7,7 @@ from .exceptions import SceneReaderException, SceneWriterException
 from .io import read_scene, write_scene, write_single_model
 from .layouts import (BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
                       GridLayoutChildData, GridLayoutModel)
-from .model import SceneModel, UnknownXMLDataModel
+from .model import SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel
 from .registry import register_scene_reader, register_scene_writer
 from .shapes import LineModel, PathModel, RectangleModel
 from .widgets.complex import (DisplayStateColorModel, EvaluatorModel,
