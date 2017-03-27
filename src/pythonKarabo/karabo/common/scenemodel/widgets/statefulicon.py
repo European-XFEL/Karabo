@@ -9,7 +9,7 @@ from xml.etree.ElementTree import SubElement
 from traits.api import String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
-from karabo.common.scenemodel.const import NS_KARABO, NS_SVG
+from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, write_base_widget_data)
 from karabo.common.scenemodel.registry import (
@@ -23,7 +23,7 @@ class StatefulIconWidgetModel(BaseWidgetObjectData):
 
 @register_scene_writer(StatefulIconWidgetModel)
 def _statefulwidget_widget_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'StatefulIconWidget')
     element.set(NS_KARABO + 'icon_name', model.icon_name)
     return element
