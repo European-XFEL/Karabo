@@ -1,5 +1,5 @@
 from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import (QAction, QInputDialog, QFrame, QLabel)
+from PyQt4.QtGui import QAction, QInputDialog, QFrame, QLabel
 
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA, WIDGET_MIN_HEIGHT
 from karabo_gui.indicators import STATE_COLORS
