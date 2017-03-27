@@ -10,9 +10,9 @@ from .layouts import (BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
 from .model import SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel
 from .registry import register_scene_reader, register_scene_writer
 from .shapes import LineModel, PathModel, RectangleModel
-from .widgets.complex import (DisplayStateColorModel, EvaluatorModel,
-                              FloatSpinBoxModel, MonitorModel, SingleBitModel,
-                              TableElementModel)
+from .widgets.complex import (ColorBoolModel, DisplayStateColorModel,
+                              EvaluatorModel, FloatSpinBoxModel, MonitorModel,
+                              SingleBitModel, TableElementModel)
 from .widgets.icon import (BaseIconsModel, DigitIconsModel,
                            DisplayIconsetModel, IconData, SelectionIconsModel,
                            TextIconsModel)
