@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Enum, Float, Int, String
+from traits.api import Bool, Enum, Float, Int, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
@@ -9,6 +9,11 @@ from karabo.common.scenemodel.io_utils import (
     write_base_widget_data)
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
+
+
+class ColorBoolModel(BaseWidgetObjectData):
+    """ A model for DisplayBool Widget"""
+    invert = Bool(False)
 
 
 class DisplayStateColorModel(BaseWidgetObjectData):
@@ -56,6 +61,22 @@ class TableElementModel(BaseWidgetObjectData):
     column_schema = String
     # The actual type of the widget
     klass = Enum('DisplayTableElement', 'EditableTableElement')
+
+
+@register_scene_reader('DisplayColorBool', version=2)
+def _display_color_bool_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    value = element.get(NS_KARABO + 'invert')
+    traits['invert'] = (value.lower() == 'true')
+    return ColorBoolModel(**traits)
+
+
+@register_scene_writer(ColorBoolModel)
+def _display_color__bool_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DisplayColorBool')
+    element.set(NS_KARABO + 'invert', str(model.invert).lower())
+    return element
 
 
 @register_scene_reader('DisplayStateColor', version=1)

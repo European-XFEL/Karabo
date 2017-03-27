@@ -1,19 +1,19 @@
 from PyQt4.QtCore import QRect
 
 from karabo.common.scenemodel.api import (
-    BaseLayoutModel, BitfieldModel, BoxLayoutModel, CheckBoxModel,
-    ChoiceElementModel, ComboBoxModel, DigitIconsModel, DirectoryModel,
-    DisplayAlignedImageModel, DisplayCommandModel, DisplayIconsetModel,
-    DisplayImageElementModel, DisplayImageModel, DisplayLabelModel,
-    DisplayPlotModel, DisplayStateColorModel, DoubleLineEditModel,
-    EditableListElementModel, EditableListModel, EditableSpinBoxModel,
-    EvaluatorModel, FileInModel, FileOutModel, FixedLayoutModel,
-    FloatSpinBoxModel, GridLayoutModel, HexadecimalModel, IntLineEditModel,
-    KnobModel, LabelModel, LampModel, LineEditModel, LineModel, LinePlotModel,
-    MonitorModel, PathModel, PopUpModel, RectangleModel, SceneLinkModel,
-    ScientificImageModel, SelectionIconsModel, SingleBitModel, SliderModel,
-    StatefulIconWidgetModel, TableElementModel, TextIconsModel,
-    UnknownXMLDataModel, VacuumWidgetModel, WebcamImageModel,
+    BaseLayoutModel, BitfieldModel, ColorBoolModel, BoxLayoutModel,
+    CheckBoxModel, ChoiceElementModel, ComboBoxModel, DigitIconsModel,
+    DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
+    DisplayIconsetModel, DisplayImageElementModel, DisplayImageModel,
+    DisplayLabelModel, DisplayPlotModel, DisplayStateColorModel,
+    DoubleLineEditModel, EditableListElementModel, EditableListModel,
+    EditableSpinBoxModel, EvaluatorModel, FileInModel, FileOutModel,
+    FixedLayoutModel, FloatSpinBoxModel, GridLayoutModel, HexadecimalModel,
+    IntLineEditModel, KnobModel, LabelModel, LampModel, LineEditModel,
+    LineModel, LinePlotModel, MonitorModel, PathModel, PopUpModel,
+    RectangleModel, SceneLinkModel, ScientificImageModel, SelectionIconsModel,
+    SingleBitModel, SliderModel, StatefulIconWidgetModel, TableElementModel,
+    TextIconsModel, UnknownXMLDataModel, VacuumWidgetModel, WebcamImageModel,
     WorkflowItemModel, XYPlotModel
 )
 
@@ -21,7 +21,7 @@ from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape
 from .widget.api import (
-    BaseWidgetContainer, ComplexImageWidgetContainer,
+    BaseWidgetContainer, ColorBoolContainer, ComplexImageWidgetContainer,
     DisplayEditableWidgetContainer, DisplayIconsetContainer,
     DisplayStateColorContainer, EvaluatorContainer, FloatSpinBoxContainer,
     GenericWidgetContainer, IconsContainer, LabelWidget, LinePlotContainer,
@@ -73,6 +73,7 @@ _SCENE_OBJ_FACTORIES = {
     FileInModel: DisplayEditableWidgetContainer,
     FileOutModel: DisplayEditableWidgetContainer,
     LineEditModel: DisplayEditableWidgetContainer,
+    ColorBoolModel: ColorBoolContainer,
     DisplayStateColorModel: DisplayStateColorContainer,
     DigitIconsModel: IconsContainer,
     SelectionIconsModel: IconsContainer,

@@ -9,6 +9,7 @@
 __all__ = [
     "displayalignedimage",
     "displaybitfield",
+    "displaycolorbool",
     "displaycheckbox",
     "displaychoiceelement",
     "displaycombobox",

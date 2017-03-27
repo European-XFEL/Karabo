@@ -1,6 +1,6 @@
 from karabo.common.scenemodel.api import (
-    BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
-    DigitIconsModel, DirectoryModel, DisplayAlignedImageModel,
+    BitfieldModel, ColorBoolModel, CheckBoxModel, ChoiceElementModel,
+    ComboBoxModel, DigitIconsModel, DirectoryModel, DisplayAlignedImageModel,
     DisplayCommandModel, DisplayIconsetModel, DisplayImageElementModel,
     DisplayImageModel, DisplayLabelModel, DisplayPlotModel,
     DisplayStateColorModel, DoubleLineEditModel, EditableListElementModel,
@@ -23,6 +23,7 @@ from karabo.common.scenemodel.api import (
 # * Adding a default widget when a property is dropped on the scene
 WIDGET_FACTORIES = {
     'Bitfield': BitfieldModel,
+    'DisplayColorBool': ColorBoolModel,
     'DisplayCheckBox': CheckBoxModel,
     'EditableCheckBox': CheckBoxModel,
     'DisplayChoiceElement': ChoiceElementModel,
