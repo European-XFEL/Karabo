@@ -389,6 +389,20 @@ namespace karabo {
             }
         }
 
+        struct FindInOptions {
+            bool result;
+            const Hash::Node& m_masterNode;
+            Hash::Node& m_workNode;
+
+            inline FindInOptions(const Hash::Node &masterNode, Hash::Node &workNode)
+            : result(false), m_masterNode(masterNode), m_workNode(workNode) { }
+
+            template <class T>
+            inline operator T*() {
+                const vector<T> &options = m_masterNode.getAttribute<vector<T> >(KARABO_SCHEMA_OPTIONS);
+                result = std::find(options.begin(), options.end(), m_workNode.getValue<T>()) != options.end();
+            }
+        };
 
         void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) {
 
@@ -445,10 +459,12 @@ namespace karabo {
             // Check ranges
             if (referenceCategory == Types::SIMPLE) {
                 if (masterNode.hasAttribute(KARABO_SCHEMA_OPTIONS)) {
-                    vector<string> options;
-                    masterNode.getAttribute(KARABO_SCHEMA_OPTIONS, options);
-                    if (std::find(options.begin(), options.end(), workNode.getValueAs<string>()) == options.end()) {
-                        report << "Value " << workNode.getValueAs<string>() << " for parameter \"" << scope << "\" is not one of the valid options: " << karabo::util::toString(options) << endl;
+
+                    FindInOptions findInOptions(masterNode, workNode);
+                    templatize(workNode.getType(), findInOptions);
+
+                    if (!findInOptions.result) {
+                        report << "Value " << workNode.getValueAs<string>() << " for parameter \"" << scope << "\" is not one of the valid options: " << masterNode.getAttributeAs<string>(KARABO_SCHEMA_OPTIONS) << endl;
                     }
                 }
 

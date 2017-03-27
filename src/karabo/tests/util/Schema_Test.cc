@@ -266,18 +266,18 @@ void Schema_Test::testGetAssignment() {
 
 
 void Schema_Test::testGetOptions() {
-    vector<std::string> options = m_schema.getOptions("exampleKey1");
+    vector<std::string> options = m_schema.getOptions<std::string>("exampleKey1");
     CPPUNIT_ASSERT(options[0] == "Radio");
     CPPUNIT_ASSERT(options[1] == "Air Condition");
     CPPUNIT_ASSERT(options[2] == "Navigation");
 
-    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey2")[0] == "5");
-    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey2")[1] == "25");
-    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey2")[2] == "10");
+    CPPUNIT_ASSERT(m_schema.getOptions<int>("exampleKey2")[0] == 5);
+    CPPUNIT_ASSERT(m_schema.getOptions<int>("exampleKey2")[1] == 25);
+    CPPUNIT_ASSERT(m_schema.getOptions<int>("exampleKey2")[2] == 10);
 
-    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey4")[0] == "1.11");
-    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey4")[1] == "-2.22");
-    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey4")[2] == "5.55");
+    CPPUNIT_ASSERT(m_schema.getOptions<float>("exampleKey4")[0] == 1.11f);
+    CPPUNIT_ASSERT(m_schema.getOptions<float>("exampleKey4")[1] == -2.22f);
+    CPPUNIT_ASSERT(m_schema.getOptions<float>("exampleKey4")[2] == 5.55f);
 }
 
 
@@ -618,8 +618,8 @@ void Schema_Test::testPathElement() {
     CPPUNIT_ASSERT(sch.getValueType("filename") == Types::STRING);
     CPPUNIT_ASSERT(sch.getAliasAsString("filename") == "5");
     CPPUNIT_ASSERT(sch.hasOptions("filename") == true);
-    CPPUNIT_ASSERT(sch.getOptions("filename")[0] == "file1");
-    CPPUNIT_ASSERT(sch.getOptions("filename")[1] == "file2");
+    CPPUNIT_ASSERT(sch.getOptions<string>("filename")[0] == "file1");
+    CPPUNIT_ASSERT(sch.getOptions<string>("filename")[1] == "file2");
     CPPUNIT_ASSERT(sch.hasDefaultValue("filename") == true);
     CPPUNIT_ASSERT(sch.getDefaultValue<string>("filename") == "karabo.log");
     CPPUNIT_ASSERT(sch.isAccessReconfigurable("filename") == true);

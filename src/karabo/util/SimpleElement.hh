@@ -38,7 +38,7 @@ namespace karabo {
              * @return reference to the SimpleElement
              */
             SimpleElement& options(const std::string& opts, const std::string& sep = " ,;") {
-                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromString<std::string, std::vector > (opts, sep));
+                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromString<ValueType, std::vector > (opts, sep));
                 return *this;
             }
 
@@ -48,7 +48,7 @@ namespace karabo {
              * @param opts vector of strings. The values are casted to the proper type.
              * @return reference to the SimpleElement
              */
-            SimpleElement& options(const std::vector<std::string>& opts) {
+            SimpleElement& options(const std::vector<ValueType>& opts) {
                 this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
                 return *this;
             }
