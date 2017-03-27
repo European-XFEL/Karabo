@@ -1,16 +1,16 @@
 from io import StringIO
 import os
 import os.path as op
-from xml.etree.ElementTree import Element
+from xml.etree.ElementTree import Element, fromstring, tostring
 
 from nose.tools import assert_raises
 
 from karabo.testing.utils import temp_cwd, temp_xml_file, xml_is_equal
 # Import via the API module so that all the readers/writers get registered
-from ..api import (SceneModel, FixedLayoutModel, LabelModel, LineModel,
-                   RectangleModel, UnknownXMLDataModel, SceneWriterException,
-                   read_scene, write_scene, write_single_model, NS_KARABO,
-                   SCENE_FILE_VERSION)
+from ..api import (
+    SceneModel, FixedLayoutModel, LabelModel, LineModel, RectangleModel,
+    UnknownWidgetDataModel, UnknownXMLDataModel, SceneWriterException,
+    read_scene, write_scene, write_single_model, NS_KARABO, SCENE_FILE_VERSION)
 from ..io_utils import set_numbers
 
 DATA_DIR = op.join(op.abspath(op.dirname(__file__)), 'data')
@@ -71,6 +71,16 @@ SCENE_SVG = """
             y2="396" />
     </svg:g>
 <metadata id="some-extra-data"><foo>bar</foo></metadata>
+</svg>
+"""
+UNKNOWN_WIDGET_SVG = """
+<svg
+    xmlns:krb="http://karabo.eu/scene"
+    xmlns:svg="http://www.w3.org/2000/svg" >
+    <svg:rect
+        height="0" width="0" x="0" y="0"
+        krb:widget="FutureStyles"
+        krb:class="DisplayWidget" />
 </svg>
 """
 
@@ -211,3 +221,35 @@ def test_real_data_round_trip():
 
         failmsg = "Scene {} didn't round trip!".format(op.basename(fn))
         assert xml_is_equal(orig_xml, new_xml), failmsg
+
+
+def test_unknown_widget_reader():
+    with temp_xml_file(UNKNOWN_WIDGET_SVG) as fn:
+        scene = read_scene(fn)
+    xml = write_scene(scene)
+    assert xml_is_equal(UNKNOWN_WIDGET_SVG, xml)
+
+
+def test_unknown_widget_writer():
+    model = UnknownWidgetDataModel(klass='FutureStyles',
+                                   parent_component='DisplayWidget')
+    xml = write_single_model(model)
+    assert xml_is_equal(UNKNOWN_WIDGET_SVG, xml)
+
+
+def test_unknown_widget_extra_data():
+    root = fromstring(UNKNOWN_WIDGET_SVG)
+    widget = root[0]
+    widget.set('garbage', 'value')
+    widget.text = 'element data'
+    expected_svg = tostring(root, encoding='unicode')
+
+    with temp_xml_file(expected_svg) as fn:
+        scene = read_scene(fn)
+
+    widget = scene.children[0]
+    assert widget.attributes['garbage'] == 'value'
+    assert widget.data == 'element data'
+
+    xml = write_single_model(widget)
+    assert xml_is_equal(expected_svg, xml)

@@ -8,7 +8,7 @@ from xml.etree.ElementTree import SubElement
 from traits.api import Bool
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
-from karabo.common.scenemodel.const import NS_KARABO, NS_SVG
+from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (read_base_widget_data,
                                                write_base_widget_data)
 from karabo.common.scenemodel.registry import (register_scene_reader,
@@ -52,7 +52,7 @@ def _build_simple_image_widget_readers_and_writers():
 
     def _build_writer_func(name):
         def writer(write_func, model, parent):
-            element = SubElement(parent, NS_SVG + 'rect')
+            element = SubElement(parent, WIDGET_ELEMENT_TAG)
             write_base_widget_data(model, element, name)
             return element
         return writer
@@ -82,7 +82,7 @@ def _build_complex_image_widget_readers_and_writers():
 
     def _build_writer_func(name):
         def writer(write_func, model, parent):
-            element = SubElement(parent, NS_SVG + 'rect')
+            element = SubElement(parent, WIDGET_ELEMENT_TAG)
             write_base_widget_data(model, element, name)
             for b_name in bool_names:
                 b_value = getattr(model, b_name)
