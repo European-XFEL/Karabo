@@ -1,5 +1,6 @@
 # flake8: noqa
 from .base import BaseWidgetContainer
+from .colorbool import ColorBoolContainer
 from .eval import EvaluatorContainer
 from .floatspinbox import FloatSpinBoxContainer
 from .generic import DisplayEditableWidgetContainer, GenericWidgetContainer
