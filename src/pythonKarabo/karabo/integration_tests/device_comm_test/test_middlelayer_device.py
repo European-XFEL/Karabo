@@ -37,6 +37,14 @@ class Tests(TestCase):
         os.chdir(this_dir)
         self.loop = setEventLoop()
 
+        self.dc = DeviceClient(dict(_deviceId_="dc"))
+        self.dc.startInstance()
+
+        dirname = os.path.dirname(__file__)
+        self.server = DeviceServer(
+            dict(serverId="testServer", pluginDirectory=dirname))
+        self.loop.run_until_complete(self.server.startInstance())
+
     def tearDown(self):
         self.loop.close()
         try:
@@ -51,7 +59,7 @@ class Tests(TestCase):
             self.loop.create_task(coro, device))
 
     @coroutine
-    def init_server(self, server):
+    def init_server(self):
         """initialize the device server and a device on it
 
         the device on the device server is started from within a
@@ -74,8 +82,8 @@ class Tests(TestCase):
         yield from sleep(0.1)
 
     @coroutine
-    def check_server_topology(self, dc):
-        schema, classId, serverId = yield from dc.call(
+    def check_server_topology(self):
+        schema, classId, serverId = yield from self.dc.call(
             "testServer", "slotGetClassSchema", "MiddleLayerTestDevice")
         self.assertEqual(serverId, "testServer")
         self.assertEqual(classId, "MiddleLayerTestDevice")
@@ -116,32 +124,25 @@ class Tests(TestCase):
           * checks everything is cleaned up afterwards
           * kills the device server
         """
-        dc = DeviceClient(dict(_deviceId_="dc"))
-        dc.startInstance()
-
-        server = DeviceServer(
-            dict(serverId="testServer",
-                 pluginDirectory=os.path.dirname(__file__)))
-        self.loop.run_until_complete(server.startInstance())
-        proxy = self.run_async(server, self.init_server(server))
+        proxy = self.run_async(self.server, self.init_server())
         self.assertEqual(proxy.something, 222,
                          "MiddleLayerTestDevice.onInitialization "
                          "did not run properly")
         self.assertEqual(proxy.counter, 12345,
                          "initialization parameter was not honored")
 
-        self.run_async(dc, self.check_server_topology(dc))
-        self.assertIn("other", server.deviceInstanceMap)
-        r = weakref.ref(server.deviceInstanceMap["other"])
+        self.run_async(self.dc, self.check_server_topology())
+        self.assertIn("other", self.server.deviceInstanceMap)
+        r = weakref.ref(self.server.deviceInstanceMap["other"])
         with proxy:
             self.assertTrue(isAlive(proxy))
-            self.run_async(server, self.shutdown_server())
-            self.assertNotIn("other", server.deviceInstanceMap)
+            self.run_async(self.server, self.shutdown_server())
+            self.assertNotIn("other", self.server.deviceInstanceMap)
             self.assertFalse(isAlive(proxy))
             gc.collect()
             self.assertIsNone(r())
-            async(dc.slotKillDevice())
-            self.loop.run_until_complete(server.slotKillServer())
+            async(self.dc.slotKillDevice())
+            self.loop.run_until_complete(self.server.slotKillServer())
             self.assertEqual(proxy.something, 111)
         self.loop.run_forever()
 
@@ -155,19 +156,22 @@ class Tests(TestCase):
         finally:
             os.remove(path)
 
+    def test_bound(self):
+        with self.assertRaises(KaraboError):
+            # mandatory expected parameter "remote" is missing
+            self.run_async(self.dc, instantiate("testServer", "CommTestDevice",
+                                                "commtestdevice"))
+        self.run_async(self.dc, instantiate("testServer", "CommTestDevice",
+                                            "commtestdevice", remote="asdf"))
+        self.run_async(self.dc, shutdown("commtestdevice"))
+
     def test_appearing_plugin(self):
         """test that new plugins appear in device server"""
-        dc = DeviceClient(dict(_deviceId_="dc"))
-        dc.startInstance()
-        dirname = os.path.dirname(__file__)
-        server = DeviceServer(
-            dict(serverId="testServer", pluginDirectory=dirname))
-        self.loop.run_until_complete(server.startInstance())
         with self.assertRaises(KaraboError):
-            self.run_async(dc, instantiate("testServer",
-                                           "SomeDevice", "someName"))
+            self.run_async(self.dc, instantiate("testServer",
+                                                "SomeDevice", "someName"))
 
-        dirname = os.path.join(dirname, "Temporary.egg-info")
+        dirname = os.path.join(os.path.dirname(__file__), "Temporary.egg-info")
         os.mkdir(dirname)
         try:
             entry_points = self.temp_file(
@@ -186,8 +190,8 @@ class Tests(TestCase):
                     License: None
                 """)
             with entry_points, pkg_info:
-                self.run_async(dc, sleep(5))
-                self.run_async(dc, instantiate("testServer",
-                                               "SomeDevice", "someName"))
+                self.run_async(self.dc, sleep(5))
+                self.run_async(self.dc, instantiate("testServer",
+                                                    "SomeDevice", "someName"))
         finally:
             os.rmdir(dirname)

@@ -19,6 +19,7 @@ from .plugin_loader import PluginLoader
 from .schema import Node
 from .serializers import decodeBinary, encodeXML
 from .signalslot import SignalSlotable, slot, coslot
+from .synchronization import firstCompleted
 
 
 class DeviceServerBase(SignalSlotable):
@@ -425,10 +426,14 @@ class BoundDeviceServer(DeviceServerBase):
             "run", self.boundNamespace, classId,
             env=env, stdin=PIPE)
         self.processes[deviceId] = process
-        process.stdin.write(encodeXML(config))
+        process.stdin.write(encodeXML(config).encode('utf8'))
         process.stdin.close()
-        yield from future
-        return True, '"{}" started'.format(deviceId)
+        done, pending = yield from firstCompleted(
+            ok=future, error=process.wait())
+        if "ok" in done:
+            return True, '"{}" started'.format(deviceId)
+        else:
+            return False, '"{}" could not be started'.format(deviceId)
 
     @coslot
     def slotKillServer(self):
