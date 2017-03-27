@@ -1,7 +1,8 @@
 from unittest import TestCase, main
+from weakref import ref
 
-from karabo.middlelayer import (Hash, isSet, Proxy, ProxyNode,
-                                ProxySlot, Schema, State, SubProxy, Unit, unit)
+from karabo.middlelayer import (Hash, isSet, Proxy, ProxyNode, ProxySlot,
+                                Schema, State, SubProxy, Timestamp, Unit, unit)
 from karabo.middlelayer_api.enums import NodeType
 from karabo.middlelayer_api.proxy import ProxyFactory
 
@@ -20,6 +21,7 @@ class Tests(TestCase):
         h["a", "defaultValue"] = 22.5
         h["setA", "nodeType"] = NodeType.Node.value
         h["setA", "displayType"] = "Slot"
+        h["setA", "description"] = "setA's description"
         self.schema = Schema("test", hash=h)
 
     def test_class(self):
@@ -40,6 +42,7 @@ class Tests(TestCase):
         self.assertEqual(cls.node.cls.b.longkey, "node.b")
 
         self.assertIsInstance(cls.setA, ProxySlot)
+        self.assertEqual(cls.setA.description, "setA's description")
 
     def test_object(self):
         cls = ProxyFactory.createProxy(self.schema)
@@ -48,6 +51,7 @@ class Tests(TestCase):
         self.assertFalse(isSet(obj.a))
         self.assertIs(obj.a.descriptor, cls.a)
         self.assertFalse(isSet(obj.node.b))
+        self.assertEqual(obj.setA.__doc__, "setA's description")
 
     def test_setvalue(self):
         class TestFactory(ProxyFactory):
@@ -80,6 +84,65 @@ class Tests(TestCase):
         proxy = cls()
         proxy.setA()
         self.assertEqual(calls, [cls.setA])
+
+    def test_onchanged(self):
+        class TestFactory(ProxyFactory):
+            class Proxy(Proxy):
+                def _notifyChanged(self, descriptor, value):
+                    calls.append((descriptor, value))
+
+        cls = TestFactory.createProxy(self.schema)
+        proxy = cls()
+
+        calls = []
+        proxy._onChanged(Hash("a", 7))
+        self.assertEqual(proxy.a, 7 * unit.A)
+        self.assertEqual(calls, [(cls.a, 7 * unit.A)])
+
+        calls = []
+        proxy._onChanged(Hash("node", Hash("b", "whatever")))
+        self.assertEqual(proxy.node.b, "whatever")
+        self.assertEqual(calls, [(cls.node.cls.b, "whatever")])
+
+        calls = []
+        proxy._onChanged(Hash("setA", 22, "inexistent", 33))
+        self.assertEqual(calls, [])
+
+        h = Hash("a", 8)
+        ts = Timestamp("2017-03-11")
+        h["a", ...] = ts.toDict()
+        proxy._onChanged(h)
+        self.assertEqual(proxy.a.timestamp, ts)
+
+        # _onChanged used to leak a cyclic reference to the proxy.
+        weakproxy = ref(proxy)
+        del proxy
+        self.assertIsNone(weakproxy())
+
+    def test_schemaupdate(self):
+        h = Hash("node", Hash("c", None), "a", Hash("c", None), "setB", None)
+        h["node", "nodeType"] = NodeType.Node.value
+        h["node.c", "nodeType"] = NodeType.Leaf.value
+        h["node.c", "valueType"] = "STRING"
+        h["a", "nodeType"] = NodeType.Node.value
+        h["a.c", "nodeType"] = NodeType.Leaf.value
+        h["a.c", "valueType"] = "STRING"
+        h["setB", "nodeType"] = NodeType.Node.value
+        h["setB", "displayType"] = "Slot"
+        h["setB", "description"] = "setA's description"
+        schema = Schema("test", hash=h)
+
+        cls = ProxyFactory.createProxy(self.schema)
+        proxy = cls()
+        proxy._onChanged(Hash("node", Hash("b", "whatever"), "a", 3))
+        self.assertEqual(proxy.a, 3 * unit.A)
+        self.assertEqual(proxy.node.b, "whatever")
+
+        ProxyFactory.updateSchema(proxy, schema)
+        proxy._onChanged(Hash("node", Hash("c", "whatever"),
+                              "a", Hash("c", "bla")))
+        self.assertEqual(proxy.a.c, "bla")
+        self.assertEqual(proxy.node.c, "whatever")
 
 
 if __name__ == "__main__":
