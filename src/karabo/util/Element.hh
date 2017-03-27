@@ -714,33 +714,40 @@ namespace karabo {
         }
 
         template<typename KeyType, typename AttributeType>
+        struct SetType {
+            Element<KeyType, AttributeType>& m_element;
+            boost::any& m_value;
+
+            inline SetType(Element<KeyType, AttributeType>& element, boost::any& value): m_element(element), m_value(value) { }
+
+            template <class T>
+            inline operator T*() {
+                m_value = m_element.template getValueAs<T>();
+            }
+
+            template <class T>
+            inline operator std::vector<T>*() {
+                m_value = m_element.template getValueAs<T, std::vector>();
+            }
+        };
+
+        template<typename KeyType, typename AttributeType>
         void Element<KeyType, AttributeType>::setType(const Types::ReferenceType & tgtType) {
-
-#define _KARABO_HELPER_MACRO(RefType, T)\
-                   case Types::RefType: m_value = this->getValueAs<T>(); break;\
-                   case Types::VECTOR_##RefType: m_value = this->getValueAs<T, std::vector>(); break;
-
             Types::ReferenceType srcType = this->getType();
             if (tgtType == srcType) return;
+            SetType<KeyType, AttributeType> processor(*this, m_value);
+            if (templatize(tgtType, processor)) return;
             try {
                 switch (tgtType) {
-                        _KARABO_HELPER_MACRO(BOOL, bool)
-                        _KARABO_HELPER_MACRO(CHAR, char)
-                        _KARABO_HELPER_MACRO(INT8, signed char)
-                        _KARABO_HELPER_MACRO(UINT8, unsigned char)
-                        _KARABO_HELPER_MACRO(INT16, short)
-                        _KARABO_HELPER_MACRO(UINT16, unsigned short)
-                        _KARABO_HELPER_MACRO(INT32, int)
-                        _KARABO_HELPER_MACRO(UINT32, unsigned int)
-                        _KARABO_HELPER_MACRO(INT64, long long)
-                        _KARABO_HELPER_MACRO(UINT64, unsigned long long)
-                        _KARABO_HELPER_MACRO(FLOAT, float)
-                        _KARABO_HELPER_MACRO(DOUBLE, double)
-                        _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
-                        _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
-                        _KARABO_HELPER_MACRO(STRING, std::string)
-                        _KARABO_HELPER_MACRO(NONE, CppNone)
-                        case Types::BYTE_ARRAY: m_value = this->getValueAs<karabo::util::ByteArray>(); break;
+                    case Types::NONE:
+                        m_value = getValueAs<CppNone>();
+                        break;
+                    case Types::VECTOR_NONE:
+                        m_value = getValueAs<CppNone, std::vector>();
+                        break;
+                    case Types::BYTE_ARRAY:
+                        m_value = this->getValueAs<karabo::util::ByteArray>();
+                        break;
                     default:
                         throw KARABO_CAST_EXCEPTION("Casting of '" + Types::to<ToCppString>(srcType) += "' to '"
                                                     + Types::to<ToCppString>(tgtType) += "' is not supported");
@@ -748,36 +755,40 @@ namespace karabo {
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Problems with casting"));
             }
-#undef _KARABO_HELPER_MACRO
         }
 
         template<typename KeyType, typename AttributeType>
+        struct GetValueAsString {
+            const Element<KeyType, AttributeType>& m_element;
+            std::string &m_result;
+
+            inline GetValueAsString(const Element<KeyType, AttributeType>& element, std::string& result) : m_element(element), m_result(result) { }
+
+            template <class T>
+            inline operator T*() {
+                m_result = karabo::util::toString(m_element.template getValue<T>());
+            }
+        };
+
+        template<typename KeyType, typename AttributeType>
         inline std::string Element<KeyType, AttributeType>::getValueAsString() const {
-
-#define _KARABO_HELPER_MACRO(RefType, CppType)\
-                    case Types::RefType: return karabo::util::toString(getValue<CppType>());\
-                    case Types::VECTOR_##RefType: return karabo::util::toString(getValue<std::vector<CppType> >());
-
             Types::ReferenceType type = this->getType();
-            switch (type) {
-                    _KARABO_HELPER_MACRO(BOOL, bool)
-                    _KARABO_HELPER_MACRO(CHAR, char)
-                    _KARABO_HELPER_MACRO(INT8, signed char)
-                    _KARABO_HELPER_MACRO(UINT8, unsigned char)
-                    _KARABO_HELPER_MACRO(INT16, short)
-                    _KARABO_HELPER_MACRO(UINT16, unsigned short)
-                    _KARABO_HELPER_MACRO(INT32, int)
-                    _KARABO_HELPER_MACRO(UINT32, unsigned int)
-                    _KARABO_HELPER_MACRO(INT64, long long)
-                    _KARABO_HELPER_MACRO(UINT64, unsigned long long)
-                    _KARABO_HELPER_MACRO(FLOAT, float)
-                    _KARABO_HELPER_MACRO(DOUBLE, double)
-                    _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
-                    _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
-                    _KARABO_HELPER_MACRO(STRING, std::string)
-                    _KARABO_HELPER_MACRO(HASH, Hash)
-                    _KARABO_HELPER_MACRO(NONE, CppNone)
-                case Types::SCHEMA: return std::string("Schema Object");
+            std::string result;
+            GetValueAsString<KeyType, AttributeType> processor(*this, result);
+            if (templatize(type, processor)) {
+                return result;
+            }
+            switch(type) {
+                case Types::HASH:
+                    return karabo::util::toString(getValue<Hash>());
+                case Types::VECTOR_HASH:
+                    return karabo::util::toString(getValue<std::vector<Hash> >());
+                case Types::NONE:
+                    return karabo::util::toString(getValue<CppNone>());
+                case Types::VECTOR_NONE:
+                    return karabo::util::toString(getValue<std::vector<CppNone> >());
+                case Types::SCHEMA:
+                    return std::string("Schema Object");
                 case Types::BYTE_ARRAY: {
                     const karabo::util::ByteArray& array = getValue<karabo::util::ByteArray>();
                     const unsigned char* data = reinterpret_cast<unsigned char*> (array.first.get());
@@ -786,7 +797,6 @@ namespace karabo {
                 default:
                     throw KARABO_CAST_EXCEPTION("Could not convert value of key \"" + m_key + "\" to string");
             }
-#undef _KARABO_HELPER_MACRO
         }
     }
 }
