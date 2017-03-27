@@ -145,6 +145,12 @@ class ProjectHandleDialog(QDialog):
             return self.domain, uuid_entry[0].data()
         return None, None
 
+    def update_view(self):
+        if self.domain:
+            self.twProjects.clearSelection()
+            self.twProjects.model().request_data(self.domain,
+                                                 self.ignore_cache)
+
     @property
     def ignore_cache(self):
         return self.rbFromRemote.isChecked()
@@ -164,8 +170,14 @@ class ProjectHandleDialog(QDialog):
         """ Whenever an item is selected the current title and the button box
         need to be updated
         """
-        rows = self.twProjects.selectionModel().selectedRows()
-        enable = True if rows else False
+        col_index = get_column_index(UUID)
+        rows = self.twProjects.selectionModel().selectedRows(col_index)
+        if rows:
+            _, is_trashed = rows[0].data(Qt.UserRole)
+            # Disable loading of trashed projects
+            enable = not is_trashed
+        else:
+            enable = False
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
     @pyqtSlot(object)
@@ -184,15 +196,13 @@ class ProjectHandleDialog(QDialog):
 
     @pyqtSlot(str)
     def on_cbDomain_currentIndexChanged(self, domain):
-        if domain:
-
-            self.twProjects.model().request_data(domain, self.ignore_cache)
+        self.update_view()
 
     @pyqtSlot(bool)
     def on_cbShowTrash_toggled(self, is_checked):
         model = self.twProjects.model()
         model.show_trashed = is_checked
-        model.request_data(self.domain, self.ignore_cache)
+        self.update_view()
 
     @pyqtSlot()
     def _show_context_menu(self):
@@ -223,13 +233,12 @@ class ProjectHandleDialog(QDialog):
         db_conn = get_db_conn()
         db_conn.update_attribute(domain, 'project', uuid, 'is_trashed',
                                  str(is_trashed).lower())
-        self.twProjects.model().request_data(domain, self.ignore_cache)
+        self.update_view()
 
     @pyqtSlot(object)
     def _openFromChanged(self, button):
         # Update view
-        self.twProjects.model().request_data(self.cbDomain.currentText(),
-                                             self.ignore_cache)
+        self.update_view()
 
 
 class NewProjectDialog(QDialog):
