@@ -366,6 +366,122 @@ namespace karabo {
             }
         };
 
+	/*
+	 * use the types templatized. Use as such:
+	 *
+	 *     struct Processor {
+	 *         template <class T>
+	 *         inline operator T*() {
+	 *             // do your business here
+	 *         }
+	 *     } processor;
+	 *
+	 *     templatize(referenceType, processor);
+         *
+         * This function deals only with numerical data types and string.
+         * Everything more complex you need to do by hand. It returns whether
+         * it could handle the data type.
+	 */
+	template <class Processor>
+	inline bool templatize(Types::ReferenceType type, Processor &processor) {
+	    switch (type) {
+		case Types::BOOL:
+		    processor.operator bool*();
+		    break;
+		case Types::CHAR:
+		    processor.operator char*();
+		    break;
+		case Types::INT8:
+		    processor.operator signed char*();
+		    break;
+		case Types::UINT8:
+		    processor.operator unsigned char*();
+		    break;
+		case Types::INT16:
+		    processor.operator short*();
+		    break;
+		case Types::UINT16:
+		    processor.operator unsigned short*();
+		    break;
+		case Types::INT32:
+		    processor.operator int*();
+		    break;
+		case Types::UINT32:
+		    processor.operator unsigned int*();
+		    break;
+		case Types::INT64:
+		    processor.operator long long*();
+		    break;
+		case Types::UINT64:
+		    processor.operator unsigned long long*();
+		    break;
+		case Types::FLOAT:
+		    processor.operator float*();
+		    break;
+		case Types::DOUBLE:
+		    processor.operator double*();
+		    break;
+		case Types::COMPLEX_FLOAT:
+		    processor.operator std::complex<float> *();
+		    break;
+		case Types::COMPLEX_DOUBLE:
+		    processor.operator std::complex<double> *();
+		    break;
+		case Types::STRING:
+		    processor.operator std::string*();
+		    break;
+		case Types::VECTOR_BOOL:
+		    processor.operator std::vector<bool> *();
+		    break;
+		case Types::VECTOR_CHAR:
+		    processor.operator std::vector<char> *();
+		    break;
+		case Types::VECTOR_INT8:
+		    processor.operator std::vector<signed char> *();
+		    break;
+		case Types::VECTOR_UINT8:
+		    processor.operator std::vector<unsigned char> *();
+		    break;
+		case Types::VECTOR_INT16:
+		    processor.operator std::vector<short> *();
+		    break;
+		case Types::VECTOR_UINT16:
+		    processor.operator std::vector<unsigned short> *();
+		    break;
+		case Types::VECTOR_INT32:
+		    processor.operator std::vector<int> *();
+		    break;
+		case Types::VECTOR_UINT32:
+		    processor.operator std::vector<unsigned int> *();
+		    break;
+		case Types::VECTOR_INT64:
+		    processor.operator std::vector<long long> *();
+		    break;
+		case Types::VECTOR_UINT64:
+		    processor.operator std::vector<unsigned long long> *();
+		    break;
+		case Types::VECTOR_FLOAT:
+		    processor.operator std::vector<float> *();
+		    break;
+		case Types::VECTOR_DOUBLE:
+		    processor.operator std::vector<double> *();
+		    break;
+		case Types::VECTOR_COMPLEX_FLOAT:
+		    processor.operator std::vector<std::complex<float> > *();
+		    break;
+		case Types::VECTOR_COMPLEX_DOUBLE:
+		    processor.operator std::vector<std::complex<double> > *();
+		    break;
+		case Types::VECTOR_STRING:
+		    processor.operator std::vector<std::string> *();
+		    break;
+                default:
+                    return false;
+	    }
+            return true;
+	}
+
+
 #define _KARABO_HELPER_MACRO(RefType, CppType) \
          template <> inline Types::ReferenceType Types::from<CppType>(const CppType&) { return Types::RefType; } \
          template <> inline Types::ReferenceType Types::from<std::vector<CppType> > (const std::vector<CppType>&) { return Types::VECTOR_##RefType; }
