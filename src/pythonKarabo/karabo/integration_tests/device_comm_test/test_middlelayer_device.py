@@ -158,6 +158,7 @@ class Tests(TestCase):
 
     def test_bound(self):
         with self.assertRaises(KaraboError):
+            # mandatory expected parameter "remote" is missing
             self.run_async(self.dc, instantiate("testServer", "CommTestDevice",
                                                 "commtestdevice"))
         self.run_async(self.dc, instantiate("testServer", "CommTestDevice",
