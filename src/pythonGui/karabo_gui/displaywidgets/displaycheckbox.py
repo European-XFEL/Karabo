@@ -33,7 +33,7 @@ from PyQt4.QtGui import QCheckBox
 class DisplayCheckBox(DisplayWidget):
     category = Bool
     alias = "Toggle Field"
-
+    priority = 10
     
     def __init__(self, box, parent):
         super(DisplayCheckBox, self).__init__(box)
