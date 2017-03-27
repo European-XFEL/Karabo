@@ -3,7 +3,7 @@ from xml.etree.ElementTree import SubElement
 from traits.api import Enum, Float, Int, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
-from karabo.common.scenemodel.const import NS_KARABO, NS_SVG
+from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, read_empty_display_editable_widget,
     write_base_widget_data)
@@ -67,7 +67,7 @@ def _display_state_color_reader(read_func, element):
 
 @register_scene_writer(DisplayStateColorModel)
 def _display_state_color_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayStateColor')
     element.set(NS_KARABO + 'staticText', model.text)
     return element
@@ -82,7 +82,7 @@ def _evaluator_reader(read_func, element):
 
 @register_scene_writer(EvaluatorModel)
 def _evaluator_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'Evaluator')
     element.set('expression', model.expression)
     return element
@@ -97,7 +97,7 @@ def _float_spin_box_reader(read_func, element):
 
 @register_scene_writer(FloatSpinBoxModel)
 def _float_spin_box_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'FloatSpinBox')
     element.set(NS_KARABO + 'step', str(model.step))
     return element
@@ -113,7 +113,7 @@ def _monitor_reader(read_func, element):
 
 @register_scene_writer(MonitorModel)
 def _monitor_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'Monitor')
     element.set('interval', str(model.interval))
     if len(model.filename) > 0:
@@ -130,7 +130,7 @@ def _single_bit_reader(read_func, element):
 
 @register_scene_writer(SingleBitModel)
 def _single_bit_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'SingleBit')
     element.set(NS_KARABO + 'bit', str(model.bit))
     return element
@@ -146,7 +146,7 @@ def _table_element_reader(read_func, element):
 
 @register_scene_writer(TableElementModel)
 def _table_element_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, model.klass)
     element.set(NS_KARABO + 'columnSchema', model.column_schema)
     return element

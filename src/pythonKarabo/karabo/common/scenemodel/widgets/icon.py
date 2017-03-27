@@ -4,7 +4,7 @@ from xml.etree.ElementTree import SubElement
 from traits.api import HasStrictTraits, Bool, Bytes, Instance, List, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
-from karabo.common.scenemodel.const import NS_KARABO, NS_SVG
+from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.exceptions import SceneWriterException
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, write_base_widget_data)
@@ -62,7 +62,7 @@ def _display_iconset_reader(read_func, element):
 
 @register_scene_writer(DisplayIconsetModel)
 def _display_iconset_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayIconset')
     if model.data is None or len(model.data) == 0:
         msg = 'Attempting to write a DisplayIconsetModel with empty data'
@@ -116,7 +116,7 @@ def _build_icon_widget_readers_and_writers():
 
     def _build_writer_func(name, tag):
         def writer(write_func, model, parent):
-            element = SubElement(parent, NS_SVG + 'rect')
+            element = SubElement(parent, WIDGET_ELEMENT_TAG)
             write_base_widget_data(model, element, name)
             _write_icon_elements(model.values, element, NS_KARABO + tag)
             return element

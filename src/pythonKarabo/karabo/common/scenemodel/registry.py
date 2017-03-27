@@ -1,6 +1,6 @@
 from collections import defaultdict, namedtuple
 
-from .const import NS_KARABO
+from .const import NS_KARABO, SCENE_FILE_VERSION, UNKNOWN_WIDGET_CLASS
 
 _scene_readers = defaultdict(list)
 _scene_writers = {}
@@ -22,7 +22,11 @@ def get_reader(version):
         for kind in ('widget', 'class'):
             klass = element.get(NS_KARABO + kind)
             if klass is not None:
-                return klass
+                if klass in _scene_readers:
+                    return klass
+                else:
+                    # Allow for the default widget reader
+                    return UNKNOWN_WIDGET_CLASS
         if element.tag in _scene_readers:
             return element.tag
         # Allow for a default reader
@@ -51,7 +55,7 @@ def get_writer():
 class register_scene_reader(object):
     """ Decorator for reader functions.
     """
-    def __init__(self, objname, xmltag='', version=1):
+    def __init__(self, objname, xmltag='', version=SCENE_FILE_VERSION):
         self.objname = objname
         self.xmltag = xmltag
         self.version = version

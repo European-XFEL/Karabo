@@ -3,7 +3,8 @@ from xml.etree.ElementTree import SubElement
 from traits.api import Enum, Int, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
-from karabo.common.scenemodel.const import NS_KARABO, NS_SVG, SceneTargetWindow
+from karabo.common.scenemodel.const import (
+    NS_KARABO, WIDGET_ELEMENT_TAG, SceneTargetWindow)
 from karabo.common.scenemodel.io_utils import (
     get_numbers, set_numbers, read_base_widget_data,
     read_empty_display_editable_widget, write_base_widget_data)
@@ -190,7 +191,7 @@ def __label_reader(read_func, element):
 def __label_writer(write_func, model, parent):
     """ A writer for LabelModel objects
     """
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     _write_class_and_geometry(model, element, 'Label')
 
     for name in ('text', 'font', 'foreground'):
@@ -215,7 +216,7 @@ def __scene_link_reader(read_func, element):
 
 @register_scene_writer(SceneLinkModel)
 def __scene_link_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     _write_class_and_geometry(model, element, 'SceneLink')
     element.set(NS_KARABO + 'target', model.target)
     element.set(NS_KARABO + 'target_window', model.target_window.value)
@@ -234,7 +235,7 @@ def __workflow_item_reader(read_func, element):
 
 @register_scene_writer(WorkflowItemModel)
 def __workflow_item_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     _write_class_and_geometry(model, element, model.klass)
     element.set(NS_KARABO + 'text', model.device_id)
     element.set(NS_KARABO + 'font', model.font)
@@ -252,7 +253,7 @@ def _build_empty_widget_readers_and_writers():
 
     def _build_writer_func(name):
         def writer(write_func, model, parent):
-            element = SubElement(parent, NS_SVG + 'rect')
+            element = SubElement(parent, WIDGET_ELEMENT_TAG)
             write_base_widget_data(model, element, name)
             return element
         return writer
@@ -280,7 +281,7 @@ def _build_empty_display_editable_readers_and_writers():
         return reader
 
     def _writer_func(write_func, model, parent):
-        element = SubElement(parent, NS_SVG + 'rect')
+        element = SubElement(parent, WIDGET_ELEMENT_TAG)
         write_base_widget_data(model, element, model.klass)
         return element
 
