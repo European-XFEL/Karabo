@@ -181,6 +181,12 @@ class Simple(object):
         """
         raise NotImplementedError
 
+    def toSchemaAndAttrs(self, device, state):
+        schema, attrs = super().toSchemaAndAttrs(device, state)
+        if self.options is not None:
+            attrs["options"] = np.array(self.options, dtype=self.numpy)
+        return schema, attrs
+
 
 class Integer(Simple, Enumable):
     """The base class for all integers"""
