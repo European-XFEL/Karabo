@@ -480,7 +480,7 @@ public:
 , (bp::arg("opts"), bp::arg("sep")=" ,;")\
 , bp::return_internal_reference<> ())\
 .def("options"\
-, (T & (T::*)(std::vector<std::string> const &))(&T::options)\
+, (T & (T::*)(std::vector<EType> const &))(&T::options)\
 , (bp::arg("opts"))\
 , bp::return_internal_reference<> ())
 
