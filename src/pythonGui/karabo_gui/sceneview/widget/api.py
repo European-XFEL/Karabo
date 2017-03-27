@@ -9,7 +9,7 @@ from .image import ComplexImageWidgetContainer, SimpleImageWidgetContainer
 from .lineplot import LinePlotContainer
 from .monitor import MonitorContainer
 from .simple import (LabelWidget, SceneLinkWidget, UnknownSvgWidget,
-                     WorkflowItemWidget)
+                     UnknownWidget, WorkflowItemWidget)
 from .singlebit import SingleBitContainer
 from .statecolor import DisplayStateColorContainer
 from .statefulicon import StatefulIconContainer

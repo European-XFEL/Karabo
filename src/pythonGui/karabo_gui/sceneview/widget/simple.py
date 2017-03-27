@@ -5,8 +5,8 @@
 #############################################################################
 from PyQt4.QtCore import QByteArray, QPoint, QRect, QSize, Qt
 from PyQt4.QtGui import (
-    QColor, QDialog, QFont, QFontMetrics, QFrame, QLabel, QPainter, QPen,
-    QPushButton, QWidget)
+    QBrush, QColor, QDialog, QFont, QFontMetrics, QFrame, QLabel, QPainter,
+    QPen, QPushButton, QWidget)
 from PyQt4.QtSvg import QSvgRenderer
 
 from karabo.common.scenemodel.api import write_single_model
@@ -157,7 +157,7 @@ class SceneLinkWidget(QPushButton):
 
 
 class UnknownSvgWidget(QWidget):
-    """ A widget which can display data from an UnknownXMLModel.
+    """ A widget which can display data from an UnknownXMLDataModel.
     """
     def __init__(self, renderer, parent=None):
         super(UnknownSvgWidget, self).__init__(parent)
@@ -208,6 +208,62 @@ class UnknownSvgWidget(QWidget):
 
     def translate(self, offset):
         """ Satisfy the informal widget interface. """
+
+
+class UnknownWidget(QWidget):
+    """ A widget which can display data from an UnknownWidgetDataModel.
+    """
+    def __init__(self, model, parent=None):
+        super(UnknownWidget, self).__init__(parent)
+        self.model = model
+        self.setToolTip('Unsupported widget type: ' + self.model.klass)
+        self.setGeometry(QRect(model.x, model.y, model.width, model.height))
+
+    def paintEvent(self, event):
+        with QPainter(self) as painter:
+            rect = self.rect()
+            boundary = rect.adjusted(2, 2, -2, -2)
+
+            painter.fillRect(rect, QBrush(Qt.lightGray, Qt.FDiagPattern))
+
+            pen = QPen(Qt.lightGray)
+            pen.setJoinStyle(Qt.MiterJoin)
+            pen.setWidth(4)
+            painter.setPen(pen)
+            painter.drawRect(boundary)
+
+            text = 'Unsupported'
+            metrics = painter.fontMetrics()
+            text_rect = metrics.boundingRect(text)
+            pos = rect.center() - QPoint(text_rect.width()/2,
+                                         -text_rect.height()/2)
+            painter.setPen(QPen())
+            painter.drawText(pos, text)
+
+    def add_boxes(self, boxes):
+        """ Satisfy the informal widget interface. """
+
+    def destroy(self):
+        """ Satisfy the informal widget interface. """
+
+    def set_visible(self, visible):
+        """ Satisfy the informal widget interface. """
+
+    def update_alarm_symbol(self, device_id, alarm_type):
+        """ Satisfy the informal widget interface. """
+
+    def update_global_access_level(self):
+        """ Satisfy the informal widget interface. """
+
+    def set_geometry(self, rect):
+        self.model.set(x=rect.x(), y=rect.y(),
+                       width=rect.width(), height=rect.height())
+        self.setGeometry(rect)
+
+    def translate(self, offset):
+        new_pos = self.pos() + offset
+        self.model.set(x=new_pos.x(), y=new_pos.y())
+        self.move(new_pos)
 
 
 class WorkflowItemWidget(QWidget):
