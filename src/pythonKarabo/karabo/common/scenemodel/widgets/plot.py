@@ -3,7 +3,7 @@ from xml.etree.ElementTree import SubElement
 from traits.api import HasStrictTraits, Enum, Instance, List, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
-from karabo.common.scenemodel.const import NS_KARABO, NS_SVG
+from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_empty_display_editable_widget, write_base_widget_data)
 from karabo.common.scenemodel.registry import (
@@ -75,7 +75,7 @@ def _line_plot_reader(read_func, element):
 
 @register_scene_writer(LinePlotModel)
 def _line_plot_writer(write_func, model, parent):
-    element = SubElement(parent, NS_SVG + 'rect')
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, model.klass)
     for box in model.boxes:
         elem = SubElement(element, NS_KARABO + 'box')
