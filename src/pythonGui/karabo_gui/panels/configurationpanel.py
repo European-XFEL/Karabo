@@ -5,8 +5,8 @@
 #############################################################################
 from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QMenu, QPalette, QPushButton,
-                         QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
-                         QWidget)
+                         QScrollArea, QSplitter, QStackedWidget, QToolButton,
+                         QVBoxLayout, QWidget)
 
 from karabo_gui.events import register_for_broadcasts, KaraboEventSender
 import karabo_gui.icons as icons
@@ -38,7 +38,7 @@ class ConfigurationPanel(BasePanelWidget):
         widget = QWidget(self)
 
         mainLayout = QVBoxLayout(widget)
-        mainLayout.setContentsMargins(5, 5, 5, 5)
+        mainLayout.setContentsMargins(0, 0, 0, 0)
 
         # Layout for navigation and project tree
         self.navSplitter = QSplitter(Qt.Vertical)
@@ -77,19 +77,6 @@ class ConfigurationPanel(BasePanelWidget):
         self.prevConfiguration = None
         self._awaitingSchema = None
 
-        topWidget = QWidget(widget)
-
-        splitTopPanes = QSplitter(Qt.Horizontal, topWidget)
-        splitTopPanes.addWidget(self.navSplitter)
-        splitTopPanes.addWidget(self.__swParameterEditor)
-
-        splitTopPanes.setStretchFactor(0, 1)
-        splitTopPanes.setStretchFactor(1, 3)
-
-        vLayout = QVBoxLayout(topWidget)
-        vLayout.setContentsMargins(0, 0, 0, 0)
-        vLayout.addWidget(splitTopPanes)
-
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0, 5, 5, 5)
 
@@ -98,7 +85,7 @@ class ConfigurationPanel(BasePanelWidget):
         self.pbInitDevice.setToolTip(text)
         self.pbInitDevice.setStatusTip(text)
         self.pbInitDevice.setVisible(False)
-        self.pbInitDevice.setMinimumSize(140, 32)
+        self.pbInitDevice.setMinimumWidth(140)
         self.pbInitDevice.clicked.connect(self.onInitDevice)
         hLayout.addWidget(self.pbInitDevice)
 
@@ -107,7 +94,7 @@ class ConfigurationPanel(BasePanelWidget):
         self.pbKillInstance.setStatusTip(text)
         self.pbKillInstance.setToolTip(text)
         self.pbKillInstance.setVisible(False)
-        self.pbKillInstance.setMinimumSize(140, 32)
+        self.pbKillInstance.setMinimumWidth(140)
         # use action for button to reuse
         self.acKillInstance = QAction(icons.kill, text, widget)
         self.acKillInstance.setStatusTip(text)
@@ -125,7 +112,7 @@ class ConfigurationPanel(BasePanelWidget):
         self.pbApplyAll.setStatusTip(description)
         self.pbApplyAll.setVisible(False)
         self.pbApplyAll.setEnabled(False)
-        self.pbApplyAll.setMinimumSize(140, 32)
+        self.pbApplyAll.setMinimumWidth(140)
         # use action for button to reuse
         self.acApplyAll = QAction(icons.apply, text, widget)
         self.acApplyAll.setStatusTip(text)
@@ -178,7 +165,7 @@ class ConfigurationPanel(BasePanelWidget):
         self.pbResetAll.setStatusTip(decription)
         self.pbResetAll.setVisible(False)
         self.pbResetAll.setEnabled(False)
-        self.pbResetAll.setMinimumSize(140, 32)
+        self.pbResetAll.setMinimumWidth(140)
         # use action for button to reuse
         self.acResetAll = QAction(icons.no, text, widget)
         self.acResetAll.setStatusTip(text)
@@ -189,9 +176,24 @@ class ConfigurationPanel(BasePanelWidget):
 
         hLayout.addWidget(self.pbResetAll)
         hLayout.addStretch()
+
+        self.rightScrollArea = QScrollArea(widget)
+        self.rightScrollArea.setWidgetResizable(True)
+        rightWidget = QWidget()
+        vLayout = QVBoxLayout(rightWidget)
+        vLayout.setContentsMargins(0, 0, 0, 0)
+        vLayout.addWidget(self.__swParameterEditor)
         vLayout.addLayout(hLayout)
-        mainLayout.addWidget(topWidget)
-        widget.setLayout(mainLayout)
+        self.rightScrollArea.setWidget(rightWidget)
+
+        splitPanes = QSplitter(Qt.Horizontal, widget)
+        splitPanes.addWidget(self.navSplitter)
+        splitPanes.addWidget(self.rightScrollArea)
+
+        splitPanes.setStretchFactor(0, 1)
+        splitPanes.setStretchFactor(1, 3)
+
+        mainLayout.addWidget(splitPanes)
 
         return widget
 
