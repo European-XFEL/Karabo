@@ -1,5 +1,6 @@
 from ..api import (
-    DisplayStateColorModel, EvaluatorModel, FloatSpinBoxModel, MonitorModel,
+    DisplayStateColorModel, ColorBoolModel, EvaluatorModel, FloatSpinBoxModel,
+    MonitorModel,
     SingleBitModel, TableElementModel,
 )
 from .utils import (assert_base_traits, base_widget_traits,
@@ -20,6 +21,15 @@ TABLE_SCHEMA = (
     " requiredAccessLevel=&quot;KRB_INT32:1&quot; valueType=&quot;"
     "KRB_STRING:BOOL&quot;&gt;0&lt;/b&gt;&lt;/root&gt;"
 )
+
+
+def test_color_bool_widget():
+    traits = base_widget_traits(parent='DisplayComponent')
+    traits['invert'] = True
+    model = ColorBoolModel(**traits)
+    read_model = single_model_round_trip(model)
+    assert_base_traits(read_model)
+    assert read_model.invert
 
 
 def test_display_state_color_widget():
