@@ -56,10 +56,16 @@ Version 1 of the scene file format is described in detail here:
 individual elements in a scene file are recognized by their corresponding
 reader functions in the Karabo library.
 
-Version 2+ of the scene file format is basically the same as version 1, but
+Version 2 of the scene file format is basically the same as version 1, but
 some elements have minor changes which are incompatible with the old reader
 implementations. These changes should be in agreement with the guidelines
 enumerated below.
+
+Version 3 (and later) does not yet exist at the time of this writing. The
+condition for it to exist would be if an existing element (or elements) need(s)
+a new reader. As soon as the format of any element changes enough that it can't
+be handled cleanly by the current reader, then a new reader (for that element)
+and new file version is required.
 
 
 Making Changes to the Scene File format
@@ -71,24 +77,33 @@ data which is already there, you should take note of the following:
 * If adding a new element, create a class which inherits ``BaseSceneObjectData``
   (a *model class*).
 
-  * Increment the ``SCENE_FILE_VERSION`` constant in
-    ``karabo.common.scenemodel.const``.
   * Create a reader function for the class. Register the reader with the
     ``register_scene_reader`` decorator. Make sure you pass
-    ``version=<new version>`` (where ``<new version>`` is the new value of
-    ``SCENE_FILE_VERSION``) to the decorator.
+    ``version=<current version>`` (where ``<current version>`` is the value of
+    ``SCENE_FILE_VERSION``) to the decorator. Don't pass ``SCENE_FILE_VERSION``
+    because this value will change over time and you want to pin your reader to
+    a single version.
   * Create a writer function for the class. Register the writer with the
     ``register_scene_writer`` decorator.
-  * Add unit tests which cover all the new code that you added. Try to cover
+  * **Add unit tests which cover all the new code that you added**. Try to cover
     edge cases that you can think of.
 
-* If modifying an existing model class, you *likely* will need to add a new
-  reader function.
+* If *lightly* modifying an existing model class, you can make small changes to
+  the reader function
 
-  * As with adding data, increment the ``SCENE_FILE_VERSION`` constant first.
+  * **Leave the** ``SCENE_FILE_VERSION`` **constant alone**.
+  * Make whatever changes are necessary to the model class.
+  * Update the other reader function(s) for the model if needed
+  * Update unit tests carefully.
+
+* If modifying an existing model class in a way which requires a new reader
+  function:
+
+  * Increment the ``SCENE_FILE_VERSION`` constant first.
   * Make whatever changes are necessary to the model class.
   * Create a **new reader function** and register it with a version equal to the
-    new value of ``SCENE_FILE_VERSION``.
+    new value of ``SCENE_FILE_VERSION``. Remember not to use
+    ``SCENE_FILE_VERSION`` here. Use its value.
   * Update the old reader function(s), **but only if NOT doing so would cause
     an exception when instantiating the model class**.
 
@@ -100,7 +115,15 @@ data which is already there, you should take note of the following:
 .. note::
 
   Removing data from the file format is always safe. Old files which contain the
-  data will continue to be readable, because the reader simply ignores the data.
+  data will continue to be readable, because the reader can simply ignore the
+  data.
+
+.. note::
+
+  Similarly, adding new widgets to the file format is also safe, as long as the
+  addition is orthogonal to existing data in the format. As of version 2.2(-ish)
+  the ``UnknownWidgetDataModel`` catches new widgets which do not have a reader
+  registered.
 
 
 Unit Tests
@@ -111,6 +134,10 @@ very extensive test coverage. You should strive to maintain this when making
 changes. It is intended as a defensive measure against introducing breaking
 changes to users. Unfortunately, it's not automatic, and it requires a bit of
 discipline on the part of developers working on the scene.
+
+**This is very important**. Good unit test coverage of the scene file model
+code is the main defense against user hostile bugs encountered when loading
+scenes.
 
 
 The View
