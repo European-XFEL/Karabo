@@ -44,8 +44,11 @@ class Injectable(Configurable):
         return super(Configurable, cls).__new__(newtype)
 
     @coroutine
-    def initializeInjectedParameters(self, **kwargs):
-        """Initialize injected parameters without publishing"""
+    def _run(self, **kwargs):
+        yield from super()._run(**kwargs)
+        self._collect_attrs()
+
+    def _collect_attrs(self):
         cls = self.__class__
         added_attrs = list(cls._added_attrs)
         cls._attrs = [attr for attr, value in cls.__dict__.items()
@@ -55,9 +58,13 @@ class Injectable(Configurable):
         cls._allattrs.extend(attr for attr in cls._attrs if attr not in seen)
         self._register_slots()
         self._added_attrs.clear()
+        return added_attrs
 
+    @coroutine
+    def initializeInjectedParameters(self, **kwargs):
+        """Initialize injected parameters without publishing"""
         initializers = []
-        for k in added_attrs:
+        for k in self._collect_attrs():
             t = getattr(type(self), k)
             init = t.checkedInit(self, kwargs.get(k))
             initializers.extend(init)

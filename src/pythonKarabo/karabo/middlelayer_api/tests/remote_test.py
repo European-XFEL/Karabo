@@ -948,5 +948,17 @@ class Tests(DeviceTest):
             d.injected = "whatever"
             yield from waitUntil(lambda: self.remote.injected == "whatever")
 
+    @async_tst
+    def test_earlyinject(self):
+        class A(Injectable, Device):
+            @coroutine
+            def onInitialization(self):
+                self.__class__.number = Int32()
+                self.number = 3
+        a = A({"_deviceId_": "testinject"})
+        yield from a.startInstance()
+        with (yield from getDevice("testinject")) as proxy:
+            self.assertEqual(proxy.number, 3)
+
 if __name__ == "__main__":
     main()
