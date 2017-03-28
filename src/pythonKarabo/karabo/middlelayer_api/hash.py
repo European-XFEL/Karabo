@@ -184,6 +184,7 @@ class Simple(object):
     def toSchemaAndAttrs(self, device, state):
         schema, attrs = super().toSchemaAndAttrs(device, state)
         if self.options is not None:
+            # assure options are serialized correctly
             attrs["options"] = np.array(self.options, dtype=self.numpy)
         return schema, attrs
 
