@@ -11,8 +11,10 @@ from PyQt4.QtGui import QAction, QDialog, QCursor, QMessageBox, QTreeView
 from karabo.common.project.api import ProjectModel, find_parent_object
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.utils import (
-    maybe_save_modified_project, save_as_object, save_object)
-from karabo_gui.singletons.api import get_project_model, get_selection_tracker
+    maybe_save_modified_project, save_as_object, save_object,
+    show_trash_project_message)
+from karabo_gui.singletons.api import (get_db_conn, get_project_model,
+                                       get_selection_tracker)
 from karabo_gui.util import is_database_processing, set_treeview_header
 from .controller.bases import BaseProjectGroupController
 from .controller.project import ProjectController
@@ -206,23 +208,12 @@ class ProjectView(QTreeView):
     def _update_is_trashed(self, project, parent_project):
         """ Mark the given `project` as (un-)trashed
         """
-        if project.is_trashed:
-            title = 'Restore from trash'
-            text = ('Do you really want to restore this project <br><b>{}</b>'
-                    ' from trash?').format(project.simple_name)
-        else:
-            title = 'Move to trash'
-            text = ('Do you really want to move this project <br><b>{}</b>'
-                    ' to trash and close it?').format(project.simple_name)
-
-        result = QMessageBox.question(None, title, text,
-                                      QMessageBox.Yes | QMessageBox.No)
-        if result == QMessageBox.No:
-            return
-
-        project.is_trashed = not project.is_trashed
-        # Always save afterwards
-        save_object(project)
-        if project.is_trashed:
-            # Close project
-            self._close_project(project, parent_project, show_dialog=False)
+        if show_trash_project_message(project.is_trashed, project.simple_name):
+            project.is_trashed = not project.is_trashed
+            db_conn = get_db_conn()
+            db_conn.update_attribute(db_conn.default_domain, 'project',
+                                     project.uuid, 'is_trashed',
+                                     str(project.is_trashed).lower())
+            if project.is_trashed:
+                # Close project
+                self._close_project(project, parent_project, show_dialog=False)
