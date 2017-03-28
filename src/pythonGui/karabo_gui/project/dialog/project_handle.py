@@ -73,7 +73,7 @@ class LoadProjectDialog(QDialog):
         self.twProjects.setModel(TableModel(parent=self))
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
-        self.twProjects.doubleClicked.connect(self.accept)
+        self.twProjects.doubleClicked.connect(self._load_item)
         self.twProjects.setContextMenuPolicy(Qt.CustomContextMenu)
         self.twProjects.customContextMenuRequested.connect(
             self._show_context_menu)
@@ -162,20 +162,34 @@ class LoadProjectDialog(QDialog):
     def domain(self):
         return self.cbDomain.currentText()
 
-    @pyqtSlot(object, object)
-    def _selectionChanged(self, selected, deselected):
-        """ Whenever an item is selected the current title and the button box
-        need to be updated
+    def _selected_item_loadable(self):
+        """ Return whether the currently selected project loadable.
         """
         col_index = get_column_index(UUID)
         rows = self.twProjects.selectionModel().selectedRows(col_index)
         if rows:
             _, is_trashed = rows[0].data(Qt.UserRole)
-            # Disable loading of trashed projects
-            enable = not is_trashed
-        else:
-            enable = False
+            return not is_trashed
+
+        return False
+
+    @pyqtSlot(object, object)
+    def _selectionChanged(self, selected, deselected):
+        """ Whenever an item is selected the current title and the button box
+        need to be updated
+        """
+        # Make sure loading of trashed projects is not possible
+        enable = self._selected_item_loadable()
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+
+    @pyqtSlot(object)
+    def _load_item(self, index):
+        """ Slot connectect to the ``QTableView`` signal ``doubleClicked``
+        Only accept the dialog, if the selected project is loadable.
+        """
+        # Make sure loading of trashed projects is not possible
+        if self._selected_item_loadable():
+            self.accept()
 
     @pyqtSlot(object)
     def _titleChanged(self, text):
