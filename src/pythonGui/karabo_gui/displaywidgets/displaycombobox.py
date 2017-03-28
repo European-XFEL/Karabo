@@ -46,7 +46,7 @@ class DisplayComboBox(DisplayWidget):
     def typeChanged(self, box):
         with SignalBlocker(self.widget):
             self.widget.clear()
-            self.widget.addItems(str(o) for o in box.descriptor.options)
+            self.widget.addItems([str(o) for o in box.descriptor.options])
 
 
     @property
