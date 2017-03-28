@@ -316,6 +316,7 @@ namespace karabo {
              * @return array of strings
              */
             std::vector<std::string> getPaths() const;
+            std::vector<std::string> getDeepPaths() const;
 
             //**********************************************
             //          General functions on Schema        *
