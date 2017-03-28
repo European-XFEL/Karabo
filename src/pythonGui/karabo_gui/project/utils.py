@@ -139,12 +139,14 @@ def get_device_server_model(server_id):
     return server_model
 
 
-def load_project():
+def load_project(is_subproject=False):
     """Load a project from the project database.
+
+    :param is_subproject States whether a master or a subproject is about to be
+                         loaded
     """
     from karabo_gui.project.dialog.project_handle import LoadProjectDialog
-
-    dialog = LoadProjectDialog()
+    dialog = LoadProjectDialog(is_subproject=is_subproject)
     result = dialog.exec()
     if result == QDialog.Accepted:
         domain, uuid = dialog.selected_item()
