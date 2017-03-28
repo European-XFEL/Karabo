@@ -13,8 +13,8 @@ from karabo.common.scenemodel.api import (
     LineModel, LinePlotModel, MonitorModel, PathModel, PopUpModel,
     RectangleModel, SceneLinkModel, ScientificImageModel, SelectionIconsModel,
     SingleBitModel, SliderModel, StatefulIconWidgetModel, TableElementModel,
-    TextIconsModel, UnknownXMLDataModel, VacuumWidgetModel, WebcamImageModel,
-    WorkflowItemModel, XYPlotModel
+    TextIconsModel, UnknownWidgetDataModel, UnknownXMLDataModel,
+    VacuumWidgetModel, WebcamImageModel, WorkflowItemModel, XYPlotModel
 )
 
 from .const import QT_BOX_LAYOUT_DIRECTION
@@ -27,14 +27,15 @@ from .widget.api import (
     GenericWidgetContainer, IconsContainer, LabelWidget, LinePlotContainer,
     MonitorContainer, SceneLinkWidget, SimpleImageWidgetContainer,
     SingleBitContainer, StatefulIconContainer, TableElementContainer,
-    UnknownSvgWidget, VacuumWidgetPlaceholder, WorkflowItemWidget
+    UnknownSvgWidget, UnknownWidget, VacuumWidgetPlaceholder,
+    WorkflowItemWidget
 )
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (
     BaseWidgetContainer, LabelWidget, SceneLinkWidget, UnknownSvgWidget,
-    WorkflowItemWidget)
+    UnknownWidget, WorkflowItemWidget)
 _SCENE_OBJ_FACTORIES = {
     FixedLayoutModel: lambda m, p: GroupLayout(m),
     BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
@@ -44,6 +45,7 @@ _SCENE_OBJ_FACTORIES = {
     PathModel: lambda m, p: PathShape(model=m),
     LabelModel: LabelWidget,
     SceneLinkModel: SceneLinkWidget,
+    UnknownWidgetDataModel: UnknownWidget,
     UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(m, parent=p),
     BitfieldModel: GenericWidgetContainer,
     DisplayCommandModel: GenericWidgetContainer,
@@ -188,7 +190,8 @@ def create_object_from_model(layout, model, parent_widget, object_dict,
         add_object_to_layout(obj, layout)
         if is_layout(obj):
             # recurse
-            fill_root_layout(obj, model, parent_widget, object_dict, scene_visible)
+            fill_root_layout(obj, model, parent_widget, object_dict,
+                             scene_visible)
             model_rect = QRect(model.x, model.y, model.width, model.height)
             if model_rect.isEmpty():
                 # Ask the layout to calculate a suitable size
@@ -267,11 +270,10 @@ def _update_box_visibility(boxes, is_visible):
     """ Update the ``boxes`` visibility
 
     :param boxes: The boxes which visibility should change
-    :param is_visible: States the visibility flag 
+    :param is_visible: States the visibility flag
     """
     for b in boxes:
         if is_visible:
             b.addVisible()
         else:
             b.removeVisible()
-
