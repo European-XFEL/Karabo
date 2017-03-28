@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from functools import partial
 from io import StringIO
 import os.path as op
 from tempfile import TemporaryDirectory
@@ -10,9 +11,11 @@ from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 from karabo.common.api import set_modified_flag, walk_traits_object
 from karabo.common.project.api import (
     PROJECT_DB_TYPE_PROJECT,
-    BaseProjectObjectModel, MacroModel, MemCacheWrapper, ProjectDBCache,
+    BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
+    DeviceServerModel, MacroModel, MemCacheWrapper, ProjectDBCache,
     ProjectModel, read_lazy_object, recursive_save_object
 )
+from karabo.common.scenemodel.api import SceneModel
 from karabo.middlelayer import encodeXML, Hash
 from ..api import (
     convert_old_project, OldProject, read_project_model, write_project_model
@@ -219,6 +222,25 @@ def test_existing_obj_mismatch():
     xml = write_project_model(model)
     with assert_raises(AssertionError):
         read_project_model(StringIO(xml), existing=existing)
+
+
+def test_existing_returns_existing():
+    # DeviceConfigurationModel blows up without a class_id value...
+    dcm_klass = partial(DeviceConfigurationModel, class_id='Tester')
+    dcm_klass.__name__ = 'DeviceConfigurationModel'
+
+    model_classes = (dcm_klass, DeviceInstanceModel, DeviceServerModel,
+                     MacroModel, ProjectModel, SceneModel)
+    for klass in model_classes:
+        model = klass(initialized=True)
+        xml = write_project_model(model)
+
+        # If an object is passed with the `existing` keyword argument, the same
+        # object must be returned to the caller
+        existing = klass(uuid=model.uuid)
+        read_model = read_project_model(StringIO(xml), existing=existing)
+        msg = '{} reader is broken!'.format(klass.__name__)
+        assert read_model is existing, msg
 
 
 def test_modified_after_read():
