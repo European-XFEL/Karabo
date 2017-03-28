@@ -14,18 +14,25 @@
 #include <cstdlib>
 #include <iomanip>
 #include <map>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/enable_shared_from_this.hpp>
+
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
+#include <karabo/util/Epochstamp.hh>
+#include <karabo/util/MetaTools.hh>
 #include <karabo/net/JmsConnection.hh>
 #include <karabo/net/JmsConsumer.hh>
-#include <karabo/util/Epochstamp.hh>
+#include <karabo/net/EventLoop.hh>
+#include <karabo/log/Logger.hh>
 
 using namespace karabo;
 
 
-class BrokerStatistics {
+class BrokerStatistics : public boost::enable_shared_from_this<BrokerStatistics> {
+
 
 
 public:
@@ -54,7 +61,8 @@ public:
 
     /// Register a message, i.e. increase statistics and possibly print.
     void registerMessage(const util::Hash::Pointer& header,
-                         const char* /*body*/, const size_t& bodySize);
+                         const util::Hash::Pointer& body,
+                         const net::JmsConsumer::Pointer& consumer);
 
 private:
 
@@ -138,34 +146,39 @@ void BrokerStatistics::printId(std::ostream& out, const SlotId& id) const {
 
 
 void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
-                                       const char* /*body*/,
-                                       const size_t& bodySize) {
-    // In the very first call we reset the start time.
-    // Otherwise (if the constructor initialises m_start with 'now') starting this
-    // tool and then starting the first device in the topic leads to wrongly low
-    // rates.
-    if (!m_start.getSeconds()) m_start.now();
+                                       const util::Hash::Pointer& body,
+                                       const net::JmsConsumer::Pointer& consumer) {
+    try {
+        // In the very first call we reset the start time.
+        // Otherwise (if the constructor initialises m_start with 'now') starting this
+        // tool and then starting the first device in the topic leads to wrongly low
+        // rates.
+        if (!m_start.getSeconds()) m_start.now();
 
-    // Register for per sender and per (intended) receiver:
-    this->registerPerSignal(header, bodySize);
-    this->registerPerSlot(header, bodySize);
+        // Register for per sender and per (intended) receiver:
+        this->registerPerSignal(header, body->size()); // FIXME: byte size of body?
+        this->registerPerSlot(header, body->size()); // FIXME: dito
 
-    // Now it might be time to print and reset.
-    // Since it is done inside registerMessage, one does not get any printout if
-    // the watched topic is silent :-(. But then we do not need monitoring anyway.
-    const util::Epochstamp now;
-    const util::TimeDuration diff = now.elapsed(m_start);
-    if (diff >= m_interval) {
-        // Calculating in single float precision should be enough...
-        const float elapsedSeconds = static_cast<float> (diff.getTotalSeconds())
-                + diff.getFractions(util::MICROSEC) / 1000000.f;
-        this->printStatistics(now, elapsedSeconds);
+        // Now it might be time to print and reset.
+        // Since it is done inside registerMessage, one does not get any printout if
+        // the watched topic is silent :-(. But then we do not need monitoring anyway.
+        const util::Epochstamp now;
+        const util::TimeDuration diff = now.elapsed(m_start);
+        if (diff >= m_interval) {
+            // Calculating in single float precision should be enough...
+            const float elapsedSeconds = static_cast<float> (diff.getTotalSeconds())
+                    + diff.getFractions(util::MICROSEC) / 1.e6f;
+            this->printStatistics(now, elapsedSeconds);
 
-        // Reset:
-        m_start = now;
-        m_signalStats.clear();
-        m_slotStats.clear();
+            // Reset:
+            m_start = now;
+            m_signalStats.clear();
+            m_slotStats.clear();
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Problem registering message: " << e.what() << "\nheader:\n" << *header << std::endl;
     }
+    consumer->readAsync(util::bind_weak(&BrokerStatistics::registerMessage, this, _1, _2, consumer));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -190,8 +203,12 @@ void BrokerStatistics::registerPerSignal(const util::Hash::Pointer& header,
 void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header,
                                        const size_t& bodySize) {
     // Get who sent the message, e.g.:
-    // |DataLogger-Cam7_Proc:slotChanged||Karabo_GuiServer_0:_slotChanged|
-    const std::string& slots = header->get<std::string>("slotFunctions");
+    // "slotFunctions": |DataLogger-Cam7_Proc:slotChanged||Karabo_GuiServer_0:_slotChanged|
+    // Asynchronous replies do not have that key, so we use instead:
+    // "slotInstanceIds": |DataLogger-Cam7_Proc||Karabo_GuiServer_0|
+    boost::optional<util::Hash::Node&> funcNode = header->find("slotFunctions");
+    const std::string& slots = (funcNode ? funcNode->getValue<std::string>()
+                                : header->get<std::string>("slotInstanceIds"));
 
     std::vector<std::string> slotsVec;
     // token_compress_on: treat "||" as "|"
@@ -280,7 +297,7 @@ BrokerStatistics::printStatistics(const StatsMap& statsMap,
 template <class IdType>
 void BrokerStatistics::printLine(const IdType& id, const Stats& stats,
                                  float elapsedSeconds) const {
-    const float kBytes = stats.first ? stats.second / (1000.f * stats.first) : 0.f;
+    const float kBytes = stats.first ? stats.second / (1.e3f * stats.first) : 0.f;
 
     this->printId(std::cout, id);
     std::cout << ":"
@@ -300,7 +317,7 @@ void printHelp(const char* name) {
         nameStr.replace(0, lastSlashPos + 1, "");
     }
     std::cout << "\n  " << nameStr << " [-h|--help] [interValSec]\n\n"
-            << "Prints the rate and average size of all signals sent to the "
+            << "Prints the rate and average size of all signals sent to the " // FIXME: not size!
             << "broker and of\n"
             << "the intended calls of the slots that receive the signals.\n"
             << "Broker host and topic are read from the usual environment "
@@ -335,45 +352,45 @@ int main(int argc, char** argv) {
         }
     }
 
+    std::string topic;
+    char* env = getenv("KARABO_BROKER_TOPIC");
+    if (env != 0) {
+        topic = env;
+    } else {
+        env = getenv("USER");
+        if (env != 0) topic = env;
+    }
+    if (topic.empty()) {
+        std::cerr << "No topic specified since neither KARABO_BROKER_TOPIC nor USER set." << std::endl;
+        return EXIT_FAILURE;
+    }
+    // Start Logger, but suppress INFO and DEBUG
+    log::Logger::configure(util::Hash("priority", "WARN"));
+    log::Logger::useOstream();
+
     try {
+        // Create connection object
+        net::JmsConnection::Pointer connection = boost::make_shared<net::JmsConnection>();
+        connection->connect();
 
-        // Create Jms connection
-        util::Hash config("Jms");
-        net::BrokerConnection::Pointer connection
-                = net::BrokerConnection::create(config);
-
-        // Get an IOService object (for async reading later)
-        net::BrokerIOService::Pointer ioService = connection->getIOService();
-
-        // Start connection
-        connection->start();
-
-        // Obtain channel
-        net::BrokerChannel::Pointer channel = connection->createChannel();
+        std::string selector; // Could be made configurable as in broker MessageLogger.
+        net::JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector);
 
         std::cout << "\nStart monitoring signal and slot rates of \n   topic     '"
-                << connection->getBrokerTopic() << "'\n   on broker '"
-                << connection->getBrokerHostname() << ":"
-                << connection->getBrokerPort() << "',\n"
+                << topic << "'\n   on broker '"
+                << connection->getBrokerUrl() << "',\n"
                 << "intervall is " << interval << " s."
                 << std::endl;
 
-        // Here we could add some filtering, e.g. based on command line
-        // arguments, to reduce the traffic.
-        // if (argc <= 1) {
-        //     channel->setFilter("signalFunction <> 'signalHeartbeat'");
-        // }
-
         // Register our registration message as async reader:
         boost::shared_ptr<BrokerStatistics> stats(new BrokerStatistics(interval));
-        channel->readAsyncHashRaw(boost::bind(&BrokerStatistics::registerMessage,
-                                              stats, _1, _2, _3));
+        consumer->readAsync(boost::bind(&BrokerStatistics::registerMessage, stats, _1, _2, consumer));
 
         // Block forever
-        ioService->work();
+        net::EventLoop::work();
 
-    } catch (const util::Exception& e) {
-        std::cerr << e << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
