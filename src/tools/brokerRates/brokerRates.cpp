@@ -66,11 +66,11 @@ public:
 
 private:
 
-    void registerPerSignal(const util::Hash::Pointer& header,
-                           const size_t& bodySize);
+    void registerPerSignal(const util::Hash::Pointer& header, size_t bodySize);
 
-    void registerPerSlot(const util::Hash::Pointer& header,
-                         const size_t& bodySize);
+    void registerPerSlot(const util::Hash::Pointer& header, size_t bodySize);
+
+    void registerLogMessage(size_t bodySize);
 
     void printStatistics(const util::Epochstamp& timeStamp,
                          float elapsedSeconds) const;
@@ -157,9 +157,14 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
 
         // Since we told the consumer to skip serialisation, we can get the total size in bytes:
         const unsigned int bodySize = body->get<unsigned int>("totalSizeInBytes");
-        // Register for per sender and per (intended) receiver:
-        this->registerPerSignal(header, bodySize);
-        this->registerPerSlot(header, bodySize);
+        boost::optional<util::Hash::Node&> targetNode = header->find("target");
+        if (targetNode && targetNode->is<std::string>() && targetNode->getValue<std::string>() == "log") {
+            this->registerLogMessage(bodySize);
+        } else {
+            // Register for per sender and per (intended) receiver:
+            this->registerPerSignal(header, bodySize);
+            this->registerPerSlot(header, bodySize);
+        }
 
         // Now it might be time to print and reset.
         // Since it is done inside registerMessage, one does not get any printout if
@@ -186,8 +191,7 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
 ////////////////////////////////////////////////////////////////////////////
 
 
-void BrokerStatistics::registerPerSignal(const util::Hash::Pointer& header,
-                                         const size_t& bodySize) {
+void BrokerStatistics::registerPerSignal(const util::Hash::Pointer& header, size_t bodySize) {
     // Get who sent the message:
     const std::string& signalId = header->get<std::string>("signalInstanceId");
     const std::string& signalFunc = header->get<std::string>("signalFunction");
@@ -202,8 +206,7 @@ void BrokerStatistics::registerPerSignal(const util::Hash::Pointer& header,
 ////////////////////////////////////////////////////////////////////////////
 
 
-void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header,
-                                       const size_t& bodySize) {
+void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header, size_t bodySize) {
     // Get who sent the message, e.g.:
     // "slotFunctions": |DataLogger-Cam7_Proc:slotChanged||Karabo_GuiServer_0:_slotChanged|
     // Asynchronous replies do not have that key, so we use instead:
@@ -226,6 +229,24 @@ void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header,
         ++stats.first;
         stats.second += bodySize;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+
+void BrokerStatistics::registerLogMessage(size_t bodySize) {
+
+    // We have no clue who sends or receives log messages.
+    // Treat them as send and received once:
+    const SignalId signalKey("?", "log");
+    Stats& senderStats = m_signalStats[signalKey];
+    ++senderStats.first;
+    senderStats.second += bodySize;
+
+    const SlotId senderKey("?:log");
+    Stats& receiverStats = m_slotStats[senderKey];
+    ++receiverStats.first;
+    receiverStats.second += bodySize;
 }
 
 ////////////////////////////////////////////////////////////////////////////
