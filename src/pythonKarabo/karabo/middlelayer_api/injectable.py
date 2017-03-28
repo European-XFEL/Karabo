@@ -25,14 +25,15 @@ class Injectable(Configurable):
     we do not want to modify the classes of all instances, we generate a
     fresh class for every object, which inherits from our class. This new
     class is completely empty, so we can modify it at will. Once we have done
-    that, call
+    that, yield from
     :meth:`~karabo.middlelayer.Injectable.publishInjectedParameters`::
 
         class MyDevice(Injectable, Device):
+            @coroutine
             def inject_something(self):
                 # inject a new property into our personal class:
                 self.__class__.injected_string = String()
-                self.publishInjectedParameters()
+                yield from self.publishInjectedParameters()
 
                 # use the property as any other property:
                 self.injected_string = "whatever"
@@ -43,8 +44,8 @@ class Injectable(Configurable):
         return super(Configurable, cls).__new__(newtype)
 
     @coroutine
-    def publishInjectedParameters(self, **kwargs):
-        """Publish all changes in the parameters of this object"""
+    def initializeInjectedParameters(self, **kwargs):
+        """Initialize injected parameters without publishing"""
         cls = self.__class__
         added_attrs = list(cls._added_attrs)
         cls._attrs = [attr for attr, value in cls.__dict__.items()
@@ -53,16 +54,32 @@ class Injectable(Configurable):
         seen = set(cls._allattrs)
         cls._allattrs.extend(attr for attr in cls._attrs if attr not in seen)
         self._register_slots()
+        self._added_attrs.clear()
 
-        _initializers = []
+        initializers = []
         for k in added_attrs:
             t = getattr(type(self), k)
             init = t.checkedInit(self, kwargs.get(k))
-            _initializers.extend(init)
-        self._added_attrs = []
+            initializers.extend(init)
 
-        yield from gather(*_initializers)
+        yield from gather(*initializers)
 
+    @coroutine
+    def publishInjectedParameters(self, **kwargs):
+        """Publish all changes in the parameters of this object
+
+        This is also the time when the injected parameters get initialized.
+        As keyword arguments, you may give the initial values for the
+        injected parameters::
+
+            self.__class__.some_number = Int32()
+            yield from self.publishInjectedParameters(some_number=3)
+
+        If your parameters have been injected by `onInitialization`, you
+        do not need to publish the parameters, as no schema has been
+        published. If you still need to initialize some injected parameters,
+        use :meth:`Injectable.initializeExpectedParameters`.
+        """
+        yield from self.initializeInjectedParameters(**kwargs)
         self._notifyNewSchema()
         self.signalChanged(self.configurationAsHash(), self.deviceId)
-        cls._added_attrs.clear()
