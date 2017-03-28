@@ -134,7 +134,7 @@ class ProjectView(QTreeView):
                 else:
                     text = 'Move to trash'
                 trash_action = QAction(text, menu)
-                trash_action.triggered.connect(partial(self._update_is_trashed,
+                trash_action.triggered.connect(partial(self.update_is_trashed,
                                                        project_model,
                                                        parent_project))
                 menu.addAction(rename_action)
@@ -205,7 +205,7 @@ class ProjectView(QTreeView):
             # The master project
             self.model().traits_data_model = None
 
-    def _update_is_trashed(self, project, parent_project):
+    def update_is_trashed(self, project, parent_project):
         """ Mark the given `project` as (un-)trashed
         """
         if show_trash_project_message(project.is_trashed, project.simple_name):
