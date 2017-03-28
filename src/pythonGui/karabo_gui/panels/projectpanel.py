@@ -65,13 +65,19 @@ class ProjectPanel(BasePanelWidget):
             tooltip="Create a copy of the project",
             triggered=_project_save_as_handler,
         )
+        trash = KaraboAction(
+            icon=icons.delete, text="&Move to trash",
+            tooltip=("Move the current project to trash. This option can be "
+                     "reverted"),
+            triggered=_project_trash_handler,
+        )
         load_old = KaraboAction(
-            icon=icons.load, text="&Load Legacy Project",
+            icon=icons.load_from_disk, text="&Load Legacy Project",
             tooltip="Load a Legacy Project",
             triggered=_old_project_load_handler,
         )
 
-        for k_action in (new, load, save, save_as, None, load_old):
+        for k_action in (new, load, save, save_as, trash, None, load_old):
             if k_action is None:
                 q_ac = QAction(self)
                 q_ac.setSeparator(True)
@@ -79,8 +85,9 @@ class ProjectPanel(BasePanelWidget):
             else:
                 q_ac = build_qaction(k_action, self)
                 q_ac.setEnabled(False)
-                item_model = self.project_view.model()
-                q_ac.triggered.connect(partial(k_action.triggered, item_model))
+                project_view = self.project_view
+                q_ac.triggered.connect(partial(k_action.triggered,
+                                       project_view))
                 self._toolbar_actions.append(q_ac)
 
         toolbar = ToolBar(parent=self)
@@ -121,11 +128,13 @@ class ProjectPanel(BasePanelWidget):
             qaction.setEnabled(enable)
 
 
-def _project_load_handler(item_model):
-    """ Load a project model and assign it to the `item_model`
+def _project_load_handler(project_view):
+    """ Load a project model (`ProjectViewItemModel`) and assign it to the
+    `ProjectViewItemModel` of the given `project_view`
 
-    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
+    :param project_view: The `ProjectView` of the panel
     """
+    item_model = project_view.model()
     # Check for modififications before showing dialog
     traits_data_model = item_model.traits_data_model
     if not maybe_save_modified_project(traits_data_model):
@@ -136,11 +145,13 @@ def _project_load_handler(item_model):
         item_model.traits_data_model = project
 
 
-def _old_project_load_handler(item_model):
-    """ Load an old project model and assign it to the `item_model`
+def _old_project_load_handler(project_view):
+    """ Load an old project model and assign it to the `ProjectViewItemModel`
+    of the given `project_view`
 
-    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
+    :param project_view: The `ProjectView` of the panel
     """
+    item_model = project_view.model()
     # Check for modififications before showing dialog
     traits_data_model = item_model.traits_data_model
     if not maybe_save_modified_project(traits_data_model):
@@ -160,11 +171,13 @@ def _old_project_load_handler(item_model):
     item_model.traits_data_model = model
 
 
-def _project_new_handler(item_model):
-    """ Create a new project model and assign it to the given `item_model`
+def _project_new_handler(project_view):
+    """ Create a new project model (`ProjectViewItemModel`) and assign it to
+    the given `project_view`
 
-    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
+    :param project_view: The `ProjectView` of the panel
     """
+    item_model = project_view.model()
     # Check for modififications before showing dialog
     traits_data_model = item_model.traits_data_model
     if not maybe_save_modified_project(traits_data_model):
@@ -180,21 +193,38 @@ def _project_new_handler(item_model):
         item_model.traits_data_model = model
 
 
-def _project_save_handler(item_model):
-    """ Save the project model of the given `item_model`
+def _project_save_handler(project_view):
+    """ Save the project model (`ProjectViewItemModel`) of the given
+    `project_view`
 
-    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
+    :param project_view: The `ProjectView` of the panel
     """
+    item_model = project_view.model()
     traits_model = item_model.traits_data_model
     if traits_model is not None:
         save_object(traits_model)
 
 
-def _project_save_as_handler(item_model):
-    """ Save the project model as a copy of the given `item_model`
+def _project_save_as_handler(project_view):
+    """ Save the project model (`ProjectViewItemModel`) of the given
+    `project_view` as a copy
 
-    :param item_model: The `ProjectViewItemModel` of the `ProjectView`
+    :param project_view: The `ProjectView` of the panel
     """
+    item_model = project_view.model()
     traits_model = item_model.traits_data_model
     if traits_model is not None:
         save_as_object(traits_model)
+
+
+def _project_trash_handler(project_view):
+    """ Move the project model (`ProjectViewItemModel`) of the given
+    `project_view` to trash
+
+    :param project_view: The `ProjectView` of the panel
+    """
+    item_model = project_view.model()
+    traits_model = item_model.traits_data_model
+    if traits_model is not None:
+        project_view.update_is_trashed(project=traits_model,
+                                       parent_project=None)
