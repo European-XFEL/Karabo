@@ -49,7 +49,7 @@ class SubprojectController(ProjectSubgroupController):
     def _load_project(self):
         """ Add an existing project as a subproject.
         """
-        project = load_project()
+        project = load_project(is_subproject=True)
         if project is None:
             return
 

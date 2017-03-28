@@ -47,9 +47,9 @@ def get_column_index(project_data_key):
     return list(PROJECT_DATA.keys()).index(project_data_key)
 
 
-class ProjectHandleDialog(QDialog):
-    def __init__(self, simple_name, title, btn_text, parent=None):
-        super(ProjectHandleDialog, self).__init__(parent)
+class LoadProjectDialog(QDialog):
+    def __init__(self, is_subproject=False, parent=None):
+        super(LoadProjectDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'project_handle.ui')
         uic.loadUi(filepath, self)
@@ -62,7 +62,12 @@ class ProjectHandleDialog(QDialog):
         self.load_from_group.addButton(self.rbFromCache)
         self.load_from_group.buttonClicked.connect(self._openFromChanged)
 
-        self._set_dialog_texts(title, btn_text)
+        if is_subproject:
+            title = 'Load Sub Project'
+        else:
+            title = 'Load Master Project'
+        self.setWindowTitle(title)
+        self.buttonBox.button(QDialogButtonBox.Ok).setText('Load')
 
         # Tableview
         self.twProjects.setModel(TableModel(parent=self))
@@ -73,13 +78,14 @@ class ProjectHandleDialog(QDialog):
         self.twProjects.customContextMenuRequested.connect(
             self._show_context_menu)
 
+        # Domain is not selectable for subprojects - only master projects
+        self.cbDomain.setEnabled(not is_subproject)
         # Domain combobox
         self.default_domain = db_conn.default_domain
         self._domains_updated(db_conn.get_available_domains())
 
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.leTitle.textChanged.connect(self._titleChanged)
-        self.leTitle.setText(simple_name)
 
         register_for_broadcasts(self)
 
@@ -89,7 +95,7 @@ class ProjectHandleDialog(QDialog):
         Stop listening for broadcast events
         """
         unregister_from_broadcasts(self)
-        super(ProjectHandleDialog, self).done(result)
+        super(LoadProjectDialog, self).done(result)
 
     def karaboBroadcastEvent(self, event):
         sender = event.sender
@@ -125,16 +131,6 @@ class ProjectHandleDialog(QDialog):
                 break
             domain = it.get('domain')
             self.on_cbDomain_currentIndexChanged(domain)
-
-    def _set_dialog_texts(self, title, btn_text):
-        """ This method sets the ``title`` and the ``btn_text`` of the ok
-        button.
-
-        :param title: The new window title
-        :param btn_text: The new text for ok button of the ``QDialogButtonBox``
-        """
-        self.setWindowTitle(title)
-        self.buttonBox.button(QDialogButtonBox.Ok).setText(btn_text)
 
     def selected_item(self):
         """Return selected domain and project
@@ -308,13 +304,6 @@ class NewProjectDialog(QDialog):
         # Select default domain
         index = self.cbDomain.findText(self.default_domain)
         self.cbDomain.setCurrentIndex(index if index > -1 else 0)
-
-
-class LoadProjectDialog(ProjectHandleDialog):
-    def __init__(self, simple_name='', title="Load project", btn_text="Load",
-                 parent=None):
-        super(LoadProjectDialog, self).__init__(simple_name, title, btn_text,
-                                                parent)
 
 
 class TableModel(QAbstractTableModel):
