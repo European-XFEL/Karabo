@@ -167,7 +167,7 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
         if (diff >= m_interval) {
             // Calculating in single float precision should be enough...
             const float elapsedSeconds = static_cast<float> (diff.getTotalSeconds())
-                    + diff.getFractions(util::MICROSEC) / 1000000.f;
+                    + diff.getFractions(util::MICROSEC) / 1.e6f;
             this->printStatistics(now, elapsedSeconds);
 
             // Reset:
@@ -297,7 +297,7 @@ BrokerStatistics::printStatistics(const StatsMap& statsMap,
 template <class IdType>
 void BrokerStatistics::printLine(const IdType& id, const Stats& stats,
                                  float elapsedSeconds) const {
-    const float kBytes = stats.first ? stats.second / (1000.f * stats.first) : 0.f;
+    const float kBytes = stats.first ? stats.second / (1.e3f * stats.first) : 0.f;
 
     this->printId(std::cout, id);
     std::cout << ":"
