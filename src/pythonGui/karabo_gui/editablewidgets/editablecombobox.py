@@ -50,26 +50,22 @@ class EditableComboBox(EditableWidget):
     def typeChanged(self, box):
         with SignalBlocker(self.widget):
             self.widget.clear()
-            self.widget.addItems(box.descriptor.options)
-
+            self.widget.addItems([str(o) for o in box.descriptor.options])
 
     def eventFilter(self, object, event):
         # Block wheel event on QComboBox
         return event.type() == QEvent.Wheel and object is self.widget
 
-
     @property
     def value(self):
-        return self.boxes[0].descriptor.fromstring(self.widget.currentText())
-
+        return self.boxes[0].descriptor.options[self.widget.currentIndex()]
 
     def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return
 
-        index = self.widget.findText(str(value))
-        if index < 0:
-            return
+        index = next(i for i, v in enumerate(box.descriptor.options)
+                     if v == value)
 
         with SignalBlocker(self.widget):
             self.widget.setCurrentIndex(index)
