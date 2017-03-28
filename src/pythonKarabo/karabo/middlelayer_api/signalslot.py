@@ -239,12 +239,12 @@ class SignalSlotable(Configurable):
             self._register_slots()
             async(self._ss.main(self))
             yield from self._assert_name_unique()
-            self._ss.notify_network(self._initInfo())
-            if server is not None:
-                server.addChild(self.deviceId, self)
             yield from super(SignalSlotable, self)._run(**kwargs)
             yield from get_event_loop().run_coroutine_or_thread(
                 self.onInitialization)
+            self._ss.notify_network(self._initInfo())
+            if server is not None:
+                server.addChild(self.deviceId, self)
             self.__initialized = True
         except:
             yield from self.slotKillDevice()
