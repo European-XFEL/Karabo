@@ -105,6 +105,7 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         # Complain loudly if this trait is initialized when the model isn't
         assert device.initialized, "DeviceInstanceModel must be initialized!"
+        assert config.initialized, "Device config must be initialized!"
 
         return get_topology().get_project_device(
             device.instance_id, device.class_id, device.server_id,
@@ -251,6 +252,10 @@ class DeviceInstanceController(BaseProjectGroupController):
             server_model.devices.remove(device)
 
     def _edit_device(self, project):
+        # Watch for incomplete model initialization
+        if not self.model.initialized:
+            return
+
         device = self.model
         server_model = find_parent_object(device, project,
                                           DeviceServerModel)
