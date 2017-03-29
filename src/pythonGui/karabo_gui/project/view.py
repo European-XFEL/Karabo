@@ -67,14 +67,13 @@ class ProjectView(QTreeView):
     # ----------------------------
     # Slots
 
-    def _items_added(self, index, start, end):
+    def _items_added(self, parent_index, start, end):
         """React to the addition of an item (or items).
         """
         # Bail immediately if not the first item
         if start != 0:
             return
 
-        parent_index = index.parent()
         controller = self.model().controller_ref(parent_index)
         if (controller is not None and
                 isinstance(controller, BaseProjectGroupController)):
