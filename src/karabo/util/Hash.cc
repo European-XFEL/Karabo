@@ -335,7 +335,17 @@ namespace karabo {
         void Hash::getPaths(std::set<std::string>& result, const char separator) const {
             if (this->empty()) return;
             std::vector<std::string> vect;
-            Hash::getPaths(*this, vect, "", separator);
+            Hash::getPaths(*this, vect, "", separator, false);
+
+            for (size_t i = 0; i < vect.size(); ++i) {
+                result.insert(vect[i]);
+            }
+        }
+        
+        void Hash::getDeepPaths(std::set<std::string>& result, const char separator) const {
+            if (this->empty()) return;
+            std::vector<std::string> vect;
+            Hash::getPaths(*this, vect, "", separator, true);
 
             for (size_t i = 0; i < vect.size(); ++i) {
                 result.insert(vect[i]);
@@ -343,7 +353,7 @@ namespace karabo {
         }
 
 
-        void Hash::getPaths(const Hash& hash, std::vector<std::string>& result, std::string prefix, const char separator) {
+        void Hash::getPaths(const Hash& hash, std::vector<std::string>& result, std::string prefix, const char separator, const bool fullPaths) {
             if (hash.empty()) {
                 result.push_back(prefix);
                 return;
@@ -355,7 +365,7 @@ namespace karabo {
                     char separators[] = {separator, 0};
                     currentKey = prefix + separators + currentKey;
                 }
-                if (it->is<Hash > () && ! it->hasAttribute(KARABO_HASH_CLASS_ID)) { // Recursion, but no hash sub classes
+                if (it->is<Hash > () && (fullPaths || !it->hasAttribute(KARABO_HASH_CLASS_ID))) { // Recursion, but no hash sub classes
                     getPaths(it->getValue<Hash > (), result, currentKey, separator);
                 } else {
                     if (it->is<std::vector<Hash> > ()) { // Recursion for vector

@@ -84,7 +84,7 @@ namespace karabo {
 
         public:
 
-           
+
             typedef Container::iterator iterator;
             typedef Container::const_iterator const_iterator;
 
@@ -313,8 +313,14 @@ namespace karabo {
             void getPaths(container<std::string>& result, const char separator = '.') const;
 
             void getPaths(std::set<std::string>& result, const char separator = '.') const;
+            
+            template<template<class T, class All = std::allocator<T> > class container >
+            void getDeepPaths(container<std::string>& result, const char separator = '.') const;
 
-            static void getPaths(const Hash& hash, std::vector<std::string>& paths, std::string prefix, const char separator = '.');
+            void getDeepPaths(std::set<std::string>& result, const char separator = '.') const;
+
+            static void getPaths(const Hash& hash, std::vector<std::string>& paths, std::string prefix,
+                                 const char separator = '.', const bool fullPaths = false);
 
             /**
              * Check if the key 'key' exist in hash
@@ -863,7 +869,13 @@ namespace karabo {
         template<template<class ValueType, class All = std::allocator<ValueType> > class container >
         void Hash::getPaths(container<std::string>& result, const char separator) const {
             if (this->empty()) return;
-            getPaths(*this, result, "", separator);
+            getPaths(*this, result, "", separator, false);
+        }
+        
+        template<template<class ValueType, class All = std::allocator<ValueType> > class container >
+        void Hash::getDeepPaths(container<std::string>& result, const char separator) const {
+            if (this->empty()) return;
+            getPaths(*this, result, "", separator, true);
         }
 
         /*******************************************************************
