@@ -5,7 +5,7 @@
 #############################################################################
 from xml.etree.ElementTree import Element, parse, SubElement, tostring
 
-from traits.api import Enum, Instance, List, String
+from traits.api import Enum, Instance, List, on_trait_change, String
 
 from .bases import BaseProjectObjectModel
 from .const import (
@@ -106,6 +106,17 @@ class DeviceInstanceModel(BaseProjectObjectModel):
         if self.active_config_ref == old:
             self.active_config_ref = new
 
+    @on_trait_change("configs:initialized")
+    def _update_configs_initialized(self):
+        """ Make sure to set ``initialized`` flag only to ``True`` whenever all
+        ``DeviceConfigurationModel`` items are initialized
+        """
+        for conf in self.configs:
+            if not conf.initialized:
+                break
+        else:
+            self.initialized = True
+
 
 def read_device(io_obj):
     """ A reader for device models
@@ -114,6 +125,7 @@ def read_device(io_obj):
         traits = {
             'class_id': element.get('class_id', ''),
             'uuid': element.get('uuid'),
+            'initialized': False
         }
         return DeviceConfigurationModel(**traits)
 
@@ -129,9 +141,7 @@ def read_device(io_obj):
                    'active_config_ref': 'active_uuid'}
     traits.update({key: root.get(xmlkey) for key, xmlkey in trait_names.items()
                    if root.get(xmlkey) is not None})
-    model = DeviceInstanceModel(**traits)
-    model.initialized = True  # Do this last to avoid triggering `modified`
-    return model
+    return DeviceInstanceModel(**traits)
 
 
 def write_device(model):
