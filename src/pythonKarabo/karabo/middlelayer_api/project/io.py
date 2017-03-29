@@ -146,7 +146,7 @@ def _check_preexisting(existing, klass, traits):
 
 
 def _device_reader(io_obj, existing, metadata):
-    """ A reader for device configurations
+    """ A reader for device instances
     """
     traits = _db_metadata_reader(metadata)
     existing = _check_preexisting(existing, DeviceInstanceModel, traits)
@@ -160,7 +160,10 @@ def _device_reader(io_obj, existing, metadata):
     existing.if_exists = device.if_exists
     existing.configs[:] = device.configs[:]
     existing.active_config_ref = device.active_config_ref
-    existing.initialized = True  # Do this last to avoid triggering `modified`
+
+    # NOTE: ``inititalized`` flag is explicitly NOT set to ``True`` here
+    # because a ``DeviceInstanceModel`` is ONLY ``initialized`` whenever ALL
+    # ``DeviceConfigurationModel``s are ``initialized``
 
     return existing
 

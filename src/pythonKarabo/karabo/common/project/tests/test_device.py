@@ -44,6 +44,20 @@ def test_reading():
     assert device.instance_id == 'fooDevice'
     assert device.if_exists == 'ignore'
     assert device.active_config_ref == UUIDS[0]
+    assert not device.initialized
+    conf0 = device.configs[0]
+    assert not conf0.initialized
+    conf1 = device.configs[1]
+    assert not conf1.initialized
+    conf2 = device.configs[2]
+    assert not conf2.initialized
+
+    conf0.initialized = True
+    assert not device.initialized
+    conf1.initialized = True
+    assert not device.initialized
+    conf2.initialized = True
+    assert device.initialized
 
 
 def test_reading_incomplete():
@@ -54,6 +68,7 @@ def test_reading_incomplete():
     assert device.instance_id == ''
     assert device.if_exists == 'ignore'
     assert device.active_config_ref == ''
+    assert not device.initialized
 
 
 def test_writing():
