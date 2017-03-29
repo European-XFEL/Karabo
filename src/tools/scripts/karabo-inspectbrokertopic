@@ -9,7 +9,7 @@ else
     # So just use the first one, i.e. everything before the first ',':
     BROKER_DEFAULT=$(cut -d ',' -f 1 <<< "$KARABO_BROKER")
     # Then strip off the leading 'tcp://' to have e.g. exflbkr02n0.desy.de:7777:
-    BROKER_DEFAULT ${BROKER_DEFAULT#tcp://}
+    BROKER_DEFAULT=${BROKER_DEFAULT#tcp://}
 fi
 
 if [ ${#@} -le 0 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
