@@ -69,6 +69,12 @@ namespace karabo {
             m_hash.getPaths(tmp);
             return tmp;
         }
+        
+        std::vector<std::string> Schema::getDeepPaths() const {
+            std::vector<std::string> tmp;
+            m_hash.getDeepPaths(tmp);
+            return tmp;
+        }
 
 
         void Schema::setAssemblyRules(const Schema::AssemblyRules& rules) {
