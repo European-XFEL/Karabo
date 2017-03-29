@@ -169,16 +169,16 @@ def _device_config_reader(io_obj, existing, metadata):
     """ A reader for device configurations
     """
     traits = _db_metadata_reader(metadata)
-    dev = _check_preexisting(existing, DeviceConfigurationModel, traits)
+    existing = _check_preexisting(existing, DeviceConfigurationModel, traits)
 
     hsh = decodeXML(io_obj.read())
     for class_id, configuration in hsh.items():
         break
 
-    dev.trait_set(class_id=class_id, configuration=configuration)
-    dev.initialized = True  # Do this last to avoid triggering `modified`
+    existing.trait_set(class_id=class_id, configuration=configuration)
+    existing.initialized = True  # Do this last to avoid triggering `modified`
 
-    return dev
+    return existing
 
 
 def _device_server_reader(io_obj, existing, metadata):
@@ -203,15 +203,15 @@ def _macro_reader(io_obj, existing, metadata):
     """ A reader for macros
     """
     traits = _db_metadata_reader(metadata)
-    macro = _check_preexisting(existing, MacroModel, traits)
+    existing = _check_preexisting(existing, MacroModel, traits)
 
     root = etree.parse(io_obj).getroot()
     code = root.text
     if code is not None:
-        macro.trait_set(code=base64.b64decode(code).decode('utf-8'))
-    macro.initialized = True  # Do this last to avoid triggering `modified`
+        existing.trait_set(code=base64.b64decode(code).decode('utf-8'))
+    existing.initialized = True  # Do this last to avoid triggering `modified`
 
-    return macro
+    return existing
 
 
 def _project_reader(io_obj, existing, metadata):
@@ -224,15 +224,15 @@ def _project_reader(io_obj, existing, metadata):
 
     traits = _db_metadata_reader(metadata)
     traits['is_trashed'] = (metadata.get('is_trashed') == 'true')
-    project = _check_preexisting(existing, ProjectModel, traits)
+    existing = _check_preexisting(existing, ProjectModel, traits)
 
     hsh = decodeXML(io_obj.read())
     project_hash = hsh[PROJECT_DB_TYPE_PROJECT]
     traits.update({k: _get_items(project_hash, k)
                    for k in PROJECT_OBJECT_CATEGORIES})
-    project.trait_set(**traits)
-    project.initialized = True  # Do this last to avoid triggering `modified`
-    return project
+    existing.trait_set(**traits)
+    existing.initialized = True  # Do this last to avoid triggering `modified`
+    return existing
 
 
 def _scene_reader(io_obj, existing, metadata):
