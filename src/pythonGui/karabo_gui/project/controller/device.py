@@ -107,6 +107,8 @@ class DeviceInstanceController(BaseProjectGroupController):
         assert device.initialized, "DeviceInstanceModel must be initialized!"
         assert config.initialized, "Device config must be initialized!"
 
+        update_check_state(self)
+
         return get_topology().get_project_device(
             device.instance_id, device.class_id, device.server_id,
             None if config is None else config.configuration
@@ -194,7 +196,10 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         device = self.model
         configuration = self.project_device.current_configuration
-        configuration.fromHash(config_model.configuration)
+        if self.project_device.online:
+            configuration.dispatchUserChanges(config_model.configuration)
+        else:
+            configuration.fromHash(config_model.configuration)
         device.active_config_ref = config_model.uuid
 
     def _broadcast_item_click(self):
