@@ -29,6 +29,9 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         if not ro:
             self._internal_widget.textChanged.connect(self.onTextChanged)
 
+        focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
+        self._internal_widget.setFocusPolicy(focus_policy)
+
     @pyqtSlot(str)
     def onTextChanged(self, text):
         palette = (self.normalPalette
