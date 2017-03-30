@@ -7,7 +7,7 @@ if [ -z $KARABO_BROKER ]; then
 else
     # KARABO_BROKER is set, but might contain more than one URI.
     # So just use the first one, i.e. everything before the first ',':
-    BROKER_DEFAULT=$(cut -d ',' -f 1 <<< "$KARABO_BROKER")
+    BROKER_DEFAULT=${KARABO_BROKER%%,*}
     # Then strip off the leading 'tcp://' to have e.g. exflbkr02n0.desy.de:7777:
     BROKER_DEFAULT=${BROKER_DEFAULT#tcp://}
 fi
