@@ -137,7 +137,7 @@ def loadConfigurationFromFile(configuration):
     if classId not in config:
         MessageBox.showError("Configuration load failed")
         return
-    configuration.fromHash(config[classId])
+    configuration.dispatchUserChanges(config[classId])
 
 
 def saveConfigurationToFile(configuration):

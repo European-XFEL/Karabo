@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from karabo_gui.project.topo_listener import SystemTopologyListener
-from karabo_gui.project.utils import update_check_state
 from .device import DeviceInstanceController
 from .device_config import DeviceConfigurationController
 from .macro import MacroController, MacroInstanceController
@@ -76,7 +75,6 @@ def create_device_instance_controller(model=None, parent=None, _qt_model=None):
         child = controller.child_create(model=conf, parent=controller,
                                         _qt_model=_qt_model)
         controller.children.append(child)
-    update_check_state(controller)
 
     return controller
 
