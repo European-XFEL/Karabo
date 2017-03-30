@@ -57,24 +57,28 @@ class ProjectViewItemModel(QAbstractItemModel):
     def insert_controller(self, controller, row):
         """Insert a ``QModelIndex`` for the given ``controller``
         """
-        index = self.createIndex(row, 0, controller)
+        index = self.createIndex(0, PROJECT_COLUMN, controller)
         if index.isValid():
-            try:
-                self.beginInsertRows(index, row, row)
-            finally:
-                self.endInsertRows()
+            parent_index = index.parent()
+            if parent_index.isValid():
+                try:
+                    self.beginInsertRows(parent_index, row, row)
+                finally:
+                    self.endInsertRows()
 
     def remove_controller(self, controller):
         """Remove the associated ``QModelIndex`` of the given ``controller``
         from the model
         """
-        row = self._controller_row(controller)
-        index = self.createIndex(row, 0, controller)
+        index = self.createIndex(0, PROJECT_COLUMN, controller)
         if index.isValid():
-            try:
-                self.beginRemoveRows(index, row, row)
-            finally:
-                self.endRemoveRows()
+            parent_index = index.parent()
+            if parent_index.isValid():
+                try:
+                    row = self._controller_row(controller)
+                    self.beginRemoveRows(parent_index, row, row)
+                finally:
+                    self.endRemoveRows()
 
     @property
     def traits_data_model(self):
