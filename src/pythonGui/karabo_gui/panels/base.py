@@ -159,12 +159,12 @@ class BasePanelWidget(QFrame):
         # Build the toolbar container
         toolbar = QWidget(self)
         toolbar_layout = QHBoxLayout(toolbar)
-        all_toolbars = [self.standard_toolbar] + self.toolbars()
+        all_toolbars = self.toolbars() + [self.standard_toolbar]
         for tb in all_toolbars:
             toolbar_layout.addWidget(tb)
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
         toolbar_layout.setSpacing(0)
-        # Make the last toolbar expand to fill all horizontal space
+        # Make the first toolbars expand to fill all horizontal space
         toolbar_layout.setStretch(toolbar_layout.count()-1, 1)
         toolbar.setVisible(False)
 
@@ -215,6 +215,7 @@ class BasePanelWidget(QFrame):
         self.acMinimize.setVisible(False)
 
         self.standard_toolbar = ToolBar("Standard", parent=self)
+        self.standard_toolbar.add_expander()
         self.standard_toolbar.addAction(self.acUndock)
         self.standard_toolbar.addAction(self.acDock)
         self.standard_toolbar.addAction(self.acMaximize)
