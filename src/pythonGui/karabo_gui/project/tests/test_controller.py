@@ -88,8 +88,10 @@ class ControllerTestCase(GuiTestCase):
             qt_model.rowsInserted.connect(rows_inserted)
             qt_model.rowsRemoved.connect(rows_removed)
 
-            controller = create_project_controller(
-                model=proj, parent=None, _qt_model=qt_model)
+            # Cause the controllers to be created and get a ref to the root
+            qt_model.traits_data_model = proj
+            controller = qt_model._controller
+
             for subgroup, creator in zip(controller.children, creators):
                 assert subgroup.child_create is creator
                 assert len(subgroup.children) == 1
@@ -132,12 +134,15 @@ class ControllerTestCase(GuiTestCase):
                             subprojects=subprojects)
 
         with qt_model_context() as qt_model:
-            proj_controller = create_project_controller(
-                model=proj, parent=None, _qt_model=qt_model)
-            proj_groups = ['macros', 'scenes', 'servers', 'subprojects']
 
-            assert len(proj_groups) == len(proj_controller.children)
-            for child in proj_controller.children:
+            # Cause the controllers to be created and get a ref to the root
+            qt_model.traits_data_model = proj
+            controller = qt_model._controller
+
+            proj_groups = ['macros', 'scenes', 'servers', 'subprojects']
+            assert len(proj_groups) == len(controller.children)
+
+            for child in controller.children:
                 if child.trait_name == proj_groups[1]:
                     assert len(child.children) == 1
                     proj.scenes.pop()
