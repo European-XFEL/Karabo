@@ -24,6 +24,7 @@ namespace karathon {
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         try {
             ScopedGILRelease nogil;
+            // receiveAsync<>(...) ?
             receiveAsync<bp::object>(boost::bind(&SignalSlotableWrap::RequestorWrap::proxyReceiveAsync0, this, replyCallback));            
         } catch (...) {
             KARABO_RETHROW
@@ -307,10 +308,13 @@ namespace karathon {
 
     void SignalSlotableWrap::proxyUpdatePerformanceStatisticsHandler(const bp::object& handler,
                                                                      float avgProcessingLatency,
-                                                                     unsigned int maxProcessingLatency) {
+                                                                     unsigned int maxProcessingLatency,
+                                                                     unsigned int numMessages,
+                                                                     unsigned int maxEventLoopLatency) {
         ScopedGILAcquire gil;
         try {
-            if (handler) handler(bp::object(avgProcessingLatency), bp::object(maxProcessingLatency));
+            if (handler) handler(bp::object(avgProcessingLatency), bp::object(maxProcessingLatency),
+                                 bp::object(numMessages), bp::object(maxEventLoopLatency));
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) PyErr_Print();
             throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
