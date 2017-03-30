@@ -51,7 +51,7 @@ namespace karabo {
                 auto it = m_instanceMap.find(instanceId);
                 if (it != m_instanceMap.end()) {
                     EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent,
-                                                             it->second, header, body));
+                                                             it->second, header, body, getEpochMillis()));
                     return true;
                 } else {
                     return false;
@@ -378,7 +378,8 @@ namespace karabo {
         void SignalSlotable::onBrokerMessage(const karabo::util::Hash::Pointer& header,
                                              const karabo::util::Hash::Pointer& body) {
             // This emulates the behavior of older karabo versions which called processEvent concurrently
-            EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, this, header, body));
+            EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, this, header, body,
+                                                     getEpochMillis()));
             m_consumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::onBrokerMessage, this, _1, _2));
         }
 
@@ -475,14 +476,17 @@ namespace karabo {
                 if (m_updatePerformanceStatistics) {
                     boost::mutex::scoped_lock lock(m_latencyMutex);
                     // Call handler synchronously
-                    m_updatePerformanceStatistics(m_processingLatency.average(), m_processingLatency.maximum);
+                    m_updatePerformanceStatistics(m_processingLatency.average(), m_processingLatency.maximum,
+                                                  m_processingLatency.counts,
+                                                  m_eventLoopLatency.average());
                     // Reset statistics
                     m_processingLatency.clear();
+                    m_eventLoopLatency.clear();
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Exception in updatePerformanceStatistics: " << e.what();
             } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception happened";
+                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception in updatePerformanceStatistics";
             }
             m_performanceTimer.expires_from_now(boost::posix_time::seconds(5));
             m_performanceTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::updatePerformanceStatistics,
@@ -502,21 +506,34 @@ namespace karabo {
         }
 
 
+        void SignalSlotable::updateLatencies(const karabo::util::Hash::Pointer& header,
+                                             long long whenPostedEpochMs) {
+            boost::optional<Hash::Node&> timestampNode = header->find("MQTimestamp");
+            if (timestampNode && timestampNode->is<long long>()) {
+                const long long nowInEpochMillis = getEpochMillis();
+                const long long latency = nowInEpochMillis - timestampNode->getValue<long long>();
+                const unsigned int posLatency = static_cast<unsigned int> (std::max(latency, 0ll));
+
+                const long long evtLoopLatency = nowInEpochMillis - whenPostedEpochMs;
+                const unsigned int posEvtLoopLatency = static_cast<unsigned int> (std::max(evtLoopLatency, 0ll));
+
+                boost::mutex::scoped_lock lock(m_latencyMutex);
+                m_processingLatency.add(posLatency);
+                m_eventLoopLatency.add(posEvtLoopLatency);
+            }
+        }
+
+
         void SignalSlotable::processEvent(const karabo::util::Hash::Pointer& header,
-                                          const karabo::util::Hash::Pointer& body) {
+                                          const karabo::util::Hash::Pointer& body, long long whenPostedEpochMs) {
             try {
 
                 // Collect performance statistics
                 if (m_updatePerformanceStatistics) {
-                    if (header->has("MQTimestamp")) {
-                        boost::mutex::scoped_lock lock(m_latencyMutex);
-                        const long long latency = getEpochMillis() - header->get<long long>("MQTimestamp");
-                        const unsigned int posLatency = static_cast<unsigned int> (std::max(latency, 0ll));
-                        m_processingLatency.add(posLatency);
-                    }
+                    updateLatencies(header, whenPostedEpochMs);
                 }
 
-                // Check whether this message is a reply
+                // Check whether this message is an async reply
                 if (header->has("replyFrom")) {
                     handleReply(header, body);
                     return;
@@ -1964,7 +1981,8 @@ namespace karabo {
         void SignalSlotable::onP2pMessage(const karabo::util::Hash::Pointer& header,
                                           const karabo::util::Hash::Pointer& body) {
 
-            EventLoop::getIOService().post(bind_weak(&SignalSlotable::processEvent, this, header, body));
+            EventLoop::getIOService().post(bind_weak(&SignalSlotable::processEvent, this, header, body,
+                                                     getEpochMillis()));
             // To be equivalent to onBrokerMessage, we would have to re-register for the next p2p message.
             // Currently this is done in PointToPoint::Consumer::consume(...) and cannot easily be moved here.
         }

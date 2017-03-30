@@ -303,8 +303,8 @@ namespace karabo {
                         .commit();
 
                 FLOAT_ELEMENT(expected).key("performanceStatistics.processingLatency")
-                        .displayedName("Processing latency (ms)")
-                        .description("Average time interval between remote message sending and reading it from the queue on this device.")
+                        .displayedName("Processing latency")
+                        .description("Average time interval between remote message sending and processing it in this device.")
                         .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                         .expertAccess()
                         .readOnly().initialValue(0)
@@ -319,6 +319,23 @@ namespace karabo {
                 UINT32_ELEMENT(expected).key("performanceStatistics.maxProcessingLatency")
                         .displayedName("Maximum proc. latency")
                         .description("Maximum processing latency within averaging interval.")
+                        .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
+                        .expertAccess()
+                        .readOnly().initialValue(0)
+                        .commit();
+
+                UINT32_ELEMENT(expected).key("performanceStatistics.numMessages")
+                        .displayedName("Number of Messages")
+                        .description("Number of messages received within averaging interval.")
+                        .unit(Unit::COUNT)
+                        .expertAccess()
+                        .readOnly().initialValue(0)
+                        .commit();
+
+                UINT32_ELEMENT(expected).key("performanceStatistics.maxEventLoopLatency")
+                        .displayedName("Maximum event loop latency")
+                        .description("Maximum time interval between posting a message on the central event loop "
+                                     "and processing it within averaging interval.")
                         .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                         .expertAccess()
                         .readOnly().initialValue(0)
@@ -1284,7 +1301,7 @@ namespace karabo {
 
                 // Register updateLatencies handler
                 this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies,
-                                                                       this, _1, _2));
+                                                                       this, _1, _2, _3, _4));
 
                 // Instantiate all channels
                 this->initChannels();
@@ -1570,14 +1587,15 @@ namespace karabo {
                 return it->second;
             }
 
-            void updateLatencies(float avgProcessingLatency, unsigned int maxProcessingLatency) {
-
-                // updateLatencies
+            void updateLatencies(float avgProcessingLatency, unsigned int maxProcessingLatency,
+                                 unsigned int numMessages, unsigned int maxEventLoopLatency) {
                 if (this->get<bool>("performanceStatistics.enable")) {
 
                     using karabo::util::Hash;
                     const Hash h("performanceStatistics", Hash("processingLatency", avgProcessingLatency,
-                                                               "maxProcessingLatency", maxProcessingLatency));
+                                                               "maxProcessingLatency", maxProcessingLatency,
+                                                               "numMessages", numMessages,
+                                                               "maxEventLoopLatency", maxEventLoopLatency));
                     this->set(h);
                 }
             }
