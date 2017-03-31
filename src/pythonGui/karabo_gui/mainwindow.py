@@ -296,14 +296,14 @@ class MainWindow(QMainWindow):
         """
         for area_enum, area_container in self._panel_areas.items():
             if area_container is not panel_container:
-                area_container.hide()
+                area_container.minimize(True)
 
     def _panelContainerMinimized(self, panel_container):
         """The given `panel_container` is about to be minimized.
         """
         for area_enum, area_container in self._panel_areas.items():
             if area_container is not panel_container:
-                area_container.show()
+                area_container.minimize(False)
 
     # --------------------------------------
     # Qt slots
