@@ -380,11 +380,11 @@ all other states.
             label = "UNKNOWN"
         ]
 
-        init -> disabled[dir=back]
-        init -> active [lhead=cluster0]
+        disabled -> active [lhead=cluster0]
         increasing -> active [ltail=cluster1, lhead=cluster0, dir=back]
         decreasing -> error [ltail=cluster1]
-        error -> unknown
+        error -> init
+        init -> unknown
 
     }
 
@@ -398,16 +398,20 @@ all other states.
     trumped by all other states.
 
 Users should however not implement trumping functionality themselves, but instead use the
-``states.returnMostSignificant`` function provided by Karabo.
+``State.returnMostSignificant`` function provided by Karabo.
 
 .. code-block:: Python
 
-    listOfStates = [states.ERROR, states.MOVING, states.CHANGING]
-    definingState = states.returnMostSignificant(listOfStates)
-    print(definingState)
-    >>> Error
+    from karabo.middlelayer import State, StateSignifier
 
-Calling ``states.returnMostSignificant`` without additional keywords will result
+    trumpState = StateSignifier()
+
+    listOfStates = [State.ERROR, State.MOVING, State.CHANGING]
+    definingState = trumpState.returnMostSignificant(listOfStates)
+    print(definingState)
+    >>> State.ERROR
+
+Calling ``returnMostSignificant`` from the ``StateSignifier`` without additional keywords will result
 in returning evaluation substates of ``STATIC`` and ``CHANGING``
 as these base states, i.e. no differentiation between ``ACTIVE`` and ``PASSIVE``
 or ``INCREASING`` and ``DECREASING`` is made. If a differentiation is needed it
@@ -421,7 +425,7 @@ changingSignificant = ``INCREASING|DECREASING``
 
 .. note::
 
-    ``states.returnMostSignificant`` works also with derived states like ``MOVING``, as shown
+    ``returnMostSignificant`` from the ``StateSignifier`` works also with derived states like ``MOVING``, as shown
      in the example, and will also return the derived state, if it is most significant. It is
      good practice to always compare the defining state against one of the base states, i.e. here
      ``if definingState == CHANGING``.
@@ -434,21 +438,20 @@ default trumping implementation.
 
 .. code-block:: Python
 
-    from karabo.midlayer import states
+    from karabo.middlelayer import State, StateSignifier
 
     trumpList = []
-    trumpList.append(states.DISABLED)
-    trumpList.append(states.STATIC)
-    trumpList.append(states.CHANGING)
-    trumpList.append(states.INIT)
-    trumpList.append(states.UNKNOWN)
-    trumpList.append(states.ERROR)
-    myStateSignifier = UserStateSignifier(trumpList)
+    trumpList.append(State.DISABLED)
+    trumpList.append(State.STATIC)
+    trumpList.append(State.CHANGING)
+    trumpList.append(State.INIT)
+    trumpList.append(State.UNKNOWN)
+    trumpList.append(State.ERROR)
+    myStateSignifier = StateSignifier(trumpList)
 
 
-    sState = myStateSignifier.returnMostSignificant([states.DISABLED,
-                                                     states.INIT])
-
+    sState = myStateSignifier.returnMostSignificant([State.DISABLED,
+                                                     State.INIT])
 
 Derived States
 ==============
@@ -684,8 +687,8 @@ should be used.
 .. note::
 
     While comparisons between different derived states are guaranteed to work it is good practice to always
-    compare to the base state. You should thus write ``if myState == states.CHANGING`` and **not**
-    ``if myState == states.MOVING``!
+    compare to the base state. You should thus write ``if myState == State.CHANGING`` and **not**
+    ``if myState == State.MOVING``!
 
 Changing States
 ===============
@@ -697,7 +700,7 @@ methods in the *bound* APIs
 
     currentState = self.getState()
     ...
-    self.updateState(states.MOVING)
+    self.updateState(State.MOVING)
 
 In the *middle-layer* API normal property retrieval and assignment will automatically
 map to these calls
@@ -705,7 +708,7 @@ map to these calls
 .. code-block:: Python
 
     currentState = self.state
-    self.state = statesMoving
+    self.state = State.MOVING
 
 .. warning::
 
@@ -747,7 +750,7 @@ state the user may overwrite the status again.
 
 .. code-block:: Python
 
-   self.updateState(states.RUNNING)
+   self.updateState(State.RUNNING)
    print(self.get("status"))
    >> The device is in the RUNNING state.
    self.set("status", "My new status")
@@ -1516,29 +1519,29 @@ a device to run on this FSM. The example further shows how slots are connected t
 	         SLOT_ELEMENT(expected).key("start")
 	            .displayedName("Start")
 	            .description("Instructs device to go to started state")
-	            .allowedStates("Ok.Stopped")
+	            .allowedStates(State::STOPPED)
 	            .commit();
 
 	         SLOT_ELEMENT(expected).key("stop")
 	            .displayedName("Stop")
 	            .description("Instructs device to go to stopped state")
-	            .allowedStates("Ok.Started")
+	            .allowedStates(State::STARTED)
 	            .commit();
 
 
 	         SLOT_ELEMENT(expected).key("reset")
 	            .displayedName("Reset")
 	            .description("Resets the device in case of an error")
-	            .allowedStates("Error")
+	            .allowedStates(State::ERROR)
 	            .commit();
 
 	         }
 
 	         void initFsmSlots() {
-	            SLOT0(start);
-	            SLOT0(stop);
-	            SLOT0(reset);
-	            SLOT2(errorFound, std::string, std::string);
+	            SLOT(start);
+	            SLOT(stop);
+	            SLOT(reset);
+	            SLOT(errorFound, std::string, std::string);
 	         }
 
 	         public:
