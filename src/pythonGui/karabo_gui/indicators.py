@@ -218,6 +218,9 @@ def get_device_status_icon(status, error=False):
         DeviceStatus.STATUS_ERROR: icons.device_error
     }
 
+    if not isinstance(status, DeviceStatus):
+        status = DeviceStatus(status)
+
     if status == DeviceStatus.STATUS_MONITORING and not error:
         return None
     elif status != DeviceStatus.STATUS_OFFLINE and error:
@@ -250,6 +253,9 @@ def get_project_device_status_icon(status, error=False):
         DeviceStatus.STATUS_INCOMPATIBLE: icons.deviceIncompatible,
     }
 
+    if not isinstance(status, DeviceStatus):
+        status = DeviceStatus(status)
+
     if status != DeviceStatus.STATUS_OFFLINE and error:
         return status_icons.get(DeviceStatus.STATUS_ERROR)
 
@@ -266,5 +272,8 @@ def get_project_server_status_icon(status):
         DeviceStatus.STATUS_OK: icons.yes,
         DeviceStatus.STATUS_OFFLINE: icons.no,
     }
+
+    if not isinstance(status, DeviceStatus):
+        status = DeviceStatus(status)
 
     return status_icons.get(status)
