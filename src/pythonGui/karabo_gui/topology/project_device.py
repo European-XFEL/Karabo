@@ -140,7 +140,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         online
         """
         self.online = self._online_dev_config.isOnline()
-        self.status = 'error' if error_flag else status
+        self.status = 'error' if self.online and error_flag else status
 
     # ---------------------------------------------------------------------
     # utils
