@@ -25,21 +25,21 @@ as given in the below diagram:
     "ERROR"[shape = box style=filled, fillcolor=red]
     "INIT"[shape = box style=filled, fillcolor=beige]
     "KNOWN"[shape = box style=filled, fillcolor=grey]
-    "STATIC"[shape = box style=filled, fillcolor=chartreuse2]
+    "STATIC"[shape = box style=filled, fillcolor=darkgreen]
     "NORMAL"[shape = box style=filled, fillcolor=grey]
     "KNOWN" -> "NORMAL"
     "KNOWN" -> "ERROR"
     "KNOWN" -> "DISABLED"
     "NORMAL" -> "STATIC"
-    "PASSIVE"[shape = box style=filled, fillcolor=white]
+    "PASSIVE"[shape = box style=filled, fillcolor="#CCCCFF"]
     "STATIC" -> "PASSIVE"
-    "ACTIVE"[shape = box style=filled, fillcolor=darkgreen]
+    "ACTIVE"[shape = box style=filled, fillcolor=chartreuse2]
     "STATIC" -> "ACTIVE"
-    "CHANGING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "CHANGING"[shape = box style=filled, fillcolor=blue]
     "NORMAL" -> "CHANGING"
-    "DECREASING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "DECREASING"[shape = box style=filled, fillcolor=blue]
     "CHANGING" -> "DECREASING"
-    "INCREASING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "INCREASING"[shape = box style=filled, fillcolor=blue]
     "CHANGING" -> "INCREASING"
 
 
@@ -98,25 +98,24 @@ from it and will compare equal to it:
     ``NORMAL`` states.
 
 
-
 The ``NORMAL`` base state should not usually be entered programmatically. Similar
 to ``KNOWN``, device logic should rather transition the device into one of the
 derived states. The following states derive from and compare
 equal to ``NORMAL``:
 
-|lightgreen-box| STATIC
+|darkgreen-box| STATIC
     is itself a base state to the ``ACTIVE`` and ``PASSIVE`` states. It may however
     also directly be used, e.g. if a device is connected but waiting on commands.
     It is the counterpart to the changing states. Devices in a static operating
     mode, e.g. a running turbo-pump which is at target speed are also in the
     ``STATIC`` state.
 
-|darkgreen-box| ACTIVE
+|lightgreen-box| ACTIVE
     is derived from ``STATIC`` and should usually be used only for comparison
     purposes. Rather developers should transition into a device state derived
     from it. It is the counterpart to ``PASSIVE``.
 
-|white-box| PASSIVE
+|lightblue-box| PASSIVE
     is derived from ``STATIC`` and should usually be used only for comparison
     purposes. Rather developers should transition into a device state derived
     from it. It is the counterpart to ``ACTIVE``.
@@ -309,13 +308,13 @@ all other states.
         subgraph cluster0 {
             label = "STATIC";
             style = filled
-            fillcolor = chartreuse2
+            fillcolor = darkgreen
 
             active
             [
                 shape = box
                 style = filled
-                fillcolor = darkgreen
+                fillcolor = chartreuse2
                 label = "ACTIVE"
             ]
 
@@ -323,7 +322,7 @@ all other states.
             [
                 shape = box
                 style = filled
-                fillcolor = white
+                fillcolor = "#CCCCFF"
                 label = "PASSIVE"
             ]
 
@@ -334,13 +333,13 @@ all other states.
         subgraph cluster1 {
             label = "CHANGING";
             style = filled
-            fillcolor = cornflowerblue
+            fillcolor = blue
 
             increasing
             [
                 shape = box
                 style = filled
-                fillcolor = cornflowerblue
+                fillcolor = blue
                 label = "INCREASING"
             ]
 
@@ -348,7 +347,7 @@ all other states.
             [
                 shape = box
                 style = filled
-                fillcolor = cornflowerblue
+                fillcolor = blue
                 label = "DECREASING"
             ]
 
@@ -411,6 +410,7 @@ Users should however not implement trumping functionality themselves, but instea
     print(definingState)
     >>> State.ERROR
 
+
 Calling ``returnMostSignificant`` from the ``StateSignifier`` without additional keywords will result
 in returning evaluation substates of ``STATIC`` and ``CHANGING``
 as these base states, i.e. no differentiation between ``ACTIVE`` and ``PASSIVE``
@@ -431,7 +431,7 @@ changingSignificant = ``INCREASING|DECREASING``
      ``if definingState == CHANGING``.
 
 In rare scenarios states might to be trumped differently. Developers can
-provide for a different trumping method using the ``UserStateSignifier` class.
+provide for a different trumping method in initialization of the ``StateSignifier``.
 It expects a complete list of base states as input, the order of which determines
 trumping and provides the same ``returnMostSignificant`` method as in the
 default trumping implementation.
@@ -489,54 +489,54 @@ both:
 
     rankdir = LR;
 
-    "STATIC"[shape = box style=filled, fillcolor=chartreuse2]
-    "PASSIVE"[shape = box style=filled, fillcolor=white]
-    "ACTIVE"[shape = box style=filled, fillcolor=darkgreen]
+    "STATIC"[shape = box style=filled, fillcolor=darkgreen]
+    "PASSIVE"[shape = box style=filled, fillcolor="#CCCCFF"]
+    "ACTIVE"[shape = box style=filled, fillcolor=chartreuse2]
 
-    "COOLED"[shape = box style=filled, fillcolor=darkgreen]
-    "WARM"[shape = box style=filled, fillcolor=white]
+    "COOLED"[shape = box style=filled, fillcolor=chartreuse2]
+    "WARM"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "WARM"->"PASSIVE" [dir=back]
 
-    "HEATED"[shape = box style=filled, fillcolor=darkgreen]
-    "COLD"[shape = box style=filled, fillcolor=white]
+    "HEATED"[shape = box style=filled, fillcolor=chartreuse2]
+    "COLD"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "COLD"->"PASSIVE" [dir=back]
 
-    "EVACUATED"[shape = box style=filled, fillcolor=darkgreen]
-    "PRESSURIZED"[shape = box style=filled, fillcolor=white]
+    "EVACUATED"[shape = box style=filled, fillcolor=chartreuse2]
+    "PRESSURIZED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "PRESSURIZED"->"PASSIVE" [dir=back]
     "ACTIVE"->"EVACUATED"
 
 
-    "CLOSED"[shape = box style=filled, fillcolor=darkgreen]
-    "OPENED"[shape = box style=filled, fillcolor=white]
+    "CLOSED"[shape = box style=filled, fillcolor=chartreuse2]
+    "OPENED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "OPENED"->"PASSIVE" [dir=back]
 
-    "ON"[shape = box style=filled, fillcolor=darkgreen]
-    "OFF"[shape = box style=filled, fillcolor=white]
+    "ON"[shape = box style=filled, fillcolor=chartreuse2]
+    "OFF"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "OFF"->"PASSIVE" [dir=back]
 
-    "EXTRACTED"[shape = box style=filled, fillcolor=darkgreen]
-    "INSERTED"[shape = box style=filled, fillcolor=white]
+    "EXTRACTED"[shape = box style=filled, fillcolor=chartreuse2]
+    "INSERTED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "INSERTED"->"PASSIVE" [dir=back]
 
-    "STARTED"[shape = box style=filled, fillcolor=darkgreen]
-    "STOPPED"[shape = box style=filled, fillcolor=white]
+    "STARTED"[shape = box style=filled, fillcolor=chartreuse2]
+    "STOPPED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "STOPPED"->"PASSIVE" [dir=back]
 
-    "LOCKED"[shape = box style=filled, fillcolor=darkgreen]
-    "UNLOCKED"[shape = box style=filled, fillcolor=white]
+    "LOCKED"[shape = box style=filled, fillcolor=chartreuse2]
+    "UNLOCKED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "UNLOCKED"->"PASSIVE" [dir=back]
 
-    "ENGAGED"[shape = box style=filled, fillcolor=darkgreen]
-    "DISENGAGED"[shape = box style=filled, fillcolor=white]
+    "ENGAGED"[shape = box style=filled, fillcolor=chartreuse2]
+    "DISENGAGED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "DISENGAGED"->"PASSIVE" [dir=back]
 
@@ -574,11 +574,11 @@ or decrease of the value is being performed.
 
         rank="same";
         style = invis;
-        "ROTATING"[shape = box style=filled, fillcolor=cornflowerblue]
-        "CHANGING"[shape = box style=filled, fillcolor=cornflowerblue]
-        "MOVING"[shape = box style=filled, fillcolor=cornflowerblue]
+        "ROTATING"[shape = box style=filled, fillcolor=blue]
+        "CHANGING"[shape = box style=filled, fillcolor=blue]
+        "MOVING"[shape = box style=filled, fillcolor=blue]
 
-        "SWITCHING"[shape = box style=filled, fillcolor=cornflowerblue]
+        "SWITCHING"[shape = box style=filled, fillcolor=blue]
 
         "ROTATING" -> "CHANGING"[constraint=false, dir=back]
         "CHANGING" -> "MOVING" [constraint=false]
@@ -591,42 +591,42 @@ or decrease of the value is being performed.
     "INCREASING" -> "ROTATING" [style="invisible",dir="none"];
     "INCREASING" -> "SWITCHING" [style="invisible",dir="none"];
 
-    "INCREASING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "DECREASING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "INCREASING"[shape = box style=filled, fillcolor=blue]
+    "DECREASING"[shape = box style=filled, fillcolor=blue]
 
-    "COOLING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "HEATING"[shape = box style=filled, fillcolor=cornflowerblue]
-
-
-    "MOVING_LEFT"[shape = box style=filled, fillcolor=cornflowerblue]
-    "MOVING_RIGHT"[shape = box style=filled, fillcolor=cornflowerblue]
-    "MOVING_DOWN"[shape = box style=filled, fillcolor=cornflowerblue]
-    "MOVING_UP"[shape = box style=filled, fillcolor=cornflowerblue]
-    "MOVING_FORWARD"[shape = box style=filled, fillcolor=cornflowerblue]
-    "MOVING_BACK"[shape = box style=filled, fillcolor=cornflowerblue]
+    "COOLING"[shape = box style=filled, fillcolor=blue]
+    "HEATING"[shape = box style=filled, fillcolor=blue]
 
 
-    "ROTATING_CLK"[shape = box style=filled, fillcolor=cornflowerblue]
-    "ROTATING_CNTCLK"[shape = box style=filled, fillcolor=cornflowerblue]
-
-    "RAMPING_DOWN"[shape = box style=filled, fillcolor=cornflowerblue]
-    "RAMPING_UP"[shape = box style=filled, fillcolor=cornflowerblue]
-
-    "EXTRACTING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "INSERTING"[shape = box style=filled, fillcolor=cornflowerblue]
-
-    "STOPPING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "STARTING"[shape = box style=filled, fillcolor=cornflowerblue]
-
-    "EMPTYING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "FILLING"[shape = box style=filled, fillcolor=cornflowerblue]
-
-    "DISENGAGING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "ENGAGING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "MOVING_LEFT"[shape = box style=filled, fillcolor=blue]
+    "MOVING_RIGHT"[shape = box style=filled, fillcolor=blue]
+    "MOVING_DOWN"[shape = box style=filled, fillcolor=blue]
+    "MOVING_UP"[shape = box style=filled, fillcolor=blue]
+    "MOVING_FORWARD"[shape = box style=filled, fillcolor=blue]
+    "MOVING_BACK"[shape = box style=filled, fillcolor=blue]
 
 
-    "SWITCHING_OFF"[shape = box style=filled, fillcolor=cornflowerblue]
-    "SWITCHING_ON"[shape = box style=filled, fillcolor=cornflowerblue]
+    "ROTATING_CLK"[shape = box style=filled, fillcolor=blue]
+    "ROTATING_CNTCLK"[shape = box style=filled, fillcolor=blue]
+
+    "RAMPING_DOWN"[shape = box style=filled, fillcolor=blue]
+    "RAMPING_UP"[shape = box style=filled, fillcolor=blue]
+
+    "EXTRACTING"[shape = box style=filled, fillcolor=blue]
+    "INSERTING"[shape = box style=filled, fillcolor=blue]
+
+    "STOPPING"[shape = box style=filled, fillcolor=blue]
+    "STARTING"[shape = box style=filled, fillcolor=blue]
+
+    "EMPTYING"[shape = box style=filled, fillcolor=blue]
+    "FILLING"[shape = box style=filled, fillcolor=blue]
+
+    "DISENGAGING"[shape = box style=filled, fillcolor=blue]
+    "ENGAGING"[shape = box style=filled, fillcolor=blue]
+
+
+    "SWITCHING_OFF"[shape = box style=filled, fillcolor=blue]
+    "SWITCHING_ON"[shape = box style=filled, fillcolor=blue]
 
     "HEATING"->"INCREASING" [dir=back]
     "MOVING_RIGHT"->"INCREASING" [dir=back]
@@ -670,11 +670,11 @@ should be used.
 
     rankdir = LR;
 
-    "CHANGING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "SEARCHING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "CHANGING"[shape = box style=filled, fillcolor=blue]
+    "SEARCHING"[shape = box style=filled, fillcolor=blue]
 
-    "STATIC"[shape = box style=filled, fillcolor=chartreuse2]
-    "INTERLOCK_OK"[shape = box style=filled, fillcolor=chartreuse2]
+    "STATIC"[shape = box style=filled, fillcolor=darkgreen]
+    "INTERLOCK_OK"[shape = box style=filled, fillcolor=darkgreen]
 
     "DISABLED"[shape = box style=filled, fillcolor=magenta]
     "INTERLOCK_BROKEN"[shape = box style=filled, fillcolor=magenta]
