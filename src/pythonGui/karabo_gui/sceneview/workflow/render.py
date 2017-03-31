@@ -57,6 +57,7 @@ def _draw_connection(painter, connection):
 
     curve = QPainterPath(points[0])
     curve.cubicTo(*points[1:4])
+    painter.setRenderHint(QPainter.Antialiasing)
     painter.drawPath(curve)
 
 
