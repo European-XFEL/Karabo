@@ -6,6 +6,7 @@ from unittest import main
 import time
 import weakref
 
+from dateutil.parser import parse as from_isoformat
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
@@ -585,6 +586,16 @@ class Tests(DeviceTest):
     @async_tst
     def test_log(self):
         """test the logging of warnings and exceptions"""
+        def _absolute_delta_to_now(isotimestr):
+            """Return the delta in seconds between some ISO 8601 timestamp
+            and now.
+            """
+            ts = from_isoformat(isotimestr)
+            delta = abs(ts - datetime.now())
+            # NOTE: `delta` is a timedelta object, which contains only
+            # days, seconds, and microseconds.
+            return delta.days*3600*24 + delta.seconds + delta.microseconds*1e-6
+
         with (yield from getDevice("remote")) as d:
             t = async(d.read_log())
             yield from sleep(0.1)
@@ -595,8 +606,7 @@ class Tests(DeviceTest):
         self.assertEqual(hash["message"], "this is an info")
         self.assertEqual(hash["type"], "WARN")
         self.assertEqual(hash["category"], "local")
-        self.assertEqual(hash["timestamp"][:18],
-                         datetime.now().isoformat()[:18])
+        self.assertLessEqual(_absolute_delta_to_now(hash["timestamp"]), 10)
         with (yield from getDevice("remote")) as d:
             t = async(d.read_log())
             yield from sleep(0.1)
@@ -610,8 +620,7 @@ class Tests(DeviceTest):
         self.assertEqual(hash["message"], "expected exception")
         self.assertEqual(hash["type"], "ERROR")
         self.assertEqual(hash["category"], "local")
-        self.assertEqual(hash["timestamp"][:18],
-                         datetime.now().isoformat()[:18])
+        self.assertLessEqual(_absolute_delta_to_now(hash["timestamp"]), 10)
         self.assertEqual(hash["funcname"], "test_log")
         self.assertEqual(hash["module"], "remote_test")
         self.assertEqual(len(hash["traceback"]), 3)
