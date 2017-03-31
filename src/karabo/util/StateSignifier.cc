@@ -70,7 +70,6 @@ namespace karabo {
 
             if (trumpList.empty()) {
                 m_trumpList.push_back(State::DISABLED);
-                m_trumpList.push_back(State::INIT);
 
                 // Take care to compare the objects, not the pointers:
                 if (staticMoreSignificant == State::PASSIVE) {
@@ -94,6 +93,7 @@ namespace karabo {
                 m_trumpList.push_back(State::CHANGING);
                 m_trumpList.push_back(State::INTERLOCKED);
                 m_trumpList.push_back(State::ERROR);
+                m_trumpList.push_back(State::INIT);
                 m_trumpList.push_back(State::UNKNOWN);
             } else {
                 m_trumpList = trumpList;
