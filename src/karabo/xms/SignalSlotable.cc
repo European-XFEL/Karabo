@@ -475,13 +475,18 @@ namespace karabo {
             try {
                 if (m_updatePerformanceStatistics) {
                     boost::mutex::scoped_lock lock(m_latencyMutex);
-                    // Call handler synchronously
-                    m_updatePerformanceStatistics(m_processingLatency.average(), m_processingLatency.maximum,
-                                                  m_processingLatency.counts,
-                                                  m_eventLoopLatency.average());
+                    const Hash::Pointer performanceMeasures
+                            = boost::make_shared<Hash>("processingLatency", m_processingLatency.average(),
+                                                       "maxProcessingLatency", m_processingLatency.maximum,
+                                                       "numMessages", m_processingLatency.counts,
+                                                       "maxEventLoopLatency", m_eventLoopLatency.maximum);
                     // Reset statistics
                     m_processingLatency.clear();
                     m_eventLoopLatency.clear();
+
+                    // Call handler synchronously - no need to keep lock for that.
+                    lock.unlock();
+                    m_updatePerformanceStatistics(performanceMeasures);
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Exception in updatePerformanceStatistics: " << e.what();
