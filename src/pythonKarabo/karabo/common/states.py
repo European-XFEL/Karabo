@@ -116,6 +116,8 @@ class State(StateBase, metaclass=ParentEnumMeta):
     """
     UNKNOWN = None
     KNOWN = None
+    INIT = None
+
     ERROR = KNOWN
 
     # INTERLOCKED is derived from DISABLED, but much more significant
@@ -186,7 +188,6 @@ class State(StateBase, metaclass=ParentEnumMeta):
     ACQUIRING = ACTIVE
     MONITORING = ACTIVE
 
-    INIT = None
     DISABLED = KNOWN
     INTERLOCK_BROKEN = DISABLED
 
