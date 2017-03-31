@@ -18,6 +18,7 @@ class PanelContainer(QTabWidget):
         self.panel_set = set()
         self.allow_closing = allow_closing
         self.handle_empty = handle_empty
+        self.minimized = False
         self.tabCloseRequested.connect(self.onCloseTab)
 
         if self.handle_empty:
@@ -67,16 +68,15 @@ class PanelContainer(QTabWidget):
         if self.handle_empty and self.count() == 0:
             self._add_placeholder()
 
-    def undock(self, panel):
-        if panel.parent() is not None:
-            self.removeTab(panel.index)
-            panel.is_docked = False
-            panel.setParent(None)
-            panel.move(QCursor.pos())
-            panel.show()
-
-            if self.count() == 0:
-                self.hide()
+    def minimize(self, minimized):
+        """Minimize/unminimize a tab container.
+        """
+        self.minimized = minimized
+        if minimized:
+            self.hide()
+        elif self.count() > 0:
+            # Only show if the container is NOT empty!
+            self.show()
 
     def dock(self, panel):
         if panel.parent() is None:
@@ -89,7 +89,20 @@ class PanelContainer(QTabWidget):
 
             self.setCurrentIndex(index)
             self._update_tabs_closable()
-            self.show()
+
+            if not self.minimized:
+                self.show()
+
+    def undock(self, panel):
+        if panel.parent() is not None:
+            self.removeTab(panel.index)
+            panel.is_docked = False
+            panel.setParent(None)
+            panel.move(QCursor.pos())
+            panel.show()
+
+            if self.count() == 0:
+                self.hide()
 
     # --------------------------------------
     # Qt Overrides
