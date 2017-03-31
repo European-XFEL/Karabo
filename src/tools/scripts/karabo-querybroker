@@ -1,15 +1,37 @@
 #!/bin/bash
-cd $(dirname $0)
+
+SCRIPT=$(basename $0)
+
+if [ $1 == "-h" ] || [ $1 == "--help" ]; then
+    # print help message if first argument asks for help
+    echo
+    echo "$SCRIPT - query broker using imqcmd tool"
+    echo
+    echo "  $SCRIPT [-h|--help] [args for \$KARABO/extern/bin/imqcmd]"
+    echo
+    echo "For help on arguments and options to be passed to imqcmd,"
+    echo "call without any argument."
+    echo "If KARABO_BROKER is set, the first broker in it will be queried"
+    echo "except if that is overwritten by passing '-b <host>:<port>'."
+    echo
+    echo "Example:"
+    echo "$SCRIPT -b exflbkr02n0.desy.de:7777 list dst"
+    echo
+    exit 0
+fi
+
 if [ -z $KARABO ]; then
   echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
   exit 1
 fi
 
-if [ -z $KARABO_BROKER_HOST ]; then
-   $KARABO/extern/bin/imqcmd "$@"
+if [ -z $KARABO_BROKER ]; then
+    $KARABO/extern/bin/imqcmd $@
 else
-   host=$KARABO_BROKER_HOST 
-   port=`grep port= $KARABO/extern/bin/imqcmd|cut -c 6-`
-   $KARABO/extern/bin/imqcmd -b $host:$port $@ 
+    # KARABO_BROKER is set, but might contain more than one URI.
+    # So just use the first one, i.e. everything before the first ',':
+    FIRST_BROKER=${KARABO_BROKER%%,*}
+    # Then strip off the leading 'tcp://' to have e.g. exflbkr02n0.desy.de:7777
+    $KARABO/extern/bin/imqcmd -b ${FIRST_BROKER#tcp://} $@
 fi
 

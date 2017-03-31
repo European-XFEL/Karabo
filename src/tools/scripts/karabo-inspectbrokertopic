@@ -1,15 +1,26 @@
 #!/bin/bash
 
-BROKER_DEFAULT=exfl-broker:7777
+SCRIPT=$(basename $0)
+DEFAULT_DEFAULT=exfl-broker:7777
+if [ -z $KARABO_BROKER ]; then
+    BROKER_DEFAULT=$DEFAULT_DEFAULT
+else
+    # KARABO_BROKER is set, but might contain more than one URI.
+    # So just use the first one, i.e. everything before the first ',':
+    BROKER_DEFAULT=${KARABO_BROKER%%,*}
+    # Then strip off the leading 'tcp://' to have e.g. exflbkr02n0.desy.de:7777:
+    BROKER_DEFAULT=${BROKER_DEFAULT#tcp://}
+fi
 
 if [ ${#@} -le 0 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
     # print help message if first argument asks for help
     echo
-    echo "$0 - Look into messages stuck on broker:"
+    echo "$SCRIPT - Look into messages stuck on broker:"
     echo 
-    echo "  $0 [-h|--help] topic [broker:port [firstMessageIdx [numMessages]]]"
+    echo "  $SCRIPT [-h|--help] topic [broker:port [firstMessageIdx [numMessages]]]"
     echo
-    echo "Default broker:port is '$BROKER_DEFAULT'."
+    echo "Default broker:port is taken as first item in \$KARABO_BROKER if that is"
+    echo "defined and is $DEFAULT_DEFAULT otherwise."
     echo "Needs karabo-querybroker as dependency."
     echo
     exit 0
@@ -36,7 +47,7 @@ declare -i counter=0
 
 for msgID in `$COMMAND | grep 'ID:' | awk '{print $2}' `; do
     echo "message query no. ${counter}: "
-    ./karabo-querybroker -b $BROKER query msg -t t -n $TOPIC -nocheck -msgID $msgID
+    karabo-querybroker -b $BROKER query msg -t t -n $TOPIC -nocheck -msgID $msgID
     echo
     echo "=================================================================="
     echo
