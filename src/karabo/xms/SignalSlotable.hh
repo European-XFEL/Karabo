@@ -72,9 +72,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*slotFunction*/,
                                           const std::string& /*callee*/) > SlotCallGuardHandler;
 
-            typedef boost::function<void (float /*avgLatency*/, unsigned int /*maxLatency*/,
-                                          unsigned int /*numMessages*/,
-                                          unsigned int /*maxEventLoopLatency*/) > UpdatePerformanceStatisticsHandler;
+            typedef boost::function<void (const karabo::util::Hash::Pointer& /*performanceMeasures*/) > UpdatePerformanceStatisticsHandler;
 
             typedef InputChannel::DataHandler DataHandler;
 

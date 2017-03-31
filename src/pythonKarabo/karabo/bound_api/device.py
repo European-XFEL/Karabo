@@ -1341,16 +1341,13 @@ class PythonDevice(NoFsm):
     def registerSlot(self, slotFunc):
         self._ss.registerSlot(slotFunc)
 
-    def updateLatencies(self, avgProcessingLatency, maxProcessingLatency,
-                        numMessages, maxEventLoopLatency):
+    def updateLatencies(self, performanceMeasures):
         if self.get("performanceStatistics.enable"):
-            stats = Hash("processingLatency", avgProcessingLatency,
-                         "maxProcessingLatency", maxProcessingLatency,
-                         "numMessages", numMessages,
-                         "maxEventLoopLatency", maxEventLoopLatency)
-            self.set(Hash("performanceStatistics", stats))
-
-
+            # Keys and values of 'performanceMeasures' are defined in
+            # SignalSlotable::updatePerformanceStatistics (C++)
+            # and expectedParameters has to foresee this content under node
+            # "performanceStatistics".
+            self.set(Hash("performanceStatistics", performanceMeasures))
 
     def setAlarmCondition(self, condition, needsAcknowledging = True,
                           description = ""):
