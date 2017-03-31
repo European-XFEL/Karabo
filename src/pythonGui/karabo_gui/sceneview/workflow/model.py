@@ -102,9 +102,7 @@ class WorkflowDeviceModel(HasStrictTraits):
     @cached_property
     def _get_position(self):
         model = self.model
-        x = model.x
-        y = model.y + model.height / 3
-        return QPoint(x, y)
+        return QPoint(model.x, model.y)
 
     def _model_changed(self):
         """When the model changes, set the project device instance.
@@ -229,7 +227,8 @@ class SceneWorkflowModel(HasStrictTraits):
     def _get_channels(self):
         return self.input_channels + self.output_channels
 
-    @on_trait_change('connections,input_channels,output_channels,devices')
+    @on_trait_change('connections,input_channels,output_channels,devices,'
+                     'connections:data_distribution')
     def _needs_update(self):
         # Event traits don't have a value, they just generate notifications
         self.updated = True
@@ -296,7 +295,9 @@ class SceneWorkflowModel(HasStrictTraits):
     def _data_distribution_cb(self, box, value, timestamp):
         """ Callback when the data distribution type of a channel changes
         """
-        inputs = [ch for ch in self.input_channels if ch.box is box]
+        path, data_dist = box.path[:-1], box.path[-1]
+        assert data_dist == 'dataDistribution'
+        inputs = [ch for ch in self.input_channels if ch.box.path == path]
         for conn in self.connections:
             if conn.input in inputs:
                 conn.data_distribution = value
