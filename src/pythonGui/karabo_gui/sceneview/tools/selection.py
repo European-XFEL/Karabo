@@ -201,9 +201,8 @@ class BoxSelectionTool(BaseSceneTool):
             boxes = widget.boxes
             if boxes:
                 # Just the first entry
-                configuration = boxes[0].configuration
-                broadcast_event(KaraboEventSender.ShowConfiguration,
-                                {'configuration': configuration})
+                broadcast_event(KaraboEventSender.ShowDevice,
+                                {'deviceId': boxes[0].configuration.id})
 
     def mouse_move(self, scene_view, event):
         pass
