@@ -57,6 +57,19 @@ void States_Test::testSignifier() {
     CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::UNKNOWN);
 }
 
+
+void States_Test::testSignifierInitTrump() {
+    
+    std::vector<State> s;
+    s.push_back(State::INIT);
+    s.push_back(State::CHANGING);
+    s.push_back(State::NORMAL);
+    s.push_back(State::PASSIVE);
+    s.push_back(State::ACTIVE);
+    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::INIT);
+
+}
+
 void States_Test::testSignifierNonDefaultList() {
     
     std::vector<State> trumpList;
