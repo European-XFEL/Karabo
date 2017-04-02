@@ -278,7 +278,6 @@ namespace karabo {
 
             for (MapGroup::iterator i = m_configurations.begin(); i != m_configurations.end(); ++i) {
                 Hash h;
-                const string& deviceId = i->first;
 
                 h.set("groupId", i->second.get<string>("id"));
                 if (i->second.has("description"))
@@ -358,7 +357,6 @@ namespace karabo {
             Hash& result = configuration.get<Hash>("configuration");
 
             for (MapGroup::const_iterator it = m_configurations.begin(); it != m_configurations.end(); ++it) {
-                const string& deviceId = it->first;
                 const Hash& group = it->second;
 
                 const string& id = group.get<string>("id");
@@ -381,7 +379,6 @@ namespace karabo {
             for (vector<Hash>::const_iterator ii = table.begin(); ii != table.end(); ++ii) {
                 const string& dataSourceId = ii->get<string>("source");
                 const bool pipelineFlag = (ii->hasAttribute("source", "pipeline") ? ii->getAttribute<bool>("source", "pipeline") : false);
-                const string& dataSourceType = ii->get<string>("type");
                 string behavior = ii->get<string>("behavior");
                 const bool monitorOut = ii->get<bool>("monitored");
                 const bool inUse = ii->get<bool>("use");
