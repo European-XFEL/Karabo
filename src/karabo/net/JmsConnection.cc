@@ -13,6 +13,7 @@
 #include "JmsConsumer.hh"
 #include "JmsProducer.hh"
 #include "EventLoop.hh"
+#include <openmqc/mqcrt.h>
 
 namespace karabo {
     namespace net {
@@ -28,7 +29,7 @@ namespace karabo {
             VECTOR_STRING_ELEMENT(s).key("brokers")
                     .displayedName("Brokers")
                     .description("Brokers must be provided as URLs of format: tcp://<host>:<port>. Extra URLs serve as fallback.")
-                    .assignmentOptional().defaultValueFromString("tcp://exfl-broker.desy.de:7777")
+                    .assignmentOptional().defaultValueFromString("tcp://localhost:7777")
                     .commit();
         }
 

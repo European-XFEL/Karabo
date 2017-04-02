@@ -38,6 +38,7 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected);
 
             RollingFileAppender(const karabo::util::Hash& input);
+            virtual ~RollingFileAppender() {}
 
             krb_log4cpp::Appender* getAppender();
 

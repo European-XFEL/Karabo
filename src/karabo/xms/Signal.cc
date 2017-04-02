@@ -24,8 +24,8 @@ namespace karabo {
             m_signalFunction(signalFunction),
             m_priority(priority),
             m_messageTimeToLive(messageTimeToLive),
-            m_argsType(typeid (karabo::util::Types::NONE)),
-            m_topic(signalSlotable->m_topic) {
+            m_topic(signalSlotable->m_topic),
+            m_argsType(typeid (karabo::util::Types::NONE)) {
         }
 
 

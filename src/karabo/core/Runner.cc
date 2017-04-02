@@ -38,12 +38,11 @@ namespace karabo {
                     } else {
                         return Configurator<DeviceServer>::create(classId);
                     }
-                } else {
-                    return DeviceServer::Pointer();
                 }
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("Failed to instantiate DeviceServer. " + e.userFriendlyMsg()));
             }
+            return DeviceServer::Pointer();
         }
 
 
