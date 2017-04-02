@@ -47,8 +47,8 @@ namespace karabo {
 
             virtual ~RunConfigurationGroup();
 
-            const karabo::util::Hash& getGroup() const {
-                return get<karabo::util::Hash>("group");
+            const karabo::util::Hash getGroup() const {
+                return std::move(get<karabo::util::Hash>("group"));
             }
 
         private:

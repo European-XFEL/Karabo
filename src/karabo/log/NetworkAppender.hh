@@ -39,6 +39,8 @@ namespace karabo {
 
             NetworkAppender(const karabo::util::Hash& config);
 
+            virtual ~NetworkAppender() {}
+
             krb_log4cpp::Appender* getAppender();
 
         private:

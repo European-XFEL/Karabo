@@ -722,12 +722,12 @@ namespace karabo {
 
             template <class T>
             inline operator T*() {
-                m_value = m_element.template getValueAs<T>();
+                m_value = m_element.template getValueAs<T>(); return nullptr;
             }
 
             template <class T>
             inline operator std::vector<T>*() {
-                m_value = m_element.template getValueAs<T, std::vector>();
+                m_value = m_element.template getValueAs<T, std::vector>();  return nullptr;
             }
         };
 
@@ -766,7 +766,7 @@ namespace karabo {
 
             template <class T>
             inline operator T*() {
-                m_result = karabo::util::toString(m_element.template getValue<T>());
+                m_result = karabo::util::toString(m_element.template getValue<T>()); return nullptr;
             }
         };
 

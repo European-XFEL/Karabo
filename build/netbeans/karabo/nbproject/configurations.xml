@@ -506,7 +506,7 @@
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
-          <warningLevel>0</warningLevel>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
@@ -1209,6 +1209,10 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <commandLine>-Wno-unused-variable</commandLine>
+          <warningLevel>2</warningLevel>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/net/JmsConnection.hh"
             ex="false"
@@ -1219,6 +1223,10 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <commandLine>-Wno-unused-variable</commandLine>
+          <warningLevel>2</warningLevel>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/net/JmsConsumer.hh"
             ex="false"
@@ -1229,6 +1237,10 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <commandLine>-Wno-unused-variable</commandLine>
+          <warningLevel>2</warningLevel>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/net/JmsProducer.hh"
             ex="false"
@@ -3150,6 +3162,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <commandLine>-Wno-unused-variable</commandLine>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/net/JmsConnection.hh"
             ex="false"
@@ -3160,6 +3175,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <commandLine>-Wno-unused-variable</commandLine>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/net/JmsConsumer.hh"
             ex="false"
@@ -3170,6 +3188,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <commandLine>-Wno-unused-variable</commandLine>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/net/JmsProducer.hh"
             ex="false"

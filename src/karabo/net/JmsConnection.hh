@@ -16,7 +16,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/asio.hpp>
-#include <openmqc/mqcrt.h>
+#include <openmqc/mqtypes.h>
 #include <openmqc/mqlogutil-priv.h>
 
 #include <string>
@@ -75,7 +75,10 @@ namespace karabo {
              * @param brokerUrls A vector of broker URLs (tcp://<host>:<port>)
              */
             JmsConnection(const std::vector<std::string>& brokerUrls =
-                          std::vector<std::string>(1, "tcp://exfl-broker.desy.de:7777"));
+                          std::vector<std::string>({
+                                    "tcp://exfl-broker.desy.de:7777",
+                                    "tcp://localhost:7777"
+                          }));
 
             /**
              * Create a tcp connection to a JMS broker
