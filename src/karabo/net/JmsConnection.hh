@@ -75,10 +75,7 @@ namespace karabo {
              * @param brokerUrls A vector of broker URLs (tcp://<host>:<port>)
              */
             JmsConnection(const std::vector<std::string>& brokerUrls =
-                          std::vector<std::string>({
-                                    "tcp://exfl-broker.desy.de:7777",
-                                    "tcp://localhost:7777"
-                          }));
+                          std::vector<std::string>({"tcp://exfl-broker.desy.de:7777"}));
 
             /**
              * Create a tcp connection to a JMS broker
