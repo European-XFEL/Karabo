@@ -188,7 +188,8 @@ class Tests(TestCase):
         self.assertEqual(v[1], 2)
 
         d = VectorFloat(unitSymbol=Unit.METER,
-                        metricPrefixSymbol=MetricPrefix.MILLI)
+                        metricPrefixSymbol=MetricPrefix.MILLI,
+                        defaultValue=[1, 2, 3])
         v = d.toKaraboValue([2, 3, 4])
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue([2, 3, 4] * unit.m / unit.m)
