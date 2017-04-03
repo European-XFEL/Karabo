@@ -201,7 +201,7 @@ class PythonDevice(NoFsm):
                                  " sending and processing it in this device.")
                     .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
                     .expertAccess()
-                    .readOnly().initialValue(-1.0)
+                    .readOnly().initialValue(0.0)
                     .warnHigh(3000.)  # 3 s
                     .info("Long average time between message being sent and"
                           " start of its processing")

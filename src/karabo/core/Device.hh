@@ -307,7 +307,7 @@ namespace karabo {
                         .description("Average time interval between remote message sending and processing it in this device.")
                         .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                         .expertAccess()
-                        .readOnly().initialValue(-1.f)
+                        .readOnly().initialValue(0.f)
                         .warnHigh(3000.f) // 3 s
                         .info("Long average time between message being sent and start of its processing")
                         .needsAcknowledging(false)
