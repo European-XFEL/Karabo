@@ -64,8 +64,11 @@ class EditableComboBox(EditableWidget):
         if value is None:
             return
 
-        index = next(i for i, v in enumerate(box.descriptor.options)
-                     if v == value)
+        try:
+            index = next(i for i, v in enumerate(box.descriptor.options)
+                         if v == value)
+        except StopIteration:
+            return
 
         with SignalBlocker(self.widget):
             self.widget.setCurrentIndex(index)
