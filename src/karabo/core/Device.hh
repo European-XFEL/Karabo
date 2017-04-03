@@ -303,11 +303,11 @@ namespace karabo {
                         .commit();
 
                 FLOAT_ELEMENT(expected).key("performanceStatistics.processingLatency")
-                        .displayedName("Processing latency (ms)")
-                        .description("Average time interval between remote message sending and reading it from the queue on this device.")
+                        .displayedName("Processing latency")
+                        .description("Average time interval between remote message sending and processing it in this device.")
                         .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                         .expertAccess()
-                        .readOnly().initialValue(0)
+                        .readOnly().initialValue(0.f)
                         .warnHigh(3000.f) // 3 s
                         .info("Long average time between message being sent and start of its processing")
                         .needsAcknowledging(false)
@@ -317,8 +317,25 @@ namespace karabo {
                         .commit();
 
                 UINT32_ELEMENT(expected).key("performanceStatistics.maxProcessingLatency")
-                        .displayedName("Maximum proc. latency")
+                        .displayedName("Maximum latency")
                         .description("Maximum processing latency within averaging interval.")
+                        .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
+                        .expertAccess()
+                        .readOnly().initialValue(0)
+                        .commit();
+
+                UINT32_ELEMENT(expected).key("performanceStatistics.numMessages")
+                        .displayedName("Number of messages")
+                        .description("Number of messages received within averaging interval.")
+                        .unit(Unit::COUNT)
+                        .expertAccess()
+                        .readOnly().initialValue(0)
+                        .commit();
+
+                UINT32_ELEMENT(expected).key("performanceStatistics.maxEventLoopLatency")
+                        .displayedName("Max. event loop latency")
+                        .description("Maximum time interval between posting a message on the central event loop "
+                                     "and processing it within averaging interval.")
                         .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                         .expertAccess()
                         .readOnly().initialValue(0)
@@ -1282,9 +1299,10 @@ namespace karabo {
                 // Register guard for slot calls
                 this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));
 
-                // Register updateLatencies handler
+                // Register updateLatencies handler -
+                // bind_weak not needed since (and as long as...) handler will not be posted on event loop
                 this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies,
-                                                                       this, _1, _2));
+                                                                       this, _1));
 
                 // Instantiate all channels
                 this->initChannels();
@@ -1570,15 +1588,11 @@ namespace karabo {
                 return it->second;
             }
 
-            void updateLatencies(float avgProcessingLatency, unsigned int maxProcessingLatency) {
-
-                // updateLatencies
+            void updateLatencies(const karabo::util::Hash::Pointer& performanceMeasures) {
                 if (this->get<bool>("performanceStatistics.enable")) {
-
-                    using karabo::util::Hash;
-                    const Hash h("performanceStatistics", Hash("processingLatency", avgProcessingLatency,
-                                                               "maxProcessingLatency", maxProcessingLatency));
-                    this->set(h);
+                    // Keys and values of 'performanceMeasures' are defined in SignalSlotable::updatePerformanceStatistics
+                    // and expectedParameters has to foresee this content under node "performanceStatistics".
+                    this->set(karabo::util::Hash("performanceStatistics", *performanceMeasures));
                 }
             }
 
