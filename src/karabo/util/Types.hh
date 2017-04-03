@@ -371,7 +371,7 @@ namespace karabo {
 	 *
 	 *     struct Processor {
 	 *         template <class T>
-	 *         inline operator T*() {
+	 *         inline void operator () (T*) {
 	 *             // do your business here
 	 *         }
 	 *     } processor;
@@ -381,99 +381,102 @@ namespace karabo {
          * This function deals only with numerical data types and string.
          * Everything more complex you need to do by hand. It returns whether
          * it could handle the data type.
+         *
+         * Note that the parameter to operator () is only there to make
+         * templatization possible. It is always 0.
 	 */
 	template <class Processor>
 	inline bool templatize(Types::ReferenceType type, Processor &processor) {
 	    switch (type) {
 		case Types::BOOL:
-		    processor.operator bool*();
+		    processor(static_cast<bool*>(0));
 		    break;
 		case Types::CHAR:
-		    processor.operator char*();
+		    processor(static_cast<char*>(0));
 		    break;
 		case Types::INT8:
-		    processor.operator signed char*();
+		    processor(static_cast<signed char*>(0));
 		    break;
 		case Types::UINT8:
-		    processor.operator unsigned char*();
+		    processor(static_cast<unsigned char*>(0));
 		    break;
 		case Types::INT16:
-		    processor.operator short*();
+		    processor(static_cast<short*>(0));
 		    break;
 		case Types::UINT16:
-		    processor.operator unsigned short*();
+		    processor(static_cast<unsigned short*>(0));
 		    break;
 		case Types::INT32:
-		    processor.operator int*();
+		    processor(static_cast<int*>(0));
 		    break;
 		case Types::UINT32:
-		    processor.operator unsigned int*();
+		    processor(static_cast<unsigned int*>(0));
 		    break;
 		case Types::INT64:
-		    processor.operator long long*();
+		    processor(static_cast<long long*>(0));
 		    break;
 		case Types::UINT64:
-		    processor.operator unsigned long long*();
+		    processor(static_cast<unsigned long long*>(0));
 		    break;
 		case Types::FLOAT:
-		    processor.operator float*();
+		    processor(static_cast<float*>(0));
 		    break;
 		case Types::DOUBLE:
-		    processor.operator double*();
+		    processor(static_cast<double*>(0));
 		    break;
 		case Types::COMPLEX_FLOAT:
-		    processor.operator std::complex<float> *();
+		    processor(static_cast<std::complex<float> *>(0));
 		    break;
 		case Types::COMPLEX_DOUBLE:
-		    processor.operator std::complex<double> *();
+		    processor(static_cast<std::complex<double> *>(0));
 		    break;
 		case Types::STRING:
-		    processor.operator std::string*();
+		    processor(static_cast<std::string*>(0));
 		    break;
 		case Types::VECTOR_BOOL:
-		    processor.operator std::vector<bool> *();
+		    processor(static_cast<std::vector<bool> *>(0));
 		    break;
 		case Types::VECTOR_CHAR:
-		    processor.operator std::vector<char> *();
+		    processor(static_cast<std::vector<char> *>(0));
 		    break;
 		case Types::VECTOR_INT8:
-		    processor.operator std::vector<signed char> *();
+		    processor(static_cast<std::vector<signed char> *>(0));
 		    break;
 		case Types::VECTOR_UINT8:
-		    processor.operator std::vector<unsigned char> *();
+		    processor(static_cast<std::vector<unsigned char> *>(0));
 		    break;
 		case Types::VECTOR_INT16:
-		    processor.operator std::vector<short> *();
+		    processor(static_cast<std::vector<short> *>(0));
 		    break;
 		case Types::VECTOR_UINT16:
-		    processor.operator std::vector<unsigned short> *();
+		    processor(static_cast<std::vector<unsigned short> *>(0));
 		    break;
 		case Types::VECTOR_INT32:
-		    processor.operator std::vector<int> *();
+		    processor(static_cast<std::vector<int> *>(0));
 		    break;
 		case Types::VECTOR_UINT32:
-		    processor.operator std::vector<unsigned int> *();
+		    processor(static_cast<std::vector<unsigned int> *>(0));
 		    break;
 		case Types::VECTOR_INT64:
-		    processor.operator std::vector<long long> *();
+		    processor(static_cast<std::vector<long long> *>(0));
 		    break;
 		case Types::VECTOR_UINT64:
-		    processor.operator std::vector<unsigned long long> *();
+		    processor(static_cast<std::vector<unsigned long long> *>(0));
 		    break;
 		case Types::VECTOR_FLOAT:
-		    processor.operator std::vector<float> *();
+		    processor(static_cast<std::vector<float> *>(0));
 		    break;
 		case Types::VECTOR_DOUBLE:
-		    processor.operator std::vector<double> *();
+		    processor(static_cast<std::vector<double> *>(0));
 		    break;
 		case Types::VECTOR_COMPLEX_FLOAT:
-		    processor.operator std::vector<std::complex<float> > *();
+		    processor(static_cast<std::vector<std::complex<float> > *>(0));
 		    break;
 		case Types::VECTOR_COMPLEX_DOUBLE:
-		    processor.operator std::vector<std::complex<double> > *();
+		    processor(static_cast<std::vector<std::complex<double> > *>(0));
 		    break;
 		case Types::VECTOR_STRING:
-		    processor.operator std::vector<std::string> *();
+		    processor(static_cast<std::vector<std::string> *>(0));
 		    break;
                 default:
                     return false;
