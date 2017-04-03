@@ -2058,7 +2058,7 @@ namespace karabo {
 
 
         float SignalSlotable::LatencyStats::average() const {
-            return counts > 0 ? sum / static_cast<float> (counts) : -1.f;
+            return counts > 0 ? sum / static_cast<float> (counts) : 0.f;
         }
     }
 }
