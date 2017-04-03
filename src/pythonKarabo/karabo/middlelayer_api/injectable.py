@@ -61,17 +61,6 @@ class Injectable(Configurable):
         return added_attrs
 
     @coroutine
-    def initializeInjectedParameters(self, **kwargs):
-        """Initialize injected parameters without publishing"""
-        initializers = []
-        for k in self._collect_attrs():
-            t = getattr(type(self), k)
-            init = t.checkedInit(self, kwargs.get(k))
-            initializers.extend(init)
-
-        yield from gather(*initializers)
-
-    @coroutine
     def publishInjectedParameters(self, **kwargs):
         """Publish all changes in the parameters of this object
 
@@ -81,12 +70,14 @@ class Injectable(Configurable):
 
             self.__class__.some_number = Int32()
             yield from self.publishInjectedParameters(some_number=3)
-
-        If your parameters have been injected by `onInitialization`, you
-        do not need to publish the parameters, as no schema has been
-        published. If you still need to initialize some injected parameters,
-        use :meth:`Injectable.initializeExpectedParameters`.
         """
-        yield from self.initializeInjectedParameters(**kwargs)
+        initializers = []
+        for k in self._collect_attrs():
+            t = getattr(type(self), k)
+            init = t.checkedInit(self, kwargs.get(k))
+            initializers.extend(init)
+
+        yield from gather(*initializers)
+
         self._notifyNewSchema()
         self.signalChanged(self.configurationAsHash(), self.deviceId)
