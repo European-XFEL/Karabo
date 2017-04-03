@@ -1148,10 +1148,6 @@ namespace schemawrap {
     }
 
     struct ConvertOptions {
-        const string& m_path;
-        const Schema& m_schema;
-        bp::object result;
-
         inline ConvertOptions(const string& path, const Schema& schema) : m_path(path), m_schema(schema) { }
 
         template <class T>
@@ -1159,6 +1155,9 @@ namespace schemawrap {
             result = karathon::Wrapper::fromStdVectorToPyArray<T>(m_schema.getOptions<T>(m_path));
         }
 
+        const string& m_path;
+        const Schema& m_schema;
+        bp::object result;
     };
 
     bp::object getOptions(const Schema& schema, const bp::object& obj) {
