@@ -114,10 +114,6 @@ class ProjectDeviceInstance(HasStrictTraits):
             self._offline_dev_config.redummy()
         self._offline_dev_config.descriptor = config.descriptor
 
-        if self._online_dev_config.descriptor is not None:
-            self._online_dev_config.redummy()
-        self._online_dev_config.descriptor = config.descriptor
-
         # Set values for offline configuration
         self._offline_dev_config.setDefault()
         if self._initial_config_hash is not None:
