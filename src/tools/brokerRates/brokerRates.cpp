@@ -155,8 +155,8 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
         // rates.
         if (!m_start.getSeconds()) m_start.now();
 
-        // Since we told the consumer to skip serialisation, we can get the total size in bytes:
-        const unsigned int bodySize = body->get<unsigned int>("totalSizeInBytes");
+        // Since we told the consumer to skip serialisation, there is just the raw data:
+        const size_t bodySize = body->get<std::vector<char> >("raw").size();
         boost::optional<util::Hash::Node&> targetNode = header->find("target");
         if (targetNode && targetNode->is<std::string>() && targetNode->getValue<std::string>() == "log") {
             this->registerLogMessage(bodySize);
