@@ -390,10 +390,6 @@ namespace karabo {
         }
 
         struct FindInOptions {
-            bool result;
-            const Hash::Node& m_masterNode;
-            Hash::Node& m_workNode;
-
             inline FindInOptions(const Hash::Node &masterNode, Hash::Node &workNode)
             : result(false), m_masterNode(masterNode), m_workNode(workNode) { }
 
@@ -402,6 +398,10 @@ namespace karabo {
                 const vector<T> &options = m_masterNode.getAttribute<vector<T> >(KARABO_SCHEMA_OPTIONS);
                 result = std::find(options.begin(), options.end(), m_workNode.getValue<T>()) != options.end();
             }
+
+            bool result;
+            const Hash::Node& m_masterNode;
+            Hash::Node& m_workNode;
         };
 
         void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) {
