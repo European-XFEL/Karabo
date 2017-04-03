@@ -721,12 +721,12 @@ namespace karabo {
             inline SetType(Element<KeyType, AttributeType>& element, boost::any& value): m_element(element), m_value(value) { }
 
             template <class T>
-            inline operator T*() {
+            inline void operator () (T*) {
                 m_value = m_element.template getValueAs<T>();
             }
 
             template <class T>
-            inline operator std::vector<T>*() {
+            inline void operator () (std::vector<T>*) {
                 m_value = m_element.template getValueAs<T, std::vector>();
             }
         };
@@ -765,7 +765,7 @@ namespace karabo {
             inline GetValueAsString(const Element<KeyType, AttributeType>& element, std::string& result) : m_element(element), m_result(result) { }
 
             template <class T>
-            inline operator T*() {
+            inline void operator () (T*) {
                 m_result = karabo::util::toString(m_element.template getValue<T>());
             }
         };

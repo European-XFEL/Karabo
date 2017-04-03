@@ -1155,7 +1155,7 @@ namespace schemawrap {
         inline ConvertOptions(const string& path, const Schema& schema) : m_path(path), m_schema(schema) { }
 
         template <class T>
-        inline operator T*() {
+        inline void operator () (T*) {
             result = karathon::Wrapper::fromStdVectorToPyArray<T>(m_schema.getOptions<T>(m_path));
         }
 

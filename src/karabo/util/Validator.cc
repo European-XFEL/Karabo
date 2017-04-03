@@ -398,7 +398,7 @@ namespace karabo {
             : result(false), m_masterNode(masterNode), m_workNode(workNode) { }
 
             template <class T>
-            inline operator T*() {
+            inline void operator () (T*) {
                 const vector<T> &options = m_masterNode.getAttribute<vector<T> >(KARABO_SCHEMA_OPTIONS);
                 result = std::find(options.begin(), options.end(), m_workNode.getValue<T>()) != options.end();
             }
