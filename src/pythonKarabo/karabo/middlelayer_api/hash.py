@@ -705,6 +705,9 @@ class NumpyVector(Vector):
 
     @classmethod
     def yieldBinary(cls, data):
+        if (not isinstance(data, np.ndarray)
+                or data.dtype != cls.basetype.numpy):
+            data = np.array(data, dtype=cls.basetype.numpy)
         yield pack('I', len(data))
         yield data.data
 
