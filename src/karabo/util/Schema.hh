@@ -649,7 +649,10 @@ namespace karabo {
              * @param path
              * @return 
              */
-            const std::vector<std::string>& getOptions(const std::string& path) const;
+            template <class T>
+            const std::vector<T>& getOptions(const std::string& path) const {
+                return m_hash.getAttribute<std::vector<T> >(path, KARABO_SCHEMA_OPTIONS);
+            }
 
             //**********************************************
             //                AllowedStates                *
