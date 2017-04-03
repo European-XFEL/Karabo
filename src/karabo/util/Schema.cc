@@ -370,11 +370,6 @@ namespace karabo {
         //**********************************************
 
         struct SetOptions {
-            Hash& m_hash;
-            const string& m_path;
-            const string& m_value;
-            const string& m_sep;
-
             inline SetOptions(Hash &hash, const string& path, const string& value, const string& sep)
             : m_hash(hash), m_path(path), m_value(value), m_sep(sep) { }
 
@@ -391,6 +386,11 @@ namespace karabo {
             inline void operator () (vector<T>*) {
                 error();
             }
+
+            Hash& m_hash;
+            const string& m_path;
+            const string& m_value;
+            const string& m_sep;
         };
 
 
