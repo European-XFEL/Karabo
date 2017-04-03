@@ -96,10 +96,13 @@ namespace karabo {
 
                         MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
                         this->parseHeader(messageHandle, *header);
+                        const char* constChars = reinterpret_cast<const char*> (bytes);
                         if (m_binarySerializer) {
-                            m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                            m_binarySerializer->load(*body, constChars, static_cast<size_t> (nBytes));
                         } else {
-                            body->set("totalSizeInBytes", static_cast<unsigned int> (nBytes));
+                            // Just copy raw bytes as vector<char> under key "raw":
+                            std::vector<char>& raw = body->bindReference<std::vector<char> >("raw");
+                            raw.assign(constChars, constChars + nBytes);
                         }
                         m_notifyStrand.post(boost::bind(handler, header, body));
                         break;
