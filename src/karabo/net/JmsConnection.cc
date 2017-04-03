@@ -201,8 +201,10 @@ namespace karabo {
 
 
         boost::shared_ptr<JmsConsumer> JmsConnection::createConsumer(const std::string& topic,
-                                                                     const std::string& selector) {
-            return boost::shared_ptr<JmsConsumer>(new JmsConsumer(shared_from_this(), topic, selector));
+                                                                     const std::string& selector,
+                                                                     bool skipSerialisation) {
+            return boost::shared_ptr<JmsConsumer>(new JmsConsumer(shared_from_this(), topic, selector,
+                                                                  skipSerialisation));
         }
 
 
