@@ -183,8 +183,8 @@ class Broker:
                         continue
                     elif e.status == 3120:  # message dropped
                         self.logger.warning(
-                            'consumer of device "%s" dropped messages',
-                            self.deviceId)
+                            'consumer of instance "%s" dropped messages',
+                            self.deviceId, exc_info=True)
                         continue
                     else:
                         raise
