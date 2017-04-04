@@ -196,9 +196,16 @@ namespace karabo {
             size_t sizeofLength = m_connectionPointer->getSizeofLength();
             if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
             m_inboundMessagePrefix.resize(sizeofLength);
-            boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
+            boost::system::error_code ec;
+            if (m_socket.available(ec) >= sizeofLength) {
+                size_t rsize = m_socket.read_some(buffer(m_inboundMessagePrefix));  // read without blocking
+                assert(rsize == sizeofLength);
+                onSizeInBytesAvailable(ec, handler);
+            } else {
+                boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
                                     m_readStrand.wrap(util::bind_weak(&karabo::net::TcpChannel::onSizeInBytesAvailable,
                                                                       this, boost::asio::placeholders::error, handler)));
+            }
         }
 
 
@@ -226,9 +233,16 @@ namespace karabo {
 
 
         void TcpChannel::readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
-            boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
-                                    m_readStrand.wrap(util::bind_weak(&karabo::net::TcpChannel::onBytesAvailable, this,
-                                                                      boost::asio::placeholders::error, handler)));
+            boost::system::error_code ec;
+            if (m_socket.available(ec) >= size) {
+                size_t rsize = m_socket.read_some(buffer(data, size));
+                assert(rsize == size);
+                onBytesAvailable(ec, handler);
+            } else {
+                boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
+                                        m_readStrand.wrap(util::bind_weak(&karabo::net::TcpChannel::onBytesAvailable, this,
+                                                                          boost::asio::placeholders::error, handler)));
+            }
         }
 
 
