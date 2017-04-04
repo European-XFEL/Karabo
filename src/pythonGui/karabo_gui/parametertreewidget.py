@@ -92,7 +92,7 @@ class ParameterTreeWidget(QTreeWidget):
         super(QTreeWidget, self).mousePressEvent(event)
 
     def keyPressEvent(self, event):
-        if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
             item = self.itemAt(self.mapFromGlobal(QCursor.pos())
                                - QPoint(0, self.header().height()))
             if item:
