@@ -196,9 +196,9 @@ namespace karabo {
             size_t sizeofLength = m_connectionPointer->getSizeofLength();
             if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
             m_inboundMessagePrefix.resize(sizeofLength);
-            boost::system::error_code ec;
-            if (m_socket.available(ec) >= sizeofLength) {
-                size_t rsize = m_socket.read_some(buffer(m_inboundMessagePrefix));  // read without blocking
+            if (m_socket.available() >= sizeofLength) {
+                boost::system::error_code ec;
+                size_t rsize = m_socket.read_some(buffer(m_inboundMessagePrefix), ec);  // read without blocking
                 assert(rsize == sizeofLength);
                 onSizeInBytesAvailable(ec, handler);
             } else {
@@ -227,15 +227,22 @@ namespace karabo {
             // and readAsyncSizeInBytes binds it to another handler which is protected by a bind_weak
             // so we do not have to bind_weak here again.
             m_inboundData->resize(byteSize);
-            this->readAsyncRaw(&(*m_inboundData)[0], byteSize,
+            if (m_socket.available() >= byteSize) {
+                boost::system::error_code ec;
+                size_t rsize = m_socket.read_some(buffer(&(*m_inboundData)[0], byteSize), ec);
+                assert(rsize == byteSize);
+                bytesAvailableHandler(ec);
+            } else {
+                this->readAsyncRaw(&(*m_inboundData)[0], byteSize,
                                m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1)));
+            }
         }
 
 
         void TcpChannel::readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
-            boost::system::error_code ec;
-            if (m_socket.available(ec) >= size) {
-                size_t rsize = m_socket.read_some(buffer(data, size));
+            if (m_socket.available() >= size) {
+                boost::system::error_code ec;
+                size_t rsize = m_socket.read_some(buffer(data, size), ec);
                 assert(rsize == size);
                 onBytesAvailable(ec, handler);
             } else {
