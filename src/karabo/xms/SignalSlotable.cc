@@ -10,6 +10,7 @@
 
 #include "SignalSlotable.hh"
 #include "karabo/util/Version.hh"
+#include "karabo/util/Exception.hh"
 #include "karabo/net/EventLoop.hh"
 
 #include <boost/regex.hpp>
@@ -60,21 +61,27 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::Requestor::receiveAsync(const boost::function<void () >& replyCallback, const boost::function<void()>& timeoutHandler) {
+        void SignalSlotable::Requestor::receiveAsync(const boost::function<void () >& replyCallback,
+                                                     const SignalSlotable::Requestor::AsyncErrorHandler& errorHandler) {
             m_signalSlotable->registerSlot(replyCallback, m_replyId);
-            registerDeadlineTimer(timeoutHandler);
+            registerErrorHandler(errorHandler);
             sendRequest();
         }
 
-        void SignalSlotable::Requestor::registerDeadlineTimer(const boost::function<void()>& timeoutHandler) {
-            if (m_timeout > 0) {
-                // Register a deadline timer into map
-                auto timer = boost::make_shared<boost::asio::deadline_timer>(EventLoop::getIOService());
-                timer->expires_from_now(boost::posix_time::milliseconds(m_timeout));
-                timer->async_wait(bind_weak(&SignalSlotable::receiveAsyncTimeoutHandler, m_signalSlotable,
-                                            boost::asio::placeholders::error, m_replyId, timeoutHandler));
-                m_signalSlotable->addReceiveAsyncTimer(m_replyId, timer);
-            }
+
+        void SignalSlotable::Requestor::registerErrorHandler(const AsyncErrorHandler& errorHandler) {
+            // If timeout is not explicitely specified (default is zero), use twice the maximum travel time
+            // to the broker as default. Do not allow negative values either.
+            // Otherwise we have a little memory leak if the slotInstanceId is never responding, e.g.
+            // since no such instance exists...
+            const int timeout = (m_timeout > 0 ? m_timeout : 2 * KARABO_SYS_TTL);
+
+            // Register a deadline timer and error handler into map
+            auto timer = boost::make_shared<boost::asio::deadline_timer>(EventLoop::getIOService());
+            timer->expires_from_now(boost::posix_time::milliseconds(timeout));
+            timer->async_wait(bind_weak(&SignalSlotable::receiveAsyncTimeoutHandler, m_signalSlotable,
+                                        boost::asio::placeholders::error, m_replyId, errorHandler));
+            m_signalSlotable->addReceiveAsyncErrorHandles(m_replyId, timer, errorHandler);
         }
 
 
@@ -400,10 +407,34 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_TRACE << m_instanceId << ": Injecting reply from: "
                     << header->get<string>("signalInstanceId") << *header << *body;
             const string& replyId = header->get<string>("replyFrom");
+            std::pair<boost::shared_ptr<boost::asio::deadline_timer>, Requestor::AsyncErrorHandler> timerAndHandler
+                    = getReceiveAsyncErrorHandles(replyId);
             // Check if the timer was registered for the reply ... and cancel it
-            boost::shared_ptr<boost::asio::deadline_timer> timer = getReceiveAsyncTimer(replyId);
-            if (timer) timer->cancel(); // A timer was set, but the message arrived before expiration -> cancel
+            if (timerAndHandler.first) timerAndHandler.first->cancel(); // message arrived before expiration
+
+            // Check whether the reply is an error
+            boost::optional<Hash::Node&> errorNode = header->find("error");
+            if (errorNode && errorNode->is<bool>() && errorNode->getValue<bool>()) {
+                // Handling an error, so double check that input is as expected, i.e. body has key "a1":
+                const boost::optional<karabo::util::Hash::Node&> textNode = body->find("a1");
+                const std::string text(textNode && textNode->is<std::string>()
+                                       ? textNode->getValue<std::string>()
+                                       : "Error signaled, but body without string at key 'a1'");
+                if (timerAndHandler.second) {
+                    try {
+                        throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"));
+                    } catch (...) {
+                        // Handler can do: try {throw;} catch(const karabo::util::RemoteException&) {...;}
+                        timerAndHandler.second();
+                    }
+                } else {
+                    KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << ": Received error from '"
+                            << header->get<std::string>("signalInstanceId") << "' for request id '" << replyId << "'";
+                }
+            }
+
             // Check whether a callback (temporary slot) was registered for the reply
+            // (if it timed out before, the slot will already be gone)
             SlotInstancePointer slot = getSlot(replyId);
             try {
                 if (slot) {
@@ -620,8 +651,8 @@ namespace karabo {
                         }
                     }
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception while processing slot call: " << e;
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception while processing slot call: " << e.what();
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Unknown exception while processing slot call.";
             }
@@ -1513,7 +1544,7 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             m_slotInstances.erase(mangledSlotFunction);
             // Will clean any associated timers to this slot
-            m_receiveAsyncTimeoutHandlers.erase(mangledSlotFunction);
+            m_receiveAsyncErrorHandles.erase(mangledSlotFunction);
         }
 
 
@@ -1800,7 +1831,7 @@ namespace karabo {
 
                 const unsigned int timeout = 1000; // in ms
                 auto successHandler = util::bind_weak(&SignalSlotable::connectInputChannelHandler, this, channel, outputChannelString, _1, _2);
-                auto timeoutHandler = util::bind_weak(&SignalSlotable::connectInputChannelTimeoutHandler, this, channel, outputChannelString,
+                auto timeoutHandler = util::bind_weak(&SignalSlotable::connectInputChannelErrorHandler, this, channel, outputChannelString,
                                                       trials, timeout + 2000);
                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
                           .timeout(timeout)
@@ -1832,8 +1863,10 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::connectInputChannelTimeoutHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
-                                                               int trials, unsigned int nextTimeout) {
+        void SignalSlotable::connectInputChannelErrorHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
+                                                             int trials, unsigned int nextTimeout) {
+            // We do not care whether it was a timeout or another (likely remote) error, so we do not do:
+            // try { throw; } catch (TimeoutError&) { _action_;} catch (RemoteException&) {_other action_;}
             if (trials-- > 0) {
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << " did not find instance of channel '" << outputChannelString
                         << "', try again for " << nextTimeout << " ms (and then " << trials << " more times).";
@@ -1845,7 +1878,7 @@ namespace karabo {
                 const std::string& channelId = v[1];
 
                 auto successHandler = util::bind_weak(&SignalSlotable::connectInputChannelHandler, this, inChannel, outputChannelString, _1, _2);
-                auto timeoutHandler = util::bind_weak(&SignalSlotable::connectInputChannelTimeoutHandler, this, inChannel, outputChannelString,
+                auto timeoutHandler = util::bind_weak(&SignalSlotable::connectInputChannelErrorHandler, this, inChannel, outputChannelString,
                                                       trials, nextTimeout + 2000);
                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
                           .timeout(nextTimeout)
@@ -2011,31 +2044,39 @@ namespace karabo {
 
 
         void SignalSlotable::receiveAsyncTimeoutHandler(const boost::system::error_code& e, const std::string& replyId,
-                                                        const boost::function<void()>& timeoutCallback) {
+                                                        const SignalSlotable::Requestor::AsyncErrorHandler& errorHandler) {
             if (e) return;
             // Remove the slot with function name replyId, as the message took too long
             removeSlot(replyId);
-            if (timeoutCallback) {
-                timeoutCallback();
+            const std::string msg("Asynchronous request with id '" + replyId + "' timed out");
+            if (errorHandler) {
+                try {
+                    throw KARABO_TIMEOUT_EXCEPTION(msg);
+                } catch (...) {
+                    // Now the errorHandler can do try { throw; } catch (catch karabo::util::TimeoutException& e) {...;}
+                    errorHandler();
+                }
             } else {
-                KARABO_LOG_FRAMEWORK_ERROR << "Asynchronous request with id \"" << replyId << "\" timed out";
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": " << msg;
             }
         }
 
 
-        void SignalSlotable::addReceiveAsyncTimer(const std::string& replyId, const boost::shared_ptr<boost::asio::deadline_timer>& timer) {
+        void SignalSlotable::addReceiveAsyncErrorHandles(const std::string& replyId, const boost::shared_ptr<boost::asio::deadline_timer>& timer,
+                                                  const Requestor::AsyncErrorHandler& errorHandler) {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-            m_receiveAsyncTimeoutHandlers[replyId] = timer;
+            m_receiveAsyncErrorHandles[replyId] = std::make_pair(timer, errorHandler);
         }
 
 
-        boost::shared_ptr<boost::asio::deadline_timer> SignalSlotable::getReceiveAsyncTimer(const std::string& replyId) const {
+        std::pair<boost::shared_ptr<boost::asio::deadline_timer>, SignalSlotable::Requestor::AsyncErrorHandler>
+        SignalSlotable::getReceiveAsyncErrorHandles(const std::string& replyId) const {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-            auto it = m_receiveAsyncTimeoutHandlers.find(replyId);
-            if (it != m_receiveAsyncTimeoutHandlers.end()) {
+            auto it = m_receiveAsyncErrorHandles.find(replyId);
+            if (it != m_receiveAsyncErrorHandles.end()) {
                 return it->second;
             }
-            return boost::shared_ptr<boost::asio::deadline_timer>();
+            return std::make_pair(boost::shared_ptr<boost::asio::deadline_timer>(), Requestor::AsyncErrorHandler());
         }
 
 
