@@ -366,13 +366,13 @@ namespace karabo {
                     currentKey = prefix + separators + currentKey;
                 }
                 if (it->is<Hash > () && (fullPaths || !it->hasAttribute(KARABO_HASH_CLASS_ID))) { // Recursion, but no hash sub classes
-                    getPaths(it->getValue<Hash > (), result, currentKey, separator);
+                    getPaths(it->getValue<Hash > (), result, currentKey, separator, fullPaths);
                 } else {
                     if (it->is<std::vector<Hash> > ()) { // Recursion for vector
                         for (size_t i = 0; i < it->getValue<std::vector<Hash> > ().size(); ++i) {
                             std::ostringstream os;
                             os << currentKey << "[" << i << "]";
-                            getPaths(it->getValue<std::vector<Hash> > ().at(i), result, os.str(), separator);
+                            getPaths(it->getValue<std::vector<Hash> > ().at(i), result, os.str(), separator, fullPaths);
                         }
                     } else {
                         result.push_back(currentKey);
