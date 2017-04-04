@@ -816,6 +816,16 @@ void Hash_Test::testGetPaths() {
         h.getPaths(paths);
         CPPUNIT_ASSERT(paths.size() == 3);
     }
+    
+    {
+        Hash h;
+        h.set("a", 1);
+        h.set("b.c", "foo");
+        h.set("b.array", NDArray(Dims(10,10)));
+        std::vector<std::string> paths;
+        h.getDeepPaths(paths);
+        CPPUNIT_ASSERT(paths.size() == 6);
+    }
 }
 
 
