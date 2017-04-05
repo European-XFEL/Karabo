@@ -25,7 +25,8 @@ from karabo_gui.panels.navigationpanel import NavigationPanel
 from karabo_gui.panels.notificationpanel import NotificationPanel
 from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
-from karabo_gui.singletons.api import get_db_conn, get_network
+from karabo_gui.singletons.api import (get_db_conn, get_network,
+                                       get_project_model)
 
 ACCESS_LEVELS = OrderedDict()
 ACCESS_LEVELS['Admin'] = AccessLevel.ADMIN
@@ -257,6 +258,14 @@ class MainWindow(QMainWindow):
         self._panel_areas[PanelAreaEnum.Right] = right
 
     def _quit(self):
+        # Check for project changes
+        project_model = get_project_model().traits_data_model
+        if project_model is not None and project_model.modified:
+            msg = ('The project \"<b>{}</b>\" has been modified.<br />Please '
+                   'make sure to save it!').format(project_model.simple_name)
+            MessageBox.showWarning(msg, 'Modified project')
+            return False
+
         # Make sure there are no pending writing things in the pipe
         if get_db_conn().is_writing():
             msg = ('There is currently data fetched from or sent to the <br>'
