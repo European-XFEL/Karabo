@@ -762,7 +762,7 @@ namespace karabo {
             inline GetValueAsString(const Element<KeyType, AttributeType>& element, std::string& result) : m_element(element), m_result(result) { }
 
             template <class T>
-            inline operator () (T*) {
+            inline void operator () (T*) {
                 m_result = karabo::util::toString(m_element.template getValue<T>());
             }
 
