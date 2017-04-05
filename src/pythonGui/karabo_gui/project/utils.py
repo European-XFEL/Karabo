@@ -216,7 +216,7 @@ def show_save_project_message(project):
     :return Whether the user wants to save
     """
     if project is not None and project.modified:
-        ask = ('The project \"<b>{}</b>\" has be modified.<br />Do you want '
+        ask = ('The project \"<b>{}</b>\" has been modified.<br />Do you want '
                'to save the project?').format(project.simple_name)
         options = (QMessageBox.Save | QMessageBox.No)
         reply = QMessageBox.question(None, 'Save project', ask, options,
