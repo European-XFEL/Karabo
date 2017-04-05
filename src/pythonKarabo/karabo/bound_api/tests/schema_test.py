@@ -267,13 +267,13 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(options[1], "Air Condition")
             self.assertEqual(options[2], "Navigation")
             
-            self.assertEqual(schema.getOptions("exampleKey2")[0], "5")
-            self.assertEqual(schema.getOptions("exampleKey2")[1], "25")
-            self.assertEqual(schema.getOptions("exampleKey2")[2], "10")
+            self.assertEqual(schema.getOptions("exampleKey2")[0], 5)
+            self.assertEqual(schema.getOptions("exampleKey2")[1], 25)
+            self.assertEqual(schema.getOptions("exampleKey2")[2], 10)
             
-            self.assertEqual(schema.getOptions("exampleKey4")[0], "1.11")
-            self.assertEqual(schema.getOptions("exampleKey4")[1], "-2.22")
-            self.assertEqual(schema.getOptions("exampleKey4")[2], "5.55")
+            self.assertEqual(schema.getOptions("exampleKey4")[0], 1.11)
+            self.assertEqual(schema.getOptions("exampleKey4")[1], -2.22)
+            self.assertEqual(schema.getOptions("exampleKey4")[2], 5.55)
             
             self.assertEqual(schema.getOptions("testPath")[0], "file1")
             self.assertEqual(schema.getOptions("testPath")[1], "file2")
@@ -285,14 +285,14 @@ class  Schema_TestCase(unittest.TestCase):
             schema = Configurator(SomeClass).getSchema("SomeClassId")
             
             options = schema.getOptions("x")
-            self.assertEqual(options[0], "5")
-            self.assertEqual(options[1], "25")
-            self.assertEqual(options[2], "10")
-            self.assertEqual(schema.getOptions("x"), ["5", "25", "10"])
+            self.assertEqual(options[0], 5)
+            self.assertEqual(options[1], 25)
+            self.assertEqual(options[2], 10)
+            self.assertEqual(schema.getOptions("x"), [5, 25, 10])
             
             schema.setOptions('x', '20, 5, 11, 13, 25')
             options = schema.getOptions("x")
-            self.assertEqual(options, ['20', '5', '11', '13', '25'])
+            self.assertEqual(options, [20, 5, 11, 13, 25])
         except Exception as e:
             self.fail("test_setOptions exception: " + str(e))
         

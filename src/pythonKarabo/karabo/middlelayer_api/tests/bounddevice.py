@@ -47,6 +47,7 @@ class TestDevice(PythonDevice):
             DOUBLE_ELEMENT(expected).key("node.b")
             .unit(METER)
             .metricPrefix(KILO)
+            .options("33,44,55,100")
             .assignmentOptional()
             .defaultValue(33)
             .commit(),

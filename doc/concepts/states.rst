@@ -20,26 +20,26 @@ as given in the below diagram:
 
 .. digraph:: state_transitions
 
-    "UNKNOWN"[shape = box style=filled, fillcolor=orange]
-    "DISABLED"[shape = box style=filled, fillcolor=magenta]
+    "UNKNOWN"[shape = box style=filled, fillcolor="#FFAA00"]
+    "DISABLED"[shape = box style=filled, fillcolor="#FF00FF"]
     "ERROR"[shape = box style=filled, fillcolor=red]
-    "INIT"[shape = box style=filled, fillcolor=beige]
-    "KNOWN"[shape = box style=filled, fillcolor=grey]
-    "STATIC"[shape = box style=filled, fillcolor=chartreuse2]
-    "NORMAL"[shape = box style=filled, fillcolor=grey]
+    "INIT"[shape = box style=filled, fillcolor="#E6E6AA"]
+    "KNOWN"[shape = box style=filled, fillcolor="#C8C8C8"]
+    "STATIC"[shape = box style=filled, fillcolor="#00AA00"]
+    "NORMAL"[shape = box style=filled, fillcolor="#C8C8C8"]
     "KNOWN" -> "NORMAL"
     "KNOWN" -> "ERROR"
     "KNOWN" -> "DISABLED"
     "NORMAL" -> "STATIC"
-    "PASSIVE"[shape = box style=filled, fillcolor=white]
+    "PASSIVE"[shape = box style=filled, fillcolor="#CCCCFF"]
     "STATIC" -> "PASSIVE"
-    "ACTIVE"[shape = box style=filled, fillcolor=darkgreen]
+    "ACTIVE"[shape = box style=filled, fillcolor="#78FF00"]
     "STATIC" -> "ACTIVE"
-    "CHANGING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "CHANGING"[shape = box style=filled, fillcolor="#00AAFF"]
     "NORMAL" -> "CHANGING"
-    "DECREASING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "DECREASING"[shape = box style=filled, fillcolor="#00AAFF"]
     "CHANGING" -> "DECREASING"
-    "INCREASING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "INCREASING"[shape = box style=filled, fillcolor="#00AAFF"]
     "CHANGING" -> "INCREASING"
 
 
@@ -57,21 +57,31 @@ defined state.
 
 Base and meta states are defined as follows:
 
-|orange-box| UNKNOWN
-    should be used if the Karabo device has no connection to hardware, or it
-    cannot be assured that the correct state of the hardware is reported by
-    the device. The latter can be e.g. the case if an unknown software error
-    occurs in the device code, which is only caught by the Karabo Framework
-    code and not by the device code.
+.. graphviz::
 
-|beige-box| INIT
-    is the state in which a Karabo device should transition into upon initialization.
-    During initialization connection to the hardware should be established.
-    After initialization the hardware state should thus be ``KNOWN``, and the device
-    should transition either to ``DISABLED``, ``ERROR`` or one of the states
-    derived from ``NORMAL``, all of which derive from ``KNOWN``.
-    If no connection can be established the device should be placed
-    into the ``UNKNOWN state``.
+    digraph unknown {UNKNOWN [shape=box, style=filled, fillcolor="#FFAA00"]}
+
+
+``UNKNOWN`` should be used if the Karabo device has no connection to hardware,
+or it cannot be assured that the correct state of the hardware is reported by
+the device. The latter can be e.g. the case if an unknown software error
+occurs in the device code, which is only caught by the Karabo Framework
+code and not by the device code.
+
+
+.. graphviz::
+
+    digraph init {INIT [shape=box, style=filled, fillcolor="#E6E6AA"]}
+
+
+The ``INIT`` state in which a Karabo device should transition into upon initialization.
+During initialization connection to the hardware should be established.
+After initialization the hardware state should thus be ``KNOWN``, and the device
+should transition either to ``DISABLED``, ``ERROR`` or one of the states
+derived from ``NORMAL``, all of which derive from ``KNOWN``.
+If no connection can be established the device should be placed
+into the ``UNKNOWN state``.
+
 
 The ``KNOWN`` base state is the counterpart to the ``UNKNOWN`` state and should
 not usually be entered programmatically. Rather
@@ -79,24 +89,34 @@ while in ``INIT`` the device logic should decide which of the states deriving
 from ``KNOWN`` should be entered. All states listed in the following derive
 from it and will compare equal to it:
 
-|magenta-box| DISABLED
-    is used if the device is will not act on commands and assignment for some
-    reason, e.g. due to manual override or an interlock condition preventing
-    the device from being used. A disabled device is however connected to the
-    Karabo system, i.e. (some) value may be read back, at the very least it
-    is able to notify Karabo of its disabled status. Note that no ``ENABLED``
-    state exists, a device which is enabled is either in one of the ``NORMAL``
-    states or in the ``ERROR`` state.
+.. graphviz::
 
-|red-box| ERROR
-    is reserved for hardware errors and uncaught processing errors on
-    pipelined-processing devices. It should only be used for an error pertinent
-    to the hardware component, not for indicating an alarm condition due to
-    e.g. a property measured by the hardware. The latter case is handled via
-    alarm conditions in Karabo. Note that no ``OK``
-    state exists, a device which is working normally is in one of the
-    ``NORMAL`` states.
+    digraph disabled {DISABLED [shape=box, style=filled, fillcolor="#FF00FF"]}
 
+
+``DISABLED`` is used if the device is will not act on commands and assignment
+for some reason, e.g. due to manual override or an interlock condition preventing
+the device from being used. A disabled device is however connected to the
+Karabo system, i.e. (some) value may be read back, at the very least it
+is able to notify Karabo of its disabled status. Note that no ``ENABLED``
+state exists, a device which is enabled is either in one of the ``NORMAL``
+states or in the ``ERROR`` state.
+
+.. graphviz::
+
+    digraph error {ERROR [shape=box, style=filled, fillcolor=red]}
+
+The ``ERROR`` state is reserved for hardware errors and uncaught processing
+errors on pipelined-processing devices. It should only be used for an
+error pertinent to the hardware component, not for indicating an alarm
+condition due to e.g. a property measured by the hardware. The latter case
+is handled via alarm conditions in Karabo. Note that no ``OK``
+state exists, a device which is working normally is in one of the
+``NORMAL`` states.
+
+.. graphviz::
+
+    digraph NORMAL {NORMAL [shape=box, style=filled, fillcolor="#C8C8C8"]}
 
 
 The ``NORMAL`` base state should not usually be entered programmatically. Similar
@@ -104,39 +124,59 @@ to ``KNOWN``, device logic should rather transition the device into one of the
 derived states. The following states derive from and compare
 equal to ``NORMAL``:
 
-|lightgreen-box| STATIC
-    is itself a base state to the ``ACTIVE`` and ``PASSIVE`` states. It may however
-    also directly be used, e.g. if a device is connected but waiting on commands.
-    It is the counterpart to the changing states. Devices in a static operating
-    mode, e.g. a running turbo-pump which is at target speed are also in the
-    ``STATIC`` state.
+.. graphviz::
 
-|darkgreen-box| ACTIVE
-    is derived from ``STATIC`` and should usually be used only for comparison
-    purposes. Rather developers should transition into a device state derived
-    from it. It is the counterpart to ``PASSIVE``.
+    digraph static {STATIC [shape=box, style=filled, fillcolor="#00AA00"]}
 
-|white-box| PASSIVE
-    is derived from ``STATIC`` and should usually be used only for comparison
-    purposes. Rather developers should transition into a device state derived
-    from it. It is the counterpart to ``ACTIVE``.
+``STATIC`` is itself a base state to the ``ACTIVE`` and ``PASSIVE`` states.
+It may however also directly be used, e.g. if a device is connected but
+waiting on commands.
+It is the counterpart to the changing states. Devices in a static operating
+mode, e.g. a running turbo-pump which is at target speed are also in the
+``STATIC`` state.
 
-|lightblue-box| CHANGING
-    is itself a base state to the ``INCREASING`` and ``DECREASING`` states. It may however
-    also directly be used, e.g. if a device is changing in a way that a directional
-    indication does not make sense. It is the counterpart to the ``STATIC`` state.
-    ``CHANGING`` and derived states should be used when a device is transitioning
-    to a new target condition, e.g. a motor moving to a new position, a power
-    supply ramping to a given voltage or a pump spinning up to speed. Once the
-    target value is reached the device should transition into a ``STATIC`` state.
+.. graphviz::
 
-|lightblue-box| INCREASING
-    is derived from ``CHANGING`` and should be used if it makes sense to indicate
-    a directional transition of the hardware. It is the counterpart to ``DECREASING``.
+    digraph active {ACTIVE [shape=box, style=filled, fillcolor="#78FF00"]}
 
-|lightblue-box| DECREASING
-    is derived from ``CHANGING`` and should be used if it makes sense to indicate
-    a directional transition of the hardware. It is the counterpart to ``INCREASING``.
+The ``ACTIVE`` state is derived from ``STATIC`` and should usually be used
+only for comparison purposes. Rather developers should transition into a device
+ state derived from it. It is the counterpart to ``PASSIVE``.
+
+.. graphviz::
+
+    digraph passive {PASSIVE [shape=box, style=filled, fillcolor="#00AAFF"]}
+
+The ``PASSIVE`` state is derived from ``STATIC`` and should usually be used
+only for comparison purposes. Rather developers should transition into a device state derived
+from it. It is the counterpart to ``ACTIVE``.
+
+.. graphviz::
+
+    digraph changing {CHANGING [shape=box, style=filled, fillcolor="#00AAFF"]}
+
+The state ``CHANGING`` itself is a base state to the ``INCREASING`` and
+``DECREASING`` states. It may however  also directly be used, e.g. if a device
+is changing in a way that a directional indication does not make sense. It is
+the counterpart to the ``STATIC`` state. ``CHANGING`` and derived states should
+ be used when a device is transitioning to a new target condition, e.g. a motor
+ moving to a new position, a power supply ramping to a given voltage or a pump
+ spinning up to speed. Once the target value is reached the device should
+ transition into a ``STATIC`` state.
+
+.. graphviz::
+
+    digraph increasing {INCREASING [shape=box, style=filled, fillcolor="#00AAFF"]}
+
+The state ``INCREASING`` is derived from ``CHANGING`` and should be used if it makes sense to indicate
+a directional transition of the hardware. It is the counterpart to ``DECREASING``.
+
+.. graphviz::
+
+    digraph decreasing {DECREASING [shape=box, style=filled, fillcolor="#00AAFF"]}
+
+The state ``DECREASING`` is derived from ``CHANGING`` and should be used if it makes sense to indicate
+a directional transition of the hardware. It is the counterpart to ``INCREASING``.
 
 
 
@@ -200,7 +240,7 @@ implement logic to recover from an ``ERROR`` state into any of the ``NORMAL``
         [
             shape = box
             style = filled
-            fillcolor = orange
+            fillcolor = "#FFAA00"
             label = "UNKNOWN"
         ]
 
@@ -208,7 +248,7 @@ implement logic to recover from an ``ERROR`` state into any of the ``NORMAL``
         [
             shape = box
             style = filled
-            fillcolor = beige
+            fillcolor = "#E6E6AA"
             label = "INIT"
         ]
 
@@ -220,7 +260,7 @@ implement logic to recover from an ``ERROR`` state into any of the ``NORMAL``
         [
             shape = box
             style = filled
-            fillcolor = magenta
+            fillcolor = "#FF00FF"
             label = "DISABLED"
         ]
 
@@ -243,14 +283,14 @@ implement logic to recover from an ``ERROR`` state into any of the ``NORMAL``
                     shape = box
                     style = filled
                     fillcolor = green
-                    label = "ONLINE"
+                    label = "ACTIVE"
                 ]
 
                 changing
                 [
                     shape = box
                     style = filled
-                    fillcolor = blue
+                    fillcolor = "#00AAFF"
                     label = "CHANGING"
                 ]
                 on -> changing
@@ -302,20 +342,20 @@ all other states.
         [
             shape = box
             style = filled
-            fillcolor = magenta
+            fillcolor = "#FF00FF"
             label = "DISABLED"
         ]
 
         subgraph cluster0 {
             label = "STATIC";
             style = filled
-            fillcolor = chartreuse2
+            fillcolor = "#00AA00"
 
             active
             [
                 shape = box
                 style = filled
-                fillcolor = darkgreen
+                fillcolor = "#78FF00"
                 label = "ACTIVE"
             ]
 
@@ -323,7 +363,7 @@ all other states.
             [
                 shape = box
                 style = filled
-                fillcolor = white
+                fillcolor = "#CCCCFF"
                 label = "PASSIVE"
             ]
 
@@ -334,13 +374,13 @@ all other states.
         subgraph cluster1 {
             label = "CHANGING";
             style = filled
-            fillcolor = cornflowerblue
+            fillcolor = "#00AAFF"
 
             increasing
             [
                 shape = box
                 style = filled
-                fillcolor = cornflowerblue
+                fillcolor = "#00AAFF"
                 label = "INCREASING"
             ]
 
@@ -348,7 +388,7 @@ all other states.
             [
                 shape = box
                 style = filled
-                fillcolor = cornflowerblue
+                fillcolor = "#00AAFF"
                 label = "DECREASING"
             ]
 
@@ -360,7 +400,7 @@ all other states.
         [
             shape = box
             style = filled
-            fillcolor = beige
+            fillcolor = "#E6E6AA"
             label = "INIT"
         ]
 
@@ -376,7 +416,7 @@ all other states.
         [
             shape = box
             style = filled
-            fillcolor = orange
+            fillcolor = "#FFAA00"
             label = "UNKNOWN"
         ]
 
@@ -398,7 +438,7 @@ all other states.
     trumped by all other states.
 
 Users should however not implement trumping functionality themselves, but instead use the
-``State.returnMostSignificant`` function provided by Karabo.
+``StateSignifier().returnMostSignificant`` function provided by Karabo.
 
 .. code-block:: Python
 
@@ -410,6 +450,7 @@ Users should however not implement trumping functionality themselves, but instea
     definingState = trumpState.returnMostSignificant(listOfStates)
     print(definingState)
     >>> State.ERROR
+
 
 Calling ``returnMostSignificant`` from the ``StateSignifier`` without additional keywords will result
 in returning evaluation substates of ``STATIC`` and ``CHANGING``
@@ -431,7 +472,7 @@ changingSignificant = ``INCREASING|DECREASING``
      ``if definingState == CHANGING``.
 
 In rare scenarios states might to be trumped differently. Developers can
-provide for a different trumping method using the ``UserStateSignifier` class.
+provide for a different trumping method in initialization of the ``StateSignifier``.
 It expects a complete list of base states as input, the order of which determines
 trumping and provides the same ``returnMostSignificant`` method as in the
 default trumping implementation.
@@ -468,8 +509,8 @@ in a state derived from ``DISABLED``:
 
 .. digraph:: state_transitions
 
-    "DISABLED"[shape = box style=filled, fillcolor=magenta]
-    "INTERLOCKED"[shape = box style=filled, fillcolor=magenta]
+    "DISABLED"[shape = box style=filled, fillcolor="#FF00FF"]
+    "INTERLOCKED"[shape = box style=filled, fillcolor="#FF00FF"]
 
     "DISABLED" -> "INTERLOCKED"
 
@@ -489,54 +530,54 @@ both:
 
     rankdir = LR;
 
-    "STATIC"[shape = box style=filled, fillcolor=chartreuse2]
-    "PASSIVE"[shape = box style=filled, fillcolor=white]
-    "ACTIVE"[shape = box style=filled, fillcolor=darkgreen]
+    "STATIC"[shape = box style=filled, fillcolor="#00AA00"]
+    "PASSIVE"[shape = box style=filled, fillcolor="#CCCCFF"]
+    "ACTIVE"[shape = box style=filled, fillcolor="#78FF00"]
 
-    "COOLED"[shape = box style=filled, fillcolor=darkgreen]
-    "WARM"[shape = box style=filled, fillcolor=white]
+    "COOLED"[shape = box style=filled, fillcolor="#78FF00"]
+    "WARM"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "WARM"->"PASSIVE" [dir=back]
 
-    "HEATED"[shape = box style=filled, fillcolor=darkgreen]
-    "COLD"[shape = box style=filled, fillcolor=white]
+    "HEATED"[shape = box style=filled, fillcolor="#78FF00"]
+    "COLD"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "COLD"->"PASSIVE" [dir=back]
 
-    "EVACUATED"[shape = box style=filled, fillcolor=darkgreen]
-    "PRESSURIZED"[shape = box style=filled, fillcolor=white]
+    "EVACUATED"[shape = box style=filled, fillcolor="#78FF00"]
+    "PRESSURIZED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "PRESSURIZED"->"PASSIVE" [dir=back]
     "ACTIVE"->"EVACUATED"
 
 
-    "CLOSED"[shape = box style=filled, fillcolor=darkgreen]
-    "OPENED"[shape = box style=filled, fillcolor=white]
+    "CLOSED"[shape = box style=filled, fillcolor="#78FF00"]
+    "OPENED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "OPENED"->"PASSIVE" [dir=back]
 
-    "ON"[shape = box style=filled, fillcolor=darkgreen]
-    "OFF"[shape = box style=filled, fillcolor=white]
+    "ON"[shape = box style=filled, fillcolor="#78FF00"]
+    "OFF"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "OFF"->"PASSIVE" [dir=back]
 
-    "EXTRACTED"[shape = box style=filled, fillcolor=darkgreen]
-    "INSERTED"[shape = box style=filled, fillcolor=white]
+    "EXTRACTED"[shape = box style=filled, fillcolor="#78FF00"]
+    "INSERTED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "INSERTED"->"PASSIVE" [dir=back]
 
-    "STARTED"[shape = box style=filled, fillcolor=darkgreen]
-    "STOPPED"[shape = box style=filled, fillcolor=white]
+    "STARTED"[shape = box style=filled, fillcolor="#78FF00"]
+    "STOPPED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "STOPPED"->"PASSIVE" [dir=back]
 
-    "LOCKED"[shape = box style=filled, fillcolor=darkgreen]
-    "UNLOCKED"[shape = box style=filled, fillcolor=white]
+    "LOCKED"[shape = box style=filled, fillcolor="#78FF00"]
+    "UNLOCKED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "UNLOCKED"->"PASSIVE" [dir=back]
 
-    "ENGAGED"[shape = box style=filled, fillcolor=darkgreen]
-    "DISENGAGED"[shape = box style=filled, fillcolor=white]
+    "ENGAGED"[shape = box style=filled, fillcolor="#78FF00"]
+    "DISENGAGED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
     "DISENGAGED"->"PASSIVE" [dir=back]
 
@@ -574,11 +615,11 @@ or decrease of the value is being performed.
 
         rank="same";
         style = invis;
-        "ROTATING"[shape = box style=filled, fillcolor=cornflowerblue]
-        "CHANGING"[shape = box style=filled, fillcolor=cornflowerblue]
-        "MOVING"[shape = box style=filled, fillcolor=cornflowerblue]
+        "ROTATING"[shape = box style=filled, fillcolor="#00AAFF"]
+        "CHANGING"[shape = box style=filled, fillcolor="#00AAFF"]
+        "MOVING"[shape = box style=filled, fillcolor="#00AAFF"]
 
-        "SWITCHING"[shape = box style=filled, fillcolor=cornflowerblue]
+        "SWITCHING"[shape = box style=filled, fillcolor="#00AAFF"]
 
         "ROTATING" -> "CHANGING"[constraint=false, dir=back]
         "CHANGING" -> "MOVING" [constraint=false]
@@ -591,42 +632,42 @@ or decrease of the value is being performed.
     "INCREASING" -> "ROTATING" [style="invisible",dir="none"];
     "INCREASING" -> "SWITCHING" [style="invisible",dir="none"];
 
-    "INCREASING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "DECREASING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "INCREASING"[shape = box style=filled, fillcolor="#00AAFF"]
+    "DECREASING"[shape = box style=filled, fillcolor="#00AAFF"]
 
-    "COOLING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "HEATING"[shape = box style=filled, fillcolor=cornflowerblue]
-
-
-    "MOVING_LEFT"[shape = box style=filled, fillcolor=cornflowerblue]
-    "MOVING_RIGHT"[shape = box style=filled, fillcolor=cornflowerblue]
-    "MOVING_DOWN"[shape = box style=filled, fillcolor=cornflowerblue]
-    "MOVING_UP"[shape = box style=filled, fillcolor=cornflowerblue]
-    "MOVING_FORWARD"[shape = box style=filled, fillcolor=cornflowerblue]
-    "MOVING_BACK"[shape = box style=filled, fillcolor=cornflowerblue]
+    "COOLING"[shape = box style=filled, fillcolor="#00AAFF"]
+    "HEATING"[shape = box style=filled, fillcolor="#00AAFF"]
 
 
-    "ROTATING_CLK"[shape = box style=filled, fillcolor=cornflowerblue]
-    "ROTATING_CNTCLK"[shape = box style=filled, fillcolor=cornflowerblue]
-
-    "RAMPING_DOWN"[shape = box style=filled, fillcolor=cornflowerblue]
-    "RAMPING_UP"[shape = box style=filled, fillcolor=cornflowerblue]
-
-    "EXTRACTING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "INSERTING"[shape = box style=filled, fillcolor=cornflowerblue]
-
-    "STOPPING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "STARTING"[shape = box style=filled, fillcolor=cornflowerblue]
-
-    "EMPTYING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "FILLING"[shape = box style=filled, fillcolor=cornflowerblue]
-
-    "DISENGAGING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "ENGAGING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "MOVING_LEFT"[shape = box style=filled, fillcolor="#00AAFF"]
+    "MOVING_RIGHT"[shape = box style=filled, fillcolor="#00AAFF"]
+    "MOVING_DOWN"[shape = box style=filled, fillcolor="#00AAFF"]
+    "MOVING_UP"[shape = box style=filled, fillcolor="#00AAFF"]
+    "MOVING_FORWARD"[shape = box style=filled, fillcolor="#00AAFF"]
+    "MOVING_BACK"[shape = box style=filled, fillcolor="#00AAFF"]
 
 
-    "SWITCHING_OFF"[shape = box style=filled, fillcolor=cornflowerblue]
-    "SWITCHING_ON"[shape = box style=filled, fillcolor=cornflowerblue]
+    "ROTATING_CLK"[shape = box style=filled, fillcolor="#00AAFF"]
+    "ROTATING_CNTCLK"[shape = box style=filled, fillcolor="#00AAFF"]
+
+    "RAMPING_DOWN"[shape = box style=filled, fillcolor="#00AAFF"]
+    "RAMPING_UP"[shape = box style=filled, fillcolor="#00AAFF"]
+
+    "EXTRACTING"[shape = box style=filled, fillcolor="#00AAFF"]
+    "INSERTING"[shape = box style=filled, fillcolor="#00AAFF"]
+
+    "STOPPING"[shape = box style=filled, fillcolor="#00AAFF"]
+    "STARTING"[shape = box style=filled, fillcolor="#00AAFF"]
+
+    "EMPTYING"[shape = box style=filled, fillcolor="#00AAFF"]
+    "FILLING"[shape = box style=filled, fillcolor="#00AAFF"]
+
+    "DISENGAGING"[shape = box style=filled, fillcolor="#00AAFF"]
+    "ENGAGING"[shape = box style=filled, fillcolor="#00AAFF"]
+
+
+    "SWITCHING_OFF"[shape = box style=filled, fillcolor="#00AAFF"]
+    "SWITCHING_ON"[shape = box style=filled, fillcolor="#00AAFF"]
 
     "HEATING"->"INCREASING" [dir=back]
     "MOVING_RIGHT"->"INCREASING" [dir=back]
@@ -670,14 +711,14 @@ should be used.
 
     rankdir = LR;
 
-    "CHANGING"[shape = box style=filled, fillcolor=cornflowerblue]
-    "SEARCHING"[shape = box style=filled, fillcolor=cornflowerblue]
+    "CHANGING"[shape = box style=filled, fillcolor="#00AAFF"]
+    "SEARCHING"[shape = box style=filled, fillcolor="#00AAFF"]
 
-    "STATIC"[shape = box style=filled, fillcolor=chartreuse2]
-    "INTERLOCK_OK"[shape = box style=filled, fillcolor=chartreuse2]
+    "STATIC"[shape = box style=filled, fillcolor="#00AA00"]
+    "INTERLOCK_OK"[shape = box style=filled, fillcolor="#00AA00"]
 
-    "DISABLED"[shape = box style=filled, fillcolor=magenta]
-    "INTERLOCK_BROKEN"[shape = box style=filled, fillcolor=magenta]
+    "DISABLED"[shape = box style=filled, fillcolor="#FF00FF"]
+    "INTERLOCK_BROKEN"[shape = box style=filled, fillcolor="#FF00FF"]
 
     "CHANGING" -> "SEARCHING"
     "STATIC" -> "INTERLOCK_OK"
