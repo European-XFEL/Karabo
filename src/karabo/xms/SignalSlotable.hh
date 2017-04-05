@@ -72,13 +72,12 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*slotFunction*/,
                                           const std::string& /*callee*/) > SlotCallGuardHandler;
 
-            typedef boost::function<void (float /*avgProcessingLatency*/, unsigned int /*maxProcessingLatency*/) > UpdatePerformanceStatisticsHandler;
+            typedef boost::function<void (const karabo::util::Hash::Pointer& /*performanceMeasures*/) > UpdatePerformanceStatisticsHandler;
 
             typedef InputChannel::DataHandler DataHandler;
 
             typedef InputChannel::InputHandler InputHandler;
 
-            // TODO Check why handlers of input and output are different! One is pointer, the other is reference!
             typedef boost::function<void (const OutputChannel::Pointer&) > OutputHandler;
 
             typedef boost::shared_ptr<karabo::xms::Slot> SlotInstancePointer;
@@ -586,7 +585,8 @@ namespace karabo {
 
             void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
-            void processEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+            void processEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
+                              long long whenPostedEpochMs);
 
             /**
              * Parses out the instanceId part of signalId or slotId
@@ -700,6 +700,8 @@ namespace karabo {
             void stopPerformanceMonitor();
 
             void updatePerformanceStatistics(const boost::system::error_code& e);
+
+            void updateLatencies(const karabo::util::Hash::Pointer& header, long long whenPostedEpochMs);
 
             bool tryToConnectToSignal(const std::string& signalInstanceId, const std::string& signalFunction,
                                       const std::string& slotInstanceId, const std::string& slotFunction);
@@ -845,6 +847,7 @@ namespace karabo {
 
             mutable boost::mutex m_latencyMutex;
             LatencyStats m_processingLatency; // measurements in milliseconds
+            LatencyStats m_eventLoopLatency; // measurements in milliseconds for
 
         };
 

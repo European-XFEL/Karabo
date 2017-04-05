@@ -369,19 +369,39 @@ namespace karabo {
         //                  Options             *
         //**********************************************
 
+        struct SetOptions {
+            inline SetOptions(Hash &hash, const string& path, const string& value, const string& sep)
+            : m_hash(hash), m_path(path), m_value(value), m_sep(sep) { }
+
+            template <class T>
+            inline void operator () (T*) {
+                m_hash.setAttribute(m_path, KARABO_SCHEMA_OPTIONS, karabo::util::fromString<T, std::vector>(m_value, m_sep));
+            }
+
+            void error() {
+                throw KARABO_PARAMETER_EXCEPTION("vectors have no options");
+            }
+
+            template <class T>
+            inline void operator () (vector<T>*) {
+                error();
+            }
+
+            Hash& m_hash;
+            const string& m_path;
+            const string& m_value;
+            const string& m_sep;
+        };
+
 
         void Schema::setOptions(const std::string& path, const std::string& value, const std::string& sep) {
-            m_hash.setAttribute(path, KARABO_SCHEMA_OPTIONS, karabo::util::fromString<std::string, std::vector > (value, sep));
+            SetOptions setOptions(m_hash, path, value, sep);
+            templatize(getValueType(path), setOptions);
         }
 
 
         bool Schema::hasOptions(const std::string& path) const {
             return m_hash.hasAttribute(path, KARABO_SCHEMA_OPTIONS);
-        }
-
-
-        const std::vector<std::string>& Schema::getOptions(const std::string& path) const {
-            return m_hash.getAttribute<std::vector<std::string> >(path, KARABO_SCHEMA_OPTIONS);
         }
 
 

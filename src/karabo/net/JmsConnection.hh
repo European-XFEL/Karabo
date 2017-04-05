@@ -113,12 +113,17 @@ namespace karabo {
 
             /**
              * Creates a new consumer channel
-             * In order to consume from different topics (selectors) in parallel several instances of consumers
-             * must be created
-             * NOTE: Each call to this function, will open new thread in the central event-loop
+             * In order to consume from different topics or selectors in parallel, several instances of consumers
+             * must be created.
+             * The 'skipSerialisation' flag is for expert use: Instead of deserialising the message body, the body
+             * provided to the JmsConsumer::MessageHandler will be a Hash with a single key "raw" containing an
+             * std::vector<char> of the serialised message.
+             *
+             * NOTE: Each call to this function will open a new thread in the central event-loop
              * @return JmsConsumer
              */
-            boost::shared_ptr<JmsConsumer> createConsumer(const std::string& topic, const std::string& selector = "");
+            boost::shared_ptr<JmsConsumer> createConsumer(const std::string& topic, const std::string& selector = "",
+                                                          bool skipSerialisation = false);
 
             /**
              * Creates a new producer channel.

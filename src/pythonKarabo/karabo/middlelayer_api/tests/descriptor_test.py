@@ -5,16 +5,29 @@ import numpy
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    AccessMode, Assignment, AccessLevel, Bool, Char, ComplexFloat, Double,
-    Float, Hash, Int8, Int16, MetricPrefix, NumpyVector, QuantityValue,
-    Schema, State, String, Timestamp, Unit, unit, UInt64, VectorBool,
-    VectorChar, VectorComplexFloat, VectorFloat, VectorHash, VectorInt8,
-    VectorString)
+    AccessMode, Assignment, AccessLevel, Attribute, Bool, Char, ComplexFloat,
+    decodeBinary, Double, encodeBinary, Float, Hash, Int8, Int16, MetricPrefix,
+    NumpyVector, QuantityValue, Schema, State, String, Timestamp, Type, Unit,
+    unit, UInt64, VectorBool, VectorChar, VectorComplexFloat, VectorFloat,
+    VectorHash, VectorInt8, VectorString)
 
 
 class Tests(TestCase):
     def setUp(self):
         self.timestamp = Timestamp()
+
+    def check_serialization(self, desc):
+        """check that a descriptor can be properly serialized"""
+        schema, attrs = desc.toSchemaAndAttrs(None, None)
+        h = Hash("d", schema)
+        h["d", ...] = attrs
+        h = decodeBinary(encodeBinary(h))
+        cls = Type.fromname[h["d", "valueType"]]
+        newdesc = cls(strict=False, **h["d", ...])
+        for k, v in desc.__dict__.items():
+            if isinstance(v, Attribute):
+                self.assertEqual(getattr(desc, k), getattr(newdesc, k))
+
 
     def check_general(self, desc, value):
         """check things common to all values"""
@@ -34,6 +47,7 @@ class Tests(TestCase):
         with self.assertRaises(TypeError):
             type(desc)(some_unknown_attr=3)
         type(desc)(strict=False, some_unknown_attr=3)
+        self.check_serialization(desc)
 
     def test_int_enum(self):
         class E(Enum):
@@ -174,7 +188,8 @@ class Tests(TestCase):
         self.assertEqual(v[1], 2)
 
         d = VectorFloat(unitSymbol=Unit.METER,
-                        metricPrefixSymbol=MetricPrefix.MILLI)
+                        metricPrefixSymbol=MetricPrefix.MILLI,
+                        defaultValue=[1, 2, 3])
         v = d.toKaraboValue([2, 3, 4])
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue([2, 3, 4] * unit.m / unit.m)
@@ -349,6 +364,7 @@ class Tests(TestCase):
         self.assertIs(d.unitSymbol, Unit.NUMBER)
         self.assertIs(d.metricPrefixSymbol, MetricPrefix.NONE)
         self.assertIsNone(d.options)
+        self.check_serialization(d)
 
     def test_attributes_nodefault(self):
         d = Double(
@@ -380,6 +396,7 @@ class Tests(TestCase):
         self.assertIs(d.unitSymbol, Unit.METER)
         self.assertIs(d.metricPrefixSymbol, MetricPrefix.MILLI)
         self.assertEqual(d.options, [22.3, 22.7, 22.8])
+        self.check_serialization(d)
 
     def test_attributes_nonstrict(self):
         d = Double(

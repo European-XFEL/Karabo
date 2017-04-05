@@ -455,7 +455,7 @@ class ComboBoxDelegate(QItemDelegate):
 
     def createEditor(self, parent, option, index):
         combo = QComboBox(parent)
-        combo.addItems(self.options)
+        combo.addItems([str(o) for o in self.options])
         self.connect(combo, SIGNAL("currentIndexChanged(int)"), self,
                      SLOT("currentIndexChanged()"))
         return combo

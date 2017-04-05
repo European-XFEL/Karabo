@@ -221,9 +221,8 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     def _update_configurator(self):
         configuration = self.project_device.current_configuration
-        if configuration.descriptor is not None:
-            broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
-                            {'configuration': configuration})
+        broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
+                        {'configuration': configuration})
 
     def _create_sub_menu(self, parent_menu, parent_project):
         """ Create sub menu for parent menu and return it

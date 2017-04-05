@@ -66,11 +66,11 @@ public:
 
 private:
 
-    void registerPerSignal(const util::Hash::Pointer& header,
-                           const size_t& bodySize);
+    void registerPerSignal(const util::Hash::Pointer& header, size_t bodySize);
 
-    void registerPerSlot(const util::Hash::Pointer& header,
-                         const size_t& bodySize);
+    void registerPerSlot(const util::Hash::Pointer& header, size_t bodySize);
+
+    void registerLogMessage(size_t bodySize);
 
     void printStatistics(const util::Epochstamp& timeStamp,
                          float elapsedSeconds) const;
@@ -155,9 +155,16 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
         // rates.
         if (!m_start.getSeconds()) m_start.now();
 
-        // Register for per sender and per (intended) receiver:
-        this->registerPerSignal(header, body->size()); // FIXME: byte size of body?
-        this->registerPerSlot(header, body->size()); // FIXME: dito
+        // Since we told the consumer to skip serialisation, there is just the raw data:
+        const size_t bodySize = body->get<std::vector<char> >("raw").size();
+        boost::optional<util::Hash::Node&> targetNode = header->find("target");
+        if (targetNode && targetNode->is<std::string>() && targetNode->getValue<std::string>() == "log") {
+            this->registerLogMessage(bodySize);
+        } else {
+            // Register for per sender and per (intended) receiver:
+            this->registerPerSignal(header, bodySize);
+            this->registerPerSlot(header, bodySize);
+        }
 
         // Now it might be time to print and reset.
         // Since it is done inside registerMessage, one does not get any printout if
@@ -184,8 +191,7 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
 ////////////////////////////////////////////////////////////////////////////
 
 
-void BrokerStatistics::registerPerSignal(const util::Hash::Pointer& header,
-                                         const size_t& bodySize) {
+void BrokerStatistics::registerPerSignal(const util::Hash::Pointer& header, size_t bodySize) {
     // Get who sent the message:
     const std::string& signalId = header->get<std::string>("signalInstanceId");
     const std::string& signalFunc = header->get<std::string>("signalFunction");
@@ -200,8 +206,7 @@ void BrokerStatistics::registerPerSignal(const util::Hash::Pointer& header,
 ////////////////////////////////////////////////////////////////////////////
 
 
-void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header,
-                                       const size_t& bodySize) {
+void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header, size_t bodySize) {
     // Get who sent the message, e.g.:
     // "slotFunctions": |DataLogger-Cam7_Proc:slotChanged||Karabo_GuiServer_0:_slotChanged|
     // Asynchronous replies do not have that key, so we use instead:
@@ -224,6 +229,24 @@ void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header,
         ++stats.first;
         stats.second += bodySize;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+
+void BrokerStatistics::registerLogMessage(size_t bodySize) {
+
+    // We have no clue who sends or receives log messages.
+    // Treat them as send and received once:
+    const SignalId signalKey("?", "log");
+    Stats& senderStats = m_signalStats[signalKey];
+    ++senderStats.first;
+    senderStats.second += bodySize;
+
+    const SlotId senderKey("?:log");
+    Stats& receiverStats = m_slotStats[senderKey];
+    ++receiverStats.first;
+    receiverStats.second += bodySize;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -317,11 +340,11 @@ void printHelp(const char* name) {
         nameStr.replace(0, lastSlashPos + 1, "");
     }
     std::cout << "\n  " << nameStr << " [-h|--help] [interValSec]\n\n"
-            << "Prints the rate and average size of all signals sent to the " // FIXME: not size!
+            << "Prints the rate and average size of all signals sent to the "
             << "broker and of\n"
             << "the intended calls of the slots that receive the signals.\n"
             << "Broker host and topic are read from the usual environment "
-            << "variables\nKARABO_BROKER_HOST and KARABO_BROKER_TOPIC or, if "
+            << "variables\nKARABO_BROKER and KARABO_BROKER_TOPIC or, if "
             << "these are not defined, use\nthe usual defaults.\n"
             << "Optional argument is the time (in seconds) for averaging "
             << "(default: 20).\n"
@@ -374,7 +397,8 @@ int main(int argc, char** argv) {
         connection->connect();
 
         std::string selector; // Could be made configurable as in broker MessageLogger.
-        net::JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector);
+        // 3rd argument true: skip serialisation (but get access to raw message size)!
+        net::JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector, true);
 
         std::cout << "\nStart monitoring signal and slot rates of \n   topic     '"
                 << topic << "'\n   on broker '"
