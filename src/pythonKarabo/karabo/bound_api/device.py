@@ -196,10 +196,9 @@ class PythonDevice(NoFsm):
                     .commit(),
 
             FLOAT_ELEMENT(expected).key("performanceStatistics.processingLatency")
-                    .displayedName("Processing latency (ms)")
+                    .displayedName("Processing latency")
                     .description("Average time interval between remote message"
-                                 " sending and reading it from the queue on "
-                                 "this device.")
+                                 " sending and processing it in this device.")
                     .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
                     .expertAccess()
                     .readOnly().initialValue(0.0)
@@ -215,9 +214,29 @@ class PythonDevice(NoFsm):
 
             UINT32_ELEMENT(expected).key("performanceStatistics"
                                          ".maxProcessingLatency")
-                     .displayedName("Maximum proc. latency")
+                     .displayedName("Maximum latency")
                      .description("Maximum processing latency within averaging"
                                   " interval.")
+                     .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
+                     .expertAccess()
+                     .readOnly().initialValue(0)
+                     .commit(),
+
+            UINT32_ELEMENT(expected).key("performanceStatistics.numMessages")
+                     .displayedName("Number of messages")
+                     .description("Number of messages received within "
+                                  "averaging interval.")
+                     .unit(Unit.COUNT)
+                     .expertAccess()
+                     .readOnly().initialValue(0)
+                     .commit(),
+
+            UINT32_ELEMENT(expected).key("performanceStatistics"
+                                         ".maxEventLoopLatency")
+                     .displayedName("Max. event loop latency")
+                     .description("Maximum time interval between posting a "
+                                  "message on the central event loop and "
+                                  "processing it within averaging interval.")
                      .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
                      .expertAccess()
                      .readOnly().initialValue(0)
@@ -1322,14 +1341,13 @@ class PythonDevice(NoFsm):
     def registerSlot(self, slotFunc):
         self._ss.registerSlot(slotFunc)
 
-    def updateLatencies(self, avgProcessingLatency, maxProcessingLatency):
+    def updateLatencies(self, performanceMeasures):
         if self.get("performanceStatistics.enable"):
-            # ignore maxBrokerLatency
-            stats = Hash("processingLatency", avgProcessingLatency,
-                         "maxProcessingLatency", maxProcessingLatency)
-            self.set(Hash("performanceStatistics", stats))
-
-
+            # Keys and values of 'performanceMeasures' are defined in
+            # SignalSlotable::updatePerformanceStatistics (C++)
+            # and expectedParameters has to foresee this content under node
+            # "performanceStatistics".
+            self.set(Hash("performanceStatistics", performanceMeasures))
 
     def setAlarmCondition(self, condition, needsAcknowledging = True,
                           description = ""):

@@ -181,6 +181,13 @@ class Simple(object):
         """
         raise NotImplementedError
 
+    def toSchemaAndAttrs(self, device, state):
+        schema, attrs = super().toSchemaAndAttrs(device, state)
+        if self.options is not None:
+            # assure options are serialized correctly
+            attrs["options"] = np.array(self.options, dtype=self.numpy)
+        return schema, attrs
+
 
 class Integer(Simple, Enumable):
     """The base class for all integers"""
@@ -698,6 +705,9 @@ class NumpyVector(Vector):
 
     @classmethod
     def yieldBinary(cls, data):
+        if (not isinstance(data, np.ndarray)
+                or data.dtype != cls.basetype.numpy):
+            data = np.array(data, dtype=cls.basetype.numpy)
         yield pack('I', len(data))
         yield data.data
 

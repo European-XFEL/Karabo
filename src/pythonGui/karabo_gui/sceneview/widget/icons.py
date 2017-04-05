@@ -10,7 +10,8 @@ class _IconsWrapperMixin(object):
     def __init__(self, model, box, parent):
         super(_IconsWrapperMixin, self).__init__(box, parent)
         self.model = model
-        self.items = [Item(m.value, m.data) for m in self.model.values]
+        self.items = [Item(box.descriptor.cast(m.value), m.data)
+                      for m in self.model.values]
 
     def item_convert(self, item):
         """ Convert a single item to an ItemData """
@@ -34,7 +35,7 @@ class _SelectionIconsWrapper(_IconsWrapperMixin, SelectionIcons):
     def item_convert(self, item):
         """ Convert a single item to an ItemData """
         return IconData(equal=False,
-                        value=item.value,
+                        value=str(item.value),
                         image=item.url or "",
                         data=item.data)
 
