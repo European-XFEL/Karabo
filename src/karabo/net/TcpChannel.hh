@@ -64,6 +64,8 @@ namespace karabo {
             std::string m_policy;
             std::atomic<bool> m_writeInProgress;
             bool m_quit;
+            double m_syncCounter;
+            double m_asyncCounter;
 
         public:
 
@@ -259,6 +261,10 @@ namespace karabo {
             void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio);
 
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy);
+            
+            int getSyncCallPercent() const {
+                return int(100 * (m_syncCounter/(m_syncCounter + m_asyncCounter)));
+            }
             
         private:
 
