@@ -894,8 +894,8 @@ STD
 .. _genericFsm:
 
 .. figure:: images/GenericFsm.png
-:scale: 50 %
-   :alt: GenericFsm.png
+    :scale: 50 %
+    :alt: GenericFsm.png
 
        **Figure 1.** Example of generic State Transition Diagram.
 
