@@ -304,6 +304,30 @@ class DeviceClientProxyFactory(ProxyFactory):
                 task.cancel()
 
         @asyncio.coroutine
+        def _notify_new(self):
+            # probably we are talking to a brand-new device, which does not
+            # know about any connection, so we have to re-establish all
+            # connections that we think we have
+            if self._schemaUpdateConnected:
+                self._device._ss.connect(
+                    self._deviceId, "signalSchemaUpdated",
+                    self._device.slotSchemaUpdated)
+            if self._used:
+                self._device._ss.connect(self._deviceId, "signalChanged",
+                                         self._device.slotChanged)
+                self._device._ss.connect(self._deviceId, "signalStateChanged",
+                                         self._device.slotChanged)
+            schema, _ = yield from self._device.call(
+                self._deviceId, "slotGetSchema", False)
+            DeviceClientProxyFactory.updateSchema(self, schema)
+
+            # get configuration
+            yield from self
+
+            if not self._alive:
+                self._alive = True
+
+        @asyncio.coroutine
         def _raise_on_death(self, coro):
             """execute *coro* but raise KaraboError if proxy is orphaned
 

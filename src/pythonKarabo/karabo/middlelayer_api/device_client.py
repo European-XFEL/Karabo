@@ -24,7 +24,7 @@ from .exceptions import KaraboError
 from .hash import Hash, Type
 from .proxy import (ProxyBase, AutoDisconnectProxyFactory,
                     DeviceClientProxyFactory)
-from .signalslot import slot
+from .signalslot import coslot, slot
 from .synchronization import firstCompleted
 
 
@@ -47,10 +47,10 @@ class DeviceClientBase(Device):
         yield from super()._run(**kwargs)
         self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
 
-    @slot
+    @coslot
     def slotInstanceNew(self, instanceId, info):
         self.updateSystemTopology(instanceId, info, "instanceNew")
-        super().slotInstanceNew(instanceId, info)
+        yield from super().slotInstanceNew(instanceId, info)
 
     @slot
     def slotInstanceUpdated(self, instanceId, info):
@@ -115,6 +115,8 @@ def _waitUntilNew_new(*props):
         proxy._queues[prop.descriptor.longkey].add(future)
         futures.append(future)
     yield from firstCompleted(*futures)
+
+
 
 
 def waitUntilNew(prop, *props, **kwargs):
