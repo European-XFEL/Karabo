@@ -1,3 +1,4 @@
 #!/bin/bash
 export KARABO=$(realpath ../../..)
+exec 2>&1
 exec envdir $KARABO/var/environment $KARABO/extern/bin/karabo-pythonserver $(< parameters)
