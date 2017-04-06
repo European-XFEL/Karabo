@@ -1,7 +1,4 @@
-#! /bin/bash
-#######################################################################
-# karabo-restart restarts those START applications which have died
-# author: CY 16.1.2013
+#!/bin/bash
 
 # Make sure Karabo is installed
 if [ -z $KARABO ]; then
@@ -10,27 +7,21 @@ if [ -z $KARABO ]; then
   exit 1
 fi
 
-# Make sure the script runs in $KARABO/var/config
-scriptDir=$KARABO/var/config
-cd ${scriptDir}
-if [ $? -ne 0 ]; then
-    echo "ERROR Could not change directory to ${scriptDir}"
-    exit 1;
+cd $KARABO/var/services
+
+if ! svok $KARABO/services
+then
+    # do not magically start all devices
+    for service in *
+    do
+        touch $service/down
+    done
+    supervise $KARABO/services &
 fi
 
-foo=".config"
-if [ ! -e $foo ]; then
-    echo "ERROR no previous karabo-start"
-    exit 1
+if [ $# == 0 ]
+then
+    exec svc -u *
+else
+    exec svc -u "$@"
 fi
-
-arg=$(grep "args:" $foo | grep "karabo-start" | grep -v grep | awk '{print $3}')
-if [ -n "$arg" ]; then
-    echo "INFO Restarting with argument: $arg"
-fi 
-
-export RESTART="yes"
-karabo-start $arg
-
-exit $?
-
