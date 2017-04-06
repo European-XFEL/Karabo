@@ -89,6 +89,7 @@ mkdir -p $PACKAGEDIR/var/log
 mkdir -p $PACKAGEDIR/var/data
 mkdir -p $PACKAGEDIR/var/config
 mkdir -p $PACKAGEDIR/var/services
+mkdir -p $PACKAGEDIR/var/environment
 
 # Version information
 echo $VERSION > $PACKAGEDIR/VERSION
