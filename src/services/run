@@ -1,2 +1,3 @@
 #!/bin/bash
-exec ../extern/bin/svscan ../var/services
+exec ../extern/bin/svscan ../var/services 2>&1 \
+    | ../extern/bin/multilog ../var/log/main
