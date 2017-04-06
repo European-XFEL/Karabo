@@ -30,10 +30,10 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.treeWidget().setItemWidget(self, 0, self.__pbCommand)
         self.__pbCommand.clicked.connect(self.onCommandClicked)
         self.box.configuration.boxvalue.state.signalUpdateComponent.connect(
-            self.onStateChanged)
-        self.onStateChanged()
+            self.updateState)
+        self.updateState()
 
-    def onStateChanged(self):
+    def updateState(self):
         enable = self.box.isAllowed() and self.box.isAccessible()
         self.__pbCommand.setEnabled(enable)
 
@@ -52,7 +52,7 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         if readOnly is True:
             self.__pbCommand.setEnabled(False)
         else:
-            self.onStateChanged()
+            self.updateState()
         BaseTreeWidgetItem.setReadOnly(self, readOnly)
 
     def onCommandClicked(self):
