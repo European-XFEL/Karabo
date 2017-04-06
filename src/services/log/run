@@ -1,0 +1,3 @@
+#!/bin/bash
+KARABO=$(realpath ../..)
+exec $KARABO/extern/bin/multilog $KARABO/var/log

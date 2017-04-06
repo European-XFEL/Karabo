@@ -1,0 +1,3 @@
+#!/bin/bash
+export KARABO=$(realpath ../../..)
+exec $KARABO/extern/bin/karabo-middlelayerserver $(< parameters)
