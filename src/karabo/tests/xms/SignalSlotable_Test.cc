@@ -251,20 +251,26 @@ void SignalSlotable_Test::testReceiveExceptions() {
     CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(1).receive(answer),
                          karabo::util::TimeoutException);
     karabo::util::Exception::clearTrace();
-    //    // Wrong argument type to slot
-    //    CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", 42).timeout(500).receive(answer),
-    //                         karabo::util::RemoteException);
-    //    karabo::util::Exception::clearTrace();
-    // Too many arguments to slot seems not to harm...
+    // Wrong argument type to slot
+    CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", 42).timeout(500).receive(answer),
+                         karabo::util::RemoteException);
+    karabo::util::Exception::clearTrace();
+    // Too many arguments to slot seems not to harm - should we make it harm?
     //CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello", 42).timeout(500).receive(answer),
     //                     karabo::util::RemoteException);
     //karabo::util::Exception::clearTrace();
     // Too few arguments to slot
-    //CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer").timeout(500).receive(answer),
-    //                     karabo::util::RemoteException);
-    //karabo::util::Exception::clearTrace();
-    // What about wrong slot name? Should give remote exception, but I guess it is Timeout
-    // What about non-existing instanceId? Should give timeout
+    CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer").timeout(500).receive(answer),
+                         karabo::util::RemoteException);
+    karabo::util::Exception::clearTrace();
+    // Non existing slot of existing instanceId
+    CPPUNIT_ASSERT_THROW(greeter->request("responder", "slot_no_answer", "Hello").timeout(500).receive(answer),
+                         karabo::util::RemoteException);
+    karabo::util::Exception::clearTrace();
+    // Non-existing receiver instanceId will run into timeout (shortened time to have less test delay)
+    CPPUNIT_ASSERT_THROW(greeter->request("responder_not_existing", "slotAnswer", "Hello").timeout(150).receive(answer),
+                         karabo::util::TimeoutException);
+    karabo::util::Exception::clearTrace();
     // Finally no exception:
     CPPUNIT_ASSERT_NO_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(500).receive(answer));
 
