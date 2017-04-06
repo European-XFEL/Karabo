@@ -7,16 +7,18 @@ States and Statuses
 ****************************
 
 
-Karabo has a fixed set of provided states, all of which are listed in the tables below. *States* are
-classified in *base states*, which can be seen as set of more general states, and *device
-type states*, which map closer to the type of hardware being controlled or to certain types
+Karabo has a fixed set of provided states, all of which are listed in the
+tables below. *States* are classified in *base states*, which can be seen
+as set of more general states, and *device type states*, which map closer
+to the type of hardware being controlled or to certain types
 of software devices, but also always map to a base state. Each base state has a
-assigned color coding, making it easy to view are devices state at first glance. The color
-coding has been chosen to match that of `Tango<www.tango-controls.org>` where appropriate,
-as users may already be familiar with this color scheme.
+assigned color coding, making it easy to view are devices state at first
+glance. The color coding has been chosen to match that
+of `Tango<www.tango-controls.org>` where appropriate, as users may already
+be familiar with this color scheme.
 
-Device, type, base and meta states connections can be seen as a form or inheritance
-as given in the below diagram:
+Device, type, base and meta states connections can be seen as a form
+or inheritance as given in the below diagram:
 
 .. digraph:: state_transitions
 
@@ -68,18 +70,16 @@ the device. The latter can be e.g. the case if an unknown software error
 occurs in the device code, which is only caught by the Karabo Framework
 code and not by the device code.
 
-
 .. graphviz::
 
     digraph init {INIT [shape=box, style=filled, fillcolor="#E6E6AA"]}
 
-
-The ``INIT`` state in which a Karabo device should transition into upon initialization.
-During initialization connection to the hardware should be established.
-After initialization the hardware state should thus be ``KNOWN``, and the device
-should transition either to ``DISABLED``, ``ERROR`` or one of the states
-derived from ``NORMAL``, all of which derive from ``KNOWN``.
-If no connection can be established the device should be placed
+The ``INIT`` state in which a Karabo device should transition into upon
+initialization. During initialization connection to the hardware should
+be established. After initialization the hardware state should thus
+be ``KNOWN``, and the device should transition either to ``DISABLED``,
+``ERROR`` or one of the states derived from ``NORMAL``, all of which derive
+from ``KNOWN``. If no connection can be established the device should be placed
 into the ``UNKNOWN state``.
 
 
@@ -92,7 +92,6 @@ from it and will compare equal to it:
 .. graphviz::
 
     digraph disabled {DISABLED [shape=box, style=filled, fillcolor="#FF00FF"]}
-
 
 ``DISABLED`` is used if the device is will not act on commands and assignment
 for some reason, e.g. due to manual override or an interlock condition preventing
@@ -118,10 +117,9 @@ state exists, a device which is working normally is in one of the
 
     digraph NORMAL {NORMAL [shape=box, style=filled, fillcolor="#C8C8C8"]}
 
-
-The ``NORMAL`` base state should not usually be entered programmatically. Similar
-to ``KNOWN``, device logic should rather transition the device into one of the
-derived states. The following states derive from and compare
+The ``NORMAL`` base state should not usually be entered programmatically.
+Similar to ``KNOWN``, device logic should rather transition the device
+into one of the derived states. The following states derive from and compare
 equal to ``NORMAL``:
 
 .. graphviz::
@@ -141,15 +139,15 @@ mode, e.g. a running turbo-pump which is at target speed are also in the
 
 The ``ACTIVE`` state is derived from ``STATIC`` and should usually be used
 only for comparison purposes. Rather developers should transition into a device
- state derived from it. It is the counterpart to ``PASSIVE``.
+state derived from it. It is the counterpart to ``PASSIVE``.
 
 .. graphviz::
 
     digraph passive {PASSIVE [shape=box, style=filled, fillcolor="#00AAFF"]}
 
 The ``PASSIVE`` state is derived from ``STATIC`` and should usually be used
-only for comparison purposes. Rather developers should transition into a device state derived
-from it. It is the counterpart to ``ACTIVE``.
+only for comparison purposes. Rather developers should transition into a
+device state derived from it. It is the counterpart to ``ACTIVE``.
 
 .. graphviz::
 
@@ -159,55 +157,60 @@ The state ``CHANGING`` itself is a base state to the ``INCREASING`` and
 ``DECREASING`` states. It may however  also directly be used, e.g. if a device
 is changing in a way that a directional indication does not make sense. It is
 the counterpart to the ``STATIC`` state. ``CHANGING`` and derived states should
- be used when a device is transitioning to a new target condition, e.g. a motor
- moving to a new position, a power supply ramping to a given voltage or a pump
- spinning up to speed. Once the target value is reached the device should
- transition into a ``STATIC`` state.
+be used when a device is transitioning to a new target condition, e.g. a motor
+moving to a new position, a power supply ramping to a given voltage or a pump
+spinning up to speed. Once the target value is reached the device should
+transition into a ``STATIC`` state.
 
 .. graphviz::
 
     digraph increasing {INCREASING [shape=box, style=filled, fillcolor="#00AAFF"]}
 
-The state ``INCREASING`` is derived from ``CHANGING`` and should be used if it makes sense to indicate
-a directional transition of the hardware. It is the counterpart to ``DECREASING``.
+The state ``INCREASING`` is derived from ``CHANGING`` and should be used if
+it makes sense to indicate a directional transition of the hardware.
+It is the counterpart to ``DECREASING``.
 
 .. graphviz::
 
     digraph decreasing {DECREASING [shape=box, style=filled, fillcolor="#00AAFF"]}
 
-The state ``DECREASING`` is derived from ``CHANGING`` and should be used if it makes sense to indicate
-a directional transition of the hardware. It is the counterpart to ``INCREASING``.
+The state ``DECREASING`` is derived from ``CHANGING`` and should be used
+if it makes sense to indicate a directional transition of the hardware.
+It is the counterpart to ``INCREASING``.
 
 
 
 .. warning::
 
-    The ``ERROR`` state is reserved for hardware errors. Errors due to communication problems or software
-    errors should result in a transition into the ``UNKNOWN`` state. Generally though, software errors should not occur
-    and if they do the device should recover into an operational mode. Composite devices should transition to
-    ``UNKNOWN`` if they are not able to contact a device they are to control, as they might not have all the information
-    available to work properly.
+    The ``ERROR`` state is reserved for hardware errors. Errors due to
+    communication problems or software errors should result in a transition
+    into the ``UNKNOWN`` state. Generally though, software errors should not
+    occur and if they do the device should recover into an operational
+    mode. Composite devices should transition to ``UNKNOWN`` if they are not
+    able to contact a device they are to control, as they might not have
+    all the information available to work properly.
 
 
 .. note::
 
-    As is evident from the list there is no ``FOLLOWING`` state in Karabo. A device which
-    operates in a closed-regulatory loop should be in the ``CHANGING`` state or one
-    of the derived states as long as it is not on-target, and then transition ``STATIC``
-    or a state derived there-of. This also means that if a change
-    of target value is to be allowed while the device is still changing to a previously
-    set target value, the slot initiating the move needs to have ``CHANGING`` as
-    an allowed state. See Section :ref:`open_closed_loop` for details.
+    As is evident from the list there is no ``FOLLOWING`` state in Karabo.
+    A device which operates in a closed-regulatory loop should be in
+    the ``CHANGING`` state or one of the derived states as long as it is
+    not on-target, and then transition ``STATIC`` or a state derived there-of.
+    This also means that if a change of target value is to be allowed while
+    the device is still changing to a previously set target value, the slot
+    initiating the move needs to have ``CHANGING`` as an allowed state.
+    See Section :ref:`open_closed_loop` for details.
 
 
 .. warning::
 
-    As is evident from the list there is no ``CONNECTED`` state. Devices requiring to
-    establish connections to hardware first, e.g. through the network, or some other
-    interface, do this either in the ``INIT`` state.
+    As is evident from the list there is no ``CONNECTED`` state. Devices
+    requiring to establish connections to hardware first, e.g. through the
+    network, or some other interface, do this either in the ``INIT`` state.
     Connection functionality should be implemented in the initialization hooks,
-    **not** in the constructor or ``__init__`` methods, as it may take time, and would
-    otherwise yield the device unresponsive.
+    **not** in the constructor or ``__init__`` methods, as it may take time,
+    and would otherwise yield the device unresponsive.
 
 
 The following diagram shows how base-states and base states are connected,
@@ -272,9 +275,6 @@ implement logic to recover from an ``ERROR`` state into any of the ``NORMAL``
             label = "ERROR"
         ]
 
-
-
-
             subgraph cluster0 {
 
                 label = "NORMAL";
@@ -324,9 +324,9 @@ the most significant state, or composite state, of a group of states. This is
 where state trumping comes into play. In Karabo, state trumping is centralized
 in the sense that a set of standard trumping rules are provided, giving the
 base states are particular order.
-In the flat base-state hierarchy the following graph is being followed in *trump*
-evaluation, where ``DISABLED`` is trumped by all other states and ``UNKNOWN`` will trump
-all other states.
+In the flat base-state hierarchy the following graph is being followed
+in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
+``UNKNOWN`` will trump all other states.
 
 .. graphviz::
 
@@ -430,15 +430,18 @@ all other states.
 
 .. warning::
 
-    The ``UNKNOWN`` state purposely trumps all other states, as the device is in a condition in which it does
-    not have all the information necessary to determine the proper state. Thus the conservative assumption is
+    The ``UNKNOWN`` state purposely trumps all other states, as the device is
+    in a condition in which it does not have all the information necessary
+    to determine the proper state. Thus the conservative assumption is
     that the device is in an error state.
-    If a device is controlling hardware known to be disconnected, used as a spare, or not working, it should be brought to into
-    the ``DISABLED`` state. In this case it is ignored for composite state determination, as this state is
-    trumped by all other states.
+    If a device is controlling hardware known to be disconnected, used as
+    a spare, or not working, it should be brought to into the ``DISABLED``
+    state. In this case it is ignored for composite state determination, as
+    this state is trumped by all other states.
 
-Users should however not implement trumping functionality themselves, but instead use the
-``StateSignifier().returnMostSignificant`` function provided by Karabo.
+Users should however not implement trumping functionality themselves,
+but instead use the ``StateSignifier().returnMostSignificant`` function
+provided by Karabo.
 
 .. code-block:: Python
 
@@ -452,11 +455,12 @@ Users should however not implement trumping functionality themselves, but instea
     >>> State.ERROR
 
 
-Calling ``returnMostSignificant`` from the ``StateSignifier`` without additional keywords will result
-in returning evaluation substates of ``STATIC`` and ``CHANGING``
-as these base states, i.e. no differentiation between ``ACTIVE`` and ``PASSIVE``
-or ``INCREASING`` and ``DECREASING`` is made. If a differentiation is needed it
-can be controlled by the following two keywords:
+Calling ``returnMostSignificant`` from the ``StateSignifier`` without
+additional keywords will result in returning evaluation substates
+of ``STATIC`` and ``CHANGING`` as these base states, i.e. no differentiation
+between ``ACTIVE`` and ``PASSIVE`` or ``INCREASING`` and ``DECREASING`` is
+made. If a differentiation is needed it can be controlled by the following
+two keywords:
 
 staticSignificant = ``ACTIVE|PASSIVE``
     defines whether ``ACTIVE`` or  ``PASSIVE`` should evaluate as more significant.
@@ -466,10 +470,11 @@ changingSignificant = ``INCREASING|DECREASING``
 
 .. note::
 
-    ``returnMostSignificant`` from the ``StateSignifier`` works also with derived states like ``MOVING``, as shown
-     in the example, and will also return the derived state, if it is most significant. It is
-     good practice to always compare the defining state against one of the base states, i.e. here
-     ``if definingState == CHANGING``.
+    ``returnMostSignificant`` from the ``StateSignifier`` works also with
+    derived states like ``MOVING``, as shown in the example, and will also
+    return the derived state, if it is most significant. It is good practice
+    to always compare the defining state against one of the base states,
+    i.e. here ``if definingState == CHANGING``.
 
 In rare scenarios states might to be trumped differently. Developers can
 provide for a different trumping method in initialization of the ``StateSignifier``.
@@ -497,12 +502,13 @@ default trumping implementation.
 Derived States
 ==============
 
-For certain device classes conventions on common state names have historically grown. Karabo supports
-these existing state names, by providing derived states. The diagrams below list these states, in terms
+For certain device classes conventions on common state names have
+historically grown. Karabo supports these existing state names, by providing
+derived states. The diagrams below list these states, in terms
 of from the base states they derive.
 
 Interlocked Devices
------------------------
+-------------------
 
 A device which may not be altered because it is in an ``INTERLOCKED`` state is
 in a state derived from ``DISABLED``:
@@ -521,9 +527,8 @@ Devices with Binary-like behavior
 
 Many hardware devices have states which map to a kind of "binary" behavior,
 i.e. two states which are the opposite or counterpart of each other, thus
-deriving from ``ACTIVE`` and ``PASSIVE``. In each
-of this states the device is rather ``STATIC``, which is the base state for
-both:
+deriving from ``ACTIVE`` and ``PASSIVE``. In each of this states the device
+is rather ``STATIC``, which is the base state for both:
 
 
 .. digraph:: state_transitions
@@ -593,8 +598,6 @@ both:
     "ACTIVE"->"HEATED"
     "ACTIVE"->"COOLED"
     "ACTIVE"->"ENGAGED"
-
-
 
 
 Devices with Transitionatory Behavior
@@ -727,15 +730,16 @@ should be used.
 
 .. note::
 
-    While comparisons between different derived states are guaranteed to work it is good practice to always
-    compare to the base state. You should thus write ``if myState == State.CHANGING`` and **not**
+    While comparisons between different derived states are guaranteed to work
+    it is good practice to always compare to the base state. You should thus
+    write ``if myState == State.CHANGING`` and **not**
     ``if myState == State.MOVING``!
 
 Changing States
 ===============
 
-The device state should be queried and set using the *getState()* and *updateState()*
-methods in the *bound* APIs
+The device state should be queried and set using the *getState()*
+and *updateState()* methods in the *bound* APIs
 
 .. code-block:: Python
 
@@ -743,8 +747,8 @@ methods in the *bound* APIs
     ...
     self.updateState(State.MOVING)
 
-In the *middle-layer* API normal property retrieval and assignment will automatically
-map to these calls
+In the *middle-layer* API normal property retrieval and assignment will
+automatically map to these calls
 
 .. code-block:: Python
 
@@ -753,15 +757,15 @@ map to these calls
 
 .. warning::
 
-    While the device state is just another property on the device it is not available via
-    usual *get* and *set* commands. This has two reasons:
+    While the device state is just another property on the device it is not
+    available via usual *get* and *set* commands. This has two reasons:
 
-    - state updates are propagated via a dedicated signal to the distributed system,
-      allowing to listen on state updates of other devices without consuming
-      network-bandwith on updates from other devies property
+    - state updates are propagated via a dedicated signal to the distributed
+      system, allowing to listen on state updates of other devices without
+      consuming network-bandwith on updates from other devies property
 
-    - while internally states are serialized as strings, states can only be updated by
-      assigning a state enumerator object.
+    - while internally states are serialized as strings, states can only be
+      updated by assigning a state enumerator object.
 
 
 Statuses
@@ -806,31 +810,32 @@ state the user may overwrite the status again.
 The Finite State Machine (FSM)
 ==============================
 
-As an enhancement to the simple state description just described, Karabo allows to define
-a full finite state machine (FSM) for *bound* devices. The full FSM implementation will
-check any slot calls which lead to state transitions if they are allowed for the current
-source state, and automatically set the target state after execution of define entry, exit
-and transition hooks. To make uses familiar of finite state machine usage an introduction
-is given first, followed by examples.
-
-
+As an enhancement to the simple state description just described, Karabo
+allows to define a full finite state machine (FSM) for *bound* devices.
+The full FSM implementation will check any slot calls which lead to state
+transitions if they are allowed for the current source state, and
+automatically set the target state after execution of define entry, exit
+and transition hooks. To make uses familiar of finite state machine usage
+an introduction is given first, followed by examples.
 
 
 Overview
 --------
 
-Finite state machines can be used to model real life system, which for most non-trivial
-tasks go through different stages (states) during their evolution, or during execution
-of a task. The system may change its state due to both internal or external events, and
-subsequent behavior may depend on the current state on the system.
+Finite state machines can be used to model real life system, which for most
+non-trivial tasks go through different stages (states) during their
+evolution, or during execution of a task. The system may change its state
+due to both internal or external events, and subsequent behavior may depend
+on the current state on the system.
 
-Models can be used to approximate these states, stimuli and resulting behavioral changes
-and define them in terms of a finite set of states, events and transitions. The result of
-such an abstraction is a so-called finite state machine. Here the word *finite* is
-important, that all expected behavior fits into the deterministic model describe the
-system with a finite set of elements. Conversely, this means that any state not foreseen
-as part of the model should be considered faulty behavior and if implemented in software
-raise and error.
+Models can be used to approximate these states, stimuli and resulting
+behavioral changes and define them in terms of a finite set of states, events
+and transitions. The result of such an abstraction is a so-called finite
+state machine. Here the word *finite* is important, that all expected
+behavior fits into the deterministic model describe the system with a finite
+set of elements. Conversely, this means that any state not foreseen
+as part of the model should be considered faulty behavior and if implemented
+in software raise and error.
 
 
 Karabo's FSM engine
@@ -889,10 +894,10 @@ STD
 .. _genericFsm:
 
 .. figure:: images/GenericFsm.png
-   :scale: 50 %
-   :alt: GenericFsm.png
+    :scale: 50 %
+    :alt: GenericFsm.png
 
-   **Figure 1.** Example of generic State Transition Diagram.
+       **Figure 1.** Example of generic State Transition Diagram.
 
 state
    A stage in the life cycle of a state machine. A state can
@@ -942,10 +947,10 @@ orthogonal regions
 .. _orthogonalFsm:
 
 .. figure:: images/OrthogonalFsm.png
-   :scale: 50 %
+:scale: 50 %
    :alt: OrthogonalFsm.png
 
-   **Figure 2.** STD with orthogonal regions.
+       **Figure 2.** STD with orthogonal regions.
 
 terminate pseudo-state
    When this state becomes active, it
