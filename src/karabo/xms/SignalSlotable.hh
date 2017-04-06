@@ -953,6 +953,8 @@ namespace karabo {
 
             } catch (const karabo::util::TimeoutException&) {
                 KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
+            } catch (const karabo::util::RemoteException&) {
+                throw; // Do not change the type, just throw again.
             } catch (const karabo::util::CastException &) {
                 std::string signalInstanceId("unknown");
                 getSignalInstanceId(header, signalInstanceId);

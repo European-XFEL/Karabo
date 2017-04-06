@@ -642,6 +642,8 @@ namespace karabo {
                                 // Warn on non-existing slot, but only if directly addressed:
                                 KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a message from '"
                                         << signalInstanceId << "' to non-existing slot \"" << slotFunction << "\"";
+                                // To trigger call of replyException below, i.e. give an answer and do not timeout
+                                throw KARABO_SIGNALSLOT_EXCEPTION("'" + getInstanceId() += "' has no slot '" + slotFunction + "'");
                             } else {
                                 KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Miss globally called slot " << slotFunction;
                             }
