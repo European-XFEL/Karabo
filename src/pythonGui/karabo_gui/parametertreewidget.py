@@ -12,6 +12,7 @@ from karabo_gui.components import (BaseComponent, EditableApplyLaterComponent,
                                    EditableNoApplyComponent)
 import karabo_gui.globals as globals
 from karabo_gui.singletons.api import get_network
+from karabo_gui.treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
 from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
 
@@ -215,6 +216,9 @@ class ParameterTreeWidget(QTreeWidget):
         if item.editableComponent is not None:
             # Let editable widgets make their own adjustments
             item.editableComponent.widgetFactory.updateState()
+
+        if isinstance(item, CommandTreeWidgetItem):
+            item.updateState()
 
         if not item.isChoiceElement and not item.isListElement:
             for i in range(item.childCount()):
