@@ -7,16 +7,18 @@ States and Statuses
 ****************************
 
 
-Karabo has a fixed set of provided states, all of which are listed in the tables below. *States* are
-classified in *base states*, which can be seen as set of more general states, and *device
-type states*, which map closer to the type of hardware being controlled or to certain types
+Karabo has a fixed set of provided states, all of which are listed in the
+tables below. *States* are classified in *base states*, which can be seen
+as set of more general states, and *device type states*, which map closer
+to the type of hardware being controlled or to certain types
 of software devices, but also always map to a base state. Each base state has a
-assigned color coding, making it easy to view are devices state at first glance. The color
-coding has been chosen to match that of `Tango<www.tango-controls.org>` where appropriate,
-as users may already be familiar with this color scheme.
+assigned color coding, making it easy to view are devices state at first
+glance. The color coding has been chosen to match that
+of `Tango<www.tango-controls.org>` where appropriate, as users may already
+be familiar with this color scheme.
 
-Device, type, base and meta states connections can be seen as a form or inheritance
-as given in the below diagram:
+Device, type, base and meta states connections can be seen as a form
+or inheritance as given in the below diagram:
 
 .. digraph:: state_transitions
 
@@ -468,10 +470,11 @@ changingSignificant = ``INCREASING|DECREASING``
 
 .. note::
 
-    ``returnMostSignificant`` from the ``StateSignifier`` works also with derived states like ``MOVING``, as shown
-     in the example, and will also return the derived state, if it is most significant. It is
-     good practice to always compare the defining state against one of the base states, i.e. here
-     ``if definingState == CHANGING``.
+    ``returnMostSignificant`` from the ``StateSignifier`` works also with
+    derived states like ``MOVING``, as shown in the example, and will also
+    return the derived state, if it is most significant. It is good practice
+    to always compare the defining state against one of the base states,
+    i.e. here ``if definingState == CHANGING``.
 
 In rare scenarios states might to be trumped differently. Developers can
 provide for a different trumping method in initialization of the ``StateSignifier``.
@@ -499,12 +502,13 @@ default trumping implementation.
 Derived States
 ==============
 
-For certain device classes conventions on common state names have historically grown. Karabo supports
-these existing state names, by providing derived states. The diagrams below list these states, in terms
+For certain device classes conventions on common state names have
+historically grown. Karabo supports these existing state names, by providing
+derived states. The diagrams below list these states, in terms
 of from the base states they derive.
 
 Interlocked Devices
------------------------
+-------------------
 
 A device which may not be altered because it is in an ``INTERLOCKED`` state is
 in a state derived from ``DISABLED``:
@@ -523,9 +527,8 @@ Devices with Binary-like behavior
 
 Many hardware devices have states which map to a kind of "binary" behavior,
 i.e. two states which are the opposite or counterpart of each other, thus
-deriving from ``ACTIVE`` and ``PASSIVE``. In each
-of this states the device is rather ``STATIC``, which is the base state for
-both:
+deriving from ``ACTIVE`` and ``PASSIVE``. In each of this states the device
+is rather ``STATIC``, which is the base state for both:
 
 
 .. digraph:: state_transitions
@@ -595,8 +598,6 @@ both:
     "ACTIVE"->"HEATED"
     "ACTIVE"->"COOLED"
     "ACTIVE"->"ENGAGED"
-
-
 
 
 Devices with Transitionatory Behavior
@@ -809,31 +810,32 @@ state the user may overwrite the status again.
 The Finite State Machine (FSM)
 ==============================
 
-As an enhancement to the simple state description just described, Karabo allows to define
-a full finite state machine (FSM) for *bound* devices. The full FSM implementation will
-check any slot calls which lead to state transitions if they are allowed for the current
-source state, and automatically set the target state after execution of define entry, exit
-and transition hooks. To make uses familiar of finite state machine usage an introduction
-is given first, followed by examples.
-
-
+As an enhancement to the simple state description just described, Karabo
+allows to define a full finite state machine (FSM) for *bound* devices.
+The full FSM implementation will check any slot calls which lead to state
+transitions if they are allowed for the current source state, and
+automatically set the target state after execution of define entry, exit
+and transition hooks. To make uses familiar of finite state machine usage
+an introduction is given first, followed by examples.
 
 
 Overview
 --------
 
-Finite state machines can be used to model real life system, which for most non-trivial
-tasks go through different stages (states) during their evolution, or during execution
-of a task. The system may change its state due to both internal or external events, and
-subsequent behavior may depend on the current state on the system.
+Finite state machines can be used to model real life system, which for most
+non-trivial tasks go through different stages (states) during their
+evolution, or during execution of a task. The system may change its state
+due to both internal or external events, and subsequent behavior may depend
+on the current state on the system.
 
-Models can be used to approximate these states, stimuli and resulting behavioral changes
-and define them in terms of a finite set of states, events and transitions. The result of
-such an abstraction is a so-called finite state machine. Here the word *finite* is
-important, that all expected behavior fits into the deterministic model describe the
-system with a finite set of elements. Conversely, this means that any state not foreseen
-as part of the model should be considered faulty behavior and if implemented in software
-raise and error.
+Models can be used to approximate these states, stimuli and resulting
+behavioral changes and define them in terms of a finite set of states, events
+and transitions. The result of such an abstraction is a so-called finite
+state machine. Here the word *finite* is important, that all expected
+behavior fits into the deterministic model describe the system with a finite
+set of elements. Conversely, this means that any state not foreseen
+as part of the model should be considered faulty behavior and if implemented
+in software raise and error.
 
 
 Karabo's FSM engine
