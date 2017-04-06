@@ -1,0 +1,2 @@
+#!/bin/bash
+exec ../extern/bin/svscan ../var/services
