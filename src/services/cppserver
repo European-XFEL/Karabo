@@ -1,3 +1,3 @@
 #!/bin/bash
 export KARABO=$(realpath ../../..)
-exec $KARABO/bin/karabo-cppserver $(< parameters)
+exec envdir $KARABO/var/environment $KARABO/bin/karabo-cppserver $(< parameters)
