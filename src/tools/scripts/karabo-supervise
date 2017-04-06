@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Make sure Karabo is installed
+if [ -z $KARABO ]; then
+  echo
+  echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
+  exit 1
+fi
+
+cd $KARABO/var/services
+
+shopt -s nullglob
+
+if svok $KARABO/services
+then
+    echo supervise is already running and OK
+else
+    # do not magically start all devices
+    for service in *
+    do
+        touch $service/down
+    done
+    echo Now starting supervise
+    supervise $KARABO/services &
+    sleep 1  # give it some time to actually start
+fi
