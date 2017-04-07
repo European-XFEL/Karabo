@@ -451,8 +451,23 @@ namespace karabo {
                     slot->callRegisteredSlotFunctions(*header, *body);
                 }
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception when handling reply from '" << signalId
-                        << "': " << e.what();
+                if (timerAndHandler.second) {
+                    try {
+                        throw;
+                    } catch (const std::exception&) {
+                        try {
+                            // Handler can do: try {throw;} catch(const karabo::util::CastException&) {...;} catch (..){
+                            timerAndHandler.second();
+                        } catch (const std::exception& e) {
+                            KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception when handling reply from '"
+                                    << signalId << "', but error handler throws exception:\n"
+                                    << e.what();
+                        }
+                    }
+                } else {
+                    KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception when handling reply from '"
+                            << signalId << "': " << e.what();
+                }
             }
             removeSlot(replyId);
             // Now check whether someone is synchronously waiting for us and if yes wake him up
