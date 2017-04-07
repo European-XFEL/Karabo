@@ -391,6 +391,14 @@ namespace configurationTest {
                     .expertAccess()
                     .commit();
 
+            UINT8_ELEMENT(expected).key("exampleKey8")
+                    .displayedName("Example key 8")
+                    .description("Options with unsigned char used to make problems")
+                    .options("1,2,3,4")
+                    .assignmentOptional().defaultValue(2)
+                    .reconfigurable()
+                    .commit();
+
             INT32_ELEMENT(expected).key("sampleKey")
                     .assignmentOptional().defaultValueFromString("10")
                     .reconfigurable()

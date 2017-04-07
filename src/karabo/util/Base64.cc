@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Base64.hh"
+#include "Exception.hh"
 
 namespace karabo {
     namespace util {
@@ -115,7 +116,7 @@ namespace karabo {
                 // Check that all input bytes are base64
                 if (t0 == std::string::npos || t1 == std::string::npos ||
                     t2 == std::string::npos || t3 == std::string::npos) {
-                    throw (std::string)"base64_decode: Non-base64 found in the string to be decoded";
+                    throw KARABO_CAST_EXCEPTION("base64_decode: Non-base64 found in the string to be decoded");
                 }
 
                 // Decode input bytes
