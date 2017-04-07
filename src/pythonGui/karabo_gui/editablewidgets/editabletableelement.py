@@ -41,8 +41,8 @@ first string-type column encountered is pre-filled with the deviceID.
 import copy
 import json
 
-from PyQt4.QtCore import (Qt, QAbstractTableModel, QModelIndex, QObject,
-                          SIGNAL, SLOT, pyqtSlot)
+from PyQt4.QtCore import (pyqtSlot, Qt, QAbstractTableModel, QModelIndex,
+                          QObject, SIGNAL, SLOT, QTimer)
 from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog,
                          QComboBox, QVBoxLayout, QWidget, QDialogButtonBox,
                          QCheckBox, QItemDelegate, QStyledItemDelegate)
@@ -330,12 +330,21 @@ class TableModel(QAbstractTableModel):
         return True
 
     def removeRows(self, pos, rows, idx):
-        self.beginRemoveRows(QModelIndex(), pos, pos + rows - 1)
+        # protect ourselves against invalid indices:
+        endPos = pos + rows - 1
+        if pos < 0 or endPos < 0:
+            return False
 
-        for r in range(rows):
-            self.cdata.pop(pos + r)
+        if endPos > len(self.cdata) - 1:
+            endPos = len(self.cdata) - 1
 
-        self.endRemoveRows()
+        self.beginRemoveRows(QModelIndex(), pos, endPos)
+        try:
+            for r in range(rows, 0, -1):
+                self.cdata.pop(pos + r - 1)
+        finally:
+            self.endRemoveRows()
+
         self.editingFinished(self.cdata)
         return True
 
@@ -599,6 +608,8 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                 self._headerPopUp)
             self._setComboBoxes(False)
 
+        self.recentContextTrigger = False
+
     def _setComboBoxes(self, ro):
         if self.columnSchema is None:
             return
@@ -686,6 +697,10 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         EditableWidget.onEditingFinished(self, value)
 
     def _headerPopUp(self, pos):
+
+        if self.recentContextTrigger:
+            return
+
         idx = None
         for i in self.widget.selectionModel().selection().indexes():
             idx = i
@@ -695,7 +710,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             addAction = menu.addAction("Add Row below")
             duplicateAction = menu.addAction("Duplicate Row below")
             removeAction = menu.addAction("Delete Row")
-            action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
+            action = menu.exec(self.widget.viewport().mapToGlobal(pos))
             if action == addAction:
                 self.tableModel.insertRows(idx.row() + 1, 1, QModelIndex())
             elif action == duplicateAction:
@@ -708,18 +723,23 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             if idx.isValid():
                 addAction = menu.addAction("Add Row below")
                 duplicateAction = menu.addAction("Duplicate Row below")
-                action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
+                action = menu.exec(self.widget.viewport().mapToGlobal(pos))
                 if action == addAction:
                     self.tableModel.insertRows(idx.row() + 1, 1, QModelIndex())
                 elif action == duplicateAction:
                     self.tableModel.duplicateRow(idx.row())
-
             else:
                 addAction = menu.addAction("Add Row to end")
-                action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
+                action = menu.exec(self.widget.viewport().mapToGlobal(pos))
                 if action == addAction:
                     self.tableModel.insertRows(self.tableModel.rowCount(None),
                                                1, QModelIndex())
+        # avoid self triggering of the menu
+        self.recentContextTrigger = True
+        triggerTime = QTimer.singleShot(200, self._clearContextTrigger)
+
+    def _clearContextTrigger(self):
+        self.recentContextTrigger = False
 
     def cellPopUp(self, pos):
         idx = None
