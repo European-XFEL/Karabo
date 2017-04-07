@@ -278,6 +278,7 @@ void Schema_Test::testGetOptions() {
     CPPUNIT_ASSERT(m_schema.getOptions<float>("exampleKey4")[0] == 1.11f);
     CPPUNIT_ASSERT(m_schema.getOptions<float>("exampleKey4")[1] == -2.22f);
     CPPUNIT_ASSERT(m_schema.getOptions<float>("exampleKey4")[2] == 5.55f);
+    CPPUNIT_ASSERT(m_schema.getOptions<unsigned char>("exampleKey8")[2] == 3);
 }
 
 
