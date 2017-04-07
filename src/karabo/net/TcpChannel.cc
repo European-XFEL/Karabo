@@ -32,7 +32,9 @@ namespace karabo {
             , m_outboundHeader(new std::vector<char>())
             , m_queue(10)
             , m_writeInProgress(false)
-            , m_quit(false) {
+            , m_quit(false)
+            , m_syncCounter(0)
+            , m_asyncCounter(0) {
             m_queue[4] = Queue::Pointer(new LosslessQueue);
             m_queue[2] = Queue::Pointer(new RemoveOldestQueue);
             m_queue[0] = Queue::Pointer(new RejectNewestQueue);
@@ -196,9 +198,18 @@ namespace karabo {
             size_t sizeofLength = m_connectionPointer->getSizeofLength();
             if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
             m_inboundMessagePrefix.resize(sizeofLength);
-            boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
+            if (m_socket.available() >= sizeofLength) {
+                m_syncCounter++;
+                boost::system::error_code ec;
+                size_t rsize = m_socket.read_some(buffer(m_inboundMessagePrefix), ec);
+                assert(rsize == sizeofLength);
+                onSizeInBytesAvailable(ec, handler);
+            } else {
+                m_asyncCounter++;
+                boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
                                     m_readStrand.wrap(util::bind_weak(&karabo::net::TcpChannel::onSizeInBytesAvailable,
                                                                       this, boost::asio::placeholders::error, handler)));
+            }
         }
 
 
@@ -220,15 +231,33 @@ namespace karabo {
             // and readAsyncSizeInBytes binds it to another handler which is protected by a bind_weak
             // so we do not have to bind_weak here again.
             m_inboundData->resize(byteSize);
-            this->readAsyncRaw(&(*m_inboundData)[0], byteSize,
-                               m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1)));
+            if (m_socket.available() >= byteSize) {
+                m_syncCounter++;
+                boost::system::error_code ec;
+                size_t rsize = m_socket.read_some(buffer(m_inboundData->data(), byteSize), ec);
+                assert(rsize == byteSize);
+                bytesAvailableHandler(ec);
+            } else {
+                m_asyncCounter++;
+                this->readAsyncRaw(m_inboundData->data(), byteSize,
+                                   m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1)));
+            }
         }
 
 
         void TcpChannel::readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
-            boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
+            if (m_socket.available() >= size) {
+                m_syncCounter++;
+                boost::system::error_code ec;
+                size_t rsize = m_socket.read_some(buffer(data, size), ec);
+                assert(rsize == size);
+                onBytesAvailable(ec, handler);
+            } else {
+                m_asyncCounter++;
+                boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
                                     m_readStrand.wrap(util::bind_weak(&karabo::net::TcpChannel::onBytesAvailable, this,
                                                                       boost::asio::placeholders::error, handler)));
+            }
         }
 
 
