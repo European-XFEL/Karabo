@@ -38,7 +38,7 @@ namespace karabo {
              * @return reference to the SimpleElement
              */
             SimpleElement& options(const std::string& opts, const std::string& sep = " ,;") {
-                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromString<ValueType, std::vector > (opts, sep));
+                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromStringForSchemaOptions<ValueType>(opts, sep));
                 return *this;
             }
 
