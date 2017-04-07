@@ -64,8 +64,8 @@ namespace karabo {
             std::string m_policy;
             std::atomic<bool> m_writeInProgress;
             bool m_quit;
-            double m_syncCounter;
-            double m_asyncCounter;
+            unsigned long long m_syncCounter;
+            unsigned long long m_asyncCounter;
 
         public:
 
@@ -262,8 +262,12 @@ namespace karabo {
 
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy);
             
-            int getSyncCallPercent() const {
-                return int(100 * (m_syncCounter/(m_syncCounter + m_asyncCounter)));
+            int getSyncPercent() {
+                double nomin = double(m_syncCounter);
+                double denom = nomin + double(m_asyncCounter);
+                int result = int(nomin/denom * 100);
+                m_syncCounter = m_asyncCounter = 0;
+                return result;
             }
             
         private:
@@ -347,10 +351,6 @@ namespace karabo {
         };
     }
 }
-
-#ifndef __SO__
-extern
-#endif
 
 #endif	/* KARABO_NET_TCPCHANNEL_HH */
 
