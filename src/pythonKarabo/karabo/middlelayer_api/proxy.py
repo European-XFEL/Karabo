@@ -312,7 +312,7 @@ class DeviceClientProxyFactory(ProxyFactory):
                 self._device._ss.connect(
                     self._deviceId, "signalSchemaUpdated",
                     self._device.slotSchemaUpdated)
-            if self._used:
+            if self._used > 0:
                 self._device._ss.connect(self._deviceId, "signalChanged",
                                          self._device.slotChanged)
                 self._device._ss.connect(self._deviceId, "signalStateChanged",
