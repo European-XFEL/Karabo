@@ -335,11 +335,14 @@ class SignalSlotable(Configurable):
         if d is not None:
             DeviceClientProxyFactory.updateSchema(d, schema)
 
-    @slot
+    @coslot
     def slotInstanceNew(self, instanceId, info):
         future = self._new_device_futures.pop(instanceId, None)
         if future is not None:
             future.set_result(None)
+        proxy = self._proxies.get(instanceId)
+        if proxy is not None:
+            yield from proxy._notify_new()
 
     @coroutine
     def _call_once_alive(self, deviceId, slot, *args):
