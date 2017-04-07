@@ -33,8 +33,8 @@ namespace karabo {
             , m_queue(10)
             , m_writeInProgress(false)
             , m_quit(false)
-            , m_syncCounter(0.)
-            , m_asyncCounter(0.) {
+            , m_syncCounter(0)
+            , m_asyncCounter(0) {
             m_queue[4] = Queue::Pointer(new LosslessQueue);
             m_queue[2] = Queue::Pointer(new RemoveOldestQueue);
             m_queue[0] = Queue::Pointer(new RejectNewestQueue);
@@ -201,7 +201,7 @@ namespace karabo {
             if (m_socket.available() >= sizeofLength) {
                 m_syncCounter++;
                 boost::system::error_code ec;
-                size_t rsize = m_socket.read_some(buffer(m_inboundMessagePrefix), ec);  // read without blocking
+                size_t rsize = m_socket.read_some(buffer(m_inboundMessagePrefix), ec);
                 assert(rsize == sizeofLength);
                 onSizeInBytesAvailable(ec, handler);
             } else {
@@ -234,13 +234,13 @@ namespace karabo {
             if (m_socket.available() >= byteSize) {
                 m_syncCounter++;
                 boost::system::error_code ec;
-                size_t rsize = m_socket.read_some(buffer(&(*m_inboundData)[0], byteSize), ec);
+                size_t rsize = m_socket.read_some(buffer(m_inboundData->data(), byteSize), ec);
                 assert(rsize == byteSize);
                 bytesAvailableHandler(ec);
             } else {
                 m_asyncCounter++;
-                this->readAsyncRaw(&(*m_inboundData)[0], byteSize,
-                               m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1)));
+                this->readAsyncRaw(m_inboundData->data(), byteSize,
+                                   m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1)));
             }
         }
 
@@ -255,8 +255,8 @@ namespace karabo {
             } else {
                 m_asyncCounter++;
                 boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
-                                        m_readStrand.wrap(util::bind_weak(&karabo::net::TcpChannel::onBytesAvailable, this,
-                                                                          boost::asio::placeholders::error, handler)));
+                                    m_readStrand.wrap(util::bind_weak(&karabo::net::TcpChannel::onBytesAvailable, this,
+                                                                      boost::asio::placeholders::error, handler)));
             }
         }
 
