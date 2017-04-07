@@ -17,6 +17,7 @@ from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QMessageBox
 
 from karabo.common.api import State
+from karabo_gui.background import executeLater, Priority
 from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.singletons.api import get_network, get_topology
@@ -50,6 +51,8 @@ class Manager(QObject):
 
         # The system topology singleton
         self._topology = get_topology()
+        # A dict which includes big networkData
+        self._big_data = {}
 
         network = get_network()
         network.signalServerConnectionChanged.connect(
@@ -347,10 +350,21 @@ class Manager(QObject):
         broadcast_event(KaraboEventSender.NotificationMessage, data)
 
     def handle_networkData(self, name, data):
-        device_id, prop_path = name.split(":")
-        device = self._topology.get_device(device_id)
-        box = device.getBox(prop_path.split("."))
-        box.boxvalue.schema.fromHash(data)
+        """This method handles the big data chucks coming from directly
+        connected devices (p2p) to `GuiServerDevice`. To keep the GUI
+        responsive the displaying of this data is delayed here.
+        """
+        def show_data():
+            if name not in self._big_data:
+                return
+            data_hash = self._big_data.pop(name)
+            device_id, prop_path = name.split(":")
+            device = self._topology.get_device(device_id)
+            box = device.getBox(prop_path.split("."))
+            box.boxvalue.schema.fromHash(data_hash)
+
+        self._big_data[name] = data
+        executeLater(show_data, Priority.BIG_DATA)
 
     def handle_initReply(self, deviceId, success, message):
         device = self._topology.get_device(deviceId)
