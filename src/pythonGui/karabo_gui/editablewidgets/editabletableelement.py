@@ -339,11 +339,12 @@ class TableModel(QAbstractTableModel):
             endPos = len(self.cdata) - 1
 
         self.beginRemoveRows(QModelIndex(), pos, endPos)
+        try:
+            for r in range(rows, 0, -1):
+                self.cdata.pop(pos + r - 1)
+        finally:
+            self.endRemoveRows()
 
-        for r in range(rows, 0, -1):
-            self.cdata.pop(pos + r - 1)
-
-        self.endRemoveRows()
         self.editingFinished(self.cdata)
         return True
 
