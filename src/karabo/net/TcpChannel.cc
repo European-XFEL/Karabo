@@ -22,7 +22,6 @@ namespace karabo {
 
         TcpChannel::TcpChannel(Connection::Pointer connection)
             : m_connectionPointer(boost::dynamic_pointer_cast<TcpConnection>(connection))
-            , m_readStrand(EventLoop::getIOService())
             , m_socket(EventLoop::getIOService())
             , m_activeHandler(TcpChannel::NONE)
             , m_readHeaderFirst(false)
@@ -207,8 +206,8 @@ namespace karabo {
             } else {
                 m_asyncCounter++;
                 boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
-                                    m_readStrand.wrap(util::bind_weak(&karabo::net::TcpChannel::onSizeInBytesAvailable,
-                                                                      this, boost::asio::placeholders::error, handler)));
+                                        util::bind_weak(&karabo::net::TcpChannel::onSizeInBytesAvailable,
+                                                        this, boost::asio::placeholders::error, handler));
             }
         }
 
@@ -240,7 +239,7 @@ namespace karabo {
             } else {
                 m_asyncCounter++;
                 this->readAsyncRaw(m_inboundData->data(), byteSize,
-                                   m_readStrand.wrap(boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1)));
+                                   boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1));
             }
         }
 
@@ -255,8 +254,8 @@ namespace karabo {
             } else {
                 m_asyncCounter++;
                 boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
-                                    m_readStrand.wrap(util::bind_weak(&karabo::net::TcpChannel::onBytesAvailable, this,
-                                                                      boost::asio::placeholders::error, handler)));
+                                        util::bind_weak(&karabo::net::TcpChannel::onBytesAvailable, this,
+                                                        boost::asio::placeholders::error, handler));
             }
         }
 
