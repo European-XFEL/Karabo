@@ -375,7 +375,7 @@ namespace karabo {
 
             template <class T>
             inline void operator () (T*) {
-                m_hash.setAttribute(m_path, KARABO_SCHEMA_OPTIONS, karabo::util::fromString<T, std::vector>(m_value, m_sep));
+                m_hash.setAttribute(m_path, KARABO_SCHEMA_OPTIONS, karabo::util::fromStringForSchemaOptions<T>(m_value, m_sep));
             }
 
             void error() {
