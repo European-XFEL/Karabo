@@ -340,9 +340,9 @@ class SignalSlotable(Configurable):
         future = self._new_device_futures.pop(instanceId, None)
         if future is not None:
             future.set_result(None)
-        device = self._proxies.get(instanceId)
-        if device is not None:
-            yield from device._notify_new()
+        proxy = self._proxies.get(instanceId)
+        if proxy is not None:
+            yield from proxy._notify_new()
 
     @coroutine
     def _call_once_alive(self, deviceId, slot, *args):
