@@ -90,7 +90,6 @@ class Manager(QObject):
 
         # Compute a runtime schema from the configuration and an unmodified
         # copy of the device class schema.
-        
         schemaAttrUpdates = getSchemaAttributeUpdates(baseSchema, config)
 
         # Send signal to network
