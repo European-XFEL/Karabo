@@ -39,7 +39,6 @@ class NumberAttributeEditor(AttributeWidget):
         self.errorPalette = QPalette(self.normalPalette)
         self.errorPalette.setColor(QPalette.Text, Qt.red)
 
-
     @pyqtSlot(str)
     def onTextChanged(self, text):
         self.widget.setPalette(self.normalPalette
@@ -52,9 +51,8 @@ class NumberAttributeEditor(AttributeWidget):
         if value is None:
             value = 0
 
-        if not self.widget.hasFocus():
-            with SignalBlocker(self.widget):
-                self.widget.setText("{}".format(value))
+        with SignalBlocker(self.widget):
+            self.widget.setText("{}".format(value))
 
     def validate_value(self):
         """ This function validates the current value of the widget and returns
