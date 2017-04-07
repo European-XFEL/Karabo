@@ -179,7 +179,13 @@ class Broker:
                     message = yield from get_event_loop().run_in_executor(
                         None, consumer.receiveMessage, 1000)
                 except openmq.Error as e:
+                    # statuses from openmqc/mqerrors.h
                     if e.status == 2103:  # timeout
+                        continue
+                    elif e.status == 3120:  # message dropped
+                        self.logger.warning(
+                            'consumer of instance "%s" dropped messages',
+                            self.deviceId, exc_info=True)
                         continue
                     else:
                         raise
