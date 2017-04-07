@@ -83,6 +83,13 @@ class Manager(QObject):
         # Compute a runtime schema from the configuration and an unmodified
         # copy of the device class schema.
         baseSchema = self._topology.get_schema(serverId, classId)
+
+        # if we do not have a schema, notify the user and return
+        if baseSchema is None:
+            QMessageBox.warning(None, 'Unknown device class',
+                                'Please install device plugin first.')
+            return
+
         schemaAttrUpdates = getSchemaAttributeUpdates(baseSchema, config)
 
         # Send signal to network
