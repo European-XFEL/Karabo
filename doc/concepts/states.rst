@@ -947,7 +947,7 @@ orthogonal regions
 .. _orthogonalFsm:
 
 .. figure:: images/OrthogonalFsm.png
-:scale: 50 %
+   :scale: 50 %
    :alt: OrthogonalFsm.png
 
        **Figure 2.** STD with orthogonal regions.
