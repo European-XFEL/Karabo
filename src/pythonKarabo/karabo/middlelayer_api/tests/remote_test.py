@@ -954,6 +954,7 @@ class Tests(DeviceTest):
             @coroutine
             def onInitialization(self):
                 self.__class__.number = Int32()
+                yield from self.publishInjectedParameters()
                 self.number = 3
         a = A({"_deviceId_": "testinject"})
         yield from a.startInstance()
