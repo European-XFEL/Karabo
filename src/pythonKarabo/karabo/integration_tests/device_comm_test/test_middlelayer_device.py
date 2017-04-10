@@ -7,9 +7,9 @@ from textwrap import dedent
 from unittest import TestCase
 import weakref
 
-from karabo.middlelayer import (getClasses, getDevice, getDevices, getServers,
-                                instantiate, isAlive, KaraboError, Macro,
-                                shutdown, sleep, Slot)
+from karabo.middlelayer import (
+    connectDevice, Device, getClasses, getDevice, getDevices, getServers,
+    instantiate, isAlive, KaraboError, Macro, shutdown, sleep, Slot)
 from karabo.middlelayer_api.cli import DeviceClient
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.tests.eventloop import setEventLoop
@@ -164,6 +164,22 @@ class Tests(TestCase):
         self.run_async(self.dc, instantiate("testServer", "CommTestDevice",
                                             "commtestdevice", remote="asdf"))
         self.run_async(self.dc, shutdown("commtestdevice"))
+
+    def test_connect_during_initialization(self):
+        class TestDevice(Device):
+            @coroutine
+            def onInitialization(self):
+                self.remote = yield from connectDevice("commtestdevice")
+        self.run_async(self.dc, instantiate("testServer", "CommTestDevice",
+                                            "commtestdevice", remote="asdf"))
+        try:
+            device = TestDevice({"_deviceId_": "testdevice"})
+            self.loop.run_until_complete(device.startInstance())
+            self.run_async(device, device.remote.slotWithoutArguments())
+            self.assertEqual(device.remote.someString,
+                             "slotWithoutArguments was called")
+        finally:
+            self.run_async(self.dc, shutdown("commtestdevice"))
 
     def test_appearing_plugin(self):
         """test that new plugins appear in device server"""
