@@ -1,4 +1,5 @@
 from asyncio import coroutine, gather
+from itertools import chain
 
 from .hash import Descriptor
 from .schema import Configurable, MetaConfigurable
@@ -15,7 +16,6 @@ class MetaInjectable(MetaConfigurable):
         self._added_attrs.append(name)
         if isinstance(value, Descriptor):
             value.key = name
-
 
 
 class Injectable(Configurable):
@@ -38,6 +38,7 @@ class Injectable(Configurable):
                 # use the property as any other property:
                 self.injected_string = "whatever"
     """
+
     def __new__(cls, configuration={}):
         """each object gets its own personal class, that it may modify"""
         newtype = MetaInjectable(cls.__name__, (cls,), {})
@@ -46,13 +47,22 @@ class Injectable(Configurable):
     @coroutine
     def _run(self, **kwargs):
         yield from super()._run(**kwargs)
-        self._collect_attrs()
 
     def _collect_attrs(self):
         cls = self.__class__
         added_attrs = list(cls._added_attrs)
-        cls._attrs = [attr for attr, value in cls.__dict__.items()
-                      if isinstance(value, Descriptor)]
+
+        def unique_everseen(iter):
+            seen = set()
+            for i in iter:
+                if i not in seen:
+                    seen.add(i)
+                    yield i
+
+        cls._attrs = list(unique_everseen(
+            attr for attr in chain(cls._attrs, added_attrs)
+            if attr in cls.__dict__))
+
         cls._allattrs = list(super(cls, cls)._allattrs)
         seen = set(cls._allattrs)
         cls._allattrs.extend(attr for attr in cls._attrs if attr not in seen)
