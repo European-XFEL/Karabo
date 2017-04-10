@@ -64,8 +64,9 @@ class Manager(QObject):
 
         # if we do not have a schema, notify the user and return
         if baseSchema is None:
-            QMessageBox.warning(None, 'Unknown device class',
-                                'Please install device plugin first.')
+            QMessageBox.warning(None, 'Unknown device schema',
+                                'Please install device plugin {} on '
+                                'server {} first.'.format(classId, serverId))
             return
 
         # Use standard configuration for server/classId
