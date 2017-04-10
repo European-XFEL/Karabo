@@ -133,7 +133,10 @@ class ProjectDeviceInstance(HasStrictTraits):
         online
         """
         self.online = self._online_dev_config.isOnline()
-        self.status = 'error' if self.online and error_flag else status
+        if self.online:
+            self.status = 'error' if error_flag else status
+        else:
+            self.status = self._update_offline_status()
 
     # ---------------------------------------------------------------------
     # utils
@@ -171,6 +174,16 @@ class ProjectDeviceInstance(HasStrictTraits):
         # Update the online flag
         self.online = online_device.isOnline()
         # Update the status
-        attributes = topology.get_attributes('device.{}'.format(device_id))
-        if attributes is not None:
-            self.status = attributes.get('status', 'ok')
+        online_device.updateStatus()
+
+    def _update_offline_status(self):
+        """Return correct offline status for given ``class_id`` and ``server_id``
+        """
+        topology = get_topology()
+        server_key = 'server.{}'.format(self.server_id)
+        attributes = topology.get_attributes(server_key)
+        if attributes is None:
+            return 'noserver'
+        elif self.class_id not in attributes.get('deviceClasses', []):
+            return 'noplugin'
+        return 'offline'
