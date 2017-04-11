@@ -1,10 +1,25 @@
 #!/bin/bash
 
+if [ "$1" = "-h" -o "$1" = "--help" ]
+then
+	cat <<-END
+		$0 - check Karabo device servers
+
+		  $0 [-h|--help] device-servers*
+
+		this shows the status of given Karabo device servers.
+
+		If no device server is given, show the status of all device
+		servers.
+	END
+fi
+
+if [ -z $KARABO ]
+then
+    echo "Please activate Karabo (type \". activate\" in your Karabo directory)"
+    exit 1
+fi
+
 . karabo-supervise
 
-if [ $# == 0 ]
-then
-    exec svstat *
-else
-    exec svstat "$@"
-fi
+exec svstat ${@:-*}
