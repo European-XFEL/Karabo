@@ -60,6 +60,15 @@ class Manager(QObject):
         network.signalReceivedData.connect(self.onReceivedData)
 
     def initDevice(self, serverId, classId, deviceId, config=None):
+        baseSchema = self._topology.get_schema(serverId, classId)
+
+        # if we do not have a schema, notify the user and return
+        if baseSchema is None:
+            QMessageBox.warning(None, 'Unknown device schema',
+                                'Please install device plugin {} on '
+                                'server {} first.'.format(classId, serverId))
+            return
+
         # Use standard configuration for server/classId
         conf = self._topology.get_class(serverId, classId)
         if config is None:
@@ -82,7 +91,6 @@ class Manager(QObject):
 
         # Compute a runtime schema from the configuration and an unmodified
         # copy of the device class schema.
-        baseSchema = self._topology.get_schema(serverId, classId)
         schemaAttrUpdates = getSchemaAttributeUpdates(baseSchema, config)
 
         # Send signal to network
