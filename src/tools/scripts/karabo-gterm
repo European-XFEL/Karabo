@@ -1,0 +1,38 @@
+#!/bin/bash
+
+if [ -z $KARABO ]
+then
+    echo "Please activate Karabo (type \". activate\" in your Karabo directory)"
+    exit 1
+fi
+
+if [ "$1" = "-h" -o "$1" = "--help" ]
+then
+	cat <<-END
+		$0 - show logs in tabs of a gnome terminal
+
+		  $0 [-h|--help] device-server*
+
+		This shows the logs of the given Karabo device servers in the
+		tabs of a gnome terminal. If no device server is given, the
+		logs of all device servers are shown.
+		All this only works for device servers where logging is
+		enabled.
+	END
+fi
+
+cd $KARABO/var/services
+
+cmd=gnome-terminal
+
+for service in ${@:-*}
+do
+    if [ -x $service/log/run ]
+    then
+        cmd="$cmd,--tab,-e,bash -c \"echo -en \\\\\e]0\\;$service\\\\\a; tail -n100 -F $service/log/current\""
+    fi
+done
+
+# yeah! this is bash magic. Make the , the separator for parameters
+IFS=,
+exec $cmd
