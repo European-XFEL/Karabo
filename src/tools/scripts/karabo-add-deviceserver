@@ -1,0 +1,55 @@
+#!/bin/bash
+
+if [ -z $KARABO ]
+then
+    echo "Please activate Karabo (type \". activate\" in your Karabo directory)"
+    exit 1
+fi
+
+if [ "$1" = "-h" -o "$1" = "--help" -o $# -lt 2 ]
+then
+	cat <<-END
+		$0 - create a new Karabo device server
+
+		  $0 [-h|--help]
+		  $0 name type arguments*
+
+		This creates a new device server in $KARABO/var/services.
+
+		name is the name of the new device server
+		type is one of: cppserver, middlelayerserver or pythonserver
+		arguments are passed to said device server
+
+		The serverId will be set to name.
+	END
+fi
+
+cd $KARABO/var
+
+serverId=$1
+targetdir=${1//\//_}
+servertype=$2
+
+if [ -e services/$targetdir ]
+then
+	echo ERROR services/$targetdir already exists
+	exit 1
+fi
+
+if [ ! -e ../services/$servertype ]
+then
+	echo ERROR server type $servertype is not known
+	exit 1
+fi
+
+tmpdir=$(mktemp -d -p .)
+pushd $tmpdir >/dev/null
+ln -s ../../../services/$2 run
+touch down  # yeah!
+shift 2
+echo serverId=$serverId "$@" >parameters
+mkdir log
+cd log
+ln -s ../../../../services/logger run
+popd >/dev/null
+mv $tmpdir services/$targetdir
