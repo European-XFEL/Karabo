@@ -204,7 +204,7 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     def _broadcast_item_click(self):
         configuration = self.project_device.current_configuration
-        if configuration.descriptor is not None:
+        if configuration is not None:
             broadcast_event(KaraboEventSender.ShowConfiguration,
                             {'configuration': configuration})
 
