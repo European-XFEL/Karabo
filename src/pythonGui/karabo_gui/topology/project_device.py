@@ -125,9 +125,6 @@ class ProjectDeviceInstance(HasStrictTraits):
     def _online_descriptor_change_slot(self, config):
         """The online device has received a new schema.
         """
-        if self._online_dev_config.descriptor is None:
-            self._online_dev_config.descriptor = config.descriptor
-
         # Let the world know
         self.schema_updated = True
 
