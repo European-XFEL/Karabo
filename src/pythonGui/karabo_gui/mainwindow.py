@@ -9,8 +9,8 @@ from enum import Enum
 import os.path
 
 from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import (QAction, QActionGroup, QMainWindow, QMenu, QSplitter,
-                         QToolButton, qApp)
+from PyQt4.QtGui import (QAction, QActionGroup, QMainWindow, QMenu,
+                         QMessageBox, QSplitter, QToolButton, qApp)
 
 import karabo_gui.icons as icons
 from karabo.middlelayer import AccessLevel
@@ -259,12 +259,16 @@ class MainWindow(QMainWindow):
 
     def _quit(self):
         # Check for project changes
-        project_model = get_project_model().traits_data_model
-        if project_model is not None and project_model.modified:
-            msg = ('The project \"<b>{}</b>\" has been modified.<br />Please '
-                   'make sure to save it!').format(project_model.simple_name)
-            MessageBox.showWarning(msg, 'Modified project')
-            return False
+        project = get_project_model().traits_data_model
+        if project is not None and project.modified:
+            name = project.simple_name
+            ask = ('The project \"<b>{}</b>\" has been modified.<br />Do you '
+                   'want to save it first project?').format(name)
+            options = (QMessageBox.Yes | QMessageBox.No)
+            reply = QMessageBox.question(None, 'Save project', ask, options,
+                                         QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                return False
 
         # Make sure there are no pending writing things in the pipe
         if get_db_conn().is_writing():
