@@ -144,7 +144,7 @@ def saveConfigurationToFile(configuration):
     """This function saves the current configuration of a device to a file.
     """
     if (configuration is None or configuration.classId is None
-        or configuration.descriptor is None):
+            or configuration.descriptor is None):
         MessageBox.showError("No configuration available. Saving failed.")
         return
 
