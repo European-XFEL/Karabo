@@ -175,12 +175,7 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     @on_trait_change("project_device.status")
     def status_change(self):
-        status_enum = DeviceStatus(self.project_device.status)
-        icon = get_project_device_status_icon(status_enum)
-        if icon is not None:
-            self.ui_data.icon = icon
-            self.ui_data.status = self.project_device.status
-
+        self._update_icon(self.ui_data)
         # Show the device's configuration, iff it was already showing
         self._update_configurator()
 
@@ -210,14 +205,12 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     def _update_icon(self, ui_data):
         # Get current status of device
-        if self.model.initialized:
-            # But only if our model is initialized!
-            status = self.project_device.status
-        else:
-            # Otherwise show the instance as offline
-            status = 'offline'
-        ui_data.icon = get_project_device_status_icon(DeviceStatus(status))
-        ui_data.status = status
+        if not self.model.initialized:
+            return
+
+        status_enum = DeviceStatus(self.project_device.status)
+        ui_data.icon = get_project_device_status_icon(status_enum)
+        ui_data.status = self.project_device.status
 
     def _update_configurator(self):
         configuration = self.project_device.current_configuration
