@@ -2,13 +2,13 @@
 ============================
 
 Karabo uses daemontools to supervise its device servers. Every device
-server corresponds to one directory in `$KARABO/var/services`.
+server corresponds to one directory in `$KARABO/var/service`.
 Typically, the device server's ID is used as a name for this
 directory, just slashes replaced by underscores.
 
 Whithin this directory, there is one `run` file, which is executed by
 supervise. Typically, they are just symbolic links to files in
-`$KARABO/services`, which contains ready-made code to execute Karabo
+`$KARABO/service`, which contains ready-made code to execute Karabo
 devices servers, but you are free to put whatever code you want.  If
 you do use the ready-mades, a `parameters` file simply contains the
 command line parameters to the server to be started.
@@ -16,7 +16,7 @@ command line parameters to the server to be started.
 There should be a `log` directory beside the `run` file, which should
 again contain a `run` file which is executed for logging the standard
 output from the device server. Again, there is a ready-made code in
-`$KARABO/services/logger`, which you may link to.
+`$KARABO/service/logger`, which you may link to.
 
 Given that said set-up is actually pretty complicated, the
 `karabo-add-deviceserver` script creates it for you. You just pass the
@@ -69,17 +69,17 @@ def entrypoint(func):
 
 def supervise():
     svok = subprocess.call([absolute("extern", "bin", "svok"),
-                            absolute("services")])
+                            absolute("service")])
     if svok == 0:
         return
     print("starting supervisor")
     subprocess.Popen([absolute("extern", "bin", "supervise"),
-                      absolute("services")],
+                      absolute("service")],
                      stdout=open(absolute("var", "log", "global"), "a"))
 
 
 def defaultall():
-    os.chdir(absolute("var", "services"))
+    os.chdir(absolute("var", "service"))
     if len(sys.argv) > 1:
         return sys.argv[1:]
     else:
@@ -182,7 +182,7 @@ def adddeviceserver():
       karabo-add-deviceserver [-h|--help]
       karabo-add-deviceserver name type arguments*
 
-    This creates a new device server in $KARABO/var/services.
+    This creates a new device server in $KARABO/var/service.
 
     name is the name of the new device server
     type is one of: cppserver, middlelayerserver or pythonserver
@@ -194,17 +194,17 @@ def adddeviceserver():
 
     _, server_id, server_type, *options = sys.argv
     target_dir = server_id.replace("/", "_")
-    abs_target = absolute("var", "services", target_dir)
+    abs_target = absolute("var", "service", target_dir)
 
     if osp.exists(abs_target):
-        print("ERROR services/{} already exists".format(target_dir))
+        print("ERROR service/{} already exists".format(target_dir))
         return 3
-    if not osp.exists(absolute("services", server_type)):
+    if not osp.exists(absolute("service", server_type)):
         print("ERROR server type {} is not known".format(server_type))
         return 4
     tmpdir = mkdtemp(dir=absolute("var"))
     try:
-        os.symlink("../../../services/{}".format(server_type),
+        os.symlink("../../../service/{}".format(server_type),
                    osp.join(tmpdir, "run"))
         open(osp.join(tmpdir, "down"), "w").close()
         with open(osp.join(tmpdir, "parameters"), "w") as params:
@@ -212,7 +212,7 @@ def adddeviceserver():
             for arg in options:
                 print(arg, file=params)
         os.mkdir(osp.join(tmpdir, "log"))
-        os.symlink("../../../../services/logger",
+        os.symlink("../../../../service/logger",
                    osp.join(tmpdir, "log", "run"))
         os.rename(tmpdir, abs_target)
     except:
