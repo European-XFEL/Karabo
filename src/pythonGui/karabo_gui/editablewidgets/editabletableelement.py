@@ -104,9 +104,8 @@ class TableModel(QAbstractTableModel):
             columnKey = self.columnHash.getKeys()[idx.column()]
 
             value = None
-            if self.cdata[idx.row()].hasAttribute(columnKey,
-                                                  "isAliasing") and role == \
-                    Qt.EditRole:
+            alias = self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing")
+            if  alias and role == Qt.EditRole:
                 value = "=" + self.cdata[idx.row()].getAttribute(columnKey,
                                                                  "isAliasing")
             else:
@@ -119,13 +118,12 @@ class TableModel(QAbstractTableModel):
 
         if role == Qt.DecorationRole:
             columnKey = self.columnHash.getKeys()[idx.column()]
-            if (
-            self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing")):  # and
-                # self.role == Qt.DisplayRole):
+            alias = self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing")
+            if alias:
+                alias = self.cdata[idx.row()].getAttribute(columnKey,
+                                                           "isAliasing")
+                monitoredDeviceId = alias.split(":")[0]
 
-                monitoredDeviceId = (
-                self.cdata[idx.row()].getAttribute(columnKey,
-                                                   "isAliasing").split(".")[0])
                 status = get_topology().get_device(monitoredDeviceId).status
                 if status in ["monitoring", "alive"]:
                     return icons.tableOnline.pixmap(10, 10)
@@ -196,8 +194,7 @@ class TableModel(QAbstractTableModel):
             self.connectedMonitors[resp].remove((row, col))
             if len(self.connectedMonitors[resp]) == 0:
                 del self.connectedMonitors[resp]
-                deviceId = resp.split(".")[0]
-                deviceProperty = ".".join(resp.split(".")[1:])
+                deviceId,  deviceProperty = resp.split(":")
                 device = get_topology().get_device(deviceId)
                 box = device.getBox(deviceProperty.split("."))
                 if role == Qt.DisplayRole:
@@ -216,7 +213,6 @@ class TableModel(QAbstractTableModel):
         if resp not in self.connectedMonitors:
             self.connectedMonitors[resp] = [(row, col)]
             if role == Qt.DisplayRole:
-
                 box.signalUpdateComponent.connect(self.monitorChanged)
         elif "{}.{}".format(row, col) in self.connectedMonitorsByCell:
             return box.value
@@ -789,9 +785,9 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             if propertyPopUp.exec_():
                 deviceId, deviceProperty, isMonitor = propertyPopUp.getValues()
                 if isMonitor:
-                    value = "={}.{}".format(deviceId, deviceProperty)
+                    value = "={}:{}".format(deviceId, deviceProperty)
                 else:
-                    value = "{}.{}".format(deviceId, deviceProperty)
+                    value = "{}:{}".format(deviceId, deviceProperty)
                 self.tableModel.setData(idx, value, Qt.EditRole)
 
     def copy(self, item):
