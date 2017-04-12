@@ -1,3 +1,41 @@
+"""Starting and stopping Karabo
+============================
+
+Karabo uses daemontools to supervise its device servers. Every device
+server corresponds to one directory in `$KARABO/var/services`.
+Typically, the device server's ID is used as a name for this
+directory, just slashes replaced by underscores.
+
+Whithin this directory, there is one `run` file, which is executed by
+supervise. Typically, they are just symbolic links to files in
+`$KARABO/services`, which contains ready-made code to execute Karabo
+devices servers, but you are free to put whatever code you want.  If
+you do use the ready-mades, a `parameters` file simply contains the
+command line parameters to the server to be started.
+
+There should be a `log` directory beside the `run` file, which should
+again contain a `run` file which is executed for logging the standard
+output from the device server. Again, there is a ready-made code in
+`$KARABO/services/logger`, which you may link to.
+
+Given that said set-up is actually pretty complicated, the
+`karabo-add-deviceserver` script creates it for you. You just pass the
+name of the device server, its type (middlelayerserver, cppserver or
+pythonserver) and additional command line parameters, and all the
+files and directories mentioned above are created.
+
+Those device servers are then started with `karabo-start`. This is
+just a small wrapper around daemontools' `svc` command, feel free to
+use the underlying command as you may please. `karabo-stop` stops the
+servers again, and `karabo-check` tells you which servers are
+currently running and how they are doing.
+
+If the standard logger described above is used, you may see the output
+using `karabo-xterm`, which opens an xterm per started device server
+to continuously show its output, or `karabo-gterm` which shows the
+same as tabs in a gnome terminal.
+"""
+
 from functools import wraps
 import os
 import os.path as osp
