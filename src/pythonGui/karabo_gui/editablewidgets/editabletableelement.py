@@ -458,30 +458,48 @@ class FromPropertyPopUp(QDialog):
 # from http://stackoverflow.com/questions/17615997/pyqt-how-to-set-qcombobox
 # -in-a-table-view-using-qitemdelegate
 class ComboBoxDelegate(QItemDelegate):
-    def __init__(self, options, parent=None, *args):
+    def __init__(self, options, row=-1, column=-1, parent=None, *args):
         super(ComboBoxDelegate, self).__init__(parent, *args)
         self.options = options
+        self.row_column = (row, column)
+        parent.clicked.connect(self.cellClicked)
+        self.currentCellIndex = None  # QPersistentModelIndex
 
     def createEditor(self, parent, option, index):
         combo = QComboBox(parent)
         combo.addItems([str(o) for o in self.options])
-        self.connect(combo, SIGNAL("currentIndexChanged(int)"), self,
-                     SLOT("currentIndexChanged()"))
+        combo.currentIndexChanged.connect(self.onCurrentIndexChanged)
         return combo
 
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
         selection = index.model().data(index, Qt.DisplayRole)
-
         editor.setCurrentIndex(self.options.index(selection))
         editor.blockSignals(False)
 
     @pyqtSlot()
-    def currentIndexChanged(self):
+    def onCurrentIndexChanged(self):
         self.commitData.emit(self.sender())
 
     def setModelData(self, editor, model, index):
         model.setData(index, self.options[editor.currentIndex()], Qt.EditRole)
+
+    @pyqtSlot(object)
+    def cellClicked(self, index):
+        """Only enable editing for this delegate whenever user clicks on cell
+        """
+        # Only consider click events for this delegate in its column
+        if (index.row(), index.column()) == self.row_column:
+            if self.currentCellIndex is not None:
+                # Persistent model index and data namely QComboBox cleaned up
+                self.parent().closePersistentEditor(self.currentCellIndex)
+            self.currentCellIndex = index
+            self.parent().openPersistentEditor(self.currentCellIndex)
+        else:
+            if self.currentCellIndex is not None:
+                # Persistent model index and data namely QComboBox cleaned up
+                self.parent().closePersistentEditor(self.currentCellIndex)
+            self.currentCellIndex = None
 
 
 class KaraboTableView(QTableView):
@@ -593,7 +611,6 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         self.widget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.widget.customContextMenuRequested.connect(self.cellPopUp)
         self.leftTableHeader = self.widget.verticalHeader()
-        self.colsWithCombos = []
 
         self.columnSchema = None
         self.columnHash = None
@@ -617,7 +634,6 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             # remove any combo delegate
             cHash = self.columnSchema.hash
             cKeys = self.columnHash.getKeys()
-            self.colsWithCombos = []
             for col, cKey in enumerate(cKeys):
 
                 if cHash.hasAttribute(cKey, "options"):
@@ -630,22 +646,13 @@ class EditableTableElement(EditableWidget, DisplayWidget):
 
             cHash = self.columnSchema.hash
             cKeys = self.columnHash.getKeys()
-            self.colsWithCombos = []
             for col, cKey in enumerate(cKeys):
-
                 if cHash.hasAttribute(cKey, "options"):
                     delegate = ComboBoxDelegate(
-                        cHash.getAttribute(cKey, "options"))
+                        cHash.getAttribute(cKey, "options"),
+                        row=self.tableModel.rowCount(None),
+                        column=col, parent=self.widget)
                     self.widget.setItemDelegateForColumn(col, delegate)
-                    self.colsWithCombos.append(col)
-            self._updateComboBoxes()
-
-    def _updateComboBoxes(self):
-        if self.role == Qt.EditRole:
-            for row in range(0, self.tableModel.rowCount(None)):
-                for col in self.colsWithCombos:
-                    self.widget.openPersistentEditor(
-                        self.tableModel.index(row, col))
 
     @classmethod
     def isCompatible(cls, box, readonly):
@@ -690,10 +697,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                 self.tableModel.setData(idx, row[col], self.role, isAliasing,
                                         fromValueChanged=True)
 
-        self._updateComboBoxes()
-
     def onEditingFinished(self, value):
-        self._updateComboBoxes()
         EditableWidget.onEditingFinished(self, value)
 
     def _headerPopUp(self, pos):
