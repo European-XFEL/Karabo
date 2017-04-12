@@ -143,14 +143,15 @@ def loadConfigurationFromFile(configuration):
 def saveConfigurationToFile(configuration):
     """This function saves the current configuration of a device to a file.
     """
+    if (configuration is None or configuration.classId is None
+            or configuration.descriptor is None):
+        MessageBox.showError("No configuration available. Saving failed.")
+        return
+
     filename = getSaveFileName(caption="Save configuration as",
                                filter="Configuration (*.xml)",
                                suffix="xml")
     if not filename:
-        return
-
-    if configuration is None or configuration.classId is None:
-        MessageBox.showError("Configuration save failed")
         return
 
     hsh, attrs = configuration.toHash()
