@@ -13,6 +13,7 @@ from karabo_gui.mainwindow import MainWindow, PanelAreaEnum
 from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.macropanel import MacroPanel
 from karabo_gui.panels.runconfigpanel import RunConfigPanel
+from karabo_gui.panels.runconfiggrouppanel import RunConfigGroupPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.singletons.api import get_project_model
 
@@ -38,6 +39,8 @@ class PanelWrangler(QObject):
         self._alarm_panels = {}
         # Run Configuration panels {instance id: panel}
         self._run_config_panels = {}
+        # Run Configuration Group panels {instance id: panel}
+        self._run_config_group_panels = {}
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary due to the fact that the singleton mediator object and
@@ -102,6 +105,11 @@ class PanelWrangler(QObject):
             for inst_id in instance_ids:
                 self._open_run_configurator(inst_id)
 
+        elif sender is KaraboEventSender.AddRunConfigGroup:
+            instance_ids = data.get('instanceIds')
+            for inst_id in instance_ids:
+                self._open_run_config_group(inst_id)
+
         elif sender is KaraboEventSender.RemoveAlarmServices:
             instance_ids = data.get('instanceIds')
             for inst_id in instance_ids:
@@ -111,6 +119,11 @@ class PanelWrangler(QObject):
             instance_ids = data.get('instanceIds')
             for inst_id in instance_ids:
                 self._close_run_configurator(inst_id)
+
+        elif sender is KaraboEventSender.RemoveRunConfigGroup:
+            instance_ids = data.get('instanceIds')
+            for inst_id in instance_ids:
+                self._close_run_config_group(inst_id)
 
         elif sender is KaraboEventSender.NetworkConnectStatus:
             self.connected_to_server = data.get('status', False)
@@ -140,6 +153,14 @@ class PanelWrangler(QObject):
         if panel is None:
             return
         del self._run_config_panels[instance_id]
+        if self.main_window is not None:
+            self.main_window.removePanel(panel, PanelAreaEnum.Right)
+
+    def _close_run_config_group(self, instance_id):
+        panel = self._run_config_group_panels.get(instance_id)
+        if panel is None:
+            return
+        del self._run_config_group_panels[instance_id]
         if self.main_window is not None:
             self.main_window.removePanel(panel, PanelAreaEnum.Right)
 
@@ -189,6 +210,18 @@ class PanelWrangler(QObject):
             panel = RunConfigPanel(instance_id, title)
             main_win.addPanel(panel, PanelAreaEnum.Right)
             self._run_config_panels[instance_id] = panel
+
+    def _open_run_config_group(self, instance_id):
+        if self.main_window is None:
+            return
+
+        main_win = self.main_window
+        panel = self._run_config_group_panels.get(instance_id)
+        if panel is None:
+            title = instance_id
+            panel = RunConfigGroupPanel(instance_id, title)
+            main_win.addPanel(panel, PanelAreaEnum.Right)
+            self._run_config_group_panels[instance_id] = panel
 
     def _open_macro(self, model):
         panel = self._project_item_panels.get(model)
