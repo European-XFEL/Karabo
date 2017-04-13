@@ -671,7 +671,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         self._setComboBoxes(self.role == Qt.DisplayRole)
 
     def valueChanged(self, box, value, timestamp=None):
-        if value is None:
+        if value is None or isinstance(value, schema.Dummy):
             return
 
         if self.tableModel.rowCount(None) > len(value):

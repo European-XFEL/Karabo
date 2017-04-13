@@ -21,7 +21,7 @@ namespace karabo {
         void RunConfigurator::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
+                    .setNewDefaultValue<int>(Schema::AccessLevel::EXPERT)
                     .commit();
 
             SLOT_ELEMENT(expected).key("buildConfigurationInUse")
