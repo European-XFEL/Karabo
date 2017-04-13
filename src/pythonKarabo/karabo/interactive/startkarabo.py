@@ -6,7 +6,7 @@ server corresponds to one directory in `$KARABO/var/service`.
 Typically, the device server's ID is used as a name for this
 directory, just slashes replaced by underscores.
 
-Whithin this directory, there is one `run` file, which is executed by
+Within this directory, there is one `run` file, which is executed by
 supervise. Typically, they are just symbolic links to files in
 `$KARABO/service`, which contains ready-made code to execute Karabo
 devices servers, but you are free to put whatever code you want.  If
@@ -89,7 +89,6 @@ def defaultall():
 def exec_defaultall(cmd, *args):
     supervise()
     path = absolute("extern", "bin", cmd)
-    defaultall()
     os.execv(path, [cmd] + list(args) + defaultall())
 
 
@@ -151,8 +150,8 @@ def gnometermlog():
     servers = [fn for fn in defaultall()
                if isexecutable(osp.join(fn, "log", "run"))]
     cmd = sum((["--tab", "-e",
-               'bash -c "echo -en \\\\\\e]0\\;{0}\\\\\\a;'  # set tab title
-                        'tail -n 100 -F {0}/log/current"'.format(s)]
+                r'bash -c "echo -en \\\e]0\;{0}\\\a;'  # set tab title
+                          'tail -n 100 -F {0}/log/current"'.format(s)]
                for s in servers), ["gnome-terminal"])
     os.execvp("gnome-terminal", cmd)
 
