@@ -91,7 +91,8 @@ class ProjectDeviceInstance(HasStrictTraits):
     def _get_current_configuration(self):
         """Traits Property getter for the current configuration
         """
-        if self.online:
+        if (self.online and self._online_dev_config.serverId == self.server_id
+                and self._online_dev_config.classId == self.class_id):
             return self._online_dev_config
 
         return self._offline_dev_config
@@ -134,7 +135,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         """
         self.online = self._online_dev_config.isOnline()
         if self.online:
-            self.status = 'error' if error_flag else status
+            self.status = self._update_online_status(box, status, error_flag)
         else:
             self.status = self._update_offline_status()
 
@@ -176,8 +177,18 @@ class ProjectDeviceInstance(HasStrictTraits):
         # Update the status
         online_device.updateStatus()
 
+    def _update_online_status(self, box, status, error_flag):
+        """Return correct online status for given ``server_id`` and
+        ``class_id``
+        """
+        conf = box.configuration
+        if conf.serverId == self.server_id and conf.classId == self.class_id:
+            return 'error' if error_flag else status
+        return 'incompatible'
+
     def _update_offline_status(self):
-        """Return correct offline status for given ``class_id`` and ``server_id``
+        """Return correct offline status for given ``server_id`` and
+        ``class_id``
         """
         topology = get_topology()
         server_key = 'server.{}'.format(self.server_id)

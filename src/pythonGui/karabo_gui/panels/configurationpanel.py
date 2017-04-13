@@ -400,8 +400,12 @@ class ConfigurationPanel(BasePanelWidget):
         if self.prevConfiguration is None:
             return
 
+        prevClassId = self.prevConfiguration.classId
+        prevServerId = self.prevConfiguration.serverId
         currentDeviceId = self.prevConfiguration.id
-        if configuration.id == currentDeviceId:
+        if (configuration.serverId == prevServerId and
+                configuration.classId == prevClassId and
+                configuration.id == currentDeviceId):
             self.showConfiguration(configuration)
 
     def _createNewParameterPage(self, configuration):
