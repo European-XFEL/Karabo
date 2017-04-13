@@ -51,10 +51,12 @@ class DeviceInstanceController(BaseProjectGroupController):
         delete_action.triggered.connect(partial(self._delete_device,
                                                 parent_project))
         instantiate_action = QAction('Instantiate', menu)
+        instantiate_action.setEnabled(not self.project_device.online)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      parent_project))
         shutdown_action = QAction('Shutdown', menu)
-        shutdown_action.triggered.connect(self.shutdown_device)
+        shutdown_action.setEnabled(self.project_device.online)
+        shutdown_action.triggered.connect(partial(self.shutdown_device, True))
         menu.addAction(edit_action)
         menu.addMenu(config_menu)
         menu.addSeparator()
