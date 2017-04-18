@@ -136,8 +136,8 @@ class DeviceServerController(BaseProjectGroupController):
 
     def _delete_all_devices(self):
         server = self.model
-        ask = ('Do you really want to delete all devices of server '
-               '\"<b>{}</b>\"?').format(server.simple_name)
+        ask = ('Do you really want to delete all devices of <br> server '
+               '<b>{}</b>?').format(server.simple_name)
         reply = QMessageBox.question(None, 'Delete all devices', ask,
                                      QMessageBox.Yes | QMessageBox.No,
                                      QMessageBox.No)
@@ -152,6 +152,15 @@ class DeviceServerController(BaseProjectGroupController):
             dev_inst_item.instantiate(server)
 
     def _shutdown_devices(self):
+        server = self.model
+        ask = ('Do you really want to shutdown all devices of <br> server '
+               '<b>{}</b>?').format(server.simple_name)
+        reply = QMessageBox.question(None, 'Shutdown all devices', ask,
+                                     QMessageBox.Yes | QMessageBox.No,
+                                     QMessageBox.No)
+        if reply == QMessageBox.No:
+            return
+
         for dev_inst_item in self.children:
             dev_inst_item.shutdown_device(show_confirm=False)
 
