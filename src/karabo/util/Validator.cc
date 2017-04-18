@@ -421,7 +421,8 @@ namespace karabo {
                     //         and in doubt chooses the latter.
                     //         So we tolerate empty vector<string> and overwrite by empty vector<Hash>.
                     workNode.setValue(vector<Hash>());
-                } else {
+                // TableElement cells may be aliasing values. In this case the actual value may be of NoneType
+                } else if (!(workNode.hasAttribute("isAliasing") && givenType == Types::NONE)) {
                     // Try casting this guy
                     try {
                         workNode.setType(referenceType);
