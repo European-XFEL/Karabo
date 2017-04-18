@@ -197,12 +197,13 @@ cp .fix-python-scripts.sh .set_relative_rpath.py $PACKAGEDIR/bin
 safeRunCommand "$PACKAGEDIR/bin/.fix-python-scripts.sh $PACKAGEDIR"
 
 if [ "$BUNDLE_ACTION" = "package" ]; then
-    # Tar it
+    # ZIP it
     cd $PACKAGEDIR/../
-    safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz $PACKAGENAME"
+    safeRunCommand "zip -qr ${PACKAGENAME}.zip $PACKAGENAME"
     
     # Create installation script
-    echo -e '#!/bin/bash\n'"VERSION=$VERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
+    echo -e '#!/bin/bash\n'"VERSION=$VERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.zip > $INSTALLSCRIPT
+    safeRunCommand "zip -A ${INSTALLSCRIPT}"
     chmod a+x $INSTALLSCRIPT
 fi
 
