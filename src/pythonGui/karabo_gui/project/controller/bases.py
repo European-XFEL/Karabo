@@ -177,8 +177,9 @@ class BaseProjectGroupController(BaseProjectController):
         """
         for model in removed:
             controller = self._child_map[model]
-            self._qt_model.remove_controller(controller)
-            self.children.remove(controller)
+            # NOTE: Always use a context manager when modifying self.children!
+            with self._qt_model.removal_context(controller):
+                self.children.remove(controller)
             self.child_destroy(controller)
 
         # Synchronize the GUI with the Traits model
@@ -202,8 +203,12 @@ class BaseProjectGroupController(BaseProjectController):
     def _update_ui_children(self, additions):
         """ Propagate changes from the Traits model to the Qt item model.
         """
-        for item in additions:
-            # NOTE: `insert_controller` must be called BEFORE adding to the
-            # backing data store. See QAbstractItemModel.beginInsertRows
-            self._qt_model.insert_controller(item, len(self.children))
-            self.children.append(item)
+        if not additions:
+            return
+
+        # First and last indices, INCLUSIVE (thus the '- 1')
+        first = len(self.children)
+        last = first + len(additions) - 1
+        # NOTE: Always use a context manager when modifying self.children!
+        with self._qt_model.insertion_context(self, first, last):
+            self.children.extend(additions)
