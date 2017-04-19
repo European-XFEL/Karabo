@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
         self.acServerConnect.setStatusTip(text)
         self.acServerConnect.setToolTip(text)
         self.acServerConnect.setCheckable(True)
-        self.acServerConnect.triggered.connect(network.onServerConnection)
+        self.acServerConnect.triggered.connect(self._on_server_connection)
 
         text = "Exit"
         self.acExit = QAction(icons.exit, "&{}".format(text), self)
@@ -259,15 +259,8 @@ class MainWindow(QMainWindow):
 
     def _quit(self):
         # Check for project changes
-        project = get_project_model().traits_data_model
-        if project is not None and project.modified:
-            name = project.simple_name
-            ask = ('The project \"<b>{}</b>\" has been modified.<br />Do you '
-                   'want to save it first project?').format(name)
-            options = (QMessageBox.Yes | QMessageBox.No)
-            reply = QMessageBox.question(None, 'Save project', ask, options,
-                                         QMessageBox.Yes)
-            if reply == QMessageBox.Yes:
+        if self._project_is_unsaved():
+            if self._save_project_before_closure():
                 return False
 
         # Make sure there are no pending writing things in the pipe
@@ -333,6 +326,35 @@ class MainWindow(QMainWindow):
             assert maximized_container is not None
             if maximized_container.count() > 0:
                 maximized_container.currentWidget().onMinimize()
+
+    def _project_is_unsaved(self):
+        """return True is a project is open and has unsaved changes."""
+        project = get_project_model().traits_data_model
+        if project is not None and project.modified:
+            return True
+        return False
+
+    def _save_project_before_closure(self):
+        ask = ('The open project has been modified.<br />'
+               'Do you want to save it first?')
+        options = (QMessageBox.Yes | QMessageBox.No)
+        reply = QMessageBox.question(None, 'Save project', ask,
+                                     options,
+                                     QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
+            return True
+        return False
+
+    def _on_server_connection(self, connect):
+        network = get_network()
+
+        if self._project_is_unsaved():
+            if self._save_project_before_closure():
+                self.acServerConnect.setChecked(True)
+            else:
+                network.onServerConnection(connect)
+        else:
+            network.onServerConnection(connect)
 
     # --------------------------------------
     # Qt slots
