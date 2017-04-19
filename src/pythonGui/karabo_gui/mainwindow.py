@@ -318,6 +318,22 @@ class MainWindow(QMainWindow):
             if area_container is not panel_container:
                 area_container.minimize(False)
 
+    def _unminimize_remaining_panels(self):
+        """Reset the maximization of any child panels
+        """
+        any_minimized = False
+        maximized_container = None
+        for area_container in self._panel_areas.values():
+            if not area_container.minimized:
+                maximized_container = area_container
+            else:
+                any_minimized = True
+
+        if any_minimized:
+            assert maximized_container is not None
+            if maximized_container.count() > 0:
+                maximized_container.currentWidget().onMinimize()
+
     # --------------------------------------
     # Qt slots
 
@@ -343,6 +359,10 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(bool)
     def onServerConnectionChanged(self, isConnected):
+        # Un-minimize all panels when disconnecting!
+        if not isConnected:
+            self._unminimize_remaining_panels()
+
         if isConnected:
             text = "Disconnect from server"
         else:
