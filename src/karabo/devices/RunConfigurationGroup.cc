@@ -79,7 +79,7 @@ namespace karabo {
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
+                    .setNewDefaultValue<int>(Schema::AccessLevel::EXPERT)
                     .commit();
 
             NODE_ELEMENT(expected).key("group")

@@ -52,9 +52,8 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         if value is None:
             value = 0
 
-        if not self._internal_widget.hasFocus():
-            with SignalBlocker(self._internal_widget):
-                self._internal_widget.setText("{}".format(value))
+        with SignalBlocker(self._internal_widget):
+            self._internal_widget.setText("{}".format(value))
 
     def validate_value(self):
         """

@@ -61,7 +61,7 @@ class TestSystemTopology(GuiTestCase):
                                              server_id=server_id)
 
         assert not device.online
-        assert device.status == 'testing'
+        assert device.status == 'offline'
         assert device._online_dev_config is topology.get_device(device_id)
         assert device._class_config is topology.get_class(server_id, class_id)
         network.onGetClassSchema.assert_called_with(server_id, class_id)

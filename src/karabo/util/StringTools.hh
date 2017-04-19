@@ -28,6 +28,7 @@
 #include <bitset>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include "Types.hh"
@@ -406,6 +407,24 @@ namespace karabo {
             std::vector<unsigned char> tmp;
             karabo::util::base64Decode(value, tmp);
             return tmp;
+        }
+
+        /**
+         * XXX: This function is working around the surprising behavior of fromstring<unsigned char>(value, sep) seen above.
+           The long-term solution should be to remove the base64 encoding/decoding in toString/fromString. However, we
+           need to discover which code is expecting that behavior before making such a change.
+
+           In the meantime, we can use this simple version for schema options parsing.
+         */
+        template <class T>
+        inline std::vector<T> fromStringForSchemaOptions(const std::string& value, const std::string& sep) {
+            const std::vector<std::string> items = karabo::util::fromString<std::string, std::vector>(value, sep);
+            std::vector<T> converted;
+            converted.reserve(items.size());
+            BOOST_FOREACH(std::string item, items) {
+                converted.push_back(karabo::util::fromString<T>(item));
+            }
+            return converted;
         }
 
         /**

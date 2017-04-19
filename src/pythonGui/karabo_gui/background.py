@@ -10,7 +10,8 @@ from PyQt4.QtCore import QTimer
 @total_ordering
 class Priority(Enum):
     NETWORK = 0
-    BACKGROUND = 1
+    BIG_DATA = 1
+    BACKGROUND = 2
 
     def __lt__(self, other):
         if isinstance(other, Priority):

@@ -9,8 +9,8 @@ from enum import Enum
 import os.path
 
 from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import (QAction, QActionGroup, QMainWindow, QMenu, QSplitter,
-                         QToolButton, qApp)
+from PyQt4.QtGui import (QAction, QActionGroup, QMainWindow, QMenu,
+                         QMessageBox, QSplitter, QToolButton, qApp)
 
 import karabo_gui.icons as icons
 from karabo.middlelayer import AccessLevel
@@ -25,7 +25,8 @@ from karabo_gui.panels.navigationpanel import NavigationPanel
 from karabo_gui.panels.notificationpanel import NotificationPanel
 from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
-from karabo_gui.singletons.api import get_db_conn, get_network
+from karabo_gui.singletons.api import (get_db_conn, get_network,
+                                       get_project_model)
 
 ACCESS_LEVELS = OrderedDict()
 ACCESS_LEVELS['Admin'] = AccessLevel.ADMIN
@@ -257,6 +258,18 @@ class MainWindow(QMainWindow):
         self._panel_areas[PanelAreaEnum.Right] = right
 
     def _quit(self):
+        # Check for project changes
+        project = get_project_model().traits_data_model
+        if project is not None and project.modified:
+            name = project.simple_name
+            ask = ('The project \"<b>{}</b>\" has been modified.<br />Do you '
+                   'want to save it first project?').format(name)
+            options = (QMessageBox.Yes | QMessageBox.No)
+            reply = QMessageBox.question(None, 'Save project', ask, options,
+                                         QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                return False
+
         # Make sure there are no pending writing things in the pipe
         if get_db_conn().is_writing():
             msg = ('There is currently data fetched from or sent to the <br>'
