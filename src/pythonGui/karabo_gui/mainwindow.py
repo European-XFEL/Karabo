@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
         self.acServerConnect.setStatusTip(text)
         self.acServerConnect.setToolTip(text)
         self.acServerConnect.setCheckable(True)
-        self.acServerConnect.triggered.connect(self._on_server_connection)
+        self.acServerConnect.triggered.connect(self.onServerConnection)
 
         text = "Exit"
         self.acExit = QAction(icons.exit, "&{}".format(text), self)
@@ -339,22 +339,10 @@ class MainWindow(QMainWindow):
                'Do you want to save it first?')
         options = (QMessageBox.Yes | QMessageBox.No)
         reply = QMessageBox.question(None, 'Save project', ask,
-                                     options,
-                                     QMessageBox.Yes)
+                                     options, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             return True
         return False
-
-    def _on_server_connection(self, connect):
-        network = get_network()
-
-        if self._project_is_unsaved():
-            if self._save_project_before_closure():
-                self.acServerConnect.setChecked(True)
-            else:
-                network.onServerConnection(connect)
-        else:
-            network.onServerConnection(connect)
 
     # --------------------------------------
     # Qt slots
@@ -417,3 +405,15 @@ class MainWindow(QMainWindow):
         checked_action = self.access_level_actions.get(global_access_level)
         if checked_action is not None:
             checked_action.setChecked(True)
+
+    @pyqtSlot(bool)
+    def onServerConnection(self, connect):
+        network = get_network()
+
+        if self._project_is_unsaved():
+            if self._save_project_before_closure():
+                self.acServerConnect.setChecked(True)
+            else:
+                network.onServerConnection(connect)
+        else:
+            network.onServerConnection(connect)
