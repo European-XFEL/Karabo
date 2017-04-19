@@ -115,11 +115,9 @@ if [ "x${interactive}x" = "xTRUEx" ]; then
 fi
 
 echo -n " Extracting files, please wait..."
-# searches for the line number where finish the script and start the tar.gz
-SKIP=`awk '/^__TARFILE_FOLLOWS__/ { print NR + 1; exit 0; }' $0`
-tail -n +$SKIP $0 | (cd  $installDir && tar xzf -) || echo_exit "Problem unpacking the file $0"
+unzip -q $0
 echo  " unpacking finished successfully"
-# Any script here will happen after the tar file extract.
+# Any script here will happen after the zip file extract.
 
 # Fix up the venv activation script
 KARABO=$(get_abs_path $installDir/karabo)
@@ -172,5 +170,3 @@ echo
 echo "       source $KARABO/activate"
 echo
 exit 0
-# NOTE: Don't place any newline characters after the last line below.
-__TARFILE_FOLLOWS__
