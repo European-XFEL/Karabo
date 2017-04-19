@@ -194,24 +194,24 @@ def adddeviceserver():
     _, server_id, server_type, *options = sys.argv
     target_dir = server_id.replace("/", "_")
     abs_target = absolute("var", "service", target_dir)
+    abs_type = absolute("service", server_type)
 
     if osp.exists(abs_target):
         print("ERROR service/{} already exists".format(target_dir))
         return 3
-    if not osp.exists(absolute("service", server_type)):
+    if not osp.exists(abs_type):
         print("ERROR server type {} is not known".format(server_type))
         return 4
     tmpdir = mkdtemp(dir=absolute("var"))
     try:
-        os.symlink("../../../service/{}".format(server_type),
-                   osp.join(tmpdir, "run"))
+        os.symlink(abs_type, osp.join(tmpdir, "run"))
         open(osp.join(tmpdir, "down"), "w").close()
         with open(osp.join(tmpdir, "parameters"), "w") as params:
             print("serverId={}".format(server_id), file=params)
             for arg in options:
                 print(arg, file=params)
         os.mkdir(osp.join(tmpdir, "log"))
-        os.symlink("../../../../service/logger",
+        os.symlink(absolute("service", "logger"),
                    osp.join(tmpdir, "log", "run"))
         os.rename(tmpdir, abs_target)
     except:
