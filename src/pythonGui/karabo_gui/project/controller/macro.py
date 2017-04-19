@@ -7,7 +7,7 @@ from functools import partial
 from io import StringIO
 
 from PyQt4.QtGui import QAction, QDialog, QMenu
-from traits.api import Instance, String
+from traits.api import Instance, String, on_trait_change
 
 from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabo_gui import icons
@@ -91,7 +91,6 @@ class MacroController(BaseProjectGroupController):
         return menu
 
     def create_ui_data(self):
-        self.model.instances = _get_macro_instances(self.model.instance_id)
         return ProjectControllerUiData(icon=icons.file)
 
     def double_click(self, parent_project, parent=None):
@@ -103,16 +102,15 @@ class MacroController(BaseProjectGroupController):
         """
         for inst_id in removed:
             controller = self._child_map[inst_id]
-            self._qt_model.remove_controller(controller)
-            self.children.remove(controller)
+            # NOTE: Always use a context manager when modifying self.children!
+            with self._qt_model.removal_context(controller):
+                self.children.remove(controller)
             self.child_destroy(controller)
 
         additions = [self.child_create(model=self.model, parent=self,
                                        _qt_model=self._qt_model,
                                        instance_id=inst_id)
                      for inst_id in added]
-        self.children.extend(additions)
-
         # Synchronize the GUI with the Traits model
         self._update_ui_children(additions)
 
@@ -132,6 +130,15 @@ class MacroController(BaseProjectGroupController):
                     # Create KaraboBroadcastEvent
                     broadcast_event(KaraboEventSender.ConnectMacroInstance,
                                     data)
+
+    # ----------------------------------------------------------------------
+    # Traits handlers
+
+    @on_trait_change("model:initialized")
+    def _update_ui_instances(self):
+        """ Whenever the object is modified it should be visible to the user
+        """
+        self.model.instances = _get_macro_instances(self.model.instance_id)
 
     # ----------------------------------------------------------------------
     # traits notification handlers
