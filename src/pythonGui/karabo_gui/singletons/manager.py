@@ -17,6 +17,7 @@ from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QMessageBox
 
 from karabo.common.api import State
+from karabo_gui.background import executeLater, Priority
 from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.singletons.api import get_network, get_topology
@@ -50,6 +51,8 @@ class Manager(QObject):
 
         # The system topology singleton
         self._topology = get_topology()
+        # A dict which includes big networkData
+        self._big_data = {}
 
         network = get_network()
         network.signalServerConnectionChanged.connect(
@@ -57,6 +60,15 @@ class Manager(QObject):
         network.signalReceivedData.connect(self.onReceivedData)
 
     def initDevice(self, serverId, classId, deviceId, config=None):
+        baseSchema = self._topology.get_schema(serverId, classId)
+
+        # if we do not have a schema, notify the user and return
+        if baseSchema is None:
+            QMessageBox.warning(None, 'Unknown device schema',
+                                'Please install device plugin {} on '
+                                'server {} first.'.format(classId, serverId))
+            return
+
         # Use standard configuration for server/classId
         conf = self._topology.get_class(serverId, classId)
         if config is None:
@@ -79,7 +91,6 @@ class Manager(QObject):
 
         # Compute a runtime schema from the configuration and an unmodified
         # copy of the device class schema.
-        baseSchema = self._topology.get_schema(serverId, classId)
         schemaAttrUpdates = getSchemaAttributeUpdates(baseSchema, config)
 
         # Send signal to network
@@ -138,6 +149,8 @@ class Manager(QObject):
                                         KaraboEventSender.ShowAlarmServices)
         self._broadcast_about_instances('RunConfigurator',
                                         KaraboEventSender.AddRunConfigurator)
+        self._broadcast_about_instances('RunConfigurationGroup',
+                                        KaraboEventSender.AddRunConfigGroup)
 
         # Tell the world about new devices/servers
         devices, servers = _extract_topology_devices(systemTopology)
@@ -179,6 +192,8 @@ class Manager(QObject):
                                         KaraboEventSender.ShowAlarmServices)
         self._broadcast_about_instances('RunConfigurator',
                                         KaraboEventSender.AddRunConfigurator)
+        self._broadcast_about_instances('RunConfigurationGroup',
+                                        KaraboEventSender.AddRunConfigGroup)
 
     def handle_instanceUpdated(self, topologyEntry):
         self._topology.instance_updated(topologyEntry)
@@ -203,6 +218,9 @@ class Manager(QObject):
             transform=_instance_finder)
         self._broadcast_about_instances(
             'RunConfigurator', KaraboEventSender.RemoveRunConfigurator,
+            transform=_instance_finder)
+        self._broadcast_about_instances(
+            'RunConfigurationGroup', KaraboEventSender.RemoveRunConfigGroup,
             transform=_instance_finder)
 
         # Update the system topology
@@ -347,10 +365,21 @@ class Manager(QObject):
         broadcast_event(KaraboEventSender.NotificationMessage, data)
 
     def handle_networkData(self, name, data):
-        device_id, prop_path = name.split(":")
-        device = self._topology.get_device(device_id)
-        box = device.getBox(prop_path.split("."))
-        box.boxvalue.schema.fromHash(data)
+        """This method handles the big data chucks coming from directly
+        connected devices (p2p) to `GuiServerDevice`. To keep the GUI
+        responsive the displaying of this data is delayed here.
+        """
+        def show_data():
+            if name not in self._big_data:
+                return
+            data_hash = self._big_data.pop(name)
+            device_id, prop_path = name.split(":")
+            device = self._topology.get_device(device_id)
+            box = device.getBox(prop_path.split("."))
+            box.boxvalue.schema.fromHash(data_hash)
+
+        self._big_data[name] = data
+        executeLater(show_data, Priority.BIG_DATA)
 
     def handle_initReply(self, deviceId, success, message):
         device = self._topology.get_device(deviceId)
@@ -413,6 +442,7 @@ class Manager(QObject):
 
 
 # ------------------------------------------------------------------
+
 
 def _extract_topology_devices(topo_hash):
     """Get all the devices and their classes out of a system topology update.

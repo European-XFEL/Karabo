@@ -12,8 +12,9 @@ import csv
 from datetime import datetime
 from threading import Timer
 
-from .hash import Hash, XMLParser, XMLWriter
+from .hash import Hash
 from .project.old import Project, BaseDevice, BaseDeviceGroup
+from .serializers import decodeXML, encodeXML
 
 
 class ProjectDevice(BaseDevice):
@@ -27,13 +28,13 @@ class ProjectDevice(BaseDevice):
         """
         This function loads the corresponding XML file of this configuration.
         """
-        self._initConfig = XMLParser().read(xmlString)
+        self._initConfig = decodeXML(xmlString)
 
     def toXml(self):
         """
         This function returns the configurations' XML file as a string.
         """
-        return XMLWriter().write(Hash(self.classId, self._initConfig))
+        return encodeXML(Hash(self.classId, self._initConfig))
 
 
 class ProjectDeviceGroup(BaseDeviceGroup):
@@ -82,7 +83,7 @@ class DeviceClientProject(Project):
                 elif d.ifexists == "restart":
                     self.deviceClient.shutdownDevice(d.deviceId)
 
-            data = XMLWriter().write(d.initConfig)
+            data = encodeXML(d.initConfig)
             self.deviceClient._instantiate(d.serverId, d.classId, d.deviceId,
                                            data)
 
@@ -98,7 +99,7 @@ class DeviceClientProject(Project):
                 elif d.ifexists == "restart":
                     self.deviceClient.shutdownDevice(d.deviceId)
 
-            data = XMLWriter().write(d.initConfig)
+            data = encodeXML(d.initConfig)
             self.deviceClient._instantiate(d.serverId, d.classId, d.deviceId,
                                            data)
 

@@ -269,6 +269,10 @@ class SystemTopology(HasStrictTraits):
         except KeyError:
             attributes = {}
 
+        # Remove instance from system hash
+        if self._system_hash is not None and path in self._system_hash:
+            del self._system_hash[path]
+
         if instance_type in ('device', 'macro'):
             # Set the Configuration to offline, but keep it.
             device = self._online_devices.get(instance_id)
@@ -300,10 +304,6 @@ class SystemTopology(HasStrictTraits):
             # Note the details of what device is gone
             host = attributes.get('host', 'UNKNOWN')
             servers.append((instance_id, host, 'offline'))
-
-        # Remove instance from system hash
-        if self._system_hash is not None and path in self._system_hash:
-            del self._system_hash[path]
 
         return devices, servers
 

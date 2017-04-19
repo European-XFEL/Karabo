@@ -41,8 +41,8 @@ first string-type column encountered is pre-filled with the deviceID.
 import copy
 import json
 
-from PyQt4.QtCore import (Qt, QAbstractTableModel, QModelIndex, QObject,
-                          SIGNAL, SLOT, pyqtSlot)
+from PyQt4.QtCore import (pyqtSlot, Qt, QAbstractTableModel, QModelIndex,
+                          QObject, SIGNAL, SLOT, QTimer)
 from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog,
                          QComboBox, QVBoxLayout, QWidget, QDialogButtonBox,
                          QCheckBox, QItemDelegate, QStyledItemDelegate)
@@ -104,9 +104,8 @@ class TableModel(QAbstractTableModel):
             columnKey = self.columnHash.getKeys()[idx.column()]
 
             value = None
-            if self.cdata[idx.row()].hasAttribute(columnKey,
-                                                  "isAliasing") and role == \
-                    Qt.EditRole:
+            alias = self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing")
+            if  alias and role == Qt.EditRole:
                 value = "=" + self.cdata[idx.row()].getAttribute(columnKey,
                                                                  "isAliasing")
             else:
@@ -119,13 +118,12 @@ class TableModel(QAbstractTableModel):
 
         if role == Qt.DecorationRole:
             columnKey = self.columnHash.getKeys()[idx.column()]
-            if (
-            self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing")):  # and
-                # self.role == Qt.DisplayRole):
+            alias = self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing")
+            if alias:
+                alias = self.cdata[idx.row()].getAttribute(columnKey,
+                                                           "isAliasing")
+                monitoredDeviceId = alias.split(":")[0]
 
-                monitoredDeviceId = (
-                self.cdata[idx.row()].getAttribute(columnKey,
-                                                   "isAliasing").split(".")[0])
                 status = get_topology().get_device(monitoredDeviceId).status
                 if status in ["monitoring", "alive"]:
                     return icons.tableOnline.pixmap(10, 10)
@@ -196,8 +194,7 @@ class TableModel(QAbstractTableModel):
             self.connectedMonitors[resp].remove((row, col))
             if len(self.connectedMonitors[resp]) == 0:
                 del self.connectedMonitors[resp]
-                deviceId = resp.split(".")[0]
-                deviceProperty = ".".join(resp.split(".")[1:])
+                deviceId,  deviceProperty = resp.split(":")
                 device = get_topology().get_device(deviceId)
                 box = device.getBox(deviceProperty.split("."))
                 if role == Qt.DisplayRole:
@@ -216,7 +213,6 @@ class TableModel(QAbstractTableModel):
         if resp not in self.connectedMonitors:
             self.connectedMonitors[resp] = [(row, col)]
             if role == Qt.DisplayRole:
-
                 box.signalUpdateComponent.connect(self.monitorChanged)
         elif "{}.{}".format(row, col) in self.connectedMonitorsByCell:
             return box.value
@@ -330,12 +326,21 @@ class TableModel(QAbstractTableModel):
         return True
 
     def removeRows(self, pos, rows, idx):
-        self.beginRemoveRows(QModelIndex(), pos, pos + rows - 1)
+        # protect ourselves against invalid indices:
+        endPos = pos + rows - 1
+        if pos < 0 or endPos < 0:
+            return False
 
-        for r in range(rows):
-            self.cdata.pop(pos + r)
+        if endPos > len(self.cdata) - 1:
+            endPos = len(self.cdata) - 1
 
-        self.endRemoveRows()
+        self.beginRemoveRows(QModelIndex(), pos, endPos)
+        try:
+            for r in range(rows, 0, -1):
+                self.cdata.pop(pos + r - 1)
+        finally:
+            self.endRemoveRows()
+
         self.editingFinished(self.cdata)
         return True
 
@@ -449,30 +454,48 @@ class FromPropertyPopUp(QDialog):
 # from http://stackoverflow.com/questions/17615997/pyqt-how-to-set-qcombobox
 # -in-a-table-view-using-qitemdelegate
 class ComboBoxDelegate(QItemDelegate):
-    def __init__(self, options, parent=None, *args):
+    def __init__(self, options, row=-1, column=-1, parent=None, *args):
         super(ComboBoxDelegate, self).__init__(parent, *args)
         self.options = options
+        self.row_column = (row, column)
+        parent.clicked.connect(self.cellClicked)
+        self.currentCellIndex = None  # QPersistentModelIndex
 
     def createEditor(self, parent, option, index):
         combo = QComboBox(parent)
         combo.addItems([str(o) for o in self.options])
-        self.connect(combo, SIGNAL("currentIndexChanged(int)"), self,
-                     SLOT("currentIndexChanged()"))
+        combo.currentIndexChanged.connect(self.onCurrentIndexChanged)
         return combo
 
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
         selection = index.model().data(index, Qt.DisplayRole)
-
         editor.setCurrentIndex(self.options.index(selection))
         editor.blockSignals(False)
 
     @pyqtSlot()
-    def currentIndexChanged(self):
+    def onCurrentIndexChanged(self):
         self.commitData.emit(self.sender())
 
     def setModelData(self, editor, model, index):
         model.setData(index, self.options[editor.currentIndex()], Qt.EditRole)
+
+    @pyqtSlot(object)
+    def cellClicked(self, index):
+        """Only enable editing for this delegate whenever user clicks on cell
+        """
+        # Only consider click events for this delegate in its column
+        if (index.row(), index.column()) == self.row_column:
+            if self.currentCellIndex is not None:
+                # Persistent model index and data namely QComboBox cleaned up
+                self.parent().closePersistentEditor(self.currentCellIndex)
+            self.currentCellIndex = index
+            self.parent().openPersistentEditor(self.currentCellIndex)
+        else:
+            if self.currentCellIndex is not None:
+                # Persistent model index and data namely QComboBox cleaned up
+                self.parent().closePersistentEditor(self.currentCellIndex)
+            self.currentCellIndex = None
 
 
 class KaraboTableView(QTableView):
@@ -584,7 +607,6 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         self.widget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.widget.customContextMenuRequested.connect(self.cellPopUp)
         self.leftTableHeader = self.widget.verticalHeader()
-        self.colsWithCombos = []
 
         self.columnSchema = None
         self.columnHash = None
@@ -599,6 +621,8 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                 self._headerPopUp)
             self._setComboBoxes(False)
 
+        self.recentContextTrigger = False
+
     def _setComboBoxes(self, ro):
         if self.columnSchema is None:
             return
@@ -606,7 +630,6 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             # remove any combo delegate
             cHash = self.columnSchema.hash
             cKeys = self.columnHash.getKeys()
-            self.colsWithCombos = []
             for col, cKey in enumerate(cKeys):
 
                 if cHash.hasAttribute(cKey, "options"):
@@ -619,22 +642,13 @@ class EditableTableElement(EditableWidget, DisplayWidget):
 
             cHash = self.columnSchema.hash
             cKeys = self.columnHash.getKeys()
-            self.colsWithCombos = []
             for col, cKey in enumerate(cKeys):
-
                 if cHash.hasAttribute(cKey, "options"):
                     delegate = ComboBoxDelegate(
-                        cHash.getAttribute(cKey, "options"))
+                        cHash.getAttribute(cKey, "options"),
+                        row=self.tableModel.rowCount(None),
+                        column=col, parent=self.widget)
                     self.widget.setItemDelegateForColumn(col, delegate)
-                    self.colsWithCombos.append(col)
-            self._updateComboBoxes()
-
-    def _updateComboBoxes(self):
-        if self.role == Qt.EditRole:
-            for row in range(0, self.tableModel.rowCount(None)):
-                for col in self.colsWithCombos:
-                    self.widget.openPersistentEditor(
-                        self.tableModel.index(row, col))
 
     @classmethod
     def isCompatible(cls, box, readonly):
@@ -657,7 +671,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         self._setComboBoxes(self.role == Qt.DisplayRole)
 
     def valueChanged(self, box, value, timestamp=None):
-        if value is None:
+        if value is None or isinstance(value, schema.Dummy):
             return
 
         if self.tableModel.rowCount(None) > len(value):
@@ -679,13 +693,14 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                 self.tableModel.setData(idx, row[col], self.role, isAliasing,
                                         fromValueChanged=True)
 
-        self._updateComboBoxes()
-
     def onEditingFinished(self, value):
-        self._updateComboBoxes()
         EditableWidget.onEditingFinished(self, value)
 
     def _headerPopUp(self, pos):
+
+        if self.recentContextTrigger:
+            return
+
         idx = None
         for i in self.widget.selectionModel().selection().indexes():
             idx = i
@@ -695,7 +710,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             addAction = menu.addAction("Add Row below")
             duplicateAction = menu.addAction("Duplicate Row below")
             removeAction = menu.addAction("Delete Row")
-            action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
+            action = menu.exec(self.widget.viewport().mapToGlobal(pos))
             if action == addAction:
                 self.tableModel.insertRows(idx.row() + 1, 1, QModelIndex())
             elif action == duplicateAction:
@@ -708,18 +723,23 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             if idx.isValid():
                 addAction = menu.addAction("Add Row below")
                 duplicateAction = menu.addAction("Duplicate Row below")
-                action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
+                action = menu.exec(self.widget.viewport().mapToGlobal(pos))
                 if action == addAction:
                     self.tableModel.insertRows(idx.row() + 1, 1, QModelIndex())
                 elif action == duplicateAction:
                     self.tableModel.duplicateRow(idx.row())
-
             else:
                 addAction = menu.addAction("Add Row to end")
-                action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
+                action = menu.exec(self.widget.viewport().mapToGlobal(pos))
                 if action == addAction:
                     self.tableModel.insertRows(self.tableModel.rowCount(None),
                                                1, QModelIndex())
+        # avoid self triggering of the menu
+        self.recentContextTrigger = True
+        triggerTime = QTimer.singleShot(200, self._clearContextTrigger)
+
+    def _clearContextTrigger(self):
+        self.recentContextTrigger = False
 
     def cellPopUp(self, pos):
         idx = None
@@ -769,9 +789,9 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             if propertyPopUp.exec_():
                 deviceId, deviceProperty, isMonitor = propertyPopUp.getValues()
                 if isMonitor:
-                    value = "={}.{}".format(deviceId, deviceProperty)
+                    value = "={}:{}".format(deviceId, deviceProperty)
                 else:
-                    value = "{}.{}".format(deviceId, deviceProperty)
+                    value = "{}:{}".format(deviceId, deviceProperty)
                 self.tableModel.setData(idx, value, Qt.EditRole)
 
     def copy(self, item):

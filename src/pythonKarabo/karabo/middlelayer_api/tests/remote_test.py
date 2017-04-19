@@ -913,6 +913,13 @@ class Tests(DeviceTest):
             self.remote.__class__.injected = String()
             self.remote.__class__.injected_node = Node(Nested)
 
+            @Int32()
+            @coroutine
+            def tobeinit(myself, value):
+                self.assertEqual(value, 100)
+                myself.tobeinit = 123
+            self.remote.__class__.tobeinit = tobeinit
+
             @Slot()
             def slot(self):
                 nonlocal slotdata
@@ -920,14 +927,15 @@ class Tests(DeviceTest):
             slotdata = None
             self.remote.__class__.injected_slot = slot
 
-            self.remote.injected = "smthng"
             with self.assertRaises(TimeoutError):
                 yield from wait_for(waitUntil(lambda: hasattr(d, "injected")),
                                     timeout=0.1)
-            self.remote.publishInjectedParameters()
+            yield from self.remote.publishInjectedParameters(tobeinit=100)
+            self.remote.injected = "smthng"
             self.remote.injected_node = Nested({})
             yield from waitUntil(lambda: hasattr(d, "injected"))
             yield from waitUntil(lambda: d.injected == "smthng")
+            self.assertEqual(d.tobeinit, 123, "initializer was not called")
             self.remote.injected = "bla"
             yield from waitUntil(lambda: d.injected == "bla")
             yield from d.injected_slot()
@@ -939,6 +947,19 @@ class Tests(DeviceTest):
 
             d.injected = "whatever"
             yield from waitUntil(lambda: self.remote.injected == "whatever")
+
+    @async_tst
+    def test_earlyinject(self):
+        class A(Injectable, Device):
+            @coroutine
+            def onInitialization(self):
+                self.__class__.number = Int32()
+                yield from self.publishInjectedParameters()
+                self.number = 3
+        a = A({"_deviceId_": "testinject"})
+        yield from a.startInstance()
+        with (yield from getDevice("testinject")) as proxy:
+            self.assertEqual(proxy.number, 3)
 
 if __name__ == "__main__":
     main()
