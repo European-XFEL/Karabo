@@ -25,6 +25,8 @@ public:
 
     Base(const karabo::util::Hash& hash);
 
+    virtual ~Base();
+
     boost::shared_ptr<Aggregated>& getAggregated();
 
 private:
@@ -44,6 +46,8 @@ public:
     Aggregated(const karabo::util::Hash& hash);
 
     Aggregated(const int answer);
+
+    virtual ~Aggregated();
 
     int foo() const;
 
