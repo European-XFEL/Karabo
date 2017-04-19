@@ -20,7 +20,7 @@ namespace karabo {
     namespace core {
 
 
-        DeviceServer::Pointer Runner::instantiate(int argc, char** argv) {
+        DeviceServer::Pointer Runner::instantiate(int argc, const char** argv) {
 
             const std::string classId("DeviceServer");
 
@@ -46,7 +46,7 @@ namespace karabo {
         }
 
 
-        bool Runner::parseCommandLine(int argc, char** argv, karabo::util::Hash & configuration) {
+        bool Runner::parseCommandLine(int argc, const char** argv, karabo::util::Hash & configuration) {
             using namespace std;
             using namespace karabo::util;
             std::string firstArg;
@@ -228,7 +228,7 @@ namespace karabo {
         }
 
 
-        void Runner::processOption(const std::string& option, int argc, char** argv) {
+        void Runner::processOption(const std::string& option, int argc, const char** argv) {
             std::string lowerOption(boost::to_lower_copy(option));
             if (argc > 2) {
                 std::string possibleFileName(argv[2]);

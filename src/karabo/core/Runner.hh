@@ -48,17 +48,17 @@ namespace karabo {
              * @param argv String array of commandline options
              * @return Pointer to device server instance (may be empty)
              */
-            static DeviceServer::Pointer instantiate(int argc, char** argv);
+            static DeviceServer::Pointer instantiate(int argc, const char** argv);
 
         protected:
 
-            static bool parseCommandLine(int argc, char** argv, karabo::util::Hash& configuration);
+            static bool parseCommandLine(int argc, const char** argv, karabo::util::Hash& configuration);
 
             static void parseToken(const std::string& prefix, const std::string& token, std::vector<std::string>& tokenList);
 
             static void resolveTokens(const std::vector<std::string>& argv, std::vector<std::string>& args);
 
-            static void processOption(const std::string& option, int argc, char** argv);
+            static void processOption(const std::string& option, int argc, const char** argv);
 
             static void showUsage(const std::string& programName, const std::string& what = "");
 

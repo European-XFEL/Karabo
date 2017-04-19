@@ -32,6 +32,10 @@ Base::Base(const karabo::util::Hash& hash) {
 }
 
 
+Base::~Base() {
+}
+
+
 boost::shared_ptr<Aggregated>& Base::getAggregated() {
     return m_aggregated;
 }
@@ -53,6 +57,10 @@ Aggregated::Aggregated(const karabo::util::Hash& hash) : m_answer(hash.get<int>(
 
 Aggregated::Aggregated(const int answer) : m_answer(answer) {
 
+}
+
+
+Aggregated::~Aggregated() {
 }
 
 
