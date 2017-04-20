@@ -19,7 +19,6 @@ import IPython
 
 import karabo
 from karabo.common.states import State
-
 from . import device_client
 from .device_client import (
     DeviceClientBase, disconnectDevice, execute, executeNoWait, getClasses,
