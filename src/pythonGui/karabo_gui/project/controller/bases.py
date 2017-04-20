@@ -49,11 +49,11 @@ class BaseProjectController(ABCHasStrictTraits):
     _qt_model = WeakRef(QAbstractItemModel)
 
     @abstractmethod
-    def context_menu(self, parent_project, parent=None):
+    def context_menu(self, project_controller, parent=None):
         """ Requests a menu to be used as a context menu for this item.
 
-        :param parent_project: The ProjectModel which is the immediate parent
-                               of the item which was clicked on.
+        :param project_controller: The ProjectController which is the immediate
+                                   parent of the item which was clicked on.
         :param parent: A QObject which can be passed as a Qt object parent.
         :return: A QMenu containing contextual actions for the item.
         """
@@ -65,19 +65,19 @@ class BaseProjectController(ABCHasStrictTraits):
         result will be stored in the ``ui_data`` trait.
         """
 
-    def double_click(self, parent_project, parent=None):
+    def double_click(self, project_controller, parent=None):
         """ Handles a double click event on this item.
 
-        :param parent_project: The ProjectModel which is the immediate parent
-                               of the item which was clicked on.
+        :param project_controller: The ProjectController which is the immediate
+                                   parent of the item which was clicked on.
         :param parent: A QObject which can be passed as a Qt object parent.
         """
 
-    def single_click(self, parent_project, parent=None):
+    def single_click(self, project_controller, parent=None):
         """ Handles a single click event on this item.
 
-        :param parent_project: The ProjectModel which is the immediate parent
-                               of the item which was clicked on.
+        :param project_controller: The ProjectController which is the immediate
+                                   parent of the item which was clicked on.
         :param parent: A QObject which can be passed as a Qt object parent.
         """
 
@@ -157,7 +157,7 @@ class BaseProjectGroupController(BaseProjectController):
         """
         return len(self.children)
 
-    def single_click(self, parent_project, parent=None):
+    def single_click(self, project_controller, parent=None):
         show_no_configuration()
 
     def items_assigned(self, obj, name, old, new):
