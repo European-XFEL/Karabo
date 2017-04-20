@@ -136,8 +136,6 @@ class MainWindow(QMainWindow):
     # private methods
 
     def _setupActions(self):
-        network = get_network()
-
         text = "Change access level"
         self.tbAccessLevel = QToolButton(self)
         self.tbAccessLevel.setIcon(icons.lock)
@@ -327,7 +325,7 @@ class MainWindow(QMainWindow):
                 maximized_container.currentWidget().onMinimize()
 
     def _save_project_before_closure(self):
-        """
+        """asks for discard/save changes on modified project.
         """
         project = get_project_model().traits_data_model
         if project is not None and project.modified:
@@ -403,11 +401,11 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(bool)
     def onServerConnectTriggered(self, connect):
-        # Executed on 'connect' button click
-        network = get_network()
-
+        """Slot triggered when the `remote` button is clicked, i.e. the
+        user (dis)connect the GUI client  from/to `gui-server`.
+        """
         if self._save_project_before_closure():
             self.acServerConnect.setChecked(True)
         else:
-            network.onServerConnection(connect)
+            get_network().onServerConnection(connect)
 
