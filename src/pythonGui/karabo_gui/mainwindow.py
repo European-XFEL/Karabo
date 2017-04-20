@@ -136,8 +136,6 @@ class MainWindow(QMainWindow):
     # private methods
 
     def _setupActions(self):
-        network = get_network()
-
         text = "Change access level"
         self.tbAccessLevel = QToolButton(self)
         self.tbAccessLevel.setIcon(icons.lock)
@@ -168,7 +166,7 @@ class MainWindow(QMainWindow):
         self.acServerConnect.setStatusTip(text)
         self.acServerConnect.setToolTip(text)
         self.acServerConnect.setCheckable(True)
-        self.acServerConnect.triggered.connect(network.onServerConnection)
+        self.acServerConnect.triggered.connect(self.onServerConnectTriggered)
 
         text = "Exit"
         self.acExit = QAction(icons.exit, "&{}".format(text), self)
@@ -259,15 +257,7 @@ class MainWindow(QMainWindow):
 
     def _quit(self):
         # Check for project changes
-        project = get_project_model().traits_data_model
-        if project is not None and project.modified:
-            name = project.simple_name
-            ask = ('The project \"<b>{}</b>\" has been modified.<br />Do you '
-                   'want to save it first project?').format(name)
-            options = (QMessageBox.Yes | QMessageBox.No)
-            reply = QMessageBox.question(None, 'Save project', ask, options,
-                                         QMessageBox.Yes)
-            if reply == QMessageBox.Yes:
+        if self._save_project_before_closure():
                 return False
 
         # Make sure there are no pending writing things in the pipe
@@ -334,6 +324,19 @@ class MainWindow(QMainWindow):
             if maximized_container.count() > 0:
                 maximized_container.currentWidget().onMinimize()
 
+    def _save_project_before_closure(self):
+        """asks for discard/save changes on modified project.
+        """
+        project = get_project_model().traits_data_model
+        if project is not None and project.modified:
+            ask = ('The open project has been modified.<br />'
+                   'Do you want to save it first?')
+            options = (QMessageBox.Yes | QMessageBox.No)
+            reply = QMessageBox.question(None, 'Save project', ask,
+                                         options, QMessageBox.Yes)
+            return reply == QMessageBox.Yes
+        return False
+
     # --------------------------------------
     # Qt slots
 
@@ -395,3 +398,14 @@ class MainWindow(QMainWindow):
         checked_action = self.access_level_actions.get(global_access_level)
         if checked_action is not None:
             checked_action.setChecked(True)
+
+    @pyqtSlot(bool)
+    def onServerConnectTriggered(self, connect):
+        """Slot triggered when the `remote` button is clicked, i.e. the
+        user (dis)connect the GUI client  from/to `gui-server`.
+        """
+        if self._save_project_before_closure():
+            self.acServerConnect.setChecked(True)
+        else:
+            get_network().onServerConnection(connect)
+
