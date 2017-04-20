@@ -95,8 +95,16 @@ class ProjectViewItemModel(QAbstractItemModel):
                     self.endRemoveRows()
 
     @property
+    def root_controller(self):
+        """ Return the project controller object at the root of the hierarchy
+        """
+        return self._controller
+
+    @property
     def traits_data_model(self):
         """ Return the project object at the root of the hierarchy
+
+        XXX: This should be renamed to ``root_model``
         """
         return self._traits_model
 

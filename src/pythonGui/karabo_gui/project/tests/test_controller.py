@@ -90,7 +90,7 @@ class ControllerTestCase(GuiTestCase):
 
             # Cause the controllers to be created and get a ref to the root
             qt_model.traits_data_model = proj
-            controller = qt_model._controller
+            controller = qt_model.root_controller
 
             for subgroup, creator in zip(controller.children, creators):
                 assert subgroup.child_create is creator
@@ -137,7 +137,7 @@ class ControllerTestCase(GuiTestCase):
 
             # Cause the controllers to be created and get a ref to the root
             qt_model.traits_data_model = proj
-            controller = qt_model._controller
+            controller = qt_model.root_controller
 
             proj_groups = ['macros', 'scenes', 'servers', 'subprojects']
             assert len(proj_groups) == len(controller.children)

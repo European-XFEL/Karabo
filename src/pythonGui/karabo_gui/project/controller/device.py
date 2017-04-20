@@ -37,26 +37,27 @@ class DeviceInstanceController(BaseProjectGroupController):
     # A proxy for online and offline device configurations
     project_device = Instance(ProjectDeviceInstance, allow_none=True)
 
-    def context_menu(self, parent_project, parent=None):
+    def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
 
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(partial(self._edit_device,
-                                              parent_project))
-        config_menu = self._create_sub_menu(menu, parent_project)
+                                              project_controller))
+        config_menu = self._create_sub_menu(menu, project_controller)
         dupe_action = QAction('Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_device,
-                                              parent_project))
+                                              project_controller))
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
-                                                parent_project))
+                                                project_controller))
         instantiate_action = QAction('Instantiate', menu)
         instantiate_action.setEnabled(not self.project_device.online)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
-                                                     parent_project))
+                                                     project_controller))
         shutdown_action = QAction('Shutdown', menu)
         shutdown_action.setEnabled(self.project_device.online)
-        shutdown_action.triggered.connect(partial(self.shutdown_device, True))
+        shutdown_action.triggered.connect(partial(self.shutdown_device,
+                                                  show_confirm=True))
         menu.addAction(edit_action)
         menu.addMenu(config_menu)
         menu.addSeparator()
@@ -72,7 +73,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         self._update_icon(ui_data)
         return ui_data
 
-    def single_click(self, parent_project, parent=None):
+    def single_click(self, project_controller, parent=None):
         if not self.model.initialized:
             return
 
@@ -219,13 +220,13 @@ class DeviceInstanceController(BaseProjectGroupController):
         broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
                         {'configuration': configuration})
 
-    def _create_sub_menu(self, parent_menu, parent_project):
+    def _create_sub_menu(self, parent_menu, project_controller):
         """ Create sub menu for parent menu and return it
         """
         config_menu = QMenu('Configuration', parent_menu)
         add_action = QAction('Add device configuration', config_menu)
         add_action.triggered.connect(partial(self._add_configuration,
-                                             parent_project))
+                                             project_controller))
         config_menu.addAction(add_action)
         for dev_conf in self.model.configs:
             conf_action = QAction(dev_conf.simple_name, config_menu)
@@ -241,22 +242,22 @@ class DeviceInstanceController(BaseProjectGroupController):
     # ----------------------------------------------------------------------
     # QAction handlers
 
-    def _delete_device(self, project):
+    def _delete_device(self, project_controller):
         """ Remove the device associated with this item from its device server
         """
         device = self.model
-        server_model = find_parent_object(device, project,
+        server_model = find_parent_object(device, project_controller.model,
                                           DeviceServerModel)
         if device in server_model.devices:
             server_model.devices.remove(device)
 
-    def _edit_device(self, project):
+    def _edit_device(self, project_controller):
         # Watch for incomplete model initialization
         if not self.model.initialized:
             return
 
         device = self.model
-        server_model = find_parent_object(device, project,
+        server_model = find_parent_object(device, project_controller.model,
                                           DeviceServerModel)
         dialog = DeviceHandleDialog(server_id=server_model.server_id,
                                     model=device,
@@ -278,9 +279,9 @@ class DeviceInstanceController(BaseProjectGroupController):
                 dev_conf.class_id = dialog.class_id
                 dev_conf.description = dialog.description
 
-    def _add_configuration(self, project):
+    def _add_configuration(self, project_controller):
         device = self.model
-        server_model = find_parent_object(device, project,
+        server_model = find_parent_object(device, project_controller.model,
                                           DeviceServerModel)
         dialog = DeviceHandleDialog(server_id=server_model.server_id,
                                     model=device, add_config=True)
@@ -296,13 +297,13 @@ class DeviceInstanceController(BaseProjectGroupController):
             device.configs.append(config_model)
             device.active_config_ref = config_model.uuid
 
-    def _duplicate_device(self, project):
+    def _duplicate_device(self, project_controller):
         """ Duplicate the active device configuration of the model
 
-        :param project: The parent project the model belongs to
+        :param project: The parent project controller the model belongs to
         """
         device = self.model
-        server_model = find_parent_object(device, project,
+        server_model = find_parent_object(device, project_controller.model,
                                           DeviceServerModel)
         active_config = self.active_config
         if active_config is None:
@@ -328,8 +329,9 @@ class DeviceInstanceController(BaseProjectGroupController):
                 dev_inst.initialized = dev_inst.modified = True
                 server_model.devices.append(dev_inst)
 
-    def _instantiate_device(self, project):
-        server = find_parent_object(self.model, project, DeviceServerModel)
+    def _instantiate_device(self, project_controller):
+        server = find_parent_object(self.model, project_controller.model,
+                                    DeviceServerModel)
         self.instantiate(server)
 
     def instantiate(self, server):
