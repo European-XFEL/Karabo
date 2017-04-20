@@ -161,7 +161,7 @@ namespace karabo {
         }
 
 
-        static const std::vector<karabo::util::Hash>::const_iterator& findDataSource(const std::vector<karabo::util::Hash>& vec, const std::string& id) {
+        static const std::vector<karabo::util::Hash>::const_iterator findDataSource(const std::vector<karabo::util::Hash>& vec, const std::string& id) {
             for (vector<Hash>::const_iterator it = vec.begin(); it != vec.end(); ++it) {
                 if (it->get<string>("source") == id) return it;
             }

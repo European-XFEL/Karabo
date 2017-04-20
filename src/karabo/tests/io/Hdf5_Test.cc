@@ -1327,9 +1327,6 @@ void Hdf5_Test::testKaraboImageData() {
 
     //compute the number of points in a single frame
     unsigned long long imageSize = nx*ny;
-    //compute total data size in MBytes
-    unsigned long long totalSize = imageSize * m_numImages * sizeof (unsigned short) / DET_NX / DET_NY;
-
 
     TimeProfiler p("writeKarabo");
     p.open();

@@ -114,7 +114,7 @@ void AlarmCondition_Test::testValidation() {
     Hash h_out;
 
     for (size_t t = 0; t < 10; t++) {
-        for (int i = 0; i < 50; i++) {
+        for (size_t i = 0; i < 50; i++) {
             std::ostringstream key_s;
             key_s << i;
             Hash h;

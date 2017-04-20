@@ -243,28 +243,27 @@ void StatisticalEvaluator::testPerformance() {
     karabo::util::RollingWindowStatistics stat1000(1000);
     profiler.startPeriod("varianceSingle");
 
-    double var;
     for (size_t i = 0; i < 10000; i++) {
         stat1000.update(123e9);
-        var = stat1000.getRollingWindowVariance();
+        stat1000.getRollingWindowVariance();
         stat1000.update(23e9);
-        var = stat1000.getRollingWindowVariance();
+        stat1000.getRollingWindowVariance();
         stat1000.update(33e9);
-        var = stat1000.getRollingWindowVariance();
+        stat1000.getRollingWindowVariance();
         stat1000.update(43e9);
-        var = stat1000.getRollingWindowVariance();
+        stat1000.getRollingWindowVariance();
         stat1000.update(1e9);
-        var = stat1000.getRollingWindowVariance();
+        stat1000.getRollingWindowVariance();
         stat1000.update(134e9);
-        var = stat1000.getRollingWindowVariance();
+        stat1000.getRollingWindowVariance();
         stat1000.update(14e9);
-        var = stat1000.getRollingWindowVariance();
+        stat1000.getRollingWindowVariance();
         stat1000.update(123e9);
-        var = stat1000.getRollingWindowVariance();
+        stat1000.getRollingWindowVariance();
         stat1000.update(-123e9);
-        var = stat1000.getRollingWindowVariance();
+        stat1000.getRollingWindowVariance();
         stat1000.update(4123e9);
-        var = stat1000.getRollingWindowVariance();
+        stat1000.getRollingWindowVariance();
     }
 
     profiler.stopPeriod("varianceSingle");
