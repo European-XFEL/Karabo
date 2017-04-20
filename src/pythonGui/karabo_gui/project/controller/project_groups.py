@@ -33,7 +33,7 @@ class ProjectSubgroupController(BaseProjectGroupController):
     # NOTE: We're overriding the base class here
     ui_data = Property(Instance(ProjectControllerUiData))
 
-    def context_menu(self, parent_project, parent=None):
+    def context_menu(self, project_controller, parent=None):
         menu_fillers = {
             'macros': _fill_macros_menu,
             'scenes': _fill_scenes_menu,
@@ -41,7 +41,7 @@ class ProjectSubgroupController(BaseProjectGroupController):
         }
         filler = menu_fillers.get(self.trait_name)
         menu = QMenu(parent)
-        filler(menu, parent_project)
+        filler(menu, project_controller)
         return menu
 
     def create_ui_data(self):
@@ -70,27 +70,27 @@ class ProjectSubgroupController(BaseProjectGroupController):
         """
 
 
-def _fill_macros_menu(menu, parent_project):
+def _fill_macros_menu(menu, project_controller):
     add_action = QAction('Add macro', menu)
-    add_action.triggered.connect(partial(_add_macro, parent_project))
+    add_action.triggered.connect(partial(_add_macro, project_controller))
     load_action = QAction('Load macro...', menu)
-    load_action.triggered.connect(partial(_load_macro, parent_project))
+    load_action.triggered.connect(partial(_load_macro, project_controller))
     menu.addAction(add_action)
     menu.addAction(load_action)
 
 
-def _fill_scenes_menu(menu, parent_project):
+def _fill_scenes_menu(menu, project_controller):
     add_action = QAction('Add scene', menu)
-    add_action.triggered.connect(partial(_add_scene, parent_project))
+    add_action.triggered.connect(partial(_add_scene, project_controller))
     load_action = QAction('Load scene...', menu)
-    load_action.triggered.connect(partial(_load_scene, parent_project))
+    load_action.triggered.connect(partial(_load_scene, project_controller))
     menu.addAction(add_action)
     menu.addAction(load_action)
 
 
-def _fill_servers_menu(menu, parent_project):
+def _fill_servers_menu(menu, project_controller):
     add_action = QAction('Add server', menu)
-    add_action.triggered.connect(partial(_add_server, parent_project))
+    add_action.triggered.connect(partial(_add_server, project_controller))
     menu.addAction(add_action)
 
 
@@ -109,9 +109,10 @@ class {0}(Macro):
 """
 
 
-def _add_macro(project):
+def _add_macro(project_controller):
     """ Add a macro to the associated project
     """
+    project = project_controller.model
     dialog = MacroHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         classname = dialog.simple_name.title()
@@ -124,10 +125,12 @@ def _add_macro(project):
         project.macros.append(macro)
 
 
-def _load_macro(project):
+def _load_macro(project_controller):
     fn = getOpenFileName(caption='Load macro', filter='Python Macros (*.py)')
     if not fn:
         return
+
+    project = project_controller.model
     # Read MacroModel
     macro = read_macro(fn)
     # Set the scene model title
@@ -136,9 +139,10 @@ def _load_macro(project):
     project.macros.append(macro)
 
 
-def _add_scene(project):
+def _add_scene(project_controller):
     """ Add a scene to the associated project
     """
+    project = project_controller.model
     dialog = SceneHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
@@ -148,10 +152,12 @@ def _add_scene(project):
         project.scenes.append(scene)
 
 
-def _load_scene(project):
+def _load_scene(project_controller):
     fn = getOpenFileName(caption='Load scene', filter='SVG Files (*.svg)')
     if not fn:
         return
+
+    project = project_controller.model
     # Read SceneModel
     scene = read_scene(fn)
     scene.simple_name = op.splitext(op.basename(fn))[0]
@@ -159,9 +165,10 @@ def _load_scene(project):
     project.scenes.append(scene)
 
 
-def _add_server(project):
+def _add_server(project_controller):
     """ Add a server to the associated project
     """
+    project = project_controller.model
     dialog = ServerHandleDialog()
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
