@@ -83,7 +83,7 @@ def supervise():
 def defaultall():
     os.chdir(absolute("var", "service"))
     if len(sys.argv) > 1:
-        return sys.argv[1:]
+        return [arg.replace("/", "_") for arg in sys.argv[1:]]
     else:
         return os.listdir()
 
@@ -229,7 +229,7 @@ def adddeviceserver():
         open(osp.join(tmpdir, "down"), "w").close()
         os.mkdir(osp.join(tmpdir, "log"))
         with open(osp.join(tmpdir, "log", "run"), "w", opener=os.open) as fout:
-            fout.write(logger_template.format(server_id))
+            fout.write(logger_template.format(target_dir))
         os.rename(tmpdir, abs_target)
     except:
         shutil.rmtree(tmpdir)
