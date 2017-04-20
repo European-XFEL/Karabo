@@ -18,6 +18,8 @@ import sys
 import IPython
 
 import karabo
+from karabo.common.states import State
+
 from . import device_client
 from .device_client import (
     DeviceClientBase, disconnectDevice, execute, executeNoWait, getClasses,
@@ -26,7 +28,6 @@ from .device_client import (
     waitUntil, waitUntilNew)
 from .eventloop import NoEventLoop
 from .macro import EventThread, Macro
-from karabo.common.states import State
 from .synchronization import sleep
 
 
