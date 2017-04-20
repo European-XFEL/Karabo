@@ -31,7 +31,7 @@ class MacroInstanceController(BaseProjectController):
     # The instance ID of the running macro
     instance_id = String
 
-    def context_menu(self, parent_project, parent=None):
+    def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
         shutdown_action = QAction('Shutdown', menu)
         shutdown_action.triggered.connect(self.shutdown)
@@ -42,7 +42,7 @@ class MacroInstanceController(BaseProjectController):
         icon = get_project_device_status_icon(DeviceStatus.STATUS_ONLINE)
         return ProjectControllerUiData(icon=icon)
 
-    def single_click(self, parent_project, parent=None):
+    def single_click(self, project_controller, parent=None):
         instance_configuration = get_topology().get_device(self.instance_id)
         broadcast_event(KaraboEventSender.ShowConfiguration,
                         {'configuration': instance_configuration})
@@ -67,16 +67,16 @@ class MacroController(BaseProjectGroupController):
     # An object which listens to system topology updates
     topo_listener = Instance(SystemTopologyListener)
 
-    def context_menu(self, parent_project, parent=None):
+    def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(self._edit_macro)
         dupe_action = QAction('Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_macro,
-                                              parent_project))
+                                              project_controller))
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_macro,
-                                                parent_project))
+                                                project_controller))
         save_as_action = QAction('Save As...', menu)
         save_as_action.triggered.connect(self._save_macro_to_file)
         run_action = QAction('Run', menu)
@@ -93,7 +93,7 @@ class MacroController(BaseProjectGroupController):
     def create_ui_data(self):
         return ProjectControllerUiData(icon=icons.file)
 
-    def double_click(self, parent_project, parent=None):
+    def double_click(self, project_controller, parent=None):
         broadcast_event(KaraboEventSender.OpenMacro,
                         {'model': self.model})
 
@@ -166,10 +166,11 @@ class MacroController(BaseProjectGroupController):
     # ----------------------------------------------------------------------
     # action handlers
 
-    def _delete_macro(self, project):
+    def _delete_macro(self, project_controller):
         """ Remove the macro associated with this item from its project
         """
         macro = self.model
+        project = project_controller.model
         if macro in project.macros:
             project.macros.remove(macro)
 
@@ -181,8 +182,9 @@ class MacroController(BaseProjectGroupController):
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
 
-    def _duplicate_macro(self, project):
+    def _duplicate_macro(self, project_controller):
         macro = self.model
+        project = project_controller.model
         dialog = ObjectDuplicateDialog(macro.simple_name)
         if dialog.exec() == QDialog.Accepted:
             code = write_macro(macro)

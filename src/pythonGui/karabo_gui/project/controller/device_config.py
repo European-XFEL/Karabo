@@ -17,7 +17,7 @@ class DeviceConfigurationController(BaseProjectController):
     # Redefine model with the correct type
     model = Instance(DeviceConfigurationModel)
 
-    def context_menu(self, parent_project, parent=None):
+    def context_menu(self, project_controller, parent=None):
         return QMenu(parent)
 
     def create_ui_data(self):

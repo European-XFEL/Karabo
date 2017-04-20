@@ -25,16 +25,16 @@ class SceneController(BaseProjectController):
     # Redefine model with the correct type
     model = Instance(SceneModel)
 
-    def context_menu(self, parent_project, parent=None):
+    def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(self._edit_scene)
         dupe_action = QAction('Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_scene,
-                                              parent_project))
+                                              project_controller))
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_scene,
-                                                parent_project))
+                                                project_controller))
         save_as_action = QAction('Save As...', menu)
         save_as_action.triggered.connect(self._save_scene_to_file)
         menu.addAction(edit_action)
@@ -47,19 +47,20 @@ class SceneController(BaseProjectController):
     def create_ui_data(self):
         return ProjectControllerUiData(icon=icons.image)
 
-    def single_click(self, parent_project, parent=None):
+    def single_click(self, project_controller, parent=None):
         show_no_configuration()
 
-    def double_click(self, parent_project, parent=None):
+    def double_click(self, project_controller, parent=None):
         broadcast_event(KaraboEventSender.OpenSceneView, {'model': self.model})
 
     # ----------------------------------------------------------------------
     # action handlers
 
-    def _delete_scene(self, project):
+    def _delete_scene(self, project_controller):
         """ Remove the scene associated with this item from its project
         """
         scene = self.model
+        project = project_controller.model
         if scene in project.scenes:
             project.scenes.remove(scene)
 
@@ -71,8 +72,9 @@ class SceneController(BaseProjectController):
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
 
-    def _duplicate_scene(self, project):
+    def _duplicate_scene(self, project_controller):
         scene = self.model
+        project = project_controller.model
         dialog = ObjectDuplicateDialog(scene.simple_name)
         if dialog.exec() == QDialog.Accepted:
             xml = write_scene(scene)
