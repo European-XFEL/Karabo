@@ -8,7 +8,7 @@ from functools import partial
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QCursor, QMessageBox, QTreeView
 
-from karabo.common.project.api import ProjectModel, find_parent_object
+from karabo.common.project.api import find_parent_object
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.utils import (
     maybe_save_modified_project, save_as_object, save_object,
@@ -18,7 +18,6 @@ from karabo_gui.singletons.api import (get_db_conn, get_project_model,
 from karabo_gui.util import is_database_processing, set_treeview_header
 from .controller.bases import BaseProjectGroupController
 from .controller.project import ProjectController
-from .controller.project_groups import ProjectSubgroupController
 
 
 class ProjectView(QTreeView):
@@ -56,8 +55,8 @@ class ProjectView(QTreeView):
     def mouseDoubleClickEvent(self, event):
         selected_controller = self._get_selected_controller()
         if selected_controller is not None:
-            parent_project = self._parent_project(selected_controller)
-            selected_controller.double_click(parent_project, parent=self)
+            project_controller = self._project_controller(selected_controller)
+            selected_controller.double_click(project_controller, parent=self)
 
             if isinstance(selected_controller, BaseProjectGroupController):
                 # Double clicks expand groups
@@ -92,8 +91,8 @@ class ProjectView(QTreeView):
 
         selected_controller = self._get_selected_controller()
         if selected_controller is not None:
-            parent_project = self._parent_project(selected_controller)
-            selected_controller.single_click(parent_project, parent=self)
+            project_controller = self._project_controller(selected_controller)
+            selected_controller.single_click(project_controller, parent=self)
 
             # Grab control of the global selection
             get_selection_tracker().grab_selection(self.selectionModel())
@@ -107,35 +106,35 @@ class ProjectView(QTreeView):
 
         selected_controller = self._get_selected_controller()
         if selected_controller is not None:
-            parent_project = self._parent_project(selected_controller)
-            menu = selected_controller.context_menu(parent_project,
+            project_controller = self._project_controller(selected_controller)
+            menu = selected_controller.context_menu(project_controller,
                                                     parent=self)
-            is_project = isinstance(selected_controller, ProjectController)
-            if parent_project is None or is_project:
-                project_model = selected_controller.model
+            if isinstance(selected_controller, ProjectController):
+                selected_project = selected_controller.model
                 rename_action = QAction('Rename', menu)
                 rename_action.triggered.connect(partial(self._rename_project,
-                                                        project_model))
+                                                        selected_project))
                 save_action = QAction('Save', menu)
                 save_action.triggered.connect(partial(save_object,
-                                                      project_model,
+                                                      selected_project,
                                                       domain=None))
                 save_as_action = QAction('Save as...', menu)
                 save_as_action.triggered.connect(partial(save_as_object,
-                                                         project_model))
+                                                         selected_project))
                 close_action = QAction('Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
-                                                       project_model,
-                                                       parent_project, True))
-                is_trashed = project_model.is_trashed
+                                                       selected_project,
+                                                       project_controller,
+                                                       show_dialog=True))
+                is_trashed = selected_project.is_trashed
                 if is_trashed:
                     text = 'Restore from trash'
                 else:
                     text = 'Move to trash'
                 trash_action = QAction(text, menu)
                 trash_action.triggered.connect(partial(self.update_is_trashed,
-                                                       project_model,
-                                                       parent_project))
+                                                       selected_project,
+                                                       project_controller))
                 menu.addAction(rename_action)
                 menu.addSeparator()
                 menu.addAction(save_action)
@@ -159,13 +158,12 @@ class ProjectView(QTreeView):
         first_index = indices[0]
         return self.model().controller_ref(first_index)
 
-    def _parent_project(self, controller):
-        """ Find the parent project model of a given controller
+    def _project_controller(self, controller):
+        """ Find the parent project controller of a given controller
         """
-        if isinstance(controller, ProjectSubgroupController):
-            return controller.model
-        root_project = self.model().traits_data_model
-        return find_parent_object(controller.model, root_project, ProjectModel)
+        root_controller = self.model().root_controller
+        return find_parent_object(controller, root_controller,
+                                  ProjectController)
 
     def _rename_project(self, project):
         """ Change the ``simple_name`` of the given ``project``
@@ -175,7 +173,7 @@ class ProjectView(QTreeView):
         if result == QDialog.Accepted:
             project.simple_name = dialog.simple_name
 
-    def _close_project(self, project, parent_project, show_dialog):
+    def _close_project(self, project, project_controller, show_dialog=False):
         """ Close the given `project`
         """
         if show_dialog:
@@ -187,24 +185,23 @@ class ProjectView(QTreeView):
             if reply == QMessageBox.No:
                 return
 
-        if parent_project is not None:
+        if project_controller is not None:
             # Check for modififications before closing
-            if show_dialog:
-                if not maybe_save_modified_project(project):
-                    return
+            if show_dialog and not maybe_save_modified_project(project):
+                return
             # A subproject
-            if project in parent_project.subprojects:
-                parent_project.subprojects.remove(project)
+            parent_project_model = project_controller.model
+            if project in parent_project_model.subprojects:
+                parent_project_model.subprojects.remove(project)
         else:
             # Check for modififications before closing
             model = self.model().traits_data_model
-            if show_dialog:
-                if not maybe_save_modified_project(model):
-                    return
+            if show_dialog and not maybe_save_modified_project(model):
+                return
             # The master project
             self.model().traits_data_model = None
 
-    def update_is_trashed(self, project, parent_project):
+    def update_is_trashed(self, project, project_controller):
         """ Mark the given `project` as (un-)trashed
         """
         if show_trash_project_message(project.is_trashed, project.simple_name):
@@ -215,4 +212,5 @@ class ProjectView(QTreeView):
                                      str(project.is_trashed).lower())
             if project.is_trashed:
                 # Close project
-                self._close_project(project, parent_project, show_dialog=False)
+                self._close_project(project, project_controller,
+                                    show_dialog=False)

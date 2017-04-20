@@ -22,7 +22,7 @@ class SubprojectController(ProjectSubgroupController):
     # These are subprojects which are asynchronously loading
     _watchers = List(Instance(ProjectLoadingWatcher))
 
-    def context_menu(self, parent_project, parent=None):
+    def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
         add_action = QAction('Add new project...', menu)
         add_action.triggered.connect(self._add_project)
