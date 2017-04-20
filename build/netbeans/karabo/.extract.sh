@@ -115,7 +115,7 @@ if [ "x${interactive}x" = "xTRUEx" ]; then
 fi
 
 echo -n " Extracting files, please wait..."
-unzip -q $0
+(cd $installDir && unzip -q $0)
 echo  " unpacking finished successfully"
 # Any script here will happen after the zip file extract.
 

@@ -3,6 +3,7 @@
 # Created on October 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from contextlib import contextmanager
 from weakref import WeakValueDictionary
 
 from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
@@ -54,29 +55,42 @@ class ProjectViewItemModel(QAbstractItemModel):
         key = model_index.internalId()
         return self._model_index_refs.get(key)
 
-    def insert_controller(self, controller, row):
-        """Insert a ``QModelIndex`` for the given ``controller``
-        """
-        index = self.createIndex(0, PROJECT_COLUMN, controller)
-        if index.isValid():
-            parent_index = index.parent()
-            if parent_index.isValid():
-                try:
-                    self.beginInsertRows(parent_index, row, row)
-                finally:
-                    self.endInsertRows()
+    @contextmanager
+    def insertion_context(self, parent_controller, first, last):
+        """Provide a context for the addition of multiple children under a
+        single parent item.
 
-    def remove_controller(self, controller):
-        """Remove the associated ``QModelIndex`` of the given ``controller``
-        from the model
+        NOTE: This method is a context manager wraps the insertion with calls
+        to ``QAbstractItemModel.beginInsertRows`` and
+        ``QAbstractItemModel.endInsertRows`` (See Qt documentation)
         """
-        index = self.createIndex(0, PROJECT_COLUMN, controller)
+        parent_row = self._controller_row(parent_controller)
+        parent_index = self.createIndex(parent_row, PROJECT_COLUMN,
+                                        parent_controller)
+        if parent_index.isValid():
+            try:
+                self.beginInsertRows(parent_index, first, last)
+                yield
+            finally:
+                self.endInsertRows()
+
+    @contextmanager
+    def removal_context(self, controller):
+        """Provide a context for the removal of a single item from the model.
+
+        NOTE: This method is a context manager which wraps the removal of an
+        item with ``QAbstractItemModel.beginRemoveRows`` and
+        ``QAbstractItemModel.endRemoveRows`` (See Qt documentation)
+        """
+        index_row = self._controller_row(controller)
+        index = self.createIndex(index_row, PROJECT_COLUMN, controller)
         if index.isValid():
             parent_index = index.parent()
             if parent_index.isValid():
                 try:
                     row = self._controller_row(controller)
                     self.beginRemoveRows(parent_index, row, row)
+                    yield
                 finally:
                     self.endRemoveRows()
 
