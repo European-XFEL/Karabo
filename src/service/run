@@ -1,3 +1,2 @@
 #!/bin/bash
-exec $KARABO/extern/bin/svscan $KARABO/var/service 2>&1 \
-    | $KARABO/extern/bin/multilog $KARABO/var/log/supervisor
+exec svscan $KARABO/var/service 2>&1

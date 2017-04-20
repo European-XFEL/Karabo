@@ -74,9 +74,12 @@ def supervise():
     if svok == 0:
         return
     print("starting supervisor")
-    subprocess.Popen([absolute("extern", "bin", "supervise"),
-                      absolute("service")],
-                     stdout=open(absolute("var", "log", "global"), "a"))
+    supervise = subprocess.Popen(
+        [absolute("extern", "bin", "supervise"), absolute("service")],
+        stdout=subprocess.PIPE)
+    subprocess.Popen([absolute("extern", "bin", "multilog"),
+                      absolute("var", "log", "supervisor")],
+                     stdin=supervise.stdout.fileno())
     sleep(1)  # give it some time to actually start
 
 
