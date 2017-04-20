@@ -83,8 +83,9 @@ class DeviceHandleDialog(QDialog):
 
         self.setWindowTitle(title)
         self.leTitle.textChanged.connect(self._update_button_box)
+        self.cbConfig.currentIndexChanged.connect(self._update_button_box)
         self.cbConfig.editTextChanged.connect(self._update_button_box)
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self._update_button_box()
 
     def _init_config_widgets(self, dev_inst_model):
         """ Init all device configuration related widgets to the associated
@@ -135,7 +136,7 @@ class DeviceHandleDialog(QDialog):
         index = self.cbClass.findText(class_id)
         self.cbClass.setCurrentIndex(index)
 
-    def _update_button_box(self, text):
+    def _update_button_box(self):
         """Only enable Ok button, if title and configuration is set
         """
         enabled = (len(self.leTitle.text()) > 0 and
