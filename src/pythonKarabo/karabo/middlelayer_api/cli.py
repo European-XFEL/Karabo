@@ -18,22 +18,24 @@ import sys
 import IPython
 
 import karabo
+from karabo.common.states import State
 from . import device_client
 from .device_client import (
-    getDevice, waitUntil, waitUntilNew, setWait, setNoWait, execute,
-    executeNoWait, DeviceClientBase, getDevices, getClasses, getServers,
-    instantiate, shutdown, shutdownNoWait, instantiateNoWait, disconnectDevice,
-    getHistory)
+    DeviceClientBase, disconnectDevice, execute, executeNoWait, getClasses,
+    getDevice, getDevices, getHistory, getServers, instantiate,
+    instantiateNoWait, setWait, setNoWait, shutdown, shutdownNoWait,
+    waitUntil, waitUntilNew)
 from .eventloop import NoEventLoop
 from .macro import EventThread, Macro
+from .synchronization import sleep
 
 
 # NOTE: This is the namespace for ikarabo
-__all__ = ["getDevice", "waitUntil", "waitUntilNew", "setWait", "setNoWait",
-           "execute", "executeNoWait", "getDevices", "getClasses",
-           "getServers", "instantiate", "connectDevice", "shutdown",
-           "shutdownNoWait", "instantiateNoWait", "karabo", "disconnectDevice",
-           "getHistory"]
+__all__ = ["connectDevice", "disconnectDevice", "execute",
+           "executeNoWait", "getClasses", "getDevice", "getDevices",
+           "getHistory", "getServers", "instantiate", "instantiateNoWait",
+           "karabo", "setWait", "setNoWait", "shutdown",
+           "shutdownNoWait", "sleep", "State", "waitUntil", "waitUntilNew"]
 
 
 class DeviceClient(Macro, DeviceClientBase):
