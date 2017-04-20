@@ -52,7 +52,7 @@ void Validator_Test::testTableDefault() {
 
     util::Schema schema;
     TABLE_ELEMENT(schema).key("table")
-            .setNodeSchema(rowSchema)
+            .setColumns(rowSchema)
             .assignmentOptional().defaultValue(std::vector<util::Hash>())
             .commit();
 
