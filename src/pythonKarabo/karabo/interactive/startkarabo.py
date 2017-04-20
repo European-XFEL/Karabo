@@ -44,6 +44,7 @@ import subprocess
 import sys
 from tempfile import mkdtemp
 from textwrap import dedent
+from time import sleep
 
 
 def absolute(*path):
@@ -76,6 +77,7 @@ def supervise():
     subprocess.Popen([absolute("extern", "bin", "supervise"),
                       absolute("service")],
                      stdout=open(absolute("var", "log", "global"), "a"))
+    sleep(1)  # give it some time to actually start
 
 
 def defaultall():
