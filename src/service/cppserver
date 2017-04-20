@@ -1,5 +1,0 @@
-#!/bin/bash
-exec 2>&1
-params=$(< parameters)
-cd $KARABO/var/data
-exec envdir $KARABO/var/environment $KARABO/bin/karabo-cppserver $params
