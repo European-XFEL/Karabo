@@ -166,7 +166,7 @@ class MainWindow(QMainWindow):
         self.acServerConnect.setStatusTip(text)
         self.acServerConnect.setToolTip(text)
         self.acServerConnect.setCheckable(True)
-        self.acServerConnect.triggered.connect(self.onServerConnectTriggered)
+        self.acServerConnect.triggered.connect(self.onConnectionButtonPress)
 
         text = "Exit"
         self.acExit = QAction(icons.exit, "&{}".format(text), self)
@@ -257,8 +257,8 @@ class MainWindow(QMainWindow):
 
     def _quit(self):
         # Check for project changes
-        if self._save_project_before_closure():
-                return False
+        if self._should_save_project_before_closing():
+            return False
 
         # Make sure there are no pending writing things in the pipe
         if get_db_conn().is_writing():
@@ -324,8 +324,8 @@ class MainWindow(QMainWindow):
             if maximized_container.count() > 0:
                 maximized_container.currentWidget().onMinimize()
 
-    def _save_project_before_closure(self):
-        """asks for discard/save changes on modified project.
+    def _should_save_project_before_closing(self):
+        """Asks for discard/save changes on modified project.
         """
         project = get_project_model().traits_data_model
         if project is not None and project.modified:
@@ -361,7 +361,25 @@ class MainWindow(QMainWindow):
         broadcast_event(KaraboEventSender.AccessLevelChanged, {})
 
     @pyqtSlot(bool)
+    def onConnectionButtonPress(self, connect):
+        """Slot triggered when the `acServerConnect` button is clicked.
+        i.e. The user wishes to (dis)connect the GUI client from/to the server.
+        """
+        if not connect and self._should_save_project_before_closing():
+            # Disconnecting AND need to save first
+            self.acServerConnect.setChecked(True)
+        else:
+            # Either connecting or no need to save before disconnecting
+            get_network().onServerConnection(connect)
+
+    @pyqtSlot(bool)
     def onServerConnectionChanged(self, isConnected):
+        """Slot triggered when the network connection goes up/down. At this
+        point, there is no way to easily undo the state change.
+
+        NOTE: If you need to do something before the state changes, see
+        ``self.onConnectionButtonPress()``
+        """
         # Un-minimize all panels when disconnecting!
         if not isConnected:
             self._unminimize_remaining_panels()
@@ -398,14 +416,3 @@ class MainWindow(QMainWindow):
         checked_action = self.access_level_actions.get(global_access_level)
         if checked_action is not None:
             checked_action.setChecked(True)
-
-    @pyqtSlot(bool)
-    def onServerConnectTriggered(self, connect):
-        """Slot triggered when the `remote` button is clicked, i.e. the
-        user (dis)connect the GUI client  from/to `gui-server`.
-        """
-        if self._save_project_before_closure():
-            self.acServerConnect.setChecked(True)
-        else:
-            get_network().onServerConnection(connect)
-
