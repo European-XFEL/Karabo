@@ -25,6 +25,7 @@ from karabo_gui.project.utils import (
 from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.topology.api import ProjectDeviceInstance
 from .bases import BaseProjectGroupController, ProjectControllerUiData
+from .server import DeviceServerController
 
 
 class DeviceInstanceController(BaseProjectGroupController):
@@ -40,6 +41,11 @@ class DeviceInstanceController(BaseProjectGroupController):
     def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
 
+        server_controller = find_parent_object(self, project_controller,
+                                               DeviceServerController)
+        server_online = server_controller.online
+        proj_device_online = self.project_device.online
+
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(partial(self._edit_device,
                                               project_controller))
@@ -51,11 +57,11 @@ class DeviceInstanceController(BaseProjectGroupController):
         delete_action.triggered.connect(partial(self._delete_device,
                                                 project_controller))
         instantiate_action = QAction('Instantiate', menu)
-        instantiate_action.setEnabled(not self.project_device.online)
+        instantiate_action.setEnabled(server_online and not proj_device_online)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      project_controller))
         shutdown_action = QAction('Shutdown', menu)
-        shutdown_action.setEnabled(self.project_device.online)
+        shutdown_action.setEnabled(proj_device_online)
         shutdown_action.triggered.connect(partial(self.shutdown_device,
                                                   show_confirm=True))
         menu.addAction(edit_action)
