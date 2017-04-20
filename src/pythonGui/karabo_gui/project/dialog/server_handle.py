@@ -6,7 +6,7 @@
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtGui import QDialog
+from PyQt4.QtGui import QDialog, QDialogButtonBox
 
 from karabo.middlelayer import AccessLevel
 import karabo_gui.globals as krb_globals
@@ -47,6 +47,12 @@ class ServerHandleDialog(QDialog):
             self.teDescription.setPlainText(model.description)
         self.setWindowTitle(title)
 
+        self.cbServerId.currentIndexChanged.connect(self._update_button_box)
+        self.cbServerId.editTextChanged.connect(self._update_button_box)
+        self.cbHost.currentIndexChanged.connect(self._update_button_box)
+        self.cbHost.editTextChanged.connect(self._update_button_box)
+        self._update_button_box()
+
     def _get_available_hosts_servers(self):
         """ Get all available hosts and servers of the `systemTopology`
         """
@@ -67,6 +73,13 @@ class ServerHandleDialog(QDialog):
 
         get_topology().visit_system_tree(visitor)
         return sorted(available_hosts), sorted(available_servers)
+
+    def _update_button_box(self):
+        """Only enable Ok button, if title and configuration is set
+        """
+        enabled = (len(self.cbServerId.currentText()) > 0 and
+                   len(self.cbHost.currentText()) > 0)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
     @property
     def server_id(self):
