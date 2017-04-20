@@ -39,7 +39,7 @@ void JmsConnection_Test::testConnect() {
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         m_connection->connect();
         CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == "tcp://exfl-broker.desy.de:7777");
+        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == "tcp://exfl-broker.desy.de:7777" || m_connection->getBrokerUrl() == "tcp://exfl-broker:7777");
         m_connection->disconnect();
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         m_connection->connect();
@@ -51,18 +51,19 @@ void JmsConnection_Test::testConnect() {
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         m_connection->connect();
         CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == "tcp://exfl-broker.desy.de:7777");
+        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == "tcp://exfl-broker.desy.de:7777" || m_connection->getBrokerUrl() == "tcp://exfl-broker:7777");
         m_connection->disconnect();
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
     }
 
     {
-        putenv("KARABO_BROKER=tcp://exfl-broker.desy.de:7777");
+        char env[] = "KARABO_BROKER=tcp://exfl-broker.desy.de:7777";
+        ::putenv(env);
         m_connection = JmsConnection::Pointer(new JmsConnection("tcp://someBadHost:7777"));
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         m_connection->connect();
         CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == "tcp://exfl-broker.desy.de:7777");
+        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == "tcp://exfl-broker.desy.de:7777" || m_connection->getBrokerUrl() == "tcp://exfl-broker:7777");
         m_connection->disconnect();
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         unsetenv("KARABO_BROKER");

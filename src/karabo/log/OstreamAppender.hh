@@ -35,6 +35,8 @@ namespace karabo {
 
             OstreamAppender(const karabo::util::Hash& input);
 
+            virtual ~OstreamAppender() {}
+
             krb_log4cpp::Appender* getAppender();
 
         private:

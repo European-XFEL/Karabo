@@ -23,7 +23,6 @@ void Exception_Test::testMethod() {
 
     CPPUNIT_ASSERT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::util::LogicException);
     CPPUNIT_ASSERT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::util::Exception);
-    CPPUNIT_ASSERT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), std::exception);
     try {
         throw KARABO_LOGIC_EXCEPTION("error");
     } catch (const std::exception& e) {

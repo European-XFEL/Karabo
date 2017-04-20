@@ -245,7 +245,7 @@ void SignalSlotable_Test::testMethod() {
     try {
         demo->request(instanceId, "slotC", 1).timeout(500).receive(reply);
     } catch (karabo::util::TimeoutException&) {
-        CPPUNIT_ASSERT_MESSAGE(false, "Timeout request/receive slotC");
+        CPPUNIT_ASSERT_MESSAGE("Timeout request/receive slotC", false);
     }
     CPPUNIT_ASSERT_EQUAL(2, reply);
 
@@ -254,7 +254,7 @@ void SignalSlotable_Test::testMethod() {
     try {
         demo->request("", "slotC", 1).timeout(500).receive(reply);
     } catch (karabo::util::TimeoutException&) {
-        CPPUNIT_ASSERT_MESSAGE(false, "Timeout request/receive slotC via \"\"");
+        CPPUNIT_ASSERT_MESSAGE("Timeout request/receive slotC via \"\"", false);
     }
     CPPUNIT_ASSERT_EQUAL(2, reply);
 
@@ -271,7 +271,7 @@ void SignalSlotable_Test::testMethod() {
     try {
         demo->request("", "noded.slot", 1).timeout(500).receive(reply);
     } catch (karabo::util::TimeoutException&) {
-        CPPUNIT_ASSERT_MESSAGE(false, "Timeout request/receive noded.slot");
+        CPPUNIT_ASSERT_MESSAGE("Timeout request/receive noded.slot", false);
     }
     CPPUNIT_ASSERT_EQUAL(2, reply);
 

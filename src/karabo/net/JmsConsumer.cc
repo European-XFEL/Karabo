@@ -14,6 +14,7 @@
 #include "JmsConsumer.hh"
 #include "JmsConnection.hh"
 #include "EventLoop.hh"
+#include <openmqc/mqcrt.h>
 
 using namespace karabo::util;
 using namespace karabo::io;

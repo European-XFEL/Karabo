@@ -16,7 +16,7 @@
 #include "JmsConnection.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/io/BinarySerializer.hh"
-#include <openmqc/mqcrt.h>
+#include <openmqc/mqtypes.h>
 #include <boost/enable_shared_from_this.hpp>
 
 /**

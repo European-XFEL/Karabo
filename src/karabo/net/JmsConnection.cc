@@ -13,6 +13,7 @@
 #include "JmsConsumer.hh"
 #include "JmsProducer.hh"
 #include "EventLoop.hh"
+#include <openmqc/mqcrt.h>
 
 namespace karabo {
     namespace net {

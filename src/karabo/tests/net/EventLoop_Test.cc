@@ -33,7 +33,7 @@ void EventLoop_Test::handler1(boost::asio::deadline_timer& timer, int count) {
         return;
     }
 
-    CPPUNIT_ASSERT(EventLoop::getNumberOfThreads() == count);
+    CPPUNIT_ASSERT(EventLoop::getNumberOfThreads() == size_t(count));
 
     if (count == 5) {
         EventLoop::removeThread(5);
