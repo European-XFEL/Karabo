@@ -27,13 +27,13 @@ class DeviceServerController(BaseProjectGroupController):
     # An object which listens to system topology updates
     topo_listener = Instance(SystemTopologyListener)
 
-    def context_menu(self, parent_project, parent=None):
+    def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(self._edit_server)
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_server,
-                                                parent_project))
+                                                project_controller))
         shutdown_action = QAction('Shutdown', menu)
         shutdown_action.triggered.connect(self._shutdown_server)
         add_action = QAction('Add device', menu)
@@ -115,10 +115,11 @@ class DeviceServerController(BaseProjectGroupController):
         # a boolean will be passed as the class_id argument
         add_device_to_server(self.model)
 
-    def _delete_server(self, project):
+    def _delete_server(self, project_controller):
         """ Remove the macro associated with this item from its project
         """
         server = self.model
+        project = project_controller.model
         if server in project.servers:
             project.servers.remove(server)
 
