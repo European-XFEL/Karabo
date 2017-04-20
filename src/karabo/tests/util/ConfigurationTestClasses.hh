@@ -583,13 +583,13 @@ namespace configurationTest {
 
             TABLE_ELEMENT(expected)
                     .key("testTable")
-                    .setNodeSchema(rowSchema)
+                    .setColumns(rowSchema)
                     .assignmentOptional().defaultValue(std::vector<Hash>(2, Hash("a", 3, "b", "foo")))
                     .commit();
 
             TABLE_ELEMENT(expected)
                     .key("testTableEmptyDefault")
-                    .setNodeSchema(rowSchema)
+                    .setColumns(rowSchema)
                     .assignmentOptional().defaultValue(std::vector<Hash>())
                     .commit();
 
