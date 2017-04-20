@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
         self.acServerConnect.setStatusTip(text)
         self.acServerConnect.setToolTip(text)
         self.acServerConnect.setCheckable(True)
-        self.acServerConnect.triggered.connect(self.onServerConnection)
+        self.acServerConnect.triggered.connect(self.onServerConnectTriggered)
 
         text = "Exit"
         self.acExit = QAction(icons.exit, "&{}".format(text), self)
@@ -259,8 +259,7 @@ class MainWindow(QMainWindow):
 
     def _quit(self):
         # Check for project changes
-        if self._project_is_unsaved():
-            if self._save_project_before_closure():
+        if self._save_project_before_closure():
                 return False
 
         # Make sure there are no pending writing things in the pipe
@@ -327,21 +326,17 @@ class MainWindow(QMainWindow):
             if maximized_container.count() > 0:
                 maximized_container.currentWidget().onMinimize()
 
-    def _project_is_unsaved(self):
-        """return True is a project is open and has unsaved changes."""
+    def _save_project_before_closure(self):
+        """
+        """
         project = get_project_model().traits_data_model
         if project is not None and project.modified:
-            return True
-        return False
-
-    def _save_project_before_closure(self):
-        ask = ('The open project has been modified.<br />'
-               'Do you want to save it first?')
-        options = (QMessageBox.Yes | QMessageBox.No)
-        reply = QMessageBox.question(None, 'Save project', ask,
-                                     options, QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
-            return True
+            ask = ('The open project has been modified.<br />'
+                   'Do you want to save it first?')
+            options = (QMessageBox.Yes | QMessageBox.No)
+            reply = QMessageBox.question(None, 'Save project', ask,
+                                         options, QMessageBox.Yes)
+            return reply == QMessageBox.Yes
         return False
 
     # --------------------------------------
@@ -407,13 +402,12 @@ class MainWindow(QMainWindow):
             checked_action.setChecked(True)
 
     @pyqtSlot(bool)
-    def onServerConnection(self, connect):
+    def onServerConnectTriggered(self, connect):
+        # Executed on 'connect' button click
         network = get_network()
 
-        if self._project_is_unsaved():
-            if self._save_project_before_closure():
-                self.acServerConnect.setChecked(True)
-            else:
-                network.onServerConnection(connect)
+        if self._save_project_before_closure():
+            self.acServerConnect.setChecked(True)
         else:
             network.onServerConnection(connect)
+
