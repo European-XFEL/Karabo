@@ -852,7 +852,7 @@ namespace karabo {
                 return getNode(tmp, separator).is<ValueType > ();
             } else {
                 const std::vector<Hash>& hashVec = getNode(tmp, separator).getValue<std::vector<Hash> >();
-                if (index >= hashVec.size()) {
+                if (size_t(index) >= hashVec.size()) {
                     throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" + path + "'.");
                 }
                 return typeid (hashVec[index]) == typeid (ValueType);
