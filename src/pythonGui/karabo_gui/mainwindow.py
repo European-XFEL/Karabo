@@ -331,10 +331,11 @@ class MainWindow(QMainWindow):
         if project is not None and project.modified:
             ask = ('The open project has been modified.<br />'
                    'Do you want to save it first?')
-            options = (QMessageBox.Save | QMessageBox.Discard)
-            reply = QMessageBox.question(None, 'Save project', ask,
-                                         options, QMessageBox.Save)
-            return reply != QMessageBox.Discard
+            msg_box = QMessageBox(QMessageBox.Warning, 'Save project', ask,
+                                  QMessageBox.Yes | QMessageBox.No)
+            msg_box.setDefaultButton(QMessageBox.Yes)
+            msg_box.setEscapeButton(QMessageBox.Yes)
+            return msg_box.exec() != QMessageBox.No
         return False
 
     # --------------------------------------
