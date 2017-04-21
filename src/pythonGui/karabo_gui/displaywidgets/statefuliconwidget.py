@@ -102,13 +102,15 @@ class StatefulIconWidget(DisplayWidget):
             self._setSVG(self.icon.with_color(STATE_COLORS[State.ACTIVE]))
         elif State(value).isDerivedFrom(State.PASSIVE):
             self._setSVG(self.icon.with_color(STATE_COLORS[State.PASSIVE]))
+        elif State(value).isDerivedFrom(State.DISABLED):
+            self._setSVG(self.icon.with_color(STATE_COLORS[State.DISABLED]))
+        elif State(value) is State.STATIC:
+            self._setSVG(self.icon.with_color(STATE_COLORS[State.STATIC]))
+        elif State(value) is State.NORMAL:
+            self._setSVG(self.icon.with_color(STATE_COLORS[State.NORMAL]))
         elif State(value) is State.ERROR:
             self._setSVG(self.icon.with_color(STATE_COLORS[State.ERROR]))
         elif State(value) is State.INIT:
             self._setSVG(self.icon.with_color(STATE_COLORS[State.INIT]))
-        elif State(value) is State.DISABLED:
-            self._setSVG(self.icon.with_color(STATE_COLORS[State.DISABLED]))
-        elif State(value) is State.NORMAL:
-            self._setSVG(self.icon.with_color(OK_COLOR))
         else:
             self._setSVG(self.icon.with_color(STATE_COLORS[State.UNKNOWN]))

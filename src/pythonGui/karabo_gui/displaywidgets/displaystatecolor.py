@@ -45,10 +45,16 @@ class DisplayStateColor(DisplayWidget):
             bgColor = STATE_COLORS[State.ACTIVE]
         elif State(value).isDerivedFrom(State.PASSIVE):
             bgColor = STATE_COLORS[State.PASSIVE]
+        elif State(value).isDerivedFrom(State.DISABLED):
+            bgColor = STATE_COLORS[State.DISABLED]
+        elif State(value) is State.STATIC:
+            bgColor = STATE_COLORS[State.STATIC]
         elif State(value) is State.NORMAL:
             bgColor = STATE_COLORS[State.NORMAL]
         elif State(value) is State.ERROR:
             bgColor = STATE_COLORS[State.ERROR]
+        elif State(value) is State.INIT:
+            bgColor = STATE_COLORS[State.INIT]
         else:
             bgColor = STATE_COLORS[State.UNKNOWN]
 
