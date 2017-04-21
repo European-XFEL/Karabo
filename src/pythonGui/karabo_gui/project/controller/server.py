@@ -6,7 +6,7 @@
 from functools import partial
 
 from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
-from traits.api import Instance, on_trait_change
+from traits.api import Bool, Instance, Property, on_trait_change
 
 from karabo.common.project.api import DeviceServerModel
 from karabo_gui.events import (register_for_broadcasts,
@@ -24,10 +24,15 @@ class DeviceServerController(BaseProjectGroupController):
     """
     # Redefine model with the correct type
     model = Instance(DeviceServerModel)
+    # Is the server currently online?
+    online = Property(Bool, depends_on=['model'])
     # An object which listens to system topology updates
     topo_listener = Instance(SystemTopologyListener)
 
     def context_menu(self, project_controller, parent=None):
+        # Enable/Disable based on online status
+        online = self.online
+
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(self._edit_server)
@@ -35,10 +40,13 @@ class DeviceServerController(BaseProjectGroupController):
         delete_action.triggered.connect(partial(self._delete_server,
                                                 project_controller))
         shutdown_action = QAction('Shutdown', menu)
+        shutdown_action.setEnabled(online)
         shutdown_action.triggered.connect(self._shutdown_server)
         add_action = QAction('Add device', menu)
+        add_action.setEnabled(online)
         add_action.triggered.connect(self._add_device)
         instantiate_all_action = QAction('Instantiate all devices', menu)
+        instantiate_all_action.setEnabled(online)
         instantiate_all_action.triggered.connect(self._instantiate_devices)
         shutdown_all_action = QAction('Shutdown all devices', menu)
         shutdown_all_action.triggered.connect(self._shutdown_devices)
@@ -73,7 +81,7 @@ class DeviceServerController(BaseProjectGroupController):
         return self.model.server_id
 
     # ----------------------------------------------------------------------
-    # traits notification handlers
+    # traits handlers
 
     @on_trait_change("model.modified,model:server_id")
     def update_ui_label(self):
@@ -87,6 +95,9 @@ class DeviceServerController(BaseProjectGroupController):
         icon = get_project_server_status_icon(status_enum)
         if icon is not None:
             self.ui_data.icon = icon
+
+    def _get_online(self):
+        return DeviceStatus(self.model.status) != DeviceStatus.STATUS_OFFLINE
 
     def _topo_listener_changed(self, name, old, new):
         """Handle broadcast event registration/unregistration here.
