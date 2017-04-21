@@ -62,9 +62,15 @@ class LampWidget(DisplayWidget):
             self._setPixmap(self.statePixmapName[State.ACTIVE])
         elif State(value).isDerivedFrom(State.PASSIVE):
             self._setPixmap(self.statePixmapName[State.PASSIVE])
-        elif State(value).isDerivedFrom(State.NORMAL):
+        elif State(value).isDerivedFrom(State.DISABLED):
+            self._setPixmap(self.statePixmapName[State.DISABLED])
+        elif State(value) is State.STATIC:
+            self._setPixmap(self.statePixmapName[State.STATIC])
+        elif State(value) is State.NORMAL:
             self._setPixmap(self.statePixmapName[State.NORMAL])
         elif State(value) is State.ERROR:
             self._setPixmap(self.statePixmapName[State.ERROR])
+        elif State(value) is State.INIT:
+            self._setPixmap(self.statePixmapName[State.INIT])
         else:
             self._setPixmap(self.statePixmapName[State.UNKNOWN])
