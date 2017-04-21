@@ -143,7 +143,7 @@ state derived from it. It is the counterpart to ``PASSIVE``.
 
 .. graphviz::
 
-    digraph passive {PASSIVE [shape=box, style=filled, fillcolor="#00AAFF"]}
+    digraph passive {PASSIVE [shape=box, style=filled, fillcolor="#CCCCFF"]}
 
 The ``PASSIVE`` state is derived from ``STATIC`` and should usually be used
 only for comparison purposes. Rather developers should transition into a
@@ -556,10 +556,10 @@ is rather ``STATIC``, which is the base state for both:
     "ACTIVE"->"EVACUATED"
 
 
-    "CLOSED"[shape = box style=filled, fillcolor="#78FF00"]
-    "OPENED"[shape = box style=filled, fillcolor="#CCCCFF"]
+    "OPENED"[shape = box style=filled, fillcolor="#78FF00"]
+    "CLOSED"[shape = box style=filled, fillcolor="#CCCCFF"]
 
-    "OPENED"->"PASSIVE" [dir=back]
+    "CLOSED"->"PASSIVE" [dir=back]
 
     "ON"[shape = box style=filled, fillcolor="#78FF00"]
     "OFF"[shape = box style=filled, fillcolor="#CCCCFF"]
@@ -594,7 +594,7 @@ is rather ``STATIC``, which is the base state for both:
     "ACTIVE"->"STARTED"
     "ACTIVE"->"EXTRACTED"
     "ACTIVE"->"ON"
-    "ACTIVE"->"CLOSED"
+    "ACTIVE"->"OPENED"
     "ACTIVE"->"HEATED"
     "ACTIVE"->"COOLED"
     "ACTIVE"->"ENGAGED"
