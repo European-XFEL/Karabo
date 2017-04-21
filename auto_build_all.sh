@@ -200,7 +200,6 @@ fi
 shift
 
 # Parse the commandline flags
-SKIP="y"
 BUNDLE="n"
 RUNTESTS="n"
 RUNINTEGRATIONTESTS="n"
@@ -209,10 +208,6 @@ NUM_JOBS=0
 DB_INIT="y"
 while [ -n "$1" ]; do
     case "$1" in
-        --auto)
-            # Don't skip building system dependencies
-            SKIP="n"
-            ;;
         --bundle)
             # Don't skip bundling
             BUNDLE="y"
@@ -257,72 +252,13 @@ if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
     DISTRO_RELEASE=$(lsb_release -rs)
     if [ "$NUM_JOBS" = "0" ]; then
-	NUM_JOBS=`grep "processor" /proc/cpuinfo | wc -l`
+        NUM_JOBS=`grep "processor" /proc/cpuinfo | wc -l`
     fi
 elif [ "$OS" = "Darwin" ]; then
     DISTRO_ID=MacOSX
     DISTRO_RELEASE=$(uname -r)
     if [ "$NUM_JOBS" = "0" ]; then
-	NUM_JOBS=`sysctl hw.ncpu | awk '{print $2}'`
-    fi
-fi
-
-if [ "$SKIP" = "n" ]; then
-    echo 
-    echo "### Fetching dependencies from ${DISTRO_ID}'s package management system. ###"
-    echo
-    
-    sleep 2
-    
-    # Platform specific sections here
-
-        ######################################
-        #              Ubuntu                #
-        ######################################
-
-    if [ "$DISTRO_ID" == "Ubuntu" ]; then
-        safeRunCommand "sudo apt-get install subversion build-essential doxygen libqt4-dev libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev libqt4-sql-sqlite libX11-dev zlib1g-dev gfortran liblapack-dev m4 libssl-dev"
-        if [ "$DISTRO_RELEASE" = "10.04" ]; then
-            safeRunCommand "sudo apt-get install libxext-dev"
-        fi
-        safeRunCommand "sudo apt-get install krb5-user"
-
-        ######################################
-        #    Scientific Linux or CentOS      #
-        ######################################
-
-    elif [ "$DISTRO_ID" == "Scientific" -o "$DISTRO_ID" == "CentOS" ]; then
-        safeRunCommand "yum install redhat-lsb"
-        safeRunCommand "yum install make gcc gcc-c++ gcc-gfortran subversion doxygen nspr-devel nss-devel zlib-devel libX11-devel readline-devel qt-devel lapack-devel sqlite-devel openssl-devel"
-        safeRunCommand "yum install epel-release
-        yum --enablerepo=epel install qtwebkit-devel"
-        safeRunCommand "yum install krb5-workstation"
-
-        ######################################
-        #              MacOSX                #
-        ######################################
-
-    elif [ "$DISTRO_ID" == "MacOSX" ]; then
-        echo "### This can take a while. Better prepare yourself a coffee..."
-        safeRunCommand "sudo port -v selfupdate || true"
-        safeRunCommand "sudo port selfupdate || true"
-        safeRunCommand "sudo port upgrade outdated || true"
-        safeRunCommand "sudo port install nspr nss pkgconfig sqlite3 python34 py34-numpy py34-scipy py34-matplotlib py34-pyqt4 py34-zmq py34-tornado  py34-pygments py34-nose py34-ipython"
-        safeRunCommand "sudo port select --set python python34"
-        safeRunCommand "sudo port select --set ipython py34-ipython"
-        safeRunCommand "sudo port install py34-readline"
-        safeRunCommand "sudo port install py34-setuptools py34-pip"
-        # Patch reported macports bug (#37201)
-        #safeRunCommand "sudo cp -rf extern/resources/bundleMacOSX/sqldrivers /opt/local/share/qt4/plugins"
-        # Patch NetBeans bug regarding Makefile pathes
-
-        safeRunCommand "cd /usr/bin"
-        safeRunCommand "sudo ln -sf /opt/local/bin/pkg-config pkg-config"
-        safeRunCommand "cd -"
-
-        safeRunCommand "cd /opt/local/Library/Frameworks/Python.framework/Versions/Current/include"
-        safeRunCommand "sudo ln -sf python3.4m python3.4"
-        safeRunCommand "cd -"
+        NUM_JOBS=`sysctl hw.ncpu | awk '{print $2}'`
     fi
 fi
 
