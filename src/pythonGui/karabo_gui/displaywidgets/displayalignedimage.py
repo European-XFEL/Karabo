@@ -10,8 +10,9 @@ from PyQt4.QtGui import (QComboBox, QHBoxLayout, QImage, QLabel, QSlider,
                          QSpinBox, QVBoxLayout, QWidget)
 
 from guiqwt.builder import make
-from guiqwt.plot import ImageDialog
-from karabo_gui.images import get_dimensions_and_format, get_image_data
+
+from karabo_gui.images import (get_dimensions_and_format, get_image_data,
+                               KaraboImageDialog)
 from karabo_gui.schema import ImageNode
 from karabo_gui.widget import DisplayWidget
 
@@ -27,8 +28,8 @@ class DisplayAlignedImage(DisplayWidget):
 
         self.widget = QWidget()
         self.layout = QHBoxLayout(self.widget)
-        self.imageWidget = ImageDialog(
-            edit=False, toolbar=True, wintitle=".".join(box.path))
+        self.imageWidget = KaraboImageDialog(edit=False, toolbar=True,
+                                             parent=parent)
         self.image = None
         self.plot = self.imageWidget.get_plot()
         self.layout.addWidget(self.imageWidget)
