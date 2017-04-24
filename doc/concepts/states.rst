@@ -404,6 +404,14 @@ in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
             label = "INIT"
         ]
 
+        interlocked
+        [
+            shape = box
+            style = filled
+            fillcolor = "#FF00FF"
+            label = "INTERLOCKED"
+        ]
+
         error
         [
             shape = box
@@ -422,7 +430,8 @@ in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
 
         disabled -> active [lhead=cluster0]
         increasing -> active [ltail=cluster1, lhead=cluster0, dir=back]
-        decreasing -> error [ltail=cluster1]
+        decreasing -> interlocked [ltail=cluster1]
+        interlocked -> error
         error -> init
         init -> unknown
 
@@ -521,6 +530,11 @@ in a state derived from ``DISABLED``:
     "DISABLED" -> "INTERLOCKED"
 
 
+.. warning::
+
+    Although the ``INTERLOCKED`` state derives from the ``DISABLED`` state, it
+    is much more significant and is trumped by ``State.ERROR``, ``State.INIT`` and
+    ``State.UNKNOWN``.
 
 Devices with Binary-like behavior
 ---------------------------------
