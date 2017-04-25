@@ -530,7 +530,7 @@ in a state derived from ``DISABLED``:
     "DISABLED" -> "INTERLOCKED"
 
 
-.. warning::
+.. note::
 
     Although the ``INTERLOCKED`` state derives from the ``DISABLED`` state, it
     is much more significant and is trumped by ``State.ERROR``, ``State.INIT`` and
