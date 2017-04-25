@@ -273,7 +273,13 @@ namespace karathon {
 
 
     bp::object InputChannelWrap::getConnectedOutputChannelsPy(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
-        return Wrapper::toObject(self->getConnectedOutputChannels());
+        typedef std::map<std::string, karabo::util::Hash> OutputChannels;
+        const OutputChannels& ochannels = self->getConnectedOutputChannels();
+        bp::dict d;
+        for (OutputChannels::const_iterator it = ochannels.begin(); it != ochannels.end(); ++it) {
+            d[it->first] = bp::object(it->second);
+        }
+        return bp::object(d);
     }
 
 
