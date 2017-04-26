@@ -380,6 +380,8 @@ namespace karabo {
 
             public:
 
+                typedef boost::function<void() > AsyncErrorHandler;
+
                 explicit Requestor(SignalSlotable* signalSlotable);
 
                 virtual ~Requestor();
@@ -398,23 +400,23 @@ namespace karabo {
                                          const Args&... args);
 
                 void receiveAsync(const boost::function<void () >& replyCallback,
-                                  const boost::function<void()>& timeoutHandler = boost::function<void()>());
+                                  const AsyncErrorHandler& errorHandlerHandler = AsyncErrorHandler());
 
                 template <class A1>
                 void receiveAsync(const boost::function<void (const A1&) >& replyCallback,
-                                  const boost::function<void()>& timeoutHandler = boost::function<void()>());
+                                  const AsyncErrorHandler& errorHandlerHandler = AsyncErrorHandler());
 
                 template <class A1, class A2>
                 void receiveAsync(const boost::function<void (const A1&, const A2&) >& replyCallback,
-                                  const boost::function<void()>& timeoutHandler = boost::function<void()>());
+                                  const AsyncErrorHandler& errorHandlerHandler = AsyncErrorHandler());
 
                 template <class A1, class A2, class A3>
                 void receiveAsync(const boost::function<void (const A1&, const A2&, const A3&) >& replyCallback,
-                                  const boost::function<void()>& timeoutHandler = boost::function<void()>());
+                                  const AsyncErrorHandler& errorHandlerHandler = AsyncErrorHandler());
 
                 template <class A1, class A2, class A3, class A4>
                 void receiveAsync(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& replyCallback,
-                                  const boost::function<void()>& timeoutHandler = boost::function<void()>());
+                                  const AsyncErrorHandler& errorHandlerHandler = AsyncErrorHandler());
 
                 template <typename ...Args>
                 void receive(Args&... args);
@@ -442,7 +444,8 @@ namespace karabo {
 
             private:
 
-                void registerDeadlineTimer(const boost::function<void()>& timeoutHandler);
+                /// Register handler for errors in async requests, e.g. timeout or remote exception
+                void registerErrorHandler(const AsyncErrorHandler& errorHandler);
 
             protected:
 
@@ -499,8 +502,9 @@ namespace karabo {
             typedef std::map<std::string, SlotInstancePointer> SlotInstances;
             SlotInstances m_slotInstances;
 
-            typedef std::map<std::string, boost::shared_ptr<boost::asio::deadline_timer> > ReceiveAsyncTimeoutHandlers;
-            ReceiveAsyncTimeoutHandlers m_receiveAsyncTimeoutHandlers;
+            typedef std::map<std::string, std::pair<boost::shared_ptr<boost::asio::deadline_timer>,
+            Requestor::AsyncErrorHandler> > ReceiveAsyncErrorHandles;
+            ReceiveAsyncErrorHandles m_receiveAsyncErrorHandles;
 
             // TODO Split into two mutexes
             mutable boost::mutex m_signalSlotInstancesMutex;
@@ -771,8 +775,8 @@ namespace karabo {
             void connectInputChannelHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
                                             bool outChannelExists, const karabo::util::Hash& outChannelInfo);
 
-            void connectInputChannelTimeoutHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
-                                                   int trials, unsigned int nextTimeout);
+            void connectInputChannelErrorHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
+                                                 int trials, unsigned int nextTimeout);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             bool hasSlot(const std::string& unmangledSlotFunction) const;
@@ -821,12 +825,16 @@ namespace karabo {
             void setTopic(const std::string& topic = "");
 
             void receiveAsyncTimeoutHandler(const boost::system::error_code& e, const std::string& replyId,
-                                            const boost::function<void()>& timeoutCallback);
+                                            const SignalSlotable::Requestor::AsyncErrorHandler& errorHandler);
 
-            void addReceiveAsyncTimer(const std::string& replyId,
-                                      const boost::shared_ptr<boost::asio::deadline_timer>& timer);
+            /// For the given replyId of a 'request.receiveAsync', register error handling,
+            /// i.e. the timer for timeout and the handler for remote exceptions.
+            void addReceiveAsyncErrorHandles(const std::string& replyId,
+                                             const boost::shared_ptr<boost::asio::deadline_timer>& timer,
+                                             const SignalSlotable::Requestor::AsyncErrorHandler& errorHandler);
 
-            boost::shared_ptr<boost::asio::deadline_timer> getReceiveAsyncTimer(const std::string& replyId) const ;
+            std::pair<boost::shared_ptr<boost::asio::deadline_timer>, SignalSlotable::Requestor::AsyncErrorHandler>
+            getReceiveAsyncErrorHandles(const std::string& replyId) const;
 
 
         private: // Members
@@ -884,33 +892,33 @@ namespace karabo {
 
         template <class A1>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&) >& replyCallback,
-                                                     const boost::function<void()>& timeoutHandler) {
+                                                     const AsyncErrorHandler& errorHandler) {
             m_signalSlotable->registerSlot<A1>(replyCallback, m_replyId);
-            registerDeadlineTimer(timeoutHandler);
+            registerErrorHandler(errorHandler);
             sendRequest();
         }
 
         template <class A1, class A2>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&, const A2&) >& replyCallback,
-                                                     const boost::function<void()>& timeoutHandler) {
+                                                     const AsyncErrorHandler& errorHandler) {
             m_signalSlotable->registerSlot<A1, A2>(replyCallback, m_replyId);
-            registerDeadlineTimer(timeoutHandler);
+            registerErrorHandler(errorHandler);
             sendRequest();
         }
 
         template <class A1, class A2, class A3>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&, const A2&, const A3&) >& replyCallback,
-                                                     const boost::function<void()>& timeoutHandler) {
+                                                     const AsyncErrorHandler& errorHandler) {
             m_signalSlotable->registerSlot<A1, A2, A3>(replyCallback, m_replyId);
-            registerDeadlineTimer(timeoutHandler);
+            registerErrorHandler(errorHandler);
             sendRequest();
         }
 
         template <class A1, class A2, class A3, class A4>
         void SignalSlotable::Requestor::receiveAsync(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& replyCallback,
-                                                     const boost::function<void()>& timeoutHandler) {
+                                                     const AsyncErrorHandler& errorHandler) {
             m_signalSlotable->registerSlot<A1, A2, A3, A4>(replyCallback, m_replyId);
-            registerDeadlineTimer(timeoutHandler);
+            registerErrorHandler(errorHandler);
             sendRequest();
         }
 
