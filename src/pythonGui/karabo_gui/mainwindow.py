@@ -329,12 +329,13 @@ class MainWindow(QMainWindow):
         """
         project = get_project_model().traits_data_model
         if project is not None and project.modified:
-            ask = ('The open project has been modified.<br />'
-                   'Do you want to save it first?')
-            options = (QMessageBox.Yes | QMessageBox.No)
-            reply = QMessageBox.question(None, 'Save project', ask,
-                                         options, QMessageBox.Yes)
-            return reply == QMessageBox.Yes
+            ask = ('Unsaved changes on project \"<b>{}</b>\" will be '
+                   'permanently lost.<br /> Continue action?'
+                   .format(project.simple_name))
+            msg_box = QMessageBox(QMessageBox.Question, 'Unsaved project', ask,
+                                  QMessageBox.Yes | QMessageBox.Cancel)
+            msg_box.setDefaultButton(QMessageBox.Cancel)
+            return msg_box.exec() != QMessageBox.Yes
         return False
 
     # --------------------------------------
