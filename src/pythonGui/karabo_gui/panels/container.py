@@ -95,7 +95,6 @@ class PanelContainer(QTabWidget):
 
     def undock(self, panel):
         if panel.parent() is not None:
-            self.removeTab(panel.index)
             panel.is_docked = False
             panel.setParent(None)
             panel.move(QCursor.pos())
