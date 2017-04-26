@@ -90,7 +90,7 @@ namespace karabo {
             KARABO_CLASSINFO(Configurator<BaseClass>, "Configurator", "1.0");
 
             /**
-             * Register a base class into the factory
+             * Register a base class with standard Hash configuration constructor into the factory
              * @param classId identifying the class in the factory
              */
             template <class DerivedClass>
@@ -100,7 +100,8 @@ namespace karabo {
             }
 
             /**
-             * Register a class derived from A1 into the factory
+             * Register a class having constructor with additional A1 type parameter (besides the standard Hash configuration)
+             * into the factory
              * @param classId identifying the class in the factory
              */
             template <class DerivedClass, typename A1>
@@ -194,6 +195,7 @@ namespace karabo {
             /**
              * Create an object  as described by configuration from the factory
              * @param configuration where the root-nodes key identifies the classId
+             * @param arbitrary type parameter to be passed to the constructor
              * @param validate if true, validate the configuration against the classes Schema. Raises an exception if validation fails
              * @return a pointer to the base class of created object
              */
@@ -211,12 +213,13 @@ namespace karabo {
             /**
              * Create an object of classId as described by configuration from the factory
              * @param configuration Hash containing the configuration
+             * @param arbitrary type parameter to be passed to the constructor
              * @param validate if true, validate the configuration against the classes Schema. Raises an exception if validation fails
              * @return a pointer to the base class of created object
              */
             template <typename A1>
             inline static typename BaseClass::Pointer create(const std::string& classId, const karabo::util::Hash& configuration, const A1& a1, const bool validate = true) {
-                CtorMap::const_iterator it = findCtor(classId, ctorKey());
+                CtorMap::const_iterator it = findCtor(classId, ctorKey<A1>());
                 if (validate) {
                     Hash validated;
                     validateConfiguration(classId, configuration, validated);
@@ -489,6 +492,112 @@ namespace karabo {
             static const ConfiguratorMember5<Base, Sub1, Sub2, Sub3, Sub4> registerMe;
         };
 
+        // Allow to register statically constructor with one more argument
+        template <class Base, class A1>
+        struct ConfiguratorWithArgMember1 {
+
+            ConfiguratorWithArgMember1(int) {
+                std::string classId(Base::classInfo().getClassId());
+                Configurator<Base>::template registerClass<Base, A1 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Base > (classId);
+            }
+
+            virtual ~ConfiguratorWithArgMember1() {
+            }
+        };
+
+        template <class Base, class A1>
+        struct RegisterConfiguratorWithArg1 {
+
+            static const ConfiguratorWithArgMember1<Base, A1> registerMe;
+        };
+
+        template <class Base, class A1, class Sub1>
+        struct ConfiguratorWithArgMember2 {
+
+            ConfiguratorWithArgMember2(int) {
+                std::string classId(Sub1::classInfo().getClassId());
+                Configurator<Base>::template registerClass<Sub1, A1 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Base > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub1 > (classId);
+            }
+
+            virtual ~ConfiguratorWithArgMember2() {
+            }
+        };
+
+        template <class Base, class A1, class Sub1>
+        struct RegisterConfiguratorWithArg2 {
+
+            static const ConfiguratorWithArgMember2<Base, A1, Sub1> registerMe;
+        };
+
+        template <class Base, class A1, class Sub1, class Sub2>
+        struct ConfiguratorWithArgMember3 {
+
+            ConfiguratorWithArgMember3(int) {
+                std::string classId(Sub2::classInfo().getClassId());
+                Configurator<Base>::template registerClass<Sub2, A1 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Base > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub1 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub2 > (classId);
+            }
+
+            virtual ~ConfiguratorWithArgMember3() {
+            }
+        };
+
+        template <class Base, class A1, class Sub1, class Sub2>
+        struct RegisterConfiguratorWithArg3 {
+
+            static const ConfiguratorWithArgMember3<Base, A1, Sub1, Sub2> registerMe;
+        };
+
+        template <class Base, class A1, class Sub1, class Sub2, class Sub3>
+        struct ConfiguratorWithArgMember4 {
+
+            ConfiguratorWithArgMember4(int) {
+                std::string classId(Sub3::classInfo().getClassId());
+                Configurator<Base>::template registerClass<Sub3, A1 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Base > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub1 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub2 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub3 > (classId);
+            }
+
+            virtual ~ConfiguratorWithArgMember4() {
+            }
+        };
+
+        template <class Base, class A1, class Sub1, class Sub2, class Sub3>
+        struct RegisterConfiguratorWithArg4 {
+
+            static const ConfiguratorWithArgMember4<Base, A1, Sub1, Sub2, Sub3> registerMe;
+        };
+
+        template <class Base, class A1, class Sub1, class Sub2, class Sub3, class Sub4>
+        struct ConfiguratorWithArgMember5 {
+
+            ConfiguratorWithArgMember5(int) {
+                std::string classId(Sub4::classInfo().getClassId());
+                Configurator<Base>::template registerClass<Sub4, A1 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Base > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub1 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub2 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub3 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub4 > (classId);
+            }
+
+            virtual ~ConfiguratorWithArgMember5() {
+            }
+        };
+
+        template <class Base, class A1, class Sub1, class Sub2, class Sub3, class Sub4>
+        struct RegisterConfiguratorWithArg5 {
+
+            static const ConfiguratorWithArgMember5<Base, A1, Sub1, Sub2, Sub3, Sub4> registerMe;
+        };
+
 
 #define _KARABO_REGISTER_FOR_CONFIGURATION_1(base) \
                 template<> const karabo::util::ConfiguratorMember1<base> \
@@ -520,6 +629,39 @@ namespace karabo {
                     _KARABO_REGISTER_FOR_CONFIGURATION_2(__VA_ARGS__), \
                     _KARABO_REGISTER_FOR_CONFIGURATION_1(__VA_ARGS__), \
                     _KARABO_REGISTER_FOR_CONFIGURATION_0(__VA_ARGS__) \
+                    )
+
+
+#define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_1(a1, base) \
+                template<> const karabo::util::ConfiguratorWithArgMember1<base, a1> \
+                karabo::util::RegisterConfiguratorWithArg1<base, a1>::registerMe(1);
+
+#define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_2(a1, base, sub1) \
+                template<> const karabo::util::ConfiguratorWithArgMember2<base, a1, sub1> \
+                karabo::util::RegisterConfiguratorWithArg2<base, a1, sub1>::registerMe(1);
+
+#define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_3(a1, base, sub1, sub2) \
+                template<> const karabo::util::ConfiguratorWithArgMember3<base, a1, sub1, sub2> \
+                karabo::util::RegisterConfiguratorWithArg3<base, a1, sub1, sub2>::registerMe(1);
+
+#define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_4(a1, base, sub1, sub2, sub3) \
+                template<> const karabo::util::ConfiguratorWithArgMember4<base, a1, sub1, sub2, sub3> \
+                karabo::util::RegisterConfiguratorWithArg4<base, a1, sub1, sub2, sub3>::registerMe(1);
+
+#define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_5(a1, base, sub1, sub2, sub3, sub4) \
+                template<> const karabo::util::ConfiguratorWithArgMember5<base, a1, sub1, sub2, sub3, sub4> \
+                karabo::util::RegisterConfiguratorWithArg5<base, a1, sub1, sub2, sub3, sub4>::registerMe(1);
+
+#define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
+
+#define KARABO_REGISTER_FOR_CONFIGURATION_ADDON(a1, ...) \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_N(,##__VA_ARGS__, \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_5(a1,__VA_ARGS__), \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_4(a1,__VA_ARGS__), \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_3(a1,__VA_ARGS__), \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_2(a1,__VA_ARGS__), \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_1(a1,__VA_ARGS__), \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_0(a1,__VA_ARGS__) \
                     )
         /**
          * If we are importing symbols from a dll in windows, we have to tell the compiler that he should use a single
@@ -564,7 +706,13 @@ namespace karabo {
                 \
                 static std::vector<std::string> getRegisteredClasses() { \
                 return karabo::util::Configurator<Self>::getRegisteredClasses(); }
-        
+
+#define KARABO_CONFIGURATION_BASE_CLASS_ADDON(A1) \
+                static boost::shared_ptr<Self> create(const karabo::util::Hash& configuration, const A1& a1, const bool validate = true) { \
+                return karabo::util::Configurator<Self>::create<A1>(configuration, a1, validate); } \
+                \
+                static boost::shared_ptr<Self> create(const std::string& classId, const karabo::util::Hash& configuration, const A1& a1, const bool validate = true) { \
+                return karabo::util::Configurator<Self>::create<A1>(classId, configuration, a1, validate); }
 
     }
 }
