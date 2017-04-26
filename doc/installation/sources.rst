@@ -28,31 +28,41 @@ Get and install the Karabo framework (quick - no details)
 
     ./auto_build_all.sh Debug
 
-  .. note::
-  
-     The compilation will only succeed if you installed all dependencies.
-     You can do this manually (see below) or try using:
-
-     ``./auto_build_all.sh Debug --auto``
-
-     but be prepared to enter a sudo password from time to time.
-
   Or this following one for the Release version, respectively.
 
   .. code-block:: bash
 
     ./auto_build_all.sh Release
 
-4. If you failed building the external dependencies, try and
-   fix the error in the dependency and compile again. For reference,
+  .. note::
+  
+     The compilation will only succeed if you installed all of the base
+     dependencies. You must do this manually (see below)
+
+4. When using a supported platform (and running from inside the DESY network),
+   external dependencies are downloaded and installed rather than built locally
+   on your computer. If this is the case, you can skip to the next step.
+   
+   When the above is not the case, there is a long (ca. 1 hour) build of the
+   external dependencies. If part of this failed to build for some reason, try
+   and fix the error in the dependency and compile again. For reference,
    this file:
 
   .. code-block:: bash
 
     karaboFramework/extern/<platform>/.marker.txt
 
-  contains a list of packages installed successfully on your
+  contains a list of packages which have already been built successfully on your
   machine.
+
+  To build a single dependency (when, for instance, debugging a build failure),
+  the following command can be used:
+
+  .. code-block:: bash
+
+    cd extern
+    ./build.sh <platfowm> package0 [... packageN]
+
 
 5. Before running the freshly compiled Karabo, you have to activate it:
 
@@ -60,7 +70,10 @@ Get and install the Karabo framework (quick - no details)
 
      source ./karabo/activate
 
-  To undo the environment parameter settings introduced by that, just do:
+  Each time you start a new shell, you will need to activate Karabo before
+  attempting to run it. (If you don't, an error message will kindly remind you)
+
+  To undo the environment parameter settings introduced by activation, just do:
 
   .. code-block:: bash
 
@@ -79,12 +92,6 @@ local working copy.
       ./auto_build_all.sh Clean-All
       ./auto_build_all.sh Debug
 
-  * if you know what you are doing:
-
-    .. code-block:: bash
-
-      cd extern
-      ./build.sh <platform> packageA packageB
 
 2. If there were any changes to netbeans project files like
    configuration.xml or makefiles like Karabo-???.mk
@@ -111,54 +118,34 @@ local working copy.
 Install dependencies
 ====================
 
-All
----
+Supported Operating Systems
+---------------------------
 
-If you intend to run Karabo all-local, i.e. have the message-broker and the
-configuration database running on your system, you need *Java*.
+The operating systems which are currently supported by Karabo are: Centos 7,
+Ubuntu 14.04, and Ubuntu 16.04 (and generally Ubuntu 14-17). To learn which
+packages must be installed before building Karabo, refer to the following
+project on the XFEL GitLab server:
 
-On Ubuntu systems the easiest way do install Java is using a recent version
-of openjdk, for example:
+https://in.xfel.eu/gitlab/Karabo/ci-containers/
 
-.. code-block:: bash
+There you will find the following Dockerfiles which list the packages needed
+on each platform.
 
-  sudo apt-get install openjdk-7-jre
+https://in.xfel.eu/gitlab/Karabo/ci-containers/blob/master/centos/7/Dockerfile
 
-Ubuntu type system
-------------------
+https://in.xfel.eu/gitlab/Karabo/ci-containers/blob/master/ubuntu/14.04/Dockerfile
 
-.. code-block:: bash
+https://in.xfel.eu/gitlab/Karabo/ci-containers/blob/master/ubuntu/16.04/Dockerfile
 
-  sudo apt-get install git build-essential doxygen pkg-config gfortran m4 libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev zlib1g-dev liblapack-dev libssl-dev libX11-dev libxext-dev qt4-default libqt4-sql-sqlite unzip file curl openssh-client
+These same files are used to generate the continuous integration infrastructure
+for Karabo, so they are more up to date than any documentation can hope to be.
 
-
-For running karabo python tests:
-
-.. code-block:: bash
-
-  sudo apt-get install imagemagick
+Even though these are docker scripts, they are quite simple and consist mainly
+of ``apt-get install`` or ``yum install`` commands (depending on the platform).
 
 
-Centos-7
---------
-
-.. code-block:: bash
-
-  sudo yum update
-  sudo yum install epel-release redhat-lsb-core  glibc gcc-c++ gcc-gfortran m4 make patch
-  sudo yum install unzip git which file curl openssh-clients pkgconfig
-  sudo yum install zlib-devel readline-devel nspr-devel sqlite-devel blas-devel lapack-devel openssl-devel libX11-devel qt-devel
-
-
-For running karabo python tests:
-
-.. code-block:: bash
-
-  sudo yum install ImageMagick-devel
-
-
-MacOS X (currently unmaintained, use with care)
------------------------------------------------
+MacOS X (**currently unmaintained, proceed with care**)
+-------------------------------------------------------
 
 1. Install Xcode
 
@@ -312,10 +299,9 @@ MacOS X (currently unmaintained, use with care)
     port list py34-ipython
 
 
- 
-
 Executing Unit Tests
 ====================
+
 Besides regular unit tests, testing Karabo includes also more advanced
 integration tests.
 
@@ -346,7 +332,7 @@ To run the integration unit tests, do the following:
 
   cd build/netbeans/integrationTests
   make test
- 
+
 To run the tests using Netbeans:
 
 * Go to Karabo project (for the unit tests) or to integrationTests project
@@ -515,13 +501,6 @@ following structure of files and sources:
     and also updates the $HOME/.karabo/karaboFramework file pointing
     to this "local" bundle.
 
-**visualStudio/**
-
-  The inherent (makefile-based) build system of the MS VisualStudio
-  IDE is used for Windows platforms.
-
-  <<<< The windows port is not yet finished, please come back later! >>>>
-
 **extern/**
 
   Any third-party sources which are compiled and added to the software
@@ -529,7 +508,8 @@ following structure of files and sources:
     
   **resources/**
 
-    Contains the sources or tarballs of the different dependencies
+    Contains the sources and build configurations of the different external
+    dependencies
         
   **<platform>/**
 
