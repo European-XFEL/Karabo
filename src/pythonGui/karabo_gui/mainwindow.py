@@ -329,9 +329,10 @@ class MainWindow(QMainWindow):
         """
         project = get_project_model().traits_data_model
         if project is not None and project.modified:
-            ask = ('Are you sure you want to exit?<br />'
-                   'Unsaved changes will be lost.')
-            msg_box = QMessageBox(QMessageBox.Question, 'Save project', ask,
+            ask = ('Unsaved changes on project \"<b>{}</b>\" will be '
+                   'permanently lost.<br /> Continue action?'
+                   .format(project.simple_name))
+            msg_box = QMessageBox(QMessageBox.Question, 'Unsaved project', ask,
                                   QMessageBox.Yes | QMessageBox.Cancel)
             msg_box.setDefaultButton(QMessageBox.Cancel)
             return msg_box.exec() != QMessageBox.Yes
