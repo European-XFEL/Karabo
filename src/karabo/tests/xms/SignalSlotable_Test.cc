@@ -167,7 +167,7 @@ void SignalSlotable_Test::testReceiveAsync() {
 }
 
 
-void SignalSlotable_Test::testReceiveAsyncTimeout() {
+void SignalSlotable_Test::testReceiveAsyncError() {
     auto greeter = boost::make_shared<SignalSlotable>("greeter");
     auto responder = boost::make_shared<SignalSlotable>("responder");
     greeter->start();
@@ -175,30 +175,52 @@ void SignalSlotable_Test::testReceiveAsyncTimeout() {
 
 
     responder->registerSlot<std::string>([&responder](const std::string & q) {
+        if (q == "Please, throw!") {
+            throw KARABO_PARAMETER_EXCEPTION("Exception was requested");
+        }
         boost::this_thread::sleep(boost::posix_time::milliseconds(100));
                                          responder->reply(q + ", world!");
     }, "slotAnswer");
 
     std::string result;
-    greeter->request("responder", "slotAnswer", "Hello").timeout(50).receiveAsync<std::string>([&result](const std::string & answer) {
+    const auto successHandler = [&result](const std::string & answer) {
         result = answer;
-    });
+    };
+    greeter->request("responder", "slotAnswer", "Hello").timeout(50).receiveAsync<std::string>(successHandler);
 
     boost::this_thread::sleep(boost::posix_time::milliseconds(200)); // ensure reply could be delivered (though not in time)
 
     CPPUNIT_ASSERT(result == "");
 
-    // Now the same, but test timeout handler
+    // Now the same, but test error handling, first timeout, then remote exception
     result = "some";
-    bool caughtTimeout = false;
+    int caughtType = 0;
+    const auto errHandler = [&caughtType]() {
+        try {
+            throw;
+        } catch (const karabo::util::TimeoutException&) {
+            karabo::util::Exception::clearTrace();
+            caughtType = 1;
+        } catch (const karabo::util::RemoteException&) {
+            karabo::util::Exception::clearTrace();
+            caughtType = -1;
+        }
+    };
     greeter->request("responder", "slotAnswer", "Hello").timeout(50)
-        .receiveAsync<std::string>([&result](const std::string & answer) { result = answer;},
-                                   [&caughtTimeout]() { caughtTimeout = true;});
+            .receiveAsync<std::string>(successHandler, errHandler);
 
     boost::this_thread::sleep(boost::posix_time::milliseconds(200)); // ensure reply could be delivered (though not in time)
 
-    CPPUNIT_ASSERT(result == "some");
-    CPPUNIT_ASSERT(caughtTimeout);
+    CPPUNIT_ASSERT_EQUAL(std::string("some"), result);
+    CPPUNIT_ASSERT_EQUAL(1, caughtType); // timeout
+
+    caughtType = 0;
+    greeter->request("responder", "slotAnswer", "Please, throw!").timeout(50) // short timeout: should immediately throw
+            .receiveAsync<std::string>(successHandler, errHandler);
+
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // ensure timeout could have happened
+
+    CPPUNIT_ASSERT_EQUAL(-1, caughtType); // remote exception
 }
 
 
@@ -219,13 +241,30 @@ void SignalSlotable_Test::testReceiveExceptions() {
     int resultInt;
     CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(500).receive(resultInt),
                          karabo::util::CastException);
+    karabo::util::Exception::clearTrace();
     // Trying to receive more items than come gives karabo::util::SignalSlotException:
     std::string answer;
     CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(500).receive(answer, resultInt),
                          karabo::util::SignalSlotException);
+    karabo::util::Exception::clearTrace();
     // Too short timeout gives TimeoutException:
     CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(1).receive(answer),
                          karabo::util::TimeoutException);
+    karabo::util::Exception::clearTrace();
+    //    // Wrong argument type to slot
+    //    CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", 42).timeout(500).receive(answer),
+    //                         karabo::util::RemoteException);
+    //    karabo::util::Exception::clearTrace();
+    // Too many arguments to slot seems not to harm...
+    //CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello", 42).timeout(500).receive(answer),
+    //                     karabo::util::RemoteException);
+    //karabo::util::Exception::clearTrace();
+    // Too few arguments to slot
+    //CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer").timeout(500).receive(answer),
+    //                     karabo::util::RemoteException);
+    //karabo::util::Exception::clearTrace();
+    // What about wrong slot name? Should give remote exception, but I guess it is Timeout
+    // What about non-existing instanceId? Should give timeout
     // Finally no exception:
     CPPUNIT_ASSERT_NO_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(500).receive(answer));
 
