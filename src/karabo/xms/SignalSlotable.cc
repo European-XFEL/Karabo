@@ -404,8 +404,11 @@ namespace karabo {
 
 
         void SignalSlotable::handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
-            KARABO_LOG_FRAMEWORK_TRACE << m_instanceId << ": Injecting reply from: "
-                    << header->get<string>("signalInstanceId") << *header << *body;
+            boost::optional<Hash::Node&> signalIdNode = header->find("signalInstanceId");
+            const std::string& signalId = (signalIdNode && signalIdNode->is<std::string>() ?
+                                           signalIdNode->getValue<std::string>() : "unspecified sender");
+            KARABO_LOG_FRAMEWORK_TRACE << m_instanceId << ": Injecting reply from: " << signalId << *header << *body;
+
             const string& replyId = header->get<string>("replyFrom");
             std::pair<boost::shared_ptr<boost::asio::deadline_timer>, Requestor::AsyncErrorHandler> timerAndHandler
                     = getReceiveAsyncErrorHandles(replyId);
@@ -422,14 +425,21 @@ namespace karabo {
                                        : "Error signaled, but body without string at key 'a1'");
                 if (timerAndHandler.second) {
                     try {
-                        throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"));
-                    } catch (...) {
-                        // Handler can do: try {throw;} catch(const karabo::util::RemoteException&) {...;}
-                        timerAndHandler.second();
+                        throw karabo::util::RemoteException(text, signalId);
+                    } catch (const std::exception&) {
+                        try {
+                            // Handler can do: try {throw;} catch(const karabo::util::RemoteException&) {...;}
+                            timerAndHandler.second();
+                        } catch (const std::exception& e) {
+                            KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << ": Received error from '" << signalId
+                                    << "' for request id '" << replyId << "', but error handler throws exception:\n"
+                                    << e.what();
+                        }
                     }
+                    Exception::clearTrace();
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << ": Received error from '"
-                            << header->get<std::string>("signalInstanceId") << "' for request id '" << replyId << "'";
+                            << signalId << "' for request id '" << replyId << "'";
                 }
             }
 
@@ -441,12 +451,8 @@ namespace karabo {
                     slot->callRegisteredSlotFunctions(*header, *body);
                 }
             } catch (const std::exception& e) {
-                boost::optional<Hash::Node&> signalIdNode = header->find("signalInstanceId");
-                const std::string& signalId = (signalIdNode && signalIdNode->is<std::string>() ?
-                                              "'" + signalIdNode->getValue<std::string>() + "'" :
-                                              " unspecified sender");
-                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception when handling reply from "
-                        << signalId << ": " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception when handling reply from '" << signalId
+                        << "': " << e.what();
             }
             removeSlot(replyId);
             // Now check whether someone is synchronously waiting for us and if yes wake him up
@@ -2045,20 +2051,27 @@ namespace karabo {
 
         void SignalSlotable::receiveAsyncTimeoutHandler(const boost::system::error_code& e, const std::string& replyId,
                                                         const SignalSlotable::Requestor::AsyncErrorHandler& errorHandler) {
-            if (e) return;
+            if (e) return; // Timer got cancelled.
+
             // Remove the slot with function name replyId, as the message took too long
             removeSlot(replyId);
-            const std::string msg("Asynchronous request with id '" + replyId + "' timed out");
+            std::string msg("Asynchronous request with id '" + replyId + "' timed out");
             if (errorHandler) {
                 try {
                     throw KARABO_TIMEOUT_EXCEPTION(msg);
-                } catch (...) {
-                    // Now the errorHandler can do try { throw; } catch (catch karabo::util::TimeoutException& e) {...;}
-                    errorHandler();
+                } catch (const std::exception&) {
+                    Exception::clearTrace();
+                    try {
+                        // Now the errorHandler can do try { throw; } catch (catch karabo::util::TimeoutException& e) {...;}
+                        errorHandler();
+                        return;
+                    } catch (const std::exception& e) {
+                        Exception::clearTrace();
+                        (msg += ", but error handler throws exception: ") += e.what();
+                    }
                 }
-            } else {
-                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": " << msg;
             }
+            KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": " << msg;
         }
 
 
