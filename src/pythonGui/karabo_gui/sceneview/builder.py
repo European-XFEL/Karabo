@@ -204,9 +204,14 @@ def create_object_from_model(layout, model, parent_widget, object_dict,
             obj.setGeometry(model_rect)
         elif is_widget(obj):
             model_rect = QRect(model.x, model.y, model.width, model.height)
+            widget_rect = obj.geometry()
             if model_rect.isEmpty():
                 model_rect.setSize(obj.sizeHint())
                 obj.set_geometry(model_rect)
+            elif not widget_rect.isEmpty() and widget_rect != model_rect:
+                # Handle the case when widgets unparented from a layout have
+                # geometry which disagrees with their model!
+                obj.set_geometry(widget_rect)
             if scene_visible and hasattr(obj, 'boxes'):
                 _update_box_visibility(obj.boxes, True)
 
