@@ -32,7 +32,7 @@ class DisplayCommand(DisplayWidget):
 
     def showDialog(self):
         dialog = SelectionDialog(self.actions, None)
-        self.actions = dialog.exec_()
+        self.actions = dialog.exec()
         self.updateIcons()
 
     def updateIcons(self):
