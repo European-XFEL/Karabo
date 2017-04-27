@@ -333,29 +333,6 @@ class Manager(QObject):
                         {'items': reply['items']})
 
     # ---------------------------------------------------------------------
-    # Legacy Project Interface
-
-    def handle_availableProjects(self, availableProjects):
-        """ exists for compatibility with old GuiServers only """
-        pass
-
-    def handle_projectNew(self, name, success, data):
-        """ exists for compatibility with old GuiServers only """
-        pass
-
-    def handle_projectLoaded(self, name, metaData, buffer):
-        """ exists for compatibility with old GuiServers only """
-        pass
-
-    def handle_projectSaved(self, name, success, data):
-        """ exists for compatibility with old GuiServers only """
-        pass
-
-    def handle_projectClosed(self, name, success, data):
-        """ exists for compatibility with old GuiServers only """
-        pass
-
-    # ---------------------------------------------------------------------
 
     def handle_notification(self, device, message, short, detailed):
         data = {'device_id': device,

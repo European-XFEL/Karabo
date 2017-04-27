@@ -10,7 +10,6 @@
 #ifndef KARABO_CORE_GUISERVERDEVICE_HH
 #define	KARABO_CORE_GUISERVERDEVICE_HH
 
-#include "karabo/devices/ProjectManager.hh"
 #include "karabo/net/JmsProducer.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/xms/InputChannel.hh"
@@ -135,6 +134,8 @@ namespace karabo {
              * @param channel
              */
             void onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel);
+
+            void registerConnect(const karabo::net::Channel::Pointer& channel);
 
             /**
              * handles incoming data in the Hash  ``info`` from ``channel``.
@@ -362,142 +363,6 @@ namespace karabo {
              * @param input
              */
             void onNetworkData(const karabo::xms::InputChannel::Pointer& input);
-
-            /**
-             * requests the available projects from the Karabo project manager. The reply
-             * is passed asynchronously through the ``availableProjects`` call-back.
-             * @param channel
-             */
-            void onGetAvailableProjects(karabo::net::Channel::Pointer channel);
-
-            /**
-             * is called back upon a ``onGetAvailableProjects`` request. It forwards the
-             * information provided by the Karabo project manager to the requesting channel:
-             * ``type=availableProjects`` and ``availableProjects`` is the hash reply
-             * from the project manager.
-             * 
-             * @param channel
-             * @param projects
-             */
-            void availableProjects(karabo::net::Channel::Pointer channel,
-                                   const karabo::util::Hash& projects);
-
-            /**
-             * triggers the creation of a new project by the client communicating via
-             * ``channel`` by the Karabo project manager, where
-             * ``info`` provides ``author``, ``projectName`` as well as project ``data``.
-             * The response from the project manager is handled asynchronously using the
-             * ``projectNew`` callback.
-             * 
-             * @param channel
-             * @param info
-             */
-            void onNewProject(karabo::net::Channel::Pointer channel,
-                              const karabo::util::Hash& info);
-
-            /**
-             * is called back upon reply from the project manager upon a ``onNewProject``
-             * request. It forwards hashed information to the client communicating on
-             * ``channel`` where ``type=projectNew``, ``name`` is the projectName,
-             * ``success`` indicates successful project creation and ``data`` is the
-             * project data.
-             * 
-             * @param channel
-             * @param projectName
-             * @param success
-             * @param data
-             */
-            void projectNew(karabo::net::Channel::Pointer channel,
-                            const std::string& projectName, bool success,
-                            const std::vector<char>& data);
-
-            /**
-             * requests loading of a project by the client communicating on ``channel``
-             * from the project manager. Here ``info`` contains the requesting ``user``
-             * and project ``name``. Project loading is handled asyncronously by the
-             * ``projectLoaded`` callback.
-             * 
-             * @param channel
-             * @param info
-             */
-            void onLoadProject(karabo::net::Channel::Pointer channel,
-                               const karabo::util::Hash& info);
-
-            /**
-             * is called back upon reply from the project manager upon a ``onLoadProject``
-             * request from a client communicating on ``channel``. A message with
-             * ``type=projectLoaded``, ``name`` as project name, ``metaData`` containing
-             * project metadata and ``data`` containing the project data is forwarded to
-             * the client on ``channel``.
-             * 
-             * @param channel
-             * @param projectName
-             * @param metaData
-             * @param data
-             */
-            void projectLoaded(karabo::net::Channel::Pointer channel,
-                               const std::string& projectName,
-                               const karabo::util::Hash& metaData,
-                               const std::vector<char>& data);
-
-            /**
-             * request saving a project from the client connected on ``channel`` by the
-             * project manager. In ``info`` the ``user`` name, project ``name`` and
-             * project ``data`` are expected to be passed. The reply of the request is
-             * handled by the ``projectSaved`` callback.
-             * 
-             * @param channel
-             * @param info
-             */
-            void onSaveProject(karabo::net::Channel::Pointer channel,
-                               const karabo::util::Hash& info);
-
-            /**
-             * is called back upon reply from the project manager upon a ``onSaveProject``
-             * request from a client communicating on ``channel``. A message with
-             * ``type=projectSaved``, ``name`` as project name, ``success`` indicating
-             * a successful save, and ``data`` containing the project data is forwarded to
-             * the client on ``channel``.
-             * 
-             * @param channel
-             * @param projectName
-             * @param success
-             * @param data
-             */
-            void projectSaved(karabo::net::Channel::Pointer channel,
-                              const std::string& projectName, bool success,
-                              const std::vector<char>& data);
-
-            /**
-             * requests closing a project open on the client communicating via ``channel``
-             * by the project manager. The ``info`` hash should contain the ``user`` name
-             * and project ``name``. The reply from the project manager is handled by the
-             * ``projectClosed`` callback.
-             * 
-             * @param channel
-             * @param info
-             */
-            void onCloseProject(karabo::net::Channel::Pointer channel,
-                                const karabo::util::Hash& info);
-
-            /**
-             * is called back upon reply from the project manager upon a ``onCloseProject``
-             * request from a client communicating on ``channel``. A message with
-             * ``type=projectClosed``, ``name`` as project name, ``success`` indicating
-             * a successful close, and ``data`` containing the project data is forwarded to
-             * the client on ``channel``.
-             * @param channel
-             * @param projectName
-             * @param success
-             * @param data
-             */
-            void projectClosed(karabo::net::Channel::Pointer channel,
-                               const std::string& projectName,
-                               bool success,
-                               const std::vector<char>& data);
-
-            
-            void registerConnect(const karabo::net::Channel::Pointer& channel);
 
             /**
              * sends the current system topology to the client connected on ``channel``.
