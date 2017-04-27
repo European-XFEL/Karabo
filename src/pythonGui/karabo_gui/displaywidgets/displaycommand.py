@@ -31,7 +31,7 @@ class DisplayCommand(DisplayWidget):
         self.addBox(box)
 
     def showDialog(self):
-        dialog = SelectionDialog(self.project, self.actions, None)
+        dialog = SelectionDialog(self.actions, None)
         self.actions = dialog.exec()
         self.updateIcons()
 
