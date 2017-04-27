@@ -447,39 +447,6 @@ class Network(QObject):
         self._tcpWriteHash(h)
 
     # ---------------------------------------------------------------------
-    # Legacy Project Interface
-
-    def onGetAvailableProjects(self):
-        h = Hash("type", "getAvailableProjects")
-        self._tcpWriteHash(h)
-
-    def onNewProject(self, fileName, data):
-        h = Hash("type", "newProject")
-        h.set("author", self.username)
-        h.set("name", fileName)
-        h.set("data", data)
-        self._tcpWriteHash(h)
-
-    def onSaveProject(self, filename, data):
-        h = Hash("type", "saveProject")
-        h.set("user", self.username)
-        h.set("name", filename)
-        h.set("data", data)
-        self._tcpWriteHash(h)
-
-    def onLoadProject(self, filename):
-        h = Hash("type", "loadProject")
-        h.set("user", self.username)
-        h.set("name", filename)
-        self._tcpWriteHash(h)
-
-    def onCloseProject(self, filename):
-        h = Hash("type", "closeProject")
-        h.set("user", self.username)
-        h.set("name", filename)
-        self._tcpWriteHash(h)
-
-    # ---------------------------------------------------------------------
 
     def onAcknowledgeAlarm(self, instanceId, rowId):
         h = Hash("type", "acknowledgeAlarm")
