@@ -504,10 +504,6 @@ class PythonDevice(NoFsm):
                     pars = tuple([h, self._getActualTimestamp()])
 
                 hash, stamp = pars
-                # Check that hash is image's free
-                paths = hash.getPaths()
-                for key in paths:
-                    value = hash[key]
 
                 validated = None
 
