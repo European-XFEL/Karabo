@@ -488,9 +488,13 @@ namespace karabo {
 
 
         void SignalSlotable::onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
-            SlotInstancePointer slot = getSlot("slotHeartbeat");
-            // Synchronously call the slot
-            if (slot) slot->callRegisteredSlotFunctions(*header, *body);
+            try {
+                SlotInstancePointer slot = getSlot("slotHeartbeat");
+                // Synchronously call the slot
+                if (slot) slot->callRegisteredSlotFunctions(*header, *body);
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": Exception in onHeartbeatMessage: " << e.what();
+            }
             // Re-register
             m_heartbeatConsumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::onHeartbeatMessage, this, _1, _2));
         }
