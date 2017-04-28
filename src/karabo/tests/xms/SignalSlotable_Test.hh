@@ -36,6 +36,7 @@ public:
 
 private:
     void waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials = 10);
+    void waitEqual(int target, const int& test, int trials = 10);
 
     void testUniqueInstanceId();
     void testReceiveAsync();
