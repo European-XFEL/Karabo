@@ -229,14 +229,16 @@ void SignalSlotable_Test::testReceiveAsyncError() {
     waitEqual(-1, caughtType);
     CPPUNIT_ASSERT_EQUAL(-1, caughtType); // remote exception
 
-    // Trying to receive int where string comes gives CastException:
+    // Trying to receive int where string comes gives SignalSlotException
+    // since Slot::callRegisteredSlotFunctions converts the underlying CastException
+    // (whereas in the synchronous case one gets SignalSlotException!):
     const auto badSuccessHandler1 = [](int answer) {
     };
     caughtType = 0;
     greeter->request("responder", "slotAnswer", "Hello").timeout(200)
             .receiveAsync<int>(badSuccessHandler1, errHandler);
-    waitEqual(-2, caughtType);
-    CPPUNIT_ASSERT_EQUAL(-2, caughtType); // cast exception
+    waitEqual(-3, caughtType);
+    CPPUNIT_ASSERT_EQUAL(-3, caughtType); // signalslot exception
 
     // Trying to receive more items than come gives karabo::util::SignalSlotException:
     const auto badSuccessHandler2 = [](const std::string& answer, int answer2) {
