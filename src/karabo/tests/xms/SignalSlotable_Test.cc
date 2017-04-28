@@ -219,18 +219,14 @@ void SignalSlotable_Test::testReceiveAsyncError() {
     };
     greeter->request("responder", "slotAnswer", "Hello").timeout(50)
             .receiveAsync<std::string>(successHandler, errHandler);
-
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200)); // ensure reply could be delivered (though not in time)
-
-    CPPUNIT_ASSERT_EQUAL(std::string("some"), result);
+    waitEqual(1, caughtType);
     CPPUNIT_ASSERT_EQUAL(1, caughtType); // timeout
+    CPPUNIT_ASSERT_EQUAL(std::string("some"), result);
 
     caughtType = 0;
     greeter->request("responder", "slotAnswer", "Please, throw!").timeout(50) // short timeout: should immediately throw
             .receiveAsync<std::string>(successHandler, errHandler);
-
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // ensure timeout could have happened
-
+    waitEqual(-1, caughtType);
     CPPUNIT_ASSERT_EQUAL(-1, caughtType); // remote exception
 
     // Trying to receive int where string comes gives CastException:
@@ -239,7 +235,7 @@ void SignalSlotable_Test::testReceiveAsyncError() {
     caughtType = 0;
     greeter->request("responder", "slotAnswer", "Hello").timeout(200)
             .receiveAsync<int>(badSuccessHandler1, errHandler);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200)); // ensure reply could be delivered
+    waitEqual(-2, caughtType);
     CPPUNIT_ASSERT_EQUAL(-2, caughtType); // cast exception
 
     // Trying to receive more items than come gives karabo::util::SignalSlotException:
@@ -248,35 +244,35 @@ void SignalSlotable_Test::testReceiveAsyncError() {
     caughtType = 0;
     greeter->request("responder", "slotAnswer", "Hello").timeout(200)
             .receiveAsync<std::string, int>(badSuccessHandler2, errHandler);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200)); // ensure reply could be delivered
+    waitEqual(-3, caughtType);
     CPPUNIT_ASSERT_EQUAL(-3, caughtType); // signalslot exception
 
     //    // Too many arguments to slot seems not to harm - should we make it harm?
     //    caughtType = 0;
     //    greeter->request("responder", "slotAnswer", "Hello", 42).timeout(200)
     //            .receiveAsync<std::string>(successHandler, errHandler);
-    //    boost::this_thread::sleep(boost::posix_time::milliseconds(200)); // ensure reply could be delivered
+    //    waitEqual(-1, caughtType);
     //    CPPUNIT_ASSERT_EQUAL(-1, caughtType); // remote exception
 
     // Too few arguments to slot
     caughtType = 0;
     greeter->request("responder", "slotAnswer").timeout(200)
             .receiveAsync<std::string>(successHandler, errHandler);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200)); // ensure reply could be delivered
+    waitEqual(-1, caughtType);
     CPPUNIT_ASSERT_EQUAL(-1, caughtType); // remote exception
 
     // Non existing slot of existing instanceId
     caughtType = 0;
     greeter->request("responder", "slot_no_answer", "Hello").timeout(200)
             .receiveAsync<std::string>(successHandler, errHandler);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200)); // ensure reply could be delivered
+    waitEqual(-1, caughtType);
     CPPUNIT_ASSERT_EQUAL(-1, caughtType); // remote exception
 
     // Non-existing receiver instanceId will run into timeout (shortened time to have less test delay)
     caughtType = 0;
     greeter->request("responder_not_existing", "slotAnswer", "Hello").timeout(150)
             .receiveAsync<std::string>(successHandler, errHandler);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(150)); // ensure reply could be delivered
+    waitEqual(1, caughtType);
     CPPUNIT_ASSERT_EQUAL(1, caughtType); // timeout exception
 
 }
@@ -460,4 +456,20 @@ void SignalSlotable_Test::waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& de
         boost::this_thread::sleep(boost::posix_time::milliseconds(millisecondsSleep));
         millisecondsSleep *= 2;
     } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
+}
+
+
+void SignalSlotable_Test::waitEqual(int target, const int& test, int trials) {
+    // test is by reference since it is expected to be updated from the outside
+
+    // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
+    unsigned int millisecondsSleep = 2;
+    do {
+        if (target == test) {
+            return;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(millisecondsSleep));
+        millisecondsSleep *= 2;
+    } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
+    std::cerr << "FIXME: finally failed" << std::endl;
 }
