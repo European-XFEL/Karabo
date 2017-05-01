@@ -44,6 +44,13 @@ namespace karabo {
 
 #define KARABO_NO_SERVER "__none__"
 
+        enum Capabilities {
+            PROVIDES_SCENES                 = (1u << 0),
+            // add future capabilities as bitmask:
+            // SOME_FUTURE_CAPABILITY       = (1u << 1),
+            // SOME_OTHER_FUTURE_CAPABILITY = (1u << 2),
+        };
+        
         /**
          * @class BaseDevice
          * @brief The BaseDevice class provides for methods which are template
@@ -1282,6 +1289,11 @@ namespace karabo {
                 instanceInfo.set("host", net::bareHostName());
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
+                
+                // the capabilities field specifies the optional capabilities a device provides.
+                unsigned int capabilities = 0;
+                if(m_parameters.has("availableScenes")) capabilities |= Capabilities::PROVIDES_SCENES;
+                instanceInfo.set("capabilities", capabilities);
 
                 // Initialize the SignalSlotable instance
                 init(m_deviceId, m_connection, m_parameters.get<int>("heartbeatInterval"), instanceInfo);
