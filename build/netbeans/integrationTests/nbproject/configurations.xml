@@ -74,6 +74,18 @@
         <itemPath>../../../src/integrationTests/TcpAdapter_3.hh</itemPath>
         <itemPath>../../../src/integrationTests/integrationRunner_3.cc</itemPath>
       </logicalFolder>
+      <logicalFolder name="f7"
+                     displayName="SceneProvider_Test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/integrationTests/NonSceneProviderTestDevice.cc</itemPath>
+        <itemPath>../../../src/integrationTests/NonSceneProviderTestDevice.hh</itemPath>
+        <itemPath>../../../src/integrationTests/SceneProviderTestDevice.cc</itemPath>
+        <itemPath>../../../src/integrationTests/SceneProviderTestDevice.hh</itemPath>
+        <itemPath>../../../src/integrationTests/SceneProvider_Test.cc</itemPath>
+        <itemPath>../../../src/integrationTests/SceneProvider_Test.hh</itemPath>
+        <itemPath>../../../src/integrationTests/integrationRunner_7.cc</itemPath>
+      </logicalFolder>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -178,6 +190,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/NonSceneProviderTestDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/NonSceneProviderTestDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/P2PSenderDevice.cc"
             ex="false"
             tool="1"
@@ -233,6 +255,26 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/SceneProviderTestDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/SceneProviderTestDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/SceneProvider_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/SceneProvider_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/TcpAdapter.cc"
             ex="false"
             tool="1"
@@ -279,6 +321,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/integrationTests/integrationRunner_6.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/integrationRunner_7.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -391,6 +438,21 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f6</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f7">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f7</output>
         </linkerTool>
       </folder>
     </conf>
@@ -501,6 +563,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/NonSceneProviderTestDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/NonSceneProviderTestDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/P2PSenderDevice.cc"
             ex="false"
             tool="1"
@@ -556,6 +628,26 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/SceneProviderTestDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/SceneProviderTestDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/SceneProvider_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/SceneProvider_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/TcpAdapter.cc"
             ex="false"
             tool="1"
@@ -602,6 +694,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/integrationTests/integrationRunner_6.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/integrationRunner_7.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -717,6 +814,21 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f6</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f7">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f7</output>
         </linkerTool>
       </folder>
     </conf>
