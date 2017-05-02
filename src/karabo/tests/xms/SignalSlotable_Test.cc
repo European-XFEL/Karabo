@@ -107,6 +107,27 @@ public:
 };
 
 
+enum class ExceptionType {
+
+    none, timeout, remote, cast, signalslot, std, unknown
+};
+
+
+void waitEqual(ExceptionType target, const ExceptionType& test, int trials = 10) {
+    // test is by reference since it is expected to be updated from the outside
+
+    // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
+    unsigned int millisecondsSleep = 2;
+    do {
+        if (target == test) {
+            return;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(millisecondsSleep));
+        millisecondsSleep *= 2;
+    } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
+}
+
+
 CPPUNIT_TEST_SUITE_REGISTRATION(SignalSlotable_Test);
 
 
@@ -194,88 +215,87 @@ void SignalSlotable_Test::testReceiveAsyncError() {
 
     // Now the same, but test error handling, first timeout, then remote exception
     result = "some";
-    int caughtType = 0;
+    ExceptionType caughtType = ExceptionType::none;
     const auto errHandler = [&caughtType]() {
         try {
             throw;
         } catch (const karabo::util::TimeoutException&) {
             karabo::util::Exception::clearTrace();
-            caughtType = 1;
+            caughtType = ExceptionType::timeout;
         } catch (const karabo::util::RemoteException&) {
             karabo::util::Exception::clearTrace();
-            caughtType = -1;
+            caughtType = ExceptionType::remote;
         } catch (const karabo::util::CastException&) {
             karabo::util::Exception::clearTrace();
-            caughtType = -2;
+            caughtType = ExceptionType::cast;
         } catch (const karabo::util::SignalSlotException&) {
-            caughtType = -3;
+            caughtType = ExceptionType::signalslot;
         } catch (const std::exception& e) {
-            std::cerr << "Caught " << e.what() << std::endl;
-            caughtType = -100;
+            caughtType = ExceptionType::std;
         } catch (...) {
-            std::cerr << "Caught unknown" << std::endl;
-            caughtType = -1000;
+            caughtType = ExceptionType::unknown;
         }
     };
     greeter->request("responder", "slotAnswer", "Hello").timeout(50)
             .receiveAsync<std::string>(successHandler, errHandler);
-    waitEqual(1, caughtType);
-    CPPUNIT_ASSERT_EQUAL(1, caughtType); // timeout
+    waitEqual(ExceptionType::timeout, caughtType);
+    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::timeout), int(caughtType));
     CPPUNIT_ASSERT_EQUAL(std::string("some"), result);
 
-    caughtType = 0;
+    caughtType = ExceptionType::none;
+    caughtType = ExceptionType::none;
     greeter->request("responder", "slotAnswer", "Please, throw!").timeout(50) // short timeout: should immediately throw
             .receiveAsync<std::string>(successHandler, errHandler);
-    waitEqual(-1, caughtType);
-    CPPUNIT_ASSERT_EQUAL(-1, caughtType); // remote exception
+    waitEqual(ExceptionType::remote, caughtType);
+    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::remote), int(caughtType));
 
     // Trying to receive int where string comes gives SignalSlotException
     // since Slot::callRegisteredSlotFunctions converts the underlying CastException
     // (whereas in the synchronous case one gets SignalSlotException!):
     const auto badSuccessHandler1 = [](int answer) {
     };
-    caughtType = 0;
+    caughtType = ExceptionType::none;
     greeter->request("responder", "slotAnswer", "Hello").timeout(200)
             .receiveAsync<int>(badSuccessHandler1, errHandler);
-    waitEqual(-3, caughtType);
-    CPPUNIT_ASSERT_EQUAL(-3, caughtType); // signalslot exception
+    waitEqual(ExceptionType::signalslot, caughtType);
+    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::signalslot), int(caughtType));
 
     // Trying to receive more items than come gives karabo::util::SignalSlotException:
     const auto badSuccessHandler2 = [](const std::string& answer, int answer2) {
     };
-    caughtType = 0;
+    caughtType = ExceptionType::none;
     greeter->request("responder", "slotAnswer", "Hello").timeout(200)
             .receiveAsync<std::string, int>(badSuccessHandler2, errHandler);
-    waitEqual(-3, caughtType);
-    CPPUNIT_ASSERT_EQUAL(-3, caughtType); // signalslot exception
+    waitEqual(ExceptionType::signalslot, caughtType);
+    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::signalslot), int(caughtType));
 
     //    // Too many arguments to slot seems not to harm - should we make it harm?
-    //    caughtType = 0;
+    //    caughtType = ExceptionType::none;
     //    greeter->request("responder", "slotAnswer", "Hello", 42).timeout(200)
     //            .receiveAsync<std::string>(successHandler, errHandler);
-    //    waitEqual(-1, caughtType);
-    //    CPPUNIT_ASSERT_EQUAL(-1, caughtType); // remote exception
+    //    waitEqual(ExceptionType::remote, caughtType);
+    //    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::remote), int(caughtType));
 
     // Too few arguments to slot
-    caughtType = 0;
+    caughtType = ExceptionType::none;
     greeter->request("responder", "slotAnswer").timeout(200)
             .receiveAsync<std::string>(successHandler, errHandler);
-    waitEqual(-1, caughtType);
-    CPPUNIT_ASSERT_EQUAL(-1, caughtType); // remote exception
+    waitEqual(ExceptionType::remote, caughtType);
+    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::remote), int(caughtType));
 
     // Non existing slot of existing instanceId
-    caughtType = 0;
+    caughtType = ExceptionType::none;
     greeter->request("responder", "slot_no_answer", "Hello").timeout(200)
             .receiveAsync<std::string>(successHandler, errHandler);
-    waitEqual(-1, caughtType);
-    CPPUNIT_ASSERT_EQUAL(-1, caughtType); // remote exception
+    waitEqual(ExceptionType::remote, caughtType);
+    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::remote), int(caughtType)); // remote exception
 
     // Non-existing receiver instanceId will run into timeout (shortened time to have less test delay)
-    caughtType = 0;
+    caughtType = ExceptionType::none;
     greeter->request("responder_not_existing", "slotAnswer", "Hello").timeout(150)
             .receiveAsync<std::string>(successHandler, errHandler);
-    waitEqual(1, caughtType);
-    CPPUNIT_ASSERT_EQUAL(1, caughtType); // timeout exception
+    waitEqual(ExceptionType::timeout, caughtType);
+    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::timeout), int(caughtType)); // timeout exception
 
 }
 
@@ -458,20 +478,4 @@ void SignalSlotable_Test::waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& de
         boost::this_thread::sleep(boost::posix_time::milliseconds(millisecondsSleep));
         millisecondsSleep *= 2;
     } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
-}
-
-
-void SignalSlotable_Test::waitEqual(int target, const int& test, int trials) {
-    // test is by reference since it is expected to be updated from the outside
-
-    // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
-    unsigned int millisecondsSleep = 2;
-    do {
-        if (target == test) {
-            return;
-        }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(millisecondsSleep));
-        millisecondsSleep *= 2;
-    } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
-    std::cerr << "FIXME: finally failed" << std::endl;
 }
