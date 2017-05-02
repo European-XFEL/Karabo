@@ -43,14 +43,23 @@ namespace karabo {
 
             typedef boost::function< void (karabo::util::Hash::Pointer, karabo::util::Hash::Pointer) > MessageHandler;
 
+            enum class Error {
+
+                drop = 0, /// messages have been dropped
+                type, /// message of wrong type (i.e. non binary format) received and dropped
+                unknown /// status reported by openmqc that is not specially treated
+            };
+            typedef boost::function< void (Error, const std::string& description) > ErrorNotifier;
+
             /**
-             * This function registers a message handler, which will be called exactly once in case a message
-             * on the given topic and obeying the provided selector will be available.
+             * This function registers a message handler, which will be called exactly once when a message
+             * on the current topic and obeying the provided selector will be available. An error notifier
+             * can be specified as well and will, in case of an error, be called before the message handler.
              * @param handler Message handler of signature <void (Hash::Pointer header, Hash::Pointer body)>
-             * @param topic The topic to consume on
-             * @param selector The selector expression (works on header keys only!)
+             * @param errorNotifier Error notifier of signature <void (JmsConsumer::Error, string)> with an Error and a
+             *                      string indicating the problem
              */
-            void readAsync(const MessageHandler handler);
+            void readAsync(const MessageHandler handler, const ErrorNotifier errorNotifier = ErrorNotifier());
 
             /**
              * Set the broker topic to consume messages from
@@ -76,7 +85,8 @@ namespace karabo {
             JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
                         const std::string& selector, bool skipSerialisation = false);
 
-            void asyncConsumeMessage(const MessageHandler handler, const std::string& topic, const std::string& selector);
+            void asyncConsumeMessage(const MessageHandler handler, const ErrorNotifier errorHandler,
+                                     const std::string& topic, const std::string& selector);
 
             MQConsumerHandle getConsumer(const std::string& topic, const std::string& selector);
 
