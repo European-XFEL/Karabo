@@ -188,6 +188,9 @@ namespace karabo {
 
             void registerPerformanceStatisticsHandler(const UpdatePerformanceStatisticsHandler& updatePerformanceStatisticsHandler);
 
+            void registerBrokerErrorHandler(const karabo::net::JmsConsumer::Pointer& consumer,
+                                            const karabo::net::JmsConsumer::ErrorNotifier& errorHandler);
+
             karabo::net::JmsConnection::Pointer getConnection() const;
 
             // TODO This will BREAK during multi-topic refactoring
@@ -563,6 +566,9 @@ namespace karabo {
             SlotCallGuardHandler m_slotCallGuardHandler;
             UpdatePerformanceStatisticsHandler m_updatePerformanceStatistics;
 
+            boost::mutex m_brokerErrorHandlersMutex;
+            std::map<karabo::net::JmsConsumer::Pointer, karabo::net::JmsConsumer::ErrorNotifier> m_brokerErrorHandlers;
+
             static std::unordered_map<std::string, SignalSlotable*> m_instanceMap;
             static boost::shared_mutex m_instanceMapMutex;
 
@@ -582,6 +588,9 @@ namespace karabo {
             void stopEmittingHearbeats();
 
             void onBrokerMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+
+            void comsumerErrorNotifier(const karabo::net::JmsConsumer::Pointer& consumer,
+                                       karabo::net::JmsConsumer::Error ec, const std::string& message);
 
             void onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
