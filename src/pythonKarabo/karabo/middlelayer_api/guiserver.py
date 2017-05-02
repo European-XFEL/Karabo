@@ -230,40 +230,6 @@ class GuiServer(DeviceClientBase):
         self.respond(channel, "propertyHistory", deviceId=deviceId,
                      property=property, data=data)
 
-    @parallel
-    def handle_getAvailableProjects(self, channel):
-        projects = yield from self.call("Karabo_ProjectManager",
-                                        "slotGetAvailableProjects")
-        self.respond(channel, "availableProjects", availableProjects=projects)
-
-    @parallel
-    def handle_newProject(self, channel, author, name, data):
-        name, success, data = yield from self.call(
-            "Karabo_ProjectManager", "slotNewProject", author, name, data)
-        self.respond(channel, "projectNew", name=name, success=success,
-                     data=data)
-
-    @parallel
-    def handle_loadProject(self, channel, user, name):
-        name, metaData, data = yield from self.call(
-            "Karabo_ProjectManager", "slotLoadProject", user, name)
-        self.respond(channel, "projectLoaded", name=name, metaData=metaData,
-                     buffer=data)
-
-    @parallel
-    def handle_saveProject(self, channel, user, name, data):
-        name, success, data = yield from self.call(
-            "Karabo_ProjectManager", "slotSaveProject", user, name)
-        self.respond(channel, "projectSaved", name=name, success=success,
-                     data=data)
-
-    @parallel
-    def handle_closeProject(self, channel, user, name):
-        name, success, data = yield from self.call(
-            "Karabo_ProjectManager", "slotCloseProject", user, name)
-        self.respond(channel, "projectClosed", name=name, success=success,
-                     data=data)
-
     @slot
     def slotSchemaUpdated(self, schema, deviceId):
         for c in self.channels:
