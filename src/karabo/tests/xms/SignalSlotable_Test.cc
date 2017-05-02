@@ -243,7 +243,6 @@ void SignalSlotable_Test::testReceiveAsyncError() {
     CPPUNIT_ASSERT_EQUAL(std::string("some"), result);
 
     caughtType = ExceptionType::none;
-    caughtType = ExceptionType::none;
     greeter->request("responder", "slotAnswer", "Please, throw!").timeout(50) // short timeout: should immediately throw
             .receiveAsync<std::string>(successHandler, errHandler);
     waitEqual(ExceptionType::remote, caughtType);
