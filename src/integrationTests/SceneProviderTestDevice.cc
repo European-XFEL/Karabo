@@ -26,7 +26,7 @@ USING_KARABO_NAMESPACES
 
     SceneProviderTestDevice::SceneProviderTestDevice(const karabo::util::Hash& config) : Device<>(config) {
         KARABO_INITIAL_FUNCTION(initialize);
-
+        registerSlot<karabo::util::Hash> (boost::bind(&SceneProviderTestDevice::slotGetScenes, this, _1), "slotGetScenes");
 
     }
 
@@ -36,6 +36,12 @@ USING_KARABO_NAMESPACES
 
 
     void SceneProviderTestDevice::initialize() {
+    }
+    
+    void SceneProviderTestDevice::slotGetScenes(const karabo::util::Hash& args) {
+        const std::vector<std::string> scenes = args.get<std::vector<std::string> >("scenes");
+        const Hash sceneHash = Hash(scenes[0], "encoded(bar scene)");
+        reply(sceneHash);
     }
 
 }

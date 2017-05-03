@@ -102,7 +102,7 @@ ${TESTDIR}/TestFiles/runtimeschemaattributes_test: ${TESTDIR}/_ext/567603001/Ala
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/runtimeschemaattributes_test $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/567603001/NonSceneProviderTestDevice.o ${TESTDIR}/_ext/567603001/SceneProviderTestDevice.o ${TESTDIR}/_ext/567603001/SceneProvider_Test.o ${TESTDIR}/_ext/567603001/integrationRunner_7.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/567603001/NonSceneProviderTestDevice.o ${TESTDIR}/_ext/567603001/SceneProviderTestDevice.o ${TESTDIR}/_ext/567603001/SceneProvider_Test.o ${TESTDIR}/_ext/567603001/TcpAdapter_4.o ${TESTDIR}/_ext/567603001/integrationRunner_7.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f7 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -243,6 +243,12 @@ ${TESTDIR}/_ext/567603001/SceneProvider_Test.o: ../../../src/integrationTests/Sc
 	${MKDIR} -p ${TESTDIR}/_ext/567603001
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/SceneProvider_Test.o ../../../src/integrationTests/SceneProvider_Test.cc
+
+
+${TESTDIR}/_ext/567603001/TcpAdapter_4.o: ../../../src/integrationTests/TcpAdapter_4.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/567603001
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/TcpAdapter_4.o ../../../src/integrationTests/TcpAdapter_4.cc
 
 
 ${TESTDIR}/_ext/567603001/integrationRunner_7.o: ../../../src/integrationTests/integrationRunner_7.cc 

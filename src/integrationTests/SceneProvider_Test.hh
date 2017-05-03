@@ -13,8 +13,7 @@
 #include <boost/shared_ptr.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "LockTestDevice.hh"
-
+#include "TcpAdapter_4.hh"
 
 
 class SceneProvider_Test : public CPPUNIT_NS::TestFixture {
@@ -33,11 +32,15 @@ public:
 private:
     void appTestRunner();
     void testInstanceInfo();
+    void testRequestScenes();
+    void testRequestSceneFailure1();
+    void testRequestSceneFailure2();
     
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
+    boost::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
 };
 
 #endif	/* SCENEPROVIDER_TEST_HH */
