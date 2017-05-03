@@ -1,16 +1,24 @@
+from multiprocessing import Process
 import os
-import sys
-from unittest import TestCase, skip
 from threading import Thread
 from time import sleep
+from unittest import TestCase
 
 from karabo.bound import EventLoop, Hash, DeviceServer, DeviceClient
 from karabo.common.states import State
 
+
 class TestDeviceDeviceComm(TestCase):
-    _timeout = 60 # seconds
-    _waitTime = 2 # seconds
+    _timeout = 60  # seconds
+    _waitTime = 2  # seconds
     _retries = _timeout//_waitTime
+
+    def runServer(self, config):
+        t = Thread(target=EventLoop.work)
+        t.start()
+        server = DeviceServer(config)  # noqa
+        EventLoop.stop()
+        t.join()
 
     def setUp(self):
         # uncomment if ever needing to use local broker
@@ -35,11 +43,10 @@ class TestDeviceDeviceComm(TestCase):
         config.set("visibility", 1)
         config.set("connection", Hash())
         config.set("pluginNamespace", "karabo.bound_device")
-        self.server = DeviceServer(config)
+        config.set("deviceClasses", ['CommTestDevice'])
 
-        self._serverThread = Thread(target=self.server.run)
-        self._serverThread.daemon = True
-        self._serverThread.start()
+        self.serverProcess = Process(target=self.runServer, args=(config,))
+        self.serverProcess.start()
 
         self.dc = DeviceClient()
 
@@ -51,17 +58,13 @@ class TestDeviceDeviceComm(TestCase):
                 raise RuntimeError("Waiting for server to appear timed out")
             nTries += 1
 
-        # wait for plugins to appear
+        # wait for plugin to appear
         nTries = 0
-        while True:
-            try:
-                self.server.import_plugin("CommTestDevice")
-                break
-            except RuntimeError:
-                sleep(2)
-                if nTries > self._retries:
-                    raise RuntimeError("Waiting for plugin to load timed out")
-                nTries += 1
+        while not "CommTestDevice" in self.dc.getClasses("testServer1"):
+            sleep(self._waitTime)
+            if nTries > self._retries:
+                raise RuntimeError("Waiting for plugin to appear timed out")
+            nTries += 1
 
         # we will use two devices communicating with each other.
         config = Hash("Logger.priority", "ERROR",
@@ -72,7 +75,7 @@ class TestDeviceDeviceComm(TestCase):
                            "deviceId", "testComm1",
                            "configuration", config)
 
-        self.server.instantiateDevice(classConfig)
+        self.dc.instantiate("testServer1", classConfig)
 
         config2 = Hash("Logger.priority", "ERROR",
                        "remote", "testComm1",
@@ -82,7 +85,7 @@ class TestDeviceDeviceComm(TestCase):
                             "deviceId", "testComm2",
                             "configuration", config2)
 
-        self.server.instantiateDevice(classConfig2)
+        self.dc.instantiate("testServer1", classConfig2)
 
         # wait for device to init
         state1 = None
@@ -92,7 +95,6 @@ class TestDeviceDeviceComm(TestCase):
             try:
                 state1 = self.dc.get("testComm1", "state")
                 state2 = self.dc.get("testComm2", "state")
-                break
             # a boost::python error will be thrown up to device init
             # these exceptions are not directly importable, thus we catch
             # very generically here
@@ -106,7 +108,8 @@ class TestDeviceDeviceComm(TestCase):
         # TODO: properly destroy server
         # right now we let the join time out as the server does not
         # always exit correctly -> related to event loop refactoring
-        self._serverThread.join(5)
+        self.dc.killServer("testServer1")
+        self.serverProcess.join()
         EventLoop.stop()
         self._eventLoopThread.join(5)
         # delete any log files
