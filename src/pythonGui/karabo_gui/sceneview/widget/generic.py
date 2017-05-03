@@ -1,6 +1,6 @@
 import karabo_gui.gui_registry_loader  # noqa
 from karabo.common.scenemodel.api import (
-    BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
+    AnalogModel, BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
     DirectoryModel, DisplayCommandModel, DisplayLabelModel, DisplayPlotModel,
     DoubleLineEditModel, EditableListElementModel, EditableListModel,
     EditableSpinBoxModel, FileInModel, FileOutModel, HexadecimalModel,
@@ -12,6 +12,7 @@ from karabo_gui.widget import Widget
 from .base import BaseWidgetContainer
 
 _GENERIC_WIDGET_FACTORIES = {
+    AnalogModel: 'DisplayAnalog',
     BitfieldModel: 'Bitfield',
     DisplayCommandModel: 'DisplayCommand',
     DisplayLabelModel: 'DisplayLabel',

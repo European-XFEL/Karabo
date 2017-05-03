@@ -1,20 +1,21 @@
 from PyQt4.QtCore import QRect
 
 from karabo.common.scenemodel.api import (
-    BaseLayoutModel, BitfieldModel, ColorBoolModel, BoxLayoutModel,
-    CheckBoxModel, ChoiceElementModel, ComboBoxModel, DigitIconsModel,
-    DirectoryModel, DisplayAlignedImageModel, DisplayCommandModel,
-    DisplayIconsetModel, DisplayImageElementModel, DisplayImageModel,
-    DisplayLabelModel, DisplayPlotModel, DisplayStateColorModel,
-    DoubleLineEditModel, EditableListElementModel, EditableListModel,
-    EditableSpinBoxModel, EvaluatorModel, FileInModel, FileOutModel,
-    FixedLayoutModel, FloatSpinBoxModel, GridLayoutModel, HexadecimalModel,
-    IntLineEditModel, KnobModel, LabelModel, LampModel, LineEditModel,
-    LineModel, LinePlotModel, MonitorModel, PathModel, PopUpModel,
-    RectangleModel, SceneLinkModel, ScientificImageModel, SelectionIconsModel,
-    SingleBitModel, SliderModel, StatefulIconWidgetModel, TableElementModel,
-    TextIconsModel, UnknownWidgetDataModel, UnknownXMLDataModel,
-    VacuumWidgetModel, WebcamImageModel, WorkflowItemModel, XYPlotModel
+    AnalogModel, BaseLayoutModel, BitfieldModel, ColorBoolModel,
+    BoxLayoutModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
+    DigitIconsModel, DirectoryModel, DisplayAlignedImageModel,
+    DisplayCommandModel, DisplayIconsetModel, DisplayImageElementModel,
+    DisplayImageModel, DisplayLabelModel, DisplayPlotModel,
+    DisplayStateColorModel, DoubleLineEditModel, EditableListElementModel,
+    EditableListModel, EditableSpinBoxModel, EvaluatorModel,
+    FileInModel, FileOutModel, FixedLayoutModel, FloatSpinBoxModel,
+    GridLayoutModel, HexadecimalModel, IntLineEditModel, KnobModel,
+    LabelModel, LampModel, LineEditModel, LineModel, LinePlotModel,
+    MonitorModel, PathModel, PopUpModel, RectangleModel, SceneLinkModel,
+    ScientificImageModel, SelectionIconsModel, SingleBitModel, SliderModel,
+    StatefulIconWidgetModel, TableElementModel, TextIconsModel,
+    UnknownWidgetDataModel, UnknownXMLDataModel, VacuumWidgetModel,
+    WebcamImageModel, WorkflowItemModel, XYPlotModel
 )
 
 from .const import QT_BOX_LAYOUT_DIRECTION
@@ -48,6 +49,7 @@ _SCENE_OBJ_FACTORIES = {
     UnknownWidgetDataModel: UnknownWidget,
     UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(m, parent=p),
     BitfieldModel: GenericWidgetContainer,
+    AnalogModel: GenericWidgetContainer,
     DisplayCommandModel: GenericWidgetContainer,
     DisplayIconsetModel: DisplayIconsetContainer,
     DisplayAlignedImageModel: SimpleImageWidgetContainer,
