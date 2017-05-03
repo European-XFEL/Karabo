@@ -20,6 +20,7 @@ from karathon import (
     ValidatorValidationRules
 )
 from karabo.common.alarm_conditions import AlarmCondition
+from karabo.common.capabilities import Capabilities
 from karabo.common.states import State
 # Use patched DeviceClient, not the one directly from karathon:
 from .device_client import DeviceClient
@@ -339,6 +340,12 @@ class PythonDevice(NoFsm):
         info["host"] = self.hostname
         info["status"] = "ok"
         info["archive"] = self.get("archive")
+
+        # device capabilities are encoded in a bit mask field
+        capabilities = 0
+        if configuration.has("availableScenes"):
+            capabilities |= Capabilities.PROVIDES_SCENES
+        info["capabilities"] = capabilities
 
         # Instantiate SignalSlotable object
         self._ss = SignalSlotable(self.deviceid, "JmsConnection",
