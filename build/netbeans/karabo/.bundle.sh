@@ -88,8 +88,6 @@ mkdir -p $PACKAGEDIR/plugins
 mkdir -p $PACKAGEDIR/var/log
 mkdir -p $PACKAGEDIR/var/data
 mkdir -p $PACKAGEDIR/var/config
-mkdir -p $PACKAGEDIR/var/service
-mkdir -p $PACKAGEDIR/var/environment
 
 # Version information
 echo $VERSION > $PACKAGEDIR/VERSION
@@ -188,6 +186,9 @@ sed "s%__VENV_DIR__%$BASEDIR/karabo%g" src/tools/scripts/activate.tmpl > $PACKAG
 cp -rf src/templates $PACKAGEDIR
 # service
 cp -rf src/service $PACKAGEDIR
+# the initial configurations
+cp -rf src/service.in $PACKAGEDIR
+cp -rf src/environment.in $PACKAGEDIR
 cd -
 
 # bundle scripts for plugin packages
