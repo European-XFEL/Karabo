@@ -3,13 +3,13 @@
 # Created on May 8, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import numpy as np
 from PyQt4.QtGui import (QCheckBox, QComboBox, QHBoxLayout, QImage, QLabel,
                          QSlider, QSpinBox, QVBoxLayout, QWidget)
 
 from guiqwt.builder import make
-from guiqwt.plot import ImageDialog
-from karabo_gui.images import get_dimensions_and_format, get_image_data
+
+from karabo_gui.images import (get_dimensions_and_format, get_image_data,
+                               KaraboImageDialog)
 from karabo_gui.schema import ImageNode
 from karabo_gui.widget import DisplayWidget
 
@@ -29,8 +29,8 @@ class DisplayImage(DisplayWidget):
         self.toolWidget = QWidget()
         self.toolLayout = QVBoxLayout(self.toolWidget)
 
-        self.imageWidget = ImageDialog(
-            edit=False, toolbar=True, wintitle=".".join(box.path))
+        self.imageWidget = KaraboImageDialog(edit=False, toolbar=True,
+                                             parent=parent)
         self.image = None
         self.plot = self.imageWidget.get_plot()
         self.layout.addWidget(self.imageWidget)

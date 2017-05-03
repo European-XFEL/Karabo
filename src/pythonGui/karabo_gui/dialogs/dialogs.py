@@ -3,13 +3,13 @@
 # Created on March 19, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from os import path
+import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot, Qt, QSize
-from PyQt4.QtGui import (QDialogButtonBox, QColorDialog, QComboBox, QDialog,
-                         QFormLayout, QIcon, QPainter, QPen, QPixmap,
-                         QTableWidgetItem)
+from PyQt4.QtCore import QSize, Qt, pyqtSlot
+from PyQt4.QtGui import (QColorDialog, QComboBox, QDialog, QDialogButtonBox,
+                         QDoubleValidator, QFormLayout, QIcon, QPainter, QPen,
+                         QPixmap, QTableWidgetItem)
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
@@ -26,7 +26,7 @@ class PenDialog(QDialog):
 
     def __init__(self, pen, brush=None):
         QDialog.__init__(self)
-        uic.loadUi(path.join(path.dirname(__file__), 'pendialog.ui'), self)
+        uic.loadUi(op.join(op.dirname(__file__), 'pendialog.ui'), self)
 
         self.pen = pen
         self.brush = brush
@@ -178,7 +178,7 @@ class PenStyleComboBox(QComboBox):
 class SceneLinkDialog(QDialog):
     def __init__(self, model, parent=None):
         super(SceneLinkDialog, self).__init__(parent=parent)
-        uic.loadUi(path.join(path.dirname(__file__), 'scenelink.ui'), self)
+        uic.loadUi(op.join(op.dirname(__file__), 'scenelink.ui'), self)
 
         self._selectedScene = 0
         self._sceneTargets = self._get_scenelink_targets()
@@ -244,7 +244,7 @@ class ReplaceDialog(QDialog):
 
     def __init__(self, devices):
         QDialog.__init__(self)
-        uic.loadUi(path.join(path.dirname(__file__), 'replacedialog.ui'), self)
+        uic.loadUi(op.join(op.dirname(__file__), 'replacedialog.ui'), self)
 
         self.twTable.setRowCount(len(devices))
         for i, d in enumerate(devices):
@@ -273,3 +273,50 @@ class ReplaceDialog(QDialog):
             return
         text = item.text()
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)
+
+
+class LutRangeDialog(QDialog):
+    def __init__(self, lut_range, lut_range_full=None, parent=None):
+        """A dialog to set the min and max range
+
+        :param lut_range: The range which should be shown
+        :parem lut_range_full: The full range according to the data range
+        :param parent: The parent of this dialog
+        """
+        super(LutRangeDialog, self).__init__(parent)
+        uic.loadUi(op.join(op.dirname(__file__), "lutrangedialog.ui"), self)
+        self.leMin.setValidator(QDoubleValidator())
+        self.leMin.textChanged.connect(self._update_button_box)
+        self.leMax.setValidator(QDoubleValidator())
+        self.leMax.textChanged.connect(self._update_button_box)
+
+        self._update_min_max(lut_range)
+
+        self.lut_range_full = lut_range_full
+        self.pbFullRange.setEnabled(self.lut_range_full is not None)
+        self.pbFullRange.pressed.connect(self._on_lut_range_full_pressed)
+
+    def _update_min_max(self, min_max_range):
+        """The given tuple (min, max) is put into the text fields
+        """
+        _min, _max = min_max_range
+        self.leMin.setText(str(_min))
+        self.leMax.setText(str(_max))
+
+    def _update_button_box(self):
+        """Only enable Ok button, if title and configuration is set
+        """
+        enabled = len(self.leMin.text()) > 0 and len(self.leMax.text()) > 0
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+
+    @pyqtSlot()
+    def _on_lut_range_full_pressed(self):
+        """The full range should be shown now
+        """
+        self._update_min_max(self.lut_range_full)
+
+    @property
+    def lut_range(self):
+        """Return the LUT transform range tuple: (min, max)
+        """
+        return (float(self.leMin.text()), float(self.leMax.text()))
