@@ -7,56 +7,21 @@ from contextlib import contextmanager
 from functools import partial
 
 from guiqwt.builder import make
-from guiqwt.plot import ImageWidget
 from guiqwt.tools import RectZoomTool, SelectTool
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QRect, Qt
-from PyQt4.QtGui import (
-    QAction, QActionGroup, QCursor, QHBoxLayout, QIcon, QMenu, QToolBar,
-    QWidget
-)
+from PyQt4.QtCore import pyqtSlot, QRect, Qt
+from PyQt4.QtGui import (QAction, QActionGroup, QCursor, QHBoxLayout, QIcon,
+                         QMenu, QToolBar, QWidget)
 from PyQt4.Qwt5.Qwt import QwtPlot
 
 from traits.api import HasStrictTraits, Bool, Callable, Instance, String
 
 import karabo_gui.icons as icons
-from karabo_gui.images import get_dimensions_and_format, get_image_data
+from karabo_gui.images import (get_dimensions_and_format, get_image_data,
+                               KaraboImageWidget)
 from karabo_gui.schema import ImageNode
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
-
-
-class _KaraboImageWidget(ImageWidget):
-    signal_mouse_event = pyqtSignal()
-
-    def __init__(self, **kwargs):
-        """ Possible key arguments:
-            * parent: parent widget
-            * title: plot title (string)
-            * xlabel, ylabel, zlabel: resp. bottom, left and right axis titles
-            (strings)
-            * xunit, yunit, zunit: resp. bottom, left and right axis units
-            (strings)
-            * yreverse: reversing Y-axis (bool)
-            * aspect_ratio: height to width ratio (float)
-            * lock_aspect_ratio: locking aspect ratio (bool)
-            * show_contrast: showing contrast adjustment tool (bool)
-            * show_xsection: showing x-axis cross section plot (bool)
-            * show_ysection: showing y-axis cross section plot (bool)
-            * xsection_pos: x-axis cross section plot position
-            (string: "top", "bottom")
-            * ysection_pos: y-axis cross section plot position
-            (string: "left", "right")
-            * panels (optional): additionnal panels (list, tuple)
-        """
-        super(_KaraboImageWidget, self).__init__(**kwargs)
-
-    def mousePressEvent(self, event):
-        """ Overwrite method to forward middle button press event which
-        resets the image """
-        super(_KaraboImageWidget, self).mousePressEvent(event)
-        if event.button() is Qt.MidButton:
-            self.signal_mouse_event.emit()
 
 
 class BaseImageDisplay(DisplayWidget):
@@ -66,11 +31,10 @@ class BaseImageDisplay(DisplayWidget):
 
     def _initUI(self, parent):
         """ Initialize widget """
-        self.image_widget = _KaraboImageWidget(parent=parent)
+        self.image_widget = KaraboImageWidget(parent=parent)
         # Make connection to keep zoom_rect in sync
         self.image_widget.signal_mouse_event.connect(self.zoom_reset)
         self.plot = self.image_widget.get_plot()
-        self.image = None  # actual image
 
         # Add tools
         self.current_tool_obj = None
@@ -212,29 +176,37 @@ class BaseImageDisplay(DisplayWidget):
         if npy is None:
             return
 
-        if self.image is None:
+        # Check for already existing image items
+        image_items = self.image_widget.get_image_item()
+        if not image_items:
             # Some dtypes (eg uint32) are not displayed -> astype('float')
-            self.image = make.image(npy.astype('float'))
-            self.plot.add_item(self.image)
+            image_item = make.image(npy.astype('float'))
+            self.plot.add_item(image_item)
         else:
-            self.image.set_data(npy.astype('float'))
+            # Manipulate top item
+            last_img = image_items[len(image_items)-1]
+            lut_range = last_img.get_lut_range()
+            if lut_range[0] == lut_range[1]:
+                # if not set not set, let it autoscale
+                lut_range = None
+            last_img.set_data(npy.astype('float'), lut_range=lut_range)
 
-        # In case an axis is disabled - the scale needs to be adapted
-        if self.zoom_rect.isEmpty():
-            DELTA = 0.2
-            img_rect = self.image.boundingRect()
-            img_width = img_rect.width()
-            img_height = img_rect.height()
-            x_axis = self.plot.axisWidget(QwtPlot.xBottom)
-            with SignalBlocker(x_axis):
-                self.plot.setAxisScale(
-                    QwtPlot.xBottom, img_rect.x() - DELTA, img_width + DELTA)
-            y_axis = self.plot.axisWidget(QwtPlot.yLeft)
-            with SignalBlocker(y_axis):
-                # Note: y axis is shown in reverse order
-                # (max - lowerBound, min - upperBound)
-                self.plot.setAxisScale(
-                    QwtPlot.yLeft, img_height + DELTA, img_rect.y() - DELTA)
+            # In case an axis is disabled - the scale needs to be adapted
+            if self.zoom_rect.isEmpty():
+                DELTA = 0.2
+                img_rect = last_img.boundingRect()
+                img_width = img_rect.width()
+                img_height = img_rect.height()
+                x_axis = self.plot.axisWidget(QwtPlot.xBottom)
+                with SignalBlocker(x_axis):
+                    self.plot.setAxisScale(
+                        QwtPlot.xBottom, img_rect.x() - DELTA, img_width + DELTA)
+                y_axis = self.plot.axisWidget(QwtPlot.yLeft)
+                with SignalBlocker(y_axis):
+                    # Note: y axis is shown in reverse order
+                    # (max - lowerBound, min - upperBound)
+                    self.plot.setAxisScale(
+                        QwtPlot.yLeft, img_height + DELTA, img_rect.y() - DELTA)
         self.plot.replot()
 
     @pyqtSlot()
