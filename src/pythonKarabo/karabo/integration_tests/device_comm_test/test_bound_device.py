@@ -43,7 +43,7 @@ class TestDeviceDeviceComm(TestCase):
         config.set("visibility", 1)
         config.set("connection", Hash())
         config.set("pluginNamespace", "karabo.bound_device")
-        config.set("deviceClasses", [])
+        config.set("deviceClasses", ['CommTestDevice'])
 
         self.serverProcess = Process(target=self.runServer, args=(config,))
         self.serverProcess.start()
@@ -56,6 +56,14 @@ class TestDeviceDeviceComm(TestCase):
             sleep(self._waitTime)
             if nTries > self._retries:
                 raise RuntimeError("Waiting for server to appear timed out")
+            nTries += 1
+
+        # wait for plugin to appear
+        nTries = 0
+        while not "CommTestDevice" in self.dc.getClasses("testServer1"):
+            sleep(self._waitTime)
+            if nTries > self._retries:
+                raise RuntimeError("Waiting for plugin to appear timed out")
             nTries += 1
 
         # we will use two devices communicating with each other.
