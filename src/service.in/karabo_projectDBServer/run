@@ -1,0 +1,4 @@
+#!/bin/bash
+# This file is part of the initial configuration of Karabo
+cd $KARABO/var/data
+exec envdir $KARABO/var/environment karabo-pythonserver serverId=karabo/projectDBServer 'deviceClasses=ProjectManager' 'autoStart[0]={ProjectManager.host=exflst105' 'ProjectManager.deviceId=KaraboProjectDB}' 'visibility=4' 'Logger.priority=INFO' 2>&1
