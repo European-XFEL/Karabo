@@ -121,8 +121,10 @@ runPythonIntegrationTests() {
     echo
     echo Running Karabo Python integration tests ...
     echo 
-    cd build/netbeans/pythonKarabo
-    safeRunCommand "nosetests -v karabo.integration_tests"
+    cd src/pythonKarabo/karabo/integration_tests/
+    cd device_comm_test
+    safeRunCommand "python3 -m unittest discover -v"
+    cd ..
     echo
     echo Integration tests complete
     echo
@@ -288,7 +290,7 @@ if [ "$RUNTESTS" = "y" ]; then
 fi
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
     runIntegrationTests
-    # runPythonIntegrationTests
+    runPythonIntegrationTests
 fi
 
 
