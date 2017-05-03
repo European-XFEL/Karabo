@@ -1,7 +1,5 @@
 CommTestDevice.egg-info/PKG-INFO
 CommTestDevice.egg-info/SOURCES.txt
-CommTestDevice.egg-info/dependency_links.txt
-CommTestDevice.egg-info/requires.txt
-CommTestDevice.egg-info/top_level.txt
+CommTestDevice.egg-info/entry_points.txt
 __init__.py
 commtestdevice.py
