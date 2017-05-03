@@ -47,6 +47,8 @@ namespace karabo {
     private:
 
         void initialize();
+        
+        void slotGetScenes(const karabo::util::Hash& args);
 
     };
 }
