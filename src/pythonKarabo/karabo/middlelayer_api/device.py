@@ -1,6 +1,7 @@
 from asyncio import coroutine
 import socket
 
+from karabo.common.capabilities import Capabilities
 from karabo.common.states import State
 from .alarm import AlarmMixin
 from .basetypes import isSet
@@ -108,6 +109,13 @@ class Device(AlarmMixin, SignalSlotable):
         info["host"] = self.hostName
         info["status"] = "ok"
         info["archive"] = self.archive.value
+
+        # device capabilities are encoded in a bit mask field
+        capabilities = 0
+        if hasattr(self, "availableScenes"):
+            capabilities |= Capabilities.PROVIDES_SCENES
+        info["capabilities"] = capabilities
+
         return info
 
     @coroutine
