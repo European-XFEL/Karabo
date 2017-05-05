@@ -232,7 +232,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(RejectNewestQueue, "RejectNewestQueue", "1.0")
 
-            RejectNewestQueue() : LosslessQueue(), m_capacity(5000) {
+            RejectNewestQueue(const size_t capacity) : LosslessQueue(), m_capacity(capacity) {
             }
 
             virtual ~RejectNewestQueue() {
@@ -279,7 +279,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(RemoveOldestQueue, "RemoveOldestQueue", "1.0")
 
-            RemoveOldestQueue() : m_queue(5000) {
+            RemoveOldestQueue(const size_t capacity) : m_queue(capacity) {
             }
 
             virtual ~RemoveOldestQueue() {
