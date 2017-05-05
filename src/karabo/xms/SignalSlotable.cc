@@ -404,9 +404,9 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_brokerErrorHandlerMutex);
             if (m_brokerErrorHandler) {
                 try {
-                    m_brokerErrorHandler(consumer, ec, message);
+                    m_brokerErrorHandler(consumer, static_cast<int>(ec), message);
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << "Exception in broker error handler: " << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": Exception in broker error handler: " << e.what();
                 }
             }
         }
