@@ -71,8 +71,10 @@ class DeviceServerController(BaseProjectGroupController):
         """ This callback is called by the ``SystemTopologyListener`` object
         in the ``topo_listener`` trait.
         """
-        for server_id, host, status in servers:
-            if self.model.server_id == server_id and self.model.host == host:
+        for server_id, _, status in servers:
+            # NOTE: the host is not checked here since it might ot have been
+            # set yet and furthermore the server_id is unique in the system
+            if self.model.server_id == server_id:
                 self.model.status = status
 
     def _get_display_name(self):
