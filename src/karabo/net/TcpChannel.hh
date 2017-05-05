@@ -259,7 +259,7 @@ namespace karabo {
 
             void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio);
 
-            virtual void setAsyncChannelPolicy(int priority, const std::string& policy);
+            virtual void setAsyncChannelPolicy(int priority, const std::string& policy, const size_t capacity = 0);
             
             int getSyncPercent() {
                 double nomin = double(m_syncCounter);
