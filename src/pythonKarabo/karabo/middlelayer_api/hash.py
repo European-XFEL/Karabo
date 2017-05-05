@@ -1271,7 +1271,8 @@ class SchemaHashType(HashType):
 
     @classmethod
     def toString(cls, data):
-        return data.name + ":" + "".join(Hash.yieldXML(data.hash))
+        from .serializers import encodeXML
+        return data.name + ":" + "".join(encodeXML(data.hash))
 
     @classmethod
     def fromstring(cls, s):
