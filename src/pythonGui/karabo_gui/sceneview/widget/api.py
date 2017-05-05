@@ -11,6 +11,7 @@ from .monitor import MonitorContainer
 from .simple import (LabelWidget, SceneLinkWidget, UnknownSvgWidget,
                      UnknownWidget, WorkflowItemWidget)
 from .singlebit import SingleBitContainer
+from .sparkline import SparklineContainer
 from .statecolor import DisplayStateColorContainer
 from .statefulicon import StatefulIconContainer
 from .tableelement import TableElementContainer
