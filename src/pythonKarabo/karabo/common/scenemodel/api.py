@@ -19,7 +19,7 @@ from .widgets.icon import (BaseIconsModel, DigitIconsModel,
 from .widgets.image import (DisplayAlignedImageModel, DisplayImageElementModel,
                             DisplayImageModel, ScientificImageModel,
                             WebcamImageModel)
-from .widgets.plot import LinePlotModel, PlotCurveModel
+from .widgets.plot import LinePlotModel, PlotCurveModel, SparklineModel
 from .widgets.simple import (AnalogModel, BitfieldModel, CheckBoxModel,
                              ChoiceElementModel, ComboBoxModel, DirectoryModel,
                              DisplayCommandModel, DisplayLabelModel,
