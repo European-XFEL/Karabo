@@ -609,15 +609,20 @@ namespace karabo {
             /**
              * Set the policy of how data is queue on this channel for the queue of the given priority.
              * Policies are:
-             * 
+             *
              * - "LOSSLESS": all data is queue and the queue increases in size within incoming data
              * - "REJECT_NEWEST": if the queue's fixed capacity is reached new data is rejected
              * - "REMOVE_OLDEST": if the queue's fixed capacity is the oldest data is rejected
-             * 
+             *
+             * NOTE: This method can potentially modify the capacity of a queue which is in use! This
+             * is undefined behavior. Users are encouraged to only call this method when intializing a
+             * Channel object instance.
+             *
              * @param priority of the queue to set the policy for
              * @param policy to set for this queue
+             * @param capacity is an optional capacity for the queue
              */
-            virtual void setAsyncChannelPolicy(int priority, const std::string& policy) {
+            virtual void setAsyncChannelPolicy(int priority, const std::string& new_policy, const size_t capacity = 0) {
             }
         };
     }

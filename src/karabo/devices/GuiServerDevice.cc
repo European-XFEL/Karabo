@@ -62,6 +62,14 @@ namespace karabo {
                     .metricPrefix(MetricPrefix::MILLI)
                     .commit();
 
+            INT32_ELEMENT(expected).key("inputChannelQueueCapacity")
+                    .displayedName("Input Channel forwarding queue size")
+                    .description("The number of messages to store in the forwarding ring buffer. NOTE: Will be applied to newly connected clients only")
+                    .assignmentOptional().defaultValue(100) // 5Hz * 20 seconds
+                    .reconfigurable()
+                    .minExc(0).maxInc(5000)
+                    .commit();
+
             INT32_ELEMENT(expected).key("propertyUpdateInterval")
                     .displayedName("Property update interval")
                     .description("Minimum interval between subsequent property updates forwarded to clients.")
@@ -181,7 +189,7 @@ namespace karabo {
 
                 // Set 2 different queues for publishing (writeAsync) to the GUI client...
                 // priority 3 bound to REJECT_OLDEST dropping policy
-                channel->setAsyncChannelPolicy(REMOVE_OLDEST, "REMOVE_OLDEST");
+                channel->setAsyncChannelPolicy(REMOVE_OLDEST, "REMOVE_OLDEST", get<int>("inputChannelQueueCapacity"));
                 // priority 4 should be LOSSLESS
                 channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
 
