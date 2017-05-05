@@ -12,14 +12,14 @@ def _assert_geometry_traits(model):
 
 
 def _check_simple_image_widget(klass):
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     model = klass(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
 
 
 def _check_base_image_widget(klass):
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     traits.update(_base_image_traits())
     model = klass(**traits)
     read_model = single_model_round_trip(model)
