@@ -400,7 +400,7 @@ namespace karabo {
             // log an error anyway
             const std::string fullMsg("Error " + toString(static_cast<int> (ec))
                                       + " from JmsConsumer '" + consumer + "': " + message);
-            KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << fullMsg;
+            KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": " << fullMsg;
 
             boost::mutex::scoped_lock lock(m_brokerErrorHandlerMutex);
             if (m_brokerErrorHandler) {
