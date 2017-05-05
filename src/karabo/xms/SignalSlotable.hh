@@ -74,8 +74,7 @@ namespace karabo {
 
             typedef boost::function<void (const karabo::util::Hash::Pointer& /*performanceMeasures*/) > UpdatePerformanceStatisticsHandler;
 
-            typedef boost::function<void (const std::string& /*channelId*/, int /*error code*/,
-                                          const std::string& /*message*/) > BrokerErrorHandler;
+            typedef boost::function<void (const std::string& /*message*/) > BrokerErrorHandler;
 
             typedef InputChannel::DataHandler DataHandler;
 
