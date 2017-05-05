@@ -616,8 +616,9 @@ namespace karabo {
              * 
              * @param priority of the queue to set the policy for
              * @param policy to set for this queue
+             * @param capacity is an optional capacity for the queue
              */
-            virtual void setAsyncChannelPolicy(int priority, const std::string& policy) {
+            virtual void setAsyncChannelPolicy(int priority, const std::string& new_policy, const size_t capacity = 0) {
             }
         };
     }

@@ -19,6 +19,7 @@ namespace karabo {
         using namespace boost::asio;
         using namespace karabo::util;
 
+        const size_t kDefaultQueueCapacity = 5000;  //JW: Moved from Queue.h
 
         TcpChannel::TcpChannel(Connection::Pointer connection)
             : m_connectionPointer(boost::dynamic_pointer_cast<TcpConnection>(connection))
@@ -35,8 +36,8 @@ namespace karabo {
             , m_syncCounter(0)
             , m_asyncCounter(0) {
             m_queue[4] = Queue::Pointer(new LosslessQueue);
-            m_queue[2] = Queue::Pointer(new RemoveOldestQueue);
-            m_queue[0] = Queue::Pointer(new RejectNewestQueue);
+            m_queue[2] = Queue::Pointer(new RemoveOldestQueue(kDefaultQueueCapacity));
+            m_queue[0] = Queue::Pointer(new RejectNewestQueue(kDefaultQueueCapacity));
 
             if (m_connectionPointer->m_serializationType == "binary") {
                 m_binarySerializer = karabo::io::BinarySerializer<Hash>::create("Bin");
@@ -1061,19 +1062,33 @@ namespace karabo {
 #undef _KARABO_SIZE_TO_VECTOR
 
 
-        void TcpChannel::setAsyncChannelPolicy(int priority, const std::string& new_policy) {
+        void TcpChannel::setAsyncChannelPolicy(int priority, const std::string& new_policy, const size_t capacity) {
             std::string candidate = boost::to_upper_copy<std::string>(new_policy);
-            if (candidate == m_policy)
+
+            if (candidate == m_policy) {
+                if (capacity > 0) {
+                    if (m_policy == "LOSSLESS") {
+                        KARABO_LOG_FRAMEWORK_WARN << "Setting the max capacity of a LosslessQueue is not allowed!";
+                        return;
+                    }
+                    m_queue[priority]->set_capacity(capacity);
+                }
                 return;
+            }
+
             if (candidate == "LOSSLESS") {
                 m_policy = candidate;
                 m_queue[priority] = Queue::Pointer(new LosslessQueue);
+
+                if (capacity > 0) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Setting the max capacity of a LosslessQueue is not allowed!";
+                }
             } else if (candidate == "REJECT_NEWEST") {
                 m_policy = candidate;
-                m_queue[priority] = Queue::Pointer(new RejectNewestQueue);
+                m_queue[priority] = Queue::Pointer(new RejectNewestQueue(capacity > 0 ? capacity : kDefaultQueueCapacity));
             } else if (candidate == "REMOVE_OLDEST") {
                 m_policy = candidate;
-                m_queue[priority] = Queue::Pointer(new RemoveOldestQueue);
+                m_queue[priority] = Queue::Pointer(new RemoveOldestQueue(capacity > 0 ? capacity : kDefaultQueueCapacity));
             } else {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Trying to assign not supported channel policy : \"" + new_policy
                                                      + "\".  Supported policies are \"LOSSLESS\", \"REJECT_NEWEST\", \"REMOVE_OLDEST\"");
