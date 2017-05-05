@@ -76,10 +76,9 @@ namespace karabo {
                         MQString statusString = MQGetStatusString(status);
                         const std::string stdStatusString(statusString);
                         MQFreeString(statusString);
+                        KARABO_LOG_FRAMEWORK_ERROR << "Problem during message consumption: " << stdStatusString;
                         if (errorNotifier) {
                             m_notifyStrand.post(boost::bind(errorNotifier, Error::drop, stdStatusString));
-                        } else {
-                            KARABO_LOG_FRAMEWORK_ERROR << "Problem during message consumption: " << stdStatusString;
                         }
                         // No 'break;'!
                     }
@@ -93,10 +92,9 @@ namespace karabo {
                         // Wrong message type -> notify error, ignore this message and re-post
                         if (messageType != MQ_BYTES_MESSAGE) {
                             const std::string msg("Received a message of wrong type");
+                            KARABO_LOG_FRAMEWORK_WARN << msg;
                             if (errorNotifier) {
                                 m_notifyStrand.post(boost::bind(errorNotifier, Error::type, msg));
-                            } else {
-                                KARABO_LOG_FRAMEWORK_WARN << msg;
                             }
                             m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
                                                       handler, errorNotifier, topic, selector));
@@ -144,10 +142,9 @@ namespace karabo {
                         const std::string errorString(tmp);
                         MQFreeString(tmp);
                         const std::string msg("Untreated message consumption error '" + errorString + "', try again.");
+                        KARABO_LOG_FRAMEWORK_WARN << msg;
                         if (errorNotifier) {
                             m_notifyStrand.post(boost::bind(errorNotifier, Error::unknown, msg));
-                        } else {
-                            KARABO_LOG_FRAMEWORK_WARN << msg;
                         }
                         // By no means stop message consumption non-voluntarily:
                         m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
