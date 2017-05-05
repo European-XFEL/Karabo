@@ -62,7 +62,7 @@ class BaseWidgetObjectData(BaseSceneObjectData):
     """
     # The property names viewed by the widget
     keys = List(String)
-    # The possible component type for a parent of the widget (can be empty)
+    # The possible component type for a parent of the widget
     parent_component = String
     # The X-coordinate of the widget
     x = Float
@@ -72,3 +72,19 @@ class BaseWidgetObjectData(BaseSceneObjectData):
     height = Float
     # The width of the widget
     width = Float
+
+    def _parent_component_default(self):
+        """If this method is not overridden by a derived class, return the
+        default value of 'DisplayComponent'
+        """
+        return 'DisplayComponent'
+
+
+class BaseDisplayEditableWidget(BaseWidgetObjectData):
+    """Handle the value of the `parent_component` trait for models which
+    represent both display and editable widgets.
+    """
+    def _parent_component_default(self):
+        if self.klass.startswith('Editable'):
+            return 'EditableApplyLaterComponent'
+        return 'DisplayComponent'

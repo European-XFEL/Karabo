@@ -2,7 +2,8 @@ from xml.etree.ElementTree import SubElement
 
 from traits.api import Bool, Enum, Float, Int, String
 
-from karabo.common.scenemodel.bases import BaseWidgetObjectData
+from karabo.common.scenemodel.bases import (
+    BaseDisplayEditableWidget, BaseWidgetObjectData)
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, read_empty_display_editable_widget,
@@ -53,7 +54,7 @@ class SingleBitModel(BaseWidgetObjectData):
     bit = Int
 
 
-class TableElementModel(BaseWidgetObjectData):
+class TableElementModel(BaseDisplayEditableWidget):
     """ A model for TableElement
     """
     # The schema which defines the table

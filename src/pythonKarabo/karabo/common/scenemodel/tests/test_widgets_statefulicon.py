@@ -9,7 +9,7 @@ STATEFUL_ICON_WIDGETS = ['foo', 'bar', 'foobar']
 def test_statefulicon_widget():
     model = StatefulIconWidgetModel()
     for name in STATEFUL_ICON_WIDGETS:
-        traits = base_widget_traits(parent='DisplayComponent')
+        traits = base_widget_traits()
         traits['icon_name'] = name
         model = StatefulIconWidgetModel(**traits)
         read_model = single_model_round_trip(model)
