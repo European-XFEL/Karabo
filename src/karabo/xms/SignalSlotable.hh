@@ -74,6 +74,9 @@ namespace karabo {
 
             typedef boost::function<void (const karabo::util::Hash::Pointer& /*performanceMeasures*/) > UpdatePerformanceStatisticsHandler;
 
+            typedef boost::function<void (const std::string& /*channelId*/, karabo::net::JmsConsumer::Error /*ec*/,
+                                          const std::string& /*message*/) > BrokerErrorHandler;
+
             typedef InputChannel::DataHandler DataHandler;
 
             typedef InputChannel::InputHandler InputHandler;
@@ -188,8 +191,7 @@ namespace karabo {
 
             void registerPerformanceStatisticsHandler(const UpdatePerformanceStatisticsHandler& updatePerformanceStatisticsHandler);
 
-            void registerBrokerErrorHandler(const karabo::net::JmsConsumer::Pointer& consumer,
-                                            const karabo::net::JmsConsumer::ErrorNotifier& errorHandler);
+            void registerBrokerErrorHandler(const BrokerErrorHandler& errorHandler);
 
             karabo::net::JmsConnection::Pointer getConnection() const;
 
@@ -566,8 +568,8 @@ namespace karabo {
             SlotCallGuardHandler m_slotCallGuardHandler;
             UpdatePerformanceStatisticsHandler m_updatePerformanceStatistics;
 
-            boost::mutex m_brokerErrorHandlersMutex;
-            std::map<karabo::net::JmsConsumer::Pointer, karabo::net::JmsConsumer::ErrorNotifier> m_brokerErrorHandlers;
+            boost::mutex m_brokerErrorHandlerMutex;
+            BrokerErrorHandler m_brokerErrorHandler;
 
             static std::unordered_map<std::string, SignalSlotable*> m_instanceMap;
             static boost::shared_mutex m_instanceMapMutex;
@@ -589,7 +591,7 @@ namespace karabo {
 
             void onBrokerMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
-            void comsumerErrorNotifier(const karabo::net::JmsConsumer::Pointer& consumer,
+            void consumerErrorNotifier(const std::string& consumer,
                                        karabo::net::JmsConsumer::Error ec, const std::string& message);
 
             void onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
