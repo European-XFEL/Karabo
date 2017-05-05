@@ -301,6 +301,16 @@ namespace karabo {
                         .expertAccess()
                         .commit();
 
+                BOOL_ELEMENT(expected).key("performanceStatistics.messagingProblems")
+                        .displayedName("Messaging problems")
+                        .description("If true, there is a problem consuming broker messages")
+                        .expertAccess()
+                        .readOnly().initialValue(false)
+                        .alarmHigh(false) // threshold is exclusive, i.e. false => no alarm, true => alarm!
+                        .info("Unreliable broker message consumption - consider restarting device!")
+                        .needsAcknowledging(true)
+                        .commit();
+
                 BOOL_ELEMENT(expected).key("performanceStatistics.enable")
                         .displayedName("Enable Performance Indicators")
                         .description("Enables some statistics to follow the performance of an individual device")
@@ -954,8 +964,8 @@ namespace karabo {
              * @return A Hash containing the current value of the selected configuration
              */
             karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const {
-                if (tags.empty()) return m_parameters;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                if (tags.empty()) return m_parameters;
                 karabo::util::Hash filtered;
                 karabo::util::HashFilter::byTag(m_fullSchema, m_parameters, filtered, tags);
                 return filtered;
@@ -1316,6 +1326,9 @@ namespace karabo {
                 this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies,
                                                                        this, _1));
 
+                // Register message consumption error handler - bind_weak not needed as above
+                this->registerBrokerErrorHandler(boost::bind(&karabo::core::Device<FSM>::onBrokerError, this, _1));
+
                 // Instantiate all channels
                 this->initChannels();
 
@@ -1606,6 +1619,11 @@ namespace karabo {
                     // and expectedParameters has to foresee this content under node "performanceStatistics".
                     this->set(karabo::util::Hash("performanceStatistics", *performanceMeasures));
                 }
+            }
+
+            void onBrokerError(const std::string& message) {
+                KARABO_LOG_ERROR << "Broker consumption problem: " << message;
+                set(karabo::util::Hash("performanceStatistics.messagingProblems", true)); // will trigger alarm
             }
 
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
