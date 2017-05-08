@@ -14,7 +14,7 @@ from .hash import Descriptor, Hash, HashType, Int32, Slot, String
 from .p2p import NetworkOutput
 from .proxy import DeviceClientProxyFactory
 from .schema import Configurable
-from .synchronization import firstCompleted
+from .synchronization import firstCompleted, FutureDict
 
 
 class Signal(object):
@@ -145,7 +145,7 @@ class SignalSlotable(Configurable):
         self._proxies = weakref.WeakValueDictionary()
         self._proxy_futures = {}
         self.__initialized = False
-        self._new_device_futures = {}
+        self._new_device_futures = FutureDict()
 
     def startInstance(self, server=None, *, loop=None):
         """Start this (device) instance
@@ -337,9 +337,7 @@ class SignalSlotable(Configurable):
 
     @coslot
     def slotInstanceNew(self, instanceId, info):
-        future = self._new_device_futures.pop(instanceId, None)
-        if future is not None:
-            future.set_result(None)
+        self._new_device_futures[instanceId] = info
         proxy = self._proxies.get(instanceId)
         if proxy is not None:
             yield from proxy._notify_new()
@@ -348,11 +346,10 @@ class SignalSlotable(Configurable):
     def _call_once_alive(self, deviceId, slot, *args):
         """try to call slot, wait until device becomes alive if needed"""
         done, pending = yield from firstCompleted(
-            newdevice=self._new_device_futures.setdefault(deviceId, Future()),
+            newdevice=self._new_device_futures[deviceId],
             call=self.call(deviceId, slot, *args))
         for p in pending.values():
             p.cancel()
-        self._new_device_futures.pop(deviceId, None)
         if "call" in done:
             return done["call"]
         elif "newdevice" in done:

@@ -907,6 +907,18 @@ class Tests(DeviceTest):
         a, b = yield from gather(getDevice("remote"), getDevice("remote"))
         self.assertIs(a, b)
 
+        alive = async(getDevice("vivro"))
+        cancelled = async(getDevice("vivro"))
+        yield  # start the tasks
+        cancelled.cancel()
+        remote = Remote({"_deviceId_": "vivro"})
+        yield from remote.startInstance()
+        try:
+            # this used to raise a CancelledError, as we cross-cancelled
+            yield from alive
+        finally:
+            yield from remote.slotKillDevice()
+
     @async_tst
     def test_inject(self):
         with (yield from getDevice("remote")) as d:
