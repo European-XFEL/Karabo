@@ -23,6 +23,7 @@ __all__ = [
     "displayimageelement",
     "displaylabel",
     "displaylineedit",
+    "displaymissingbox",
     "displayplot",
     "displaysparkline",
     "displaystatecolor",

@@ -34,6 +34,8 @@ class _LinePlotWrapperMixin(object):
         # Initialize the widget
         for plot in model.boxes:
             box, curve = _decode_plot_curve_model(plot)
+            if box is None:
+                continue
             super(_LinePlotWrapperMixin, self)._addCurve(box, curve)
 
     def _addCurve(self, box, curve):
@@ -47,6 +49,7 @@ class _LinePlotWrapperMixin(object):
 class _DisplaySparklineWrapper(_LinePlotWrapperMixin, DisplaySparkline):
     """ A wrapper around DisplaySparkline
     """
+
 
 class _DisplayTrendlineWrapper(_LinePlotWrapperMixin, DisplayTrendline):
     """ A wrapper around DisplayTrendline
