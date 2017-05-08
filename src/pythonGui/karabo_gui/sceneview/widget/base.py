@@ -67,7 +67,6 @@ class BaseWidgetContainer(QWidget):
                     self.model.keys.append(device_box.key())
                     self.boxes.append(device_box)
                     self._make_box_connections(device_box)
-                    device_box.addVisible()
                     widget_added = True
         return widget_added
 
