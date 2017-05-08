@@ -20,8 +20,8 @@ from .widgets.image import (DisplayAlignedImageModel, DisplayImageElementModel,
                             DisplayImageModel, ScientificImageModel,
                             WebcamImageModel)
 from .widgets.plot import LinePlotModel, PlotCurveModel
-from .widgets.simple import (BitfieldModel, CheckBoxModel, ChoiceElementModel,
-                             ComboBoxModel, DirectoryModel,
+from .widgets.simple import (AnalogModel, BitfieldModel, CheckBoxModel,
+                             ChoiceElementModel, ComboBoxModel, DirectoryModel,
                              DisplayCommandModel, DisplayLabelModel,
                              DisplayPlotModel, DoubleLineEditModel,
                              EditableListElementModel, EditableListModel,

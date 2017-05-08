@@ -12,6 +12,10 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 
+class AnalogModel(BaseWidgetObjectData):
+    """ A model for Analog Widget"""
+
+
 class BitfieldModel(BaseWidgetObjectData):
     """ A model for Bitfield"""
 
@@ -258,11 +262,12 @@ def _build_empty_widget_readers_and_writers():
             return element
         return writer
 
-    names = ('BitfieldModel', 'DisplayCommandModel', 'DisplayLabelModel',
-             'DisplayPlotModel', 'DoubleLineEditModel', 'EditableListModel',
-             'EditableListElementModel', 'EditableSpinBoxModel',
-             'HexadecimalModel', 'IntLineEditModel', 'KnobModel', 'LampModel',
-             'PopUpModel', 'SliderModel', 'XYPlotModel')
+    names = ('AnalogModel', 'BitfieldModel', 'DisplayCommandModel',
+             'DisplayLabelModel', 'DisplayPlotModel', 'DoubleLineEditModel',
+             'EditableListModel', 'EditableListElementModel',
+             'EditableSpinBoxModel', 'HexadecimalModel', 'IntLineEditModel',
+             'KnobModel', 'LampModel', 'PopUpModel', 'SliderModel',
+             'XYPlotModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]
