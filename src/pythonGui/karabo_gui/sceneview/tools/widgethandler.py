@@ -24,6 +24,10 @@ class WidgetSceneHandler(ABCHasStrictTraits):
         if not isinstance(self.widget, BaseWidgetContainer):
             return
 
+        if not self.widget.boxes:
+            # A widget with no boxes is in no condition to be changed...
+            return
+
         box = self.widget.boxes[0]
         model = self.widget.model
         if model.parent_component == 'EditableApplyLaterComponent':
