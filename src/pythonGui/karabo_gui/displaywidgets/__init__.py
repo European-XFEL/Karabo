@@ -8,6 +8,7 @@
 
 __all__ = [
     "displayalignedimage",
+    "displayanalog",
     "displaybitfield",
     "displaycolorbool",
     "displaycheckbox",

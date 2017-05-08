@@ -18,8 +18,9 @@ ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 OK_COLOR = (225, 242, 225, 128)
 ERROR_COLOR_ALPHA = (255, 155, 155, 128)  # semitransparent
 
-WARN_COLOR = (255, 102, 0)  # orange
+WARN_COLOR = (255, 255, 0)  # yellow
 ALARM_COLOR = (255, 0, 0)  # red
+NORM_COLOR = (100, 149, 237)  # fancy blue
 INTERLOCK_COLOR = (51, 51, 255)  # blue
 
 # Parameter item properties

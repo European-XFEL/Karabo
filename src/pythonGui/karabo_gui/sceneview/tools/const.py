@@ -1,5 +1,5 @@
 from karabo.common.scenemodel.api import (
-    BitfieldModel, ColorBoolModel, CheckBoxModel, ChoiceElementModel,
+    AnalogModel, BitfieldModel, ColorBoolModel, CheckBoxModel, ChoiceElementModel,
     ComboBoxModel, DigitIconsModel, DirectoryModel, DisplayAlignedImageModel,
     DisplayCommandModel, DisplayIconsetModel, DisplayImageElementModel,
     DisplayImageModel, DisplayLabelModel, DisplayPlotModel,
@@ -22,6 +22,7 @@ from karabo.common.scenemodel.api import (
 # * Switching widgets for a device property
 # * Adding a default widget when a property is dropped on the scene
 WIDGET_FACTORIES = {
+    'DisplayAnalog': AnalogModel,
     'Bitfield': BitfieldModel,
     'DisplayColorBool': ColorBoolModel,
     'DisplayCheckBox': CheckBoxModel,
