@@ -5,8 +5,8 @@
 #############################################################################
 from PyQt4.QtCore import QByteArray, QPoint, QRect, QSize, Qt
 from PyQt4.QtGui import (
-    QBrush, QColor, QDialog, QFont, QFontMetrics, QFrame, QLabel, QPainter,
-    QPen, QPushButton, QWidget)
+    QColor, QDialog, QFont, QFontMetrics, QFrame, QLabel, QPainter, QPen,
+    QPushButton, QWidget)
 from PyQt4.QtSvg import QSvgRenderer
 
 from karabo.common.scenemodel.api import write_single_model
@@ -14,6 +14,7 @@ from karabo_gui.dialogs.dialogs import SceneLinkDialog
 from karabo_gui.dialogs.textdialog import TextDialog
 from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.sceneview.utils import calc_rect_from_text
+from karabo_gui.util import PlaceholderWidget
 
 LIGHT_BLUE = (224, 240, 255)
 PADDING = 10
@@ -210,35 +211,14 @@ class UnknownSvgWidget(QWidget):
         """ Satisfy the informal widget interface. """
 
 
-class UnknownWidget(QWidget):
+class UnknownWidget(PlaceholderWidget):
     """ A widget which can display data from an UnknownWidgetDataModel.
     """
     def __init__(self, model, parent=None):
-        super(UnknownWidget, self).__init__(parent)
+        super(UnknownWidget, self).__init__('Unsupported', parent)
         self.model = model
         self.setToolTip('Unsupported widget type: ' + self.model.klass)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
-
-    def paintEvent(self, event):
-        with QPainter(self) as painter:
-            rect = self.rect()
-            boundary = rect.adjusted(2, 2, -2, -2)
-
-            painter.fillRect(rect, QBrush(Qt.lightGray, Qt.FDiagPattern))
-
-            pen = QPen(Qt.lightGray)
-            pen.setJoinStyle(Qt.MiterJoin)
-            pen.setWidth(4)
-            painter.setPen(pen)
-            painter.drawRect(boundary)
-
-            text = 'Unsupported'
-            metrics = painter.fontMetrics()
-            text_rect = metrics.boundingRect(text)
-            pos = rect.center() - QPoint(text_rect.width()/2,
-                                         -text_rect.height()/2)
-            painter.setPen(QPen())
-            painter.drawText(pos, text)
 
     def add_boxes(self, boxes):
         """ Satisfy the informal widget interface. """

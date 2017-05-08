@@ -39,4 +39,11 @@ def determine_if_value_unchanged(value, widget_value, box):
 
 def get_box(device_id, path):
     """ Return the Box for a given device and property path. """
-    return get_topology().get_device(device_id).getBox(path.split("."))
+    device_proxy = get_topology().get_device(device_id)
+    path_parts = path.split(".")
+    try:
+        return device_proxy.getBox(path_parts)
+    except AttributeError:
+        # When a prpoerty is renamed, we get an AttributeError here.
+        # Return None and deal with the consequences in the layers above.
+        return None
