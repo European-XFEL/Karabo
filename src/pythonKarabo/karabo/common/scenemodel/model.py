@@ -79,10 +79,15 @@ def _read_extra_attributes(element):
 def __scene_reader(read_func, element):
     traits = {
         'file_format_version': int(element.get(NS_KARABO + 'version', 1)),
+        'uuid': element.get(NS_KARABO + 'uuid'),
         'width': float(element.get('width', 0)),
         'height': float(element.get('height', 0)),
         'extra_attributes': _read_extra_attributes(element),
     }
+    # This attribute is not guaranteed to be there...
+    if traits['uuid'] is None:
+        del traits['uuid']
+
     scene = SceneModel(**traits)
     for child in element:
         scene.children.append(read_func(child))
@@ -102,6 +107,7 @@ def __scene_writer(write_func, scene, root):
     for child in scene.children:
         write_func(child, root)
 
+    root.set(NS_KARABO + 'uuid', scene.uuid)
     set_numbers(('height', 'width'), scene, root)
     for name, value in scene.extra_attributes.items():
         root.set(name, value)
