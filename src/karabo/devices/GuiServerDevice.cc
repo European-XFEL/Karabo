@@ -62,12 +62,20 @@ namespace karabo {
                     .metricPrefix(MetricPrefix::MILLI)
                     .commit();
 
-            INT32_ELEMENT(expected).key("inputChannelQueueCapacity")
-                    .displayedName("Input Channel forwarding queue size")
-                    .description("The number of messages to store in the forwarding ring buffer. NOTE: Will be applied to newly connected clients only")
-                    .assignmentOptional().defaultValue(100) // 5Hz * 20 seconds
+            INT32_ELEMENT(expected).key("fastDataQueueCapacity")
+                    .displayedName("Fast Data forwarding queue size")
+                    .description("The number of fast data (cameras, other big data) messages to store in the forwarding ring buffer. NOTE: Will be applied to newly connected clients only")
+                    .assignmentOptional().defaultValue(5) // 5Hz * 1 second
                     .reconfigurable()
-                    .minExc(0).maxInc(5000)
+                    .minExc(0).maxInc(100)
+                    .commit();
+
+            INT32_ELEMENT(expected).key("lossyDataQueueCapacity")
+                    .displayedName("Lossy Data forwarding queue size")
+                    .description("The number of lossy data messages to store in the forwarding ring buffer. NOTE: Will be applied to newly connected clients only")
+                    .assignmentOptional().defaultValue(100)
+                    .reconfigurable()
+                    .minExc(0).maxInc(1000)
                     .commit();
 
             INT32_ELEMENT(expected).key("propertyUpdateInterval")
@@ -189,9 +197,11 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
 
-                // Set 2 different queues for publishing (writeAsync) to the GUI client...
-                // priority 3 bound to REJECT_OLDEST dropping policy
-                channel->setAsyncChannelPolicy(REMOVE_OLDEST, "REMOVE_OLDEST", get<int>("inputChannelQueueCapacity"));
+                // Set 3 different queues for publishing (writeAsync) to the GUI client...
+                // priority 2 bound to FAST_DATA traffic with REMOVE_OLDEST policy with a small queue
+                channel->setAsyncChannelPolicy(FAST_DATA, "REMOVE_OLDEST", get<int>("fastDataQueueCapacity"));
+                // priority 3 bound to REMOVE_OLDEST dropping policy
+                channel->setAsyncChannelPolicy(REMOVE_OLDEST, "REMOVE_OLDEST", get<int>("lossyDataQueueCapacity"));
                 // priority 4 should be LOSSLESS
                 channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
 
@@ -691,7 +701,7 @@ namespace karabo {
                     pair<NetworkMap::iterator, NetworkMap::iterator> range = m_networkConnections.equal_range(input);
                     for (; range.first != range.second; ++range.first) {
                         h.set("name", range.first->second.name);
-                        safeClientWrite(WeakChannelPointer(range.first->second.channel), h, REMOVE_OLDEST);
+                        safeClientWrite(WeakChannelPointer(range.first->second.channel), h, FAST_DATA);
                     }
                 }
             } catch (const Exception &e) {

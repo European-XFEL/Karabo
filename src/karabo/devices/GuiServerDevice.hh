@@ -46,7 +46,7 @@ namespace karabo {
 
             enum QueueBehaviorsTypes {
 
-                REMOVE_OLDEST = 3, LOSSLESS
+                FAST_DATA = 2, REMOVE_OLDEST, LOSSLESS
             };
 
             karabo::net::Connection::Pointer m_dataConnection;
