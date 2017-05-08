@@ -4,14 +4,45 @@ import os.path as op
 from tempfile import mkstemp
 from uuid import uuid4
 
-from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QDialog, QFileDialog, QHeaderView, QLabel, QMovie
+from PyQt4.QtCore import QPoint, QSize, Qt
+from PyQt4.QtGui import (
+    QBrush, QDialog, QFileDialog, QHeaderView, QLabel, QMovie, QPainter, QPen,
+    QWidget)
 
 from karabo.middlelayer import decodeXML, Hash, MetricPrefix, Unit, writeXML
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
 from karabo_gui.messagebox import MessageBox
 from karabo_gui.singletons.api import get_db_conn
+
+
+class PlaceholderWidget(QWidget):
+    """A widget which indicates to the user that something is missing or
+    unsupported.
+    """
+    def __init__(self, text, parent=None):
+        super(PlaceholderWidget, self).__init__(parent)
+        self._text = text
+
+    def paintEvent(self, event):
+        with QPainter(self) as painter:
+            rect = self.rect()
+            boundary = rect.adjusted(2, 2, -2, -2)
+
+            painter.fillRect(rect, QBrush(Qt.lightGray, Qt.FDiagPattern))
+
+            pen = QPen(Qt.lightGray)
+            pen.setJoinStyle(Qt.MiterJoin)
+            pen.setWidth(4)
+            painter.setPen(pen)
+            painter.drawRect(boundary)
+
+            metrics = painter.fontMetrics()
+            text_rect = metrics.boundingRect(self._text)
+            pos = rect.center() - QPoint(text_rect.width()/2,
+                                         -text_rect.height()/2)
+            painter.setPen(QPen())
+            painter.drawText(pos, self._text)
 
 
 class SignalBlocker(object):
