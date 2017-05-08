@@ -68,6 +68,7 @@ class ConfigurationDropHandler(SceneDnDHandler):
         if widget is not None:
             boxes = [item.box for item in source.selectedItems()]
             if widget.add_boxes(boxes):
+                widget.set_visible(True)
                 event.accept()
                 return
 
