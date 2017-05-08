@@ -1064,30 +1064,17 @@ namespace karabo {
 
         void TcpChannel::setAsyncChannelPolicy(int priority, const std::string& new_policy, const size_t capacity) {
             std::string candidate = boost::to_upper_copy<std::string>(new_policy);
-
-            if (candidate == m_policy) {
-                if (capacity > 0) {
-                    if (m_policy == "LOSSLESS") {
-                        KARABO_LOG_FRAMEWORK_WARN << "Setting the max capacity of a LosslessQueue is not allowed!";
-                        return;
-                    }
-                    m_queue[priority]->set_capacity(capacity);
-                }
-                return;
-            }
+            boost::mutex::scoped_lock lock(m_queueMutex);
 
             if (candidate == "LOSSLESS") {
-                m_policy = candidate;
                 m_queue[priority] = Queue::Pointer(new LosslessQueue);
 
                 if (capacity > 0) {
                     KARABO_LOG_FRAMEWORK_WARN << "Setting the max capacity of a LosslessQueue is not allowed!";
                 }
             } else if (candidate == "REJECT_NEWEST") {
-                m_policy = candidate;
                 m_queue[priority] = Queue::Pointer(new RejectNewestQueue(capacity > 0 ? capacity : kDefaultQueueCapacity));
             } else if (candidate == "REMOVE_OLDEST") {
-                m_policy = candidate;
                 m_queue[priority] = Queue::Pointer(new RemoveOldestQueue(capacity > 0 ? capacity : kDefaultQueueCapacity));
             } else {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Trying to assign not supported channel policy : \"" + new_policy
