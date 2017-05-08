@@ -60,7 +60,6 @@ namespace karabo {
             unsigned int m_headerSize;
             boost::mutex m_queueMutex;
             std::vector<karabo::net::Queue::Pointer> m_queue;
-            std::string m_policy;
             std::atomic<bool> m_writeInProgress;
             bool m_quit;
             unsigned long long m_syncCounter;
