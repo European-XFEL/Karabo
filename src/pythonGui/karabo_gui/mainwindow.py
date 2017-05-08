@@ -262,10 +262,16 @@ class MainWindow(QMainWindow):
 
         # Make sure there are no pending writing things in the pipe
         if get_db_conn().is_writing():
-            msg = ('There is currently data fetched from or sent to the <br>'
-                   '<b>project database</b>. Please wait until this is done!')
-            MessageBox.showWarning(msg, 'Database connection active')
-            return False
+            ask = ('There is currently data being sent to the <b>project '
+                   'database</b>.<br> If you choose to force quit the '
+                   'application, the project<br>might get corrupted or data '
+                   'will be lost!')
+            msg_box = QMessageBox(QMessageBox.Question, 'Force quit', ask,
+                                  QMessageBox.Yes | QMessageBox.Cancel)
+            msg_box.setButtonText(QMessageBox.Yes, 'Force quit')
+            msg_box.setButtonText(QMessageBox.No, 'Cancel')
+            msg_box.setDefaultButton(QMessageBox.Cancel)
+            return msg_box.exec() == QMessageBox.Yes
 
         return True
 
