@@ -22,6 +22,7 @@ SCENE_SVG = """
     xmlns:svg="http://www.w3.org/2000/svg"
     height="768"
     krb:version="2"
+    krb:uuid="e24a23c7-5aa9-420c-9741-248ea6672355"
     width="1024"
     krb:random="golly" >
     <svg:g
@@ -143,7 +144,8 @@ def test_reading():
 
 def test_writing():
     extra_attributes = {NS_KARABO + 'random': 'golly'}
-    scene = SceneModel(extra_attributes=extra_attributes)
+    scene = SceneModel(extra_attributes=extra_attributes,
+                       uuid='e24a23c7-5aa9-420c-9741-248ea6672355')
     layout = FixedLayoutModel(x=106, y=74, height=323, width=384)
     label = LabelModel(
         x=175, y=125, height=60, width=309,
