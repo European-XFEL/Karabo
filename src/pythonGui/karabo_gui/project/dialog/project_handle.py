@@ -12,7 +12,8 @@ import os.path as op
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
 from PyQt4.QtGui import (QAction, QButtonGroup, QCursor, QDialog,
-                         QDialogButtonBox, QItemSelectionModel, QMenu)
+                         QDialogButtonBox, QItemSelectionModel, QMenu,
+                         QMessageBox)
 
 from karabo_gui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
@@ -116,7 +117,12 @@ class LoadProjectDialog(QDialog):
             self.cbDomain.addItems(sorted(domains))
         # Select default domain
         index = self.cbDomain.findText(self.default_domain)
-        if index == self.cbDomain.currentIndex():
+        if index == -1:
+            msg = ('The default project domain defined by<br>'
+                   '<b>KARABO_PROJECT_DB_DOMAIN = {}</b><br>does not exist in '
+                   'the current project database.').format(self.default_domain)
+            QMessageBox.warning(self, 'Default domain does not exist', msg)
+        if index in (self.cbDomain.currentIndex(), -1):
             # Make sure the signal is triggered when setting the index below
             self.cbDomain.setCurrentIndex(-1)
         self.cbDomain.setCurrentIndex(index if index > -1 else 0)
