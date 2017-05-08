@@ -3,6 +3,7 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
                          QToolButton, QWidget)
 
 from karabo_gui import icons
+from karabo_gui.displaywidgets.displaymissingbox import DisplayMissingBox
 from karabo_gui.indicators import (DeviceStatus, get_alarm_pixmap,
                                    get_device_status_pixmap)
 from karabo_gui.singletons.api import get_network
@@ -16,7 +17,11 @@ class BaseWidgetContainer(QWidget):
     def __init__(self, model, parent):
         super(BaseWidgetContainer, self).__init__(parent)
         self.model = model
+
+        # Handle boxes. If anything is missing, we wipe the slate clean
         self.boxes = [get_box(*key.split('.', 1)) for key in self.model.keys]
+        if None in self.boxes:
+            self.boxes = []
 
         self.layout = QStackedLayout(self)
         self.layout.setStackingMode(QStackedLayout.StackAll)
@@ -26,7 +31,11 @@ class BaseWidgetContainer(QWidget):
 
         self.alarm_symbol = QLabel("", self)
 
-        self.old_style_widget = self._create_widget(self.boxes)
+        if self.boxes:
+            self.old_style_widget = self._create_widget(self.boxes)
+        else:
+            self.old_style_widget = DisplayMissingBox(self)
+
         for box in self.boxes:
             self._make_box_connections(box)
         if self.model.parent_component == 'EditableApplyLaterComponent':
@@ -61,6 +70,8 @@ class BaseWidgetContainer(QWidget):
             for box in boxes:
                 device_id, property_path = box.key().split('.', 1)
                 device_box = get_box(device_id, property_path)
+                if device_box is None:
+                    continue
                 # This is only ``True`` if the display widget allows more
                 # than one box to be added to it
                 if widget.addBox(device_box):
@@ -75,11 +86,13 @@ class BaseWidgetContainer(QWidget):
         """
         widget = self.old_style_widget
         if self.model.parent_component == 'EditableApplyLaterComponent':
-            box = self.boxes[0]
-            widget.signalEditingFinished.disconnect(self._on_editing_finished)
-            # These are connected in `EditableWidget.__init__`
-            box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
-                widget.updateStateSlot)
+            if self.boxes:
+                box = self.boxes[0]
+                sig = widget.signalEditingFinished
+                sig.disconnect(self._on_editing_finished)
+                # These are connected in `EditableWidget.__init__`
+                sig = box.configuration.boxvalue.state.signalUpdateComponent
+                sig.disconnect(widget.updateStateSlot)
 
         for box in self.boxes:
             box.signalNewDescriptor.disconnect(widget.typeChangedSlot)
@@ -108,7 +121,6 @@ class BaseWidgetContainer(QWidget):
         """
         # Check whether device_id is related to these boxes
         for b in self.boxes:
-            conf_dev_id = b.configuration.id
             if b.configuration.id == device_id:
                 break
         else:
@@ -262,13 +274,18 @@ class BaseWidgetContainer(QWidget):
         self._update_buttons()
 
     def _update_buttons(self):
-        box = self.boxes[0]
         widget = self.old_style_widget
-        allowed = box.isAllowed()
+        if self.boxes:
+            box = self.boxes[0]
+            allowed = box.isAllowed()
+            value_unchanged = determine_if_value_unchanged(
+                self.__current_value, widget.value, box)
+        else:
+            allowed = False
+            value_unchanged = True
+
         self.apply_button.setEnabled(allowed)
 
-        value_unchanged = determine_if_value_unchanged(
-            self.__current_value, widget.value, box)
         if value_unchanged:
             self.apply_button.setIcon(icons.applyGrey)
             self.__has_conflict = False
