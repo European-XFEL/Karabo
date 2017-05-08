@@ -246,7 +246,9 @@ class SceneView(QWidget):
             return
 
         for obj in self._scene_obj_cache.values():
-            if is_widget(obj):
+            # NOTE: check also if widget is visible due to the fact that we
+            # only hide widgets with got replaced by 'Change Widget...'
+            if is_widget(obj) and obj.isVisible():
                 obj.set_visible(visible)
         self.workflow_model.set_visible(visible)
 
