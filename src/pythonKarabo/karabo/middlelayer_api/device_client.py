@@ -312,7 +312,7 @@ def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
     futures = instance._proxy_futures
     future = futures.get(deviceId)
     if future is not None:
-        return (yield from future)
+        return (yield from asyncio.shield(future))
 
     @asyncio.coroutine
     def create():
@@ -352,9 +352,9 @@ def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
         instance._ss.enter_context(connectSchemaUpdated())
         yield from proxy
         return proxy
-    future = asyncio.shield(create())
+    future = asyncio.async(create())
     futures[deviceId] = future
-    return (yield from future)
+    return (yield from asyncio.shield(future))
 
 
 def getDevice(deviceId, *, sync=None, timeout=5):

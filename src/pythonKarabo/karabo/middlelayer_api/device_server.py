@@ -84,7 +84,6 @@ class DeviceServerBase(SignalSlotable):
 
     def __init__(self, configuration):
         super().__init__(configuration)
-        self.newDeviceFutures = {}
         self.hostname, _, self.domainname = socket.gethostname().partition('.')
         self.needScanPlugins = True
         if not isSet(self.serverId):
@@ -214,13 +213,6 @@ class DeviceServerBase(SignalSlotable):
         self.stopEventLoop()
         self._ss.emit("call", {"*": ["slotDeviceServerInstanceGone"]},
                       self.serverId)
-
-    @slot
-    def slotInstanceNew(self, instanceId, info):
-        future = self.newDeviceFutures.get(instanceId)
-        if future is not None:
-            future.set_result(info)
-        super(DeviceServerBase, self).slotInstanceNew(instanceId, info)
 
     @slot
     def slotGetClassSchema(self, classId):
@@ -420,7 +412,7 @@ class BoundDeviceServer(DeviceServerBase):
                     .startDevice(classId, deviceId, config))
         env = dict(os.environ)
         env["PYTHONPATH"] = self.pluginDirectory
-        future = self.newDeviceFutures.setdefault(deviceId, Future())
+        future = self._new_device_futures[deviceId]
         process = yield from create_subprocess_exec(
             sys.executable, "-m", "karabo.bound_api.launcher",
             "run", self.boundNamespace, classId,
