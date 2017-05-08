@@ -157,6 +157,11 @@ def load_project(is_subproject=False):
                              existing=model)
             db_conn.default_domain = domain
             db_conn.flush()
+            if not dialog.ignore_cache:
+                # Set modified flag recursively to True to make sure that
+                # EVERYTHING gets saved to the database in case the project was
+                # loaded from cache
+                set_modified_flag(model, value=True)
             return model
     return None
 
