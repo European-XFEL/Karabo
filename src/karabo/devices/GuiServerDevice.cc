@@ -235,7 +235,9 @@ namespace karabo {
                 // GUI communication scenarios
                 if (info.has("type")) {
                     string type = info.get<string > ("type");
-                    if (type == "login") {
+                    if (type == "requestFromSlot") {
+                        onRequestFromSlot(channel, info);
+                    } else if (type == "login") {
                         onLogin(channel, info);
                     } else if (type == "reconfigure") {
                         onReconfigure(info);
@@ -1266,6 +1268,16 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in forwarding reply of type '" << replyType << "': " << e;
             }
         }
+        
+        void GuiServerDevice::forwardRequestReply(WeakChannelPointer channel, const karabo::util::Hash& reply, const std::string& token) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "forwardRequestReply for token : "<< token;
+                Hash h("reply", reply, "token", token, "success", true, "type", "requestFromSlot");
+                safeClientWrite(channel, h, LOSSLESS);
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in forwarding request reply for token '" << token << "': " << e;
+            }
+        }
 
 
         bool GuiServerDevice::checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string & type) {
@@ -1300,6 +1312,49 @@ namespace karabo {
                 safeAllClientsWrite(h, LOSSLESS);
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad config group update: " << e.userFriendlyMsg();
+            }
+        }
+        
+        void GuiServerDevice::onRequestFromSlot(WeakChannelPointer channel, const karabo::util::Hash& hash) {
+            Hash failureInfo;
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRequest";
+                // verify that hash is sane on top level
+                failureInfo.set("deviceId", hash.has("deviceId"));
+                failureInfo.set("slot", hash.has("slot"));
+                failureInfo.set("args", hash.has("args"));
+                failureInfo.set("token", hash.has("token"));
+                const string& deviceId = hash.get<string > ("deviceId");
+                const string& slot = hash.get<string > ("slot");
+                const Hash& arg_hash = hash.get<Hash > ("args");
+                const string& token = hash.get<string > ("token");
+                request(deviceId, slot, arg_hash).template receiveAsync<Hash>(bind_weak(&GuiServerDevice::forwardRequestReply, this, channel, _1, token),
+                                                                              bind_weak(&GuiServerDevice::onRequestFromSlotErrorHandler, this, channel, failureInfo, token));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequest() with args: "<<hash<<": " << e.userFriendlyMsg();
+                failureInfo.set("replied_error", e.what());
+                Hash reply("success", false, "info", failureInfo, "token", (hash.has("token")? hash.get<std::string>("token"): "undefined"), "type", "requestFromSlot");
+                safeClientWrite(channel, reply, LOSSLESS);
+            }
+        }
+        
+        void GuiServerDevice::onRequestFromSlotErrorHandler(WeakChannelPointer channel, const karabo::util::Hash& info, const std::string& token) {
+            try {
+                throw;
+            } catch (const TimeoutException& te) {
+                // act on timeout, e.g.
+                KARABO_LOG_FRAMEWORK_ERROR << te.what();
+                Hash failureInfo(info);
+                failureInfo.set("replied_error", te.what());
+                Hash reply("success", false, "info", failureInfo, "token", token, "type", "requestFromSlot");
+                safeClientWrite(channel, reply, LOSSLESS);
+            } catch (const RemoteException& re) {
+                // act on remote error, e.g.
+                KARABO_LOG_FRAMEWORK_ERROR << re.what();
+                Hash failureInfo(info);
+                failureInfo.set("replied_error", re.what());
+                Hash reply("success", false, "info", failureInfo, "token", token, "type", "requestFromSlot");
+                safeClientWrite(channel, reply, LOSSLESS);
             }
         }
 
