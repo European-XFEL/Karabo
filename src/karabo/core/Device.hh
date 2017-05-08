@@ -306,7 +306,8 @@ namespace karabo {
                         .description("If true, there is a problem consuming broker messages")
                         .expertAccess()
                         .readOnly().initialValue(false)
-                        .alarmHigh(false) // threshold is exclusive, i.e. false => no alarm, true => alarm!
+                        // threshold is exclusive: value true fulfils "> false" and triggers alarm whereas false does not
+                        .alarmHigh(false)
                         .info("Unreliable broker message consumption - consider restarting device!")
                         .needsAcknowledging(true)
                         .commit();
