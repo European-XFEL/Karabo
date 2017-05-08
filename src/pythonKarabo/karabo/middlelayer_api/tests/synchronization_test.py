@@ -1,4 +1,4 @@
-from asyncio import CancelledError, coroutine, Future, TimeoutError
+from asyncio import async, CancelledError, coroutine, Future, TimeoutError
 from pint import DimensionalityError
 from unittest import main
 import time
@@ -6,6 +6,7 @@ import time
 from .eventloop import async_tst, DeviceTest, sync_tst
 from karabo.middlelayer import (background, firstCompleted, gather, sleep,
                                 synchronous, unit)
+from karabo.middlelayer_api.synchronization import FutureDict
 
 
 class Tests(DeviceTest):
@@ -233,6 +234,24 @@ class Tests(DeviceTest):
         except CancelledError:
             pass
 
+    @async_tst
+    def test_futuredict(self):
+        futuredict = FutureDict()
+
+        task1 = async(futuredict["car"])
+        task2 = async(futuredict["car"])
+        task3 = async(futuredict["power"])
+        yield  # let the tasks start
+        self.assertFalse(task1.done())
+        futuredict["car"] = "DeLorean"
+        self.assertEqual((yield from task1), "DeLorean")
+        self.assertEqual((yield from task2), "DeLorean")
+
+        self.assertFalse(task3.done())
+        task3.cancel()
+        futuredict["power"] = "lightning"
+
+        futuredict["whatever"] = 3  # should be a no-op
 
 if __name__ == "__main__":
     main()

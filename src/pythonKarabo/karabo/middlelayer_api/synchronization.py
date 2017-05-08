@@ -1,7 +1,7 @@
 """This module contains some synchronization routines for users"""
 
 import asyncio
-from asyncio import (async, coroutine, get_event_loop, iscoroutine,
+from asyncio import (async, coroutine, Future, get_event_loop, iscoroutine,
                      iscoroutinefunction)
 from functools import wraps
 
@@ -130,3 +130,38 @@ def synchronous(func):
 
     assert not iscoroutinefunction(func)
     return wrapper
+
+
+class FutureDict(object):
+    """A dict for values which are only available in the future
+
+    If you want to wait for something that only becomes available in the
+    future, use::
+
+        power = yield from futuredict["power"]
+
+    If later the value is available, just write:
+
+        futuredict["power"] = "lightning"
+
+    and everyone waiting on this value will continue.
+    """
+    def __init__(self):
+        self.futures = {}
+
+    @coroutine
+    def __getitem__(self, item):
+        future = Future()
+        futures = self.futures.setdefault(item, set())
+        futures.add(future)
+        try:
+            return (yield from future)
+        except:
+            futures.discard(future)
+            raise
+
+    def __setitem__(self, item, value):
+        futures = self.futures.pop(item, ())
+        for future in futures:
+            if not future.cancelled():
+                future.set_result(value)
