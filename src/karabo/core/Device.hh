@@ -145,6 +145,8 @@ namespace karabo {
             std::set<std::string> m_accumulatedGlobalAlarms;
 
             karabo::util::Epochstamp m_lastBrokerErrorStamp;
+            boost::asio::deadline_timer m_timeTickerTimer;
+
 
         public:
 
@@ -388,7 +390,8 @@ namespace karabo {
              */
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
                 m_globalAlarmCondition(karabo::util::AlarmCondition::NONE),
-                m_lastBrokerErrorStamp(0ull, 0ull) {
+                m_lastBrokerErrorStamp(0ull, 0ull), m_timeTickerTimer(karabo::net::EventLoop::getIOService()) {
+
 
                 m_connection = karabo::util::Configurator<karabo::net::JmsConnection>::createNode("_connection_", configuration);
 
@@ -435,6 +438,7 @@ namespace karabo {
                         << m_deviceClient.use_count() << "\n"
                         << karabo::util::StackTrace();
                 m_deviceClient.reset();
+                m_timeTickerTimer.cancel();
             };
 
             /**
@@ -1430,7 +1434,7 @@ namespace karabo {
 
                 KARABO_SLOT(slotKillDevice)
 
-                KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
+                KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, long long /* period */);
 
                 KARABO_SLOT(slotReSubmitAlarms, karabo::util::Hash);
 
@@ -1669,16 +1673,26 @@ namespace karabo {
                 }
             }
 
-            void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, long long period) {
+
                 {
                     boost::mutex::scoped_lock lock(m_timeChangeMutex);
                     m_timeId = id;
                     m_timeSec = sec;
                     m_timeFrac = frac;
-                    m_timePeriod = period;
+                    m_timePeriod = abs(period);
                 }
-
-                onTimeUpdate(id, sec, frac, period);
+                if(period < 0) {
+                    m_timeTickerTimer.cancel(); // cancel any pending timers, especially if we had an update from the time server
+                    m_timeTickerTimer.expires_from_now(boost::posix_time::milliseconds(-period));
+                    m_timeTickerTimer.async_wait(util::bind_weak(&Device<FSM>::timeTicker, this, boost::asio::placeholders::error, id, period));
+                }
+                onTimeUpdate(id, sec, frac, abs(period));
+            }
+            
+            void timeTicker(const boost::system::error_code& e, unsigned long long id, long long period){
+                karabo::util::Epochstamp epochNow;
+                slotTimeTick(id++, epochNow.getSeconds(), epochNow.getFractionalSeconds(), period);
             }
 
             const std::pair<bool, const karabo::util::AlarmCondition> evaluateAndUpdateAlarmCondition(bool forceUpate) {
