@@ -6,15 +6,9 @@
 from collections import OrderedDict, namedtuple
 
 from PyQt4.QtCore import QAbstractTableModel, QDateTime, QModelIndex, Qt
-from PyQt4.QtGui import QColor
 
 from karabo.middlelayer import Timestamp
-from karabo_gui.const import ALARM_COLOR, INTERLOCK_COLOR, WARN_COLOR
-from karabo_gui.indicators import (
-    ALARM_GLOBAL, ALARM_HIGH, ALARM_LOW, ALARM_VARIANCE_HIGH,
-    ALARM_VARIANCE_LOW, INTERLOCK, WARN_GLOBAL, WARN_HIGH, WARN_LOW,
-    WARN_VARIANCE_HIGH, WARN_VARIANCE_LOW, NONE
-)
+from karabo_gui.indicators import get_alarm_icon, ALARM_NONE
 
 ALARM_ID = 'id'
 TIME_OF_FIRST_OCCURENCE = 'timeOfFirstOccurrence'
@@ -68,20 +62,6 @@ class AlarmModel(QAbstractTableModel):
         device to show in a table view. """
     headers = [value for key, value in ALARM_DATA.items()]
 
-    textColor = {
-        WARN_GLOBAL: QColor(*WARN_COLOR),
-        WARN_LOW: QColor(*WARN_COLOR),
-        WARN_HIGH: QColor(*WARN_COLOR),
-        WARN_VARIANCE_LOW: QColor(*WARN_COLOR),
-        WARN_VARIANCE_HIGH: QColor(*WARN_COLOR),
-        ALARM_GLOBAL: QColor(*ALARM_COLOR),
-        ALARM_LOW: QColor(*ALARM_COLOR),
-        ALARM_HIGH: QColor(*ALARM_COLOR),
-        ALARM_VARIANCE_LOW: QColor(*ALARM_COLOR),
-        ALARM_VARIANCE_HIGH: QColor(*ALARM_COLOR),
-        INTERLOCK: QColor(*INTERLOCK_COLOR),
-    }
-
     def __init__(self, instanceId, parent=None):
         super(AlarmModel, self).__init__(parent)
         self.instanceId = instanceId  # InstanceId of associated AlarmService
@@ -99,7 +79,7 @@ class AlarmModel(QAbstractTableModel):
         for id, h in rows.items():
             # Get data of hash
             for updateType, aHash in h.items():
-                if aHash.get(ALARM_TYPE) == NONE:
+                if aHash.get(ALARM_TYPE) == ALARM_NONE:
                     # No need to add an entry
                     continue
                 updateTypes.append(updateType)
@@ -210,9 +190,8 @@ class AlarmModel(QAbstractTableModel):
             return None
         entry = self.filtered[index.row()]
         type_index = getAlarmKeyIndex(ALARM_TYPE)
-        # XXX: TODO: Handle icons display
-        if role == Qt.TextColorRole and index.column() == type_index:
-            return self.textColor.get(entry.type)
+        if role == Qt.DecorationRole and index.column() == type_index:
+            return get_alarm_icon(entry.type)
         elif role in (Qt.DisplayRole, Qt.ToolTipRole):
             return entry[index.column()]
         return None
