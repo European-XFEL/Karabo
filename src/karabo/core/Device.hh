@@ -141,6 +141,7 @@ namespace karabo {
             karabo::util::Schema m_fullSchema;
 
             karabo::util::AlarmCondition m_globalAlarmCondition;
+            karabo::util::Epochstamp m_lastBrokerErrorStamp;
 
         public:
 
@@ -377,7 +378,8 @@ namespace karabo {
              * @param configuration
              */
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
-                m_globalAlarmCondition(karabo::util::AlarmCondition::NONE) {
+                m_globalAlarmCondition(karabo::util::AlarmCondition::NONE),
+                m_lastBrokerErrorStamp(0ull, 0ull) {
 
                 m_connection = karabo::util::Configurator<karabo::net::JmsConnection>::createNode("_connection_", configuration);
 
@@ -1624,7 +1626,13 @@ namespace karabo {
 
             void onBrokerError(const std::string& message) {
                 KARABO_LOG_ERROR << "Broker consumption problem: " << message;
-                set(karabo::util::Hash("performanceStatistics.messagingProblems", true)); // will trigger alarm
+                // Trigger alarm, but not always a new one (system is busy anyway). By setting messagingProblems
+                // up to every second, we can investigate roughly the time of problems via the data logger.
+                if (!get<bool>("performanceStatistics.messagingProblems")
+                    || (karabo::util::Epochstamp() - m_lastBrokerErrorStamp).getTotalSeconds() >= 1ull) {
+                    set(karabo::util::Hash("performanceStatistics.messagingProblems", true));
+                    m_lastBrokerErrorStamp.now();
+                }
             }
 
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
