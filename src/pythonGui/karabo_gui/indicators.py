@@ -14,6 +14,11 @@ from . import icons
 # --------------------------------------------------------------------------
 # Alarms
 
+WARN_COLOR = (255, 255, 0)  # yellow
+ALARM_COLOR = (255, 0, 0)  # red
+NORM_COLOR = (100, 149, 237)  # fancy blue
+INTERLOCK_COLOR = (51, 51, 255)  # blue
+
 WARN_GLOBAL = 'warn'
 WARN_LOW = 'warnLow'
 WARN_HIGH = 'warnHigh'
@@ -25,7 +30,7 @@ ALARM_HIGH = 'alarmHigh'
 ALARM_VARIANCE_LOW = 'alarmVarianceLow'
 ALARM_VARIANCE_HIGH = 'alarmVarianceHigh'
 INTERLOCK = 'interlock'
-NONE = 'none'
+ALARM_NONE = 'none'
 
 ALARM_ICONS = {
     WARN_GLOBAL: icons.warnGlobal,
@@ -39,6 +44,20 @@ ALARM_ICONS = {
     ALARM_VARIANCE_LOW: icons.alarmVarianceLow,
     ALARM_VARIANCE_HIGH: icons.alarmVarianceHigh,
     INTERLOCK: icons.interlock,
+}
+
+ALARM_COLORS = {
+    WARN_GLOBAL: QColor(*WARN_COLOR),
+    WARN_LOW: QColor(*WARN_COLOR),
+    WARN_HIGH: QColor(*WARN_COLOR),
+    WARN_VARIANCE_LOW: QColor(*WARN_COLOR),
+    WARN_VARIANCE_HIGH: QColor(*WARN_COLOR),
+    ALARM_GLOBAL: QColor(*ALARM_COLOR),
+    ALARM_LOW: QColor(*ALARM_COLOR),
+    ALARM_HIGH: QColor(*ALARM_COLOR),
+    ALARM_VARIANCE_LOW: QColor(*ALARM_COLOR),
+    ALARM_VARIANCE_HIGH: QColor(*ALARM_COLOR),
+    INTERLOCK: QColor(*INTERLOCK_COLOR),
 }
 
 
@@ -56,10 +75,18 @@ def get_alarm_pixmap(alarm_type, extent=16):
     `extent` sets the size of the pixmap. The pixmap might be smaller than
     requested, but never larger.
     """
-    if alarm_type is not None and alarm_type != NONE:
+    if alarm_type is not None and alarm_type != ALARM_NONE:
         icon = get_alarm_icon(alarm_type)
         if icon is not None:
             return icon.pixmap(extent)
+
+
+def get_alarm_color(alarm_type):
+    """The color for the given `alarm_type` is returned.
+    """
+    alarm_color = ALARM_COLORS.get(alarm_type)
+    if alarm_color is not None:
+        return alarm_color
 
 
 # --------------------------------------------------------------------------
