@@ -353,6 +353,15 @@ class Network(QObject):
 
         self._tcpWriteHash(h)
 
+    def onExecuteGeneric(self, token, device_id, slot_name, params):
+        h = Hash("type", "requestFromSlot")
+        h.set("deviceId", device_id)
+        h.set("slot", slot_name)
+        h.set("args", params)
+        h.set("token", token)
+
+        self._tcpWriteHash(h)
+
     def onStartMonitoringDevice(self, deviceId):
         h = Hash("type", "startMonitoringDevice")
         h.set("deviceId", deviceId)
