@@ -187,6 +187,21 @@ class PythonDevice(NoFsm):
                     .expertAccess()
                     .commit(),
 
+            BOOL_ELEMENT(expected).key("performanceStatistics."
+                                       "messagingProblems")
+                    .displayedName("Messaging problems")
+                    .description("If true, there is a problem consuming "
+                                 "broker messages")
+                    .expertAccess()
+                    .readOnly().initialValue(False)
+                    # Threshold is exclusive: value True fulfils "> False"
+                    # and triggers alarm whereas False does not:
+                    .alarmHigh(False)
+                    .info("Unreliable broker message consumption - "
+                          "consider restarting device!")
+                    .needsAcknowledging(True)
+                    .commit(),
+
             BOOL_ELEMENT(expected).key("performanceStatistics.enable")
                     .displayedName("Enable Performance Indicators")
                     .description("Enables some statistics to follow the"
@@ -314,6 +329,9 @@ class PythonDevice(NoFsm):
         self.validatorExtern.setValidationRules(rules)
         self.globalAlarmCondition = AlarmCondition.NONE
 
+        # For broker error handler
+        self.lastBrokerErrorStamp = 0
+
         # Initialize regular expression object
         self.errorRegex = re.compile(".*error.*", re.IGNORECASE)
 
@@ -368,6 +386,8 @@ class PythonDevice(NoFsm):
 
         # Register updateLatencies handler
         self._ss.registerPerformanceStatisticsHandler(self.updateLatencies)
+
+        self._ss.registerBrokerErrorHandler(self.onBrokerError)
 
 
     def _finalizeInternalInitialization(self):
@@ -1351,6 +1371,16 @@ class PythonDevice(NoFsm):
             # and expectedParameters has to foresee this content under node
             # "performanceStatistics".
             self.set(Hash("performanceStatistics", performanceMeasures))
+
+    def onBrokerError(self, message):
+        self.log.ERROR("Broker consumption problem: {}".format(message))
+        # Trigger alarm, but not always a new one (system is busy anyway).
+        # By setting messagingProblems up to every second, we can investigate
+        # roughly the time of problems via the data logger.
+        if (not self["performanceStatistics.messagingProblems"]
+            or time.time() - self.lastBrokerErrorStamp >= 1.):
+            self["performanceStatistics.messagingProblems"] = True
+            self.lastBrokerErrorStamp = time.time()
 
     def setAlarmCondition(self, condition, needsAcknowledging = True,
                           description = ""):
