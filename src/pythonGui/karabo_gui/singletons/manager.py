@@ -283,7 +283,12 @@ class Manager(QObject):
 
     def handle_propertyHistory(self, deviceId, property, data):
         device = self._topology.get_device(deviceId)
-        box = device.getBox(property.split("."))
+        try:
+            box = device.getBox(property.split("."))
+        except AttributeError:
+            # When a property is renamed, we get an AttributeError here.
+            # Return and deal with the consequences in the layers above
+            return
         box.signalHistoricData.emit(box, data)
 
     # ---------------------------------------------------------------------
