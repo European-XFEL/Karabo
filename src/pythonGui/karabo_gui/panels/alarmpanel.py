@@ -13,7 +13,7 @@ from PyQt4.QtGui import (QButtonGroup, QComboBox, QColor, QHBoxLayout, QLabel,
 from karabo_gui.alarm_model import (ACKNOWLEDGE, ALARM_DATA, ALARM_ID,
                                     ALARM_TYPE, DEVICE_ID, PROPERTY,
                                     SHOW_DEVICE, AlarmModel, getAlarmKeyIndex)
-from karabo_gui.const import ALARM_COLOR
+from karabo_gui.indicators import ALARM_COLOR
 from karabo_gui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
