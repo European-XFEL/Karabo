@@ -292,7 +292,7 @@ def waitUntil(condition):
     condition are connected while we are waiting (so typically they appear
     in a with statement)"""
     loop = get_event_loop()
-    # suspend once to assure the event oop gets a chance to run
+    # suspend once to assure the event loop gets a chance to run
     yield from sleep(0)
     while not condition():
         yield from loop.waitForChanges()
