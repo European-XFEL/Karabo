@@ -299,6 +299,46 @@ void SignalSlotable_Test::testReceiveAsyncError() {
 }
 
 
+void SignalSlotable_Test::testReceiveAsyncNoReply() {
+    auto greeter = boost::make_shared<SignalSlotable>("greeter");
+    auto responder = boost::make_shared<SignalSlotable>("responder");
+    greeter->start();
+    responder->start();
+
+    responder->registerSlot<karabo::util::Hash>([&responder](const karabo::util::Hash&) {
+        // No call to reply()!
+    }, "slotAnswer");
+
+    int result = 0;
+    const auto normalHandler = [&result](const karabo::util::Hash&) {
+        // We don't expect this handler to be called
+        result = 42;
+    };
+    const auto errHandler = [&result]() {
+        // Rather, our error handler will be called
+        try {
+            throw;
+        } catch (const karabo::util::SignalSlotException&) {
+            // We should only be expecting this exception
+            result = 4200;
+        } catch (...) {
+            // Leave some breadcrumbs for the assert statement below
+            result = -4200;
+        }
+    };
+    greeter->request("responder", "slotAnswer").receiveAsync<karabo::util::Hash>(normalHandler, errHandler);
+
+    // Wait maximum 200 ms for message travel
+    int trials = 10;
+    while (--trials >= 0) {
+        if (result != 0) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
+    }
+    // Assert that the correct exception was caught
+    CPPUNIT_ASSERT_EQUAL(4200, result);
+}
+
+
 void SignalSlotable_Test::testReceiveExceptions() {
     // Testing the different kinds of exceptions
     auto greeter = boost::make_shared<SignalSlotable>("greeter");
