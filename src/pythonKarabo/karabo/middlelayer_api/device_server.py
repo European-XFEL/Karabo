@@ -4,6 +4,7 @@ from asyncio import (async, coroutine, create_subprocess_exec, Future, gather,
 import copy
 import os
 import sys
+from signal import SIGTERM
 import socket
 from subprocess import PIPE
 
@@ -262,6 +263,7 @@ class DeviceServerBase(SignalSlotable):
                        for k, v in (a.split("=", 1) for a in argv[1:])})
         server = cls(params)
         if server:
+            loop.add_signal_handler(SIGTERM, async, server.slotKillServer())
             server.startInstance()
             try:
                 loop.run_forever()
