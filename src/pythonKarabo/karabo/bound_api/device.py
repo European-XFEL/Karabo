@@ -1378,7 +1378,7 @@ class PythonDevice(NoFsm):
         # By setting messagingProblems up to every second, we can investigate
         # roughly the time of problems via the data logger.
         if (not self["performanceStatistics.messagingProblems"]
-            or time.time() - self.lastBrokerErrorStamp >= 1.):
+                or time.time() - self.lastBrokerErrorStamp >= 1.):
             self["performanceStatistics.messagingProblems"] = True
             self.lastBrokerErrorStamp = time.time()
 
