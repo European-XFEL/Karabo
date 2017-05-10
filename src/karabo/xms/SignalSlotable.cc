@@ -336,7 +336,9 @@ namespace karabo {
 
 
         void SignalSlotable::start() {
-            m_consumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::onBrokerMessage, this, _1, _2));
+            m_consumerChannel->readAsync(bind_weak(&SignalSlotable::onBrokerMessage, this, _1, _2),
+                                         bind_weak(&SignalSlotable::consumerErrorNotifier, this,
+                                                   std::string(), _1, _2));
             ensureInstanceIdIsValid(m_instanceId);
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id " << m_instanceId;
             m_randPing = 0; // Allows to answer on slotPing with argument rand = 0.
@@ -387,7 +389,27 @@ namespace karabo {
             // This emulates the behavior of older karabo versions which called processEvent concurrently
             EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, this, header, body,
                                                      getEpochMillis()));
-            m_consumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::onBrokerMessage, this, _1, _2));
+            m_consumerChannel->readAsync(bind_weak(&SignalSlotable::onBrokerMessage, this, _1, _2),
+                                         bind_weak(&SignalSlotable::consumerErrorNotifier, this,
+                                                   std::string(), _1, _2));
+        }
+
+
+        void SignalSlotable::consumerErrorNotifier(const std::string& consumer,
+                                                   karabo::net::JmsConsumer::Error ec, const std::string& message) {
+            // log an error anyway
+            const std::string fullMsg("Error " + toString(static_cast<int> (ec))
+                                      + " from JmsConsumer '" + consumer + "': " + message);
+            KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": " << fullMsg;
+
+            boost::mutex::scoped_lock lock(m_brokerErrorHandlerMutex);
+            if (m_brokerErrorHandler) {
+                try {
+                    m_brokerErrorHandler(fullMsg);
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": Exception in broker error handler: " << e.what();
+                }
+            }
         }
 
 
@@ -492,7 +514,9 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": Exception in onHeartbeatMessage: " << e.what();
             }
             // Re-register
-            m_heartbeatConsumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::onHeartbeatMessage, this, _1, _2));
+            m_heartbeatConsumerChannel->readAsync(bind_weak(&SignalSlotable::onHeartbeatMessage, this, _1, _2),
+                                                  bind_weak(&SignalSlotable::consumerErrorNotifier, this,
+                                                            std::string("heartbeats"), _1, _2));
         }
 
 
@@ -838,7 +862,9 @@ namespace karabo {
             m_trackAllInstances = true;
             m_heartbeatConsumerChannel = m_connection->createConsumer(m_topic + "_beats",
                                                                       "signalFunction = 'signalHeartbeat'");
-            m_heartbeatConsumerChannel->readAsync(bind_weak(&karabo::xms::SignalSlotable::onHeartbeatMessage, this, _1, _2));
+            m_heartbeatConsumerChannel->readAsync(bind_weak(&SignalSlotable::onHeartbeatMessage, this, _1, _2),
+                                                  bind_weak(&SignalSlotable::consumerErrorNotifier, this,
+                                                            std::string("heartbeats"), _1, _2));
             startTrackingSystem();
         }
 
@@ -1995,6 +2021,12 @@ namespace karabo {
 
         void SignalSlotable::registerPerformanceStatisticsHandler(const UpdatePerformanceStatisticsHandler& updatePerformanceStatisticsHandler) {
             m_updatePerformanceStatistics = updatePerformanceStatisticsHandler;
+        }
+
+
+        void SignalSlotable::registerBrokerErrorHandler(const BrokerErrorHandler& errorHandler) {
+            boost::mutex::scoped_lock lock(m_brokerErrorHandlerMutex);
+            m_brokerErrorHandler = errorHandler;
         }
 
 

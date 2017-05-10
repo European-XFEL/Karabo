@@ -141,6 +141,7 @@ namespace karabo {
             karabo::util::Schema m_fullSchema;
 
             karabo::util::AlarmCondition m_globalAlarmCondition;
+            karabo::util::Epochstamp m_lastBrokerErrorStamp;
 
         public:
 
@@ -301,6 +302,17 @@ namespace karabo {
                         .expertAccess()
                         .commit();
 
+                BOOL_ELEMENT(expected).key("performanceStatistics.messagingProblems")
+                        .displayedName("Messaging problems")
+                        .description("If true, there is a problem consuming broker messages")
+                        .expertAccess()
+                        .readOnly().initialValue(false)
+                        // threshold is exclusive: value true fulfils "> false" and triggers alarm whereas false does not
+                        .alarmHigh(false)
+                        .info("Unreliable broker message consumption - consider restarting device!")
+                        .needsAcknowledging(true)
+                        .commit();
+
                 BOOL_ELEMENT(expected).key("performanceStatistics.enable")
                         .displayedName("Enable Performance Indicators")
                         .description("Enables some statistics to follow the performance of an individual device")
@@ -366,7 +378,8 @@ namespace karabo {
              * @param configuration
              */
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
-                m_globalAlarmCondition(karabo::util::AlarmCondition::NONE) {
+                m_globalAlarmCondition(karabo::util::AlarmCondition::NONE),
+                m_lastBrokerErrorStamp(0ull, 0ull) {
 
                 m_connection = karabo::util::Configurator<karabo::net::JmsConnection>::createNode("_connection_", configuration);
 
@@ -954,8 +967,8 @@ namespace karabo {
              * @return A Hash containing the current value of the selected configuration
              */
             karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const {
-                if (tags.empty()) return m_parameters;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                if (tags.empty()) return m_parameters;
                 karabo::util::Hash filtered;
                 karabo::util::HashFilter::byTag(m_fullSchema, m_parameters, filtered, tags);
                 return filtered;
@@ -1316,6 +1329,9 @@ namespace karabo {
                 this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies,
                                                                        this, _1));
 
+                // Register message consumption error handler - bind_weak not needed as above
+                this->registerBrokerErrorHandler(boost::bind(&karabo::core::Device<FSM>::onBrokerError, this, _1));
+
                 // Instantiate all channels
                 this->initChannels();
 
@@ -1605,6 +1621,17 @@ namespace karabo {
                     // Keys and values of 'performanceMeasures' are defined in SignalSlotable::updatePerformanceStatistics
                     // and expectedParameters has to foresee this content under node "performanceStatistics".
                     this->set(karabo::util::Hash("performanceStatistics", *performanceMeasures));
+                }
+            }
+
+            void onBrokerError(const std::string& message) {
+                KARABO_LOG_ERROR << "Broker consumption problem: " << message;
+                // Trigger alarm, but not always a new one (system is busy anyway). By setting messagingProblems
+                // up to every second, we can investigate roughly the time of problems via the data logger.
+                if (!get<bool>("performanceStatistics.messagingProblems")
+                    || (karabo::util::Epochstamp() - m_lastBrokerErrorStamp).getTotalSeconds() >= 1ull) {
+                    set(karabo::util::Hash("performanceStatistics.messagingProblems", true));
+                    m_lastBrokerErrorStamp.now();
                 }
             }
 
