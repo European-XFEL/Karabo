@@ -463,6 +463,11 @@ class Network(QObject):
         h.set("acknowledgedRows", Hash(rowId, True))
         self._tcpWriteHash(h)
 
+    def onRequestAlarms(self, instanceId):
+        h = Hash("type", "requestAlarms")
+        h.set("alarmInstanceId", instanceId)
+        self._tcpWriteHash(h)
+
     def onSubscribeToOutput(self, box, subscribe):
         h = Hash("type", "subscribeNetwork")
         h["channelName"] = (box.configuration.id + ":" +
