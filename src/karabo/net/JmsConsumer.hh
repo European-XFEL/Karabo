@@ -55,6 +55,7 @@ namespace karabo {
              * This function registers a message handler, which will be called exactly once when a message
              * on the current topic and obeying the provided selector will be available. An error notifier
              * can be specified as well and will, in case of an error, be called before the message handler.
+             * After calling this method it must not be called again before the message handler has been called.
              * @param handler Message handler of signature <void (Hash::Pointer header, Hash::Pointer body)>
              * @param errorNotifier Error notifier of signature <void (JmsConsumer::Error, string)> with an Error and a
              *                      string indicating the problem
@@ -124,9 +125,8 @@ namespace karabo {
             typedef std::map<std::string, MQConsumerHandle > Consumers;
             std::map<std::string, MQConsumerHandle > m_consumers;
 
-            boost::asio::io_service::strand m_mqStrand;
-
-            boost::asio::io_service::strand m_notifyStrand;
+            bool m_useErrorStrand;
+            boost::asio::io_service::strand m_errorStrand;
 
             std::string m_topic;
 
