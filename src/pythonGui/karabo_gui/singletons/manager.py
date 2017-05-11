@@ -53,6 +53,8 @@ class Manager(QObject):
         self._topology = get_topology()
         # A dict which includes big networkData
         self._big_data = {}
+        # Handler callbacks for `handle_requestFromSlot`
+        self._request_handlers = {}
 
         network = get_network()
         network.signalServerConnectionChanged.connect(
@@ -97,6 +99,19 @@ class Manager(QObject):
         get_network().onInitDevice(serverId, classId, deviceId, config,
                                    attrUpdates=schemaAttrUpdates)
 
+    def callDeviceSlot(self, token, handler, device_id, slot_name, params):
+        """Call a device slot using the `requestFromSlot` mechanism.
+
+        See karabo_gui.request for more details.
+        """
+        # Set the callback handler
+        assert token not in self._request_handlers
+        assert callable(handler)
+        self._request_handlers[token] = handler
+
+        # Call the GUI server
+        get_network().onExecuteGeneric(token, device_id, slot_name, params)
+
     def shutdownDevice(self, deviceId, showConfirm=True):
         if showConfirm:
             ask = ('Do you really want to shutdown the device '
@@ -134,6 +149,27 @@ class Manager(QObject):
         # Clear the system topology
         if not isConnected:
             self._topology.clear()
+
+            # Any pending requests are effectively timed-out
+            pending = list(self._request_handlers.keys())
+            for token in pending:
+                self.handle_requestFromSlot(token, False, info=None)
+
+    def handle_requestFromSlot(self, token, success, reply=None, info=None):
+        handler = self._request_handlers.pop(token, lambda s, r: None)
+        # If the request failed at the server level, `reply` is None and
+        # `info` is passed instead
+        info = info or {}
+        hsh = info if reply is None or not success else reply
+
+        # Wrap the handler invocation in an exception swallower
+        try:
+            handler(success, hsh)
+        except Exception as ex:
+            # But at least show something when exceptions are being swallowed
+            msg = ('Exception of type "{}" caught in callback handler "{}" '
+                   'with reply:\n{}')
+            print(msg.format(type(ex).__name__, handler, hsh))
 
     def handle_log(self, messages):
         broadcast_event(KaraboEventSender.LogMessages, {'messages': messages})
