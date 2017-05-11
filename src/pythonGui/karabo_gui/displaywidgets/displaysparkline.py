@@ -1,4 +1,6 @@
+from collections import OrderedDict
 import datetime
+from functools import partial
 import time
 
 import numpy as np
@@ -9,7 +11,8 @@ from PyQt4.QtCore import Qt, QPoint, pyqtSlot
 
 from karabo.middlelayer import Simple, Timestamp
 from karabo_gui.indicators import (ALARM_COLOR, WARN_COLOR, ALARM_LOW,
-                                   ALARM_HIGH, WARN_GLOBAL, WARN_LOW, WARN_HIGH)
+                                   ALARM_HIGH, WARN_GLOBAL, WARN_LOW,
+                                   WARN_HIGH)
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 
@@ -31,8 +34,11 @@ class SparkRenderer(QWidget):
     # size in pixels of the min max indication area
     _min_max_indic_size = 60
 
-    # relative epsilon within within the tendency will be considerd stable
+    # relative epsilon within within the tendency will be considered stable
     _tendency_eps = 0.05
+
+    # size of the window in bins which is used for evaluating trend indication
+    _indicator_window_size = 5
 
     def __init__(self, parent):
         super(SparkRenderer, self).__init__(parent)
@@ -193,6 +199,9 @@ class SparkRenderer(QWidget):
         # check if we need to roll to the next bin
         dt = int((t-self.then)/(self.time_base / self._p_max))
         if dt >= 1:
+            # the sparkline might need to cover "gaps" in its data series
+            # e.g. when for a given bin, no data was pushed to the widget
+            # in this case we fill with the value of the previous bin
             self.yvals = np.roll(self.yvals, -dt)
             self.yvals[-dt:-1] = self.yvals[-dt-1]
             self.yvals[-1] = 0.
@@ -228,13 +237,14 @@ class SparkRenderer(QWidget):
         ymax = self._scale_y(self.ymax[nonzero], height)
 
         # evaluate tendency for last 5 point intervals
-        c_idx_nz = np.nonzero(self.ycnts[-5:])
-        t_idx_nz = np.nonzero(self.ycnts[-10:-5])
+        iws = self._indicator_window_size
+        c_idx_nz = np.nonzero(self.ycnts[-iws:])
+        t_idx_nz = np.nonzero(self.ycnts[-2*iws:-iws])
         if np.any(c_idx_nz) and np.any(t_idx_nz):
-            current_avg = np.mean(self.yvals[-5:][c_idx_nz]
-                                  / self.ycnts[-5:][c_idx_nz])
-            test_avg = np.mean(self.yvals[-10:-5][t_idx_nz]
-                               / self.ycnts[-10:-5][t_idx_nz])
+            current_avg = np.mean(self.yvals[-iws:][c_idx_nz]
+                                  / self.ycnts[-iws:][c_idx_nz])
+            test_avg = np.mean(self.yvals[-2*iws:-iws][t_idx_nz]
+                               / self.ycnts[-2*iws:-iws][t_idx_nz])
             delta = (current_avg-test_avg)/test_avg
             if abs(delta) <= self._tendency_eps or not np.isfinite(delta):
                 self.tendency = 0
@@ -329,6 +339,12 @@ class DisplaySparkline(DisplayWidget):
     _height = 50
     _width = 200
 
+    # timebases available for the widget, values in seconds
+    _timebases = OrderedDict()
+    _timebases['60s'] = 60
+    _timebases['10m'] = 600
+    _timebases['10h'] = 36000
+
     def __init__(self, model, box, parent):
         super(DisplaySparkline, self).__init__(None)
 
@@ -370,26 +386,16 @@ class DisplaySparkline(DisplayWidget):
         self.widget.addAction(timeBaseSeparator)
 
         timebaseGroup = QActionGroup(self.widget)
-        timeBase60Action = QAction("60s time base", timebaseGroup,
-                                   checkable=True)
-        timeBase60Action.triggered.connect(lambda: self._setTimeBase(60))
+        for label, base in self._timebases.items():
+            tbAction = QAction("{} time base".format(label),
+                               timebaseGroup, checkable=True)
 
-        timebaseGroup.addAction(timeBase60Action)
-        timeBase600Action = QAction("10m time base", timebaseGroup,
-                                    checkable=True)
-        timeBase600Action.triggered.connect(lambda: self._setTimeBase(600))
-        timebaseGroup.addAction(timeBase600Action)
-        timeBase36000Action = QAction("10h time base", timebaseGroup,
-                                      checkable=True)
-        timeBase36000Action.triggered.connect(lambda: self._setTimeBase(36000))
-        timebaseGroup.addAction(timeBase36000Action)
+            tbAction.triggered.connect(partial(self._setTimeBase, base))
 
-        if self.model.time_base  == 60:
-            timeBase60Action.setChecked(True)
-        elif self.model.time_base  == 600:
-            timeBase600Action.setChecked(True)
-        elif self.model.time_base  == 36000:
-            timeBase36000Action.setChecked(True)
+            if self.model.time_base == base:
+                tbAction.setChecked(True)
+
+            timebaseGroup.addAction(tbAction)
 
         self.widget.addActions(timebaseGroup.actions())
 
