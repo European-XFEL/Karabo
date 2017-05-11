@@ -6,16 +6,19 @@
 from functools import partial
 import os.path as op
 
-from PyQt4.QtGui import QAction, QDialog, QMenu
+from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, String
 
 from karabo.common.project.api import (
     DeviceServerModel, MacroModel, ProjectModel, read_macro)
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabo_gui import icons
+from karabo_gui.project.dialog.device_scenes import DeviceScenesDialog
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
+from karabo_gui.project.utils import handle_scene_from_server
+from karabo_gui.request import call_device_slot
 from karabo_gui.util import getOpenFileName
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
@@ -84,8 +87,12 @@ def _fill_scenes_menu(menu, project_controller):
     add_action.triggered.connect(partial(_add_scene, project_controller))
     load_action = QAction('Load scene...', menu)
     load_action.triggered.connect(partial(_load_scene, project_controller))
+    load_from_device = QAction('Load from device...', menu)
+    load_from_device.triggered.connect(partial(_load_scene_from_device,
+                                               project_controller))
     menu.addAction(add_action)
     menu.addAction(load_action)
+    menu.addAction(load_from_device)
 
 
 def _fill_servers_menu(menu, project_controller):
@@ -163,6 +170,27 @@ def _load_scene(project_controller):
     scene.simple_name = op.splitext(op.basename(fn))[0]
     scene.modified = True
     project.scenes.append(scene)
+
+
+def _load_scene_from_device(project_controller):
+    """Request a scene directly from a device
+    """
+    dialog = DeviceScenesDialog()
+    if dialog.exec() == QDialog.Accepted:
+        device_id = dialog.device_id
+        scene_name = dialog.scene_name
+        project = project_controller.model
+        project_scenes = {s.simple_name for s in project.scenes}
+
+        if scene_name in project_scenes:
+            QMessageBox.warning(None, 'Cannot Load Scene',
+                                'A scene with that name already exists in the '
+                                'selected project.')
+            return
+
+        handler = partial(handle_scene_from_server, device_id, scene_name,
+                          project)
+        call_device_slot(handler, device_id, 'requestScene', name=scene_name)
 
 
 def _add_server(project_controller):
