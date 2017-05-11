@@ -181,8 +181,7 @@ class Manager(QObject):
         self._topology.update(systemTopology)
 
         # Tell the GUI about various devices that are alive
-        self._broadcast_about_instances('AlarmService',
-                                        KaraboEventSender.ShowAlarmServices)
+        self._check_for_alarm_service()
         self._broadcast_about_instances('RunConfigurator',
                                         KaraboEventSender.AddRunConfigurator)
         self._broadcast_about_instances('RunConfigurationGroup',
@@ -224,8 +223,7 @@ class Manager(QObject):
                         {'devices': devices, 'servers': servers})
 
         # Tell the GUI about various devices or servers that are alive
-        self._broadcast_about_instances('AlarmService',
-                                        KaraboEventSender.ShowAlarmServices)
+        self._check_for_alarm_service()
         self._broadcast_about_instances('RunConfigurator',
                                         KaraboEventSender.AddRunConfigurator)
         self._broadcast_about_instances('RunConfigurationGroup',
@@ -407,12 +405,22 @@ class Manager(QObject):
             broadcast_event(KaraboEventSender.DeviceInitReply, data)
 
     def handle_alarmInit(self, instanceId, rows):
-        # Create KaraboBroadcastEvent
-        broadcast_event(KaraboEventSender.AlarmInitReply,
-                        {'instanceId': instanceId, 'rows': rows})
+        """Show initial update for ``AlarmService`` with given ``instanceId``
+           and all the information given in the ``Hash`` ``rows``.
+        """
+        if not rows.empty():
+            # Create KaraboBroadcastEvent only if there is something to show
+            broadcast_event(KaraboEventSender.AlarmInitReply,
+                            {'instanceId': instanceId, 'rows': rows})
 
     def handle_alarmUpdate(self, instanceId, rows):
-        # Create KaraboBroadcastEvent
+        """Show update for ``AlarmService`` with given ``instanceId`` and all
+           the information given in the ``Hash`` ``rows``.
+        """
+        if rows.empty():
+            return
+
+        # Create KaraboBroadcastEvent only if there is something to show
         broadcast_event(KaraboEventSender.AlarmUpdate,
                         {'instanceId': instanceId, 'rows': rows})
 
@@ -451,6 +459,18 @@ class Manager(QObject):
         if instance_ids:
             # Tell the world
             broadcast_event(event_type, {'instanceIds': instance_ids})
+
+        return instance_ids
+
+    def _check_for_alarm_service(self):
+        """Fetch all available ``AlarmService`` device instance ids and trigger
+        request for those devices to network
+        """
+        instance_ids = self._broadcast_about_instances(
+            'AlarmService', KaraboEventSender.ShowAlarmServices)
+        for inst_id in instance_ids:
+            # Request all current alarms for the given alarm service device
+            get_network().onRequestAlarms(inst_id)
 
     def _device_data_received(self):
         """Notify all listeners that some (class, schema, or config) data was
