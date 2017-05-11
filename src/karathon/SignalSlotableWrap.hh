@@ -253,6 +253,10 @@ namespace karathon {
                                                              this, handler, _1));
         }
 
+        void registerBrokerErrorHandlerPy(const bp::object& handler) {
+            registerBrokerErrorHandler(boost::bind(&SignalSlotableWrap::proxyBrokerErrorHandler, this, handler, _1));
+        }
+
         karabo::xms::OutputChannel::Pointer
         createOutputChannelPy(const std::string& channelName,
                               const karabo::util::Hash& config,
@@ -307,6 +311,8 @@ namespace karathon {
         void proxySlotCallGuardHandler(const bp::object&, const std::string&, const std::string&);
 
         void proxyUpdatePerformanceStatisticsHandler(const bp::object&, const karabo::util::Hash::Pointer&);
+
+        void proxyBrokerErrorHandler(const bp::object&, const std::string&);
 
         void proxyOnOutputPossibleHandler(const bp::object& handler, const karabo::xms::OutputChannel::Pointer& channel);
 
