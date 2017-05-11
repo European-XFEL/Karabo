@@ -12,6 +12,7 @@
 using namespace std;
 
 #define KRB_TEST_MAX_TIMEOUT 5
+#define TICK_RATE 100 //ms
 
 USING_KARABO_NAMESPACES
 
@@ -52,7 +53,7 @@ void Timing_Test::appTestRunner() {
     
     // bring up a GUI server and a tcp adapter to it
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerTiming", "SimulatedTimeServerDevice",
-                                                                       Hash("deviceId", "Karabo_TimeServer", "period", 100, "updateRate", 100), KRB_TEST_MAX_TIMEOUT);
+                                                                       Hash("deviceId", "Karabo_TimeServer", "period", TICK_RATE, "updateRate", TICK_RATE), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
     success = m_deviceClient->instantiate("testServerTiming", "TimingTestDevice", Hash("deviceId", "timeTester", "useTimeserver", true), KRB_TEST_MAX_TIMEOUT);
@@ -61,48 +62,49 @@ void Timing_Test::appTestRunner() {
     
     int tries = 20;
     
-    /*while(!m_deviceClient->get<bool>("timeTester", "slot_connected")) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-        tries--;
-        std::clog<<tries<<std::endl;
-        if (tries == 0) {
-            std::clog<<"Failed connecting to slotTimeTick"<<std::endl;
-            CPPUNIT_ASSERT(false);
-        }
-    }*/
     m_lastCheck = karabo::util::Epochstamp();
     
-    testCorrelated();
-    testIntermittantUpdates();
-   
+    testSynchronized();
+    testIntermittentUpdates();
+    testTickStability();
 
 }
 
-void Timing_Test::testCorrelated() {
-    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+void Timing_Test::testSynchronized() {
+    // Here we test synchronized ticking - the time server determines the signal
+    boost::this_thread::sleep(boost::posix_time::milliseconds(TICK_RATE*50));
     unsigned long long period = m_deviceClient->get<unsigned long long>("timeTester", "period");
     unsigned long long update_period = m_deviceClient->get<unsigned long long>("timeTester", "update_period");
     unsigned long long tick_count = m_deviceClient->get<unsigned long long>("timeTester", "tick_count");
     
-    float expected_ticks = (karabo::util::Epochstamp()-m_lastCheck).getFractions()/1e9.;
-    
+    karabo::util::TimeDuration dt = (karabo::util::Epochstamp()-m_lastCheck);
+    float expected_ticks = (dt.getSeconds()*TICK_RATE*10 + dt.getFractions()/1e6)/TICK_RATE;
     CPPUNIT_ASSERT(abs(period - update_period)/period <= 0.01);
-    CPPUNIT_ASSERT(abs(period - 100)/period <= 0.01);
-    CPPUNIT_ASSERT(abs(update_period - 100)/period <= 0.01);
-    std::clog<<tick_count<<" "<<expected_ticks<<" "<<abs((float)(tick_count - expected_ticks)/expected_ticks)<<std::endl;
-    CPPUNIT_ASSERT(abs((tick_count - expected_ticks)/expected_ticks) <= 0.25); // allow for 25% error
+    CPPUNIT_ASSERT(abs(period - TICK_RATE)/period <= 0.01);
+    CPPUNIT_ASSERT(abs(update_period - TICK_RATE)/period <= 0.01);
+
+    CPPUNIT_ASSERT(abs((tick_count - expected_ticks)/expected_ticks) <= 0.01); // allow for 1% error
 
 }
 
-void Timing_Test::testIntermittantUpdates(){
-    m_deviceClient->set("Karabo_TimeServer", "updateRate", 1000);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+void Timing_Test::testIntermittentUpdates(){
+    // Here we test de-synchronized ticking - the time server only give intermittent sync. updates
+    m_deviceClient->set("Karabo_TimeServer", "updateRate", TICK_RATE*10);
+    boost::this_thread::sleep(boost::posix_time::milliseconds(TICK_RATE*50));
     unsigned long long server_rate = m_deviceClient->get<unsigned long long>("Karabo_TimeServer", "updateRate");
-   /* CPPUNIT_ASSERT(server_rate == 1000);
+    CPPUNIT_ASSERT(server_rate == TICK_RATE *10);
     unsigned long long period = m_deviceClient->get<unsigned long long>("timeTester", "period");
     unsigned long long update_period = m_deviceClient->get<unsigned long long>("timeTester", "update_period");
     CPPUNIT_ASSERT(abs(period - update_period)/period <= 0.01);
-    CPPUNIT_ASSERT(abs(period - 100)/period <= 0.01);
-    CPPUNIT_ASSERT(abs(update_period - 100)/period <= 0.01);*/
-    
+    CPPUNIT_ASSERT(abs(period - TICK_RATE)/period <= 0.01);
+    CPPUNIT_ASSERT(abs(update_period - TICK_RATE)/period <= 0.01); 
+}
+
+void Timing_Test::testTickStability() {
+    // This tests tick stability, i.e. the updates a device receives. The tick interval/period shouldn't exceed the server tick rate
+    // both in synced and de-synced server operation. Shorter updates are possible, e.g. when a sigal from the server takes precedence
+    std::vector<unsigned long long> update_periods = m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "update_periods");
+    for(auto it = ++(update_periods.cbegin()); it != update_periods.cend(); ++it) { // first one will be off, because tester device needs to init
+        CPPUNIT_ASSERT(*it <= TICK_RATE*1.01); // allow for 1% jitter
+    }
 }
