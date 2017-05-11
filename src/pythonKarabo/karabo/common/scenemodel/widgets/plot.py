@@ -1,11 +1,12 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import HasStrictTraits, Enum, Instance, List, String
+from traits.api import HasStrictTraits, Bool, Enum, Instance, Int, List, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
-    read_empty_display_editable_widget, write_base_widget_data)
+    read_base_widget_data, read_empty_display_editable_widget,
+    write_base_widget_data)
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
@@ -31,7 +32,7 @@ class LinePlotModel(BaseWidgetObjectData):
     """ A model for line plot objects
     """
     # The actual type of the widget
-    klass = Enum('DisplaySparkline', 'DisplayTrendline', 'XYVector')
+    klass = Enum('DisplayTrendline', 'XYVector')
     # The plots for this object
     boxes = List(Instance(PlotCurveModel))
 
@@ -55,7 +56,17 @@ class LinePlotModel(BaseWidgetObjectData):
                     self.boxes.remove(model)
 
 
-@register_scene_reader('DisplaySparkline', version=2)
+class SparklineModel(BaseWidgetObjectData):
+    """ A model for a Sparkline
+    """
+    # Time span displayed by the sparkline
+    time_base = Int(600)
+    # If True, show the current value next to the line
+    show_value = Bool(False)
+    # String format for the value when it is shown
+    show_format = String("0.2f")
+
+
 @register_scene_reader('DisplayTrendline', version=1)
 @register_scene_reader('XYVector', version=1)
 def _line_plot_reader(read_func, element):
@@ -82,4 +93,24 @@ def _line_plot_writer(write_func, model, parent):
         elem.set("device", box.device)
         elem.set("path", box.path)
         elem.text = box.curve_object_data
+    return element
+
+
+@register_scene_reader('DisplaySparkline', version=2)
+def _display_sparkline_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits['time_base'] = int(element.get(NS_KARABO + 'time_base', 600))
+    traits['show_format'] = element.get(NS_KARABO + 'show_format', '0.2f')
+    show_value = element.get(NS_KARABO + 'show_value', 'false')
+    traits['show_value'] = (show_value.lower() == 'true')
+    return SparklineModel(**traits)
+
+
+@register_scene_writer(SparklineModel)
+def _display_sparkline_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DisplaySparkline')
+    element.set(NS_KARABO + 'time_base', str(model.time_base))
+    element.set(NS_KARABO + 'show_value', str(model.show_value).lower())
+    element.set(NS_KARABO + 'show_format', str(model.show_format))
     return element
