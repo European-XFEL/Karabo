@@ -9,7 +9,7 @@ only very simple. This can be achieved by functions which operate directly
 on the deviceId, without going through the hazzle of creating a device
 proxy. """
 import asyncio
-from asyncio import get_event_loop
+from asyncio import get_event_loop, sleep
 from contextlib import contextmanager
 from decimal import Decimal
 from weakref import ref
@@ -292,7 +292,8 @@ def waitUntil(condition):
     condition are connected while we are waiting (so typically they appear
     in a with statement)"""
     loop = get_event_loop()
-    yield  # assure the event loop gets a chance to run, esp. in a busy loop
+    # suspend once to assure the event loop gets a chance to run
+    yield from sleep(0)
     while not condition():
         yield from loop.waitForChanges()
 
