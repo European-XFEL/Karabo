@@ -8,8 +8,8 @@ from karabo.common.scenemodel.api import (
     FileOutModel, FloatSpinBoxModel, HexadecimalModel, IntLineEditModel,
     KnobModel, LampModel, LineEditModel, LinePlotModel, MonitorModel,
     PopUpModel, ScientificImageModel, SelectionIconsModel, SingleBitModel,
-    SliderModel, TableElementModel, TextIconsModel, WebcamImageModel,
-    XYPlotModel, StatefulIconWidgetModel
+    SliderModel, SparklineModel, TableElementModel, TextIconsModel,
+    WebcamImageModel, XYPlotModel, StatefulIconWidgetModel
 )
 
 
@@ -42,6 +42,7 @@ WIDGET_FACTORIES = {
     'DisplayAlignedImage': DisplayAlignedImageModel,
     'DisplayImage': DisplayImageModel,
     'DisplayImageElement': DisplayImageElementModel,
+    'DisplaySparkline': SparklineModel,
     'ScientificImageDisplay': ScientificImageModel,
     'WebcamImageDisplay': WebcamImageModel,
     'DisplayLabel': DisplayLabelModel,
@@ -72,5 +73,4 @@ WIDGET_FACTORIES = {
     'SingleBit': SingleBitModel,
     'PopUp': PopUpModel,
     'StatefulIconWidget': StatefulIconWidgetModel,
-    'DisplaySparkline': LinePlotModel,
 }
