@@ -146,6 +146,7 @@ namespace karabo {
 
             karabo::util::Epochstamp m_lastBrokerErrorStamp;
             boost::asio::deadline_timer m_timeTickerTimer;
+            std::atomic<bool> m_timeServerUpdateImminent;
 
 
         public:
@@ -389,9 +390,14 @@ namespace karabo {
              * @param configuration
              */
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
+<<<<<<< HEAD
                 m_globalAlarmCondition(karabo::util::AlarmCondition::NONE),
                 m_lastBrokerErrorStamp(0ull, 0ull), m_timeTickerTimer(karabo::net::EventLoop::getIOService()) {
 
+=======
+                m_globalAlarmCondition(karabo::util::AlarmCondition::NONE), m_timeTickerTimer(karabo::net::EventLoop::getIOService()),
+                m_timeServerUpdateImminent(false) {
+>>>>>>> 8e46f92... Include integration tests
 
                 m_connection = karabo::util::Configurator<karabo::net::JmsConnection>::createNode("_connection_", configuration);
 
@@ -1674,6 +1680,12 @@ namespace karabo {
             }
 
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, long long period) {
+                m_timeServerUpdateImminent.exchange(true);
+                m_timeTickerTimer.cancel(); // cancel any pending timers, if we had an update from the time server
+                timeTick(id, sec, frac, period);
+            }
+            
+            void timeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, long long period) {
 
                 {
                     boost::mutex::scoped_lock lock(m_timeChangeMutex);
@@ -1682,17 +1694,20 @@ namespace karabo {
                     m_timeFrac = frac;
                     m_timePeriod = abs(period);
                 }
+                
                 if(period < 0) {
-                    m_timeTickerTimer.cancel(); // cancel any pending timers, especially if we had an update from the time server
                     m_timeTickerTimer.expires_from_now(boost::posix_time::milliseconds(-period));
                     m_timeTickerTimer.async_wait(util::bind_weak(&Device<FSM>::timeTicker, this, boost::asio::placeholders::error, id, period));
                 }
                 onTimeUpdate(id, sec, frac, abs(period));
+                m_timeServerUpdateImminent.exchange(false);
             }
             
             void timeTicker(const boost::system::error_code& e, unsigned long long id, long long period){
                 karabo::util::Epochstamp epochNow;
-                slotTimeTick(id++, epochNow.getSeconds(), epochNow.getFractionalSeconds(), period);
+                if(!m_timeServerUpdateImminent.exchange(false)) {
+                    timeTick(id++, epochNow.getSeconds(), epochNow.getFractionalSeconds(), period);
+                }
             }
 
             const std::pair<bool, const karabo::util::AlarmCondition> evaluateAndUpdateAlarmCondition(bool forceUpate) {
