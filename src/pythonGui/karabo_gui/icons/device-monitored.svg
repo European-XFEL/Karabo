@@ -16,7 +16,7 @@
    viewBox="0 0 32.000001 32"
    id="svg2"
    version="1.1"
-   inkscape:version="0.91 r"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="device-monitored.svg"
    inkscape:export-filename="/home/teichman/hilf.png"
    inkscape:export-xdpi="90"
@@ -66,7 +66,8 @@
        y1="1042.3622"
        x2="27"
        y2="1030.3622"
-       gradientUnits="userSpaceOnUse" />
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.1262691,0,0,1.1262691,-2.0203051,-129.97661)" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -75,19 +76,19 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="22.4"
-     inkscape:cx="8.3333647"
-     inkscape:cy="8.6054101"
+     inkscape:zoom="15.839192"
+     inkscape:cx="18.682281"
+     inkscape:cy="23.484506"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      units="px"
      showguides="false"
-     inkscape:window-width="1680"
-     inkscape:window-height="974"
-     inkscape:window-x="0"
-     inkscape:window-y="24"
-     inkscape:window-maximized="1">
+     inkscape:window-width="958"
+     inkscape:window-height="955"
+     inkscape:window-x="905"
+     inkscape:window-y="102"
+     inkscape:window-maximized="0">
     <inkscape:grid
        type="xygrid"
        id="grid4180" />
@@ -110,9 +111,41 @@
      id="layer1"
      transform="translate(0,-1020.3622)">
     <path
-       style="fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:1;fill:url(#linearGradient19937)"
-       d="m 2,1036.3622 14,-7 14,7 -14,7 z"
+       style="fill:url(#linearGradient19937);fill-opacity:1;fill-rule:evenodd;stroke:none"
+       d="m 0.23223299,1037.246 15.76776801,-7.8838 15.767766,7.8838 -15.767766,7.884 z"
        id="path4414"
        inkscape:connector-curvature="0" />
+    <g
+       id="g3784"
+       transform="matrix(1.166932,0,0,1.166932,-4.4630613,-172.28534)">
+      <path
+         transform="matrix(1.3409091,0,0,1.3409091,-8.3685068,1010.3987)"
+         d="M 29,21.5 C 29,24.537566 26.537566,27 23.5,27 20.462434,27 18,24.537566 18,21.5 18,18.462434 20.462434,16 23.5,16 c 3.037566,0 5.5,2.462434 5.5,5.5 z"
+         sodipodi:ry="5.5"
+         sodipodi:rx="5.5"
+         sodipodi:cy="21.5"
+         sodipodi:cx="23.5"
+         id="path3766"
+         style="fill:#09b1ff;fill-opacity:1;stroke:none"
+         sodipodi:type="arc" />
+      <path
+         transform="matrix(0.55357141,0,0,0.53869046,22.633928,1028.7552)"
+         d="m 4,27 c 0,1.656854 -1.3431458,3 -3,3 -1.65685425,0 -3,-1.343146 -3,-3 0,-1.656854 1.34314575,-3 3,-3 1.6568542,0 3,1.343146 3,3 z"
+         sodipodi:ry="3"
+         sodipodi:rx="3"
+         sodipodi:cy="27"
+         sodipodi:cx="1"
+         id="path3780"
+         style="fill:#ffffff;fill-opacity:1;stroke:none"
+         sodipodi:type="arc" />
+      <rect
+         ry="0.91078395"
+         y="1033.6478"
+         x="21.553572"
+         height="7.196394"
+         width="3.3392873"
+         id="rect3782"
+         style="fill:#ffffff;fill-opacity:1;stroke:none" />
+    </g>
   </g>
 </svg>
