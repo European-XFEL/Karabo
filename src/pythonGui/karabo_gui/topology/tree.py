@@ -5,8 +5,8 @@
 #############################################################################
 
 from contextlib import contextmanager
-from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Instance, List,
-                        String, WeakRef)
+from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Instance, Int,
+                        List, String, WeakRef)
 
 from karabo.middlelayer import AccessLevel
 from karabo_gui.enums import NavigationItemTypes
@@ -19,6 +19,7 @@ class SystemTreeNode(HasStrictTraits):
     path = String
     visibility = Enum(*list(AccessLevel))
     status = String
+    capabilities = Int
     attributes = Dict
     alarm_type = Any
     monitoring = Bool(False)
@@ -246,6 +247,7 @@ class SystemTree(HasStrictTraits):
             host = attrs.get('host', 'UNKNOWN')
             visibility = AccessLevel(attrs.get('visibility',
                                                AccessLevel.OBSERVER))
+            capabilities = attrs.get('capabilities', 0)
             server_id = attrs.get('serverId', 'unknown-server')
             class_id = attrs.get('classId', 'unknown-class')
             status = attrs.get('status', 'ok')
@@ -289,3 +291,4 @@ class SystemTree(HasStrictTraits):
             device_node.status = status
             device_node.visibility = visibility
             device_node.attributes = attrs
+            device_node.capabilities = capabilities
