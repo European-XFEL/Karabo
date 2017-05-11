@@ -97,6 +97,9 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("registerPerformanceStatisticsHandler", &SignalSlotableWrap::registerPerformanceStatisticsHandlerPy
                  , (bp::arg("handler")))
 
+            .def("registerBrokerErrorHandler", &SignalSlotableWrap::registerBrokerErrorHandlerPy
+                 , (bp::arg("handler")))
+
             .def("connect",
                  (bool (SignalSlotable::*)(const string&, const string&, const string&, const string&))(&SignalSlotable::connect),
                  (bp::arg("signalInstanceId"),
