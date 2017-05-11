@@ -1,14 +1,18 @@
+from collections import OrderedDict
 import datetime
+from functools import partial
 import time
 
 import numpy as np
-from PyQt4.QtGui import (QColor, QHBoxLayout, QLineEdit, QPainter,
-                         QPainterPath, QPen, QWidget)
-from PyQt4.QtCore import Qt, pyqtSlot
+from PyQt4.QtGui import (QAction, QActionGroup, QColor, QHBoxLayout,
+                         QInputDialog, QLineEdit, QPainter, QPainterPath,
+                         QPen, QWidget)
+from PyQt4.QtCore import Qt, QPoint, pyqtSlot
 
 from karabo.middlelayer import Simple, Timestamp
 from karabo_gui.indicators import (ALARM_COLOR, WARN_COLOR, ALARM_LOW,
-                                   ALARM_HIGH, WARN_GLOBAL, WARN_LOW, WARN_HIGH)
+                                   ALARM_HIGH, WARN_GLOBAL, WARN_LOW,
+                                   WARN_HIGH)
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 
@@ -19,13 +23,22 @@ class SparkRenderer(QWidget):
     """
 
     # the widget has a fixed time base
-    time_range = 600  # seconds
+    time_base = 600  # seconds
 
     # maximum number of points to use, determines the binning off data
     _p_max = 120
 
     # plot fraction in y-direction to use
     _plot_frac = 0.9
+
+    # size in pixels of the min max indication area
+    _min_max_indic_size = 60
+
+    # relative epsilon within within the tendency will be considered stable
+    _tendency_eps = 0.05
+
+    # size of the window in bins which is used for evaluating trend indication
+    _indicator_window_size = 5
 
     def __init__(self, parent):
         super(SparkRenderer, self).__init__(parent)
@@ -35,7 +48,6 @@ class SparkRenderer(QWidget):
 
         self.yrange = None
         self.ystep = None
-        self.dt = self.time_range/self._p_max
         self.tvals = np.arange(self._p_max)
 
         self.yvals = np.zeros(self._p_max, np.double)
@@ -51,6 +63,17 @@ class SparkRenderer(QWidget):
 
         self.then = time.time()
         self.alarms = None
+
+        self.tendency = 0
+        self.tendency_indicators = {}
+        self.tendency_indicators[0] = {'x': np.array([0., 10., 0., 0.]),
+                                       'y': np.array([-5., 0., 5., -5.])}
+
+        self.tendency_indicators[1] = {'x': np.array([-5., 0., 5., -5.]),
+                                       'y': np.array([10., 0., 10., 10.])}
+
+        self.tendency_indicators[-1] = {'x': np.array([-5., 0., 5., -5.]),
+                                        'y': np.array([-7., 3., -7., -7.])}
 
     def _scale_y(self, val, height):
 
@@ -71,7 +94,7 @@ class SparkRenderer(QWidget):
         if self.painter_path is None:
             return
 
-        width = self.width()
+        width = self.width() - self._min_max_indic_size
         height = self._plot_frac * self.height()
 
         with QPainter(self) as painter:
@@ -100,6 +123,61 @@ class SparkRenderer(QWidget):
                     val = self._scale_y(val, height)
                     painter.drawLine(0, val, width, val)
 
+            # add min and max value indicators
+            pen = QPen(Qt.black, 1, Qt.SolidLine)
+            painter.setPen(pen)
+            x_points = [width, width]
+            y_points = [0, self.height()]
+            painter.drawPath(self._createPainterPath(np.array(x_points),
+                                                     np.array(y_points)))
+
+            # add min max indicator
+            font = painter.font()
+            font.setPointSize(8)
+            font.setFamily("Monospace")
+            painter.setFont(font)
+            painter.drawText(QPoint(width+5, 10),
+                             self._returnFormatted(self.yrange[1]))
+            painter.drawText(QPoint(width+5, height+2),
+                             self._returnFormatted(self.yrange[0]))
+
+            #  add tendency indicator
+            x_points = self.tendency_indicators[self.tendency]['x'] + width
+            y_points = self.tendency_indicators[self.tendency]['y']
+            dy = height/2 + 2.5
+            if self.tendency != 0:
+                dy = height/2 + (-1)*self.tendency*height/2
+            path = self._createPainterPath(np.array(x_points),
+                                           np.array(y_points)+dy)
+            painter.fillPath(path, Qt.magenta)
+            painter.drawPath(path)
+
+            # add timebase info
+            tb = self.time_base
+            if tb >= 3600:
+                tb = "{:d}h".format(tb//3600)
+            elif tb >= 600:
+                tb = "{:d}m".format(tb//60)
+            else:
+                tb = "{:d}s".format(tb)
+
+            dy = self.height()-13
+            path = self._createPainterPath(np.array([3., 28., 28., 3., 3.]),
+                                           np.array([0., 0., 12., 12., 0.])+dy)
+            painter.fillPath(path, QColor(255, 255, 255, 200))
+            painter.drawPath(path)
+            painter.drawText(QPoint(5, self.height()-2), tb)
+
+    def _returnFormatted(self, v):
+        if v == 0:
+            return "{:+0.2f}".format(v)
+
+        exp = np.log10(abs(v))
+        if abs(exp) <= 2:
+            return "{:+0.2f}".format(v)
+        else:
+            return "{:+0.1e}".format(v)
+
     def _createPainterPath(self, x, y):
         path = QPainterPath()
         path.moveTo(x[0], y[0])
@@ -119,14 +197,21 @@ class SparkRenderer(QWidget):
         t = timestamp.toTimestamp()
 
         # check if we need to roll to the next bin
-        dt = int(np.floor(t-self.then)//self.dt)
+        dt = int((t-self.then)/(self.time_base / self._p_max))
         if dt >= 1:
+            # the sparkline might need to cover "gaps" in its data series
+            # e.g. when for a given bin, no data was pushed to the widget
+            # in this case we fill with the value of the previous bin
             self.yvals = np.roll(self.yvals, -dt)
-            self.yvals[-dt:] = 0.
+            self.yvals[-dt:-1] = self.yvals[-dt-1]
+            self.yvals[-1] = 0.
             self.ycnts = np.roll(self.ycnts, -dt)
-            self.ycnts[-dt:] = 0.
+            self.ycnts[-dt:-1] = self.ycnts[-dt-1]
+            self.ycnts[-1] = 0.
             self.ymax = np.roll(self.ymax, -dt)
+            self.ymax[-dt:-1] = self.ymax[-dt-1]
             self.ymin = np.roll(self.ymin, -dt)
+            self.ymin[-dt:-1] = self.ymin[-dt-1]
             self.then = time.time()
 
         self.yvals[-1] += value
@@ -136,7 +221,7 @@ class SparkRenderer(QWidget):
         self._update_ranges(value, alarms)
         self.alarms = alarms
 
-        width = self.width()
+        width = self.width() - self._min_max_indic_size
         height = self._plot_frac * self.height()
 
         step = width / self._p_max
@@ -150,6 +235,21 @@ class SparkRenderer(QWidget):
 
         ymin = self._scale_y(self.ymin[nonzero], height)
         ymax = self._scale_y(self.ymax[nonzero], height)
+
+        # evaluate tendency for last 5 point intervals
+        iws = self._indicator_window_size
+        c_idx_nz = np.nonzero(self.ycnts[-iws:])
+        t_idx_nz = np.nonzero(self.ycnts[-2*iws:-iws])
+        if np.any(c_idx_nz) and np.any(t_idx_nz):
+            current_avg = np.mean(self.yvals[-iws:][c_idx_nz]
+                                  / self.ycnts[-iws:][c_idx_nz])
+            test_avg = np.mean(self.yvals[-2*iws:-iws][t_idx_nz]
+                               / self.ycnts[-2*iws:-iws][t_idx_nz])
+            delta = (current_avg-test_avg)/test_avg
+            if abs(delta) <= self._tendency_eps or not np.isfinite(delta):
+                self.tendency = 0
+            else:
+                self.tendency = np.sign(delta)
 
         self.painter_path = self._createPainterPath(x, y)
         self.painter_path_min = self._createPainterPath(x, ymin)
@@ -171,10 +271,10 @@ class SparkRenderer(QWidget):
         now = time.time()
         x = now-x
         binned, bins = np.histogram(x, bins=self._p_max,
-                                    range=[0, self.time_range], weights=y)
+                                    range=[0, self.time_base], weights=y)
 
         counts, _ = np.histogram(x, bins=self._p_max,
-                                 range=[0, self.time_range])
+                                 range=[0, self.time_base])
 
         self.yvals = binned[::-1]
         self.ycnts = counts[::-1]
@@ -220,6 +320,9 @@ class SparkRenderer(QWidget):
         self.offset = (self.height() - pheight)//2
         self.ystep = 1./pheight
 
+    def update_time_base(self, time_base):
+        self.time_base = time_base
+
 
 class DisplaySparkline(DisplayWidget):
     """
@@ -236,9 +339,16 @@ class DisplaySparkline(DisplayWidget):
     _height = 50
     _width = 200
 
-    def __init__(self, box, parent):
+    # timebases available for the widget, values in seconds
+    _timebases = OrderedDict()
+    _timebases['60s'] = 60
+    _timebases['10m'] = 600
+    _timebases['10h'] = 36000
+
+    def __init__(self, model, box, parent):
         super(DisplaySparkline, self).__init__(None)
 
+        self.model = model
         self.widget = QWidget(parent)
         self.layout = QHBoxLayout(self.widget)
         self.widget.setFixedHeight(self._height)
@@ -247,19 +357,55 @@ class DisplaySparkline(DisplayWidget):
         self.lineedit.setReadOnly(True)
         self.renderarea = SparkRenderer(self.widget)
         self.renderarea.setFixedWidth(self._width)
-        self.tspan = self.renderarea.time_range
+        self.renderarea.time_base = model.time_base
 
         self.layout.addWidget(self.lineedit)
+        self.lineedit.setVisible(model.show_value)
         self.layout.addWidget(self.renderarea)
 
         self._value = None
         self.box = box
 
+        # display options
+        showValueAction = QAction("Show value", self.widget, checkable=True)
+
+        def showValFun():
+            self._setShowValue(not self.model.show_value)
+
+        showValueAction.triggered.connect(showValFun)
+        showValueAction.setChecked(self.model.show_value)
+        self.widget.addAction(showValueAction)
+
+        self.showFormatAction = QAction("Set value format", self.widget)
+        self.showFormatAction.triggered.connect(self._queryShowFormat)
+        self.showFormatAction.setEnabled(self.model.show_value)
+        self.widget.addAction(self.showFormatAction)
+
+        timeBaseSeparator = QAction("Timebase", self.widget)
+        timeBaseSeparator.setSeparator(True)
+        self.widget.addAction(timeBaseSeparator)
+
+        timebaseGroup = QActionGroup(self.widget)
+        for label, base in self._timebases.items():
+            tbAction = QAction("{} time base".format(label),
+                               timebaseGroup, checkable=True)
+
+            tbAction.triggered.connect(partial(self._setTimeBase, base))
+
+            if self.model.time_base == base:
+                tbAction.setChecked(True)
+
+            timebaseGroup.addAction(tbAction)
+
+        self.widget.addActions(timebaseGroup.actions())
+
         self.box.signalHistoricData.connect(self.onHistoricData)
         self.box.visibilityChanged.connect(self.onVisibilityChanged)
 
         now = time.time()
-        self.getPropertyHistory(now - self.tspan, now, True)
+        self.getPropertyHistory(now - self.model.time_base, now, True)
+
+        self.widget.destroyed.connect(self.destroy)
 
     def valueChanged(self, box, value, timestamp=None):
 
@@ -277,7 +423,8 @@ class DisplaySparkline(DisplayWidget):
 
         if value != self._value:
             with SignalBlocker(self.widget):
-                self.lineedit.setText(str(value))
+                self.lineedit.setText(str("{:"+self.model.show_format+"}")
+                                      .format(value))
 
         self._value = value
 
@@ -285,7 +432,7 @@ class DisplaySparkline(DisplayWidget):
     def onVisibilityChanged(self, visible):
         if visible:
             now = time.time()
-            self.getPropertyHistory(now - self.tspan, now)
+            self.getPropertyHistory(now - self.model.time_base, now)
 
     @pyqtSlot(object, object)
     def onHistoricData(self, box, data):
@@ -311,3 +458,31 @@ class DisplaySparkline(DisplayWidget):
         t0 = str(datetime.datetime.utcfromtimestamp(t0).isoformat())
         t1 = str(datetime.datetime.utcfromtimestamp(t1).isoformat())
         self.box.getPropertyHistory(t0, t1, -1)
+
+    @pyqtSlot(object)
+    def _setTimeBase(self, timebase):
+        self.model.time_base = timebase
+        self.renderarea.update_time_base(timebase)
+        now = time.time()
+        self.getPropertyHistory(now - self.model.time_base, now, True)
+
+    @pyqtSlot(object)
+    def _setShowValue(self, value):
+        self.model.show_value = value
+        self.lineedit.setVisible(value)
+        self.showFormatAction.setEnabled(value)
+
+    @pyqtSlot(object)
+    def _queryShowFormat(self):
+        form, ok = QInputDialog.getText(self.widget, "Enter Format",
+                                        "", text=self.model.show_format)
+        if ok:
+            self._setShowFormat(form)
+
+    def _setShowFormat(self, format):
+        self.model.show_format = format
+
+    @pyqtSlot(object)
+    def destroy(self):
+        self.box.signalHistoricData.disconnect(self.onHistoricData)
+        self.box.visibilityChanged.disconnect(self.onVisibilityChanged)
