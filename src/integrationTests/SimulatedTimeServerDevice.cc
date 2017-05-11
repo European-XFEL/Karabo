@@ -46,6 +46,7 @@ USING_KARABO_NAMESPACES
 
     void SimulatedTimeServerDevice::initialize() {
         unsigned long long period = get<unsigned long long>("period");
+        m_lastTimeStamp = karabo::util::Epochstamp();
         m_timeTickerTimer.expires_from_now(boost::posix_time::milliseconds(period));
         m_timeTickerTimer.async_wait(util::bind_weak(&SimulatedTimeServerDevice::tickTock, this, boost::asio::placeholders::error));   
     }
@@ -55,13 +56,16 @@ USING_KARABO_NAMESPACES
         long long period = get<unsigned long long>("period");
         unsigned long long update_rate = get<unsigned long long>("updateRate");
         karabo::util::Epochstamp now = karabo::util::Epochstamp();
-        if((now - m_lastTimeStamp).getFractions()/1000000u >= update_rate){
+        karabo::util::TimeDuration dt = (now - m_lastTimeStamp);
+        if (((dt.getSeconds()*1000 + dt.getFractions()/1000000u) >= update_rate) || (m_last_update_rate != update_rate) ){
             emit("signalTimeTick", m_id, now.getSeconds(), now.getFractionalSeconds(), (update_rate <= period) ? period : -period);
             m_lastTimeStamp = now;
         }
         m_id++;
+        m_last_update_rate = update_rate;
         m_timeTickerTimer.expires_from_now(boost::posix_time::milliseconds(period));
-        m_timeTickerTimer.async_wait(util::bind_weak(&SimulatedTimeServerDevice::tickTock, this, boost::asio::placeholders::error));    
+        m_timeTickerTimer.async_wait(util::bind_weak(&SimulatedTimeServerDevice::tickTock, this, boost::asio::placeholders::error));
+        
     }
 
 }
