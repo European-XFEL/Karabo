@@ -19,19 +19,6 @@ OLD_SPARKY = """
     </svg:rect>
 </svg:svg>
 """
-NEW_SPARKY = """
-<svg:svg
-    xmlns:krb="http://karabo.eu/scene"
-    xmlns:svg="http://www.w3.org/2000/svg"
-    height="540" width="728"
-    krb:version="2" >
-    <svg:rect
-        height="364" width="426" x="256" y="172"
-        krb:class="DisplayComponent"
-        krb:keys="thePast.sparkProp"
-        krb:widget="DisplaySparkline" />
-</svg:svg>
-"""
 
 
 def test_line_plot_widget():
