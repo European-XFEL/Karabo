@@ -93,13 +93,14 @@ namespace karabo {
                     .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(1500)
                     .reconfigurable()
-                    .minExc(500).maxInc(5000)
+                    .minExc(500).maxInc(5000)  // NOTE: Not _too_ fast. The device instantiation timer is always running!
                     .commit();
 
         }
 
 
-        GuiServerDevice::GuiServerDevice(const Hash& config) : Device<>(config) {
+        GuiServerDevice::GuiServerDevice(const Hash& config) : Device<>(config),
+        m_deviceInitTimer(EventLoop::getIOService()) {
 
             KARABO_INITIAL_FUNCTION(initialize)
 
@@ -164,14 +165,14 @@ namespace karabo {
                     }
                 }
 
-
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
-
 
                 m_loggerConsumer = getConnection()->createConsumer(m_topic, "target = 'log'");
                 m_loggerConsumer->readAsync(bind_weak(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2));
 
                 m_guiDebugProducer = getConnection()->createProducer();
+
+                startDeviceInstantiation();
 
                 // Produce some information
                 KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port");
@@ -189,6 +190,12 @@ namespace karabo {
             // i.e. change delay value for existing input channels.
             // For now, changing "delayOnInput" will only affect new InputChannels, i.e. _all_ GUI clients requesting
             // data of a specific output channel have to dis- and then reconnect to see the new delay.
+        }
+
+        void GuiServerDevice::startDeviceInstantiation() {
+            // NOTE: This timer is a rate limiter for device instantiations
+            m_deviceInitTimer.expires_from_now(boost::posix_time::milliseconds(get<int>("waitInitDevice")));
+            m_deviceInitTimer.async_wait(bind_weak(&karabo::devices::GuiServerDevice::initSingleDevice, this, boost::asio::placeholders::error));
         }
 
         void GuiServerDevice::onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
@@ -378,16 +385,54 @@ namespace karabo {
         void GuiServerDevice::onInitDevice(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             try {
 
-                const string& serverId = hash.get<string > ("serverId");
-                const string& deviceId = hash.get<string > ("deviceId");
-                KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: request to start device instance \"" << deviceId << "\" on server \"" << serverId << "\"";
-                request(serverId, "slotStartDevice", hash)
-                        .receiveAsync<bool, string > (bind_weak(&karabo::devices::GuiServerDevice::initReply, this, channel, deviceId, hash, _1, _2));
+                const string& serverId = hash.get<string>("serverId");
+                const string& deviceId = hash.get<string>("deviceId");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: Queueing request to start device instance \""
+                                           << deviceId << "\" on server \"" << serverId << "\"";
+
+                DeviceInstantiation inst;
+                inst.channel = channel;
+                inst.hash = hash;
+                {
+                    boost::mutex::scoped_lock(m_pendingInstantiationsMutex);
+                    m_pendingDeviceInstantiations.push(inst);
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInitDevice(): " << e.userFriendlyMsg();
             }
-            // NOTE: This sleep() is a rate limiter for device instantiations
-            boost::this_thread::sleep(boost::posix_time::milliseconds(get<int>("waitInitDevice")));
+        }
+
+
+        void GuiServerDevice::initSingleDevice(const boost::system::error_code& err) {
+            if (err) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Device instantiation timer was cancelled!";
+                return;
+            }
+
+            try {
+
+                boost::mutex::scoped_lock(m_pendingInstantiationsMutex);
+                if (!m_pendingDeviceInstantiations.empty()) {
+                    const DeviceInstantiation& inst = m_pendingDeviceInstantiations.front();
+                    const string& serverId = inst.hash.get<string>("serverId");
+                    const string& deviceId = inst.hash.get<string>("deviceId");
+
+                    KARABO_LOG_FRAMEWORK_DEBUG << "initSingleDevice: Requesting to start device instance \""
+                                               << deviceId << "\" on server \"" << serverId << "\"";
+
+                    request(serverId, "slotStartDevice", inst.hash)
+                        .receiveAsync<bool, string>(bind_weak(&karabo::devices::GuiServerDevice::initReply,
+                                                              this, inst.channel, deviceId, inst.hash, _1, _2));
+
+                    m_pendingDeviceInstantiations.pop();
+                }
+
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in initSingleDevice(): " << e.userFriendlyMsg();
+            }
+
+            // Always restart the timer!
+            startDeviceInstantiation();
         }
 
 

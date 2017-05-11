@@ -41,6 +41,11 @@ namespace karabo {
                 karabo::net::Channel::Pointer channel;
             };
 
+            struct DeviceInstantiation {
+                boost::weak_ptr<karabo::net::Channel> channel;
+                karabo::util::Hash hash;
+            };
+
             typedef boost::weak_ptr<karabo::net::Channel> WeakChannelPointer;
             typedef std::multimap<karabo::xms::InputChannel::Pointer, NetworkConnection> NetworkMap;
 
@@ -53,18 +58,21 @@ namespace karabo {
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
             std::map<karabo::net::Channel::Pointer, std::set<std::string> > m_channels;
+            std::map<std::string, std::vector<karabo::util::Hash> > m_pendingAttributeUpdates;
+            std::queue<DeviceInstantiation> m_pendingDeviceInstantiations;
             mutable boost::mutex m_channelMutex;
             mutable boost::mutex m_monitoredDevicesMutex;
             mutable boost::mutex m_networkMutex;
             mutable boost::mutex m_pendingAttributesMutex;
+            mutable boost::mutex m_pendingInstantiationsMutex;
+
+            boost::asio::deadline_timer m_deviceInitTimer;
 
             karabo::net::JmsConsumer::Pointer m_loggerConsumer;
             std::map<std::string, int> m_monitoredDevices;
             NetworkMap m_networkConnections;
 
             karabo::net::JmsProducer::Pointer m_guiDebugProducer;
-
-            std::map<std::string, std::vector<karabo::util::Hash> > m_pendingAttributeUpdates;
 
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator ConstChannelIterator;
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::iterator ChannelIterator;
@@ -91,6 +99,11 @@ namespace karabo {
         private: // Functions
             /** Called if configuration changed from outside. */
             virtual void postReconfigure();
+
+            /**
+             * Starts the deadline timer which throttles device instantiation.
+             */
+            void startDeviceInstantiation();
 
             /**
              * writes a message  to the specified channel with the given priority
@@ -217,13 +230,24 @@ namespace karabo {
             void onExecute(const karabo::util::Hash& info);
 
             /**
-             * Instructs the server at ``serverId`` to try initializing the device
-             * at ``deviceId`` as given in ``info``. The reply from the device server
-             * is registered to the ``initReply`` callback.
+             * Enqueues a future device instantiation. The relevant information will be
+             * stored in ``m_pendingDeviceInstantiations`` and ``initSingleDevice``
+             * will take care of the actual instantiation when it is called by the
+             * instantiation timer.
              * @param channel
              * @param info
              */
             void onInitDevice(WeakChannelPointer channel, const karabo::util::Hash& info);
+
+            /**
+             * Instructs the server at ``serverId`` to try initializing the device
+             * at ``deviceId`` as given in ``info``. The reply from the device server
+             * is registered to the ``initReply`` callback.
+             *
+             * NOTE: This should only be called by ``m_deviceInitTimer``
+             * @param error
+             */
+            void initSingleDevice(const boost::system::error_code& error);
 
             /**
              * is the callback for the ``onInitDevice`` method. It is called upon reply
