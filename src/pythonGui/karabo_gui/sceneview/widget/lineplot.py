@@ -46,11 +46,6 @@ class _LinePlotWrapperMixin(object):
         self.model.boxes.append(_encode_plot_curve_model(box, curve))
 
 
-class _DisplaySparklineWrapper(_LinePlotWrapperMixin, DisplaySparkline):
-    """ A wrapper around DisplaySparkline
-    """
-
-
 class _DisplayTrendlineWrapper(_LinePlotWrapperMixin, DisplayTrendline):
     """ A wrapper around DisplayTrendline
     """
@@ -64,7 +59,6 @@ class _XYVectorWrapper(_LinePlotWrapperMixin, XYVector):
 class LinePlotContainer(BaseWidgetContainer):
     def _create_widget(self, boxes):
         factories = {
-            'DisplaySparkline': _DisplaySparklineWrapper,
             'DisplayTrendline': _DisplayTrendlineWrapper,
             'XYVector': _XYVectorWrapper,
         }
