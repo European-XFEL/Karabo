@@ -52,6 +52,7 @@ namespace karabo {
         unsigned long long m_id;
         boost::asio::deadline_timer m_timeTickerTimer;
         karabo::util::Epochstamp m_lastTimeStamp;
+        unsigned long long m_last_update_rate;
     };
 }
 
