@@ -3,6 +3,7 @@
 # Created on November 29, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from io import StringIO
 from types import MethodType
 import weakref
 
@@ -14,6 +15,7 @@ from karabo.common.project.api import (
     DeviceServerModel, ProjectModel, device_instance_exists,
     recursive_save_object, read_lazy_object
 )
+from karabo.common.scenemodel.api import read_scene
 from karabo.middlelayer import Hash, read_project_model
 from karabo_gui.events import broadcast_event, KaraboEventSender
 import karabo_gui.globals as krb_globals
@@ -136,6 +138,32 @@ def get_device_server_model(server_id):
     root_project = get_project_model().traits_data_model
     walk_traits_object(root_project, visitor)
     return server_model
+
+
+def handle_scene_from_server(dev_id, name, project, success, reply):
+    """Callback handler for a request to a device to load one of its scenes.
+    """
+    if not (success and reply.get('payload.success', False)):
+        msg = 'Scene "{}" from device "{}" was not retreived!'
+        QMessageBox.warning(None, 'Load Scene from Device Failed',
+                            msg.format(name, dev_id))
+        return
+
+    data = reply.get('payload.data', '')
+    if not data:
+        msg = 'Scene "{}" from device "{}" contains no data!'
+        QMessageBox.warning(None, 'Load Scene from Device Failed',
+                            msg.format(name, dev_id))
+        return
+
+    with StringIO(data) as fp:
+        scene = read_scene(fp)
+        scene.modified = True
+        scene.simple_name = name
+
+    # Add to the project AND open it
+    project.scenes.append(scene)
+    broadcast_event(KaraboEventSender.OpenSceneView, {'model': scene})
 
 
 def load_project(is_subproject=False):
