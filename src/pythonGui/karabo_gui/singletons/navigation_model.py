@@ -14,11 +14,11 @@ from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 from traits.api import HasStrictTraits, WeakRef
 
+from karabo_gui.alarms.const import get_alarm_icon
 from karabo_gui.events import KaraboEventSender, register_for_broadcasts
 import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
-from karabo_gui.indicators import (get_alarm_icon,
-                                   get_state_icon_for_status)
+from karabo_gui.indicators import get_state_icon_for_status
 from karabo_gui.singletons.api import get_topology
 
 

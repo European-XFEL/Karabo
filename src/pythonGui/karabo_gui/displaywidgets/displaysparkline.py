@@ -10,9 +10,9 @@ from PyQt4.QtGui import (QAction, QActionGroup, QColor, QHBoxLayout,
 from PyQt4.QtCore import Qt, QPoint, pyqtSlot
 
 from karabo.middlelayer import Simple, Timestamp
-from karabo_gui.indicators import (ALARM_COLOR, WARN_COLOR, ALARM_LOW,
-                                   ALARM_HIGH, WARN_GLOBAL, WARN_LOW,
-                                   WARN_HIGH)
+from karabo_gui.alarms.const import (ALARM_COLOR, WARN_COLOR, ALARM_LOW,
+                                     ALARM_HIGH, WARN_GLOBAL, WARN_LOW,
+                                     WARN_HIGH)
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 

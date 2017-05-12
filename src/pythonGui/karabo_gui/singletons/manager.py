@@ -17,6 +17,7 @@ from functools import wraps
 from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QMessageBox
 
+from karabo_gui.alarms.utils import broadcast_about_alarm
 from karabo.common.api import State
 from karabo_gui.background import executeLater, Priority
 from karabo_gui.events import broadcast_event, KaraboEventSender
@@ -425,21 +426,18 @@ class Manager(QObject):
            and all the information given in the ``Hash`` ``rows``.
         """
         if not rows.empty():
-            # Create KaraboBroadcastEvent only if there is something to show
-            broadcast_event(KaraboEventSender.AlarmInitReply,
-                            {'instanceId': instanceId, 'rows': rows})
+            broadcast_about_alarm(KaraboEventSender.AlarmServiceInit,
+                                  instanceId, rows)
 
     def handle_alarmUpdate(self, instanceId, rows):
         """Show update for ``AlarmService`` with given ``instanceId`` and all
            the information given in the ``Hash`` ``rows``.
         """
-        if rows.empty():
-            return
+        if not rows.empty():
+            broadcast_about_alarm(KaraboEventSender.AlarmServiceUpdate,
+                                  instanceId, rows)
 
-        # Create KaraboBroadcastEvent only if there is something to show
-        broadcast_event(KaraboEventSender.AlarmUpdate,
-                        {'instanceId': instanceId, 'rows': rows})
-
+        # TODO: this will go away once I deal with the navigation/project/scene
         for hsh in rows.values():
             # Get data of hash
             for aHash in hsh.values():
