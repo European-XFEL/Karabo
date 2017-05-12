@@ -4,50 +4,43 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
 """This module contains a class which inherits from a QTreeWidgetItem.
-   
-   Inherited by: PropertyTreeWidgetItem, ImageTreeWidgetItem, CommandTreeWidgetItem,
-                 AttributeTreeWidgetItem
+
+   Inherited by: PropertyTreeWidgetItem, ImageTreeWidgetItem,
+                 CommandTreeWidgetItem, AttributeTreeWidgetItem
 """
-
-__all__ = ["BaseTreeWidgetItem"]
-
-
 from collections import OrderedDict
-
-from .popupwidget import PopupWidget
-
-from karabo.middlelayer import Type
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QCursor, QTreeWidgetItem
 
+from karabo_gui.indicators import (ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH)
+from karabo.middlelayer import Type
+from .popupwidget import PopupWidget
+
 
 class BaseTreeWidgetItem(QTreeWidgetItem):
-    
+
     def __init__(self, box, parent, parentItem=None):
-        
+
         if parentItem:
             super(BaseTreeWidgetItem, self).__init__(parentItem)
         else:
             super(BaseTreeWidgetItem, self).__init__(parent)
-        
+
         self.box = box
-        
+
         # The components can be defined in Subclasses
         self.displayComponent = None
         self.__editableComponent = None
-        
+
         self.mItem = None
-        
+
         # Popup widget for tooltip info
         self.popupWidget = None
 
-
     def setupContextMenu(self):
         raise NotImplementedError("BaseTreeWidgetItem.setupContextMenu")
-
 
     isChoiceElement = False
     isListElement = False
@@ -56,16 +49,18 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     # Returns the editable component of the item
     def _editableComponent(self):
         return self.__editableComponent
+
     def _setEditableComponent(self, component):
         if component is None:
             return
-        
+
         self.__editableComponent = component
-        
+
         self.setupContextMenu()
         self.treeWidget().setItemWidget(self, 2, self.editableComponent.widget)
         self.treeWidget().resizeColumnToContents(2)
-    editableComponent = property(fget=_editableComponent, fset=_setEditableComponent)
+    editableComponent = property(fget=_editableComponent,
+                                 fset=_setEditableComponent)
 
     def showContextMenu(self):
         if self.mItem is None:
@@ -73,11 +68,9 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
 
         self.mItem.exec_(QCursor.pos())
 
-
     def setErrorState(self, isError):
         if self.displayComponent:
             self.displayComponent.setErrorState(isError)
-
 
     def setReadOnly(self, readOnly):
         if readOnly is True:
@@ -85,14 +78,12 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         else:
             self.setFlags(self.flags() | Qt.ItemIsEnabled)
 
-
     def setToolTipDialogVisible(self, show):
         if not self.popupWidget:
             self.popupWidget = PopupWidget(self.treeWidget())
 
         if show:
-            info = self.updateToolTipDialog()
-            
+            self.updateToolTipDialog()
             pos = QCursor.pos()
             pos.setX(pos.x() + 10)
             pos.setY(pos.y() + 10)
@@ -101,10 +92,9 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         else:
             self.popupWidget.hide()
 
-
     def updateToolTipDialog(self):
             info = OrderedDict()
-            
+
             if len(self.text(0)) > 0:
                 info["Property"] = self.text(0)
             d = self.box.descriptor
@@ -127,5 +117,10 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
             if self.box.configuration.type == "device":
                 info["Value on device"] = self.box.value
 
-            self.popupWidget.setInfo(info)
+            alarms = [('Warn low', WARN_LOW), ('Warn high', WARN_HIGH),
+                      ('Alarm low', ALARM_LOW), ('Alarm high', ALARM_HIGH)]
+            for label, alarm in alarms:
+                this_alarm = getattr(d, alarm)
+                info[label] = 'n/a' if this_alarm is None else this_alarm
 
+            self.popupWidget.setInfo(info)
