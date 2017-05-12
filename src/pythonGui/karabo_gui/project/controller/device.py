@@ -23,7 +23,8 @@ from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import (
     update_check_state, check_device_instance_exists)
 from karabo_gui.singletons.api import get_manager, get_topology
-from karabo_gui.topology.api import ProjectDeviceInstance
+from karabo_gui.topology.api import (clear_configuration_instance,
+                                     ProjectDeviceInstance)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 from .server import DeviceServerController
 
@@ -185,8 +186,14 @@ class DeviceInstanceController(BaseProjectGroupController):
     @on_trait_change("project_device.status")
     def status_change(self):
         self._update_icon(self.ui_data)
-        # Show the device's configuration, iff it was already showing
-        self._update_configurator()
+        status = self.project_device.status
+        if status in ('noplugin', 'noserver'):
+            configuration = self.project_device.current_configuration
+            # Clear configuration but do not reset (redummy) the descriptor
+            clear_configuration_instance(configuration, redummy=False)
+        else:
+            # Show the device's configuration, iff it was already showing
+            self._update_configurator()
 
     # ----------------------------------------------------------------------
     # Util methods
