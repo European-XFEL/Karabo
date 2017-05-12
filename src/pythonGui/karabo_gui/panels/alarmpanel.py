@@ -6,17 +6,17 @@
 from functools import partial
 
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (QButtonGroup, QComboBox, QColor, QHBoxLayout, QLabel,
+from PyQt4.QtGui import (QButtonGroup, QColor, QComboBox, QHBoxLayout, QLabel,
                          QLineEdit, QPixmap, QPushButton, QStyle,
                          QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
 
-from karabo_gui.alarm_model import (ACKNOWLEDGE, ALARM_DATA, ALARM_ID,
-                                    ALARM_TYPE, DEVICE_ID, PROPERTY,
-                                    SHOW_DEVICE, AlarmModel, getAlarmKeyIndex)
-from karabo_gui.indicators import ALARM_COLOR
-from karabo_gui.events import (
-    KaraboEventSender, broadcast_event, register_for_broadcasts,
-    unregister_from_broadcasts)
+from karabo_gui.alarms.model import AlarmModel
+from karabo_gui.alarms.const import (ACKNOWLEDGE, ALARM_COLOR, ALARM_DATA,
+                                     ALARM_ID, ALARM_TYPE, DEVICE_ID, PROPERTY,
+                                     SHOW_DEVICE, get_alarm_key_index)
+from karabo_gui.events import (KaraboEventSender, broadcast_event,
+                               register_for_broadcasts,
+                               unregister_from_broadcasts)
 from karabo_gui.singletons.api import get_network
 from .base import BasePanelWidget
 
@@ -33,13 +33,17 @@ class AlarmPanel(BasePanelWidget):
         register_for_broadcasts(self)
 
     def karaboBroadcastEvent(self, event):
-        if event.sender is KaraboEventSender.AlarmInitReply:
+        if event.sender is KaraboEventSender.AlarmServiceInit:
             data = event.data
-            self._initAlarms(data.get('instanceId'), data.get('rows'))
+            self.model.initAlarms(data.get('instanceId'),
+                                  data.get('updateTypes'),
+                                  data.get('alarmEntries'))
             return False
-        elif event.sender is KaraboEventSender.AlarmUpdate:
+        elif event.sender is KaraboEventSender.AlarmServiceUpdate:
             data = event.data
-            self._updateAlarms(data.get('instanceId'), data.get('rows'))
+            self.model.updateAlarms(data.get('instanceId'),
+                                    data.get('updateTypes'),
+                                    data.get('alarmEntries'))
             return False
 
     def closeEvent(self, event):
@@ -112,12 +116,6 @@ class AlarmPanel(BasePanelWidget):
         """
         return QColor(*ALARM_COLOR)
 
-    def _initAlarms(self, instanceId, rows):
-        self.model.initAlarms(instanceId, rows)
-
-    def _updateAlarms(self, instanceId, rows):
-        self.model.updateAlarms(instanceId, rows)
-
     def _enableCustomFilter(self, enable):
         self.cbFilterType.setEnabled(enable)
         self.leFilterText.setEnabled(enable)
@@ -166,8 +164,8 @@ class ButtonDelegate(QStyledItemDelegate):
             Otherwise ``False`` and an empty string is returned.
         """
         column = index.column()
-        ack_index = getAlarmKeyIndex(ACKNOWLEDGE)
-        device_index = getAlarmKeyIndex(SHOW_DEVICE)
+        ack_index = get_alarm_key_index(ACKNOWLEDGE)
+        device_index = get_alarm_key_index(SHOW_DEVICE)
         if column == ack_index or column == device_index:
             if column == ack_index:
                 text = ALARM_DATA[ACKNOWLEDGE]
@@ -182,10 +180,10 @@ class ButtonDelegate(QStyledItemDelegate):
         """
         button.setText(text)
         column = index.column()
-        if column == getAlarmKeyIndex(ACKNOWLEDGE):
+        if column == get_alarm_key_index(ACKNOWLEDGE):
             needsAck, ack = index.data()
             button.setEnabled(needsAck and ack)
-        elif column == getAlarmKeyIndex(SHOW_DEVICE):
+        elif column == get_alarm_key_index(SHOW_DEVICE):
             button.setEnabled(True)
 
     def createEditor(self, parent, option, index):
@@ -245,7 +243,7 @@ class ButtonDelegate(QStyledItemDelegate):
                                 {'deviceId': index.data()})
             else:
                 # Send signal to acknowledge alarm
-                id_index = getAlarmKeyIndex(ALARM_ID)
+                id_index = get_alarm_key_index(ALARM_ID)
                 model = index.model()
                 alarm_id = model.index(index.row(), id_index).data()
                 get_network().onAcknowledgeAlarm(model.instanceId, alarm_id)
