@@ -54,7 +54,9 @@ namespace karabo {
             /**
              * This function registers a message handler, which will be called exactly once when a message
              * on the current topic and obeying the provided selector will be available. An error notifier
-             * can be specified as well and will, in case of an error, be called before the message handler.
+             * can be specified as well and will, in case of an error, be called (and have finished) before
+             * the message handler is called.
+             * IMPORTANT:
              * After calling this method it must not be called again before the message handler has been called.
              * @param handler Message handler of signature <void (Hash::Pointer header, Hash::Pointer body)>
              * @param errorNotifier Error notifier of signature <void (JmsConsumer::Error, string)> with an Error and a

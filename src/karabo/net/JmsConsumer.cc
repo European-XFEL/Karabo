@@ -116,6 +116,9 @@ namespace karabo {
                             std::vector<char>& raw = body->bindReference<std::vector<char> >("raw");
                             raw.assign(constChars, constChars + nBytes);
                         }
+                        // In case an error happened earlier, post the message handler via m_errorStrand to ensure that
+                        // the errorNotifier has finished its action before the message handler is called, as guaranteed
+                        // by the documentation of 'readAsync'.
                         if (m_useErrorStrand) {
                             m_useErrorStrand = false;
                             m_errorStrand.post(boost::bind(handler, header, body));
