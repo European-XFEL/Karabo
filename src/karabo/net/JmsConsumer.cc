@@ -27,8 +27,8 @@ namespace karabo {
                                  const std::string& selector, bool skipSerialisation) :
             m_connection(connection),
             m_binarySerializer(skipSerialisation ? nullptr : BinarySerializer<Hash>::create("Bin")),
-            m_mqStrand(EventLoop::getIOService()),
-            m_notifyStrand(EventLoop::getIOService()),
+            m_useErrorStrand(false),
+            m_errorStrand(EventLoop::getIOService()),
             m_topic(topic),
             m_selector(selector) {
             EventLoop::addThread();
@@ -49,9 +49,8 @@ namespace karabo {
             this->ensureConsumerSessionAvailable(m_topic, m_selector);
             this->getConsumer(m_topic, m_selector);
 
-            // Posting through strand guarantees thread-safety, never will the posted message run concurrently
-            m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this, handler, errorNotifier,
-                                      m_topic, m_selector));
+            EventLoop::getIOService().post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
+                                                     handler, errorNotifier, m_topic, m_selector));
         }
 
 
@@ -78,7 +77,8 @@ namespace karabo {
                         MQFreeString(statusString);
                         KARABO_LOG_FRAMEWORK_ERROR << "Problem during message consumption: " << stdStatusString;
                         if (errorNotifier) {
-                            m_notifyStrand.post(boost::bind(errorNotifier, Error::drop, stdStatusString));
+                            m_useErrorStrand = true;
+                            m_errorStrand.post(boost::bind(errorNotifier, Error::drop, stdStatusString));
                         }
                         // No 'break;'!
                     }
@@ -94,10 +94,11 @@ namespace karabo {
                             const std::string msg("Received a message of wrong type");
                             KARABO_LOG_FRAMEWORK_WARN << msg;
                             if (errorNotifier) {
-                                m_notifyStrand.post(boost::bind(errorNotifier, Error::type, msg));
+                                m_useErrorStrand = true;
+                                m_errorStrand.post(boost::bind(errorNotifier, Error::type, msg));
                             }
-                            m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
-                                                      handler, errorNotifier, topic, selector));
+                            EventLoop::getIOService().post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
+                                                                     handler, errorNotifier, topic, selector));
                             return;
                         }
                         Hash::Pointer header(new Hash());
@@ -115,14 +116,22 @@ namespace karabo {
                             std::vector<char>& raw = body->bindReference<std::vector<char> >("raw");
                             raw.assign(constChars, constChars + nBytes);
                         }
-                        m_notifyStrand.post(boost::bind(handler, header, body));
+                        // In case an error happened earlier, post the message handler via m_errorStrand to ensure that
+                        // the errorNotifier has finished its action before the message handler is called, as guaranteed
+                        // by the documentation of 'readAsync'.
+                        if (m_useErrorStrand) {
+                            m_useErrorStrand = false;
+                            m_errorStrand.post(boost::bind(handler, header, body));
+                        } else {
+                            EventLoop::getIOService().post(boost::bind(handler, header, body));
+                        }
                         break;
                     }
 
                     case MQ_TIMEOUT_EXPIRED:
                     { // No message received, post again
-                        m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
-                                                  handler, errorNotifier, topic, selector));
+                        EventLoop::getIOService().post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
+                                                                 handler, errorNotifier, topic, selector));
                         break;
                     }
                     case MQ_STATUS_INVALID_HANDLE:
@@ -132,8 +141,8 @@ namespace karabo {
                     { // Invalidate handles and re-post
                         // This function may be called concurrently, hence its thread-safe
                         this->clearConsumerHandles();
-                        m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
-                                                  handler, errorNotifier, topic, selector));
+                        EventLoop::getIOService().post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
+                                                                 handler, errorNotifier, topic, selector));
                         break;
                     }
                     default:
@@ -144,11 +153,12 @@ namespace karabo {
                         const std::string msg("Untreated message consumption error '" + errorString + "', try again.");
                         KARABO_LOG_FRAMEWORK_WARN << msg;
                         if (errorNotifier) {
-                            m_notifyStrand.post(boost::bind(errorNotifier, Error::unknown, msg));
+                            m_useErrorStrand = true;
+                            m_errorStrand.post(boost::bind(errorNotifier, Error::unknown, msg));
                         }
                         // By no means stop message consumption non-voluntarily:
-                        m_mqStrand.post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
-                                                  handler, errorNotifier, topic, selector));
+                        EventLoop::getIOService().post(bind_weak(&karabo::net::JmsConsumer::asyncConsumeMessage, this,
+                                                                 handler, errorNotifier, topic, selector));
                     }
                 }
             }
