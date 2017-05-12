@@ -112,6 +112,8 @@ class ProjectDeviceInstance(HasStrictTraits):
         for the dependent device ``Configuration`` instances.
         """
         if self._offline_dev_config.descriptor is not None:
+            # Save current offline configuration hash
+            self._initial_config_hash, _ = self._offline_dev_config.toHash()
             self._offline_dev_config.redummy()
         self._offline_dev_config.descriptor = config.descriptor
 
