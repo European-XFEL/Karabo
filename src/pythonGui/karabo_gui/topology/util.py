@@ -5,8 +5,12 @@
 #############################################################################
 
 
-def clear_configuration_instance(configuration):
-    """Clear some of the state built up in a Configuration object.
+def clear_configuration_instance(configuration, redummy=True):
+    """Clear some of the state built up in a Configuration object
+
+    :param configuration: The Configuration object
+    :param redummy: Flag states whether we want to `redummy` the Configuration
+                    object or let the descriptor stay set
     """
     if configuration is None:
         return
@@ -15,5 +19,5 @@ def clear_configuration_instance(configuration):
         configuration.parameterEditor.clear()
         configuration.parameterEditor = None
 
-    if configuration.descriptor is not None:
+    if redummy and configuration.descriptor is not None:
         configuration.redummy()
