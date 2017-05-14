@@ -29,7 +29,7 @@ Timing_Test::~Timing_Test() {
 
 void Timing_Test::setUp() {
     // uncomment this if ever testing against a local broker
-   setenv("KARABO_BROKER", "tcp://localhost:7777", true);
+    // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
@@ -58,9 +58,6 @@ void Timing_Test::appTestRunner() {
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
     success = m_deviceClient->instantiate("testServerTiming", "TimingTestDevice", Hash("deviceId", "timeTester", "useTimeserver", true), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
-    
-    
-    int tries = 20;
     
     m_lastCheck = karabo::util::Epochstamp();
     
