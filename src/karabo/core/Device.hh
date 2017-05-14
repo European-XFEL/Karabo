@@ -147,6 +147,7 @@ namespace karabo {
             karabo::util::Epochstamp m_lastBrokerErrorStamp;
             boost::asio::deadline_timer m_timeTickerTimer;
             std::atomic<bool> m_timeServerUpdateImminent;
+            bool m_timeServerSyncMode;
 
 
         public:
@@ -396,8 +397,13 @@ namespace karabo {
 
 =======
                 m_globalAlarmCondition(karabo::util::AlarmCondition::NONE), m_timeTickerTimer(karabo::net::EventLoop::getIOService()),
+<<<<<<< HEAD
                 m_timeServerUpdateImminent(false) {
 >>>>>>> 8e46f92... Include integration tests
+=======
+                m_timeServerUpdateImminent(false), m_timeServerSyncMode(false)
+                {
+>>>>>>> 21525d1... Use flag internally
 
                 m_connection = karabo::util::Configurator<karabo::net::JmsConnection>::createNode("_connection_", configuration);
 
@@ -1679,31 +1685,55 @@ namespace karabo {
                 }
             }
 
+            /**
+             * A slot called by the time-server to synchronize this device with the timing system
+             * @param id: current train id
+             * @param sec: current system seconds
+             * @param frac: current fractional seconds
+             * @param period: tick-period of the time-server, i.e the update interval at which onTimeUpdate should be called.
+             *                it will be positive if the timeserver constantly syncs the system, and negative if the time server
+             *                only provides sync updates at a frequency lower than the period.
+             */
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, long long period) {
                 m_timeServerUpdateImminent.exchange(true);
+                m_timeServerSyncMode = period > 0;
                 m_timeTickerTimer.cancel(); // cancel any pending timers, if we had an update from the time server
-                timeTick(id, sec, frac, period);
+                timeTick(id, sec, frac, abs(period));
             }
             
-            void timeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, long long period) {
-
+            /**
+             * Helper function called both by time server updates and the internal device clock
+             * @param id: current train id
+             * @param sec: current system seconds
+             * @param frac: current fractional seconds
+             * @param period: tick-period of the time-server
+             */
+            void timeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
                 {
                     boost::mutex::scoped_lock lock(m_timeChangeMutex);
                     m_timeId = id;
                     m_timeSec = sec;
                     m_timeFrac = frac;
-                    m_timePeriod = abs(period);
+                    m_timePeriod = period;
                 }
                 
-                if(period < 0) {
-                    m_timeTickerTimer.expires_from_now(boost::posix_time::milliseconds(-period));
+                if(!m_timeServerSyncMode) {
+                    m_timeTickerTimer.expires_from_now(boost::posix_time::milliseconds(period));
                     m_timeTickerTimer.async_wait(util::bind_weak(&Device<FSM>::timeTicker, this, boost::asio::placeholders::error, id, period));
                 }
                 onTimeUpdate(id, sec, frac, abs(period));
                 m_timeServerUpdateImminent.exchange(false);
             }
             
-            void timeTicker(const boost::system::error_code& e, unsigned long long id, long long period){
+            /**
+             * A device's internal time ticker callback, which will assure `onTimeUpdate` is called at an interval of `period` if the timeserver
+             * works in non-sync mode.
+             * 
+             * @param e: error code from the boost::deadline_timer
+             * @param id: current train id
+             * @param period: tick-period of the time-server
+             */
+            void timeTicker(const boost::system::error_code& e, unsigned long long id, unsigned long long period){
                 karabo::util::Epochstamp epochNow;
                 if(!m_timeServerUpdateImminent.exchange(false)) {
                     timeTick(id++, epochNow.getSeconds(), epochNow.getFractionalSeconds(), period);
