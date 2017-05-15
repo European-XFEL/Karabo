@@ -9,6 +9,7 @@
 #include "GuiServerDevice.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/net/EventLoop.hh"
+#include "karabo/net/TcpChannel.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -21,7 +22,6 @@ using namespace karabo::xms;
 
 namespace karabo {
     namespace devices {
-
 
         KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, GuiServerDevice)
 
@@ -108,6 +108,7 @@ namespace karabo {
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
             KARABO_SLOT(slotAlarmSignalsUpdate, std::string, std::string, karabo::util::Hash );
             KARABO_SLOT(slotRunConfigSourcesUpdate, karabo::util::Hash, std::string);
+            KARABO_SLOT(slotDumpDebugInfo, karabo::util::Hash);
             KARABO_SIGNAL("signalClientSignalsAlarmUpdate", Hash);
             KARABO_SIGNAL("signalClientRequestsAlarms");
 
@@ -1056,6 +1057,76 @@ namespace karabo {
         }
 
 
+        void GuiServerDevice::slotDumpDebugInfo(const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotDebugInfo : info ...\n" << info;
+
+                Hash data;
+
+                if (info.empty() || info.has("clients")) {
+                    // connected clients
+
+                    // Start with the client TCP connections
+                    {
+                        boost::mutex::scoped_lock lock(m_channelMutex);
+
+                        for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
+                            const std::string clientAddr = getChannelAddress(it->first);
+                            const std::vector<std::string> monitoredDevices(it->second.begin(), it->second.end());
+                            TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(it->first);
+
+                            data.set(clientAddr, Hash("queueInfo", tcpChannel->queueInfo(),
+                                                      "monitoredDevices", monitoredDevices,
+                                                      // Leave a string vector for the pipeline connections to be filled in below
+                                                      "pipelineConnections", std::vector<std::string>()));
+                        }
+                    }
+
+                    // Then add pipeline information to the client connection infos
+                    {
+                        boost::mutex::scoped_lock lock(m_networkMutex);
+
+                        // m_networkConnections is a multimap; the same client channel (key) might be encountered more than once
+                        for (auto it = m_networkConnections.begin(); it != m_networkConnections.end(); ++it) {
+                            const std::string clientAddr = getChannelAddress(it->second.channel);
+                            std::vector<std::string>& pipelineConnections = data.get<std::vector<std::string> >(clientAddr + ".pipelineConnections");
+                            pipelineConnections.push_back(it->second.name); // the connected device property name
+                        }
+                    }
+                }
+
+                if (info.empty() || info.has("devices")) {
+                    // monitored devices
+                    Hash& monitoredDevices = data.bindReference<Hash>("monitoredDeviceConfigs");
+                    {
+                        boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
+
+                        for (auto it = m_monitoredDevices.begin(); it != m_monitoredDevices.end(); ++it) {
+                            Hash config = remote().getConfigurationNoWait(it->first);
+                            if (config.empty()) {
+                                // It's important to know if `getConfigurationNoWait` returned an empty config!
+                                monitoredDevices.set(it->first, Hash("configMissing", true));
+                            } else {
+                                monitoredDevices.set(it->first, config);
+                            }
+                        }
+                    }
+                }
+
+                if (info.empty() || info.has("topology")) {
+                    // system topology
+                    data.set("systemTopology", remote().getSystemTopology());
+                }
+
+                // reply to the caller
+                reply(data);
+
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in slotDebugInfo(): " << e.userFriendlyMsg();
+            }
+        }
+
+
         void GuiServerDevice::updateNewInstanceAttributes(const std::string& deviceId) {
             boost::mutex::scoped_lock(m_pendingAttributesMutex);
             const auto it = m_pendingAttributeUpdates.find(deviceId);
@@ -1411,6 +1482,17 @@ namespace karabo {
                 Hash reply("success", false, "info", failureInfo, "token", token, "type", "requestFromSlot");
                 safeClientWrite(channel, reply, LOSSLESS);
             }
+        }
+
+
+        std::string GuiServerDevice::getChannelAddress(const karabo::net::Channel::Pointer& channel) const {
+            TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+            std::string addr = boost::lexical_cast<std::string>(tcpChannel->socket().remote_endpoint());
+
+            // convert periods to underscores, so that this can be used as a Hash key...
+            std::transform(addr.begin(), addr.end(), addr.begin(), [](char c){ return c == '.' ? '_' : c; });
+
+            return addr;
         }
 
     }
