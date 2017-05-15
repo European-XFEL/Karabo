@@ -434,6 +434,8 @@ namespace karabo {
 
             void slotLoggerMap(const karabo::util::Hash& loggerMap);
 
+            void slotDumpDebugInfo(const karabo::util::Hash& info);
+
             /**
              * Called from instanceNewHandler to handle schema attribute updates which
              * were received at initialization time. The slotUpdateSchemaAttributes slot
@@ -724,7 +726,13 @@ namespace karabo {
              * Error handler to be called in case of remote errors resulting from requests.
              */
             void onRequestFromSlotErrorHandler(WeakChannelPointer channel, const karabo::util::Hash& info, const std::string& token);
-        
+
+
+            /**
+             * Utility for getting a "name" from client connections.
+             */
+            std::string getChannelAddress(const karabo::net::Channel::Pointer& channel) const;
+
         };
     }
 }

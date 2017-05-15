@@ -234,6 +234,12 @@ namespace karabo {
 
             virtual bool isOpen();
 
+            /**
+             * Records the sizes of the write queues in a Hash.
+             * Useful for debugging devices with multiple channels open (like the GuiServerDevice...)
+             */
+            karabo::util::Hash queueInfo();
+
             boost::asio::ip::tcp::socket& socket() {
                 return m_socket;
             }
