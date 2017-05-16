@@ -172,10 +172,15 @@ class SystemTree(HasStrictTraits):
         and the view needs an update.
 
         The incoming ``config`` represents the system topology.
+
+        Returns a dictionary of ``SystemTreeNode`` instances for newly added
+        device instances.
         """
         self._handle_server_data(system_hash)
-        self._handle_device_data('device', system_hash)
-        self._handle_device_data('macro', system_hash)
+        nodes = self._handle_device_data('device', system_hash)
+        nodes.update(self._handle_device_data('macro', system_hash))
+
+        return nodes
 
     # ------------------------------------------------------------------
 
@@ -249,12 +254,14 @@ class SystemTree(HasStrictTraits):
 
     def _handle_device_data(self, device_type, system_hash):
         """Put the contents of Hash `system_hash` into the internal tree
-        structure.
+        structure. Returns a dictionary of any newly added device
+        ``SystemTreeNode`` instances.
         """
+        new_dev_nodes = {}
         assert device_type in ('device', 'macro')
 
         if device_type not in system_hash:
-            return
+            return new_dev_nodes
 
         for device_id, _, attrs in system_hash[device_type].iterall():
             if len(attrs) == 0:
@@ -304,7 +311,12 @@ class SystemTree(HasStrictTraits):
                                              parent=class_node)
                 self._append_child_node(class_node, device_node)
                 device_node.monitoring = False
+                # new nodes should be returned
+                new_dev_nodes[device_id] = device_node
+
             device_node.status = status
             device_node.visibility = visibility
             device_node.attributes = attrs
             device_node.capabilities = capabilities
+
+        return new_dev_nodes
