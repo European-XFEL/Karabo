@@ -5,9 +5,10 @@
 #############################################################################
 
 from contextlib import contextmanager
-from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Instance, Int,
-                        List, String, WeakRef)
+from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
+                        Int, List, String, WeakRef)
 
+from karabo.common.api import AlarmInfo
 from karabo.middlelayer import AccessLevel
 from karabo_gui.enums import NavigationItemTypes
 
@@ -21,7 +22,8 @@ class SystemTreeNode(HasStrictTraits):
     status = String
     capabilities = Int
     attributes = Dict
-    alarm_type = Any
+    # Struct to keep track of all alarms related to this
+    alarm_info = Instance(AlarmInfo, args=())
     monitoring = Bool(False)
 
     parent = WeakRef('SystemTreeNode')
@@ -63,6 +65,18 @@ class SystemTreeNode(HasStrictTraits):
             return 0
         return self.parent.children.index(self)
 
+    def append_alarm_type(self, dev_property, alarm_type):
+        """Append given ``alarm_type`` to dict and update list with device
+        properties
+        """
+        self.alarm_info.append_alarm_type(dev_property, alarm_type)
+
+    def remove_alarm_type(self, dev_property, alarm_type):
+        """Remove given ``dev_property`` with ``alarm_type`` from dict list
+        or remove ``alarm_type`` from dict
+        """
+        self.alarm_info.remove_alarm_type(dev_property, alarm_type)
+
 
 class SystemTree(HasStrictTraits):
     """A data model which holds data concerning the devices and servers in a
@@ -73,6 +87,8 @@ class SystemTree(HasStrictTraits):
 
     # A context manager to enter when manipulating the tree
     update_context = Instance(object)
+    # An event which is triggered whenever the tree needs to be updated
+    needs_update = Event
 
     def clear_all(self):
         """Removes all data from the model.
