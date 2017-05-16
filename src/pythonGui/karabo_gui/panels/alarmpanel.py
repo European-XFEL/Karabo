@@ -10,10 +10,10 @@ from PyQt4.QtGui import (QButtonGroup, QColor, QComboBox, QHBoxLayout, QLabel,
                          QLineEdit, QPixmap, QPushButton, QStyle,
                          QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
 
-from karabo_gui.alarms.model import AlarmModel
-from karabo_gui.alarms.const import (ACKNOWLEDGE, ALARM_COLOR, ALARM_DATA,
-                                     ALARM_ID, ALARM_TYPE, DEVICE_ID, PROPERTY,
-                                     SHOW_DEVICE, get_alarm_key_index)
+from karabo_gui.alarms.api import (ACKNOWLEDGE, ALARM_COLOR, ALARM_DATA,
+                                   ALARM_ID, ALARM_TYPE, DEVICE_ID, PROPERTY,
+                                   SHOW_DEVICE, AlarmModel,
+                                   get_alarm_key_index)
 from karabo_gui.events import (KaraboEventSender, broadcast_event,
                                register_for_broadcasts,
                                unregister_from_broadcasts)
@@ -35,15 +35,15 @@ class AlarmPanel(BasePanelWidget):
     def karaboBroadcastEvent(self, event):
         if event.sender is KaraboEventSender.AlarmServiceInit:
             data = event.data
-            self.model.initAlarms(data.get('instanceId'),
-                                  data.get('updateTypes'),
-                                  data.get('alarmEntries'))
+            self.model.initAlarms(data.get('instance_id'),
+                                  data.get('update_types'),
+                                  data.get('alarm_entries'))
             return False
         elif event.sender is KaraboEventSender.AlarmServiceUpdate:
             data = event.data
-            self.model.updateAlarms(data.get('instanceId'),
-                                    data.get('updateTypes'),
-                                    data.get('alarmEntries'))
+            self.model.updateAlarms(data.get('instance_id'),
+                                    data.get('update_types'),
+                                    data.get('alarm_entries'))
             return False
 
     def closeEvent(self, event):

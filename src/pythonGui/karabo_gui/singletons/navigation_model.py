@@ -14,7 +14,7 @@ from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 from traits.api import HasStrictTraits, WeakRef
 
-from karabo_gui.alarms.const import get_alarm_icon
+from karabo_gui.alarms.api import get_alarm_icon
 from karabo_gui.events import KaraboEventSender, register_for_broadcasts
 import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
@@ -105,6 +105,8 @@ class NavigationTreeModel(QAbstractItemModel):
         # Our hierarchy tree
         self.tree = get_topology().system_tree
         self.tree.update_context = _UpdateContext(item_model=self)
+        # Add listeners for ``needs_update`` change event
+        self.tree.on_trait_change(self._needs_update, 'needs_update')
 
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self, self)
@@ -122,13 +124,13 @@ class NavigationTreeModel(QAbstractItemModel):
             self._toggleMonitoring(data.get('device_id', ''), True)
         elif sender is KaraboEventSender.StopMonitoringDevice:
             self._toggleMonitoring(data.get('device_id', ''), False)
-        elif event.sender is KaraboEventSender.ShowDevice:
+        elif sender is KaraboEventSender.ShowDevice:
             self.selectPath(data.get('deviceId'))
-        elif event.sender is KaraboEventSender.AlarmDeviceUpdate:
+        elif sender is KaraboEventSender.AlarmDeviceUpdate:
             device_id = data.get('deviceId')
             alarm_type = data.get('alarm_type')
             self._updateAlarmIndicators(device_id, alarm_type)
-        elif event.sender is KaraboEventSender.AccessLevelChanged:
+        elif sender is KaraboEventSender.AccessLevelChanged:
             self.globalAccessLevelChanged()
         return False
 
@@ -291,7 +293,9 @@ class NavigationTreeModel(QAbstractItemModel):
                 return get_state_icon_for_status(node.status)
         elif column == 2 and role == Qt.DecorationRole:
             if hierarchyLevel == 3:
-                return get_alarm_icon(node.alarm_type)
+                alarm_type = node.alarm_info.alarm_type
+                if alarm_type is not None:
+                    return get_alarm_icon(alarm_type)
 
     def flags(self, index):
         """Reimplemented function of QAbstractItemModel.
@@ -371,9 +375,8 @@ class NavigationTreeModel(QAbstractItemModel):
             index.internalPointer().monitoring = monitoring
             self.layoutChanged.emit()
 
-    def _updateAlarmIndicators(self, device_id, alarm_type):
-        index = self.findIndex(device_id)
-        if index is not None and index.isValid():
-            node = index.internalPointer()
-            node.alarm_type = alarm_type
-            self.layoutChanged.emit()
+    def _needs_update(self):
+        """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
+        the view needs to be updated
+        """
+        self.layoutChanged.emit()

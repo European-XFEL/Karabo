@@ -3,7 +3,7 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
                          QToolButton, QWidget)
 
 from karabo_gui import icons
-from karabo_gui.alarms.const import get_alarm_pixmap
+from karabo_gui.alarms.api import get_alarm_pixmap
 from karabo_gui.displaywidgets.displaymissingbox import DisplayMissingBox
 from karabo_gui.indicators import DeviceStatus, get_device_status_pixmap
 from karabo_gui.singletons.api import get_network
