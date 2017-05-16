@@ -172,8 +172,6 @@ class DeviceServerBase(SignalSlotable):
 
     def parse(self, hash):
         classId = hash['classId']
-        self.logger.info("Trying to start %s...", classId)
-        self.logger.debug("with the following configuration:\n%s", hash)
 
         # Get configuration
         config = copy.copy(hash['configuration'])
@@ -183,11 +181,16 @@ class DeviceServerBase(SignalSlotable):
 
         # Inject deviceId
         if 'deviceId' in hash and hash['deviceId']:
-            config['_deviceId_'] = hash['deviceId']
+            deviceId = hash['deviceId']
         else:
-            config['_deviceId_'] = self._generateDefaultDeviceId(classId)
+            deviceId = self._generateDefaultDeviceId(classId)
 
-        return classId, config['_deviceId_'], config
+        config['_deviceId_'] = deviceId
+        self.logger.info('Trying to start "%s" of class "%s"',
+                         deviceId, classId)
+        self.logger.debug("with the following configuration:\n%s", hash)
+
+        return classId, deviceId, config
 
     def deviceClassesHash(self):
         visibilities = self.getVisibilities()
