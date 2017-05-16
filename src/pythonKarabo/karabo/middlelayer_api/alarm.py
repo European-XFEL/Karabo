@@ -42,8 +42,9 @@ class AlarmMixin(Configurable):
         if old_alarm is not new_alarm:
             self._alarmConditions[key] = new_alarm, desc, value.timestamp
             if new_alarm > self.alarmCondition.enum:
-                self.alarmCondition = new_alarm
-            elif new_alarm < old_alarm is self.alarmCondition.enum:
+                self.alarmCondition = new_alarm.criticalityLevel()
+            elif (new_alarm.criticalityLevel() < old_alarm.criticalityLevel()
+                  is self.alarmCondition.enum):
                 self.alarmCondition = max(
                     (v.criticalityLevel()
                      for v, _, _ in self._alarmConditions.values()),
