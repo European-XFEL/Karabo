@@ -145,6 +145,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         """ Whenever the object is modified it should be visible to the user
         """
         self._update_icon(self.ui_data)
+        self._update_alarm_type()
 
     @on_trait_change("model:active_config_ref")
     def _active_config_ref_change(self):
@@ -195,6 +196,10 @@ class DeviceInstanceController(BaseProjectGroupController):
             # Show the device's configuration, iff it was already showing
             self._update_configurator()
 
+    @on_trait_change("project_device:device_node.alarm_info.alarm_dict_items")
+    def _alarm_info_change(self):
+        self._update_alarm_type()
+
     # ----------------------------------------------------------------------
     # Util methods
 
@@ -240,6 +245,18 @@ class DeviceInstanceController(BaseProjectGroupController):
             check_state = (Qt.Checked if active_config is child.model
                            else Qt.Unchecked)
             child.ui_data.check_state = check_state
+
+    def _update_alarm_type(self):
+        # Get current status of device
+        if not self.model.initialized:
+            return
+
+        device_node = self.project_device.device_node
+        if device_node is None:
+            alarm_type = ''
+        else:
+            alarm_type = device_node.alarm_info.alarm_type
+        self.ui_data.alarm_type = alarm_type
 
     def _update_configurator(self):
         configuration = self.project_device.current_configuration
