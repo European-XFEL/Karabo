@@ -4,15 +4,15 @@ from functools import partial
 import time
 
 import numpy as np
+from PyQt4.QtCore import QPoint, Qt, pyqtSlot
 from PyQt4.QtGui import (QAction, QActionGroup, QColor, QHBoxLayout,
-                         QInputDialog, QLineEdit, QPainter, QPainterPath,
-                         QPen, QWidget)
-from PyQt4.QtCore import Qt, QPoint, pyqtSlot
+                         QInputDialog, QLineEdit, QPainter, QPainterPath, QPen,
+                         QWidget)
 
 from karabo.middlelayer import Simple, Timestamp
-from karabo_gui.alarms.const import (ALARM_COLOR, WARN_COLOR, ALARM_LOW,
-                                     ALARM_HIGH, WARN_GLOBAL, WARN_LOW,
-                                     WARN_HIGH)
+from karabo_gui.alarms.api import (ALARM_COLOR, ALARM_HIGH, ALARM_LOW,
+                                   WARN_COLOR, WARN_GLOBAL, WARN_HIGH,
+                                   WARN_LOW)
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 

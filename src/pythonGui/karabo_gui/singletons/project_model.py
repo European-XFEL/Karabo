@@ -12,7 +12,7 @@ from PyQt4.QtGui import QItemSelectionModel
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import MacroModel
 from karabo.common.scenemodel.api import SceneModel
-from karabo_gui.alarms.const import get_alarm_icon
+from karabo_gui.alarms.api import get_alarm_icon
 from karabo_gui.events import (broadcast_event, KaraboEventSender,
                                register_for_broadcasts)
 from karabo_gui.indicators import get_state_icon_for_status
