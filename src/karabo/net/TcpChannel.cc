@@ -1057,6 +1057,17 @@ namespace karabo {
             return m_socket.is_open();
         }
 
+        karabo::util::Hash TcpChannel::queueInfo() {
+            Hash info;
+            boost::mutex::scoped_lock lock(m_queueMutex);
+            for (size_t i = 0; i < m_queue.size(); ++i) {
+                if (!m_queue[i]) continue;
+
+                info.set<unsigned long long>(karabo::util::toString(i), m_queue[i]->size());
+            }
+            return info;
+        }
+
 
 #undef _KARABO_VECTOR_TO_SIZE
 #undef _KARABO_SIZE_TO_VECTOR
