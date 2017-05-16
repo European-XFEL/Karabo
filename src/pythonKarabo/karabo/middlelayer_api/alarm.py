@@ -32,7 +32,8 @@ class AlarmMixin(Configurable):
                 self.alarmCondition = new_alarm
             elif new_alarm < old_alarm is self.alarmCondition.enum:
                 self.alarmCondition = max(
-                    (v for v, _, _ in self._alarmConditions.values()),
+                    (v.criticalityLevel()
+                     for v, _, _ in self._alarmConditions.values()),
                     default=AlarmCondition.NONE)
             self._changed_alarms.add(key)
             self._old_alarms[key] = old_alarm
