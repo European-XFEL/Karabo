@@ -4,7 +4,7 @@ from datetime import datetime
 import logging
 import traceback
 
-from .hash import Hash
+from .hash import Hash, String
 from .schema import Configurable, ListOfNodes
 
 
@@ -69,6 +69,8 @@ class PrintHandler(Handler):
 
 
 class Logger(Configurable):
+    logger = None
+
     handlers = ListOfNodes(
         Handler,
         description="Handlers for logging",
@@ -80,6 +82,16 @@ class Logger(Configurable):
         description="Global filters for logging",
         displayedName="Filters", defaultValue=[])
 
+    @String(
+        displayedName="Logging Level",
+        options=("DEBUG", "INFO", "WARN", "ERROR"),
+        defaultValue="INFO")
+    def level(self, value):
+        """The minimum level for this logger to log"""
+        if self.logger is not None:
+            self.logger.setLevel(value)
+        self.level = value
+
     @contextmanager
     def setBroker(self, broker):
         """Once a device is up and running, set the broker
@@ -88,6 +100,7 @@ class Logger(Configurable):
         to the Python logging loggers. This can only be done once we
         have a connection to the broker, and should stop once we loose it."""
         self.logger = logging.getLogger(broker.deviceId)
+        self.logger.setLevel(self.level)
         for h in self.handlers:
             h.parent = self
             self.logger.addHandler(h.handler)
