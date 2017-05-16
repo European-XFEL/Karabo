@@ -1,5 +1,3 @@
-from contextlib import contextmanager
-
 from traits.api import push_exception_handler, pop_exception_handler
 
 from karabo.common.project.api import (
@@ -7,7 +5,6 @@ from karabo.common.project.api import (
     MacroModel, ProjectModel, PROJECT_OBJECT_CATEGORIES
 )
 from karabo.common.scenemodel.api import SceneModel
-from karabo_gui.events import unregister_from_broadcasts
 from karabo_gui.singletons.project_model import ProjectViewItemModel
 from karabo_gui.testing import GuiTestCase
 from ..controller.build import (
@@ -38,17 +35,6 @@ def assert_no_notification_handlers(proj_model):
     # Recurse!
     for sub in proj_model.subprojects:
         assert_no_notification_handlers(sub)
-
-
-@contextmanager
-def qt_model_context():
-    """A context manager to handle unregistering from broadcast events.
-    """
-    try:
-        model = ProjectViewItemModel(parent=None)
-        yield model
-    finally:
-        unregister_from_broadcasts(model)
 
 
 class ControllerTestCase(GuiTestCase):
@@ -84,41 +70,41 @@ class ControllerTestCase(GuiTestCase):
         def rows_removed(parent, start, end):
             removals.append((start, end))
 
-        with qt_model_context() as qt_model:
-            qt_model.rowsInserted.connect(rows_inserted)
-            qt_model.rowsRemoved.connect(rows_removed)
+        qt_model = ProjectViewItemModel(parent=None)
+        qt_model.rowsInserted.connect(rows_inserted)
+        qt_model.rowsRemoved.connect(rows_removed)
 
-            # Cause the controllers to be created and get a ref to the root
-            qt_model.traits_data_model = proj
-            controller = qt_model.root_controller
+        # Cause the controllers to be created and get a ref to the root
+        qt_model.traits_data_model = proj
+        controller = qt_model.root_controller
 
-            for subgroup, creator in zip(controller.children, creators):
-                assert subgroup.child_create is creator
-                assert len(subgroup.children) == 1
+        for subgroup, creator in zip(controller.children, creators):
+            assert subgroup.child_create is creator
+            assert len(subgroup.children) == 1
 
-            proj_servers = proj.servers
-            assert len(proj_servers) == len(servers) == 1
-            serv = proj_servers[0]
-            assert len(serv.devices) == len(servers[0].devices) == 2
-            assert serv.devices[0].instance_id == 'dev0'
-            assert serv.devices[1].instance_id == 'dev1'
+        proj_servers = proj.servers
+        assert len(proj_servers) == len(servers) == 1
+        serv = proj_servers[0]
+        assert len(serv.devices) == len(servers[0].devices) == 2
+        assert serv.devices[0].instance_id == 'dev0'
+        assert serv.devices[1].instance_id == 'dev1'
 
-            assert len(insertions) == 0
-            assert len(removals) == 0
+        assert len(insertions) == 0
+        assert len(removals) == 0
 
-            proj.scenes.append(SceneModel())
-            assert len(controller.children[1].children) == 2
-            assert len(insertions) == 1
-            assert insertions[0] == (1, 1)
+        proj.scenes.append(SceneModel())
+        assert len(controller.children[1].children) == 2
+        assert len(insertions) == 1
+        assert insertions[0] == (1, 1)
 
-            subproj = proj.subprojects.pop()
-            assert len(controller.children[-1].children) == 0
-            assert len(removals) == 1
-            assert removals[0] == (0, 0)
-            assert_no_notification_handlers(subproj)
+        subproj = proj.subprojects.pop()
+        assert len(controller.children[-1].children) == 0
+        assert len(removals) == 1
+        assert removals[0] == (0, 0)
+        assert_no_notification_handlers(subproj)
 
-            destroy_project_controller(controller)
-            assert_no_notification_handlers(proj)
+        destroy_project_controller(controller)
+        assert_no_notification_handlers(proj)
 
     def test_device_server_controller(self):
         sc0 = SceneModel()
@@ -133,28 +119,27 @@ class ControllerTestCase(GuiTestCase):
         proj = ProjectModel(scenes=[sc0], servers=[devServ0],
                             subprojects=subprojects)
 
-        with qt_model_context() as qt_model:
+        qt_model = ProjectViewItemModel(parent=None)
+        # Cause the controllers to be created and get a ref to the root
+        qt_model.traits_data_model = proj
+        controller = qt_model.root_controller
 
-            # Cause the controllers to be created and get a ref to the root
-            qt_model.traits_data_model = proj
-            controller = qt_model.root_controller
+        proj_groups = ['macros', 'scenes', 'servers', 'subprojects']
+        assert len(proj_groups) == len(controller.children)
 
-            proj_groups = ['macros', 'scenes', 'servers', 'subprojects']
-            assert len(proj_groups) == len(controller.children)
-
-            for child in controller.children:
-                if child.trait_name == proj_groups[1]:
-                    assert len(child.children) == 1
-                    proj.scenes.pop()
-                    assert len(child.children) == 0
-                    proj.scenes.append(SceneModel())
-                elif child.trait_name == proj_groups[2]:
-                    assert len(child.children) == 1
-                    server_items = child.children
-                    assert server_items[0].model is devServ0
-                    assert len(server_items[0].children) == 2
-                    devServ0.devices.pop()
-                    assert len(server_items[0].children) == 1
-                    dev2 = DeviceInstanceModel(instance_id='dev2')
-                    devServ0.devices.append(dev2)
-                    assert len(server_items[0].children) == 2
+        for child in controller.children:
+            if child.trait_name == proj_groups[1]:
+                assert len(child.children) == 1
+                proj.scenes.pop()
+                assert len(child.children) == 0
+                proj.scenes.append(SceneModel())
+            elif child.trait_name == proj_groups[2]:
+                assert len(child.children) == 1
+                server_items = child.children
+                assert server_items[0].model is devServ0
+                assert len(server_items[0].children) == 2
+                devServ0.devices.pop()
+                assert len(server_items[0].children) == 1
+                dev2 = DeviceInstanceModel(instance_id='dev2')
+                devServ0.devices.append(dev2)
+                assert len(server_items[0].children) == 2
