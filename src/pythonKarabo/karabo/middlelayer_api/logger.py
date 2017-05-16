@@ -53,9 +53,14 @@ class NetworkHandler(Handler):
                      )[bisect([20, 30, 40], record.levelno)],
             "category", self.parent.broker.deviceId,
             "message", record.getMessage(),
+            "msg", record.msg,
             "lineno", record.lineno,
             "module", record.module,
             "funcname", record.funcName)
+        args = Hash()
+        for i, arg in enumerate(record.args):
+            args["{}{}".format(type(arg).__name__, i)] = arg
+        hash["args"] = args
         if record.exc_info is not None:
             hash["traceback"] = traceback.format_exception(*record.exc_info)
         self.parent.broker.log(hash)
