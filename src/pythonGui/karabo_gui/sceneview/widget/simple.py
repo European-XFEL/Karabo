@@ -59,7 +59,7 @@ class LabelWidget(QLabel):
     def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
-    def update_alarm_symbol(self, device_id, alarm_type):
+    def update_alarm_symbol(self):
         """ Satisfy the informal widget interface. """
 
     def update_global_access_level(self):
@@ -132,7 +132,7 @@ class SceneLinkWidget(QPushButton):
     def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
-    def update_alarm_symbol(self, device_id, alarm_type):
+    def update_alarm_symbol(self):
         """ Satisfy the informal widget interface. """
 
     def update_global_access_level(self):
@@ -198,7 +198,7 @@ class UnknownSvgWidget(QWidget):
     def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
-    def update_alarm_symbol(self, device_id, alarm_type):
+    def update_alarm_symbol(self):
         """ Satisfy the informal widget interface. """
 
     def update_global_access_level(self):
@@ -229,7 +229,7 @@ class UnknownWidget(PlaceholderWidget):
     def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
-    def update_alarm_symbol(self, device_id, alarm_type):
+    def update_alarm_symbol(self):
         """ Satisfy the informal widget interface. """
 
     def update_global_access_level(self):
@@ -291,7 +291,7 @@ class WorkflowItemWidget(QWidget):
     def set_visible(self, visible):
         """ Satisfy the informal widget interface. """
 
-    def update_alarm_symbol(self, device_id, alarm_type):
+    def update_alarm_symbol(self):
         """ Satisfy the informal widget interface. """
 
     def update_global_access_level(self):

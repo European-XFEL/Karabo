@@ -30,6 +30,7 @@ class BaseWidgetContainer(QWidget):
         self.layout.addWidget(self.status_symbol)
 
         self.alarm_symbol = QLabel("", self)
+        self.update_alarm_symbol()
 
         if self.boxes:
             self.old_style_widget = self._create_widget(self.boxes)
@@ -115,18 +116,27 @@ class BaseWidgetContainer(QWidget):
             for box in self.boxes:
                 box.removeVisible()
 
-    def update_alarm_symbol(self, device_id, alarm_type):
+    def update_alarm_symbol(self):
         """Update the alarm symbol with a pixmap matching the given
         ``alarm_type``
         """
-        # Check whether device_id is related to these boxes
+        widget_alarms = []
         for b in self.boxes:
-            if b.configuration.id == device_id:
-                break
-        else:
-            return
+            system_topo_node = b.configuration.topology_node
+            if system_topo_node is None:
+                continue
 
-        pixmap = get_alarm_pixmap(alarm_type)
+            alarm_dict = system_topo_node.alarm_info.alarm_dict
+            property_name = '.'.join(b.path)
+            for alarm_type, properties in alarm_dict.items():
+                if property_name in properties:
+                    widget_alarms.append(alarm_type)
+
+        pixmap = None
+        if widget_alarms:
+            widget_alarms.sort()  # Alphabetic order corresponds to priority
+            pixmap = get_alarm_pixmap(widget_alarms[0])
+
         if pixmap is not None:
             self.alarm_symbol.setPixmap(pixmap)
             self.alarm_symbol.show()
