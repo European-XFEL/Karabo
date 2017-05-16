@@ -12,6 +12,7 @@
 """
 
 from datetime import datetime
+from functools import wraps
 
 from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QMessageBox
@@ -19,7 +20,6 @@ from PyQt4.QtGui import QMessageBox
 from karabo.common.api import State
 from karabo_gui.background import executeLater, Priority
 from karabo_gui.events import broadcast_event, KaraboEventSender
-from karabo_gui.messagebox import MessageBox
 from karabo_gui.singletons.api import get_network, get_topology
 from karabo_gui.util import getSchemaAttributeUpdates
 
@@ -43,6 +43,23 @@ def handle_device_state_change(box, value, timestamp):
         data = {'configuration': configuration,
                 'is_changing': False}
         broadcast_event(KaraboEventSender.DeviceStateChanged, data)
+
+
+def project_db_handler(fall_through=False):
+    """Decorator for project DB handlers to cut down on boilerplate"""
+
+    def inner(handler):
+        @wraps(handler)
+        def wrapped(self, reply):
+            success = reply.get('success', True)
+            if not success:
+                QMessageBox.critical(None, 'Error', reply['reason'])
+            # If needed, call the handler even when there was a failure
+            if fall_through or success:
+                return handler(self, reply)
+
+        return wrapped
+    return inner
 
 
 class Manager(QObject):
@@ -334,38 +351,37 @@ class Manager(QObject):
     def handle_projectEndUserSession(self, reply):
         pass
 
+    @project_db_handler()
     def handle_projectListDomains(self, reply):
         # ``reply`` is a Hash containing a list of domain names
         broadcast_event(KaraboEventSender.ProjectDomainsList,
                         {'items': reply['domains']})
 
+    @project_db_handler()
     def handle_projectListItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
-        success = reply.get('success', True)
-        if not success:
-            MessageBox.showError(reply['reason'])
-            return
         broadcast_event(KaraboEventSender.ProjectItemsList,
-                        {'items': reply['items']})
+                        {'items': reply.get('items', [])})
 
     def handle_projectListProjectManagers(self, reply):
         # ``reply`` is a list of strings
         broadcast_event(KaraboEventSender.ProjectManagersList,
                         {'items': reply})
 
+    @project_db_handler(fall_through=True)
     def handle_projectLoadItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
         success = reply.get('success', True)
-        if not success:
-            MessageBox.showError(reply['reason'])
-        d = {'success': success, 'items': reply['items']}  # Hash -> dict
+        d = {'success': success, 'items': reply.get('items', [])}
         broadcast_event(KaraboEventSender.ProjectItemsLoaded, d)
 
+    @project_db_handler()
     def handle_projectSaveItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
         broadcast_event(KaraboEventSender.ProjectItemsSaved,
                         {'items': reply['items']})
 
+    @project_db_handler()
     def handle_projectUpdateAttribute(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
         broadcast_event(KaraboEventSender.ProjectAttributeUpdated,
