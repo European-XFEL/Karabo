@@ -18,17 +18,17 @@ class Tests(TestCase):
         a.amin = 5
         self.assertEqual(a.alarmCondition, AlarmCondition.NONE)
         a.amin = 1
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_LOW)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
         a.amax = 30
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_HIGH)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
         a.amax = 3
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_LOW)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
         a.wmax = 22
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_LOW)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
         a.wmin = 1
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_LOW)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
         a.amin = 55
-        self.assertEqual(a.alarmCondition, AlarmCondition.WARN_HIGH)
+        self.assertEqual(a.alarmCondition, AlarmCondition.WARN)
 
     def test_multiple(self):
         class A(AlarmMixin):
@@ -39,15 +39,15 @@ class Tests(TestCase):
         a = A({})
         self.assertEqual(a.alarmCondition, AlarmCondition.NONE)
         a.aminwmax = 2
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_LOW)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
         a.aminwmax = 22
-        self.assertEqual(a.alarmCondition, AlarmCondition.WARN_HIGH)
+        self.assertEqual(a.alarmCondition, AlarmCondition.WARN)
         a.aminwmax = 4
         self.assertEqual(a.alarmCondition, AlarmCondition.NONE)
         a.amaxwmax = 10
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_HIGH)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
         a.amaxwmax = 8
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_HIGH)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
         a.amaxwmax = 5
         self.assertEqual(a.alarmCondition, AlarmCondition.NONE)
 
@@ -64,15 +64,15 @@ class Tests(TestCase):
         a = A({})
         self.assertEqual(a.alarmCondition, AlarmCondition.NONE)
         a.left.amin = 1
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_LOW)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
         a.right.wmax = 22
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_LOW)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
         a.left.amin = 5
-        self.assertEqual(a.alarmCondition, AlarmCondition.WARN_HIGH)
+        self.assertEqual(a.alarmCondition, AlarmCondition.WARN)
         a.wmin = 3
-        self.assertEqual(a.alarmCondition, AlarmCondition.WARN_HIGH)
+        self.assertEqual(a.alarmCondition, AlarmCondition.WARN)
         a.right.wmax = 1
-        self.assertEqual(a.alarmCondition, AlarmCondition.WARN_LOW)
+        self.assertEqual(a.alarmCondition, AlarmCondition.WARN)
 
     def test_init(self):
         class A(AlarmMixin):
@@ -80,7 +80,7 @@ class Tests(TestCase):
 
         a = A({"amin": 2})
         self.assertEqual(a.amin, 2)
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_LOW)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
 
     def test_default(self):
         class A(AlarmMixin):
@@ -88,7 +88,7 @@ class Tests(TestCase):
 
         a = A({})
         self.assertEqual(a.amin, 2)
-        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM_LOW)
+        self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
 
 
 if __name__ == "__main__":
