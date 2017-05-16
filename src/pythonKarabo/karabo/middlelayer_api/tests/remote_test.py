@@ -913,6 +913,7 @@ class Tests(DeviceTest):
         self.assertFalse(
             ah["toAdd.globalAlarmCondition.alarm.needsAcknowledging"])
         self.remote.signalAlarmUpdate.disconnect("local", "slotAlarmUpdate")
+        self.remote.globalAlarmCondition = AlarmCondition.NONE
 
     @async_tst
     def test_double_getDevice(self):
