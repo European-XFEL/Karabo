@@ -5,6 +5,14 @@ from .schema import Configurable
 from .signalslot import Signal, slot
 
 
+class Alarm(String):
+    def __init__(self, **kwargs):
+        super().__init__(enum=AlarmCondition, **kwargs)
+
+    def alarmCondition(self, value):
+        return value.enum
+
+
 class AlarmMixin(Configurable):
     alarmCondition = String(
         enum=AlarmCondition,
@@ -12,6 +20,11 @@ class AlarmMixin(Configurable):
         description="The current alarm condition of the device. "
                     "Evaluates to the highest condition on any property "
                     "if not set manually.",
+        accessMode=AccessMode.READONLY, defaultValue=AlarmCondition.NONE)
+
+    globalAlarmCondition = Alarm(
+        displayedName="Global Alarm Condition",
+        description="This is the alarm condition of the entire device",
         accessMode=AccessMode.READONLY, defaultValue=AlarmCondition.NONE)
 
     signalAlarmUpdate = Signal(String(), HashType())
