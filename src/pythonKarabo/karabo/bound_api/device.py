@@ -425,18 +425,24 @@ class PythonDevice(NoFsm):
         :param config: a Hash providing logger configuration
         :return:
         """
-        if not config.has("Logger.network.topic"):
-            # If not specified, use the local topic for log messages
-            config.set("Logger.network.topic", self._ss.getTopic())
+        # cure the network part of the logger config
+        topicPath = "Logger.network.topic"
+        if (not config.has(topicPath) or not config[topicPath]):
+            # If not specified or empty, use the local topic for log messages
+            config.set(topicPath, self._ss.getTopic())
+            topicAttrs = config.getNode(topicPath).getAttributes()
+            self._getActualTimestamp().toHashAttributes(topicAttrs)
 
+        # cure the file part of the logger config
         path = os.path.join(os.environ['KARABO'], "var", "log", self.serverid,
                             self.deviceid)
         if not os.path.isdir(path):
             os.makedirs(path)
         path = os.path.join(path, 'device.log')
         config.set('Logger.file.filename', path)
+
+        # finally configure the logger
         Logger.configure(config["Logger"])
-        Logger.configure(config.get("Logger"))
         Logger.useOstream()
         Logger.useFile()
         Logger.useNetwork()
@@ -549,7 +555,6 @@ class PythonDevice(NoFsm):
                         node = validated.getNode("alarmCondition")
                         attributes = node.getAttributes()
                         stamp.toHashAttributes(attributes)
-
                     changedAlarms = self._evaluateAlarmUpdates(prevAlarmParams)
 
                     if not changedAlarms.get("toClear").empty() or not \
