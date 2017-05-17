@@ -900,7 +900,20 @@ class Tests(DeviceTest):
         ah = self.local.alarmhash
         self.assertFalse(ah["toAdd"])
         self.assertEqual(ah["toClear.alarm"], ["warnLow"])
+
+        self.local.alarm_future = Future()
+        self.remote.globalAlarmCondition = AlarmCondition.ALARM
+        self.remote.update()
+        yield from self.local.alarm_future
+        ah = self.local.alarmhash
+        self.assertFalse(ah["toClear"])
+        self.assertEqual(ah["toAdd.globalAlarmCondition.alarm.type"], "alarm")
+        self.assertEqual(
+            ah["toAdd.globalAlarmCondition.alarm.description"], "")
+        self.assertFalse(
+            ah["toAdd.globalAlarmCondition.alarm.needsAcknowledging"])
         self.remote.signalAlarmUpdate.disconnect("local", "slotAlarmUpdate")
+        self.remote.globalAlarmCondition = AlarmCondition.NONE
 
     @async_tst
     def test_double_getDevice(self):
