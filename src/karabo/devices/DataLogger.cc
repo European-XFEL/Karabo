@@ -86,6 +86,11 @@ namespace karabo {
             input.get("deviceToBeLogged", m_deviceToBeLogged);
             // start "flush" actor ...
             input.get("flushInterval", m_flushInterval); // in seconds
+
+            // Register slots in constructor to ensure existence when sending instanceNew
+            KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
+            KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
+            KARABO_SLOT(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
         }
 
 
@@ -121,11 +126,6 @@ namespace karabo {
                 boost::filesystem::create_directory(get<string>("directory") + "/" + m_deviceToBeLogged + "/idx");
 
             m_lastIndex = determineLastIndex(m_deviceToBeLogged);
-
-            // Register slots
-            KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
-            KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
-            KARABO_SLOT(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
 
             connect(m_deviceToBeLogged, "signalChanged", "", "slotChanged");
             connect(m_deviceToBeLogged, "signalStateChanged", "", "slotChanged");
@@ -224,10 +224,14 @@ namespace karabo {
                 if (leafNode.getType() == Types::HASH) continue;
                 // Skip those elements which should not be archived
                 if (!m_currentSchema.has(path) || (m_currentSchema.hasArchivePolicy(path) && (m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING))) continue;
-                string value = leafNode.getValueAs<string>();
-                string type = Types::to<ToLiteral>(leafNode.getType());
+                if (!Timestamp::hashAttributesContainTimeInformation(leafNode.getAttributes())) {
+                    KARABO_LOG_WARN << "Skip '" << path << "' - it lacks time information attributes.";
+                    continue;
+                }
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 m_lastDataTimestamp = t;
+                const string value = leafNode.getValueAs<string>();
+                const string type = Types::to<ToLiteral>(leafNode.getType());
 
                 bool newFile = false;
                 if (!m_configStream.is_open()) {
