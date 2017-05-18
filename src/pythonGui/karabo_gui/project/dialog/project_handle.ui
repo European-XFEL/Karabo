@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>400</height>
+    <width>725</width>
+    <height>420</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -112,13 +112,6 @@
     </widget>
    </item>
   </layout>
-  <zorder>twProjects</zorder>
-  <zorder>leTitle</zorder>
-  <zorder>buttonBox</zorder>
-  <zorder>cbShowTrash</zorder>
-  <zorder>rbFromRemote</zorder>
-  <zorder>rbFromCache</zorder>
-  <zorder>laLoadFrom</zorder>
  </widget>
  <resources/>
  <connections>
