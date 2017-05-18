@@ -50,6 +50,11 @@ namespace karabo {
         }
 
 
+        bool AlarmCondition::isLowerCriticalityThan(const AlarmCondition & other) const {
+            return m_rank < other.m_rank;
+        }
+
+
         bool AlarmCondition::isSameCriticality(const AlarmCondition & test) const {
             return test.m_rank == this->m_rank;
         }

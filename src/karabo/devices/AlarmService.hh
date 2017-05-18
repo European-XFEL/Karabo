@@ -111,7 +111,6 @@ namespace karabo {
 
             void slotUpdateAlarms(const std::string& deviceId, const karabo::util::Hash& alarmInfo);
 
-   
             /**
              * Add signals and slots which need to be set up during initialization in this function
              */
@@ -127,7 +126,6 @@ namespace karabo {
              */
             void reinitFromFile();
 
-           
             /**
              * Add an update to a row in the alarm system
              * @param updateType: type of update: init, update, delete, acknowledgeable, deviceKilled
@@ -135,6 +133,22 @@ namespace karabo {
              * @return: a Hash to add to the updated rows.
              */
             karabo::util::Hash addRowUpdate(const std::string& updateType, const karabo::util::Hash& entry) const;
+
+            /**
+             * Add/update the alarms for a device
+             * @param deviceId: A device ID
+             * @param alarms: A hash of property names -> hashes of alarm type entry hashes
+             * @param rowUpdates: A Hash of updated rows which will be emitted to connected slots
+             */
+            void addDeviceAlarms(const std::string& deviceId, const karabo::util::Hash& alarms, karabo::util::Hash& rowUpdates);
+
+            /**
+             * Clear the alarms for a device
+             * @param deviceId: A device ID
+             * @param alarms: A hash of property names -> hashes of alarm type entry hashes
+             * @param rowUpdates: A Hash of updated rows which will be emitted to connected slots
+             */
+            void removeDeviceAlarms(const std::string& deviceId, const karabo::util::Hash& alarms, karabo::util::Hash& rowUpdates);
 
             /**
              * Slot to be called if a client wishes to acknowledge an alarm
@@ -156,8 +170,28 @@ namespace karabo {
             bool allowLock() const {
                 return false;
             }
-           
-           
+
+            /**
+             * Determine a single property's most significant alarm.
+             * @param propertyAlarmTypes: a Hash containing all the alarm type hashes for a single property
+             * @return The most significant alarm type
+             */
+            karabo::util::AlarmCondition getMostSignificantAlarm(const karabo::util::Hash& propertyAlarmTypes) const;
+
+            /**
+             * Make all alarm types which are of a lower significance 'acknowledgeable'
+             * if 'needsAcknowledging' is set for them.
+             *
+             * NOTE: `m_alarmChangeMutex` must be locked when calling this method!
+             *
+             * @param propertyAlarms: The sub-Hash of m_alarms containing all the alarm type hashes for a single property
+             * @param significantType: An alarm type to compare against
+             * @param rowUpdates: A row updates Hash which will be emitted to connected slots
+             */
+            void  makeLessSignificantAcknowledgeable(karabo::util::Hash& propertyAlarms,
+                                                     const karabo::util::AlarmCondition& significantType,
+                                                     karabo::util::Hash& rowUpdates);
+
         private: // members
 
             std::map<std::string, karabo::util::Hash> m_registeredDevices;
