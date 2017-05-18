@@ -17,12 +17,14 @@ from karabo_gui.singletons.api import (get_db_conn, get_project_model,
                                        get_selection_tracker)
 from karabo_gui.util import is_database_processing, set_treeview_header
 from .controller.bases import BaseProjectGroupController
+from .controller.device import DeviceInstanceController
 from .controller.project import ProjectController
 
 
 class ProjectView(QTreeView):
     """ An object representing the view for a Karabo project
     """
+
     def __init__(self, parent=None):
         super(ProjectView, self).__init__(parent)
 
@@ -75,8 +77,10 @@ class ProjectView(QTreeView):
 
         controller = self.model().controller_ref(parent_index)
         if (controller is not None and
-                isinstance(controller, BaseProjectGroupController)):
+                isinstance(controller, BaseProjectGroupController) and not
+                isinstance(controller, DeviceInstanceController)):
             # If a group just added its first item, expand it
+            # except for device instances
             self.expand(parent_index)
 
     def _selection_change(self, selected, deselected):
