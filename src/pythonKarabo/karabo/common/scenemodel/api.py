@@ -1,6 +1,7 @@
 # flake8: noqa
-from .bases import (BaseLayoutData, BaseLayoutModel, BaseSceneObjectData,
-                    BaseShapeObjectData, BaseWidgetObjectData)
+from .bases import (BaseDisplayEditableWidget, BaseLayoutData, BaseLayoutModel,
+                    BaseSceneObjectData, BaseShapeObjectData,
+                    BaseWidgetObjectData)
 from .const import (NS_KARABO, NS_SVG, SCENE_FILE_VERSION, SCENE_MIN_HEIGHT,
                     SCENE_MIN_WIDTH, SceneTargetWindow)
 from .exceptions import SceneReaderException, SceneWriterException

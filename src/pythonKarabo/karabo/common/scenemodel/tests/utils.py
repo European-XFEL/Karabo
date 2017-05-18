@@ -11,13 +11,11 @@ def assert_base_traits(model):
     assert model.keys == ['device_id.prop']
 
 
-def base_widget_traits(parent=None):
+def base_widget_traits():
     traits = {
         'keys': ['device_id.prop'],
         'x': 0, 'y': 0, 'height': 100, 'width': 100
     }
-    if parent is not None:
-        traits['parent_component'] = parent
     return traits
 
 

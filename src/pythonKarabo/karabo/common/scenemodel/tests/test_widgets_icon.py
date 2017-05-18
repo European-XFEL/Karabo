@@ -46,7 +46,7 @@ VERSION_1_DISPLAY_ICONSET_SVG = """
 
 
 def _check_icon_widget(klass):
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     icon = IconData(data=b'karabo')
     if klass is DigitIconsModel:
         icon.equal = True
@@ -63,7 +63,7 @@ def _check_icon_widget(klass):
 
 
 def test_display_iconset_widget():
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     traits['data'] = b'karabo'
     model = DisplayIconsetModel(**traits)
     read_model = single_model_round_trip(model)
@@ -92,11 +92,11 @@ def test_icon_widget_version_1():
 
 
 def test_write_exceptions():
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     traits['values'] = [IconData()]
     model = TextIconsModel(**traits)
     assert_raises(SceneWriterException, single_model_round_trip, model)
 
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     model = DisplayIconsetModel(**traits)
     assert_raises(SceneWriterException, single_model_round_trip, model)

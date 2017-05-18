@@ -24,7 +24,7 @@ OLD_SPARKY = """
 def test_line_plot_widget():
     curve = PlotCurveModel(device='dev1', path='prop', curve_object_data='00')
     for name in ('DisplayTrendline', 'XYVector'):
-        traits = base_widget_traits(parent='DisplayComponent')
+        traits = base_widget_traits()
         traits['klass'] = name
         traits['boxes'] = [curve]
         model = LinePlotModel(**traits)
@@ -41,7 +41,7 @@ def test_line_plot_duplicate_curves():
     curve0 = PlotCurveModel(device='dev1', path='foo', curve_object_data='00')
     curve1 = PlotCurveModel(device='dev1', path='bar', curve_object_data='11')
     curve2 = PlotCurveModel(device='dev1', path='foo', curve_object_data='22')
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     model = LinePlotModel(klass='XYVector', boxes=[curve0, curve1], **traits)
 
     model.boxes.append(curve1)
@@ -52,7 +52,7 @@ def test_line_plot_duplicate_curves():
 
 
 def test_sparkline_basics():
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     traits['time_base'] = 42
     traits['show_value'] = True
     traits['show_format'] = 'whatever'

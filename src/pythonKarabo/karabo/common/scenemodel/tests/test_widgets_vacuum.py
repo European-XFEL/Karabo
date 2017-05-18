@@ -7,7 +7,7 @@ from .utils import (assert_base_traits, base_widget_traits,
 def test_vacuum_widget():
     model = VacuumWidgetModel()
     for name in VACUUM_WIDGETS:
-        traits = base_widget_traits(parent='DisplayComponent')
+        traits = base_widget_traits()
         traits['klass'] = name
         model = VacuumWidgetModel(**traits)
         read_model = single_model_round_trip(model)
