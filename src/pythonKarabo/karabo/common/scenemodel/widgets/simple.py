@@ -2,7 +2,8 @@ from xml.etree.ElementTree import SubElement
 
 from traits.api import Enum, Int, String
 
-from karabo.common.scenemodel.bases import BaseWidgetObjectData
+from karabo.common.scenemodel.bases import (
+    BaseDisplayEditableWidget, BaseWidgetObjectData)
 from karabo.common.scenemodel.const import (
     NS_KARABO, WIDGET_ELEMENT_TAG, SceneTargetWindow)
 from karabo.common.scenemodel.io_utils import (
@@ -20,28 +21,28 @@ class BitfieldModel(BaseWidgetObjectData):
     """ A model for Bitfield"""
 
 
-class CheckBoxModel(BaseWidgetObjectData):
+class CheckBoxModel(BaseDisplayEditableWidget):
     """ A model for DisplayCheckBox/EditableCheckBox
     """
     # The actual type of the widget
     klass = Enum('DisplayCheckBox', 'EditableCheckBox')
 
 
-class ChoiceElementModel(BaseWidgetObjectData):
+class ChoiceElementModel(BaseDisplayEditableWidget):
     """ A model for DisplayChoiceElement/EditableChoiceElement
     """
     # The actual type of the widget
     klass = Enum('DisplayChoiceElement', 'EditableChoiceElement')
 
 
-class ComboBoxModel(BaseWidgetObjectData):
+class ComboBoxModel(BaseDisplayEditableWidget):
     """ A model for DisplayComboBox/EditableComboBox
     """
     # The actual type of the widget
     klass = Enum('DisplayComboBox', 'EditableComboBox')
 
 
-class DirectoryModel(BaseWidgetObjectData):
+class DirectoryModel(BaseDisplayEditableWidget):
     """ A model for DisplayDirectory/EditableDirectory
     """
     # The actual type of the widget
@@ -76,14 +77,14 @@ class EditableSpinBoxModel(BaseWidgetObjectData):
     """ A model for EditableSpinBox"""
 
 
-class FileInModel(BaseWidgetObjectData):
+class FileInModel(BaseDisplayEditableWidget):
     """ A model for DisplayFileIn/EditableFileIn
     """
     # The actual type of the widget
     klass = Enum('DisplayFileIn', 'EditableFileIn')
 
 
-class FileOutModel(BaseWidgetObjectData):
+class FileOutModel(BaseDisplayEditableWidget):
     """ A model for DisplayFileOut/EditableFileOut
     """
     # The actual type of the widget
@@ -121,7 +122,7 @@ class LampModel(BaseWidgetObjectData):
     """ A model for LampWidget"""
 
 
-class LineEditModel(BaseWidgetObjectData):
+class LineEditModel(BaseDisplayEditableWidget):
     """ A model for DisplayLineEdit/EditableLineEdit
     """
     # The actual type of the widget

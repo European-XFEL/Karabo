@@ -24,7 +24,7 @@ TABLE_SCHEMA = (
 
 
 def test_color_bool_widget():
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     traits['invert'] = True
     model = ColorBoolModel(**traits)
     read_model = single_model_round_trip(model)
@@ -33,7 +33,7 @@ def test_color_bool_widget():
 
 
 def test_display_state_color_widget():
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     traits['text'] = 'foo'
     model = DisplayStateColorModel(**traits)
     read_model = single_model_round_trip(model)
@@ -42,7 +42,7 @@ def test_display_state_color_widget():
 
 
 def test_evaluator_widget():
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     traits['expression'] = 'x'
     model = EvaluatorModel(**traits)
     read_model = single_model_round_trip(model)
@@ -51,7 +51,7 @@ def test_evaluator_widget():
 
 
 def test_float_spinbox_widget():
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     traits['step'] = 1.5
     model = FloatSpinBoxModel(**traits)
     read_model = single_model_round_trip(model)
@@ -60,7 +60,7 @@ def test_float_spinbox_widget():
 
 
 def test_monitor_widget():
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     traits['filename'] = 'foo.log'
     traits['interval'] = 1.5
     model = MonitorModel(**traits)
@@ -71,7 +71,7 @@ def test_monitor_widget():
 
 
 def test_single_bit_widget():
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     traits['bit'] = 42
     model = SingleBitModel(**traits)
     read_model = single_model_round_trip(model)
@@ -80,12 +80,8 @@ def test_single_bit_widget():
 
 
 def test_table_element_widget():
-    parts = (
-        ('DisplayComponent', 'DisplayTableElement'),
-        ('EditableComponent', 'EditableTableElement')
-    )
-    for parent, klass_name in parts:
-        traits = base_widget_traits(parent=parent)
+    for klass_name in ('DisplayTableElement', 'EditableTableElement'):
+        traits = base_widget_traits()
         traits['klass'] = klass_name
         # XXX: What does a schema look like?
         traits['column_schema'] = TABLE_SCHEMA
