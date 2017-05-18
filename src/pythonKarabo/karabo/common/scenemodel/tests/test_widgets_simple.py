@@ -23,22 +23,20 @@ def _assert_geometry_traits(model):
 
 
 def _check_display_editable_widget(klass):
-    extras = (
-        ('DisplayComponent', 'Display'), ('EditableComponent', 'Editable')
-    )
     suffix = klass.__name__[:-len('Model')]
-    for parent, prefix in extras:
+    for prefix in ('Display', 'Editable'):
+        traits = base_widget_traits()
         klass_name = prefix + suffix
-        traits = base_widget_traits(parent=parent)
         traits['klass'] = klass_name
         model = klass(**traits)
         read_model = single_model_round_trip(model)
         assert_base_traits(read_model)
         assert read_model.klass == klass_name
+        assert read_model.parent_component.startswith(prefix)
 
 
 def _check_empty_widget(klass):
-    traits = base_widget_traits(parent='DisplayComponent')
+    traits = base_widget_traits()
     model = klass(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
@@ -68,6 +66,7 @@ def test_display_editable_widgets():
 
 def test_missing_parent_component():
     traits = base_widget_traits()
+    traits['parent_component'] = ''  # explicitly empty!
     model = BitfieldModel(**traits)
     assert_raises(SceneWriterException, single_model_round_trip, model)
 
