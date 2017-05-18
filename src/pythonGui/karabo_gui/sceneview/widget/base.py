@@ -129,7 +129,8 @@ class BaseWidgetContainer(QWidget):
             alarm_dict = system_topo_node.alarm_info.alarm_dict
             property_name = '.'.join(b.path)
             for alarm_type, properties in alarm_dict.items():
-                if property_name in properties:
+                # feature: show global alarm_type for 'state' property
+                if property_name == 'state' or property_name in properties:
                     widget_alarms.append(alarm_type)
 
         pixmap = None
