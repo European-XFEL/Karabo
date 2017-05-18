@@ -70,7 +70,7 @@ class LoadProjectDialog(QDialog):
         self.setWindowTitle(title)
         self.buttonBox.button(QDialogButtonBox.Ok).setText('Load')
 
-        # Tableview
+        # QTableview in ui file
         self.twProjects.setModel(TableModel(parent=self))
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
@@ -78,7 +78,7 @@ class LoadProjectDialog(QDialog):
         self.twProjects.setContextMenuPolicy(Qt.CustomContextMenu)
         self.twProjects.customContextMenuRequested.connect(
             self._show_context_menu)
-
+        
         # Domain is not selectable for subprojects - only master projects
         self.cbDomain.setEnabled(not is_subproject)
         # Domain combobox
@@ -104,6 +104,8 @@ class LoadProjectDialog(QDialog):
         if sender is KaraboEventSender.ProjectItemsList:
             items = data.get('items', [])
             self.twProjects.model().add_project_manager_data(items)
+            # Match only the simple name column to content
+            self.twProjects.resizeColumnToContents(0)
         elif sender is KaraboEventSender.ProjectDomainsList:
             self._domains_updated(data.get('items', []))
         elif sender is KaraboEventSender.ProjectAttributeUpdated:
