@@ -8,8 +8,8 @@ from contextlib import contextmanager
 from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
                         Int, List, String, WeakRef)
 
-from karabo.common.api import AlarmInfo
 from karabo.middlelayer import AccessLevel
+from karabo_gui.alarms.api import AlarmInfo
 from karabo_gui.enums import NavigationItemTypes
 
 

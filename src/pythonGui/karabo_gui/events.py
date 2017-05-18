@@ -13,7 +13,6 @@ class KaraboEventSender(Enum):
     AddRunConfigGroup = "Add run configuration group"
     AlarmServiceInit = "Alarm service init"
     AlarmServiceUpdate = "Alarm service update"
-    AlarmDeviceUpdate = "Alarm device update"
     ClearConfigurator = "Clear configurator"
     ConnectMacroInstance = "Connect macro instance"
     CreateMainWindow = "Create the main window"

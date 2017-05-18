@@ -1,6 +1,5 @@
 # flake8: noqa
 from .alarm_conditions import AlarmCondition
-from .alarm_utils import AlarmInfo
 from .capabilities import Capabilities
 from .savable import BaseSavableModel, set_modified_flag
 from .shell_namespace import ShellNamespaceWrapper

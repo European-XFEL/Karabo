@@ -2,6 +2,7 @@ from PyQt4.QtCore import QRect, QSize, Qt, QTimer, pyqtSlot
 from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
                          QToolButton, QWidget)
 
+from karabo.common.api import AlarmCondition
 from karabo_gui import icons
 from karabo_gui.alarms.api import get_alarm_pixmap
 from karabo_gui.displaywidgets.displaymissingbox import DisplayMissingBox
@@ -131,12 +132,12 @@ class BaseWidgetContainer(QWidget):
             for alarm_type, properties in alarm_dict.items():
                 # feature: show global alarm_type for 'state' property
                 if property_name == 'state' or property_name in properties:
-                    widget_alarms.append(alarm_type)
+                    widget_alarms.append(AlarmCondition.fromString(alarm_type))
 
         pixmap = None
         if widget_alarms:
-            widget_alarms.sort()  # Alphabetic order corresponds to priority
-            pixmap = get_alarm_pixmap(widget_alarms[0])
+            widget_alarms.sort()  # AlarmCondition is sortable
+            pixmap = get_alarm_pixmap(widget_alarms[-1].asString())
 
         if pixmap is not None:
             self.alarm_symbol.setPixmap(pixmap)

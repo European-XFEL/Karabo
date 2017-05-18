@@ -145,7 +145,9 @@ class ProjectDeviceInstance(HasStrictTraits):
             self.status = self._update_online_status(box, status, error_flag)
         else:
             self.status = self._update_offline_status()
-        self._update_device_node()
+
+        # Keep the device_node pointer up-to-date
+        self.device_node = self._online_dev_config.topology_node
 
     # ---------------------------------------------------------------------
     # utils
@@ -206,16 +208,3 @@ class ProjectDeviceInstance(HasStrictTraits):
         elif self.class_id not in attributes.get('deviceClasses', []):
             return 'noplugin'
         return 'offline'
-
-    def _update_device_node(self):
-        """Fetch the weak reference for the correct ``SystemTreeNode``
-        """
-        device_node = None
-
-        def visitor(node):
-            nonlocal device_node
-            if node.node_id == self.device_id:
-                device_node = node
-
-        get_topology().visit_system_tree(visitor)
-        self.device_node = device_node
