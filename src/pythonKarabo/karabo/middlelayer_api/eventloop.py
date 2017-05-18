@@ -186,7 +186,7 @@ class Broker:
                         self.logger.warning(
                             'consumer of instance "%s" dropped messages',
                             self.deviceId, exc_info=True)
-                        continue
+                        message = e.message
                     else:
                         raise
                 finally:
