@@ -34,11 +34,15 @@ class WorkflowChannelModel(HasStrictTraits):
 
     def toggle_box_notifications(self, visible):
         """Register/Unregister for box notifications.
+
+        NOTE: We change the visibility of the base ``Configuration`` object,
+        because making an output channel Box visible will request a connection
+        to the output and data will be continually sent to the GUI.
         """
         if visible:
-            self.box.addVisible()
+            self.box.configuration.addVisible()
         else:
-            self.box.removeVisible()
+            self.box.configuration.removeVisible()
 
     def _get_device_ids(self):
         # XXX: There's only one ID until workflow group items are supported
