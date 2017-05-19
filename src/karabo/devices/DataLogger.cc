@@ -147,7 +147,18 @@ namespace karabo {
         void DataLogger::refreshDeviceInformation() {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "refreshDeviceInformation " << m_deviceToBeLogged;
-                requestNoWait(m_deviceToBeLogged, "slotGetSchema", "", "slotSchemaUpdated", false);
+                // We have to ensure that schema has arrived before the answer of slotGetConfiguration is received:
+                // ==> use synchronous call!
+                // If the timeout is for some reason too short (how that?), we will likely not be able to log the
+                // initial configuration. But probably the device to be logged is then anyway down and this logger
+                // is already being killed by the DataLoggerManager...
+                Schema schema;
+                std::string deviceId;
+                request(m_deviceToBeLogged, "slotGetSchema", false)
+                        .timeout(2000) // 2 s - How long is that! But in 99.99...% of the cases we receive quickly.
+                        .receive(schema, deviceId);
+                slotSchemaUpdated(schema, deviceId);
+
                 requestNoWait(m_deviceToBeLogged, "slotGetConfiguration", "", "slotChanged");
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("Could not create new entry for " + m_deviceToBeLogged));
@@ -188,7 +199,11 @@ namespace karabo {
         void DataLogger::slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId) {
 
             // To write log I need schema ...
-            if (m_currentSchema.empty()) return;
+            if (m_currentSchema.empty()) {
+                // DEBUG only since can happen when initialising, i.e. slot is connected, but Schema did not yet arrive.
+                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": slotChanged called, but no schema yet - ignore!";
+                return;
+            }
 
             if (deviceId != m_deviceToBeLogged) {
                 KARABO_LOG_ERROR << "slotChanged called from " << deviceId
