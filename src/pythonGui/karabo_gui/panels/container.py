@@ -21,8 +21,8 @@ class PanelContainer(QTabWidget):
         self.minimized = False
         self.tabCloseRequested.connect(self.onCloseTab)
 
-        if self.handle_empty:
-            self._add_placeholder()
+        self._add_placeholder()
+        self._update_tabs_closable()
 
     # ----------------------------------------------------------------------
     # public methods
@@ -30,11 +30,7 @@ class PanelContainer(QTabWidget):
     def addPanel(self, panel):
         """This function gets a panel and adds it to this container.
         """
-        # Remove the placeholder if needed
-        if self.handle_empty and self.count() == 1:
-            first_panel = self.widget(0)
-            if isinstance(first_panel, PlaceholderPanel):
-                self.removeTab(0)
+        self._remove_placeholder()
 
         # XXX: Circular references hurrah!
         panel.attach_to_container(self)
@@ -64,9 +60,7 @@ class PanelContainer(QTabWidget):
         self.panel_set.remove(panel)
         self._update_tabs_closable()
 
-        # Add a placeholder if needed
-        if self.handle_empty and self.count() == 0:
-            self._add_placeholder()
+        self._add_placeholder()
 
     def minimize(self, minimized):
         """Minimize/unminimize a tab container.
@@ -80,6 +74,8 @@ class PanelContainer(QTabWidget):
 
     def dock(self, panel):
         if panel.parent() is None:
+            self._remove_placeholder()
+
             index = self.insertTab(panel.index, panel, panel.windowTitle())
             panel.is_docked = True
 
@@ -100,6 +96,7 @@ class PanelContainer(QTabWidget):
             panel.move(QCursor.pos())
             panel.show()
 
+            self._add_placeholder()
             if self.count() == 0:
                 self.hide()
 
@@ -121,9 +118,6 @@ class PanelContainer(QTabWidget):
 
     @pyqtSlot(int)
     def onCloseTab(self, index):
-        if self.count() == 1:
-            return
-
         # Get panel, which is about to be closed
         panel = self.widget(index)
         # Close panel (if possible) before removing it from tab
@@ -133,14 +127,26 @@ class PanelContainer(QTabWidget):
         self.removeTab(index)
         panel.setParent(None)
         self.panel_set.remove(panel)
-        self._update_tabs_closable()
+
+        self._add_placeholder()
 
     # ----------------------------------------------------------------------
     # private methods
 
     def _add_placeholder(self):
-        placeholder = PlaceholderPanel()
-        self.addTab(placeholder, placeholder.windowTitle())
+        """Add a placeholder if needed
+        """
+        if self.handle_empty and self.count() == 0:
+            placeholder = PlaceholderPanel()
+            self.addTab(placeholder, placeholder.windowTitle())
+            self._update_tabs_closable()
+
+    def _remove_placeholder(self):
+        """Remove the placeholder if needed
+        """
+        if self.handle_empty and self.count() == 1:
+            if isinstance(self.widget(0), PlaceholderPanel):
+                self.removeTab(0)
 
     def _set_tab_text_color(self, index, widget):
         color = widget.tab_text_color()
@@ -149,7 +155,8 @@ class PanelContainer(QTabWidget):
             tab_bar.setTabTextColor(index, color)
 
     def _update_tabs_closable(self):
-        if self.count() > 1 and not self.tabsClosable():
+        if self.count() > 1:
             self.setTabsClosable(self.allow_closing)
         elif self.count() == 1:
-            self.setTabsClosable(False)
+            is_placeholder = isinstance(self.widget(0), PlaceholderPanel)
+            self.setTabsClosable(self.allow_closing and not is_placeholder)
