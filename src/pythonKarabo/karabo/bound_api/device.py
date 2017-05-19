@@ -369,8 +369,8 @@ class PythonDevice(NoFsm):
         self._ss = SignalSlotable(self.deviceid, "JmsConnection",
                                   self.parameters["_connection_"], 20, info)
 
-        # Setup device logger (needs self._ss)
-        self.loadLogger(configuration)
+        # Setup device logger (needs self._ss and self.parameters)
+        self.loadLogger()
         self.log = Logger.getCategory(self.deviceid)
 
         # Initialize FSM slots if defined
@@ -420,18 +420,21 @@ class PythonDevice(NoFsm):
         """Get SignalSlotable object embedded in PythonDevice instance."""
         return self._ss
 
-    def loadLogger(self, config):
-        """Load the distributed logger
-        :param config: a Hash providing logger configuration
-        :return:
+    def loadLogger(self):
         """
+        Load the distributed logger using config in self.parameters["Logger"]
+        """
+        config = self.parameters["Logger"]
+        stamp = self._getActualTimestamp()
+
         # cure the network part of the logger config
-        topicPath = "Logger.network.topic"
+        topicPath = "network.topic"
         if (not config.has(topicPath) or not config[topicPath]):
             # If not specified or empty, use the local topic for log messages
             config.set(topicPath, self._ss.getTopic())
+            # Since manipulating self.parameters, add timestamp:
             topicAttrs = config.getNode(topicPath).getAttributes()
-            self._getActualTimestamp().toHashAttributes(topicAttrs)
+            stamp.toHashAttributes(topicAttrs)
 
         # cure the file part of the logger config
         path = os.path.join(os.environ['KARABO'], "var", "log", self.serverid,
@@ -439,10 +442,13 @@ class PythonDevice(NoFsm):
         if not os.path.isdir(path):
             os.makedirs(path)
         path = os.path.join(path, 'device.log')
-        config.set('Logger.file.filename', path)
+        config.set('file.filename', path)
+        # Since manipulating self.parameters, add timestamp:
+        pathAttrs = config.getNode('file.filename').getAttributes()
+        stamp.toHashAttributes(pathAttrs)
 
         # finally configure the logger
-        Logger.configure(config["Logger"])
+        Logger.configure(config)
         Logger.useOstream()
         Logger.useFile()
         Logger.useNetwork()
