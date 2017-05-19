@@ -51,7 +51,7 @@ class SceneController(BaseProjectController):
         show_no_configuration()
 
     def double_click(self, project_controller, parent=None):
-        broadcast_event(KaraboEventSender.OpenSceneView, {'model': self.model})
+        broadcast_event(KaraboEventSender.ShowSceneView, {'model': self.model})
 
     # ----------------------------------------------------------------------
     # action handlers
@@ -64,7 +64,8 @@ class SceneController(BaseProjectController):
         if scene in project.scenes:
             project.scenes.remove(scene)
 
-        broadcast_event(KaraboEventSender.RemoveSceneView, {'model': scene})
+        broadcast_event(KaraboEventSender.RemoveProjectModelViews,
+                        {'models': [scene]})
 
     def _edit_scene(self):
         dialog = SceneHandleDialog(self.model)

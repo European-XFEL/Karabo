@@ -94,7 +94,7 @@ class MacroController(BaseProjectGroupController):
         return ProjectControllerUiData(icon=icons.file)
 
     def double_click(self, project_controller, parent=None):
-        broadcast_event(KaraboEventSender.OpenMacro,
+        broadcast_event(KaraboEventSender.ShowMacroView,
                         {'model': self.model})
 
     def item_handler(self, added, removed):
@@ -174,7 +174,8 @@ class MacroController(BaseProjectGroupController):
         if macro in project.macros:
             project.macros.remove(macro)
 
-        broadcast_event(KaraboEventSender.RemoveMacro, {'model': macro})
+        broadcast_event(KaraboEventSender.RemoveProjectModelViews,
+                        {'models': [macro]})
 
     def _edit_macro(self):
         dialog = MacroHandleDialog(self.model)
