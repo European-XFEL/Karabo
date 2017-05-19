@@ -10,6 +10,8 @@ from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt4.QtGui import QItemSelectionModel
 
 from karabo.common.api import walk_traits_object
+from karabo.common.project.api import MacroModel
+from karabo.common.scenemodel.api import SceneModel
 from karabo_gui.events import (broadcast_event, KaraboEventSender,
                                register_for_broadcasts)
 from karabo_gui.indicators import get_alarm_icon, get_state_icon_for_status
@@ -141,12 +143,17 @@ class ProjectViewItemModel(QAbstractItemModel):
         if self._traits_model is None:
             return
 
-        for scene in self._traits_model.scenes:
-            broadcast_event(KaraboEventSender.RemoveSceneView,
-                            {'model': scene})
+        models = []
 
-        for macro in self._traits_model.macros:
-            broadcast_event(KaraboEventSender.RemoveMacro, {'model': macro})
+        def visitor(obj):
+            """Find all macros and scenes"""
+            if isinstance(obj, (MacroModel, SceneModel)):
+                models.append(obj)
+
+        # Request that views for every macro and scene be closed
+        walk_traits_object(self._traits_model, visitor)
+        broadcast_event(KaraboEventSender.RemoveProjectModelViews,
+                        {'models': models})
 
     def _controller_row(self, controller):
         """Return the row for the given ``controller``
