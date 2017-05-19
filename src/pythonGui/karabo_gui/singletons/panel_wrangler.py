@@ -69,7 +69,7 @@ class PanelWrangler(QObject):
         if sender is KaraboEventSender.DeviceDataReceived:
             self._update_scenes()
 
-        elif sender is KaraboEventSender.OpenSceneView:
+        elif sender is KaraboEventSender.ShowSceneView:
             target_window = SceneTargetWindow.MainWindow
             model = data.get('model')
             self._open_scene(model, target_window)
@@ -79,16 +79,15 @@ class PanelWrangler(QObject):
             model = _find_scene_model(data.get('target'))
             self._open_scene(model, target_window)
 
-        elif sender in (KaraboEventSender.RemoveSceneView,
-                        KaraboEventSender.RemoveMacro):
-            self._close_project_item_panel(data.get('model'))
+        elif sender is KaraboEventSender.RemoveProjectModelViews:
+            self._close_project_item_panels(data.get('models'))
 
         elif sender is KaraboEventSender.MiddlePanelClosed:
             model = data.get('model')
             if model in self._project_item_panels:
                 self._project_item_panels.pop(model)
 
-        elif sender is KaraboEventSender.OpenMacro:
+        elif sender is KaraboEventSender.ShowMacroView:
             self._open_macro(data.get('model'))
 
         elif sender is KaraboEventSender.ShowAlarmServices:
@@ -164,14 +163,15 @@ class PanelWrangler(QObject):
         if self.main_window is not None:
             self.main_window.removePanel(panel, PanelAreaEnum.Right)
 
-    def _close_project_item_panel(self, model):
-        panel = self._project_item_panels.get(model)
-        if panel is None:
-            return
-        if self.main_window is None:
-            panel.force_close()
-        else:
-            self.main_window.removePanel(panel, PanelAreaEnum.MiddleTop)
+    def _close_project_item_panels(self, models):
+        for model in models:
+            panel = self._project_item_panels.get(model)
+            if panel is None:
+                continue
+            if self.main_window is None:
+                panel.force_close()
+            else:
+                self.main_window.removePanel(panel, PanelAreaEnum.MiddleTop)
 
     def _create_main_window(self):
         if self.main_window is not None:
