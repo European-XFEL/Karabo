@@ -296,13 +296,18 @@ class Consumer(_Consumer):
 
     def receiveMessage(self, timeout=None):
         ret = c_int()
-        if timeout is None:
-            self.dll.MQReceiveMessageWait(self.handle, byref(ret))
-        elif timeout == 0:
-            self.dll.MQReceiveMessageNoWait(self.handle, byref(ret))
-        else:
-            self.dll.MQReceiveMessageWithTimeout(self.handle, c_int(timeout),
-                                                 byref(ret))
+        try:
+            if timeout is None:
+                self.dll.MQReceiveMessageWait(self.handle, byref(ret))
+            elif timeout == 0:
+                self.dll.MQReceiveMessageNoWait(self.handle, byref(ret))
+            else:
+                self.dll.MQReceiveMessageWithTimeout(
+                    self.handle, c_int(timeout), byref(ret))
+        except Error as e:
+            if e.status == 3120:  # broker dropped messages
+                e.message = Message._create(ret)
+            raise
         return Message._create(ret)
 
 
