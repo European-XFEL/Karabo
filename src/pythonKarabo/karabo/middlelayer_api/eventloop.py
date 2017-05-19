@@ -182,11 +182,18 @@ class Broker:
                     # statuses from openmqc/mqerrors.h
                     if e.status == 2103:  # timeout
                         continue
+                    elif e.status == 1116:  # concurrent access
+                        # Sometimes this error appears. It seems to be a race
+                        # condition within openmqc, but retrying just helps.
+                        self.logger.warning(
+                            'consumer of instance "%s" had a concurrent access',
+                            self.deviceId, exc_info=True)
+                        continue
                     elif e.status == 3120:  # message dropped
                         self.logger.warning(
                             'consumer of instance "%s" dropped messages',
                             self.deviceId, exc_info=True)
-                        continue
+                        message = e.message
                     else:
                         raise
                 finally:
