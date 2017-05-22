@@ -30,6 +30,7 @@ class Remote(Macro):
     counter = Int(defaultValue=-1)
     device = DeviceNode()
 
+    # avoid that test_main gets stuck. Raise a timeout error instead.
     @coroutine
     def _run(self, *args, **kwargs):
         return (yield from wait_for(super()._run(*args, **kwargs), timeout=5))
