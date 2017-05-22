@@ -336,14 +336,17 @@ class DeviceServer(object):
 
             modname = self.availableDevices[classid]["module"]
 
-            filename = "/tmp/{}.{}.{}.configuration_{}_{}.xml"
-            filename = filename.format(modname, classid, deviceid,
-                                       self.pid, self.seqnum)
-            while os.path.isfile(filename):
-                self.seqnum += 1
-                filename = "/tmp/{}.{}.{}.configuration_{}_{}.xml"
-                filename = filename.format(modname, classid, deviceid,
-                                           self.pid, self.seqnum)
+            # Create unique filename in /tmp - without '/' from deviceid...
+            fn_tmpl = "/tmp/{mod}.{cls}.{dev}.configuration_{pid}_{num}.xml"
+            filename_data = {'mod': modname, 'cls': classid, 'pid': self.pid,
+                             'dev': deviceid.replace(os.path.sep, '_')}
+            while True:
+                filename = fn_tmpl.format(num=self.seqnum, **filename_data)
+                if os.path.isfile(filename):
+                    self.seqnum += 1
+                else:
+                    break
+
             saveToFile(config, filename, Hash("format.Xml.indentation", 2))
             params = [modname, classid, filename]
 
