@@ -429,7 +429,7 @@ class PythonDevice(NoFsm):
 
         # cure the network part of the logger config
         topicPath = "network.topic"
-        if (not config.has(topicPath) or not config[topicPath]):
+        if config.get(topicPath, default="") == "":
             # If not specified or empty, use the local topic for log messages
             config.set(topicPath, self._ss.getTopic())
             # Since manipulating self.parameters, add timestamp:
