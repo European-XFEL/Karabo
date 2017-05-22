@@ -160,8 +160,10 @@ namespace karabo {
                 slotSchemaUpdated(schema, deviceId);
 
                 requestNoWait(m_deviceToBeLogged, "slotGetConfiguration", "", "slotChanged");
-            } catch (...) {
-                KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("Could not create new entry for " + m_deviceToBeLogged));
+            } catch (const std::exception& e) {
+                // e.g. timeout
+                KARABO_LOG_WARN << "Shutdown since failed to receive schema or to request configuration: " << e.what();
+                call("", "slotKillDevice"); // kill ourselves - DataLoggerManager might restart us if needed
             }
         }
 
