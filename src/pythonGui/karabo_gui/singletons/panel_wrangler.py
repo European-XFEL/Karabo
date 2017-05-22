@@ -95,10 +95,6 @@ class PanelWrangler(QObject):
             for inst_id in instance_ids:
                 self._open_alarm_panel(inst_id)
 
-        elif sender in (KaraboEventSender.AlarmServiceInit,
-                        KaraboEventSender.AlarmServiceUpdate):
-            self._open_alarm_panel(data.get('instance_id'))
-
         elif sender is KaraboEventSender.AddRunConfigurator:
             instance_ids = data.get('instanceIds')
             for inst_id in instance_ids:
