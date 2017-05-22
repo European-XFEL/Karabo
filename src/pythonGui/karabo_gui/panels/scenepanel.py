@@ -36,6 +36,9 @@ class ScenePanel(BasePanelWidget):
         self.connected_to_server_at_init = connected_to_server
         super(ScenePanel, self).__init__(model.simple_name)
 
+        # NOTE: We want to close when undocked!
+        self.doesDockOnClose = False
+
         # Add a handler for the window title. Don't forget to remove it later!
         self.model.on_trait_change(self.set_title, 'simple_name')
 
