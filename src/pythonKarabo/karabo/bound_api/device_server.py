@@ -196,19 +196,23 @@ class DeviceServer(object):
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["visibility"] = self.visibility
-        # Instantiate and start SignalSlotable object
+
         self.ss = SignalSlotable(self.serverid, "JmsConnection",
                                  self.connectionParameters, 10, info)
+
+        # Register before self.ss.start(), i.e before sending instanceNew:
+        self._registerAndConnectSignalsAndSlots()
+
+        # Start SignalSlotable object
         self.ss.start()
 
         self.loadLogger(config)
         self.log = Logger.getCategory(self.serverid)
 
-        self._registerAndConnectSignalsAndSlots()
-        brokerUrl = self.ss.getConnection().getBrokerUrl()
-        self.log.INFO("Starting Karabo DeviceServer on host: {}, serverId: {},"
-                      " broker: {}".format(self.hostname,
-                                           self.serverid, brokerUrl))
+        msg = "Starting Karabo DeviceServer (pid: {}) on host: {}, "\
+              "serverId: {}, broker: {}"""
+        self.log.INFO(msg.format(self.pid, self.hostname, self.serverid,
+                                 self.ss.getConnection().getBrokerUrl()))
 
         self.fsm.start()
         signal.pause()
@@ -332,10 +336,17 @@ class DeviceServer(object):
 
             modname = self.availableDevices[classid]["module"]
 
-            filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
-            while os.path.isfile(filename):
-                self.seqnum += 1
-                filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
+            # Create unique filename in /tmp - without '/' from deviceid...
+            fn_tmpl = "/tmp/{mod}.{cls}.{dev}.configuration_{pid}_{num}.xml"
+            filename_data = {'mod': modname, 'cls': classid, 'pid': self.pid,
+                             'dev': deviceid.replace(os.path.sep, '_')}
+            while True:
+                filename = fn_tmpl.format(num=self.seqnum, **filename_data)
+                if os.path.isfile(filename):
+                    self.seqnum += 1
+                else:
+                    break
+
             saveToFile(config, filename, Hash("format.Xml.indentation", 2))
             params = [modname, classid, filename]
 

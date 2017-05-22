@@ -123,6 +123,12 @@ class PythonDevice(NoFsm):
                     .readOnly()
                     .commit(),
 
+            INT32_ELEMENT(expected).key("pid")
+                    .displayedName("Process ID")
+                    .description("The unix process ID of the device")
+                    .expertAccess().readOnly().initialValue(0)
+                    .commit(),
+
             STATE_ELEMENT(expected).key("state")
                     .displayedName("State")
                     .description("The current state the device is in")
@@ -401,13 +407,16 @@ class PythonDevice(NoFsm):
             raise RuntimeError("PythonDevice.__init__: "
                                "SignalSlotable Exception -- {0}".format(str(e)))
 
+        pid = os.getpid()
         self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
-                      "on server '{0.serverid}'.".format(self))
+                      "on server '{0.serverid}', pid '{1}'.".format(self, pid))
 
         # Connect input channels
         self._ss.connectInputChannels()
 
         self.startFsm()
+
+        self.set("pid", pid)
 
         if self.get("useTimeserver"):
             self.log.DEBUG("Connecting to time server")
