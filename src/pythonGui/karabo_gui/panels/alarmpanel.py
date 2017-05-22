@@ -5,7 +5,7 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtCore import pyqtSlot, Qt, QTimer
 from PyQt4.QtGui import (QButtonGroup, QColor, QComboBox, QHBoxLayout, QLabel,
                          QLineEdit, QPixmap, QPushButton, QStyle,
                          QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
@@ -22,11 +22,20 @@ from .base import BasePanelWidget
 
 
 class AlarmPanel(BasePanelWidget):
+    TIMER_INTERVAL = 500
+    BLACK_COLOR = QColor(Qt.black)
+    RED_COLOR = QColor(*ALARM_COLOR)
+
     def __init__(self, instanceId, title):
         self.instanceId = instanceId
 
         # Important: call the BasePanelWidget initializer
         super(AlarmPanel, self).__init__(title)
+
+        self._color_toggle = False
+        self._color_timer = QTimer()
+        self._color_timer.setInterval(self.TIMER_INTERVAL)
+        self._color_timer.timeout.connect(self._color_timeout)
 
         # Register for KaraboBroadcastEvent
         # NOTE: unregister_from_broadcasts will be called by closeEvent()
@@ -38,12 +47,14 @@ class AlarmPanel(BasePanelWidget):
             self.model.initAlarms(data.get('instance_id'),
                                   data.get('update_types'),
                                   data.get('alarm_entries'))
+            self._alternate_title_color()
             return False
         elif event.sender is KaraboEventSender.AlarmServiceUpdate:
             data = event.data
             self.model.updateAlarms(data.get('instance_id'),
                                     data.get('update_types'),
                                     data.get('alarm_entries'))
+            self._alternate_title_color()
             return False
 
     def closeEvent(self, event):
@@ -107,18 +118,26 @@ class AlarmPanel(BasePanelWidget):
 
         return widget
 
-    def tab_text_color(self):
-        """Returns a QColor containing the color to be used for the label on
-        the panel container's tab for this panel.
-
-        This method only needs to be overridden if a panel wants a special
-        color for its tabs.
-        """
-        return QColor(*ALARM_COLOR)
+    def _alternate_title_color(self):
+        if self.model.allEntries:
+            self._color_timer.start()
+        else:
+            self._color_timer.stop()
+            # Make sure to have default color again
+            self.update_tab_text_color(self.BLACK_COLOR)
 
     def _enableCustomFilter(self, enable):
         self.cbFilterType.setEnabled(enable)
         self.leFilterText.setEnabled(enable)
+
+    @pyqtSlot()
+    def _color_timeout(self):
+        if self._color_toggle:
+            title_color = self.RED_COLOR
+        else:
+            title_color = self.BLACK_COLOR
+        self._color_toggle = not self._color_toggle
+        self.update_tab_text_color(title_color)
 
     @property
     def model(self):

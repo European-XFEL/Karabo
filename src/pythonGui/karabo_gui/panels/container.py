@@ -100,17 +100,22 @@ class PanelContainer(QTabWidget):
             if self.count() == 0:
                 self.hide()
 
+    def update_tab_text_color(self, panel, color):
+        if panel.is_docked:
+            index = self.indexOf(panel)
+            self._set_tab_text_color(index, panel, color)
+
     # --------------------------------------
     # Qt Overrides
 
     def addTab(self, widget, label):
         index = super(PanelContainer, self).addTab(widget, label)
-        self._set_tab_text_color(index, widget)
+        self._set_tab_text_color(index, widget, widget.tab_text_color)
         return index
 
     def insertTab(self, index, widget, label):
         index = super(PanelContainer, self).insertTab(index, widget, label)
-        self._set_tab_text_color(index, widget)
+        self._set_tab_text_color(index, widget, widget.tab_text_color)
         return index
 
     # ----------------------------------------------------------------------
@@ -148,8 +153,7 @@ class PanelContainer(QTabWidget):
             if isinstance(self.widget(0), PlaceholderPanel):
                 self.removeTab(0)
 
-    def _set_tab_text_color(self, index, widget):
-        color = widget.tab_text_color()
+    def _set_tab_text_color(self, index, widget, color=None):
         if color is not None and color.isValid():
             tab_bar = self.tabBar()
             tab_bar.setTabTextColor(index, color)
