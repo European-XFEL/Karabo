@@ -1,4 +1,5 @@
-from asyncio import async, coroutine, get_event_loop, set_event_loop, sleep
+from asyncio import (async, coroutine, get_event_loop, set_event_loop, sleep,
+    wait_for)
 from contextlib import closing
 import gc
 from itertools import count
@@ -28,6 +29,10 @@ from .eventloop import setEventLoop
 class Remote(Macro):
     counter = Int(defaultValue=-1)
     device = DeviceNode()
+
+    @coroutine
+    def _run(self, *args, **kwargs):
+        return (yield from wait_for(super()._run(*args, **kwargs), timeout=5))
 
     @Slot()
     def count(self):
@@ -116,7 +121,7 @@ class Tests(TestCase):
     def test_main(self):
         Remote.main(["", "count", "counter=7",
                      "device=Remote_{}_{}".format(
-                        socket.gethostname(), os.getpid())])
+                        socket.gethostname().split(".")[0], os.getpid())])
 
     code = """if True:
         from karabo.middlelayer import *
