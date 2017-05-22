@@ -144,14 +144,6 @@ then
     mv $KARABO/environment.in $KARABO/var/environment
 fi
 
-# Install and initialize the local project database
-if [ ! -d "$KARABO/extern/eXistDB/db" ]; then
-    echo -n " Activating local project database, please wait..."
-    source $KARABO/activate
-    $KARABO/extern/eXistDB/doInstall.sh $KARABO &> /dev/null
-echo " done"
-fi
-
 echo
 echo " Karabo framework was successfully installed to: $KARABO"
 echo 
