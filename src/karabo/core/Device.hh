@@ -28,6 +28,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 #include <unordered_set>
+#include <unistd.h>
 
 /**
  * The main European XFEL namespace
@@ -224,6 +225,12 @@ namespace karabo {
                         .description("The name of the host where this device runs")
                         .expertAccess()
                         .readOnly()
+                        .commit();
+
+                INT32_ELEMENT(expected).key("pid")
+                        .displayedName("Process ID")
+                        .description("The unix process ID of the device (i.e. of the server")
+                        .expertAccess().readOnly().initialValue(0)
                         .commit();
 
                 STATE_ELEMENT(expected).key("state")
@@ -1352,6 +1359,8 @@ namespace karabo {
 
                 // Start the state machine (call initialization methods in case of noFsm)
                 this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
+
+                this->set("pid", ::getpid());
 
                 if (get<bool>("useTimeserver")) {
                     KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": Connecting to time server";
