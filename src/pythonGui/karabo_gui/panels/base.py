@@ -38,6 +38,7 @@ class BasePanelWidget(QFrame):
         self.doesDockOnClose = True
         self.panel_container = None
         self.is_docked = False
+        self.tab_text_color = None
 
         self._fill_panel()
 
@@ -57,13 +58,11 @@ class BasePanelWidget(QFrame):
         """Called when this panel is undocked from the main window.
         """
 
-    def tab_text_color(self):
-        """Returns a QColor containing the color to be used for the label on
-        the panel container's tab for this panel.
-
-        This method only needs to be overridden if a panel wants a special
-        color for its tabs.
+    def update_tab_text_color(self, color=None):
+        """Called when this panels tab text color should be changed.
         """
+        self.tab_text_color = color
+        self.panel_container.update_tab_text_color(self, self.tab_text_color)
 
     def toolbars(self):
         """This should create and return a list of `ToolBar` instances needed
