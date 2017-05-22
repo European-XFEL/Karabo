@@ -29,6 +29,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <cstdlib>
 #include <csignal>
+#include <unistd.h>
 
 namespace karabo {
 
@@ -218,7 +219,8 @@ namespace karabo {
 
             startFsm();
 
-            KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << net::bareHostName()
+            KARABO_LOG_INFO << "Starting Karabo DeviceServer (pid: " << ::getpid()
+                    << ") on host: " << net::bareHostName()
                     << ", serverId: " << m_serverId
                     << ", Broker: " << m_connection->getBrokerUrl();
 
