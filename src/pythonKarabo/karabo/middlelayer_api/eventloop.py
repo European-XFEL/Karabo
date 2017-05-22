@@ -3,9 +3,9 @@ from __future__ import absolute_import, unicode_literals
 from asyncio import (
     AbstractEventLoop, async, CancelledError, coroutine, Future, gather,
     get_event_loop, iscoroutinefunction, Queue, set_event_loop,
-    SelectorEventLoop, sleep, Task, TimeoutError, wait_for)
+    SelectorEventLoop, shield, sleep, Task, TimeoutError, wait_for)
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import ExitStack
+from contextlib import closing, ExitStack
 from functools import wraps
 import getpass
 import inspect
@@ -168,62 +168,74 @@ class Broker:
 
     @coroutine
     def consume(self, device):
-        consumer = openmq.Consumer(
-            self.session, self.destination,
-            "slotInstanceIds LIKE '%|{0.deviceId}|%' "
-            "OR slotInstanceIds LIKE '%|*|%'".format(self), False)
+        loop = get_event_loop()
+        device = weakref.ref(device)
+        running = True
+
+        def receiver():
+            consumer = openmq.Consumer(
+                self.session, self.destination,
+                "slotInstanceIds LIKE '%|{0.deviceId}|%' "
+                "OR slotInstanceIds LIKE '%|*|%'".format(self), False)
+            with closing(consumer):
+                while running:
+                    try:
+                        message = consumer.receiveMessage(1000)
+                    except openmq.Error as e:
+                        # statuses from openmqc/mqerrors.h
+                        if e.status == 2103:  # timeout
+                            continue
+                        elif e.status == 1116:  # concurrent access
+                            # Sometimes this error appears. It seems to be a race
+                            # condition within openmqc, but retrying just helps.
+                            loop.call_soon_threadsafe(self.logger.warning,
+                                'consumer of instance "%s" had a concurrent access',
+                                self.deviceId)
+                            continue
+                        elif e.status == 3120:  # message dropped
+                            loop.call_soon_threadsafe(self.logger.warning,
+                                'consumer of instance "%s" dropped messages',
+                                self.deviceId)
+                            message = e.message
+                        else:
+                            raise
+                    d = device()
+                    if d is None:
+                        return
+                    loop.call_soon_threadsafe(
+                        loop.create_task, self.handleMessage(message, d), d)
+                    d = None
+        task = loop.run_in_executor(None, receiver)
         try:
-            while True:
-                device = weakref.ref(device)
-                try:
-                    message = yield from get_event_loop().run_in_executor(
-                        None, consumer.receiveMessage, 1000)
-                except openmq.Error as e:
-                    # statuses from openmqc/mqerrors.h
-                    if e.status == 2103:  # timeout
-                        continue
-                    elif e.status == 1116:  # concurrent access
-                        # Sometimes this error appears. It seems to be a race
-                        # condition within openmqc, but retrying just helps.
-                        self.logger.warning(
-                            'consumer of instance "%s" had a concurrent access',
-                            self.deviceId, exc_info=True)
-                        continue
-                    elif e.status == 3120:  # message dropped
-                        self.logger.warning(
-                            'consumer of instance "%s" dropped messages',
-                            self.deviceId, exc_info=True)
-                        message = e.message
-                    else:
-                        raise
-                finally:
-                    device = device()
-                try:
-                    slots, params = self.decodeMessage(message)
-                except:
-                    self.logger.exception("Malformed message")
-                    continue
-                if device is None:
-                    continue
-                try:
-                    slots = [(self.slots[s], s)
-                             for s in slots.get(self.deviceId, [])] + \
-                            [(self.slots[s], s) for s in slots.get("*", [])
-                             if s in self.slots]
-                except KeyError:
-                    self.logger.exception("Slot does not exist")
-                    continue
-                try:
-                    for slot, name in slots:
-                        slot.slot(slot, device, name, message, params)
-                except Exception:
-                    # the slot.slot wrapper should already catch all exceptions
-                    # all exceptions raised additionally are a bug in Karabo
-                    self.logger.exception(
-                        "Internal error while executing slot")
-                slot = slots = None  # delete reference to device
-        finally:
-            consumer.close()
+            yield from shield(task)
+        except CancelledError:
+            running = False
+            yield from task
+            raise
+
+    @coroutine
+    def handleMessage(self, message, device):
+        try:
+            slots, params = self.decodeMessage(message)
+        except:
+            self.logger.exception("Malformed message")
+            return
+        try:
+            slots = [(self.slots[s], s)
+                     for s in slots.get(self.deviceId, [])] + \
+                    [(self.slots[s], s) for s in slots.get("*", [])
+                     if s in self.slots]
+        except KeyError:
+            self.logger.exception("Slot does not exist")
+            return
+        try:
+            for slot, name in slots:
+                slot.slot(slot, device, name, message, params)
+        except Exception:
+            # the slot.slot wrapper should already catch all exceptions
+            # all exceptions raised additionally are a bug in Karabo
+            self.logger.exception(
+                "Internal error while executing slot")
 
     def register_slot(self, name, slot):
         """register a slot on the device
