@@ -25,7 +25,7 @@ def test_tree_node_basics():
     assert empty.child('a_child') is None
     assert empty.level() == -1
     assert empty.info() is None
-    assert empty.row() is None
+    assert empty.row() == 0
 
 
 def test_tree_node_levels():
