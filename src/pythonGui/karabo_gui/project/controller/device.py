@@ -6,6 +6,7 @@
 from functools import partial
 from io import StringIO
 
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance, Property, on_trait_change
 
@@ -20,8 +21,7 @@ from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
-from karabo_gui.project.utils import (
-    update_check_state, check_device_instance_exists)
+from karabo_gui.project.utils import check_device_instance_exists
 from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.topology.api import (clear_configuration_instance,
                                      ProjectDeviceInstance)
@@ -117,7 +117,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         assert device.initialized, "DeviceInstanceModel must be initialized!"
         assert config.initialized, "Device config must be initialized!"
 
-        update_check_state(self)
+        self._update_check_state()
 
         return get_topology().get_project_device(
             device.instance_id, device.class_id, device.server_id,
@@ -152,7 +152,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         if not self.model.initialized:
             return
 
-        model = self._get_active_config()
+        model = self.active_config
         if model is not None:
             self.project_device.set_project_config_hash(model.configuration)
 
@@ -160,7 +160,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         if not self.project_device.online:
             self._broadcast_item_click()
 
-        update_check_state(self)
+        self._update_check_state()
 
     @on_trait_change('project_device:schema_updated,project_device:online')
     def _device_schema_changed(self):
@@ -227,6 +227,19 @@ class DeviceInstanceController(BaseProjectGroupController):
         status_enum = DeviceStatus(self.project_device.status)
         ui_data.icon = get_project_device_status_icon(status_enum)
         ui_data.status = self.project_device.status
+
+    def _update_check_state(self):
+        """Update the Qt.CheckState of the ``DeviceConfigurationController``
+        children
+        """
+        if not self.model.initialized:
+            return
+
+        active_config = self.active_config
+        for child in self.children:
+            check_state = (Qt.Checked if active_config is child.model
+                           else Qt.Unchecked)
+            child.ui_data.check_state = check_state
 
     def _update_configurator(self):
         configuration = self.project_device.current_configuration

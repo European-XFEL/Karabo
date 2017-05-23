@@ -6,7 +6,6 @@
 from types import MethodType
 import weakref
 
-from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.common.api import set_modified_flag, walk_traits_object
@@ -271,15 +270,3 @@ def run_macro(macro_model):
              "uuid", macro_model.uuid)
     get_network().onInitDevice(krb_globals.MACRO_SERVER, "MetaMacro",
                                instance_id, h)
-
-
-def update_check_state(device_controller):
-    """Update the Qt.CheckState of the ``DeviceConfigurationController``
-    children of the given ``device_controller``
-    """
-    device_model = device_controller.model
-    active_ref = device_model.active_config_ref
-    for child in device_controller.children:
-        config_ref = child.model.uuid
-        checked = Qt.Checked if config_ref == active_ref else Qt.Unchecked
-        child.ui_data.check_state = checked
