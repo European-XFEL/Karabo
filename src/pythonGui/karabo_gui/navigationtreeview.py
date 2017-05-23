@@ -27,7 +27,7 @@ class NavigationTreeView(QTreeView):
         model = get_navigation_model()
         self.setModel(model)
         self.setSelectionModel(model.selectionModel)
-        model.modelReset.connect(self.expandAll)
+        model.rowsInserted.connect(self._items_added)
         model.signalItemChanged.connect(self.onSelectionChanged)
 
         set_treeview_header(self)
@@ -132,6 +132,18 @@ class NavigationTreeView(QTreeView):
         self._current_configuration = None
         self.clearSelection()
         self.model().clear()
+
+    # ----------------------------
+    # Slots
+
+    def _items_added(self, parent_index, start, end):
+        """React to the addition of an item (or items).
+        """
+        # Bail immediately if not the first item
+        if start != 0:
+            return
+
+        self.expand(parent_index)
 
     def onAbout(self):
         index = self.currentIndex()
