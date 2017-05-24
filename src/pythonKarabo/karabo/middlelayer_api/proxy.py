@@ -28,6 +28,13 @@ class ProxyBase(object):
     def __dir__(cls):
         return cls._allattrs
 
+    def __repr__(self):
+        subs = ", ".join("{}={!r}".format(k, getattr(self, k))
+                         for k, v in self.__class__.__dict__.items()
+                         if isinstance(v, Descriptor)
+                             and not isinstance(v, Slot) and hasattr(self, k))
+        return "{}[{}]".format(self.__class__.__name__, subs)
+
     def _use(self):
         pass
 
@@ -113,6 +120,13 @@ class SubProxyBase(object):
     @classmethod
     def __dir__(cls):
         return cls._allattrs
+
+    def __repr__(self):
+        subs = ", ".join("{}={!r}".format(k, getattr(self, k))
+                         for k, v in self.__class__.__dict__.items()
+                         if isinstance(v, Descriptor)
+                             and not isinstance(v, Slot) and hasattr(self, k))
+        return "[{}]".format(subs)
 
     def _use(self):
         self._parent._use()
