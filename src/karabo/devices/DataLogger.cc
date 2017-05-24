@@ -131,9 +131,13 @@ namespace karabo {
             connect(m_deviceToBeLogged, "signalStateChanged", "", "slotChanged");
             connect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated");
 
-            refreshDeviceInformation();
-            
-            if(std::getenv("KARABO_DISABLE_LOGGER_P2P") == NULL){
+            // Request initial schema (and then also initial configuration),
+            // error (e.g. timeout) handler kills the logger since without Schema it cannot log anything.
+            request(m_deviceToBeLogged, "slotGetSchema", false)
+                    .receiveAsync<Schema, std::string>(util::bind_weak(&DataLogger::handleFirstSchemaRequest, this, _1, _2),
+                                                       util::bind_weak(&DataLogger::errorHandleFirstSchemaRequest, this));
+
+            if (std::getenv("KARABO_DISABLE_LOGGER_P2P") == NULL) {
                 connectP2P(m_deviceToBeLogged);
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "Data logging via p2p has been disabled for loggers!";
@@ -144,27 +148,20 @@ namespace karabo {
         }
 
 
-        void DataLogger::refreshDeviceInformation() {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "refreshDeviceInformation " << m_deviceToBeLogged;
-                // We have to ensure that schema has arrived before the answer of slotGetConfiguration is received:
-                // ==> use synchronous call!
-                // If the timeout is for some reason too short (how that?), we will likely not be able to log the
-                // initial configuration. But probably the device to be logged is then anyway down and this logger
-                // is already being killed by the DataLoggerManager...
-                Schema schema;
-                std::string deviceId;
-                request(m_deviceToBeLogged, "slotGetSchema", false)
-                        .timeout(2000) // 2 s - How long is that! But in 99.99...% of the cases we receive quickly.
-                        .receive(schema, deviceId);
-                slotSchemaUpdated(schema, deviceId);
+        void DataLogger::handleFirstSchemaRequest(const Schema& schema, const std::string& deviceId) {
+            slotSchemaUpdated(schema, deviceId);
+            requestNoWait(m_deviceToBeLogged, "slotGetConfiguration", "", "slotChanged");
+        }
 
-                requestNoWait(m_deviceToBeLogged, "slotGetConfiguration", "", "slotChanged");
+
+        void DataLogger::errorHandleFirstSchemaRequest() {
+            try {
+                throw; // This will tell us which exception triggered the call to this error handler.
             } catch (const std::exception& e) {
-                // e.g. timeout
-                KARABO_LOG_WARN << "Shutdown since failed to receive schema or to request configuration: " << e.what();
-                call("", "slotKillDevice"); // kill ourselves - DataLoggerManager might restart us if needed
+                KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " will kill itself due to problem requesting Schema: "
+                        << e.what();
             }
+            call("", "slotKillDevice");
         }
 
 
