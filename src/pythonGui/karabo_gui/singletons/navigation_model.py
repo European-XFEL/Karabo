@@ -6,12 +6,13 @@
 """ This module contains a class which represents a model to display a
 hierarchical navigation in a treeview."""
 
+from contextlib import contextmanager
 import json
 
 from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
                           Qt, pyqtSignal)
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
-from traits.api import HasStrictTraits, String, WeakRef
+from traits.api import HasStrictTraits, WeakRef
 
 from karabo_gui.events import KaraboEventSender, register_for_broadcasts
 import karabo_gui.globals as krb_globals
@@ -26,21 +27,73 @@ class _UpdateContext(HasStrictTraits):
     know that it's dealing with a Qt QAbstractItemModel.
     """
     item_model = WeakRef(QAbstractItemModel)
-    last_selection = String
 
-    def __enter__(self):
-        self.last_selection = self.item_model.currentSelectionPath()
-        self.item_model.beginResetModel()
-        return self
+    @contextmanager
+    def reset_context(self):
+        """Provide a context whenever the system tree was cleared then the
+        Qt model needs to be reseted.
 
-    def __exit__(self, *exc):
-        self.item_model.endResetModel()
+        NOTE: This method is a context manager wraps the insertion with calls
+        to ``QAbstractItemModel.beginResetModel`` and
+        ``QAbstractItemModel.endResetModel`` (See Qt documentation)
+        """
+        try:
+            self.item_model.beginResetModel()
+            yield
+        finally:
+            self.item_model.endResetModel()
 
-        if self.last_selection != '':
-            self.item_model.selectPath(self.last_selection)
-        self.last_selection = ''
+    @contextmanager
+    def insertion_context(self, parent_node, first, last):
+        """Provide a context for the addition of multiple children under a
+        single parent item.
 
-        return False
+        NOTE: This method is a context manager wraps the insertion with calls
+        to ``QAbstractItemModel.beginInsertRows`` and
+        ``QAbstractItemModel.endInsertRows`` (See Qt documentation)
+        """
+        parent_index = self.item_model.createIndex(parent_node.row(), 0,
+                                                   parent_node)
+
+        def gen():
+            try:
+                self.item_model.beginInsertRows(parent_index, first, last)
+                yield
+            finally:
+                self.item_model.endInsertRows()
+
+        if parent_index.isValid():
+            yield from gen()
+        else:
+            yield
+
+    @contextmanager
+    def removal_context(self, tree_node):
+        """Provide a context for the removal of a single item from the model.
+
+        NOTE: This method is a context manager which wraps the removal of an
+        item with ``QAbstractItemModel.beginRemoveRows`` and
+        ``QAbstractItemModel.endRemoveRows`` (See Qt documentation)
+        """
+        node_row = tree_node.row()
+        index = self.item_model.createIndex(node_row, 0, tree_node)
+        if index.isValid():
+            parent_index = index.parent()
+        else:
+            parent_index = QModelIndex()
+
+        def gen():
+            try:
+                self.item_model.beginRemoveRows(parent_index, node_row,
+                                                node_row)
+                yield
+            finally:
+                self.item_model.endRemoveRows()
+
+        if parent_index.isValid():
+            yield from gen()
+        else:
+            yield
 
 
 class NavigationTreeModel(QAbstractItemModel):
@@ -75,6 +128,8 @@ class NavigationTreeModel(QAbstractItemModel):
             device_id = data.get('deviceId')
             alarm_type = data.get('alarm_type')
             self._updateAlarmIndicators(device_id, alarm_type)
+        elif event.sender is KaraboEventSender.AccessLevelChanged:
+            self.globalAccessLevelChanged()
         return False
 
     def currentSelectionPath(self):
@@ -174,11 +229,11 @@ class NavigationTreeModel(QAbstractItemModel):
             return QModelIndex()
 
         child_node = index.internalPointer()
-        if not child_node:
+        if child_node is None:
             return QModelIndex()
 
         parent_node = child_node.parent
-        if not parent_node:
+        if parent_node is None:
             return QModelIndex()
 
         if parent_node == self.tree.root:
