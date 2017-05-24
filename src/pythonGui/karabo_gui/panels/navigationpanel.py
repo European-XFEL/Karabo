@@ -3,7 +3,6 @@
 # Created on November 30, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from karabo_gui.events import register_for_broadcasts, KaraboEventSender
 from karabo_gui.navigationtreeview import NavigationTreeView
 from .base import BasePanelWidget
 
@@ -12,26 +11,8 @@ class NavigationPanel(BasePanelWidget):
     def __init__(self):
         super(NavigationPanel, self).__init__("Navigation")
 
-        # Register for broadcast events.
-        # This object lives as long as the app. No need to unregister.
-        register_for_broadcasts(self)
-
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
         """
         self.twNavigation = NavigationTreeView(self)
         return self.twNavigation
-
-    def karaboBroadcastEvent(self, event):
-        """ Router for incoming broadcasts
-        """
-        sender = event.sender
-        if sender is KaraboEventSender.NetworkConnectStatus:
-            if not event.data['status']:
-                self.twNavigation.clear()
-        elif sender is KaraboEventSender.AccessLevelChanged:
-            self.twNavigation.model().globalAccessLevelChanged()
-        return False
-
-    def onSelectNewNavigationItem(self, devicePath):
-        self.twNavigation.selectItem(devicePath)
