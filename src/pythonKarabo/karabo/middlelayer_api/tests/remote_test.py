@@ -986,5 +986,33 @@ class Tests(DeviceTest):
         with (yield from getDevice("testinject")) as proxy:
             self.assertEqual(proxy.number, 3)
 
+    @async_tst
+    def test_device_restart(self):
+        proxy = None
+        self.remote.done = False
+        class A(Device):
+            @coroutine
+            def onInitialization(self):
+                nonlocal future, proxy
+                proxy = yield from connectDevice("remote")
+                future.set_result(None)
+        future = Future()
+        a = A({"_deviceId_": "testrestart"})
+        yield from a.startInstance()
+        yield from future
+        firstproxy = proxy
+        yield from a.slotKillDevice()
+
+        future = Future()
+        a = A({"_deviceId_": "testrestart"})
+        yield from a.startInstance()
+        yield from future
+        weakproxy = weakref.ref(firstproxy)
+        del firstproxy
+        self.assertIsNone(weakproxy())
+        yield from proxy.doit()
+        self.assertTrue(proxy.done)
+
+
 if __name__ == "__main__":
     main()
