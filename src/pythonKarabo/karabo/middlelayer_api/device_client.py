@@ -325,6 +325,26 @@ def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
             proxy = cls(instance, deviceId, sync)
             proxy._schema_hash = schema.hash
             instance._proxies[deviceId] = proxy
+            weakproxy = ref(proxy)
+
+            @contextmanager
+            def killer():
+                """kill the proxy once the owning device dies
+
+                In an ideal world, we would let proxies only be used in with
+                statements, so that we can control their lifetime.
+                But our users will kill us if they have to do that on the
+                command line. So we trust the garbage collector to kill
+                superfluous proxies, but will finish them off once the
+                owning device goes down.
+                """
+                try:
+                    yield
+                finally:
+                    proxy = weakproxy()
+                    if proxy is not None:
+                        proxy.__del__()
+            instance._ss.enter_context(killer())
         finally:
             del futures[deviceId]
 
