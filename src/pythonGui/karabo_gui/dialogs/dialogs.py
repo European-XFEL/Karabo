@@ -306,7 +306,10 @@ class LutRangeDialog(QDialog):
     def _update_button_box(self):
         """Only enable Ok button, if title and configuration is set
         """
-        enabled = len(self.leMin.text()) > 0 and len(self.leMax.text()) > 0
+        _min = self.leMin.text()
+        _max = self.leMax.text()
+        enabled = (len(_min) > 0 and len(_max) > 0 and
+                   float(_min) < float(_max))
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
     @pyqtSlot()
