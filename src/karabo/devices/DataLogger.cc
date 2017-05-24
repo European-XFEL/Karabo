@@ -86,6 +86,11 @@ namespace karabo {
             input.get("deviceToBeLogged", m_deviceToBeLogged);
             // start "flush" actor ...
             input.get("flushInterval", m_flushInterval); // in seconds
+
+            // Register slots in constructor to ensure existence when sending instanceNew
+            KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
+            KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
+            KARABO_SLOT(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
         }
 
 
@@ -122,11 +127,6 @@ namespace karabo {
 
             m_lastIndex = determineLastIndex(m_deviceToBeLogged);
 
-            // Register slots
-            KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
-            KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
-            KARABO_SLOT(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
-
             connect(m_deviceToBeLogged, "signalChanged", "", "slotChanged");
             connect(m_deviceToBeLogged, "signalStateChanged", "", "slotChanged");
             connect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated");
@@ -147,10 +147,23 @@ namespace karabo {
         void DataLogger::refreshDeviceInformation() {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "refreshDeviceInformation " << m_deviceToBeLogged;
-                requestNoWait(m_deviceToBeLogged, "slotGetSchema", "", "slotSchemaUpdated", false);
+                // We have to ensure that schema has arrived before the answer of slotGetConfiguration is received:
+                // ==> use synchronous call!
+                // If the timeout is for some reason too short (how that?), we will likely not be able to log the
+                // initial configuration. But probably the device to be logged is then anyway down and this logger
+                // is already being killed by the DataLoggerManager...
+                Schema schema;
+                std::string deviceId;
+                request(m_deviceToBeLogged, "slotGetSchema", false)
+                        .timeout(2000) // 2 s - How long is that! But in 99.99...% of the cases we receive quickly.
+                        .receive(schema, deviceId);
+                slotSchemaUpdated(schema, deviceId);
+
                 requestNoWait(m_deviceToBeLogged, "slotGetConfiguration", "", "slotChanged");
-            } catch (...) {
-                KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("Could not create new entry for " + m_deviceToBeLogged));
+            } catch (const std::exception& e) {
+                // e.g. timeout
+                KARABO_LOG_WARN << "Shutdown since failed to receive schema or to request configuration: " << e.what();
+                call("", "slotKillDevice"); // kill ourselves - DataLoggerManager might restart us if needed
             }
         }
 
@@ -188,7 +201,11 @@ namespace karabo {
         void DataLogger::slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId) {
 
             // To write log I need schema ...
-            if (m_currentSchema.empty()) return;
+            if (m_currentSchema.empty()) {
+                // DEBUG only since can happen when initialising, i.e. slot is connected, but Schema did not yet arrive.
+                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": slotChanged called, but no schema yet - ignore!";
+                return;
+            }
 
             if (deviceId != m_deviceToBeLogged) {
                 KARABO_LOG_ERROR << "slotChanged called from " << deviceId
@@ -224,10 +241,14 @@ namespace karabo {
                 if (leafNode.getType() == Types::HASH) continue;
                 // Skip those elements which should not be archived
                 if (!m_currentSchema.has(path) || (m_currentSchema.hasArchivePolicy(path) && (m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING))) continue;
-                string value = leafNode.getValueAs<string>();
-                string type = Types::to<ToLiteral>(leafNode.getType());
+                if (!Timestamp::hashAttributesContainTimeInformation(leafNode.getAttributes())) {
+                    KARABO_LOG_WARN << "Skip '" << path << "' - it lacks time information attributes.";
+                    continue;
+                }
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 m_lastDataTimestamp = t;
+                const string value = leafNode.getValueAs<string>();
+                const string type = Types::to<ToLiteral>(leafNode.getType());
 
                 bool newFile = false;
                 if (!m_configStream.is_open()) {
