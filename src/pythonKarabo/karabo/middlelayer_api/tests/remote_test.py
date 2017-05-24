@@ -993,7 +993,7 @@ class Tests(DeviceTest):
         class A(Device):
             @coroutine
             def onInitialization(self):
-                nonlocal proxy
+                nonlocal future, proxy
                 proxy = yield from connectDevice("remote")
                 future.set_result(None)
         future = Future()
