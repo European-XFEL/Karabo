@@ -126,10 +126,6 @@ class NavigationTreeModel(QAbstractItemModel):
             self._toggleMonitoring(data.get('device_id', ''), False)
         elif sender is KaraboEventSender.ShowDevice:
             self.selectPath(data.get('deviceId'))
-        elif sender is KaraboEventSender.AlarmDeviceUpdate:
-            device_id = data.get('deviceId')
-            alarm_type = data.get('alarm_type')
-            self._updateAlarmIndicators(device_id, alarm_type)
         elif sender is KaraboEventSender.AccessLevelChanged:
             self.globalAccessLevelChanged()
         return False
