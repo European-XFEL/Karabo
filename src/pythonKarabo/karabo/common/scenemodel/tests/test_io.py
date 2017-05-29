@@ -225,6 +225,20 @@ def test_real_data_round_trip():
         assert xml_is_equal(orig_xml, new_xml), failmsg
 
 
+def test_uuid_replacement():
+    with temp_xml_file(SCENE_SVG) as fn:
+        scene = read_scene(fn)
+
+    old_uuid = scene.uuid
+
+    scene.reset_uuid()
+    xml = write_scene(scene)
+    with temp_xml_file(xml) as fn:
+        scene = read_scene(fn)
+
+    assert old_uuid != scene.uuid
+
+
 def test_unknown_widget_reader():
     with temp_xml_file(UNKNOWN_WIDGET_SVG) as fn:
         scene = read_scene(fn)
