@@ -910,7 +910,7 @@ class Tests(DeviceTest):
         self.assertEqual(ah["toAdd.globalAlarmCondition.alarm.type"], "alarm")
         self.assertEqual(
             ah["toAdd.globalAlarmCondition.alarm.description"], "")
-        self.assertFalse(
+        self.assertTrue(
             ah["toAdd.globalAlarmCondition.alarm.needsAcknowledging"])
         self.remote.signalAlarmUpdate.disconnect("local", "slotAlarmUpdate")
         self.remote.globalAlarmCondition = AlarmCondition.NONE

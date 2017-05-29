@@ -18,6 +18,7 @@ from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QMessageBox
 
 from karabo.common.api import State
+from karabo_gui.alarms.api import extract_alarms_data
 from karabo_gui.background import executeLater, Priority
 from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.singletons.api import get_network, get_topology
@@ -425,28 +426,20 @@ class Manager(QObject):
            and all the information given in the ``Hash`` ``rows``.
         """
         if not rows.empty():
-            # Create KaraboBroadcastEvent only if there is something to show
-            broadcast_event(KaraboEventSender.AlarmInitReply,
-                            {'instanceId': instanceId, 'rows': rows})
+            data = extract_alarms_data(instanceId, rows)
+            self._topology.update_alarms_info(data)
+
+            broadcast_event(KaraboEventSender.AlarmServiceInit, data)
 
     def handle_alarmUpdate(self, instanceId, rows):
         """Show update for ``AlarmService`` with given ``instanceId`` and all
            the information given in the ``Hash`` ``rows``.
         """
-        if rows.empty():
-            return
+        if not rows.empty():
+            data = extract_alarms_data(instanceId, rows)
+            self._topology.update_alarms_info(data)
 
-        # Create KaraboBroadcastEvent only if there is something to show
-        broadcast_event(KaraboEventSender.AlarmUpdate,
-                        {'instanceId': instanceId, 'rows': rows})
-
-        for hsh in rows.values():
-            # Get data of hash
-            for aHash in hsh.values():
-                # Fetch only deviceId and type to broadcast this
-                data = {'deviceId': aHash.get('deviceId'),
-                        'alarm_type': aHash.get('type')}
-                broadcast_event(KaraboEventSender.AlarmDeviceUpdate, data)
+            broadcast_event(KaraboEventSender.AlarmServiceUpdate, data)
 
     def handle_runConfigSourcesInGroup(self, reply):
         broadcast_event(KaraboEventSender.RunConfigSourcesUpdate, reply)
@@ -493,7 +486,6 @@ class Manager(QObject):
         received.
         """
         broadcast_event(KaraboEventSender.DeviceDataReceived, {})
-
 
 # ------------------------------------------------------------------
 

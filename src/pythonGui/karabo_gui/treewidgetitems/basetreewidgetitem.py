@@ -14,8 +14,8 @@ from collections import OrderedDict
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QCursor, QTreeWidgetItem
 
-from karabo_gui.indicators import (ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH)
 from karabo.middlelayer import Type
+from karabo_gui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
 from .popupwidget import PopupWidget
 
 

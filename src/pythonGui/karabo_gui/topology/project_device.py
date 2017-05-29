@@ -4,11 +4,13 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from traits.api import HasStrictTraits, Bool, Event, Instance, Property, String
+from traits.api import (HasStrictTraits, Bool, Event, Instance, Property,
+                        String, WeakRef)
 
 from karabo.middlelayer import Hash
 from karabo_gui.configuration import Configuration
 from karabo_gui.singletons.api import get_topology
+from .tree import SystemTreeNode
 from .util import clear_configuration_instance
 
 
@@ -28,6 +30,9 @@ class ProjectDeviceInstance(HasStrictTraits):
     status = String('offline')
     # The current configuration for this device
     current_configuration = Property(Instance(Configuration))
+
+    # A weak reference to the system topology device node
+    device_node = WeakRef(SystemTreeNode, allow_none=True)
 
     # An event which is triggered whenever the configuration is updated
     configuration_updated = Event
@@ -140,6 +145,9 @@ class ProjectDeviceInstance(HasStrictTraits):
             self.status = self._update_online_status(box, status, error_flag)
         else:
             self.status = self._update_offline_status()
+
+        # Keep the device_node pointer up-to-date
+        self.device_node = self._online_dev_config.topology_node
 
     # ---------------------------------------------------------------------
     # utils

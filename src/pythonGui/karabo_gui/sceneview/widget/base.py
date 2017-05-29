@@ -2,10 +2,11 @@ from PyQt4.QtCore import QRect, QSize, Qt, QTimer, pyqtSlot
 from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QStackedLayout,
                          QToolButton, QWidget)
 
+from karabo.common.api import AlarmCondition
 from karabo_gui import icons
+from karabo_gui.alarms.api import get_alarm_pixmap
 from karabo_gui.displaywidgets.displaymissingbox import DisplayMissingBox
-from karabo_gui.indicators import (DeviceStatus, get_alarm_pixmap,
-                                   get_device_status_pixmap)
+from karabo_gui.indicators import DeviceStatus, get_device_status_pixmap
 from karabo_gui.singletons.api import get_network
 from .utils import get_box, determine_if_value_unchanged
 
@@ -30,6 +31,7 @@ class BaseWidgetContainer(QWidget):
         self.layout.addWidget(self.status_symbol)
 
         self.alarm_symbol = QLabel("", self)
+        self.update_alarm_symbol()
 
         if self.boxes:
             self.old_style_widget = self._create_widget(self.boxes)
@@ -115,18 +117,28 @@ class BaseWidgetContainer(QWidget):
             for box in self.boxes:
                 box.removeVisible()
 
-    def update_alarm_symbol(self, device_id, alarm_type):
+    def update_alarm_symbol(self):
         """Update the alarm symbol with a pixmap matching the given
         ``alarm_type``
         """
-        # Check whether device_id is related to these boxes
+        widget_alarms = []
         for b in self.boxes:
-            if b.configuration.id == device_id:
-                break
-        else:
-            return
+            system_topo_node = b.configuration.topology_node
+            if system_topo_node is None:
+                continue
 
-        pixmap = get_alarm_pixmap(alarm_type)
+            alarm_dict = system_topo_node.alarm_info.alarm_dict
+            property_name = '.'.join(b.path)
+            for alarm_type, properties in alarm_dict.items():
+                # feature: show global alarm_type for 'state' property
+                if property_name == 'state' or property_name in properties:
+                    widget_alarms.append(AlarmCondition.fromString(alarm_type))
+
+        pixmap = None
+        if widget_alarms:
+            widget_alarms.sort()  # AlarmCondition is sortable
+            pixmap = get_alarm_pixmap(widget_alarms[-1].asString())
+
         if pixmap is not None:
             self.alarm_symbol.setPixmap(pixmap)
             self.alarm_symbol.show()
