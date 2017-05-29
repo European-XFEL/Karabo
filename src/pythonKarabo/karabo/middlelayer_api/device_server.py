@@ -13,6 +13,7 @@ import numpy
 from .basetypes import isSet
 from .enums import AccessLevel, AccessMode, Assignment
 from .eventloop import EventLoop
+from .exceptions import KaraboError
 from .hash import Bool, Hash, Int32, String, VectorString
 from .logger import Logger
 from .output import KaraboStream
@@ -20,7 +21,7 @@ from .plugin_loader import PluginLoader
 from .schema import Node
 from .serializers import decodeBinary, encodeXML
 from .signalslot import SignalSlotable, slot, coslot
-from .synchronization import firstCompleted
+from .synchronization import background, firstCompleted
 
 
 class DeviceServerBase(SignalSlotable):
@@ -410,6 +411,45 @@ class BoundDeviceServer(DeviceServerBase):
             return schema, classId, self.serverId
         return super(BoundDeviceServer, self).slotGetClassSchema(classId)
 
+    def supervise(self, deviceId, process, info):
+        def supervisor():
+            while True:
+                yield from sleep(100)
+                for i in range(5):
+                    try:
+                        nonlocal info
+                        info = yield from wait_for(
+                            self.call(deviceId, "slotPing", deviceId,
+                                      1, False),
+                            timeout=5)
+                        break
+                    except TimeoutError:
+                        self.logger.info('could not ping device "%s"',
+                                         deviceId)
+                    except KaraboError as e:
+                        self.logger.warn('ping failed for device "%s": %s',
+                                         deviceId, e.args[0])
+                else:
+                    self.logger.warn('terminating non-responding device "%s"',
+                                     deviceId)
+                    process.terminate()
+                    try:
+                        # we will be cancelled once the process is gone
+                        yield from sleep(5)
+                        self.logger.warn('killing non-responding device "%s"',
+                                         deviceId)
+                        process.kill()
+                    finally:
+                        self._ss.emit("call", {"*": ['slotInstanceGone']},
+                                      deviceId, info)
+
+        task = background(supervisor())
+        try:
+            yield from process.wait()
+        finally:
+            task.cancel()
+
+
     @coroutine
     def startDevice(self, classId, deviceId, config):
         if classId not in self.bounds:
@@ -428,6 +468,7 @@ class BoundDeviceServer(DeviceServerBase):
         done, pending = yield from firstCompleted(
             ok=future, error=process.wait())
         if "ok" in done:
+            background(self.supervise(deviceId, process, done["ok"]))
             return True, '"{}" started'.format(deviceId)
         else:
             return False, '"{}" could not be started'.format(deviceId)
