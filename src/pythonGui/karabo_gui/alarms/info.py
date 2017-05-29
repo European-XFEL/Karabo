@@ -21,11 +21,7 @@ class AlarmInfo(HasStrictTraits):
         """
         if not isinstance(alarm_type, AlarmCondition):
             alarm_type = AlarmCondition.fromString(alarm_type)
-
-        if alarm_type in self.alarm_dict:
-            self.alarm_dict[alarm_type].append(dev_property)
-        else:
-            self.alarm_dict[alarm_type] = [dev_property]
+        self.alarm_dict.setdefault(alarm_type, []).append(dev_property)
 
     def remove_alarm_type(self, dev_property, alarm_type):
         """Remove given ``dev_property`` for ``alarm_type`` from dict list
@@ -37,16 +33,14 @@ class AlarmInfo(HasStrictTraits):
         if alarm_type in self.alarm_dict:
             dev_props = self.alarm_dict[alarm_type]
             dev_props.remove(dev_property)
-            if dev_props:
-                self.alarm_dict[alarm_type] = dev_props
-            else:
+            if len(dev_props) == 0:
                 del self.alarm_dict[alarm_type]
 
     def _get_alarm_type(self):
         """Return the ``alarm_type`` with the highest priority
         """
         if self.alarm_dict:
-            # AlarmCondition supports the less-than operator, so sort() works
-            keys = sorted(self.alarm_dict.keys())
-            return keys[-1].asString()
+            # AlarmCondition supports the less-than operator, so max() returns
+            # the highest priority alarm type in the dictionary.
+            return max(self.alarm_dict).asString()
         return ''
