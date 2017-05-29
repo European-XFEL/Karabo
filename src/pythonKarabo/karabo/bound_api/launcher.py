@@ -1,4 +1,6 @@
+import ctypes
 import os.path
+import signal
 import sys
 import threading
 
@@ -23,6 +25,12 @@ elif command == "run":
     config = sys.stdin.read()
     ser = TextSerializerHash.create("Xml")
     config = ser.load(config)
+
+    # in case our parent process (the device server) dies,
+    # tell linux to terminate ourselves.
+    PR_SET_PDEATHSIG = 1  # from linux/prctl.h
+    libc = ctypes.cdll.LoadLibrary("libc.so.6")
+    libc.prctl(PR_SET_PDEATHSIG, signal.SIGTERM)
 
     # If log filename not specified, make use of device name to avoid
     # that different processes write to the same file.
