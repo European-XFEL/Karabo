@@ -38,11 +38,6 @@ namespace karabo {
                     .setNewDefaultValue("Karabo_GuiServer_0")
                     .commit();
 
-            // Do not archive the archivers (would lead to infinite recursion)
-            OVERWRITE_ELEMENT(expected).key("archive")
-                    .setNewDefaultValue(false)
-                    .commit();
-
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
                     .commit();
@@ -50,6 +45,11 @@ namespace karabo {
             // Slow beats on GuiServer
             OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
                     .setNewDefaultValue(60)
+                    .commit();
+
+            // Monitor performance of this system relevant device
+            OVERWRITE_ELEMENT(expected).key("performanceStatistics.enable")
+                    .setNewDefaultValue(true)
                     .commit();
 
             INT32_ELEMENT(expected).key("delayOnInput")
