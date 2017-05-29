@@ -391,19 +391,11 @@ namespace karabo {
              * @param configuration
              */
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
-<<<<<<< HEAD
                 m_globalAlarmCondition(karabo::util::AlarmCondition::NONE),
-                m_lastBrokerErrorStamp(0ull, 0ull), m_timeTickerTimer(karabo::net::EventLoop::getIOService()) {
-
-=======
-                m_globalAlarmCondition(karabo::util::AlarmCondition::NONE), m_timeTickerTimer(karabo::net::EventLoop::getIOService()),
-<<<<<<< HEAD
-                m_timeServerUpdateImminent(false) {
->>>>>>> 8e46f92... Include integration tests
-=======
+                m_lastBrokerErrorStamp(0ull, 0ull), m_timeTickerTimer(karabo::net::EventLoop::getIOService()) ,
                 m_timeServerUpdateImminent(false), m_timeServerSyncMode(false)
                 {
->>>>>>> 21525d1... Use flag internally
+
 
                 m_connection = karabo::util::Configurator<karabo::net::JmsConnection>::createNode("_connection_", configuration);
 
