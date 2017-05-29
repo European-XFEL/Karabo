@@ -1,3 +1,4 @@
+from karabo.common.api import Capabilities
 from karabo.middlelayer import AccessLevel, Hash
 from ..tree import SystemTree
 
@@ -28,6 +29,7 @@ def system_hash():
     h['device.divvy', ...] = {
         'host': 'BIG_IRON',
         'visibility': AccessLevel.ADMIN,
+        'capabilities': Capabilities.PROVIDES_SCENES,
         'serverId': 'swerver',
         'classId': 'FooClass',
         'status': 'testing'

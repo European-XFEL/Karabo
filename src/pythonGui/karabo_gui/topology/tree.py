@@ -5,10 +5,11 @@
 #############################################################################
 
 from contextlib import contextmanager
-from traits.api import (HasStrictTraits, Any, Bool, Dict, Enum, Instance, List,
-                        String, WeakRef)
+from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
+                        Int, List, String, WeakRef)
 
 from karabo.middlelayer import AccessLevel
+from karabo_gui.alarms.api import AlarmInfo
 from karabo_gui.enums import NavigationItemTypes
 
 
@@ -19,8 +20,10 @@ class SystemTreeNode(HasStrictTraits):
     path = String
     visibility = Enum(*list(AccessLevel))
     status = String
+    capabilities = Int
     attributes = Dict
-    alarm_type = Any
+    # Struct to keep track of all alarms related to this
+    alarm_info = Instance(AlarmInfo, args=())
     monitoring = Bool(False)
 
     parent = WeakRef('SystemTreeNode')
@@ -62,6 +65,18 @@ class SystemTreeNode(HasStrictTraits):
             return 0
         return self.parent.children.index(self)
 
+    def append_alarm_type(self, dev_property, alarm_type):
+        """Append given ``alarm_type`` to dict and update list with device
+        properties
+        """
+        self.alarm_info.append_alarm_type(dev_property, alarm_type)
+
+    def remove_alarm_type(self, dev_property, alarm_type):
+        """Remove given ``dev_property`` with ``alarm_type`` from dict list
+        or remove ``alarm_type`` from dict
+        """
+        self.alarm_info.remove_alarm_type(dev_property, alarm_type)
+
 
 class SystemTree(HasStrictTraits):
     """A data model which holds data concerning the devices and servers in a
@@ -72,6 +87,8 @@ class SystemTree(HasStrictTraits):
 
     # A context manager to enter when manipulating the tree
     update_context = Instance(object)
+    # An event which is triggered whenever the tree needs to be updated
+    needs_update = Event
 
     def clear_all(self):
         """Removes all data from the model.
@@ -155,10 +172,15 @@ class SystemTree(HasStrictTraits):
         and the view needs an update.
 
         The incoming ``config`` represents the system topology.
+
+        Returns a dictionary of ``SystemTreeNode`` instances for newly added
+        device instances.
         """
         self._handle_server_data(system_hash)
-        self._handle_device_data('device', system_hash)
-        self._handle_device_data('macro', system_hash)
+        nodes = self._handle_device_data('device', system_hash)
+        nodes.update(self._handle_device_data('macro', system_hash))
+
+        return nodes
 
     # ------------------------------------------------------------------
 
@@ -232,12 +254,14 @@ class SystemTree(HasStrictTraits):
 
     def _handle_device_data(self, device_type, system_hash):
         """Put the contents of Hash `system_hash` into the internal tree
-        structure.
+        structure. Returns a dictionary of any newly added device
+        ``SystemTreeNode`` instances.
         """
+        new_dev_nodes = {}
         assert device_type in ('device', 'macro')
 
         if device_type not in system_hash:
-            return
+            return new_dev_nodes
 
         for device_id, _, attrs in system_hash[device_type].iterall():
             if len(attrs) == 0:
@@ -246,6 +270,7 @@ class SystemTree(HasStrictTraits):
             host = attrs.get('host', 'UNKNOWN')
             visibility = AccessLevel(attrs.get('visibility',
                                                AccessLevel.OBSERVER))
+            capabilities = attrs.get('capabilities', 0)
             server_id = attrs.get('serverId', 'unknown-server')
             class_id = attrs.get('classId', 'unknown-class')
             status = attrs.get('status', 'ok')
@@ -286,6 +311,12 @@ class SystemTree(HasStrictTraits):
                                              parent=class_node)
                 self._append_child_node(class_node, device_node)
                 device_node.monitoring = False
+                # new nodes should be returned
+                new_dev_nodes[device_id] = device_node
+
             device_node.status = status
             device_node.visibility = visibility
             device_node.attributes = attrs
+            device_node.capabilities = capabilities
+
+        return new_dev_nodes

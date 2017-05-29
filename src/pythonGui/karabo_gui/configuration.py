@@ -3,6 +3,7 @@
 # Created on March 7, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import weakref
 
 from PyQt4.QtCore import pyqtSignal
 
@@ -45,9 +46,9 @@ class Configuration(Box):
         self.error = False
         self.parameterEditor = None
         self.bulk_changes = False
-        self.bulk_list = { }
+        self.bulk_list = {}
+        self._topology_node_ref = None
 
-        #if type == "device":
         self.serverId = None
         self.classId = None
         self.index = None
@@ -60,6 +61,16 @@ class Configuration(Box):
             if self.visible > 0:
                 _start_device_monitoring(self.id)
             self.status = "schema"
+
+    @property
+    def topology_node(self):
+        if self._topology_node_ref:
+            return self._topology_node_ref()
+        return self._topology_node_ref
+
+    @topology_node.setter
+    def topology_node(self, topo_node):
+        self._topology_node_ref = weakref.ref(topo_node)
 
     @property
     def status(self):

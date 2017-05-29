@@ -8,11 +8,25 @@ from traits.api import (HasStrictTraits, Bool, Dict, Instance, Property,
                         on_trait_change)
 
 from karabo.middlelayer import Hash, Schema
+from karabo_gui.alarms.api import (ADD_UPDATE_TYPE, INIT_UPDATE_TYPE,
+                                   REMOVE_ALARM_TYPES)
 from karabo_gui.configuration import BulkNotifications, Configuration
 from karabo_gui.singletons.api import get_network
 from .project_device import ProjectDeviceInstance
 from .tree import SystemTree
 from .util import clear_configuration_instance
+
+
+class _DeviceNodeFinder(object):
+    """A system tree visitor which finds the node for a specific device id.
+    """
+    def __init__(self, device_id):
+        self.node = None
+        self._device_id = device_id
+
+    def __call__(self, node):
+        if node.node_id == self._device_id:
+            self.node = node
 
 
 class SystemTopology(HasStrictTraits):
@@ -101,6 +115,12 @@ class SystemTopology(HasStrictTraits):
             device = Configuration(device_id, 'device')
             self._online_devices[device_id] = device
             device.updateStatus()
+
+            # Get the system topology node, if it's there
+            finder = _DeviceNodeFinder(device_id)
+            self.visit_system_tree(finder)
+            if finder.node:
+                device.topology_node = finder.node
 
         statuses = ('offline', 'requested')
         if device.descriptor is None and device.status not in statuses:
@@ -349,7 +369,33 @@ class SystemTopology(HasStrictTraits):
             self._system_hash.merge(server_hash, "merge")
 
         # Update high-level representation
-        self.system_tree.update(server_hash)
+        new_topology_nodes = self.system_tree.update(server_hash)
 
         for dev in self._online_devices.values():
             dev.updateStatus()
+
+            # Keep a reference to the topology node of the device
+            if dev.id in new_topology_nodes:
+                dev.topology_node = new_topology_nodes[dev.id]
+
+    def update_alarms_info(self, alarm_data):
+        """Update the ``SystemTreeNode`` objects with the current alarm types
+        """
+        update_types = alarm_data.get('update_types')
+        alarm_entries = alarm_data.get('alarm_entries')
+
+        def visitor(node):
+            if node.attributes.get('type') != 'device':
+                return
+
+            for up_type, alarm_entry in zip(update_types, alarm_entries):
+                if node.node_id == alarm_entry.deviceId:
+                    if up_type in (ADD_UPDATE_TYPE, INIT_UPDATE_TYPE):
+                        node.append_alarm_type(alarm_entry.property,
+                                               alarm_entry.type)
+                    elif up_type in REMOVE_ALARM_TYPES:
+                        node.remove_alarm_type(alarm_entry.property,
+                                               alarm_entry.type)
+
+        self.visit_system_tree(visitor)
+        self.system_tree.needs_update = True

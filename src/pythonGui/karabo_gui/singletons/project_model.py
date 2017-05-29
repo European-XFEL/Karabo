@@ -12,9 +12,9 @@ from PyQt4.QtGui import QItemSelectionModel
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import MacroModel
 from karabo.common.scenemodel.api import SceneModel
-from karabo_gui.events import (broadcast_event, KaraboEventSender,
-                               register_for_broadcasts)
-from karabo_gui.indicators import get_alarm_icon, get_state_icon_for_status
+from karabo_gui.alarms.api import get_alarm_icon
+from karabo_gui.events import broadcast_event, KaraboEventSender
+from karabo_gui.indicators import get_state_icon_for_status
 from karabo_gui.project.controller.build import (
     create_project_controller, destroy_project_controller)
 from karabo_gui.project.controller.device import DeviceInstanceController
@@ -40,11 +40,6 @@ class ProjectViewItemModel(QAbstractItemModel):
         self._traits_model = None
         self._controller = None
         self._model_index_refs = WeakValueDictionary()
-
-        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
-        # not necessary for self due to the fact that the singleton mediator
-        # object and `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
 
     def controller_ref(self, model_index):
         """Get the controller object for a ``QModelIndex``. This is essentially
@@ -167,36 +162,8 @@ class ProjectViewItemModel(QAbstractItemModel):
         else:
             return parent_controller.children.index(controller)
 
-    def _update_alarm_type(self, device_id, alarm_type):
-        """Update alarm qt item for the given ``device_id``
-        """
-        if self._controller is None:
-            return
-
-        # Walk tree to find DeviceInstanceController with given ``device_id``
-        device_controller = None
-
-        def visitor(obj):
-            nonlocal device_controller
-            if (isinstance(obj, DeviceInstanceController) and
-                    obj.model.instance_id == device_id):
-                device_controller = obj
-
-        walk_traits_object(self._controller, visitor)
-
-        if device_controller is not None:
-            device_controller.ui_data.alarm_type = alarm_type
-
     # ----------------------------
     # Qt methods
-
-    def karaboBroadcastEvent(self, event):
-        if event.sender is KaraboEventSender.AlarmDeviceUpdate:
-            data = event.data
-            device_id = data.get('deviceId')
-            alarm_type = data.get('alarm_type')
-            self._update_alarm_type(device_id, alarm_type)
-        return False
 
     def createIndex(self, row, column, controller):
         """Prophalaxis for QModelIndex.internalPointer...

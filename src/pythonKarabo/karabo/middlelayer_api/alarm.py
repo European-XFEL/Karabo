@@ -33,6 +33,7 @@ class AlarmMixin(Configurable):
         self._alarmConditions = {}
         self._changed_alarms = set()
         self._old_alarms = {}
+        self.accumulatedGlobalAlarms = set()
         super(AlarmMixin, self).__init__(configuration)
 
     def setChildValue(self, key, value, desc):
@@ -51,6 +52,8 @@ class AlarmMixin(Configurable):
                     default=AlarmCondition.NONE)
             self._changed_alarms.add(key)
             self._old_alarms[key] = old_alarm
+            if key == 'globalAlarmCondition':
+                self.accumulatedGlobalAlarms.add(new_alarm.value)
         super(AlarmMixin, self).setChildValue(key, value, desc)
 
     def update(self):
@@ -69,14 +72,20 @@ class AlarmMixin(Configurable):
             if cond is AlarmCondition.NONE:
                 old = self._old_alarms.get(prop, AlarmCondition.NONE)
                 if old is not AlarmCondition.NONE:
-                    toClear.setdefault(prop, []).append(old.value)
+                    if prop == 'globalAlarmCondition':
+                        toClear.setdefault(prop, []).extend(
+                            self.accumulatedGlobalAlarms)
+                        self.accumulatedGlobalAlarms.clear()
+                    else:
+                        toClear.setdefault(prop, []).append(old.value)
             else:
                 toAdd[prop] = Hash(cond.value, Hash(
                     "type", cond.value,
                     "description",
                     getattr(desc, "alarmInfo_{}".format(cond.value), ""),
                     "needsAcknowledging",
-                    getattr(desc, "alarmNeedsAck_{}".format(cond.value), "")))
+                    bool(getattr(desc, "alarmNeedsAck_{}".format(cond.value),
+                                 True))))
                 toAdd[prop][cond.value, ...] = timestamp.toDict()
         self._old_alarms = {}
         self._changed_alarms = set()

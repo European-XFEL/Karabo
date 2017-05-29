@@ -334,6 +334,7 @@ class PythonDevice(NoFsm):
         self.validatorIntern.setValidationRules(rules)
         self.validatorExtern.setValidationRules(rules)
         self.globalAlarmCondition = AlarmCondition.NONE
+        self.accumulatedGlobalAlarms = set()
 
         # For broker error handler
         self.lastBrokerErrorStamp = 0
@@ -1418,24 +1419,28 @@ class PythonDevice(NoFsm):
                             " not '{}'".format(str(type(condition))))
         resultingCondition = None
         currentCondition = None
-        currentGlobal = self.globalAlarmCondition
+        previousGlobal = self.globalAlarmCondition
+        self.accumulatedGlobalAlarms.add(previousGlobal.asString())
+
         with self._stateChangeLock:
             self.globalAlarmCondition = condition
             resultingCondition = \
                 self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
             currentCondition = self.parameters.get("alarmCondition")
 
-        if resultingCondition is not None and resultingCondition.asString()\
-           != currentCondition:
+        if (resultingCondition is not None
+                and resultingCondition.asString() != currentCondition):
             self.set("alarmCondition", resultingCondition,
                      validate=False)
 
         emitHash = Hash("toClear", Hash(), "toAdd", Hash())
         conditionString = condition.asString()
 
-        if (condition == AlarmCondition.NONE and currentGlobal is not None
-            and currentGlobal != AlarmCondition.NONE):
-            emitHash.set("toClear.global", [currentGlobal.asString()])
+        if (condition == AlarmCondition.NONE
+                and previousGlobal != AlarmCondition.NONE):
+            alarmsToClear = list(self.accumulatedGlobalAlarms)
+            self.accumulatedGlobalAlarms.clear()
+            emitHash.set("toClear.global", alarmsToClear)
         else:
             entry = Hash("type", condition.asString(),
                          "description", description,
