@@ -142,6 +142,8 @@ namespace karabo {
             karabo::util::Schema m_fullSchema;
 
             karabo::util::AlarmCondition m_globalAlarmCondition;
+            std::set<std::string> m_accumulatedGlobalAlarms;
+
             karabo::util::Epochstamp m_lastBrokerErrorStamp;
 
         public:
@@ -1157,9 +1159,11 @@ namespace karabo {
                 using namespace karabo::util;
 
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                // copy on purpose for currentGlobal
-                const std::string currentGlobal = m_globalAlarmCondition.asString();
+                // copy on purpose for previousGlobal
+                const std::string previousGlobal = m_globalAlarmCondition.asString();
                 m_globalAlarmCondition = condition;
+                m_accumulatedGlobalAlarms.insert(previousGlobal);
+
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
                 if (result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")) {
                     lock.unlock();
@@ -1174,8 +1178,10 @@ namespace karabo {
                 Hash& toClear = emitHash.bindReference<Hash>("toClear");
                 Hash& toAdd = emitHash.bindReference<Hash>("toAdd");
                 const std::string& conditionString = condition.asString();
-                if (condition.asString() == AlarmCondition::NONE.asString() && currentGlobal != AlarmCondition::NONE.asString()) {
-                    toClear.set("global", std::vector<std::string>(1, currentGlobal));
+                if (condition.asString() == AlarmCondition::NONE.asString() && previousGlobal != AlarmCondition::NONE.asString()) {
+                    const std::vector<std::string> alarmsToClear(m_accumulatedGlobalAlarms.begin(), m_accumulatedGlobalAlarms.end());
+                    m_accumulatedGlobalAlarms.clear();
+                    toClear.set("global", alarmsToClear);
                 } else {
                     Hash::Node& propertyNode = toAdd.set("global", Hash());
                     Hash::Node& entryNode = propertyNode.getValue<Hash>().set(conditionString, Hash());

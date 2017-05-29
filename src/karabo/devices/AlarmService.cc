@@ -8,6 +8,7 @@
 
 #include <fstream>
 
+#include <boost/foreach.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/sharable_lock.hpp>
@@ -198,156 +199,174 @@ namespace karabo {
 
         void AlarmService::slotUpdateAlarms(const std::string& deviceId, const karabo::util::Hash& alarmInfo) {
 
-            //check for sanity of incoming hash
-            if (!alarmInfo.has("toClear") || !alarmInfo.has("toAdd")) return;
+            // alarmInfo MUST HAVE "toClear" and "toAdd" keys
+            if (!(alarmInfo.has("toClear") && alarmInfo.has("toAdd"))) return;
 
-            // get rid of alarm conditions that have passed or can now be acknowledged
-            const Hash& toClear = alarmInfo.get<Hash>("toClear");
-
-            //updates by row
             Hash rowUpdates;
 
-            // check if any alarms exist for this deviceId
-            // in the following capital "N" at the end of a variable declarations signifies a Hash node
-            boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
-            boost::optional<Hash::Node&> existingDeviceEntryN = m_alarms.find(deviceId);
+            removeDeviceAlarms(deviceId, alarmInfo.get<Hash>("toClear"), rowUpdates);
+            addDeviceAlarms(deviceId, alarmInfo.get<Hash>("toAdd"), rowUpdates);
 
-            if (existingDeviceEntryN) {
-                boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
-                Hash& existingDeviceEntry = existingDeviceEntryN->getValue<Hash>();
-
-                //iterate over properties for this deviceId
-                for (Hash::const_iterator propIt = toClear.begin(); propIt != toClear.end(); ++propIt) {
-                    boost::optional<Hash::Node&> existingPropEntryN = existingDeviceEntry.find(propIt->getKey()); //existing property alarms for deviceId
-                    if (!existingPropEntryN) continue; //no alarm for this property
-
-                    Hash& existingPropEntry = existingPropEntryN->getValue<Hash>();
-
-                    //iterate over alarm types in this property
-                    const std::vector<std::string>& alarmTypes = propIt->getValue<std::vector<std::string> >();
-
-                    for (std::vector<std::string>::const_iterator aTypeIt = alarmTypes.begin(); aTypeIt != alarmTypes.end(); ++aTypeIt) {
-                        boost::optional<Hash::Node&> existingTypeEntryN = existingPropEntry.find(*aTypeIt); //existing alarm types for property
-                        if (!existingTypeEntryN) continue; //no alarm for this property and alarm type
-
-                        //alarm of this type exists for the property
-                        Hash& existingTypeEntry = existingTypeEntryN->getValue<Hash>();
-
-                        const unsigned long long id = m_alarmsMap_r.find(&(*existingTypeEntryN))->second;
-                        if (existingTypeEntry.get<bool>("needsAcknowledging")) {
-                            //if the alarm needs to be acknowledged we allow this now
-                            existingTypeEntry.set("acknowledgeable", true);
-                            //add to rowUpdates
-                            rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("acknowledgeable", existingTypeEntry));
-
-                        } else {
-
-                            //add as delete to row updates;
-                            rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("remove", existingTypeEntry));
-
-                            m_alarmsMap_r.erase(&(*existingTypeEntryN));
-                            m_alarmsMap.erase(id);
-
-                            //go ahead and erase the alarm condition as it is allowed to silently disappear
-                            existingPropEntry.erase(*aTypeIt);
-                        }
-                    }
-
-                    if (existingPropEntry.empty()) existingDeviceEntry.erase(propIt->getKey());
-
-                }
+            if (!rowUpdates.empty()) {
+                emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), rowUpdates);
             }
-
-            //now add new alarms
-            const Hash& toAdd = alarmInfo.get<Hash>("toAdd");
-
-            if (!toAdd.empty()) {
-
-                boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
-                //if instance appears for first time we add it to the alarm entries
-
-                if (!existingDeviceEntryN) {
-                    existingDeviceEntryN = m_alarms.set(deviceId, Hash());
-                }
-
-                Hash& existingDeviceEntry = existingDeviceEntryN->getValue<Hash>();
-
-                //iteration over properties with alarms
-                for (Hash::const_iterator propIt = toAdd.begin(); propIt != toAdd.end(); ++propIt) {
-                    //check if alarms for this property exist
-                    boost::optional<Hash::Node&> existingPropEntryN = existingDeviceEntry.find(propIt->getKey());
-                    if (!existingPropEntryN) {
-                        //create node for property if it doesn't exist
-                        existingPropEntryN = existingDeviceEntry.set(propIt->getKey(), Hash());
-                    }
-
-                    //update this property
-                    const Hash& updatingPropEntry = propIt->getValue<Hash>();
-                    Hash& existingPropEntry = existingPropEntryN->getValue<Hash>();
-
-                    //iterates over alarm type of this property
-                    for (Hash::const_iterator aTypeIt = updatingPropEntry.begin(); aTypeIt != updatingPropEntry.end(); ++aTypeIt) {
-                        boost::optional<Hash::Node&> existingTypeEntryN = existingPropEntry.find(aTypeIt->getKey());
-
-
-                        const Timestamp updatedTimeStamp = Timestamp::fromHashAttributes(aTypeIt->getAttributes());
-                        Timestamp originalTimeStamp = updatedTimeStamp;
-
-
-                        //get the next id if we perform insertion
-                        unsigned long long id = 0;
-                        if (!m_alarmsMap.empty()) {
-                            id = (--m_alarmsMap.end())->first;
-                            id++;
-                        }
-
-                        if (existingTypeEntryN) {
-                            //alarm exists, we use its first occurance
-                            Hash& existingTypeEntry = existingTypeEntryN->getValue<Hash>();
-                            originalTimeStamp = Timestamp::fromHashAttributes(existingTypeEntry.getAttributes("timeOfFirstOccurrence"));
-                            id = m_alarmsMap_r.find(&(*existingTypeEntryN))->second;
-                        }
-
-                        //first set all properties we can simply copy by assigning value of the new entry
-                        Hash::Node& newEntryN = existingPropEntry.set(aTypeIt->getKey(), aTypeIt->getValue<Hash>());
-
-                        //now those which we needed to modify
-                        Hash& newEntry = newEntryN.getValue<Hash>();
-                        newEntry.set("timeOfFirstOccurrence", originalTimeStamp.toIso8601Ext());
-                        newEntry.set("timeOfOccurrence", updatedTimeStamp.toIso8601Ext());
-                        originalTimeStamp.toHashAttributes(newEntry.getAttributes("timeOfFirstOccurrence"));
-                        updatedTimeStamp.toHashAttributes(newEntry.getAttributes("timeOfOccurrence"));
-                        // acknowledgeable is determined by whether an alarm needs acknowledging
-                        newEntry.set("acknowledgeable", !newEntry.get<bool>("needsAcknowledging"));
-                        newEntry.set("deviceId", deviceId);
-                        newEntry.set("property", boost::replace_all_copy(existingPropEntryN->getKey(), Validator::kAlarmParamPathSeparator, "."));
-                        newEntry.set("id", id);
-
-                        //update maps
-                        m_alarmsMap[id] = &newEntryN;
-                        m_alarmsMap_r[&newEntryN] = id;
-
-
-                        if (existingTypeEntryN) {
-                            rowUpdates.set(boost::lexical_cast<std::string>(id),
-                                           addRowUpdate("update", newEntry));
-                        } else {
-                            rowUpdates.set(boost::lexical_cast<std::string>(id),
-                                           addRowUpdate("add", newEntry));
-                        }
-
-
-                    }
-                }
-            }
-            emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), rowUpdates);
-
-
         }
 
 
         karabo::util::Hash AlarmService::addRowUpdate(const std::string& updateType, const karabo::util::Hash& entry) const {
             return Hash(updateType, entry);
+        }
+
+
+        void AlarmService::addDeviceAlarms(const std::string& deviceId, const karabo::util::Hash& alarms, karabo::util::Hash& rowUpdates) {
+            // check if any alarms exist for this deviceId
+            // in the following, a suffix of "Node" at the end of a variable name signifies a Hash node
+            boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
+
+            if (!alarms.empty()) {
+
+                boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
+                boost::optional<Hash::Node&> deviceAlarmsNode = m_alarms.find(deviceId);
+
+                if (!deviceAlarmsNode) {
+                    // These are the first alarm entries for this device. Create a sub-Hash in m_alarms
+                    deviceAlarmsNode = m_alarms.set(deviceId, Hash());
+                }
+
+                Hash& deviceAlarms = deviceAlarmsNode->getValue<Hash>();
+
+                // Iterate over properties with alarms to add
+                for (Hash::const_iterator propertyNameIt = alarms.begin(); propertyNameIt != alarms.end(); ++propertyNameIt) {
+
+                    //check if alarms for this property exist
+                    boost::optional<Hash::Node&> propertyEntryNode = deviceAlarms.find(propertyNameIt->getKey());
+                    if (!propertyEntryNode) {
+                        // These are the first alarm entries for this property
+                        propertyEntryNode = deviceAlarms.set(propertyNameIt->getKey(), Hash());
+                    }
+
+                    // Update the property
+                    const Hash& propertyEntryFromUpdate = propertyNameIt->getValue<Hash>();
+                    Hash& propertyEntry = propertyEntryNode->getValue<Hash>();
+
+                    // Iterate over alarm types for this property
+                    for (Hash::const_iterator alarmTypeEntryIt = propertyEntryFromUpdate.begin(); alarmTypeEntryIt != propertyEntryFromUpdate.end(); ++alarmTypeEntryIt) {
+                        boost::optional<Hash::Node&> existingAlarmTypeEntryNode = propertyEntry.find(alarmTypeEntryIt->getKey());
+
+                        const Timestamp updateTimeStamp = Timestamp::fromHashAttributes(alarmTypeEntryIt->getAttributes());
+                        Timestamp existingTimeStamp = updateTimeStamp;
+
+                        //get the next id if we perform insertion
+                        unsigned long long id = 0;
+                        if (!m_alarmsMap.empty()) {
+                            id = (--m_alarmsMap.end())->first + 1ULL;
+                        }
+
+                        if (existingAlarmTypeEntryNode) {
+                            //alarm exists, we use its first occurance
+                            Hash& existingAlarmTypeEntry = existingAlarmTypeEntryNode->getValue<Hash>();
+                            existingTimeStamp = Timestamp::fromHashAttributes(existingAlarmTypeEntry.getAttributes("timeOfFirstOccurrence"));
+                            id = m_alarmsMap_r.find(&(*existingAlarmTypeEntryNode))->second;
+                        }
+
+                        //first set all properties we can simply copy by assigning value of the new entry
+                        Hash::Node& newAlarmTypeEntryNode = propertyEntry.set(alarmTypeEntryIt->getKey(), alarmTypeEntryIt->getValue<Hash>());
+                        Hash& newAlarmTypeEntry = newAlarmTypeEntryNode.getValue<Hash>();
+
+                        //now those which we needed to modify
+                        newAlarmTypeEntry.set("timeOfFirstOccurrence", existingTimeStamp.toIso8601Ext());
+                        existingTimeStamp.toHashAttributes(newAlarmTypeEntry.getAttributes("timeOfFirstOccurrence"));
+                        newAlarmTypeEntry.set("timeOfOccurrence", updateTimeStamp.toIso8601Ext());
+                        updateTimeStamp.toHashAttributes(newAlarmTypeEntry.getAttributes("timeOfOccurrence"));
+                        // acknowledgeable is determined by whether an alarm needs acknowledging
+                        newAlarmTypeEntry.set("acknowledgeable", !newAlarmTypeEntry.get<bool>("needsAcknowledging"));
+                        newAlarmTypeEntry.set("deviceId", deviceId);
+                        newAlarmTypeEntry.set("property", boost::replace_all_copy(propertyEntryNode->getKey(), Validator::kAlarmParamPathSeparator, "."));
+                        newAlarmTypeEntry.set("id", id);
+
+                        //update maps
+                        m_alarmsMap[id] = &newAlarmTypeEntryNode;
+                        m_alarmsMap_r[&newAlarmTypeEntryNode] = id;
+
+                        if (existingAlarmTypeEntryNode) {
+                            rowUpdates.set(boost::lexical_cast<std::string>(id),
+                                           addRowUpdate("update", newAlarmTypeEntry));
+                        } else {
+                            rowUpdates.set(boost::lexical_cast<std::string>(id),
+                                           addRowUpdate("add", newAlarmTypeEntry));
+                        }
+                    }
+
+                    // Find most significant alarm type belonging to this property
+                    const AlarmCondition mostSignificant = getMostSignificantAlarm(propertyEntry);
+
+                    // Make all less significant alarm types acknowledgeable
+                    makeLessSignificantAcknowledgeable(propertyEntry, mostSignificant, rowUpdates);
+                }
+            }
+        }
+
+
+        void AlarmService::removeDeviceAlarms(const std::string& deviceId, const karabo::util::Hash& alarms, karabo::util::Hash& rowUpdates) {
+
+            boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
+            boost::optional<Hash::Node&> deviceAlarmsNode = m_alarms.find(deviceId);
+
+            // check if any alarms exist for this deviceId
+            if (deviceAlarmsNode) {
+                boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
+                Hash& deviceAlarms = deviceAlarmsNode->getValue<Hash>();
+
+                // iterate over property names which have alarms to clear
+                for (Hash::const_iterator propertyNameIt = alarms.begin(); propertyNameIt != alarms.end(); ++propertyNameIt) {
+                    boost::optional<Hash::Node&> propertyEntryNode = deviceAlarms.find(propertyNameIt->getKey()); // existing alarms for deviceId.property
+                    if (!propertyEntryNode) continue; // no alarms for this property
+
+                    Hash& propertyEntry = propertyEntryNode->getValue<Hash>();
+
+                    // iterate over alarm types in this property
+                    const std::vector<std::string>& alarmTypesToClear = propertyNameIt->getValue<std::vector<std::string> >();
+
+                    for (auto alarmTypeIt = alarmTypesToClear.begin(); alarmTypeIt != alarmTypesToClear.end(); ++alarmTypeIt) {
+                        boost::optional<Hash::Node&> alarmTypeEntryNode = propertyEntry.find(*alarmTypeIt); //existing alarm types for property
+                        if (!alarmTypeEntryNode) continue; //no alarm for this property and alarm type
+
+                        //alarm of this type exists for the property
+                        Hash& alarmTypeEntry = alarmTypeEntryNode->getValue<Hash>();
+
+                        const unsigned long long id = m_alarmsMap_r.find(&(*alarmTypeEntryNode))->second;
+                        if (alarmTypeEntry.get<bool>("needsAcknowledging")) {
+                            //if the alarm needs to be acknowledged we allow this now
+                            alarmTypeEntry.set("acknowledgeable", true);
+                            //add to rowUpdates
+                            rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("acknowledgeable", alarmTypeEntry));
+
+                        } else {
+
+                            //add as delete to row updates;
+                            rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("remove", alarmTypeEntry));
+
+                            // Erase the pointers to the m_alarms Hash
+                            m_alarmsMap_r.erase(&(*alarmTypeEntryNode));
+                            m_alarmsMap.erase(id);
+
+                            // Erase the alarm condition from the m_alarms Hash as it is allowed to silently disappear
+                            propertyEntry.erase(*alarmTypeIt);
+                        }
+                    }
+
+                    // Find most significant alarm type belonging to this property
+                    const AlarmCondition mostSignificant = getMostSignificantAlarm(propertyEntry);
+
+                    // Make all less significant alarm types acknowledgeable
+                    makeLessSignificantAcknowledgeable(propertyEntry, mostSignificant, rowUpdates);
+
+                    if (propertyEntry.empty()) {
+                        // When a device property has no remaining alarms, erase it from the m_alarms Hash
+                        deviceAlarms.erase(propertyNameIt->getKey());
+                    }
+                }
+            }
         }
 
 
@@ -499,6 +518,42 @@ namespace karabo {
 
         }
 
+
+        karabo::util::AlarmCondition AlarmService::getMostSignificantAlarm(const karabo::util::Hash& propertyAlarmTypes) const {
+            // Find most significant alarm type added to this property
+            std::vector<AlarmCondition> alarmTypesForProperty;
+            std::vector<std::string> alarmTypeNames;
+
+            propertyAlarmTypes.getKeys(alarmTypeNames);
+            BOOST_FOREACH(std::string name, alarmTypeNames) {
+                alarmTypesForProperty.push_back(AlarmCondition::fromString(name));
+            }
+            return AlarmCondition::returnMostSignificant(alarmTypesForProperty);
+        }
+
+
+        void AlarmService::makeLessSignificantAcknowledgeable(karabo::util::Hash& propertyAlarms, const karabo::util::AlarmCondition& significantType,
+                                                              karabo::util::Hash& rowUpdates) {
+
+            for (Hash::iterator alarmTypeEntryIt = propertyAlarms.begin(); alarmTypeEntryIt != propertyAlarms.end(); ++alarmTypeEntryIt) {
+
+                const AlarmCondition alarmType = AlarmCondition::fromString(alarmTypeEntryIt->getKey());
+
+                if (alarmType.isLowerCriticalityThan(significantType)) {
+                    // make this type entry acknowledgeable
+                    Hash::Node& existingAlarmTypeEntryNode = propertyAlarms.getNode(alarmTypeEntryIt->getKey());
+                    Hash& existingAlarmTypeEntry = existingAlarmTypeEntryNode.getValue<Hash>();
+
+                    if (!existingAlarmTypeEntry.get<bool>("acknowledgeable")) {
+                        const unsigned long long id = m_alarmsMap_r[&existingAlarmTypeEntryNode];
+                        existingAlarmTypeEntry.set("acknowledgeable", existingAlarmTypeEntry.get<bool>("needsAcknowledging"));
+
+                        rowUpdates.set(boost::lexical_cast<std::string>(id),
+                                       addRowUpdate("update", existingAlarmTypeEntry));
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -97,7 +97,12 @@ namespace karabo {
              */
             operator std::string() const;
 
-
+            /**
+             * Tests whether an alarm conditions is more critical than this alarm condition
+             * @param other: the condition to test criticality against
+             * @return true if this condition has a lower criticality than the other; false otherwise.
+             */
+            bool isLowerCriticalityThan(const AlarmCondition & other) const;
 
             /**
              * Tests whether two alarm conditions are similar, e.g. are subsets of the same basic condition
