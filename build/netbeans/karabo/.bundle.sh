@@ -184,6 +184,11 @@ cd $BASEDIR
 sed "s%__VENV_DIR__%$BASEDIR/karabo%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
 # templates
 cp -rf src/templates $PACKAGEDIR
+# service
+cp -rf src/service $PACKAGEDIR
+# the initial configurations
+cp -rf src/service.in $PACKAGEDIR
+cp -rf src/environment.in $PACKAGEDIR
 cd -
 
 # bundle scripts for plugin packages
