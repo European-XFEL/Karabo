@@ -12,8 +12,9 @@ from .const import (ACKNOWLEDGE, ALARM_DATA, ALARM_TYPE, DEVICE_ID, PROPERTY,
 
 class AlarmModel(QAbstractTableModel):
     """ A class which describes the relevant data (model) of a alarm service
-        device to show in a table view. """
-    headers = [value for key, value in ALARM_DATA.items()]
+    device to show in a table view.
+    """
+    headers = list(ALARM_DATA.values())
 
     def __init__(self, instanceId, parent=None):
         super(AlarmModel, self).__init__(parent)
@@ -35,7 +36,7 @@ class AlarmModel(QAbstractTableModel):
         for upType, alarmEntry in zip(updateTypes, alarmEntries):
             entryIndex = self._getEntryIndex(alarmEntry.id)
             if upType in UPDATE_ALARM_TYPES:
-                if entryIndex > -1 and entryIndex < len(self.allEntries):
+                if 0 <= entryIndex < len(self.allEntries):
                     # Replace entry
                     self.allEntries[entryIndex] = alarmEntry
                 else:
