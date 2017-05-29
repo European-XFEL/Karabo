@@ -112,6 +112,10 @@ def startkarabo():
 
     If the device server is already running, nothing happens.
     """
+    if not osp.exists(absolute("var", "service")):
+        shutil.copytree(absolute("service.in"), absolute("var", "service"))
+    if not osp.exists(absolute("var", "environment")):
+        shutil.copytree(absolute("environment.in"), absolute("var", "environment"))
     exec_defaultall("svc", "-u")
 
 
