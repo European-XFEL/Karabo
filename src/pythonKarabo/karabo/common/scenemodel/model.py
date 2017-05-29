@@ -65,7 +65,7 @@ class UnknownXMLDataModel(BaseSceneObjectData):
 def _read_extra_attributes(element):
     """ Read all the attributes that we don't explicitly write.
     """
-    our_names = ('height', 'width', NS_KARABO + 'version')
+    our_names = ('height', 'width', NS_KARABO + 'version', NS_KARABO + 'uuid')
     attributes = {}
     for name, value in element.items():
         if name not in our_names:
