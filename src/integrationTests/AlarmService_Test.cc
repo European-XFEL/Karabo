@@ -94,6 +94,7 @@ void AlarmService_Test::appTestRunner() {
     testRecovery();
     testDeviceKilled();
     testDeviceReappeared();
+    //testTriggerGlobal();
 }
 
 
@@ -105,6 +106,7 @@ void AlarmService_Test::testDeviceRegistration() {
     std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >("testAlarmService", "registeredDevices");
     CPPUNIT_ASSERT(registeredDevices[0] == "alarmTester");
 
+    std::clog << std::endl << "Tested device registration.. Ok" << std::endl;
 }
 
 
@@ -179,7 +181,7 @@ void AlarmService_Test::testAlarmPassing() {
     //the alarm should now not be acknowledgeable anymore
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
 
-
+    std::clog << "Tested alarm passing.. Ok" << std::endl;
 }
 
 
@@ -280,6 +282,7 @@ void AlarmService_Test::testAcknowledgement() {
         }
     }
 
+    std::clog << "Tested acknowledgement.. Ok" << std::endl;
 }
 
 
@@ -325,6 +328,7 @@ void AlarmService_Test::testFlushing() {
         CPPUNIT_ASSERT(karabo::util::similar(h, hTest));
     }
 
+    std::clog << "Tested flushing.. Ok" << std::endl;
 }
 
 
@@ -361,7 +365,7 @@ void AlarmService_Test::testRecovery() {
 
     //now we bring the alarm service back up
     std::vector<TcpAdapter::QueuePtr> messageQs(3, TcpAdapter::QueuePtr());
-    messageQs[0] = m_tcpAdapter->getNextMessages("alarmUpdate", 3, [&] {
+    messageQs[0] = m_tcpAdapter->getNextMessages("alarmUpdate", 2, [&] {
         messageQs[1] = m_tcpAdapter->getNextMessages("alarmInit", 1, [&] {
             messageQs[2] = m_tcpAdapter->getNextMessages("instanceNew", 1, [&] {
                 success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService", "flushInterval", 1, "storagePath", std::string(KARABO_TESTPATH)), KRB_TEST_MAX_TIMEOUT);
@@ -371,13 +375,11 @@ void AlarmService_Test::testRecovery() {
     CPPUNIT_ASSERT(success.first);
 
 
-    // alarmState should now be an alarm for floatProperty and floatProperty2 acknowledgeable, and alarm on alarmTester2
+    // alarmState should now be two alarms for floatProperty, one on alarmTester and the other on alarmTester2
     // messages are unordered as they depend on async answers from other devices
     bool row2add = false;
-    bool row1ack = false;
     bool row3add = false;
     bool topologyMessage = false;
-    bool initMessage = false;
 
     const int maxPops = 10;
     int pop = 0;
@@ -387,11 +389,7 @@ void AlarmService_Test::testRecovery() {
             popsuccess = messageQs[i]->pop(lastMessage);
             if (popsuccess) {
                 if (lastMessage.has("topologyEntry.device.testAlarmService")) topologyMessage = true;
-                if (lastMessage.has("rows." + m_rowForDevice1 + ".init")) initMessage = true;
                 if (lastMessage.has("rows.2.add")) row2add = true;
-                if (lastMessage.has("rows." + m_rowForDevice1 + ".acknowledgeable")) row1ack = true;
-
-
                 if (lastMessage.has("rows.3.add")) row3add = true;
             }
         }
@@ -399,11 +397,10 @@ void AlarmService_Test::testRecovery() {
     }
 
     CPPUNIT_ASSERT(topologyMessage);
-    //CPPUNIT_ASSERT(initMessage);
     CPPUNIT_ASSERT(row2add);
-    CPPUNIT_ASSERT(row1ack);
     CPPUNIT_ASSERT(row3add);
 
+    std::clog << "Tested service recovery.. Ok" << std::endl;
 }
 
 
@@ -420,11 +417,9 @@ void AlarmService_Test::testDeviceKilled() {
     //the following depends on async messaging of the reappearance of the
     // alarm service in a previous test. We cannot know for sure which row
 
-    if (lastMessage.has("rows.3.deviceKilled")) m_killedDeviceRow = "3";
-    if (lastMessage.has("rows.2.deviceKilled")) m_killedDeviceRow = "2";
-
-
     if (lastMessage.has("rows.1.deviceKilled")) m_killedDeviceRow = "1";
+    if (lastMessage.has("rows.2.deviceKilled")) m_killedDeviceRow = "2";
+    if (lastMessage.has("rows.3.deviceKilled")) m_killedDeviceRow = "3";
 
     CPPUNIT_ASSERT(!m_killedDeviceRow.empty());
     Hash h = lastMessage.get<Hash>("rows." + m_killedDeviceRow + ".deviceKilled");
@@ -434,6 +429,8 @@ void AlarmService_Test::testDeviceKilled() {
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmLow");
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
+
+    std::clog << "Tested device killing.. Ok" << std::endl;
 }
 
 
@@ -460,6 +457,7 @@ void AlarmService_Test::testDeviceReappeared() {
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
 
+    std::clog << "Tested device reappearance.. Ok" << std::endl;
 }
 
 void AlarmService_Test::testTriggerGlobal() {
@@ -480,6 +478,8 @@ void AlarmService_Test::testTriggerGlobal() {
     //these should be the same as it is the first time the alarm is raised
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
     CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
+
+    std::clog << "Tested global triggering.. Ok" << std::endl;
 }
 
 
