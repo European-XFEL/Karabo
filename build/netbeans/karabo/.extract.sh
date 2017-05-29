@@ -134,6 +134,16 @@ if [ ! -e "$KARABO/var/config/config" ]; then
     cp $KARABO/bin/config.orig $KARABO/var/config/config
 fi
 
+if [ ! -e "$KARABO/var/service" ]
+then
+    mv $KARABO/service.in $KARABO/var/service
+fi
+
+if [ ! -e "$KARABO/var/environment" ]
+then
+    mv $KARABO/environment.in $KARABO/var/environment
+fi
+
 # Install and initialize the local project database
 if [ ! -d "$KARABO/extern/eXistDB/db" ]; then
     echo -n " Activating local project database, please wait..."
