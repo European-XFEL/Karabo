@@ -70,15 +70,16 @@ def entrypoint(func):
 
 def supervise():
     svok = subprocess.call([absolute("extern", "bin", "svok"),
-                            absolute("service")])
+                            absolute("var", "service", "svscan")])
     if svok == 0:
         return
     print("starting supervisor")
     supervise = subprocess.Popen(
-        [absolute("extern", "bin", "supervise"), absolute("service")],
+        [absolute("extern", "bin", "supervise"),
+         absolute("var", "service", "svscan")],
         stdout=subprocess.PIPE)
     subprocess.Popen([absolute("extern", "bin", "multilog"),
-                      absolute("var", "log", "supervisor")],
+                      absolute("var", "log", "svscan")],
                      stdin=supervise.stdout.fileno())
     sleep(1)  # give it some time to actually start
 
