@@ -89,7 +89,12 @@ def defaultall():
     if len(sys.argv) > 1:
         return [arg.replace("/", "_") for arg in sys.argv[1:]]
     else:
-        return os.listdir()
+        ret = os.listdir()
+        try:
+            ret.remove("svscan")
+        except ValueError:
+            pass
+        return ret
 
 
 def exec_defaultall(cmd, *args):
