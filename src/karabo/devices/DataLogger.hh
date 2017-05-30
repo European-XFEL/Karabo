@@ -99,7 +99,9 @@ namespace karabo {
              */
             void slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason);
 
-            void refreshDeviceInformation();
+            void handleFirstSchemaRequest(const karabo::util::Schema& schema, const std::string& deviceId);
+
+            void errorHandleFirstSchemaRequest();
 
             int determineLastIndex(const std::string& deviceId);
 
