@@ -70,15 +70,16 @@ def entrypoint(func):
 
 def supervise():
     svok = subprocess.call([absolute("extern", "bin", "svok"),
-                            absolute("service")])
+                            absolute("var", "service", "svscan")])
     if svok == 0:
         return
     print("starting supervisor")
     supervise = subprocess.Popen(
-        [absolute("extern", "bin", "supervise"), absolute("service")],
+        [absolute("extern", "bin", "supervise"),
+         absolute("var", "service", "svscan")],
         stdout=subprocess.PIPE)
     subprocess.Popen([absolute("extern", "bin", "multilog"),
-                      absolute("var", "log", "supervisor")],
+                      absolute("var", "log", "svscan")],
                      stdin=supervise.stdout.fileno())
     sleep(1)  # give it some time to actually start
 
@@ -88,7 +89,12 @@ def defaultall():
     if len(sys.argv) > 1:
         return [arg.replace("/", "_") for arg in sys.argv[1:]]
     else:
-        return os.listdir()
+        ret = os.listdir()
+        try:
+            ret.remove("svscan")
+        except ValueError:
+            pass
+        return ret
 
 
 def exec_defaultall(cmd, *args):
@@ -215,14 +221,10 @@ def adddeviceserver():
 
     target_dir = server_id.replace("/", "_")
     abs_target = absolute("var", "service", target_dir)
-    abs_type = absolute("service", server_type)
 
     if osp.exists(abs_target):
         print("ERROR service/{} already exists".format(target_dir))
         return 3
-    if not osp.exists(abs_type):
-        print("ERROR server type {} is not known".format(server_type))
-        return 4
     tmpdir = mkdtemp(dir=absolute("var"))
 
     try:
