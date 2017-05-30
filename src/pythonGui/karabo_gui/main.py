@@ -30,6 +30,12 @@ def excepthook(exc_type, value, traceback):
 
 def run_gui(args):
     app = QApplication(args)
+
+    # These should be set to simplify QSettings usage
+    app.setOrganizationName('XFEL')
+    app.setOrganizationDomain('xfel.eu')
+    app.setApplicationName('KaraboGUI')
+
     splash_path = op.join(op.dirname(__file__), "icons", "xfel_logo.png")
     splash_img = QPixmap(splash_path)
     splash = QSplashScreen(splash_img, Qt.WindowStaysOnTopHint)
