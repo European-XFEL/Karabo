@@ -3,6 +3,5 @@ from .alarm_conditions import AlarmCondition
 from .decorators import karabo_deprecated
 from .capabilities import Capabilities
 from .savable import BaseSavableModel, set_modified_flag
-from .shell_namespace import ShellNamespaceWrapper
 from .states import State, StateSignifier
 from .traits import walk_traits_object
