@@ -215,19 +215,18 @@ def adddeviceserver():
     """
     assert len(sys.argv) > 2
 
+    if not osp.exists(absolute("var", "service")):
+        shutil.copytree(absolute("service.in"), absolute("var", "service"))
+
     _, server_id, server_type, *options = sys.argv
     assert server_type in {"cppserver", "middlelayerserver", "pythonserver"}
 
     target_dir = server_id.replace("/", "_")
     abs_target = absolute("var", "service", target_dir)
-    abs_type = absolute("service", server_type)
 
     if osp.exists(abs_target):
         print("ERROR service/{} already exists".format(target_dir))
         return 3
-    if not osp.exists(abs_type):
-        print("ERROR server type {} is not known".format(server_type))
-        return 4
     tmpdir = mkdtemp(dir=absolute("var"))
 
     try:
