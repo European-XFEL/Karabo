@@ -1,5 +1,4 @@
 #!/bin/bash
 # This file is part of the initial configuration of Karabo
 cd $KARABO/var/data
-export PYTHONUNBUFFERED=1
 exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/macroServer 'serverId=karabo/macroServer' 'visibility=4' 2>&1
