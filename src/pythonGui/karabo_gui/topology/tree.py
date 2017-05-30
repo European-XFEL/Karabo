@@ -108,7 +108,7 @@ class SystemTree(HasStrictTraits):
 
         for server_id in server_hash.keys():
             # Check, if server_id is already in tree
-            if self.find(server_id) is None:
+            if not self.find(server_id):
                 continue
 
             server_class_keys.extend(self.remove_server(server_id))
@@ -116,7 +116,7 @@ class SystemTree(HasStrictTraits):
 
         for device_id in device_hash.keys():
             # Check, if device_id is already in tree
-            if self.find(device_id) is None:
+            if not self.find(device_id):
                 continue
 
             self.remove_device(device_id)
@@ -124,54 +124,53 @@ class SystemTree(HasStrictTraits):
 
         return existing_devices, server_class_keys
 
-    def find(self, node_path):
-        """Find a node by its path
+    def find(self, node_id):
+        """Find all nodes with the given `node_id` and return them in a list
         """
-        def recurse(node, path):
+        found_nodes = []
+
+        def recurse(node, _id):
+            nonlocal found_nodes
             for i in range(len(node.children)):
                 child = node.children[i]
-                result = recurse(child, path)
-                if result is not None:
-                    return result
+                recurse(child, _id)
 
-            if node.path != "" and path == node.path:
-                return node
+            if node.path != "" and _id == node.node_id:
+                found_nodes.append(node)
 
-            return None
-
-        return recurse(self.root, node_path)
+        recurse(self.root, node_id)
+        return found_nodes
 
     def remove_device(self, instance_id):
         """Remove the entry for a device from the tree
         """
-        node = self.find(instance_id)
-        if node is not None:
+        nodes = self.find(instance_id)
+        for node in nodes:
             with self.update_context.removal_context(node):
                 node.parent.children.remove(node)
 
     def remove_server(self, instance_id):
         """Remove the entry for a server from the tree
         """
-        server_node = self.find(instance_id)
-        if server_node is None:
-            return []
-
+        server_nodes = self.find(instance_id)
         server_class_keys = []
-        # Take care of removing all children
-        while server_node.children:
-            with self.update_context.removal_context(server_node):
-                class_node = server_node.children.pop()
-                key = (server_node.node_id, class_node.node_id)
-                server_class_keys.append(key)
 
-            while class_node.children:
-                # Just for security take care of devices
-                with self.update_context.removal_context(class_node):
-                    class_node.children.pop()
+        for server_node in server_nodes:
+            # Take care of removing all children
+            while server_node.children:
+                with self.update_context.removal_context(server_node):
+                    class_node = server_node.children.pop()
+                    key = (server_node.node_id, class_node.node_id)
+                    server_class_keys.append(key)
 
-        host_node = server_node.parent
-        with self.update_context.removal_context(host_node):
-            host_node.children.remove(server_node)
+                while class_node.children:
+                    # Just for security take care of devices
+                    with self.update_context.removal_context(class_node):
+                        class_node.children.pop()
+
+            host_node = server_node.parent
+            with self.update_context.removal_context(host_node):
+                host_node.children.remove(server_node)
 
         return server_class_keys
 
