@@ -3,7 +3,7 @@ from traits.api import push_exception_handler, pop_exception_handler
 from karabo.middlelayer import AccessLevel
 from karabo_gui.enums import NavigationItemTypes
 from ..tree import SystemTree, SystemTreeNode
-from .utils import system_hash
+from .utils import system_hash, system_hash_server_and_plugins
 
 
 def setUp():
@@ -62,31 +62,43 @@ def test_tree_node_levels():
 
 def test_tree_basics():
     tree = SystemTree()
-    assert tree.find('anything') is None
+    assert len(tree.find('anything')) == 0
 
     sys_hash = system_hash()
-    names = ('swerver', 'swerver.FooClass', 'swerver.BarClass', 'divvy',
-             'macdonald', 'orphan', '__none__')
+    names = ('swerver', 'divvy', 'macdonald', 'orphan', '__none__')
 
     for node_id in names:
-        assert tree.find(node_id) is None
+        assert len(tree.find(node_id)) == 0
 
     tree.update(sys_hash)
     for node_id in names:
-        assert tree.find(node_id) is not None
+        assert len(tree.find(node_id)) > 0
 
     tree.clear_all()
     for node_id in names:
-        assert tree.find(node_id) is None
+        assert len(tree.find(node_id)) == 0
+
+
+def test_tree_find():
+    tree = SystemTree()
+    names = ('FooClass', 'BarClass')
+
+    for node_id in names:
+        assert len(tree.find(node_id)) == 0
+
+    h = system_hash_server_and_plugins()
+    tree.update(h)
+    assert len(tree.find('FooClass')) == 2
+    assert len(tree.find('BarClass')) == 1
+    assert len(tree.find('BlahClass')) == 1
 
 
 def test_tree_clear_existing():
     tree = SystemTree()
-    names = ('swerver', 'swerver.FooClass', 'swerver.BarClass', 'divvy',
-             'macdonald', 'orphan')
+    names = ('swerver', 'divvy', 'macdonald', 'orphan')
     sys_hash = system_hash()
 
     tree.update(sys_hash)
     tree.clear_existing(sys_hash)
     for node_id in names:
-        assert tree.find(node_id) is None
+        assert len(tree.find(node_id)) == 0

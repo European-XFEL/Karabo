@@ -125,54 +125,10 @@ class NavigationTreeModel(QAbstractItemModel):
         elif sender is KaraboEventSender.StopMonitoringDevice:
             self._toggleMonitoring(data.get('device_id', ''), False)
         elif sender is KaraboEventSender.ShowDevice:
-            self.selectPath(data.get('deviceId'))
+            self.selectNode(data.get('deviceId'))
         elif sender is KaraboEventSender.AccessLevelChanged:
-            self.globalAccessLevelChanged()
+            self._needs_update()
         return False
-
-    def currentSelectionPath(self):
-        """Returns the current selection path, or '' if nothing is selected.
-        """
-        # Get last selection path
-        selectedIndexes = self.selectionModel.selectedIndexes()
-        if selectedIndexes:
-            return selectedIndexes[0].internalPointer().path
-        else:
-            return ''
-
-    def has(self, path):
-        return self.tree.find(path) is not None
-
-    def eraseDevice(self, instanceId):
-        index = self.findIndex(instanceId)
-        if index is None or not index.isValid():
-            return
-
-        next_selection = ''
-        if self.selectionModel.isSelected(index):
-            next_selection = index.internalPointer().parent.path
-
-        self.tree.remove_device(instanceId)
-
-        if next_selection:
-            self.selectPath(next_selection)
-
-    def eraseServer(self, instanceId):
-        return self.tree.remove_server(instanceId)
-
-    def detectExistingInstances(self, config):
-        """This function checks whether instances already exist in the tree.
-
-        \Returns a list with all existing instanceIds and a list with existing
-        serverClassIds.
-        """
-        return self.tree.clear_existing(config)
-
-    def globalAccessLevelChanged(self):
-        lastSelectionPath = self.currentSelectionPath()
-        self.modelReset.emit()
-        if lastSelectionPath != '':
-            self.selectPath(lastSelectionPath)
 
     def clear(self):
         self.tree.clear_all()
@@ -189,15 +145,15 @@ class NavigationTreeModel(QAbstractItemModel):
         self.selectionModel.setCurrentIndex(index,
                                             QItemSelectionModel.ClearAndSelect)
 
-    def findIndex(self, path):
-        node = self.tree.find(path)
-        if node is not None:
-            return self.createIndex(node.row(), 0, node)
-        return None
-
-    def selectPath(self, path):
-        index = self.findIndex(path)
-        self.selectIndex(index)
+    def selectNode(self, node_id):
+        """Select the `QModelIndex` with the given `node_id`
+        """
+        nodes = self.tree.find(node_id)
+        if nodes:
+            # Select first entry
+            node = nodes[0]
+            index = self.createIndex(node.row(), 0, node)
+            self.selectIndex(index)
 
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -365,11 +321,13 @@ class NavigationTreeModel(QAbstractItemModel):
         self.signalItemChanged.emit(item_type, conf)
 
     def _toggleMonitoring(self, device_id, monitoring):
-        index = self.findIndex(device_id)
-        if index is not None and index.isValid():
-            assert index.internalPointer().monitoring != monitoring
-            index.internalPointer().monitoring = monitoring
-            self.layoutChanged.emit()
+        nodes = self.tree.find(device_id)
+        # There should better be only one instance with this ID
+        assert len(nodes) == 1
+        node = nodes[0]
+        assert node.monitoring != monitoring
+        node.monitoring = monitoring
+        self._needs_update()
 
     def _needs_update(self):
         """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
