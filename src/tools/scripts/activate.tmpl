@@ -49,13 +49,17 @@ deactivate () {
         hash -r
     fi
 
-    unset KARABO
     if [ ! "$1" = "nondestructive" ] ; then
         # Self destruct!
-        unset KARABO_BROKER
-        unset KARABO_BROKER_TOPIC
+        pushd "$KARABO/var/environment" >/dev/null
+        for var in *
+        do
+           unset $var
+        done
+        popd >/dev/null
         unset -f deactivate
     fi
+    unset KARABO
 }
 
 # unset irrelevant variables
@@ -64,12 +68,17 @@ deactivate nondestructive
 KARABO="__VENV_DIR__"
 export KARABO
 
-# source the config file
-if [ -e $KARABO/var/config/config ]; then
-   source $KARABO/var/config/config
-   export KARABO_BROKER
-   export KARABO_BROKER_TOPIC
+if [ ! -e "$KARABO/var/environment" ]
+then
+  cp -r "$KARABO/environment.in" "$KARABO/var/environment"
 fi
+
+pushd "$KARABO/var/environment" >/dev/null
+for var in *
+do
+   export $var="$(cat $var)"
+done
+popd >/dev/null
 
 _OLD_KARABO_PATH="$PATH"
 PATH="$KARABO/bin:$KARABO/extern/bin:$PATH"
