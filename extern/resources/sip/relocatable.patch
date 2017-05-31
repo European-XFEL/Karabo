@@ -7,11 +7,10 @@
 +
 +# the rest of this file was added by Karabo to make sip relocatable
 +try:
-+    import os.path as osp
-+    newpath = osp.dirname(__file__)
++    newpath = os.path.dirname(__file__)
 +    oldpath = _pkg_config["default_mod_dir"]
 +
-+    common = len(osp.commonprefix([newpath[::-1], oldpath[::-1]]))
++    common = len(os.path.commonprefix([newpath[::-1], oldpath[::-1]]))
 +    oldpath = oldpath[:-common]
 +    newpath = newpath[:-common]
 +
@@ -21,4 +20,5 @@
 +            assert path.startswith(oldpath)
 +            _pkg_config[key] = newpath + path[len(oldpath):]
 +except NameError:
++    # _pkg_config is only defined in sipconfig, not in its template siputils
 +    pass
