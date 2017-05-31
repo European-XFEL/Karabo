@@ -434,7 +434,6 @@ class BoundDeviceServer(DeviceServerBase):
                                      deviceId)
                     process.terminate()
                     try:
-                        # we will be cancelled once the process is gone
                         yield from sleep(5)
                         self.logger.warn('killing non-responding device "%s"',
                                          deviceId)
