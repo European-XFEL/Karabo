@@ -152,18 +152,26 @@ class SystemTree(HasStrictTraits):
     def remove_server(self, instance_id):
         """Remove the entry for a server from the tree
         """
-        node = self.find(instance_id)
-        if node is None:
+        server_node = self.find(instance_id)
+        if server_node is None:
             return []
 
         server_class_keys = []
-        parent = node.parent
-        with self.update_context.removal_context(parent):
-            # There are children, if server
-            for child in node.children:
-                key = (node.node_id, child.node_id)
+        # Take care of removing all children
+        while server_node.children:
+            with self.update_context.removal_context(server_node):
+                class_node = server_node.children.pop()
+                key = (server_node.node_id, class_node.node_id)
                 server_class_keys.append(key)
-            parent.children.remove(node)
+
+            while class_node.children:
+                # Just for security take care of devices
+                with self.update_context.removal_context(class_node):
+                    class_node.children.pop()
+
+        host_node = server_node.parent
+        with self.update_context.removal_context(host_node):
+            host_node.children.remove(server_node)
 
         return server_class_keys
 
