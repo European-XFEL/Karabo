@@ -177,11 +177,12 @@ struct NodeElementWrap {
     }
 
     static NodeElement& setDaqDataType(NodeElement& self, const bp::object& dataTypeObj) {
-        if (!bp::extract<DaqDataType>(dataTypeObj).check())
+        bp::extract<DaqDataType> getDaqType(dataTypeObj);
+        if (!getDaqType.check()) {
             throw KARABO_PYTHON_EXCEPTION("Argument is not a DaqDataType object.");
-        const DaqDataType dataType = bp::extract<DaqDataType> (dataTypeObj);
-        self.getNode().setAttribute<int>(KARABO_SCHEMA_DAQ_DATA_TYPE, dataType);
-        return self;
+        }
+        const DaqDataType dataType = getDaqType();
+        return self.setDaqDataType(dataType);
     }
 };
 
@@ -1935,8 +1936,8 @@ void exportPyUtilSchema() {
         s.def("hasRollingStatistics", &Schema::hasRollingStatistics);
         s.def("subSchema", &Schema::subSchema, (bp::arg("subNodePath"), bp::arg("filterTags") = ""));
         s.def("setDaqDataType", &Schema::setDaqDataType, (bp::arg("path"), bp::arg("dataType")));
-        s.def("getDaqDataType", &Schema::getDaqDataType, bp::arg("path"));
-        s.def("hasDaqDataType", &Schema::hasDaqDataType, bp::arg("path"));
+        s.def("getDaqDataType", &Schema::getDaqDataType, (bp::arg("path")));
+        s.def("hasDaqDataType", &Schema::hasDaqDataType, (bp::arg("path")));
     }// end Schema
 
     /////////////////////////////////////////////////////////////
