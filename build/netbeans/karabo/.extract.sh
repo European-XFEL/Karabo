@@ -152,26 +152,6 @@ if [ ! -d "$KARABO/extern/eXistDB/db" ]; then
 echo " done"
 fi
 
-# change sipconfig.py
-#
-# find site-packages directory using installed python
-sitePackagesDir=`$KARABO/extern/bin/python -c "import site; print(site.getsitepackages()[0])"`
-includeDir=`$KARABO/extern/bin/python3-config --includes`
-configDir=`$KARABO/extern/bin/python3-config --configdir`
-cd $sitePackagesDir
-sitePackagesDir=${sitePackagesDir##*/extern/}
-includeDir=${includeDir##*/extern/}
-configDir=${configDir##*/extern/}
-sed -i "/'default_bin_dir'/c\    'default_bin_dir':    '$KARABO/extern/bin'," sipconfig.py
-sed -i "/'default_mod_dir'/c\    'default_mod_dir':    '$KARABO/extern/$sitePackagesDir'," sipconfig.py
-sed -i "/'default_sip_dir'/c\    'default_sip_dir':    '$KARABO/extern/share/sip'," sipconfig.py
-sed -i "/'py_conf_inc_dir'/c\    'py_conf_inc_dir':    '$KARABO/extern/$includeDir'," sipconfig.py
-sed -i "/'py_inc_dir'/c\    'py_inc_dir':         '$KARABO/extern/$includeDir'," sipconfig.py
-sed -i "/'py_lib_dir'/c\    'py_lib_dir':         '$KARABO/extern/$configDir'," sipconfig.py
-sed -i "/'sip_bin'/c\    'sip_bin':            '$KARABO/extern/bin/sip'," sipconfig.py
-sed -i "/'sip_inc_dir'/c\    'sip_inc_dir':        '$KARABO/extern/$includeDir'," sipconfig.py
-sed -i "/'sip_mod_dir'/c\    'sip_mod_dir':        '$KARABO/extern/$sitePackagesDir'," sipconfig.py
-cd - >/dev/null
 echo
 echo " Karabo framework was successfully installed to: $KARABO"
 echo 
