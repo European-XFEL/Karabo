@@ -318,9 +318,6 @@ class SystemTopology(HasStrictTraits):
             for dev in self._online_devices.values():
                 dev.updateStatus()
 
-            # Update system tree
-            self.system_tree.remove_server(instance_id)
-
             # Note the details of what device is gone
             host = attributes.get('host', 'UNKNOWN')
             servers.append((instance_id, host, 'offline'))
