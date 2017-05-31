@@ -3,10 +3,10 @@ import unittest
 
 from karabo.bound import (
     Configurator,
-    METER, MICRO, MANDATORY, READ, WRITE, INIT,
+    METER, MICRO, MANDATORY, NODE_ELEMENT, READ, WRITE, INIT,
     AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
     Hash, Logger, MetricPrefix, NodeType, Schema, Types, Unit, Validator,
-    AlarmCondition, State
+    AlarmCondition, DaqDataType, State
 )
 from .configuration_example_classes import (
     Base, GraphicsRenderer, GraphicsRenderer1, Shape, SomeClass, TestStruct1,
@@ -809,6 +809,22 @@ class  Schema_TestCase(unittest.TestCase):
         schema.setAllowedStates("exampleKey3", (State.INIT, State.NORMAL))
         allowedStates = schema.getAllowedStates("exampleKey3")
         self.assertEqual(allowedStates, [State.INIT, State.NORMAL])
+
+
+    def test_daq_data_type(self):
+        schema = Schema()
+
+        NODE_ELEMENT(schema).key("trainData").commit() # Has no DAQ data type yet
+        NODE_ELEMENT(schema).key("pulseData").setDaqDataType(DaqDataType.PULSE).commit()
+
+        self.assertEqual(schema.hasDaqDataType("trainData"), False)
+        self.assertEqual(schema.hasDaqDataType("pulseData"), True)
+        self.assertEqual(schema.getDaqDataType("pulseData"), DaqDataType.PULSE)
+
+        # Now add DAQ data type to node "trainData"
+        schema.setDaqDataType("trainData", DaqDataType.TRAIN)
+        self.assertEqual(schema.hasDaqDataType("trainData"), True)
+        self.assertEqual(schema.getDaqDataType("trainData"), DaqDataType.TRAIN)
 
 if __name__ == '__main__':
     unittest.main()
