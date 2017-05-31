@@ -27,7 +27,7 @@ elif command == "run":
     config = ser.load(config)
 
     # in case our parent process (the device server) dies,
-    # tell linux to terminate ourselves.
+    # tell linux to terminate this device process
     PR_SET_PDEATHSIG = 1  # from linux/prctl.h
     libc = ctypes.cdll.LoadLibrary("libc.so.6")
     libc.prctl(PR_SET_PDEATHSIG, signal.SIGTERM)
