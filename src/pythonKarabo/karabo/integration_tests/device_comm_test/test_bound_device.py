@@ -1,11 +1,13 @@
-from multiprocessing import Process
-import os
+import os.path as op
 from threading import Thread
 from time import sleep
 from unittest import TestCase
 
-from karabo.bound import EventLoop, Hash, DeviceServer, DeviceClient
+from karabo.bound import DeviceClient, EventLoop, Hash
 from karabo.common.states import State
+from karabo.integration_tests.utils import start_bound_api_server
+
+SERVER_ID = "testServer1"
 
 
 class TestDeviceDeviceComm(TestCase):
@@ -13,54 +15,24 @@ class TestDeviceDeviceComm(TestCase):
     _waitTime = 2  # seconds
     _retries = _timeout//_waitTime
 
-    def runServer(self, config):
-        t = Thread(target=EventLoop.work)
-        t.start()
-        server = DeviceServer(config)  # noqa
-        EventLoop.stop()
-        t.join()
-
     def setUp(self):
-        # uncomment if ever needing to use local broker
-        # os.environ['KARABO_BROKER'] = 'tcp://localhost:7777'
+        # Note where we are for later cleanip
+        self._ownDir = str(op.dirname(op.abspath(__file__)))
 
-        # set the plugin directory to directory of this file
-        # the static .egg-info file located in the test directory
-        # assures the the pkg_resources plugin loader will indentify
-        # the test device as a valid plugin with an entry point
-        self._ownDir = os.path.dirname(os.path.abspath(__file__))
-        pluginDir = str(self._ownDir)
-
+        # Start the EventLoop so that DeviceClient works properly
         self._eventLoopThread = Thread(target=EventLoop.work)
         self._eventLoopThread.daemon = True
         self._eventLoopThread.start()
 
-        config = Hash()
-        config.set("serverId", "testServer1")
-        config.set("pluginDirectory", pluginDir)
-        config.set("pluginNames", "")
-        config.set("Logger.priority", "ERROR")
-        config.set("visibility", 1)
-        config.set("connection", Hash())
-        config.set("pluginNamespace", "karabo.bound_device")
-        config.set("deviceClasses", ['CommTestDevice'])
-
-        self.serverProcess = Process(target=self.runServer, args=(config,))
-        self.serverProcess.start()
-
+        server_args = ["deviceClasses=CommTestDevice", "visibility=1",
+                       "Logger.priority=ERROR"]
+        self.serverProcess = start_bound_api_server(SERVER_ID, server_args,
+                                                    plugin_dir=self._ownDir)
         self.dc = DeviceClient()
-
-        # wait til the server appears in the system topology
-        nTries = 0
-        while not self.dc.getSystemTopology().has("server"):
-            sleep(self._waitTime)
-            if nTries > self._retries:
-                raise RuntimeError("Waiting for server to appear timed out")
-            nTries += 1
 
         # wait for plugin to appear
         nTries = 0
-        while not "CommTestDevice" in self.dc.getClasses("testServer1"):
+        while "CommTestDevice" not in self.dc.getClasses(SERVER_ID):
             sleep(self._waitTime)
             if nTries > self._retries:
                 raise RuntimeError("Waiting for plugin to appear timed out")
@@ -75,7 +47,7 @@ class TestDeviceDeviceComm(TestCase):
                            "deviceId", "testComm1",
                            "configuration", config)
 
-        self.dc.instantiate("testServer1", classConfig)
+        self.dc.instantiate(SERVER_ID, classConfig)
 
         config2 = Hash("Logger.priority", "ERROR",
                        "remote", "testComm1",
@@ -85,7 +57,7 @@ class TestDeviceDeviceComm(TestCase):
                             "deviceId", "testComm2",
                             "configuration", config2)
 
-        self.dc.instantiate("testServer1", classConfig2)
+        self.dc.instantiate(SERVER_ID, classConfig2)
 
         # wait for device to init
         state1 = None
@@ -95,38 +67,19 @@ class TestDeviceDeviceComm(TestCase):
             try:
                 state1 = self.dc.get("testComm1", "state")
                 state2 = self.dc.get("testComm2", "state")
-            # a boost::python error will be thrown up to device init
-            # these exceptions are not directly importable, thus we catch
-            # very generically here
-            except:
+            # A RuntimeError will be raised up to device init
+            except RuntimeError:
                 sleep(2)
                 if nTries > self._retries:
                     raise RuntimeError("Waiting for device to init timed out")
                 nTries += 1
 
     def tearDown(self):
-        # TODO: properly destroy server
-        # right now we let the join time out as the server does not
-        # always exit correctly -> related to event loop refactoring
-        self.dc.killServer("testServer1")
-        self.serverProcess.join()
+        # Stop the server
+        self.serverProcess.terminate()
+        # Stop the event loop
         EventLoop.stop()
         self._eventLoopThread.join(5)
-        # delete any log files
-        # handles both the case where we started as part of integration
-        # tests, or as a single test
-        dirs = [self._ownDir, os.path.join(self._ownDir, '..')]
-        for cdir in dirs:
-            files = os.listdir(cdir)
-            for cfile in files:
-                if 'openMQLib.log' in cfile:
-                    os.remove(os.path.join(cdir, cfile))
-                if 'device-testComm' in cfile:
-                    os.remove(os.path.join(cdir, cfile))
-                if 'karabo.log' in cfile:
-                    os.remove(os.path.join(cdir, cfile))
-                if 'serverId.xml' in cfile:
-                    os.remove(os.path.join(cdir, cfile))
 
     def test_in_sequence(self):
         # tests are run in sequence as sub tests
