@@ -127,6 +127,7 @@ if __name__ == '__main__':
                 'karabo-gterm=karabo.interactive.startkarabo:gnometermlog',
                 'karabo-xterm=karabo.interactive.startkarabo:xtermlog',
                 'karabo-add-deviceserver=karabo.interactive.startkarabo:adddeviceserver',
+                'karabo-remove-deviceserver=karabo.interactive.startkarabo:removedeviceserver',
              ],
             'karabo.bound_device': [
                 'ProjectManager=karabo.bound_devices.project_manager:ProjectManager',
