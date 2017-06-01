@@ -19,6 +19,7 @@ from karabo.common.scenemodel.api import read_scene
 from karabo.middlelayer import Hash, read_project_model
 from karabo_gui.events import broadcast_event, KaraboEventSender
 import karabo_gui.globals as krb_globals
+from karabo_gui import messagebox
 from karabo_gui.singletons.api import (get_db_conn, get_project_model,
                                        get_network)
 
@@ -72,7 +73,7 @@ def add_device_to_server(server, class_id=''):
         msg = ('A device server with the ID "<b>{}</b>"<br>'
                'needs to be added to the current project before<br>'
                'a device can be added').format(server)
-        QMessageBox.warning(None, 'Server doesn\'t exist', msg)
+        messagebox.show_warning(msg, title='Server doesn\'t exist')
         return ''
 
     dialog = DeviceHandleDialog(server_id=server_model.server_id,
@@ -117,7 +118,7 @@ def check_device_instance_exists(instance_id):
         msg = ('Another device with the same device ID \"<b>{}</b>\" '
                '<br>already exists! Therefore it will not be '
                'added!').format(instance_id)
-        QMessageBox.warning(None, 'Device already exists', msg)
+        messagebox.show_warning(msg, title='Device already exists')
         return True
     return False
 
@@ -145,15 +146,15 @@ def handle_scene_from_server(dev_id, name, project, success, reply):
     """
     if not (success and reply.get('payload.success', False)):
         msg = 'Scene "{}" from device "{}" was not retreived!'
-        QMessageBox.warning(None, 'Load Scene from Device Failed',
-                            msg.format(name, dev_id))
+        messagebox.show_warning(msg.format(name, dev_id),
+                                title='Load Scene from Device Failed')
         return
 
     data = reply.get('payload.data', '')
     if not data:
         msg = 'Scene "{}" from device "{}" contains no data!'
-        QMessageBox.warning(None, 'Load Scene from Device Failed',
-                            msg.format(name, dev_id))
+        messagebox.show_warning(msg.format(name, dev_id),
+                                title='Load Scene from Device Failed')
         return
 
     with StringIO(data) as fp:
