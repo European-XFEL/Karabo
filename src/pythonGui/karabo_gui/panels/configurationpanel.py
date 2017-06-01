@@ -271,7 +271,7 @@ class ConfigurationPanel(BasePanelWidget):
             self.removeDepartedConfiguration(deviceId)
         elif event.sender is KaraboEventSender.ShowNavigationItem:
             device_path = data.get('device_path')
-            self.twNavigation.model().selectNode(device_path)
+            self.twNavigation.model().selectNodeById(device_path)
         elif event.sender is KaraboEventSender.DeviceStateChanged:
             configuration = data.get('configuration')
             is_changing = data.get('is_changing')
