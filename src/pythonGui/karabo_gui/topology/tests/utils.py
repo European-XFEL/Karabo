@@ -52,3 +52,25 @@ def system_hash():
     }
 
     return h
+
+def system_hash_server_and_plugins():
+    """Generate a system hash which will be built into a system tree
+    """
+    h = Hash()
+
+    h['server.myserver'] = None
+    h['server.myserver', ...] = {
+        'host': 'exflpxc_something',
+        'visibility': AccessLevel.ADMIN,
+        'deviceClasses': ['FooClass', 'BarClass'],
+        'visibilities': [AccessLevel.USER, AccessLevel.GOD]
+    }
+    h['server.samedeviceclasses'] = None
+    h['server.samedeviceclasses', ...] = {
+        'host': 'exflpxc_something',
+        'visibility': AccessLevel.ADMIN,
+        'deviceClasses': ['FooClass', 'BlahClass'],
+        'visibilities': [AccessLevel.OPERATOR, AccessLevel.ADMIN]
+    }
+
+    return h
