@@ -175,6 +175,15 @@ struct NodeElementWrap {
         self.getNode().setValue<Hash>(h);
         return self;
     }
+
+    static NodeElement& setDaqDataType(NodeElement& self, const bp::object& dataTypeObj) {
+        bp::extract<DaqDataType> getDaqType(dataTypeObj);
+        if (!getDaqType.check()) {
+            throw KARABO_PYTHON_EXCEPTION("Argument is not a DaqDataType object.");
+        }
+        const DaqDataType dataType = getDaqType();
+        return self.setDaqDataType(dataType);
+    }
 };
 
 
@@ -1501,6 +1510,13 @@ void exportPyUtilSchema() {
             .export_values()
             ;
 
+    bp::enum_< DaqDataType>("DaqDataType")
+            .value("PULSE", DaqDataType::PULSE)
+            .value("TRAIN", DaqDataType::TRAIN)
+            .value("PULSEMASTER", DaqDataType::PULSEMASTER)
+            .value("TRAINMASTER", DaqDataType::TRAINMASTER)
+            ;
+
     {
         bp::enum_<MetricPrefixType>("MetricPrefix")
                 .value("YOTTA", MetricPrefix::YOTTA)
@@ -1919,6 +1935,9 @@ void exportPyUtilSchema() {
         s.def("updateAliasMap", &schemawrap::updateAliasMap);
         s.def("hasRollingStatistics", &Schema::hasRollingStatistics);
         s.def("subSchema", &Schema::subSchema, (bp::arg("subNodePath"), bp::arg("filterTags") = ""));
+        s.def("setDaqDataType", &Schema::setDaqDataType, (bp::arg("path"), bp::arg("dataType")));
+        s.def("getDaqDataType", &Schema::getDaqDataType, (bp::arg("path")));
+        s.def("hasDaqDataType", &Schema::hasDaqDataType, (bp::arg("path")));
     }// end Schema
 
     /////////////////////////////////////////////////////////////
@@ -2165,6 +2184,9 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("appendSchema"
                      , &NodeElementWrap::appendSchema, (bp::arg("schema"))
+                     , bp::return_internal_reference<> ())
+                .def("setDaqDataType"
+                     , &NodeElementWrap::setDaqDataType, (bp::arg("dataType"))
                      , bp::return_internal_reference<> ())
                 ;
     }
