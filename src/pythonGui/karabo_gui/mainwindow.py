@@ -17,7 +17,6 @@ from karabo.middlelayer import AccessLevel
 import karabo_gui.globals as krb_globals
 from karabo_gui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts)
-from karabo_gui.messagebox import MessageBox
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.container import PanelContainer
 from karabo_gui.panels.loggingpanel import LoggingPanel

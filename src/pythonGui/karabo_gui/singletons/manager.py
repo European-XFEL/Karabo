@@ -21,6 +21,7 @@ from karabo.common.api import State
 from karabo_gui.alarms.api import extract_alarms_data
 from karabo_gui.background import executeLater, Priority
 from karabo_gui.events import broadcast_event, KaraboEventSender
+from karabo_gui import messagebox
 from karabo_gui.singletons.api import get_network, get_topology
 from karabo_gui.util import getSchemaAttributeUpdates
 
@@ -54,7 +55,8 @@ def project_db_handler(fall_through=False):
         def wrapped(self, reply):
             success = reply.get('success', True)
             if not success:
-                QMessageBox.critical(None, 'Error', reply['reason'])
+                # NOTE: Don't block the event loop with these messages!
+                messagebox.show_error(reply['reason'], modal=False)
             # If needed, call the handler even when there was a failure
             if fall_through or success:
                 return handler(self, reply)
@@ -84,9 +86,9 @@ class Manager(QObject):
 
         # if we do not have a schema, notify the user and return
         if baseSchema is None:
-            QMessageBox.warning(None, 'Unknown device schema',
-                                'Please install device plugin {} on '
-                                'server {} first.'.format(classId, serverId))
+            msg = ('Please install device plugin {} on server {} '
+                   'first.'.format(classId, serverId))
+            messagebox.show_warning(msg, title='Unknown device schema')
             return
 
         # Use standard configuration for server/classId

@@ -9,7 +9,7 @@ from PyQt4.QtGui import QAction, QApplication, QDialog, QLabel, QPixmap
 
 import karabo_gui.icons as icons
 from karabo.middlelayer import Integer, Number, String
-from karabo_gui.messagebox import MessageBox
+from karabo_gui import messagebox
 from karabo_gui.util import getOpenFileName, temp_file
 from karabo_gui.widget import DisplayWidget
 
@@ -92,7 +92,7 @@ class Item(object):
             if not pixmap.loadFromData(self.data):
                 raise IconError
         except (KeyError, IconError):
-            MessageBox.showError("Could not read image.")
+            messagebox.show_error("Could not read image.")
             return False
 
         self.pixmap = pixmap
