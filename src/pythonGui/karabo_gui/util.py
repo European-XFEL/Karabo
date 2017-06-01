@@ -12,7 +12,7 @@ from PyQt4.QtGui import (
 from karabo.middlelayer import decodeXML, Hash, MetricPrefix, Unit, writeXML
 import karabo_gui.globals as globals
 import karabo_gui.icons as icons
-from karabo_gui.messagebox import MessageBox
+from karabo_gui import messagebox
 from karabo_gui.singletons.api import get_db_conn
 
 
@@ -158,7 +158,7 @@ def loadConfigurationFromFile(configuration):
         return
 
     if configuration is None or configuration.classId is None:
-        MessageBox.showError("Configuration load failed")
+        messagebox.show_error("Configuration load failed")
         return
 
     with open(filename, 'rb') as fp:
@@ -166,7 +166,7 @@ def loadConfigurationFromFile(configuration):
 
     classId = configuration.classId
     if classId not in config:
-        MessageBox.showError("Configuration load failed")
+        messagebox.show_error("Configuration load failed")
         return
     configuration.dispatchUserChanges(config[classId])
 
@@ -176,7 +176,7 @@ def saveConfigurationToFile(configuration):
     """
     if (configuration is None or configuration.classId is None
             or configuration.descriptor is None):
-        MessageBox.showError("No configuration available. Saving failed.")
+        messagebox.show_error("No configuration available. Saving failed.")
         return
 
     filename = getSaveFileName(caption="Save configuration as",
@@ -220,7 +220,7 @@ def is_database_processing():
     if get_db_conn().is_processing():
         msg = ('There is currently data fetched from or sent to the <br>'
                '<b>project database</b>. Please wait until this is done!')
-        MessageBox.showWarning(msg, 'Database connection active')
+        messagebox.show_warning(msg, 'Database connection active')
         return True
     return False
 
