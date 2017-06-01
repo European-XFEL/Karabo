@@ -7,7 +7,7 @@ from functools import partial
 
 from PyQt4.QtCore import pyqtSlot, QEvent, QSize, Qt
 from PyQt4.QtGui import (QAction, QActionGroup, QApplication, QKeySequence,
-                         QMenu, QPalette, QScrollArea)
+                         QMenu, QPalette, QScrollArea, QSizePolicy)
 
 import karabo_gui.icons as icons
 from karabo_gui.events import broadcast_event, KaraboEventSender
@@ -61,17 +61,23 @@ class ScenePanel(BasePanelWidget):
         """Called when this panel is docked into the main window.
         """
         self.scroll_widget.setWidgetResizable(False)
+        # The scroll widget will use scene_view's sizeHint
+        self.scene_view.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
     def undock(self):
         """Called when this panel is undocked from the main window.
         """
         width, height = self._compute_panel_size()
         screen_rect = QApplication.desktop().screenGeometry()
+        scene_view = self.scene_view
         if (width < screen_rect.width() and height < screen_rect.height()):
             # Resize panel
             self.resize(width, height)
             # Enlarge the scene widget to its actual size
-            self.scroll_widget.setWidgetResizable(True)
+            with scene_view.ignore_resize_events():
+                self.scroll_widget.setWidgetResizable(True)
+        # We want to grow with the panel window
+        scene_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
     def toolbars(self):
         """This should create and return one or more `ToolBar` instances needed
@@ -356,6 +362,12 @@ class ResizableScrollArea(QScrollArea):
             else:
                 cursor = 'arrow'
                 self._resize_type = ''
+
+            if not self._child_widget.design_mode:
+                # Disallow unless the scene is in design mode!
+                cursor = 'arrow'
+                self._resize_type = ''
+
             self.setCursor(QT_CURSORS[cursor])
         elif self._resizing:
             mouse_pos = event.pos()
