@@ -86,10 +86,12 @@ def supervise():
 
 def defaultall():
     os.chdir(absolute("var", "service"))
-    if len(sys.argv) > 1:
-        return [arg.replace("/", "_") for arg in sys.argv[1:]]
-    else:
+    argv = [arg.replace("/", "_") for arg in sys.argv[1:]
+            if not arg.startswith("-")]
+    if not argv:
         return [d for d in os.listdir() if not d.startswith(".")]
+    else:
+        return argv
 
 
 def exec_defaultall(cmd, *args):
@@ -126,6 +128,71 @@ def stopkarabo():
     device server.
     """
     exec_defaultall("svc", "-d")
+
+
+@entrypoint
+def killkarabo():
+    """karabo-kill - kill Karabo device servers
+
+      karabo-kill [-h|--help] [-udopcaitkx ]
+
+    send a signal to the listed device servers, by default to all.
+
+    The signals are as follows:
+
+    -i
+      send an INT signal (as if Ctrl-C had been pressed)
+
+    -t
+      send a TERM signal (this should stop a server cleanly)
+
+    -k
+      send a KILL signal (kill the server for good)
+
+    -p
+      send a STOP signal
+
+    -c
+      send a CONT signal
+
+    -a
+      send an ALRM signal
+
+    Several signals can be given on the command line. A "-l" signifies that not
+    the device server, but its logger is meant.
+
+    There are other commands that can be given to a device server:
+
+    -u
+      Up. This is what karaob-start does.
+
+    -d
+      Down. This is what karabo-stop does.
+
+    -o
+      Start the device server once, but don't restart it if it stops.
+
+    -x
+      Kill the supervisor of the device server. Note that it will be restarted
+      by svscan.
+
+    If you want to kill all of karabo, use the following:
+
+      karabo-kill -dx .svscan  # prevent supervisors from getting restarted
+      karabo-kill -dx          # kill all device servers and their suvervisors
+      karabo-kill -l -dx       # kill all loggers and their supervisors
+
+    This command does not try to start supervisors before running, so it is
+    the only command usable to shut down Karabo completely.
+    """
+    assert len(sys.argv) > 1
+    path = absolute("extern", "bin", "svc")
+    args = [arg for arg in sys.argv if arg.startswith("-")]
+    dirs = defaultall()
+    if "-l" in args:
+        args.remove("-l")
+        dirs = [osp.join(d, "log") for d in dirs]
+    os.execv(path, ["svc"] + args + dirs)
 
 
 @entrypoint
@@ -194,6 +261,7 @@ logger_template = """#!/bin/bash
 exec multilog $KARABO/var/log/{target_dir}
 """
 
+
 @entrypoint
 def adddeviceserver():
     """karabo-add-deviceserver - create a new Karabo device server
@@ -220,7 +288,8 @@ def adddeviceserver():
     if osp.exists(abs_target):
         print("ERROR service/{} already exists".format(target_dir))
         return 3
-    tmpdir = mkdtemp(dir=absolute("var"))
+    # hide the new dir from svscan by prefixing with a . until we are done
+    tmpdir = mkdtemp(dir=absolute("var", "service"), prefix=".tmp-")
 
     try:
         # the "opener" argument magically makes the file executable
@@ -236,3 +305,24 @@ def adddeviceserver():
     except:
         shutil.rmtree(tmpdir)
         raise
+
+
+@entrypoint
+def removedeviceserver():
+    """karabo-remove-deviceserver - remove a Karabo device server
+
+      karabo-remove-deviceserver [-h|--help] name
+
+    This removes a device server from $KARABO/var/service.
+
+    name is the name of the device server to remove.
+    """
+    assert len(sys.argv) == 2
+    name = sys.argv[1].replace("/", "_")
+    # hide the service from svscan by prefixing with a . so it doesn't restart
+    tmppath = absolute("var", "service", ".{}".format(name))
+    os.rename(absolute("var", "service", name), tmppath)
+    subprocess.call([absolute("extern", "bin", "svc"), "-dx", tmppath])
+    subprocess.call([absolute("extern", "bin", "svc"), "-dx",
+                     osp.join(tmppath, "log")])
+    shutil.rmtree(tmppath)
