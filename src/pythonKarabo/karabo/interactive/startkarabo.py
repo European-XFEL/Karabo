@@ -261,6 +261,7 @@ logger_template = """#!/bin/bash
 exec multilog $KARABO/var/log/{target_dir}
 """
 
+
 @entrypoint
 def adddeviceserver():
     """karabo-add-deviceserver - create a new Karabo device server
@@ -287,7 +288,7 @@ def adddeviceserver():
     if osp.exists(abs_target):
         print("ERROR service/{} already exists".format(target_dir))
         return 3
-    tmpdir = mkdtemp(dir=absolute("var"))
+    tmpdir = mkdtemp(dir=absolute("var", "service"), prefix=".tmp-")
 
     try:
         # the "opener" argument magically makes the file executable
