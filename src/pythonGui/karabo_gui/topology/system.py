@@ -395,4 +395,5 @@ class SystemTopology(HasStrictTraits):
                                                alarm_entry.type)
 
         self.visit_system_tree(visitor)
+        # NOTE: this should actually be called in the system_tree itself
         self.system_tree.needs_update = True
