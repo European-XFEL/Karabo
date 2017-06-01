@@ -11,6 +11,80 @@ of that device and provide distributed (remote) access to it.
 As Karabo provides three different APIs for device implementation 
 also three different servers are needed (C++, Python, and Middle-Layer).
 
+Karabo uses `daemontools <https://cr.yp.to/daemontools.html>`_ to
+supervise all device servers. Their service directory is
+``$KARABO/var/service``. Feel free to use daemontools directly,
+modifying the service directory as you wish. If you don't want to
+learn a new tool, there are some Karabo wrappers around daemontools
+for common operations, which also have the advantage that they deduce
+the service directory from ``$KARABO``, so you don't need to search
+for it.
+
+All commands have a ``-h`` parameter which gives you a help text. Most
+commands are written such that they apply to all device servers,
+unless you give a list of device servers on the command line. Here are
+the wrappers:
+
+karabo-check
+  This prints the state of all device servers, whether and how long
+  they are running or not. You should get suspicious if a device
+  server has only been running for a very short time, which might
+  indicate that it is crashing regularly.
+
+  At typical output looks like this::
+
+    karabo_logAggregator: down 63 seconds
+    karabo_guiServer: up 61 seconds
+    karabo_dataLoggerManager: up 61 seconds, want down
+
+  The ``want down`` in the third lines means that a TERM signal was
+  sent to the ``karabo_dataLoggerManager``, but it did not terminate
+  yet. You may use ``karabo-kill`` to send another signal.
+
+karabo-start
+  Start the device servers, and keep them running. Whenever one dies,
+  it gets restarted.
+
+karabo-stop
+  stop the device servers, and don't restart them.
+
+karabo-add-deviceserver
+  Add a new device server. It takes the name of the new device server
+  and the type as parameters, as well as additional options that
+  should be added. There are three types: cppserver,
+  middlelayerserver, and pythonserver.
+
+  So if you want to add a cppserver named *myserver* with the option
+  ``Logger.priority=INFO``, you would write::
+
+    karabo-add-deviceserver myserver cppserver Logger.priority=INFO
+
+  This should be sufficient for most usecases of device servers. If
+  you need something special, feel free to change the ``run`` file in
+  ``/var/service/myserver``. This way you may even do completely
+  different things than running device servers, if you need to have
+  something running all the time, just add a fake device server and
+  edit its ``run`` file to your likings.
+
+  The generated ``run`` file will read environment variables from
+  ``$KARABO/var/environment``. Into this directory you should put any
+  environment variable that you want to have set for all device
+  servers in a Karabo installation. The name of the file is the name
+  of the variable, its contents will be the value. Environment
+  variables which should only be set for one server should better be
+  added into the ``run`` file.
+
+karabo-remove-deviceserver
+  This stops the device server if necessary and removes it completely.
+
+karabo-kill
+  Sometimes devices servers may hang, and you need to kill them. With
+  this command you can do that. As an example
+  ``karabo-kill -k broken-server`` kills the broken server. It gets
+  restarted unless it has been stopped with ``karabo-stop`` before.
+  Don't forget that by default this command kills all device
+  servers, so better list the ones you want to kill.
+
 Despite some small differences, all servers share the following, most important
 configurations:
 
