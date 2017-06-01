@@ -122,10 +122,12 @@ if __name__ == '__main__':
                 'convert-karabo-device=karabo.interactive.convert_device_project:main',
                 'karabo-start=karabo.interactive.startkarabo:startkarabo',
                 'karabo-stop=karabo.interactive.startkarabo:stopkarabo',
+                'karabo-kill=karabo.interactive.startkarabo:killkarabo',
                 'karabo-check=karabo.interactive.startkarabo:checkkarabo',
                 'karabo-gterm=karabo.interactive.startkarabo:gnometermlog',
                 'karabo-xterm=karabo.interactive.startkarabo:xtermlog',
                 'karabo-add-deviceserver=karabo.interactive.startkarabo:adddeviceserver',
+                'karabo-remove-deviceserver=karabo.interactive.startkarabo:removedeviceserver',
              ],
             'karabo.bound_device': [
                 'ProjectManager=karabo.bound_devices.project_manager:ProjectManager',
