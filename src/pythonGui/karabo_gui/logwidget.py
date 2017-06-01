@@ -377,6 +377,7 @@ class LogWidget(QWidget):
         value = index.data()
         if value is None:
             return
+        # TODO: make sure that only data from the device ID column is sent
         broadcast_event(KaraboEventSender.ShowNavigationItem,
                         {'device_path': value})
 
