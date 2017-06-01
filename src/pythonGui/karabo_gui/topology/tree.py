@@ -11,6 +11,7 @@ from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
 from karabo.middlelayer import AccessLevel
 from karabo_gui.alarms.api import AlarmInfo
 from karabo_gui.enums import NavigationItemTypes
+import karabo_gui.globals as krb_globals
 
 
 class SystemTreeNode(HasStrictTraits):
@@ -124,22 +125,50 @@ class SystemTree(HasStrictTraits):
 
         return existing_devices, server_class_keys
 
-    def find(self, node_id):
+    def find(self, node_id, access_level=None, startswith=False,
+             case_sensitive=True):
         """Find all nodes with the given `node_id` and return them in a list
         """
+        access_level = (krb_globals.GLOBAL_ACCESS_LEVEL if access_level is None
+                        else access_level)
+
         found_nodes = []
 
-        def recurse(node, _id):
-            nonlocal found_nodes
-            for i in range(len(node.children)):
-                child = node.children[i]
-                recurse(child, _id)
+        def visitor(node):
+            parent_node = node.parent
+            parent_check = (parent_node is not None
+                            and parent_node.visibility > access_level)
+            if (node.visibility > access_level or parent_check):
+                # Do not look for nodes which are not visible or its parent
+                return
 
-            if node.path != "" and _id == node.node_id:
+            if case_sensitive:
+                current_node_id = node.node_id
+                cmp_node_id = node_id
+            else:
+                current_node_id = node.node_id.lower()
+                cmp_node_id = node_id.lower()
+
+            if startswith:
+                if current_node_id.startswith(cmp_node_id):
+                    found_nodes.append(node)
+            elif cmp_node_id == current_node_id:
                 found_nodes.append(node)
 
-        recurse(self.root, node_id)
+        self.visit(visitor)
         return found_nodes
+
+    def visit(self, visitor):
+        """Walk every node in the system tree and run a `visitor` function on
+        each item.
+        """
+        def _iter_tree_node(node):
+            yield node
+            for child in node.children:
+                yield from _iter_tree_node(child)
+
+        for t_node in _iter_tree_node(self.root):
+            visitor(t_node)
 
     def remove_device(self, instance_id):
         """Remove the entry for a device from the tree
