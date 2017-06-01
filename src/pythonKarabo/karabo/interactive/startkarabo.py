@@ -70,13 +70,13 @@ def entrypoint(func):
 
 def supervise():
     svok = subprocess.call([absolute("extern", "bin", "svok"),
-                            absolute("var", "service", "svscan")])
+                            absolute("var", "service", ".svscan")])
     if svok == 0:
         return
     print("starting supervisor")
     supervise = subprocess.Popen(
         [absolute("extern", "bin", "supervise"),
-         absolute("var", "service", "svscan")],
+         absolute("var", "service", ".svscan")],
         stdout=subprocess.PIPE)
     subprocess.Popen([absolute("extern", "bin", "multilog"),
                       absolute("var", "log", "svscan")],
@@ -89,12 +89,7 @@ def defaultall():
     if len(sys.argv) > 1:
         return [arg.replace("/", "_") for arg in sys.argv[1:]]
     else:
-        ret = os.listdir()
-        try:
-            ret.remove("svscan")
-        except ValueError:
-            pass
-        return ret
+        return [d for d in os.listdir() if not d.startswith(".")]
 
 
 def exec_defaultall(cmd, *args):
