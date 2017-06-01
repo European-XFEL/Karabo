@@ -17,7 +17,7 @@ from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer
 from PyQt4.QtGui import QAction, QHBoxLayout, QToolButton, QWidget
 
 from . import icons
-from .messagebox import MessageBox
+from . import messagebox
 from .singletons.api import get_network
 from .widget import EditableWidget, DisplayWidget, Widget
 
@@ -312,7 +312,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.updateButtons()
 
     def onTimeOut(self):
-        MessageBox.showWarning(
+        messagebox.show_warning(
             "The attribute couldn't be set in the current state.")
 
     @pyqtSlot(object, object)
