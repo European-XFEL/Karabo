@@ -47,7 +47,7 @@ from karathon import (
     COMMAND, COULOMB, COUNT, Category, Channel,
     ClassInfo, Connection,
     DAY, DECA, DECI, DEGREE, DEGREE_CELSIUS, DOUBLE_ELEMENT,
-    DateTimeString, DetectorGeometry, Dims,
+    DaqDataType, DateTimeString, DetectorGeometry, Dims,
     ELECTRONVOLT, EVERY_100MS, EVERY_10MIN, EVERY_10S, EVERY_1MIN,
     EVERY_1S, EVERY_5S, EVERY_EVENT, EXA, EXPERT,
     Encoding, Epochstamp, ErrorCode,
