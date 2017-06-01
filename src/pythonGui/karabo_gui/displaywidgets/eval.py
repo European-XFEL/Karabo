@@ -1,9 +1,10 @@
 
 import traceback
-from PyQt4.QtGui import QAction, QInputDialog, QLineEdit, QMessageBox
+from PyQt4.QtGui import QAction, QInputDialog, QLineEdit
 
 from karabo.middlelayer import String, Simple
 from karabo_gui.const import WIDGET_MIN_HEIGHT
+from karabo_gui import messagebox
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
 from .unitlabel import add_unit_label
@@ -48,8 +49,8 @@ class Evaluator(DisplayWidget):
             self.function = eval("lambda x: {}".format(text), self.globals)
         except SyntaxError as e:
             err = traceback.format_exception_only(type(e), e)
-            QMessageBox.warning(None, "Error in expression",
-                                "<pre>{1}{2}</pre>{3}".format(*err))
+            msg = "<pre>{1}{2}</pre>{3}".format(*err)
+            messagebox.show_warning(msg, title='Error in expression')
             return
 
         self.text = text

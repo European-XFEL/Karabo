@@ -3,12 +3,13 @@
 # Created on January 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
+from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance, List, on_trait_change
 
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import (
     DeviceInstanceModel, ProjectModel, device_instance_exists)
+from karabo_gui import messagebox
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
 from karabo_gui.project.loading_watcher import ProjectLoadingWatcher
 from karabo_gui.project.utils import load_project
@@ -93,7 +94,7 @@ class SubprojectController(ProjectSubgroupController):
             msg = ('The subproject which you wish to load contains devices<br>'
                    'which already exist in the current project. Therefore <br>'
                    'it will not be added.')
-            QMessageBox.warning(None, 'Device already exists', msg)
+            messagebox.show_warning(msg, title='Device already exists')
             return
 
         # Finally add the subproject
