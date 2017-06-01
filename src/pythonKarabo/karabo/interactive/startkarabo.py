@@ -304,3 +304,23 @@ def adddeviceserver():
     except:
         shutil.rmtree(tmpdir)
         raise
+
+
+@entrypoint
+def removedeviceserver():
+    """karabo-remove-deviceserver - remove a Karabo device server
+
+      karabo-remove-deviceserver [-h|--help] name
+
+    This removes a device server from $KARABO/var/service.
+
+    name is the name of the device server to remove.
+    """
+    assert len(sys.argv) == 2
+    name = sys.argv[1].replace("/", "_")
+    tmppath = absolute("var", "service", ".{}".format(name))
+    os.rename(absolute("var", "service", name), tmppath)
+    subprocess.call([absolute("extern", "bin", "svc"), "-dx", tmppath])
+    subprocess.call([absolute("extern", "bin", "svc"), "-dx",
+                     osp.join(tmppath, "log")])
+    shutil.rmtree(tmppath)
