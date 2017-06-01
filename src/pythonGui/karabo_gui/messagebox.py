@@ -1,49 +1,31 @@
 #############################################################################
-# Author: <kerstin.weger@xfel.eu>
-# Created on February 27, 2012
+# Author: <john.wiggins@xfel.eu>
+# Created on June 1, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
-"""This module contains a class which represents a message box with different
-   static methods to either show an alarm, an error, ...
-"""
-
-__all__ = ["MessageBox"]
-
-
-from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QMessageBox
 
 
-class MessageBox(QObject):
-    
-    def __init__(self):
-        super(MessageBox, self).__init__()
+def show_alarm(text, title="Alarm", modal=True):
+    _show_message_box(QMessageBox.Critical, text, title, modal)
 
 
-    @staticmethod
-    def showAlarm(text, title="Alarm"):
-        QMessageBox.critical(None, title, text)
+def show_error(text, title="Error", modal=True):
+    _show_message_box(QMessageBox.Critical, text, title, modal)
 
 
-    @staticmethod
-    def showError(text, title="Error"):
-        QMessageBox.critical(None, title, text)
+def show_information(text, title="Information", modal=True):
+    _show_message_box(QMessageBox.Information, text, title, modal)
 
 
-    @staticmethod
-    def showInformation(text, title="Information"):
-        QMessageBox.information(None, title, text)
+def show_warning(text, title="Warning", modal=True):
+    _show_message_box(QMessageBox.Warning, text, title, modal)
 
 
-    @staticmethod
-    def showQuestion(question, title="Question"):
-        result = QMessageBox.question(None, title, question, QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
-        return result
-
-
-    @staticmethod
-    def showWarning(text, title="Warning"):
-        QMessageBox.warning(None, title, text)
-
+def _show_message_box(icon, text, title, modal):
+    """A wrapper to simplify the different message box styles defined below.
+    """
+    message_box = QMessageBox(icon, title, text, parent=None)
+    message_box.setModal(modal)
+    return message_box.exec()
