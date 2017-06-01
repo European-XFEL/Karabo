@@ -12,13 +12,12 @@ import os.path as op
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
 from PyQt4.QtGui import (QAction, QButtonGroup, QCursor, QDialog,
-                         QDialogButtonBox, QItemSelectionModel, QMenu,
-                         QMessageBox)
+                         QDialogButtonBox, QItemSelectionModel, QMenu)
 
 from karabo_gui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
 )
-from karabo_gui.messagebox import MessageBox
+from karabo_gui import messagebox
 from karabo_gui.project.utils import show_trash_project_message
 from karabo_gui.singletons.api import get_db_conn
 from karabo_gui.util import SignalBlocker
@@ -78,12 +77,16 @@ class LoadProjectDialog(QDialog):
         self.twProjects.setContextMenuPolicy(Qt.CustomContextMenu)
         self.twProjects.customContextMenuRequested.connect(
             self._show_context_menu)
-        
+
         # Domain is not selectable for subprojects - only master projects
         self.cbDomain.setEnabled(not is_subproject)
         # Domain combobox
         self.default_domain = db_conn.default_domain
-        self._domains_updated(db_conn.get_available_domains())
+        # ... request the domains list
+        domains = db_conn.get_available_domains()
+        if not self.ignore_cache:
+            # Only fill with the cache domains if the user has requested it!
+            self._domains_updated(domains)
 
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.leTitle.textChanged.connect(self._titleChanged)
@@ -123,7 +126,10 @@ class LoadProjectDialog(QDialog):
             msg = ('The default project domain defined by<br>'
                    '<b>KARABO_PROJECT_DB_DOMAIN = {}</b><br>does not exist in '
                    'the current project database.').format(self.default_domain)
-            QMessageBox.warning(self, 'Default domain does not exist', msg)
+            # NOTE: If this dialog is not modal, it can block the list of
+            # domains arriving from the GUI server!
+            messagebox.show_warning(msg, title='Default domain does not exist',
+                                    modal=False)
         if index in (self.cbDomain.currentIndex(), -1):
             # Make sure the signal is triggered when setting the index below
             self.cbDomain.setCurrentIndex(-1)
@@ -135,7 +141,7 @@ class LoadProjectDialog(QDialog):
                     and it.get('item_type') != 'project'):
                 continue
             if not it.get('success', True):
-                MessageBox.showError(it['reason'])
+                messagebox.show_error(it['reason'])
                 break
             domain = it.get('domain')
             self.on_cbDomain_currentIndexChanged(domain)
