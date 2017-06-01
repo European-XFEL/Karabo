@@ -17,7 +17,7 @@ from karabo_gui.events import (
     broadcast_event, KaraboEventSender, register_for_broadcasts
 )
 import karabo_gui.globals as krb_globals
-from karabo_gui.messagebox import MessageBox
+from karabo_gui import messagebox
 from karabo_gui.singletons.api import get_network
 
 # This matches the batch size used in the project database
@@ -214,7 +214,7 @@ class ProjectDatabaseConnection(QObject):
             uuid = item['uuid']
             success = item['success']
             if not success:
-                MessageBox.showError(item['reason'])
+                messagebox.show_error(item['reason'])
             self._pop_writing(domain, uuid, success)
 
     # -------------------------------------------------------------------
