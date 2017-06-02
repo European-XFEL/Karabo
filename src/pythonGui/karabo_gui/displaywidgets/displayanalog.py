@@ -6,11 +6,11 @@
 
 
 from PyQt4.QtCore import Qt, QRectF
-from PyQt4.QtGui import (QColor, QLabel, QMessageBox, QPainter, QPainterPath,
-                         QPixmap, QPen)
+from PyQt4.QtGui import QColor, QLabel, QPainter, QPainterPath, QPixmap, QPen
 
 from karabo.middlelayer import Float
 from karabo_gui.alarms.api import ALARM_COLOR, NORM_COLOR, WARN_COLOR
+from karabo_gui import messagebox
 from karabo_gui.widget import DisplayWidget
 
 B_ALOW, B_WLOW, B_WHIGH, B_AHIGH = (0.1, 0.3, 0.7, 0.9)
@@ -43,9 +43,9 @@ class DisplayAnalog(DisplayWidget):
         alarm = {"LOW": desc.alarmLow,
                  "HIGH": desc.alarmHigh}
         if None in alarm.values() and None in warning.values():
-            QMessageBox.warning(None, "Wrong property configuration",
-                                "No proper configuration detected.\n"
-                                "Please define alarm and warning thresholds.")
+            msg = ('No proper configuration detected.\n Please define alarm '
+                   'and warning thresholds.')
+            messagebox.show_warning(msg, title='Wrong property configuration')
 
     def drawRegion(self, painter, start, stop, color):
         rect = QRectF(MARGIN, start * self._height,
