@@ -6,13 +6,14 @@
 from functools import partial
 import os.path as op
 
-from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
+from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance, Property, String
 
 from karabo.common.project.api import (
     DeviceServerModel, MacroModel, ProjectModel, read_macro)
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabo_gui import icons
+from karabo_gui import messagebox
 from karabo_gui.project.dialog.device_scenes import DeviceScenesDialog
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
@@ -183,9 +184,9 @@ def _load_scene_from_device(project_controller):
         project_scenes = {s.simple_name for s in project.scenes}
 
         if scene_name in project_scenes:
-            QMessageBox.warning(None, 'Cannot Load Scene',
-                                'A scene with that name already exists in the '
-                                'selected project.')
+            msg = ('A scene with that name already exists in the selected '
+                   'project.')
+            messagebox.show_warning(msg, title='Cannot Load Scene')
             return
 
         handler = partial(handle_scene_from_server, device_id, scene_name,
