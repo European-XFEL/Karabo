@@ -3,8 +3,9 @@
 # Created on June 6, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from contextlib import contextmanager
 
-from PyQt4.QtCore import QEvent, Qt
+from PyQt4.QtCore import QEvent, QSize, Qt
 from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
                          QWidget)
 
@@ -57,6 +58,7 @@ class SceneView(QWidget):
         layout.addWidget(self.inner)
 
         self.scene_model = None
+        self._ignore_resize_events = False
         self.selection_model = SceneSelectionModel()
         self.workflow_model = SceneWorkflowModel()
 
@@ -75,7 +77,7 @@ class SceneView(QWidget):
                                             'updated')
 
         self.setFocusPolicy(Qt.StrongFocus)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setAcceptDrops(True)
         self.setAttribute(Qt.WA_MouseTracking)
         self.setBackgroundRole(QPalette.Window)
@@ -103,6 +105,21 @@ class SceneView(QWidget):
         is either enabled or disabled.
         """
         self.inner.setAttribute(Qt.WA_TransparentForMouseEvents, enable)
+
+    @contextmanager
+    def ignore_resize_events(self):
+        """Provide a context for explicitly disabling resize propagation to
+        the data model.
+        This is necessary because Qt will first set us to a size which it
+        chooses when undocking, then give us a chance to set the size we
+        actually want. In the meantime, it would be nice to disable updates
+        so that our scene doesn't get modified.
+        """
+        try:
+            self._ignore_resize_events = True
+            yield
+        finally:
+            self._ignore_resize_events = False
 
     # ----------------------------
     # Qt Methods
@@ -181,9 +198,20 @@ class SceneView(QWidget):
             if self.current_tool.visible:
                 self.current_tool.draw(painter)
 
+    def sizeHint(self):
+        model = self.scene_model
+        if model is None:
+            return QSize()
+
+        return QSize(model.width, model.height)
+
     def resizeEvent(self, event):
         model = self.scene_model
         if model is None:
+            return
+
+        if self._ignore_resize_events or not self.design_mode:
+            # Often, we want to avoid modifying the model
             return
 
         size = event.size()
