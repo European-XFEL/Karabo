@@ -16,7 +16,7 @@ from PyQt4.QtGui import (QButtonGroup, QDateTimeEdit, QDialog, QHBoxLayout,
 from PyQt4.Qwt5.Qwt import (QwtPlot, QwtScaleDraw, QwtText,
                             QwtLinearScaleEngine, QwtScaleDiv)
 
-from karabo.middlelayer import Simple, Timestamp
+from karabo.middlelayer import Bool, Simple, Timestamp
 import karabo_gui.globals as krb_globals
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
@@ -350,7 +350,7 @@ class _KaraboCurveWidget(CurveWidget):
 
 
 class DisplayTrendline(DisplayWidget):
-    category = Simple
+    category = Bool, Simple
     alias = "Trendline"
 
     style = "{text-align: center; font-size: 9px; padding: 0}"
