@@ -21,14 +21,14 @@ def system_hash():
     h['server.swerver'] = None
     h['server.swerver', ...] = {
         'host': 'BIG_IRON',
-        'visibility': AccessLevel.ADMIN,
+        'visibility': AccessLevel.OBSERVER,
         'deviceClasses': ['FooClass', 'BarClass'],
-        'visibilities': [AccessLevel.USER, AccessLevel.GOD]
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
     }
     h['device.divvy'] = None
     h['device.divvy', ...] = {
         'host': 'BIG_IRON',
-        'visibility': AccessLevel.ADMIN,
+        'visibility': AccessLevel.OBSERVER,
         'capabilities': Capabilities.PROVIDES_SCENES,
         'serverId': 'swerver',
         'classId': 'FooClass',
@@ -37,7 +37,7 @@ def system_hash():
     h['macro.macdonald'] = None
     h['macro.macdonald', ...] = {
         'host': 'BIG_IRON',
-        'visibility': AccessLevel.ADMIN,
+        'visibility': AccessLevel.OBSERVER,
         'serverId': 'swerver',
         'classId': 'BarClass',
         'status': 'metacontrolling'
@@ -45,13 +45,14 @@ def system_hash():
 
     h['device.orphan'] = None
     h['device.orphan', ...] = {
-        'visibility': AccessLevel.ADMIN,
+        'visibility': AccessLevel.OBSERVER,
         'serverId': '__none__',
         'classId': 'Parentless',
         'status': 'existential'
     }
 
     return h
+
 
 def system_hash_server_and_plugins():
     """Generate a system hash which will be built into a system tree
@@ -61,16 +62,24 @@ def system_hash_server_and_plugins():
     h['server.myserver'] = None
     h['server.myserver', ...] = {
         'host': 'exflpxc_something',
-        'visibility': AccessLevel.ADMIN,
+        'visibility': AccessLevel.OBSERVER,
         'deviceClasses': ['FooClass', 'BarClass'],
-        'visibilities': [AccessLevel.USER, AccessLevel.GOD]
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
     }
     h['server.samedeviceclasses'] = None
     h['server.samedeviceclasses', ...] = {
         'host': 'exflpxc_something',
-        'visibility': AccessLevel.ADMIN,
+        'visibility': AccessLevel.EXPERT,
         'deviceClasses': ['FooClass', 'BlahClass'],
-        'visibilities': [AccessLevel.OPERATOR, AccessLevel.ADMIN]
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
+    }
+
+    h['server.differentaccesslevel'] = None
+    h['server.differentaccesslevel', ...] = {
+        'host': 'exflpxc_something',
+        'visibility': AccessLevel.EXPERT,
+        'deviceClasses': ['FooClass', 'BarClass'],
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.EXPERT]
     }
 
     return h
