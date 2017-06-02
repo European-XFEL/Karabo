@@ -9,12 +9,16 @@ from io import StringIO
 from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance
 
+from karabo.common.project.api import get_user_cache
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
-from karabo_gui import icons
+from karabo.middlelayer_api.project.api import read_project_model
 from karabo_gui.events import broadcast_event, KaraboEventSender
+from karabo_gui import icons
+from karabo_gui import messagebox
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.utils import show_no_configuration
+from karabo_gui.singletons.api import get_db_conn, get_panel_wrangler
 from karabo_gui.util import getSaveFileName
 from .bases import BaseProjectController, ProjectControllerUiData
 
@@ -37,11 +41,16 @@ class SceneController(BaseProjectController):
                                                 project_controller))
         save_as_action = QAction('Save As...', menu)
         save_as_action.triggered.connect(self._save_scene_to_file)
+        revert_action = QAction('Revert Changes', menu)
+        revert_action.triggered.connect(self._revert_changes)
+        can_revert = not self._is_showing() and self.model.modified
+        revert_action.setEnabled(can_revert)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
         menu.addSeparator()
         menu.addAction(save_as_action)
+        menu.addAction(revert_action)
         return menu
 
     def create_ui_data(self):
@@ -83,6 +92,24 @@ class SceneController(BaseProjectController):
                 dupe_scene = read_scene(StringIO(xml))
                 dupe_scene.simple_name = simple_name
                 project.scenes.append(dupe_scene)
+
+    def _is_showing(self):
+        scene = self.model
+        wrangler = get_panel_wrangler()
+        return wrangler.is_showing_project_item(scene)
+
+    def _revert_changes(self):
+        scene = self.model
+        # NOTE: The domain only changes when a project is saved or loaded
+        domain = get_db_conn().default_domain
+        data = get_user_cache().retrieve(domain, scene.uuid)
+        if data is None:
+            msg = 'That scene has been removed from the local cache!'
+            messagebox.show_error(msg, title='Revert failed')
+            return
+
+        read_project_model(StringIO(data), existing=scene)
+        scene.modified = False
 
     def _save_scene_to_file(self):
         scene = self.model
