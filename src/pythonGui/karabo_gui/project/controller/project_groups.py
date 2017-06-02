@@ -169,6 +169,7 @@ def _load_scene(project_controller):
     # Read SceneModel
     scene = read_scene(fn)
     scene.simple_name = op.splitext(op.basename(fn))[0]
+    scene.reset_uuid()
     scene.modified = True
     project.scenes.append(scene)
 
