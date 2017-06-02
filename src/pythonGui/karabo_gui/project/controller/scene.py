@@ -82,6 +82,7 @@ class SceneController(BaseProjectController):
             for simple_name in dialog.duplicate_names:
                 dupe_scene = read_scene(StringIO(xml))
                 dupe_scene.simple_name = simple_name
+                dupe_scene.reset_uuid()
                 project.scenes.append(dupe_scene)
 
     def _save_scene_to_file(self):
