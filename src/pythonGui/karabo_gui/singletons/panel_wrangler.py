@@ -50,6 +50,11 @@ class PanelWrangler(QObject):
     # -------------------------------------------------------------------
     # public interface
 
+    def is_showing_project_item(self, model):
+        """Returns True if the given `model` has a view currently showing.
+        """
+        return model in self._project_item_panels
+
     def use_splash_screen(self, splash):
         """Attach a QSplashScreen instance which will be closed when the first
         window appears.
