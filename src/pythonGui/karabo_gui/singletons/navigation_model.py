@@ -125,7 +125,7 @@ class NavigationTreeModel(QAbstractItemModel):
         elif sender is KaraboEventSender.StopMonitoringDevice:
             self._toggleMonitoring(data.get('device_id', ''), False)
         elif sender is KaraboEventSender.ShowDevice:
-            self.selectNode(data.get('deviceId'))
+            self.selectNodeById(data.get('deviceId'))
         elif sender is KaraboEventSender.AccessLevelChanged:
             self._needs_update()
         return False
@@ -137,6 +137,8 @@ class NavigationTreeModel(QAbstractItemModel):
         return self.selectionModel.currentIndex()
 
     def selectIndex(self, index):
+        """Select the given `index` of type `QModelIndex` if this is not None
+        """
         if index is None:
             self.selectionModel.selectionChanged.emit(QItemSelection(),
                                                       QItemSelection())
@@ -145,15 +147,35 @@ class NavigationTreeModel(QAbstractItemModel):
         self.selectionModel.setCurrentIndex(index,
                                             QItemSelectionModel.ClearAndSelect)
 
-    def selectNode(self, node_id):
-        """Select the `QModelIndex` with the given `node_id`
+    def selectNodeById(self, node_id):
+        """Select the `SystemTreeNode` with the given `node_id`.
+
+        :param node_id: A string which we are looking for in the tree
         """
-        nodes = self.tree.find(node_id)
+        nodes = self.findNodes(node_id)
         if nodes:
             # Select first entry
-            node = nodes[0]
+            self.selectNode(nodes[0])
+
+    def selectNode(self, node):
+        """Select the given `node` of type `SystemTreeNode` if this is not None,
+        otherwise nothing is selected
+
+        :param node: The `SystemTreeNode` which should be selected
+        """
+        if node is not None:
             index = self.createIndex(node.row(), 0, node)
-            self.selectIndex(index)
+        else:
+            # Select nothing
+            index = None
+        self.selectIndex(index)
+
+    def findNodes(self, node_id, access_level=None, startswith=False,
+                  case_sensitive=True):
+        access_level = (krb_globals.GLOBAL_ACCESS_LEVEL if access_level is None
+                        else access_level)
+        return self.tree.find(node_id, access_level, startswith,
+                              case_sensitive)
 
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
