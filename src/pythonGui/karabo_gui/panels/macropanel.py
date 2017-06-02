@@ -5,8 +5,7 @@
 #############################################################################
 """ This is the central panel to edit macros. """
 from PyQt4.QtCore import Qt, QEvent
-from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QMessageBox,
-                         QSplitter, QTextCursor)
+from PyQt4.QtGui import QTextEdit, QPlainTextEdit, QSplitter, QTextCursor
 
 try:
     from qtconsole.pygments_highlighter import PygmentsHighlighter
@@ -18,6 +17,7 @@ from karabo_gui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 import karabo_gui.icons as icons
+from karabo_gui import messagebox
 from karabo_gui.project.utils import run_macro
 from karabo_gui.singletons.api import get_topology
 from karabo_gui.toolbar import ToolBar
@@ -135,10 +135,9 @@ class MacroPanel(BasePanelWidget):
                 c.movePosition(c.Down, n=e.lineno - 1)
                 c.movePosition(c.Right, n=e.offset)
                 self.teEditor.setTextCursor(c)
-            QMessageBox.warning(self.teEditor, type(e).__name__,
-                                "{}\n{}{}^\nin {} line {}".format(
-                                e.msg, e.text, " " * e.offset, e.filename,
-                                e.lineno))
+            formatted_msg = "{}\n{}{}^\nin {} line {}".format(
+                    e.msg, e.text, " " * e.offset, e.filename, e.lineno)
+            messagebox.show_warning(formatted_msg, title=type(e).__name__)
         else:
             run_macro(self.model)
 
