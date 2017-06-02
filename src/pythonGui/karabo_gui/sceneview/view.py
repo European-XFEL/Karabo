@@ -264,6 +264,7 @@ class SceneView(QWidget):
         self.workflow_model.destroy()
 
         unregister_from_broadcasts(self)
+        self._set_scene_model(None)
 
     def set_tab_visible(self, visible):
         """ Sets whether this scene is visible
@@ -439,7 +440,14 @@ class SceneView(QWidget):
     def _set_scene_model(self, scene_model):
         """ The scene model is set and all notification handlers are defined.
         """
+        if self.scene_model is not None:
+            self.scene_model.on_trait_change(self._model_modified,
+                                             'children_items', remove=True)
+
         self.scene_model = scene_model
+        if scene_model is None:
+            return
+
         self.scene_model.on_trait_change(self._model_modified,
                                          'children_items')
         self._add_workflow_items(self.scene_model.children)
