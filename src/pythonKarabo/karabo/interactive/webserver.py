@@ -7,7 +7,7 @@ from textwrap import dedent
 
 from tornado import ioloop, web
 
-from .startkarabo import absolute, defaultall
+from .startkarabo import absolute, defaultall, entrypoint
 
 
 mainpage = """
@@ -119,7 +119,7 @@ class MainHandler(web.RequestHandler):
             with open(ctrl, "w") as cfile:
                 cfile.write(cmd)
 
-
+@entrypoint
 def run_webserver():
     """karabo-webserver - start a web server to monitor karabo servers
 
