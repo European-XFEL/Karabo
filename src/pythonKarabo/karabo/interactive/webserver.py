@@ -138,7 +138,7 @@ def run_webserver():
 
     If you want to monitor server1 and server2, use the following:
 
-      karabo-webserver --allowed server1 server2
+      karabo-webserver --filter server1 server2
 
     """
     parser = ArgumentParser()
