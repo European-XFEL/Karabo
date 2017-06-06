@@ -46,6 +46,8 @@ from tempfile import mkdtemp
 from textwrap import dedent
 from time import sleep
 
+WEBSERVER = 'webserver'
+
 
 def absolute(*path):
     return osp.join(os.environ["KARABO"], *path)
@@ -224,7 +226,7 @@ def gnometermlog():
                if isexecutable(osp.join(fn, "log", "run"))]
     cmd = sum((["--tab", "-e",
                 r'bash -c "echo -en \\\e]0\;{0}\\\a;'  # set tab title
-                          'tail -n 100 -F $KARABO/var/log/{0}/current"'
+                'tail -n 100 -F $KARABO/var/log/{0}/current"'
                 .format(s)]
                for s in servers), ["gnome-terminal"])
     os.execvp("gnome-terminal", cmd)
@@ -272,7 +274,7 @@ def adddeviceserver():
     This creates a new device server in $KARABO/var/service.
 
     name is the name of the new device server
-    type is one of: cppserver, middlelayerserver or pythonserver
+    type is one of: cppserver, middlelayerserver, pythonserver or webserver
     arguments are passed to said device server
 
     The serverId will be set to name.
@@ -280,7 +282,8 @@ def adddeviceserver():
     assert len(sys.argv) > 2
 
     _, server_id, server_type, *options = sys.argv
-    assert server_type in {"cppserver", "middlelayerserver", "pythonserver"}
+    assert server_type in {"cppserver", "middlelayerserver", "pythonserver",
+                           WEBSERVER}
 
     target_dir = server_id.replace("/", "_")
     abs_target = absolute("var", "service", target_dir)

@@ -1,9 +1,10 @@
 from struct import unpack
 import time
-
+import sys
+from argparse import ArgumentParser
 from tornado import ioloop, web
 
-from .startkarabo import absolute, defaultall
+from .startkarabo import absolute, defaultall, WEBSERVER
 
 
 mainpage = """
@@ -52,12 +53,25 @@ refresh = """
 """
 
 
+def filter_services(services):
+    if services is None or len(services) == 0:
+        allowed = defaultall()
+    else:
+        allowed = [serv_id for serv_id in services
+                   if serv_id in defaultall()]
+    try:
+        allowed.remove(WEBSERVER)
+    except ValueError:
+        pass
+    return allowed
+
+
 def getdata(name):
     try:
         path = absolute("var", "service", name, "supervise", "status")
         with open(path, "rb") as fin:
             status = fin.read()
-        pid, paused, want =  unpack("<12xI?c", status)
+        pid, paused, want = unpack("<12xI?c", status)
         tai, = unpack(">Q10x", status)
 
         timestamp = tai - 4611686018427387914  # from deamontool's tai.h
@@ -77,8 +91,12 @@ def getdata(name):
 
 
 class MainHandler(web.RequestHandler):
+
+    def initialize(self, service_list=None):
+        self.service_list = service_list
+
     def get(self):
-        data = [getdata(d) for d in defaultall()]
+        data = [getdata(d) for d in filter_services(self.service_list)]
         table = "".join(
             row.format(serverdir=d[0], status=d[1], since=d[2])
             for d in data)
@@ -88,6 +106,12 @@ class MainHandler(web.RequestHandler):
         self.write(refresh)
         cmd = self.get_argument("cmd")
         servers = self.get_arguments("servers")
+        if any(server not in filter_services(self.service_list)
+               for server in servers):
+            # if a client tried to post a not allowed server
+            self.set_status(400)
+            self.write("<html><body>HOW DARE YOU!</body></html>")
+            return
         for s in servers:
             ctrl = absolute("var", "service", s, "supervise", "control")
             with open(ctrl, "w") as cfile:
@@ -95,6 +119,43 @@ class MainHandler(web.RequestHandler):
 
 
 def run_webserver():
-    app = web.Application([("/", MainHandler)])
-    app.listen(8888)
+    """karabo-webserver - start a web server to monitor karabo servers
+
+      karabo-webserver serverId=useless_string [-h|--help] [--filter list]
+      [--port portnumber ]
+
+    --filter
+      limits the list of the services to be controlled
+
+    --port
+      takes a list of the services to be monitored
+
+    If you want to monitor all karabo services, use the following:
+
+      karabo-webserver
+
+    changes in the services will be followed by the server
+
+    If you want to monitor server1 and server2, use the following:
+
+      karabo-webserver --allowed server1 server2
+
+    """
+    parser = ArgumentParser()
+    parser.add_argument('serverId')
+    parser.add_argument('--filter',
+                        default=[],
+                        help='list of services to be monitored',
+                        nargs='*')
+    parser.add_argument('--port',
+                        help='port number the server listens to',
+                        default=8888)
+    args = parser.parse_args()
+    service_list = set(args.filter)
+    sys.argv = sys.argv[:1]
+    # need to fool the startkarabo library since it uses sys.argv and
+    # sys.argv and argparse don't mix well.
+    app = web.Application([("/", MainHandler,
+                            dict(service_list=service_list))])
+    app.listen(args.port)
     ioloop.IOLoop.current().start()
