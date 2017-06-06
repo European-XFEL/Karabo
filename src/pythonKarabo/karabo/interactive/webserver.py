@@ -133,17 +133,7 @@ def run_webserver():
       port number the server listens to
     """
 
-    description = dedent("""
-    If you want to monitor all karabo services, use the following:
-
-    karabo-webserver
-
-    changes in the services will be followed by the server
-
-    If you want to monitor server1 and server2, use the following:
-    karabo-webserver --filter server1 server2
-    """)
-    parser = ArgumentParser(description=description)
+    parser = ArgumentParser()
     parser.add_argument('serverId')
     parser.add_argument('--filter',
                         default=[],
