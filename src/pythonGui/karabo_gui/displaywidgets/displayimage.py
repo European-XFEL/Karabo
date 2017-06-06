@@ -113,7 +113,7 @@ class DisplayImage(DisplayWidget):
         self.cellWidget.setVisible(False)
 
     def valueChanged(self, box, value, timestamp=None):
-        if self.value is not None or value is self.value:
+        if self.value is not None or value == self.value:
             return
 
         dimX, dimY, dimZ, format = get_dimensions_and_format(value)

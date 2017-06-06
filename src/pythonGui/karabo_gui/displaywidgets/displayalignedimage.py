@@ -185,7 +185,7 @@ class DisplayAlignedImage(DisplayWidget):
                     p.set_lut_range([minimum, maximum])
 
     def valueChanged(self, box, value, timestamp=None):
-        if self.value is not None or value is self.value:
+        if self.value is not None or value == self.value:
             return
 
         if hasattr(value, "stackAxis"):
