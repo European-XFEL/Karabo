@@ -180,55 +180,55 @@ class ButtonDelegate(QStyledItemDelegate):
             Returns tuple:
             [0] - states whether this is a relevant column
             [1] - the text which needs to be shown on the button
-            Otherwise ``False`` and an empty string is returned.
+            [2] - states whether this is clickable
+            Otherwise ``False``, an empty string and ``False`` is returned.
         """
         column = index.column()
         ack_index = get_alarm_key_index(ACKNOWLEDGE)
         device_index = get_alarm_key_index(SHOW_DEVICE)
-        if column == ack_index or column == device_index:
-            if column == ack_index:
-                text = ALARM_DATA[ACKNOWLEDGE]
-            else:
-                text = ALARM_DATA[SHOW_DEVICE]
-            return (True, text)
-        return (False, '')
+        if not (column == ack_index or column == device_index):
+            return (False, '', False)
 
-    def _updateButton(self, button, index, text):
-        """ Set the enabling of the button depending on the
-            properties ``NEEDS_ACKNOWLEDGING`` and ``ACKNOWLEDGEABLE``.
+        if column == ack_index:
+            text = ALARM_DATA[ACKNOWLEDGE]
+            needsAck, ack = index.data()
+            clickable = needsAck and ack
+        else:
+            text = ALARM_DATA[SHOW_DEVICE]
+            clickable = True
+        return (True, text, clickable)
+
+    def _updateButton(self, button, text, enabled):
+        """Update button with given ``text`` and set whether the button is
+        ``enabled``.
         """
         button.setText(text)
-        column = index.column()
-        if column == get_alarm_key_index(ACKNOWLEDGE):
-            needsAck, ack = index.data()
-            button.setEnabled(needsAck and ack)
-        elif column == get_alarm_key_index(SHOW_DEVICE):
-            button.setEnabled(True)
+        button.setEnabled(enabled)
 
     def createEditor(self, parent, option, index):
         """ This method is called whenever the delegate is in edit mode."""
-        isRelevant, text = self._isRelevantColumn(index)
+        isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant:
             # This button is for the highlighting effect when clicking/editing
             # the index, is deleted whenever `closePersistentEditor` is called
             button = QPushButton(parent)
-            self._updateButton(button, index, text)
+            self._updateButton(button, text, clickable)
             return button
         else:
             return super(ButtonDelegate, self).createEditor(parent, option, index)
 
     def setEditorData(self, button, index):
-        isRelevant, text = self._isRelevantColumn(index)
+        isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant:
-            self._updateButton(button, index, text)
+            self._updateButton(button, text, clickable)
         else:
             super(ButtonDelegate, self).setEditorData(button, index)
 
     def paint(self, painter, option, index):
-        isRelevant, text = self._isRelevantColumn(index)
+        isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant:
             self.pbClick.setGeometry(option.rect)
-            self._updateButton(self.pbClick, index, text)
+            self._updateButton(self.pbClick, text, clickable)
             if option.state == QStyle.State_Selected:
                 painter.fillRect(option.rect, option.palette.highlight())
             pixmap = QPixmap.grabWidget(self.pbClick)
@@ -237,15 +237,15 @@ class ButtonDelegate(QStyledItemDelegate):
             super(ButtonDelegate, self).paint(painter, option, index)
 
     def updateEditorGeometry(self, button, option, index):
-        isRelevant, text = self._isRelevantColumn(index)
+        isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant:
             button.setGeometry(option.rect)
-            self._updateButton(button, index, text)
+            self._updateButton(button, text, clickable)
 
     @pyqtSlot(object)
     def cellClicked(self, index):
-        isRelevant, text = self._isRelevantColumn(index)
-        if isRelevant:
+        isRelevant, text, clickable = self._isRelevantColumn(index)
+        if isRelevant and clickable:
             if self.cellEditMode:
                 # Remove old persistent model index
                 self.parent().closePersistentEditor(self.currentCellIndex)
