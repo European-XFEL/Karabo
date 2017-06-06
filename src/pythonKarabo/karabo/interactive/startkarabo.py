@@ -281,7 +281,7 @@ def adddeviceserver():
 
     _, server_id, server_type, *options = sys.argv
     assert server_type in {"cppserver", "middlelayerserver", "pythonserver",
-                           'webserver'}
+                           "webserver"}
 
     target_dir = server_id.replace("/", "_")
 
