@@ -46,8 +46,6 @@ from tempfile import mkdtemp
 from textwrap import dedent
 from time import sleep
 
-WEBSERVER = 'webserver'
-
 
 def absolute(*path):
     return osp.join(os.environ["KARABO"], *path)
@@ -283,9 +281,10 @@ def adddeviceserver():
 
     _, server_id, server_type, *options = sys.argv
     assert server_type in {"cppserver", "middlelayerserver", "pythonserver",
-                           WEBSERVER}
+                           'webserver'}
 
     target_dir = server_id.replace("/", "_")
+
     abs_target = absolute("var", "service", target_dir)
 
     if osp.exists(abs_target):
