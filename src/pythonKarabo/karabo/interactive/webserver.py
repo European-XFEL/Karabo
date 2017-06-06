@@ -3,6 +3,7 @@ import time
 import sys
 from argparse import ArgumentParser
 from datetime import datetime
+from textwrap import dedent
 
 from tornado import ioloop, web
 
@@ -54,6 +55,7 @@ refresh = """
 </html>
 """
 
+
 def filter_services(handler):
     allowed = defaultall()
     if handler.service_list:
@@ -96,12 +98,10 @@ class MainHandler(web.RequestHandler):
         self.service_list = service_list
         self.service_id = service_id
 
-
     def get(self):
         data = [getdata(d) for d in filter_services(self)]
-        table = "".join(
-            row.format(serverdir=d[0], status=d[1], since=d[2])
-            for d in data)
+        table = "".join(row.format(serverdir=d[0], status=d[1], since=d[2])
+                        for d in data)
         self.write(mainpage.format(table=table))
 
     def post(self):
@@ -133,17 +133,16 @@ def run_webserver():
       port number the server listens to
     """
 
-    description = ""
-    "If you want to monitor all karabo services, use the following:\n"
-    "\n"
-    "  karabo-webserver\n"
-    "\n"
-    "changes in the services will be followed by the server\n"
-    "\n"
-    "If you want to monitor server1 and server2, use the following:\n"
-    "\n"
-    "  karabo-webserver --filter server1 server2\n"
+    description = dedent("""
+    If you want to monitor all karabo services, use the following:
 
+    karabo-webserver
+
+    changes in the services will be followed by the server
+
+    If you want to monitor server1 and server2, use the following:
+    karabo-webserver --filter server1 server2
+    """)
     parser = ArgumentParser(description=description)
     parser.add_argument('serverId')
     parser.add_argument('--filter',
@@ -152,16 +151,19 @@ def run_webserver():
                         nargs='*')
     parser.add_argument('--port',
                         help='port number the server listens to',
-                        default=8888)
+                        default=8080)
     args = parser.parse_args()
+    if args.serverId.startswith('serverId='):
+        service_id = args.serverId.split('=')[1].replace("/", "_")
+    else:
+        parser.print_help()
+        return
     service_list = set(args.filter)
-    service_id = args.serverId.split('=')[1].replace("/", "_")
-
     # need to fool the startkarabo library since it uses sys.argv and
     # sys.argv and argparse don't mix well.
     sys.argv = sys.argv[:1]
     app = web.Application([("/", MainHandler,
                             dict(service_list=service_list,
-                                 service_id = service_id))])
+                                 service_id=service_id))])
     app.listen(args.port)
     ioloop.IOLoop.current().start()
