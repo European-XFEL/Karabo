@@ -3,18 +3,6 @@
 # Created on August 9, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-"""This module contains a class which represents a widget plugin for attributes
-   and is created by the factory class DisplayWidget.
-   
-   Each plugin needs to implement the following interface:
-   
-   def getCategoryAliasClassName():
-       pass
-   
-    class Maker:
-        def make(self, **params):
-            return Attribute*(**params)
-"""
 
 import numpy as np
 from PyQt4.QtCore import Qt
@@ -31,7 +19,7 @@ class DisplayImageElement(DisplayWidget):
     category = ImageNode
     alias = "Image Element"
 
-    colorTable = [QColor(i,i,i).rgb() for i in range(256)]
+    colorTable = [QColor(i, i, i).rgb() for i in range(256)]
 
     def __init__(self, box, parent):
         super(DisplayImageElement, self).__init__(box)
@@ -57,11 +45,11 @@ class DisplayImageElement(DisplayWidget):
 
     def setErrorState(self, isError):
         color = ERROR_COLOR_ALPHA if isError else OK_COLOR
-        ss = self._styleSheet.format( color)
+        ss = self._styleSheet.format(color)
         self.image.setStyleSheet(ss)
 
     def valueChanged(self, box, value, timestamp=None):
-        if self.value is not None or value is self.value:
+        if self.value is not None or value == self.value:
             return
 
         dimX, dimY, dimZ, format = get_dimensions_and_format(value)
@@ -83,7 +71,7 @@ class DisplayImageElement(DisplayWidget):
             image = QImage(npy.data, dimX, dimY, dimX, format)
             image.setColorTable(self.colorTable)
         elif format is QImage.Format_RGB888:
-            image = QImage(npy.data, dimX, dimY, dimX*dimZ, format)
+            image = QImage(npy.data, dimX, dimY, dimX * dimZ, format)
         else:
             return
         pixmap = QPixmap.fromImage(image)
