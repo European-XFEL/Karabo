@@ -60,8 +60,9 @@ def getdata(name):
         pid, paused, want =  unpack("<12xI?c", status)
         tai, = unpack(">Q10x", status)
 
+        timestamp = tai - 4611686018427387914  # from deamontool's tai.h
         since = time.strftime("%a, %d %b %Y %H:%M:%S",
-                              time.localtime(tai - 4611686018427387914))
+                              time.localtime(timestamp))
         status = "up" if pid else "down"
         if pid and paused:
             status += "paused, "
