@@ -73,6 +73,27 @@ void TimeClasses_Test::testEpochstamp() {
 }
 
 
+void TimeClasses_Test::testEpochstampConversion() {
+    // to boost::posix_time::ptime
+    const Epochstamp stamp(3600ull * 24ull * (365ull + 30ull) // 31.1.1971 0.00 h
+                           + 3ull * 3600ull // => 3.00 h
+                           + 125ull, // => 3.02:05 h
+                           123456ull * 1000000000ull); // 123456 nanosec
+    const boost::posix_time::ptime asPtime = stamp.getPtime();
+
+    CPPUNIT_ASSERT_EQUAL(1971, static_cast<int> (asPtime.date().year()));
+    CPPUNIT_ASSERT_EQUAL(1, static_cast<int> (asPtime.date().month()));
+    CPPUNIT_ASSERT_EQUAL(31, static_cast<int> (asPtime.date().day()));
+
+    CPPUNIT_ASSERT_EQUAL(3, asPtime.time_of_day().hours());
+    CPPUNIT_ASSERT_EQUAL(2, asPtime.time_of_day().minutes());
+    CPPUNIT_ASSERT_EQUAL(5, asPtime.time_of_day().seconds());
+    auto totalNanoSec = asPtime.time_of_day().total_nanoseconds();
+    auto nanoSec = totalNanoSec - asPtime.time_of_day().total_seconds() * 1000000000ull;
+    CPPUNIT_ASSERT_EQUAL(123000ull, nanoSec); // nanoseconds are truncated to microseconds
+
+}
+
 void TimeClasses_Test::testTimePeriod() {
     Epochstamp t0;
     TimePeriod p1;
@@ -196,6 +217,14 @@ void TimeClasses_Test::testTimeDuration() {
     const TimeDuration durK(111ull, oneSec - 100ull);
     CPPUNIT_ASSERT(durI + durK == TimeDuration(334ull, 4567889900ull));
     CPPUNIT_ASSERT(durI - durK == TimeDuration(110ull, 4567890100ull));
+
+    // Testing operator* (operator *= implicitly tested since used inside operator*)
+    // 1) without 'crossing' seconds border
+    const TimeDuration durO(1ull, 123ull);
+    CPPUNIT_ASSERT(durO * 3ull == TimeDuration(3ull, 369ull));
+    // 2) with 'crossing' seconds border
+    const TimeDuration durP(1234ull, 400000000000000000ull); // 17 zeros: 0.4 s
+    CPPUNIT_ASSERT(durP * 7ull == TimeDuration(8640ull, 800000000000000000ull));
 
     // Testing operator/
     const TimeDuration durL(222ull, 222222222222222ull);

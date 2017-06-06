@@ -124,6 +124,13 @@ namespace karabo {
             TimeDuration& operator-=(const TimeDuration& other);
 
             /**
+             *
+             * @param other
+             * @return
+             */
+            TimeDuration operator*(TimeValue factor) const;
+            TimeDuration& operator*=(TimeValue factor);
+            /**
              * Division, i.e. how many time one time duration is bigger/smaller than another one
              * @param other TimeDuration
              * @return long double
@@ -245,6 +252,12 @@ namespace karabo {
             return result;
         }
 
+        inline TimeDuration TimeDuration::operator*(TimeValue factor) const {
+            TimeDuration result(*this);
+            result *= factor;
+            return result;
+        }
+
         inline long double TimeDuration::operator/(const TimeDuration& other) const {
             if (other.isNull()) return std::numeric_limits<long double>::quiet_NaN();
 
@@ -273,6 +286,17 @@ namespace karabo {
             } else {
                 m_Fractions -= other.m_Fractions;
             }
+
+            return *this;
+        }
+
+        inline TimeDuration& TimeDuration::operator*=(TimeValue factor) {
+            m_Seconds *= factor;
+            m_Fractions *= factor;
+
+            const TimeValue extraSeconds = m_Fractions / m_oneSecondInAtto;
+            m_Seconds += extraSeconds;
+            m_Fractions -= (extraSeconds * m_oneSecondInAtto);
 
             return *this;
         }
