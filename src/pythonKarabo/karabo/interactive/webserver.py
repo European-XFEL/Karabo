@@ -112,7 +112,8 @@ class MainHandler(web.RequestHandler):
         for s in servers:
             if s not in allowed:
                 # if a client tried to post a not allowed server
-                print('{} {} attempted an unlawful command {} on service {}'
+                print('{}: {} attempted an illegal post:'
+                      'command {} on service {}'
                       ''.format(datetime.now(), repr(self.request), cmd, s))
                 continue
             ctrl = absolute("var", "service", s, "supervise", "control")
