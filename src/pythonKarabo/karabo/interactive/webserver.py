@@ -6,7 +6,7 @@ from datetime import datetime
 
 from tornado import ioloop, web
 
-from .startkarabo import absolute, defaultall, WEBSERVER
+from .startkarabo import absolute, defaultall
 
 
 mainpage = """
