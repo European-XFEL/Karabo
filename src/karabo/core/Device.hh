@@ -390,9 +390,9 @@ namespace karabo {
              * @param configuration
              */
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
+                m_timeTickerTimer(karabo::net::EventLoop::getIOService()),
                 m_globalAlarmCondition(karabo::util::AlarmCondition::NONE),
-                m_lastBrokerErrorStamp(0ull, 0ull),
-                m_timeTickerTimer(karabo::net::EventLoop::getIOService())
+                m_lastBrokerErrorStamp(0ull, 0ull)
                 {
 
 
@@ -1449,7 +1449,7 @@ namespace karabo {
 
                 KARABO_SLOT(slotKillDevice)
 
-                KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, long long /* period */);
+                KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
 
                 KARABO_SLOT(slotReSubmitAlarms, karabo::util::Hash);
 
@@ -1697,7 +1697,7 @@ namespace karabo {
              * @param period: interval between subsequent ids in microseconds
              */
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-                const bool firstCall = false;
+                bool firstCall = false;
                 {
                     boost::mutex::scoped_lock lock(m_timeChangeMutex);
                     m_timeId = id;
