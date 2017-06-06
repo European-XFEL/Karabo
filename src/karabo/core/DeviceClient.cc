@@ -1053,6 +1053,7 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 m_deviceChangedHandlers.set(deviceId + "._function", callbackFunction);
             }
+            m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
             m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
             immortalize(deviceId);
         }
