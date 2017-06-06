@@ -132,6 +132,8 @@ namespace karabo {
             unsigned long long m_timeFrac; // attoseconds
             unsigned long long m_timePeriod; // microseconds
             mutable boost::mutex m_timeChangeMutex;
+            unsigned long long m_timeIdLastTick; // only for onTimeTick, no need for mutex protection
+            boost::asio::deadline_timer m_timeTickerTimer;
 
             krb_log4cpp::Category* m_log;
 
@@ -145,9 +147,6 @@ namespace karabo {
             std::set<std::string> m_accumulatedGlobalAlarms;
 
             karabo::util::Epochstamp m_lastBrokerErrorStamp;
-            boost::asio::deadline_timer m_timeTickerTimer;
-            std::atomic<bool> m_timeServerUpdateImminent;
-            bool m_timeServerSyncMode;
 
 
         public:
@@ -392,8 +391,8 @@ namespace karabo {
              */
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
                 m_globalAlarmCondition(karabo::util::AlarmCondition::NONE),
-                m_lastBrokerErrorStamp(0ull, 0ull), m_timeTickerTimer(karabo::net::EventLoop::getIOService()) ,
-                m_timeServerUpdateImminent(false), m_timeServerSyncMode(false)
+                m_lastBrokerErrorStamp(0ull, 0ull),
+                m_timeTickerTimer(karabo::net::EventLoop::getIOService())
                 {
 
 
@@ -410,7 +409,8 @@ namespace karabo {
                 m_timeId = 0;
                 m_timeSec = 0;
                 m_timeFrac = 0;
-                m_timePeriod = 0;
+                m_timePeriod = 0; // zero as identifier of initial value used in slotTimeTick
+                m_timeIdLastTick = 0;
 
                 // Set serverId
                 if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
@@ -1081,18 +1081,29 @@ namespace karabo {
             }
 
             /**
-             * A hook which is called if the device receives a time-server update. Can be overwritten
-             * by derived classes
+             * A hook which is called if the device receives a time-server update, i.e. if slotTimeTick is called.
+             * Can be overwritten by derived classes.
              *
              * @param id: train id
              * @param sec: unix seconds
-             * @param frac: fractional seconds
-             * @param period
+             * @param frac: fractional seconds (i.e. attoseconds)
+             * @param period: interval between ids im microseconds
+             */
+            virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            }
+
+            /**
+             * If the device receives time-server updates via slotTimeTick, this hook will be called for every id,
+             * irrespective of the frequency of the calls to slotTimeTick.
+             * Can be overwritten by derived classes
+             *
+             * @param id: train id
+             * @param sec: unix seconds
+             * @param frac: fractional seconds (i.e. attoseconds)
+             * @param period: interval between ids microseconds
              */
             virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
-
-            // TODO:  Implement local call: just post command on local queue
 
             /**
              * Execute a command on this device
@@ -1678,58 +1689,70 @@ namespace karabo {
             }
 
             /**
-             * A slot called by the time-server to synchronize this device with the timing system
+             * A slot called by the time-server to synchronize this device with the timing system.
+             *
              * @param id: current train id
              * @param sec: current system seconds
              * @param frac: current fractional seconds
-             * @param period: tick-period of the time-server, i.e the update interval at which onTimeUpdate should be called.
-             *                it will be positive if the timeserver constantly syncs the system, and negative if the time server
-             *                only provides sync updates at a frequency lower than the period.
+             * @param period: interval between subsequent ids in microseconds
              */
-            void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, long long period) {
-                m_timeServerUpdateImminent.exchange(true);
-                m_timeServerSyncMode = period > 0;
-                m_timeTickerTimer.cancel(); // cancel any pending timers, if we had an update from the time server
-                timeTick(id, sec, frac, abs(period));
-            }
-            
-            /**
-             * Helper function called both by time server updates and the internal device clock
-             * @param id: current train id
-             * @param sec: current system seconds
-             * @param frac: current fractional seconds
-             * @param period: tick-period of the time-server
-             */
-            void timeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+                const bool firstCall = false;
                 {
                     boost::mutex::scoped_lock lock(m_timeChangeMutex);
                     m_timeId = id;
                     m_timeSec = sec;
                     m_timeFrac = frac;
+                    firstCall = (m_timePeriod == 0ull);
                     m_timePeriod = period;
                 }
-                
-                if(!m_timeServerSyncMode) {
-                    m_timeTickerTimer.expires_from_now(boost::posix_time::milliseconds(period));
-                    m_timeTickerTimer.async_wait(util::bind_weak(&Device<FSM>::timeTicker, this, boost::asio::placeholders::error, id, period));
+                // Take care that 'onTimeUpdate' is called every period:
+                // Cancel pending timer if we had an update from the time server...
+                if (m_timeTickerTimer.cancel() > 0 || firstCall) { // order matters if timer was already running
+                    // ...but start again (or the first time), freshly synchronised.
+                    timeTick(boost::system::error_code(), id);
                 }
-                onTimeUpdate(id, sec, frac, abs(period));
-                m_timeServerUpdateImminent.exchange(false);
+                // Call hook for each external time tick update.
+                onTimeTick(id, sec, frac, period);
             }
-            
+
             /**
-             * A device's internal time ticker callback, which will assure `onTimeUpdate` is called at an interval of `period` if the timeserver
-             * works in non-sync mode.
-             * 
-             * @param e: error code from the boost::deadline_timer
+             * Helper function for internal time ticker deadline timer to provide internal clock
+             * that calls 'onTimeUpdate' for every id even if slotTimeTick is called less often.
+             *
+             * @param ec error code indicating whether deadline timer was cancelled
              * @param id: current train id
-             * @param period: tick-period of the time-server
              */
-            void timeTicker(const boost::system::error_code& e, unsigned long long id, unsigned long long period){
-                karabo::util::Epochstamp epochNow;
-                if(!m_timeServerUpdateImminent.exchange(false)) {
-                    timeTick(id++, epochNow.getSeconds(), epochNow.getFractionalSeconds(), period);
+            void timeTick(const boost::system::error_code ec, unsigned long long newId) {
+                if (ec) return;
+
+                // Get values of last 'external' update via slotTimeTick.
+                unsigned long long id = 0, period = 0;
+                util::Epochstamp stamp(0ull, 0ull);
+                {
+                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                    id = m_timeId;
+                    stamp = util::Epochstamp(m_timeSec, m_timeFrac);
+                    period = m_timePeriod;
                 }
+                // Calculate how many ids we are away from last external update and adjust stamp
+                const unsigned long long delta = newId - id; // newId >= id is fulfilled
+                const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
+                                                        period * 1000000000000ull); // '* 10^12': micro- to attoseconds
+                const util::TimeDuration sinceId(periodDuration * delta);
+                stamp += sinceId;
+
+                // Call hook that indicates next id. In case the internal ticker was too slow, call it for
+                // each otherwise missed id (with same time...). If it was too fast, do not call again.
+                if (m_timeIdLastTick == 0ull) m_timeIdLastTick = newId - 1; // first time tick
+                while (m_timeIdLastTick < newId) {
+                  onTimeUpdate(++m_timeIdLastTick, stamp.getSeconds(), stamp.getFractionalSeconds(), period);
+                }
+
+                // reload timer for next id:
+                m_timeTickerTimer.expires_at((stamp += periodDuration).getPtime());
+                m_timeTickerTimer.async_wait(util::bind_weak(&Device<FSM>::timeTick, this,
+                                                             boost::asio::placeholders::error, ++newId));
             }
 
             const std::pair<bool, const karabo::util::AlarmCondition> evaluateAndUpdateAlarmCondition(bool forceUpate) {
