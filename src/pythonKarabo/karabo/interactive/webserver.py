@@ -2,6 +2,8 @@ from struct import unpack
 import time
 import sys
 from argparse import ArgumentParser
+from datetime import datetime
+
 from tornado import ioloop, web
 
 from .startkarabo import absolute, defaultall, WEBSERVER
@@ -52,15 +54,13 @@ refresh = """
 </html>
 """
 
-
-def filter_services(services):
-    if services is None or len(services) == 0:
-        allowed = defaultall()
-    else:
-        allowed = [serv_id for serv_id in services
-                   if serv_id in defaultall()]
+def filter_services(handler):
+    allowed = defaultall()
+    if handler.service_list:
+        allowed = [serv_id for serv_id in handler.service_list
+                   if serv_id in allowed]
     try:
-        allowed.remove(WEBSERVER)
+        allowed.remove(handler.service_id)
     except ValueError:
         pass
     return allowed
@@ -92,11 +92,13 @@ def getdata(name):
 
 class MainHandler(web.RequestHandler):
 
-    def initialize(self, service_list=None):
+    def initialize(self, service_list=None, service_id=None):
         self.service_list = service_list
+        self.service_id = service_id
+
 
     def get(self):
-        data = [getdata(d) for d in filter_services(self.service_list)]
+        data = [getdata(d) for d in filter_services(self)]
         table = "".join(
             row.format(serverdir=d[0], status=d[1], since=d[2])
             for d in data)
@@ -106,13 +108,13 @@ class MainHandler(web.RequestHandler):
         self.write(refresh)
         cmd = self.get_argument("cmd")
         servers = self.get_arguments("servers")
-        if any(server not in filter_services(self.service_list)
-               for server in servers):
-            # if a client tried to post a not allowed server
-            self.set_status(400)
-            self.write("<html><body>HOW DARE YOU!</body></html>")
-            return
+        allowed = filter_services(self)
         for s in servers:
+            if s not in allowed:
+                # if a client tried to post a not allowed server
+                print('{} {} attempted an unlawful command {} on service {}'
+                      ''.format(datetime.now(), repr(self.request), cmd, s))
+                continue
             ctrl = absolute("var", "service", s, "supervise", "control")
             with open(ctrl, "w") as cfile:
                 cfile.write(cmd)
@@ -121,27 +123,28 @@ class MainHandler(web.RequestHandler):
 def run_webserver():
     """karabo-webserver - start a web server to monitor karabo servers
 
-      karabo-webserver serverId=useless_string [-h|--help] [--filter list]
+      karabo-webserver serverId=webserver [-h|--help] [--filter list]
       [--port portnumber ]
 
     --filter
       limits the list of the services to be controlled
 
     --port
-      takes a list of the services to be monitored
-
-    If you want to monitor all karabo services, use the following:
-
-      karabo-webserver
-
-    changes in the services will be followed by the server
-
-    If you want to monitor server1 and server2, use the following:
-
-      karabo-webserver --filter server1 server2
-
+      port number the server listens to
     """
-    parser = ArgumentParser()
+
+    description = ""
+    "If you want to monitor all karabo services, use the following:\n"
+    "\n"
+    "  karabo-webserver\n"
+    "\n"
+    "changes in the services will be followed by the server\n"
+    "\n"
+    "If you want to monitor server1 and server2, use the following:\n"
+    "\n"
+    "  karabo-webserver --filter server1 server2\n"
+
+    parser = ArgumentParser(description=description)
     parser.add_argument('serverId')
     parser.add_argument('--filter',
                         default=[],
@@ -152,10 +155,13 @@ def run_webserver():
                         default=8888)
     args = parser.parse_args()
     service_list = set(args.filter)
-    sys.argv = sys.argv[:1]
+    service_id = args.serverId.split('=')[1].replace("/", "_")
+
     # need to fool the startkarabo library since it uses sys.argv and
     # sys.argv and argparse don't mix well.
+    sys.argv = sys.argv[:1]
     app = web.Application([("/", MainHandler,
-                            dict(service_list=service_list))])
+                            dict(service_list=service_list,
+                                 service_id = service_id))])
     app.listen(args.port)
     ioloop.IOLoop.current().start()
