@@ -17,6 +17,7 @@ class TimeClasses_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(TimeClasses_Test);
     CPPUNIT_TEST(testEpochstamp);
+    CPPUNIT_TEST(testEpochstampConversion);
     CPPUNIT_TEST(testTimePeriod);
     CPPUNIT_TEST(testTimeDuration);
     CPPUNIT_TEST(testTimeProfiler);
@@ -35,6 +36,7 @@ public:
 
 private:
     void testEpochstamp();
+    void testEpochstampConversion();
     void testTimePeriod();
     void testTimeDuration();
     void testTimeProfiler();
