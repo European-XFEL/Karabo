@@ -24,14 +24,13 @@ States_Test::~States_Test() {
 
 
 void States_Test::setUp() {
-    
+
 }
 
 
 void States_Test::tearDown() {
-    
-}
 
+}
 
 
 void States_Test::testStringRoundTrip() {
@@ -41,8 +40,9 @@ void States_Test::testStringRoundTrip() {
     CPPUNIT_ASSERT(s == s2);
 }
 
+
 void States_Test::testSignifier() {
-    
+
     std::vector<State> s;
     s.push_back(State::DISABLED);
     s.push_back(State::COOLED);
@@ -57,8 +57,9 @@ void States_Test::testSignifier() {
     CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::UNKNOWN);
 }
 
+
 void States_Test::testSignifierInitTrump() {
-    
+
     std::vector<State> s;
     s.push_back(State::INIT);
     s.push_back(State::CHANGING);
@@ -68,13 +69,26 @@ void States_Test::testSignifierInitTrump() {
     CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::INIT);
 }
 
+
+void States_Test::testInterlockTrump() {
+
+    std::vector<State> s;
+    s.push_back(State::CHANGING);
+    s.push_back(State::NORMAL);
+    s.push_back(State::PASSIVE);
+    s.push_back(State::ACTIVE);
+    s.push_back(State::INTERLOCKED);
+    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::INTERLOCKED);
+}
+
+
 void States_Test::testSignifierNonDefaultList() {
-    
+
     std::vector<State> trumpList;
     trumpList.push_back(State::INTERLOCKED);
     trumpList.push_back(State::UNKNOWN);
     trumpList.push_back(State::KNOWN);
-    
+
     std::vector<State> s;
     s.push_back(State::DISABLED);
     s.push_back(State::CHANGING);
@@ -85,11 +99,12 @@ void States_Test::testSignifierNonDefaultList() {
     CPPUNIT_ASSERT(StateSignifier(trumpList).returnMostSignificant(s) == State::CHANGING);
 }
 
-void States_Test::testComparisons(){
-    CPPUNIT_ASSERT(State::CHANGING.isDerivedFrom(State::NORMAL));// direct parentage
+
+void States_Test::testComparisons() {
+    CPPUNIT_ASSERT(State::CHANGING.isDerivedFrom(State::NORMAL)); // direct parentage
     CPPUNIT_ASSERT(!State::NORMAL.isDerivedFrom(State::CHANGING)); // direct parentage the other way round should not compare
     CPPUNIT_ASSERT(!State::CHANGING.isDerivedFrom(State::ERROR)); // no parentage
-    CPPUNIT_ASSERT(!State::ERROR.isDerivedFrom(State::CHANGING));  // the other way round
+    CPPUNIT_ASSERT(!State::ERROR.isDerivedFrom(State::CHANGING)); // the other way round
     CPPUNIT_ASSERT(State::HEATED.isDerivedFrom(State::NORMAL)); // longer list of ancestors
     CPPUNIT_ASSERT(!State::KNOWN.isDerivedFrom(State::INCREASING)); // longer list of ancestors the other way round should not compare
 
