@@ -73,27 +73,26 @@ void RunTimeSchemaAttributes_Test::appTestRunner() {
 
 
 void RunTimeSchemaAttributes_Test::testRuntimeApplication() {
-    std::vector<karabo::util::Hash> schemaUpdates;
-    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "warnLow", "value", -1000.0));
-    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "minInc", "value", -10.0));
     //register a dummy monitor to assure that signals from the device are tracked
     m_deviceClient->registerDeviceMonitor("alarmTesterSchema", boost::bind(&RunTimeSchemaAttributes_Test::dummyMonitor, this, _1, _2));
-    m_deviceClient->setAttribute("alarmTesterSchema", "floatProperty", "warnLow", -1000.0);
-    m_deviceClient->setAttribute("alarmTesterSchema", "floatProperty", "minInc", -10.0);
     boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+    m_deviceClient->setAttribute("alarmTesterSchema", "floatProperty", "warnLow", -1000.0f);
+    m_deviceClient->setAttribute("alarmTesterSchema", "floatProperty", "minInc", -10.0f);
     const karabo::util::Schema& s = m_deviceClient->getDeviceSchema("alarmTesterSchema");
 
 
     CPPUNIT_ASSERT(s.getWarnLow<float>("floatProperty") == -1000.0);
     CPPUNIT_ASSERT(s.getMinInc<float>("floatProperty") == -10.0);
+
+    std::clog << std::endl << "Tested application.. Ok" << std::endl;
 }
 
 
 void RunTimeSchemaAttributes_Test::testGuiServerApplication() {
 
     std::vector<karabo::util::Hash> schemaUpdates;
-    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "warnHigh", "value", 1000.0));
-    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "maxInc", "value", 10.0));
+    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "warnHigh", "value", 1000.0f));
+    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "maxInc", "value", 10.0f));
 
     Hash message("type", "updateAttributes", "instanceId", "alarmTesterSchema", "updates", schemaUpdates);
     karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("attributesUpdated", 1, [&] {
@@ -108,15 +107,17 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplication() {
     const Schema& s = lastMessage.get<Schema>("reply.updatedSchema");
     CPPUNIT_ASSERT(s.getWarnHigh<float>("floatProperty") == 1000.0);
     CPPUNIT_ASSERT(s.getMaxInc<float>("floatProperty") == 10.0);
+
+    std::clog << "Tested GuiServer application.. Ok" << std::endl;
 }
 
 
 void RunTimeSchemaAttributes_Test::testGuiServerApplicationFailure() {
 
     std::vector<karabo::util::Hash> schemaUpdates;
-    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "warnHigh", "value", 50.0));
+    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "warnHigh", "value", 50.0f));
     schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "maxInc", "value", "this will Fail"));
-    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "alarmHigh", "value", 500.0));
+    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "alarmHigh", "value", 500.0f));
 
     Hash message("type", "updateAttributes", "instanceId", "alarmTesterSchema", "updates", schemaUpdates);
     karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("attributesUpdated", 1, [&] {
@@ -135,6 +136,8 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplicationFailure() {
     CPPUNIT_ASSERT(s.getMaxInc<float>("floatProperty") == 10.0);
     //this update is okay again
     CPPUNIT_ASSERT(s.getAlarmHigh<float>("floatProperty") == 500.0);
+
+    std::clog << "Tested GuiServer application failure.. Ok" << std::endl;
 }
 
 
