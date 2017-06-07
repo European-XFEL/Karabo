@@ -69,24 +69,26 @@ class AlarmMixin(Configurable):
         for prop in self._changed_alarms:
             cond, desc, timestamp = self._alarmConditions.get(
                 prop, (AlarmCondition.NONE, None, None))
+            # Needed for our validator in case of node elements
+            prop_sep = "KRB_ALARM_SEP_REPLACEMENT".join(prop.split('.'))
             if cond is AlarmCondition.NONE:
                 old = self._old_alarms.get(prop, AlarmCondition.NONE)
                 if old is not AlarmCondition.NONE:
                     if prop == 'globalAlarmCondition':
-                        toClear.setdefault(prop, []).extend(
+                        toClear.setdefault(prop_sep, []).extend(
                             self.accumulatedGlobalAlarms)
                         self.accumulatedGlobalAlarms.clear()
                     else:
-                        toClear.setdefault(prop, []).append(old.value)
+                        toClear.setdefault(prop_sep, []).append(old.value)
             else:
-                toAdd[prop] = Hash(cond.value, Hash(
+                toAdd[prop_sep] = Hash(cond.value, Hash(
                     "type", cond.value,
                     "description",
                     getattr(desc, "alarmInfo_{}".format(cond.value), ""),
                     "needsAcknowledging",
                     bool(getattr(desc, "alarmNeedsAck_{}".format(cond.value),
                                  True))))
-                toAdd[prop][cond.value, ...] = timestamp.toDict()
+                toAdd[prop_sep][cond.value, ...] = timestamp.toDict()
         self._old_alarms = {}
         self._changed_alarms = set()
 

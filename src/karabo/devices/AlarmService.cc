@@ -198,6 +198,8 @@ namespace karabo {
 
 
         void AlarmService::slotUpdateAlarms(const std::string& deviceId, const karabo::util::Hash& alarmInfo) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotUpdateAlarms alarmInfo for: " << deviceId;
+            KARABO_LOG_FRAMEWORK_DEBUG << alarmInfo;
 
             // alarmInfo MUST HAVE "toClear" and "toAdd" keys
             if (!(alarmInfo.has("toClear") && alarmInfo.has("toAdd"))) return;
