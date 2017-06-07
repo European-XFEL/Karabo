@@ -105,10 +105,10 @@ USING_KARABO_NAMESPACES
     void AlarmTester::initialize() {
 
         Schema schema = getFullSchema();
-        schema.setWarnLow("floatProperty", -1.);
-        schema.setWarnHigh("floatProperty", 1.);
-        schema.setAlarmLow("floatProperty", -2.);
-        schema.setAlarmHigh("floatProperty", 2.);
+        schema.setWarnLow<float>("floatProperty", -1.);
+        schema.setWarnHigh<float>("floatProperty", 1.);
+        schema.setAlarmLow<float>("floatProperty", -2.);
+        schema.setAlarmHigh<float>("floatProperty", 2.);
         appendSchema(schema, true);
     }
 
