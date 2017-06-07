@@ -24,6 +24,13 @@ class States_TestCase(unittest.TestCase):
                   State.PASSIVE]
         self.assertIs(signifier.returnMostSignificant(states), State.INIT)
 
+    def test_interlock_trumps_normal_states(self):
+        signifier = StateSignifier()
+        states = [State.NORMAL, State.CHANGING, State.ACTIVE, State.PASSIVE,
+                  State.INTERLOCKED]
+        self.assertIs(signifier.returnMostSignificant(states),
+                      State.INTERLOCKED)
+
     def test_states_signifier_non_def_list(self):
         trumpList = [State.INTERLOCKED, State.UNKNOWN, State.KNOWN]
         s = [State.DISABLED, State.CHANGING, State.COOLED, State.DECREASING,
