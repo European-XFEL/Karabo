@@ -33,6 +33,7 @@ private:
     void testStringRoundTrip();
     void testSignifier();
     void testSignifierInitTrump();
+    void testInterlockTrump();
     void testSignifierNonDefaultList();
     void testComparisons();
     
