@@ -215,7 +215,7 @@ namespace karabo {
             boost::atomic<bool> m_flushRunning;
             std::string m_flushFilePath;
 
-
+            unsigned long long m_alarmIdCounter;
 
         };
     }
