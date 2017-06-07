@@ -21,6 +21,7 @@ PYTHON_ENTRY_POINTS=(convert-karabo-device convert-karabo-project
     ikarabo karabo karabo-cli karabo-gui karabo-middlelayerserver
     karabo-pythonserver project-runner karabo-start karabo-stop
     karabo-check karabo-xterm karabo-gterm karabo-add-deviceserver
+    karabo-remove-deviceserver karabo-webserver karabo-kill
     scene-runner
 )
 
