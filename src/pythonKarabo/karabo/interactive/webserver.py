@@ -33,8 +33,8 @@ mainpage = """
 
 row = """
 <tr>
-<td><input type="checkbox" name="servers" value="{serverdir}"/></td>
-<td>{serverdir}</td>
+<td><input type="checkbox" name="servers" value="{name}"/></td>
+<td>{name}</td>
 <td>{status}</td>
 <td>{since}</td>
 </tr>
@@ -108,15 +108,13 @@ def getdata(name):
         elif not pid and want == b"u":
             status += ", want up"
 
-        return name, status, since, duration
+        return {'name': name, 'status': status,
+                'since': since, 'duration': duration}
     except Exception as e:
-        return name, "error", str(e)
-
-
-def getserver(server_id):
-    name, status, since, duration = getdata(server_id)
-    return {'name': name, 'status': status,
-            'since': since, 'duration': duration}
+        print('{}: Exception {} when fetching service status {}'
+              ''.format(datetime.now(),str(e),name)
+        return {'name': name, 'status': 'error',
+                'since': '', 'duration': -1}
 
 
 def server_up(server):
@@ -133,7 +131,7 @@ class DaemonHandler(web.RequestHandler):
     def get(self, server_id=None):
         response = EMPTY_RESPONSE
         success = {'error': False, '': False}
-        response['servers'] = [getserver(server_id)]
+        response['servers'] = [getdata(server_id)]
         response['success'] = success.get(response['servers'][0]['status'],
                                           True)
         response['status_ok'] = server_up(response['servers'][0])
@@ -150,6 +148,7 @@ class DaemonHandler(web.RequestHandler):
         command = conf['command'].lower()
         if control_service(server_id, command):
             response['success'] = True
+            conf['status'] = conf.pop('command')
             response['servers'] = [conf]
         self.write(response)
 
@@ -163,7 +162,7 @@ class MainHandler(web.RequestHandler):
     def get(self):
         data = [getdata(d) for d in filter_services(self.service_id,
                                                     self.service_list)]
-        table = "".join(row.format(serverdir=d[0], status=d[1], since=d[2])
+        table = "".join(row.format(**d)
                         for d in data)
         self.write(mainpage.format(table=table))
 
@@ -185,7 +184,7 @@ class MainHandler(web.RequestHandler):
 class StatusHandler(web.RequestHandler):
     def get(self):
         response = EMPTY_RESPONSE
-        response['servers'] = [getserver(s) for s in defaultall()]
+        response['servers'] = [getdata(s) for s in defaultall()]
         statuses = [server_up(s) for s in response['servers']]
         response['status_ok'] = all(statuses)
         response['success'] = True
