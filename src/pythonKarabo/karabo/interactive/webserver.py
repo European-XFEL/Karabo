@@ -3,7 +3,6 @@ import time
 import sys
 from argparse import ArgumentParser
 from datetime import datetime
-from textwrap import dedent
 
 from tornado import ioloop, web
 
@@ -56,13 +55,13 @@ refresh = """
 """
 
 
-def filter_services(handler):
+def filter_services(service_id, service_list):
     allowed = defaultall()
-    if handler.service_list:
-        allowed = [serv_id for serv_id in handler.service_list
+    if service_list:
+        allowed = [serv_id for serv_id in service_list
                    if serv_id in allowed]
     try:
-        allowed.remove(handler.service_id)
+        allowed.remove(service_id)
     except ValueError:
         pass
     return allowed
@@ -99,7 +98,8 @@ class MainHandler(web.RequestHandler):
         self.service_id = service_id
 
     def get(self):
-        data = [getdata(d) for d in filter_services(self)]
+        data = [getdata(d) for d in filter_services(self.service_id,
+                                                    self.service_list)]
         table = "".join(row.format(serverdir=d[0], status=d[1], since=d[2])
                         for d in data)
         self.write(mainpage.format(table=table))
@@ -108,7 +108,7 @@ class MainHandler(web.RequestHandler):
         self.write(refresh)
         cmd = self.get_argument("cmd")
         servers = self.get_arguments("servers")
-        allowed = filter_services(self)
+        allowed = filter_services(self.service_id, self.service_list)
         for s in servers:
             if s not in allowed:
                 # if a client tried to post a not allowed server
@@ -119,6 +119,7 @@ class MainHandler(web.RequestHandler):
             ctrl = absolute("var", "service", s, "supervise", "control")
             with open(ctrl, "w") as cfile:
                 cfile.write(cmd)
+
 
 @entrypoint
 def run_webserver():
