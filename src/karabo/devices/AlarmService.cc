@@ -102,6 +102,7 @@ namespace karabo {
 
             m_flushRunning = true;
             m_flushWorker = boost::thread(&AlarmService::flushRunner, this);
+            m_alarmIdCounter = 0;
 
             updateState(State::NORMAL);
         }
@@ -258,17 +259,16 @@ namespace karabo {
                         const Timestamp updateTimeStamp = Timestamp::fromHashAttributes(alarmTypeEntryIt->getAttributes());
                         Timestamp existingTimeStamp = updateTimeStamp;
 
-                        //get the next id if we perform insertion
                         unsigned long long id = 0;
-                        if (!m_alarmsMap.empty()) {
-                            id = (--m_alarmsMap.end())->first + 1ULL;
-                        }
-
                         if (existingAlarmTypeEntryNode) {
                             //alarm exists, we use its first occurance
                             Hash& existingAlarmTypeEntry = existingAlarmTypeEntryNode->getValue<Hash>();
                             existingTimeStamp = Timestamp::fromHashAttributes(existingAlarmTypeEntry.getAttributes("timeOfFirstOccurrence"));
                             id = m_alarmsMap_r.find(&(*existingAlarmTypeEntryNode))->second;
+                        }
+                        else {
+                            // get the next id if we perform insertion
+                            id = m_alarmIdCounter++;
                         }
 
                         //first set all properties we can simply copy by assigning value of the new entry
