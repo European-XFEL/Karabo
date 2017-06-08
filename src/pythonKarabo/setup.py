@@ -26,7 +26,7 @@ def _get_version(path):
         out = VERSION
 
     # Make sure this is a version tag
-    expr = r'(\d+)\.(\d+)\.(\d+)$'
+    expr = r'(\d+\.)(\d+\.)(\d+)((a|b|rc)\d+)?'
     match = re.match(expr, out)
     if match is None:
         out = VERSION  # Use hard-coded version instead
