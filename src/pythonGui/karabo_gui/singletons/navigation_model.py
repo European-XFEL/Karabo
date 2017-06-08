@@ -344,12 +344,12 @@ class NavigationTreeModel(QAbstractItemModel):
 
     def _toggleMonitoring(self, device_id, monitoring):
         nodes = self.tree.find(device_id)
-        # There should better be only one instance with this ID
-        assert len(nodes) == 1
-        node = nodes[0]
-        assert node.monitoring != monitoring
-        node.monitoring = monitoring
-        self._needs_update()
+        assert len(nodes) <= 1
+        if nodes:
+            node = nodes[0]
+            assert node.monitoring != monitoring
+            node.monitoring = monitoring
+            self._needs_update()
 
     def _needs_update(self):
         """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
