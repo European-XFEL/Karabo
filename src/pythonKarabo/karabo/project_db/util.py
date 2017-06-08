@@ -7,7 +7,7 @@ from eulexistdb import db
 from eulexistdb.exceptions import ExistDBException
 from requests.packages.urllib3.exceptions import HTTPError
 
-from .dbsettings import ProbeDbSettings, LocalDbSettings
+from .dbsettings import ProbeDbSettings
 
 
 class ProjectDBError(Exception):
@@ -24,9 +24,9 @@ def check_running():
         if len(cmd) == 0:
             continue
         # check if a web app for eXistDB is running. the full command is
-        # java -jar existDB/start jetty
+        # java -jar <bunch of dirs>/existdb/start.jar jetty
         if 'java' in cmd and '-jar' in cmd and \
-           True in [True if 'eXistDB' in c else False for c in cmd]:
+           True in [True if 'existdb' in c else False for c in cmd]:
             return True
 
     return False
@@ -81,9 +81,6 @@ def assure_running(project_db_server=None, project_db_port=None):
                                            .format(last_ex))
                 sleep(waitBetween)
                 count += 1
-
-            # now init db if needed
-            init_local_db()
     else:
         try:
             tSettings = ProbeDbSettings(project_db_server,
@@ -114,36 +111,3 @@ def stop_database():
     # wait til we are down
     while check_running():
         sleep(waitBetween)
-
-
-def init_local_db():
-    """
-    Initializes the **local** database structures if not already present
-    :return: None
-    """
-
-    settings = LocalDbSettings()
-    dbhandle = db.ExistDB(settings.server_url)
-    krbroot = settings.root_collection
-
-    # root
-    if not dbhandle.hasCollection(krbroot):
-        dbhandle.createCollection(krbroot)
-        print("Created root collection at {}".format(krbroot))
-    else:
-        print("Root collection already exists at {}".format(krbroot))
-        return
-    # local domain
-    if not dbhandle.hasCollection("{}/LOCAL".format(krbroot)):
-        dbhandle.createCollection("{}/LOCAL".format(krbroot))
-        print("Created LOCAL domain at {}/LOCAL".format(krbroot))
-    else:
-        print("Local domain already exists at {}/local".format(krbroot))
-    # test root
-    if not dbhandle.hasCollection(settings.root_collection_test):
-        dbhandle.createCollection(settings.root_collection_test)
-        print("Created test collection at {}"
-              .format(settings.root_collection_test))
-    else:
-        print("Test root collection already exists at {}"
-              .format(settings.root_collection_test))
