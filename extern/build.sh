@@ -4,8 +4,8 @@
 # Packages that we know how to build
 
 DEPENDENCIES_BASE=( bzip2 libpng snappy jpeg tiff python3.4 lapack boost
-freetype hdf5 log4cpp cppunit openmq openmqc patchelf gmock existDB libxml
-libxslt daemontools )
+freetype hdf5 log4cpp cppunit openmq openmqc patchelf gmock libxml libxslt
+daemontools )
 
 DEPENDENCIES_PYTHON=( setuptools pip wheel cython numpy scipy six nose py pytest
 pillow sip backports backports_abc tornado pyparsing dateutil pytz pexpect pyzmq
@@ -14,7 +14,9 @@ sphinx_rtd_theme imagesize sphinx decorator ipykernel ipython_genutils
 jupyter_core jupyter_client pickleshare wcwidth prompt_toolkit simplegeneric
 traitlets dill ipython h5py pyusb parse suds jsonschema ecdsa pycrypto paramiko
 tzlocal httplib2 pssh traits pint nbformat notebook ipyparallel ipcluster_tools
-cycler pyelftools rpathology lxml requests ply eulxml eulexist psutil)
+cycler pyelftools rpathology lxml requests ply psutil)
+
+DEPENDENCIES_DB=(eulxml eulexist existDB)
 
 DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole pyqwt5 guidata guiqwt )
 
@@ -124,11 +126,12 @@ determine_build_packages() {
         CI|ALL)
             # Build everything
             DEPENDENCIES=( ${DEPENDENCIES_BASE[@]} ${DEPENDENCIES_PYTHON[@]}
-                           ${DEPENDENCIES_GUI[@]} )
+                           ${DEPENDENCIES_DB[@]} ${DEPENDENCIES_GUI[@]} )
             ;;
         NOGUI)
             # The classic NOGUI option
-            DEPENDENCIES=( ${DEPENDENCIES_BASE[@]} ${DEPENDENCIES_PYTHON[@]} )
+            DEPENDENCIES=( ${DEPENDENCIES_BASE[@]} ${DEPENDENCIES_PYTHON[@]}
+                           ${DEPENDENCIES_DB[@]} )
             ;;
         DARWIN)
             # Mac OS X dependencies
@@ -137,6 +140,10 @@ determine_build_packages() {
         PYTHON)
             # Python packages
             DEPENDENCIES=( ${DEPENDENCIES_PYTHON[@]} )
+            ;;
+        DB)
+            # eXistDB packages
+            DEPENDENCIES=( ${DEPENDENCIES_DB[@]} )
             ;;
         GUI)
             # GUI-related packages
@@ -315,10 +322,10 @@ usage() {
     echo
     echo "Build the Karabo Dependencies"
     echo
-    echo "Usage: $0 [args] INSTALL_DIRECTORY CI|ALL|NOGUI|PYTHON|GUI|<list>"
+    echo "Usage: $0 [args] INSTALL_DIRECTORY CI|ALL|NOGUI|PYTHON|DB|GUI|<list>"
     echo "  INSTALL_DIRECTORY : The directory where build artifacts are installed"
-    echo "  CI|ALL|NOGUI|PYTHON|GUI|<list> : The type of build to perform, OR"
-    echo "                                   <list> is a list of packages to build"
+    echo "  CI|ALL|NOGUI|PYTHON|DB|GUI|<list> : The type of build to perform, OR"
+    echo "                                      <list> is a list of packages to build"
     echo "Arguments:"
     echo "  --package | -p : After building, make a tarball of the install directory"
     echo "  --quiet | -q : Suppress output of build commands"

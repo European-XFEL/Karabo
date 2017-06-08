@@ -1,8 +1,6 @@
 #!/bin/bash
 echo "Stopping eXist database"
-EXIST_BASE="$KARABO/extern/eXistDB"
-EXIST_HOME="$KARABO/extern/eXistDB/db"
-CURRENT_DIR=`pwd`
+EXIST_HOME="$KARABO/extern/existdb"
 
 #check if java is installed
 if type -p java; then
@@ -15,7 +13,9 @@ else
 fi
 
 #finally, stop the db server
-cd $EXIST_HOME
+pushd $EXIST_HOME
 $JAVA -jar $EXIST_HOME/start.jar shutdown -p karabo
+popd
+
 sleep 5
 pkill -9 -f jetty #force kill as server is pretty reluctant
