@@ -8,8 +8,7 @@ from traits.api import (HasStrictTraits, Bool, Dict, Instance, Property,
                         on_trait_change)
 
 from karabo.middlelayer import Hash, Schema
-from karabo_gui.alarms.api import (ADD_UPDATE_TYPE, INIT_UPDATE_TYPE,
-                                   REMOVE_ALARM_TYPES)
+from karabo_gui.alarms.api import ADD_ALARM_TYPES, REMOVE_ALARM_TYPES
 from karabo_gui.configuration import BulkNotifications, Configuration
 from karabo_gui.singletons.api import get_network
 from .project_device import ProjectDeviceInstance
@@ -381,7 +380,7 @@ class SystemTopology(HasStrictTraits):
 
             for up_type, alarm_entry in zip(update_types, alarm_entries):
                 if node.node_id == alarm_entry.deviceId:
-                    if up_type in (ADD_UPDATE_TYPE, INIT_UPDATE_TYPE):
+                    if up_type in ADD_ALARM_TYPES:
                         node.append_alarm_type(alarm_entry.property,
                                                alarm_entry.type)
                     elif up_type in REMOVE_ALARM_TYPES:
