@@ -377,8 +377,7 @@ void AlarmService_Test::testRecovery() {
 
     // alarmState should now be two alarms for floatProperty, one on alarmTester and the other on alarmTester2
     // messages are unordered as they depend on async answers from other devices
-    bool row2add = false;
-    bool row3add = false;
+    bool row1add = false;
     bool topologyMessage = false;
 
     const int maxPops = 10;
@@ -389,16 +388,14 @@ void AlarmService_Test::testRecovery() {
             popsuccess = messageQs[i]->pop(lastMessage);
             if (popsuccess) {
                 if (lastMessage.has("topologyEntry.device.testAlarmService")) topologyMessage = true;
-                if (lastMessage.has("rows.2.add")) row2add = true;
-                if (lastMessage.has("rows.3.add")) row3add = true;
+                if (lastMessage.has("rows.1.add")) row1add = true;
             }
         }
         pop++;
     }
 
     CPPUNIT_ASSERT(topologyMessage);
-    CPPUNIT_ASSERT(row2add);
-    CPPUNIT_ASSERT(row3add);
+    CPPUNIT_ASSERT(row1add);
 
     std::clog << "Tested service recovery.. Ok" << std::endl;
 }
