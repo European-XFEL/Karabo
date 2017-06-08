@@ -52,7 +52,7 @@ deactivate () {
     if [ ! "$1" = "nondestructive" ] ; then
         # Self destruct!
         pushd "$KARABO/var/environment" >/dev/null
-        for var in *
+        for var in $(ls)
         do
            unset $var
         done
@@ -79,7 +79,7 @@ then
 fi
 
 pushd "$KARABO/var/environment" >/dev/null
-for var in *
+for var in $(ls)
 do
    export $var="$(cat $var)"
 done
