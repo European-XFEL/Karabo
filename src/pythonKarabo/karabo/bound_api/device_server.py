@@ -386,16 +386,26 @@ class DeviceServer(object):
     def slotKillServer(self):
         self.log.INFO("Received kill signal")
         launchers = []
-        for deviceid  in list(self.deviceInstanceMap.keys()):
+        for deviceid in list(self.deviceInstanceMap.keys()):
             self.ss.call(deviceid, "slotKillDevice")
             launchers.append(self.deviceInstanceMap[deviceid])
         for l in launchers:
             if l:
                 l.join()
         self.deviceInstanceMap = {}
-        self.ss.reply(self.serverid)
-        self.stopDeviceServer()
-        self.log.DEBUG("slotKillServer DONE")
+        try:
+            # `signal_handler` might have set `self.ss` to None or other
+            # failures might occur
+            self.ss.reply(self.serverid)
+        except Exception as e:
+            msg = ("Did not notify distributed system of server shutdown:"
+                   "\n {}").format(e)
+            self.log.ERROR(msg)
+        finally:
+            # NOTE: `stopDeviceServer` will not return because the process will
+            # be killed - everything which is called after this call will
+            # therefore never be executed
+            self.stopDeviceServer()
 
     def slotDeviceGone(self, instanceId):
         # Would prefer a self.log.FRAMEWORK_INFO as in C++ instead of self.log.DEBUG:
