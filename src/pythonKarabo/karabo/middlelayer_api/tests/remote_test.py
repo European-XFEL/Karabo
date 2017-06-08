@@ -626,6 +626,18 @@ class Tests(DeviceTest):
         self.assertEqual(len(hash["traceback"]), 3)
 
     @async_tst
+    def test_earlylog(self):
+        class A(Device):
+            @coroutine
+            def onInitialization(self):
+                self.logger.info("some test log message")
+        a = A({"_deviceId_": "testearlylog"})
+        with self.assertLogs("testearlylog", level="INFO") as cm:
+            yield from a.startInstance()
+        self.assertEqual(cm.records[0].msg, "some test log message")
+        yield from a.slotKillDevice()
+
+    @async_tst
     def test_queue(self):
         """test queues of properties"""
         with (yield from getDevice("remote")) as d:
