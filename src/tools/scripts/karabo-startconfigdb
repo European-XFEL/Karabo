@@ -1,9 +1,6 @@
 #!/bin/bash
 
-
-EXIST_BASE="$KARABO/extern/eXistDB"
-EXIST_HOME="$KARABO/extern/eXistDB/db"
-CURRENT_DIR=`pwd`
+EXIST_HOME="$KARABO/extern/existdb"
 
 #check if java is installed
 if type -p java; then
@@ -17,9 +14,9 @@ fi
 
 
 #finally, start the db server
-cd $EXIST_HOME
+pushd $EXIST_HOME
 $JAVA -jar $EXIST_HOME/start.jar jetty> /dev/null&
 echo "------------------------------------------"
 echo "Configuration DB was started."
 echo "You can access the backend at: http://localhost:8080/exist/"
-cd $CURRENT_DIR
+popd
