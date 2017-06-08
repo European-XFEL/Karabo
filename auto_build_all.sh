@@ -134,11 +134,6 @@ runPythonIntegrationTests() {
     echo
 }
 
-installProjectDB() {
-    echo Installing and initializing Local Project Database
-    safeRunCommand "$scriptDir/extern/resources/existDB/doInstall.sh ${scriptDir}/karabo"
-}
-
 # Make sure the script runs in the correct directory
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 cd ${scriptDir}
@@ -160,7 +155,6 @@ Available flags:
   --runIntegrationTests
                - Run integration tests after building (for Debug|Release)
   --numJobs N  - Specify the number of jobs that make should use to run simultaneously
-  --noDbInit   - do not initialize the project database locally
 
 Note: "Dependencies" builds only the external dependencies
       "Clean" cleans all Karabo code (src folder)
@@ -211,7 +205,6 @@ RUNTESTS="n"
 RUNINTEGRATIONTESTS="n"
 PYOPT="wheel"
 NUM_JOBS=0
-DB_INIT="y"
 while [ -n "$1" ]; do
     case "$1" in
         --bundle)
@@ -240,10 +233,6 @@ while [ -n "$1" ]; do
                 exit 1
             fi
             ;;
-        --noDbInit)
-            # Don't init the project database
-            DB_INIT="n"
-	    ;;
         *)
             # Make a little noise
             echo "Unrecognized commandline flag: $1"
@@ -286,9 +275,7 @@ elif [ "$BUNDLE" = "y" ]; then
 else
     safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_JOBS bundle-install"
 fi
-if [ "$DB_INIT" = "y" ]; then
-    installProjectDB
-fi
+
 if [ "$RUNTESTS" = "y" ]; then
     runUnitTests
 fi
