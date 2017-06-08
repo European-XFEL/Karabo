@@ -268,7 +268,7 @@ class NavigationTreeModel(QAbstractItemModel):
         elif column == 2 and role == Qt.DecorationRole:
             if hierarchyLevel == 3:
                 alarm_type = node.alarm_info.alarm_type
-                if alarm_type is not None:
+                if alarm_type:
                     return get_alarm_icon(alarm_type)
 
     def flags(self, index):
