@@ -124,12 +124,24 @@ namespace karabo {
             TimeDuration& operator-=(const TimeDuration& other);
 
             /**
-             *
-             * @param other
-             * @return
+             * Create a multiple of the TimeDuration by multiplication with an unsigned, i.e. non-negative number.
+             * @param factor that the time duration should be multiplied with
+             * @return the new TimeDuration
              */
             TimeDuration operator*(TimeValue factor) const;
+            /**
+             * Multiply by an unsigned, i.e. non-negative number.
+             * @param factor that the time duration should be multiplied with
+             * @return reference to *this after multiplication
+             */
             TimeDuration& operator*=(TimeValue factor);
+
+            /**
+             * These multiplications with a signed value create a linker error: TimeDuration cannot be negative.
+             */
+            TimeDuration operator*(long long illegalSignedFactor) const;
+            TimeDuration& operator*=(long long illegalSignedFactor);
+
             /**
              * Division, i.e. how many time one time duration is bigger/smaller than another one
              * @param other TimeDuration
@@ -256,6 +268,20 @@ namespace karabo {
             TimeDuration result(*this);
             result *= factor;
             return result;
+        }
+
+        void non_implemented_since_TimeDuration_cannot_be_multiplied_with_signed_factor();
+
+        // These fake implementations of operator*/operator*=(long long) must stay in header:
+        // Only when used, a linker error is produced.
+        inline TimeDuration& TimeDuration::operator*=(long long illegalSignedFactor) {
+            non_implemented_since_TimeDuration_cannot_be_multiplied_with_signed_factor();
+            return *this;
+        }
+
+        inline TimeDuration TimeDuration::operator*(long long illegalSignedFactor) const {
+            non_implemented_since_TimeDuration_cannot_be_multiplied_with_signed_factor();
+            return TimeDuration();
         }
 
         inline long double TimeDuration::operator/(const TimeDuration& other) const {
