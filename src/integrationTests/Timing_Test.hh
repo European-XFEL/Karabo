@@ -31,9 +31,6 @@ public:
 
 private:
     void appTestRunner();
-    void testSynchronized();
-    void testIntermittentUpdates();
-    void testTickStability();
     
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
