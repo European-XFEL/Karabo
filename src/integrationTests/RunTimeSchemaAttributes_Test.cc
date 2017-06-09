@@ -76,13 +76,13 @@ void RunTimeSchemaAttributes_Test::testRuntimeApplication() {
     //register a dummy monitor to assure that signals from the device are tracked
     m_deviceClient->registerDeviceMonitor("alarmTesterSchema", boost::bind(&RunTimeSchemaAttributes_Test::dummyMonitor, this, _1, _2));
     boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
-    m_deviceClient->setAttribute("alarmTesterSchema", "floatProperty", "warnLow", -1000.0f);
-    m_deviceClient->setAttribute("alarmTesterSchema", "floatProperty", "minInc", -10.0f);
+    m_deviceClient->setAttribute("alarmTesterSchema", "intPropNeedsAck", "warnLow", -1000);
+    m_deviceClient->setAttribute("alarmTesterSchema", "intPropNeedsAck", "minInc", -10);
+
     const karabo::util::Schema& s = m_deviceClient->getDeviceSchema("alarmTesterSchema");
 
-
-    CPPUNIT_ASSERT(s.getWarnLow<float>("floatProperty") == -1000.0);
-    CPPUNIT_ASSERT(s.getMinInc<float>("floatProperty") == -10.0);
+    CPPUNIT_ASSERT(s.getWarnLow<int>("intPropNeedsAck") == -1000);
+    CPPUNIT_ASSERT(s.getMinInc<int>("intPropNeedsAck") == -10);
 
     std::clog << std::endl << "Tested application.. Ok" << std::endl;
 }
@@ -91,9 +91,9 @@ void RunTimeSchemaAttributes_Test::testRuntimeApplication() {
 void RunTimeSchemaAttributes_Test::testGuiServerApplication() {
 
     std::vector<karabo::util::Hash> schemaUpdates;
-    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "warnHigh", "value", 1000.0f));
-    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "maxInc", "value", 10.0f));
-
+    schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "warnHigh", "value", 1000));
+    schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "maxInc", "value", 10));
+    
     Hash message("type", "updateAttributes", "instanceId", "alarmTesterSchema", "updates", schemaUpdates);
     karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("attributesUpdated", 1, [&] {
         m_tcpAdapter->sendMessage(message);
@@ -105,8 +105,8 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplication() {
     CPPUNIT_ASSERT(lastMessage.get<std::string>("reply.instanceId") == "alarmTesterSchema");
     CPPUNIT_ASSERT(lastMessage.get<std::vector<Hash> > ("reply.requestedUpdate") == schemaUpdates);
     const Schema& s = lastMessage.get<Schema>("reply.updatedSchema");
-    CPPUNIT_ASSERT(s.getWarnHigh<float>("floatProperty") == 1000.0);
-    CPPUNIT_ASSERT(s.getMaxInc<float>("floatProperty") == 10.0);
+    CPPUNIT_ASSERT(s.getWarnHigh<int>("intPropNeedsAck") == 1000);
+    CPPUNIT_ASSERT(s.getMaxInc<int>("intPropNeedsAck") == 10);
 
     std::clog << "Tested GuiServer application.. Ok" << std::endl;
 }
@@ -115,9 +115,11 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplication() {
 void RunTimeSchemaAttributes_Test::testGuiServerApplicationFailure() {
 
     std::vector<karabo::util::Hash> schemaUpdates;
-    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "warnHigh", "value", 50.0f));
-    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "maxInc", "value", "this will Fail"));
-    schemaUpdates.push_back(Hash("path", "floatProperty", "attribute", "alarmHigh", "value", 500.0f));
+    schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "warnHigh", "value", 50));
+    // NOTE: bug found - this will not do what it is supposed to do
+    //schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "maxInc", "value", "this will Fail"));
+    schemaUpdates.push_back(Hash("path", "nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2", "attribute", "maxInc", "value", "this will Fail"));
+    schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "alarmHigh", "value", 500));
 
     Hash message("type", "updateAttributes", "instanceId", "alarmTesterSchema", "updates", schemaUpdates);
     karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("attributesUpdated", 1, [&] {
@@ -131,11 +133,11 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplicationFailure() {
     CPPUNIT_ASSERT(lastMessage.get<std::vector<Hash> > ("reply.requestedUpdate") == schemaUpdates);
     const Schema& s = lastMessage.get<Schema>("reply.updatedSchema");
     //this update should have passed through
-    CPPUNIT_ASSERT(s.getWarnHigh<float>("floatProperty") == 50.0);
+    CPPUNIT_ASSERT(s.getWarnHigh<int>("intPropNeedsAck") == 50);
     //we failed at updating this one, it is at its previous value
-    CPPUNIT_ASSERT(s.getMaxInc<float>("floatProperty") == 10.0);
+    CPPUNIT_ASSERT(s.getMaxInc<int>("intPropNeedsAck") == 10);
     //this update is okay again
-    CPPUNIT_ASSERT(s.getAlarmHigh<float>("floatProperty") == 500.0);
+    CPPUNIT_ASSERT(s.getAlarmHigh<int>("intPropNeedsAck") == 500);
 
     std::clog << "Tested GuiServer application failure.. Ok" << std::endl;
 }
