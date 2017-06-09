@@ -31,6 +31,23 @@
   except:
     - branches
 
+.deps_test_template: &deps_test_build
+  before_script:
+    - pushd extern
+    - export DEPS_BASE_NAME=$(lsb_release -is)-$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+    - export DEPS_DIR_ABS_PATH=$(pwd -P)/$DEPS_BASE_NAME
+    - bash build.sh -q $DEPS_BASE_NAME CI
+    - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py --fix-links $DEPS_BASE_NAME/bin $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
+    - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py $DEPS_BASE_NAME/lib $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
+    - bash build.sh -p $DEPS_BASE_NAME CI
+    - mv $DEPS_BASE_NAME*.tar.gz $DEPS_BASE_NAME-$CI_BUILD_REF_SLUG.tar.gz
+    - sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME-$CI_BUILD_REF_SLUG.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps/
+    - popd
+  only:
+    - /^deps-mr-.+$/
+  except:
+    - master
+
 .mr_test_template: &mr_test_build
   script:
     - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
@@ -39,6 +56,7 @@
     - branches
   except:
     - master
+    - /^deps-mr-.+$/
 
 .centos_mr_test_template: &centos_mr_test_build
   <<: *mr_test_build
@@ -90,6 +108,44 @@ deps:ubuntu14:
 deps:ubuntu16:
   <<: *deps_build
   image: europeanxfel/karabo-ci:ubuntu-16
+
+# Deps test builds
+
+depstest:centos7:
+  <<: *deps_test_build
+  image: europeanxfel/karabo-ci:centos-7
+  script:
+    - localedef -c -i en_US -f UTF-8 en_US.utf8
+    - export LANG=en_US.UTF-8
+    - export DISPLAY=:99.0
+    - /usr/bin/Xvfb $DISPLAY &
+    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
+    - export FORCED_DEPS_TAG=$CI_BUILD_REF_SLUG
+    - bash ./auto_build_all.sh Debug --runTests
+
+depstest:ubuntu14:
+  <<: *deps_test_build
+  image: europeanxfel/karabo-ci:ubuntu-14
+  script:
+    - locale-gen en_US.UTF-8
+    - update-locale LANG=en_US.UTF-8
+    - export DISPLAY=:99.0
+    - start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
+    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
+    - export FORCED_DEPS_TAG=$CI_BUILD_REF_SLUG
+    - bash ./auto_build_all.sh Debug --runTests
+
+depstest:ubuntu16:
+  <<: *deps_test_build
+  image: europeanxfel/karabo-ci:ubuntu-16
+  script:
+    - locale-gen en_US.UTF-8
+    - update-locale LANG=en_US.UTF-8
+    - export DISPLAY=:99.0
+    - start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
+    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
+    - export FORCED_DEPS_TAG=$CI_BUILD_REF_SLUG
+    - bash ./auto_build_all.sh Debug --runTests
 
 # MR test builds
 
