@@ -136,8 +136,9 @@ namespace karabo {
              * @return timespec struct
              */
             time_t getTime() const; // Unix time_t, Resolution = seconds
-            timeval getTimeOfDay() const; // Resolution u-sec
+            timeval getTimeOfDay() const; // Resolution micro-sec
             timespec getClockTime() const; // Resolution nano-sec
+            boost::posix_time::ptime getPtime() const; // Resolution micro-seconds
 
             /**
              * Retrieve current time for the system. Highest resolution is Nano-seconds
