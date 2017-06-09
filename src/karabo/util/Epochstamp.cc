@@ -75,6 +75,14 @@ namespace karabo {
             return result;
         }
 
+
+        boost::posix_time::ptime Epochstamp::getPtime() const {
+            using namespace boost::posix_time;
+            static ptime epoch(boost::gregorian::date(1970, 1, 1));
+            // nanoseconds not available in our boost, so choose microsecond precision
+            return epoch + seconds(long(m_seconds))
+              + microseconds(long(m_fractionalSeconds / 1000000000000ULL)); // 10^12: atto to micro
+        }
         // retrieve the current time
 #ifdef _WIN32
 
