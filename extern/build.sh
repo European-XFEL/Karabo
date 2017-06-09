@@ -171,6 +171,12 @@ download_latest_deps() {
     fi
 
     local deps_tag=$(get_last_deps_tag)
+
+    # Allow for the dependency tag to be specified (for testing)
+    if [ ! -z $FORCED_DEPS_TAG ]; then
+        deps_tag=$FORCED_DEPS_TAG
+    fi
+
     local deps_file=$deps_base_name-$deps_tag.tar.gz
     local deps_url=$DEP_URL_BASE/$deps_file
 
