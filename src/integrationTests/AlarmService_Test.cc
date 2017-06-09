@@ -90,11 +90,12 @@ void AlarmService_Test::appTestRunner() {
     testDeviceRegistration();
     testAlarmPassing();
     testAcknowledgement();
+    testTriggerGlobalAck();
+    testTriggerGlobal();
     testFlushing();
     testRecovery();
     testDeviceKilled();
     testDeviceReappeared();
-    //testTriggerGlobal();
 }
 
 
@@ -113,70 +114,71 @@ void AlarmService_Test::testDeviceRegistration() {
 void AlarmService_Test::testAlarmPassing() {
     // test if raising an alarm on alarmTester propagates to testAlarmService and updates the alarmTable there
     TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
-        m_deviceClient->execute("alarmTester", "triggerAlarmHigh", KRB_TEST_MAX_TIMEOUT);
+        m_deviceClient->execute("alarmTester", "triggerAlarmHighAck", KRB_TEST_MAX_TIMEOUT);
     });
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggeredAlarmHigh");
-
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerAlarmHighAck");
+    CPPUNIT_ASSERT(m_deviceClient->get<int>("alarmTester", "intPropNeedsAck") == 5);
+    
     //get row for first device
     CPPUNIT_ASSERT(lastMessage.has("rows"));
-    m_rowForDevice0 = lastMessage.get<Hash>("rows").begin()->getKey();
+    std::string row_id = lastMessage.get<Hash>("rows").begin()->getKey();
 
-    CPPUNIT_ASSERT(lastMessage.has("rows." + m_rowForDevice0 + ".add"));
-    Hash h = lastMessage.get<Hash>("rows." + m_rowForDevice0 + ".add");
+    CPPUNIT_ASSERT(lastMessage.has("rows." + row_id + ".add"));
+    Hash h = lastMessage.get<Hash>("rows." + row_id + ".add");
     //these should be the same as it is the first time the alarm is raised
     CPPUNIT_ASSERT(h.get<std::string>("timeOfOccurrence") == h.get<std::string>("timeOfFirstOccurrence"));
     CPPUNIT_ASSERT(karabo::util::Timestamp::fromHashAttributes(h.getAttributes("timeOfOccurrence")) == karabo::util::Timestamp::fromHashAttributes(h.getAttributes("timeOfFirstOccurrence")));
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
-    CPPUNIT_ASSERT(h.get<std::string>("description") == "A description for alarmHigh");
+    CPPUNIT_ASSERT(h.get<std::string>("description") == "A intPropNeedsAck alarmHigh");
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
 
-
     //go out of the alarm state
     messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
-        m_deviceClient->execute("alarmTester", "triggerNormal", KRB_TEST_MAX_TIMEOUT);
+        m_deviceClient->execute("alarmTester", "triggerNormalAck", KRB_TEST_MAX_TIMEOUT);
     });
     messageQ->pop(lastMessage);
+    row_id = lastMessage.get<Hash>("rows").begin()->getKey();
+    
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerNormalAck");
+    CPPUNIT_ASSERT(m_deviceClient->get<int>("alarmTester", "intPropNeedsAck") == 0);
 
-
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggeredNormal");
-
-
-    CPPUNIT_ASSERT(lastMessage.has("rows.0.acknowledgeable"));
-    h = lastMessage.get<Hash>("rows.0.acknowledgeable");
+    CPPUNIT_ASSERT(lastMessage.has("rows." + row_id + ".acknowledgeable"));
+    h = lastMessage.get<Hash>("rows." + row_id + ".acknowledgeable");
 
     CPPUNIT_ASSERT(karabo::util::Timestamp::fromHashAttributes(h.getAttributes("timeOfOccurrence")) == karabo::util::Timestamp::fromHashAttributes(h.getAttributes("timeOfFirstOccurrence")));
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
-    CPPUNIT_ASSERT(h.get<std::string>("description") == "A description for alarmHigh");
+    CPPUNIT_ASSERT(h.get<std::string>("description") == "A intPropNeedsAck alarmHigh");
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
 
-
-    //retrigger the alarm
+    // Retrigger the alarm
     messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
-        m_deviceClient->execute("alarmTester", "triggerAlarmHigh", KRB_TEST_MAX_TIMEOUT);
+        m_deviceClient->execute("alarmTester", "triggerAlarmHighAck", KRB_TEST_MAX_TIMEOUT);
     });
     messageQ->pop(lastMessage);
+    row_id = lastMessage.get<Hash>("rows").begin()->getKey();
 
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggeredAlarmHigh");
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerAlarmHighAck");
+    CPPUNIT_ASSERT(m_deviceClient->get<int>("alarmTester", "intPropNeedsAck") == 5);
 
     //now occurrences should mismatch and alarm should not be acknowledgeable
-    CPPUNIT_ASSERT(lastMessage.has("rows." + m_rowForDevice0 + ".update"));
-    h = lastMessage.get<Hash>("rows." + m_rowForDevice0 + ".update");
+    CPPUNIT_ASSERT(lastMessage.has("rows." + row_id + ".update"));
+    h = lastMessage.get<Hash>("rows." + row_id + ".update");
 
     CPPUNIT_ASSERT(h.get<std::string>("timeOfOccurrence") != h.get<std::string>("timeOfFirstOccurrence"));
     //not testing on train id, as it will be 0 in both cases without use of a time server
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
-    CPPUNIT_ASSERT(h.get<std::string>("description") == "A description for alarmHigh");
+    CPPUNIT_ASSERT(h.get<std::string>("description") == "A intPropNeedsAck alarmHigh");
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     //the alarm should now not be acknowledgeable anymore
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
@@ -184,23 +186,22 @@ void AlarmService_Test::testAlarmPassing() {
     std::clog << "Tested alarm passing.. Ok" << std::endl;
 }
 
-
 void AlarmService_Test::testAcknowledgement() {
-
     //add another alarm to the table so we have two alarms pending
     //we will work only on the first one afterwards
     TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
-        m_deviceClient->execute("alarmTester", "triggerWarnHigh2", KRB_TEST_MAX_TIMEOUT);
+        m_deviceClient->execute("alarmTester", "triggerWarnHighAckNode", KRB_TEST_MAX_TIMEOUT);
     });
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggeredWarnHigh2");
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerWarnHighAckNode");
 
     //get row for second device
     CPPUNIT_ASSERT(lastMessage.has("rows"));
-    m_rowForDevice1 = lastMessage.get<Hash>("rows").begin()->getKey();
-    CPPUNIT_ASSERT(lastMessage.has("rows." + m_rowForDevice1 + ".add"));
+    std::string row_id = lastMessage.get<Hash>("rows").begin()->getKey();
+    m_rowForDevice1 = row_id;
+    CPPUNIT_ASSERT(lastMessage.has("rows." + row_id + ".add"));
 
     //first test if we cannot acknowledge a not acknowledgeable alarm.
     //the alarm service should be in this state after the previous test.
@@ -209,17 +210,18 @@ void AlarmService_Test::testAcknowledgement() {
         m_tcpAdapter->sendMessage(message);
     });
     messageQ->pop(lastMessage);
+    row_id = lastMessage.get<Hash>("rows").begin()->getKey();
 
     //acknowledgement should have been refused
-    CPPUNIT_ASSERT(lastMessage.has("rows." + m_rowForDevice0 + ".refuseAcknowledgement"));
-    Hash h = lastMessage.get<Hash>("rows." + m_rowForDevice0 + ".refuseAcknowledgement");
+    CPPUNIT_ASSERT(lastMessage.has("rows." + row_id + ".refuseAcknowledgement"));
+    Hash h = lastMessage.get<Hash>("rows." + row_id + ".refuseAcknowledgement");
 
     //and now updates
     CPPUNIT_ASSERT(h.get<std::string>("timeOfOccurrence") != h.get<std::string>("timeOfFirstOccurrence"));
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
-    CPPUNIT_ASSERT(h.get<std::string>("description") == "A description for alarmHigh");
+    CPPUNIT_ASSERT(h.get<std::string>("description") == "A intPropNeedsAck alarmHigh");
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
 
@@ -227,36 +229,36 @@ void AlarmService_Test::testAcknowledgement() {
     //now we go into the normal state. Acknowledging is now possible, and we are
     //made aware of this
     messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
-        m_deviceClient->execute("alarmTester", "triggerNormal", KRB_TEST_MAX_TIMEOUT);
+        m_deviceClient->execute("alarmTester", "triggerNormalAck", KRB_TEST_MAX_TIMEOUT);
     });
 
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggeredNormal");
-
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerNormalAck");
 
     messageQ->pop(lastMessage);
-    CPPUNIT_ASSERT(lastMessage.has("rows." + m_rowForDevice0 + ".acknowledgeable"));
-    h = lastMessage.get<Hash>("rows." + m_rowForDevice0 + ".acknowledgeable");
+    row_id = lastMessage.get<Hash>("rows").begin()->getKey();
+
+    CPPUNIT_ASSERT(lastMessage.has("rows." + row_id + ".acknowledgeable"));
+    h = lastMessage.get<Hash>("rows." + row_id + ".acknowledgeable");
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
 
     // we can now acknowledge the alarm, by sending the appropriate message
-    // this should trigger a message signalling that the acknowledged alarm is
+    // this should trigger a message signaling that the acknowledged alarm is
     // to be removed
     messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
         m_tcpAdapter->sendMessage(message);
     });
     messageQ->pop(lastMessage);
-    CPPUNIT_ASSERT(lastMessage.has("rows." + m_rowForDevice0 + ".remove"));
+    row_id = lastMessage.get<Hash>("rows").begin()->getKey();
 
-    h = lastMessage.get<Hash>("rows." + m_rowForDevice0 + ".remove");
+    CPPUNIT_ASSERT(lastMessage.has("rows." + row_id + ".remove"));
 
+    h = lastMessage.get<Hash>("rows." + row_id + ".remove");
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
 
-
-
-    // requesting the alarm entries again, one entry, remains, this is the
+    // requesting the alarm entries again, two entries remain, this is the
     // second alarm we raised.
     bool initMessageReceived = false;
     const int maxRepeats = 5;
@@ -270,14 +272,11 @@ void AlarmService_Test::testAcknowledgement() {
         });
         //m_deviceClient->execute("testAlarmService", "slotReconfigure", Hash("currentAlarms", alarmTable), KRB_TEST_MAX_TIMEOUT);
         messageQ->pop(lastMessage);
-
-
-        if (lastMessage.has("rows." + m_rowForDevice1 + ".init")) {
-
-
-            h = lastMessage.get<Hash>("rows." + m_rowForDevice1 + ".init");
+        row_id = lastMessage.get<Hash>("rows").begin()->getKey();
+        if (lastMessage.has("rows." + row_id + ".init")) {
+            h = lastMessage.get<Hash>("rows." + row_id + ".init");
             CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-            CPPUNIT_ASSERT(h.get<std::string>("property") == "nodeA.floatProperty2");
+            CPPUNIT_ASSERT(h.get<std::string>("property") == "nodeA.floatPropNeedsAck2");
             initMessageReceived = true;
         }
     }
@@ -286,10 +285,82 @@ void AlarmService_Test::testAcknowledgement() {
 }
 
 
+void AlarmService_Test::testTriggerGlobalAck() {
+    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
+        m_deviceClient->execute("alarmTester", "triggerGlobalWarnAck", KRB_TEST_MAX_TIMEOUT);
+    });
+    Hash lastMessage;
+    messageQ->pop(lastMessage);
+
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerGlobalWarnAck");
+
+    //get row for first device
+    CPPUNIT_ASSERT(lastMessage.has("rows"));
+    std::string row_id = lastMessage.get<Hash>("rows").begin()->getKey();
+
+    CPPUNIT_ASSERT(lastMessage.has("rows." + row_id + ".add"));
+    Hash h = lastMessage.get<Hash>("rows." + row_id + ".add");
+    //these should be the same as it is the first time the alarm is raised
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
+    CPPUNIT_ASSERT(h.get<std::string>("type") == "warn");
+    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
+
+    //go out of the alarm state
+    messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
+        m_deviceClient->execute("alarmTester", "triggerGlobalNormal", KRB_TEST_MAX_TIMEOUT);
+    });
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerGlobalNormal");
+
+    row_id = lastMessage.get<Hash>("rows").begin()->getKey();
+    CPPUNIT_ASSERT(lastMessage.has("rows." + row_id + ".acknowledgeable"));
+    h = lastMessage.get<Hash>("rows." + row_id + ".acknowledgeable");
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
+    CPPUNIT_ASSERT(h.get<std::string>("type") == "warn");
+    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
+
+    std::clog << "Tested global acknowledgeable triggering.. Ok" << std::endl;
+}
+
+void AlarmService_Test::testTriggerGlobal() {
+    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
+        m_deviceClient->execute("alarmTester", "triggerGlobalWarn", KRB_TEST_MAX_TIMEOUT);
+    });
+    Hash lastMessage;
+    messageQ->pop(lastMessage);
+
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerGlobalWarn");
+
+    //get row for first device
+    CPPUNIT_ASSERT(lastMessage.has("rows"));
+    std::string row_id = lastMessage.get<Hash>("rows").begin()->getKey();
+
+    CPPUNIT_ASSERT(lastMessage.has("rows." + row_id + ".update"));
+    Hash h = lastMessage.get<Hash>("rows." + row_id + ".update");
+    //these should be the same as it is the first time the alarm is raised
+    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
+    CPPUNIT_ASSERT(h.get<std::string>("type") == "warn");
+    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == false);
+
+    //go out of the alarm state
+    messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
+        m_deviceClient->execute("alarmTester", "triggerGlobalNormal", KRB_TEST_MAX_TIMEOUT);
+    });
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerGlobalNormal");
+
+    std::clog << "Tested global triggering.. Ok" << std::endl;
+}
+
 void AlarmService_Test::testFlushing() {
     //we should find a flushed file in the working directory
     //assure the flushed file resembles the current state
-
+    
     boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
     boost::interprocess::file_lock flock((std::string(KARABO_TESTPATH) + "/testAlarmService.xml").c_str());
     {
@@ -299,14 +370,12 @@ void AlarmService_Test::testFlushing() {
         std::ostringstream archive;
         std::string input;
 
-
         while (fin >> input) archive << input << std::endl;
         fin.close();
         TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
         Hash h;
         serializer->load(h, archive.str());
-
-
+        
         //should be the same as what we currently hold in the table and devices sections
         std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >("testAlarmService", "registeredDevices");
 
@@ -316,14 +385,14 @@ void AlarmService_Test::testFlushing() {
         propHash.set("needsAcknowledging", true);
         propHash.set("acknowledgeable", false);
         propHash.set("deviceId", "alarmTester");
-        propHash.set("property", "nodeA" + Validator::kAlarmParamPathSeparator + "floatProperty2");
+        propHash.set("property", "nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2");
         propHash.set<unsigned long long>("id", boost::lexical_cast<unsigned long long>(m_rowForDevice1));
-        Hash alarmHash("alarmTester", Hash("nodeA" + Validator::kAlarmParamPathSeparator + "floatProperty2", Hash("warnHigh", propHash)));
+        Hash alarmHash("alarmTester", Hash("nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2", Hash("warnHigh", propHash)));
         Hash hTest("devices", registeredDevices, "alarms", alarmHash);
 
         //erase the occurance times, as the will not match!
-        h.erase("alarms.alarmTester.nodeA" + Validator::kAlarmParamPathSeparator + "floatProperty2.warnHigh.timeOfFirstOccurrence");
-        h.erase("alarms.alarmTester.nodeA" + Validator::kAlarmParamPathSeparator + "floatProperty2.warnHigh.timeOfOccurrence");
+        h.erase("alarms.alarmTester.nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2.warnHigh.timeOfFirstOccurrence");
+        h.erase("alarms.alarmTester.nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2.warnHigh.timeOfOccurrence");
 
         CPPUNIT_ASSERT(karabo::util::similar(h, hTest));
     }
@@ -334,7 +403,7 @@ void AlarmService_Test::testFlushing() {
 
 void AlarmService_Test::testRecovery() {
     //first we bring down the alarm service.
-    //at this state it should hold an warnHigh for floatProperty2 which cannot be acknowledged
+    //at this state it should hold a warnHigh for floatPropNeedsAck2 which cannot be acknowledged
     std::pair<bool, std::string> success;
     TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("instanceGone", 1, [&] {
         m_deviceClient->killDevice("testAlarmService", KRB_TEST_MAX_TIMEOUT);
@@ -344,24 +413,25 @@ void AlarmService_Test::testRecovery() {
     CPPUNIT_ASSERT(lastMessage.has("instanceId"));
     CPPUNIT_ASSERT(lastMessage.get<std::string>("instanceId") == "testAlarmService");
 
-    //know we raise an alarm on floatProperty again and ma floatProperty2 acknowledgeable
-    m_deviceClient->execute("alarmTester", "triggerNormal2", KRB_TEST_MAX_TIMEOUT);
+    // now we raise an alarm on intPropNeedsAck again and ma nodeA.floatPropNoAck2 acknowledgeable
+    m_deviceClient->execute("alarmTester", "triggerNormalAckNode", KRB_TEST_MAX_TIMEOUT);
     // Wait a bit until our internal cache will be updated
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggeredNormal2");
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerNormalAckNode");
 
-    m_deviceClient->execute("alarmTester", "triggerAlarmHigh", KRB_TEST_MAX_TIMEOUT);
+    m_deviceClient->execute("alarmTester", "triggerAlarmHighAck", KRB_TEST_MAX_TIMEOUT);
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggeredAlarmHigh");
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerAlarmHighAck");
 
     success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2"), KRB_TEST_MAX_TIMEOUT);
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT(success.first);
 
     //trigger an alarm
-    m_deviceClient->execute("alarmTester2", "triggerAlarmLow", KRB_TEST_MAX_TIMEOUT);
+    m_deviceClient->execute("alarmTester2", "triggerAlarmLowAck", KRB_TEST_MAX_TIMEOUT);
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester2", "result") == "triggeredAlarmLow");
+    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester2", "result") == "triggerAlarmLowAck");
+    CPPUNIT_ASSERT(m_deviceClient->get<int>("alarmTester2", "intPropNeedsAck") == -5);
 
     //now we bring the alarm service back up
     std::vector<TcpAdapter::QueuePtr> messageQs(3, TcpAdapter::QueuePtr());
@@ -373,11 +443,10 @@ void AlarmService_Test::testRecovery() {
         });
     });
     CPPUNIT_ASSERT(success.first);
-
-
-    // alarmState should now be two alarms for floatProperty, one on alarmTester and the other on alarmTester2
+    
+    // alarmState should now be two alarms for intPropNeedsAck, one on alarmTester and the other on alarmTester2
     // messages are unordered as they depend on async answers from other devices
-    bool row1add = false;
+    bool rowAdded = false;
     bool topologyMessage = false;
 
     const int maxPops = 10;
@@ -388,14 +457,13 @@ void AlarmService_Test::testRecovery() {
             popsuccess = messageQs[i]->pop(lastMessage);
             if (popsuccess) {
                 if (lastMessage.has("topologyEntry.device.testAlarmService")) topologyMessage = true;
-                if (lastMessage.has("rows.1.add")) row1add = true;
+                if (lastMessage.has("rows.0.add")) rowAdded = true;
             }
         }
         pop++;
     }
-
     CPPUNIT_ASSERT(topologyMessage);
-    CPPUNIT_ASSERT(row1add);
+    CPPUNIT_ASSERT(rowAdded);
 
     std::clog << "Tested service recovery.. Ok" << std::endl;
 }
@@ -411,18 +479,11 @@ void AlarmService_Test::testDeviceKilled() {
 
     Hash lastMessage;
     messageQ->pop(lastMessage);
-    //the following depends on async messaging of the reappearance of the
-    // alarm service in a previous test. We cannot know for sure which row
-
-    if (lastMessage.has("rows.1.deviceKilled")) m_killedDeviceRow = "1";
-    if (lastMessage.has("rows.2.deviceKilled")) m_killedDeviceRow = "2";
-    if (lastMessage.has("rows.3.deviceKilled")) m_killedDeviceRow = "3";
-
-    CPPUNIT_ASSERT(!m_killedDeviceRow.empty());
+    m_killedDeviceRow = lastMessage.get<Hash>("rows").begin()->getKey();
     Hash h = lastMessage.get<Hash>("rows." + m_killedDeviceRow + ".deviceKilled");
 
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester2");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmLow");
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
@@ -438,47 +499,23 @@ void AlarmService_Test::testDeviceReappeared() {
     // any more, as we start it into an alarm state.
     std::pair<bool, std::string> success;
     TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
-        success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2", "floatProperty", -5.), KRB_TEST_MAX_TIMEOUT);
+        success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2", "intPropNeedsAck", -5), KRB_TEST_MAX_TIMEOUT);
     });
     CPPUNIT_ASSERT(success.first);
 
     Hash lastMessage;
     messageQ->pop(lastMessage);
-
-    CPPUNIT_ASSERT(lastMessage.has("rows." + m_killedDeviceRow + ".update"));
-    Hash h = lastMessage.get<Hash>("rows." + m_killedDeviceRow + ".update");
+    CPPUNIT_ASSERT(lastMessage.has("rows." + m_killedDeviceRow + ".acknowledgeable"));
+    Hash h = lastMessage.get<Hash>("rows." + m_killedDeviceRow + ".acknowledgeable");
 
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester2");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "floatProperty");
+    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
     CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmLow");
-    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
+    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
 
     std::clog << "Tested device reappearance.. Ok" << std::endl;
 }
-
-void AlarmService_Test::testTriggerGlobal() {
-    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
-        m_deviceClient->execute("alarmTester", "triggerAlarmHigh", KRB_TEST_MAX_TIMEOUT);
-    });
-    Hash lastMessage;
-    messageQ->pop(lastMessage);
-
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerGlobalWarn");
-
-    //get row for first device
-    CPPUNIT_ASSERT(lastMessage.has("rows"));
-    m_rowForDevice0 = lastMessage.get<Hash>("rows").begin()->getKey();
-
-    CPPUNIT_ASSERT(lastMessage.has("rows." + m_rowForDevice0 + ".add"));
-    Hash h = lastMessage.get<Hash>("rows." + m_rowForDevice0 + ".add");
-    //these should be the same as it is the first time the alarm is raised
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
-
-    std::clog << "Tested global triggering.. Ok" << std::endl;
-}
-
 
 #undef KRB_TEST_MAX_TIMEOUT
 
