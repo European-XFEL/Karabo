@@ -16,28 +16,40 @@ USING_KARABO_NAMESPACES
     KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, TimingTestDevice)
 
     void TimingTestDevice::expectedParameters(Schema& expected) {
-        UINT64_ELEMENT(expected).key("period")
-            .unit(karabo::util::Unit::SECOND)
-            .metricPrefix(karabo::util::MetricPrefix::MILLI)
-            .readOnly().initialValue(100)
-            .commit();
-        
-        UINT64_ELEMENT(expected).key("update_period")
-            .unit(karabo::util::Unit::SECOND)
-            .metricPrefix(karabo::util::MetricPrefix::MILLI)
-            .readOnly().initialValue(100)
-            .commit();
-        
-        VECTOR_UINT64_ELEMENT(expected).key("update_periods")
-            .unit(karabo::util::Unit::SECOND)
-            .metricPrefix(karabo::util::MetricPrefix::MILLI)
-            .readOnly().initialValue(std::vector<unsigned long long>())
-            .commit();
-        
-        
-        UINT64_ELEMENT(expected).key("tick_count")
-            .readOnly().initialValue(0)
-            .commit();
+
+        SLOT_ELEMENT(expected).key("start")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("stop")
+                .commit();
+
+        VECTOR_UINT64_ELEMENT(expected).key("ids")
+                .readOnly().initialValue(std::vector<unsigned long long>())
+                .commit();
+
+        VECTOR_UINT64_ELEMENT(expected).key("seconds")
+                .description("Full seconds of the received time updates")
+                .readOnly().initialValue(std::vector<unsigned long long>())
+                .commit();
+
+        VECTOR_UINT64_ELEMENT(expected).key("fractions")
+                .description("Fractions of seconds of the received time updates")
+                .readOnly().initialValue(std::vector<unsigned long long>())
+                .commit();
+
+        VECTOR_UINT64_ELEMENT(expected).key("idsTick")
+                .readOnly().initialValue(std::vector<unsigned long long>())
+                .commit();
+
+        VECTOR_UINT64_ELEMENT(expected).key("secondsTick")
+                .description("Full seconds of the calls to slotTimeTick")
+                .readOnly().initialValue(std::vector<unsigned long long>())
+                .commit();
+
+        VECTOR_UINT64_ELEMENT(expected).key("fractionsTick")
+                .description("Fractions of seconds of the calls to slotTimeTick")
+                .readOnly().initialValue(std::vector<unsigned long long>())
+                .commit();
         
         BOOL_ELEMENT(expected).key("slot_connected")
             .readOnly().initialValue(false)
@@ -46,8 +58,13 @@ USING_KARABO_NAMESPACES
     }
 
 
-    TimingTestDevice::TimingTestDevice(const karabo::util::Hash& config) : Device<>(config) {
+    TimingTestDevice::TimingTestDevice(const karabo::util::Hash& config) : Device<>(config),
+        m_started(false) {
+
         KARABO_INITIAL_FUNCTION(initialize);
+
+        KARABO_SLOT(start);
+        KARABO_SLOT(stop);
     }
 
 
@@ -56,24 +73,63 @@ USING_KARABO_NAMESPACES
 
 
     void TimingTestDevice::initialize() {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
-        updateState(karabo::util::State::NORMAL);
+        // FIXME:
+        // This sleep here is a workaround to ensure that our slotTimeTick stays registered at the time servers
+        // 'signalTimeTick'
+        // as is done at the end of Device::finalizeInternalInitialization. This initialize() method is called via
+        // startFsm() a few lines above that.
+        // Without this delay, the signal connection is completed (via inner process shortcut communication) before the
+        // time server receives (via broker communication since it is a broadcast to '*') its call to slotInstanceNew
+        // for this device. And slotInstanceNew removes our slotTimeTick again from 'signalTimeTick'...
+        // A proper solution could be to delay establishing shortcut communication to the very end of the initialisation
+        // process (which is probably outside the hands of Sig)nalSlotable...:-().
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
     }
-    
+
+
+    void TimingTestDevice::start() {
+        m_started = true;
+    }
+
+
+    void TimingTestDevice::stop() {
+        m_started = false;
+
+        // Some sleep to guarantee that any onTimeUpdate has finished to avoid races on members.
+        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+
+        set(Hash("ids", m_ids, "seconds", m_seconds, "fractions", m_fractions,
+                 "idsTick", m_idsTick, "secondsTick", m_secondsTick, "fractionsTick", m_fractionsTick));
+
+        m_ids.clear();
+        m_seconds.clear();
+        m_fractions.clear();
+
+        m_idsTick.clear();
+        m_secondsTick.clear();
+        m_fractionsTick.clear();
+    }
+
+
     void TimingTestDevice::onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-        karabo::util::Epochstamp now = karabo::util::Epochstamp();
-        set("period", period);
-        karabo::util::TimeDuration dt = (now - m_lastTimeStamp);
-        unsigned long long update_period = dt.getSeconds()*1000 + dt.getFractions()/1000000u;
-        set("update_period", update_period);
-        m_lastTimeStamp = now;
+        if (!get<bool>("slot_connected")) {
+            set("slot_connected", true);
+        }
+        if (!m_started) return;
 
-        set("tick_count", get<unsigned long long>("tick_count") + 1);
-        set("slot_connected", true);
-        
-        std::vector<unsigned long long> update_periods = get<std::vector<unsigned long long> >("update_periods");
-        update_periods.push_back(update_period);
-        set("update_periods", update_periods);
+        m_ids.push_back(id);
+        m_seconds.push_back(sec);
+        m_fractions.push_back(frac);
     }
 
+
+    void TimingTestDevice::onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+
+        if (!m_started) return;
+
+        m_idsTick.push_back(id);
+        m_secondsTick.push_back(sec);
+        m_fractionsTick.push_back(frac);
+
+    }
 }
