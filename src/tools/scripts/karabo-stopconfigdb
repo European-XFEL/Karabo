@@ -19,3 +19,6 @@ popd
 
 sleep 5
 pkill -9 -f jetty #force kill as server is pretty reluctant
+
+# Force a clean returncode
+exit 0
