@@ -1267,7 +1267,26 @@ namespace karabo {
                 return true;
             }
 
-
+            /**
+             * Returns the actual timestamp. The Trainstamp part of Timestamp is extrapolated from the last values
+             * received via slotTimeTick (or zero if no time ticks received, i.e. useTimeserver is false).
+             *
+             * @return the actual timestamp
+             */
+            karabo::util::Timestamp getActualTimestamp() {
+                karabo::util::Epochstamp epochNow;
+                unsigned long long id = 0;
+                {
+                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                    if (m_timePeriod > 0) {
+                        karabo::util::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
+                        karabo::util::TimeDuration duration = epochNow.elapsed(epochLastReceived);
+                        unsigned int nPeriods = (duration.getTotalSeconds() * 1000000 + duration.getFractions(karabo::util::MICROSEC)) / m_timePeriod;
+                        id = m_timeId + nPeriods;
+                    }
+                }
+                return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
+            }
 
         private: // Functions
 
@@ -1660,21 +1679,6 @@ namespace karabo {
                 }
 
                 onTimeUpdate(id, sec, frac, period);
-            }
-
-            karabo::util::Timestamp getActualTimestamp() {
-                karabo::util::Epochstamp epochNow;
-                unsigned long long id = 0;
-                {
-                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
-                    if (m_timePeriod > 0) {
-                        karabo::util::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
-                        karabo::util::TimeDuration duration = epochNow.elapsed(epochLastReceived);
-                        unsigned int nPeriods = (duration.getTotalSeconds() * 1000000 + duration.getFractions(karabo::util::MICROSEC)) / m_timePeriod;
-                        id = m_timeId + nPeriods;
-                    }
-                }
-                return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
             }
 
             const std::pair<bool, const karabo::util::AlarmCondition> evaluateAndUpdateAlarmCondition(bool forceUpate) {
