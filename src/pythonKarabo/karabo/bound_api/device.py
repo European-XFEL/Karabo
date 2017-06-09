@@ -728,12 +728,15 @@ class PythonDevice(NoFsm):
 
         self.set(key, value, self._getActualTimestamp())
         
-    def writeChannel(self, channelName, data):
+    def writeChannel(self, channelName, data, timestamp=None):
         """
         Write data to an output channel.
         :param channelName: name given to an OUTPUT_CHANNEL in
          expectedParameters
-        :param data: a Hash with keys as described in the Schema of the channel
+        :param data: a Hash with keys as described in the Schema of the
+         channel
+        :param timestamp: optional timestamp; if none is given, the current
+         timestamp is used
 
         Example for an output channel sending an image (key: "image") and
         a frame number (key: "frame"):
@@ -745,7 +748,9 @@ class PythonDevice(NoFsm):
 
         channel = self._ss.getOutputChannel(channelName)
         sourceName = "{}:{}".format(self.getInstanceId(), channelName)
-        meta = ChannelMetaData(sourceName, self._getActualTimestamp())
+        if not timestamp:
+            timestamp = self._getActualTimestamp()
+        meta = ChannelMetaData(sourceName, timestamp)
         channel.write(data, meta)
         channel.update()
 
