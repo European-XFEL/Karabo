@@ -1,3 +1,4 @@
+sphinx==1.4.5
 pint
 git+https://git.xfel.eu/gitlab/Karabo/rtd-conf-py.git
 slumber
