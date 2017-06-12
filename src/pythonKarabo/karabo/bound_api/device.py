@@ -1381,10 +1381,8 @@ class PythonDevice(NoFsm):
         return Timestamp(epochNow, Trainstamp(int(id)))
 
     def _getActualTimestamp(self):
-        '''This method is DEPRECATED'''
-        print("_getActualTimestamp() is deprecated, use getActualTimestamp()"
-              "instead")
-        self.getActualTimestamp()
+        '''This method is DEPRECATED, use getActualTimestamp() instead'''
+        return self.getActualTimestamp()
 
     def _getStateDependentSchema(self, state):
         with self._stateDependentSchemaLock:
