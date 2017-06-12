@@ -38,6 +38,7 @@ class BaseWidgetContainer(QWidget):
         else:
             self.old_style_widget = DisplayMissingBox(self)
 
+        self._has_configuration_connection = False
         for box in self.boxes:
             self._make_box_connections(box)
         if self.model.parent_component == 'EditableApplyLaterComponent':
@@ -104,9 +105,10 @@ class BaseWidgetContainer(QWidget):
                     self._on_display_value_change)
             else:  # DisplayWidgets
                 box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
-            device = box.configuration
-            device.signalStatusChanged.disconnect(
-                self._device_status_changed)
+
+        if self._has_configuration_connection:
+            device = self.boxes[0].configuration
+            device.signalStatusChanged.disconnect(self._device_status_changed)
 
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""
@@ -179,9 +181,11 @@ class BaseWidgetContainer(QWidget):
         else:
             widget.setReadOnly(True)
 
-        device = box.configuration
-        device.signalStatusChanged.connect(self._device_status_changed)
-        self._device_status_changed(device, device.status, device.error)
+        if not self._has_configuration_connection:
+            device = box.configuration
+            device.signalStatusChanged.connect(self._device_status_changed)
+            self._device_status_changed(device, device.status, device.error)
+            self._has_configuration_connection = True
 
     def _add_alarm_symbol(self, layout):
         """ Add alarm symbol to the given ``layout`` and return the widget this
