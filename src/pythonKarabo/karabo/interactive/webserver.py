@@ -112,7 +112,7 @@ def getdata(name):
                 'since': since, 'duration': duration}
     except Exception as e:
         print('{}: Exception {} when fetching service status {}'
-              ''.format(datetime.now(),str(e),name)
+              ''.format(datetime.now(), str(e), name))
         return {'name': name, 'status': 'error',
                 'since': '', 'duration': -1}
 
@@ -123,7 +123,6 @@ def server_up(server):
 
 
 class DaemonHandler(web.RequestHandler):
-
     def initialize(self, service_list=None, service_id=None):
         self.service_list = service_list
         self.service_id = service_id
@@ -154,7 +153,6 @@ class DaemonHandler(web.RequestHandler):
 
 
 class MainHandler(web.RequestHandler):
-
     def initialize(self, service_list=None, service_id=None):
         self.service_list = service_list
         self.service_id = service_id
