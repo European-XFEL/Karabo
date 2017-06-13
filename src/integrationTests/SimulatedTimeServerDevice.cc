@@ -30,14 +30,22 @@ USING_KARABO_NAMESPACES
             .minInc(1)
             .reconfigurable()
             .commit();
+
+        FLOAT_ELEMENT(expected).key("periodVariationFraction")
+            .displayedName("Period variation factor")
+            .description("Whenever broadcasting the tick, give a period length that is correct, too short or too long by this fraction")
+                .assignmentOptional().defaultValue(0.f) // no variation by default
+                .minInc(0.f)
+                .maxInc(.9f)
+            .reconfigurable()
+            .commit();
     }
 
 
     SimulatedTimeServerDevice::SimulatedTimeServerDevice(const karabo::util::Hash& config) : Device<>(config),
         m_id(1ull),
+        m_emitCount(0ull),
         m_timeTickerTimer(karabo::net::EventLoop::getIOService()) {
-
-        karabo::net::EventLoop::addThread();
 
         KARABO_INITIAL_FUNCTION(initialize);
         KARABO_SYSTEM_SIGNAL("signalTimeTick", unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
@@ -46,19 +54,18 @@ USING_KARABO_NAMESPACES
 
     SimulatedTimeServerDevice::~SimulatedTimeServerDevice() {
         m_timeTickerTimer.cancel();
-        karabo::net::EventLoop::removeThread();
     }
 
 
     void SimulatedTimeServerDevice::initialize() {
         m_tickCountdown = 0;
         const unsigned long long period = get<unsigned long long>("period");
-        m_lastTimeStamp = karabo::util::Epochstamp();
 
         m_timeTickerTimer.expires_from_now(boost::posix_time::microseconds(period));
-        m_timeTickerTimer.async_wait(util::bind_weak(&SimulatedTimeServerDevice::tickTock, this, boost::asio::placeholders::error));   
+        m_timeTickerTimer.async_wait(util::bind_weak(&SimulatedTimeServerDevice::tickTock, this, boost::asio::placeholders::error));
     }
-    
+
+
     void SimulatedTimeServerDevice::tickTock(const boost::system::error_code& e) {
         if (e) return;
 
@@ -66,18 +73,29 @@ USING_KARABO_NAMESPACES
         const karabo::util::Epochstamp now;
 
         if (m_tickCountdown == 0) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "ticktock emits: " << m_id << " " << m_tickCountdown;
+            KARABO_LOG_FRAMEWORK_DEBUG << "ticktock emits: " << m_id << " " << m_tickCountdown
+                    << " at " << now.getSeconds() << " " << now.getFractionalSeconds();
             m_tickCountdown = get<unsigned int>("tickCountdown"); // re-arm the counter
-            emit("signalTimeTick", m_id, now.getSeconds(), now.getFractionalSeconds(), period);
+            const unsigned long long sign = (m_emitCount++ % 3ull); // 0, 1, or 2
+            unsigned long long fakePeriod = period;
+            if (sign) {
+                const auto periodDiff = static_cast<unsigned long long> (get<float>("periodVariationFraction") * period);
+                if (sign == 1) {
+                    fakePeriod -= periodDiff;
+                } else { // i.e. 2
+                    fakePeriod += periodDiff;
+                }
+            }
+            emit("signalTimeTick", m_id, now.getSeconds(), now.getFractionalSeconds(), fakePeriod);
         } else {
-            KARABO_LOG_FRAMEWORK_DEBUG << "ticktock does NOT emit: " << m_id << " " << m_tickCountdown;
+            KARABO_LOG_FRAMEWORK_DEBUG << "ticktock does NOT emit: " << m_id << " " << m_tickCountdown
+                    << " at " << now.getSeconds() << " " << now.getFractionalSeconds();
         }
         --m_tickCountdown;
 
-        m_timeTickerTimer.expires_at(m_lastTimeStamp.getPtime() + boost::posix_time::microseconds(period));
+        //
+        m_timeTickerTimer.expires_at(m_timeTickerTimer.expires_at() + boost::posix_time::microseconds(period));
         m_timeTickerTimer.async_wait(util::bind_weak(&SimulatedTimeServerDevice::tickTock, this, boost::asio::placeholders::error));
-
-        m_lastTimeStamp = now;
         ++m_id;
     }
 
