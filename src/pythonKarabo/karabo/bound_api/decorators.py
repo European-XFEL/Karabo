@@ -4,6 +4,9 @@ from .configurator import Configurator
 __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ = "$Aug 2, 2012 10:39:43 AM$"
 
+import warnings
+import functools
+
 
 def KARABO_CLASSINFO(classid, version):
     """
@@ -132,3 +135,31 @@ def KARABO_CONFIGURATION_BASE_CLASS(theClass):
         theClass.getRegisteredClasses = getRegisteredClasses
 
     return theClass
+
+
+def KARABO_DEPRECATED(func):
+    """
+    This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used.
+
+    ## Usage examples ##
+    @KARABO_DEPRECATED
+    def my_func():
+        pass
+
+    @other_decorators_must_be_upper
+    @KARABO_DEPRECATED
+    def my_func():
+        pass
+    """
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.warn_explicit(
+            "Call to deprecated function {}.".format(func.__name__),
+            category=DeprecationWarning,
+            filename=func.__code__.co_filename,
+            lineno=func.__code__.co_firstlineno + 1
+        )
+        return func(*args, **kwargs)
+    return new_func
