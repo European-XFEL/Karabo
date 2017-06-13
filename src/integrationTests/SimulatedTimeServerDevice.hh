@@ -48,10 +48,10 @@ namespace karabo {
         
         void initialize();
         void tickTock(const boost::system::error_code& e);
-        
+
         unsigned long long m_id;
+        unsigned long long m_emitCount;
         boost::asio::deadline_timer m_timeTickerTimer;
-        karabo::util::Epochstamp m_lastTimeStamp;
         unsigned int m_tickCountdown;
     };
 }

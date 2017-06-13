@@ -4,8 +4,8 @@
  
  */
 
-#ifndef SCENEPROVIDER_TEST_HH
-#define	SCENEPROVIDER_TEST_HH
+#ifndef TIMING_TEST_HH
+#define TIMING_TEST_HH
 
 #include "karabo/karabo.hpp"
 #include "karabo/core/DeviceServer.hh"
@@ -39,5 +39,5 @@ private:
     karabo::util::Epochstamp m_lastCheck;
 };
 
-#endif	/* SCENEPROVIDER_TEST_HH */
+#endif	/* TIMING_TEST_HH */
 
