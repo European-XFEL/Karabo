@@ -8,7 +8,7 @@ from karabo_gui.alarms.api import get_alarm_pixmap
 from karabo_gui.displaywidgets.displaymissingbox import DisplayMissingBox
 from karabo_gui.indicators import DeviceStatus, get_device_status_pixmap
 from karabo_gui.singletons.api import get_network
-from .utils import get_box, determine_if_value_unchanged
+from .utils import PendingBoxes, get_box, determine_if_value_unchanged
 
 
 class BaseWidgetContainer(QWidget):
@@ -18,42 +18,35 @@ class BaseWidgetContainer(QWidget):
     def __init__(self, model, parent):
         super(BaseWidgetContainer, self).__init__(parent)
         self.model = model
+        self._visible = False
+        # Keep track of `Configuration` objects whose signals are connected
+        self._configuration_connections = {}
+        # Initialize this attribute. Will be used if any boxes are missing
+        self._pending_boxes = None
+
+        self.alarm_symbol = QLabel("", self)
+        self.status_symbol = QLabel("", self)
+        self.status_symbol.setAttribute(Qt.WA_TransparentForMouseEvents)
+
+        self.layout = QStackedLayout(self)
+        self.layout.setStackingMode(QStackedLayout.StackAll)
+        self.layout.addWidget(self.status_symbol)
 
         # Handle boxes. If anything is missing, we wipe the slate clean
         self.boxes = [get_box(*key.split('.', 1)) for key in self.model.keys]
         if None in self.boxes:
             self.boxes = []
-
-        self.layout = QStackedLayout(self)
-        self.layout.setStackingMode(QStackedLayout.StackAll)
-        self.status_symbol = QLabel("", self)
-        self.status_symbol.setAttribute(Qt.WA_TransparentForMouseEvents)
-        self.layout.addWidget(self.status_symbol)
-
-        self.alarm_symbol = QLabel("", self)
-        self.update_alarm_symbol()
-
-        if self.boxes:
-            self.old_style_widget = self._create_widget(self.boxes)
-        else:
             self.old_style_widget = DisplayMissingBox(self)
-
-        self._has_configuration_connection = False
-        for box in self.boxes:
-            self._make_box_connections(box)
-        if self.model.parent_component == 'EditableApplyLaterComponent':
-            layout = self._add_edit_widgets()
-            edit_widgets = self._add_alarm_symbol(layout)
-            self.layout.addWidget(edit_widgets)
+            self.layout.addWidget(self.old_style_widget.widget)
+            self._watch_devices_for_boxes()
         else:
-            layout = QHBoxLayout()
-            layout.addWidget(self.old_style_widget.widget)
-            disp_widgets = self._add_alarm_symbol(layout)
-            self.layout.addWidget(disp_widgets)
-            layout.setContentsMargins(0, 0, 0, 0)
+            # Normal operation
+            self.old_style_widget = self._create_widget(self.boxes)
+            self._setup_wrapped_widget()
 
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
         self.setToolTip(", ".join(self.model.keys))
+        self.update_alarm_symbol()
 
     def _create_widget(self, boxes):
         """ A method for creating the child widget.
@@ -87,6 +80,9 @@ class BaseWidgetContainer(QWidget):
     def destroy(self):
         """ Disconnect the box signals
         """
+        # Do this first; just in case it finishes its work during this method
+        self._destroy_pending_boxes()
+
         widget = self.old_style_widget
         if self.model.parent_component == 'EditableApplyLaterComponent':
             if self.boxes:
@@ -106,18 +102,28 @@ class BaseWidgetContainer(QWidget):
             else:  # DisplayWidgets
                 box.signalUpdateComponent.disconnect(widget.valueChangedSlot)
 
-        if self._has_configuration_connection:
-            device = self.boxes[0].configuration
-            device.signalStatusChanged.disconnect(self._device_status_changed)
+        for config in self._configuration_connections.values():
+            config.signalStatusChanged.disconnect(self._device_status_changed)
+
+    def set_geometry(self, rect):
+        self.model.set(x=rect.x(), y=rect.y(),
+                       width=rect.width(), height=rect.height())
+        self.setGeometry(rect)
 
     def set_visible(self, visible):
         """ Set whether this widget is seen by the user."""
+        self._visible = visible
         if visible:
             for box in self.boxes:
                 box.addVisible()
         else:
             for box in self.boxes:
                 box.removeVisible()
+
+    def translate(self, offset):
+        new_pos = self.pos() + offset
+        self.model.set(x=new_pos.x(), y=new_pos.y())
+        self.move(new_pos)
 
     def update_alarm_symbol(self):
         """Update the alarm symbol with a pixmap matching the given
@@ -152,15 +158,39 @@ class BaseWidgetContainer(QWidget):
         """
         self.old_style_widget.updateState()
 
-    def set_geometry(self, rect):
-        self.model.set(x=rect.x(), y=rect.y(),
-                       width=rect.width(), height=rect.height())
-        self.setGeometry(rect)
+    # ---------------------------------------------------------------------
+    # Internal methods
 
-    def translate(self, offset):
-        new_pos = self.pos() + offset
-        self.model.set(x=new_pos.x(), y=new_pos.y())
-        self.move(new_pos)
+    def _add_alarm_symbol(self, layout):
+        """ Add alarm symbol to the given ``layout`` and return the widget this
+        layout then belongs to
+        """
+        layout.addWidget(self.alarm_symbol)
+        layout_widget = QWidget()
+        layout_widget.setLayout(layout)
+        return layout_widget
+
+    def _boxes_ready(self):
+        """Boxes which had to wait for schema changes are now ready to be used!
+        """
+        self.boxes = self._pending_boxes.boxes[:]
+        self._destroy_pending_boxes()
+
+        self.layout.takeAt(1)  # There are only two widgets in this layout
+        self.old_style_widget = self._create_widget(self.boxes)
+        self._setup_wrapped_widget()
+        # Only if we are already visible!
+        if self._visible:
+            self.set_visible(True)
+
+    def _destroy_pending_boxes(self):
+        if self._pending_boxes is None:
+            return
+
+        self._pending_boxes.on_trait_change(self._boxes_ready, 'ready',
+                                            remove=True)
+        self._pending_boxes.destroy()
+        self._pending_boxes = None
 
     def _make_box_connections(self, box):
         """ Hook up all the box signals to the old_style_widget instance.
@@ -181,20 +211,48 @@ class BaseWidgetContainer(QWidget):
         else:
             widget.setReadOnly(True)
 
-        if not self._has_configuration_connection:
-            device = box.configuration
+        device = box.configuration
+        if device.id not in self._configuration_connections:
             device.signalStatusChanged.connect(self._device_status_changed)
             self._device_status_changed(device, device.status, device.error)
-            self._has_configuration_connection = True
+            self._configuration_connections[device.id] = device
 
-    def _add_alarm_symbol(self, layout):
-        """ Add alarm symbol to the given ``layout`` and return the widget this
-        layout then belongs to
+    def _setup_wrapped_widget(self):
+        """Wrap up the alarm symbol and possible edit buttons in a layout with
+        the `old_style_widget`.
         """
-        layout.addWidget(self.alarm_symbol)
-        layout_widget = QWidget()
-        layout_widget.setLayout(layout)
-        return layout_widget
+        for box in self.boxes:
+            self._make_box_connections(box)
+
+        if self.model.parent_component == 'EditableApplyLaterComponent':
+            layout = self._add_edit_widgets()
+            edit_widgets = self._add_alarm_symbol(layout)
+            self.layout.addWidget(edit_widgets)
+        else:
+            layout = QHBoxLayout()
+            layout.addWidget(self.old_style_widget.widget)
+            disp_widgets = self._add_alarm_symbol(layout)
+            self.layout.addWidget(disp_widgets)
+            layout.setContentsMargins(0, 0, 0, 0)
+
+    def _watch_devices_for_boxes(self):
+        """Find out which boxes are missing and arrange to fill them in as
+        their controlling device updates its schema.
+        """
+        self._pending_boxes = PendingBoxes()
+        self._pending_boxes.on_trait_change(self._boxes_ready, 'ready')
+        self._pending_boxes.keys = self.model.keys
+
+    @pyqtSlot(object, str, bool)
+    def _device_status_changed(self, configuration, status, error):
+        """ Callback when the status of the device is changes.
+        """
+        pixmap = get_device_status_pixmap(DeviceStatus(status), error)
+        if pixmap is not None:
+            self.status_symbol.setPixmap(pixmap)
+            self.status_symbol.show()
+        else:
+            self.status_symbol.hide()
 
     # ---------------------------------------------------------------------
     # Edit buttons related code
@@ -316,14 +374,3 @@ class BaseWidgetContainer(QWidget):
         self.apply_button.setStatusTip(description)
         self.apply_button.setToolTip(description)
         self.decline_button.setEnabled(allowed and not value_unchanged)
-
-    @pyqtSlot(object, str, bool)
-    def _device_status_changed(self, configuration, status, error):
-        """ Callback when the status of the device is changes.
-        """
-        pixmap = get_device_status_pixmap(DeviceStatus(status), error)
-        if pixmap is not None:
-            self.status_symbol.setPixmap(pixmap)
-            self.status_symbol.show()
-        else:
-            self.status_symbol.hide()
