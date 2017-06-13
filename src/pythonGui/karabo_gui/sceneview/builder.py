@@ -161,8 +161,8 @@ def remove_object_from_layout(obj, layout, object_dict, scene_visible):
         layout._remove_shape(obj)
     elif is_widget(obj):
         layout._remove_widget(obj)
-        if scene_visible and hasattr(obj, 'boxes'):
-            _update_box_visibility(obj.boxes, False)
+        if scene_visible:
+            obj.set_visible(False)
     elif is_layout(obj):
         layout._remove_layout(obj)
         # Recursively remove all children
@@ -215,8 +215,10 @@ def create_object_from_model(layout, model, parent_widget, object_dict,
                 # Handle the case when widgets unparented from a layout have
                 # geometry which disagrees with their model!
                 obj.set_geometry(widget_rect)
-            if scene_visible and hasattr(obj, 'boxes'):
-                _update_box_visibility(obj.boxes, True)
+            # Don't just call set_visible(scene_visible) here!
+            # The visibility count will be wrong if scene_visible is False!
+            if scene_visible:
+                obj.set_visible(True)
 
 
 def fill_root_layout(layout, parent_model, parent_widget, object_dict,
@@ -272,16 +274,3 @@ def is_shape(scene_obj):
 def is_widget(scene_obj):
     """Returns True if `scene_obj` is a widget."""
     return isinstance(scene_obj, _WIDGET_CLASSES)
-
-
-def _update_box_visibility(boxes, is_visible):
-    """ Update the ``boxes`` visibility
-
-    :param boxes: The boxes which visibility should change
-    :param is_visible: States the visibility flag
-    """
-    for b in boxes:
-        if is_visible:
-            b.addVisible()
-        else:
-            b.removeVisible()
