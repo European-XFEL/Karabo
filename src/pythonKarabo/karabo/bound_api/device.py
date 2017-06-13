@@ -21,12 +21,11 @@ from karathon import (
 )
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.capabilities import Capabilities
+from karabo.common.decorators import karabo_deprecated
 from karabo.common.states import State
 # Use patched DeviceClient, not the one directly from karathon:
 from .device_client import DeviceClient
-from .decorators import (
-    KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, KARABO_DEPRECATED
-)
+from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .configurator import Configurator
 from .no_fsm import NoFsm
 
@@ -981,7 +980,7 @@ class PythonDevice(NoFsm):
 
         return self._ss.getAvailableInstances()
 
-    @KARABO_DEPRECATED
+    @karabo_deprecated
     def errorFoundAction(self, shortMessage, detailedMessage):
         """
         This method is DEPRECATED!
@@ -1048,13 +1047,13 @@ class PythonDevice(NoFsm):
                     self._ss.updateInstanceInfo(Hash("status", "ok"))
         self._ss.reply(stateName)  # reply new state to interested event initiators
 
-    @KARABO_DEPRECATED
+    @karabo_deprecated
     def onStateUpdate(self, currentState):
         """This method is DEPRECATED, use updateState() instead"""
         assert isinstance(currentState, State)
         self.updateState(currentState)
 
-    @KARABO_DEPRECATED
+    @karabo_deprecated
     def exceptionFound(self, shortMessage, detailedMessage):
         """
         This method is DEPRECATED and will removed.
@@ -1214,7 +1213,7 @@ class PythonDevice(NoFsm):
         """
         self._ss.registerEndOfStreamHandler(channelName, handler)
 
-    @KARABO_DEPRECATED
+    @karabo_deprecated
     def triggerError(self, s, d):
         """This method is deprecated, use execute() instead"""
         self.exceptionFound(s, d)
@@ -1387,7 +1386,7 @@ class PythonDevice(NoFsm):
                 id = self._timeId + nPeriods
         return Timestamp(epochNow, Trainstamp(int(id)))
 
-    @KARABO_DEPRECATED
+    @karabo_deprecated
     def _getActualTimestamp(self):
         '''This method is DEPRECATED, use getActualTimestamp() instead'''
         return self.getActualTimestamp()
