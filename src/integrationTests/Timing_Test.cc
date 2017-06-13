@@ -6,6 +6,7 @@
 
 #include "Timing_Test.hh"
 #include <karabo/net/EventLoop.hh>
+#include <karabo/util/StringTools.hh>
 #include <cstdlib>
 
 
@@ -28,11 +29,12 @@ Timing_Test::~Timing_Test() {
 
 void Timing_Test::setUp() {
     // uncomment this if ever testing against a local broker
-    setenv("KARABO_BROKER", "tcp://localhost:7777", true);
+    // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
+
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
-    Hash config("serverId", "testServerTiming", "scanPlugins", false, "Logger.priority", "DEBUG"); //FATAL");
+    Hash config("serverId", "testServerTiming", "scanPlugins", false, "Logger.priority", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
@@ -50,22 +52,18 @@ void Timing_Test::tearDown() {
 
 void Timing_Test::appTestRunner() {
 
-    // bring up a GUI server and a tcp adapter to it
-    const unsigned long long tickPeriodInMicrosec = 100000ull; // 100 ms
-    const long long tickCountdown = 10u;
+    // Bring up a (simulated) time server and a time testing device
+    const unsigned long long tickPeriodInMicrosec = 50000ull; // 50 ms
+    const long long tickCountdown = 20u; // i.e. every 20th id is published
+    const float periodVarFrac = 0.1f; // i.e. sometimes the published period is off by 10% up or down
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerTiming", "SimulatedTimeServerDevice",
                                                                        Hash("deviceId", "Karabo_TimeServer",
                                                                             "period", tickPeriodInMicrosec,
-                                                                            "tickCountdown", tickCountdown),
+                                                                            "tickCountdown", tickCountdown,
+                                                                            "periodVariationFraction", periodVarFrac),
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
-    //    // Need to assure that instanceNew of Karabo_TimeServer comes before timeTester connects to its signalTimeTick.
-    //    // (Why??)
-    //    std::cerr << "START WAITING" << std::endl;
-    //    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
-    //    std::cerr << "END WAITING" << std::endl;
 
-    // in order to avoid recurring setup and tear down call all tests are run in a single runner
     success = m_deviceClient->instantiate("testServerTiming", "TimingTestDevice", Hash("deviceId", "timeTester", "useTimeserver", true),
                                           KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
@@ -84,17 +82,16 @@ void Timing_Test::appTestRunner() {
     m_deviceClient->execute("timeTester", "start");
 
     // some time to test the timing
-    const unsigned int testDurationInMicrosec = 3000000u;
+    const unsigned int testDurationInMicrosec = 5432109u;
     boost::this_thread::sleep(boost::posix_time::microseconds(testDurationInMicrosec));
 
     m_deviceClient->execute("timeTester", "stop");
-
-    const unsigned int numExpectedTicks = testDurationInMicrosec / tickPeriodInMicrosec;
 
     const auto ids(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "ids"));
     const auto seconds(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "seconds"));
     const auto fractions(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "fractions"));
 
+    // Test integrity, i.e. same size of vectors of ids and times
     CPPUNIT_ASSERT_EQUAL(ids.size(), seconds.size());
     CPPUNIT_ASSERT_EQUAL(ids.size(), fractions.size());
     CPPUNIT_ASSERT(ids.size() >= 2);
@@ -109,13 +106,13 @@ void Timing_Test::appTestRunner() {
         CPPUNIT_ASSERT(currentStamp >= lastStamp);
 
         const karabo::util::TimeDuration diff = (currentStamp - lastStamp);
-        std::cerr << "diff for id: " << ids[i] << " " << static_cast<double> (diff) << std::endl; //.getSeconds() << "." << diff.getFractions(karabo::util::ATTOSEC) << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG_C("Timing_Test") << "diff for id: " << ids[i] << " " << static_cast<double> (diff);
 
         lastId = ids[i];
         lastStamp = currentStamp;
     }
 
-    // Now test that the real ticks received from the time server have the expected spacing and are increasing 
+    // Now test that the real ticks received from the time server have the expected spacing and are increasing
     // (== not allowed!).
     const auto idsTick(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "idsTick"));
     const auto secondsTick(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "secondsTick"));
@@ -138,8 +135,13 @@ void Timing_Test::appTestRunner() {
         lastStampTick = currentStamp;
     }
 
-    // As last test check how many ticks we got...
-    // CPPUNIT_ASSERT_EQUAL(numExpectedTicks, static_cast<unsigned int> (ids.size()));
-
-
+    // As last test check how many ticks we really got - might be off a bit since time server sometimes reports
+    // period that is off by periodVarFrac.
+    const int numExpectedTicks = testDurationInMicrosec / tickPeriodInMicrosec;
+    const int maxOff = static_cast<float> (std::ceil(tickCountdown * periodVarFrac));
+    const std::string msg("Ids received: " + karabo::util::toString(ids.size())
+                          + ", expected: " + karabo::util::toString(numExpectedTicks)
+                          + ", maxOff: " + karabo::util::toString(maxOff));
+    CPPUNIT_ASSERT_MESSAGE(msg, static_cast<int> (ids.size()) <= numExpectedTicks + maxOff);
+    CPPUNIT_ASSERT_MESSAGE(msg, static_cast<int> (ids.size()) >= numExpectedTicks - maxOff);
 }
