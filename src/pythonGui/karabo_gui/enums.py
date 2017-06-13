@@ -4,10 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
+from enum import Enum
 
-"""This module contains classes which define different enumerators."""
-
-__all__ = ["NavigationItemTypes"]
 
 class NavigationItemTypes(object):
     UNDEFINED = -1
@@ -16,3 +14,8 @@ class NavigationItemTypes(object):
     CLASS = 2
     DEVICE = 3
 
+
+class KaraboSettings(Enum):
+    CONFIG_DIR = "LastUsedFolder/ConfigurationDialog"
+    MACRO_DIR = "LastUsedFolder/MacroDialog"
+    SCENE_DIR = "LastUsedFolder/SceneDialog"
