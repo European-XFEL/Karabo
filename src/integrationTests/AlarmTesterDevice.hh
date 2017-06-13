@@ -69,16 +69,41 @@ namespace karabo {
          */
         virtual void postReconfigure();
 
-        void triggerWarnLow();
-        void triggerWarnHigh();
-        void triggerWarnHigh2();
-        void triggerAlarmLow();
-        void triggerAlarmHigh();
-        void triggerGlobalAlarm();
-        void triggerGlobalWarn();
-        void triggerNormal();
-        void triggerNormal2();
         void initialize();
+        void triggerWarnLowAck();
+        void triggerWarnHighAck();
+        void triggerAlarmLowAck();
+        void triggerAlarmHighAck();
+
+        void triggerWarnLowNoAck();
+        void triggerWarnHighNoAck();
+        void triggerAlarmLowNoAck();
+        void triggerAlarmHighNoAck();
+
+        void triggerWarnLowAckNode();
+        void triggerWarnHighAckNode();
+        void triggerAlarmLowAckNode();
+        void triggerAlarmHighAckNode();
+
+        void triggerWarnLowNoAckNode();
+        void triggerWarnHighNoAckNode();
+        void triggerAlarmLowNoAckNode();
+        void triggerAlarmHighNoAckNode();
+
+        void triggerGlobalWarnAck();
+        void triggerGlobalAlarmAck();
+        void triggerInterlockAck();
+
+        void triggerGlobalWarn();
+        void triggerGlobalAlarm();
+        void triggerInterlock();
+
+        void triggerNormalAck();
+        void triggerNormalNoAck();
+
+        void triggerNormalAckNode();
+        void triggerNormalNoAckNode();
+
         void triggerGlobalNormal();
 
     private:

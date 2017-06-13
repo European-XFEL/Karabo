@@ -43,6 +43,7 @@ private:
     void testRecovery();
     void testDeviceKilled();
     void testDeviceReappeared();
+    void testTriggerGlobalAck();
     void testTriggerGlobal();
 
 
@@ -54,7 +55,7 @@ private:
     boost::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
     std::string m_killedDeviceRow;
 
-    std::string m_rowForDevice0, m_rowForDevice1, m_rowForDevice2;
+    std::string m_rowForDevice1;
 
 };
 
