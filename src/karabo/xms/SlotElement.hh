@@ -33,6 +33,7 @@ namespace karabo {
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, karabo::util::WRITE);
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::NODE);
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Slot"); // Reserved displayType for commands
+                this->m_node->setAttribute(KARABO_SCHEMA_CLASS_ID, "Slot");
 
                 //default value of requiredAccessLevel for Slot element: USER
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, karabo::util::Schema::USER);
