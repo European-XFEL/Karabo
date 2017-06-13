@@ -165,7 +165,7 @@ def handle_scene_from_server(dev_id, name, project, success, reply):
 
     # Add to the project AND open it
     project.scenes.append(scene)
-    broadcast_event(KaraboEventSender.OpenSceneView, {'model': scene})
+    broadcast_event(KaraboEventSender.ShowSceneView, {'model': scene})
 
 
 def load_project(is_subproject=False):
