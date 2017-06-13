@@ -36,9 +36,10 @@ def run_gui(args):
     app.setOrganizationDomain('xfel.eu')
     app.setApplicationName('KaraboGUI')
 
-    splash_path = op.join(op.dirname(__file__), "icons", "xfel_logo.png")
+    splash_path = op.join(op.dirname(__file__), "icons", "splash.png")
     splash_img = QPixmap(splash_path)
     splash = QSplashScreen(splash_img, Qt.WindowStaysOnTopHint)
+    splash.setMask(splash_img.mask())
     splash.show()
     app.processEvents()
 
