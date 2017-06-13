@@ -131,6 +131,7 @@ namespace karabo {
             unsigned long long m_timeSec; // seconds
             unsigned long long m_timeFrac; // attoseconds
             unsigned long long m_timePeriod; // microseconds
+            bool m_noTimeTickYet; // whether slotTimeTick received a first call
             mutable boost::mutex m_timeChangeMutex;
             unsigned long long m_timeIdLastTick; // only for onTimeTick, no need for mutex protection
             boost::asio::deadline_timer m_timeTickerTimer;
@@ -392,8 +393,7 @@ namespace karabo {
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
                 m_timeTickerTimer(karabo::net::EventLoop::getIOService()),
                 m_globalAlarmCondition(karabo::util::AlarmCondition::NONE),
-                m_lastBrokerErrorStamp(0ull, 0ull)
-                {
+                m_lastBrokerErrorStamp(0ull, 0ull) {
 
 
                 m_connection = karabo::util::Configurator<karabo::net::JmsConnection>::createNode("_connection_", configuration);
@@ -1703,8 +1703,9 @@ namespace karabo {
                     m_timeId = id;
                     m_timeSec = sec;
                     m_timeFrac = frac;
-                    firstCall = (m_timePeriod == 0ull);
                     m_timePeriod = period;
+                    firstCall = m_noTimeTickYet;
+                    m_noTimeTickYet = false;
                 }
                 // Take care that 'onTimeUpdate' is called every period:
                 // Cancel pending timer if we had an update from the time server...
@@ -1738,7 +1739,7 @@ namespace karabo {
                 // Calculate how many ids we are away from last external update and adjust stamp
                 const unsigned long long delta = newId - id; // newId >= id is fulfilled
                 const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
-                                                        period * 1000000000000ull); // '* 10^12': micro- to attoseconds
+                                                        (period % 1000000ull) * 1000000000000ull); // '* 10^12': micro- to attoseconds
                 const util::TimeDuration sinceId(periodDuration * delta);
                 stamp += sinceId;
 
