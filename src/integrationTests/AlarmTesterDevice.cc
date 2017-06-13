@@ -22,24 +22,45 @@ USING_KARABO_NAMESPACES
 
     void AlarmTester::expectedParameters(Schema& expected) {
 
-        FLOAT_ELEMENT(expected).key("floatProperty")
-                .displayedName("Float Property")
-                .readOnly().initialValue(0)
-                .alarmLow(-1.5).info("A description for alarmLow").needsAcknowledging(true)
-                .alarmHigh(1.5).info("A description for alarmHigh").needsAcknowledging(true)
-                .enableRollingStats().warnVarianceHigh(3).needsAcknowledging(false).evaluationInterval(100)
-                .commit();
-
-
         NODE_ELEMENT(expected).key("nodeA")
                 .commit();
 
-        FLOAT_ELEMENT(expected).key("nodeA.floatProperty2")
-                .displayedName("Float Property2")
+        FLOAT_ELEMENT(expected).key("nodeA.floatPropNoAck2")
+                .displayedName("Float Property2 NO needsAcknowledging")
                 .readOnly().initialValue(0)
-                .warnLow(-2).info("A description for alarmLow").needsAcknowledging(true)
-                .warnHigh(2).info("A description for alarmHigh").needsAcknowledging(true)
-                .enableRollingStats().warnVarianceHigh(3).needsAcknowledging(false).evaluationInterval(100)
+                .warnLow(-2.0).info("A floatPropNoAck2 warnLow").needsAcknowledging(false)
+                .warnHigh(2.0).info("A floatPropNoAck2 warnHigh").needsAcknowledging(false)
+                .alarmLow(-3.0).info("A floatPropNoAck2 alarmLow").needsAcknowledging(false)
+                .alarmHigh(3.0).info("A floatPropNoAck2 alarmHigh").needsAcknowledging(false)
+//                .enableRollingStats().warnVarianceHigh(2.5).needsAcknowledging(true).evaluationInterval(100)
+                .commit();
+
+        FLOAT_ELEMENT(expected).key("nodeA.floatPropNeedsAck2")
+                .displayedName("Float Property2 needsAcknowledging")
+                .readOnly().initialValue(0)
+                .warnLow(-2.0).info("A floatPropNeedsAck2 warnLow").needsAcknowledging(true)
+                .warnHigh(2.0).info("A floatPropNeedsAck2 warnHigh").needsAcknowledging(true)
+                .alarmLow(-3.0).info("A floatPropNeedsAck2 alarmLow").needsAcknowledging(true)
+                .alarmHigh(3.0).info("A floatPropNeedsAck2 alarmHigh").needsAcknowledging(true)
+                .commit();
+
+        INT32_ELEMENT(expected).key("intPropNeedsAck")
+                .displayedName("Int Property needsAcknowledging")
+                .readOnly().initialValue(0)
+                .warnLow(-30).info("A intPropNeedsAck warnLow").needsAcknowledging(true)
+                .warnHigh(30).info("A intPropNeedsAck warnHigh").needsAcknowledging(true)
+                .alarmLow(-40).info("A intPropNeedsAck alarmLow").needsAcknowledging(true)
+                .alarmHigh(40).info("A intPropNeedsAck alarmHigh").needsAcknowledging(true)
+//                .enableRollingStats().warnVarianceHigh(3).needsAcknowledging(false).evaluationInterval(100)
+                .commit();
+
+        INT32_ELEMENT(expected).key("intPropNoAck")
+                .displayedName("Int Property NO needsAcknowledging")
+                .readOnly().initialValue(0)
+                .warnLow(-30).info("A intPropNoAck warnLow").needsAcknowledging(false)
+                .warnHigh(30).info("A intPropNoAck warnHigh").needsAcknowledging(false)
+                .alarmLow(-40).info("A intPropNoAck alarmLow").needsAcknowledging(false)
+                .alarmHigh(40).info("A intPropNoAck alarmHigh").needsAcknowledging(false)
                 .commit();
 
         STRING_ELEMENT(expected).key("result")
@@ -47,20 +68,80 @@ USING_KARABO_NAMESPACES
                 .readOnly().initialValue("")
                 .commit();
 
-        SLOT_ELEMENT(expected).key("triggerWarnLow")
-                .displayedName("Trigger WARN_LOW")
+        SLOT_ELEMENT(expected).key("triggerWarnLowAck")
+                .displayedName("Trigger warnLow needsAck")
                 .commit();
 
-        SLOT_ELEMENT(expected).key("triggerWarnHigh")
-                .displayedName("Trigger WARN_HIGH")
+        SLOT_ELEMENT(expected).key("triggerWarnHighAck")
+                .displayedName("Trigger warnHigh needsAck")
                 .commit();
 
-        SLOT_ELEMENT(expected).key("triggerAlarmLow")
-                .displayedName("Trigger ALARM_LOW")
+        SLOT_ELEMENT(expected).key("triggerAlarmLowAck")
+                .displayedName("Trigger alarmLow needsAck")
+                .commit();
+        
+        SLOT_ELEMENT(expected).key("triggerAlarmHighAck")
+                .displayedName("Trigger alarmHigh needsAck")
                 .commit();
 
-        SLOT_ELEMENT(expected).key("triggerAlarmHigh")
-                .displayedName("Trigger ALARM_HIGH")
+        SLOT_ELEMENT(expected).key("triggerWarnLowNoAck")
+                .displayedName("Trigger warnLow NO needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerWarnHighNoAck")
+                .displayedName("Trigger warnHigh NO needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerAlarmLowNoAck")
+                .displayedName("Trigger alarmLow NO needsAck")
+                .commit();
+        
+        SLOT_ELEMENT(expected).key("triggerAlarmHighNoAck")
+                .displayedName("Trigger alarmHigh NO needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerWarnLowAckNode")
+                .displayedName("Trigger nodewarnLow needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerWarnHighAckNode")
+                .displayedName("Trigger node warnHigh needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerAlarmLowAckNode")
+                .displayedName("Trigger node alarmLow needsAck")
+                .commit();
+        
+        SLOT_ELEMENT(expected).key("triggerAlarmHighAckNode")
+                .displayedName("Trigger node alarmHigh needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerWarnLowNoAckNode")
+                .displayedName("Trigger node warnLow NO needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerWarnHighNoAckNode")
+                .displayedName("Trigger node warnHigh NO needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerAlarmLowNoAckNode")
+                .displayedName("Trigger node alarmLow NO needsAck")
+                .commit();
+        
+        SLOT_ELEMENT(expected).key("triggerAlarmHighNoAckNode")
+                .displayedName("Trigger node alarmHigh NO needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerGlobalWarnAck")
+                .displayedName("Trigger Global Warn needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerGlobalAlarmAck")
+                .displayedName("Trigger Global Alarm needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerInterlockAck")
+                .displayedName("Trigger INTERLOCK needsAck")
                 .commit();
 
         SLOT_ELEMENT(expected).key("triggerGlobalWarn")
@@ -71,47 +152,90 @@ USING_KARABO_NAMESPACES
                 .displayedName("Trigger Global Alarm")
                 .commit();
 
-        SLOT_ELEMENT(expected).key("triggerNormal")
-                .displayedName("Back to normal")
+        SLOT_ELEMENT(expected).key("triggerInterlock")
+                .displayedName("Trigger INTERLOCK")
                 .commit();
 
+        SLOT_ELEMENT(expected).key("triggerNormalAck")
+                .displayedName("Back to normal needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerNormalNoAck")
+                .displayedName("Back to normal NO needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerNormalAckNode")
+                .displayedName("Back to node normal needsAck")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("triggerNormalNoAckNode")
+                .displayedName("Back to node normal NO needsAck")
+                .commit();
+        
         SLOT_ELEMENT(expected).key("triggerGlobalNormal")
                 .displayedName("Back to global normal")
                 .commit();
 
     }
 
-
     AlarmTester::AlarmTester(const karabo::util::Hash& config) : Device<>(config) {
-        KARABO_SLOT(triggerWarnLow);
-        KARABO_SLOT(triggerWarnHigh);
-        KARABO_SLOT(triggerWarnHigh2);
-        KARABO_SLOT(triggerAlarmLow);
-        KARABO_SLOT(triggerAlarmHigh);
-        KARABO_SLOT(triggerGlobalAlarm);
+        KARABO_SLOT(triggerWarnLowAck);
+        KARABO_SLOT(triggerWarnHighAck);
+        KARABO_SLOT(triggerAlarmLowAck);
+        KARABO_SLOT(triggerAlarmHighAck);
+
+        KARABO_SLOT(triggerWarnLowNoAck);
+        KARABO_SLOT(triggerWarnHighNoAck);
+        KARABO_SLOT(triggerAlarmLowNoAck);
+        KARABO_SLOT(triggerAlarmHighNoAck);
+
+        KARABO_SLOT(triggerWarnLowAckNode);
+        KARABO_SLOT(triggerWarnHighAckNode);
+        KARABO_SLOT(triggerAlarmLowAckNode);
+        KARABO_SLOT(triggerAlarmHighAckNode);
+
+        KARABO_SLOT(triggerWarnLowNoAckNode);
+        KARABO_SLOT(triggerWarnHighNoAckNode);
+        KARABO_SLOT(triggerAlarmLowNoAckNode);
+        KARABO_SLOT(triggerAlarmHighNoAckNode);
+
+        KARABO_SLOT(triggerGlobalWarnAck);
+        KARABO_SLOT(triggerGlobalAlarmAck);
+        KARABO_SLOT(triggerInterlockAck);
+
         KARABO_SLOT(triggerGlobalWarn);
-        KARABO_SLOT(triggerNormal);
-        KARABO_SLOT(triggerNormal2);
+        KARABO_SLOT(triggerGlobalAlarm);
+        KARABO_SLOT(triggerInterlock);
+
+        KARABO_SLOT(triggerNormalAck);
+        KARABO_SLOT(triggerNormalNoAck);
+
+        KARABO_SLOT(triggerNormalAckNode);
+        KARABO_SLOT(triggerNormalNoAckNode);
+
         KARABO_SLOT(triggerGlobalNormal);
 
         KARABO_INITIAL_FUNCTION(initialize);
     }
 
-
     AlarmTester::~AlarmTester() {
     }
 
-
     void AlarmTester::initialize() {
-
         Schema schema = getFullSchema();
-        schema.setWarnLow<float>("floatProperty", -1.);
-        schema.setWarnHigh<float>("floatProperty", 1.);
-        schema.setAlarmLow<float>("floatProperty", -2.);
-        schema.setAlarmHigh<float>("floatProperty", 2.);
+
+        schema.setWarnLow<int>("intPropNeedsAck", -3);
+        schema.setWarnHigh<int>("intPropNeedsAck", 3);
+        schema.setAlarmLow<int>("intPropNeedsAck", -4);
+        schema.setAlarmHigh<int>("intPropNeedsAck", 4);
+
+        schema.setWarnLow<int>("intPropNoAck", -3);
+        schema.setWarnHigh<int>("intPropNoAck", 3);
+        schema.setAlarmLow<int>("intPropNoAck", -4);
+        schema.setAlarmHigh<int>("intPropNoAck", 4);
+
         appendSchema(schema, true);
     }
-
 
     void AlarmTester::preReconfigure(karabo::util::Hash& incomingReconfiguration) {
     }
@@ -120,69 +244,166 @@ USING_KARABO_NAMESPACES
     void AlarmTester::postReconfigure() {
     }
 
-
-    void AlarmTester::triggerWarnLow() {
-        set("floatProperty", -1.2);
-        set("result", "triggeredWarnLow");
+    void AlarmTester::triggerWarnLowAck() {
+        set("intPropNeedsAck", -4);
+        set("result", "triggerWarnLowAck");
     }
 
-
-    void AlarmTester::triggerWarnHigh() {
-        set("floatProperty", 1.2);
-        set("result", "triggeredWarnHigh");
+    void AlarmTester::triggerWarnHighAck() {
+        set("intPropNeedsAck", 4);
+        set("result", "triggerWarnHighAck");
     }
 
-
-    void AlarmTester::triggerWarnHigh2() {
-        set("nodeA.floatProperty2", 2.2);
-        set("result", "triggeredWarnHigh2");
-    }
-
-
-    void AlarmTester::triggerAlarmLow() {
-        set("floatProperty", -2.2);
+    void AlarmTester::triggerAlarmLowAck() {
+        set("intPropNeedsAck", -5);
 
         KARABO_LOG_INFO << getAlarmInfo();
-        set("result", "triggeredAlarmLow");
+        set("result", "triggerAlarmLowAck");
     }
 
-
-    void AlarmTester::triggerAlarmHigh() {
-        set("floatProperty", 2.2);
+    void AlarmTester::triggerAlarmHighAck() {
+        set("intPropNeedsAck", 5);
 
         KARABO_LOG_INFO << getAlarmInfo();
-        set("result", "triggeredAlarmHigh");
+        set("result", "triggerAlarmHighAck");
     }
 
+    void AlarmTester::triggerWarnLowNoAck() {
+        set("intPropNoAck", -4);
+        set("result", "triggerWarnLowNoAck");
+    }
 
-    void AlarmTester::triggerGlobalAlarm() {
+    void AlarmTester::triggerWarnHighNoAck() {
+        set("intPropNoAck", 4);
+        set("result", "triggerWarnHighNoAck");
+    }
+
+    void AlarmTester::triggerAlarmLowNoAck() {
+        set("intPropNoAck", -5);
+
+        KARABO_LOG_INFO << getAlarmInfo();
+        set("result", "triggerAlarmLowNoAck");
+    }
+
+    void AlarmTester::triggerAlarmHighNoAck() {
+        set("intPropNoAck", 5);
+
+        KARABO_LOG_INFO << getAlarmInfo();
+        set("result", "triggerAlarmHighNoAck");
+    }
+
+    void AlarmTester::triggerWarnLowAckNode() {
+        set("nodeA.floatPropNeedsAck2", -2.2);
+
+        KARABO_LOG_INFO << getAlarmInfo();
+        set("result", "triggerWarnLowAckNode");
+    } 
+
+    void AlarmTester::triggerWarnHighAckNode() {
+        set("nodeA.floatPropNeedsAck2", 2.2);
+
+        KARABO_LOG_INFO << getAlarmInfo();
+        set("result", "triggerWarnHighAckNode");
+    }
+
+    void AlarmTester::triggerAlarmLowAckNode() {
+        set("nodeA.floatPropNeedsAck2", -3.2);
+
+        KARABO_LOG_INFO << getAlarmInfo();
+        set("result", "triggerAlarmLowAckNode");
+    }
+
+    void AlarmTester::triggerAlarmHighAckNode() {
+        set("nodeA.floatPropNeedsAck2", 3.2);
+
+        KARABO_LOG_INFO << getAlarmInfo();
+        set("result", "triggerAlarmHighAckNode");
+    }
+
+    void AlarmTester::triggerWarnLowNoAckNode() {
+        set("nodeA.floatPropNoAck2", -2.2);
+
+        KARABO_LOG_INFO << getAlarmInfo();
+        set("result", "triggerWarnLowNoAckNode");
+    }
+
+    void AlarmTester::triggerWarnHighNoAckNode() {
+        set("nodeA.floatPropNoAck2", 2.2);
+
+        KARABO_LOG_INFO << getAlarmInfo();
+        set("result", "triggerWarnHighNoAckNode");
+    }
+
+    void AlarmTester::triggerAlarmLowNoAckNode() {
+        set("nodeA.floatPropNoAck2", -3.2);
+
+        KARABO_LOG_INFO << getAlarmInfo();
+        set("result", "triggerAlarmLowNoAckNode");
+    }
+
+    void AlarmTester::triggerAlarmHighNoAckNode() {
+        set("nodeA.floatPropNoAck2", 3.2);
+
+        KARABO_LOG_INFO << getAlarmInfo();
+        set("result", "triggerAlarmHighNoAckNode");
+    }
+
+    void AlarmTester::triggerInterlockAck() {
+        setAlarmCondition(AlarmCondition::INTERLOCK);
+        set("result", "triggerInterlockAck");
+    }
+
+    void AlarmTester::triggerGlobalWarnAck() {
+        setAlarmCondition(AlarmCondition::WARN);
+        set("result", "triggerGlobalWarnAck");
+    }
+
+    void AlarmTester::triggerGlobalAlarmAck() {
         setAlarmCondition(AlarmCondition::ALARM);
 
         KARABO_LOG_INFO << getAlarmInfo();
-        set("result", "triggeredGlobalAlarm");
+        set("result", "triggerGlobalAlarmAck");
     }
 
+    void AlarmTester::triggerInterlock() {
+        setAlarmCondition(AlarmCondition::INTERLOCK, false);
+        set("result", "triggerInterlock");
+    }
 
     void AlarmTester::triggerGlobalWarn() {
-        setAlarmCondition(AlarmCondition::WARN);
-        set("result", "triggeredGlobalWarn");
+        setAlarmCondition(AlarmCondition::WARN, false);
+        set("result", "triggerGlobalWarn");
     }
 
+    void AlarmTester::triggerGlobalAlarm() {
+        setAlarmCondition(AlarmCondition::ALARM, false);
 
-    void AlarmTester::triggerNormal() {
-        set("floatProperty", 0);
-        set("result", "triggeredNormal");
+        KARABO_LOG_INFO << getAlarmInfo();
+        set("result", "triggerGlobalAlarm");
     }
 
-
-    void AlarmTester::triggerNormal2() {
-        set("nodeA.floatProperty2", 0);
-        set("result", "triggeredNormal2");
+    void AlarmTester::triggerNormalAck() {
+        set("intPropNeedsAck", 0);
+        set("result", "triggerNormalAck");
     }
 
+    void AlarmTester::triggerNormalNoAck() {
+        set("intPropNoAck", 0);
+        set("result", "triggerNormalNoAck");
+    }
+
+    void AlarmTester::triggerNormalAckNode() {
+        set("nodeA.floatPropNeedsAck2", 0);
+        set("result", "triggerNormalAckNode");
+    }
+
+    void AlarmTester::triggerNormalNoAckNode() {
+        set("nodeA.floatPropNoAck2", 0);
+        set("result", "triggerNormalNoAckNode");
+    }
 
     void AlarmTester::triggerGlobalNormal() {
         setAlarmCondition(AlarmCondition::NONE);
-        set("result", "triggeredGlobalNormal");
+        set("result", "triggerGlobalNormal");
     }
 }
