@@ -19,10 +19,8 @@ from karathon import (
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
     ValidatorValidationRules
 )
-from karabo.common.alarm_conditions import AlarmCondition
-from karabo.common.capabilities import Capabilities
-from karabo.common.decorators import karabo_deprecated
-from karabo.common.states import State
+from karabo.common.api import (AlarmCondition, Capabilities, State,
+                               karabo_deprecated)
 # Use patched DeviceClient, not the one directly from karathon:
 from .device_client import DeviceClient
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
