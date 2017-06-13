@@ -202,16 +202,26 @@ class SparkRenderer(QWidget):
             # the sparkline might need to cover "gaps" in its data series
             # e.g. when for a given bin, no data was pushed to the widget
             # in this case we fill with the value of the previous bin
-            self.yvals = np.roll(self.yvals, -dt)
-            self.yvals[-dt:-1] = self.yvals[-dt-1]
-            self.yvals[-1] = 0.
-            self.ycnts = np.roll(self.ycnts, -dt)
-            self.ycnts[-dt:-1] = self.ycnts[-dt-1]
-            self.ycnts[-1] = 0.
-            self.ymax = np.roll(self.ymax, -dt)
-            self.ymax[-dt:-1] = self.ymax[-dt-1]
-            self.ymin = np.roll(self.ymin, -dt)
-            self.ymin[-dt:-1] = self.ymin[-dt-1]
+            # if dt is larger than the length of the array, we clear the
+            # array instead as there is nothing to display in the period
+
+            if dt < self.yvals.size:
+                self.yvals = np.roll(self.yvals, -dt)
+                self.yvals[-dt:-1] = self.yvals[-dt-1]
+                self.yvals[-1] = 0.
+                self.ycnts = np.roll(self.ycnts, -dt)
+                self.ycnts[-dt:-1] = self.ycnts[-dt-1]
+                self.ycnts[-1] = 0.
+                self.ymax = np.roll(self.ymax, -dt)
+                self.ymax[-dt:-1] = self.ymax[-dt-1]
+                self.ymin = np.roll(self.ymin, -dt)
+                self.ymin[-dt:-1] = self.ymin[-dt-1]
+            else:
+                self.yvals[:] = 0.
+                self.ycnts[:] = 0.
+                self.ymax[:] = self.finfo.min
+                self.ymin[:] = self.finfo.max
+
             self.then = time.time()
 
         self.yvals[-1] += value
