@@ -1056,8 +1056,8 @@ class PythonDevice(NoFsm):
     @karabo_deprecated
     def exceptionFound(self, shortMessage, detailedMessage):
         """
-        This method is DEPRECATED and will removed.
-        Hook for when an exception is encounterd.
+        This method is DEPRECATED and will be removed.
+        Hook for when an exception is encountered.
         Catch exceptions where they can occur instead, e.g.
         when calling a slot or requesting a value!
 
