@@ -251,6 +251,7 @@ namespace karabo {
                     // Update the property
                     const Hash& propertyEntryFromUpdate = propertyNameIt->getValue<Hash>();
                     Hash& propertyEntry = propertyEntryNode->getValue<Hash>();
+                    std::string lastAlarmType;
 
                     // Iterate over alarm types for this property
                     for (Hash::const_iterator alarmTypeEntryIt = propertyEntryFromUpdate.begin(); alarmTypeEntryIt != propertyEntryFromUpdate.end(); ++alarmTypeEntryIt) {
@@ -297,13 +298,14 @@ namespace karabo {
                             rowUpdates.set(boost::lexical_cast<std::string>(id),
                                            addRowUpdate("add", newAlarmTypeEntry));
                         }
+                        lastAlarmType = newAlarmTypeEntry.get<std::string>("type");
                     }
 
-                    // Find most significant alarm type belonging to this property
-                    const AlarmCondition mostSignificant = getMostSignificantAlarm(propertyEntry);
-
-                    // Make all less significant alarm types acknowledgeable
-                    makeLessSignificantAcknowledgeable(propertyEntry, mostSignificant, rowUpdates);
+                    if (propertyEntryNode->getKey() == "global") {
+                        const AlarmCondition lastAdded = AlarmCondition::fromString(lastAlarmType);
+                        // Make all more significant alarm types acknowledgeable
+                        makeMoreSignificantAcknowledgeable(propertyEntry, lastAdded, rowUpdates);
+                    }
                 }
             }
         }
@@ -335,7 +337,6 @@ namespace karabo {
 
                         //alarm of this type exists for the property
                         Hash& alarmTypeEntry = alarmTypeEntryNode->getValue<Hash>();
-
                         const unsigned long long id = m_alarmsMap_r.find(&(*alarmTypeEntryNode))->second;
                         if (alarmTypeEntry.get<bool>("needsAcknowledging")) {
                             //if the alarm needs to be acknowledged we allow this now
@@ -356,12 +357,6 @@ namespace karabo {
                             propertyEntry.erase(*alarmTypeIt);
                         }
                     }
-
-                    // Find most significant alarm type belonging to this property
-                    const AlarmCondition mostSignificant = getMostSignificantAlarm(propertyEntry);
-
-                    // Make all less significant alarm types acknowledgeable
-                    makeLessSignificantAcknowledgeable(propertyEntry, mostSignificant, rowUpdates);
 
                     if (propertyEntry.empty()) {
                         // When a device property has no remaining alarms, erase it from the m_alarms Hash
@@ -419,10 +414,6 @@ namespace karabo {
 
                 boost::unique_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
                 m_alarms = previousState.get<Hash>("alarms");
-
-
-
-
             } catch (...) {
                 //we go on without updating alarms
                 KARABO_LOG_WARN << "Could not load previous alarm state from file " << m_flushFilePath << " even though file exists!";
@@ -521,27 +512,23 @@ namespace karabo {
         }
 
 
-        karabo::util::AlarmCondition AlarmService::getMostSignificantAlarm(const karabo::util::Hash& propertyAlarmTypes) const {
-            // Find most significant alarm type added to this property
-            std::vector<AlarmCondition> alarmTypesForProperty;
-            std::vector<std::string> alarmTypeNames;
-
-            propertyAlarmTypes.getKeys(alarmTypeNames);
-            BOOST_FOREACH(std::string name, alarmTypeNames) {
-                alarmTypesForProperty.push_back(AlarmCondition::fromString(name));
-            }
-            return AlarmCondition::returnMostSignificant(alarmTypesForProperty);
-        }
-
-
-        void AlarmService::makeLessSignificantAcknowledgeable(karabo::util::Hash& propertyAlarms, const karabo::util::AlarmCondition& significantType,
+        void AlarmService::makeMoreSignificantAcknowledgeable(karabo::util::Hash& propertyAlarms, const karabo::util::AlarmCondition& lastAdded,
                                                               karabo::util::Hash& rowUpdates) {
 
+            /*
+             * Checking against the following matrix:
+             * 
+             * X marks acknowledgeable
+             *                   warn  alarm  interlock
+             * normal state        X     X      X
+             * warn state          -     X      X
+             * alarm state         -     -      X
+             * interlock state     -     -      -
+            */
             for (Hash::iterator alarmTypeEntryIt = propertyAlarms.begin(); alarmTypeEntryIt != propertyAlarms.end(); ++alarmTypeEntryIt) {
 
                 const AlarmCondition alarmType = AlarmCondition::fromString(alarmTypeEntryIt->getKey());
-
-                if (alarmType.isLowerCriticalityThan(significantType)) {
+                if (alarmType.isMoreCriticalThan(lastAdded)) {
                     // make this type entry acknowledgeable
                     Hash::Node& existingAlarmTypeEntryNode = propertyAlarms.getNode(alarmTypeEntryIt->getKey());
                     Hash& existingAlarmTypeEntry = existingAlarmTypeEntryNode.getValue<Hash>();
@@ -551,7 +538,7 @@ namespace karabo {
                         existingAlarmTypeEntry.set("acknowledgeable", existingAlarmTypeEntry.get<bool>("needsAcknowledging"));
 
                         rowUpdates.set(boost::lexical_cast<std::string>(id),
-                                       addRowUpdate("update", existingAlarmTypeEntry));
+                                       addRowUpdate("acknowledgeable", existingAlarmTypeEntry));
                     }
                 }
             }
