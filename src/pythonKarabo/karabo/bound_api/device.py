@@ -353,7 +353,7 @@ class PythonDevice(NoFsm):
             # Validate first time to assign timestamps
             validated = self.validatorIntern.validate(self.fullSchema,
                                                       self.parameters,
-                                                      self._getActualTimestamp())
+                                                      self.getActualTimestamp())
             self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
 
         # Create 'info' hash
@@ -435,7 +435,7 @@ class PythonDevice(NoFsm):
         Load the distributed logger using config in self.parameters["Logger"]
         """
         config = self.parameters["Logger"]
-        stamp = self._getActualTimestamp()
+        stamp = self.getActualTimestamp()
 
         # cure the network part of the logger config
         topicPath = "network.topic"
@@ -534,7 +534,7 @@ class PythonDevice(NoFsm):
                 h = pars[0]
                 if not isinstance(h, Hash):
                     raise TypeError("The only argument should be a Hash")
-                pars = tuple([h, self._getActualTimestamp()])   # add timestamp
+                pars = tuple([h, self.getActualTimestamp()])   # add timestamp
             
             # key, value or hash, timestamp args
             if len(pars) == 2:
@@ -550,7 +550,7 @@ class PythonDevice(NoFsm):
                         h.setAttribute(key, "indicateAlarm", True)
                     else:
                         h.set(key, value)
-                    pars = tuple([h, self._getActualTimestamp()])
+                    pars = tuple([h, self.getActualTimestamp()])
 
                 hash, stamp = pars
 
@@ -726,14 +726,17 @@ class PythonDevice(NoFsm):
         The timestamp is set to the current timestamp
         """
 
-        self.set(key, value, self._getActualTimestamp())
+        self.set(key, value, self.getActualTimestamp())
         
-    def writeChannel(self, channelName, data):
+    def writeChannel(self, channelName, data, timestamp=None):
         """
         Write data to an output channel.
         :param channelName: name given to an OUTPUT_CHANNEL in
          expectedParameters
-        :param data: a Hash with keys as described in the Schema of the channel
+        :param data: a Hash with keys as described in the Schema of the
+         channel
+        :param timestamp: optional timestamp; if none is given, the current
+         timestamp is used
 
         Example for an output channel sending an image (key: "image") and
         a frame number (key: "frame"):
@@ -745,7 +748,9 @@ class PythonDevice(NoFsm):
 
         channel = self._ss.getOutputChannel(channelName)
         sourceName = "{}:{}".format(self.getInstanceId(), channelName)
-        meta = ChannelMetaData(sourceName, self._getActualTimestamp())
+        if not timestamp:
+            timestamp = self.getActualTimestamp()
+        meta = ChannelMetaData(sourceName, timestamp)
         channel.write(data, meta)
         channel.update()
 
@@ -810,7 +815,7 @@ class PythonDevice(NoFsm):
         rules.injectTimestamps           = True
         validator = Validator()
         validator.setValidationRules(rules)
-        validated = validator.validate(schema, Hash(), self._getActualTimestamp())
+        validated = validator.validate(schema, Hash(), self.getActualTimestamp())
         with self._stateChangeLock:
             for path in self._injectedSchema.getPaths():
                 if self.parameters.has(path) and not self.staticSchema.has(path): 
@@ -840,7 +845,7 @@ class PythonDevice(NoFsm):
         rules.injectTimestamps           = True
         validator = Validator()
         validator.setValidationRules(rules)
-        validated = validator.validate(schema, self.parameters, self._getActualTimestamp())
+        validated = validator.validate(schema, self.parameters, self.getActualTimestamp())
         with self._stateChangeLock:
             for key in self._injectedSchema.getKeys():
                 self.parameters.erase(key)
@@ -1285,7 +1290,7 @@ class PythonDevice(NoFsm):
         whiteList = self._getStateDependentSchema(currentState)
         self.log.DEBUG("Incoming (un-validated) reconfiguration:\n{}".format(unvalidated))
         try:
-            validated = self.validatorExtern.validate(whiteList, unvalidated, self._getActualTimestamp())
+            validated = self.validatorExtern.validate(whiteList, unvalidated, self.getActualTimestamp())
         except RuntimeError as e:
             errorText = str(e) + " in state: \"" + currentState + "\""
             return (False, errorText, unvalidated)
@@ -1357,7 +1362,14 @@ class PythonDevice(NoFsm):
         Logger.setPriority(newprio)
         self.log.INFO("Logger Priority changed : {} ==> {}".format(oldprio, newprio))
 
-    def _getActualTimestamp(self):
+    def getActualTimestamp(self):
+        """
+        Returns the actual timestamp. The Trainstamp part of Timestamp is
+        extrapolated from the last values received via slotTimeTick (or zero
+        if no time ticks received, i.e. useTimeserver is false).
+
+        :return: the actual timestamp
+        """
         epochNow = Epochstamp()
         id = 0
         with self._timeLock:
@@ -1367,6 +1379,10 @@ class PythonDevice(NoFsm):
                 nPeriods = int((duration.getTotalSeconds() * 1000000 + duration.getFractions() / 1000) / self._timePeriod)
                 id = self._timeId + nPeriods
         return Timestamp(epochNow, Trainstamp(int(id)))
+
+    def _getActualTimestamp(self):
+        '''This method is DEPRECATED, use getActualTimestamp() instead'''
+        return self.getActualTimestamp()
 
     def _getStateDependentSchema(self, state):
         with self._stateDependentSchemaLock:
