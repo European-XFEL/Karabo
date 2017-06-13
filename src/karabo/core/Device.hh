@@ -391,6 +391,12 @@ namespace karabo {
              * @param configuration
              */
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
+                m_timeId(0ull),
+                m_timeSec(0ull),
+                m_timeFrac(0ull),
+                m_timePeriod(0ull),
+                m_noTimeTickYet(true),
+                m_timeIdLastTick(0ull),
                 m_timeTickerTimer(karabo::net::EventLoop::getIOService()),
                 m_globalAlarmCondition(karabo::util::AlarmCondition::NONE),
                 m_lastBrokerErrorStamp(0ull, 0ull) {
@@ -405,12 +411,6 @@ namespace karabo {
                 // Will remove a potential JmsConnection::Pointer instance from the m_parameters
                 m_parameters.set("_connection_", karabo::util::Hash());
                 m_parameters.set("hostName", net::bareHostName());
-
-                m_timeId = 0;
-                m_timeSec = 0;
-                m_timeFrac = 0;
-                m_timePeriod = 0; // zero as identifier of initial value used in slotTimeTick
-                m_timeIdLastTick = 0;
 
                 // Set serverId
                 if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
