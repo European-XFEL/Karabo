@@ -83,6 +83,21 @@ namespace karabo {
              */
             virtual karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const = 0;
 
+            /**
+             * A slot called by the time-server to synchronize this device with the timing system.
+             *
+             * @param id: current train id
+             * @param sec: current system seconds
+             * @param frac: current fractional seconds
+             * @param period: interval between subsequent ids in microseconds
+             */
+            virtual void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
+
+            /**
+             * Check if the device is configured to use the time server ticks
+             * @return boolean
+             */
+            virtual bool useTimeServer() const = 0;
         };
 
         /**
@@ -131,10 +146,7 @@ namespace karabo {
             unsigned long long m_timeSec; // seconds
             unsigned long long m_timeFrac; // attoseconds
             unsigned long long m_timePeriod; // microseconds
-            bool m_noTimeTickYet; // whether slotTimeTick received a first call
             mutable boost::mutex m_timeChangeMutex;
-            unsigned long long m_timeIdLastTick; // only for onTimeTick, no need for mutex protection
-            boost::asio::deadline_timer m_timeTickerTimer;
 
             krb_log4cpp::Category* m_log;
 
@@ -390,16 +402,10 @@ namespace karabo {
              *
              * @param configuration
              */
-            Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase),
-                m_timeId(0ull),
-                m_timeSec(0ull),
-                m_timeFrac(0ull),
-                m_timePeriod(0ull),
-                m_noTimeTickYet(true),
-                m_timeIdLastTick(0ull),
-                m_timeTickerTimer(karabo::net::EventLoop::getIOService()),
-                m_globalAlarmCondition(karabo::util::AlarmCondition::NONE),
-                m_lastBrokerErrorStamp(0ull, 0ull) {
+            Device(const karabo::util::Hash& configuration)
+                : m_errorRegex(".*error.*", boost::regex::icase)
+                , m_globalAlarmCondition(karabo::util::AlarmCondition::NONE)
+                , m_lastBrokerErrorStamp(0ull, 0ull) {
 
 
                 m_connection = karabo::util::Configurator<karabo::net::JmsConnection>::createNode("_connection_", configuration);
@@ -411,6 +417,11 @@ namespace karabo {
                 // Will remove a potential JmsConnection::Pointer instance from the m_parameters
                 m_parameters.set("_connection_", karabo::util::Hash());
                 m_parameters.set("hostName", net::bareHostName());
+
+                m_timeId = 0;
+                m_timeSec = 0;
+                m_timeFrac = 0;
+                m_timePeriod = 0; // zero as identifier of initial value used in slotTimeTick
 
                 // Set serverId
                 if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
@@ -442,7 +453,6 @@ namespace karabo {
                         << m_deviceClient.use_count() << "\n"
                         << karabo::util::StackTrace();
                 m_deviceClient.reset();
-                m_timeTickerTimer.cancel();
             };
 
             /**
@@ -1081,18 +1091,6 @@ namespace karabo {
             }
 
             /**
-             * A hook which is called if the device receives a time-server update, i.e. if slotTimeTick is called.
-             * Can be overwritten by derived classes.
-             *
-             * @param id: train id
-             * @param sec: unix seconds
-             * @param frac: fractional seconds (i.e. attoseconds)
-             * @param period: interval between ids im microseconds
-             */
-            virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-            }
-
-            /**
              * If the device receives time-server updates via slotTimeTick, this hook will be called for every id,
              * irrespective of the frequency of the calls to slotTimeTick.
              * Can be overwritten by derived classes
@@ -1105,6 +1103,10 @@ namespace karabo {
             virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
 
+            bool useTimeServer() const {
+                return this->get<bool>("useTimeserver");
+            }
+            
             /**
              * Execute a command on this device
              * @param command
@@ -1269,6 +1271,18 @@ namespace karabo {
             }
 
 
+            void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+                {
+                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                    m_timeId = id;
+                    m_timeSec = sec;
+                    m_timeFrac = frac;
+                    m_timePeriod = period;
+                }
+                // Call hook for each external time tick update.
+                onTimeUpdate(id, sec, frac, period);
+            }
+
 
 
         protected: // Functions and Classes
@@ -1407,8 +1421,7 @@ namespace karabo {
                 this->set("pid", ::getpid());
 
                 if (get<bool>("useTimeserver")) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": Connecting to time server";
-                    connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick");
+                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " is configured to use the TimeServer";
                 }
             }
 
@@ -1448,8 +1461,6 @@ namespace karabo {
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
 
                 KARABO_SLOT(slotKillDevice)
-
-                KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
 
                 KARABO_SLOT(slotReSubmitAlarms, karabo::util::Hash);
 
@@ -1686,74 +1697,6 @@ namespace karabo {
                     set(karabo::util::Hash("performanceStatistics.messagingProblems", true));
                     m_lastBrokerErrorStamp.now();
                 }
-            }
-
-            /**
-             * A slot called by the time-server to synchronize this device with the timing system.
-             *
-             * @param id: current train id
-             * @param sec: current system seconds
-             * @param frac: current fractional seconds
-             * @param period: interval between subsequent ids in microseconds
-             */
-            void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-                bool firstCall = false;
-                {
-                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
-                    m_timeId = id;
-                    m_timeSec = sec;
-                    m_timeFrac = frac;
-                    m_timePeriod = period;
-                    firstCall = m_noTimeTickYet;
-                    m_noTimeTickYet = false;
-                }
-                // Take care that 'onTimeUpdate' is called every period:
-                // Cancel pending timer if we had an update from the time server...
-                if (m_timeTickerTimer.cancel() > 0 || firstCall) { // order matters if timer was already running
-                    // ...but start again (or the first time), freshly synchronised.
-                    timeTick(boost::system::error_code(), id);
-                }
-                // Call hook for each external time tick update.
-                onTimeTick(id, sec, frac, period);
-            }
-
-            /**
-             * Helper function for internal time ticker deadline timer to provide internal clock
-             * that calls 'onTimeUpdate' for every id even if slotTimeTick is called less often.
-             *
-             * @param ec error code indicating whether deadline timer was cancelled
-             * @param id: current train id
-             */
-            void timeTick(const boost::system::error_code ec, unsigned long long newId) {
-                if (ec) return;
-
-                // Get values of last 'external' update via slotTimeTick.
-                unsigned long long id = 0, period = 0;
-                util::Epochstamp stamp(0ull, 0ull);
-                {
-                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
-                    id = m_timeId;
-                    stamp = util::Epochstamp(m_timeSec, m_timeFrac);
-                    period = m_timePeriod;
-                }
-                // Calculate how many ids we are away from last external update and adjust stamp
-                const unsigned long long delta = newId - id; // newId >= id is fulfilled
-                const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
-                                                        (period % 1000000ull) * 1000000000000ull); // '* 10^12': micro- to attoseconds
-                const util::TimeDuration sinceId(periodDuration * delta);
-                stamp += sinceId;
-
-                // Call hook that indicates next id. In case the internal ticker was too slow, call it for
-                // each otherwise missed id (with same time...). If it was too fast, do not call again.
-                if (m_timeIdLastTick == 0ull) m_timeIdLastTick = newId - 1; // first time tick
-                while (m_timeIdLastTick < newId) {
-                  onTimeUpdate(++m_timeIdLastTick, stamp.getSeconds(), stamp.getFractionalSeconds(), period);
-                }
-
-                // reload timer for next id:
-                m_timeTickerTimer.expires_at((stamp += periodDuration).getPtime());
-                m_timeTickerTimer.async_wait(util::bind_weak(&Device<FSM>::timeTick, this,
-                                                             boost::asio::placeholders::error, ++newId));
             }
 
             const std::pair<bool, const karabo::util::AlarmCondition> evaluateAndUpdateAlarmCondition(bool forceUpate) {
