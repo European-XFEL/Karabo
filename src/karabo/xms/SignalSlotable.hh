@@ -173,7 +173,12 @@ namespace karabo {
              */
             const std::string& getInstanceId() const;
 
-            void updateInstanceInfo(const karabo::util::Hash& update);
+            /**
+             * Update and publish the instanceInfo
+             * @param update: a Hash containing new or updated keys - or keys to remove
+             * @param remove: if false (default), merge 'update' to existing instance info, otherwise subtract it
+             */
+            void updateInstanceInfo(const karabo::util::Hash& update, bool remove = false);
 
             const karabo::util::Hash& getInstanceInfo() const;
 
