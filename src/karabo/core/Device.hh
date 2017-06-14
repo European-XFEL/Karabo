@@ -1285,6 +1285,8 @@ namespace karabo {
                 onTimeUpdate(id, sec, frac, period);
             }
 
+            void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            }
 
 
         protected: // Functions and Classes
