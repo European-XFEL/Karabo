@@ -2,9 +2,11 @@
 API cross test
 """
 
+import numpy
+
 from karabo.bound import (
-    AMPERE, Hash, DOUBLE_ELEMENT, Epochstamp, KARABO_CLASSINFO,
-    KILO, METER, MILLI, NODE_ELEMENT, PythonDevice, Schema, SLOT_ELEMENT,
+    AMPERE, Hash, DOUBLE_ELEMENT, Epochstamp, KARABO_CLASSINFO, KILO, METER,
+    MILLI, NDARRAY_ELEMENT, NODE_ELEMENT, PythonDevice, Schema, SLOT_ELEMENT,
     State, STRING_ELEMENT, TABLE_ELEMENT, Timestamp, Trainstamp)
 
 
@@ -66,6 +68,11 @@ class TestDevice(PythonDevice):
             .setNodeSchema(tableSchema)
             .assignmentOptional()
             .defaultValue([Hash("d", 5, "s", "hallo")])
+            .commit(),
+
+            NDARRAY_ELEMENT(expected).key("ndarray")
+            .shape("3,2")
+            .dtype("FLOAT")
             .commit()
         )
 
@@ -85,6 +92,7 @@ class TestDevice(PythonDevice):
         self.set("a", 22.7, ts)
         ts = Timestamp(Epochstamp("20160617T135522"), Trainstamp(0))
         self.set("node.b", 100, ts)
+        self.set("ndarray", numpy.array([[1, 2, 3], [4, 5, 6]]))
 
     def backfire(self):
         remote = self.remote()
