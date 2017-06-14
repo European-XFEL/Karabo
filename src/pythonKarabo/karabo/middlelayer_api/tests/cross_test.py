@@ -70,7 +70,7 @@ class Tests(DeviceTest):
             stdout=PIPE)
         schema = yield from self.process.stdout.read()
         yield from self.process.wait()
-        self.assertEqual(adler32(schema), 2269400352,
+        self.assertEqual(adler32(schema), 2833882265,
             "The generated schema changed. If this is desired, change the "
             "checksum in the code.")
 
@@ -116,6 +116,8 @@ class Tests(DeviceTest):
                              "2016-06-17T13:55:22 UTC")
             self.assertEqual(proxy.state, State.UNKNOWN)
             self.assertEqual(proxy.alarmCondition, AlarmCondition.NONE)
+
+            self.assertEqual(proxy.ndarray[0, 1], 2)
 
             with self.assertRaises(ValueError):
                 proxy.a = 77
