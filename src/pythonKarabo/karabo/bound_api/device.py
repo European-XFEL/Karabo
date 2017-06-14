@@ -19,9 +19,8 @@ from karathon import (
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
     ValidatorValidationRules
 )
-from karabo.common.alarm_conditions import AlarmCondition
-from karabo.common.capabilities import Capabilities
-from karabo.common.states import State
+from karabo.common.api import (AlarmCondition, Capabilities, State,
+                               karabo_deprecated)
 # Use patched DeviceClient, not the one directly from karathon:
 from .device_client import DeviceClient
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
@@ -979,10 +978,11 @@ class PythonDevice(NoFsm):
 
         return self._ss.getAvailableInstances()
 
-
+    @karabo_deprecated
     def errorFoundAction(self, shortMessage, detailedMessage):
         """
-        A function to overwrite for error handling. Is deprecated!
+        This method is DEPRECATED!
+        A function to overwrite for error handling.
         :param shortMessage:
         :param detailedMessage:
         :return:
@@ -1045,15 +1045,18 @@ class PythonDevice(NoFsm):
                     self._ss.updateInstanceInfo(Hash("status", "ok"))
         self._ss.reply(stateName)  # reply new state to interested event initiators
 
+    @karabo_deprecated
     def onStateUpdate(self, currentState):
+        """This method is DEPRECATED, use updateState() instead"""
         assert isinstance(currentState, State)
-        print("onStateUpdate() is deprecated, use updateState() instead")
         self.updateState(currentState)
 
+    @karabo_deprecated
     def exceptionFound(self, shortMessage, detailedMessage):
         """
-        Hook for when an exception is encounterd. This method is DEPRECATED
-        and will removed. Catch exceptions where they can occur instead, e.g.
+        This method is DEPRECATED and will be removed.
+        Hook for when an exception is encountered.
+        Catch exceptions where they can occur instead, e.g.
         when calling a slot or requesting a value!
 
         :param shortMessage: exception message
@@ -1208,8 +1211,9 @@ class PythonDevice(NoFsm):
         """
         self._ss.registerEndOfStreamHandler(channelName, handler)
 
+    @karabo_deprecated
     def triggerError(self, s, d):
-        print("The triggerError() function is deprecated, use execute() instead")
+        """This method is deprecated, use execute() instead"""
         self.exceptionFound(s, d)
 
     def execute(self, command, *args):
@@ -1380,6 +1384,7 @@ class PythonDevice(NoFsm):
                 id = self._timeId + nPeriods
         return Timestamp(epochNow, Trainstamp(int(id)))
 
+    @karabo_deprecated
     def _getActualTimestamp(self):
         '''This method is DEPRECATED, use getActualTimestamp() instead'''
         return self.getActualTimestamp()
