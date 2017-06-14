@@ -537,7 +537,7 @@ void SignalSlotable_Test::testRegisterSlotTwice() {
     // Trying to register a further method with another signature raises an exception:
     auto third = [](int arg) {
     };
-    CPPUNIT_ASSERT_THROW(instance->registerSlot<int>(third, "slot"), karabo::util::Exception);
+    CPPUNIT_ASSERT_THROW(instance->registerSlot<int>(third, "slot"), karabo::util::SignalSlotException);
     karabo::util::Exception::clearTrace();
 }
 
