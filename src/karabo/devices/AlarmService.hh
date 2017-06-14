@@ -172,24 +172,17 @@ namespace karabo {
             }
 
             /**
-             * Determine a single property's most significant alarm.
-             * @param propertyAlarmTypes: a Hash containing all the alarm type hashes for a single property
-             * @return The most significant alarm type
-             */
-            karabo::util::AlarmCondition getMostSignificantAlarm(const karabo::util::Hash& propertyAlarmTypes) const;
-
-            /**
              * Make all alarm types which are of a lower significance 'acknowledgeable'
              * if 'needsAcknowledging' is set for them.
              *
              * NOTE: `m_alarmChangeMutex` must be locked when calling this method!
              *
              * @param propertyAlarms: The sub-Hash of m_alarms containing all the alarm type hashes for a single property
-             * @param significantType: An alarm type to compare against
+             * @param lastAdded: An alarm type to compare against
              * @param rowUpdates: A row updates Hash which will be emitted to connected slots
              */
-            void  makeLessSignificantAcknowledgeable(karabo::util::Hash& propertyAlarms,
-                                                     const karabo::util::AlarmCondition& significantType,
+            void  makeMoreSignificantAcknowledgeable(karabo::util::Hash& propertyAlarms,
+                                                     const karabo::util::AlarmCondition& lastAdded,
                                                      karabo::util::Hash& rowUpdates);
 
         private: // members
