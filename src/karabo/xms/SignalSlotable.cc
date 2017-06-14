@@ -1097,8 +1097,12 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::updateInstanceInfo(const karabo::util::Hash& update) {
-            m_instanceInfo.merge(update);
+        void SignalSlotable::updateInstanceInfo(const karabo::util::Hash& update, bool remove) {
+            if (remove) {
+                m_instanceInfo.subtract(update);
+            } else {
+                m_instanceInfo.merge(update);
+            }
             call("*", "slotInstanceUpdated", m_instanceId, m_instanceInfo);
         }
 
