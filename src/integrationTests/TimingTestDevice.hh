@@ -52,11 +52,17 @@ namespace karabo {
         void stop();
 
         virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
+        virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
 
+        karabo::util::Epochstamp m_lastTimeStamp;
         bool m_started;
         std::vector<unsigned long long> m_ids;
         std::vector<unsigned long long> m_seconds;
         std::vector<unsigned long long> m_fractions;
+
+        std::vector<unsigned long long> m_idsTick;
+        std::vector<unsigned long long> m_secondsTick;
+        std::vector<unsigned long long> m_fractionsTick;
     };
 }
 
