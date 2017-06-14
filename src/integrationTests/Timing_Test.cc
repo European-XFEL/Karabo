@@ -112,29 +112,6 @@ void Timing_Test::appTestRunner() {
         lastStamp = currentStamp;
     }
 
-    // Now test that the real ticks received from the time server have the expected spacing and are increasing
-    // (== not allowed!).
-    const auto idsTick(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "idsTick"));
-    const auto secondsTick(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "secondsTick"));
-    const auto fractionsTick(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "fractionsTick"));
-
-    CPPUNIT_ASSERT(ids.size() > idsTick.size());
-    CPPUNIT_ASSERT_EQUAL(idsTick.size(), secondsTick.size());
-    CPPUNIT_ASSERT_EQUAL(idsTick.size(), fractionsTick.size());
-    CPPUNIT_ASSERT(idsTick.size() >= 2);
-
-    unsigned long long lastIdTick = idsTick[0];
-    karabo::util::Epochstamp lastStampTick(secondsTick[0], fractionsTick[0]);
-    for (size_t i = 1; i < idsTick.size(); ++i) {
-        CPPUNIT_ASSERT_EQUAL(idsTick[i], lastIdTick + static_cast<unsigned long long> (tickCountdown));
-
-        const karabo::util::Epochstamp currentStamp(secondsTick[i], fractionsTick[i]);
-        CPPUNIT_ASSERT(currentStamp > lastStampTick);
-
-        lastIdTick = idsTick[i];
-        lastStampTick = currentStamp;
-    }
-
     // As last test check how many ticks we really got - might be off a bit since time server sometimes reports
     // period that is off by periodVarFrac.
     const int numExpectedTicks = testDurationInMicrosec / tickPeriodInMicrosec;
