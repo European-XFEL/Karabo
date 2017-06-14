@@ -506,6 +506,41 @@ void SignalSlotable_Test::testAutoConnectSlot() {
 }
 
 
+void SignalSlotable_Test::testRegisterSlotTwice() {
+    // Registering two function of the same signature for the same slot means that both are executed
+    // when the slot is called.
+    auto instance = boost::make_shared<SignalSlotable>("instance");
+    instance->start();
+
+    bool firstIsCalled = false;
+    auto first = [&firstIsCalled]() {
+        firstIsCalled = true;
+    };
+    instance->registerSlot(first, "slot");
+
+    bool secondIsCalled = false;
+    auto second = [&secondIsCalled]() {
+        secondIsCalled = true;
+    };
+    // Adding second with same signature is fine in contrast to third below:
+    CPPUNIT_ASSERT_NO_THROW(instance->registerSlot(second, "slot"));
+
+    auto tester = boost::make_shared<SignalSlotable>("tester");
+    tester->start();
+    // Synchronous request to avoid sleeps in test - assert that no timeout happens.
+    // Our slot functions do not place any answers, so an empty one will be added.
+    CPPUNIT_ASSERT_NO_THROW(tester->request("instance", "slot").timeout(500).receive());
+
+    CPPUNIT_ASSERT(firstIsCalled);
+    CPPUNIT_ASSERT(secondIsCalled);
+
+    // Trying to register a further method with another signature raises an exception:
+    auto third = [](int arg) {
+    };
+    CPPUNIT_ASSERT_THROW(instance->registerSlot<int>(third, "slot"), karabo::util::Exception);
+    karabo::util::Exception::clearTrace();
+}
+
 void SignalSlotable_Test::waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls,
                                      int trials) {
     // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
