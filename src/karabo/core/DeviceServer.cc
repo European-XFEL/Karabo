@@ -123,7 +123,7 @@ namespace karabo {
             STRING_ELEMENT(expected).key("timeServerId")
                     .displayedName("TimeServer ID")
                     .description("The instance id uniquely identifies a TimeServer instance in the distributed system")
-                    .assignmentOptional().defaultValue("Karabo_TimeServer")
+                    .assignmentOptional().defaultValue("")
                     .commit();
 
         }
@@ -307,7 +307,7 @@ namespace karabo {
             // Calculate how many ids we are away from last external update and adjust stamp
             const unsigned long long delta = newId - id; // newId >= id is fulfilled
             const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
-                                                    period * 1000000000000ull); // '* 10^12': micro- to attoseconds
+                                                    (period % 1000000ull) * 1000000000000ull); // '* 10^12': micro- to attoseconds
             const util::TimeDuration sinceId(periodDuration * delta);
             stamp += sinceId;
 
@@ -326,6 +326,15 @@ namespace karabo {
 
 
         void DeviceServer::onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            DeviceInstanceMap dim;
+            {
+                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                dim = m_deviceInstanceMap;
+            }
+            for (DeviceInstanceMap::iterator it = dim.begin(); it != dim.end(); ++it) {
+                if (it->second && it->second->useTimeServer())
+                    it->second->onTimeTick(id, sec, frac, period);
+            }
         }
 
 

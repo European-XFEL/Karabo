@@ -92,6 +92,8 @@ namespace karabo {
              * @param period: interval between subsequent ids in microseconds
              */
             virtual void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
+            
+            virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
 
             /**
              * Check if the device is configured to use the time server ticks
