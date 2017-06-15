@@ -2,7 +2,7 @@ import karabo_gui.gui_registry_loader  # noqa
 from karabo.common.scenemodel.api import (
     AnalogModel, BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
     DirectoryModel, DisplayCommandModel, DisplayLabelModel, DisplayPlotModel,
-    DoubleLineEditModel, EditableListElementModel, EditableListModel,
+    EditableListElementModel, EditableListModel,
     EditableSpinBoxModel, FileInModel, FileOutModel, HexadecimalModel,
     IntLineEditModel, KnobModel, LampModel, LineEditModel, PopUpModel,
     SliderModel, XYPlotModel
@@ -17,7 +17,6 @@ _GENERIC_WIDGET_FACTORIES = {
     DisplayCommandModel: 'DisplayCommand',
     DisplayLabelModel: 'DisplayLabel',
     DisplayPlotModel: 'DisplayPlot',
-    DoubleLineEditModel: 'DoubleLineEdit',
     EditableListModel: 'EditableList',
     EditableListElementModel: 'EditableListElement',
     EditableSpinBoxModel: 'EditableSpinBox',
