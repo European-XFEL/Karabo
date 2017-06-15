@@ -4,20 +4,24 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
 from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import QLineEdit, QDoubleValidator, QPalette, QValidator
+from PyQt4.QtGui import (QAction, QInputDialog, QLineEdit, QDoubleValidator,
+                         QPalette, QValidator)
 
-from karabo.middlelayer import Integer, Number
 from karabo_gui.displaywidgets.unitlabel import add_unit_label
 from karabo_gui.util import SignalBlocker
+from karabo_gui.schema import Dummy
 from karabo_gui.widget import DisplayWidget, EditableWidget
+from karabo.middlelayer import Integer, Number
+
+MAX_FLOATING_PRECISION = 12
 
 
 class NumberLineEdit(EditableWidget, DisplayWidget):
     def __init__(self, box, parent):
         super(NumberLineEdit, self).__init__(box)
         self._internal_widget = QLineEdit(parent)
+        self._internal_widget.setAlignment(Qt.AlignLeft | Qt.AlignAbsolute)
         self._internal_widget.setValidator(self.validator)
         self.widget = add_unit_label(box, self._internal_widget, parent=parent)
         self.normalPalette = self._internal_widget.palette()
@@ -46,15 +50,6 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         self.validator.setBottom(min)
         self.validator.setTop(max)
 
-    def valueChanged(self, box, value, timestamp=None):
-        self.widget.updateLabel(box)
-
-        if value is None:
-            value = 0
-
-        with SignalBlocker(self._internal_widget):
-            self._internal_widget.setText("{}".format(value))
-
     def validate_value(self):
         """
         This function validates the current value of the widget and returns
@@ -79,9 +74,41 @@ class DoubleLineEdit(NumberLineEdit):
         self.validator = QDoubleValidator(None)
         NumberLineEdit.__init__(self, box, parent)
 
+        # No formatting as default
+        self.decimals = -1
+
+        decimalAction = QAction("Change number of decimals", self.widget)
+        decimalAction.triggered.connect(self._showDecimalDialog)
+        self.widget.addAction(decimalAction)
+
     @property
     def value(self):
         return float(self.validate_value())
+
+    def valueChanged(self, box, value, timestamp=None):
+        if isinstance(value, Dummy):
+            return
+
+        self.widget.updateLabel(box)
+
+        if value is None:
+            value = 0
+        format_str = ("{}" if self.decimals == -1
+                      else "{{:.{}f}}".format(self.decimals))
+        with SignalBlocker(self._internal_widget):
+            self._internal_widget.setText(format_str.format(value))
+
+    def _showDecimalDialog(self):
+        num_decimals, ok = QInputDialog.getInt(self.widget, "Decimal",
+                                               "Floating point precision:",
+                                               self.decimals,
+                                               -1, MAX_FLOATING_PRECISION)
+        if ok:
+            self._setDecimalNumber(num_decimals)
+
+    def _setDecimalNumber(self, value):
+        self.decimals = value
+        self.valueChanged(self.boxes[0], self.boxes[0].value)
 
 
 class IntValidator(QValidator):
@@ -128,3 +155,12 @@ class IntLineEdit(NumberLineEdit):
     @property
     def value(self):
         return int(self.validate_value())
+
+    def valueChanged(self, box, value, timestamp=None):
+        self.widget.updateLabel(box)
+
+        if value is None:
+            value = 0
+
+        with SignalBlocker(self._internal_widget):
+            self._internal_widget.setText("{}".format(value))
