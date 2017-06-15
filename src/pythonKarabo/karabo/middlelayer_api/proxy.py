@@ -1,7 +1,7 @@
 import asyncio
 from collections import defaultdict
 import time
-from weakref import ref, WeakSet
+from weakref import WeakSet
 
 from .basetypes import KaraboValue
 from .enums import NodeType
@@ -149,9 +149,11 @@ class ProxyFactory(object):
         It should inherit from :class:`SubProxyBase`.
     """
     Proxy = ProxyBase
-    createSlot = ProxySlotBase
-    createNDArray = NDArray
     SubProxy = SubProxyBase
+
+    node_factories = dict(
+        Slot=ProxySlotBase,
+        NDArray=NDArray)
 
     @classmethod
     def createNode(cls, key, node, prefix, **kwargs):
@@ -167,7 +169,7 @@ class ProxyFactory(object):
         in the class of the caller, and normal Python inheritance rules apply,
         so you can overload the registration in a specialized class.
         """
-        setattr(cls, "create{}".format(name), special)
+        cls.node_factories[name] = special
 
     @classmethod
     def createNamespace(cls, schema, prefix=""):
@@ -181,9 +183,8 @@ class ProxyFactory(object):
             elif nodeType is NodeType.Node:
                 # once also Slots have the classId set, we better use
                 # classId, not displayType
-                classId = a.get("displayType", "Node")
-                factory = getattr(cls, "create{}".format(classId),
-                                  cls.createNode)
+                classId = a.get("displayType")
+                factory = cls.node_factories.get(classId, cls.createNode)
                 descriptor = factory(key=k, node=v, prefix=prefix,
                                      strict=False, **a)
             else:
