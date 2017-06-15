@@ -4,15 +4,16 @@ import os.path as op
 from tempfile import mkstemp
 from uuid import uuid4
 
-from PyQt4.QtCore import QPoint, QSize, Qt
+from PyQt4.QtCore import QPoint, QSize, Qt, QSettings
 from PyQt4.QtGui import (
     QBrush, QDialog, QFileDialog, QHeaderView, QLabel, QMovie, QPainter, QPen,
     QWidget)
 
 from karabo.middlelayer import decodeXML, Hash, MetricPrefix, Unit, writeXML
-import karabo_gui.globals as globals
+import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
 from karabo_gui import messagebox
+from karabo_gui.enums import KaraboSettings
 from karabo_gui.singletons.api import get_db_conn
 
 
@@ -20,6 +21,7 @@ class PlaceholderWidget(QWidget):
     """A widget which indicates to the user that something is missing or
     unsupported.
     """
+
     def __init__(self, text, parent=None):
         super(PlaceholderWidget, self).__init__(parent)
         self._text = text
@@ -39,14 +41,15 @@ class PlaceholderWidget(QWidget):
 
             metrics = painter.fontMetrics()
             text_rect = metrics.boundingRect(self._text)
-            pos = rect.center() - QPoint(text_rect.width()/2,
-                                         -text_rect.height()/2)
+            pos = rect.center() - QPoint(text_rect.width() / 2,
+                                         -text_rect.height() / 2)
             painter.setPen(QPen())
             painter.drawText(pos, self._text)
 
 
 class SignalBlocker(object):
     """ Block signals from a QWidget in a with statement """
+
     def __init__(self, object):
         self.object = object
 
@@ -61,20 +64,22 @@ def generateObjectName(widget):
     return "{0}_{1}".format(widget.__class__.__name__, uuid4().hex)
 
 
-def getOpenFileName(parent=None, caption="", filter=""):
+def getOpenFileName(parent=None, caption="", filter="", directory=""):
     """ Return `filename` of the Qt file open dialog.
     """
+    directory = directory or krb_globals.HIDDEN_KARABO_FOLDER
+
     return QFileDialog.getOpenFileName(parent=parent,
                                        caption=caption,
-                                       directory=globals.HIDDEN_KARABO_FOLDER,
+                                       directory=directory,
                                        filter=filter,
                                        options=QFileDialog.DontUseNativeDialog)
 
 
-def getSaveFileName(parent=None, caption="", directory="", filter="",
+def getSaveFileName(parent=None, caption="", filter="", directory="",
                     suffix="", selectFile=""):
-    if not directory:
-        directory = globals.HIDDEN_KARABO_FOLDER
+
+    directory = directory or krb_globals.HIDDEN_KARABO_FOLDER
 
     dialog = QFileDialog(parent, caption, directory, filter)
     dialog.selectFile(selectFile)
@@ -152,8 +157,13 @@ def loadConfigurationFromFile(configuration):
     """Given a ``Configuration`` object instance. Read a configuration Hash
     from an XML file and assign it to the object.
     """
+
+    path = get_setting(KaraboSettings.CONFIG_DIR)
+    directory = path if path and op.isdir(path) else ""
+
     filename = getOpenFileName(caption="Open configuration",
-                               filter="XML (*.xml)")
+                               filter="XML (*.xml)",
+                               directory=directory)
     if not filename:
         return
 
@@ -170,6 +180,9 @@ def loadConfigurationFromFile(configuration):
         return
     configuration.dispatchUserChanges(config[classId])
 
+    # Save the directory information
+    set_setting(KaraboSettings.CONFIG_DIR, op.dirname(filename))
+
 
 def saveConfigurationToFile(configuration):
     """This function saves the current configuration of a device to a file.
@@ -179,9 +192,13 @@ def saveConfigurationToFile(configuration):
         messagebox.show_error("No configuration available. Saving failed.")
         return
 
+    path = get_setting(KaraboSettings.CONFIG_DIR)
+    directory = path if path and op.isdir(path) else ""
+
     filename = getSaveFileName(caption="Save configuration as",
                                filter="Configuration (*.xml)",
-                               suffix="xml")
+                               suffix="xml",
+                               directory=directory)
     if not filename:
         return
 
@@ -250,3 +267,15 @@ def set_treeview_header(tree_view):
     tree_view.header().setResizeMode(2, QHeaderView.Fixed)
     tree_view.setColumnWidth(1, 20)
     tree_view.setColumnWidth(2, 20)
+
+
+def get_setting(attr):
+    """ This function is used to retrieve a value from the QSettings file """
+    assert isinstance(attr, KaraboSettings)
+    return QSettings().value(attr.name)
+
+
+def set_setting(attr, value):
+    """ This function is used to set an attribute in the QSettings file """
+    assert isinstance(attr, KaraboSettings)
+    QSettings().setValue(attr.name, value)

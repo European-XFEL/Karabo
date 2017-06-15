@@ -14,13 +14,14 @@ from karabo.common.project.api import (
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabo_gui import icons
 from karabo_gui import messagebox
+from karabo_gui.enums import KaraboSettings
 from karabo_gui.project.dialog.device_scenes import DeviceScenesDialog
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
 from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.utils import handle_scene_from_server
 from karabo_gui.request import call_device_slot
-from karabo_gui.util import getOpenFileName
+from karabo_gui.util import getOpenFileName, get_setting, set_setting
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 
@@ -134,9 +135,16 @@ def _add_macro(project_controller):
 
 
 def _load_macro(project_controller):
-    fn = getOpenFileName(caption='Load macro', filter='Python Macros (*.py)')
+    path = get_setting(KaraboSettings.MACRO_DIR)
+    directory = path if path and op.isdir(path) else ""
+
+    fn = getOpenFileName(caption='Load macro', filter='Python Macros (*.py)',
+                         directory=directory)
     if not fn:
         return
+
+    # Store old macro dialog path
+    set_setting(KaraboSettings.MACRO_DIR, op.dirname(fn))
 
     project = project_controller.model
     # Read MacroModel
@@ -161,9 +169,18 @@ def _add_scene(project_controller):
 
 
 def _load_scene(project_controller):
-    fn = getOpenFileName(caption='Load scene', filter='SVG Files (*.svg)')
+    """ Load a scene from local disk
+    """
+    path = get_setting(KaraboSettings.SCENE_DIR)
+    directory = path if path and op.isdir(path) else ""
+
+    fn = getOpenFileName(caption='Load scene', filter='SVG Files (*.svg)',
+                         directory=directory)
     if not fn:
         return
+
+    # Store old scene dialog path
+    set_setting(KaraboSettings.SCENE_DIR, op.dirname(fn))
 
     project = project_controller.model
     # Read SceneModel
