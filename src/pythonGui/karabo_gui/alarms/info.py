@@ -9,23 +9,24 @@ from karabo.common.api import AlarmCondition
 
 
 class AlarmInfo(HasStrictTraits):
-    # Keep track of all alarm_types (key: alarm type, value: list of device
+    # Keep track of all alarm_types (key: alarm type, value: set of device
     # properties)
     alarm_dict = Dict
     # A property which returns the alarm_type of the highest priority
     alarm_type = Property(String)
 
     def append_alarm_type(self, dev_property, alarm_type):
-        """Append given ``alarm_type`` to dict and update list with device
+        """Append given ``alarm_type`` to dict and update set with device
         properties
         """
         if not isinstance(alarm_type, AlarmCondition):
             alarm_type = AlarmCondition.fromString(alarm_type)
-        self.alarm_dict.setdefault(alarm_type, []).append(dev_property)
+
+        self.alarm_dict.setdefault(alarm_type, set()).add(dev_property)
 
     def remove_alarm_type(self, dev_property, alarm_type):
-        """Remove given ``dev_property`` for ``alarm_type`` from dict list
-        or remove ``alarm_type`` from dict if list is empty afterwards
+        """Remove given ``dev_property`` for ``alarm_type`` from dict set
+        or remove ``alarm_type`` from dict if set is empty afterwards
         """
         if not isinstance(alarm_type, AlarmCondition):
             alarm_type = AlarmCondition.fromString(alarm_type)
