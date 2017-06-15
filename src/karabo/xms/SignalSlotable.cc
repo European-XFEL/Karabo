@@ -833,6 +833,9 @@ namespace karabo {
             // Global slot instance gone
             KARABO_SLOT2(slotInstanceGone, string /*instanceId*/, Hash /*instanceInfo*/)
 
+            // Global slot instance updated
+            KARABO_SLOT(slotInstanceUpdated, string /*instanceId*/, Hash /*instanceInfo*/)
+
             // Listener for ping answers
             KARABO_SLOT2(slotPingAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
 
@@ -896,19 +899,34 @@ namespace karabo {
 
             reconnectSignals(instanceId);
 
-            if (m_discoverConnectionResourcesMode && instanceInfo.has("p2p_connection") && m_instanceInfo.has("p2p_connection")) {
-                string localConnectionString, remoteConnectionString;
-                m_instanceInfo.get("p2p_connection", localConnectionString);
-                instanceInfo.get("p2p_connection", remoteConnectionString);
-
-                // Store only remote connection strings
-                if (localConnectionString != remoteConnectionString) {
-                    boost::mutex::scoped_lock lock(m_connectionStringsMutex);
-                    m_connectionStrings[instanceId] = remoteConnectionString;
-                }
+            if (m_discoverConnectionResourcesMode) {
+                updateP2pConnectionStrings(instanceId, instanceInfo, m_instanceInfo);
             }
 
             reconnectInputChannels(instanceId);
+        }
+
+
+        void SignalSlotable::updateP2pConnectionStrings(const std::string& newInstanceId, const karabo::util::Hash& newInstanceInfo,
+                                                        const karabo::util::Hash& localInstanceInfo) {
+            boost::mutex::scoped_lock lock(m_connectionStringsMutex);
+            if (newInstanceInfo.has("p2p_connection")) {
+                std::string localConnectionString;
+                if (localInstanceInfo.has("p2p_connection")) {
+                    localInstanceInfo.get("p2p_connection", localConnectionString);
+                }
+                const std::string remoteConnectionString = newInstanceInfo.get<std::string>("p2p_connection");
+                // Store only remote connection strings - even if local does not 'speak' p2p, it may discover for others.
+                if (remoteConnectionString != localConnectionString) {
+                    m_connectionStrings[newInstanceId] = remoteConnectionString;
+                } else {
+                    // Usually should not be in map, but ensure that
+                    m_connectionStrings.erase(newInstanceId);
+                }
+            } else {
+                // Maybe it was in before, maybe not - now it should definitively not be anymore!
+                m_connectionStrings.erase(newInstanceId);
+            }
         }
 
 
@@ -923,10 +941,21 @@ namespace karabo {
             }
 
             emit("signalInstanceGone", instanceId, instanceInfo);
-            if (m_discoverConnectionResourcesMode && instanceInfo.has("p2p_connection")) {
+            if (m_discoverConnectionResourcesMode) {
                 boost::mutex::scoped_lock lock(m_connectionStringsMutex);
-                map<string, string>::iterator it = m_connectionStrings.find(instanceId);
-                if (it != m_connectionStrings.end()) m_connectionStrings.erase(it);
+                // No matter whether this instanceId is in the map - we have to ensure that it is not anymore:
+                m_connectionStrings.erase(instanceId);
+            }
+        }
+
+
+        void SignalSlotable::slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+
+            if (instanceId == m_instanceId) return;
+
+            if (m_discoverConnectionResourcesMode) {
+                // We are in charge to take care of global p2p_connection info (added, changed or even removed)
+                updateP2pConnectionStrings(instanceId, instanceInfo, m_instanceInfo);
             }
         }
 
