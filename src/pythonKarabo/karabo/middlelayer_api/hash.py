@@ -864,8 +864,9 @@ class ByteArray(Vector):
 
     @classmethod
     def yieldBinary(cls, data):
-        yield pack('I', len(data))
-        yield data
+        mv = memoryview(data)
+        yield pack('I', mv.nbytes)
+        yield mv
 
     def cast(self, other):
         if isinstance(other, bytearray):
@@ -1370,8 +1371,6 @@ def _gettype(data):
             return ComplexDouble
         elif isinstance(data, bytes):
             return VectorChar
-        elif isinstance(data, bytearray):
-            return ByteArray
         elif isinstance(data, str):
             return String
         elif isinstance(data, list):
@@ -1381,7 +1380,10 @@ def _gettype(data):
                 return VectorString
         elif not basetypes.isSet(data):
             return None_
-        else:
+        try:
+            memoryview(data)
+            return ByteArray
+        except TypeError:
             raise TypeError('unknown datatype {}'.format(data.__class__))
 
 
