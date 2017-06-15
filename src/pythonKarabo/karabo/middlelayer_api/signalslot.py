@@ -11,7 +11,6 @@ import re
 from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
 from .hash import Descriptor, Hash, HashType, Int32, Slot, String
-from .p2p import NetworkOutput
 from .proxy import DeviceClientProxyFactory
 from .schema import Configurable
 from .synchronization import firstCompleted, FutureDict
@@ -207,16 +206,6 @@ class SignalSlotable(Configurable):
     @slot
     def slotStopTrackingExistenceOfConnection(self, *args):
         print('receivet stopTracking...', args)
-
-    @slot
-    def slotGetOutputChannelInformation(self, ioChannelId, processId):
-        ch = getattr(self, ioChannelId, None)
-        if isinstance(ch, NetworkOutput):
-            ret = ch.getInformation()
-            ret["memoryLocation"] = "remote"
-            return True, ret
-        else:
-            return False, Hash()
 
     def _initInfo(self):
         """return the info hash at initialization time"""
