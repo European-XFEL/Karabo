@@ -7,9 +7,9 @@ from pint import DimensionalityError
 from karabo.middlelayer import (
     AccessMode, Assignment, AccessLevel, Attribute, Bool, Char, ComplexFloat,
     decodeBinary, Double, encodeBinary, Float, Hash, Int8, Int16, MetricPrefix,
-    NumpyVector, QuantityValue, Schema, State, String, Timestamp, Type, Unit,
-    unit, UInt64, VectorBool, VectorChar, VectorComplexFloat, VectorFloat,
-    VectorHash, VectorInt8, VectorString)
+    NumpyVector, NDArray, QuantityValue, Schema, State, String, Timestamp,
+    Type, Unit, unit, UInt64, VectorBool, VectorChar, VectorComplexFloat,
+    VectorFloat, VectorHash, VectorInt8, VectorString)
 
 
 class Tests(TestCase):
@@ -245,6 +245,46 @@ class Tests(TestCase):
                                metricPrefixSymbol=MetricPrefix.KILO)
         v = d.toKaraboValue(v)
         self.assertAlmostEqual(v[1].magnitude, 3e-6+4e-6j)
+
+    def test_ndarray(self):
+        d = NDArray(dtype=ComplexFloat, shape=(2, 3))
+        v = d.toKaraboValue([[1, 2], [3, 4]])
+        self.assertEqual(v[0, 1], 2)
+        self.assertEqual(v.dtype, numpy.dtype("c8"))
+        h, attrs = d.toDataAndAttrs(v)
+        h = decodeBinary(encodeBinary(h))
+        self.assertEqual(h["type"], 24)
+        self.assertFalse(h["isBigEndian"])
+        self.assertEqual(h["shape"][1], 2)
+        self.assertEqual(len(h["data"]), 32)
+
+        d = NDArray(dtype=">i2", shape=(0, 3))
+        v = d.toKaraboValue(v.real)
+        self.assertEqual(v.dtype, numpy.dtype(">i2"))
+        self.assertEqual(v[1, 0], 3)
+        schema, attrs = d.toSchemaAndAttrs(None, None)
+        h = Hash("d", schema)
+        h["d", ...] = attrs
+        h = decodeBinary(encodeBinary(h))
+        self.assertEqual(h["d", "classId"], "NDArray")
+        self.assertEqual(h["d", "displayType"], "NDArray")
+        self.assertEqual(h["d", "shape"][0], 0)
+        self.assertEqual(h["d", "type"], 8)
+        h, attrs = d.toDataAndAttrs(v)
+        h = decodeBinary(encodeBinary(h))
+        self.assertEqual(h["type"], 8)
+        self.assertTrue(h["isBigEndian"])
+        self.assertEqual(h["shape"][1], 2)
+        self.assertEqual(len(h["data"]), 8)
+
+        conv = d.toKaraboValue(h)
+        self.assertEqual(conv[1, 1], 4)
+
+        # the following tests that toKaraboValue does not copy, and
+        # that the data is indeed big endian.
+        h["data"][0] = 1
+        conv = d.toKaraboValue(h)
+        self.assertEqual(conv[0, 0], 257)
 
     def test_string(self):
         d = String()
