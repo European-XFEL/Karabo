@@ -680,7 +680,12 @@ namespace karabo {
 
             void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
+            static void updateP2pConnectionStrings(const std::string& newInstanceId, const karabo::util::Hash& newInstanceInfo,
+                                                   const karabo::util::Hash& localInstanceInfo);
+
             void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+
+            void slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             void slotPing(const std::string& instanceId, int rand, bool trackPingedInstance);
 
