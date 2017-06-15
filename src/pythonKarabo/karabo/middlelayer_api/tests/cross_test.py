@@ -12,8 +12,9 @@ from zlib import adler32
 
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, background, Configurable, Device,
-    DeviceClientBase, getDevice, getHistory, Int32, MetricPrefix, Node,
-    shutdown, sleep, Slot, State, unit, Unit, waitUntil, waitUntilNew)
+    DeviceClientBase, getDevice, getHistory, isSet, InputChannel, Int32,
+    MetricPrefix, Node, shutdown, sleep, Slot, State, unit, Unit, waitUntil,
+    waitUntilNew)
 
 from .eventloop import DeviceTest, async_tst
 
@@ -23,6 +24,9 @@ class Child(Configurable):
 
 
 class MiddlelayerDevice(DeviceClientBase):
+    channelcount = 0
+    rawchannelcount = 0
+
     value = Int32()
 
     child = Node(Child)
@@ -31,12 +35,31 @@ class MiddlelayerDevice(DeviceClientBase):
     def slot(self):
         self.marker = True
 
+    @InputChannel()
+    def channel(self, data, meta):
+        self.channelcount += 1
+        self.channeldata = data
+        self.channelmeta = meta
+
+    @channel.close
+    def channel(self, output):
+        self.channelclose = output
+
+    @InputChannel(raw=True)
+    def rawchannel(self, data, meta):
+        self.rawchannelcount += 1
+        self.rawchanneldata = data
+        self.rawchannelmeta = meta
+
 
 class Tests(DeviceTest):
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
-        cls.device = MiddlelayerDevice(dict(_deviceId_="middlelayerDevice"))
+        cls.device = MiddlelayerDevice(dict(
+            _deviceId_="middlelayerDevice",
+            rawchannel=dict(connectedOutputChannels=["boundDevice:output2"]),
+            channel=dict(connectedOutputChannels=["boundDevice:output1"])))
         with cls.deviceManager(lead=cls.device):
             yield
 
@@ -70,7 +93,7 @@ class Tests(DeviceTest):
             stdout=PIPE)
         schema = yield from self.process.stdout.read()
         yield from self.process.wait()
-        self.assertEqual(adler32(schema), 1791732348,
+        self.assertEqual(adler32(schema), 1484824827,
             "The generated schema changed. If this is desired, change the "
             "checksum in the code.")
 
@@ -157,6 +180,25 @@ class Tests(DeviceTest):
         yield from proxy.backfire()
         self.assertEqual(self.device.value, 99)
         self.assertTrue(self.device.marker)
+
+        yield from proxy.send()
+        self.assertEqual(self.device.channelcount, 1)
+        self.assertFalse(isSet(self.device.channeldata.d))
+        self.assertEqual(self.device.channeldata.s, "hallo")
+        self.assertEqual(self.device.channelmeta.source, "boundDevice:output1")
+        self.assertTrue(self.device.channelmeta.timestamp)
+        self.assertEqual(self.device.rawchannelcount, 1)
+        self.assertEqual(self.device.rawchanneldata["e"], 5)
+        self.assertEqual(self.device.rawchanneldata["s"], "hallo")
+        self.assertEqual(self.device.rawchannelmeta.source,
+                         "boundDevice:output2")
+        self.assertTrue(self.device.rawchannelmeta.timestamp)
+
+        yield from proxy.send()
+        self.assertEqual(self.device.channelcount, 2)
+        yield from proxy.end()
+        self.assertEqual(self.device.channelclose, "boundDevice:output1")
+
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
         yield from self.process.wait()
