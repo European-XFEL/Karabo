@@ -1,13 +1,14 @@
 import asyncio
 from collections import defaultdict
 import time
-from weakref import ref, WeakSet
+from weakref import WeakSet
 
 from .basetypes import KaraboValue
 from .enums import NodeType
 from .eventloop import synchronize
 from .exceptions import KaraboError
 from .hash import Descriptor, Hash, Slot, Type
+from .ndarray import NDArray
 from .timestamp import Timestamp
 from .weak import Weak
 
@@ -65,18 +66,7 @@ class ProxyBase(object):
         """this is called by _onChanged for each change"""
 
 
-class ProxyDescriptor(Descriptor):
-    """A descriptor in a Proxy
-
-    All descriptors in Proxies know where they are in the hierarchy,
-    their attribute `longkey` contains the full name.
-    """
-    def __init__(self, *, longkey, **kwargs):
-        super().__init__(**kwargs)
-        self.longkey = longkey
-
-
-class ProxyNodeBase(ProxyDescriptor):
+class ProxyNodeBase(Descriptor):
     """The base class for all nodes in a Proxy
 
     This is the :class:`Descriptor` for a node in the class. The actual
@@ -101,7 +91,7 @@ class ProxyNodeBase(ProxyDescriptor):
         return sub
 
 
-class ProxySlotBase(Slot, ProxyDescriptor):
+class ProxySlotBase(Slot, Descriptor):
     """The base class for Slots in proxies"""
     def __get__(self, instance, owner):
         if instance is None:
@@ -159,9 +149,27 @@ class ProxyFactory(object):
         It should inherit from :class:`SubProxyBase`.
     """
     Proxy = ProxyBase
-    ProxySlot = ProxySlotBase
-    ProxyNode = ProxyNodeBase
     SubProxy = SubProxyBase
+
+    node_factories = dict(
+        Slot=ProxySlotBase,
+        NDArray=NDArray)
+
+    @classmethod
+    def createNode(cls, key, node, prefix, **kwargs):
+        sub = cls.createNamespace(node, "{}{}.".format(prefix, key))
+        Cls = type(key, (cls.SubProxy,), sub)
+        return ProxyNodeBase(key=key, cls=Cls, **kwargs)
+
+    @classmethod
+    def register_special(cls, name, special):
+        """register a special class *special* with *name*
+
+        This adds a new handler for a classId. Note that this is registered
+        in the class of the caller, and normal Python inheritance rules apply,
+        so you can overload the registration in a specialized class.
+        """
+        cls.node_factories[name] = special
 
     @classmethod
     def createNamespace(cls, schema, prefix=""):
@@ -172,16 +180,17 @@ class ProxyFactory(object):
                 descriptor = Type.fromname[a["valueType"]](
                     strict=False, key=k, **a)
                 descriptor.longkey = prefix + k
-                namespace[k] = descriptor
             elif nodeType is NodeType.Node:
-                if a.get("displayType") == "Slot":
-                    namespace[k] = cls.ProxySlot(key=k, longkey=prefix + k,
-                                                 strict=False, **a)
-                else:
-                    sub = cls.createNamespace(v, "{}{}.".format(prefix, k))
-                    Cls = type(k, (cls.SubProxy,), sub)
-                    namespace[k] = cls.ProxyNode(key=k, longkey=prefix + k,
-                                                 cls=Cls, strict=False, **a)
+                # once also Slots have the classId set, we better use
+                # classId, not displayType
+                classId = a.get("displayType")
+                factory = cls.node_factories.get(classId, cls.createNode)
+                descriptor = factory(key=k, node=v, prefix=prefix,
+                                     strict=False, **a)
+            else:
+                continue  # currently unsupported NodeType
+            descriptor.longkey = prefix + k
+            namespace[k] = descriptor
         namespace["_allattrs"] = list(schema)
         return namespace
 
