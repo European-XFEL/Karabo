@@ -919,11 +919,11 @@ class Tests(DeviceTest):
         yield from self.local.alarm_future
         ah = self.local.alarmhash
         self.assertFalse(ah["toClear"])
-        self.assertEqual(ah["toAdd.globalAlarmCondition.alarm.type"], "alarm")
+        self.assertEqual(ah["toAdd.global.alarm.type"], "alarm")
         self.assertEqual(
-            ah["toAdd.globalAlarmCondition.alarm.description"], "")
+            ah["toAdd.global.alarm.description"], "")
         self.assertTrue(
-            ah["toAdd.globalAlarmCondition.alarm.needsAcknowledging"])
+            ah["toAdd.global.alarm.needsAcknowledging"])
         self.remote.signalAlarmUpdate.disconnect("local", "slotAlarmUpdate")
         self.remote.globalAlarmCondition = AlarmCondition.NONE
 
