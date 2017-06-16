@@ -3,6 +3,7 @@ from .enums import AccessMode
 from .hash import Hash, HashType, String
 from .schema import Configurable
 from .signalslot import Signal, slot
+from .timestamp import Timestamp
 
 
 class Alarm(String):
@@ -71,16 +72,18 @@ class AlarmMixin(Configurable):
                 prop, (AlarmCondition.NONE, None, None))
             # Needed for our validator in case of node elements
             prop_sep = "KRB_ALARM_SEP_REPLACEMENT".join(prop.split('.'))
-            if cond is AlarmCondition.NONE:
-                old = self._old_alarms.get(prop, AlarmCondition.NONE)
-                if old is not AlarmCondition.NONE:
-                    if prop == 'globalAlarmCondition':
-                        toClear.setdefault(prop_sep, []).extend(
-                            self.accumulatedGlobalAlarms)
-                        self.accumulatedGlobalAlarms.clear()
-                    else:
-                        toClear.setdefault(prop_sep, []).append(old.value)
-            else:
+            prop_sep = 'global' if prop == 'globalAlarmCondition' else prop_sep
+            old = self._old_alarms.get(prop, AlarmCondition.NONE)
+            if old is not AlarmCondition.NONE:
+                if (cond is AlarmCondition.NONE and
+                        prop == 'globalAlarmCondition'):
+                    toClear.setdefault(prop_sep, []).extend(
+                        self.accumulatedGlobalAlarms)
+                    self.accumulatedGlobalAlarms.clear()
+                else:
+                    toClear.setdefault(prop_sep, []).append(old.value)
+
+            if cond is not AlarmCondition.NONE:
                 toAdd[prop_sep] = Hash(cond.value, Hash(
                     "type", cond.value,
                     "description",
