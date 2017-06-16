@@ -105,15 +105,18 @@ class Manager(QObject):
             obsolete_paths = descriptor.getObsoletePaths(config)
             for key in obsolete_paths:
                 config.erase(key)
+
+        # Compute a runtime schema from the configuration and an unmodified
+        # copy of the device class schema.
+        schemaAttrUpdates = getSchemaAttributeUpdates(baseSchema, config)
+
+        # read-only paths can only be erased after attribute filtering
+        if descriptor is not None:
             read_only_paths = descriptor.getReadOnlyPaths()
             for key in read_only_paths:
                 # Remove all read only parameters
                 if key in config:  # erase does not tolerate non-existing keys
                     config.erase(key)
-
-        # Compute a runtime schema from the configuration and an unmodified
-        # copy of the device class schema.
-        schemaAttrUpdates = getSchemaAttributeUpdates(baseSchema, config)
 
         # Send signal to network
         get_network().onInitDevice(serverId, classId, deviceId, config,
