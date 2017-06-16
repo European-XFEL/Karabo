@@ -217,10 +217,10 @@ class SparkRenderer(QWidget):
                 self.ymin = np.roll(self.ymin, -dt)
                 self.ymin[-dt:-1] = self.ymin[-dt-1]
             else:
-                self.yvals[:] = 0.
-                self.ycnts[:] = 0.
-                self.ymax[:] = self.finfo.min
-                self.ymin[:] = self.finfo.max
+                self.yvals[:] = self.yvals[-1]
+                self.ycnts[:] = self.ycnts[-1]
+                self.ymax[:] = self.ymax[-1]
+                self.ymin[:] = self.ymin[-1]
 
             self.then = time.time()
 
