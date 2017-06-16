@@ -10,6 +10,7 @@ from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabo_gui.events import KaraboEventSender, register_for_broadcasts
 from karabo_gui.mainwindow import MainWindow, PanelAreaEnum
+from karabo_gui import messagebox
 from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.macropanel import MacroPanel
 from karabo_gui.panels.runconfigpanel import RunConfigPanel
@@ -225,12 +226,18 @@ class PanelWrangler(QObject):
             self._run_config_group_panels[instance_id] = panel
 
     def _open_macro(self, model):
+        if model is None:
+            print("Tried to open a macro which was None!")
+            return
         panel = self._project_item_panels.get(model)
         if panel is None:
             panel = MacroPanel(model)
         self._show_project_item_panel(model, panel)
 
     def _open_scene(self, model, target_window):
+        if model is None:
+            print("Tried to open a scene which was None!")
+            return
         panel = self._project_item_panels.get(model)
         if panel is None:
             panel = ScenePanel(model, self.connected_to_server)
@@ -286,4 +293,10 @@ def _find_scene_model(uuid):
 
     visitor = _Visitor()
     walk_traits_object(project, visitor)
+
+    if visitor.found is None:
+        msg = 'Linked scene with UUID "{}" not found!'.format(uuid)
+        messagebox.show_error(msg)
+        return None
+
     return visitor.found
