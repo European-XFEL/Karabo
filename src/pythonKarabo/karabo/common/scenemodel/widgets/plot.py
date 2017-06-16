@@ -1,7 +1,8 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import HasStrictTraits, Bool, Enum, Instance, Int, List, String
+from traits.api import Bool, Enum, Instance, Int, List, String
 
+from karabo.common.api import BaseSavableModel
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
@@ -11,7 +12,7 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 
-class PlotCurveModel(HasStrictTraits):
+class PlotCurveModel(BaseSavableModel):
     """ A model for plot curve data
     """
     # The device with the data
@@ -36,24 +37,25 @@ class LinePlotModel(BaseWidgetObjectData):
     # The plots for this object
     boxes = List(Instance(PlotCurveModel))
 
-    def _boxes_items_changed(self, event):
-        """ Watch for duplicate boxes being added. When found, remove them
-        after updating the existing box.
+    def add_curve(self, curve_model):
+        """Maybe add a curve (box) to the model, but only if it is not a
+        duplicate of an existing curve in the model. If it is an existing
+        curve, then update the data.
         """
-        def _find_all_matching_boxes(model):
-            matches = []
-            model_hash = hash(model)
-            for box in self.boxes:
-                if hash(box) == model_hash:
-                    matches.append(box)
-            return matches
+        existing = self._find_all_matching_boxes(curve_model)
+        if not existing:
+            self.boxes.append(curve_model)
+        else:
+            assert len(existing) == 1
+            existing[0].curve_object_data = curve_model.curve_object_data
 
-        for model in event.added:
-            existing = _find_all_matching_boxes(model)
-            if existing:
-                existing[0].curve_object_data = model.curve_object_data
-                if len(existing) > 1:
-                    self.boxes.remove(model)
+    def _find_all_matching_boxes(self, curve_model):
+        matches = []
+        model_hash = hash(curve_model)
+        for box in self.boxes:
+            if hash(box) == model_hash:
+                matches.append(box)
+        return matches
 
 
 class SparklineModel(BaseWidgetObjectData):
@@ -79,7 +81,9 @@ def _line_plot_reader(read_func, element):
             'path': child_elem.get("path"),
             'curve_object_data': child_elem.text,
         }
-        boxes.append(PlotCurveModel(**box_traits))
+        model = PlotCurveModel(**box_traits)
+        model.initialized = True  # Satisfy BaseSavableModel
+        boxes.append(model)
     traits['boxes'] = boxes
     return LinePlotModel(**traits)
 
