@@ -50,8 +50,10 @@ class MonitorModel(BaseWidgetObjectData):
 class SingleBitModel(BaseWidgetObjectData):
     """ A model for SingleBit
     """
-    # Which bit is being edited
+    # Which bit is being displayed
     bit = Int
+    # True if the value of the bit should be inverted
+    invert = Bool(False)
 
 
 class TableElementModel(BaseDisplayEditableWidget):
@@ -146,6 +148,8 @@ def _monitor_writer(write_func, model, parent):
 @register_scene_reader('SingleBit', version=1)
 def _single_bit_reader(read_func, element):
     traits = read_base_widget_data(element)
+    invert = element.get(NS_KARABO + 'invert', '')
+    traits['invert'] = (invert.lower() == 'true')
     traits['bit'] = int(element.get(NS_KARABO + 'bit', 0))
     return SingleBitModel(**traits)
 
@@ -155,6 +159,7 @@ def _single_bit_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'SingleBit')
     element.set(NS_KARABO + 'bit', str(model.bit))
+    element.set(NS_KARABO + 'invert', str(model.invert).lower())
     return element
 
 

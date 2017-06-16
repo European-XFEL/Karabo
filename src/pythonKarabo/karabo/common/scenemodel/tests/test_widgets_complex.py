@@ -72,10 +72,12 @@ def test_monitor_widget():
 
 def test_single_bit_widget():
     traits = base_widget_traits()
+    traits['invert'] = True
     traits['bit'] = 42
     model = SingleBitModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
+    assert read_model.invert
     assert read_model.bit == 42
 
 
