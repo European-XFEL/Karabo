@@ -640,53 +640,56 @@ class PythonDevice(NoFsm):
         knownAlarms = set()
 
         current = self.validatorIntern.getParametersInWarnOrAlarm()
-
-        # check if we need to clear/clean alarms
+        # Check if we need to clear/clean alarms
         for p in previous:
             pKey = p.getKey()
             currentEntry = current.find(pKey)
-            # case where alarm still exists, we do not need to clean
-            if currentEntry is not None:
+            desc = p.getValue()
+            exType = desc.get("type")
+            if (currentEntry is not None and
+                    exType == currentEntry.getValue().get("type")):
                 timeStampPrevious = Timestamp.fromHashAttributes(
                     p.getAttributes())
                 timeStampCurrent = Timestamp.fromHashAttributes(
                     currentEntry.getAttributes())
-                if not forceUpdate and timeStampPrevious == \
-                        timeStampCurrent:
-                    knownAlarms |= pKey
+                if not forceUpdate and timeStampPrevious == timeStampCurrent:
+                    knownAlarms.add(pKey)
+
+                # alarmCondition still exists nothing to clean
                 continue
+
             # alarm is gone: we should clean
-            desc = p.getValue()
             existingEntries = []
             existingEntyNode = toClear.find(pKey)
             if existingEntyNode is not None:
                 existingEntries = existingEntyNode.getValue()
 
-            existingEntries.append(desc.get("type"))
+            existingEntries.append(exType)
             toClear.set(pKey, existingEntries)
 
-        # add new alarms
+        # Add new alarms
         for c in current:
-            if not forceUpdate and c.getKey() in knownAlarms:
-                continue
-
             cKey = c.getKey()
             desc = c.getValue()
             conditionString = desc.get("type")
+            # avoid unnecessary chatter of already sent messages
+            if not forceUpdate and cKey in knownAlarms:
+                continue
+
             condition = AlarmCondition(conditionString)
             pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
 
             alarmDesc = self.getFullSchema().getInfoForAlarm(pSep, condition)
             needAck = self.getFullSchema().doesAlarmNeedAcknowledging(
-                        pSep, condition)
+                pSep, condition)
 
-            entry = Hash("type", condition.asString(),
+            entry = Hash("type", conditionString,
                          "description", alarmDesc,
                          "needsAcknowledging", needAck)
-            occuredAt = Timestamp.fromHashAttributes(c.getAttributes())
 
             prop = Hash(conditionString, entry)
             entryNode = prop.getNode(conditionString)
+            occuredAt = Timestamp.fromHashAttributes(c.getAttributes())
             occuredAt.toHashAttributes(entryNode.getAttributes())
             toAdd.set(cKey, prop)
 
