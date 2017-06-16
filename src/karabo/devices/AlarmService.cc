@@ -301,6 +301,7 @@ namespace karabo {
                         lastAlarmType = newAlarmTypeEntry.get<std::string>("type");
                     }
 
+                    // Handle global alarm conditions from cpp/python/middlelayer devices
                     if (propertyEntryNode->getKey() == "global") {
                         const AlarmCondition lastAdded = AlarmCondition::fromString(lastAlarmType);
                         // Make all more significant alarm types acknowledgeable
