@@ -42,10 +42,10 @@ def test_line_plot_duplicate_curves():
     curve1 = PlotCurveModel(device='dev1', path='bar', curve_object_data='11')
     curve2 = PlotCurveModel(device='dev1', path='foo', curve_object_data='22')
     traits = base_widget_traits()
-    model = LinePlotModel(klass='XYVector', boxes=[curve0, curve1], **traits)
+    model = LinePlotModel(klass='XYVector', boxes=[curve0], **traits)
 
-    model.boxes.append(curve1)
-    model.boxes.append(curve2)
+    model.add_curve(curve1)
+    model.add_curve(curve2)
     assert len(model.boxes) == 2
     assert model.boxes[0].curve_object_data == curve2.curve_object_data
     assert model.boxes[1] is curve1

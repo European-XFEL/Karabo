@@ -2,7 +2,6 @@ import base64
 import pickle
 
 from karabo.common.scenemodel.api import PlotCurveModel
-from karabo_gui.displaywidgets.displaysparkline import DisplaySparkline
 from karabo_gui.displaywidgets.displaytrendline import DisplayTrendline, Curve
 from karabo_gui.displaywidgets.xyvectors import XYVector
 from .base import BaseWidgetContainer
@@ -43,7 +42,7 @@ class _LinePlotWrapperMixin(object):
         if isinstance(curve, Curve):
             curve = curve.curve  # Strip off some extraneous wrapping
         # The data model will handle duplicate curves!
-        self.model.boxes.append(_encode_plot_curve_model(box, curve))
+        self.model.add_curve(_encode_plot_curve_model(box, curve))
 
 
 class _DisplayTrendlineWrapper(_LinePlotWrapperMixin, DisplayTrendline):
