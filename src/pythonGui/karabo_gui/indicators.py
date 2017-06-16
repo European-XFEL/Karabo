@@ -201,6 +201,7 @@ def get_project_device_status_icon(status, error=False):
         DeviceStatus.STATUS_NOPLUGIN: icons.deviceOfflineNoPlugin,
         DeviceStatus.STATUS_OFFLINE: icons.deviceOffline,
         DeviceStatus.STATUS_INCOMPATIBLE: icons.deviceIncompatible,
+        DeviceStatus.STATUS_MONITORING: icons.deviceMonitored,
     }
 
     if not isinstance(status, DeviceStatus):
