@@ -123,8 +123,7 @@ class LoadProjectDialog(QDialog):
         # Select default domain
         index = self.cbDomain.findText(self.default_domain)
         if len(domains) > 0 and index == -1:
-            msg = ('The default project domain defined by<br>'
-                   '<b>KARABO_PROJECT_DB_DOMAIN = {}</b><br>does not exist in '
+            msg = ('The default project domain <b>{}</b><br>does not exist in '
                    'the current project database.').format(self.default_domain)
             # NOTE: If this dialog is not modal, it can block the list of
             # domains arriving from the GUI server!

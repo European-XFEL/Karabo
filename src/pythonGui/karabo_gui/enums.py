@@ -19,3 +19,4 @@ class KaraboSettings(Enum):
     CONFIG_DIR = "LastUsedFolder/ConfigurationDialog"
     MACRO_DIR = "LastUsedFolder/MacroDialog"
     SCENE_DIR = "LastUsedFolder/SceneDialog"
+    PROJECT_DOMAIN = "Project/LastUsedDbDomain"
