@@ -146,15 +146,9 @@ class DeviceServer(object):
         else:
             print('INTERRUPT : You terminated me!')
         if self.ss is not None:
-            self.ss.call("", "slotKillServer")
+            self.ss.call(self.serverid, "slotKillServer")
         else:
-            self.slotKillServer()
-        self.scanning = False
-        self.pluginThread.join()
-        self.pluginThread = None
-        self.ss = None
-        # time.sleep(3)
-        EventLoop.stop()
+            self.stopDeviceServer()
 
     def __init__(self, config):
         '''Constructor'''
@@ -294,6 +288,12 @@ class DeviceServer(object):
             time.sleep(3)
 
     def stopDeviceServer(self):
+        self.scanning = False
+        self.pluginThread.join()
+        self.pluginThread = None
+        self.ss = None
+        EventLoop.stop()
+
         if not self.signal_handled:
             pid = os.getpid()
             os.kill(pid, signal.SIGTERM)
@@ -394,8 +394,6 @@ class DeviceServer(object):
                 l.join()
         self.deviceInstanceMap = {}
         try:
-            # `signal_handler` might have set `self.ss` to None or other
-            # failures might occur
             self.ss.reply(self.serverid)
         except Exception as e:
             msg = ("Did not notify distributed system of server shutdown:"
