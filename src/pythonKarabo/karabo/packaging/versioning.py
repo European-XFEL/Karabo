@@ -16,8 +16,9 @@ def _get_development_version(path):
     generators = [partial(f, path)
                   for f in (svn_version, jsvn_version, git_version)]
     for gen in generators:
-        vcs_version, commit_count = gen()
-        if vcs_version != 'Unknown':
+        vers_dict = gen()
+        if vers_dict['vcs_revision'] != 'Unknown':
+            commit_count = vers_dict['revision_count']
             break
 
     return commit_count
@@ -87,19 +88,36 @@ def git_version(path):
     """ Return the git revision as a string and a commit count
     """
     try:
-        cmd = 'git describe'.split(' ')
+        # Find a tag matching the glob *.*.* (version number prefixed tags)
+        cmd = 'git describe --match *.*.*'.split(' ')
         out = subprocess.check_output(cmd, cwd=path).decode('ascii')
     except (subprocess.CalledProcessError, OSError):
         out = ''
 
-    expr = r'.*?\-(?P<count>\d+)-g(?P<hash>[a-fA-F0-9]+)'
+    # Git will return something like NN.NN.NN[(a|b|rc)NN]?-NN-XXXXXX
+    # The group names in this regex explain the parts
+    # The only required part of the regex is the NN.NN.NN. All others optional.
+    expr = (
+        r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<micro>\d+)(?P<abrc>(a|b|rc)\d+)?'
+        '(\-)?(?P<count>\d+)?(-g)?(?P<hash>[a-fA-F0-9]+)?'
+    )
     match = re.match(expr, out)
     if match is None:
-        git_revision, git_count = 'Unknown', '0'
+        revision, count = 'Unknown', '0'
+        version, released = '0.0.0', False
     else:
-        git_revision, git_count = match.group('hash'), match.group('count')
+        revision = match.group('hash') or ''
+        count = match.group('count') or '0'
+        version = '.'.join([match.group(n)
+                            for n in ('major', 'minor', 'micro')])
+        released = (revision == '' and count == '0')
 
-    return git_revision, git_count
+    return {
+        'vcs_revision': revision,
+        'revision_count': count,
+        'version': version,
+        'released': released,
+    }
 
 
 def svn_version(path, svn_cmd='svn'):
@@ -111,9 +129,15 @@ def svn_version(path, svn_cmd='svn'):
         svn_branch = _parse_svn_part(out, 'branch')
         svn_count = _parse_svn_part(out, 'revision')
     except (subprocess.CalledProcessError, OSError, SvnParseError):
-        return 'Unknown', '0'
+        return {'vcs_revision': 'Unknown', 'revision_count': '0',
+                'version': '0.0.0', 'released': False}
 
-    return '{}@r{}'.format(svn_branch, svn_count), svn_count
+    return {
+        'vcs_revision': '{}@r{}'.format(svn_branch, svn_count),
+        'revision_count': svn_count,
+        'version': svn_branch,
+        'released': svn_count == '0',
+    }
 
 
 # Define this where it can be imported.

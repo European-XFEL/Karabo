@@ -1,46 +1,17 @@
-from functools import partial
 import os.path as op
-import re
-import subprocess
 
 from setuptools import setup, find_packages
 
-MAJOR = 2
-MINOR = 0
-MICRO = 3
-IS_RELEASED = False
-VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 VERSION_FILE_PATH = op.join('karabo', '_version.py')
-
-
-def _get_version(path):
-    """ Returns the contents of a version tag if it matches the
-    MAJOR.MINOR.MICRO format.
-    """
-    global IS_RELEASED
-    try:
-        cmd = 'git describe --exact-match HEAD'.split(' ')
-        out = subprocess.check_output(cmd, cwd=path).strip().decode('ascii')
-        IS_RELEASED = True
-    except (subprocess.CalledProcessError, OSError):
-        out = VERSION
-
-    # Make sure this is a version tag
-    expr = r'(\d+\.)(\d+\.)(\d+)((a|b|rc)\d+)?'
-    match = re.match(expr, out)
-    if match is None:
-        out = VERSION  # Use hard-coded version instead
-        IS_RELEASED = False
-
-    return out
 
 
 def _get_src_dist_version():
     if not op.exists(VERSION_FILE_PATH):
-        return 'Unknown', '0'
+        return 'Unknown', '0', '0.0.0'
 
     # must be a source distribution, use existing version file
     try:
+        from karabo._version import full_version as version
         from karabo._version import vcs_revision as vcs_rev
         from karabo._version import vcs_revision_count as dev_num
     except ImportError:
@@ -48,12 +19,21 @@ def _get_src_dist_version():
                           "{} and the build directory "
                           "before building.").format(VERSION_FILE_PATH)
 
-    return vcs_rev, dev_num
+    return vcs_rev, dev_num, version
+
+
+def _get_version(path):
+    vcs_rev, dev_num, version = _get_src_dist_version()
+
+    if vcs_rev != 'Unknown':
+        return {'vcs_revision': vcs_rev, 'revision_count': dev_num,
+                'version': version, 'released': True}
+
+    from karabo.packaging.versioning import git_version
+    return git_version(path)
 
 
 def _write_version_py(filename=VERSION_FILE_PATH):
-    from karabo.packaging.versioning import git_version
-
     template = """\
 # THIS FILE IS GENERATED FROM SETUP.PY
 version = '{version}'
@@ -64,31 +44,23 @@ is_released = {is_released}
 """
     path = op.normpath(op.dirname(__file__))
 
-    version = _get_version(path)
+    vers_dict = _get_version(path)
+    version = vers_dict['version']
     fullversion = version
-    vcs_rev, dev_num = 'Unknown', '0'
 
-    # Try many ways to get version info
-    version_generators = (
-        partial(git_version, path),
-        _get_src_dist_version,
-    )
-    for version_gen in version_generators:
-        vcs_rev, dev_num = version_gen()
-        if vcs_rev != 'Unknown':
-            break
+    if not vers_dict['released']:
+        fullversion += '.dev{0}'.format(vers_dict['revision_count'])
 
-    if not IS_RELEASED:
-        fullversion += '.dev{0}'.format(dev_num)
-
-    with open(filename, "wt") as fp:
-        fp.write(template.format(version=version,
-                                 full_version=fullversion,
-                                 vcs_revision=vcs_rev,
-                                 vcs_revision_count=dev_num,
-                                 is_released=IS_RELEASED))
+    if not op.exists(filename):
+        with open(filename, "wt") as fp:
+            fp.write(template.format(
+                version=version, full_version=fullversion,
+                vcs_revision=vers_dict['vcs_revision'],
+                vcs_revision_count=vers_dict['revision_count'],
+                is_released=vers_dict['released']))
 
     return fullversion
+
 
 if __name__ == '__main__':
     version = _write_version_py()
