@@ -11,7 +11,7 @@ from .serializers import decodeBinary, encodeBinary
 from .proxy import ProxyBase, ProxyFactory
 
 
-class MetaData(ProxyBase):
+class PipelineMetaData(ProxyBase):
     source = String(key="source")
     timestamp = Bool(key="timestamp")
 
@@ -44,6 +44,7 @@ class Channel(object):
     def writeSize(self, size):
         self.writer.write(pack(self.sizeCode, size))
 
+    @coroutine
     def drain(self):
         with (yield from self.drain_lock):
             yield from self.writer.drain()
@@ -132,7 +133,7 @@ class NetworkInput(Configurable):
                 for length, meta_hash in zip(header["byteSizes"],
                                              header["sourceInfo"]):
                     chunk = decodeBinary(data[pos:pos + length])
-                    meta = MetaData()
+                    meta = PipelineMetaData()
                     meta._onChanged(meta_hash)
                     if self.raw:
                         yield from loop.run_coroutine_or_thread(
@@ -179,7 +180,6 @@ class InputChannel(Node):
         uninterpreted hash. The `data` object will be empty if the sender has
         not declared a schema.
     """
-    connection_handler = None
     close_handler = None
 
     def __init__(self, raw=False, **kwargs):
@@ -204,5 +204,5 @@ class InputChannel(Node):
     def __call__(self, handler):
         if self.description is None:
             self.description = handler.__doc__
-        self.handler = coroutine(handler)
+        self.handler = handler
         return self
