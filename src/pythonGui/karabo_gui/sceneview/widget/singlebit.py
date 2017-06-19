@@ -11,10 +11,15 @@ class _SingleBitWrapper(SingleBit):
 
         # Initialize the widget
         super(_SingleBitWrapper, self)._setBit(self.model.bit)
+        super(_SingleBitWrapper, self)._setInvert(self.model.invert)
 
     def _setBit(self, bit):
         super(_SingleBitWrapper, self)._setBit(bit)
         self.model.bit = bit
+
+    def _setInvert(self, flag):
+        super(_SingleBitWrapper, self)._setInvert(flag)
+        self.model.invert = flag
 
 
 class SingleBitContainer(BaseWidgetContainer):
