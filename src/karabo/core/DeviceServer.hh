@@ -46,7 +46,7 @@ namespace karabo {
          * NORMAL karabo::util::State states.
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
-
+            
             krb_log4cpp::Category* m_log;
             karabo::log::Logger::Pointer m_logger;
 
@@ -238,7 +238,7 @@ namespace karabo {
              * @param id: current train id
              */
             void timeTick(const boost::system::error_code ec, unsigned long long newId);
-            
+
             /**
              * A hook which is called if the device receives a time-server update, i.e. if slotTimeTick is called.
              * Can be overwritten by derived classes.
