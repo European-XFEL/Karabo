@@ -201,17 +201,29 @@ class SparkRenderer(QWidget):
         if dt >= 1:
             # the sparkline might need to cover "gaps" in its data series
             # e.g. when for a given bin, no data was pushed to the widget
-            # in this case we fill with the value of the previous bin
-            self.yvals = np.roll(self.yvals, -dt)
-            self.yvals[-dt:-1] = self.yvals[-dt-1]
-            self.yvals[-1] = 0.
-            self.ycnts = np.roll(self.ycnts, -dt)
-            self.ycnts[-dt:-1] = self.ycnts[-dt-1]
-            self.ycnts[-1] = 0.
-            self.ymax = np.roll(self.ymax, -dt)
-            self.ymax[-dt:-1] = self.ymax[-dt-1]
-            self.ymin = np.roll(self.ymin, -dt)
-            self.ymin[-dt:-1] = self.ymin[-dt-1]
+            # in this case we fill with the value of the previous bin.
+            # If the sparkline does not receive any value updates from a
+            # device for dt > time_base, indexing by [-dt:] would result 
+            # in an IndexError. In these cases we set all values in the 
+            # sparkline to the value of the last update, consitent with the
+            # gap filling behaviour for valid "dt"s.
+            if dt < self.yvals.size:
+                self.yvals = np.roll(self.yvals, -dt)
+                self.yvals[-dt:-1] = self.yvals[-dt-1]
+                self.yvals[-1] = 0.
+                self.ycnts = np.roll(self.ycnts, -dt)
+                self.ycnts[-dt:-1] = self.ycnts[-dt-1]
+                self.ycnts[-1] = 0.
+                self.ymax = np.roll(self.ymax, -dt)
+                self.ymax[-dt:-1] = self.ymax[-dt-1]
+                self.ymin = np.roll(self.ymin, -dt)
+                self.ymin[-dt:-1] = self.ymin[-dt-1]
+            else:
+                self.yvals[:] = self.yvals[-1]
+                self.ycnts[:] = self.ycnts[-1]
+                self.ymax[:] = self.ymax[-1]
+                self.ymin[:] = self.ymin[-1]
+
             self.then = time.time()
 
         self.yvals[-1] += value
