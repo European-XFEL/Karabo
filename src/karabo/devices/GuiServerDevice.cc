@@ -1133,8 +1133,12 @@ namespace karabo {
 
             if (it != m_pendingAttributeUpdates.end()) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId;
-
-                request(deviceId, "slotUpdateSchemaAttributes", it->second);
+                
+                Hash h;
+                request(deviceId, "slotUpdateSchemaAttributes", it->second).receive(h);
+                if(!h.get<bool>("success")) {
+                    KARABO_LOG_WARN<<"Schema attribute update failed for device: "<< deviceId;
+                }
                 m_pendingAttributeUpdates.erase(it);
             }
         }
