@@ -704,18 +704,8 @@ class PythonDevice(NoFsm):
         :param existingAlarms: A hash containing existing alarms pertinent to
                this device. May be empty
         """
-
-        existingRF = Hash()
-
-        for existing in existingAlarms:
-            propertyHash = existing.getValue()
-            property = existing.getKey()
-            for aType in propertyHash:
-                existingRF.set(property.replace(".", Validator.kPathSeparator),
-                               Hash("type", aType.getKey()))
-
         with self._stateChangeLock:
-            alarmsToUpdate = self._evaluateAlarmUpdates(existingRF,
+            alarmsToUpdate = self._evaluateAlarmUpdates(existingAlarms,
                                                         forceUpdate=True)
 
         self._ss.reply(self.getInstanceId(), alarmsToUpdate)
