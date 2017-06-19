@@ -156,7 +156,7 @@ namespace karabo {
 
             // What visibility this server should have
             config.get("visibility", m_visibility);
-            
+
             // What is the TimeServer ID
             config.get("timeServerId", m_timeServerId);
 
@@ -331,9 +331,8 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
                 dim = m_deviceInstanceMap;
             }
-            for (DeviceInstanceMap::iterator it = dim.begin(); it != dim.end(); ++it) {
-                if (it->second && it->second->useTimeServer())
-                    it->second->onTimeTick(id, sec, frac, period);
+            for (auto& kv : dim) {
+                if (kv.second && kv.second->useTimeServer()) kv.second->onTimeTick(id, sec, frac, period);
             }
         }
 
@@ -344,9 +343,8 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
                 dim = m_deviceInstanceMap;
             }
-            for (DeviceInstanceMap::iterator it = dim.begin(); it != dim.end(); ++it) {
-                if (it->second && it->second->useTimeServer())
-                    it->second->slotTimeTick(id, sec, frac, period);
+            for (auto& kv : dim) {
+                if (kv.second && kv.second->useTimeServer()) kv.second->slotTimeTick(id, sec, frac, period);
             }
         }
 
