@@ -29,14 +29,21 @@ Timing_Test::~Timing_Test() {
 
 void Timing_Test::setUp() {
     // uncomment this if ever testing against a local broker
-    // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
+    //setenv("KARABO_BROKER", "tcp://localhost:7777", true);
 
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
-    Hash config("serverId", "testServerTiming", "scanPlugins", false, "Logger.priority", "FATAL", "timeServerId", "Karabo_TimeServer");
-    m_deviceServer = DeviceServer::create("DeviceServer", config);
-    m_deviceServer->finalizeInternalInitialization();
+    {
+        Hash config("serverId", "testServerTiming", "scanPlugins", false, "Logger.priority", "FATAL", "timeServerId", "Karabo_TimeServer");
+        m_deviceServer = DeviceServer::create("DeviceServer", config);
+        m_deviceServer->finalizeInternalInitialization();
+    }
+    {
+        Hash config("serverId", "testServerTimingClient", "scanPlugins", false, "Logger.priority", "FATAL", "timeServerId", "Karabo_TimeServer");
+        m_deviceServer2 = DeviceServer::create("DeviceServer", config);
+        m_deviceServer2->finalizeInternalInitialization();
+    }
     // Create client
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
 
@@ -44,6 +51,7 @@ void Timing_Test::setUp() {
 
 
 void Timing_Test::tearDown() {
+    m_deviceServer2.reset();
     m_deviceServer.reset();
     EventLoop::stop();
     m_eventLoopThread.join();
@@ -64,84 +72,102 @@ void Timing_Test::appTestRunner() {
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
-    success = m_deviceClient->instantiate("testServerTiming", "TimingTestDevice", Hash("deviceId", "timeTester", "useTimeserver", true),
-                                          KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT(success.first);
+    size_t nDevices = 20;
+
+    for (size_t i = 1; i <= nDevices; ++i) {
+        success = m_deviceClient->instantiate("testServerTimingClient", "TimingTestDevice",
+                                              Hash("deviceId", "timeTester_" + toString(i), "useTimeserver", true),
+                                              KRB_TEST_MAX_TIMEOUT);
+        CPPUNIT_ASSERT(success.first);
+    }
 
     m_lastCheck = karabo::util::Epochstamp();
 
     // Give some time to connect the timing slot.
     // If this fails, it is likely that the signal connection was erased again because the call to slotInstanceNew
     // of the Karabo_TimeServer came late and cleared the signal.
-    int counter = 0;
-    while (true) {
-        if (m_deviceClient->get<bool>("timeTester", "slot_connected")) break;
-        CPPUNIT_ASSERT(counter++ < 500);
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    for (size_t i = 1; i <= nDevices; ++i) {
+        int counter = 0;
+        while (true) {
+            if (m_deviceClient->get<bool>("timeTester_" + toString(i), "slot_connected")) break;
+            CPPUNIT_ASSERT(counter++ < 500);
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        }
     }
-    m_deviceClient->execute("timeTester", "start");
+
+    for (size_t i = 1; i <= nDevices; ++i) {
+        m_deviceClient->execute("timeTester_" + toString(i), "start");
+    }
 
     // some time to test the timing
     const unsigned int testDurationInMicrosec = 5432109u;
     boost::this_thread::sleep(boost::posix_time::microseconds(testDurationInMicrosec));
 
-    m_deviceClient->execute("timeTester", "stop");
-
-    const auto ids(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "ids"));
-    const auto seconds(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "seconds"));
-    const auto fractions(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "fractions"));
-
-    // Test integrity, i.e. same size of vectors of ids and times
-    CPPUNIT_ASSERT_EQUAL(ids.size(), seconds.size());
-    CPPUNIT_ASSERT_EQUAL(ids.size(), fractions.size());
-    CPPUNIT_ASSERT(ids.size() >= 2);
-
-    // Test that ids are subsequent and time stamps are increasing (== is allowed!)
-    unsigned long long lastId = ids[0];
-    karabo::util::Epochstamp lastStamp(seconds[0], fractions[0]);
-    for (size_t i = 1; i < ids.size(); ++i) {
-        CPPUNIT_ASSERT_EQUAL(ids[i], lastId + 1ull);
-
-        const karabo::util::Epochstamp currentStamp(seconds[i], fractions[i]);
-        CPPUNIT_ASSERT(currentStamp >= lastStamp);
-
-        const karabo::util::TimeDuration diff = (currentStamp - lastStamp);
-        KARABO_LOG_FRAMEWORK_DEBUG_C("Timing_Test") << "diff for id: " << ids[i] << " " << static_cast<double> (diff);
-
-        lastId = ids[i];
-        lastStamp = currentStamp;
+    for (size_t i = 1; i <= nDevices; ++i) {
+        m_deviceClient->execute("timeTester_" + toString(i), "stop");
     }
 
-    // Now test that the real ticks received from the time server have the expected spacing and are increasing
-    // (== not allowed!).
-    const auto idsTick(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "idsTick"));
-    const auto secondsTick(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "secondsTick"));
-    const auto fractionsTick(m_deviceClient->get<std::vector<unsigned long long> >("timeTester", "fractionsTick"));
+    for (size_t k = 1; k <= nDevices; ++k) {
+        const std::string deviceId = "timeTester_" + toString(k);
+        const auto ids(m_deviceClient->get<std::vector<unsigned long long> >(deviceId, "ids"));
+        const auto seconds(m_deviceClient->get<std::vector<unsigned long long> >(deviceId, "seconds"));
+        const auto fractions(m_deviceClient->get<std::vector<unsigned long long> >(deviceId, "fractions"));
 
-    CPPUNIT_ASSERT(ids.size() > idsTick.size());
-    CPPUNIT_ASSERT_EQUAL(idsTick.size(), secondsTick.size());
-    CPPUNIT_ASSERT_EQUAL(idsTick.size(), fractionsTick.size());
-    CPPUNIT_ASSERT(idsTick.size() >= 2);
+        // Test integrity, i.e. same size of vectors of ids and times
+        CPPUNIT_ASSERT_EQUAL(ids.size(), seconds.size());
+        CPPUNIT_ASSERT_EQUAL(ids.size(), fractions.size());
+        CPPUNIT_ASSERT(ids.size() >= 2);
 
-    unsigned long long lastIdTick = idsTick[0];
-    karabo::util::Epochstamp lastStampTick(secondsTick[0], fractionsTick[0]);
-    for (size_t i = 1; i < idsTick.size(); ++i) {
-        CPPUNIT_ASSERT_EQUAL(idsTick[i], lastIdTick + static_cast<unsigned long long> (tickCountdown));
+        // Test that ids are subsequent and time stamps are increasing (== is allowed!)
+        unsigned long long lastId = ids[0];
+        karabo::util::Epochstamp lastStamp(seconds[0], fractions[0]);
+        for (size_t i = 1; i < ids.size(); ++i) {
+            CPPUNIT_ASSERT_EQUAL(ids[i], lastId + 1ull);
 
-        const karabo::util::Epochstamp currentStamp(secondsTick[i], fractionsTick[i]);
-        CPPUNIT_ASSERT(currentStamp > lastStampTick);
+            const karabo::util::Epochstamp currentStamp(seconds[i], fractions[i]);
+            CPPUNIT_ASSERT(currentStamp >= lastStamp);
 
-        lastIdTick = idsTick[i];
-        lastStampTick = currentStamp;
+            const karabo::util::TimeDuration diff = (currentStamp - lastStamp);
+            KARABO_LOG_FRAMEWORK_DEBUG_C("Timing_Test") << "diff for id: " << ids[i] << " " << static_cast<double> (diff);
+
+            lastId = ids[i];
+            lastStamp = currentStamp;
+        }
+
+        // Now test that the real ticks received from the time server have the expected spacing and are increasing
+        // (== not allowed!).
+        const auto idsTick(m_deviceClient->get<std::vector<unsigned long long> >(deviceId, "idsTick"));
+        const auto secondsTick(m_deviceClient->get<std::vector<unsigned long long> >(deviceId, "secondsTick"));
+        const auto fractionsTick(m_deviceClient->get<std::vector<unsigned long long> >(deviceId, "fractionsTick"));
+
+        CPPUNIT_ASSERT(ids.size() > idsTick.size());
+        CPPUNIT_ASSERT_EQUAL(idsTick.size(), secondsTick.size());
+        CPPUNIT_ASSERT_EQUAL(idsTick.size(), fractionsTick.size());
+        CPPUNIT_ASSERT(idsTick.size() >= 2);
+
+        unsigned long long lastIdTick = idsTick[0];
+        karabo::util::Epochstamp lastStampTick(secondsTick[0], fractionsTick[0]);
+        for (size_t i = 1; i < idsTick.size(); ++i) {
+            CPPUNIT_ASSERT_EQUAL(idsTick[i], lastIdTick + static_cast<unsigned long long> (tickCountdown));
+
+            const karabo::util::Epochstamp currentStamp(secondsTick[i], fractionsTick[i]);
+            CPPUNIT_ASSERT(currentStamp > lastStampTick);
+
+            lastIdTick = idsTick[i];
+            lastStampTick = currentStamp;
+        }
+
+        if (k == 1) {
+            // As last test check how many ticks we really got - might be off a bit since time server sometimes reports
+            // period that is off by periodVarFrac.
+            const int numExpectedTicks = testDurationInMicrosec / tickPeriodInMicrosec;
+            const int maxOff = int(std::ceil(tickCountdown * periodVarFrac));
+            const int idsSize = ids.size();
+            const std::string msg("Ids received: " + toString(idsSize)
+                                  + ", expected: " + toString(numExpectedTicks)
+                                  + ", maxOff: "   + toString(maxOff));
+            CPPUNIT_ASSERT_MESSAGE(msg, idsSize <= numExpectedTicks + maxOff + int(k/3));
+            CPPUNIT_ASSERT_MESSAGE(msg, idsSize >= numExpectedTicks - maxOff);
+        }
     }
-
-    // As last test check how many ticks we really got - might be off a bit since time server sometimes reports
-    // period that is off by periodVarFrac.
-    const int numExpectedTicks = testDurationInMicrosec / tickPeriodInMicrosec;
-    const int maxOff = static_cast<float> (std::ceil(tickCountdown * periodVarFrac));
-    const std::string msg("Ids received: " + karabo::util::toString(ids.size())
-                          + ", expected: " + karabo::util::toString(numExpectedTicks)
-                          + ", maxOff: " + karabo::util::toString(maxOff));
-    CPPUNIT_ASSERT_MESSAGE(msg, static_cast<int> (ids.size()) <= numExpectedTicks + maxOff);
-    CPPUNIT_ASSERT_MESSAGE(msg, static_cast<int> (ids.size()) >= numExpectedTicks - maxOff);
 }

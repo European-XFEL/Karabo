@@ -84,7 +84,8 @@ namespace karabo {
             virtual karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const = 0;
 
             /**
-             * A slot called by the time-server to synchronize this device with the timing system.
+             * A slot called by the device server if the external or possibly generated internally time ticks have to be
+             * passed to synchronize this device with the timing system.
              *
              * @param id: current train id
              * @param sec: current system seconds
@@ -93,6 +94,16 @@ namespace karabo {
              */
             virtual void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
             
+            /**
+             * A hook which is called if the device receives external time-server update, i.e. if slotTimeTick on the 
+             * device server is called.
+             * Can be overwritten by derived classes.
+             *
+             * @param id: train id
+             * @param sec: unix seconds
+             * @param frac: fractional seconds (i.e. attoseconds)
+             * @param period: interval between ids im microseconds
+             */
             virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
 
             /**
