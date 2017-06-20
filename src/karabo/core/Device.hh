@@ -15,6 +15,7 @@
 #include "DeviceClient.hh"
 #include "Lock.hh"
 
+#include "karabo/util/MetaTools.hh"
 #include "karabo/util/State.hh"
 #include "karabo/util.hpp"
 #include "karabo/util/StackTrace.hh"
@@ -46,12 +47,13 @@ namespace karabo {
 #define KARABO_NO_SERVER "__none__"
 
         enum Capabilities {
-            PROVIDES_SCENES                 = (1u << 0),
+
+            PROVIDES_SCENES = (1u << 0),
             // add future capabilities as bitmask:
             // SOME_FUTURE_CAPABILITY       = (1u << 1),
             // SOME_OTHER_FUTURE_CAPABILITY = (1u << 2),
         };
-        
+
         /**
          * @class BaseDevice
          * @brief The BaseDevice class provides for methods which are template
@@ -93,7 +95,19 @@ namespace karabo {
              * @param period: interval between subsequent ids in microseconds
              */
             virtual void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
-            
+
+            /**
+             * If the device receives time-server updates via slotTimeTick, this hook will be called for every id,
+             * irrespective of the frequency of the calls to slotTimeTick.
+             * Can be overwritten by derived classes
+             *
+             * @param id: train id
+             * @param sec: unix seconds
+             * @param frac: fractional seconds (i.e. attoseconds)
+             * @param period: interval between ids microseconds
+             */
+            virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
+
             /**
              * A hook which is called if the device receives external time-server update, i.e. if slotTimeTick on the 
              * device server is called.
@@ -1103,23 +1117,13 @@ namespace karabo {
                         << "\" does not allow a transition for event \"" << eventName << "\".";
             }
 
-            /**
-             * If the device receives time-server updates via slotTimeTick, this hook will be called for every id,
-             * irrespective of the frequency of the calls to slotTimeTick.
-             * Can be overwritten by derived classes
-             *
-             * @param id: train id
-             * @param sec: unix seconds
-             * @param frac: fractional seconds (i.e. attoseconds)
-             * @param period: interval between ids microseconds
-             */
             virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
 
             bool useTimeServer() const {
                 return this->get<bool>("useTimeserver");
             }
-            
+
             /**
              * Execute a command on this device
              * @param command
@@ -1283,7 +1287,6 @@ namespace karabo {
 
             }
 
-
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
                 {
                     boost::mutex::scoped_lock lock(m_timeChangeMutex);
@@ -1292,8 +1295,8 @@ namespace karabo {
                     m_timeFrac = frac;
                     m_timePeriod = period;
                 }
-                // Call hook for each external time tick update.
-                onTimeUpdate(id, sec, frac, period);
+                karabo::net::EventLoop::getIOService().post(karabo::util::bind_weak(&Device<FSM>::onTimeUpdate, this,
+                                                                                    id, sec, frac, period));
             }
 
             void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
@@ -1382,10 +1385,10 @@ namespace karabo {
                 instanceInfo.set("host", net::bareHostName());
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
-                
+
                 // the capabilities field specifies the optional capabilities a device provides.
                 unsigned int capabilities = 0;
-                if(m_parameters.has("availableScenes")) capabilities |= Capabilities::PROVIDES_SCENES;
+                if (m_parameters.has("availableScenes")) capabilities |= Capabilities::PROVIDES_SCENES;
                 instanceInfo.set("capabilities", capabilities);
 
                 // Initialize the SignalSlotable instance
