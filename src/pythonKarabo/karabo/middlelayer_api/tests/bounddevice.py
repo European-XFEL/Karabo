@@ -6,8 +6,8 @@ import numpy
 
 from karabo.bound import (
     AMPERE, Hash, DOUBLE_ELEMENT, Epochstamp, KARABO_CLASSINFO, KILO, METER,
-    MILLI, NDARRAY_ELEMENT, NODE_ELEMENT, PythonDevice, Schema, SLOT_ELEMENT,
-    State, STRING_ELEMENT, TABLE_ELEMENT, Timestamp, Trainstamp)
+    MILLI, NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL, PythonDevice, Schema,
+    SLOT_ELEMENT, State, STRING_ELEMENT, TABLE_ELEMENT, Timestamp, Trainstamp)
 
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
@@ -63,6 +63,12 @@ class TestDevice(PythonDevice):
             SLOT_ELEMENT(expected).key("injectSchema")
             .commit(),
 
+            SLOT_ELEMENT(expected).key("send")
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("end")
+            .commit(),
+
             TABLE_ELEMENT(expected).key("table")
             .displayedName("bla")
             .setNodeSchema(tableSchema)
@@ -73,7 +79,15 @@ class TestDevice(PythonDevice):
             NDARRAY_ELEMENT(expected).key("ndarray")
             .shape("3,2")
             .dtype("FLOAT")
-            .commit()
+            .commit(),
+
+            OUTPUT_CHANNEL(expected).key("output1")
+            .dataSchema(tableSchema)
+            .commit(),
+
+            OUTPUT_CHANNEL(expected).key("output2")
+            .dataSchema(tableSchema)
+            .commit(),
         )
 
     def __init__(self, configuration):
@@ -82,6 +96,8 @@ class TestDevice(PythonDevice):
         self.registerSlot(self.setA)
         self.registerSlot(self.backfire)
         self.registerSlot(self.injectSchema)
+        self.registerSlot(self.send)
+        self.registerSlot(self.end)
         self.word_no = 1
 
     def initialize(self):
@@ -122,3 +138,11 @@ class TestDevice(PythonDevice):
         self.updateSchema(schema)
         self.set("injectedNode.number{}".format(self.word_no), self.word_no)
         self.word_no += 1
+
+    def send(self):
+        self.writeChannel("output1", Hash("e", 5, "s", "hallo"))
+        self.writeChannel("output2", Hash("e", 5, "s", "hallo"))
+
+    def end(self):
+        self.signalEndOfStream("output1")
+        self.signalEndOfStream("output2")
