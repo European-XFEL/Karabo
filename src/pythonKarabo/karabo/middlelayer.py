@@ -44,6 +44,7 @@ from .middlelayer_api.hash import (
     VectorUInt64, VectorUInt8
 )
 from .middlelayer_api.ndarray import NDArray
+from .middlelayer_api.pipeline import InputChannel, NetworkInput
 from .middlelayer_api.project.api import (
     convert_old_project, OldProject, read_project_model, write_project_model
 )

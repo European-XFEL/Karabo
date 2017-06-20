@@ -182,8 +182,8 @@ namespace karabo {
                 /* The hello message is expected to have:
                  *     instanceId (std::string)
                  *     memoryLocation (std::string) [local/remote]
-                 *     dataDistribution (std::string) [distribute/copy]
-                 *     onSlowness (std::string) [queue/drop/wait/error]
+                 *     dataDistribution (std::string) [shared/copy]
+                 *     onSlowness (std::string) [queue/drop/wait/throw]
                  */
 
                 const std::string& instanceId = message.get<std::string > ("instanceId");
