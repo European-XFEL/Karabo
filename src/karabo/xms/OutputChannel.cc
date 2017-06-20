@@ -183,7 +183,7 @@ namespace karabo {
                  *     instanceId (std::string)
                  *     memoryLocation (std::string) [local/remote]
                  *     dataDistribution (std::string) [shared/copy]
-                 *     onSlowness (std::string) [queue/drop/wait/error]
+                 *     onSlowness (std::string) [queue/drop/wait/throw]
                  */
 
                 const std::string& instanceId = message.get<std::string > ("instanceId");
