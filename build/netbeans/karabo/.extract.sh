@@ -129,11 +129,6 @@ mkdir -p $HOME/.karabo
 # fix the shebang line of Python entry-points
 safeRunCommand "$KARABO/bin/.fix-python-scripts.sh" $KARABO
 
-# add the config file to var/config in case not existing yet
-if [ ! -e "$KARABO/var/config/config" ]; then    
-    cp $KARABO/bin/config.orig $KARABO/var/config/config
-fi
-
 if [ ! -e "$KARABO/var/service" ]
 then
     mv $KARABO/service.in $KARABO/var/service
