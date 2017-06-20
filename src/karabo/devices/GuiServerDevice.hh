@@ -732,6 +732,11 @@ namespace karabo {
              * Utility for getting a "name" from client connections.
              */
             std::string getChannelAddress(const karabo::net::Channel::Pointer& channel) const;
+            
+            /**
+             * Response handler for updating schema attributes on device
+             */
+            void onUpdateNewInstanceAttributesHandler(const std::string& deviceId, const karabo::util::Hash& response);
 
         };
     }

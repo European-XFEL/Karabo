@@ -1128,20 +1128,38 @@ namespace karabo {
 
 
         void GuiServerDevice::updateNewInstanceAttributes(const std::string& deviceId) {
-            boost::mutex::scoped_lock(m_pendingAttributesMutex);
-            const auto it = m_pendingAttributeUpdates.find(deviceId);
+            try {
+                boost::mutex::scoped_lock(m_pendingAttributesMutex);
+                const auto it = m_pendingAttributeUpdates.find(deviceId);
 
-            if (it != m_pendingAttributeUpdates.end()) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId;
-                
-                Hash h;
-                request(deviceId, "slotUpdateSchemaAttributes", it->second).receive(h);
-                if(!h.get<bool>("success")) {
-                    KARABO_LOG_WARN<<"Schema attribute update failed for device: "<< deviceId;
+                if (it != m_pendingAttributeUpdates.end()) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId;
+                    request(deviceId, "slotUpdateSchemaAttributes", it->second).receiveAsync<Hash>(boost::bind(&GuiServerDevice::onUpdateNewInstanceAttributesHandler, this, deviceId, _1));
+
                 }
-                m_pendingAttributeUpdates.erase(it);
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in updating attributes for device '"<<deviceId<<"': " << e.userFriendlyMsg();
             }
         }
+        
+        void GuiServerDevice::onUpdateNewInstanceAttributesHandler(const std::string& deviceId, const Hash& response) {
+             try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Handling attribute update response from "<<deviceId;
+                if(!response.get<bool>("success")) {
+                    KARABO_LOG_ERROR<<"Schema attribute update failed for device: "<< deviceId;
+                }
+                
+                boost::mutex::scoped_lock(m_pendingAttributesMutex);
+                const auto it = m_pendingAttributeUpdates.find(deviceId);
+                if (it != m_pendingAttributeUpdates.end()) {
+                    m_pendingAttributeUpdates.erase(it);
+                } else {
+                    KARABO_LOG_ERROR<<"Received non-requested attribute update response from: "<< deviceId;
+                }
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in receiving attribute update response: " << e.userFriendlyMsg();
+            }
+        };
 
 
         void GuiServerDevice::slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type, const karabo::util::Hash& updateRows) {
