@@ -125,8 +125,7 @@ class SystemTree(HasStrictTraits):
 
         return existing_devices, server_class_keys
 
-    def find(self, node_id, access_level=None, startswith=False,
-             case_sensitive=True):
+    def find(self, node_id, access_level=None, case_sensitive=True):
         """Find all nodes with the given `node_id` and return them in a list
         """
         access_level = (krb_globals.GLOBAL_ACCESS_LEVEL if access_level is None
@@ -149,10 +148,7 @@ class SystemTree(HasStrictTraits):
                 current_node_id = node.node_id.lower()
                 cmp_node_id = node_id.lower()
 
-            if startswith:
-                if current_node_id.startswith(cmp_node_id):
-                    found_nodes.append(node)
-            elif cmp_node_id == current_node_id:
+            if cmp_node_id in current_node_id:
                 found_nodes.append(node)
 
         self.visit(visitor)
@@ -194,7 +190,7 @@ class SystemTree(HasStrictTraits):
                     # Remove device node
                     with self.update_context.removal_context(device_node):
                         class_node.children.pop()
-                        
+
                 # Remove class node
                 with self.update_context.removal_context(class_node):
                     key = (server_node.node_id, class_node.node_id)
