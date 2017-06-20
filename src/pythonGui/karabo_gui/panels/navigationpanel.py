@@ -81,8 +81,7 @@ class NavigationPanel(BasePanelWidget):
         """
         if text:
             model = self.twNavigation.model()
-            self.found = model.findNodes(text, startswith=True,
-                                         case_sensitive=False)
+            self.found = model.findNodes(text, case_sensitive=False)
         else:
             self.found = []
 
