@@ -2,7 +2,7 @@ from nose.tools import assert_raises
 
 from ..api import (BitfieldModel, CheckBoxModel, ChoiceElementModel,
                    ComboBoxModel, DirectoryModel, DisplayCommandModel,
-                   DisplayLabelModel, DisplayPlotModel, DoubleLineEditModel,
+                   DisplayLabelModel, DisplayPlotModel,
                    EditableListElementModel, EditableListModel,
                    EditableSpinBoxModel, FileInModel, FileOutModel,
                    HexadecimalModel, IntLineEditModel, KnobModel, LabelModel,
@@ -49,7 +49,7 @@ def _geometry_traits():
 def test_all_empty_widgets():
     model_classes = (
         BitfieldModel, DisplayCommandModel, DisplayLabelModel,
-        DisplayPlotModel, DoubleLineEditModel, EditableListModel,
+        DisplayPlotModel, EditableListModel,
         EditableListElementModel, EditableSpinBoxModel, HexadecimalModel,
         IntLineEditModel, KnobModel, SliderModel, XYPlotModel, PopUpModel
     )
