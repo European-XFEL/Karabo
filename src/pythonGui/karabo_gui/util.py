@@ -211,6 +211,9 @@ def saveConfigurationToFile(configuration):
     with open(filename, 'w') as fp:
         writeXML(config, fp)
 
+    # save the last config directory
+    set_setting(KaraboSettings.CONFIG_DIR, op.dirname(filename))
+
 
 @contextmanager
 def temp_file(suffix='', prefix='tmp', dir=None):
