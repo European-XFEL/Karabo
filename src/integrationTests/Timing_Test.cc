@@ -166,7 +166,7 @@ void Timing_Test::appTestRunner() {
             const std::string msg("Ids received: " + toString(idsSize)
                                   + ", expected: " + toString(numExpectedTicks)
                                   + ", maxOff: "   + toString(maxOff));
-            CPPUNIT_ASSERT_MESSAGE(msg, idsSize <= numExpectedTicks + maxOff + int(k/3));
+            CPPUNIT_ASSERT_MESSAGE(msg, idsSize <= numExpectedTicks + maxOff);
             CPPUNIT_ASSERT_MESSAGE(msg, idsSize >= numExpectedTicks - maxOff);
         }
     }
