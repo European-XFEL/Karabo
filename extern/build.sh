@@ -4,7 +4,7 @@
 # Packages that we know how to build
 
 DEPENDENCIES_BASE=( bzip2 libpng snappy jpeg tiff python3.4 lapack boost
-freetype hdf5 log4cpp cppunit openmq openmqc patchelf gmock libxml libxslt
+freetype hdf5 log4cpp cppunit openmq nss openmqc patchelf gmock libxml libxslt
 daemontools )
 
 DEPENDENCIES_PYTHON=( setuptools pip wheel cython numpy scipy six nose py pytest
@@ -171,6 +171,12 @@ download_latest_deps() {
     fi
 
     local deps_tag=$(get_last_deps_tag)
+
+    # Allow for the dependency tag to be specified (for testing)
+    if [ ! -z $FORCED_DEPS_TAG ]; then
+        deps_tag=$FORCED_DEPS_TAG
+    fi
+
     local deps_file=$deps_base_name-$deps_tag.tar.gz
     local deps_url=$DEP_URL_BASE/$deps_file
 
