@@ -87,7 +87,7 @@ class NetworkInput(Configurable):
         displayedName="On Slowness",
         description="Policy for what to do if this input is too slow for the "
                     "fed data rate (only used in copy mode)",
-        options=["queue", "drop", "wait", "error"],
+        options=["queue", "drop", "wait", "throw"],
         assignment=Assignment.OPTIONAL, defaultValue="wait",
         accessMode=AccessMode.RECONFIGURABLE)
 
