@@ -24,12 +24,12 @@ from .shapes import LineShape, PathShape, RectangleShape
 from .widget.api import (
     BaseWidgetContainer, ColorBoolContainer, ComplexImageWidgetContainer,
     DisplayEditableWidgetContainer, DisplayIconsetContainer,
-    DisplayStateColorContainer, EvaluatorContainer, FloatSpinBoxContainer,
-    GenericWidgetContainer, IconsContainer, LabelWidget, LinePlotContainer,
-    MonitorContainer, SceneLinkWidget, SimpleImageWidgetContainer,
-    SingleBitContainer, SparklineContainer, StatefulIconContainer,
-    TableElementContainer, UnknownSvgWidget, UnknownWidget,
-    VacuumWidgetPlaceholder, WorkflowItemWidget
+    DisplayStateColorContainer, DoubleLineEditContainer, EvaluatorContainer,
+    FloatSpinBoxContainer, GenericWidgetContainer, IconsContainer,
+    LabelWidget, LinePlotContainer, MonitorContainer, SceneLinkWidget,
+    SimpleImageWidgetContainer, SingleBitContainer, SparklineContainer,
+    StatefulIconContainer, TableElementContainer, UnknownSvgWidget,
+    UnknownWidget, VacuumWidgetPlaceholder, WorkflowItemWidget
 )
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
@@ -59,7 +59,7 @@ _SCENE_OBJ_FACTORIES = {
     WebcamImageModel: ComplexImageWidgetContainer,
     DisplayLabelModel: GenericWidgetContainer,
     DisplayPlotModel: GenericWidgetContainer,
-    DoubleLineEditModel: GenericWidgetContainer,
+    DoubleLineEditModel: DoubleLineEditContainer,
     EditableListModel: GenericWidgetContainer,
     EditableListElementModel: GenericWidgetContainer,
     EditableSpinBoxModel: GenericWidgetContainer,
