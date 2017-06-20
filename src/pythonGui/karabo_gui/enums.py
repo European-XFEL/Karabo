@@ -20,3 +20,4 @@ class KaraboSettings(Enum):
     MACRO_DIR = "LastUsedFolder/MacroDialog"
     SCENE_DIR = "LastUsedFolder/SceneDialog"
     PROJECT_DOMAIN = "Project/LastUsedDbDomain"
+    GUI_SERVER = "Server/LastConnectionAddress"

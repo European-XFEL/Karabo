@@ -6,7 +6,6 @@
 
 from functools import partial
 import os
-import os.path as op
 import socket
 from struct import calcsize, pack, unpack
 
@@ -16,12 +15,13 @@ from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
 from PyQt4.QtGui import QDialog, QMessageBox, qApp
 
 from karabo.authenticator import Authenticator
-from karabo.common.api import ShellNamespaceWrapper
 from karabo.middlelayer import Hash, decodeBinary, encodeBinary, AccessLevel
 from karabo_gui import background
 from karabo_gui.dialogs.logindialog import LoginDialog
+from karabo_gui.enums import KaraboSettings
 from karabo_gui.events import broadcast_event, KaraboEventSender
 import karabo_gui.globals as krb_globals
+from karabo_gui.util import get_setting, set_setting
 
 
 class Network(QObject):
@@ -81,13 +81,11 @@ class Network(QObject):
         if hostname is not None and port is not None:
             return (hostname, port)
 
-        if op.exists(krb_globals.CONFIG_FILE):
-            config = ShellNamespaceWrapper(krb_globals.CONFIG_FILE)
-            # Only read from config file if values are not found in environment
-            if hostname is None:
-                hostname = config.get(krb_globals.KARABO_GUI_HOST, 'localhost')
-            if port is None:
-                port = int(config.get(krb_globals.KARABO_GUI_PORT, 44444))
+        # Load from QSettings
+        server = get_setting(KaraboSettings.GUI_SERVER)
+        server = server or 'localhost:44444'
+        hostname, port = server.split(':')
+        port = int(port)
 
         return (hostname, port)
 
@@ -289,6 +287,10 @@ class Network(QObject):
         self.endServerConnection()
 
     def onConnected(self):
+        # cache the server address
+        server = '{}:{}'.format(self.hostname, self.port)
+        set_setting(KaraboSettings.GUI_SERVER, server)
+
         # If some requests got piled up, because of no server connection,
         # now these get handled
         for r in self.requestQueue:
