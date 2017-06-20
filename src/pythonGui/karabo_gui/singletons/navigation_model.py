@@ -170,10 +170,10 @@ class NavigationTreeModel(QAbstractItemModel):
             index = None
         self.selectIndex(index)
 
-    def findNodes(self, node_id, access_level=None, case_sensitive=True):
-        access_level = (krb_globals.GLOBAL_ACCESS_LEVEL if access_level is None
-                        else access_level)
-        return self.tree.find(node_id, access_level, case_sensitive)
+    def findNodes(self, node_id, **kwargs):
+        if kwargs.get('access_level') is None:
+            kwargs['access_level'] = krb_globals.GLOBAL_ACCESS_LEVEL
+        return self.tree.find(node_id, **kwargs)
 
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.

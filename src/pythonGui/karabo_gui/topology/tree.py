@@ -5,6 +5,8 @@
 #############################################################################
 
 from contextlib import contextmanager
+import re
+
 from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
                         Int, List, String, WeakRef)
 
@@ -125,13 +127,24 @@ class SystemTree(HasStrictTraits):
 
         return existing_devices, server_class_keys
 
-    def find(self, node_id, access_level=None, case_sensitive=True):
+    def find(self, node_id, access_level=None, case_sensitive=True,
+             use_reg_ex=False):
         """Find all nodes with the given `node_id` and return them in a list
+
+        :param node_id: The actual string we are looking for in the tree
+        :param access_level: The global access level
+        :param case_sensitive: States whether the given string should match
+                               case or not
+        :param use_reg_ex: Defines the given string as a regular expression
+        :return list of found nodes (which could be empty)
         """
         access_level = (krb_globals.GLOBAL_ACCESS_LEVEL if access_level is None
                         else access_level)
 
         found_nodes = []
+        pattern = node_id if use_reg_ex else re.escape(node_id)
+        flags = 0 if case_sensitive else re.IGNORECASE
+        regex = re.compile(pattern, flags=flags)
 
         def visitor(node):
             parent_node = node.parent
@@ -141,14 +154,8 @@ class SystemTree(HasStrictTraits):
                 # Do not look for nodes which are not visible or its parent
                 return
 
-            if case_sensitive:
-                current_node_id = node.node_id
-                cmp_node_id = node_id
-            else:
-                current_node_id = node.node_id.lower()
-                cmp_node_id = node_id.lower()
-
-            if cmp_node_id in current_node_id:
+            match = regex.match(node.node_id)
+            if match is not None:
                 found_nodes.append(node)
 
         self.visit(visitor)
