@@ -61,10 +61,6 @@ class DisplayPlotModel(BaseWidgetObjectData):
     """ A model for DisplayPlot"""
 
 
-class DoubleLineEditModel(BaseWidgetObjectData):
-    """ A model for DoubleLineEdit"""
-
-
 class EditableListModel(BaseWidgetObjectData):
     """ A model for EditableList"""
 
@@ -250,10 +246,12 @@ def __workflow_item_writer(write_func, model, parent):
 def _build_empty_widget_readers_and_writers():
     """ Build readers and writers for the empty widget classes
     """
+
     def _build_reader_func(klass):
         def reader(read_func, element):
             traits = read_base_widget_data(element)
             return klass(**traits)
+
         return reader
 
     def _build_writer_func(name):
@@ -261,10 +259,11 @@ def _build_empty_widget_readers_and_writers():
             element = SubElement(parent, WIDGET_ELEMENT_TAG)
             write_base_widget_data(model, element, name)
             return element
+
         return writer
 
     names = ('AnalogModel', 'BitfieldModel', 'DisplayCommandModel',
-             'DisplayLabelModel', 'DisplayPlotModel', 'DoubleLineEditModel',
+             'DisplayLabelModel', 'DisplayPlotModel',
              'EditableListModel', 'EditableListElementModel',
              'EditableSpinBoxModel', 'HexadecimalModel', 'IntLineEditModel',
              'KnobModel', 'LampModel', 'PopUpModel', 'SliderModel',
@@ -280,10 +279,12 @@ def _build_empty_display_editable_readers_and_writers():
     """ Build readers and writers for the empty widget classes which come in
     Editable and Display types.
     """
+
     def _build_reader_func(klass):
         def reader(read_func, element):
             traits = read_empty_display_editable_widget(element)
             return klass(**traits)
+
         return reader
 
     def _writer_func(write_func, model, parent):

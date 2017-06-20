@@ -1,7 +1,7 @@
 from ..api import (
-    DisplayStateColorModel, ColorBoolModel, EvaluatorModel, FloatSpinBoxModel,
-    MonitorModel,
-    SingleBitModel, TableElementModel,
+    ColorBoolModel, DisplayStateColorModel, DoubleLineEditModel,
+    EvaluatorModel, FloatSpinBoxModel, MonitorModel, SingleBitModel,
+    TableElementModel,
 )
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
@@ -21,6 +21,15 @@ TABLE_SCHEMA = (
     " requiredAccessLevel=&quot;KRB_INT32:1&quot; valueType=&quot;"
     "KRB_STRING:BOOL&quot;&gt;0&lt;/b&gt;&lt;/root&gt;"
 )
+
+
+def test_doubleline_edit():
+    traits = base_widget_traits()
+    traits['decimals'] = 5
+    model = DoubleLineEditModel(**traits)
+    read_model = single_model_round_trip(model)
+    assert_base_traits(read_model)
+    assert read_model.decimals == 5
 
 
 def test_color_bool_widget():

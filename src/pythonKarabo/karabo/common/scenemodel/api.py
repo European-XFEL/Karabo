@@ -12,7 +12,8 @@ from .model import SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel
 from .registry import register_scene_reader, register_scene_writer
 from .shapes import LineModel, PathModel, RectangleModel
 from .widgets.complex import (ColorBoolModel, DisplayStateColorModel,
-                              EvaluatorModel, FloatSpinBoxModel, MonitorModel,
+                              DoubleLineEditModel, EvaluatorModel,
+                              FloatSpinBoxModel, MonitorModel,
                               SingleBitModel, TableElementModel)
 from .widgets.icon import (BaseIconsModel, DigitIconsModel,
                            DisplayIconsetModel, IconData, SelectionIconsModel,
@@ -24,10 +25,10 @@ from .widgets.plot import LinePlotModel, PlotCurveModel, SparklineModel
 from .widgets.simple import (AnalogModel, BitfieldModel, CheckBoxModel,
                              ChoiceElementModel, ComboBoxModel, DirectoryModel,
                              DisplayCommandModel, DisplayLabelModel,
-                             DisplayPlotModel, DoubleLineEditModel,
-                             EditableListElementModel, EditableListModel,
-                             EditableSpinBoxModel, FileInModel, FileOutModel,
-                             HexadecimalModel, IntLineEditModel, KnobModel,
+                             DisplayPlotModel, EditableListElementModel,
+                             EditableListModel, EditableSpinBoxModel,
+                             FileInModel, FileOutModel, HexadecimalModel,
+                             IntLineEditModel, KnobModel,
                              LabelModel, LampModel, LineEditModel, PopUpModel,
                              SceneLinkModel, SliderModel, WorkflowItemModel,
                              XYPlotModel)

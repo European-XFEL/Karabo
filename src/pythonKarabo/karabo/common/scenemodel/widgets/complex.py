@@ -17,6 +17,13 @@ class ColorBoolModel(BaseWidgetObjectData):
     invert = Bool(False)
 
 
+class DoubleLineEditModel(BaseWidgetObjectData):
+    """ A model for DisplayBool Widget"""
+
+    # The floating point precision
+    decimals = Int
+
+
 class DisplayStateColorModel(BaseWidgetObjectData):
     """ A model for DisplayStateColor
     """
@@ -79,6 +86,24 @@ def _display_color__bool_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayColorBool')
     element.set(NS_KARABO + 'invert', str(model.invert).lower())
+    return element
+
+
+@register_scene_reader('DoubleLineEdit', version=1)
+def _display_color_bool_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    try:
+        traits['decimals'] = int(element.get(NS_KARABO + 'decimals', "-1"))
+    except ValueError:
+        traits['decimals'] = -1
+    return DoubleLineEditModel(**traits)
+
+
+@register_scene_writer(DoubleLineEditModel)
+def _display_color__bool_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DoubleLineEdit')
+    element.set(NS_KARABO + 'decimals', str(model.decimals))
     return element
 
 
