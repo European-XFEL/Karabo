@@ -90,7 +90,7 @@ def test_tree_find():
     tree.update(h)
     assert len(tree.find('BarClass')) == 1
     assert len(tree.find('barclass', case_sensitive=False)) == 1
-    assert len(tree.find('Bar', startswith=True)) == 1
+    assert len(tree.find('Bar')) == 1
     assert len(tree.find('FooClass', access_level=AccessLevel.ADMIN)) == 3
     assert len(tree.find('BarClass', access_level=AccessLevel.OBSERVER)) == 1
     assert len(tree.find('BlahClass', access_level=AccessLevel.ADMIN)) == 1
