@@ -1134,7 +1134,7 @@ namespace karabo {
 
                 if (it != m_pendingAttributeUpdates.end()) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId;
-                    request(deviceId, "slotUpdateSchemaAttributes", it->second).receiveAsync<Hash>(boost::bind(&GuiServerDevice::onUpdateNewInstanceAttributesHandler, this, deviceId, _1));
+                    request(deviceId, "slotUpdateSchemaAttributes", it->second).receiveAsync<Hash>(bind_weak(&GuiServerDevice::onUpdateNewInstanceAttributesHandler, this, deviceId, _1));
 
                 }
             } catch (const Exception& e) {
