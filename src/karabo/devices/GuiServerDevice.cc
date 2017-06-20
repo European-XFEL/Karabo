@@ -1150,11 +1150,8 @@ namespace karabo {
                 }
                 
                 boost::mutex::scoped_lock(m_pendingAttributesMutex);
-                const auto it = m_pendingAttributeUpdates.find(deviceId);
-                if (it != m_pendingAttributeUpdates.end()) {
-                    m_pendingAttributeUpdates.erase(it);
-                } else {
-                    KARABO_LOG_ERROR<<"Received non-requested attribute update response from: "<< deviceId;
+                if (m_pendingAttributeUpdates.erase(deviceId) == 0) {
+                   KARABO_LOG_ERROR<<"Received non-requested attribute update response from: "<< deviceId;
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in receiving attribute update response: " << e.userFriendlyMsg();
