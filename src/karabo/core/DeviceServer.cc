@@ -326,24 +326,19 @@ namespace karabo {
 
 
         void DeviceServer::onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-            DeviceInstanceMap dim;
-            {
-                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-                dim = m_deviceInstanceMap;
-            }
-            for (auto& kv : dim) {
-                if (kv.second && kv.second->useTimeServer()) kv.second->onTimeTick(id, sec, frac, period);
+            boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+            for (auto& kv : m_deviceInstanceMap) {
+                if (kv.second && kv.second->useTimeServer()) {
+                    EventLoop::getIOService().post(util::bind_weak(&BaseDevice::onTimeTick, kv.second.get(),
+                                                                   id, sec, frac, period));
+                }
             }
         }
 
 
         void DeviceServer::onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-            DeviceInstanceMap dim;
-            {
-                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-                dim = m_deviceInstanceMap;
-            }
-            for (auto& kv : dim) {
+            boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+            for (auto& kv : m_deviceInstanceMap) {
                 if (kv.second && kv.second->useTimeServer()) kv.second->slotTimeTick(id, sec, frac, period);
             }
         }
