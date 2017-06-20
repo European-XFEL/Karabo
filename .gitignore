@@ -1,4 +1,4 @@
-/extern/resources/*/*libs.txt
+/extern/resources/*/*.txt
 /extern/resources/*/*/
 /extern/*.tar.gz
 !/extern/resources/openmqc/openmqc-5.0.1/
