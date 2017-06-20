@@ -80,7 +80,7 @@ class NetworkInput(Configurable):
         displayedName="Data Distribution",
         description="The way data is fetched from the connected output "
                     "channels (shared/copy)",
-        options=["distribute", "copy"], assignment=Assignment.OPTIONAL,
+        options=["shared", "copy"], assignment=Assignment.OPTIONAL,
         defaultValue="copy", accessMode=AccessMode.RECONFIGURABLE)
 
     onSlowness = String(

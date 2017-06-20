@@ -182,7 +182,7 @@ namespace karabo {
                 /* The hello message is expected to have:
                  *     instanceId (std::string)
                  *     memoryLocation (std::string) [local/remote]
-                 *     dataDistribution (std::string) [distribute/copy]
+                 *     dataDistribution (std::string) [shared/copy]
                  *     onSlowness (std::string) [queue/drop/wait/error]
                  */
 
