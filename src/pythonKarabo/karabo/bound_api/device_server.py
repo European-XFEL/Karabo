@@ -146,6 +146,9 @@ class DeviceServer(object):
         else:
             print('INTERRUPT : You terminated me!')
         if self.ss is not None:
+            # Give serverid explicitely even though it should not be needed
+            # Note: self.ss.call("", "slotKillServer") currently does not work
+            # TODO: investigate bound method and add tests!
             self.ss.call(self.serverid, "slotKillServer")
         else:
             self.stopDeviceServer()
