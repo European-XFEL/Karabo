@@ -17,11 +17,14 @@ from karabo.common.project.api import (
 )
 from karabo.common.scenemodel.api import read_scene
 from karabo.middlelayer import Hash, read_project_model
+from karabo_gui.enums import KaraboSettings
 from karabo_gui.events import broadcast_event, KaraboEventSender
 import karabo_gui.globals as krb_globals
 from karabo_gui import messagebox
 from karabo_gui.singletons.api import (get_db_conn, get_project_model,
                                        get_network)
+from karabo_gui.topology.util import is_server_online
+from karabo_gui.util import get_setting
 
 
 class WeakMethodRef(object):
@@ -298,5 +301,16 @@ def run_macro(macro_model):
     h = Hash("code", macro_model.code,
              "module", macro_model.simple_name,
              "uuid", macro_model.uuid)
-    get_network().onInitDevice(krb_globals.MACRO_SERVER, "MetaMacro",
+
+    serverId = get_setting(KaraboSettings.MACRO_SERVER)
+
+    serverId = serverId or krb_globals.MACRO_SERVER
+    success = is_server_online(serverId)
+    if not success:
+        messagebox.show_error("Macro server {} not found in system topology. "
+                              "Macro cannot be started.".format(serverId),
+                              modal=False)
+        return
+
+    get_network().onInitDevice(serverId, "MetaMacro",
                                instance_id, h)
