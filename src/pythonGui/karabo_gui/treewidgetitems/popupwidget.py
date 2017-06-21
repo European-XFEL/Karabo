@@ -19,7 +19,7 @@ from PyQt4.QtGui import QHBoxLayout, QTextEdit, QWidget
 class PopupWidget(QWidget):
     
     def __init__(self, parent=None):
-        super(PopupWidget, self).__init__(parent, Qt.Drawer)
+        super(PopupWidget, self).__init__(parent, Qt.Popup)
         
         self.__teInfo = TextEdit(self)
         self.__teInfo.setReadOnly(True)
