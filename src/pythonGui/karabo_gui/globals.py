@@ -25,14 +25,10 @@ KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.ADMIN  # Outside XFEL
 # Hidden karabo folder which includes certain karabo related files
 if platform.startswith('win'):
     HIDDEN_KARABO_FOLDER = path.join(environ['APPDATA'], 'karabo')
-    KARABO_CONFIG_FOLDER = HIDDEN_KARABO_FOLDER
 else:
     HIDDEN_KARABO_FOLDER = path.join(environ['HOME'], '.karabo')
-    KARABO_CONFIG_FOLDER = path.join(environ['KARABO'], 'var', 'config')
 # Project folder
 KARABO_PROJECT_FOLDER = path.join(HIDDEN_KARABO_FOLDER, 'projects')
-
-CONFIG_FILE = path.join(KARABO_CONFIG_FOLDER, 'config')
 
 MACRO_SERVER = 'karabo/macroServer'
 
