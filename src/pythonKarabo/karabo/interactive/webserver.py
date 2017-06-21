@@ -26,6 +26,7 @@ mainpage = """
       <button name="cmd" value="down">Stop</button>
       <button name="cmd" value="once">Start once</button>
       <button name="cmd" value="kill">Kill</button>
+      <button name="cmd" value="group">Kill Group</button>
     </form>
   </body>
 </html>
@@ -66,7 +67,8 @@ def control_service(server_id, command):
     svc_ctrl = {'up': 'u',
                 'down': 'd',
                 'once': 'o',
-                'kill': 'k'}
+                'kill': '=k',
+                'group': '+k'}
     ctrl = absolute("var", "service", server_id, "supervise", "control")
     if command not in svc_ctrl:
         return False
