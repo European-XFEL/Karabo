@@ -46,7 +46,7 @@ namespace karabo {
          * NORMAL karabo::util::State states.
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
-
+            
             krb_log4cpp::Category* m_log;
             karabo::log::Logger::Pointer m_logger;
 
@@ -69,6 +69,16 @@ namespace karabo {
             karabo::net::JmsConnection::Pointer m_connection;
 
             std::string m_serverId;
+
+            std::string m_timeServerId;
+            unsigned long long m_timeId;
+            unsigned long long m_timeSec; // seconds
+            unsigned long long m_timeFrac; // attoseconds
+            unsigned long long m_timePeriod; // microseconds
+            bool m_noTimeTickYet; // whether slotTimeTick received a first call
+            mutable boost::mutex m_timeChangeMutex;
+            unsigned long long m_timeIdLastTick; // only for onTimeTick, no need for mutex protection
+            boost::asio::deadline_timer m_timeTickerTimer;
 
         public:
 
@@ -209,6 +219,48 @@ namespace karabo {
             void instantiate(const std::string& deviceId, const std::string& classId, const util::Hash& config);
 
             void slotLoggerPriority(const std::string& prio);
+
+            /**
+             * A slot called by the time-server to synchronize this device with the timing system.
+             *
+             * @param id: current train id
+             * @param sec: current system seconds
+             * @param frac: current fractional seconds
+             * @param period: interval between subsequent ids in microseconds
+             */
+            void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
+            
+            /**
+             * Helper function for internal time ticker deadline timer to provide internal clock
+             * that calls 'onTimeUpdate' for every id even if slotTimeTick is called less often.
+             *
+             * @param ec error code indicating whether deadline timer was cancelled
+             * @param id: current train id
+             */
+            void timeTick(const boost::system::error_code ec, unsigned long long newId);
+
+            /**
+             * A hook which is called if the device receives a time-server update, i.e. if slotTimeTick is called.
+             * Can be overwritten by derived classes.
+             *
+             * @param id: train id
+             * @param sec: unix seconds
+             * @param frac: fractional seconds (i.e. attoseconds)
+             * @param period: interval between ids im microseconds
+             */
+            void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
+
+            /**
+             * If the device receives time-server updates via slotTimeTick, this hook will be called for every id,
+             * irrespective of the frequency of the calls to slotTimeTick.
+             * Can be overwritten by derived classes
+             *
+             * @param id: train id
+             * @param sec: unix seconds
+             * @param frac: fractional seconds (i.e. attoseconds)
+             * @param period: interval between ids microseconds
+             */
+            void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
 
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
         };

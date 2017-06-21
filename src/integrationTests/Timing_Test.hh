@@ -33,6 +33,7 @@ private:
     void appTestRunner();
     
     karabo::core::DeviceServer::Pointer m_deviceServer;
+    karabo::core::DeviceServer::Pointer m_deviceServer2;
     boost::thread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;

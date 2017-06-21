@@ -119,10 +119,26 @@ namespace karabo {
             OVERWRITE_ELEMENT(expected).key("Logger.file.filename")
                     .setNewDefaultValue("device-server.log")
                     .commit();
+
+            STRING_ELEMENT(expected).key("timeServerId")
+                    .displayedName("TimeServer ID")
+                    .description("The instance id uniquely identifies a TimeServer instance in the distributed system")
+                    .assignmentOptional().defaultValue("")
+                    .commit();
+
         }
 
 
-        DeviceServer::DeviceServer(const karabo::util::Hash& config) : m_log(0), m_scanPluginsTimer(EventLoop::getIOService()) {
+        DeviceServer::DeviceServer(const karabo::util::Hash& config)
+            : m_log(0)
+            , m_scanPluginsTimer(EventLoop::getIOService())
+            , m_timeId(0ull)
+            , m_timeSec(0ull)
+            , m_timeFrac(0ull)
+            , m_timePeriod(0ull)
+            , m_noTimeTickYet(true)
+            , m_timeIdLastTick(0ull)
+            , m_timeTickerTimer(EventLoop::getIOService()) {
 
             if (config.has("serverId")) {
                 config.get("serverId", m_serverId);
@@ -140,6 +156,9 @@ namespace karabo {
 
             // What visibility this server should have
             config.get("visibility", m_visibility);
+
+            // What is the TimeServer ID
+            config.get("timeServerId", m_timeServerId);
 
             m_connection = Configurator<JmsConnection>::createNode("connection", config);
             m_connection->connect();
@@ -170,6 +189,7 @@ namespace karabo {
         DeviceServer::~DeviceServer() {
             stopDeviceServer();
             KARABO_LOG_FRAMEWORK_TRACE << "DeviceServer::~DeviceServer() dtor : m_logger.use_count()=" << m_logger.use_count();
+            m_timeTickerTimer.cancel();
             m_logger.reset();
         }
 
@@ -225,6 +245,11 @@ namespace karabo {
                     << ", Broker: " << m_connection->getBrokerUrl();
 
             m_serverIsRunning = true;
+
+            if (!m_timeServerId.empty()) {
+                KARABO_LOG_FRAMEWORK_DEBUG << m_serverId << ": Connecting to time server \"" << m_timeServerId << "\"";
+                connect(m_timeServerId, "signalTimeTick", "", "slotTimeTick");
+            }
         }
 
 
@@ -241,6 +266,81 @@ namespace karabo {
             KARABO_SLOT(slotDeviceGone, string /*deviceId*/)
             KARABO_SLOT(slotGetClassSchema, string /*classId*/)
             KARABO_SLOT(slotLoggerPriority, string /*priority*/)
+            KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
+        }
+
+
+        void DeviceServer::slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            bool firstCall = false;
+            {
+                boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                m_timeId = id;
+                m_timeSec = sec;
+                m_timeFrac = frac;
+                m_timePeriod = period;
+                firstCall = m_noTimeTickYet;
+                m_noTimeTickYet = false;
+            }
+            // Take care that 'onTimeUpdate' is called every period:
+            // Cancel pending timer if we had an update from the time server...
+            if (m_timeTickerTimer.cancel() > 0 || firstCall) { // order matters if timer was already running
+                // ...but start again (or the first time), freshly synchronized.
+                timeTick(boost::system::error_code(), id);
+            }
+            // Call hook for each external time tick update.
+            onTimeTick(id, sec, frac, period);
+        }
+
+
+        void DeviceServer::timeTick(const boost::system::error_code ec, unsigned long long newId) {
+            if (ec) return;
+
+            // Get values of last 'external' update via slotTimeTick.
+            unsigned long long id = 0, period = 0;
+            util::Epochstamp stamp(0ull, 0ull);
+            {
+                boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                id = m_timeId;
+                stamp = util::Epochstamp(m_timeSec, m_timeFrac);
+                period = m_timePeriod;
+            }
+            // Calculate how many ids we are away from last external update and adjust stamp
+            const unsigned long long delta = newId - id; // newId >= id is fulfilled
+            const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
+                                                    (period % 1000000ull) * 1000000000000ull); // '* 10^12': micro- to attoseconds
+            const util::TimeDuration sinceId(periodDuration * delta);
+            stamp += sinceId;
+
+            // Call hook that indicates next id. In case the internal ticker was too slow, call it for
+            // each otherwise missed id (with same time...). If it was too fast, do not call again.
+            if (m_timeIdLastTick == 0ull) m_timeIdLastTick = newId - 1; // first time tick
+            while (m_timeIdLastTick < newId) {
+                onTimeUpdate(++m_timeIdLastTick, stamp.getSeconds(), stamp.getFractionalSeconds(), period);
+            }
+
+            // reload timer for next id:
+            m_timeTickerTimer.expires_at((stamp += periodDuration).getPtime());
+            m_timeTickerTimer.async_wait(util::bind_weak(&DeviceServer::timeTick, this,
+                                                         boost::asio::placeholders::error, ++newId));
+        }
+
+
+        void DeviceServer::onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+            for (auto& kv : m_deviceInstanceMap) {
+                if (kv.second && kv.second->useTimeServer()) {
+                    EventLoop::getIOService().post(util::bind_weak(&BaseDevice::onTimeTick, kv.second.get(),
+                                                                   id, sec, frac, period));
+                }
+            }
+        }
+
+
+        void DeviceServer::onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+            for (auto& kv : m_deviceInstanceMap) {
+                if (kv.second && kv.second->useTimeServer()) kv.second->slotTimeTick(id, sec, frac, period);
+            }
         }
 
 
