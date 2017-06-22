@@ -142,7 +142,7 @@ class SystemTree(HasStrictTraits):
                         else access_level)
 
         found_nodes = []
-        pattern = node_id if use_reg_ex else re.escape(node_id)
+        pattern = node_id if use_reg_ex else ".*{}".format(re.escape(node_id))
         flags = 0 if case_sensitive else re.IGNORECASE
         regex = re.compile(pattern, flags=flags)
 
