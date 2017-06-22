@@ -1648,7 +1648,7 @@ namespace karabo {
                 const karabo::util::State& currentState = getState();
                 const karabo::util::Schema whiteList(getStateDependentSchema(currentState));
                 KARABO_LOG_DEBUG << "Incoming (un-validated) reconfiguration:\n" << unvalidated;
-                std::pair<bool, std::string> valResult = m_validatorExtern.validate(whiteList, unvalidated, validated);
+                std::pair<bool, std::string> valResult = m_validatorExtern.validate(whiteList, unvalidated, validated, getActualTimestamp());
                 KARABO_LOG_DEBUG << "Validated reconfiguration:\n" << validated;
                 return valResult;
             }
