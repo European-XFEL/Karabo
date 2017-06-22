@@ -7,10 +7,10 @@ from .basetypes import KaraboValue
 from .hash import Hash
 
 
-class KaraboEncoder(json.JSONEncoder):
+class KaraboJSONEncoder(json.JSONEncoder):
     """Encode Karabo values for JSON
 
-    The encoding is pretty greedy: Hashes loose their attributes, Karabo
+    The encoding is pretty greedy: Hashes lose their attributes, Karabo
     values their timestamp, and no bit sizes are preserved.
     """
     def default(self, v):
