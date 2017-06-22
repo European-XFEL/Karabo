@@ -259,19 +259,6 @@ class MainWindow(QMainWindow):
         if self._should_save_project_before_closing():
             return False
 
-        # Make sure there are no pending writing things in the pipe
-        if get_db_conn().is_writing():
-            ask = ('There is currently data being sent to the <b>project '
-                   'database</b>.<br> If you choose to force quit the '
-                   'application, the project<br>might get corrupted or data '
-                   'will be lost!')
-            msg_box = QMessageBox(QMessageBox.Question, 'Force quit', ask,
-                                  QMessageBox.Yes | QMessageBox.Cancel)
-            msg_box.setButtonText(QMessageBox.Yes, 'Force quit')
-            msg_box.setButtonText(QMessageBox.No, 'Cancel')
-            msg_box.setDefaultButton(QMessageBox.Cancel)
-            return msg_box.exec() == QMessageBox.Yes
-
         return True
 
     def _enable_toolbar(self, enable):
@@ -333,7 +320,9 @@ class MainWindow(QMainWindow):
         """Asks for discard/save changes on modified project.
         """
         project = get_project_model().traits_data_model
-        if project is not None and project.modified:
+        if project is None:
+            return False
+        if project.modified or get_db_conn().is_writing():
             ask = ('Unsaved changes on project \"<b>{}</b>\" will be '
                    'permanently lost.<br /> Continue action?'
                    .format(project.simple_name))
