@@ -18,8 +18,12 @@ except ImportError:
     from IPython.qt import kernel_mixins, inprocess
 
 from karabo.middlelayer import Hash, State
+from karabo_gui.enums import KaraboSettings
 import karabo_gui.globals as krb_globals
+from karabo_gui import messagebox
 from karabo_gui.singletons.api import get_network, get_topology
+from karabo_gui.topology.util import is_server_online
+from karabo_gui.util import get_setting
 
 
 class IPythonWidget(RichJupyterWidget):
@@ -59,11 +63,20 @@ class KernelManager(kernel_mixins.QtKernelManagerMixin):
     __client = None
 
     def start_kernel(self):
+        serverId = get_setting(KaraboSettings.MACRO_SERVER)
+        serverId = serverId or krb_globals.MACRO_SERVER
+
+        success = is_server_online(serverId)
+        if not success:
+            messagebox.show_error(
+                "Macro server {} not found in system topology. "
+                "Macro cannot be started.".format(serverId),
+                modal=False)
+            return
         hostname = socket.gethostname().replace(".", "_")
         network = get_network()
         self.name = "CLI-{}-{}".format(hostname, os.getpid())
-        network.onInitDevice(krb_globals.MACRO_SERVER, "IPythonKernel",
-                             self.name, Hash())
+        network.onInitDevice(serverId, "IPythonKernel", self.name, Hash())
 
     def shutdown_kernel(self):
         network = get_network()
