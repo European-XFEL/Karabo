@@ -94,6 +94,14 @@ def test_tree_find():
     assert len(tree.find('FooClass', access_level=AccessLevel.ADMIN)) == 3
     assert len(tree.find('BarClass', access_level=AccessLevel.OBSERVER)) == 1
     assert len(tree.find('BlahClass', access_level=AccessLevel.ADMIN)) == 1
+    kwargs = {'access_level': AccessLevel.ADMIN, 'case_sensitive': True,
+              'use_reg_ex': True}
+    assert len(tree.find('(.*)Class', **kwargs)) == 6
+    assert len(tree.find('(.*)class', **kwargs)) == 1
+    kwargs['access_level'] = AccessLevel.ADMIN
+    kwargs['case_sensitive'] = False
+    kwargs['use_reg_ex'] = True
+    assert len(tree.find('(.*)fooclass', **kwargs)) == 3
 
 
 def test_tree_clear_existing():
