@@ -5,7 +5,7 @@ from unittest import TestCase, main
 import numpy
 
 from karabo.middlelayer import (
-    AccessMode, BoolValue, EnumValue, Hash, KaraboEncoder, NoneValue,
+    AccessMode, BoolValue, EnumValue, Hash, KaraboJSONEncoder, NoneValue,
     QuantityValue, VectorCharValue, StringValue, VectorStringValue)
 
 
@@ -14,7 +14,7 @@ class Tests(TestCase):
 
     def assert_json_equal(self, left, right):
         """remove all whitespace in comparison"""
-        left = re.sub(self.pattern, '', dumps(left, cls=KaraboEncoder))
+        left = re.sub(self.pattern, '', dumps(left, cls=KaraboJSONEncoder))
         right = re.sub(self.pattern, '', right)
         self.assertEqual(left, right)
 
