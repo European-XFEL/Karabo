@@ -18,6 +18,13 @@ before_script:
   except:
     - branches
 
+.deps_build: &deps-build
+  <<: *build
+  only:
+    - /^deps-.+$/
+  except:
+    - branches
+
 .integration_tests: &integration-tests
   <<: *test
   only:
@@ -39,13 +46,6 @@ before_script:
     - /^deps-mr-.+$/
   except:
     - master
-
-.deps_build: &deps-build
-  <<: *build
-  only:
-    - /^deps-.+$/
-  except:
-    - branches
 
 ### Jobs
 
@@ -85,15 +85,15 @@ deps build ubuntu14:
 
 deps tests centos7:
   image: europeanxfel/karabo-ci:centos-7
-  <<: *deps-tests
+  <<: *deps-build-tests
 
 deps tests ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
-  <<: *deps-tests
+  <<: *deps-build-tests
 
 deps tests ubuntu14:
   image: europeanxfel/karabo-ci:ubuntu-14
-  <<: *deps-tests
+  <<: *deps-build-tests
 
 # MR test builds
 

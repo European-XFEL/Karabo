@@ -39,13 +39,8 @@ JOB_SCOPE=$(echo $1 | cut -f1 -d' ')
 JOB_TYPE=$(echo $1 | cut -f2 -d' ')
 TARGET_OS=$(echo $1 | cut -f3 -d' ')
 
-if ! [[ $TARGET_OS == (centos7|ubuntu1[46]|windows) ]]; then 
-    echo "unknown job: $1"
-    exit 127
-fi
-
 case "$JOB_SCOPE" in
     release) __release_build ;;
     deps) __deps_build $JOB_TYPE ;;
-    *) echo "unknow job scope: $JOB_SCOPE" ;;
+    *) echo "unknow job scope: $JOB_SCOPE" ; exit 127 ;;
 esac

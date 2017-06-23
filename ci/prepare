@@ -9,9 +9,7 @@ __lang_setting() {
             locale-gen en_US.UTF-8
             update-locale LANG=en_US.UTF-8
             ;;
-        *)
-        echo "unknown target os: $1"
-        ;;
+        *) ;;
     esac
 }
 
@@ -25,7 +23,7 @@ __start_Xvfb() {
             export DISPLAY=:99.0
             start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
             ;;
-        *) echo "unknown target os: $1" ;;
+        *) ;;
     esac
 }
 
@@ -43,6 +41,6 @@ fi
 
 __lang_setting $TARGET_OS
 
-if [[ $JOB_TYPE == "tests" ]] ; then
+if [[ $JOB_TYPE == "tests" ]] && [[ $JOB_SCOPE == (unit|deps) ]] ; then
     __start_Xvfb $TARGET_OS
 fi
