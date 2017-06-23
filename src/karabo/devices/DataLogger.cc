@@ -198,10 +198,13 @@ namespace karabo {
         void DataLogger::slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId) {
 
             // To write log I need schema ...
-            if (m_currentSchema.empty()) {
-                // DEBUG only since can happen when initialising, i.e. slot is connected, but Schema did not yet arrive.
-                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": slotChanged called, but no schema yet - ignore!";
-                return;
+            {
+                boost::mutex::scoped_lock lock(m_currentSchemaMutex);
+                if (m_currentSchema.empty()) {
+                    // DEBUG only since can happen when initialising, i.e. slot is connected, but Schema did not yet arrive.
+                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": slotChanged called, but no schema yet - ignore!";
+                    return;
+                }
             }
 
             if (deviceId != m_deviceToBeLogged) {
@@ -237,7 +240,10 @@ namespace karabo {
                 const Hash::Node& leafNode = configuration.getNode(path);
                 if (leafNode.getType() == Types::HASH) continue;
                 // Skip those elements which should not be archived
-                if (!m_currentSchema.has(path) || (m_currentSchema.hasArchivePolicy(path) && (m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING))) continue;
+                {
+                    boost::mutex::scoped_lock lock(m_currentSchemaMutex);
+                    if (!m_currentSchema.has(path) || (m_currentSchema.hasArchivePolicy(path) && (m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING))) continue;
+                }
                 if (!Timestamp::hashAttributesContainTimeInformation(leafNode.getAttributes())) {
                     KARABO_LOG_WARN << "Skip '" << path << "' - it lacks time information attributes.";
                     continue;
@@ -290,6 +296,7 @@ namespace karabo {
                 if (find(m_idxprops.begin(), m_idxprops.end(), path) == m_idxprops.end()) continue;
 
                 // Check if we need to build index for this property by inspecting schema ... checking only existence
+                boost::mutex::scoped_lock lock(m_currentSchemaMutex);
                 if (m_currentSchema.has(path)) {
                     MetaData::Pointer& mdp = m_idxMap[path]; //Pointer by reference!
                     bool first = false;
@@ -391,7 +398,10 @@ namespace karabo {
 
         void DataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
             KARABO_LOG_FRAMEWORK_DEBUG << "slotSchemaUpdated: Schema for " << deviceId << " arrived...";
-            m_currentSchema = schema;
+            {
+                boost::mutex::scoped_lock lock(m_currentSchemaMutex);
+                m_currentSchema = schema;
+            }
             string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_schema.txt";
             fstream fileout(filename.c_str(), ios::out | ios::app);
             if (fileout.is_open()) {
