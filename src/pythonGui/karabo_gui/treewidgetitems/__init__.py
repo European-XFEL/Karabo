@@ -1,8 +1,8 @@
-#############################################################################
-# Author: <kerstin.weger@xfel.eu>
-# Created on May 23, 2013
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
-#############################################################################
-
-# define package treewidgetitems
-
+# flake8: noqa
+from .attributetreewidgetitem import AttributeTreeWidgetItem
+from .basetreewidgetitem import BaseTreeWidgetItem
+from .commandtreewidgetitem import CommandTreeWidgetItem
+from .imagetreewidgetitem import ImageTreeWidgetItem
+from .popupwidget import PopupWidget
+from .propertytreewidgetitem import PropertyTreeWidgetItem
+from .tabletreewidgetitem import TableTreeWidgetItem
