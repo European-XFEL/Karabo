@@ -1,11 +1,10 @@
-
 __lang_setting() {
     case "$1" in
         centos7)
             localedef -c -i en_US -f UTF-8 en_US.utf8
             export LANG=en_US.UTF-8
             ;;
-        (ubuntu1[46]|windows))
+        ubuntu1[46]|windows)
             locale-gen en_US.UTF-8
             update-locale LANG=en_US.UTF-8
             ;;
@@ -19,7 +18,7 @@ __start_Xvfb() {
             export DISPLAY=:99.0
             /usr/bin/Xvfb $DISPLAY &
             ;;
-        (ubuntu1[46]|windows))
+        ubuntu1[46]|windows)
             export DISPLAY=:99.0
             start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
             ;;
