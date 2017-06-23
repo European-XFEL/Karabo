@@ -1,0 +1,33 @@
+
+__deps_build_tests() {
+    export FORCED_DEPS_TAG=$CI_BUILD_REF_SLUG
+    bash ./auto_build_all.sh Debug --runTests
+}
+
+__unit_tests() {
+    bash ./auto_build_all.sh Debug --runTests
+}
+
+__integration_tests() {
+    bash ./auto_build_all.sh Debug --runIntegrationTests
+}
+
+echo "Start to testing job: {$1}"
+
+JOB_SCOPE=$(echo $1 | cut -f1 -d' ')
+JOB_TYPE=$(echo $1 | cut -f2 -d' ')
+TARGET_OS=$(echo $1 | cut -f3 -d' ')
+
+if ! [[ $TARGET_OS == (centos7|ubuntu1[46]|windows) ]]; then 
+    echo "unknown job: $1"
+    exit 127
+fi
+
+export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
+
+case "$JOB_SCOPE" in
+    deps) __deps_build_tests ;;
+    unit) __unit_tests ;;
+    integration) __integration_tests ;;
+    *) echo "unknown job scope: $JOB_SCOPE" ;;
+esac
