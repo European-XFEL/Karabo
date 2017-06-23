@@ -43,6 +43,7 @@ namespace karabo {
 
             std::string m_deviceToBeLogged;
 
+            boost::mutex m_currentSchemaMutex;
             karabo::util::Schema m_currentSchema;
 
             boost::mutex m_configMutex;
