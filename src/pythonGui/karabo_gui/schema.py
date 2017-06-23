@@ -8,31 +8,28 @@
 .. autoclass:: Box
 """
 
-from karabo.middlelayer import AccessMode, AccessLevel, NodeType, Hash, Timestamp
-import karabo.middlelayer_api.hash as hashmod
-from karabo_gui.registry import Monkey
-from karabo_gui.singletons.api import get_network
-import karabo_gui.icons as icons
-
-from karabo_gui.attributeediting.api import (EDITABLE_ATTRIBUTE_NAMES,
-                                             ATTRIBUTE_EDITOR_FACTORIES,
-                                             EditAttributeComponent)
-from karabo_gui.components import (ChoiceComponent, EditableApplyLaterComponent,
-                                   EditableNoApplyComponent)
-from karabo_gui import globals
-
-from karabo_gui.treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
-from karabo_gui.treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem
-from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
-from karabo_gui.treewidgetitems.tabletreewidgetitem import TableTreeWidgetItem
-from karabo_gui.widget import DisplayWidget, EditableWidget
+from collections import OrderedDict
+from functools import partial
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 
-from asyncio import async
-from collections import OrderedDict
-import weakref
-from functools import partial
+from karabo.middlelayer import (
+    AccessMode, AccessLevel, Assignment, NodeType, Hash, Timestamp)
+import karabo.middlelayer_api.hash as hashmod
+from karabo_gui.attributeediting.api import (
+    EDITABLE_ATTRIBUTE_NAMES, ATTRIBUTE_EDITOR_FACTORIES,
+    EditAttributeComponent
+)
+from karabo_gui.components import (
+    ChoiceComponent, EditableApplyLaterComponent, EditableNoApplyComponent)
+import karabo_gui.globals as krb_globals
+import karabo_gui.icons as icons
+from karabo_gui.registry import Monkey
+from karabo_gui.singletons.api import get_network
+from karabo_gui.treewidgetitems import (
+    CommandTreeWidgetItem, ImageTreeWidgetItem, PropertyTreeWidgetItem,
+    TableTreeWidgetItem)
+from karabo_gui.widget import EditableWidget
 
 # MOST of the attribute names from Schemas that we care about.
 # Schema.parseAttrs() contains a few others as well.
@@ -55,11 +52,14 @@ class Box(QObject):
 
     Note that the network is *not* connected to those signals, as this
     would end up in an endless loop as every change coming from the
-    network is returned to it. """
-
+    network is returned to it.
+    """
+    # signalNewDescriptor(box)
     signalNewDescriptor = pyqtSignal(object)
-    signalUpdateComponent = pyqtSignal(object, object, object) # box, value, timestamp
-    signalUserChanged = pyqtSignal(object, object, object) # box, value, timestamp
+    # signalUpdateComponent(box, value, timestamp)
+    signalUpdateComponent = pyqtSignal(object, object, object)
+    # signalUserChanged(box, value, timestamp)
+    signalUserChanged = pyqtSignal(object, object, object)
     # the user changed the value, but it is not yet applied, so the value
     # in the box has not yet changed!
     signalHistoricData = pyqtSignal(object, object)
@@ -77,23 +77,19 @@ class Box(QObject):
         self._value = Dummy()
         self.initialized = False
         self.descriptor = descriptor
-        self.current = None # Support for choice of nodes
+        self.current = None  # Support for choice of nodes
         self.visible = 0
-
 
     def key(self):
         return self.configuration.id + '.' + '.'.join(self.path)
-
 
     @property
     def value(self):
         return self._value
 
-
     @property
     def descriptor(self):
         return self._descriptor
-
 
     @descriptor.setter
     def descriptor(self, d):
@@ -102,33 +98,31 @@ class Box(QObject):
             self._value = self.dummyCast()
             self.signalNewDescriptor.emit(self)
 
-
     def fillWidget(self, parameterEditor, isClass):
         if self._descriptor is not None:
             self._descriptor.fillWidget(parameterEditor, self, isClass)
 
-
     def __getattr__(self, attr):
         if self.descriptor is None:
-            raise AttributeError("Box.{} needs descriptor to work".format(attr))
+            msg = "Box.{} needs descriptor to work".format(attr)
+            raise AttributeError(msg)
         return partial(getattr(self.descriptor, attr), self)
 
-
     def _set(self, value, timestamp):
-        """ this is the internal method that sets the value and notifies
-        listeners. The public set method is in the descriptors, so
-        they can take care that the values actually make sense """
+        """This is the internal method that sets the value and notifies
+        listeners. The public set method is in the descriptors, so they can
+        take care that the values actually make sense
+        """
         self._value = self.descriptor.cast(value)
         self.initialized = True
         self.update(timestamp)
 
-
     def update(self, timestamp=None):
-        """ Call this method if you changed the value of this box
-        without setting it, like changing elements of a list """
+        """Call this method if you changed the value of this box without
+        setting it, like changing elements of a list.
+        """
         self.timestamp = timestamp
         self.configuration.boxChanged(self, self._value, timestamp)
-
 
     @pyqtSlot(object, object)
     def slotSet(self, box, value):
@@ -136,13 +130,13 @@ class Box(QObject):
             value = box.current
         self.set(value)
 
-
     def hasValue(self):
         return self.initialized
 
     def isAllowed(self):
-        """return whether the user may change the value, based on
-        device's state"""
+        """Return whether the user may change the value, based on
+        device's state
+        """
         if not self.configuration.isOnline():
             return False
         return (self.descriptor is None or
@@ -151,26 +145,24 @@ class Box(QObject):
                 in self.descriptor.allowedStates)
 
     def isAccessible(self):
-        """return whether the user may change the value, based on
-        the current access level"""
-
+        """Return whether the user may change the value, based on
+        the current access level
+        """
+        global_level = krb_globals.GLOBAL_ACCESS_LEVEL
         return (self.descriptor is None or
-                globals.GLOBAL_ACCESS_LEVEL >=
-                    self.descriptor.requiredAccessLevel)
-
+                global_level >= self.descriptor.requiredAccessLevel)
 
     def getPropertyHistory(self, t0, t1, maxNumData):
         get_network().onGetPropertyHistory(self, t0, t1, maxNumData)
 
-
     def __str__(self):
         return "<{} {}>".format(type(self).__name__, self.key())
 
-
     @property
     def boxvalue(self):
-        """ don't get the actual value of a box, but a proxy to get the
-        sub-boxes of a value """
+        """Don't get the actual value of a box, but a proxy to get the
+        sub-boxes of a value
+        """
         r = _BoxValue()
         r.__dict__["__box__"] = self
         return r
@@ -182,7 +174,6 @@ class Box(QObject):
             # This needs to be done to subscribe for output channels
             self.visibilityChanged.emit(True)
 
-
     def removeVisible(self):
         self.visible -= 1
         self.parent().removeVisible()
@@ -191,21 +182,21 @@ class Box(QObject):
             self.visibilityChanged.emit(False)
 
     def unitLabel(self):
-        """
-        The unit strings are only available, if the descriptor is properly set,
-        otherwise nothing is returned.
+        """The unit strings are only available, if the descriptor is properly
+        set, otherwise nothing is returned.
         """
         descr = self.descriptor
         if descr is not None:
             return descr.metricPrefixSymbol + descr.unitSymbol
 
     def axisLabel(self):
-        """ This function returns the axis label string.
+        """This function returns the axis label string.
         """
         unit = self.unitLabel()
         descr = self.descriptor
         name = descr.displayedName if descr is not None else ''
         return "{} [{}]".format(name, unit) if unit else name
+
 
 class _BoxValue(object):
     def __getattr__(self, attr):
@@ -219,7 +210,6 @@ class _BoxValue(object):
             else:
                 raise AttributeError(attr)
 
-
     def __setattr__(self, attr, value):
         self.value.__dict__[attr] = value
 
@@ -228,14 +218,13 @@ class Descriptor(hashmod.Descriptor, metaclass=Monkey):
     # Means that parent class is overwritten/updated
 
     def completeItem(self, treeWidget, item, box, isClass):
-        if self.assignment == 1: # Mandatory
+        if self.assignment == Assignment.MANDATORY.value:
             f = item.font(0)
             f.setBold(True)
             item.setFont(0, f)
         item.requiredAccessLevel = self.requiredAccessLevel
         item.displayText = self.displayedName
         item.allowedStates = self.allowedStates
-
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -244,7 +233,6 @@ class Descriptor(hashmod.Descriptor, metaclass=Monkey):
             if self.key not in instance.__dict__:
                 raise AttributeError
             return instance.__dict__[self.key].value
-
 
     def __set__(self, instance, value):
         if instance.__box__.configuration.type == "device":
@@ -258,37 +246,16 @@ class Type(hashmod.Type, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     icon = icons.undefined
 
-
     def set(self, box, value, timestamp=None):
         box._set(value, timestamp)
-
-
-    def copyFrom(self, box, otherbox, who):
-        """Copy data from ``otherbox`` to ``box``.
-
-        ``who`` is a function called on each leaf's descriptor,
-        and the value is only copied if this function returns
-        something true."""
-        if who(self) and otherbox.hasValue():
-            box._set(otherbox.value, None)
-
-
-    def connectOtherBox(self, box, other):
-        """
-        The signalUpdateComponent is connected from ``box`` to ``other`` to
-        broadcast value changes.
-        """
-        box.signalUpdateComponent.connect(other.slotSet)
 
     def dispatchUserChanges(self, box, hash, attrs=None):
         self._copyAttrs(box, attrs)
         box.signalUserChanged.emit(box, box.descriptor.cast(hash), None)
 
-
     def setDefault(self, box):
         if self.defaultValue is not None:
             self.set(box, self.defaultValue)
-
 
     def item(self, treeWidget, parentItem, box, isClass):
         item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
@@ -314,7 +281,7 @@ class Type(hashmod.Type, metaclass=Monkey):
         return item
 
     def completeItem(self, treeWidget, item, box, isClass):
-        """ Add tree widget items for editable attributes.
+        """Add tree widget items for editable attributes.
 
         Editable attributes only show up BEFORE a class is instantiated.
         """
@@ -362,18 +329,16 @@ class Type(hashmod.Type, metaclass=Monkey):
                       if hasattr(desc, key) and getattr(desc, key) is not None}
         return box.value, attributes
 
-
     def fromHash(self, box, data, attrs=None, timestamp=None):
         self._copyAttrs(box, attrs)
         box._set(data, timestamp)
 
-
     def redummy(self, box):
-        """ remove all values from box """
+        """Remove all values from the box
+        """
         box._value = Dummy()
         box.initialized = False
         box.descriptor = None
-
 
     def dummyCast(self, box):
         """dummy-aware casting of box
@@ -423,8 +388,10 @@ class Bool(hashmod.Bool, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     icon = icons.boolean
 
+
 class Vector(hashmod.Vector, metaclass=Monkey):
     pass
+
 
 class Object(object):
     def __init__(self, box):
@@ -444,18 +411,17 @@ class Object(object):
                     b.descriptor = v
                 self.__dict__[k] = b
 
-
     def __enter__(self):
         self.__box__.addVisible()
         return self
-
 
     def __exit__(self, a, b, c):
         self.__box__.removeVisible()
 
 
 class NetworkObject(Object, QObject):
-    """An object that gets its data via a network output"""
+    """An object that gets its data via a network output
+    """
     def __init__(self, box):
         QObject.__init__(self)
         Object.__init__(self, box)
@@ -468,11 +434,12 @@ class NetworkObject(Object, QObject):
 
 
 class Dummy(object):
-    """this class represents a not-yet-loaded value.
-    it seems to contain all possible attributes, as we don't know yet
-    which attributes might come...
+    """This class represents a not-yet-loaded value.
+    It seems to contain all possible attributes, as we don't know yet which
+    attributes might come...
 
-    All the actual functionality is done in Box."""
+    All the actual functionality is done in Box.
+    """
 
 
 class Schema(hashmod.Descriptor):
@@ -480,7 +447,6 @@ class Schema(hashmod.Descriptor):
         self.dict = OrderedDict()
         self.cls = None
         self.name = name
-
 
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
@@ -506,11 +472,10 @@ class Schema(hashmod.Descriptor):
         self.key = key
         return self
 
-
     @staticmethod
     def parseAttrs(self, attrs, parent):
-        """parse the attributes from attrs."""
-
+        """Parse the attributes from attrs.
+        """
         for a in SCHEMA_ATTRIBUTE_NAMES:
             setattr(self, a, attrs.get(a))
         self.displayedName = attrs.get('displayedName', self.displayedName)
@@ -526,7 +491,6 @@ class Schema(hashmod.Descriptor):
         self.requiredAccessLevel = max(AccessLevel(
             attrs.get('requiredAccessLevel', AccessLevel.OBSERVER)), ral)
 
-
     @staticmethod
     def parseLeaf(key, hash, attrs, parent):
         ret = Type.fromname[attrs['valueType']]()
@@ -535,17 +499,14 @@ class Schema(hashmod.Descriptor):
         Schema.parseAttrs(ret, attrs, parent)
         return ret
 
-
     def item(self, treeWidget, parentItem, box, isClass):
         item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
         self.completeItem(treeWidget, item, box, isClass)
         return item
 
-
     def completeItem(self, treeWidget, item, box, isClass):
         self._item(treeWidget, item, box, isClass)
         super(Schema, self).completeItem(treeWidget, item, box, isClass)
-
 
     def _item(self, treeWidget, parentItem, box, isClass):
         for k, v in self.dict.items():
@@ -555,19 +516,17 @@ class Schema(hashmod.Descriptor):
                 except AttributeError:
                     print('missing {} in {}'.format(k, box.value))
                 else:
-                    item = v.item(treeWidget, parentItem, c, isClass)
-
+                    v.item(treeWidget, parentItem, c, isClass)
 
     def fillWidget(self, treeWidget, configuration, isClass):
-        self._item(treeWidget, treeWidget.invisibleRootItem(), configuration, isClass)
+        self._item(treeWidget, treeWidget.invisibleRootItem(), configuration,
+                   isClass)
         treeWidget.resizeColumnToContents(0)
-
 
     def getClass(self):
         if self.cls is None:
             self.cls = type(str(self.name), (Object,), self.dict)
         return self.cls
-
 
     def cast(self, other):
         if isinstance(other, self.getClass()):
@@ -576,13 +535,11 @@ class Schema(hashmod.Descriptor):
             raise TypeError('cannot cast to {}, (was {})'.format(
                 self.name, other))
 
-
     def dummyCast(self, box):
         if box.hasValue():
             return self.cast(box.value)
         else:
             return self.getClass()(box)
-
 
     def toHash(self, box):
         ret = Hash()
@@ -595,7 +552,6 @@ class Schema(hashmod.Descriptor):
                 ret[k] = value
                 ret[k, ...] = attrs
         return ret, {}
-
 
     def fromHash(self, box, value, attrs=None, timestamp=None):
         for k, v, a in value.iterall():
@@ -611,23 +567,20 @@ class Schema(hashmod.Descriptor):
                 s = vv.fromHash
             except AttributeError:
                 pass
-                #print 'bullshit in', k, vv, vv.descriptor
+                # print 'bullshit in', k, vv, vv.descriptor
             else:
                 s(v, attrs=a, timestamp=ts)
         box._set(box._value, timestamp)
 
-
     def dispatchUserChanges(self, box, hash, attrs=None):
         for k, v, a in hash.iterall():
             getattr(box.boxvalue, k).dispatchUserChanges(v, attrs=a)
-
 
     def setDefault(self, box):
         box._value = self.getClass()(box)
         for k, v in self.dict.items():
             getattr(box.boxvalue, k).setDefault()
         box._set(box._value, None)
-
 
     def redummy(self, box):
         d = Dummy()
@@ -642,50 +595,24 @@ class Schema(hashmod.Descriptor):
         box.initialized = False
         box.descriptor = None
 
-
-    def copyFrom(self, box, otherbox, who=lambda x: True):
-        """Copy data from ``otherbox`` to ``box``.
-
-        The value of otherbox is recursively copied into box.
-        ``who`` is a function called on each leaf's descriptor,
-        and the value is only copied if this function returns
-        something true."""
-        for k, v in self.dict.items():
-            myChild = getattr(box.boxvalue, k, None)
-            otherChild = getattr(otherbox.boxvalue, k, None)
-            if myChild is not None and otherChild is not None:
-                myChild.copyFrom(otherChild, who)
-
-
-    def connectOtherBox(self, box, other):
-        """Connect value changes of ``box`` to ``other``.
-
-        The signalUpdateComponent is recursively connected from ``box`` to
-        ``other``.
-        """
-        for k, v in self.dict.items():
-            myChild = getattr(box.boxvalue, k, None)
-            otherChild = getattr(other.boxvalue, k, None)
-            if myChild is not None and otherChild is not None:
-                myChild.connectOtherBox(otherChild)
-
     def _recurseGetDictPaths(self, parent_key, parent_value, path_list,
                              accessMode=None):
-        """ This is a private methods which goes recursively through the `dict`
-            of a `Schema` and returns a list of either all paths or all
-            read-only paths.
+        """This is a private methods which goes recursively through the `dict`
+        of a `Schema` and returns a list of either all paths or all
+        read-only paths.
         """
         if isinstance(parent_value, Schema):
             for key, value in parent_value.dict.items():
                 new_key = "{}.{}".format(parent_key, key)
-                self._recurseGetDictPaths(new_key, value, path_list, accessMode)
+                self._recurseGetDictPaths(
+                    new_key, value, path_list, accessMode)
         if accessMode is None:
             return path_list.append(parent_key)
         elif parent_value.accessMode is accessMode:
             return path_list.append(parent_key)
 
     def getAllPaths(self):
-        """" This method returns a string list of all paths for this context.
+        """This method returns a string list of all paths for this context.
         """
         all_paths = []
         for key, value in self.dict.items():
@@ -693,8 +620,8 @@ class Schema(hashmod.Descriptor):
         return all_paths
 
     def getReadOnlyPaths(self):
-        """ This recursive method returns a string list of all paths with
-            read-only access.
+        """This recursive method returns a string list of all paths with
+        read-only access.
         """
         read_only_paths = []
         for key, value in self.dict.items():
@@ -703,18 +630,20 @@ class Schema(hashmod.Descriptor):
         return read_only_paths
 
     def getObsoletePaths(self, config):
-        """" This recursive method checks whether the paths in the `config`
-             hash still exist in this context.
-             A string list of obsolete paths is returned.
+        """This recursive method checks whether the paths in the `config`
+        hash still exist in this context.
+
+        A string list of obsolete paths is returned.
         """
         all_paths = self.getAllPaths()
+
         def recurse(parent_key, parent_value, obsolete_paths):
             if isinstance(parent_value, Hash):
                 for key, value in parent_value.items():
                     new_key = "{}.{}".format(parent_key, key)
                     recurse(new_key, value, obsolete_paths)
 
-            if not parent_key in all_paths:
+            if parent_key not in all_paths:
                 return obsolete_paths.append(parent_key)
 
         obsolete_paths = []
@@ -729,11 +658,12 @@ class ImageNode(Schema):
         item.enabled = not isClass
         self.completeItem(treeWidget, item, box, isClass)
 
+
 class TableNode(Schema):
     def item(self, treeWidget, parentItem, box, isClass):
         item = TableTreeWidgetItem(box, treeWidget, parentItem)
-        #item.enabled = not isClass
         self.completeItem(treeWidget, item, box, isClass)
+
 
 class OutputNode(Schema):
     def getClass(self):
@@ -747,7 +677,6 @@ class Slot(Object):
         Object.__init__(self, box)
         self.box = box
 
-
     def __call__(self):
         self.box.execute()
 
@@ -756,12 +685,10 @@ class SlotNode(Schema):
     def execute(self, box):
         get_network().onExecute(box)
 
-
     def item(self, treeWidget, parentItem, box, isClass):
         item = CommandTreeWidgetItem(self.key, box, treeWidget, parentItem)
         item.enabled = not isClass
         self.completeItem(treeWidget, item, box, isClass)
-
 
     def getClass(self):
         if self.cls is None:
@@ -779,7 +706,6 @@ class ChoiceOfNodes(Schema):
         self.metricPrefixSymbol = ''
         self.unitSymbol = ''
         return self
-
 
     def item(self, treeWidget, parentItem, box, isClass):
         item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
@@ -822,13 +748,11 @@ class ChoiceOfNodes(Schema):
         item.editableComponent.widgetFactory.valueChanged(box, box.current)
         return item
 
-
     def fromHash(self, box, value, attrs=None, timestamp=None):
         for k in value:
             box.current = k
-            break # there should be only one entry in the hash
+            break  # there should be only one entry in the hash
         Schema.fromHash(self, box, value, attrs=attrs, timestamp=timestamp)
-
 
     def dispatchUserChanges(self, box, hash, attrs=None):
         for k in hash:
@@ -836,12 +760,10 @@ class ChoiceOfNodes(Schema):
             break
         Schema.dispatchUserChanges(self, box, hash, attrs=attrs)
 
-
     def setDefault(self, box):
         if self.defaultValue is not None:
             box.current = self.defaultValue
         Schema.setDefault(self, box)
-
 
     def toHash(self, box):
         ret, attrs = super(ChoiceOfNodes, self).toHash(box)
@@ -852,7 +774,6 @@ class ChoiceOfNodes(Schema):
             h = Hash(key, ret[key])
             h[key, ...] = attrs
             return h, {}
-
 
     def set(self, box, value, timestamp=None):
         """The value of this ChoiceElement is set.
@@ -866,30 +787,10 @@ class ChoiceOfNodes(Schema):
         # Go on recursively
         box._set(box.value, timestamp)
 
-
     def slotSet(self, box, otherbox, value):
-        """value is another choice element to copy from"""
+        """Value is another choice element to copy from
+        """
         self.set(box, otherbox.current)
-
-
-    def copyFrom(self, box, otherbox, who):
-        """Copy data from ``otherbox`` to ``box``.
-
-        ``who`` is a function called on each leaf's descriptor,
-        and the value is only copied if this function returns
-        something true."""
-        Schema.copyFrom(self, box, otherbox, who)
-        box.current = otherbox.current
-        box._set(box.value, None)
-
-
-    def connectOtherBox(self, box, other):
-        """
-        The signalUpdateComponent is recursively connected from ``box`` to
-        ``other`` to broadcast value changes.
-        """
-        Schema.connectOtherBox(self, box, other)
-        box.signalUpdateComponent.connect(other.slotSet)
 
 
 class ListOfNodes(hashmod.Descriptor):
@@ -900,54 +801,31 @@ class ListOfNodes(hashmod.Descriptor):
         descr.unitSymbol = ''
         return descr
 
-
     def setDefault(self, box):
         return
-
 
     def setAssignment(self, item):
         return
 
-
     def toHash(self, box):
         return [], {}
-
 
     def item(self, treeWidget, parentItem, box, isClass):
         item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
         item.displayText = box.path[-1]
         item.requiredAccessLevel = AccessLevel.GOD
 
-
     def dummyCast(self, box):
         return box.value
-
 
     def redummy(self, box):
         box._value = Dummy()
         box.initialized = False
         box.descriptor = None
 
-    def copyFrom(self, box, otherbox, who):
-        """Copy data from ``otherbox`` to ``box``.
-
-        ``who`` is a function called on each leaf's descriptor,
-        and the value is only copied if this function returns
-        something true."""
-        if who(self) and otherbox.hasValue():
-            box._set(otherbox.value, None)
-
-    def connectOtherBox(self, box, other):
-        """
-        The signalUpdateComponent is connected from ``box`` to ``other`` to broadcast
-        value changes.
-        """
-        box.signalUpdateComponent.connect(other.slotSet)
-
 
 class VectorHash(hashmod.VectorHash, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    #icon = icons.string
 
     def item(self, treeWidget, parentItem, box, isClass):
         item = TableTreeWidgetItem(box, treeWidget, parentItem)
