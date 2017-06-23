@@ -47,14 +47,16 @@ from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog,
                          QComboBox, QVBoxLayout, QWidget, QDialogButtonBox,
                          QCheckBox, QItemDelegate, QStyledItemDelegate)
 
-from karabo.middlelayer import AccessMode, Hash, Type, VectorHash
+from karabo.middlelayer import (
+    AccessMode, Bool, Hash, String, Type, Vector, VectorHash
+)
 from karabo_gui.widget import DisplayWidget, EditableWidget
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.events import (
     KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
+from karabo_gui.schema import Dummy
 from karabo_gui.singletons.api import get_topology
-import karabo_gui.schema as schema
 
 
 class TableModel(QAbstractTableModel):
@@ -96,7 +98,7 @@ class TableModel(QAbstractTableModel):
             columnKey = self.columnHash.getKeys()[idx.column()]
             value = row[columnKey]
             valueType = self.columnSchema.getValueType(columnKey)()
-            if isinstance(valueType, schema.Bool):
+            if isinstance(valueType, Bool):
                 return Qt.Checked if value == True else Qt.Unchecked
 
         if role == Qt.DisplayRole or role == Qt.EditRole:
@@ -112,7 +114,7 @@ class TableModel(QAbstractTableModel):
                 value = row[columnKey]
 
             valueType = self.columnSchema.getValueType(columnKey)()
-            if isinstance(valueType, schema.Vector):
+            if isinstance(valueType, Vector):
                 return ", ".join(value)
             return str(value)
 
@@ -159,7 +161,7 @@ class TableModel(QAbstractTableModel):
         cKey = self.columnHash.getKeys()[idx.column()]
         valueType = self.columnSchema.getValueType(cKey)()
         accessMode = AccessMode(self.columnSchema.hash[cKey, "accessMode"])
-        if isinstance(valueType, schema.Bool) and self.role == Qt.EditRole:
+        if isinstance(valueType, Bool) and self.role == Qt.EditRole:
 
             if accessMode == AccessMode.READONLY:
                 return (Qt.ItemIsUserCheckable | Qt.ItemIsSelectable
@@ -233,7 +235,7 @@ class TableModel(QAbstractTableModel):
 
             columnKey = self.columnHash.getKeys()[idx.column()]
             valueType = self.columnSchema.getValueType(columnKey)()
-            if isinstance(valueType, schema.Bool):
+            if isinstance(valueType, Bool):
 
                 value = True if value == Qt.Checked else False
                 self.cdata[row][columnKey] = value
@@ -267,7 +269,7 @@ class TableModel(QAbstractTableModel):
             if isAliasing is not None:
                 value = self._addMonitor(row, col, isAliasing, role)
             # now display value
-            if isinstance(valueType, schema.Vector) and not fromValueChanged:
+            if isinstance(valueType, Vector) and not fromValueChanged:
                 # this will be a list of individual chars we need to join
                 value = "".join(value)
                 value = [v.strip() for v in value.split(",")]
@@ -516,7 +518,7 @@ class KaraboTableView(QTableView):
 
         for c, cKey in enumerate(self.cKeys):
             valueType = self.columnSchema.getValueType(self.cKeys[c])()
-            if isinstance(valueType, schema.String):
+            if isinstance(valueType, String):
                 self.firstStringColumn = c
                 break
 
@@ -541,12 +543,12 @@ class KaraboTableView(QTableView):
 
         columnKey = self.cKeys[idx.column()]
         valueType = self.columnSchema.getValueType(columnKey)()
-        if not isinstance(valueType, schema.String) and usable:
+        if not isinstance(valueType, String) and usable:
             event.accept()
             return True, idx, True, deviceId
 
         # drop onto existing cell
-        if isinstance(valueType, schema.String) and usable:
+        if isinstance(valueType, String) and usable:
             event.accept()
             return True, idx, False, deviceId
 
@@ -671,7 +673,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         self._setComboBoxes(self.role == Qt.DisplayRole)
 
     def valueChanged(self, box, value, timestamp=None):
-        if value is None or isinstance(value, schema.Dummy):
+        if value is None or isinstance(value, Dummy):
             return
 
         if self.tableModel.rowCount(None) > len(value):

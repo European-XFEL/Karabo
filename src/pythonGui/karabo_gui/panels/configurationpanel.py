@@ -14,7 +14,8 @@ from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.project.view import ProjectView
 from karabo_gui.singletons.api import get_manager
 from karabo_gui.toolbar import ToolBar
-from karabo_gui.treewidget.api import ParameterTreeWidget
+from karabo_gui.treewidget.api import (
+    ParameterTreeWidget, fill_parameter_tree_widget)
 from karabo_gui.util import (
     get_spin_widget, loadConfigurationFromFile, saveConfigurationToFile
 )
@@ -387,7 +388,7 @@ class ConfigurationPanel(BasePanelWidget):
             index = configuration.index
             twParameterEditor = self.__swParameterEditor.widget(index)
             twParameterEditor.clear()
-            configuration.fillWidget(twParameterEditor)
+            fill_parameter_tree_widget(twParameterEditor, configuration)
         else:
             # Everything is ready to go!
             index = configuration.index
@@ -426,7 +427,7 @@ class ConfigurationPanel(BasePanelWidget):
             twParameterEditor.hideColumn(1)
 
         if configuration is not None:
-            configuration.fillWidget(twParameterEditor)
+            fill_parameter_tree_widget(twParameterEditor, configuration)
 
         index = self.__swParameterEditor.addWidget(twParameterEditor)
         return index
