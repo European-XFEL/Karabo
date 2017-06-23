@@ -90,6 +90,7 @@ PATH="$KARABO/bin:$KARABO/extern/bin:$PATH"
 export PATH
 
 # for backward compatibility (and NetBeans) set the path in .karabo/karaboFramework
+mkdir -p $HOME/.karabo
 echo $KARABO > $HOME/.karabo/karaboFramework
 
 # unset PYTHONHOME if set
