@@ -11,10 +11,10 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QMenu, QPalette, QPushButton,
 from karabo_gui.events import register_for_broadcasts, KaraboEventSender
 import karabo_gui.icons as icons
 from karabo_gui.navigationtreeview import NavigationTreeView
-from karabo_gui.parametertreewidget import ParameterTreeWidget
 from karabo_gui.project.view import ProjectView
 from karabo_gui.singletons.api import get_manager
 from karabo_gui.toolbar import ToolBar
+from karabo_gui.treewidget import ParameterTreeWidget
 from karabo_gui.util import (
     get_spin_widget, loadConfigurationFromFile, saveConfigurationToFile
 )

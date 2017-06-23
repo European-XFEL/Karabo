@@ -5,10 +5,9 @@
 #############################################################################
 from PyQt4.QtGui import QPushButton
 
-import karabo_gui.icons as icons
 from karabo_gui.components import DisplayComponent
-
-from .basetreewidgetitem import BaseTreeWidgetItem
+import karabo_gui.icons as icons
+from .base_item import BaseTreeWidgetItem
 
 
 class CommandTreeWidgetItem(BaseTreeWidgetItem):
