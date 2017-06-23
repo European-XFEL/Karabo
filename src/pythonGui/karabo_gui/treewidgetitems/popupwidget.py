@@ -19,8 +19,9 @@ from PyQt4.QtGui import QHBoxLayout, QTextEdit, QWidget
 class PopupWidget(QWidget):
     
     def __init__(self, parent=None):
-        super(PopupWidget, self).__init__(parent, Qt.Popup)
-        
+        super(PopupWidget, self).__init__(parent, Qt.Tool)
+        flags = Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint
+        self.setWindowFlags(self.windowFlags() | flags)
         self.__teInfo = TextEdit(self)
         self.__teInfo.setReadOnly(True)
         
