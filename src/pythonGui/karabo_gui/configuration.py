@@ -152,13 +152,6 @@ class Configuration(Box):
         else:
             box.signalUpdateComponent.emit(box, value, timestamp)
 
-    def fillWidget(self, parameterEditor):
-        self.parameterEditor = parameterEditor
-        Box.fillWidget(self, parameterEditor,
-                       self.type in ("class", "projectClass", "deviceGroupClass"))
-        parameterEditor.globalAccessLevelChanged()
-        parameterEditor.ensureMiddleColumnWidth()
-
     def addVisible(self):
         self.visible += 1
         if self.visible == 1 and self.status not in ("offline", "requested"):
