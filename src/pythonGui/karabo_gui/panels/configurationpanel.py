@@ -14,7 +14,7 @@ from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.project.view import ProjectView
 from karabo_gui.singletons.api import get_manager
 from karabo_gui.toolbar import ToolBar
-from karabo_gui.treewidget import ParameterTreeWidget
+from karabo_gui.treewidget.api import ParameterTreeWidget
 from karabo_gui.util import (
     get_spin_widget, loadConfigurationFromFile, saveConfigurationToFile
 )
