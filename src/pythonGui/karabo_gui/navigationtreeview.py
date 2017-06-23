@@ -12,9 +12,9 @@ from PyQt4.QtGui import QAbstractItemView, QAction, QCursor, QMenu, QTreeView
 
 import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
+from karabo_gui.popupwidget import PopupWidget
 from karabo_gui.singletons.api import (get_manager, get_selection_tracker,
                                        get_navigation_model)
-from karabo_gui.treewidgetitems.popupwidget import PopupWidget
 from karabo_gui.util import (
     loadConfigurationFromFile, saveConfigurationToFile, set_treeview_header)
 

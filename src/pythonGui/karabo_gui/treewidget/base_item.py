@@ -3,12 +3,6 @@
 # Created on April 27, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-"""This module contains a class which inherits from a QTreeWidgetItem.
-
-   Inherited by: PropertyTreeWidgetItem, ImageTreeWidgetItem,
-                 CommandTreeWidgetItem, AttributeTreeWidgetItem
-"""
 from collections import OrderedDict
 
 from PyQt4.QtCore import Qt
@@ -16,7 +10,7 @@ from PyQt4.QtGui import QCursor, QTreeWidgetItem
 
 from karabo.middlelayer import Type
 from karabo_gui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
-from .popupwidget import PopupWidget
+from karabo_gui.popupwidget import PopupWidget
 
 
 class BaseTreeWidgetItem(QTreeWidgetItem):
