@@ -1,214 +1,124 @@
-# Templates for each build category
 
-.deps_build_template: &deps_build
-  script:
-    - pushd extern
-    - export DEPS_BASE_NAME=$(lsb_release -is)-$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
-    - export DEPS_DIR_ABS_PATH=$(pwd -P)/$DEPS_BASE_NAME
-    - bash build.sh -q $DEPS_BASE_NAME CI
-    - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py --fix-links $DEPS_BASE_NAME/bin $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
-    - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py $DEPS_BASE_NAME/lib $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
-    - bash build.sh -p $DEPS_BASE_NAME CI
-    - sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME*.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps/
-  only:
-    - /^deps-.+$/
-  except:
-    - branches
+before_script:
+  - source ci/prepare "$CI_BUILD_NAME"
 
-.release_build_template: &release_build
+.build_template: &build
   script:
-    - export REL_OS_NAME=$(lsb_release -is)
-    - export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
-    - export REL_TAG=$CI_BUILD_REF_NAME
-    - export REL_ARTIFACT_NAME=karabo-$REL_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh
-    - export REL_ARTIFACT_DEST=karaboFramework/tags/$REL_TAG
-    - bash ./auto_build_all.sh Release --noDbInit --bundle
-    - mv package/Release/$REL_OS_NAME/$REL_OS_VERS_LONG/x86_64/karabo-*.sh $REL_ARTIFACT_NAME
-    - sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null xdata@exflserv05 "mkdir -p /var/www/html/karabo/$REL_ARTIFACT_DEST"
-    - sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME xdata@exflserv05:/var/www/html/karabo/$REL_ARTIFACT_DEST
+    - source ci/build "$CI_BUILD_NAME"
+
+.test_template: &test
+  script:
+    - source ci/test "$CI_BUILD_NAME"
+
+
+.release_build: &release-build
+  <<: *build
   only:
     - /^(\d+\.)(\d+\.)(\d+)((a|b|rc)\d+)?$/
   except:
     - branches
 
-.deps_test_template: &deps_test_build
-  before_script:
-    - pushd extern
-    - export DEPS_BASE_NAME=$(lsb_release -is)-$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
-    - export DEPS_DIR_ABS_PATH=$(pwd -P)/$DEPS_BASE_NAME
-    - bash build.sh -q $DEPS_BASE_NAME CI
-    - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py --fix-links $DEPS_BASE_NAME/bin $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
-    - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py $DEPS_BASE_NAME/lib $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
-    - bash build.sh -p $DEPS_BASE_NAME CI
-    - mv $DEPS_BASE_NAME*.tar.gz $DEPS_BASE_NAME-$CI_BUILD_REF_SLUG.tar.gz
-    - sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME-$CI_BUILD_REF_SLUG.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps/
-    - popd
+.integration_tests: &integration-tests
+  <<: *test
   only:
-    - /^deps-mr-.+$/
-  except:
     - master
 
-.mr_test_template: &mr_test_build
-  script:
-    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
-    - bash ./auto_build_all.sh Debug --runTests
+.unit_tests: &unit-tests
+  <<: *test
   only:
     - branches
   except:
     - master
     - /^deps-mr-.+$/
 
-.centos_mr_test_template: &centos_mr_test_build
-  <<: *mr_test_build
-  before_script:
-    - localedef -c -i en_US -f UTF-8 en_US.utf8
-    - export LANG=en_US.UTF-8
-    - export DISPLAY=:99.0
-    - /usr/bin/Xvfb $DISPLAY &
-
-.ubuntu_mr_test_template: &ubuntu_mr_test_build
-  <<: *mr_test_build
-  before_script:
-    - locale-gen en_US.UTF-8
-    - update-locale LANG=en_US.UTF-8
-    - export DISPLAY=:99.0
-    - start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
-
-.integration_test_template: &integration_test_build
+.deps_build_tests: &deps-build-tests
   script:
-    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
-    - bash ./auto_build_all.sh Debug --runIntegrationTests
+    - source ci/build "$CI_BUILD_NAME"
+    - source ci/test "$CI_BUILD_NAME"
   only:
+    - /^deps-mr-.+$/
+  except:
     - master
 
-.centos_integration_test_template: &centos_integration_test_build
-  <<: *integration_test_build
-  before_script:
-    - localedef -c -i en_US -f UTF-8 en_US.utf8
-    - export LANG=en_US.UTF-8
+.deps_build: &deps-build
+  <<: *build
+  only:
+    - /^deps-.+$/
+  except:
+    - branches
 
-.ubuntu_integration_test_template: &ubuntu_integration_test_build
-  <<: *integration_test_build
-  before_script:
-    - locale-gen en_US.UTF-8
-    - update-locale LANG=en_US.UTF-8
+### Jobs
 
-#########################################################################
+# release build
 
-# Deps builds
-
-deps:centos7:
-  <<: *deps_build
+release build centos7:
   image: europeanxfel/karabo-ci:centos-7
+  <<: *release-build
 
-deps:ubuntu14:
-  <<: *deps_build
-  image: europeanxfel/karabo-ci:ubuntu-14
-
-deps:ubuntu16:
-  <<: *deps_build
+release build ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
+  <<: *release-build
 
-# Deps test builds
+release build ubuntu14:
+  image: europeanxfel/karabo-ci:ubuntu-14
+  <<: *release-build
 
-depstest:centos7:
-  <<: *deps_test_build
+release build windows GUI:
+  image: europeanxfel/karabo-ci:ubuntu-14
+  <<: *release-build
+
+# Dependencies build
+
+deps build centos7:
   image: europeanxfel/karabo-ci:centos-7
-  script:
-    - localedef -c -i en_US -f UTF-8 en_US.utf8
-    - export LANG=en_US.UTF-8
-    - export DISPLAY=:99.0
-    - /usr/bin/Xvfb $DISPLAY &
-    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
-    - export FORCED_DEPS_TAG=$CI_BUILD_REF_SLUG
-    - bash ./auto_build_all.sh Debug --runTests
+  <<: *deps-build
 
-depstest:ubuntu14:
-  <<: *deps_test_build
-  image: europeanxfel/karabo-ci:ubuntu-14
-  script:
-    - locale-gen en_US.UTF-8
-    - update-locale LANG=en_US.UTF-8
-    - export DISPLAY=:99.0
-    - start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
-    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
-    - export FORCED_DEPS_TAG=$CI_BUILD_REF_SLUG
-    - bash ./auto_build_all.sh Debug --runTests
-
-depstest:ubuntu16:
-  <<: *deps_test_build
+deps build ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
-  script:
-    - locale-gen en_US.UTF-8
-    - update-locale LANG=en_US.UTF-8
-    - export DISPLAY=:99.0
-    - start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
-    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
-    - export FORCED_DEPS_TAG=$CI_BUILD_REF_SLUG
-    - bash ./auto_build_all.sh Debug --runTests
+  <<: *deps-build
+
+deps build ubuntu14:
+  image: europeanxfel/karabo-ci:ubuntu-14
+  <<: *deps-build
+
+# Dependencies build tests
+
+deps tests centos7:
+  image: europeanxfel/karabo-ci:centos-7
+  <<: *deps-tests
+
+deps tests ubuntu16:
+  image: europeanxfel/karabo-ci:ubuntu-16
+  <<: *deps-tests
+
+deps tests ubuntu14:
+  image: europeanxfel/karabo-ci:ubuntu-14
+  <<: *deps-tests
 
 # MR test builds
 
-test:centos7:
-  <<: *centos_mr_test_build
+unit tests centos7:
   image: europeanxfel/karabo-ci:centos-7
+  <<: *unit-tests
 
-test:ubuntu14:
-  <<: *ubuntu_mr_test_build
-  image: europeanxfel/karabo-ci:ubuntu-14
-
-test:ubuntu16:
-  <<: *ubuntu_mr_test_build
+unit tests ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
+  <<: *unit-tests
+
+unit tests ubuntu14:
+  image: europeanxfel/karabo-ci:ubuntu-14
+  <<: *unit-tests
 
 # Post-merge integration test builds
 
-integration:centos7:
-  <<: *centos_integration_test_build
+integration tests centos7:
   image: europeanxfel/karabo-ci:centos-7
+  <<: *integration-tests
 
-integration:ubuntu14:
-  <<: *ubuntu_integration_test_build
-  image: europeanxfel/karabo-ci:ubuntu-14
-
-integration:ubuntu16:
-  <<: *ubuntu_integration_test_build
+integration tests ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
+  <<: *integration-tests
 
-# Release builders
-
-release:ubuntu14:
-  <<: *release_build
+integration tests ubuntu14:
   image: europeanxfel/karabo-ci:ubuntu-14
-  before_script:
-    - locale-gen en_US.UTF-8
-    - update-locale LANG=en_US.UTF-8
-
-release:ubuntu16:
-  <<: *release_build
-  image: europeanxfel/karabo-ci:ubuntu-16
-  before_script:
-    - locale-gen en_US.UTF-8
-    - update-locale LANG=en_US.UTF-8
-
-release:centos7:
-  <<: *release_build
-  image: europeanxfel/karabo-ci:centos-7
-  before_script:
-    - localedef -c -i en_US -f UTF-8 en_US.utf8
-    - export LANG=en_US.UTF-8
-
-release:windowsGUI:
-  <<: *release_build
-  image: europeanxfel/karabo-ci:ubuntu-14
-  before_script:
-    - locale-gen en_US.UTF-8
-    - update-locale LANG=en_US.UTF-8
-  script:
-    - export REL_TAG=$CI_BUILD_REF_NAME
-    - export REL_ARTIFACT_DEST=karaboGui/KaraboGUI-$REL_TAG.win32.exe
-    - bash ./auto_build_all.sh Release --noDbInit
-    - source karabo/activate
-    - cd build/python
-    - bash ./build.sh
-    - sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null KaraboGUI-*.exe xdata@exflserv05:/var/www/html/karabo/$REL_ARTIFACT_DEST
+  <<: *integration-tests
