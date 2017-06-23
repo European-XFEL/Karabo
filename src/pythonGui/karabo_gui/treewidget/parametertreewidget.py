@@ -10,14 +10,15 @@ from PyQt4.QtGui import (QAbstractItemView, QCursor, QHeaderView, QMenu,
 
 from karabo_gui.components import (BaseComponent, EditableApplyLaterComponent,
                                    EditableNoApplyComponent)
-import karabo_gui.globals as globals
+import karabo_gui.globals as krb_globals
 from karabo_gui.singletons.api import get_network
-from karabo_gui.treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
-from karabo_gui.treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
+from .command_item import CommandTreeWidgetItem
+from .property_item import PropertyTreeWidgetItem
 
 
 class ParameterTreeWidget(QTreeWidget):
-    signalApplyChanged = pyqtSignal(object, bool, bool) # box, enable, hasConflicts
+    # signalApplyChanged(box, enable, hasConflicts)
+    signalApplyChanged = pyqtSignal(object, bool, bool)
 
     def __init__(self, conf=None):
         super(ParameterTreeWidget, self).__init__()
@@ -29,12 +30,12 @@ class ParameterTreeWidget(QTreeWidget):
         self.setWordWrap(True)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        #self.setSortingEnabled(True)
-        #self.sortByColumn(0, Qt.AscendingOrder)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.mContext = QMenu(self) # Actions from configurationPanel are added via addContextAction
-        self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+        # Actions from configurationPanel are added via addContextAction
+        self.mContext = QMenu(self)
+        self.customContextMenuRequested.connect(
+            self.onCustomContextMenuRequested)
 
         self.model().setSupportedDragActions(Qt.CopyAction)
         self.setDragEnabled(True)
@@ -51,13 +52,12 @@ class ParameterTreeWidget(QTreeWidget):
                 c.setParent(None)
 
     def ensureMiddleColumnWidth(self):
-        """ Set the minimum column width for the whole table to the current
+        """Set the minimum column width for the whole table to the current
         width of the middle column.
         """
         header = self.header()
         header.setMinimumSectionSize(header.sectionSize(1))
 
-### protected ###
     def mousePressEvent(self, event):
         item = self.itemAt(event.pos())
 
@@ -68,8 +68,8 @@ class ParameterTreeWidget(QTreeWidget):
         # Get the tree widget's x position
         treeX = self.header().sectionViewportPosition(0)
 
-        # Get the x coordinate of the root item. It is required in order to calculate
-        # the identation of the item
+        # Get the x coordinate of the root item. It is required in order to
+        # calculate the identation of the item
         rootX = self.visualItemRect(self.invisibleRootItem()).x()
 
         # Get the rectangle of the viewport occupied by the pressed item
@@ -85,7 +85,8 @@ class ParameterTreeWidget(QTreeWidget):
             # Hide tooltip of former item
             self.prevItem.setToolTipDialogVisible(False)
 
-        # Now check where the press event took place and handle it correspondingly
+        # Now check where the press event took place and handle it
+        # correspondingly
         if iconRect.contains(event.pos()):
             self.prevItem = item
             self.prevItem.setToolTipDialogVisible(True)
@@ -109,25 +110,22 @@ class ParameterTreeWidget(QTreeWidget):
         mimeData.setData("sourceType", "ParameterTreeWidget")
         return mimeData
 
-
     def checkApplyButtonsEnabled(self):
         # Returns a tuple containing the enabled and the conflicted state
         return self._r_applyButtonsEnabled(self.invisibleRootItem())
 
-
     def applyItem(self, item):
-        """return a list of pairs (box, value) to be applied """
-
+        """Return a list of pairs (box, value) to be applied
+        """
         editableComponent = item.editableComponent
         if (editableComponent is None or
                 not isinstance(editableComponent, EditableApplyLaterComponent)
                 or not editableComponent.applyEnabled):
-            return [ ]
+            return []
 
         return [(box, editableComponent.widgetFactory.value)
                 for box in editableComponent.boxes
                 if box.isAccessible() and box.isAllowed()]
-
 
     def applyRemoteChanges(self, item):
         editableComponent = item.editableComponent
@@ -139,7 +137,6 @@ class ParameterTreeWidget(QTreeWidget):
 
         editableComponent.onApplyRemoteChanges()
 
-
     def resetAll(self):
         nbSelectedItems = self.nbSelectedApplyEnabledItems()
         if nbSelectedItems > 0:
@@ -149,9 +146,9 @@ class ParameterTreeWidget(QTreeWidget):
         else:
             self.onApplyAllRemoteChanges()
 
-
     def nbSelectedApplyEnabledItems(self):
-        # Return only selected items for not applied yet
+        """Return only selected items for not applied yet
+        """
         counter = 0
         for item in self.selectedItems():
             editableComponent = item.editableComponent
@@ -164,22 +161,17 @@ class ParameterTreeWidget(QTreeWidget):
                 counter += 1
         return counter
 
-
     def setErrorState(self, inErrorState):
         self._r_setErrorStateItem(self.invisibleRootItem(), inErrorState)
-
 
     def setReadOnly(self, readOnly):
         self._r_setReadOnlyItem(self.invisibleRootItem(), readOnly)
 
-
-### private functions ###
     def _r_setErrorStateItem(self, item, inErrorState):
         for i in range(item.childCount()):
             childItem = item.child(i)
             childItem.setErrorState(inErrorState)
             self._r_setErrorStateItem(childItem, inErrorState)
-
 
     def _r_setReadOnlyItem(self, item, readOnly):
         for i in range(item.childCount()):
@@ -187,28 +179,25 @@ class ParameterTreeWidget(QTreeWidget):
             childItem.setReadOnly(readOnly)
             self._r_setReadOnlyItem(childItem, readOnly)
 
-
     def addContextAction(self, action):
         self.mContext.addAction(action)
-
 
     def addContextMenu(self, menu):
         self.mContext.addMenu(menu)
 
-
     def addContextSeparator(self):
         self.mContext.addSeparator()
-
 
     def globalAccessLevelChanged(self):
         rootItem = self.invisibleRootItem()
         for i in range(rootItem.childCount()):
             self._r_globalAccessLevelChanged(rootItem.child(i))
 
-
     def _r_globalAccessLevelChanged(self, item):
-        if item.requiredAccessLevel > globals.GLOBAL_ACCESS_LEVEL or \
-           (self.conf.type == "deviceGroup" and item.editableComponent is None):
+        global_level = krb_globals.GLOBAL_ACCESS_LEVEL
+        if (item.requiredAccessLevel > global_level or
+                (self.conf.type == "deviceGroup" and
+                 item.editableComponent is None)):
             item.setHidden(True)
         else:
             item.setHidden(False)
@@ -224,29 +213,28 @@ class ParameterTreeWidget(QTreeWidget):
             for i in range(item.childCount()):
                 self._r_globalAccessLevelChanged(item.child(i))
 
-
     def _r_applyAll(self, item, config):
-        # recursive function for tree to update the apply buttons
+        """Recursive function for tree to update the apply buttons
+        """
         for i in range(item.childCount()):
             childItem = item.child(i)
             self.addItemDataToHash(childItem, config)
             self._r_applyAll(childItem, config)
 
-
     def _r_applyAllRemoteChanges(self, item):
-        # recursive function for tree to update the apply buttons
+        """Recursive function for tree to update the apply buttons
+        """
         for i in range(item.childCount()):
             childItem = item.child(i)
             self.applyRemoteChanges(childItem)
             self._r_applyAllRemoteChanges(childItem)
-
 
     def _r_applyButtonsEnabled(self, item):
         for i in range(item.childCount()):
             childItem = item.child(i)
             if isinstance(childItem, PropertyTreeWidgetItem):
                 result = self._r_applyButtonsEnabled(childItem)
-                if result[0]: # Bug: returns but
+                if result[0]:  # Bug: returns but
                     return result
 
         if (not isinstance(item, PropertyTreeWidgetItem) or
@@ -258,16 +246,15 @@ class ParameterTreeWidget(QTreeWidget):
         return (item.editableComponent.applyEnabled,
                 item.editableComponent.hasConflict)
 
-
     def onApplyChanged(self, box, enable):
-        # Called when apply button of editableComponent changed
-        # Check if no apply button in tree is enabled/conflicted anymore
+        """ Called when apply button of editableComponent changed
+        Check if no apply button in tree is enabled/conflicted anymore
+        """
         result = self.checkApplyButtonsEnabled()
         self.signalApplyChanged.emit(box, result[0], result[1])
 
-
     def allItems(self):
-        stack = [ ]
+        stack = []
         item = self.invisibleRootItem()
         while True:
             stack.extend(item.child(i) for i in range(item.childCount()))
@@ -276,21 +263,18 @@ class ParameterTreeWidget(QTreeWidget):
             item = stack.pop()
             yield item
 
-
     def onApplyAll(self):
         nbSelectedItems = self.nbSelectedApplyEnabledItems()
         if nbSelectedItems > 0:
             selectedItems = self.selectedItems()
         else:
             selectedItems = self.allItems()
-        boxes = sum([self.applyItem(item) for item in selectedItems], [ ])
+        boxes = sum([self.applyItem(item) for item in selectedItems], [])
         # TODO: deviceGroups...
         get_network().onReconfigure(boxes)
 
-
     def onApplyAllRemoteChanges(self):
         self._r_applyAllRemoteChanges(self.invisibleRootItem())
-
 
     def onCustomContextMenuRequested(self, pos):
         item = self.itemAt(pos)
@@ -300,7 +284,6 @@ class ParameterTreeWidget(QTreeWidget):
             return
 
         item.showContextMenu()
-
 
     def onApplyCurrentItemChanges(self):
         editableComponent = self.currentItem().editableComponent
@@ -314,4 +297,3 @@ class ParameterTreeWidget(QTreeWidget):
         if editableComponent is None:
             return
         editableComponent.onApplyRemoteChanges()
-
