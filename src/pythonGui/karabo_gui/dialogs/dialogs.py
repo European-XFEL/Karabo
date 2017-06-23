@@ -182,15 +182,15 @@ class SceneLinkDialog(QDialog):
 
         self._selectedScene = 0
         self._sceneTargets = self._get_scenelink_targets()
-        sceneCombo = self.sceneSelectCombo
         for scene in self._sceneTargets:
-            sceneCombo.addItem(scene)
+            self.lwScenes.addItem(scene)
 
-        targetIndex = sceneCombo.findText(model.target)
-        if targetIndex > -1:
-            self._selectedScene = targetIndex
-
-        sceneCombo.setCurrentIndex(self._selectedScene)
+        flags = Qt.MatchExactly | Qt.MatchCaseSensitive
+        items = self.lwScenes.findItems(model.target, flags)
+        if items:
+            # Select first result
+            self.lwScenes.setCurrentItem(items[0])
+        self._selectedScene = self.lwScenes.currentRow()
 
         self._selectedTargetWin = model.target_window
         radioButtons = {
@@ -226,7 +226,7 @@ class SceneLinkDialog(QDialog):
         return self._selectedTargetWin
 
     @pyqtSlot(int)
-    def on_sceneSelectCombo_currentIndexChanged(self, index):
+    def on_lwScenes_currentRowChanged(self, index):
         self._selectedScene = index
 
     @pyqtSlot(bool)
