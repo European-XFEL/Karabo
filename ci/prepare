@@ -1,28 +1,29 @@
+
 __lang_setting() {
     case "$1" in
-        centos7)
+        CentOS)
             localedef -c -i en_US -f UTF-8 en_US.utf8
             export LANG=en_US.UTF-8
             ;;
-        ubuntu1[46]|windows)
+        Ubuntu)
             locale-gen en_US.UTF-8
             update-locale LANG=en_US.UTF-8
             ;;
-        *) ;;
+        *) echo "unknown target os: $1" ;;
     esac
 }
 
 __start_Xvfb() {
     case "$1" in
-        centos7)
+        CentOS)
             export DISPLAY=:99.0
             /usr/bin/Xvfb $DISPLAY &
             ;;
-        ubuntu1[46]|windows)
+        Ubuntu)
             export DISPLAY=:99.0
             start-stop-daemon --start -b -x /usr/bin/Xvfb $DISPLAY
             ;;
-        *) ;;
+        *) echo "unknown target os: $1" ;;
     esac
 }
 
@@ -33,13 +34,10 @@ JOB_SCOPE=$(echo $1 | cut -f1 -d' ')
 JOB_TYPE=$(echo $1 | cut -f2 -d' ')
 TARGET_OS=$(echo $1 | cut -f3 -d' ')
 
-if ! [[ $TARGET_OS == (centos7|ubuntu1[46]|windows) ]]; then 
-    echo "unknown job: $1"
-    exit 127
-fi
+REL_OS_NAME=$(lsb_release -is)
 
-__lang_setting $TARGET_OS
+__lang_setting $REL_OS_NAME
 
-if [[ $JOB_TYPE == "tests" ]] && [[ $JOB_SCOPE == (unit|deps) ]] ; then
-    __start_Xvfb $TARGET_OS
+if [[ $JOB_TYPE == "tests" ]] && [[ $JOB_SCOPE != "integration" ]] ; then
+    __start_Xvfb $REL_OS_NAME
 fi
