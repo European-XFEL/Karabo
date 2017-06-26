@@ -26,7 +26,7 @@ import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
 from karabo_gui.registry import Monkey
 from karabo_gui.singletons.api import get_network
-from karabo_gui.treewidgetitems import (
+from karabo_gui.treewidget import (
     CommandTreeWidgetItem, ImageTreeWidgetItem, PropertyTreeWidgetItem,
     TableTreeWidgetItem)
 from karabo_gui.widget import EditableWidget
