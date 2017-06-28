@@ -14,22 +14,12 @@ from functools import partial
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from karabo.middlelayer import (
-    AccessMode, AccessLevel, Assignment, NodeType, Hash, Timestamp)
+    AccessMode, AccessLevel, NodeType, Hash, Timestamp)
 import karabo.middlelayer_api.hash as hashmod
-from karabo_gui.attributeediting.api import (
-    EDITABLE_ATTRIBUTE_NAMES, ATTRIBUTE_EDITOR_FACTORIES,
-    EditAttributeComponent
-)
-from karabo_gui.components import (
-    ChoiceComponent, EditableApplyLaterComponent, EditableNoApplyComponent)
+from karabo_gui.attributeediting.api import EDITABLE_ATTRIBUTE_NAMES
 import karabo_gui.globals as krb_globals
-import karabo_gui.icons as icons
 from karabo_gui.registry import Monkey
 from karabo_gui.singletons.api import get_network
-from karabo_gui.treewidget import (
-    CommandTreeWidgetItem, ImageTreeWidgetItem, PropertyTreeWidgetItem,
-    TableTreeWidgetItem)
-from karabo_gui.widget import EditableWidget
 
 # MOST of the attribute names from Schemas that we care about.
 # Schema.parseAttrs() contains a few others as well.
@@ -97,10 +87,6 @@ class Box(QObject):
         if d is not None:
             self._value = self.dummyCast()
             self.signalNewDescriptor.emit(self)
-
-    def fillWidget(self, parameterEditor, isClass):
-        if self._descriptor is not None:
-            self._descriptor.fillWidget(parameterEditor, self, isClass)
 
     def __getattr__(self, attr):
         if self.descriptor is None:
@@ -216,16 +202,6 @@ class _BoxValue(object):
 
 class Descriptor(hashmod.Descriptor, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-
-    def completeItem(self, treeWidget, item, box, isClass):
-        if self.assignment == Assignment.MANDATORY.value:
-            f = item.font(0)
-            f.setBold(True)
-            item.setFont(0, f)
-        item.requiredAccessLevel = self.requiredAccessLevel
-        item.displayText = self.displayedName
-        item.allowedStates = self.allowedStates
-
     def __get__(self, instance, owner):
         if instance is None:
             return self
@@ -244,7 +220,6 @@ class Descriptor(hashmod.Descriptor, metaclass=Monkey):
 
 class Type(hashmod.Type, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    icon = icons.undefined
 
     def set(self, box, value, timestamp=None):
         box._set(value, timestamp)
@@ -256,71 +231,6 @@ class Type(hashmod.Type, metaclass=Monkey):
     def setDefault(self, box):
         if self.defaultValue is not None:
             self.set(box, self.defaultValue)
-
-    def item(self, treeWidget, parentItem, box, isClass):
-        item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
-
-        item.setIcon(0, self.icon if self.options is None else icons.enum)
-        item.enumeration = self.options
-        component = None
-        item.editableComponent = None
-        if isClass:
-            if self.accessMode in (AccessMode.INITONLY,
-                                   AccessMode.RECONFIGURABLE):
-                component = EditableNoApplyComponent
-        else:
-            if self.accessMode is AccessMode.RECONFIGURABLE:
-                component = EditableApplyLaterComponent
-        if component is not None:
-            factory = EditableWidget.getClass(box)(box, treeWidget)
-            item.editableComponent = component(factory, box, treeWidget)
-        if component is EditableApplyLaterComponent:
-            item.editableComponent.signalApplyChanged.connect(
-                treeWidget.onApplyChanged)
-        self.completeItem(treeWidget, item, box, isClass)
-        return item
-
-    def completeItem(self, treeWidget, item, box, isClass):
-        """Add tree widget items for editable attributes.
-
-        Editable attributes only show up BEFORE a class is instantiated.
-        """
-        super(Type, self).completeItem(treeWidget, item, box, isClass)
-
-        # We're not interested unless this is an uninstantiated class.
-        if not isClass:
-            return
-
-        desc = box.descriptor
-        for name in EDITABLE_ATTRIBUTE_NAMES:
-            if hasattr(desc, name):
-                value = getattr(desc, name)
-                # Skip empty values
-                if value is None:
-                    continue
-                # Skip blank units
-                if name == 'unitSymbol' and value == '':
-                    continue
-                # Skip metric prefixes with no associated units
-                if (name == 'metricPrefixSymbol' and value == ''
-                        and getattr(desc, 'unitSymbol') == ''):
-                    continue
-                self._attributeItem(treeWidget, item, box, name)
-
-    def _attributeItem(self, treeWidget, parentItem, box, attributeName):
-        """ Build a single tree widget item for an attribute.
-        """
-        item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
-
-        item.setIcon(0, self.icon if self.options is None else icons.enum)
-        item.enumeration = self.options
-        factory = ATTRIBUTE_EDITOR_FACTORIES[attributeName]
-        item.editableComponent = EditAttributeComponent(
-            factory, box, attributeName, treeWidget)
-
-        item.requiredAccessLevel = self.requiredAccessLevel
-        item.displayText = attributeName
-        item.allowedStates = self.allowedStates
 
     def toHash(self, box):
         desc = box.descriptor
@@ -355,42 +265,6 @@ class Type(hashmod.Type, metaclass=Monkey):
         desc = box.descriptor
         for name, value in attrs.items():
             setattr(desc, name, value)
-
-
-class Char(hashmod.Char, metaclass=Monkey):
-    # Means that parent class is overwritten/updated
-    icon = icons.string
-
-
-class String(hashmod.String, metaclass=Monkey):
-    # Means that parent class is overwritten/updated
-    icon = icons.string
-
-    def item(self, treeWidget, parentItem, box, isClass):
-        if self.displayType in ("directory", "fileIn", "fileOut"):
-            self.icon = icons.path
-        item = super(String, self).item(treeWidget, parentItem, box, isClass)
-        self.completeItem(treeWidget, item, box, isClass)
-        return item
-
-
-class Integer(hashmod.Integer, metaclass=Monkey):
-    # Means that parent class is overwritten/updated
-    icon = icons.int
-
-
-class Number(hashmod.Number, metaclass=Monkey):
-    # Means that parent class is overwritten/updated
-    icon = icons.float
-
-
-class Bool(hashmod.Bool, metaclass=Monkey):
-    # Means that parent class is overwritten/updated
-    icon = icons.boolean
-
-
-class Vector(hashmod.Vector, metaclass=Monkey):
-    pass
 
 
 class Object(object):
@@ -498,30 +372,6 @@ class Schema(hashmod.Descriptor):
         ret.key = key
         Schema.parseAttrs(ret, attrs, parent)
         return ret
-
-    def item(self, treeWidget, parentItem, box, isClass):
-        item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
-        self.completeItem(treeWidget, item, box, isClass)
-        return item
-
-    def completeItem(self, treeWidget, item, box, isClass):
-        self._item(treeWidget, item, box, isClass)
-        super(Schema, self).completeItem(treeWidget, item, box, isClass)
-
-    def _item(self, treeWidget, parentItem, box, isClass):
-        for k, v in self.dict.items():
-            if isinstance(v, hashmod.Descriptor):
-                try:
-                    c = getattr(box.boxvalue, k)
-                except AttributeError:
-                    print('missing {} in {}'.format(k, box.value))
-                else:
-                    v.item(treeWidget, parentItem, c, isClass)
-
-    def fillWidget(self, treeWidget, configuration, isClass):
-        self._item(treeWidget, treeWidget.invisibleRootItem(), configuration,
-                   isClass)
-        treeWidget.resizeColumnToContents(0)
 
     def getClass(self):
         if self.cls is None:
@@ -653,16 +503,13 @@ class Schema(hashmod.Descriptor):
 
 
 class ImageNode(Schema):
-    def item(self, treeWidget, parentItem, box, isClass):
-        item = ImageTreeWidgetItem(box, treeWidget, parentItem)
-        item.enabled = not isClass
-        self.completeItem(treeWidget, item, box, isClass)
+    # Subclassed to simplify isinstance() checks later
+    pass
 
 
 class TableNode(Schema):
-    def item(self, treeWidget, parentItem, box, isClass):
-        item = TableTreeWidgetItem(box, treeWidget, parentItem)
-        self.completeItem(treeWidget, item, box, isClass)
+    # Subclassed to simplify isinstance() checks later
+    pass
 
 
 class OutputNode(Schema):
@@ -685,11 +532,6 @@ class SlotNode(Schema):
     def execute(self, box):
         get_network().onExecute(box)
 
-    def item(self, treeWidget, parentItem, box, isClass):
-        item = CommandTreeWidgetItem(self.key, box, treeWidget, parentItem)
-        item.enabled = not isClass
-        self.completeItem(treeWidget, item, box, isClass)
-
     def getClass(self):
         if self.cls is None:
             self.cls = type(str(self.name), (Slot,), self.dict)
@@ -706,47 +548,6 @@ class ChoiceOfNodes(Schema):
         self.metricPrefixSymbol = ''
         self.unitSymbol = ''
         return self
-
-    def item(self, treeWidget, parentItem, box, isClass):
-        item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
-        item.defaultValue = self.defaultValue
-
-        item.isChoiceElement = True
-        item.editableComponent = None
-        component = None
-
-        if isClass:
-            component = EditableNoApplyComponent
-        else:
-            component = ChoiceComponent
-
-        factory = EditableWidget.getClass(box)(box, treeWidget)
-        item.editableComponent = component(factory, box, treeWidget)
-        self.completeItem(treeWidget, item, box, isClass)
-
-        children = []
-        for i in range(item.childCount()):
-            child = item.child(i)
-            childKey = child.box.path[-1]
-
-            if item.defaultValue is None:
-                if i > 0:
-                    child.setHidden(True)
-                else:
-                    if box.current is None:
-                        # Set current choice elements via key
-                        box.current = childKey
-            else:
-                if childKey != item.defaultValue:
-                    child.setHidden(True)
-
-            if item.editableComponent is not None:
-                children.append(child)
-        item.editableComponent.widgetFactory.childItemList = children
-
-        # Trigger change of combobox
-        item.editableComponent.widgetFactory.valueChanged(box, box.current)
-        return item
 
     def fromHash(self, box, value, attrs=None, timestamp=None):
         for k in value:
@@ -810,11 +611,6 @@ class ListOfNodes(hashmod.Descriptor):
     def toHash(self, box):
         return [], {}
 
-    def item(self, treeWidget, parentItem, box, isClass):
-        item = PropertyTreeWidgetItem(box, treeWidget, parentItem)
-        item.displayText = box.path[-1]
-        item.requiredAccessLevel = AccessLevel.GOD
-
     def dummyCast(self, box):
         return box.value
 
@@ -822,30 +618,3 @@ class ListOfNodes(hashmod.Descriptor):
         box._value = Dummy()
         box.initialized = False
         box.descriptor = None
-
-
-class VectorHash(hashmod.VectorHash, metaclass=Monkey):
-    # Means that parent class is overwritten/updated
-
-    def item(self, treeWidget, parentItem, box, isClass):
-        item = TableTreeWidgetItem(box, treeWidget, parentItem)
-        item.setIcon(0, self.icon if self.options is None else icons.enum)
-        item.enumeration = self.options
-        component = None
-        item.editableComponent = None
-        if isClass:
-            if self.accessMode in (AccessMode.INITONLY,
-                                   AccessMode.RECONFIGURABLE):
-                component = EditableNoApplyComponent
-        else:
-            if self.accessMode is AccessMode.RECONFIGURABLE:
-                component = EditableApplyLaterComponent
-
-        if component is not None:
-            factory = EditableWidget.getClass(box)(box, treeWidget)
-            item.editableComponent = component(factory, box, treeWidget)
-        if component is EditableApplyLaterComponent:
-            item.editableComponent.signalApplyChanged.connect(
-                treeWidget.onApplyChanged)
-        self.completeItem(treeWidget, item, box, isClass)
-        return item
