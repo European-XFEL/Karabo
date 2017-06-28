@@ -43,6 +43,7 @@ from .middlelayer_api.hash import (
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
     VectorUInt64, VectorUInt8
 )
+from .middlelayer_api.json import KaraboJSONEncoder
 from .middlelayer_api.ndarray import NDArray
 from .middlelayer_api.pipeline import InputChannel, NetworkInput
 from .middlelayer_api.project.api import (
