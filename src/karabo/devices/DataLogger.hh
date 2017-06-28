@@ -54,8 +54,8 @@ namespace karabo {
             karabo::util::Timestamp m_lastDataTimestamp;
             bool m_pendingLogin;
 
-            std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap;
-            std::vector<std::string> m_idxprops;
+            std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap; // protect by m_configMutex!
+            std::vector<std::string> m_idxprops; // needs no mutex as long as used only in slotChanged
             size_t m_propsize;
             time_t m_lasttime;
 
