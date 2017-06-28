@@ -25,5 +25,5 @@ case "$JOB_SCOPE" in
     deps) __deps_build_tests ;;
     unit) __unit_tests ;;
     integration) __integration_tests ;;
-    *) echo "unknown job scope: $JOB_SCOPE" ; exit 127 ;;
+    *) echo "unknown job scope: $JOB_SCOPE" ;;
 esac
