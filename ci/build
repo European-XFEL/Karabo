@@ -1,0 +1,60 @@
+__release_build() {
+    case "$1" in
+        windows) 
+            export REL_TAG=$CI_BUILD_REF_NAME
+            export REL_ARTIFACT_DEST=karaboGui/KaraboGUI-$REL_TAG.win32.exe
+            bash ./auto_build_all.sh Release
+            source karabo/activate
+            cd build/python
+            bash ./build.sh
+            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null KaraboGUI-*.exe xdata@exflserv05:/var/www/html/karabo/$REL_ARTIFACT_DEST
+            ;;
+        ubuntu*|centos*)
+            export REL_OS_NAME=$(lsb_release -is)
+            export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+            export REL_TAG=$CI_BUILD_REF_NAME
+            export REL_ARTIFACT_NAME=karabo-$REL_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh
+            export REL_ARTIFACT_DEST=karaboFramework/tags/$REL_TAG
+            bash ./auto_build_all.sh Release --bundle
+            mv package/Release/$REL_OS_NAME/$REL_OS_VERS_LONG/x86_64/karabo-*.sh $REL_ARTIFACT_NAME
+            sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null xdata@exflserv05 "mkdir -p /var/www/html/karabo/$REL_ARTIFACT_DEST"
+            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME xdata@exflserv05:/var/www/html/karabo/$REL_ARTIFACT_DEST
+            ;;
+        *) echo "unknown target OS: $1" ;;
+    esac
+}
+
+__deps_build() {
+    pushd extern
+    export DEPS_BASE_NAME=$(lsb_release -is)-$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+    export DEPS_DIR_ABS_PATH=$(pwd -P)/$DEPS_BASE_NAME
+    bash build.sh -q $DEPS_BASE_NAME CI
+    $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py --fix-links $DEPS_BASE_NAME/bin $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
+    $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py $DEPS_BASE_NAME/lib $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
+    bash build.sh -p $DEPS_BASE_NAME CI
+
+    case "$1" in
+        build)
+            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME*.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps
+            ;;
+        tests)
+            mv $DEPS_BASE_NAME*.tar.gz $DEPS_BASE_NAME-$CI_BUILD_REF_SLUG.tar.gz
+            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME-$CI_BUILD_REF_SLUG.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps/
+            ;;
+        *) echo "unknown job type: $1" ;;
+    esac
+    popd
+}
+
+
+echo "Start building job: {$1}"
+
+JOB_SCOPE=$(echo $1 | cut -f1 -d' ')
+JOB_TYPE=$(echo $1 | cut -f2 -d' ')
+TARGET_OS=$(echo $1 | cut -f3 -d' ')
+
+case "$JOB_SCOPE" in
+    release) __release_build $TARGET_OS ;;
+    deps) __deps_build $JOB_TYPE ;;
+    *) echo "unknow job scope: $JOB_SCOPE" ;;
+esac
