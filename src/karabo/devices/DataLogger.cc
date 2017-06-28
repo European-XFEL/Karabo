@@ -296,8 +296,13 @@ namespace karabo {
                 if (find(m_idxprops.begin(), m_idxprops.end(), path) == m_idxprops.end()) continue;
 
                 // Check if we need to build index for this property by inspecting schema ... checking only existence
-                boost::mutex::scoped_lock lock(m_currentSchemaMutex);
-                if (m_currentSchema.has(path)) {
+                bool schemaHasPath = false;
+                {
+                    boost::mutex::scoped_lock lock(m_currentSchemaMutex);
+                    schemaHasPath = m_currentSchema.has(path);
+                }
+                if (schemaHasPath) {
+                    // m_configMutex (for use of m_idxMap) already locked above
                     MetaData::Pointer& mdp = m_idxMap[path]; //Pointer by reference!
                     bool first = false;
                     if (!mdp) {
