@@ -10,7 +10,6 @@
 
 #include "EventLoop.hh"
 #include "karabo/log/Logger.hh"
-#include "karabo/util/StackTrace.hh"
 
 namespace karabo {
     namespace net {
