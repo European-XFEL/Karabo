@@ -75,6 +75,7 @@ namespace karabo {
 
         DataLogger::DataLogger(const Hash& input)
             : karabo::core::Device<karabo::core::OkErrorFsm>(input)
+            , m_currentSchemaChanged(true)
             , m_pendingLogin(true)
             , m_propsize(0)
             , m_lasttime(0)
@@ -198,13 +199,20 @@ namespace karabo {
         void DataLogger::slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId) {
 
             // To write log I need schema ...
+            // Copy once under mutex protection and then use copy without further need to think about races
             {
                 boost::mutex::scoped_lock lock(m_currentSchemaMutex);
-                if (m_currentSchema.empty()) {
-                    // DEBUG only since can happen when initialising, i.e. slot is connected, but Schema did not yet arrive.
-                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": slotChanged called, but no schema yet - ignore!";
-                    return;
+                if (m_currentSchemaChanged) {
+                    m_schemaForSlotChanged = m_currentSchema;
+                    if (!m_schemaForSlotChanged.empty()) {
+                        m_currentSchemaChanged = false;
+                    }
                 }
+            }
+            if (m_schemaForSlotChanged.empty()) {
+                // DEBUG only since can happen when initialising, i.e. slot is connected, but Schema did not yet arrive.
+                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": slotChanged called, but no schema yet - ignore!";
+                return;
             }
 
             if (deviceId != m_deviceToBeLogged) {
@@ -240,9 +248,9 @@ namespace karabo {
                 const Hash::Node& leafNode = configuration.getNode(path);
                 if (leafNode.getType() == Types::HASH) continue;
                 // Skip those elements which should not be archived
-                {
-                    boost::mutex::scoped_lock lock(m_currentSchemaMutex);
-                    if (!m_currentSchema.has(path) || (m_currentSchema.hasArchivePolicy(path) && (m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING))) continue;
+                if (!m_schemaForSlotChanged.has(path)
+                    || (m_schemaForSlotChanged.hasArchivePolicy(path) && (m_schemaForSlotChanged.getArchivePolicy(path) == Schema::NO_ARCHIVING))) {
+                    continue;
                 }
                 if (!Timestamp::hashAttributesContainTimeInformation(leafNode.getAttributes())) {
                     KARABO_LOG_WARN << "Skip '" << path << "' - it lacks time information attributes.";
@@ -295,36 +303,28 @@ namespace karabo {
                 // check if we have property registered
                 if (find(m_idxprops.begin(), m_idxprops.end(), path) == m_idxprops.end()) continue;
 
-                // Check if we need to build index for this property by inspecting schema ... checking only existence
-                bool schemaHasPath = false;
-                {
-                    boost::mutex::scoped_lock lock(m_currentSchemaMutex);
-                    schemaHasPath = m_currentSchema.has(path);
+                // m_configMutex (for use of m_idxMap) already locked above
+                MetaData::Pointer& mdp = m_idxMap[path]; //Pointer by reference!
+                bool first = false;
+                if (!mdp) {
+                    // a property not yet indexed - create meta data and set file
+                    mdp = MetaData::Pointer(new MetaData);
+                    mdp->idxFile = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(m_lastIndex)
+                            + "-" + path + "-index.bin";
+                    first = true;
                 }
-                if (schemaHasPath) {
-                    // m_configMutex (for use of m_idxMap) already locked above
-                    MetaData::Pointer& mdp = m_idxMap[path]; //Pointer by reference!
-                    bool first = false;
-                    if (!mdp) {
-                        // a property not yet indexed - create meta data and set file
-                        mdp = MetaData::Pointer(new MetaData);
-                        mdp->idxFile = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(m_lastIndex)
-                                + "-" + path + "-index.bin";
-                        first = true;
-                    }
-                    if (!mdp->idxStream.is_open()) {
-                        mdp->idxStream.open(mdp->idxFile.c_str(), ios::out | ios::app | ios::binary);
-                    }
-                    mdp->record.epochstamp = t.toTimestamp();
-                    mdp->record.trainId = t.getTrainId();
-                    mdp->record.positionInRaw = position;
-                    mdp->record.extent1 = (expNum & 0xFFFFFF);
-                    mdp->record.extent2 = (runNum & 0xFFFFFF);
-                    if (first) {
-                        mdp->record.extent2 |= (1 << 30);
-                    }
-                    mdp->idxStream.write((char*) &mdp->record, sizeof (MetaData::Record));
+                if (!mdp->idxStream.is_open()) {
+                    mdp->idxStream.open(mdp->idxFile.c_str(), ios::out | ios::app | ios::binary);
                 }
+                mdp->record.epochstamp = t.toTimestamp();
+                mdp->record.trainId = t.getTrainId();
+                mdp->record.positionInRaw = position;
+                mdp->record.extent1 = (expNum & 0xFFFFFF);
+                mdp->record.extent2 = (runNum & 0xFFFFFF);
+                if (first) {
+                    mdp->record.extent2 |= (1 << 30);
+                }
+                mdp->idxStream.write((char*) &mdp->record, sizeof (MetaData::Record));
             }
 
             long maxFilesize = get<int>("maximumFileSize") * 1000000; // times to 1000000 because maximumFilesSize in MBytes
@@ -406,6 +406,7 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_currentSchemaMutex);
                 m_currentSchema = schema;
+                m_currentSchemaChanged = true;
             }
             string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_schema.txt";
             fstream fileout(filename.c_str(), ios::out | ios::app);
