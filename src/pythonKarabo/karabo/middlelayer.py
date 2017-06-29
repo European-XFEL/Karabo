@@ -61,7 +61,8 @@ from .middlelayer_api.serializers import (
 )
 from .middlelayer_api.signalslot import Signal, SignalSlotable, slot, coslot
 from .middlelayer_api.synchronization import (
-    background, firstCompleted, gather, sleep, synchronous
+    allCompleted, background, firstCompleted, firstException, gather, sleep,
+    synchronous
 )
 from .middlelayer_api.timestamp import Timestamp
 from .middlelayer_api import numeric
