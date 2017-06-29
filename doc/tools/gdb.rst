@@ -45,8 +45,7 @@ Now, start the server from within GDB::
 
 Now create the device to inspect. This can be done in two different ways:
 
- * From karabo-gui: use the *Instantiate Device* button in the *Configuration Editor*
-               Panel
+ * From karabo-gui: use the *Instantiate Device* button in the *Configuration Editor* Panel
  * From ikarabo::
 
     instantiate("gdbServer/1",
@@ -125,11 +124,10 @@ then the cppserver will crash and will require a `kill -9`. This could be due to
 the broker dropping the connection when the device is irresponsive for a period
 of time. Consider using watchpoints instead.
 
-Future work:
-++++++++++++
+Future work
++++++++++++
 The following are suggestions to improve debugging:
  * Get a graphical client (Netbeans integration, gdbgui or...)
- * See whether the gdbserver can be bypassed altogether
 
 .. note::
     You are debugging a distributed system, the resources you are inspecting may
