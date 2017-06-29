@@ -356,6 +356,21 @@ def synchronize(coro):
     return wrapper
 
 
+def synchronize_notimeout(coro):
+    """same as synchronize, but the timeout is handled by the coroutine"""
+    coro = coroutine(coro)
+
+    @wraps(coro)
+    def wrapper(*args, wait=True, **kwargs):
+        return get_event_loop().sync(coro(*args, **kwargs), -1, wait)
+
+    if wrapper.__doc__ is not None:
+        if not wrapper.__doc__[-1] == "\n":
+            wrapper.__doc__ += "\n"
+        wrapper.__doc__ += "\nThis is a synchronized coroutine.\n"
+    return wrapper
+
+
 class KaraboFuture(object):
     """A handle for a result that will be available in the future
 
