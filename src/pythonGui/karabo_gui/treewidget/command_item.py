@@ -16,7 +16,7 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.setIcon(0, icons.slot)
 
         # Create empty label for 2nd column (current value on device)
-        self.displayComponent = DisplayComponent("DisplayLabel", self.box,
+        self.displayComponent = DisplayComponent("DisplayLabel", box,
                                                  self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
@@ -28,31 +28,33 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.__pbCommand.setEnabled(False)
         self.treeWidget().setItemWidget(self, 0, self.__pbCommand)
         self.__pbCommand.clicked.connect(self.onCommandClicked)
-        self.box.configuration.boxvalue.state.signalUpdateComponent.connect(
+
+        box.configuration.boxvalue.state.signalUpdateComponent.connect(
             self.updateState)
         self.updateState()
 
-    def updateState(self):
-        enable = self.box.isAllowed() and self.box.isAccessible()
-        self.__pbCommand.setEnabled(enable)
-
-    def _getText(self):
+    @property
+    def displayText(self):
         return self.__pbCommand.text()
 
-    def _setText(self, text):
+    @displayText.setter
+    def displayText(self, text):
         self.__pbCommand.setText(text)
-    displayText = property(fget=_getText, fset=_setText)
 
-    def _getCommand(self):
+    @property
+    def command(self):
         return self.__command
-    command = property(fget=_getCommand)
 
     def setReadOnly(self, readOnly):
         if readOnly is True:
             self.__pbCommand.setEnabled(False)
         else:
             self.updateState()
-        BaseTreeWidgetItem.setReadOnly(self, readOnly)
+        super(CommandTreeWidgetItem, self).setReadOnly(readOnly)
 
     def onCommandClicked(self):
         self.box.execute()
+
+    def updateState(self):
+        enable = self.box.isAllowed() and self.box.isAccessible()
+        self.__pbCommand.setEnabled(enable)
