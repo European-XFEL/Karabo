@@ -24,7 +24,7 @@ class BaseProjectObjectModel(BaseSavableModel):
     uuid = String
 
     # Last modified date as string
-    date = String
+    date = String(transient=True)
 
     def _uuid_default(self):
         """If a uuid isn't supplied, generate one
