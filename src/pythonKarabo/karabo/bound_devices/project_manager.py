@@ -166,7 +166,7 @@ class ProjectManager(PythonDevice):
             for item in items:
                 xml = item.get("xml")
                 # Remove XML data to not send it back
-                del item['xml']
+                item['xml'] = ''
                 uuid = item.get("uuid")
                 overwrite = item.get("overwrite")
                 domain = item.get("domain")
