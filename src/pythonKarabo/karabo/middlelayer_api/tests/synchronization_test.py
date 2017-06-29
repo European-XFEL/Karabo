@@ -1,11 +1,12 @@
-from asyncio import async, CancelledError, coroutine, Future, TimeoutError
+from asyncio import async, CancelledError, coroutine, TimeoutError
 from pint import DimensionalityError
 from unittest import main
 import time
 
 from .eventloop import async_tst, DeviceTest, sync_tst
-from karabo.middlelayer import (background, firstCompleted, gather, sleep,
-                                synchronous, unit)
+from karabo.middlelayer import (
+    allCompleted, background, firstCompleted, firstException, gather, sleep,
+    synchronous, unit)
 from karabo.middlelayer_api.synchronization import FutureDict
 
 
@@ -213,26 +214,69 @@ class Tests(DeviceTest):
     def test_firstCompleted_sync(self):
         slow = background(sleep, 1000)
         fast = background(sleep, 0.001, "some result")
-        done, pending = firstCompleted(slow=slow, fast=fast)
+        err = background(lambda: 1/0)
+        done, pending, error = firstCompleted(slow=slow, fast=fast, err=err)
         self.assertEqual(done, {"fast": "some result"})
         self.assertEqual(list(pending.keys()), ["slow"])
+        self.assertIsInstance(error["err"], ZeroDivisionError)
         self.assertIs(pending["slow"], slow)
         pending["slow"].cancel()
 
+        slow = background(sleep, 1000)
+        done, pending, error = firstCompleted(slow=slow, timeout=0.001)
+        self.assertIn("slow", pending)
+
     @async_tst
     def test_firstCompleted_async(self):
-        done, pending = yield from firstCompleted(
+        done, pending, error = yield from firstCompleted(
             sleep(100), slow=sleep(1000), fast=sleep(0.001, "result"))
         self.assertEqual(done, {"fast": "result"})
         self.assertEqual(set(pending.keys()), {0, "slow"})
-        self.assertIsInstance(pending["slow"], Future)
-        pending["slow"].cancel()
-        pending[0].cancel()
+        self.assertFalse(error)
         try:
             yield from pending["slow"]
             self.fail()
         except CancelledError:
             pass
+
+        exception = RuntimeError()
+        @coroutine
+        def raisor():
+            raise exception
+        done, pending, error = yield from firstCompleted(
+            sleep(100), slow=sleep(1000), err=raisor())
+        self.assertFalse(done)
+        self.assertEqual(set(pending.keys()), {0, "slow"})
+        self.assertEqual(error, {"err": exception})
+
+    @async_tst
+    def test_allCompleted(self):
+        exception = RuntimeError()
+        @coroutine
+        def raisor():
+            raise exception
+        done, pending, error = yield from allCompleted(
+            sleep(100), slow=sleep(1000), fast=sleep(0.001, "result"),
+            err=raisor(), timeout=0.01)
+
+        self.assertEqual(done, {"fast": "result"})
+        self.assertEqual(error, {"err": exception})
+        self.assertEqual(set(pending.keys()), {0, "slow"})
+
+    @async_tst
+    def test_firstException(self):
+        exception = RuntimeError()
+        @coroutine
+        def raisor():
+            raise exception
+        done, pending, error = yield from firstException(
+            sleep(100), slow=sleep(1000), fast=sleep(0.001, "result"),
+            err=raisor(), timeout=0.01)
+
+        self.assertFalse(done)
+        self.assertEqual(error, {"err": exception})
+        self.assertEqual(set(pending.keys()), {0, "slow", "fast"})
+
 
     @async_tst
     def test_futuredict(self):
