@@ -85,26 +85,6 @@ class OneShotQueue(asyncio.Future):
             self.set_result(value)
 
 
-class _WaitUntilNew_old:
-    # this was current before 1.5, when the syntax was
-    # waitUntilNew(someDevice).someProperty.
-    # In some future this should go
-    def __init__(self, proxy):
-        self.proxy = proxy
-
-    @synchronize
-    def __getattr__(self, attr):
-        assert isinstance(getattr(type(self.proxy), attr), Type)
-        future = OneShotQueue(loop=self.proxy._device._ss.loop)
-        self.proxy._queues[attr].add(future)
-        return (yield from future)
-
-    def __iter__(self):
-        future = OneShotQueue(loop=self.proxy._device._ss.loop)
-        self.proxy._queues[None].add(future)
-        return (yield from future)
-
-
 @synchronize
 def waitUntilNew(*props):
     # _new means since 1.5
