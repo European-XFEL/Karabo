@@ -1,7 +1,7 @@
 import os
 from contextlib import ContextDecorator
 from textwrap import dedent
-from time import gmtime, strftime
+from time import gmtime, strftime, strptime
 
 from eulexistdb.db import ExistDB
 from eulexistdb.exceptions import ExistDBException
@@ -9,6 +9,8 @@ from lxml import etree
 
 from .util import assure_running, ProjectDBError
 from .dbsettings import DbSettings
+
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
 class ProjectDatabase(ContextDecorator):
@@ -167,10 +169,47 @@ class ProjectDatabase(ContextDecorator):
 
         # Extract some information
         item_tree = self._make_xml_if_needed(item_xml)
+
         if 'user' not in item_tree.attrib:
             item_tree.attrib['user'] = 'Karabo User'
         if 'date' not in item_tree.attrib:
-            item_tree.attrib['date'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+            item_tree.attrib['date'] = strftime(DATE_FORMAT, gmtime())
+        else:
+            # Check whether the object got modified inbetween
+            path = "{}/{}".format(self.root, domain)
+            query = """
+                xquery version "3.0";
+                let $path := "{path}"
+                let $uuid := "{uuid}"
+
+                for $doc in collection($path)/xml[@uuid = $uuid]
+                let $user := $doc/@user
+                let $date := $doc/@date
+                return <item user="{{$user}}"
+                        date="{{$date}}"/>
+                    """.format(path=path, uuid=uuid)
+
+            results = []
+            try:
+                res = self.dbhandle.query(query)
+                for r in res.results:
+                    results.append({'user': r.get('uuid'),
+                                    'date': r.get('date')})
+            except ExistDBException as e:
+                raise ProjectDBError(e)
+
+            current_modified = strptime(results[0]['date'], DATE_FORMAT)
+            last_modified = strptime(item_tree.attrib['date'], DATE_FORMAT)
+            if last_modified < current_modified:
+                # Object got saved inbetween
+                msg = ("Saving item failed!<br><br>The object <b>{}</b> was "
+                       "already modified by someone else.<br><br>To continue, "
+                       "please remember your changes and apply them again "
+                       "after closing and loading the project.").format(uuid)
+                raise ProjectDBError(msg)
+            # Update time stamp
+            item_tree.attrib['date'] = strftime(DATE_FORMAT, gmtime())
+
         # XXX: Add a revision/alias to keep old code from blowing up
         item_tree.attrib['revision'] = '0'
         item_tree.attrib['alias'] = 'default'
