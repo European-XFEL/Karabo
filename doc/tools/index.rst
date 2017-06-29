@@ -9,5 +9,5 @@ Contents:
    python
    git
    redmine
+   gdb
 
-   
