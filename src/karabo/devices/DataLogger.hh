@@ -45,6 +45,9 @@ namespace karabo {
 
             boost::mutex m_currentSchemaMutex;
             karabo::util::Schema m_currentSchema;
+            bool m_currentSchemaChanged;
+
+            karabo::util::Schema m_schemaForSlotChanged; // only use within slotChanged
 
             boost::mutex m_configMutex;
             std::fstream m_configStream;
