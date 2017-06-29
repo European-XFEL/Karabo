@@ -171,18 +171,18 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_timeout(self):
-        t = time.time()
+        f = sleep(1000, wait=False)
         with self.assertRaises(TimeoutError):
-            sleep(10, timeout=0.01)
-        self.assertLess(time.time() - t, 9)
+            gather(f, timeout=0.01)
 
         t = time.time()
+        f = sleep(1000, wait=False)
         with self.assertRaises(TimeoutError):
-            sleep(10, timeout=10 * unit.ms)
+            gather(f, timeout=10 * unit.ms)
         self.assertLess(time.time() - t, 1)
 
         with self.assertRaises(DimensionalityError):
-            sleep(10, timeout=10 * unit.meter)
+            gather(10, timeout=10 * unit.meter)
 
     @async_tst
     def test_synchronous_async(self):
