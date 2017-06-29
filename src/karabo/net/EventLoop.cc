@@ -10,7 +10,6 @@
 
 #include "EventLoop.hh"
 #include "karabo/log/Logger.hh"
-#include "karabo/util/StackTrace.hh"
 
 namespace karabo {
     namespace net {
@@ -40,14 +39,12 @@ namespace karabo {
 
         void EventLoop::work() {
 
-            boost::asio::signal_set signals(getIOService(), SIGINT, SIGTERM, SIGSEGV);
+            boost::asio::signal_set signals(getIOService(), SIGINT, SIGTERM);
             EventLoop& loop = instance();
             // TODO: Consider to use ordinary function instead of this lengthy lambda.
             boost::function<void(boost::system::error_code ec, int signo) > signalHandler
                     = [&loop](boost::system::error_code ec, int signo) {
                         if (ec) return;
-
-                        if (signo == SIGSEGV) std::cerr << util::StackTrace() << std::endl;
 
                         {
                             boost::mutex::scoped_lock(loop.m_signalHandlerMutex);
