@@ -14,9 +14,11 @@ from karabo_gui.popupwidget import PopupWidget
 
 
 class BaseTreeWidgetItem(QTreeWidgetItem):
+    isChoiceElement = False
+    isListElement = False
+    description = None
 
     def __init__(self, box, parent, parentItem=None):
-
         if parentItem:
             super(BaseTreeWidgetItem, self).__init__(parentItem)
         else:
@@ -27,40 +29,35 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         # The components can be defined in Subclasses
         self.displayComponent = None
         self.__editableComponent = None
-
-        self.mItem = None
+        self._contextMenu = None
 
         # Popup widget for tooltip info
         self.popupWidget = None
 
-    def setupContextMenu(self):
-        raise NotImplementedError("BaseTreeWidgetItem.setupContextMenu")
-
-    isChoiceElement = False
-    isListElement = False
-    description = None
-
-    # Returns the editable component of the item
-    def _editableComponent(self):
+    @property
+    def editableComponent(self):
+        """Returns the editable component of the item
+        """
         return self.__editableComponent
 
-    def _setEditableComponent(self, component):
+    @editableComponent.setter
+    def editableComponent(self, component):
         if component is None:
             return
 
         self.__editableComponent = component
 
-        self.setupContextMenu()
-        self.treeWidget().setItemWidget(self, 2, self.editableComponent.widget)
+        self._contextMenu = self.setupContextMenu()
+        self.treeWidget().setItemWidget(self, 2, component.widget)
         self.treeWidget().resizeColumnToContents(2)
-    editableComponent = property(fget=_editableComponent,
-                                 fset=_setEditableComponent)
+
+    def setupContextMenu(self):
+        raise NotImplementedError("BaseTreeWidgetItem.setupContextMenu")
 
     def showContextMenu(self):
-        if self.mItem is None:
+        if self._contextMenu is None:
             return
-
-        self.mItem.exec_(QCursor.pos())
+        self._contextMenu.exec_(QCursor.pos())
 
     def setErrorState(self, isError):
         if self.displayComponent:
