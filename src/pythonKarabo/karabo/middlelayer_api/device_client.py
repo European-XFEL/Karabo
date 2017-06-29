@@ -106,33 +106,20 @@ class _WaitUntilNew_old:
 
 
 @synchronize
-def _waitUntilNew_new(*props):
+def waitUntilNew(*props):
     # _new means since 1.5
     futures = []
     for prop in props:
-        proxy = prop._parent
-        future = OneShotQueue(loop=proxy._device._ss.loop)
-        proxy._queues[prop.descriptor.longkey].add(future)
+        if isinstance(prop, ProxyBase):
+            future = OneShotQueue(loop=prop._device._ss.loop)
+            prop._queues[None].add(future)
+        else:
+            proxy = prop._parent
+            future = OneShotQueue(loop=proxy._device._ss.loop)
+            proxy._queues[prop.descriptor.longkey].add(future)
         futures.append(future)
     yield from firstCompleted(*futures)
 
-
-
-
-def waitUntilNew(prop, *props, **kwargs):
-    """wait until a new value for a property is available
-
-    this function waits until any of the given properties of a device changes::
-
-        waitUntilNew(someDevice.someProperty, otherDevice.otherProperty)
-
-    If you want to wait for something to reach a certain value, you may use
-    :func:`waitUntil`. If you want to get all updates of a property, use
-    :class:`Queue`."""
-    if isinstance(prop, ProxyBase):
-        return _WaitUntilNew_old(prop)
-    else:
-        return _waitUntilNew_new(prop, *props, **kwargs)
 
 def _parse_date(date):
     d = dateutil.parser.parse(date)
