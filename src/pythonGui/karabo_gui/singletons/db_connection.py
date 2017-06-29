@@ -217,10 +217,12 @@ class ProjectDatabaseConnection(QObject):
         for item in items:
             domain = item['domain']
             uuid = item['uuid']
+            entry = item['entry']
+            date = entry.get('date') if entry is not None else ''
             success = item['success']
             if not success:
                 messagebox.show_error(item['reason'])
-            self._pop_writing(domain, uuid, success)
+            self._pop_writing(domain, uuid, date, success)
 
     # -------------------------------------------------------------------
     # private interface
@@ -293,13 +295,15 @@ class ProjectDatabaseConnection(QObject):
 
         self._broadcast_is_processing(is_processing)
 
-    def _pop_writing(self, domain, uuid, success):
+    def _pop_writing(self, domain, uuid, date, success):
         # Store previous processing state
         is_processing = self.is_processing()
 
         obj = self._waiting_for_write.pop(uuid)
 
         if success:
+            # Update date
+            obj.date = date
             # Write to the local cache
             data = write_project_model(obj)
             self.cache.store(domain, uuid, data)
