@@ -6,7 +6,8 @@ from asyncio import (async, coroutine, Future, get_event_loop, iscoroutine,
 from functools import wraps
 
 from .basetypes import KaraboValue, unit_registry as unit
-from .eventloop import EventLoop, KaraboFuture, synchronize
+from .eventloop import (EventLoop, KaraboFuture, synchronize,
+                        synchronize_notimeout)
 
 
 def background(task, *args, timeout=-1):
@@ -60,7 +61,7 @@ def gather(*args, return_exceptions=False):
                                       return_exceptions=return_exceptions))
 
 
-@synchronize
+@synchronize_notimeout
 def sleep(delay, result=None):
     """do nothing for *delay* seconds
 
