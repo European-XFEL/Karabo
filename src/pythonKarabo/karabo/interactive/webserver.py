@@ -26,6 +26,7 @@ mainpage = """
       <button name="cmd" value="down">Stop</button>
       <button name="cmd" value="once">Start once</button>
       <button name="cmd" value="kill">Kill</button>
+      <button name="cmd" value="group">Kill Group</button>
     </form>
   </body>
 </html>
@@ -66,7 +67,8 @@ def control_service(server_id, command):
     svc_ctrl = {'up': 'u',
                 'down': 'd',
                 'once': 'o',
-                'kill': 'k'}
+                'kill': '=k',
+                'group': '+k'}
     ctrl = absolute("var", "service", server_id, "supervise", "control")
     if command not in svc_ctrl:
         return False
@@ -92,8 +94,8 @@ def getdata(name):
         path = absolute("var", "service", name, "supervise", "status")
         with open(path, "rb") as fin:
             status = fin.read()
-        pid, paused, want = unpack("<12xI?c", status)
-        tai, = unpack(">Q10x", status)
+        pid, paused, want, flag = unpack("<12xI?cbx", status)
+        tai, = unpack(">Q12x", status)
 
         timestamp = tai - 4611686018427387914  # from deamontool's tai.h
         tsince = time.localtime(timestamp)
@@ -102,11 +104,15 @@ def getdata(name):
         duration = time.mktime(time.localtime()) - start_time
         status = "up" if pid else "down"
         if pid and paused:
-            status += "paused, "
+            status += ", paused"
         if pid and want == b"d":
             status += ", want down"
         elif not pid and want == b"u":
             status += ", want up"
+        status += ", " + ["stopped", "starting", "started", "running",
+                          "stopping", "failed", "orphanage"][flag]
+        if pid and want == b"\0":
+            status += ", once"
 
         return {'name': name, 'status': status,
                 'since': since, 'duration': duration}
