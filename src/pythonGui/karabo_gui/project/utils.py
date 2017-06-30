@@ -15,7 +15,7 @@ from karabo.common.project.api import (
     DeviceServerModel, ProjectModel, device_instance_exists,
     recursive_save_object, read_lazy_object
 )
-from karabo.common.scenemodel.api import read_scene
+from karabo.common.scenemodel.api import SceneLinkModel, SceneModel, read_scene
 from karabo.middlelayer import Hash, read_project_model
 from karabo_gui.enums import KaraboSettings
 from karabo_gui.events import broadcast_event, KaraboEventSender
@@ -216,16 +216,46 @@ def save_as_object(obj):
     :param obj A project model object
     """
     from karabo_gui.project.dialog.project_handle import NewProjectDialog
+    # Map old scene UUIDs to new UUIDs
+    scene_uuids = {}
+    # Store all scene link references
+    scene_links = []
 
     def _visitor(model):
         if isinstance(model, BaseProjectObjectModel):
+            old_uuid = model.uuid
             model.reset_uuid()
+            if isinstance(model, SceneModel):
+                # Keep track of new UUIDs
+                scene_uuids[old_uuid] = model.uuid
+        elif isinstance(model, SceneLinkModel):
+            scene_links.append(model)
+
+    def _replace_scene_link_uuids():
+        for link in scene_links:
+            parts = link.target.split(':')
+            if len(parts) != 2:
+                break
+            # target format => "simple_name:UUID"
+            simple_name = parts[0]
+            old_uuid = parts[1]
+            if old_uuid in scene_uuids:
+                new_uuid = scene_uuids[old_uuid]
+                target = "{}:{}".format(simple_name, new_uuid)
+                link.target = target
+            else:
+                msg = "Linked scene <br><b>{}</b><br> not found.".format(
+                    link.target)
+                messagebox.show_warning(msg, "Broken scene link")
 
     assert isinstance(obj, ProjectModel)
     dialog = NewProjectDialog(model=obj)
     if dialog.exec() == QDialog.Accepted:
         obj.simple_name = dialog.simple_name
+        # Reset UUIDs and take proper care of scene links
         walk_traits_object(obj, _visitor)
+        # Replace old scene link UUIDs with new ones
+        _replace_scene_link_uuids()
         # Set all child object of the given ``obj`` to modified to actually
         # save the complete tree to the new domain
         set_modified_flag(obj, value=True)
