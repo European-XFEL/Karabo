@@ -1,11 +1,13 @@
-from time import gmtime, strftime, time
+from time import gmtime, strftime, strptime, time
 from unittest import TestCase
 from uuid import uuid4
 
 from lxml import etree
 
 from karabo.project_db.project_database import ProjectDatabase
-from karabo.project_db.util import stop_database
+from karabo.project_db.util import ProjectDBError, stop_database
+
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
 def _gen_uuid():
@@ -170,7 +172,7 @@ class TestProjectDatabase(TestCase):
                 # Save three consecutive versions
                 for i in range(MAX_REV, 0, -1):
                     # consecutive dates beginning a few seconds ago
-                    date = strftime("%Y-%m-%d %H:%M:%S", gmtime(earlier+i))
+                    date = strftime(DATE_FORMAT, gmtime(earlier+i))
                     xml = xml_rep.format(uuid=versioned_uuid, revision=i,
                                          date=date)
                     path = "{}/{}/{}_{}".format(db.root, 'LOCAL',
@@ -185,7 +187,7 @@ class TestProjectDatabase(TestCase):
                 self.assertEqual(int(itemxml.get('revision')), MAX_REV)
 
                 # Write it back with save_item
-                date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+                date = strftime(DATE_FORMAT, gmtime())
                 xml_rep = """
                 <xml uuid="{uuid}" date="{date}" user="sue">foo</xml>
                 """.format(uuid=versioned_uuid, date=date)
@@ -195,5 +197,53 @@ class TestProjectDatabase(TestCase):
                 res = db.load_item('LOCAL', [versioned_uuid])
                 itemxml = db._make_xml_if_needed(res[0]['xml'])
                 self.assertEqual(itemxml.get('revision'), '0')
+
+            stop_database()
+
+    def test_save_check_modification(self):
+        proj_uuid = _gen_uuid()
+
+        with ProjectDatabase(self.user, self.password, server='localhost',
+                             test_mode=True) as db:
+
+            path = "{}/{}".format(db.root, 'LOCAL')
+            if db.dbhandle.hasCollection(path):
+                db.dbhandle.removeCollection(path)
+
+            # make sure we have the LOCAL collection and subcollections
+            path = "{}/{}".format(db.root, 'LOCAL')
+            if not db.dbhandle.hasCollection(path):
+                db.dbhandle.createCollection(path)
+
+            with self.subTest(msg='test_save_item'):
+                date = "2011-11-01 09:00:52"
+                xml_rep = """
+                <xml uuid="{uuid}" date="{date}">foo</xml>
+                """.format(uuid=proj_uuid, date=date)
+
+                success = True
+                try:
+                    meta = db.save_item('LOCAL', proj_uuid, xml_rep)
+                except ProjectDBError as e:
+                    success = False
+
+                self.assertTrue(success)
+                self.assertTrue('date' in meta)
+                new_date = meta['date']
+                self.assertNotEqual(new_date, date)
+                date_t = strptime(date, DATE_FORMAT)
+                current_date_t = strptime(new_date, DATE_FORMAT)
+                self.assertLess(date_t, current_date_t)
+
+                # Try saving again but using same time stamp
+                success = True
+                reason = ""
+                try:
+                    meta = db.save_item('LOCAL', proj_uuid, xml_rep)
+                except ProjectDBError as e:
+                    success = False
+                    reason = str(e)
+                self.assertFalse(success)
+                self.assertTrue(reason)
 
             stop_database()
