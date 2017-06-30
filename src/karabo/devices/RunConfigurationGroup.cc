@@ -115,7 +115,7 @@ namespace karabo {
                     .assignmentOptional().noDefaultValue()
                     .reconfigurable()
                     .commit();
-
+            // Converted internally into group_saveGroupConfiguration
             SLOT_ELEMENT(expected).key("group.saveGroupConfiguration")
                     .displayedName("Save configuration")
                     .description("Push the button to save configuration in 'run_config_group' folder.")
