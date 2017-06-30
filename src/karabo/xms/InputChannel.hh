@@ -144,6 +144,20 @@ namespace karabo {
             void triggerEndOfStreamEvent();
 
             /**
+             * Returns the number of bytes read since the last call of this method
+             *
+             * See karabo::util::TcpChannel::dataQuantityRead()
+             */
+            size_t dataQuantityRead();
+
+            /**
+             * Returns the number of bytes written since the last call of this method
+             *
+             * See karabo::util::TcpChannel::dataQuantityWritten()
+             */
+            size_t dataQuantityWritten();
+
+            /**
              * Returns a map of between  "output channel string" and "output channel info" Hash
              * outputChannelString (STRING) represented like "instanceId@channelName" or "instanceId:channelName"
              * outputChannelInfo contains connection parameters or is empty, depending on connection state.
