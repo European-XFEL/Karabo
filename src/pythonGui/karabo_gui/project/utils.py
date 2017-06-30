@@ -218,6 +218,8 @@ def save_as_object(obj):
     from karabo_gui.project.dialog.project_handle import NewProjectDialog
     # Map old scene UUIDs to new UUIDs
     scene_uuids = {}
+    # Store all scene link references
+    scene_links = []
 
     def _visitor(model):
         nonlocal scene_uuids
@@ -227,25 +229,21 @@ def save_as_object(obj):
             if isinstance(model, SceneModel):
                 # Keep track of new UUIDs
                 scene_uuids[old_uuid] = model.uuid
+        elif isinstance(model, SceneLinkModel):
+            scene_links.append(model)
 
-    def _replace_scene_links(model):
-
-        def _recurse(parent):
-            for child in parent.children:
-                if isinstance(child, SceneLinkModel):
-                    parts = child.target.split(':')
-                    if len(parts) != 2:
-                        break
-                    # target format => "simple_name:UUID"
-                    simple_name = parts[0]
-                    old_uuid = parts[1]
-                    if old_uuid in scene_uuids:
-                        new_uuid = scene_uuids[old_uuid]
-                        target = "{}:{}".format(simple_name, new_uuid)
-                        child.target = target
-
-        if isinstance(model, SceneModel):
-            _recurse(model)
+    def _replace_scene_link_uuids():
+        for link in scene_links:
+            parts = link.target.split(':')
+            if len(parts) != 2:
+                break
+            # target format => "simple_name:UUID"
+            simple_name = parts[0]
+            old_uuid = parts[1]
+            if old_uuid in scene_uuids:
+                new_uuid = scene_uuids[old_uuid]
+                target = "{}:{}".format(simple_name, new_uuid)
+                link.target = target
 
     assert isinstance(obj, ProjectModel)
     dialog = NewProjectDialog(model=obj)
@@ -254,7 +252,7 @@ def save_as_object(obj):
         # Reset UUIDs and take proper care of scene links
         walk_traits_object(obj, _visitor)
         # Replace old scene link UUIDs with new ones
-        walk_traits_object(obj, _replace_scene_links)
+        _replace_scene_link_uuids()
         # Set all child object of the given ``obj`` to modified to actually
         # save the complete tree to the new domain
         set_modified_flag(obj, value=True)
