@@ -222,7 +222,6 @@ def save_as_object(obj):
     scene_links = []
 
     def _visitor(model):
-        nonlocal scene_uuids
         if isinstance(model, BaseProjectObjectModel):
             old_uuid = model.uuid
             model.reset_uuid()
@@ -244,6 +243,10 @@ def save_as_object(obj):
                 new_uuid = scene_uuids[old_uuid]
                 target = "{}:{}".format(simple_name, new_uuid)
                 link.target = target
+            else:
+                msg = "Linked scene <br><b>{}</b><br> not found.".format(
+                    link.target)
+                messagebox.show_warning(msg, "Broken scene link")
 
     assert isinstance(obj, ProjectModel)
     dialog = NewProjectDialog(model=obj)
