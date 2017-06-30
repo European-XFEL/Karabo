@@ -30,6 +30,10 @@ class TableTreeWidgetItem(BaseTreeWidgetItem):
         self.setText(0, text)
         self.treeWidget().resizeColumnToContents(0)
 
+    def destroy(self):
+        """Give item subclasses a chance to clean up signal connections"""
+        self.box.signalUpdateComponent.disconnect(self.onDisplayValueChanged)
+
     def setupContextMenu(self):
         # item specific menu
         # add actions from attributeWidget
