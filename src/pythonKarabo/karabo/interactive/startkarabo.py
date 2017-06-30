@@ -158,8 +158,11 @@ def killkarabo():
     -a
       send an ALRM signal
 
-    Several signals can be given on the command line. A "-l" signifies that not
-    the device server, but its logger is meant.
+    Several signals can be given on the command line. A "-l" signifies that
+    not the device server, but its logger is meant. A + sign before a signal
+    means (as in -+k) that the signal should be sent to the entire process
+    group. This may be used to kill all bound Python devices of a device
+    server.
 
     There are other commands that can be given to a device server:
 
@@ -300,6 +303,7 @@ def adddeviceserver():
                 server_type=server_type, server_id=server_id,
                 options="'{}'".format("' '".join(options)) if options else ""))
         open(osp.join(tmpdir, "down"), "w").close()
+        open(osp.join(tmpdir, "orphanage"), "w").close()
         os.mkdir(osp.join(tmpdir, "log"))
         with open(osp.join(tmpdir, "log", "run"), "w", opener=os.open) as fout:
             fout.write(logger_template.format(target_dir=target_dir))
