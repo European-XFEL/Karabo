@@ -233,8 +233,8 @@ class Tests(DeviceTest):
             sleep(0.01)
             executeNoWait(d, "count")
             for i in range(30):
-                j = waitUntilNew(d).counter
-                self.assertEqual(i, j)
+                waitUntilNew(d.counter)
+                self.assertEqual(i, d.counter)
 
     @async_tst
     def test_print(self):
