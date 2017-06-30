@@ -107,6 +107,7 @@ if __name__ == '__main__':
                         'karabo-gui=karabo_gui.main:main',
                         'project-runner=karabo_gui.project.runner:main',
                         'scene-runner=karabo_gui.sceneview.runner:main',
+                        'navigation-runner=karabo_gui.topology.runner:main',
                         ]},
           # Add an alias for 'build' so we can prepare data for Windows
           cmdclass={WINDOWS_BUILDER: distutils.command.build.build},
