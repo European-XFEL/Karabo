@@ -51,6 +51,9 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         self.treeWidget().setItemWidget(self, 2, component.widget)
         self.treeWidget().resizeColumnToContents(2)
 
+    def destroy(self):
+        """Give item subclasses a chance to clean up signal connections"""
+
     def setupContextMenu(self):
         raise NotImplementedError("BaseTreeWidgetItem.setupContextMenu")
 
