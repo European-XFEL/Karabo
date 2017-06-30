@@ -43,7 +43,11 @@ namespace karabo {
 
             std::string m_deviceToBeLogged;
 
+            boost::mutex m_currentSchemaMutex;
             karabo::util::Schema m_currentSchema;
+            bool m_currentSchemaChanged;
+
+            karabo::util::Schema m_schemaForSlotChanged; // only use within slotChanged
 
             boost::mutex m_configMutex;
             std::fstream m_configStream;
@@ -53,8 +57,8 @@ namespace karabo {
             karabo::util::Timestamp m_lastDataTimestamp;
             bool m_pendingLogin;
 
-            std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap;
-            std::vector<std::string> m_idxprops;
+            std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap; // protect by m_configMutex!
+            std::vector<std::string> m_idxprops; // needs no mutex as long as used only in slotChanged
             size_t m_propsize;
             time_t m_lasttime;
 
