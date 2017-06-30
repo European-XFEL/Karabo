@@ -128,7 +128,7 @@ class SystemTree(HasStrictTraits):
         return existing_devices, server_class_keys
 
     def find(self, node_id, access_level=None, case_sensitive=True,
-             use_reg_ex=False):
+             use_reg_ex=False, match_case=False):
         """Find all nodes with the given `node_id` and return them in a list
 
         :param node_id: The actual string we are looking for in the tree
@@ -154,7 +154,10 @@ class SystemTree(HasStrictTraits):
                 # Do not look for nodes which are not visible or its parent
                 return
 
-            match = regex.match(node.node_id)
+            if match_case:
+                match = regex.fullmatch(node.node_id)
+            else:
+                match = regex.match(node.node_id)
             if match is not None:
                 found_nodes.append(node)
 
