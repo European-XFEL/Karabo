@@ -341,7 +341,7 @@ class NavigationTreeModel(QAbstractItemModel):
         self.signalItemChanged.emit(item_type, conf)
 
     def _toggleMonitoring(self, device_id, monitoring):
-        nodes = self.tree.find(device_id)
+        nodes = self.tree.find(device_id, match_case=True)
         assert len(nodes) <= 1
         if nodes:
             node = nodes[0]
