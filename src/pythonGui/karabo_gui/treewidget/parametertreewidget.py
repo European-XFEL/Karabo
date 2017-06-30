@@ -45,8 +45,18 @@ class ParameterTreeWidget(QTreeWidget):
     def clear(self):
         """The components in the tree are children of this widget.
         They must be deleted by Qt, otherwise they'll still receive
-        signals."""
-        QTreeWidget.clear(self)
+        signals.
+        """
+        def _recursive_destroy(parent):
+            for i in range(parent.childCount()):
+                item = parent.child(i)
+                item.destroy()
+                _recursive_destroy(item)
+
+        # Tell all the items to destroy themselves before clearing the widget
+        _recursive_destroy(self.invisibleRootItem())
+        super(ParameterTreeWidget, self).clear()
+
         for c in self.children():
             if isinstance(c, BaseComponent):
                 c.setParent(None)

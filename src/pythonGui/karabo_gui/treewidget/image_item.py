@@ -5,6 +5,7 @@
 #############################################################################
 from karabo_gui.components import DisplayComponent
 import karabo_gui.icons as icons
+from karabo_gui.util import write_only_property
 from .base_item import BaseTreeWidgetItem
 
 
@@ -18,6 +19,6 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 
-    def _setText(self, text):
+    @write_only_property
+    def displayText(self, text):
         self.setText(0, text)
-    displayText = property(fset=_setText)
