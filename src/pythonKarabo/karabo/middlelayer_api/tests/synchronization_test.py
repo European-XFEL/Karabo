@@ -214,11 +214,10 @@ class Tests(DeviceTest):
     def test_firstCompleted_sync(self):
         slow = background(sleep, 1000)
         fast = background(sleep, 0.001, "some result")
-        err = background(lambda: 1/0)
-        done, pending, error = firstCompleted(slow=slow, fast=fast, err=err)
+        done, pending, error = firstCompleted(slow=slow, fast=fast)
         self.assertEqual(done, {"fast": "some result"})
         self.assertEqual(list(pending.keys()), ["slow"])
-        self.assertIsInstance(error["err"], ZeroDivisionError)
+        self.assertFalse(error)
         self.assertIs(pending["slow"], slow)
         pending["slow"].cancel()
 
