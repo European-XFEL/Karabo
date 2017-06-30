@@ -129,7 +129,7 @@ namespace karabo {
 
             KARABO_SYSTEM_SIGNAL("signalGetGroup", string, Hash);
             KARABO_SLOT(slotGetGroup);
-            KARABO_SLOT(saveGroupConfiguration);
+            KARABO_SLOT(group_saveGroupConfiguration);
         }
 
 
@@ -156,7 +156,7 @@ namespace karabo {
         }
 
 
-        void RunConfigurationGroup::saveGroupConfiguration() {
+        void RunConfigurationGroup::group_saveGroupConfiguration() {
             karabo::io::saveToFile<Hash>(get<Hash>("group"), "run_config_groups/" + getInstanceId() + ".xml");
         }
 
