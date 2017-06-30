@@ -60,6 +60,16 @@ class SignalBlocker(object):
         self.object.blockSignals(self.state)
 
 
+class write_only_property(object):
+    """Like @property but for attribute which can only be assigned to.
+    """
+    def __init__(self, func):
+        self.func = func
+
+    def __set__(self, obj, value):
+        return self.func(obj, value)
+
+
 def generateObjectName(widget):
     return "{0}_{1}".format(widget.__class__.__name__, uuid4().hex)
 
