@@ -8,6 +8,7 @@ from PyQt4.QtGui import QAction, QMenu
 
 from karabo_gui.components import DisplayComponent
 import karabo_gui.icons as icons
+from karabo_gui.util import write_only_property
 from .base_item import BaseTreeWidgetItem
 
 
@@ -17,20 +18,29 @@ class TableTreeWidgetItem(BaseTreeWidgetItem):
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, icons.folder)
 
-        self.displayComponent = DisplayComponent("DisplayTableElement",
-                                                 self.box, self.treeWidget())
+        self.displayComponent = DisplayComponent("DisplayTableElement", box,
+                                                 self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 
         box.signalUpdateComponent.connect(self.onDisplayValueChanged)
 
+    @write_only_property
+    def displayText(self, text):
+        self.setText(0, text)
+        self.treeWidget().resizeColumnToContents(0)
+
+    def destroy(self):
+        """Give item subclasses a chance to clean up signal connections"""
+        self.box.signalUpdateComponent.disconnect(self.onDisplayValueChanged)
+
     def setupContextMenu(self):
         # item specific menu
         # add actions from attributeWidget
         if self.editableComponent is None:
-            return
+            return None
 
-        self.mItem = QMenu()
+        menu = QMenu()
         text = "Reset to default"
         self.__acResetToDefault = QAction(icons.revert, text, None)
         self.__acResetToDefault.setStatusTip(text)
@@ -38,18 +48,14 @@ class TableTreeWidgetItem(BaseTreeWidgetItem):
         self.__acResetToDefault.setIconVisibleInMenu(True)
         self.__acResetToDefault.triggered.connect(self.onSetToDefault)
 
-        self.mItem.addAction(self.__acResetToDefault)
-        self.mItem.addSeparator()
-
-    def _setText(self, text):
-        self.setText(0, text)
-        self.treeWidget().resizeColumnToContents(0)
-    displayText = property(fset=_setText)
+        menu.addAction(self.__acResetToDefault)
+        menu.addSeparator()
+        return menu
 
     def setReadOnly(self, readOnly):
         if self.editableComponent is not None:
             self.editableComponent.setEnabled(not readOnly)
-        BaseTreeWidgetItem.setReadOnly(self, readOnly)
+        super(TableTreeWidgetItem, self).setReadOnly(readOnly)
 
     def onSetToDefault(self):
         self.box.descriptor.setDefault(self.box)
