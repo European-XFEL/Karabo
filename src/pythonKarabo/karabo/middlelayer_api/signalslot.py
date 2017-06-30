@@ -334,11 +334,9 @@ class SignalSlotable(Configurable):
     @coroutine
     def _call_once_alive(self, deviceId, slot, *args):
         """try to call slot, wait until device becomes alive if needed"""
-        done, pending = yield from firstCompleted(
+        done, pending, error = yield from firstCompleted(
             newdevice=self._new_device_futures[deviceId],
             call=self.call(deviceId, slot, *args))
-        for p in pending.values():
-            p.cancel()
         if "call" in done:
             return done["call"]
         elif "newdevice" in done:
