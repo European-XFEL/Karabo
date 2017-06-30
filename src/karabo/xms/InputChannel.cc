@@ -154,6 +154,23 @@ namespace karabo {
             m_endOfStreamHandler = endOfStreamEventHandler;
         }
 
+        size_t InputChannel::dataQuantityRead() {
+            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            size_t bytesRead = 0;
+            for (auto it = m_openConnections.begin(); it != m_openConnections.end(); ++it) {
+                bytesRead += it->second.second->dataQuantityRead();
+            }
+            return bytesRead;
+        }
+
+        size_t InputChannel::dataQuantityWritten() {
+            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            size_t bytesWritten = 0;
+            for (auto it = m_openConnections.begin(); it != m_openConnections.end(); ++it) {
+                bytesWritten += it->second.second->dataQuantityWritten();
+            }
+            return bytesWritten;
+        }
 
         std::map<std::string, karabo::util::Hash> InputChannel::getConnectedOutputChannels() {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);

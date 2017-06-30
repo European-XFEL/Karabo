@@ -96,11 +96,58 @@ namespace karabo {
                     .minExc(500).maxInc(5000)  // NOTE: Not _too_ fast. The device instantiation timer is always running!
                     .commit();
 
+            UINT32_ELEMENT(expected).key("connectedClientCount")
+                    .displayedName("Connected clients count")
+                    .description("The number of clients currently connected to the server.")
+                    .readOnly().initialValue(0)
+                    .commit();
+
+            NODE_ELEMENT(expected).key("networkPerformance")
+                    .displayedName("Network performance monitoring")
+                    .description("Contains information about how much data is being read/written from/to the network")
+                    .commit();
+
+            INT32_ELEMENT(expected).key("networkPerformance.sampleInterval")
+                    .displayedName("Sample interval")
+                    .description("Minimum interval between subsequent network performance recordings.")
+                    .unit(Unit::SECOND)
+                    .assignmentOptional().defaultValue(5)
+                    .reconfigurable()
+                    .minInc(1).maxInc(3600)  // Once per second to once per hour
+                    .commit();
+
+            UINT64_ELEMENT(expected).key("networkPerformance.clientBytesRead")
+                    .displayedName("Bytes read from clients")
+                    .description("The number of bytes read from the network in the last `sampleInterval` seconds")
+                    .readOnly().initialValue(0)
+                    .commit();
+
+            UINT64_ELEMENT(expected).key("networkPerformance.clientBytesWritten")
+                    .displayedName("Bytes written to clients")
+                    .description("The number of bytes written to the network in the last `sampleInterval` seconds")
+                    .readOnly().initialValue(0)
+                    .commit();
+
+            UINT64_ELEMENT(expected).key("networkPerformance.pipelineBytesRead")
+                    .displayedName("Bytes read from pipeline connections")
+                    .description("The number of bytes read from the network in the last `sampleInterval` seconds")
+                    .readOnly().initialValue(0)
+                    .commit();
+
+            UINT64_ELEMENT(expected).key("networkPerformance.pipelineBytesWritten")
+                    .displayedName("Bytes written to pipeline connections")
+                    .description("The number of bytes written to the network in the last `sampleInterval` seconds")
+                    .readOnly().initialValue(0)
+                    .commit();
+
+
         }
 
 
-        GuiServerDevice::GuiServerDevice(const Hash& config) : Device<>(config),
-        m_deviceInitTimer(EventLoop::getIOService()) {
+        GuiServerDevice::GuiServerDevice(const Hash& config)
+        : Device<>(config)
+        , m_deviceInitTimer(EventLoop::getIOService())
+        , m_networkStatsTimer(EventLoop::getIOService()) {
 
             KARABO_INITIAL_FUNCTION(initialize)
 
@@ -174,6 +221,7 @@ namespace karabo {
                 m_guiDebugProducer = getConnection()->createProducer();
 
                 startDeviceInstantiation();
+                startNetworkMonitor();
 
                 // Produce some information
                 KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port");
@@ -198,6 +246,51 @@ namespace karabo {
             m_deviceInitTimer.expires_from_now(boost::posix_time::milliseconds(get<int>("waitInitDevice")));
             m_deviceInitTimer.async_wait(bind_weak(&karabo::devices::GuiServerDevice::initSingleDevice, this, boost::asio::placeholders::error));
         }
+
+        void GuiServerDevice::startNetworkMonitor() {
+            m_networkStatsTimer.expires_from_now(boost::posix_time::seconds(get<int>("networkPerformance.sampleInterval")));
+            m_networkStatsTimer.async_wait(bind_weak(&karabo::devices::GuiServerDevice::collectNetworkStats, this, boost::asio::placeholders::error));
+        }
+
+        void GuiServerDevice::collectNetworkStats(const boost::system::error_code& error) {
+            if (error) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Network monitor timer was cancelled!";
+                return;
+            }
+
+            size_t clientBytesRead = 0, clientBytesWritten = 0;
+            {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    clientBytesRead += it->first->dataQuantityRead();
+                    clientBytesWritten += it->first->dataQuantityWritten();
+                }
+            }
+
+            size_t pipeBytesRead = 0, pipeBytesWritten = 0;
+            {
+                boost::mutex::scoped_lock lock(m_networkMutex);
+                for (auto it = m_networkConnections.begin(); it != m_networkConnections.end(); ) {
+                    karabo::xms::InputChannel::Pointer channel = it->first;
+
+                    pipeBytesRead += channel->dataQuantityRead();
+                    pipeBytesWritten += channel->dataQuantityWritten();
+
+                    // m_networkConnections is a multimap. Go to the next non-duplicate key.
+                    do {
+                        ++it;
+                    } while (it != m_networkConnections.end() && channel != it->first);
+                }
+            }
+
+            set(Hash("networkPerformance.clientBytesRead", static_cast<unsigned long long>(clientBytesRead),
+                     "networkPerformance.clientBytesWritten", static_cast<unsigned long long>(clientBytesWritten),
+                     "networkPerformance.pipelineBytesRead", static_cast<unsigned long long>(pipeBytesRead),
+                     "networkPerformance.pipelineBytesWritten", static_cast<unsigned long long>(pipeBytesWritten)));
+
+            startNetworkMonitor();
+        }
+
 
         void GuiServerDevice::onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
             if (e) return;
@@ -240,6 +333,8 @@ namespace karabo {
         void GuiServerDevice::registerConnect(const karabo::net::Channel::Pointer & channel) {
             boost::mutex::scoped_lock lock(m_channelMutex);
             m_channels[channel] = std::set<std::string > (); // maps channel to visible instances
+            // Update the number of clients connected
+            set("connectedClientCount", static_cast<unsigned int>(m_channels.size()));
         }
 
 
@@ -1007,6 +1102,9 @@ namespace karabo {
                         m_channels.erase(it);
                     }
                     KARABO_LOG_FRAMEWORK_INFO << m_channels.size() << " client(s) left.";
+
+                    // Update the number of clients connected
+                    set("connectedClientCount", static_cast<unsigned int>(m_channels.size()));
                 }
 
                 // Now check all devices that this channel had interest in and decrement counter.
