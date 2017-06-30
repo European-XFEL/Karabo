@@ -67,6 +67,7 @@ namespace karabo {
             mutable boost::mutex m_pendingInstantiationsMutex;
 
             boost::asio::deadline_timer m_deviceInitTimer;
+            boost::asio::deadline_timer m_networkStatsTimer;
 
             karabo::net::JmsConsumer::Pointer m_loggerConsumer;
             std::map<std::string, int> m_monitoredDevices;
@@ -104,6 +105,16 @@ namespace karabo {
              * Starts the deadline timer which throttles device instantiation.
              */
             void startDeviceInstantiation();
+
+            /**
+             * Starts the deadline timer which triggers network stats collection
+             */
+            void startNetworkMonitor();
+
+            /**
+             * Preform network stats collection
+             */
+            void collectNetworkStats(const boost::system::error_code& error);
 
             /**
              * writes a message  to the specified channel with the given priority

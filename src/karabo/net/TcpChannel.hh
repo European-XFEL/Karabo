@@ -60,6 +60,9 @@ namespace karabo {
             unsigned int m_headerSize;
             boost::mutex m_queueMutex;
             std::vector<karabo::net::Queue::Pointer> m_queue;
+            std::vector<size_t> m_queueWrittenBytes;
+            size_t m_readBytes;
+            size_t m_writtenBytes;
             std::atomic<bool> m_writeInProgress;
             bool m_quit;
             unsigned long long m_syncCounter;
@@ -230,6 +233,10 @@ namespace karabo {
 
             void writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data, const WriteCompleteHandler& handler);
 
+            virtual size_t dataQuantityRead();
+
+            virtual size_t dataQuantityWritten();
+
             virtual void close();
 
             virtual bool isOpen();
@@ -276,7 +283,7 @@ namespace karabo {
             
         private:
 
-            void onBytesAvailable(const ErrorCode& error, const ReadRawHandler& handler);
+            void onBytesAvailable(const ErrorCode& error, const size_t length, const ReadRawHandler& handler);
 
             /**
              * Internal default handler
@@ -333,9 +340,9 @@ namespace karabo {
             void read(char*& data, size_t& size, char*& hdr, size_t& hsize);
             void write(const char* header, const size_t& headerSize, const char* body, const size_t& bodySize);
 
-            void asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler);
-            void asyncWriteHandlerBody(const ErrorCode& e, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& body);
-            void asyncWriteHandlerHeaderBody(const ErrorCode& e, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& header, const boost::shared_ptr<std::vector<char> >& body);
+            void asyncWriteHandler(const ErrorCode& e, const size_t length, const Channel::WriteCompleteHandler& handler);
+            void asyncWriteHandlerBody(const ErrorCode& e, const size_t length, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& body);
+            void asyncWriteHandlerHeaderBody(const ErrorCode& e, const size_t length, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& header, const boost::shared_ptr<std::vector<char> >& body);
 
             // MQ support methods
         private:
@@ -350,7 +357,7 @@ namespace karabo {
 
             void doWrite();
 
-            void doWriteHandler(Message::Pointer& msg, boost::system::error_code, std::size_t length);
+            void doWriteHandler(Message::Pointer& msg, boost::system::error_code, const size_t length, const int queueIndex);
 
         };
     }
