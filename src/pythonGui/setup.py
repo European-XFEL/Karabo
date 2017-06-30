@@ -104,10 +104,11 @@ if __name__ == '__main__':
             json.dump(metadata, fp)
 
     setup(entry_points={'console_scripts': [
-                        'karabo-gui=karabo_gui.main:main',
-                        'project-runner=karabo_gui.project.runner:main',
-                        'scene-runner=karabo_gui.sceneview.runner:main',
-                        ]},
+                'karabo-gui=karabo_gui.programs.gui_runner:main',
+                'project-runner=karabo_gui.programs.project_runner:main',
+                'scene-runner=karabo_gui.programs.scene_runner:main',
+                'navigation-runner=karabo_gui.programs.navigation_runner:main',
+            ]},
           # Add an alias for 'build' so we can prepare data for Windows
           cmdclass={WINDOWS_BUILDER: distutils.command.build.build},
           **metadata)
