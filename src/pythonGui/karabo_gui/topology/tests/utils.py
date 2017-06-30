@@ -64,22 +64,25 @@ def system_hash_server_and_plugins():
         'host': 'exflpxc_something',
         'visibility': AccessLevel.OBSERVER,
         'deviceClasses': ['FooClass', 'BarClass'],
-        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER,
+                         AccessLevel.OBSERVER]
     }
     h['server.samedeviceclasses'] = None
     h['server.samedeviceclasses', ...] = {
         'host': 'exflpxc_something',
         'visibility': AccessLevel.EXPERT,
-        'deviceClasses': ['FooClass', 'BlahClass'],
-        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
+        'deviceClasses': ['FooClass', 'BlahClass', 'HooClass_0'],
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER,
+                         AccessLevel.OBSERVER]
     }
 
     h['server.differentaccesslevel'] = None
     h['server.differentaccesslevel', ...] = {
         'host': 'exflpxc_something',
         'visibility': AccessLevel.EXPERT,
-        'deviceClasses': ['FooClass', 'BarClass'],
-        'visibilities': [AccessLevel.OBSERVER, AccessLevel.EXPERT]
+        'deviceClasses': ['FooClass', 'BarClass', 'HooClass_1'],
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.EXPERT,
+                         AccessLevel.OBSERVER]
     }
 
     return h
