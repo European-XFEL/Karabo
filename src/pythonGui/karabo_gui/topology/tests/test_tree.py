@@ -103,7 +103,7 @@ def test_tree_find():
     kwargs['use_reg_ex'] = True
     assert len(tree.find('(.*)fooclass', **kwargs)) == 3
     assert len(tree.find('HooClass', **kwargs)) == 2
-    kwargs['match_case'] = True
+    kwargs['full_match'] = True
     assert len(tree.find('HooClass', **kwargs)) == 0
     assert len(tree.find('HooClass_0', **kwargs)) == 1
     assert len(tree.find('HooClass_1', **kwargs)) == 1
