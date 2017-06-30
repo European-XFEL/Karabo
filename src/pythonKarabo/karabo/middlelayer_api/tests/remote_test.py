@@ -204,7 +204,7 @@ class Tests(DeviceTest):
             d.unit_vector_int = [3, 4, 5] * unit.meter / unit.second
             d.unit_vector_float = [1, 2, 3]
             d.string_list = ["a", "bla"]
-            yield from waitUntilNew(d).string_list
+            yield from waitUntilNew(d.string_list)
 
             self.assertEqual(d.string, "bla")
             self.assertLess(abs(d.string.timestamp.toTimestamp() -
@@ -250,7 +250,7 @@ class Tests(DeviceTest):
             d.unit_vector_int = [2, 3, 4] * unit.meter / unit.second
             d.unit_vector_float = [5, 7, 8] * unit.degree
             d.string_list = []
-            yield from waitUntilNew(d).string_list
+            yield from waitUntilNew(d.string_list)
 
             self.assertEqual(d.unit_int, 5000 * unit.meter)
             self.assertEqual(d.unit_float, 2 * unit.millisecond)
@@ -477,21 +477,7 @@ class Tests(DeviceTest):
                 yield from task
 
     @async_tst
-    def test_waituntilnew_old(self):
-        """test the waitUntilNew coroutine for properties"""
-        with (yield from getDevice("remote")) as d:
-            d.counter = 0
-            yield from sleep(0.1)
-            task = async(d.count())
-            try:
-                for i in range(30):
-                    j = yield from waitUntilNew(d).counter
-                    self.assertEqual(i, j)
-            finally:
-                yield from task
-
-    @async_tst
-    def test_waituntilnew_new(self):
+    def test_waituntilnew(self):
         """test the waitUntilNew coroutine for properties"""
         self.remote.counter = None
         with (yield from getDevice("remote")) as d:
@@ -518,8 +504,8 @@ class Tests(DeviceTest):
             task = async(d.count())
             try:
                 for i in range(30):
-                    h = yield from waitUntilNew(d)
-                    self.assertEqual(i, h["counter"])
+                    h = yield from async(waitUntilNew(d))
+                    self.assertEqual(i, d.counter)
             finally:
                 yield from task
 
