@@ -1,7 +1,7 @@
 import os
 from contextlib import ContextDecorator
 from textwrap import dedent
-from time import gmtime, strftime
+from time import gmtime, strftime, strptime
 
 from eulexistdb.db import ExistDB
 from eulexistdb.exceptions import ExistDBException
@@ -9,6 +9,8 @@ from lxml import etree
 
 from .util import assure_running, ProjectDBError
 from .dbsettings import DbSettings
+
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
 class ProjectDatabase(ContextDecorator):
@@ -124,6 +126,47 @@ class ProjectDatabase(ContextDecorator):
 
         raise AttributeError("Cannot handle type {}".format(type(xml_rep)))
 
+    def _check_for_modification(self, domain, uuid, old_date):
+        """ Check whether the item with of the given `domain` and `uuid` was
+        modified
+
+        :param domain: the domain under which this item exists
+        :param uuid: the item's uuid
+        :param old_date: the item's last modified time stamp
+        :return A tuple stating whether the item was modified inbetween and a
+                string describing the reason
+        """
+        # Check whether the object got modified inbetween
+        path = "{}/{}".format(self.root, domain)
+        query = """
+            xquery version "3.0";
+            let $path := "{path}"
+            let $uuid := "{uuid}"
+
+            for $doc in collection($path)/xml[@uuid = $uuid]
+            let $date := $doc/@date
+            return <item date="{{$date}}"/>
+                """.format(path=path, uuid=uuid)
+        modified = False
+        reason = ""
+        try:
+            res = self.dbhandle.query(query)
+            if res.results:
+                current_date = res.results[0].get('date')
+            else:
+                # Item not yet existing
+                return modified, reason
+        except ExistDBException as e:
+            raise ProjectDBError(e)
+
+        current_modified = strptime(current_date, DATE_FORMAT)
+        last_modified = strptime(old_date, DATE_FORMAT)
+        if last_modified < current_modified:
+            # Item got saved inbetween
+            modified = True
+            reason = "Versioning conflict! Document modified inbetween."
+        return modified, reason
+
     def save_item(self, domain, uuid, item_xml, overwrite=False):
         """
         Saves a item xml file into the domain. It will
@@ -167,10 +210,19 @@ class ProjectDatabase(ContextDecorator):
 
         # Extract some information
         item_tree = self._make_xml_if_needed(item_xml)
+
         if 'user' not in item_tree.attrib:
             item_tree.attrib['user'] = 'Karabo User'
-        if 'date' not in item_tree.attrib:
-            item_tree.attrib['date'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        if not item_tree.attrib.get('date'):
+            item_tree.attrib['date'] = strftime(DATE_FORMAT, gmtime())
+        else:
+            modified, reason = self._check_for_modification(
+                domain, uuid, item_tree.attrib['date'])
+            if modified:
+                raise ProjectDBError(reason)
+            # Update time stamp
+            item_tree.attrib['date'] = strftime(DATE_FORMAT, gmtime())
+
         # XXX: Add a revision/alias to keep old code from blowing up
         item_tree.attrib['revision'] = '0'
         item_tree.attrib['alias'] = 'default'
@@ -192,6 +244,7 @@ class ProjectDatabase(ContextDecorator):
         meta = {}
         meta['domain'] = domain
         meta['uuid'] = uuid
+        meta['date'] = item_tree.attrib['date']
         return meta
 
     def load_item(self, domain, items):
