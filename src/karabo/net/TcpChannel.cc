@@ -31,6 +31,9 @@ namespace karabo {
             , m_outboundData(new std::vector<char>())
             , m_outboundHeader(new std::vector<char>())
             , m_queue(10)
+            , m_queueWrittenBytes(m_queue.size(), 0)
+            , m_readBytes(0)
+            , m_writtenBytes(0)
             , m_writeInProgress(false)
             , m_quit(false)
             , m_syncCounter(0)
@@ -95,7 +98,7 @@ namespace karabo {
             if (sizeofLength > 0) {
                 ErrorCode error; //in case of error
                 m_inboundMessagePrefix.resize(sizeofLength);
-                boost::asio::read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(), error);
+                m_readBytes += boost::asio::read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(), error);
                 if (error) throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
                 // prefix[0] - message length (body)
                 size_t byteSize = 0;
@@ -109,7 +112,7 @@ namespace karabo {
 
         void TcpChannel::read(char* data, const size_t& size) {
             ErrorCode error;
-            boost::asio::read(m_socket, buffer(data, size), transfer_all(), error);
+            m_readBytes += boost::asio::read(m_socket, buffer(data, size), transfer_all(), error);
             if (error) {
                 throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
             }
@@ -251,17 +254,21 @@ namespace karabo {
                 boost::system::error_code ec;
                 size_t rsize = m_socket.read_some(buffer(data, size), ec);
                 assert(rsize == size);
-                onBytesAvailable(ec, handler);
+                onBytesAvailable(ec, rsize, handler);
             } else {
                 m_asyncCounter++;
                 boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
                                         util::bind_weak(&karabo::net::TcpChannel::onBytesAvailable, this,
-                                                        boost::asio::placeholders::error, handler));
+                                                        boost::asio::placeholders::error,
+                                                        boost::asio::placeholders::bytes_transferred(),
+                                                        handler));
             }
         }
 
 
-        void TcpChannel::onBytesAvailable(const ErrorCode& error, const ReadRawHandler& handler) {
+        void TcpChannel::onBytesAvailable(const ErrorCode& error, const size_t length, const ReadRawHandler& handler) {
+            // Update the total read bytes count
+            m_readBytes += length;
             handler(error);
         }
 
@@ -601,7 +608,7 @@ namespace karabo {
                 }
                 buf.push_back(buffer(data, size)); // body
 
-                boost::asio::write(m_socket, buf, transfer_all(), error);
+                m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
 
                 if (!error) return;
                 else throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
@@ -718,7 +725,7 @@ namespace karabo {
                 buf.push_back(buffer(header, headerSize));
                 buf.push_back(buffer(m_outboundMessagePrefix));
                 buf.push_back(buffer(body, bodySize));
-                boost::asio::write(m_socket, buf, transfer_all(), error);
+                m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
                     throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
                 }
@@ -742,7 +749,9 @@ namespace karabo {
                 buf.push_back(buffer(*m_outboundData));
                 boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::asyncWriteHandler, this,
-                                                         boost::asio::placeholders::error, handler));
+                                                         boost::asio::placeholders::error,
+                                                         boost::asio::placeholders::bytes_transferred(),
+                                                         handler));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -762,7 +771,9 @@ namespace karabo {
                 buf.push_back(buffer(*m_outboundData));
                 boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::asyncWriteHandler, this,
-                                                         boost::asio::placeholders::error, handler));
+                                                         boost::asio::placeholders::error,
+                                                         boost::asio::placeholders::bytes_transferred(),
+                                                         handler));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -780,7 +791,9 @@ namespace karabo {
                 buf.push_back(buffer(data, size));
                 boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::asyncWriteHandler, this,
-                                                         boost::asio::placeholders::error, handler));
+                                                         boost::asio::placeholders::error,
+                                                         boost::asio::placeholders::bytes_transferred(),
+                                                         handler));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -800,7 +813,9 @@ namespace karabo {
                 buf.push_back(buffer(data, size));
                 boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::asyncWriteHandler, this,
-                                                         boost::asio::placeholders::error, handler));
+                                                         boost::asio::placeholders::error,
+                                                         boost::asio::placeholders::bytes_transferred(),
+                                                         handler));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -898,6 +913,7 @@ namespace karabo {
                 boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::asyncWriteHandlerBody, this,
                                                          boost::asio::placeholders::error,
+                                                         boost::asio::placeholders::bytes_transferred(),
                                                          handler, dataPtr));
             } catch (...) {
                 KARABO_RETHROW
@@ -973,6 +989,7 @@ namespace karabo {
                 boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::asyncWriteHandlerHeaderBody,
                                                          this, boost::asio::placeholders::error,
+                                                         boost::asio::placeholders::bytes_transferred(),
                                                          handler, header, body));
             } catch (...) {
                 KARABO_RETHROW
@@ -1014,8 +1031,9 @@ namespace karabo {
         }
 
 
-        void TcpChannel::asyncWriteHandler(const ErrorCode& e, const Channel::WriteCompleteHandler& handler) {
+        void TcpChannel::asyncWriteHandler(const ErrorCode& e, const size_t length, const Channel::WriteCompleteHandler& handler) {
             try {
+                m_writtenBytes += length;
                 EventLoop::getIOService().post(boost::bind(handler, e));
             } catch (...) {
                 KARABO_RETHROW
@@ -1023,10 +1041,11 @@ namespace karabo {
         }
 
 
-        void TcpChannel::asyncWriteHandlerBody(const ErrorCode& e,
+        void TcpChannel::asyncWriteHandlerBody(const ErrorCode& e, const size_t length,
                                                const Channel::WriteCompleteHandler& handler,
                                                const boost::shared_ptr<std::vector<char> >& body) {
             try {
+                m_writtenBytes += length;
                 EventLoop::getIOService().post(boost::bind(handler, e));
             } catch (...) {
                 KARABO_RETHROW
@@ -1034,15 +1053,36 @@ namespace karabo {
         }
 
 
-        void TcpChannel::asyncWriteHandlerHeaderBody(const ErrorCode& e,
+        void TcpChannel::asyncWriteHandlerHeaderBody(const ErrorCode& e, const size_t length,
                                                      const Channel::WriteCompleteHandler& handler,
                                                      const boost::shared_ptr<std::vector<char> >& header,
                                                      const boost::shared_ptr<std::vector<char> >& body) {
             try {
+                m_writtenBytes += length;
                 EventLoop::getIOService().post(boost::bind(handler, e));
             } catch (...) {
                 KARABO_RETHROW
             }
+        }
+
+
+        // NOTE: There is the potential for a race condition here. However,
+        // we are not worried about it. This method and `dataQuantityWritten`
+        // should only be used for rough statistics gathering to be used
+        // in understanding aggregate network usage. If a message here and there
+        // gets overlooked, it's not a dealbreaker. The complexity needed to
+        // protect access here is not worth the risk.
+        size_t TcpChannel::dataQuantityRead() {
+            const size_t ret = m_readBytes;
+            m_readBytes = 0;
+            return ret;
+        }
+
+
+        size_t TcpChannel::dataQuantityWritten() {
+            const size_t ret = m_writtenBytes;
+            m_writtenBytes = 0;
+            return ret;
         }
 
 
@@ -1063,7 +1103,10 @@ namespace karabo {
             for (size_t i = 0; i < m_queue.size(); ++i) {
                 if (!m_queue[i]) continue;
 
-                info.set<unsigned long long>(karabo::util::toString(i), m_queue[i]->size());
+                Hash queueStats;
+                queueStats.set<unsigned long long>("pendingCount", m_queue[i]->size());
+                queueStats.set<unsigned long long>("writtenBytes", m_queueWrittenBytes[i]);
+                info.set<Hash>(karabo::util::toString(i), queueStats);
             }
             return info;
         }
@@ -1130,12 +1173,14 @@ namespace karabo {
 
             try {
                 Message::Pointer mp;
+                int queueIndex = 0;
                 {
                     boost::mutex::scoped_lock lock(m_queueMutex);
                     for (int i = 9; i >= 0; --i) {
                         if (!m_queue[i] || m_queue[i]->empty()) continue;
                         mp = m_queue[i]->front();
                         m_queue[i]->pop_front();
+                        queueIndex = i;
                         break;
                     }
                     // if all queues are empty
@@ -1163,7 +1208,8 @@ namespace karabo {
                 boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::doWriteHandler, this,
                                                          mp, boost::asio::placeholders::error,
-                                                         boost::asio::placeholders::bytes_transferred()));
+                                                         boost::asio::placeholders::bytes_transferred(),
+                                                         queueIndex));
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::doWrite exception : " << e.what();
                 m_writeInProgress = false;
@@ -1171,7 +1217,11 @@ namespace karabo {
         }
 
 
-        void TcpChannel::doWriteHandler(Message::Pointer& mp, boost::system::error_code ec, std::size_t length) {
+        void TcpChannel::doWriteHandler(Message::Pointer& mp, boost::system::error_code ec, const size_t length, const int queueIndex) {
+            // Update the total written bytes counts
+            m_queueWrittenBytes[queueIndex] += length;
+            m_writtenBytes += length;
+
             if (!ec) {
                 doWrite();
             } else {

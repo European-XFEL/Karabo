@@ -488,6 +488,20 @@ namespace karabo {
             //**************************************************************/
 
             /**
+             * Returns the number of bytes read since the last call of this method
+             */
+            virtual size_t dataQuantityRead() {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
+            }
+
+            /**
+             * Returns the number of bytes written since the last call of this method
+             */
+            virtual size_t dataQuantityWritten() {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
+            }
+
+            /**
              * Set a timeout in when synchronous reads timeout if the haven't been handled
              * @param milliseconds
              */
