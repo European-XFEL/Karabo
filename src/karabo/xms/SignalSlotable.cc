@@ -1263,16 +1263,8 @@ namespace karabo {
             const std::string& signalInstanceId = (signalInstanceIdIn.empty() ? m_instanceId : signalInstanceIdIn);
             const std::string& slotInstanceId = (slotInstanceIdIn.empty() ? m_instanceId : slotInstanceIdIn);
 
-            {
-                // Keep track of what we connect - or at least try to:
-                const SignalSlotConnection connection(signalInstanceId, signalFunction, slotInstanceId, slotFunction);
-                boost::mutex::scoped_lock lock(m_signalSlotConnectionsMutex);
-                // Register twice as we have to re-connect if either signal or slot instance comes back.
-                // (We might skip to register for s*InstanceId == m_instanceId, but then "reconnectSignals"
-                //  looses its genericity.)
-                m_signalSlotConnections[signalInstanceId].insert(connection);
-                m_signalSlotConnections[slotInstanceId].insert(connection);
-            }
+            // Keep track of what we connect - or at least try to:
+            this->storeConnection(signalInstanceId, signalFunction, slotInstanceId, slotFunction);
 
             if (this->instanceHasSlot(slotInstanceId, slotFunction)) {
                 if (this->tryToConnectToSignal(signalInstanceId, signalFunction, slotInstanceId, slotFunction)) {
@@ -1293,6 +1285,18 @@ namespace karabo {
             return false;
         }
 
+
+        void SignalSlotable::storeConnection(const std::string& signalInstanceId, const std::string& signalFunction,
+                                             const std::string& slotInstanceId, const std::string& slotFunction) {
+
+            const SignalSlotConnection connection(signalInstanceId, signalFunction, slotInstanceId, slotFunction);
+            boost::mutex::scoped_lock lock(m_signalSlotConnectionsMutex);
+            // Register twice as we have to re-connect if either signal or slot instance comes back.
+            // (We might skip to register for s*InstanceId == m_instanceId, but then "reconnectSignals"
+            //  looses its genericity.)
+            m_signalSlotConnections[signalInstanceId].insert(connection);
+            m_signalSlotConnections[slotInstanceId].insert(connection);
+        }
 
         bool SignalSlotable::tryToConnectToSignal(const std::string& signalInstanceId, const std::string& signalFunction,
                                                   const std::string& slotInstanceId, const std::string& slotFunction) {
@@ -1420,6 +1424,52 @@ namespace karabo {
             std::pair<std::string, std::string> signalPair = splitIntoInstanceIdAndFunctionName(signal);
             std::pair<std::string, std::string> slotPair = splitIntoInstanceIdAndFunctionName(slot);
             return connect(signalPair.first, signalPair.second, slotPair.first, slotPair.second);
+        }
+
+
+        void SignalSlotable::asyncConnect(const std::string& signalInstanceIdIn, const std::string& signalSignature,
+                                          const std::string& slotInstanceIdIn, const std::string& slotSignature,
+                                          const boost::function<void ()>& successHandler,
+                                          const boost::function<void ()>& failureHandler,
+                                          int timeout) {
+
+            const std::string& signalInstanceId = (signalInstanceIdIn.empty() ? m_instanceId : signalInstanceIdIn);
+            const std::string& slotInstanceId = (slotInstanceIdIn.empty() ? m_instanceId : slotInstanceIdIn);
+
+            // Keep track of what we connect - or at least try to:
+            storeConnection(signalInstanceId, signalSignature, slotInstanceId, slotSignature);
+
+            auto hasSlotSuccessHandler = [ = ] (bool hasSlot){// capture copies
+                if (hasSlot) {
+                    auto signalConnectedHandler = [successHandler, failureHandler] (bool signalExists) {
+                        if (signalExists) {
+                            successHandler();
+                        } else if (failureHandler) {
+                            callErrorHandler(failureHandler, "Signal does not exist.");
+                        }
+                    };
+                    auto requestor = request(signalInstanceId, "slotConnectToSignal", signalSignature, slotInstanceId, slotSignature);
+                    if (timeout > 0) requestor.timeout(timeout);
+                    requestor.receiveAsync<bool>(signalConnectedHandler, failureHandler);
+                } else if (failureHandler) {
+                    callErrorHandler(failureHandler, "Slot does not exist.");
+                }
+            };
+
+            // First check whether slot exists to avoid signal emits are send if no-one listens correctly.
+            auto requestor = request(slotInstanceId, "slotHasSlot", slotSignature);
+            if (timeout > 0) requestor.timeout(timeout);
+            requestor.receiveAsync<bool>(hasSlotSuccessHandler, failureHandler);
+        }
+
+
+        void SignalSlotable::callErrorHandler(const boost::function<void () > handler, const std::string& message) {
+            try {
+                throw KARABO_SIGNALSLOT_EXCEPTION(message);
+            } catch (const std::exception&) {
+                Exception::clearTrace();
+                handler();
+            }
         }
 
 
