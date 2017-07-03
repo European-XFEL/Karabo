@@ -92,9 +92,7 @@ def defaultall():
     argv = [arg if arg in existing else arg.lower()
             for arg in argv]
     if not argv:
-        ret = list(existing)
-        ret.sort()
-        return ret
+        return sorted(existing)
     else:
         return argv
 
