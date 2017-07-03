@@ -1,8 +1,8 @@
-"""
-Author: __EMAIL__
-Creation date: __DATE__
-Copyright (c) European XFEL GmbH Hamburg. All rights reserved.
-"""
+#############################################################################
+# Author: __EMAIL__
+# Created on __DATE__
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
 
 from karabo.bound import PythonDevice, KARABO_CLASSINFO
 
