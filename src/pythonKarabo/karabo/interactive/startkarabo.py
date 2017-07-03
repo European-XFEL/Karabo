@@ -86,10 +86,13 @@ def supervise():
 
 def defaultall():
     os.chdir(absolute("var", "service"))
+    existing = {d for d in os.listdir() if not d.startswith(".")}
     argv = [arg.replace("/", "_") for arg in sys.argv[1:]
             if not arg.startswith("-")]
+    argv = [arg if arg in existing else arg.lower()
+            for arg in argv]
     if not argv:
-        return [d for d in os.listdir() if not d.startswith(".")]
+        return sorted(existing)
     else:
         return argv
 
@@ -286,7 +289,7 @@ def adddeviceserver():
     assert server_type in {"cppserver", "middlelayerserver", "pythonserver",
                            "webserver"}
 
-    target_dir = server_id.replace("/", "_")
+    target_dir = server_id.lower().replace("/", "_")
 
     abs_target = absolute("var", "service", target_dir)
 
@@ -304,6 +307,8 @@ def adddeviceserver():
                 options="'{}'".format("' '".join(options)) if options else ""))
         open(osp.join(tmpdir, "down"), "w").close()
         open(osp.join(tmpdir, "orphanage"), "w").close()
+        with open(osp.join(tmpdir, "name"), "w") as fout:
+            fout.write(server_id)
         os.mkdir(osp.join(tmpdir, "log"))
         with open(osp.join(tmpdir, "log", "run"), "w", opener=os.open) as fout:
             fout.write(logger_template.format(target_dir=target_dir))
@@ -327,7 +332,11 @@ def removedeviceserver():
     name = sys.argv[1].replace("/", "_")
     # hide the service from svscan by prefixing with a . so it doesn't restart
     tmppath = absolute("var", "service", ".{}".format(name))
-    os.rename(absolute("var", "service", name), tmppath)
+    if osp.exists(absolute("var", "service", name)):
+        os.rename(absolute("var", "service", name), tmppath)
+    else:
+        name = name.lower()
+        os.rename(absolute("var", "service", name), tmppath)
     subprocess.call([absolute("extern", "bin", "svc"), "-dx", tmppath])
     subprocess.call([absolute("extern", "bin", "svc"), "-dx",
                      osp.join(tmppath, "log")])
