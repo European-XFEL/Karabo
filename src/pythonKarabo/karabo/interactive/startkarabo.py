@@ -86,7 +86,7 @@ def supervise():
 
 def defaultall():
     os.chdir(absolute("var", "service"))
-    argv = [arg.replace("/", "_") for arg in sys.argv[1:]
+    argv = [arg.lower().replace("/", "_") for arg in sys.argv[1:]
             if not arg.startswith("-")]
     if not argv:
         return [d for d in os.listdir() if not d.startswith(".")]
@@ -286,7 +286,7 @@ def adddeviceserver():
     assert server_type in {"cppserver", "middlelayerserver", "pythonserver",
                            "webserver"}
 
-    target_dir = server_id.replace("/", "_")
+    target_dir = server_id.lower().replace("/", "_")
 
     abs_target = absolute("var", "service", target_dir)
 
@@ -324,7 +324,7 @@ def removedeviceserver():
     name is the name of the device server to remove.
     """
     assert len(sys.argv) == 2
-    name = sys.argv[1].replace("/", "_")
+    name = sys.argv[1].lower().replace("/", "_")
     # hide the service from svscan by prefixing with a . so it doesn't restart
     tmppath = absolute("var", "service", ".{}".format(name))
     os.rename(absolute("var", "service", name), tmppath)
