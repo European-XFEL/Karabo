@@ -57,7 +57,7 @@ namespace karabo {
 
             void slotGetGroup();
 
-            void saveGroupConfiguration();
+            void group_saveGroupConfiguration();
 
             void preReconfigure(karabo::util::Hash& incomingReconfiguration);
 
