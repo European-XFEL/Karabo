@@ -6,7 +6,8 @@ from asyncio import (async, coroutine, Future, get_event_loop, iscoroutine,
 from functools import wraps
 
 from .basetypes import KaraboValue, unit_registry as unit
-from .eventloop import EventLoop, KaraboFuture, synchronize
+from .eventloop import (EventLoop, KaraboFuture, synchronize,
+                        synchronize_notimeout)
 
 
 def background(task, *args, timeout=-1):
@@ -60,7 +61,7 @@ def gather(*args, return_exceptions=False):
                                       return_exceptions=return_exceptions))
 
 
-@synchronize
+@synchronize_notimeout
 def sleep(delay, result=None):
     """do nothing for *delay* seconds
 
@@ -74,38 +75,86 @@ def sleep(delay, result=None):
     return asyncio.sleep(delay, result)
 
 
-@synchronize
-def firstCompleted(*args, **kwargs):
-    """wait for the first of futures to return
-
-    Wait for the first future given as keyword argument to return. It returns
-    two dicts: one with the names of the done futures and their results, and
-    one mapping the name of the pending futures to them, as an example::
-
-        work = background(do_some_work)
-        party = background(partey)
-        done, pending = firstCompleted(work=work, party=party)
-
-    the result will then be something like ``{"work": 5}`` and
-    ``{"party": Future()}``.
-
-    You may also give futures as positional parameters, they will be returned
-    by their number::
-
-        done, pending = firstCompleted(work, party)
-
-    will return something like ``{0: 5}`` and ``{1: Future}``.
-    """
+@coroutine
+def _wait(return_when, *args, timeout=None, cancel_pending=True, **kwargs):
     kwargs.update(enumerate(args))
     futures = {k: f if isinstance(f, KaraboFuture) else asyncio.async(f)
                for k, f in kwargs.items()}
     names = {
         f.future if isinstance(f, KaraboFuture) else f: k
         for k, f in futures.items()}
-    done, pending = yield from asyncio.wait(
-        names, return_when=asyncio.FIRST_COMPLETED)
-    return ({names[f]: f.result() for f in done},
-            {names[f]: futures[names[f]] for f in pending})
+    done, pending = yield from asyncio.wait(names, return_when=return_when,
+                                            timeout=timeout)
+    if cancel_pending:
+        for fut in pending:
+            fut.cancel()
+
+    return ({names[f]: f.result() for f in done if not f.cancelled()
+                                                   and f.exception() is None},
+            {names[f]: futures[names[f]] for f in pending},
+            {names[f]: None if f.cancelled() else f.exception()
+             for f in done if f.cancelled() or f.exception() is not None})
+
+
+@synchronize_notimeout
+def firstCompleted(*args, **kwargs):
+    """wait for the first of coroutines or futures to return
+
+    Wait for the first future given as keyword argument to return. It returns
+    three dicts: one with the names of the done futures and their results,
+    one mapping the name of the pending futures to them, and a third one
+    mapping the names of failed futures to their exceptions, as an example::
+
+        work = background(do_some_work)
+        party = background(partey)
+        sleep = background(zzz)
+        done, pending, error = firstCompleted(
+            work=work, party=party, sleep=sleep)
+
+    the result will then be something like ``{"work": 5}``,
+    ``{"party": Future()}`` and ``{"sleep": RuntimeError()}``.
+
+    You may also give futures as positional parameters, they will be returned
+    by their number::
+
+        done, pending, error = firstCompleted(work, party, sleep)
+
+    will return something like ``{0: 5}``, ``{1: Future()}`` and
+    ``{2: RuntimeError()}``.
+
+    Cancelled futures will be listed in the error dict, mapped to ``None``.
+    You may also give a timemout.
+    Futures still pending will be cancelled before return, unless you
+    set `cancel_pending` to `False`.
+    """
+    return (yield from _wait(asyncio.FIRST_COMPLETED, *args, **kwargs))
+
+
+@synchronize_notimeout
+def allCompleted(*args, **kwargs):
+    """wait until all futures are done
+
+    This function is an improved version of :func:`asyncio.gather`,
+    which also works if a future fails, and a timeout can be set.
+
+    For the returned dicts, see :func:`firstCompleted`.
+    """
+    return (yield from _wait(asyncio.ALL_COMPLETED, *args, **kwargs))
+
+
+@synchronize_notimeout
+def firstException(*args, **kwargs):
+    """wait until a future raises an exception
+
+    If no future raises an exception, this is the same as
+    :func:`allCompleted`.
+
+    This function is an improved version of :func:`asyncio.gather`,
+    which also works if a future fails, and a timeout can be set.
+
+    For the returned dicts, see :func:`firstCompleted`.
+    """
+    return (yield from _wait(asyncio.FIRST_EXCEPTION, *args, **kwargs))
 
 
 def synchronous(func):
