@@ -92,6 +92,12 @@ Synchronization
 
 .. autofunction:: karabo.middlelayer.gather
 
+.. autofunction:: karabo.middlelayer.firstCompleted
+
+.. autofunction:: karabo.middlelayer.allCompleted
+
+.. autofunction:: karabo.middlelayer.firstException
+
 .. autofunction:: karabo.middlelayer.sleep
 
 .. autoclass:: karabo.middlelayer.KaraboFuture
