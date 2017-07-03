@@ -462,7 +462,7 @@ void SignalSlotable_Test::testConnectAsync() {
     CPPUNIT_ASSERT(!connectTimeout);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
-    CPPUNIT_ASSERT(connectFailedMsg.find("Signal does not exist.") != std::string::npos);
+    CPPUNIT_ASSERT(connectFailedMsg.find("signalInstance has no signal 'NOT_A_signal'.") != std::string::npos);
 
     ///////////////////////////////////////////////////////////////////////////
     // Test failureHandler again - now non-existing slot gives same exception type, but other message
@@ -479,7 +479,7 @@ void SignalSlotable_Test::testConnectAsync() {
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connectTimeout);
-    CPPUNIT_ASSERT(connectFailedMsg.find("Slot does not exist.") != std::string::npos);
+    CPPUNIT_ASSERT(connectFailedMsg.find("slotInstance has no slot 'NOT_A_slot'.") != std::string::npos);
 
     ///////////////////////////////////////////////////////////////////////////
     // Another test for failureHandler - non-existing signalInstanceId gives TimeoutException
