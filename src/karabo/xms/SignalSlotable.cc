@@ -1439,22 +1439,30 @@ namespace karabo {
             // Keep track of what we connect - or at least try to:
             storeConnection(signalInstanceId, signalSignature, slotInstanceId, slotSignature);
 
+            // If slot is there, we want to connect it to the signal - so here is the handler for that:
             auto hasSlotSuccessHandler = [ = ] (bool hasSlot){// capture copies
                 if (hasSlot) {
-                    auto signalConnectedHandler = [successHandler, failureHandler] (bool signalExists) {
+                    // This nested lambda is the success handler for the request to slotConnectToSignal:
+                    auto signalConnectedHandler = [ = ] (bool signalExists){
                         if (signalExists) {
-                            successHandler();
+                            try {
+                                successHandler();
+                            } catch (const std::exception& e) {
+                                KARABO_LOG_FRAMEWORK_ERROR << "Trouble with successHandler of asyncConnect("
+                                        << signalInstanceId << ", " << signalSignature << ", " << slotInstanceId << ", "
+                                        << slotSignature << "):\n" << e.what();
+                            }
                         } else if (failureHandler) {
-                            callErrorHandler(failureHandler, "Signal does not exist.");
+                            callErrorHandler(failureHandler, signalInstanceId + " has no signal '" + signalSignature + "'.");
                         }
-                    };
+                    }; // end of nested lambda
                     auto requestor = request(signalInstanceId, "slotConnectToSignal", signalSignature, slotInstanceId, slotSignature);
                     if (timeout > 0) requestor.timeout(timeout);
                     requestor.receiveAsync<bool>(signalConnectedHandler, failureHandler);
                 } else if (failureHandler) {
-                    callErrorHandler(failureHandler, "Slot does not exist.");
+                    callErrorHandler(failureHandler, slotInstanceId + " has no slot '" + slotSignature + "'.");
                 }
-            };
+            }; // end of lambda definition of success handler for slotHasSlot
 
             // First check whether slot exists to avoid signal emits are send if no-one listens correctly.
             auto requestor = request(slotInstanceId, "slotHasSlot", slotSignature);
@@ -1468,7 +1476,13 @@ namespace karabo {
                 throw KARABO_SIGNALSLOT_EXCEPTION(message);
             } catch (const std::exception&) {
                 Exception::clearTrace();
-                handler();
+                // handler can now do 'try { throw; } catch (const SignalSLotException& e) { ... }'
+                try {
+                    handler();
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Error handler for message '" << message << "' threw exception: "
+                            << e.what();
+                }
             }
         }
 
@@ -2198,7 +2212,6 @@ namespace karabo {
                         errorHandler();
                         return;
                     } catch (const std::exception& e) {
-                        Exception::clearTrace();
                         (msg += ", but error handler throws exception: ") += e.what();
                     }
                 }
