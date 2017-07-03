@@ -309,6 +309,8 @@ def adddeviceserver():
                 options="'{}'".format("' '".join(options)) if options else ""))
         open(osp.join(tmpdir, "down"), "w").close()
         open(osp.join(tmpdir, "orphanage"), "w").close()
+        with open(osp.join(tmpdir, "name"), "w") as fout:
+            fout.write(server_id)
         os.mkdir(osp.join(tmpdir, "log"))
         with open(osp.join(tmpdir, "log", "run"), "w", opener=os.open) as fout:
             fout.write(logger_template.format(target_dir=target_dir))
