@@ -86,10 +86,15 @@ def supervise():
 
 def defaultall():
     os.chdir(absolute("var", "service"))
-    argv = [arg.lower().replace("/", "_") for arg in sys.argv[1:]
+    existing = {d for d in os.listdir() if not d.startswith(".")}
+    argv = [arg.replace("/", "_") for arg in sys.argv[1:]
             if not arg.startswith("-")]
+    argv = [arg if arg in existing else arg.lower()
+            for arg in argv]
     if not argv:
-        return [d for d in os.listdir() if not d.startswith(".")]
+        ret = list(existing)
+        ret.sort()
+        return ret
     else:
         return argv
 
@@ -324,10 +329,14 @@ def removedeviceserver():
     name is the name of the device server to remove.
     """
     assert len(sys.argv) == 2
-    name = sys.argv[1].lower().replace("/", "_")
+    name = sys.argv[1].replace("/", "_")
     # hide the service from svscan by prefixing with a . so it doesn't restart
     tmppath = absolute("var", "service", ".{}".format(name))
-    os.rename(absolute("var", "service", name), tmppath)
+    try:
+        os.rename(absolute("var", "service", name), tmppath)
+    except FileNotFoundError:
+        name = name.lower()
+        os.rename(absolute("var", "service", name), tmppath)
     subprocess.call([absolute("extern", "bin", "svc"), "-dx", tmppath])
     subprocess.call([absolute("extern", "bin", "svc"), "-dx",
                      osp.join(tmppath, "log")])
