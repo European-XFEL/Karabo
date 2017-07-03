@@ -332,9 +332,9 @@ def removedeviceserver():
     name = sys.argv[1].replace("/", "_")
     # hide the service from svscan by prefixing with a . so it doesn't restart
     tmppath = absolute("var", "service", ".{}".format(name))
-    try:
+    if osp.exists(absolute("var", "service", name)):
         os.rename(absolute("var", "service", name), tmppath)
-    except FileNotFoundError:
+    else:
         name = name.lower()
         os.rename(absolute("var", "service", name), tmppath)
     subprocess.call([absolute("extern", "bin", "svc"), "-dx", tmppath])
