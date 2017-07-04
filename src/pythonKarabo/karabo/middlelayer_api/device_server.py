@@ -457,9 +457,11 @@ class BoundDeviceServer(DeviceServerBase):
         env = dict(os.environ)
         env["PYTHONPATH"] = self.pluginDirectory
         future = self._new_device_futures[deviceId]
+        # the device ID is a parameter on the commandline only such that
+        # one can identify via ps which process corresponds to which device
         process = yield from create_subprocess_exec(
             sys.executable, "-m", "karabo.bound_api.launcher",
-            "run", self.boundNamespace, classId,
+            "run", self.boundNamespace, classId, deviceId,
             env=env, stdin=PIPE)
         self.processes[deviceId] = process
         process.stdin.write(encodeXML(config).encode('utf8'))
