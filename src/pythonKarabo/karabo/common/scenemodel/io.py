@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import Element, parse, tostring
 
-from .const import NS_KARABO, SCENE_FILE_VERSION
+from .const import NS_KARABO, NS_SVG, SCENE_FILE_VERSION
 from .model import SceneModel
 from .registry import get_reader, get_writer
 
@@ -27,7 +27,7 @@ def read_scene(filename_or_fileobj):
 def write_scene(scene):
     """ Write Scene object `scene` to a string.
     """
-    root = Element('svg')
+    root = Element(NS_SVG + 'svg')
     # We always WRITE the most recent version.
     root.set(NS_KARABO + 'version', str(SCENE_FILE_VERSION))
     return _writer_core(scene, root)
@@ -36,7 +36,7 @@ def write_scene(scene):
 def write_single_model(model):
     """ Write a scene model object as an SVG containing only that object.
     """
-    root = Element('svg')
+    root = Element(NS_SVG + 'svg')
     return _writer_core(model, root)
 
 
