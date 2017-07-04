@@ -488,8 +488,9 @@ void SignalSlotable_Test::testConnectAsync() {
     connectFailedMsg = "";
     signaler->asyncConnect("NOT_A_signalInstance", "signal", "slotInstance", "slot",
                            dummyHandler, connectFailedHandler,
-                           5); // Very short timeout to run into
-    boost::this_thread::sleep(boost::posix_time::milliseconds(15));
+                           50); // Timeout allows 25 ms per message travel
+    // The first request will succeed, the second (to "NOT_A_sig...") not - so wait 4 * 25 ms plus margin to be sure
+    boost::this_thread::sleep(boost::posix_time::milliseconds(105));
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(connectTimeout);
     CPPUNIT_ASSERT(connectFailedMsg.empty());
@@ -501,8 +502,9 @@ void SignalSlotable_Test::testConnectAsync() {
     connectFailedMsg = "";
     signaler->asyncConnect("signalInstance", "signal", "NOT_A_slotInstance", "slot",
                            dummyHandler, connectFailedHandler,
-                           5); // Very short timeout to run into
-    boost::this_thread::sleep(boost::posix_time::milliseconds(15));
+                           50); // Timeout allows 25 ms per message travel
+    // The first request (to "NOT_A_slot...") will fail, so allow for 2 * 25 ms plus margin to be sure
+    boost::this_thread::sleep(boost::posix_time::milliseconds(55));
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(connectTimeout);
     CPPUNIT_ASSERT(connectFailedMsg.empty());

@@ -1439,23 +1439,24 @@ namespace karabo {
             // Keep track of what we connect - or at least try to:
             storeConnection(signalInstanceId, signalSignature, slotInstanceId, slotSignature);
 
+            // Prepare a success handler for the request to slotConnectToSignal:
+            auto signalConnectedHandler = [ = ] (bool signalExists){//capture copies
+                if (signalExists) {
+                    try {
+                        successHandler();
+                    } catch (const std::exception& e) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Trouble with successHandler of asyncConnect("
+                                << signalInstanceId << ", " << signalSignature << ", " << slotInstanceId << ", "
+                                << slotSignature << "):\n" << e.what();
+                    }
+                } else if (failureHandler) {
+                    callErrorHandler(failureHandler, signalInstanceId + " has no signal '" + signalSignature + "'.");
+                }
+            };
+
             // If slot is there, we want to connect it to the signal - so here is the handler for that:
             auto hasSlotSuccessHandler = [ = ] (bool hasSlot){// capture copies
                 if (hasSlot) {
-                    // This nested lambda is the success handler for the request to slotConnectToSignal:
-                    auto signalConnectedHandler = [ = ] (bool signalExists){
-                        if (signalExists) {
-                            try {
-                                successHandler();
-                            } catch (const std::exception& e) {
-                                KARABO_LOG_FRAMEWORK_ERROR << "Trouble with successHandler of asyncConnect("
-                                        << signalInstanceId << ", " << signalSignature << ", " << slotInstanceId << ", "
-                                        << slotSignature << "):\n" << e.what();
-                            }
-                        } else if (failureHandler) {
-                            callErrorHandler(failureHandler, signalInstanceId + " has no signal '" + signalSignature + "'.");
-                        }
-                    }; // end of nested lambda
                     auto requestor = request(signalInstanceId, "slotConnectToSignal", signalSignature, slotInstanceId, slotSignature);
                     if (timeout > 0) requestor.timeout(timeout);
                     requestor.receiveAsync<bool>(signalConnectedHandler, failureHandler);
