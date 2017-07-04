@@ -211,7 +211,7 @@ namespace karabo {
             const SlotInstancePointer& getSenderInfo(const std::string& slotFunction);
 
             /**
-             * This function tries to establish a connection between a signal
+             * This function tries to establish synchronously a connection between a signal
              * and a slot, identified both by their respective instance IDs and
              * signatures.
              * Moreover, this SignalSlotable obeys (throughout its full lifetime
@@ -242,6 +242,33 @@ namespace karabo {
              * @return whether connection is already succesfully established
              */
             bool connect(const std::string& signal, const std::string& slot);
+
+            /**
+             * This function tries to establish asynchronously a connection between a signal
+             * and a slot, identified both by their respective instance IDs and
+             * signatures.
+             * Moreover, this SignalSlotable obeys (throughout its full lifetime
+             * or until "disconnect" is called with the same arguments) the
+             * responsibility  to keep this connection alive, i.e. to reconnect
+             * if either signal or slot instance come back after they have
+             * shutdown or if they come up the first time.
+             *
+             * @param signalInstanceId is the instance ID of the signal (if empty use this instance)
+             * @param signalSignature is the signature of the signal
+             * @param slotInstanceId is the instance ID of the slot (if empty use this instance)
+             * @param slotSignature is the signature of the slot
+             * @param successHandler is called when connection is established
+             * @param failureHandler is called when connection could not be established, in the same way as an
+             *                            Requestor::AsyncErrorHandler - if Signal or Slot do not exist, the exception
+             *                            is a SignalSlotException
+             * @param timeout in milliseconds for internal async requests - non-positive (default) means the very long
+             *                            default timeout
+             */
+            void asyncConnect(const std::string& signalInstanceId, const std::string& signalSignature,
+                              const std::string& slotInstanceId, const std::string& slotSignature,
+                              const boost::function<void ()>& successHandler,
+                              const boost::function<void ()>& failureHandler = boost::function<void ()>(),
+                              int timeout = 0);
 
             /**
              * Disconnects a slot from a signal, identified both by their
@@ -749,6 +776,9 @@ namespace karabo {
             /// Slot to tell whether instance has a slot of given name.
             void slotHasSlot(const std::string& unmangledSlotFunction);
 
+            void storeConnection(const std::string& signalInstanceId, const std::string& signalFunction,
+                                 const std::string& slotInstanceId, const std::string& slotFunction);
+
             bool tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction,
                                            const std::string& slotInstanceId, const std::string& slotFunction);
 
@@ -856,6 +886,12 @@ namespace karabo {
             std::pair<boost::shared_ptr<boost::asio::deadline_timer>, SignalSlotable::Requestor::AsyncErrorHandler>
             getReceiveAsyncErrorHandles(const std::string& replyId) const;
 
+            /// Helper that calls 'handler' such that it can do
+            ///
+            ///  try { throw; } catch (const SignalSlotException &e) { <action>}
+            ///
+            /// @param message text given to the SignalSlotException
+            static void callErrorHandler(const boost::function<void () > handler, const std::string& message);
 
         private: // Members
 
