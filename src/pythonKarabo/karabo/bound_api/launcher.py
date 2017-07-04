@@ -9,7 +9,7 @@ from pkg_resources import working_set
 from karabo.bound import (EventLoop, Hash, TextSerializerHash,
                           BinarySerializerHash)
 
-_, command, namespace, name = sys.argv
+command, namespace, name = sys.argv[1:4]
 
 entrypoint = next(working_set.iter_entry_points(namespace, name))
 
