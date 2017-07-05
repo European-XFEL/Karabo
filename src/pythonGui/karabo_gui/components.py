@@ -135,7 +135,11 @@ class EditableNoApplyComponent(BaseComponent):
             self.widgetFactory.valueChanged(box, box.value, box.timestamp)
         box.signalUpdateComponent.connect(self.widgetFactory.valueChangedSlot)
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
-        box.signalUserChanged.connect(self.widgetFactory.valueChangedSlot)
+        box.signalUserChanged.connect(self.onUserChanged)
+
+    @pyqtSlot(object, object, object)
+    def onUserChanged(self, box, value, timestamp=None):
+        box.set(value, None)
 
     @property
     def widgetCategory(self):
