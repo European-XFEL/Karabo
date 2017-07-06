@@ -101,7 +101,9 @@ namespace karabo {
 
         DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
             m_ibs = IndexBuilderService::getInstance();
-            //set<int>("nThreads", 1);
+
+            KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
+            KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/)
         }
 
 
@@ -111,8 +113,6 @@ namespace karabo {
 
 
         void DataLogReader::okStateOnEntry() {
-            KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
-            KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/)
         }
 
 
