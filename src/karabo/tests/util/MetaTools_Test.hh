@@ -72,9 +72,15 @@ struct Test_Device : public virtual Test_SignalSlotable {
     }
 
     void init() {
-        // This is just testing that binding a const member function compiles:
+        // This is just testing that binding a const member function compiles - both with a this which is const or not:
         m_timer.expires_from_now(boost::posix_time::millisec(100));
         m_timer.async_wait(karabo::util::bind_weak(&Test_Device::dummyConstFunction, this, 0, _1));
+        m_timer.async_wait(karabo::util::bind_weak(&Test_Device::dummyConstFunction,
+                                                   const_cast<const Test_Device*> (this), 0, _1));
+        m_timer.cancel();
+
+        // This is just testing that binding a const member function compiles if we have a :
+        m_timer.expires_from_now(boost::posix_time::millisec(100));
         m_timer.cancel();
 
         // Now the real test starts:
