@@ -129,13 +129,15 @@ namespace karabo {
         };
 
         /**
-         * Provides a wrapper with the same signature as f, but securing shared ownership of an object O before execution of f.
-         * Class O needs to derive somewhere in its inheritance tree from enable_shared_from_this();
-         * @param f: an arbitrary member function, can have any argument types but must return void
+         * Provides a wrapper with the same signature as f, but securing shared ownership of an object of type Obj
+         * before execution of f.
+         * Class Obj needs to derive somewhere in its inheritance tree from enable_shared_from_this();
+         * @param f: a const member function, can have any argument types and any return value
+         * @param o: a pointer to an object that has a member function f
          * @return a wrapped version of f.
          */
         template<typename Ret, typename... Args, typename Obj>
-        std::function<void(Args...) > exec_weak_impl(Ret(Obj::*f)(Args...), Obj* o) {
+        std::function<Ret(Args...) > exec_weak_impl(Ret(Obj::*f)(Args...) const, Obj* o) {
             typedef typename std::is_same < boost::shared_ptr<Obj>, decltype(o->shared_from_this())>::type is_same_type;
             boost::weak_ptr<Obj> wp(cond_dyn_cast<is_same_type>::template cast(o));
             //we need to copy-capture here -> otherwise segfault, because f and wp go out of scope
@@ -150,14 +152,30 @@ namespace karabo {
             return wrapped;
         }
 
+        /**
+         * Provides a wrapper with the same signature as f, but securing shared ownership of an object of type Obj
+         * before execution of f.
+         * Class Obj needs to derive somewhere in its inheritance tree from enable_shared_from_this();
+         * @param f: a non-const member function, can have any argument types and any return value
+         * @param o: a pointer to an object that has a member function f
+         * @return a wrapped version of f.
+         */
+        template<typename Ret, typename... Args, typename Obj>
+        std::function<Ret(Args...) > exec_weak_impl(Ret(Obj::*f)(Args...), Obj* o) {
+            // Just cast to a const member function and re-use implementation for that.
+            // Does anybody know how to do that with a C++ style cast for member function pointers?
+            auto fConst = (Ret(Obj::*)(Args...) const) f;
+            return exec_weak_impl(fConst, o);
+        }
 
         /**
-         * Weakly binds function f to an object of class Obj, but assures shared ownership of the object while f is executed.
+         * Weakly binds member function f to an object of class Obj, but assures shared ownership of the object while f is executed.
          * This means that during the lifetime of calling f, the object cannot be destroyed, but destruction is not blocked
          * if f is not being executed but only bound.
          * Class Obj needs to derive from boost::enable_shared_from_this and the object pointer o has to be hold by a
          * shared_ptr. This means that you cannot use bind_weak within the constructor of Obj nor for objects constructed on
          * the stack.
+         * Note that f may have any return type, but the bound functor will return void.
          * Below is an example of how to bind to a boost::asio interface.
          *
          * void Device::executeStepFunction(int arg, const boost::system::error_code& error) {

@@ -72,6 +72,12 @@ struct Test_Device : public virtual Test_SignalSlotable {
     }
 
     void init() {
+        // This is just testing that binding a const member function compiles:
+        m_timer.expires_from_now(boost::posix_time::millisec(100));
+        m_timer.async_wait(karabo::util::bind_weak(&Test_Device::dummyConstFunction, this, 0, _1));
+        m_timer.cancel();
+
+        // Now the real test starts:
         m_timer.expires_from_now(boost::posix_time::millisec(100));
         m_timer.async_wait(karabo::util::bind_weak(&Test_Device::executeStepFunction, this, 5, _1));
     }
@@ -79,6 +85,10 @@ struct Test_Device : public virtual Test_SignalSlotable {
     ~Test_Device() {
         m_messages->push_back("Test_Device deleted");
         m_timer.cancel();
+    }
+
+    void dummyConstFunction(int arg, const boost::system::error_code& error) const {
+        // nothing to do
     }
 
     void executeStepFunction(int arg, const boost::system::error_code& error) {
