@@ -137,9 +137,9 @@ namespace karabo {
          * @return a wrapped version of f.
          */
         template<typename Ret, typename... Args, typename Obj>
-        std::function<Ret(Args...) > exec_weak_impl(Ret(Obj::*f)(Args...) const, Obj* o) {
+        std::function<Ret(Args...) > exec_weak_impl(Ret(Obj::*f)(Args...) const, const Obj* o) {
             typedef typename std::is_same < boost::shared_ptr<Obj>, decltype(o->shared_from_this())>::type is_same_type;
-            boost::weak_ptr<Obj> wp(cond_dyn_cast<is_same_type>::template cast(o));
+            boost::weak_ptr<const Obj> wp(cond_dyn_cast<is_same_type>::template cast(o));
             //we need to copy-capture here -> otherwise segfault, because f and wp go out of scope
             auto wrapped = [f, wp](Args... fargs) {
 
@@ -165,6 +165,8 @@ namespace karabo {
             // Just cast to a const member function and re-use implementation for that.
             // Does anybody know how to do that with a C++ style cast for member function pointers?
             auto fConst = (Ret(Obj::*)(Args...) const) f;
+            // No need for 'auto oConst = const_cast<const Obj*>(o);' since the above const cast ensures that the
+            // correct exec_weak_impl is used -  a non const pointer can well be used in const context!
             return exec_weak_impl(fConst, o);
         }
 
