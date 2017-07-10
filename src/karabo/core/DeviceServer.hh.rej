@@ -1,0 +1,20 @@
+--- src/karabo/core/DeviceServer.hh
++++ src/karabo/core/DeviceServer.hh
+@@ -59,7 +59,7 @@ namespace karabo {
+             bool m_serverIsRunning;
+             std::vector<karabo::util::Hash> m_autoStart;
+ 
+-            std::vector<std::pair<karabo::util::Hash, std::string> > m_pendingInstantiations;
++            std::vector<std::pair<karabo::util::Hash, SignalSlotable::AsyncReply> > m_pendingInstantiations;
+             boost::mutex m_pendingInstantiationsMutex;
+             bool m_stopInstantiate;
+             boost::asio::deadline_timer m_instantiateTimer;
+@@ -226,7 +226,7 @@ namespace karabo {
+ 
+             /// Helper for instantiateDevices - e.g. sets the (async) reply.
+             void instantiate(const std::string& deviceId, const std::string& classId,
+-                             const util::Hash& config, const std::string &asyncReplyId);
++                             const util::Hash& config, const SignalSlotable::AsyncReply& asyncReplyId);
+ 
+             void slotLoggerPriority(const std::string& prio);
+ 
