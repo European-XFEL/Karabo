@@ -12,11 +12,10 @@ from pint import DimensionalityError
 from karabo.middlelayer import (
     AlarmCondition, Bool, Configurable, connectDevice, decodeBinary, Device,
     DeviceNode, execute, Float, getDevice, Hash, isSet, Int32, KaraboError,
-    lock, MetricPrefix, Node, setNoWait, setWait, Slot, slot, State, String,
-    unit, Unit, VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
-    waitUntilNew)
+    lock, MetricPrefix, Node, Queue, setNoWait, setWait, Slot, slot, State,
+    String, unit, Unit, VectorChar, VectorInt16, VectorString, VectorFloat,
+    waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
-from karabo.middlelayer_api.device_client import Queue
 from karabo.middlelayer_api.injectable import Injectable
 
 from .eventloop import DeviceTest, async_tst
