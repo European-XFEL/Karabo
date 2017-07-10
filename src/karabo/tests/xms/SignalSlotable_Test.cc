@@ -563,6 +563,82 @@ void SignalSlotable_Test::testMethod() {
 }
 
 
+void SignalSlotable_Test::testAsyncReply() {
+
+
+    class SignalSlotableAsyncReply : public karabo::xms::SignalSlotable {
+
+
+    public:
+
+
+        KARABO_CLASSINFO(SignalSlotableAsyncReply, "SignalSlotAsyncReply", "1.0")
+
+        SignalSlotableAsyncReply(const std::string& instanceId)
+            : karabo::xms::SignalSlotable(instanceId)
+            , m_slotCallEnded(false)
+            , m_timer(karabo::net::EventLoop::getIOService()) {
+
+            KARABO_SLOT(slotAsyncReply, int);
+        }
+
+
+        void slotAsyncReply(int i) {
+            const std::string replyId = registerAsyncReply();
+
+            // Let's stop this function call soon, but nevertheless send reply in 100 ms (likely in another thread!)
+            m_timer.expires_from_now(boost::posix_time::milliseconds(100));
+            m_timer.async_wait([replyId, i, this](const boost::system::error_code & ec) {
+                if (ec) return;
+                this->asyncReply(replyId, 2 * i + 1);
+            });
+            m_slotCallEnded = true;
+        }
+
+        bool m_slotCallEnded;
+    private:
+        boost::asio::deadline_timer m_timer;
+
+    };
+
+    auto slotter = boost::make_shared<SignalSlotableAsyncReply>("slotter");
+    auto sender = boost::make_shared<SignalSlotable>("sender");
+    sender->start();
+    slotter->start();
+
+    bool received = false;
+    bool resultIs7 = false;
+    auto successHandler = [&received, &resultIs7] (int j) {
+        received = true;
+        if (j == 7) resultIs7 = true;
+    };
+    bool errorHappened = false;
+    auto errorHandler = [&errorHappened] () {
+        errorHappened = true;
+    };
+    sender->request("slotter", "slotAsyncReply", 3).receiveAsync<int>(successHandler, errorHandler);
+    // Some time for message travel and execution until slot call is finished...
+    int counter = 20;
+    while (--counter >= 0) {
+        if (slotter->m_slotCallEnded) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+    CPPUNIT_ASSERT(slotter->m_slotCallEnded);
+    // ...but reply is not yet received
+    CPPUNIT_ASSERT(!received);
+
+    // Now wait until reply is received
+    counter = 20;
+    while (--counter >= 0) {
+        if (received) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+    // Assert and also check result:
+    CPPUNIT_ASSERT(received);
+    CPPUNIT_ASSERT(resultIs7);
+    CPPUNIT_ASSERT(!errorHappened);
+}
+
 void SignalSlotable_Test::testAutoConnectSignal() {
 
     // Give a unique name to exclude interference with other tests
