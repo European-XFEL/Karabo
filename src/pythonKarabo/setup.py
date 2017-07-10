@@ -28,11 +28,14 @@ def _get_version(path):
     if vcs_rev != 'Unknown':
         return {'vcs_revision': vcs_rev, 'revision_count': dev_num,
                 'version': version, 'released': True}
+
     try:
         from karabo.packaging.versioning import git_version
         return git_version(path)
     except ImportError:
-        return 'git_version_missing'
+        return {'vcs_revision': vcs_rev, 'revision_count': dev_num,
+                'version': version, 'released': False}
+
 
 def _write_version_py(filename=VERSION_FILE_PATH):
     template = """\
