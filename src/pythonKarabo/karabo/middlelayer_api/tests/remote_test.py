@@ -630,7 +630,7 @@ class Tests(DeviceTest):
             task = async(d.count())
             yield from waitUntil(lambda: d.counter == 0)
             try:
-                q = Queue(d).counter
+                q = Queue(d.counter)
                 for i in range(1, 30):
                     j = yield from q.get()
                     self.assertEqual(i, j)
