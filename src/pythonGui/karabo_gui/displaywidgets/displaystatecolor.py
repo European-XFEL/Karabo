@@ -63,6 +63,11 @@ class DisplayStateColor(DisplayWidget):
         if self.widget.text() != self._staticText:
             self.widget.setText(self._staticText)
 
+    @classmethod
+    def isCompatible(cls, box, readonly):
+        super_comp = super(DisplayStateColor, cls).isCompatible(box, readonly)
+        return super_comp and box.path == ('state',)
+
     @pyqtSlot()
     def _onChangeStaticText(self):
         text, ok = QInputDialog.getText(self.widget, "Change static text",
