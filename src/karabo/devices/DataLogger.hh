@@ -66,6 +66,10 @@ namespace karabo {
             bool m_doFlushFiles;
             unsigned int m_flushInterval;
 
+            // Only for initialisation - counting connections to signalChanged and signalStateChanged
+            boost::mutex m_numChangedConnectedMutex;
+            int m_numChangedConnected;
+
         public:
 
             KARABO_CLASSINFO(DataLogger, "DataLogger", "1.0")
@@ -103,9 +107,14 @@ namespace karabo {
              */
             void slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason);
 
-            void handleFirstSchemaRequest(const karabo::util::Schema& schema, const std::string& deviceId);
+            /// Helper used as error callback that triggers device suicide.
+            void errorToDieHandle(const std::string& reason) const;
 
-            void errorHandleFirstSchemaRequest();
+            void wrapRequestNoWaitBool(const std::string& requestedId, const std::string& requestedSlot,
+                                       const std::string& replyId, const std::string& replySlot, bool arg);
+
+            /// Helper for connecting to both signalChanged and signalStateChanged
+            void pollConfig();
 
             int determineLastIndex(const std::string& deviceId);
 
