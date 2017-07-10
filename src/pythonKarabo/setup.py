@@ -23,13 +23,22 @@ def _get_src_dist_version():
 
 
 def _get_version(path):
+    try:
+        from karabo.packaging.versioning import git_version
+    except ImportError:
+        git_version = None
+
     vcs_rev, dev_num, version = _get_src_dist_version()
 
     if vcs_rev != 'Unknown':
+        # This path is taken when building from a source distribution (sdist)
         return {'vcs_revision': vcs_rev, 'revision_count': dev_num,
                 'version': version, 'released': True}
+    elif git_version is None:
+        # This path is taken when building an arbitrary commit with pip
+        return {'vcs_revision': vcs_rev, 'revision_count': dev_num,
+                'version': version, 'released': False}
 
-    from karabo.packaging.versioning import git_version
     return git_version(path)
 
 
