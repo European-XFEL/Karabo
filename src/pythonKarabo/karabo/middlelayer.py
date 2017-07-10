@@ -14,7 +14,7 @@ from .middlelayer_api.device_client import (
     connectDevice, DeviceClientBase, disconnectDevice, lock, getHistory,
     waitUntilNew, waitUntil, setWait, instantiate, instantiateNoWait, isAlive,
     shutdown, shutdownNoWait, setNoWait, getClasses, getDevice, getDevices,
-    getServers, execute, executeNoWait, updateDevice
+    getServers, execute, executeNoWait, updateDevice, Queue
 )
 from .middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxySlotBase as ProxySlot,
