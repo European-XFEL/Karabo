@@ -28,6 +28,7 @@
 #include <queue>
 #include <map>
 #include <unordered_map>
+#include <tuple>
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
@@ -319,6 +320,15 @@ namespace karabo {
             template <typename ...Args>
             void reply(const Args&... args);
 
+            /**
+             * Send asynchronous reply registered before with registerAsyncReply inside a slot.
+             * Can be used in asynchronous callback handlers posted by a slot
+             * @param id as returned before from registerAsyncReply
+             * @param args up to four return values of the slot
+             */
+            template <typename ...Args>
+            void asyncReply(const std::string& id, const Args&... args);
+
             template <typename ...Args>
             void registerSignal(const std::string& funcName);
 
@@ -474,8 +484,6 @@ namespace karabo {
                 void registerRequest(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header,
                                      const karabo::util::Hash::Pointer& body);
 
-                static std::string generateUUID();
-
                 void sendRequest() const;
 
             private:
@@ -559,6 +567,19 @@ namespace karabo {
             int m_randPing;
 
             // Reply/Request related
+        private:
+            // Map slot name and whether it was called globally
+            std::map<boost::thread::id, std::pair<std::string, bool> > m_currentSlots; // unordered? needs std::hash<boost::thread::id>...
+            mutable boost::mutex m_currentSlotsMutex;
+
+            // A map providing header, slotName and whether slot was called globally for asyncReply ids
+            typedef std::unordered_map<std::string, std::tuple<karabo::util::Hash::Pointer, std::string, bool> > AsyncReplyInfos;
+            AsyncReplyInfos m_asyncReplyInfos;
+            mutable boost::mutex m_asyncReplyInfosMutex;
+
+            static boost::uuids::random_generator m_uuidGenerator;
+
+       protected:
             typedef std::map<boost::thread::id, karabo::util::Hash::Pointer> Replies;
             Replies m_replies;
             mutable boost::mutex m_replyMutex;
@@ -573,7 +594,6 @@ namespace karabo {
             mutable boost::mutex m_receivedRepliesBMCMutex;
 
             karabo::util::Hash m_emitFunctions;
-            std::vector<boost::any> m_slots;
 
             karabo::util::Hash m_trackedInstances;
             bool m_trackAllInstances;
@@ -666,6 +686,18 @@ namespace karabo {
                 }
             }
 
+            /**
+             * Use within a slot call to prepare for sending the reply asynchronously.
+             * The returned string is an id to be passed later in asyncReply(id, arg1, ...);
+             * Note:
+             * As the synchronous reply(arg1,...), registerAsyncReply() must be called directly
+             * in the registered slot function, i.e. without posting to another thread.
+             * On the other hand, asyncReply(...) is exactly foreseen for that case.
+             * @return id to be used as first argument in asyncReply
+             */
+            std::string registerAsyncReply();
+
+
             void registerReply(const karabo::util::Hash::Pointer& reply);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
@@ -722,9 +754,12 @@ namespace karabo {
 
             void sendPotentialReply(const karabo::util::Hash& header, const std::string& slotFunction, bool global);
 
-            void sendErrorHappenedReply(const karabo::util::Hash& header, const std::string& errorMesssage);
+            /// Template less part of asyncReply(id, args...)
+            void asyncReplyImpl(const std::string& id);
 
-            void emitHeartbeat(const boost::system::error_code& e);
+            static std::string generateUUID();
+
+            void emitHeartbeat(const boost::system::error_code & e);
 
             void registerDefaultSignalsAndSlots();
 
@@ -1076,6 +1111,13 @@ namespace karabo {
             karabo::util::Hash::Pointer hash = boost::make_shared<karabo::util::Hash>();
             karabo::util::pack(*hash, args...);
             registerReply(hash);
+        }
+
+        template <typename ...Args>
+        void SignalSlotable::asyncReply(const std::string& id, const Args&... args) {
+            // Place reply and treat it - which is template independent...
+            reply(args...);
+            asyncReplyImpl(id);
         }
 
         template <typename ...Args>
