@@ -109,13 +109,16 @@ class SignalSlotable(Configurable):
     naming_regex = re.compile("[A-Za-z0-9_/-]+")
     signalChanged = Signal(HashType(), String())
 
-    _deviceId_ = String(
+    @String(
         displayedName="_DeviceID_",
         description="Do not set this property, it will be set by the "
                     "device-server",
         requiredAccessLevel=AccessLevel.EXPERT,
         assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
         defaultValue="__none__")
+    def _deviceId_(self, value):
+        self._deviceId_ = value
+        self.logger = logging.getLogger(value)
 
     deviceId = String(
         displayedName="DeviceID",
