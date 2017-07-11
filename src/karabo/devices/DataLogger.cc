@@ -24,9 +24,14 @@ namespace karabo {
         using namespace karabo::io;
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>, DataLogger)
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger)
 
         void DataLogger::expectedParameters(Schema& expected) {
+
+            OVERWRITE_ELEMENT(expected).key("state")
+                    .setNewOptions(State::INIT, State::NORMAL)
+                    .setNewDefaultValue(State::INIT)
+                    .commit();
 
             STRING_ELEMENT(expected).key("deviceToBeLogged")
                     .displayedName("Device to be logged")
@@ -74,7 +79,7 @@ namespace karabo {
 
 
         DataLogger::DataLogger(const Hash& input)
-            : karabo::core::Device<karabo::core::OkErrorFsm>(input)
+            : karabo::core::Device<>(input)
             , m_currentSchemaChanged(true)
             , m_pendingLogin(true)
             , m_propsize(0)
@@ -93,6 +98,8 @@ namespace karabo {
             KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
             KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
             KARABO_SLOT(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
+
+            KARABO_INITIAL_FUNCTION(initialize)
         }
 
 
@@ -105,7 +112,7 @@ namespace karabo {
         }
 
 
-        void DataLogger::okStateOnEntry() {
+        void DataLogger::initialize() {
 
             boost::system::error_code ec;
 
@@ -175,6 +182,8 @@ namespace karabo {
             if (++m_numChangedConnected == 2) {
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting slotGetConfiguration (no wait)";
                 requestNoWait(m_deviceToBeLogged, "slotGetConfiguration", "", "slotChanged");
+                // Done with initialisation:
+                updateState(State::NORMAL);
             }
         }
 
