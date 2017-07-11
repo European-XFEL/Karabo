@@ -146,9 +146,9 @@ namespace karabo {
                                          m_deviceToBeLogged, "slotGetSchema", "", "slotSchemaUpdated", false),
                          util::bind_weak(&DataLogger::errorToDieHandle, this, failMsgBegin + "signalSchemaUpdated")
                          );
-
             // Finally connect concurrently both, signalStateChanged and signalChanged, to the same slot.
-            // The pollConfig that is called as the second one will then request the configuration.
+            // The same pollConfig is callback (in case of success) for both connection requests. The second
+            // time it is called it will request the configuration.
             asyncConnect(m_deviceToBeLogged, "signalStateChanged", "", "slotChanged",
                          util::bind_weak(&DataLogger::pollConfig, this),
                          util::bind_weak(&DataLogger::errorToDieHandle, this, failMsgBegin + "signalStateChanged")
@@ -165,7 +165,7 @@ namespace karabo {
 
         void DataLogger::wrapRequestNoWaitBool(const std::string& requestedId, const std::string& requestedSlot,
                                                const std::string& replyId, const std::string& replySlot, bool arg) {
-            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Request (no wait) " << requestedSlot;
+            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting " << requestedSlot << " (no wait)";
             requestNoWait<bool>(requestedId, requestedSlot, replyId, replySlot, arg);
         }
 
@@ -173,7 +173,7 @@ namespace karabo {
         void DataLogger::pollConfig() {
             boost::mutex::scoped_lock lock(m_numChangedConnectedMutex);
             if (++m_numChangedConnected == 2) {
-                KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Request (no wait) slotGetConfiguration";
+                KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting slotGetConfiguration (no wait)";
                 requestNoWait(m_deviceToBeLogged, "slotGetConfiguration", "", "slotChanged");
             }
         }
