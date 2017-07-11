@@ -155,10 +155,21 @@ namespace karabo {
 
             karabo::util::Hash getAvailableInstances(const bool activateTracking = false);
 
-            std::vector<std::string> getAvailableSignals(const std::string& instanceId);
+            /**
+             * This is a synchronous call with timeout in milliseconds return vector of device signals.
+             * @param instanceId of the device
+             * @param timeout in milliseconds
+             * @return vector of device's signal names
+             */
+            std::vector<std::string> getAvailableSignals(const std::string& instanceId, int timeout = 100);
 
-            std::vector<std::string> getAvailableSlots(const std::string& instanceId);
-
+            /**
+             * This is a synchronous call with timeout in milliseconds return vector of device slots.
+             * @param instanceId of the device
+             * @param timeout in milliseconds
+             * @return vector of device's slot names
+             */
+            std::vector<std::string> getAvailableSlots(const std::string& instanceId, int timeout = 100);
 
             /**
              * Retrieves currently logged in username (empty if not logged in)
