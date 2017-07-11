@@ -15,8 +15,6 @@
 
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/core/Device.hh"
-#include "karabo/core/OkErrorFsm.hh"
-#include "karabo/core/Worker.hh"
 
 
 /**
@@ -38,8 +36,9 @@ namespace karabo {
          * system and logs its slow control data. DataLoggers are managed by the
          * karabo::devices::DataLoggerManager. Information is passed to them using a dedicated p2p
          * channel, thus logging does not result in additional broker load.
+         * When it is ready to log data its state changes from INIT to NORMAL.
          */
-        class DataLogger : public karabo::core::Device<karabo::core::OkErrorFsm> {
+        class DataLogger : public karabo::core::Device<> {
 
             std::string m_deviceToBeLogged;
 
@@ -66,6 +65,10 @@ namespace karabo {
             bool m_doFlushFiles;
             unsigned int m_flushInterval;
 
+            // Only for initialisation - counting connections to signalChanged and signalStateChanged
+            boost::mutex m_numChangedConnectedMutex;
+            int m_numChangedConnected;
+
         public:
 
             KARABO_CLASSINFO(DataLogger, "DataLogger", "1.0")
@@ -78,7 +81,7 @@ namespace karabo {
 
         private: // Functions
 
-            void okStateOnEntry();
+            void initialize();
 
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
@@ -103,9 +106,14 @@ namespace karabo {
              */
             void slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason);
 
-            void handleFirstSchemaRequest(const karabo::util::Schema& schema, const std::string& deviceId);
+            /// Helper used as error callback that triggers device suicide.
+            void errorToDieHandle(const std::string& reason) const;
 
-            void errorHandleFirstSchemaRequest();
+            void wrapRequestNoWaitBool(const std::string& requestedId, const std::string& requestedSlot,
+                                       const std::string& replyId, const std::string& replySlot, bool arg);
+
+            /// Helper for connecting to both signalChanged and signalStateChanged
+            void pollConfig();
 
             int determineLastIndex(const std::string& deviceId);
 
