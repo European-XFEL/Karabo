@@ -1115,6 +1115,9 @@ namespace karabo {
 
         template <typename ...Args>
         void SignalSlotable::asyncReply(const std::string& id, const Args&... args) {
+            // If id is empty, we cannot reply - likely that does not matter (see registerAsyncReply()).
+            if (id.empty()) return;
+
             // Place reply and treat it - which is template independent...
             reply(args...);
             asyncReplyImpl(id);

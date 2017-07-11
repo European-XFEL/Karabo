@@ -577,6 +577,7 @@ void SignalSlotable_Test::testAsyncReply() {
         SignalSlotableAsyncReply(const std::string& instanceId)
             : karabo::xms::SignalSlotable(instanceId)
             , m_slotCallEnded(false)
+            , m_asynReplyHandlerCalled(false)
             , m_timer(karabo::net::EventLoop::getIOService()) {
 
             KARABO_SLOT(slotAsyncReply, int);
@@ -591,11 +592,13 @@ void SignalSlotable_Test::testAsyncReply() {
             m_timer.async_wait([replyId, i, this](const boost::system::error_code & ec) {
                 if (ec) return;
                 this->asyncReply(replyId, 2 * i + 1);
+                this->m_asynReplyHandlerCalled = true;
             });
             m_slotCallEnded = true;
         }
 
         bool m_slotCallEnded;
+        bool m_asynReplyHandlerCalled;
     private:
         boost::asio::deadline_timer m_timer;
 
@@ -634,9 +637,25 @@ void SignalSlotable_Test::testAsyncReply() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
     // Assert and also check result:
+    CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
     CPPUNIT_ASSERT(received);
     CPPUNIT_ASSERT(resultIs7);
     CPPUNIT_ASSERT(!errorHappened);
+
+    //
+    // Now check that we can call a slot with an async reply directly (although the reply does not matter)
+    //
+    slotter->m_slotCallEnded = false;
+    slotter->m_asynReplyHandlerCalled = false;
+    CPPUNIT_ASSERT_NO_THROW(slotter->slotAsyncReply(3));
+    CPPUNIT_ASSERT(slotter->m_slotCallEnded);
+
+    counter = 20;
+    while (--counter >= 0) {
+        if (slotter->m_asynReplyHandlerCalled) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+    CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
 }
 
 void SignalSlotable_Test::testAutoConnectSignal() {
