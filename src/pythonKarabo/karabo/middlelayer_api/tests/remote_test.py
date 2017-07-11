@@ -613,10 +613,16 @@ class Tests(DeviceTest):
     @async_tst
     def test_earlylog(self):
         class A(Device):
+            @Int32()
+            def logint(self, value):
+                self.logger.info("log the int")
+
             @coroutine
             def onInitialization(self):
                 self.logger.info("some test log message")
-        a = A({"_deviceId_": "testearlylog"})
+        with self.assertLogs("testearlylog", level="INFO") as cm:
+            a = A({"_deviceId_": "testearlylog"})
+        self.assertEqual(cm.records[0].msg, "log the int")
         with self.assertLogs("testearlylog", level="INFO") as cm:
             yield from a.startInstance()
         self.assertEqual(cm.records[0].msg, "some test log message")
