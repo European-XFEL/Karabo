@@ -24,9 +24,14 @@ namespace karabo {
         using namespace karabo::io;
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>, DataLogger)
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger)
 
         void DataLogger::expectedParameters(Schema& expected) {
+
+            OVERWRITE_ELEMENT(expected).key("state")
+                    .setNewOptions(State::INIT, State::NORMAL)
+                    .setNewDefaultValue(State::INIT)
+                    .commit();
 
             STRING_ELEMENT(expected).key("deviceToBeLogged")
                     .displayedName("Device to be logged")
@@ -74,13 +79,14 @@ namespace karabo {
 
 
         DataLogger::DataLogger(const Hash& input)
-            : karabo::core::Device<karabo::core::OkErrorFsm>(input)
+            : karabo::core::Device<>(input)
             , m_currentSchemaChanged(true)
             , m_pendingLogin(true)
             , m_propsize(0)
             , m_lasttime(0)
             , m_flushDeadline(karabo::net::EventLoop::getIOService())
-            , m_doFlushFiles(true) {
+            , m_doFlushFiles(true)
+            , m_numChangedConnected(0) {
 
             m_idxprops.clear();
 
@@ -92,6 +98,8 @@ namespace karabo {
             KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
             KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
             KARABO_SLOT(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
+
+            KARABO_INITIAL_FUNCTION(initialize)
         }
 
 
@@ -104,7 +112,7 @@ namespace karabo {
         }
 
 
-        void DataLogger::okStateOnEntry() {
+        void DataLogger::initialize() {
 
             boost::system::error_code ec;
 
@@ -128,39 +136,64 @@ namespace karabo {
 
             m_lastIndex = determineLastIndex(m_deviceToBeLogged);
 
-            connect(m_deviceToBeLogged, "signalChanged", "", "slotChanged");
-            connect(m_deviceToBeLogged, "signalStateChanged", "", "slotChanged");
-            connect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated");
-
-            // Request initial schema (and then also initial configuration),
-            // error (e.g. timeout) handler kills the logger since without Schema it cannot log anything.
-            request(m_deviceToBeLogged, "slotGetSchema", false)
-                    .receiveAsync<Schema, std::string>(util::bind_weak(&DataLogger::handleFirstSchemaRequest, this, _1, _2),
-                                                       util::bind_weak(&DataLogger::errorHandleFirstSchemaRequest, this));
-
+            // First try to establish p2p before connecting signals - i.e. don't to spam the broker with signalChanged.
             if (std::getenv("KARABO_DISABLE_LOGGER_P2P") == NULL) {
-                connectP2P(m_deviceToBeLogged);
+                if (!connectP2P(m_deviceToBeLogged)) { // This should become asynchronous!
+                    // As of now (2017-07-07), this is expected for middlelayer...
+                    KARABO_LOG_FRAMEWORK_WARN << "Could not establish p2p to " << m_deviceToBeLogged;
+                }
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "Data logging via p2p has been disabled for loggers!";
             }
+
+            // Then connect to schema updates and afterwards request Schema (in other order we might miss an update).
+            const std::string failMsgBegin("Failed to connect to ");
+            asyncConnect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated",
+                         util::bind_weak(&DataLogger::wrapRequestNoWaitBool, this,
+                                         m_deviceToBeLogged, "slotGetSchema", "", "slotSchemaUpdated", false),
+                         util::bind_weak(&DataLogger::errorToDieHandle, this, failMsgBegin + "signalSchemaUpdated")
+                         );
+            // Finally connect concurrently both, signalStateChanged and signalChanged, to the same slot.
+            // The same pollConfig is callback (in case of success) for both connection requests. The second
+            // time it is called it will request the configuration.
+            asyncConnect(m_deviceToBeLogged, "signalStateChanged", "", "slotChanged",
+                         util::bind_weak(&DataLogger::pollConfig, this),
+                         util::bind_weak(&DataLogger::errorToDieHandle, this, failMsgBegin + "signalStateChanged")
+                         );
+            asyncConnect(m_deviceToBeLogged, "signalChanged", "", "slotChanged",
+                         util::bind_weak(&DataLogger::pollConfig, this),
+                         util::bind_weak(&DataLogger::errorToDieHandle, this, failMsgBegin + "signalChanged")
+                         );
 
             m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
             m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
 
 
-        void DataLogger::handleFirstSchemaRequest(const Schema& schema, const std::string& deviceId) {
-            slotSchemaUpdated(schema, deviceId);
-            requestNoWait(m_deviceToBeLogged, "slotGetConfiguration", "", "slotChanged");
+        void DataLogger::wrapRequestNoWaitBool(const std::string& requestedId, const std::string& requestedSlot,
+                                               const std::string& replyId, const std::string& replySlot, bool arg) {
+            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting " << requestedSlot << " (no wait)";
+            requestNoWait<bool>(requestedId, requestedSlot, replyId, replySlot, arg);
         }
 
 
-        void DataLogger::errorHandleFirstSchemaRequest() {
+        void DataLogger::pollConfig() {
+            boost::mutex::scoped_lock lock(m_numChangedConnectedMutex);
+            if (++m_numChangedConnected == 2) {
+                KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting slotGetConfiguration (no wait)";
+                requestNoWait(m_deviceToBeLogged, "slotGetConfiguration", "", "slotChanged");
+                // Done with initialisation:
+                updateState(State::NORMAL);
+            }
+        }
+
+
+        void DataLogger::errorToDieHandle(const std::string& reason) const {
             try {
                 throw; // This will tell us which exception triggered the call to this error handler.
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " will kill itself due to problem requesting Schema: "
-                        << e.what();
+                KARABO_LOG_FRAMEWORK_WARN << "Reason '" << reason << "' causes '" << getInstanceId()
+                        << "' to kill itself after exception: " << e.what();
             }
             call("", "slotKillDevice");
         }
