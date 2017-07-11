@@ -259,7 +259,7 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             executeNoWait(d, "count")
             waitUntil(lambda: d.counter == 0)
-            q = Queue(d).counter
+            q = Queue(d.counter)
             for i in range(1, 30):
                 j = q.get()
                 self.assertEqual(i, j)
