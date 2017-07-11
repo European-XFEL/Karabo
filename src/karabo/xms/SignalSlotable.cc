@@ -670,14 +670,17 @@ namespace karabo {
 
                             SlotInstancePointer slot = getSlot(slotFunction);
                             if (slot) {
-                                { // Store slot for asyncReply (never cleared to avoid mutex lock [number of threads is finite])
+                                { // Store slot for asyncReply
                                     boost::mutex::scoped_lock lock(m_currentSlotsMutex);
                                     m_currentSlots[boost::this_thread::get_id()] = std::make_pair(slotFunction, globalCall);
                                 }
-                                // TODO:
-                                // better some callRegisteredSlotFunctions with HashPtr for header since will be copied...
+                                // TODO: callRegisteredSlotFunctions copies header since it is passed by value :-(.
                                 slot->callRegisteredSlotFunctions(*header, *body);
                                 sendPotentialReply(*header, slotFunction, globalCall);
+                                { // Clean again
+                                    boost::mutex::scoped_lock lock(m_currentSlotsMutex);
+                                    m_currentSlots.erase(boost::this_thread::get_id());
+                                }
                             } else if (!globalCall) {
                                 // Warn on non-existing slot, but only if directly addressed:
                                 KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a message from '"
@@ -715,24 +718,32 @@ namespace karabo {
 
         std::string SignalSlotable::registerAsyncReply() {
             // Get name of current slot (sometimes referred to as 'slotFunction'):
-            std::pair <std::string, bool> slotName_calledGlobally;
+            std::pair<std::string, bool> slotName_calledGlobally;
             {
                 boost::mutex::scoped_lock lock(m_currentSlotsMutex);
-                slotName_calledGlobally = m_currentSlots[boost::this_thread::get_id()];
+                const auto it = m_currentSlots.find(boost::this_thread::get_id());
+                if (it != m_currentSlots.end()) {
+                    slotName_calledGlobally = it->second;
+                }
+                // else { // slot is not called via processEvent and thus any reply does not matter!}
             }
+
+            std::string id;
             const std::string& slotName = slotName_calledGlobally.first;
+            // If no slotName placed, reply does not matter (see above) - we mark this as empty id.
+            if (!slotName.empty()) {
+                // Prepare asyncReplyId and prepare relevant information
+                ((id += getInstanceId()) += slotName) += generateUUID(); // instanceId/slot for debugging
+                {
+                    boost::mutex::scoped_lock lock(m_asyncReplyInfosMutex);
+                    m_asyncReplyInfos[id] = std::make_tuple(getSenderInfo(slotName)->getHeaderOfSender(), slotName,
+                                                            slotName_calledGlobally.second);
+                }
 
-            // Prepare asyncReplyId and prepare relevant information
-            const std::string id((getInstanceId() + slotName) += generateUUID()); // instanceId/slot for debugging
-            {
-                boost::mutex::scoped_lock lock(m_asyncReplyInfosMutex);
-                m_asyncReplyInfos[id] = std::make_tuple(getSenderInfo(slotName)->getHeaderOfSender(), slotName,
-                                                        slotName_calledGlobally.second);
+                // Place an invalid reply to avoid a default reply to be send (see sendPotentialReply):
+                // This will do the third mutex lock in this short method... :-(
+                registerReply(karabo::util::Hash::Pointer());
             }
-
-            // Place an invalid reply to avoid a default reply to be send (see sendPotentialReply):
-            // This will do the third mutex lock in this short method... :-()
-            registerReply(karabo::util::Hash::Pointer());
 
             return id;
         }
@@ -741,7 +752,7 @@ namespace karabo {
         void SignalSlotable::asyncReplyImpl(const std::string& id) {
             // reply has just been placed...
             try {
-                std::tuple < Hash::Pointer, std::string, bool> headerSlotnameGlobalflag;
+                std::tuple<Hash::Pointer, std::string, bool> headerSlotnameGlobalflag;
                 {
                     boost::mutex::scoped_lock lock(m_asyncReplyInfosMutex);
                     auto replyIt = m_asyncReplyInfos.find(id);
@@ -818,7 +829,7 @@ namespace karabo {
             }
 
             // For caseRequestNoWait it does not make sense to send an empty reply if
-            // the called slot did not place an answer (argument mismatch for reply slot).
+            // the called slot did not provide a reply itself (possible argument mismatch for reply slot).
             if (caseRequestNoWait && !replyPlaced) {
                 KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Slot '"
                         << slotFunction << "' did not place a "
