@@ -19,7 +19,7 @@ import dateutil.tz
 
 from .basetypes import KaraboValue
 from .device import Device
-from .eventloop import synchronize
+from .eventloop import EventLoop, synchronize
 from .exceptions import KaraboError
 from .hash import Hash, Type
 from .proxy import (ProxyBase, AutoDisconnectProxyFactory,
@@ -87,7 +87,6 @@ class OneShotQueue(asyncio.Future):
 
 @synchronize
 def waitUntilNew(*props):
-    # _new means since 1.5
     futures = []
     for prop in props:
         if isinstance(prop, ProxyBase):
@@ -222,24 +221,22 @@ def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
                                timeout=timeout, wait=wait)
 
 
-class Queue:
+class Queue(object):
     """A queue of property changes
 
     This allows you to track all the changes of a property on a remote device.
     An example of usage::
 
         q = Queue(motor.position)
-        new_position = q.get()
+        new_position = yield from q.get()
     """
+    def __init__(self, prop):
+        self.queue = asyncio.Queue(loop=EventLoop.global_loop)
+        prop._parent._queues[prop.descriptor.longkey].add(self.queue)
 
-    def __init__(self, proxy):
-        self.proxy = proxy
-
-    def __getattr__(self, attr):
-        assert isinstance(getattr(type(self.proxy), attr), Type)
-        queue = get_event_loop().Queue()
-        self.proxy._queues[attr].add(queue)
-        return queue
+    @synchronize
+    def get(self):
+        return (yield from self.queue.get())
 
 
 def get_instance():
