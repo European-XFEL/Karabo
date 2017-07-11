@@ -15,8 +15,6 @@
 
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/core/Device.hh"
-#include "karabo/core/OkErrorFsm.hh"
-#include "karabo/core/Worker.hh"
 
 
 /**
@@ -38,8 +36,9 @@ namespace karabo {
          * system and logs its slow control data. DataLoggers are managed by the
          * karabo::devices::DataLoggerManager. Information is passed to them using a dedicated p2p
          * channel, thus logging does not result in additional broker load.
+         * When it is ready to log data its state changes from INIT to NORMAL.
          */
-        class DataLogger : public karabo::core::Device<karabo::core::OkErrorFsm> {
+        class DataLogger : public karabo::core::Device<> {
 
             std::string m_deviceToBeLogged;
 
@@ -82,7 +81,7 @@ namespace karabo {
 
         private: // Functions
 
-            void okStateOnEntry();
+            void initialize();
 
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
