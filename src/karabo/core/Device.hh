@@ -159,8 +159,8 @@ namespace karabo {
             std::string m_serverId;
             std::string m_deviceId;
 
-            std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
-            mutable boost::mutex m_stateDependendSchemaMutex;
+            std::map<std::string, karabo::util::Schema> m_stateDependentSchema;
+            mutable boost::mutex m_stateDependentSchemaMutex;
 
             // Regular expression for error detection in state word
             boost::regex m_errorRegex;
@@ -853,7 +853,7 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
                     // Clear cache
-                    m_stateDependendSchema.clear();
+                    m_stateDependentSchema.clear();
 
                     // Save injected
                     m_injectedSchema.merge(schema);
@@ -861,13 +861,13 @@ namespace karabo {
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
 
+                    // Notify the distributed system
+                    emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+
+                    // Merge all parameters
+                    if (keepParameters) validated.merge(m_parameters);
                 }
 
-                // Notify the distributed system
-                emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
-
-                // Merge all parameters
-                if (keepParameters) validated.merge(m_parameters);
                 set(validated);
 
                 KARABO_LOG_INFO << "Schema updated";
@@ -903,7 +903,7 @@ namespace karabo {
                     }
 
                     // Clear cache
-                    m_stateDependendSchema.clear();
+                    m_stateDependentSchema.clear();
 
                     // Reset fullSchema
                     m_fullSchema = m_staticSchema;
@@ -913,13 +913,13 @@ namespace karabo {
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
+
+                    // Notify the distributed system
+                    emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+
+                    // Merge all parameters
+                    if (keepParameters) validated.merge(m_parameters);
                 }
-
-                // Notify the distributed system
-                emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
-
-                // Merge all parameters
-                if (keepParameters) validated.merge(m_parameters);
                 set(validated);
 
                 KARABO_LOG_INFO << "Schema updated";
@@ -1242,6 +1242,7 @@ namespace karabo {
              * @return the alarm condition of the property
              */
             const karabo::util::AlarmCondition & getAlarmCondition(const std::string & key, const std::string & sep = ".") const {
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 const std::string& propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep);
                 return karabo::util::AlarmCondition::fromString(propertyCondition);
             }
@@ -1359,6 +1360,9 @@ namespace karabo {
                 this->initClassId();
                 this->initSchema();
 
+                bool hasAvailableScenes = false;
+                int  heartbeatInterval = 0;
+
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     // ClassId
@@ -1373,6 +1377,10 @@ namespace karabo {
                     std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, getActualTimestamp());
                     if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
+
+                    // Do this under mutex protection
+                    hasAvailableScenes = m_parameters.has("availableScenes");
+                    heartbeatInterval  = m_parameters.get<int>("heartbeatInterval");
                 }
 
                 // Prepare some info further describing this particular instance
@@ -1388,11 +1396,11 @@ namespace karabo {
 
                 // the capabilities field specifies the optional capabilities a device provides.
                 unsigned int capabilities = 0;
-                if (m_parameters.has("availableScenes")) capabilities |= Capabilities::PROVIDES_SCENES;
+                if (hasAvailableScenes) capabilities |= Capabilities::PROVIDES_SCENES;
                 instanceInfo.set("capabilities", capabilities);
 
                 // Initialize the SignalSlotable instance
-                init(m_deviceId, m_connection, m_parameters.get<int>("heartbeatInterval"), instanceInfo);
+                init(m_deviceId, m_connection, heartbeatInterval, instanceInfo);
 
                 //
                 // Now do all registrations etc. (Note that it is safe to register slots in the constructor)
@@ -1609,6 +1617,7 @@ namespace karabo {
             void slotGetSchema(bool onlyCurrentState) {
                 if (onlyCurrentState) {
                     const karabo::util::State& currentState = getState();
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     const karabo::util::Schema schema(getStateDependentSchema(currentState));
                     reply(schema, m_deviceId);
                 } else {
@@ -1646,6 +1655,7 @@ namespace karabo {
             std::pair<bool, std::string> validate(const karabo::util::Hash& unvalidated, karabo::util::Hash& validated) {
                 // Retrieve the current state of the device instance
                 const karabo::util::State& currentState = getState();
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 const karabo::util::Schema whiteList(getStateDependentSchema(currentState));
                 KARABO_LOG_DEBUG << "Incoming (un-validated) reconfiguration:\n" << unvalidated;
                 std::pair<bool, std::string> valResult = m_validatorExtern.validate(whiteList, unvalidated, validated, getActualTimestamp());
@@ -1685,11 +1695,11 @@ namespace karabo {
                 using namespace karabo::util;
                 const std::string& currentState = state.name();
                 KARABO_LOG_DEBUG << "call: getStateDependentSchema() for state: " << currentState;
-                boost::mutex::scoped_lock lock(m_stateDependendSchemaMutex);
+                boost::mutex::scoped_lock lock(m_stateDependentSchemaMutex);
                 // Check cache, whether a special set of state-dependent expected parameters was created before
-                std::map<std::string, Schema>::iterator it = m_stateDependendSchema.find(currentState);
-                if (it == m_stateDependendSchema.end()) { // No
-                    it = m_stateDependendSchema.insert(make_pair(currentState, Device::getSchema(m_classId, Schema::AssemblyRules(WRITE, currentState)))).first; // New one
+                std::map<std::string, Schema>::iterator it = m_stateDependentSchema.find(currentState);
+                if (it == m_stateDependentSchema.end()) { // No
+                    it = m_stateDependentSchema.insert(make_pair(currentState, Device::getSchema(m_classId, Schema::AssemblyRules(WRITE, currentState)))).first; // New one
                     KARABO_LOG_DEBUG << "Providing freshly cached state-dependent schema:\n" << it->second;
                     if (!m_injectedSchema.empty()) it->second.merge(m_injectedSchema);
                 } else {
@@ -1805,8 +1815,11 @@ namespace karabo {
                         Hash& entry = entryNode.getValue<Hash>();
 
                         entry.set("type", conditionString);
-                        entry.set("description", m_fullSchema.getInfoForAlarm(propertyDotSep, condition));
-                        entry.set("needsAcknowledging", m_fullSchema.doesAlarmNeedAcknowledging(propertyDotSep, condition));
+                        {
+                            boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                            entry.set("description", m_fullSchema.getInfoForAlarm(propertyDotSep, condition));
+                            entry.set("needsAcknowledging", m_fullSchema.doesAlarmNeedAcknowledging(propertyDotSep, condition));
+                        }
                         const Timestamp& occuredAt = Timestamp::fromHashAttributes(it->getAttributes());
                         occuredAt.toHashAttributes(entryNode.getAttributes());
                     }
@@ -1853,8 +1866,8 @@ namespace karabo {
              */
             void slotUpdateSchemaAttributes(const std::vector<karabo::util::Hash>& updates) {
                 bool success = false;
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     success = m_fullSchema.applyRuntimeUpdates(updates);
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
