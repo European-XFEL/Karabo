@@ -322,8 +322,8 @@ namespace karabo {
 
             /**
              * Send asynchronous reply registered before with registerAsyncReply inside a slot.
-             * Can be used in asynchronous callback handlers posted by a slot
-             * @param id as returned before from registerAsyncReply
+             * Can be used in asynchronous callback handlers posted by a slot.
+             * @param id as returned before from registerAsyncReply - if empty, reply is ignored
              * @param args up to four return values of the slot
              */
             template <typename ...Args>
