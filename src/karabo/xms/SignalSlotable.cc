@@ -1040,10 +1040,10 @@ namespace karabo {
         }
 
 
-        std::vector<string> SignalSlotable::getAvailableSignals(const std::string& instanceId) {
+        std::vector<string> SignalSlotable::getAvailableSignals(const std::string& instanceId, int tout) {
             std::vector<string> signals;
             try {
-                request(instanceId, "slotGetAvailableFunctions", "signals").timeout(100).receive(signals);
+                request(instanceId, "slotGetAvailableFunctions", "signals").timeout(tout).receive(signals);
             } catch (const karabo::util::TimeoutException&) {
                 karabo::util::Exception::clearTrace();
                 cout << "ERROR:  The requested instanceId \"" << instanceId << "\" is currently not available." << endl;
@@ -1052,10 +1052,10 @@ namespace karabo {
         }
 
 
-        std::vector<string> SignalSlotable::getAvailableSlots(const std::string& instanceId) {
+        std::vector<string> SignalSlotable::getAvailableSlots(const std::string& instanceId, int tout) {
             std::vector<string> slots;
             try {
-                request(instanceId, "slotGetAvailableFunctions", "slots").timeout(100).receive(slots);
+                request(instanceId, "slotGetAvailableFunctions", "slots").timeout(tout).receive(slots);
             } catch (const karabo::util::TimeoutException&) {
                 karabo::util::Exception::clearTrace();
                 cout << "ERROR:  The requested instanceId \"" << instanceId << "\" is currently not available." << endl;
