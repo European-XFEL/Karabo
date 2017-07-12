@@ -920,6 +920,7 @@ namespace karabo {
                     // Merge all parameters
                     if (keepParameters) validated.merge(m_parameters);
                 }
+
                 set(validated);
 
                 KARABO_LOG_INFO << "Schema updated";
@@ -1815,11 +1816,8 @@ namespace karabo {
                         Hash& entry = entryNode.getValue<Hash>();
 
                         entry.set("type", conditionString);
-                        {
-                            boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                            entry.set("description", m_fullSchema.getInfoForAlarm(propertyDotSep, condition));
-                            entry.set("needsAcknowledging", m_fullSchema.doesAlarmNeedAcknowledging(propertyDotSep, condition));
-                        }
+                        entry.set("description", m_fullSchema.getInfoForAlarm(propertyDotSep, condition));
+                        entry.set("needsAcknowledging", m_fullSchema.doesAlarmNeedAcknowledging(propertyDotSep, condition));
                         const Timestamp& occuredAt = Timestamp::fromHashAttributes(it->getAttributes());
                         occuredAt.toHashAttributes(entryNode.getAttributes());
                     }
