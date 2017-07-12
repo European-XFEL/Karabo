@@ -32,7 +32,7 @@ def system_hash():
         'capabilities': Capabilities.PROVIDES_SCENES,
         'serverId': 'swerver',
         'classId': 'FooClass',
-        'status': 'testing'
+        'status': 'online'
     }
     h['macro.macdonald'] = None
     h['macro.macdonald', ...] = {
@@ -40,7 +40,7 @@ def system_hash():
         'visibility': AccessLevel.OBSERVER,
         'serverId': 'swerver',
         'classId': 'BarClass',
-        'status': 'metacontrolling'
+        'status': 'incompatible'
     }
 
     h['device.orphan'] = None
@@ -48,7 +48,7 @@ def system_hash():
         'visibility': AccessLevel.OBSERVER,
         'serverId': '__none__',
         'classId': 'Parentless',
-        'status': 'existential'
+        'status': 'noserver'
     }
 
     return h

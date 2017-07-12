@@ -9,12 +9,13 @@ from io import StringIO
 from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance, String, on_trait_change
 
+from karabo.common.api import DeviceStatus
 from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabo_gui import icons
 from karabo_gui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
     KaraboEventSender)
-from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
+from karabo_gui.indicators import get_project_device_status_icon
 from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
@@ -39,7 +40,7 @@ class MacroInstanceController(BaseProjectController):
         return menu
 
     def create_ui_data(self):
-        icon = get_project_device_status_icon(DeviceStatus.STATUS_ONLINE)
+        icon = get_project_device_status_icon(DeviceStatus.ONLINE)
         return ProjectControllerUiData(icon=icon)
 
     def single_click(self, project_controller, parent=None):
@@ -122,7 +123,8 @@ class MacroController(BaseProjectGroupController):
         running_instances = self.model.instances
         for dev_id, class_id, status in devices:
             if dev_id.startswith(self.model.instance_id):
-                if status == 'offline' and dev_id in running_instances:
+                if (status is DeviceStatus.OFFLINE and
+                        dev_id in running_instances):
                     running_instances.remove(dev_id)
                 elif dev_id not in running_instances:
                     running_instances.append(dev_id)

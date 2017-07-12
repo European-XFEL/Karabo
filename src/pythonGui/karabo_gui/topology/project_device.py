@@ -4,9 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from traits.api import (HasStrictTraits, Bool, Event, Instance, Property,
+from traits.api import (HasStrictTraits, Bool, Enum, Event, Instance, Property,
                         String, WeakRef)
 
+from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Hash
 from karabo_gui.configuration import Configuration
 from karabo_gui.singletons.api import get_topology
@@ -27,7 +28,7 @@ class ProjectDeviceInstance(HasStrictTraits):
     # Binary online/offline state of the device
     online = Bool
     # Current status of the online device (never the offline device)
-    status = String('offline')
+    status = Enum(*DeviceStatus)
     # The current configuration for this device
     current_configuration = Property(Instance(Configuration))
 
@@ -193,8 +194,8 @@ class ProjectDeviceInstance(HasStrictTraits):
         """
         conf = box.configuration
         if conf.serverId == self.server_id and conf.classId == self.class_id:
-            return 'error' if error_flag else status
-        return 'incompatible'
+            return DeviceStatus.ERROR if error_flag else status
+        return DeviceStatus.INCOMPATIBLE
 
     def _update_offline_status(self):
         """Return correct offline status for given ``server_id`` and
@@ -204,7 +205,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         server_key = 'server.{}'.format(self.server_id)
         attributes = topology.get_attributes(server_key)
         if attributes is None:
-            return 'noserver'
+            return DeviceStatus.NOSERVER
         elif self.class_id not in attributes.get('deviceClasses', []):
-            return 'noplugin'
-        return 'offline'
+            return DeviceStatus.NOPLUGIN
+        return DeviceStatus.OFFLINE

@@ -7,6 +7,7 @@
 from traits.api import (HasStrictTraits, Bool, Dict, Instance, Property,
                         on_trait_change)
 
+from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Hash, Schema
 from karabo_gui.alarms.api import ADD_ALARM_TYPES, REMOVE_ALARM_TYPES
 from karabo_gui.configuration import BulkNotifications, Configuration
@@ -99,10 +100,10 @@ class SystemTopology(HasStrictTraits):
             klass = Configuration(path, 'class')
             self._class_configurations[key] = klass
 
-        statuses = ('requested', 'schema')
+        statuses = (DeviceStatus.REQUESTED, DeviceStatus.SCHEMA)
         if klass.descriptor is None or klass.status not in statuses:
             get_network().onGetClassSchema(*key)
-            klass.status = 'requested'
+            klass.status = DeviceStatus.REQUESTED
 
         return klass
 
@@ -121,10 +122,10 @@ class SystemTopology(HasStrictTraits):
             if finder.node:
                 device.topology_node = finder.node
 
-        statuses = ('offline', 'requested')
+        statuses = (DeviceStatus.OFFLINE, DeviceStatus.REQUESTED)
         if device.descriptor is None and device.status not in statuses:
             get_network().onGetDeviceSchema(device_id)
-            device.status = 'requested'
+            device.status = DeviceStatus.REQUESTED
 
         return device
 
@@ -239,10 +240,10 @@ class SystemTopology(HasStrictTraits):
         with BulkNotifications(device):
             device.fromHash(config)
 
-        if device.status == 'schema':
-            device.status = 'alive'
-        if device.status == 'alive' and device.visible > 0:
-            device.status = 'monitoring'
+        if device.status is DeviceStatus.SCHEMA:
+            device.status = DeviceStatus.ALIVE
+        if device.status is DeviceStatus.ALIVE and device.visible > 0:
+            device.status = DeviceStatus.MONITORING
 
         return device
 
@@ -258,7 +259,7 @@ class SystemTopology(HasStrictTraits):
 
         conf = self._online_devices[device_id]
         # Schema already existent -> schema injected
-        if conf.status in ('alive', 'monitoring'):
+        if conf.status in (DeviceStatus.ALIVE, DeviceStatus.MONITORING):
             get_network().onGetDeviceConfiguration(conf)
 
         # Clear the configuration editor
@@ -290,7 +291,7 @@ class SystemTopology(HasStrictTraits):
             # Set the Configuration to offline, but keep it.
             device = self._online_devices.get(instance_id)
             if device is not None:
-                device.status = 'offline'
+                device.status = DeviceStatus.OFFLINE
                 clear_configuration_instance(device)
 
             # Update system tree
@@ -298,7 +299,7 @@ class SystemTopology(HasStrictTraits):
 
             # Note the details of what device is gone
             class_id = attributes.get('classId', 'unknown-class')
-            devices.append((instance_id, class_id, 'offline'))
+            devices.append((instance_id, class_id, DeviceStatus.OFFLINE))
 
         elif instance_type == 'server':
             # Clear configuration parameter pages for the server's classes
@@ -313,7 +314,7 @@ class SystemTopology(HasStrictTraits):
 
             # Note the details of what device is gone
             host = attributes.get('host', 'UNKNOWN')
-            servers.append((instance_id, host, 'offline'))
+            servers.append((instance_id, host, DeviceStatus.OFFLINE))
 
         return devices, servers
 

@@ -1,5 +1,6 @@
 from traits.api import push_exception_handler, pop_exception_handler
 
+from karabo.common.api import DeviceStatus
 from karabo.middlelayer import AccessLevel
 from karabo_gui.enums import NavigationItemTypes
 from ..tree import SystemTree, SystemTreeNode
@@ -18,7 +19,7 @@ def test_tree_node_basics():
     empty = SystemTreeNode(
         node_id='node_id', path='path',
         visibility=AccessLevel.OPERATOR,
-        status='testing',
+        status=DeviceStatus.OFFLINE,
         children=[]
     )
 
