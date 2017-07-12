@@ -1816,6 +1816,7 @@ namespace karabo {
                         Hash& entry = entryNode.getValue<Hash>();
 
                         entry.set("type", conditionString);
+                        // We expect to be protected by locking of m_objectStateChangeMutex outside of the current function 
                         entry.set("description", m_fullSchema.getInfoForAlarm(propertyDotSep, condition));
                         entry.set("needsAcknowledging", m_fullSchema.doesAlarmNeedAcknowledging(propertyDotSep, condition));
                         const Timestamp& occuredAt = Timestamp::fromHashAttributes(it->getAttributes());
