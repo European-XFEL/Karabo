@@ -585,13 +585,13 @@ void SignalSlotable_Test::testAsyncReply() {
 
 
         void slotAsyncReply(int i) {
-            const std::string replyId = registerAsyncReply();
+          AsyncReply reply(registerAsyncReply());
 
             // Let's stop this function call soon, but nevertheless send reply in 100 ms (likely in another thread!)
             m_timer.expires_from_now(boost::posix_time::milliseconds(100));
-            m_timer.async_wait([replyId, i, this](const boost::system::error_code & ec) {
+            m_timer.async_wait([reply, i, this](const boost::system::error_code & ec) {
                 if (ec) return;
-                this->asyncReply(replyId, 2 * i + 1);
+                reply(2 * i + 1);
                 this->m_asynReplyHandlerCalled = true;
             });
             m_slotCallEnded = true;

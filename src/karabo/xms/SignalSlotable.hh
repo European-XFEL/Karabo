@@ -62,6 +62,7 @@ namespace karabo {
             // Forward
         protected:
             class Requestor;
+            class AsyncReply;
 
         public:
 
@@ -321,13 +322,15 @@ namespace karabo {
             void reply(const Args&... args);
 
             /**
-             * Send asynchronous reply registered before with registerAsyncReply inside a slot.
-             * Can be used in asynchronous callback handlers posted by a slot.
-             * @param id as returned before from registerAsyncReply - if empty, reply is ignored
-             * @param args up to four return values of the slot
+             * Use within a slot call to prepare for sending the reply asynchronously.
+             * The returned AsyncReply is a functor that can later be passed the reply values as arguments.
+             * Note:
+             * As the synchronous reply(arg1,...), registerAsyncReply() must be called directly
+             * in the registered slot function, i.e. without posting to another thread.
+             * On the other hand, AsyncReply(...) is exactly foreseen for that case.
+             * @return id to be used as first argument in asyncReply
              */
-            template <typename ...Args>
-            void asyncReply(const std::string& id, const Args&... args);
+            SignalSlotable::AsyncReply registerAsyncReply();
 
             template <typename ...Args>
             void registerSignal(const std::string& funcName);
@@ -504,6 +507,33 @@ namespace karabo {
                 int m_timeout;
                 static boost::uuids::random_generator m_uuidGenerator;
 
+            };
+
+            class AsyncReply {
+
+            public:
+
+              // TODO: consider to make private and only accessible to SignalSlotable 
+              AsyncReply(SignalSlotable* signalSlotable, const std::string& id)
+                : m_signalSlotable(signalSlotable), m_replyId(id) {
+              }
+
+              // ~AsyncReply(); // not needed, nor has to be virtual
+
+              template <typename ...Args>
+              void operator () (const Args&... args)
+              {
+                if (m_replyId.empty()) return;
+
+                // Place rely and treat it in non-templated code with SignalSlotable internals
+                m_signalSlotable->reply(args...);
+                m_signalSlotable->asyncReplyImpl(m_replyId);
+              }
+
+            private:
+
+                SignalSlotable* m_signalSlotable;
+                std::string m_replyId;
             };
 
             struct SignalSlotConnection {
@@ -686,17 +716,6 @@ namespace karabo {
                 }
             }
 
-            /**
-             * Use within a slot call to prepare for sending the reply asynchronously.
-             * The returned string is an id to be passed later in asyncReply(id, arg1, ...);
-             * Note:
-             * As the synchronous reply(arg1,...), registerAsyncReply() must be called directly
-             * in the registered slot function, i.e. without posting to another thread.
-             * On the other hand, asyncReply(...) is exactly foreseen for that case.
-             * @return id to be used as first argument in asyncReply
-             */
-            std::string registerAsyncReply();
-
 
             void registerReply(const karabo::util::Hash::Pointer& reply);
 
@@ -759,7 +778,7 @@ namespace karabo {
 
             static std::string generateUUID();
 
-            void emitHeartbeat(const boost::system::error_code & e);
+            void emitHeartbeat(const boost::system::error_code& e);
 
             void registerDefaultSignalsAndSlots();
 
@@ -1111,16 +1130,6 @@ namespace karabo {
             karabo::util::Hash::Pointer hash = boost::make_shared<karabo::util::Hash>();
             karabo::util::pack(*hash, args...);
             registerReply(hash);
-        }
-
-        template <typename ...Args>
-        void SignalSlotable::asyncReply(const std::string& id, const Args&... args) {
-            // If id is empty, we cannot reply - likely that does not matter (see registerAsyncReply()).
-            if (id.empty()) return;
-
-            // Place reply and treat it - which is template independent...
-            reply(args...);
-            asyncReplyImpl(id);
         }
 
         template <typename ...Args>
