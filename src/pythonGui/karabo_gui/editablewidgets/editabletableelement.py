@@ -47,6 +47,7 @@ from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog,
                          QComboBox, QVBoxLayout, QWidget, QDialogButtonBox,
                          QCheckBox, QItemDelegate, QStyledItemDelegate)
 
+from karabo.common.api import DeviceStatus
 from karabo.middlelayer import (
     AccessMode, Bool, Hash, String, Type, Vector, VectorHash
 )
@@ -127,9 +128,10 @@ class TableModel(QAbstractTableModel):
                 monitoredDeviceId = alias.split(":")[0]
 
                 status = get_topology().get_device(monitoredDeviceId).status
-                if status in ["monitoring", "alive"]:
+                if status in (DeviceStatus.MONITORING, DeviceStatus.ALIVE):
                     return icons.tableOnline.pixmap(10, 10)
-                elif status in ["online", "requested", "schema"]:
+                elif status in (DeviceStatus.ONLINE, DeviceStatus.REQUESTED,
+                                DeviceStatus.SCHEMA):
                     return icons.tablePending.pixmap(10, 10)
                 else:
                     return icons.tableOffline.pixmap(10, 10)
