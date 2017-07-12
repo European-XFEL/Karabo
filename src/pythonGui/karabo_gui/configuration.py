@@ -7,6 +7,7 @@ import weakref
 
 from PyQt4.QtCore import pyqtSignal
 
+from karabo.common.api import DeviceStatus
 from karabo_gui.events import KaraboEventSender, broadcast_event
 from karabo_gui.schema import Schema, Box
 from karabo_gui.singletons.api import get_manager, get_network, get_topology
@@ -29,7 +30,7 @@ class BulkNotifications(object):
 
 
 class Configuration(Box):
-    signalStatusChanged = pyqtSignal(object, str, bool)
+    signalStatusChanged = pyqtSignal(object, object, bool)
     signalBoxChanged = pyqtSignal()
 
     def __init__(self, id, type, descriptor=None):
@@ -42,7 +43,7 @@ class Configuration(Box):
         assert type in ('class', 'projectClass', 'device', 'deviceGroupClass', 'deviceGroup')
         self.type = type
         self.id = id
-        self._status = "offline"
+        self._status = DeviceStatus.OFFLINE
         self.error = False
         self.parameterEditor = None
         self.bulk_changes = False
@@ -57,10 +58,10 @@ class Configuration(Box):
         if self.descriptor is not None:
             self.redummy()
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
-        if self.status == "requested":
+        if self.status is DeviceStatus.REQUESTED:
             if self.visible > 0:
                 _start_device_monitoring(self.id)
-            self.status = "schema"
+            self.status = DeviceStatus.SCHEMA
 
     @property
     def topology_node(self):
@@ -74,41 +75,25 @@ class Configuration(Box):
 
     @property
     def status(self):
-        """Each device can be in one of the following states:
-
-        "noserver": device server not available
-        "noplugin": class plugin not available
-        "incompatible": device running, but of different type
-        "offline": device could, but is not started
-        "online": the device is online but doesn't have a schema yet
-        "requested": a schema is requested, but didnt arrive yet
-        "schema": the device has a schema, but no value yet
-        "alive": everything is up-and-running
-        "monitoring": we are registered to monitor this device
-
-        "noserver", "noplugin", and "incompatible" only make sense
-        if we actually know the (future) server, so only for a device
-        in a project. Actual devices are just "offline". """
         return self._status
 
     @status.setter
     def status(self, value):
-        assert value in ('offline', 'noserver', 'noplugin', 'online',
-                         'incompatible', 'requested', 'schema', 'alive',
-                         'monitoring')
+        assert isinstance(value, DeviceStatus)
         if value != self._status:
             self._status = value
         self.signalStatusChanged.emit(self, value, self.error)
 
     def isOnline(self):
-        return self.status not in ("offline", "noplugin", "noserver",
-                                   "incompatible")
+        offline_statuses = (DeviceStatus.OFFLINE, DeviceStatus.NOPLUGIN,
+                            DeviceStatus.NOSERVER, DeviceStatus.INCOMPATIBLE)
+        return self.status not in offline_statuses
 
     def updateStatus(self):
         """ determine the status from the system topology """
         topology = get_topology()
         if not topology.online:
-            self.status = "offline"
+            self.status = DeviceStatus.OFFLINE
             return
 
         for k in ("device", "macro", "server"):
@@ -119,18 +104,21 @@ class Configuration(Box):
             break
         else:
             self.error = False
-            self.status = "offline"
+            self.status = DeviceStatus.OFFLINE
             return
 
         self.classId = attrs.get("classId")
         self.serverId = attrs.get("serverId")
         error = attrs.get("status") == "error"
         self.error = error
-        if self.status == "offline" and self.visible > 0:
+
+        special_statuses = (DeviceStatus.REQUESTED, DeviceStatus.SCHEMA,
+                            DeviceStatus.ALIVE, DeviceStatus.MONITORING)
+        if self.status is DeviceStatus.OFFLINE and self.visible > 0:
             get_network().onGetDeviceSchema(self.id)
-            self.status = "requested"
-        elif self.status not in ("requested", "schema", "alive", "monitoring"):
-            self.status = "online"
+            self.status = DeviceStatus.REQUESTED
+        elif self.status not in special_statuses:
+            self.status = DeviceStatus.ONLINE
         else:
             self.signalStatusChanged.emit(self, self.status, self.error)
 
@@ -153,23 +141,25 @@ class Configuration(Box):
             box.signalUpdateComponent.emit(box, value, timestamp)
 
     def addVisible(self):
+        ignored_statuses = (DeviceStatus.OFFLINE, DeviceStatus.REQUESTED)
         self.visible += 1
-        if self.visible == 1 and self.status not in ("offline", "requested"):
+        if self.visible == 1 and self.status not in ignored_statuses:
             network = get_network()
-            if self.status == "online":
+            if self.status is DeviceStatus.ONLINE:
                 network.onGetDeviceSchema(self.id)
-                self.status = "requested"
+                self.status = DeviceStatus.REQUESTED
             else:
                 _start_device_monitoring(self.id)
 
     __enter__ = addVisible
 
     def removeVisible(self):
+        ignored_statuses = (DeviceStatus.OFFLINE, DeviceStatus.REQUESTED)
         self.visible -= 1
-        if self.visible == 0 and self.status not in ("offline", "requested"):
+        if self.visible == 0 and self.status not in ignored_statuses:
             _stop_device_monitoring(self.id)
-            if self.status == "monitoring":
-                self.status = "alive"
+            if self.status is DeviceStatus.MONITORING:
+                self.status = DeviceStatus.ALIVE
 
     def __exit__(self, a, b, c):
         self.removeVisible()

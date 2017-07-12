@@ -8,7 +8,7 @@ from enum import Enum
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QIcon, QPainter, QPixmap
 
-from karabo.common.api import State
+from karabo.common.api import State, DeviceStatus
 from . import icons
 
 # --------------------------------------------------------------------------
@@ -102,21 +102,24 @@ def _create_state_icon(color):
         return QIcon(pix)
 
 
-def get_state_icon_for_status(status_str):
-    """Return a state icon which reflects the given ``status_str``
+def get_state_icon_for_status(status):
+    """Return a state icon which reflects the given `DeviceStatus`
     """
-    unknown_statuses = (DeviceStatus.STATUS_OFFLINE.value,
-                        DeviceStatus.STATUS_REQUESTED.value,
-                        DeviceStatus.STATUS_DEAD.value,
-                        DeviceStatus.STATUS_NOSERVER.value,
-                        DeviceStatus.STATUS_NOPLUGIN.value,
-                        DeviceStatus.STATUS_INCOMPATIBLE.value,
-                        DeviceStatus.STATUS_MISSING.value)
-    if status_str in unknown_statuses:
+    unknown_statuses = (DeviceStatus.OFFLINE,
+                        DeviceStatus.REQUESTED,
+                        DeviceStatus.DEAD,
+                        DeviceStatus.NOSERVER,
+                        DeviceStatus.NOPLUGIN,
+                        DeviceStatus.INCOMPATIBLE,
+                        DeviceStatus.MISSING)
+
+    if not isinstance(status, DeviceStatus):
+        status = DeviceStatus(status)
+
+    if status in unknown_statuses:
         return None
 
-    error = DeviceStatus.STATUS_ERROR.value
-    state = State.ERROR if status_str == error else State.ACTIVE
+    state = State.ERROR if status is DeviceStatus.ERROR else State.ACTIVE
     # XXX: Maybe show more color options in the future
     return get_state_icon(state)
 
@@ -124,57 +127,30 @@ def get_state_icon_for_status(status_str):
 # --------------------------------------------------------------------------
 # Mapping device status to icons
 
-class DeviceStatus(Enum):
-    # device could, but is not started
-    STATUS_OFFLINE = 'offline'
-    # the device is online, but no detailed information retrieved yet
-    STATUS_OK = 'ok'
-    # the device is online but doesn't have a schema yet
-    STATUS_ONLINE = 'online'
-    # everything is up-and-running
-    STATUS_ALIVE = 'alive'
-    # we are registered to monitor this device
-    STATUS_MONITORING = 'monitoring'
-    # a schema is requested, but didnt arrive yet
-    STATUS_REQUESTED = 'requested'
-    # the device has a schema, but no value yet
-    STATUS_SCHEMA = 'schema'
-    # the device is dead
-    STATUS_DEAD = 'dead'
-    # device server not available
-    STATUS_NOSERVER = 'noserver'
-    # class plugin not available
-    STATUS_NOPLUGIN = 'noplugin'
-    # device running, but of different type
-    STATUS_INCOMPATIBLE = 'incompatible'
-    STATUS_MISSING = 'missing'
-    STATUS_ERROR = 'error'
-
-
 def get_device_status_icon(status, error=False):
     """A `QIcon` for the given `status` is returned.
     """
     status_icons = {
-        DeviceStatus.STATUS_OFFLINE: icons.deviceOffline,
-        DeviceStatus.STATUS_OK: icons.deviceAlive,
-        DeviceStatus.STATUS_ALIVE: icons.deviceAlive,
-        DeviceStatus.STATUS_REQUESTED: icons.device_requested,
-        DeviceStatus.STATUS_SCHEMA: icons.device_schema,
-        DeviceStatus.STATUS_DEAD: icons.device_dead,
-        DeviceStatus.STATUS_NOSERVER: icons.deviceOfflineNoServer,
-        DeviceStatus.STATUS_NOPLUGIN: icons.deviceOfflineNoPlugin,
-        DeviceStatus.STATUS_INCOMPATIBLE: icons.deviceIncompatible,
-        DeviceStatus.STATUS_MISSING: icons.propertyMissing,
-        DeviceStatus.STATUS_ERROR: icons.device_error
+        DeviceStatus.OFFLINE: icons.deviceOffline,
+        DeviceStatus.OK: icons.deviceAlive,
+        DeviceStatus.ALIVE: icons.deviceAlive,
+        DeviceStatus.REQUESTED: icons.device_requested,
+        DeviceStatus.SCHEMA: icons.device_schema,
+        DeviceStatus.DEAD: icons.device_dead,
+        DeviceStatus.NOSERVER: icons.deviceOfflineNoServer,
+        DeviceStatus.NOPLUGIN: icons.deviceOfflineNoPlugin,
+        DeviceStatus.INCOMPATIBLE: icons.deviceIncompatible,
+        DeviceStatus.MISSING: icons.propertyMissing,
+        DeviceStatus.ERROR: icons.device_error
     }
 
     if not isinstance(status, DeviceStatus):
         status = DeviceStatus(status)
 
-    if status == DeviceStatus.STATUS_MONITORING and not error:
+    if status == DeviceStatus.MONITORING and not error:
         return None
-    elif status != DeviceStatus.STATUS_OFFLINE and error:
-        return status_icons.get(DeviceStatus.STATUS_ERROR)
+    elif status != DeviceStatus.OFFLINE and error:
+        return status_icons.get(DeviceStatus.ERROR)
 
     return status_icons.get(status)
 
@@ -196,19 +172,19 @@ def get_project_device_status_icon(status, error=False):
     NOTE: These icons are for the Project Panel
     """
     status_icons = {
-        DeviceStatus.STATUS_ERROR: icons.deviceInstanceError,
-        DeviceStatus.STATUS_NOSERVER: icons.deviceOfflineNoServer,
-        DeviceStatus.STATUS_NOPLUGIN: icons.deviceOfflineNoPlugin,
-        DeviceStatus.STATUS_OFFLINE: icons.deviceOffline,
-        DeviceStatus.STATUS_INCOMPATIBLE: icons.deviceIncompatible,
-        DeviceStatus.STATUS_MONITORING: icons.deviceMonitored,
+        DeviceStatus.ERROR: icons.deviceInstanceError,
+        DeviceStatus.NOSERVER: icons.deviceOfflineNoServer,
+        DeviceStatus.NOPLUGIN: icons.deviceOfflineNoPlugin,
+        DeviceStatus.OFFLINE: icons.deviceOffline,
+        DeviceStatus.INCOMPATIBLE: icons.deviceIncompatible,
+        DeviceStatus.MONITORING: icons.deviceMonitored,
     }
 
     if not isinstance(status, DeviceStatus):
         status = DeviceStatus(status)
 
-    if status != DeviceStatus.STATUS_OFFLINE and error:
-        return status_icons.get(DeviceStatus.STATUS_ERROR)
+    if status != DeviceStatus.OFFLINE and error:
+        return status_icons.get(DeviceStatus.ERROR)
 
     return status_icons.get(status, icons.deviceInstance)
 
@@ -219,9 +195,9 @@ def get_project_server_status_icon(status):
     NOTE: These icons are for the Project Panel
     """
     status_icons = {
-        DeviceStatus.STATUS_ONLINE: icons.yes,
-        DeviceStatus.STATUS_OK: icons.yes,
-        DeviceStatus.STATUS_OFFLINE: icons.no,
+        DeviceStatus.ONLINE: icons.yes,
+        DeviceStatus.OK: icons.yes,
+        DeviceStatus.OFFLINE: icons.no,
     }
 
     if not isinstance(status, DeviceStatus):
