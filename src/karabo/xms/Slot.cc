@@ -37,6 +37,11 @@ namespace karabo {
         }
 
 
+        karabo::util::Hash::Pointer Slot::getHeaderOfSender() const {
+            return m_headerOfSender;
+        }
+
+
         void Slot::extractSenderInformation(const karabo::util::Hash& header) {
             boost::optional<const Hash::Node&> node = header.find("userId");
             if (node) m_userIdOfSender = node->getValue<std::string>();
@@ -46,6 +51,8 @@ namespace karabo {
             if (node) m_instanceIdOfSender = node->getValue<std::string>();
             node = header.find("sessionToken");
             if (node) m_sessionTokenOfSender = node->getValue<std::string>();
+
+            m_headerOfSender = boost::make_shared<karabo::util::Hash>(header);
         }
 
 
@@ -54,6 +61,7 @@ namespace karabo {
             m_accessLevelOfSender = "";
             m_instanceIdOfSender = "";
             m_sessionTokenOfSender = "";
+            m_headerOfSender.reset();
         }
 
 
