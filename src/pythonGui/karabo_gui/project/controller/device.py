@@ -10,6 +10,7 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance, Property, on_trait_change
 
+from karabo.common.api import DeviceStatus
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object
@@ -18,7 +19,7 @@ from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
 from karabo_gui.events import broadcast_event, KaraboEventSender
-from karabo_gui.indicators import DeviceStatus, get_project_device_status_icon
+from karabo_gui.indicators import get_project_device_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabo_gui.project.utils import check_device_instance_exists
@@ -188,7 +189,7 @@ class DeviceInstanceController(BaseProjectGroupController):
     def status_change(self):
         self._update_icon(self.ui_data)
         status = self.project_device.status
-        if status in ('noplugin', 'noserver'):
+        if status in (DeviceStatus.NOPLUGIN, DeviceStatus.NOSERVER):
             configuration = self.project_device.current_configuration
             # Clear configuration but do not reset (redummy) the descriptor
             clear_configuration_instance(configuration, redummy=False)
@@ -229,9 +230,9 @@ class DeviceInstanceController(BaseProjectGroupController):
         if not self.model.initialized:
             return
 
-        status_enum = DeviceStatus(self.project_device.status)
+        status_enum = self.project_device.status
         ui_data.icon = get_project_device_status_icon(status_enum)
-        ui_data.status = self.project_device.status
+        ui_data.status = status_enum
 
     def _update_check_state(self):
         """Update the Qt.CheckState of the ``DeviceConfigurationController``

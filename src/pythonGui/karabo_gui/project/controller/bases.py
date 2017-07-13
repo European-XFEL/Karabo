@@ -8,10 +8,11 @@ from abc import abstractmethod
 from PyQt4.QtCore import QAbstractItemModel, Qt
 from PyQt4.QtGui import QBrush, QFont, QIcon
 from traits.api import (
-    ABCHasStrictTraits, HasStrictTraits, Bool, Callable, Dict, Instance, Int,
-    List, Property, String, WeakRef, on_trait_change
+    ABCHasStrictTraits, HasStrictTraits, Bool, Callable, Dict, Enum, Instance,
+    Int, List, Property, String, WeakRef, on_trait_change
 )
 
+from karabo.common.api import DeviceStatus
 from karabo.common.project.api import BaseProjectObjectModel
 from karabo_gui.project.utils import show_no_configuration
 
@@ -26,7 +27,7 @@ class ProjectControllerUiData(HasStrictTraits):
     checkable = Bool(False)
     check_state = Int(Qt.Unchecked)
     alarm_type = String
-    status = String
+    status = Enum(*DeviceStatus)
 
 
 class BaseProjectController(ABCHasStrictTraits):
