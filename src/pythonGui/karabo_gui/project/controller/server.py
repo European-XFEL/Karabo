@@ -8,10 +8,11 @@ from functools import partial
 from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Bool, Instance, Property, on_trait_change
 
+from karabo.common.api import DeviceStatus
 from karabo.common.project.api import DeviceServerModel
 from karabo_gui.events import (register_for_broadcasts,
                                unregister_from_broadcasts)
-from karabo_gui.indicators import DeviceStatus, get_project_server_status_icon
+from karabo_gui.indicators import get_project_server_status_icon
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.topo_listener import SystemTopologyListener
 from karabo_gui.project.utils import add_device_to_server
@@ -93,13 +94,12 @@ class DeviceServerController(BaseProjectGroupController):
 
     @on_trait_change("model.status")
     def status_change(self):
-        status_enum = DeviceStatus(self.model.status)
-        icon = get_project_server_status_icon(status_enum)
+        icon = get_project_server_status_icon(self.model.status)
         if icon is not None:
             self.ui_data.icon = icon
 
     def _get_online(self):
-        return DeviceStatus(self.model.status) != DeviceStatus.STATUS_OFFLINE
+        return self.model.status is not DeviceStatus.OFFLINE
 
     def _topo_listener_changed(self, name, old, new):
         """Handle broadcast event registration/unregistration here.
@@ -115,7 +115,7 @@ class DeviceServerController(BaseProjectGroupController):
     def _update_icon(self, ui_data):
         # Get current status of server
         self.model.status = _get_server_status(self.model.server_id)
-        icon = get_project_server_status_icon(DeviceStatus(self.model.status))
+        icon = get_project_server_status_icon(self.model.status)
         ui_data.icon = icon
 
     # ----------------------------------------------------------------------
@@ -185,5 +185,5 @@ def _get_server_status(server_id):
     topology = get_topology()
     attributes = topology.get_attributes('server.{}'.format(server_id))
     if attributes is not None:
-        return attributes.get('status', 'ok')
-    return 'offline'
+        return DeviceStatus(attributes.get('status', 'ok'))
+    return DeviceStatus.OFFLINE
