@@ -1,7 +1,7 @@
 from asyncio import coroutine
 import socket
 
-from karabo.common.capabilities import Capabilities
+from karabo.common.enums import Capabilities
 from karabo.common.states import State
 from .alarm import AlarmMixin
 from .basetypes import isSet

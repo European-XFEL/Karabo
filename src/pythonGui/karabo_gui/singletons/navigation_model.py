@@ -14,6 +14,7 @@ from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 from traits.api import HasStrictTraits, WeakRef
 
+from karabo.common.api import DeviceStatus
 from karabo_gui.alarms.api import get_alarm_icon
 from karabo_gui.events import KaraboEventSender, register_for_broadcasts
 import karabo_gui.globals as krb_globals
@@ -254,7 +255,7 @@ class NavigationTreeModel(QAbstractItemModel):
             elif hierarchyLevel == 2:
                 return icons.deviceClass
             elif hierarchyLevel == 3:
-                if node.status == "error":
+                if node.status is DeviceStatus.ERROR:
                     return icons.deviceInstanceError
                 if node.monitoring:
                     return icons.deviceMonitored

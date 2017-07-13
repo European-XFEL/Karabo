@@ -10,6 +10,7 @@ import re
 from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
                         Int, List, String, WeakRef)
 
+from karabo.common.api import DeviceStatus
 from karabo.middlelayer import AccessLevel
 from karabo_gui.alarms.api import AlarmInfo
 from karabo_gui.enums import NavigationItemTypes
@@ -21,8 +22,8 @@ class SystemTreeNode(HasStrictTraits):
     """
     node_id = String
     path = String
-    visibility = Enum(*list(AccessLevel))
-    status = String
+    visibility = Enum(*AccessLevel)
+    status = Enum(*DeviceStatus)
     capabilities = Int
     attributes = Dict
     # Struct to keep track of all alarms related to this
@@ -319,7 +320,7 @@ class SystemTree(HasStrictTraits):
             capabilities = attrs.get('capabilities', 0)
             server_id = attrs.get('serverId', 'unknown-server')
             class_id = attrs.get('classId', 'unknown-class')
-            status = attrs.get('status', 'ok')
+            status = DeviceStatus(attrs.get('status', 'ok'))
 
             # Host node
             host_node = self.root.child(host)

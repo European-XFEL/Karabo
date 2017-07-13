@@ -4,8 +4,7 @@ from time import sleep
 from unittest import TestCase
 
 from karabo.bound import DeviceClient, EventLoop, Hash
-from karabo.common.capabilities import Capabilities
-from karabo.common.states import State
+from karabo.common.api import Capabilities, State
 from karabo.integration_tests.utils import start_bound_api_server
 
 SERVER_ID = "testServerSceneProviders"
