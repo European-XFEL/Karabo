@@ -69,6 +69,8 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         for k, v in dict.items():
             if isinstance(v, Descriptor):
                 v.key = k
+            if isinstance(v, Overwrite):
+                setattr(cls, k, v.overwrite(getattr(super(cls, cls), k)))
         cls._attrs = [k for k in dict
                       if isinstance(getattr(cls, k), Descriptor)]
         allattrs = []
@@ -160,6 +162,28 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     def _use(self):
         """this method is called each time an attribute of this configurable
         is read"""
+
+
+class Overwrite(object):
+    """Overwrite the attributes of an inherited property
+
+    This looks like a normal property definition, just that it takes the
+    inherited one and updates it::
+
+        class Base(Configurable):
+            number = Int32(minExc=3)
+
+        class Child(Base):
+            number = Overwrite(minExc=7)
+    """
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+
+    def overwrite(self, original):
+        _, attrs = original.toSchemaAndAttrs(None, None)
+        ret = original.__class__(strict=False, **attrs)
+        ret.__init__(key=original.key, **self.kwargs)
+        return ret
 
 
 class Node(Descriptor):
