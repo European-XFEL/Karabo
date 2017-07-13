@@ -466,7 +466,7 @@ class BoundDeviceServer(DeviceServerBase):
         self.processes[deviceId] = process
         process.stdin.write(encodeXML(config).encode('utf8'))
         process.stdin.close()
-        done, pending = yield from firstCompleted(
+        done, pending, error = yield from firstCompleted(
             ok=future, error=process.wait())
         if "ok" in done:
             background(self.supervise(deviceId, process, done["ok"]))
