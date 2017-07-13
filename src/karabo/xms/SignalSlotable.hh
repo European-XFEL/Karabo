@@ -509,31 +509,31 @@ namespace karabo {
 
             };
 
+            /**
+             * A functor to place an asynchronous reply for a slot.
+             * Must not be used once the SignalSlotable object that created it is (being) destructed.
+             */
             class AsyncReply {
 
+                friend class SignalSlotable; // to give access to constructor
+
             public:
+                // ~AsyncReply(); // not needed, nor has to be virtual
 
-              // TODO: consider to make private and only accessible to SignalSlotable 
-              AsyncReply(SignalSlotable* signalSlotable, const std::string& id)
-                : m_signalSlotable(signalSlotable), m_replyId(id) {
-              }
-
-              // ~AsyncReply(); // not needed, nor has to be virtual
-
-              template <typename ...Args>
-              void operator () (const Args&... args)
-              {
-                if (m_replyId.empty()) return;
-
-                // Place rely and treat it in non-templated code with SignalSlotable internals
-                m_signalSlotable->reply(args...);
-                m_signalSlotable->asyncReplyImpl(m_replyId);
-              }
+                /**
+                 * Place the reply - like using SignalSlotable::reply in the synchronous case.
+                 */
+                template <typename ...Args>
+                void operator()(const Args&... args) const;
 
             private:
 
-                SignalSlotable* m_signalSlotable;
-                std::string m_replyId;
+                // Private: Only SignalSlotable may use this constructor - (default) copy/assignment constructors are OK
+                inline AsyncReply(SignalSlotable* signalSlotable, const std::string& id)
+                    : m_signalSlotable(signalSlotable), m_replyId(id) {}
+
+                SignalSlotable* const m_signalSlotable; // pointer is const - but may call non-const methods
+                const std::string m_replyId;
             };
 
             struct SignalSlotConnection {
@@ -1080,6 +1080,17 @@ namespace karabo {
             }
         }
 
+        /**** AsyncReply Template Function Implementation ****/
+
+        template <typename ...Args>
+        void SignalSlotable::AsyncReply::operator()(const Args&... args) const {
+            // See SignalSlotable::registerAsyncReply() about empty id
+            if (m_replyId.empty()) return;
+
+            // Place reply and treat it in non-templated code with SignalSlotable internals
+            m_signalSlotable->reply(args...);
+            m_signalSlotable->asyncReplyImpl(m_replyId);
+        }
         /**** SignalSlotable Template Function Implementations ****/
 
         template <typename ...Args>
