@@ -585,7 +585,7 @@ void SignalSlotable_Test::testAsyncReply() {
 
 
         void slotAsyncReply(int i) {
-          AsyncReply reply(registerAsyncReply());
+            const AsyncReply reply(this);
 
             // Let's stop this function call soon, but nevertheless send reply in 100 ms (likely in another thread!)
             m_timer.expires_from_now(boost::posix_time::milliseconds(100));

@@ -716,7 +716,7 @@ namespace karabo {
         }
 
 
-        SignalSlotable::AsyncReply SignalSlotable::registerAsyncReply() {
+        std::string SignalSlotable::registerAsyncReply() {
             // Get name of current slot (sometimes referred to as 'slotFunction'):
             std::pair<std::string, bool> slotName_calledGlobally;
             {
@@ -745,7 +745,7 @@ namespace karabo {
                 registerReply(karabo::util::Hash::Pointer());
             }
 
-            return AsyncReply(this, id);
+            return id;
         }
 
 

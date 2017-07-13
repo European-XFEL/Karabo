@@ -321,17 +321,6 @@ namespace karabo {
             template <typename ...Args>
             void reply(const Args&... args);
 
-            /**
-             * Use within a slot call to prepare for sending the reply asynchronously.
-             * The returned AsyncReply is a functor that can later be passed the reply values as arguments.
-             * Note:
-             * As the synchronous reply(arg1,...), registerAsyncReply() must be called directly
-             * in the registered slot function, i.e. without posting to another thread.
-             * On the other hand, AsyncReply(...) is exactly foreseen for that case.
-             * @return id to be used as first argument in asyncReply
-             */
-            SignalSlotable::AsyncReply registerAsyncReply();
-
             template <typename ...Args>
             void registerSignal(const std::string& funcName);
 
@@ -510,28 +499,33 @@ namespace karabo {
             };
 
             /**
-             * A functor to place an asynchronous reply for a slot.
+             * A functor to place an asynchronous reply during slot execution.
+             *
              * Must not be used once the SignalSlotable object that created it is (being) destructed.
              */
             class AsyncReply {
 
-                friend class SignalSlotable; // to give access to constructor
-
             public:
+
+                /**
+                 * Construct functor for an asynchronous reply.
+                 * Use only within a slot call of a SignalSlotable
+                 * @param signalSlotable pointer to the SignalSlotable whose slot is currently executed (usually: this)
+                 */
+                explicit AsyncReply(SignalSlotable* signalSlotable)
+                    : m_signalSlotable(signalSlotable), m_replyId(m_signalSlotable->registerAsyncReply()) {
+                }
                 // ~AsyncReply(); // not needed, nor has to be virtual
 
                 /**
-                 * Place the reply - like using SignalSlotable::reply in the synchronous case.
+                 * Place the reply - almost like using SignalSlotable::reply in the synchronous case.
+                 * The difference is that here the reply is immediately send and cannot be overwritten
+                 * by a following call.
                  */
                 template <typename ...Args>
                 void operator()(const Args&... args) const;
 
             private:
-
-                // Private: Only SignalSlotable may use this constructor - (default) copy/assignment constructors are OK
-                inline AsyncReply(SignalSlotable* signalSlotable, const std::string& id)
-                    : m_signalSlotable(signalSlotable), m_replyId(id) {}
-
                 SignalSlotable* const m_signalSlotable; // pointer is const - but may call non-const methods
                 const std::string m_replyId;
             };
@@ -772,6 +766,12 @@ namespace karabo {
             void replyException(const karabo::util::Hash& header, const std::string& message);
 
             void sendPotentialReply(const karabo::util::Hash& header, const std::string& slotFunction, bool global);
+
+            /**
+             * Internal method to provide async reply id to AsyncReply object
+             * @return id for AsyncReply
+             */
+            std::string registerAsyncReply();
 
             /// Template less part of asyncReply(id, args...)
             void asyncReplyImpl(const std::string& id);
