@@ -205,10 +205,14 @@ def saveConfigurationToFile(configuration):
     path = get_setting(KaraboSettings.CONFIG_DIR)
     directory = path if path and op.isdir(path) else ""
 
+    # default configuration name is deviceId
+    selectFile = configuration.id.replace('/', '-') + '.xml'
+
     filename = getSaveFileName(caption="Save configuration as",
                                filter="Configuration (*.xml)",
                                suffix="xml",
-                               directory=directory)
+                               directory=directory,
+                               selectFile=selectFile)
     if not filename:
         return
 
