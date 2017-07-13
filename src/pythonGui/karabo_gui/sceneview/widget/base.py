@@ -6,7 +6,7 @@ from karabo.common.api import AlarmCondition
 from karabo_gui import icons
 from karabo_gui.alarms.api import get_alarm_pixmap
 from karabo_gui.displaywidgets.displaymissingbox import DisplayMissingBox
-from karabo_gui.indicators import DeviceStatus, get_device_status_pixmap
+from karabo_gui.indicators import get_device_status_pixmap
 from karabo_gui.singletons.api import get_network
 from .utils import PendingBoxes, get_box, determine_if_value_unchanged
 
@@ -243,11 +243,11 @@ class BaseWidgetContainer(QWidget):
         self._pending_boxes.on_trait_change(self._boxes_ready, 'ready')
         self._pending_boxes.keys = self.model.keys
 
-    @pyqtSlot(object, str, bool)
+    @pyqtSlot(object, object, bool)
     def _device_status_changed(self, configuration, status, error):
         """ Callback when the status of the device is changes.
         """
-        pixmap = get_device_status_pixmap(DeviceStatus(status), error)
+        pixmap = get_device_status_pixmap(status, error)
         if pixmap is not None:
             self.status_symbol.setPixmap(pixmap)
             self.status_symbol.show()
