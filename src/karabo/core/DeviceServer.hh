@@ -63,6 +63,7 @@ namespace karabo {
             boost::mutex m_pendingInstantiationsMutex;
             bool m_stopInstantiate;
             boost::asio::deadline_timer m_instantiateTimer;
+            static const int m_instantiateIntervalInMs; /// interval to sleep before next round of instantiations
 
             karabo::util::Hash m_availableDevices;
             std::vector<std::string> m_deviceClasses;
