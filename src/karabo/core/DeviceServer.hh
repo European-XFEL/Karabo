@@ -224,9 +224,9 @@ namespace karabo {
             boost::tuple<std::string, std::string, util::Hash>
             prepareInstantiate(const util::Hash& configuration);
 
-            /// Helper for instantiateDevices - e.g. sets the (async) reply.
+            /// Helper for instantiateDevices - e.g. provides the (async) reply for slotStartDevice.
             void instantiate(const std::string& deviceId, const std::string& classId,
-                             const util::Hash& config, const SignalSlotable::AsyncReply& asyncReplyId);
+                             const util::Hash& config, const SignalSlotable::AsyncReply& asyncReply);
 
             void slotLoggerPriority(const std::string& prio);
 
