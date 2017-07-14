@@ -45,6 +45,8 @@ namespace karabo {
         using namespace karabo::xms;
         using namespace krb_log4cpp;
 
+        // static variables
+        const int DeviceServer::m_instantiateIntervalInMs = 500;
 
         KARABO_REGISTER_FOR_CONFIGURATION(DeviceServer)
 
@@ -127,7 +129,6 @@ namespace karabo {
                     .commit();
 
         }
-
 
         DeviceServer::DeviceServer(const karabo::util::Hash& config)
             : m_log(0)
@@ -508,7 +509,7 @@ namespace karabo {
             if (m_stopInstantiate) return;
 
             // reload timer
-            m_instantiateTimer.expires_from_now(boost::posix_time::milliseconds(500));
+            m_instantiateTimer.expires_from_now(boost::posix_time::milliseconds(m_instantiateIntervalInMs));
             m_instantiateTimer.async_wait(bind_weak(&DeviceServer::instantiateDevices, this, boost::asio::placeholders::error));
         }
 
