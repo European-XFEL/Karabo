@@ -583,7 +583,7 @@ namespace karabo {
                 }
 
                 // Answer initiation of device (KARABO_LOG_* is done by device)
-                asyncReply(true, deviceId); // TODO think about
+                asyncReply(true, deviceId);
 
             } catch (const std::exception& se) {
                 const std::string message("Device of class " + classId + " could not be started because: ");
