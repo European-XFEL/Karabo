@@ -22,6 +22,9 @@
 
 #include "boost/asio/deadline_timer.hpp"
 
+#include <vector>
+#include <utility>
+
 /**
  * The main European XFEL namespace
  */
@@ -54,8 +57,13 @@ namespace karabo {
             boost::asio::deadline_timer m_scanPluginsTimer;
             bool m_scanPlugins;
             bool m_serverIsRunning;
-
             std::vector<karabo::util::Hash> m_autoStart;
+
+            std::vector<std::pair<karabo::util::Hash, SignalSlotable::AsyncReply> > m_pendingInstantiations;
+            boost::mutex m_pendingInstantiationsMutex;
+            bool m_stopInstantiate;
+            boost::asio::deadline_timer m_instantiateTimer;
+            static const int m_instantiateIntervalInMs; /// interval to sleep before next round of instantiations
 
             karabo::util::Hash m_availableDevices;
             std::vector<std::string> m_deviceClasses;
@@ -184,6 +192,8 @@ namespace karabo {
 
             void slotStartDevice(const karabo::util::Hash& configuration);
 
+            void instantiateDevices(const boost::system::error_code& ec);
+
             void onStateUpdate(const karabo::util::State& currentState);
 
             void loadLogger(const karabo::util::Hash& input);
@@ -215,8 +225,9 @@ namespace karabo {
             boost::tuple<std::string, std::string, util::Hash>
             prepareInstantiate(const util::Hash& configuration);
 
-            /// Helper for slotStartDevice - e.g. sets the reply.
-            void instantiate(const std::string& deviceId, const std::string& classId, const util::Hash& config);
+            /// Helper for instantiateDevices - e.g. provides the (async) reply for slotStartDevice.
+            void instantiate(const std::string& deviceId, const std::string& classId,
+                             const util::Hash& config, const SignalSlotable::AsyncReply& asyncReply);
 
             void slotLoggerPriority(const std::string& prio);
 
