@@ -355,7 +355,7 @@ namespace karabo {
                 }
             }
             // Ping any guy with my id. If there is one, he will answer, if not, we timeout.
-            // HACK: slotPing takes care that I do not answer myself before timeout...
+            // slotPing takes care that I do not answer myself before timeout...
             Hash instanceInfo;
             try {
                 request(instanceId, "slotPing", instanceId, m_randPing, false)
@@ -1093,17 +1093,16 @@ namespace karabo {
                 // case 2) or by SignalSlotable::exists or SignalSlotable::connectP2P: rand is 1
                 if (instanceId == m_instanceId) {
                     if (rand == m_randPing) {
-                        // We are in case 1) and I ask myself. I must not answer, at least not in time.
-                        // HACK: Let's wait until my own request timed out for sure.
-                        // Idea: Instead, registerAsyncReply to invalidate automatic answer?
-                        boost::this_thread::sleep(boost::posix_time::milliseconds(msPingTimeoutInIsValidInstanceId * 1.5));
+                        // We are in case 1) and I ask myself. I must not answer, so place an invalid reply to avoid
+                        // a default reply to be send (see sendPotentialReply):
+                        registerReply(karabo::util::Hash::Pointer());
+                    } else {
+                        // m_randPing == 0 (I am up) or >= 2 (I am 'booting')
+                        // 1) It is not me, so that guy must not come up: tell him. Note: Two guys coming up
+                        //    at the same time with the same id might both fail here.
+                        // 2) I just reply my existence.
+                        reply(m_instanceInfo);
                     }
-                    // else:
-                    // m_randPing == 0 (I am up) or >= 2 (I am 'booting')
-                    // 1) It is not me, so that guy must not come up: tell him. Note: Two guys coming up
-                    //    at the same time with the same id might both fail here.
-                    // 2) I just reply my existence.
-                    reply(m_instanceInfo);
                 }
             } else if (!m_randPing) {
                 // I should only answer, if my name got accepted which is indicated by a value of m_randPing==0
