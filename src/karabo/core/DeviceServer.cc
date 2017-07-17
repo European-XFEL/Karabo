@@ -45,9 +45,6 @@ namespace karabo {
         using namespace karabo::xms;
         using namespace krb_log4cpp;
 
-        // static variables
-        const int DeviceServer::m_instantiateIntervalInMs = 500;
-
         KARABO_REGISTER_FOR_CONFIGURATION(DeviceServer)
 
         void DeviceServer::expectedParameters(Schema& expected) {
@@ -133,9 +130,6 @@ namespace karabo {
         DeviceServer::DeviceServer(const karabo::util::Hash& config)
             : m_log(0)
             , m_scanPluginsTimer(EventLoop::getIOService())
-            , m_pendingInstantiations()
-            , m_stopInstantiate(false)
-            , m_instantiateTimer(EventLoop::getIOService())
             , m_timeId(0ull)
             , m_timeSec(0ull)
             , m_timeFrac(0ull)
@@ -372,9 +366,6 @@ namespace karabo {
                 slotStartDevice(device);
             }
 
-            // Start the loop to instantiate in the background
-            EventLoop::getIOService().post(util::bind_weak(&DeviceServer::instantiateDevices, this, boost::system::error_code()));
-
             // Whether to scan for additional plug-ins at runtime
             if (m_scanPlugins) {
                 KARABO_LOG_INFO << "Keep watching directory: " << m_pluginLoader->getPluginDirectory() << " for Device plugins";
@@ -433,8 +424,6 @@ namespace karabo {
 
         void DeviceServer::stopDeviceServer() {
             // First stop background work
-            m_stopInstantiate = true;
-            m_instantiateTimer.cancel();
             m_scanPluginsTimer.cancel();
 
             // Then stop devices
@@ -468,49 +457,23 @@ namespace karabo {
             // Just register an asynchronous reply and put on the "stack".
             const SignalSlotable::AsyncReply reply(this);
 
-            boost::mutex::scoped_lock lock(m_pendingInstantiationsMutex);
-            m_pendingInstantiations.push_back(std::make_pair(configuration, reply));
+            EventLoop::getIOService().post(util::bind_weak(&DeviceServer::startDevice, this, configuration, reply));
         }
 
 
-        void DeviceServer::instantiateDevices(const boost::system::error_code& ec) {
-            if (ec) return;
+        void DeviceServer::startDevice(const karabo::util::Hash& configuration,
+                                       const SignalSlotable::AsyncReply& reply) {
 
-            // Copy the current list of pending instantiations
-            typedef std::pair<karabo::util::Hash, SignalSlotable::AsyncReply> ConfigReplyPair;
-            std::vector<ConfigReplyPair> pendingInstantiations;
-            {
-                boost::mutex::scoped_lock lock(m_pendingInstantiationsMutex);
-                m_pendingInstantiations.swap(pendingInstantiations);
-            }
+            const boost::tuple<std::string, std::string, util::Hash>& idClassIdConfig
+                    = this->prepareInstantiate(configuration);
 
-            if (!pendingInstantiations.empty()) {
-                KARABO_LOG_FRAMEWORK_INFO << "Begin working on " << pendingInstantiations.size() << " instantiations.";
-            }
-            // Now go through them
-            for (const ConfigReplyPair& cfgAndReply : pendingInstantiations) {
-                if (m_stopInstantiate) return;
+            const std::string& deviceId = idClassIdConfig.get<0>();
+            const std::string& classId = idClassIdConfig.get<1>();
+            KARABO_LOG_FRAMEWORK_INFO << "Trying to start a '" << classId
+                    << "' with deviceId '" << deviceId << "'...";
+            KARABO_LOG_FRAMEWORK_DEBUG << "...with the following configuration:\n" << configuration;
 
-                const Hash& configuration = cfgAndReply.first;
-                const SignalSlotable::AsyncReply& reply = cfgAndReply.second;
-
-                const boost::tuple<std::string, std::string, util::Hash>& idClassIdConfig
-                        = this->prepareInstantiate(configuration);
-
-                const std::string& deviceId = idClassIdConfig.get<0>();
-                const std::string& classId = idClassIdConfig.get<1>();
-                KARABO_LOG_FRAMEWORK_INFO << "Trying to start a '" << classId
-                        << "' with deviceId '" << deviceId << "'...";
-                KARABO_LOG_FRAMEWORK_DEBUG << "...with the following configuration:\n" << configuration;
-
-                this->instantiate(deviceId, classId, idClassIdConfig.get<2>(), reply);
-            }
-
-            if (m_stopInstantiate) return;
-
-            // reload timer
-            m_instantiateTimer.expires_from_now(boost::posix_time::milliseconds(m_instantiateIntervalInMs));
-            m_instantiateTimer.async_wait(bind_weak(&DeviceServer::instantiateDevices, this, boost::asio::placeholders::error));
+            instantiate(deviceId, classId, idClassIdConfig.get<2>(), reply);
         }
 
 
@@ -570,6 +533,9 @@ namespace karabo {
 
         void DeviceServer::instantiate(const std::string& deviceId, const std::string& classId,
                                        const util::Hash& config, const xms::SignalSlotable::AsyncReply& asyncReply) {
+            // Each device adds two threads, one of them is permanently used for reading from broker.
+            // Since finalizeInternalInitialization() blocks for > 1 s, we temporarily add another thread.
+            EventLoop::addThread();
             try {
 
                 BaseDevice::Pointer device = BaseDevice::create(classId, config);
@@ -587,12 +553,12 @@ namespace karabo {
                 asyncReply(true, deviceId);
 
             } catch (const std::exception& se) {
-                const std::string message("Device of class " + classId + " could not be started because: ");
+                const std::string message("Device '" + deviceId + "' of class '" + classId + "' could not be started: ");
                 KARABO_LOG_ERROR << message << se.what();
                 asyncReply(false, message + se.what());
             }
+            EventLoop::removeThread();
         }
-
 
         void DeviceServer::newPluginAvailable() {
             vector<string> deviceClasses;
