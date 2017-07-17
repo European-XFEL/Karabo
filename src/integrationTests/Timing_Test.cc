@@ -84,8 +84,6 @@ void Timing_Test::appTestRunner() {
     m_lastCheck = karabo::util::Epochstamp();
 
     // Give some time to connect the timing slot.
-    // If this fails, it is likely that the signal connection was erased again because the call to slotInstanceNew
-    // of the Karabo_TimeServer came late and cleared the signal.
     for (size_t i = 1; i <= nDevices; ++i) {
         int counter = 0;
         while (true) {
@@ -103,7 +101,7 @@ void Timing_Test::appTestRunner() {
     const unsigned int testDurationInMicrosec = 5432109u;
     boost::this_thread::sleep(boost::posix_time::microseconds(testDurationInMicrosec));
 
-    for (size_t i = 1; i <= nDevices; ++i) {
+    for (size_t i = nDevices; i >= 1; --i) {
         m_deviceClient->execute("timeTester_" + toString(i), "stop");
     }
 
@@ -157,11 +155,11 @@ void Timing_Test::appTestRunner() {
             lastStampTick = currentStamp;
         }
 
-        if (k == 1) {
+        if (k == nDevices) { // Started last and stopped first, i.e. testDurationInMicrosec is appropriate.
             // As last test check how many ticks we really got - might be off a bit since time server sometimes reports
             // period that is off by periodVarFrac.
             const int numExpectedTicks = testDurationInMicrosec / tickPeriodInMicrosec;
-            const int maxOff = int(std::ceil(tickCountdown * periodVarFrac));
+            const int maxOff = int(std::ceil(tickCountdown * periodVarFrac)) + 1;
             const int idsSize = ids.size();
             const std::string msg("Ids received: " + toString(idsSize)
                                   + ", expected: " + toString(numExpectedTicks)
