@@ -30,13 +30,31 @@ class Injectable(Configurable):
 
         class MyDevice(Injectable, Device):
             @coroutine
+            def onInitialization(self):
+                # should it be needed to test that the node is there
+                self.my_node = None
+
+            @coroutine
             def inject_something(self):
                 # inject a new property into our personal class:
                 self.__class__.injected_string = String()
+                self.__class__.my_node = Node(MyNode, displayedName="position")
                 yield from self.publishInjectedParameters()
 
                 # use the property as any other property:
                 self.injected_string = "whatever"
+                # the test that the node is there is superflous here
+                if self.my_node is not None:
+                    self.my_node.reached = False
+
+        class MyNode(Configurable):
+            reached = Bool(displayedName="On position",
+                           description="On position flag",
+                           defaultValue=True,
+                           accessMode=AccessMode.RECONFIGURABLE
+            )
+
+    Note that calling inject_something again resets the values of proprties to their defaults.
     """
 
     def __new__(cls, configuration={}):
