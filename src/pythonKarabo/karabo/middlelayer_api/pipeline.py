@@ -1,5 +1,4 @@
-from asyncio import (async, coroutine, get_event_loop, Lock, open_connection)
-from functools import partial
+from asyncio import coroutine, get_event_loop, Lock, open_connection
 import os
 from struct import pack, unpack, calcsize
 
@@ -7,6 +6,7 @@ from .enums import Assignment, AccessMode
 from .hash import Bool, Hash, VectorString, Schema, String
 from .schema import Configurable, Node
 from .serializers import decodeBinary, encodeBinary
+from .synchronization import background
 
 from .proxy import ProxyBase, ProxyFactory
 
@@ -70,10 +70,8 @@ class NetworkInput(Configurable):
             self.connected[k].cancel()
         for output in outputs:
             if output not in self.connected:
-                task = async(self.start_channel(output))
+                task = background(self.start_channel(output))
                 self.connected[output] = task
-                task.add_done_callback(
-                    partial(self.connected.pop, output))
         self.connectedOutputChannels = list(self.connected)
 
     dataDistribution = String(
