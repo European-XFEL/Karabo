@@ -278,10 +278,9 @@ class SystemTopology(HasStrictTraits):
 
         # Get the attributes of the instance which is now gone
         path = instance_type + '.' + instance_id
-        try:
-            attributes = self._system_hash[path, ...]
-        except KeyError:
-            attributes = {}
+        attributes = self.get_attributes(path)
+        if attributes is None:
+            return
 
         # Remove instance from system hash
         if self._system_hash is not None and path in self._system_hash:
