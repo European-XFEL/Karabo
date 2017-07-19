@@ -1110,14 +1110,14 @@ class HashType(Type):
             type, = file.readFormat('I')
             type = cls.types[type]
             asize, = file.readFormat('I')
-            attrs = { }
+            attrs = {}
             for i in range(asize):
                 akey = file.readKey()
                 atype, = file.readFormat('I')
                 atype = cls.types[atype]
                 attrs[akey] = atype.read(file)
-            ret[key] = type.read(file)
-            ret[key, ...] = attrs
+            # Optimization: Set value and attributes simultaneously
+            ret._setelement(key, HashElement(type.read(file), attrs))
         return ret
 
     @classmethod
@@ -1450,6 +1450,12 @@ class Hash(OrderedDict):
                       for k in self)
         return '<' + r + '>'
 
+    def _setelement(self, key, value):
+        # NOTE: This is a fast path for __setitem__ to be use by the binary
+        # deserializer. It must only be called for values in this hash, never
+        # for values in sub-hashes!
+        assert '.' not in key, "Can't set values in sub-hashes!"
+        OrderedDict.__setitem__(self, key, value)
 
     def __setitem__(self, item, value):
         if isinstance(item, tuple):
