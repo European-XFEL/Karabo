@@ -29,6 +29,7 @@ class KaraboEventSender(Enum):
     NetworkConnectStatus = "Network connection changed"
     NotificationMessage = "Notification message"
     OpenSceneLink = "Scene link"
+    ProcessingDelay = "Delay"
     RemoveAlarmServices = "Remove alarm services"
     RemoveProjectModelViews = "Remove scene or macro views"
     RemoveRunConfigurator = "Remove run configurator"
