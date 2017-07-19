@@ -8,9 +8,11 @@ from collections import OrderedDict
 from enum import Enum
 import os.path
 
-from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import (QAction, QActionGroup, QMainWindow, QMenu,
-                         QMessageBox, QSplitter, QToolButton, qApp)
+from PyQt4.QtCore import QEvent, Qt, pyqtSlot
+from PyQt4.QtGui import (
+    QAction, QActionGroup, QLabel, QMainWindow, QMenu, QMessageBox,
+    QSizePolicy, QSplitter, QToolButton, QWidget, qApp
+)
 
 import karabo_gui.icons as icons
 from karabo.middlelayer import AccessLevel
@@ -45,6 +47,27 @@ class PanelAreaEnum(Enum):
     Right = 4
 
 
+class _PatternMatcher(object):
+    """A tiny state machine which watches for a single pattern.
+
+    Useful for watching for specific key sequences...
+    """
+    def __init__(self, pattern):
+        self.pattern = pattern
+        self.index = 0
+
+    def check(self, letter):
+        if letter == self.pattern[self.index]:
+            self.index += 1
+            if self.index == len(self.pattern):
+                self.index = 0
+                return True
+        else:
+            self.index = 0
+
+        return False
+
+
 class MainWindow(QMainWindow):
     """The main window of the application which includes all relevant panels
     and the main toolbar.
@@ -74,6 +97,10 @@ class MainWindow(QMainWindow):
         network.signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
 
+        # Listen for application events
+        qApp.installEventFilter(self)
+        self._net_monitor_matcher = _PatternMatcher('chooch')
+
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary for self due to the fact that the singleton mediator
         # object and `self` are being destroyed when the GUI exists
@@ -90,9 +117,23 @@ class MainWindow(QMainWindow):
         event.accept()
         QMainWindow.closeEvent(self, event)
 
+    def eventFilter(self, obj, event):
+        """Listen for key press events
+        """
+        if event.type() == QEvent.KeyPress:
+            if self._net_monitor_matcher.check(event.text()):
+                get_network().togglePerformanceMonitor()
+                self.networkPerfDisplay.setText('')
+
+        return super(MainWindow, self).eventFilter(obj, event)
+
     def karaboBroadcastEvent(self, event):
         sender = event.sender
         data = event.data
+        if sender is KaraboEventSender.ProcessingDelay:
+            self.networkPerfDisplay.setText('{:.3f}'.format(data['value']))
+            return True  # Nobody else should handle this event!
+
         if sender is KaraboEventSender.DatabaseIsBusy:
             self._database_is_processing(data.get('is_processing'))
         elif sender is KaraboEventSender.MaximizePanel:
@@ -198,6 +239,13 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.acServerConnect)
 
         toolbar.addWidget(self.tbAccessLevel)
+
+        # Add a widget (on the right side) for displaying network performance
+        expander = QWidget()
+        expander.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.networkPerfDisplay = QLabel()
+        toolbar.addWidget(expander)
+        toolbar.addWidget(self.networkPerfDisplay)
 
     def _setupStatusBar(self):
         self.statusBar().showMessage('Ready...')
