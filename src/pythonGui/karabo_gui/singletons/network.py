@@ -15,7 +15,8 @@ from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
 from PyQt4.QtGui import QDialog, QMessageBox, qApp
 
 from karabo.authenticator import Authenticator
-from karabo.middlelayer import Hash, decodeBinary, encodeBinary, AccessLevel
+from karabo.middlelayer import (
+    Hash, decodeBinary, encodeBinary, AccessLevel, Timestamp)
 from karabo_gui import background
 from karabo_gui.dialogs.logindialog import LoginDialog
 from karabo_gui.enums import KaraboSettings
@@ -41,6 +42,9 @@ class Network(QObject):
 
         self.tcpSocket = None
         self.requestQueue = []
+
+        self._waitingMessages = {}
+        self._monitoringPerformance = False
 
         self.username = ''
         self.password = ''
@@ -126,6 +130,9 @@ class Network(QObject):
             return
 
         print("Disconnect failed:", self.tcpSocket.errorString())
+
+    def togglePerformanceMonitor(self):
+        self._monitoringPerformance = not self._monitoringPerformance
 
     def _login(self):
         """
@@ -216,12 +223,19 @@ class Network(QObject):
             dataBytes = self.tcpSocket.read(bytesNeeded)
 
             # Do something with the Hash at some point in the future.
+            self._waitingMessages[id(dataBytes)] = Timestamp().toTimestamp()
             background.executeLater(partial(self.parseInput, dataBytes),
                                     background.Priority.NETWORK)
 
     def parseInput(self, data):
         """parse the data and emit the signalReceivedData"""
+        self._performanceMonitor(self._waitingMessages.pop(id(data)))
         self.signalReceivedData.emit(decodeBinary(data))
+
+    def _performanceMonitor(self, recv_timestamp):
+        if self._monitoringPerformance:
+            diff = Timestamp().toTimestamp() - recv_timestamp
+            broadcast_event(KaraboEventSender.ProcessingDelay, {'value': diff})
 
     def onSocketError(self, socketError):
         print("onSocketError", self.tcpSocket.errorString(), socketError)
