@@ -15,8 +15,8 @@ class BinaryParser(object):
         return unpack(fmt, self.data[self.pos - size:self.pos])
 
     def readKey(self):
-        size, = self.readFormat('B')
-        self.pos += size
+        size, = unpack('B', self.data[self.pos:self.pos + 1])
+        self.pos += size + 1
         return self.data[self.pos - size:self.pos].decode("ascii")
 
     def read(self, data):
