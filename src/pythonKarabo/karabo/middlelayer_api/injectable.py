@@ -59,13 +59,13 @@ class Injectable(Configurable):
     be remembered:
 
     * classes can only be injected into the top layer of the empty class
-      and, consequently, of the schema rendition.
+      and, consequently, of the schema rendition
     * the order of injection defines the order in schema rendition
     * classes injected can be simple (a Float, Bool, etc.) or complex
       (a node, an entire class hierarchies, etc.)
     * later modification of injected class structure is not seen in the
       schema. Modification can only be achieved by overwriting the top level
-      assignment of the class and calling 
+      assignment of the class and calling `publishInjectedParameters`
     * injected classes are not affected by later calls to
       `publishInjectedParameters` used to inject other classes
     * deleted (del) injected classes are removed from the schema by calling
