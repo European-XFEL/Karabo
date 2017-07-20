@@ -75,14 +75,17 @@ class ProjectDatabaseConnection(QObject):
     def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
+        sender = event.sender
         data = event.data
-        if event.sender is KaraboEventSender.ProjectItemsLoaded:
+        if sender is KaraboEventSender.ProjectItemsLoaded:
             success = data.get('success')
             items = data.get('items', [])
             self._items_loaded(items, success)
-        elif event.sender is KaraboEventSender.ProjectItemsSaved:
+        elif sender is KaraboEventSender.ProjectItemsSaved:
             items = data.get('items', [])
             self._items_saved(items)
+        elif sender is KaraboEventSender.NetworkConnectStatus:
+            self._have_logged_in = False
         return False
 
     # -------------------------------------------------------------------
