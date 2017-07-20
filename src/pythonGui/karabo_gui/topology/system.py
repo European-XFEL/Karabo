@@ -280,7 +280,7 @@ class SystemTopology(HasStrictTraits):
         path = instance_type + '.' + instance_id
         attributes = self.get_attributes(path)
         if attributes is None:
-            return
+            return devices, servers
 
         # Remove instance from system hash
         if self._system_hash is not None and path in self._system_hash:
