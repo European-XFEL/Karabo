@@ -18,7 +18,12 @@ class Timestamp(object):
 
     :param date: is either another timestamp (then we copy), None
     (we return now) or a string that will be parsed with
-    :mod:`dateutil`"""
+    :mod:`dateutil`
+    """
+
+    # Reduce the memory needed for this _very_ common object
+    __slots__ = ['time', 'tid']
+
     def __init__(self, date=None):
         self.tid = 0
         if date is None:
@@ -31,11 +36,11 @@ class Timestamp(object):
                 d = d.replace(tzinfo=dateutil.tz.tzlocal())
             self.time = int(d.timestamp() * RESOLUTION)
 
-    @staticmethod
-    def fromHashAttributes(attrs):
+    @classmethod
+    def fromHashAttributes(cls, attrs):
         if 'sec' not in attrs:
             return None
-        ret = Timestamp()
+        ret = cls.__new__(cls)
         ret.time = attrs['frac'] + attrs['sec'] * RESOLUTION
         ret.tid = attrs['tid']
         return ret
