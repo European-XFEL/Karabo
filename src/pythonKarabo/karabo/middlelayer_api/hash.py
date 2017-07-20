@@ -546,8 +546,8 @@ class Type(Descriptor, Registry):
     enum = None
 
     types = [None] * 51
-    fromname = { }
-    strs = { }
+    fromname = {}
+    strs = {}
 
     options = Attribute()
 
@@ -659,7 +659,7 @@ class Vector(Type):
 class NumpyVector(Vector):
     """The base class for all vectors which can be represented as numpy
     vectors"""
-    vstrs = { }
+    vstrs = {}
     numpy = np.object_
 
     @classmethod
@@ -753,9 +753,10 @@ class VectorBool(NumpyVector):
             other = [o in ('true', 'True', '1') for o in other]
         return super(VectorBool, self).cast(other)
 
+
 class Char(Simple, Type):
     number = 2
-    numpy = np.uint8 # actually not used, for convenience only
+    numpy = np.uint8  # actually not used, for convenience only
 
     @staticmethod
     def read(file):
@@ -1245,7 +1246,7 @@ class SchemaHashType(HashType):
 
     @classmethod
     def read(cls, file):
-        l, = file.readFormat('I') # ignore length
+        l, = file.readFormat('I')  # ignore length
         op = file.pos
         size, = file.readFormat('B')
         name = str(file.data[file.pos:file.pos + size], "utf8")
@@ -1331,7 +1332,7 @@ class None_(Type):
 
     @staticmethod
     def read(file):
-        file.readFormat('I') # ignore length
+        file.readFormat('I')  # ignore length
         return None
 
     @classmethod
@@ -1439,10 +1440,8 @@ class Hash(OrderedDict):
             raise KeyError(path)
         return s, path[-1]
 
-
     def _get(self, path, auto=False):
         return OrderedDict.__getitem__(*self._path(path, auto))
-
 
     def __repr__(self):
         r = ', '.join('{}{!r}: {!r}'.format(k, self[k, ...], self[k])
@@ -1468,7 +1467,7 @@ class Hash(OrderedDict):
             if p in s:
                 attrs = s[p, ...]
             else:
-                attrs = { }
+                attrs = {}
             OrderedDict.__setitem__(s, p, HashElement(value, attrs))
 
     def __getitem__(self, item):
@@ -1488,14 +1487,12 @@ class Hash(OrderedDict):
         else:
             OrderedDict.__delitem__(*self._path(item))
 
-
     def __contains__(self, key):
         try:
             self._get(key)
             return True
         except KeyError:
             return False
-
 
     def iterall(self):
         """ Iterate over key, value and attributes
@@ -1510,7 +1507,6 @@ class Hash(OrderedDict):
         for k in self:
             elem = OrderedDict.__getitem__(self, k)
             yield k, elem.data, elem.attrs
-
 
     def merge(self, other, attribute_policy='merge'):
         """Merge the hash other into this hash.
@@ -1531,7 +1527,6 @@ class Hash(OrderedDict):
             else:
                 self[k, ...] = other[k, ...].copy()
 
-
     def get(self, item, default=None):
         try:
             return self[item]
@@ -1546,7 +1541,6 @@ class Hash(OrderedDict):
 
     def getAttribute(self, item, key):
         return self[item, key]
-
 
     def getAttributes(self, item):
         return self[item, ...]
@@ -1566,7 +1560,7 @@ class Hash(OrderedDict):
         del self[key]
 
     def paths(self):
-        ret = [ ]
+        ret = []
         for k, v in self.items():
             if isinstance(v, Hash):
                 ret.extend(k + '.' + kk for kk in v.paths())

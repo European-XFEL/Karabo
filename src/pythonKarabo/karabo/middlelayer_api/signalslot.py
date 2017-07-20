@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
-from asyncio import (async, CancelledError, coroutine, Future,
-                     get_event_loop, sleep, TimeoutError, wait, wait_for)
+from asyncio import (async, CancelledError, coroutine, get_event_loop,
+                     TimeoutError, wait_for)
 import logging
 import random
 import sys
@@ -238,7 +238,7 @@ class SignalSlotable(Configurable):
             yield from get_event_loop().run_coroutine_or_thread(
                 self.onInitialization)
             self.__initialized = True
-        except:
+        except Exception:
             yield from self.slotKillDevice()
             raise
 
@@ -306,10 +306,6 @@ class SignalSlotable(Configurable):
         self._sethash[key] = value, desc
         if self._ss is not None:
             self._ss.loop.call_soon_threadsafe(self.update)
-
-    @slot
-    def slotSchemaUpdated(self, schema, deviceId):
-        print("slot schema updated called:", deviceId)
 
     @slot
     def slotChanged(self, configuration, deviceId):
@@ -394,7 +390,7 @@ class SignalSlotable(Configurable):
         def logException(coro):
             try:
                 yield from coro
-            except:
+            except Exception:
                 logger.exception("error in error handler")
 
         loop = get_event_loop()
