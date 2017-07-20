@@ -28,7 +28,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             ham = Int32()
             eggs = String()
     """
-    _subclasses = { }
+    _subclasses = {}
     schema = None
 
     def __init__(self, configuration={}):
@@ -79,7 +79,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                     allattrs.append(attr)
                     seen.add(attr)
         cls._allattrs = allattrs
-        cls._subclasses = { }
+        cls._subclasses = {}
         for b in cls.__bases__:
             if issubclass(b, Configurable):
                 b._subclasses[name] = cls
@@ -286,7 +286,7 @@ class ListOfNodes(Node):
         return ret
 
     def toDataAndAttrs(self, instance):
-        l = HashList()
+        ret = HashList()
         for v in instance:
             r = Hash()
             t = type(v)
@@ -294,5 +294,5 @@ class ListOfNodes(Node):
                 value, attrs = getattr(t, k).toDataAndAttrs(getattr(v, k))
                 r[k] = value
                 r[k, ...] = attrs
-            l.append(r)
-        return Hash(self.key, l), {}
+            ret.append(r)
+        return Hash(self.key, ret), {}
