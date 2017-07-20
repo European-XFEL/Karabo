@@ -299,9 +299,12 @@ class SceneWorkflowModel(HasStrictTraits):
     def _data_distribution_cb(self, box, value, timestamp):
         """ Callback when the data distribution type of a channel changes
         """
+        device_id = box.configuration.id
         path, data_dist = box.path[:-1], box.path[-1]
         assert data_dist == 'dataDistribution'
-        inputs = [ch for ch in self.input_channels if ch.box.path == path]
+        inputs = [ch for ch in self.input_channels
+                  if ch.box.configuration.id == device_id and
+                  ch.box.path == path]
         for conn in self.connections:
             if conn.input in inputs:
                 conn.data_distribution = value
