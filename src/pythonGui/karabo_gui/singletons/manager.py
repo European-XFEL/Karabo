@@ -158,9 +158,10 @@ class Manager(QObject):
 
         get_network().onKillServer(serverId)
 
-    def onReceivedData(self, hash):
-        getattr(self, "handle_" + hash["type"])(
-            **{k: v for k, v in hash.items() if k != "type"})
+    def onReceivedData(self, hsh):
+        handler = getattr(self, "handle_" + hsh["type"])
+        kwargs = {k: v for k, v in hsh.items() if k != "type"}
+        handler(**kwargs)
 
     def onServerConnectionChanged(self, isConnected):
         """If the server connection is changed, the model needs an update.
