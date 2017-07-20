@@ -1,7 +1,7 @@
 __release_build() {
     case "$1" in
         windows) 
-            export REL_TAG=$CI_BUILD_REF_NAME
+            export REL_TAG=$CI_COMMIT_REF_NAME
             export REL_ARTIFACT_DEST=karaboGui/KaraboGUI-$REL_TAG.win32.exe
             bash ./auto_build_all.sh Release
             source karabo/activate
@@ -12,7 +12,7 @@ __release_build() {
         ubuntu*|centos*)
             export REL_OS_NAME=$(lsb_release -is)
             export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
-            export REL_TAG=$CI_BUILD_REF_NAME
+            export REL_TAG=$CI_COMMIT_REF_NAME
             export REL_ARTIFACT_NAME=karabo-$REL_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh
             export REL_ARTIFACT_DEST=karaboFramework/tags/$REL_TAG
             bash ./auto_build_all.sh Release --bundle
@@ -38,8 +38,8 @@ __deps_build() {
             sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME*.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps
             ;;
         tests)
-            mv $DEPS_BASE_NAME*.tar.gz $DEPS_BASE_NAME-$CI_BUILD_REF_SLUG.tar.gz
-            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME-$CI_BUILD_REF_SLUG.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps/
+            mv $DEPS_BASE_NAME*.tar.gz $DEPS_BASE_NAME-$CI_COMMIT_REF_SLUG.tar.gz
+            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME-$CI_COMMIT_REF_SLUG.tar.gz xdata@exflserv05:/var/www/html/karabo/karaboDevelopmentDeps/
             ;;
         *) echo "unknown job type: $1" ;;
     esac
