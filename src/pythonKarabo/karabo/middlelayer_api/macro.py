@@ -127,7 +127,6 @@ class Macro(Device):
     def cancel(self):
         self._lastloop.cancel()
 
-
     @classmethod
     def register(cls, name, dict):
         Macro._subclasses = {}
