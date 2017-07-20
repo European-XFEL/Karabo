@@ -573,6 +573,9 @@ class DisplayTrendline(DisplayWidget):
                 with SignalBlocker(aw):
                     self.plot.setAxisScale(QwtPlot.xBottom, t0, t + 10)
 
+        # Make sure to keep the y axis updated as well
+        self._update_y_axis_scale()
+
         self.lasttime = timestamp.toTimestamp()
         self.wasVisible = True
         self.updateLater()
