@@ -124,8 +124,6 @@ namespace karabo {
             
             karabo::util::Hash::Pointer prepareHeader(const SlotMap& slots) const;
             
-            void filterOutP2pConnected(SlotMap& notConnected, SlotMap& connected);
-
         private:
 
             void doEmit(const karabo::util::Hash::Pointer& message);
