@@ -18,26 +18,30 @@
 #include "Channel.hh"
 #include "EventLoop.hh"
 
+
+typedef boost::function<void (const karabo::util::Hash::Pointer&, const karabo::util::Hash::Pointer&)> GlobalP2PReadHandler;
+
+
 namespace karabo {
     namespace net {
 
-        typedef boost::function<void (const karabo::util::Hash::Pointer&,
-                                      const karabo::util::Hash::Pointer&) > ConsumeHandler;
 
-        /**
-         * @class PointToPoint
-         * @brief This class implements a point-to-point (p2p) messaging interface for Karabo
-         * 
-         * This class implements a point-to-point (p2p) messaging interface for Karabo. When
-         * using this interface the signaling side (producer) is always the server, the
-         * slot side (consumer) is always the client.
-         */
-        class PointToPoint {
+        class PointToPoint : public boost::enable_shared_from_this<PointToPoint> {
 
         public:
 
-            typedef boost::shared_ptr<karabo::net::PointToPoint> Pointer;
+            // In SignalSlotable there is no serverId. We use url instead
+            // mapping the instanceId to url
+            typedef std::map<std::string, std::string> MapInstanceIdToUrl;
+            // mapping url to set of instanceIds
+            typedef std::map<std::string, std::set<std::string> > MapUrlToInstanceIdSet;
+            // mapping url to connection (pair of channel and connection pointers)
+            typedef std::map<std::string, std::pair<karabo::net::Channel::Pointer, karabo::net::Connection::Pointer> > MapUrlToConnection;
+            // This repeates map defined in karabo::xms::Signal class
+            typedef std::map<std::string, std::set<std::string> > SlotMap;
 
+            KARABO_CLASSINFO(PointToPoint, "PointToPoint", "2.1")
+            
             PointToPoint();
 
             virtual ~PointToPoint();
@@ -46,35 +50,28 @@ namespace karabo {
              * Return a string specifying the host and port the p2p interface is connected to
              * @return 
              */
-            std::string getConnectionString() const;
+            std::string getLocalUrl() const;
 
             /**
-             * Return the boost::asio::io_service of Karabo's EventLoop
-             * @return 
-             */
-            boost::asio::io_service& getIOService() {
-                return karabo::net::EventLoop::getIOService();
-            }
-
-            /**
-             * Connect a signal on a SignalSlotable instance to a slot on another SignalSlotable 
-             * instance using the PointToPoint interface. If both instances run in the same
-             * process a shortcut is used and no tcp traffic is generated.
+             * Actively requests to establish and register a P2P connection to the remote server where
+             * remoteInstanceId is located.
              * 
-             * @param signalInstanceId SignalSlotable instance the signal is on
-             * @param slotInstanceId SignalSlotable instance the slot is on
-             * @param signalConnectionString connection string as given by getConnectionString identifying the server (signal side)
-             * @param handler on the consumer (slot) used for consuming messages
+             * @param remoteInstanceId remote SignalSlotable instanceId on the remote server
+             * @param info is a Hash with the instanceInfo Hash with the remote serverId and connection string, and
+             *        vector<string> of all instanceIds on the remote server
              */
-            void connect(const std::string& signalInstanceId, const std::string& slotInstanceId,
-                         const std::string& signalConnectionString, const karabo::net::ConsumeHandler& handler);
+            bool connectAsync(const std::string& remoteInstanceId);
+
+            bool connect(const std::string& remoteInstanceId);
+
+            bool isConnected(const std::string& remoteInstanceId);
 
             /**
-             * Disconnect a PointToPoint connection established between a signal instance and a slot instance
-             * @param signalInstanceId
-             * @param slotInstanceId
+             * Disconnect or de-register remoteInstanceIda
+             * @param remoteInstanceId
              */
-            void disconnect(const std::string& signalInstanceId, const std::string& slotInstanceId);
+            void disconnect(const std::string& remoteInstanceId) {
+            }
 
             /**
              * Publish a message to a slot instance consisting of a message header and body, with
@@ -85,32 +82,78 @@ namespace karabo {
              * @param prio of the message, ranging from 0-9 where 9 is the highest priority.
              * @return 
              */
-            bool publish(const std::string& slotInstanceId,
+            bool publish(const std::string& remoteInstanceId,
                          const karabo::util::Hash::Pointer& header,
                          const karabo::util::Hash::Pointer& body,
                          int prio);
             
+            void filterConnectedAndGroupByUrl(SlotMap& in, std::map<std::string, SlotMap>& out);
+            
             /**
-             * Publish a message to slot instances having a slot connected to those specified
-             * in registered slots
-             * @param registeredSlots a std::map where the key is the slot instance and the value is a std::set
-             *        of slots that should be registered and connected to on this instance
-             * @param header of the message
-             * @param message of the message 
-             * @param prio of the message, ranging from 0-9 where 9 is the highest priority.
+             * Update InstanceIdToUrl map
+             * @param remoteInstanceId
+             * @param remoteUrl - connection string
              */
-            void publishIfConnected(std::map<std::string, std::set<std::string> >& registeredSlots,
-                                    const karabo::util::Hash::Pointer& header,
-                                    const karabo::util::Hash::Pointer& message, int prio);
+            void updateUrl(const std::string& remoteInstanceId, const std::string& remoteUrl);
 
+            /**
+             * Erase entry from InstanceIdToUrl map
+             * @param instanceId
+             */
+            void eraseUrl(const std::string& instanceId);
+
+            /**
+             * Find URL (connection string) by remoteInstanceId
+             * @param remoteInstanceId
+             * @return URL
+             */
+            std::string findUrlById(const std::string& remoteInstanceId);
+            
+            void registerP2PReadHandler(const GlobalP2PReadHandler& handler);
 
         private:
 
-            class Producer;
-            class Consumer;
+            void init();
 
-            boost::shared_ptr<Producer> m_producer;
-            boost::shared_ptr<Consumer> m_consumer;
+            /**
+             * Passive connection: we simply wait for client to connect us.
+             * Then, following the protocol: the client should send us the configuration Hash:
+             *    "instanceId"    : client instanceId
+             *    "instanceInfo"  : client instanceInfo
+             *    "instanceIds"   : all instanceIds on client's side application (device server)
+             * @param e
+             * @param channel
+             */
+            void onConnectServer(const ErrorCode& e,
+                                 const karabo::net::Channel::Pointer& channel,
+                                 const karabo::net::Connection::Pointer& connection);
+
+            void onConnectServerBottomHalf(const ErrorCode& e,
+                                           const karabo::net::Channel::Pointer& channel,
+                                           const karabo::net::Connection::Pointer& connection,
+                                           const karabo::util::Hash::Pointer& message);
+
+            void onConnectClient(const ErrorCode& e,
+                                 const Channel::Pointer& channel,
+                                 const Connection::Pointer& connection,
+                                 const karabo::util::Hash& config);
+
+            void onP2PMessage(const ErrorCode& e,
+                              const karabo::net::Channel::Pointer& channel,
+                              const karabo::util::Hash::Pointer& header,
+                              const karabo::util::Hash::Pointer& message);
+
+            void channelErrorHandler(const ErrorCode& ec, const Channel::Pointer& channel);
+
+        private:
+
+            int m_serverPort;
+            std::string m_localUrl;
+            GlobalP2PReadHandler m_globalHandler;
+            boost::mutex m_pointToPointMutex;
+            MapInstanceIdToUrl m_instanceIdToUrl;
+            MapUrlToInstanceIdSet m_urlToInstanceIdSet;
+            MapUrlToConnection m_mapOpenConnections;
 
         };
 

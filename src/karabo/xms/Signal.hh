@@ -121,8 +121,10 @@ namespace karabo {
         protected:
 
             std::pair<std::string, std::string> generateSlotStrings(const SlotMap& slots) const;
-
+            
             karabo::util::Hash::Pointer prepareHeader(const SlotMap& slots) const;
+            
+            void filterOutP2pConnected(SlotMap& notConnected, SlotMap& connected);
 
         private:
 
