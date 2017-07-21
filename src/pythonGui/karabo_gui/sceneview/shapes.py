@@ -72,7 +72,7 @@ class BaseShape(ABCHasStrictTraits):
 
     def edit(self, scene_view):
         """ Edits the pen and brush of the shape."""
-        dialog = PenDialog(self.pen, self.brush)
+        dialog = PenDialog(QPen(self.pen), QBrush(self.brush))
         if dialog.exec_() == QDialog.Rejected:
             return
 
