@@ -10,11 +10,11 @@ from dateutil.parser import parse as from_isoformat
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    AlarmCondition, Bool, Configurable, connectDevice, decodeBinary, Device,
-    DeviceNode, execute, Float, getDevice, Hash, isSet, Int32, KaraboError,
-    lock, MetricPrefix, Node, Queue, setNoWait, setWait, Slot, slot, State,
-    String, unit, Unit, VectorChar, VectorInt16, VectorString, VectorFloat,
-    waitUntil, waitUntilNew)
+    AlarmCondition, background, Bool, Configurable, connectDevice, decodeBinary,
+    Device, DeviceNode, execute, Float, getDevice, Hash, isAlive, isSet, Int32,
+    KaraboError, lock, MetricPrefix, Node, Queue, setNoWait, setWait, Slot,
+    slot, State, String, unit, Unit, VectorChar, VectorInt16, VectorString,
+    VectorFloat, waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.injectable import Injectable
 
@@ -474,6 +474,22 @@ class Tests(DeviceTest):
                                         timeout=0.01)
             finally:
                 yield from task
+
+    @async_tst
+    def test_isAlive(self):
+        moriturus = Local({"_deviceId_": "moriturus"})
+        yield from moriturus.startInstance()
+        proxy = yield from getDevice("moriturus")
+        self.assertTrue(isAlive(proxy))
+        background(moriturus.slotKillDevice())
+        yield from waitUntil(lambda: not isAlive(proxy))
+        self.assertFalse(isAlive(proxy))
+        moriturus = Local({"_deviceId_": "moriturus"})
+        yield from moriturus.startInstance()
+        yield from waitUntil(lambda: isAlive(proxy))
+        self.assertTrue(isAlive(proxy))
+        yield from moriturus.slotKillDevice()
+        self.assertFalse(isAlive(proxy))
 
     @async_tst
     def test_waituntilnew(self):
