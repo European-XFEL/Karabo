@@ -661,8 +661,6 @@ namespace karabo {
             static boost::shared_mutex m_instanceMapMutex;
 
             bool m_discoverConnectionResourcesMode;
-            static std::map<std::string, std::string> m_connectionStrings;
-            static boost::mutex m_connectionStringsMutex;
 
             static karabo::net::PointToPoint::Pointer m_pointToPoint;
 
@@ -682,7 +680,7 @@ namespace karabo {
 
             void onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
-            void onP2pMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+            static void onP2pMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 

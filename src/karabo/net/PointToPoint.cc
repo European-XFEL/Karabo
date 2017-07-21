@@ -20,558 +20,263 @@ namespace karabo {
     namespace net {
 
 
-        class PointToPoint::Producer : public boost::enable_shared_from_this<PointToPoint::Producer> {
-
-            typedef std::map<karabo::net::Channel::Pointer, std::unordered_set<std::string> > ChannelToSlotInstanceIds;
-
-        public:
-
-            KARABO_CLASSINFO(Producer, "PointToPointProducer", "1.0")
-
-            Producer();
-
-            virtual ~Producer();
-
-
-            boost::asio::io_service& getIOService() {
-                return EventLoop::getIOService();
-            }
-
-
-            unsigned int getPort() const {
-                return m_port;
-            }
-
-            bool publish(const std::string& slotInstanceId,
-                         const karabo::util::Hash::Pointer& header,
-                         const karabo::util::Hash::Pointer& body,
-                         int prio);
-
-            void publishIfConnected(std::map<std::string, std::set<std::string> >& registeredSlots,
-                                    const karabo::util::Hash::Pointer& header,
-                                    const karabo::util::Hash::Pointer& message, int prio);
-
-            void connectHandler(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel);
-
-            void onSubscribe(const ErrorCode& e, const karabo::net::Channel::Pointer& channel, const std::string& subscription);
-
-            void stop();
-
-        private:
-
-            void updateHeader(const karabo::util::Hash::Pointer& header,
-                              const std::map<std::string, std::set<std::string> >& registeredSlots) const;
-
-            void channelErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
-
-        private:
-
-            unsigned int m_port;
-            Connection::Pointer m_connection;
-            ChannelToSlotInstanceIds m_registeredChannels;
-            boost::shared_mutex m_registeredChannelsMutex;
-
-        };
-
-
-        class PointToPoint::Consumer : public boost::enable_shared_from_this<PointToPoint::Consumer> {
-
-            typedef std::map<std::string, ConsumeHandler> SlotInstanceIds;
-            // Mapping signalInstanceId into signalConnectionString like "tcp://host:port" and set of pairs of slotInstanceId and ConsumeHandler
-            typedef std::map<std::string, std::pair<std::string, SlotInstanceIds> > ConnectedInstances;
-            // Mapping connectionString into (Connection, Channel) pointers
-            typedef std::map<std::string, std::pair<karabo::net::Connection::Pointer, karabo::net::Channel::Pointer> > OpenConnections;
-
-        public:
-
-            KARABO_CLASSINFO(Consumer, "PointToPointConsumer", "1.0")
-
-            Consumer();
-
-            virtual ~Consumer();
-
-            void connect(const std::string& signalInstanceId,
-                         const std::string& slotInstanceId,
-                         const std::string& signalConnectionString,
-                         const karabo::net::ConsumeHandler& handler);
-
-            void disconnect(const std::string& signalInstanceId, const std::string& slotInstanceId);
-
-            void consume(const karabo::net::ErrorCode& ec,
-                         const std::string& signalConnectionString,
-                         const karabo::net::Connection::Pointer& connection,
-                         const karabo::net::Channel::Pointer& channel,
-                         karabo::util::Hash::Pointer& header,
-                         karabo::util::Hash::Pointer& body);
-
-        private:
-
-
-            void connectionErrorHandler(const karabo::net::ErrorCode& ec,
-                                        const std::string& signalInstanceId,
-                                        const std::string& signalConnectionString,
-                                        const karabo::net::Connection::Pointer& connection);
-
-            void channelErrorHandler(const karabo::net::ErrorCode& ec,
-                                     const std::string& signalConnectionString,
-                                     const karabo::net::Connection::Pointer& connection,
-                                     const karabo::net::Channel::Pointer& channel);
-
-
-            void storeTcpConnectionInfo(const std::string& signalConnectionString,
-                                        const karabo::net::Connection::Pointer& connection,
-                                        const karabo::net::Channel::Pointer& channel) {
-                if (m_openConnections.find(signalConnectionString) == m_openConnections.end())
-                    m_openConnections[signalConnectionString] = std::make_pair(connection, channel);
-            }
-
-            /** To be called under protection of 'boost::mutex::scoped_lock lock(m_connectedInstancesMutex);'.
-             */
-            void storeSignalSlotConnectionInfo(const std::string& slotInstanceId,
-                                               const std::string& signalInstanceId,
-                                               const std::string& signalConnectionString,
-                                               const ConsumeHandler& handler);
-
-            void connectHandler(const karabo::net::ErrorCode& ec,
-                                const std::string& subscription,
-                                const std::string& instanceId,
-                                const std::string& connectionString,
-                                const karabo::net::ConsumeHandler& handler,
-                                const karabo::net::Connection::Pointer& connection,
-                                const karabo::net::Channel::Pointer& channel);
-
-        private:
-
-            OpenConnections m_openConnections; // key: connection_string 
-            ConnectedInstances m_connectedInstances;
-            boost::mutex m_connectedInstancesMutex;
-
-        };
-
-
-        PointToPoint::Producer::Producer()
-            : m_port(0)
-            , m_connection()
-            , m_registeredChannels() {
-            m_connection = Connection::create(Hash("Tcp.port", 0, "Tcp.type", "server"));
-            // No bind_weak in constructor possible yet...
-            m_port = m_connection->startAsync(boost::bind(&PointToPoint::Producer::connectHandler, this, _1, _2));
+        PointToPoint::PointToPoint() : m_serverPort(0), m_localUrl(""), m_globalHandler() {
+            // No bind_weak in constructor possible yet... call "second" constructor via EventLoop
+            EventLoop::getIOService().post(boost::bind(&PointToPoint::init, this));
         }
 
 
-        PointToPoint::Producer::~Producer() {
-        }
-
-
-        void PointToPoint::Producer::channelErrorHandler(const ErrorCode& ec, const Channel::Pointer& channel) {
-            {
-                // Could use shared_lock here and promote to unique_lock before erase...
-                boost::unique_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
-                for (ChannelToSlotInstanceIds::const_iterator it = m_registeredChannels.begin(); it != m_registeredChannels.end(); ++it) {
-                    if (it->first.get() == channel.get()) {
-                        m_registeredChannels.erase(it);
-                        break;
-                    }
-                }
+        void PointToPoint::init() {
+            try {
+                // We get an exception if the object is destroyed
+                boost::shared_ptr<PointToPoint> guard = shared_from_this();
+                // Here bind_weak is possible - second constructor
+                Connection::Pointer connection = Connection::create(Hash("Tcp.port", 0, "Tcp.type", "server"));
+                m_serverPort = connection->startAsync(bind_weak(&PointToPoint::onConnectServer, this, _1, _2, connection));
+                m_localUrl = "tcp://" + karabo::net::bareHostName() + ":" + toString(m_serverPort);
+            } catch (const std::exception&) {
             }
-            if (channel) channel->close();
-        }
-
-
-        void PointToPoint::Producer::connectHandler(const ErrorCode& e, const Channel::Pointer& channel) {
-            if (e) {
-                channelErrorHandler(e, channel);
-                return;
-            }
-            m_connection->startAsync(bind_weak(&PointToPoint::Producer::connectHandler, this, _1, _2));
-            channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
-            channel->setAsyncChannelPolicy(4, "LOSSLESS");
-            channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
-            boost::unique_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
-            m_registeredChannels[channel] = std::unordered_set<std::string>();
-        }
-
-
-        void PointToPoint::Producer::onSubscribe(const ErrorCode& e, const karabo::net::Channel::Pointer& channel, const std::string& subscription) {
-            if (e) {
-                channelErrorHandler(e, channel);
-                return;
-            }
-
-            vector<string> v;
-            string s = subscription;
-            boost::split(v, s, boost::is_any_of(" "));
-            const string& slotInstanceId = v[0];
-            const string& command = v[1];
-
-            boost::unique_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
-            if (command == "SUBSCRIBE")
-                m_registeredChannels[channel].insert(slotInstanceId);
-            else if (command == "UNSUBSCRIBE")
-                m_registeredChannels[channel].erase(slotInstanceId);
-            // wait for next command
-            channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
-        }
-
-
-        void PointToPoint::Producer::stop() {
-            boost::unique_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
-            for (ChannelToSlotInstanceIds::const_iterator it = m_registeredChannels.begin(); it != m_registeredChannels.end(); ++it) {
-                const Channel::Pointer& channel = it->first;
-                channel->close();
-            }
-            m_registeredChannels.clear();
-            m_connection->stop();
-        }
-
-
-        bool PointToPoint::Producer::publish(const std::string& slotInstanceId,
-                                             const karabo::util::Hash::Pointer& header,
-                                             const karabo::util::Hash::Pointer& body,
-                                             int prio) {
-            // A read-only lock since content of m_registeredChannels is not changed:
-            boost::shared_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
-            for (ChannelToSlotInstanceIds::const_iterator it = m_registeredChannels.begin(); it != m_registeredChannels.end(); ++it) {
-                const Channel::Pointer& channel = it->first;
-                const std::unordered_set<std::string>& slotInstanceIds = it->second;
-                auto ii = slotInstanceIds.find(slotInstanceId);
-                if (ii == slotInstanceIds.end()) continue;
-                try {
-                    // Concurrent writeAsync allowed since TcpChannel protects its queues itself.
-                    // ==> No need to promote lock to unique_lock.
-                    channel->writeAsync(*header, *body, prio);
-                } catch (const karabo::util::Exception& e) {
-                    KARABO_LOG_FRAMEWORK_WARN << e;
-                }
-                return true;
-            }
-            return false;
-        }
-
-
-        void PointToPoint::Producer::publishIfConnected(std::map<std::string, std::set<std::string> >& registeredSlots,
-                                                        const karabo::util::Hash::Pointer& header,
-                                                        const karabo::util::Hash::Pointer& message, int prio) {
-            if (registeredSlots.empty()) return;
-
-            // A read-only lock since content of m_registeredChannels is not changed:
-            boost::shared_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
-
-            for (ChannelToSlotInstanceIds::const_iterator mapItChannelSlotInstIds = m_registeredChannels.cbegin();
-                 mapItChannelSlotInstIds != m_registeredChannels.cend(); ++mapItChannelSlotInstIds) {
-
-                const Channel::Pointer& channel = mapItChannelSlotInstIds->first;
-                const std::unordered_set<string>& slotInstanceIds = mapItChannelSlotInstIds->second;
-                std::map<std::string, std::set<std::string> > slotsToUse;
-
-                for (auto iSlotInstId = slotInstanceIds.cbegin(); iSlotInstId != slotInstanceIds.cend(); ++iSlotInstId) {
-                    const string& slotInstanceId = *iSlotInstId;
-                    std::map<std::string, std::set<std::string> >::iterator it = registeredSlots.find(slotInstanceId);
-                    if (it == registeredSlots.end()) continue;
-                    slotsToUse[slotInstanceId] = it->second;
-                    registeredSlots.erase(it); // filter out
-                }
-
-                if (slotsToUse.empty()) continue;
-
-                updateHeader(header, slotsToUse);
-                try {
-                    channel->writeAsync(*header, *message, prio);
-                } catch (const karabo::util::Exception& e) {
-                    KARABO_LOG_FRAMEWORK_WARN << e;
-                }
-            }
-
-            updateHeader(header, registeredSlots);
-        }
-
-
-        void PointToPoint::Producer::updateHeader(const karabo::util::Hash::Pointer& header, const std::map<std::string, std::set<std::string> >& registeredSlots) const {
-            string registeredSlotsString;
-            string registeredSlotInstanceIdsString;
-
-            for (std::map<std::string, std::set<std::string> >::const_iterator it = registeredSlots.begin(); it != registeredSlots.end(); ++it) {
-                registeredSlotInstanceIdsString += "|" + it->first + "|";
-                registeredSlotsString += "|" + it->first + ":" + karabo::util::toString(it->second) + "|";
-            }
-
-            header->set("slotInstanceIds", registeredSlotInstanceIdsString);
-            header->set("slotFunctions", registeredSlotsString);
-        }
-
-
-        PointToPoint::Consumer::Consumer() {
-        }
-
-
-        PointToPoint::Consumer::~Consumer() {
-        }
-
-
-        void PointToPoint::Consumer::connectionErrorHandler(const karabo::net::ErrorCode& ec,
-                                                            const std::string& signalInstanceId,
-                                                            const std::string& signalConnectionString,
-                                                            const karabo::net::Connection::Pointer& connection) {
-
-            KARABO_LOG_FRAMEWORK_WARN << "Point-to-point connection to \"" << signalInstanceId << "\" using \"" << signalConnectionString
-                    << "\" failed.  Code " << ec.value() << " -- \"" << ec.message() << "\"";
-
-            karabo::net::Channel::Pointer channel;
-            {
-                boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
-
-                for (ConnectedInstances::iterator i = m_connectedInstances.begin(); i != m_connectedInstances.end(); ++i) {
-                    if (i->second.first == signalConnectionString) {
-                        m_connectedInstances.erase(i);
-                    }
-                }
-
-                OpenConnections::iterator ii = m_openConnections.find(signalConnectionString);
-                if (ii != m_openConnections.end()) {
-                    channel = ii->second.second;
-                    m_openConnections.erase(ii);
-                }
-            }
-            if (channel) channel->close();
-            if (connection) connection->stop();
-        }
-
-
-        void PointToPoint::Consumer::channelErrorHandler(const karabo::net::ErrorCode& ec,
-                                                         const std::string& signalConnectionString,
-                                                         const karabo::net::Connection::Pointer& connection,
-                                                         const karabo::net::Channel::Pointer& channel) {
-            
-            KARABO_LOG_FRAMEWORK_WARN << "karabo::net::Channel to \"" << signalConnectionString
-                    << "\" failed.  Code " << ec.value() << " -- \"" << ec.message() << "\"";
-
-            {
-                boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
-
-                for (ConnectedInstances::iterator i = m_connectedInstances.begin(); i != m_connectedInstances.end(); ++i) {
-                    if (i->second.first == signalConnectionString) {
-                        m_connectedInstances.erase(i);
-                    }
-                }
-
-                OpenConnections::iterator ii = m_openConnections.find(signalConnectionString);
-                if (ii != m_openConnections.end()) m_openConnections.erase(ii);
-            }
-            if (channel) channel->close();
-        }
-
-
-        void PointToPoint::Consumer::storeSignalSlotConnectionInfo(const std::string& slotInstanceId,
-                                                                   const std::string& signalInstanceId,
-                                                                   const std::string& signalConnectionString,
-                                                                   const ConsumeHandler& handler) {
-            if (m_connectedInstances.find(signalInstanceId) == m_connectedInstances.end()) {
-                m_connectedInstances[signalInstanceId] = std::make_pair(signalConnectionString, Consumer::SlotInstanceIds());
-            }
-            SlotInstanceIds& slotInstanceIds = m_connectedInstances[signalInstanceId].second;
-            if (slotInstanceIds.find(slotInstanceId) == slotInstanceIds.end()) {
-                slotInstanceIds[slotInstanceId] = handler;
-            }
-        }
-
-
-        void PointToPoint::Consumer::connectHandler(const karabo::net::ErrorCode& ec,
-                                                    const std::string& slotInstanceId,
-                                                    const std::string& signalInstanceId,
-                                                    const std::string& signalConnectionString,
-                                                    const ConsumeHandler& handler,
-                                                    const karabo::net::Connection::Pointer& connection,
-                                                    const karabo::net::Channel::Pointer& channel) {
-
-            if (ec) {
-                channelErrorHandler(ec, signalConnectionString, connection, channel);
-                return;
-            }
-            // bookkeeping ...
-            {
-                boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
-                storeTcpConnectionInfo(signalConnectionString, connection, channel);
-                storeSignalSlotConnectionInfo(slotInstanceId, signalInstanceId, signalConnectionString, handler);
-            }
-
-            // Subscribe to producer with our own instanceId
-            channel->write(slotInstanceId + " SUBSCRIBE");
-            // ... and, finally, wait for publications ...
-            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1,
-                                                               signalConnectionString, connection, channel, _2, _3));
-        }
-
-
-        void PointToPoint::Consumer::connect(const std::string& signalInstanceId,
-                                             const std::string& slotInstanceId,
-                                             const std::string& signalConnectionString,
-                                             const karabo::net::ConsumeHandler& handler) {
-
-            boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
-
-            // Are we not connected yet to the "signalInstanceId" producer...
-            if (m_connectedInstances.find(signalInstanceId) == m_connectedInstances.end()) {
-                // Check if the TCP connection does not exist yet ...
-                if (m_openConnections.find(signalConnectionString) == m_openConnections.end()) {
-                    Hash params("type", "client");
-                    {
-                        vector<string> v;
-
-                        string hostport = signalConnectionString.substr(6); // tcp://host:port
-                        boost::split(v, hostport, boost::is_any_of(":"));
-                        params.set("hostname", v[0]);
-                        params.set("port", fromString<unsigned int>(v[1]));
-                    }
-
-                    Connection::Pointer connection = Connection::create(Hash("Tcp", params));
-
-                    connection->startAsync(bind_weak(&Consumer::connectHandler, this, _1, slotInstanceId,
-                                                     signalInstanceId, signalConnectionString, handler, connection, _2));
-
-                    return;
-                }
-
-                // bookkeeping ...
-                storeSignalSlotConnectionInfo(slotInstanceId, signalInstanceId, signalConnectionString, handler);
-
-                // Subscribe to producer with slotInstanceId
-                m_openConnections[signalConnectionString].second->write(slotInstanceId + " SUBSCRIBE");
-            }
-            // Connected!
-        }
-
-
-        void PointToPoint::Consumer::disconnect(const std::string& signalInstanceId, const std::string& slotInstanceId) {
-
-            boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
-
-            // An iterator pointing to a pair of a connection string and SlotInstanceIds
-            ConnectedInstances::iterator itConnectStringSlotIds = m_connectedInstances.find(signalInstanceId);
-            if (itConnectStringSlotIds == m_connectedInstances.end()) return; // Done! ... nothing to disconnect
-
-            KARABO_LOG_FRAMEWORK_INFO << "Disconnect signalId '" << signalInstanceId
-                    << "' from slotId '" << slotInstanceId << "'.";
-
-            const string& signalConnectionString = itConnectStringSlotIds->second.first;
-
-            // un-subscribe from producer
-            auto& connectionChannelPair = m_openConnections[signalConnectionString];
-            connectionChannelPair.second->write(slotInstanceId + " UNSUBSCRIBE");
-
-            // Remove handler for the slotInstanceId
-            SlotInstanceIds& slotInstanceIds = itConnectStringSlotIds->second.second;
-            slotInstanceIds.erase(slotInstanceId);
-
-            // Check if TCP connection should be closed:
-            // Try to find signalConnectionString among _other_ connectedInstances.
-            bool found = false;
-            for (auto i = m_connectedInstances.begin(); i != m_connectedInstances.end(); ++i) {
-                if (i != itConnectStringSlotIds && i->second.first == signalConnectionString) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                KARABO_LOG_FRAMEWORK_INFO << "Close TCP channel/connection to: '" << signalConnectionString << "'.";
-                connectionChannelPair.second->close();
-                connectionChannelPair.first->stop();
-                m_openConnections.erase(signalConnectionString);
-            }
-
-            // If no slotInstanceIds left for that signalConnectionString, we erase the complete entry.
-            // (Do that at the very end since there are references to things belonging to 'itConnectStringSlotIds'.)
-            if (slotInstanceIds.empty()) m_connectedInstances.erase(itConnectStringSlotIds);
-        }
-
-
-        void PointToPoint::Consumer::consume(const karabo::net::ErrorCode& ec,
-                                             const std::string& signalConnectionString,
-                                             const karabo::net::Connection::Pointer& connection,
-                                             const karabo::net::Channel::Pointer& channel,
-                                             karabo::util::Hash::Pointer& header,
-                                             karabo::util::Hash::Pointer& body) {
-
-            if (ec) {
-                channelErrorHandler(ec, signalConnectionString, connection, channel);
-                return;
-            }
-            
-            // Re-register itself
-            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1, signalConnectionString,
-                                                               connection, channel, _2, _3));
-            // Get signalInstancdId and slotInstanceIds from header
-            const string& signalInstanceId = header->get<string>("signalInstanceId");
-            const string& slotInstanceIdsString = header->get<string>("slotInstanceIds");
-
-            // Split into vector of "slotInstanceId"
-            vector<string> ids;
-            boost::split(ids, slotInstanceIdsString, boost::is_any_of("|"), boost::token_compress_on);
-
-            // Try to call all slot handlers
-            for (vector<string>::iterator i = ids.begin(); i != ids.end(); ++i) {
-                if (i->empty())
-                    continue;
-                const string& slotInstanceId = *i;
-
-                ConsumeHandler handler;
-                {
-                    boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
-
-                    ConnectedInstances::iterator ii = m_connectedInstances.find(signalInstanceId);
-                    if (ii == m_connectedInstances.end()) return;
-                    SlotInstanceIds& slotInstanceIds = ii->second.second;
-
-                    SlotInstanceIds::iterator iii = slotInstanceIds.find(slotInstanceId);
-                    if (iii == slotInstanceIds.end()) continue;
-                    handler = iii->second;
-                }
-                // call user callback of type "ConsumeHandler"
-                handler(header, body);
-            }
-        }
-
-
-        PointToPoint::PointToPoint() : m_producer(new Producer), m_consumer(new Consumer) {
-            EventLoop::addThread();
         }
 
 
         PointToPoint::~PointToPoint() {
-            m_producer->stop();
-            EventLoop::removeThread();
         }
 
 
-        void PointToPoint::connect(const std::string& signalInstanceId, const std::string& slotInstanceId,
-                                   const std::string& signalConnectionString, const karabo::net::ConsumeHandler& handler) {
-            m_consumer->connect(signalInstanceId, slotInstanceId, signalConnectionString, handler);
+        void PointToPoint::registerP2PReadHandler(const GlobalP2PReadHandler& handler) {
+            m_globalHandler = handler;
         }
 
 
-        void PointToPoint::disconnect(const std::string& signalInstanceId, const std::string& slotInstanceId) {
-            m_consumer->disconnect(signalInstanceId, slotInstanceId);
+        // Bookkeeping stuff
+
+        std::string PointToPoint::getLocalUrl() const {
+            return m_localUrl;
         }
 
 
-        bool PointToPoint::publish(const std::string& slotInstanceId,
-                                   const karabo::util::Hash::Pointer& header,
-                                   const karabo::util::Hash::Pointer& body,
-                                   int prio) {
-            return m_producer->publish(slotInstanceId, header, body, prio);
+        void PointToPoint::updateUrl(const std::string& newInstanceId, const std::string& remoteUrl) {
+            boost::mutex::scoped_lock lock(m_pointToPointMutex);
+            auto it = m_instanceIdToUrl.find(newInstanceId);
+            if (it != m_instanceIdToUrl.end()) {
+                // found -- clean up old info
+                const std::string& oldUrl = it->second;
+                auto ii = m_urlToInstanceIdSet.find(oldUrl);
+                if (ii != m_urlToInstanceIdSet.end()) ii->second.erase(newInstanceId);
+                if (ii->second.empty()) {
+                    // Don't keep entry with the empty id's set
+                    m_urlToInstanceIdSet.erase(ii);
+                    // No reference left to the old connection
+                    auto iii = m_mapOpenConnections.find(oldUrl);
+                    // This will close obsolete connection (by destroying their shared pointers)
+                    if (iii != m_mapOpenConnections.end()) m_mapOpenConnections.erase(iii);
+                }
+            }
+            m_instanceIdToUrl[newInstanceId] = remoteUrl;
+            auto ii = m_urlToInstanceIdSet.find(remoteUrl);
+            if (ii == m_urlToInstanceIdSet.end()) {
+                m_urlToInstanceIdSet[remoteUrl] = std::set<std::string>();
+                ii = m_urlToInstanceIdSet.find(remoteUrl);
+            }
+            auto& ids = ii->second;
+            ids.insert(newInstanceId);
         }
 
 
-        void PointToPoint::publishIfConnected(std::map<std::string, std::set<std::string> >& registeredSlots,
-                                              const karabo::util::Hash::Pointer& header,
-                                              const karabo::util::Hash::Pointer& message, int prio) {
-            m_producer->publishIfConnected(registeredSlots, header, message, prio);
+        void PointToPoint::eraseUrl(const std::string& instanceId) {
+            boost::mutex::scoped_lock lock(m_pointToPointMutex);
+            auto it = m_instanceIdToUrl.find(instanceId);
+            if (it == m_instanceIdToUrl.end()) return;
+            const std::string& url = it->second;
+            auto ii = m_urlToInstanceIdSet.find(url);
+            if (ii == m_urlToInstanceIdSet.end()) {
+                auto ir = m_mapOpenConnections.find(url);
+                // This should not ever happen ...
+                if (ir != m_mapOpenConnections.end()) m_mapOpenConnections.erase(ir);
+                return;
+            }
+            auto& ids = ii->second;
+            ids.erase(instanceId);
+            if (ids.empty()) {
+                m_urlToInstanceIdSet.erase(ii);
+                auto ir = m_mapOpenConnections.find(url);
+                if (ir != m_mapOpenConnections.end()) m_mapOpenConnections.erase(ir);
+            }
         }
 
 
-        std::string PointToPoint::getConnectionString() const {
-            ostringstream oss;
-            oss << "tcp://" << boost::asio::ip::host_name() << ":" << m_producer->getPort();
-            return oss.str();
+        std::string PointToPoint::findUrlById(const std::string& remoteInstanceId) {
+            boost::mutex::scoped_lock lock(m_pointToPointMutex);
+            auto it = m_instanceIdToUrl.find(remoteInstanceId);
+            if (it == m_instanceIdToUrl.end()) return "";
+            return it->second;
+        }
+
+
+        /**
+         * Passive connection: we simply wait for client to connect us.
+         *
+         * @param e
+         * @param channel
+         */
+        void PointToPoint::onConnectServer(const ErrorCode& e,
+                                           const Channel::Pointer& channel,
+                                           const Connection::Pointer& connection) {
+            if (e) {
+                channelErrorHandler(e, channel);
+                return;
+            }
+            // We can accept more connections
+            channel->getConnection()->startAsync(bind_weak(&PointToPoint::onConnectServer, this, _1, _2, connection));
+            channel->readAsyncHashPointer(bind_weak(&PointToPoint::onConnectServerBottomHalf, this, _1, channel, connection, _2));
+        }
+
+
+        void PointToPoint::onConnectServerBottomHalf(const ErrorCode& e,
+                                                     const karabo::net::Channel::Pointer& channel,
+                                                     const karabo::net::Connection::Pointer& connection,
+                                                     const karabo::util::Hash::Pointer& message) {
+            if (e) {
+                channelErrorHandler(e, channel);
+                return;
+            }
+
+            channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
+            channel->setAsyncChannelPolicy(4, "LOSSLESS");
+
+            try {
+                const string& remoteUrl = message->get<string>("url");
+                {
+                    boost::mutex::scoped_lock lock(m_pointToPointMutex);
+                    m_mapOpenConnections[remoteUrl] = std::make_pair(channel, connection);
+                }
+                channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "PointToPoint::onConnectServerBottomHalf : exception -- " << e.what()
+                        << "\n**** message was ...\n" << message;
+            }
+        }
+
+
+        bool PointToPoint::connect(const std::string& remoteInstanceId) {
+
+            boost::mutex::scoped_lock lock(m_pointToPointMutex);
+
+            auto it = m_instanceIdToUrl.find(remoteInstanceId);
+            if (it == m_instanceIdToUrl.end()) return false;
+            const std::string& remoteUrl = it->second;
+
+            auto ii = m_mapOpenConnections.find(remoteUrl);
+            if (ii != m_mapOpenConnections.end()) return true;   // already connected
+
+            Connection::Pointer connection = Connection::create(Hash("Tcp", Hash("type", "client", "url", remoteUrl)));
+            Channel::Pointer channel = connection->start();
+            if (!channel) return false;
+            this->onConnectClient(boost::system::error_code(), channel, connection, Hash("url", remoteUrl));
+            return true;
+        }
+
+
+        bool PointToPoint::connectAsync(const std::string& remoteInstanceId) {
+
+            boost::mutex::scoped_lock lock(m_pointToPointMutex);
+
+            auto it = m_instanceIdToUrl.find(remoteInstanceId);
+            if (it == m_instanceIdToUrl.end()) return false;
+            const std::string& remoteUrl = it->second;
+
+            auto ii = m_mapOpenConnections.find(remoteUrl);
+            if (ii != m_mapOpenConnections.end()) return true;   // already connected
+
+            Connection::Pointer connection = Connection::create(Hash("Tcp", Hash("type", "client", "url", remoteUrl)));
+            connection->startAsync(bind_weak(&PointToPoint::onConnectClient, this, _1, _2, connection, Hash("url", remoteUrl)));
+            return true;
+        }
+
+
+        void PointToPoint::onConnectClient(const ErrorCode& e,
+                                           const Channel::Pointer& channel,
+                                           const Connection::Pointer& connection,
+                                           const Hash& config) {
+            if (e) {
+                channelErrorHandler(e, channel);
+                return;
+            }
+            
+            channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
+            channel->setAsyncChannelPolicy(4, "LOSSLESS");
+
+            const string& remoteUrl = config.get<string>("url");
+            {
+                boost::mutex::scoped_lock lock(m_pointToPointMutex);
+                m_mapOpenConnections[remoteUrl] = std::make_pair(channel, connection);
+            }
+            channel->writeAsync(Hash("url", m_localUrl), 4);
+            channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));
+        }
+
+
+        bool PointToPoint::isConnected(const std::string& remoteInstanceId) {
+            boost::mutex::scoped_lock lock(m_pointToPointMutex);
+            const auto& it = m_instanceIdToUrl.find(remoteInstanceId);
+            if (it == m_instanceIdToUrl.end()) return false;
+            const std::string& remoteUrl = it->second;
+            const auto& ir = m_mapOpenConnections.find(remoteUrl);
+            if (ir == m_mapOpenConnections.end()) return false;
+            return true;
+        }
+
+
+        void PointToPoint::filterConnectedAndGroupByUrl(SlotMap& input, std::map<std::string, SlotMap>& resultMap) {
+            resultMap.clear();
+            boost::mutex::scoped_lock lock(m_pointToPointMutex);
+            for (SlotMap::iterator it = input.begin(); it != input.end(); ++it) {
+                const string& remoteInstanceId = it->first;
+                const std::set<std::string>& remoteValue = it->second;
+                const auto& ii = m_instanceIdToUrl.find(remoteInstanceId);
+                if (ii == m_instanceIdToUrl.end()) continue;
+                const std::string& remoteUrl = ii->second;
+                const auto& ir = m_mapOpenConnections.find(remoteUrl);
+                if (ir == m_mapOpenConnections.end()) continue;   // not connected
+                auto ik = resultMap.find(remoteUrl);
+                if (ik == resultMap.end()) {
+                    resultMap[remoteUrl] = SlotMap();
+                    ik = resultMap.find(remoteUrl);
+                }
+                ik->second[remoteInstanceId] = remoteValue;
+                input.erase(it);
+            }
+        }
+
+
+        void PointToPoint::onP2PMessage(const ErrorCode& e, const karabo::net::Channel::Pointer& channel,
+                                        const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& message) {
+            if (e) {
+                channelErrorHandler(e, channel);
+                return;
+            }
+
+            m_globalHandler(header, message);
+        }
+
+
+        void PointToPoint::channelErrorHandler(const ErrorCode& ec, const Channel::Pointer& channel) {
+            KARABO_LOG_FRAMEWORK_ERROR << "Channel Exception #"<< ec.value() << " -- " << ec.message();
+        }
+
+
+        bool PointToPoint::publish(const std::string& remoteInstanceId,
+                                             const karabo::util::Hash::Pointer& header,
+                                             const karabo::util::Hash::Pointer& body,
+                                             int prio) {
+            boost::mutex::scoped_lock lock(m_pointToPointMutex);
+            auto it = m_instanceIdToUrl.find(remoteInstanceId);
+            if (it == m_instanceIdToUrl.end()) return false;
+            const string& remoteUrl = it->second;
+            auto ir = m_mapOpenConnections.find(remoteUrl);
+            if (ir == m_mapOpenConnections.end()) return false;
+            ir->second.first->writeAsync(*header, *body, prio);
+            return true;
         }
     }
 }

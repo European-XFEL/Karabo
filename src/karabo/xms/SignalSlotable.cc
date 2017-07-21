@@ -36,8 +36,6 @@ namespace karabo {
         boost::uuids::random_generator SignalSlotable::m_uuidGenerator;
         std::unordered_map<std::string, SignalSlotable*> SignalSlotable::m_instanceMap;
         boost::shared_mutex SignalSlotable::m_instanceMapMutex;
-        std::map<std::string, std::string> SignalSlotable::m_connectionStrings;
-        boost::mutex SignalSlotable::m_connectionStringsMutex;
         PointToPoint::Pointer SignalSlotable::m_pointToPoint;
 
 
@@ -286,17 +284,17 @@ namespace karabo {
             if (!instance) {
                 instance = this;
             } else if (instance != this) {
-                // Do not dare to call methods on instance - could already be destructed...?
+                // Do not dare to call methods on instance - could already be destroyed...?
                 KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Cannot register "
                         << "for short-cut messaging since there is already another instance.";
             }
             if (!m_pointToPoint) {
                 m_pointToPoint = boost::make_shared<PointToPoint>();
+                m_pointToPoint->registerP2PReadHandler(boost::bind(SignalSlotable::onP2pMessage, _1, _2));
                 m_discoverConnectionResourcesMode = true;
-                KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint producer connection string is \""
-                        << m_pointToPoint->getConnectionString() << "\"";
+                KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint local URL is \"" << m_pointToPoint->getLocalUrl() << "\"";
             }
-            m_instanceInfo.set("p2p_connection", m_pointToPoint->getConnectionString());
+            m_instanceInfo.set("p2p_connection", m_pointToPoint->getLocalUrl());
         }
 
 
@@ -980,23 +978,22 @@ namespace karabo {
 
         void SignalSlotable::updateP2pConnectionStrings(const std::string& newInstanceId, const karabo::util::Hash& newInstanceInfo,
                                                         const karabo::util::Hash& localInstanceInfo) {
-            boost::mutex::scoped_lock lock(m_connectionStringsMutex);
             if (newInstanceInfo.has("p2p_connection")) {
-                std::string localConnectionString;
+                std::string localUrl;
                 if (localInstanceInfo.has("p2p_connection")) {
-                    localInstanceInfo.get("p2p_connection", localConnectionString);
+                    localInstanceInfo.get("p2p_connection", localUrl);
                 }
-                const std::string remoteConnectionString = newInstanceInfo.get<std::string>("p2p_connection");
+                const std::string remoteUrl = newInstanceInfo.get<std::string>("p2p_connection");
                 // Store only remote connection strings - even if local does not 'speak' p2p, it may discover for others.
-                if (remoteConnectionString != localConnectionString) {
-                    m_connectionStrings[newInstanceId] = remoteConnectionString;
+                if (remoteUrl != localUrl) {
+                    m_pointToPoint->updateUrl(newInstanceId, remoteUrl);
                 } else {
                     // Usually should not be in map, but ensure that
-                    m_connectionStrings.erase(newInstanceId);
+                    m_pointToPoint->eraseUrl(newInstanceId);
                 }
             } else {
                 // Maybe it was in before, maybe not - now it should definitively not be anymore!
-                m_connectionStrings.erase(newInstanceId);
+                m_pointToPoint->eraseUrl(newInstanceId);
             }
         }
 
@@ -1013,9 +1010,8 @@ namespace karabo {
 
             emit("signalInstanceGone", instanceId, instanceInfo);
             if (m_discoverConnectionResourcesMode) {
-                boost::mutex::scoped_lock lock(m_connectionStringsMutex);
                 // No matter whether this instanceId is in the map - we have to ensure that it is not anymore:
-                m_connectionStrings.erase(instanceId);
+                m_pointToPoint->eraseUrl(instanceId);
             }
         }
 
@@ -2199,30 +2195,30 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::connectP2P(const std::string& signalInstanceId) {
-            if (signalInstanceId == m_instanceId) return false;
-            string signalConnectionString;
+        bool SignalSlotable::connectP2P(const std::string& remoteInstanceId) {
+            if (remoteInstanceId == m_instanceId) return false;
+            {
+                boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
+                // Do not connect if the remoteInstanceId is on the same server
+                if (m_instanceMap.find(remoteInstanceId) != m_instanceMap.end()) return false;
+            }
+
+            // Find connectionString of the remote instanceId
+            string remoteUrl;
             int attempt = 0;
             int millis = 200; // milliseconds
             while (attempt++ < 4) {
-                // Try to find connection string (URI) locally in global table: m_connectionStrings
-                {
-                    boost::mutex::scoped_lock lock(m_connectionStringsMutex);
-                    map<string, string>::iterator it = m_connectionStrings.find(signalInstanceId);
-                    if (it != m_connectionStrings.end()) {
-                        signalConnectionString = it->second;
-                        break;
-                    }
-                }
+                // Try to find connection string (URI) locally
+                remoteUrl = m_pointToPoint->findUrlById(remoteInstanceId);
+                if (!remoteUrl.empty()) break; // found!
 
                 // ... failed :( ... try to request instanceInfo remotely via broker ...
                 Hash instanceInfo;
                 try {
-                    this->request(signalInstanceId, "slotPing", signalInstanceId, 1, false).timeout(millis).receive(instanceInfo);
+                    this->request(remoteInstanceId, "slotPing", remoteInstanceId, 1, false).timeout(millis).receive(instanceInfo);
                     if (instanceInfo.has("p2p_connection")) {
-                        instanceInfo.get("p2p_connection", signalConnectionString);
-                        boost::mutex::scoped_lock lock(m_connectionStringsMutex);
-                        m_connectionStrings[signalInstanceId] = signalConnectionString;
+                        instanceInfo.get("p2p_connection", remoteUrl);
+                        m_pointToPoint->updateUrl(remoteInstanceId, remoteUrl);
                         break;
                     }
                 } catch (const TimeoutException&) {
@@ -2232,10 +2228,10 @@ namespace karabo {
             }
 
             // connection string should not be empty
-            if (signalConnectionString.empty()) return false;
-
-            m_pointToPoint->connect(signalInstanceId, m_instanceId, signalConnectionString,
-                                    bind_weak(&SignalSlotable::onP2pMessage, this, _1, _2));
+            if (remoteUrl.empty()) return false;
+            KARABO_LOG_FRAMEWORK_INFO << "*** connectP2P local \"" << m_instanceId << "\" to remote \"" << remoteInstanceId
+                    << "\" with signalConnectionString \"" << remoteUrl << "\".";
+            m_pointToPoint->connectAsync(remoteInstanceId);
             return true;
         }
 
@@ -2243,16 +2239,53 @@ namespace karabo {
         void SignalSlotable::onP2pMessage(const karabo::util::Hash::Pointer& header,
                                           const karabo::util::Hash::Pointer& body) {
 
-            EventLoop::getIOService().post(bind_weak(&SignalSlotable::processEvent, this, header, body,
-                                                     getEpochMillis()));
-            // To be equivalent to onBrokerMessage, we would have to re-register for the next p2p message.
-            // Currently this is done in PointToPoint::Consumer::consume(...) and cannot easily be moved here.
+            // We don't need to check the existence of "slotInstanceIds" in header. It is always there!
+            const string& slotInstanceIds = header->get<string>("slotInstanceIds");
+            // slotInstanceIds is defined like
+            // |slotInstanceId| or |*| or |slotInstanceId1||slotInstanceId2||...||slotInstanceIdN|
+            KARABO_LOG_FRAMEWORK_DEBUG << "SignalSlotable::onP2pMessage  slotInstanceIds : \"" << slotInstanceIds << "\"";
+            // strip vertical lines
+            string stripped = slotInstanceIds.substr(1, slotInstanceIds.size()-2);
+            size_t pos = stripped.find_first_of("|");
+            if (pos == std::string::npos) {
+                boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
+                if (stripped == "*") {
+                    // "Broadcast" case:  |*|
+                    for (auto& i : m_instanceMap) EventLoop::getIOService()
+                            .post(bind_weak(&SignalSlotable::processEvent, i.second,
+                                            header, body, i.second->getEpochMillis()));
+                } else {
+                    // "Specified" slotInstanceId case:  |slotInstaceId|
+                    for (auto& i : m_instanceMap) {
+                        if (stripped == i.first) EventLoop::getIOService()
+                            .post(bind_weak(&SignalSlotable::processEvent, i.second,
+                                            header, body, i.second->getEpochMillis()));
+                    }
+                }
+                return;
+            }
+            // Many slotInstanceIds : |slotInstaceId1||slotInstaceId2||slotInstaceId3|...|slotInstaceIdN|
+            std::vector<std::string> ids;
+            boost::split(ids, stripped, boost::is_any_of("|"), boost::token_compress_on);
+            boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
+            for (auto& slotInstanceId : ids) {
+                for (auto& i : m_instanceMap) {
+                    if (slotInstanceId == i.first) EventLoop::getIOService()
+                            .post(bind_weak(&SignalSlotable::processEvent, i.second,
+                                            header, body, i.second->getEpochMillis()));
+                }
+            }
         }
 
 
-        void SignalSlotable::disconnectP2P(const std::string& signalInstanceId) {
-            if (signalInstanceId == m_instanceId) return;
-            m_pointToPoint->disconnect(signalInstanceId, m_instanceId);
+        void SignalSlotable::disconnectP2P(const std::string& remoteInstanceId) {
+            if (remoteInstanceId == m_instanceId) return;
+            {
+                boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
+                // Do not disconnect if the signalInstanceId is on the same server
+                if (m_instanceMap.find(remoteInstanceId) != m_instanceMap.end()) return;
+            }
+            m_pointToPoint->disconnect(remoteInstanceId);
         }
 
 
