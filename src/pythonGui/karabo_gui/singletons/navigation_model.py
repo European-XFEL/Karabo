@@ -153,7 +153,8 @@ class NavigationTreeModel(QAbstractItemModel):
 
         :param node_id: A string which we are looking for in the tree
         """
-        nodes = self.findNodes(node_id)
+        nodes = self.findNodes(node_id, full_match=True)
+        assert len(nodes) <= 1
         if nodes:
             # Select first entry
             self.selectNode(nodes[0])
