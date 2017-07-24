@@ -8,7 +8,7 @@ import os
 from unittest import TestCase, main
 import sys
 
-from mccabe import get_module_complexity
+from mccabe import get_code_complexity
 from pycodestyle import Checker
 from pyflakes.api import checkPath
 
@@ -49,7 +49,9 @@ class Tests(TestCase):
         for mod in self.modules:
             base = os.path.basename(mod)
             with self.subTest(module=base):
-                complexity = get_module_complexity(mod)
+                with open(mod, "r", encoding="utf-8") as fin:
+                    code = fin.read()
+                complexity = get_code_complexity(code, filename=base)
                 self.assertLess(complexity, 6)
 
 
