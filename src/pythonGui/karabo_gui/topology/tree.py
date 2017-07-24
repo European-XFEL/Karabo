@@ -129,7 +129,7 @@ class SystemTree(HasStrictTraits):
         return existing_devices, server_class_keys
 
     def find(self, node_id, access_level=None, case_sensitive=True,
-             use_reg_ex=False, full_match=False):
+             use_reg_ex=True, full_match=False):
         """Find all nodes with the given `node_id` and return them in a list
 
         :param node_id: The actual string we are looking for in the tree
