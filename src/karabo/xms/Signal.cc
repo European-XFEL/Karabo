@@ -138,11 +138,6 @@ namespace karabo {
         }
 
 
-        void Signal::filterOutP2pConnected(SlotMap& in, SlotMap& out) {
-            
-        }
-
-
         karabo::util::Hash::Pointer Signal::prepareHeader(const SlotMap& slots) const {
             karabo::util::Hash::Pointer header(new karabo::util::Hash);
             std::pair<std::string, std::string> slotStrings = generateSlotStrings(slots);
