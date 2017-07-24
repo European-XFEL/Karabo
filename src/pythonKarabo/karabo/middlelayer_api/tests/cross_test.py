@@ -45,14 +45,7 @@ class MiddlelayerDevice(DeviceClientBase):
     @channel.close
     @coroutine
     def channel(self, output):
-        """auto-reconnect on close.
-
-        This method is not good style, but nevertheless it should work
-        yet didn't, thus the test.
-        """
         self.channelclose = output
-        yield from self.channel.__class__.connectedOutputChannels.setter(
-            self.channel, ["boundDevice:output1"])
 
     @InputChannel(raw=True)
     def rawchannel(self, data, meta):
@@ -207,23 +200,19 @@ class Tests(DeviceTest):
         yield from proxy.send()
         self.assertEqual(self.device.channelcount, 2)
         yield from proxy.end()
-        self.assertEqual(self.device.channelclose, "boundDevice:output1")
-
-        # The rest of this test looks weird. It tests for a bug which
-        # happened only the third time we connected... Thus the
-        # repetitive code
-        yield from proxy.send()
-        yield from proxy.send()
+        self.assertIsNone(self.device.channeldata)
+        self.assertEqual(self.device.channelmeta.source,
+                         "boundDevice:output1")
         self.assertEqual(self.device.channelcount, 3)
-        yield from proxy.end()
-
         yield from proxy.send()
-        yield from proxy.send()
+        self.assertEqual(self.device.channeldata.s, "hallo")
+        self.assertEqual(self.device.channelmeta.source, "boundDevice:output1")
         self.assertEqual(self.device.channelcount, 4)
 
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
         yield from self.process.wait()
+        self.assertEqual(self.device.channelclose, "boundDevice:output1")
 
     @async_tst
     def test_history(self):

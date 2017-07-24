@@ -1,4 +1,5 @@
-from asyncio import coroutine, get_event_loop, Lock, open_connection
+from asyncio import (
+    coroutine, get_event_loop, IncompleteReadError, Lock, open_connection)
 import os
 from struct import pack, unpack, calcsize
 
@@ -124,9 +125,22 @@ class NetworkInput(Configurable):
                        "onSlowness", self.onSlowness)
             channel.writeHash(cmd)
             cmd = Hash("reason", "update", "instanceId", self.parent.deviceId)
-            header = yield from channel.readHash()
-            while "endOfStream" not in header:
+            while True:
+                try:
+                    header = yield from channel.readHash()
+                except IncompleteReadError as e:
+                    if e.partial:
+                        raise
+                    else:
+                        self.parent.logger.info("stream %s finished", output)
+                        return
                 data = yield from channel.readBytes()
+                if "endOfStream" in header:
+                    meta = PipelineMetaData()
+                    meta._onChanged(Hash("source", output))
+                    yield from loop.run_coroutine_or_thread(
+                        self.handler, None, meta)
+                    continue
                 pos = 0
                 for length, meta_hash in zip(header["byteSizes"],
                                              header["sourceInfo"]):
@@ -143,7 +157,6 @@ class NetworkInput(Configurable):
                             self.handler, proxy, meta)
                     pos += length
                 channel.writeHash(cmd)
-                header = yield from channel.readHash()
         finally:
             self.connected.pop(output)
             self.connectedOutputChannels = list(self.connected)
