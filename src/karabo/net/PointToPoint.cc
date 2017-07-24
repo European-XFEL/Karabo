@@ -257,6 +257,8 @@ namespace karabo {
             }
 
             m_globalHandler(header, message);
+            
+            channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));
         }
 
 
