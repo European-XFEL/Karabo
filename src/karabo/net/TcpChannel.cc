@@ -198,10 +198,16 @@ namespace karabo {
 
 
         void TcpChannel::readAsyncSizeInBytes(const ReadSizeInBytesHandler& handler) {
+            // This public interface has to ensure that we go at least once via EventLoop, i.e. we are asynchronous.
+            readAsyncSizeInBytesImpl(handler, false);
+        }
+
+
+        void TcpChannel::readAsyncSizeInBytesImpl(const ReadSizeInBytesHandler& handler, bool allowNonAsync) {
             size_t sizeofLength = m_connectionPointer->getSizeofLength();
             if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
             m_inboundMessagePrefix.resize(sizeofLength);
-            if (m_socket.available() >= sizeofLength) {
+            if (allowNonAsync && m_socket.available() >= sizeofLength) {
                 m_syncCounter++;
                 boost::system::error_code ec;
                 size_t rsize = m_socket.read_some(buffer(m_inboundMessagePrefix), ec);
@@ -218,7 +224,6 @@ namespace karabo {
 
         void TcpChannel::onSizeInBytesAvailable(const ErrorCode& e, const ReadSizeInBytesHandler& handler) {
             if (e) {
-                boost::shared_ptr<std::vector<char> > inData(new std::vector<char>);
                 bytesAvailableHandler(e);
                 return;
             }
@@ -242,14 +247,20 @@ namespace karabo {
                 bytesAvailableHandler(ec);
             } else {
                 m_asyncCounter++;
-                this->readAsyncRaw(m_inboundData->data(), byteSize,
-                                   boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1));
+                this->readAsyncRawImpl(m_inboundData->data(), byteSize,
+                                       boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1), true);
             }
         }
 
 
         void TcpChannel::readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
-            if (m_socket.available() >= size) {
+            // This public interface has to ensure that we go at least once via EventLoop, i.e. we are asynchronous.
+            readAsyncRawImpl(data, size, handler, false);
+        }
+
+
+        void TcpChannel::readAsyncRawImpl(char* data, const size_t& size, const ReadRawHandler& handler, bool allowNonAsync) {
+            if (allowNonAsync && m_socket.available() >= size) {
                 m_syncCounter++;
                 boost::system::error_code ec;
                 size_t rsize = m_socket.read_some(buffer(data, size), ec);
@@ -277,7 +288,8 @@ namespace karabo {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::VECTOR;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+            // 'false' ensures that we leave the context and go via the event loop:
+            this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
 
 
@@ -285,7 +297,8 @@ namespace karabo {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::VECTOR_POINTER;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+            // 'false' ensures that we leave the context and go via the event loop:
+            this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
 
 
@@ -293,7 +306,8 @@ namespace karabo {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::STRING;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+            // 'false' ensures that we leave the context and go via the event loop:
+            this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
 
 
@@ -301,7 +315,8 @@ namespace karabo {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+            // 'false' ensures that we leave the context and go via the event loop:
+            this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
 
 
@@ -309,7 +324,8 @@ namespace karabo {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH_POINTER;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+            // 'false' ensures that we leave the context and go via the event loop:
+            this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
 
 
@@ -318,7 +334,8 @@ namespace karabo {
             m_activeHandler = TcpChannel::HASH_VECTOR;
             m_readHeaderFirst = true;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+            // 'false' ensures that we leave the context and go via the event loop:
+            this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
 
 
@@ -327,7 +344,8 @@ namespace karabo {
             m_activeHandler = TcpChannel::HASH_VECTOR_POINTER;
             m_readHeaderFirst = true;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+            // 'false' ensures that we leave the context and go via the event loop:
+            this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
 
 
@@ -336,7 +354,8 @@ namespace karabo {
             m_activeHandler = TcpChannel::HASH_STRING;
             m_readHeaderFirst = true;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+            // 'false' ensures that we leave the context and go via the event loop:
+            this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
 
 
@@ -345,7 +364,8 @@ namespace karabo {
             m_activeHandler = TcpChannel::HASH_HASH;
             m_readHeaderFirst = true;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+            // 'false' ensures that we leave the context and go via the event loop:
+            this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
 
 
@@ -354,7 +374,8 @@ namespace karabo {
             m_activeHandler = TcpChannel::HASH_POINTER_HASH_POINTER;
             m_readHeaderFirst = true;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+            // 'false' ensures that we leave the context and go via the event loop:
+            this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
 
 
@@ -364,7 +385,8 @@ namespace karabo {
                 if (m_readHeaderFirst) {
                     m_readHeaderFirst = false;
                     m_inboundData.swap(m_inboundHeader);
-                    this->readAsyncSizeInBytes(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1));
+                    // 'true' allows non-async shortcut to avoid event loop posts if data has already arrived
+                    this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), true);
                     return;
                 }
             }
