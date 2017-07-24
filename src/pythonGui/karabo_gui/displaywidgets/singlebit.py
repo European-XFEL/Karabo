@@ -7,6 +7,7 @@ from karabo.common.api import State
 from karabo.middlelayer import Integer
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 from karabo_gui.indicators import STATE_COLORS
+from karabo_gui.schema import Dummy
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 from .unitlabel import add_unit_label
@@ -47,6 +48,9 @@ class SingleBit(DisplayWidget):
         self._internal_widget.setEnabled(not ro)
 
     def valueChanged(self, box, value, timestamp=None):
+        if isinstance(value, Dummy):
+            return
+
         self.widget.updateLabel(box)
         value = (value >> self.bit) & 1 != 0
         value = not value if self.invert else value

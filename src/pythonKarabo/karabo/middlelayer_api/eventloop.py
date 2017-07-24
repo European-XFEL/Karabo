@@ -620,6 +620,11 @@ class EventLoop(SelectorEventLoop):
         finally:
             self.changedFutures.discard(f)
 
+    def something_changed(self):
+        for future in self.changedFutures:
+            future.set_result(None)
+        self.changedFutures = set()
+
     def sync(self, coro, timeout, wait):
         return coro
 

@@ -1,6 +1,6 @@
 
 __deps_build_tests() {
-    export FORCED_DEPS_TAG=$CI_BUILD_REF_SLUG
+    export FORCED_DEPS_TAG=$CI_COMMIT_REF_SLUG
     bash ./auto_build_all.sh Debug --runTests
 }
 
@@ -19,7 +19,7 @@ JOB_SCOPE=$(echo $1 | cut -f1 -d' ')
 JOB_TYPE=$(echo $1 | cut -f2 -d' ')
 TARGET_OS=$(echo $1 | cut -f3 -d' ')
 
-export KARABO_BROKER_TOPIC="gitlab_ci_$CI_BUILD_ID"
+export KARABO_BROKER_TOPIC="gitlab_ci_$CI_JOB_ID"
 
 case "$JOB_SCOPE" in
     deps) __deps_build_tests ;;

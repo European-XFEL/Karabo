@@ -158,9 +158,10 @@ class Manager(QObject):
 
         get_network().onKillServer(serverId)
 
-    def onReceivedData(self, hash):
-        getattr(self, "handle_" + hash["type"])(
-            **{k: v for k, v in hash.items() if k != "type"})
+    def onReceivedData(self, hsh):
+        handler = getattr(self, "handle_" + hsh["type"])
+        kwargs = {k: v for k, v in hsh.items() if k != "type"}
+        handler(**kwargs)
 
     def onServerConnectionChanged(self, isConnected):
         """If the server connection is changed, the model needs an update.
@@ -330,13 +331,7 @@ class Manager(QObject):
         self._device_data_received()
 
     def handle_deviceConfiguration(self, deviceId, configuration):
-        device = self._topology.device_config_updated(deviceId, configuration)
-        if device is None:
-            return
-
-        if device.status in (DeviceStatus.ALIVE, DeviceStatus.MONITORING):
-            # Trigger update scenes - to draw possible Workflow Connections
-            self._device_data_received()
+        self._topology.device_config_updated(deviceId, configuration)
 
     def handle_propertyHistory(self, deviceId, property, data):
         device = self._topology.get_device(deviceId)

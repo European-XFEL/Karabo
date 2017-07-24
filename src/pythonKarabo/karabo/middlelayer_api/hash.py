@@ -1110,23 +1110,22 @@ class HashType(Type):
             type, = file.readFormat('I')
             type = cls.types[type]
             asize, = file.readFormat('I')
-            attrs = { }
+            attrs = {}
             for i in range(asize):
                 akey = file.readKey()
                 atype, = file.readFormat('I')
                 atype = cls.types[atype]
                 attrs[akey] = atype.read(file)
-            ret[key] = type.read(file)
-            ret[key, ...] = attrs
+            # Optimization: Set value and attributes simultaneously
+            ret._setelement(key, HashElement(type.read(file), attrs))
         return ret
 
     @classmethod
     def yieldBinary(cls, data):
         yield pack('I', len(data))
-        for k, v in data.items():
+        for k, v, attrs in data.iterall():
             yield from yieldKey(k)
             hashtype = _gettype(v)
-            attrs = data[k, ...]
             yield pack('II', hashtype.number, len(attrs))
             for ak, av in attrs.items():
                 atype = _gettype(av)
@@ -1450,6 +1449,12 @@ class Hash(OrderedDict):
                       for k in self)
         return '<' + r + '>'
 
+    def _setelement(self, key, value):
+        # NOTE: This is a fast path for __setitem__ to be use by the binary
+        # deserializer. It must only be called for values in this hash, never
+        # for values in sub-hashes!
+        assert '.' not in key, "Can't set values in sub-hashes!"
+        OrderedDict.__setitem__(self, key, value)
 
     def __setitem__(self, item, value):
         if isinstance(item, tuple):
@@ -1497,9 +1502,14 @@ class Hash(OrderedDict):
 
         This behaves like the :meth:`~dict.items` method of Python
         :class:`dict`, except that it yields not only key and value but
-        also the attributes for it. """
+        also the attributes for it.
+        """
+        # NOTE: Because this only iterates over a single level of the Hash,
+        # none of the keys contain '.' and thus OrderedDict.__getitem__ can
+        # be called directly for a fairly big speedup
         for k in self:
-            yield k, self[k], self[k, ...]
+            elem = OrderedDict.__getitem__(self, k)
+            yield k, elem.data, elem.attrs
 
 
     def merge(self, other, attribute_policy='merge'):
