@@ -316,16 +316,14 @@ class SignalSlotable(Configurable):
         d = self._proxies.get(deviceId)
         if d is not None:
             d._onChanged(configuration)
-        loop = get_event_loop()
-        for f in loop.changedFutures:
-            f.set_result(None)
-        loop.changedFutures = set()
+        get_event_loop().something_changed()
 
     @slot
     def slotSchemaUpdated(self, schema, deviceId):
         d = self._proxies.get(deviceId)
         if d is not None:
             DeviceClientProxyFactory.updateSchema(d, schema)
+        get_event_loop().something_changed()
 
     @coslot
     def slotInstanceNew(self, instanceId, info):
@@ -333,6 +331,7 @@ class SignalSlotable(Configurable):
         proxy = self._proxies.get(instanceId)
         if proxy is not None:
             yield from proxy._notify_new()
+        get_event_loop().something_changed()
 
     @coroutine
     def _call_once_alive(self, deviceId, slot, *args):
@@ -356,6 +355,7 @@ class SignalSlotable(Configurable):
         device = self._proxies.get(instanceId)
         if device is not None:
             device._notify_gone()
+        get_event_loop().something_changed()
 
     @coroutine
     def onInitialization(self):
