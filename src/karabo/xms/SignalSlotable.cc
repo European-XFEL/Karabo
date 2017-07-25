@@ -2203,6 +2203,8 @@ namespace karabo {
                 if (m_instanceMap.find(remoteInstanceId) != m_instanceMap.end()) return false;
             }
 
+            if (m_pointToPoint && m_pointToPoint->isConnected(remoteInstanceId)) return true;
+
             // Find connectionString of the remote instanceId
             string remoteUrl;
             int attempt = 0;
@@ -2229,9 +2231,11 @@ namespace karabo {
 
             // connection string should not be empty
             if (remoteUrl.empty()) return false;
-            KARABO_LOG_FRAMEWORK_INFO << "*** connectP2P local \"" << m_instanceId << "\" to remote \"" << remoteInstanceId
-                    << "\" with signalConnectionString \"" << remoteUrl << "\".";
-            m_pointToPoint->connectAsync(remoteInstanceId);
+
+            KARABO_LOG_FRAMEWORK_INFO << "connectP2P \"" << m_instanceId << "\" to remote=\"" << remoteInstanceId
+                    << "\" via URL=\"" << remoteUrl << "\".";
+
+            m_pointToPoint->connect(remoteInstanceId);  // synchronous connect!
             return true;
         }
 
