@@ -131,8 +131,10 @@ namespace karabo {
 
             // Publish logger map read from disc. Do that as late as possible in the initialisation procedure
             // to give those interested the chance to register their slots after we sent signalInstanceNew.
-            boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
-            emit<Hash>("signalLoggerMap", m_loggerMap);
+            {
+                boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
+                emit<Hash>("signalLoggerMap", m_loggerMap);
+            }
 
             updateState(State::NORMAL);
         }
