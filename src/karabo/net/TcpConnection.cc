@@ -58,7 +58,7 @@ namespace karabo {
             STRING_ELEMENT(expected)
                     .key("url")
                     .displayedName("URL")
-                    .description("URL format is tcp://hostname:port")
+                    .description("URL format is tcp://hostname:port. This style has precedence.")
                     .assignmentOptional().defaultValue("")
                     .commit();
 
