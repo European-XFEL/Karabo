@@ -159,20 +159,26 @@ namespace karabo {
 
 
         bool PointToPoint::connect(const std::string& remoteInstanceId) {
-
             boost::mutex::scoped_lock lock(m_pointToPointMutex);
 
             auto it = m_instanceIdToUrl.find(remoteInstanceId);
             if (it == m_instanceIdToUrl.end()) return false;
-            const std::string& remoteUrl = it->second;
+            const string& remoteUrl = it->second;
 
             auto ii = m_mapOpenConnections.find(remoteUrl);
             if (ii != m_mapOpenConnections.end()) return true;   // already connected
 
             Connection::Pointer connection = Connection::create(Hash("Tcp", Hash("type", "client", "url", remoteUrl)));
-            Channel::Pointer channel = connection->start();
+            Channel::Pointer channel = connection->start();  // synchronous call
             if (!channel) return false;
-            this->onConnectClient(boost::system::error_code(), channel, connection, Hash("url", remoteUrl));
+
+            channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
+            channel->setAsyncChannelPolicy(4, "LOSSLESS");
+
+            m_mapOpenConnections[remoteUrl] = std::make_pair(channel, connection);
+
+            channel->writeAsync(Hash("url", m_localUrl), 4);
+            channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));
             return true;
         }
 
