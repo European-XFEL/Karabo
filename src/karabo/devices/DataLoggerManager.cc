@@ -30,10 +30,15 @@ namespace karabo {
         using namespace karabo::io;
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>, DataLoggerManager)
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLoggerManager)
 
 
         void DataLoggerManager::expectedParameters(Schema& expected) {
+
+            OVERWRITE_ELEMENT(expected).key("state")
+                    .setNewOptions(State::INIT, State::NORMAL)
+                    .setNewDefaultValue(State::INIT)
+                    .commit();
 
             INT32_ELEMENT(expected).key("flushInterval")
                     .displayedName("Flush interval")
@@ -87,7 +92,7 @@ namespace karabo {
 
 
         DataLoggerManager::DataLoggerManager(const Hash& input)
-            : karabo::core::Device<karabo::core::OkErrorFsm>(input),
+            : karabo::core::Device<>(input),
             m_serverList(input.get<vector<string> >("serverList")),
             m_serverIndex(0), m_loggerMapFile("loggermap.xml") {
             m_loggerMap.clear();
@@ -97,6 +102,8 @@ namespace karabo {
 
             KARABO_SYSTEM_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
             KARABO_SLOT(slotGetLoggerMap);
+
+            KARABO_INITIAL_FUNCTION(initialize);
         }
 
 
@@ -105,7 +112,9 @@ namespace karabo {
         }
 
 
-        void DataLoggerManager::okStateOnEntry() {
+        void DataLoggerManager::initialize() {
+
+            checkLoggerMap(); // throws if loggerMap and serverList are inconsistent
 
             // Switch on the heartbeat tracking 
             trackAllInstances();
@@ -124,6 +133,29 @@ namespace karabo {
             // to give those interested the chance to register their slots after we sent signalInstanceNew.
             boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
             emit<Hash>("signalLoggerMap", m_loggerMap);
+
+            updateState(State::NORMAL);
+        }
+
+
+        void DataLoggerManager::checkLoggerMap() {
+            // Check that all servers that are supposed to host DataLoggers are in server list.
+
+            // First get server ids - the values of the logger map.
+            std::set<std::string> serversInMap;
+            {
+                boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
+                for (Hash::const_iterator it = m_loggerMap.begin(), itEnd = m_loggerMap.end(); it != itEnd; ++it) {
+                    serversInMap.insert(it->getValue<std::string>());
+                }
+            }
+            // Now loop and check
+            for (const std::string& serverInMap : serversInMap) {
+                if (find(m_serverList.begin(), m_serverList.end(), serverInMap) == m_serverList.end()) {
+                    throw KARABO_LOGIC_EXCEPTION("Inconsistent '" + m_loggerMapFile + "' and \"serverList\" configuration: '"
+                                                 + serverInMap + "' is in map, but not in list.");
+                }
+            }
         }
 
 
