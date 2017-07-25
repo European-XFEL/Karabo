@@ -15,24 +15,10 @@ from karabo.common.scenemodel.api import (
 )
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.project.utils import add_device_to_server
-from karabo_gui.schema import ChoiceOfNodes
-from karabo_gui.singletons.api import get_topology
-from karabo_gui.widget import DisplayWidget, EditableWidget
+from karabo_gui.sceneview.widget.utils import get_box
 from .const import WIDGET_FACTORIES
 
 _STACKED_WIDGET_OFFSET = 30
-
-
-def getDeviceBox(box):
-    """Return a box that belongs to an active device
-
-    if the box already is part of a running device, return it,
-    if it is from a class in a project, return the corresponding
-    instantiated device's box.
-    """
-    if box.configuration.type == "projectClass":
-        return get_topology().get_device(box.configuration.id).getBox(box.path)
-    return box
 
 
 class SceneDnDHandler(ABCHasStrictTraits):
@@ -49,71 +35,63 @@ class SceneDnDHandler(ABCHasStrictTraits):
 class ConfigurationDropHandler(SceneDnDHandler):
     """Scene D&D handler for drops originating from the configuration view.
     """
-
     def can_handle(self, event):
-        sourceType = event.mimeData().data("sourceType")
-        if sourceType == "ParameterTreeWidget":
-            source = event.source()
-            if (source is not None and not (source.conf.type == "class")
-                    and not isinstance(source.currentItem().box.descriptor,
-                                       ChoiceOfNodes)):
-                return True
+        source_type = event.mimeData().data('source_type')
+        if source_type == 'ParameterTreeWidget':
+            return True
         return False
 
     def handle(self, scene_view, event):
-        source = event.source()
+        mime_data = event.mimeData()
+        items = []
+        if mime_data.data('tree_items'):
+            items_data = mime_data.data('tree_items').data()
+            items = json.loads(items_data.decode())
 
+        # Handle the case when dropped on an existing scene widget
         pos = event.pos()
         widget = scene_view.widget_at_position(pos)
         if widget is not None:
-            boxes = [item.box for item in source.selectedItems()]
+            boxes = [get_box(*item['key'].split('.', 1)) for item in items]
             if widget.add_boxes(boxes):
                 widget.set_visible(True)
                 event.accept()
                 return
 
+        # Handle the case when dropped as new scene widgets
         models = []
-        for item in source.selectedItems():
-            model = self._create_model_from_parameter_item(item, pos)
-            models.append(model)
+        for item in items:
+            models.append(self._create_model_from_parameter_item(item, pos))
             pos += QPoint(0, _STACKED_WIDGET_OFFSET)
         scene_view.add_models(*models)
         event.accept()
 
     def _create_model_from_parameter_item(self, item, pos):
-        """ The given ``item`` which is a TreeWidgetItem is used to create
-            the model for the view.
+        """Create the scene models for a single item
         """
         # Horizonal layout
         layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
                                       x=pos.x(), y=pos.y())
         # Add label to layout model
-        label_model = LabelModel(text=item.text(0), font=QFont().toString(),
+        label_model = LabelModel(text=item['label'], font=QFont().toString(),
                                  foreground='#000000')
         layout_model.children.append(label_model)
 
-        # Get Boxes. "box" is in the project, "realbox" the
-        # one on the device. They are the same if not from a project
-        box = item.box
-        realbox = getDeviceBox(box)
-        if realbox.descriptor is not None:
-            box = realbox
-
-        def create_model(factory, box, parent_component, layout_model):
-            klass = WIDGET_FACTORIES[factory.__name__]
-            model = klass(keys=[box.key()],
-                          parent_component=parent_component)
+        def create_model(klass_name, key, parent_component, layout_model):
+            klass = WIDGET_FACTORIES[klass_name]
+            model = klass(keys=[key], parent_component=parent_component)
             if hasattr(model, 'klass'):
-                model.klass = factory.__name__
+                model.klass = klass_name
             layout_model.children.append(model)
 
         # Add the display and editable components, as needed
-        if item.displayComponent:
-            factory = DisplayWidget.getClass(box)
-            create_model(factory, box, 'DisplayComponent', layout_model)
-        if item.editableComponent:
-            factory = EditableWidget.getClass(box)
-            create_model(factory, box, 'EditableApplyLaterComponent',
+        key = item['key']
+        if 'display_widget_class' in item:
+            klass_name = item['display_widget_class']
+            create_model(klass_name, key, 'DisplayComponent', layout_model)
+        if 'edit_widget_class' in item:
+            klass_name = item['edit_widget_class']
+            create_model(klass_name, key, 'EditableApplyLaterComponent',
                          layout_model)
 
         return layout_model
