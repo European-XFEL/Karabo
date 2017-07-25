@@ -198,11 +198,15 @@ class TableModel(QAbstractTableModel):
             self.connectedMonitors[resp].remove((row, col))
             if len(self.connectedMonitors[resp]) == 0:
                 del self.connectedMonitors[resp]
-                deviceId,  deviceProperty = resp.split(":")
-                device = get_topology().get_device(deviceId)
-                box = device.getBox(deviceProperty.split("."))
-                if role == Qt.DisplayRole:
-                    box.signalUpdateComponent.disconnect(self.monitorChanged)
+                try:
+                    deviceId,  deviceProperty = resp.split(":")
+                    device = get_topology().get_device(deviceId)
+                    box = device.getBox(deviceProperty.split("."))
+                    if role == Qt.DisplayRole:
+                        signal = box.signalUpdateComponent
+                        signal.disconnect(self.monitorChanged)
+                except (TypeError, ValueError):
+                    pass # catch signals which were not connected
 
     def _addMonitor(self, row, col, resp, role):
         cKey = self.columnHash.getKeys()[col]
