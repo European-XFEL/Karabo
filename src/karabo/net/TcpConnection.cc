@@ -124,7 +124,7 @@ namespace karabo {
                 input.get("port", m_port);
             } else {
                 const boost::tuple<std::string, std::string,
-                                   std::string, std::string, std::string>& parts = parseUrl(url);
+                                   std::string, std::string, std::string> parts = parseUrl(url);
                 assert(parts.get<0>() == "tcp");
                 m_hostname = parts.get<1>();
                 m_port = fromString<unsigned int>(parts.get<2>());
