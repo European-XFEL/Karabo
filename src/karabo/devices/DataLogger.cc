@@ -260,7 +260,8 @@ namespace karabo {
             }
             if (m_schemaForSlotChanged.empty()) {
                 // DEBUG only since can happen when initialising, i.e. slot is connected, but Schema did not yet arrive.
-                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": slotChanged called, but no schema yet - ignore!";
+                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": slotChanged called with configuration of size "
+                        << configuration.size() << ", but no schema yet - ignore!";
                 return;
             }
 
