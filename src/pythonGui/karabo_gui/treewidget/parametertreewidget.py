@@ -3,6 +3,7 @@
 # Created on February 2, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import json
 
 from PyQt4.QtCore import pyqtSignal, QMimeData, QPoint, QRect, Qt
 from PyQt4.QtGui import (QAbstractItemView, QCursor, QHeaderView, QMenu,
@@ -11,9 +12,23 @@ from PyQt4.QtGui import (QAbstractItemView, QCursor, QHeaderView, QMenu,
 from karabo_gui.components import (BaseComponent, EditableApplyLaterComponent,
                                    EditableNoApplyComponent)
 import karabo_gui.globals as krb_globals
-from karabo_gui.singletons.api import get_network
+from karabo_gui.schema import ChoiceOfNodes
+from karabo_gui.singletons.api import get_network, get_topology
+from karabo_gui.widget import DisplayWidget, EditableWidget
 from .command_item import CommandTreeWidgetItem
 from .property_item import PropertyTreeWidgetItem
+
+
+def getDeviceBox(box):
+    """Return a box that belongs to an active device
+
+    if the box already is part of a running device, return it,
+    if it is from a class in a project, return the corresponding
+    instantiated device's box.
+    """
+    if box.configuration.type == "projectClass":
+        return get_topology().get_device(box.configuration.id).getBox(box.path)
+    return box
 
 
 class ParameterTreeWidget(QTreeWidget):
@@ -115,9 +130,45 @@ class ParameterTreeWidget(QTreeWidget):
         super(QTreeWidget, self).keyPressEvent(event)
 
     def mimeData(self, items):
+        """Provide data for Drag & Drop operations.
+        """
+        if len(items) == 0 or self.conf.type == 'class':
+            return None
+
+        dragged = []
+        for item in items:
+            if isinstance(item.box.descriptor, ChoiceOfNodes):
+                continue  # Skip ChoiceOfNodes
+
+            # Get the box. "box" is in the project, "realbox" the
+            # one on the device. They are the same if not from a project
+            box = item.box
+            realbox = getDeviceBox(box)
+            if realbox.descriptor is not None:
+                box = realbox
+
+            # Collect the relevant information
+            data = {
+                'key': box.key(),
+                'label': item.text(0),
+            }
+            if item.displayComponent:
+                factory = DisplayWidget.getClass(box)
+                if factory is not None:
+                    data['display_widget_class'] = factory.__name__
+            if item.editableComponent:
+                factory = EditableWidget.getClass(box)
+                if factory is not None:
+                    data['edit_widget_class'] = factory.__name__
+            # Add it to the list of dragged items
+            dragged.append(data)
+
+        if not dragged:
+            return None
+
         mimeData = QMimeData()
-        # Source type
-        mimeData.setData("sourceType", "ParameterTreeWidget")
+        mimeData.setData('source_type', 'ParameterTreeWidget')
+        mimeData.setData('tree_items', json.dumps(dragged))
         return mimeData
 
     def checkApplyButtonsEnabled(self):
