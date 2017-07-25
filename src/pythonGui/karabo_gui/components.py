@@ -19,6 +19,7 @@ from PyQt4.QtGui import QAction, QHBoxLayout, QToolButton, QWidget
 from . import icons
 from . import messagebox
 from .singletons.api import get_network
+from .util import generateObjectName
 from .widget import EditableWidget, DisplayWidget, Widget
 
 
@@ -183,8 +184,10 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__currentDisplayValue = None
 
         self.__compositeWidget = QWidget(parent)
+        self.__compositeWidget.setObjectName(generateObjectName(
+            self.__compositeWidget))
         hLayout = QHBoxLayout(self.__compositeWidget)
-        hLayout.setContentsMargins(0, 0, 0, 0)
+        hLayout.setContentsMargins(2, 2, 2, 2)
 
         W = Widget.widgets.get(classAlias)
         if W is None:
@@ -197,29 +200,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
         self.box = box
         self.hasConflict = False
-
-        text = "Apply"
-        description = "Apply property changes"
-        self.acApply = QAction(icons.applyGrey, text, self)
-        self.acApply.setStatusTip(text)
-        self.acApply.setToolTip(text)
-        self.acApply.triggered.connect(self.onApplyClicked)
-        tb = QToolButton()
-        tb.setDefaultAction(self.acApply)
-        tb.setPopupMode(QToolButton.InstantPopup)
-        tb.setIconSize(QSize(24, 24))
-        hLayout.addWidget(tb)
-
-        text = "Decline"
-        description = "Decline property changes and reset them to value on device"
-        self.acReset = QAction(icons.no, text, self)
-        self.acReset.setStatusTip(description)
-        self.acReset.setToolTip(description)
-        self.acReset.triggered.connect(self.onApplyRemoteChanges)
-        tb = QToolButton()
-        tb.setDefaultAction(self.acReset)
-        tb.setIconSize(QSize(24, 24))
-        hLayout.addWidget(tb)
 
         self.__busyTimer = QTimer(self)
         self.__busyTimer.setSingleShot(True)
@@ -285,8 +265,9 @@ class EditableApplyLaterComponent(BaseComponent):
         if self.boxes[0].hasValue():
             self.widgetFactory.valueChanged(self.boxes[0], self.boxes[0].value)
 
-    # Slot called when changes need to be sent to Manager
-    def onApplyClicked(self):
+    def apply_changes(self):
+        """All changes of this component need to be send to the GuiServerDevice
+        """
         network = get_network()
         changes = []
         for b in self.boxes:
@@ -310,7 +291,10 @@ class EditableApplyLaterComponent(BaseComponent):
             self.__busyTimer.start(5000)
             network.onReconfigure(changes)
 
-    def onApplyRemoteChanges(self):
+    def decline_changes(self):
+        """All changes of this component are declined and reset to the current
+        value on device
+        """
         for b in self.boxes:
             self.widgetFactory.valueChanged(b, self.__currentDisplayValue)
         self.updateButtons()
@@ -337,9 +321,6 @@ class EditableApplyLaterComponent(BaseComponent):
     def updateButtons(self):
         """ update the buttons to reflect the current state of affairs """
         box = self.boxes[0]
-        allowed = box.isAllowed()
-        self.acApply.setEnabled(allowed)
-
         value = self.__currentDisplayValue
 
         if value is None:
@@ -367,20 +348,25 @@ class EditableApplyLaterComponent(BaseComponent):
         else:
             isEqualEditable = (str(value) == str(self.widgetFactory.value))
 
+        object_name = self.__compositeWidget.objectName()
         if isEqualEditable:
-            self.acApply.setIcon(icons.applyGrey)
+            # No changes
             self.hasConflict = False
-            description = None
+            style_sheet = ("QWidget#{}".format(object_name) +
+                           " { border: 0px }")
         elif self.hasConflict:
-            self.acApply.setIcon(icons.applyConflict)
-            description = "Apply my property changes"
+            # Conflict - the value on device got changed
+            style_sheet = ("QWidget#{}".format(object_name) +
+                        " { border: 2px solid rgb(255, 170, 0) }")
         else:
-            description = "Apply property changes"
-            self.acApply.setIcon(icons.apply)
-        self.acApply.setStatusTip(description)
-        self.acApply.setToolTip(description)
+            # Something which can be changed
+            style_sheet = ("QWidget#{}".format(object_name) +
+                           " { border: 2px solid rgb(0, 170, 255) }")
+
+        allowed = box.isAllowed()
         self.applyEnabled = allowed and not isEqualEditable
-        self.acReset.setEnabled(self.applyEnabled)
+        # Use different borders to show status
+        self.__compositeWidget.setStyleSheet(style_sheet)
 
     def onEditingFinished(self, box, value):
         if self.__currentDisplayValue is None:
