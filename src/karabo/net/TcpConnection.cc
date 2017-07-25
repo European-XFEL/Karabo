@@ -12,6 +12,7 @@
 #include "TcpConnection.hh"
 #include "TcpChannel.hh"
 #include "EventLoop.hh"
+#include "utils.hh"
 
 #include "karabo/log/Logger.hh"
 #include "karabo/util/SimpleElement.hh"
@@ -51,7 +52,14 @@ namespace karabo {
                     .key("port")
                     .displayedName("Hostport")
                     .description("Hostport of a peer for type 'client' and local port for type 'server'")
-                    .assignmentOptional().defaultValue(11111)
+                    .assignmentOptional().defaultValue(0)
+                    .commit();
+
+            STRING_ELEMENT(expected)
+                    .key("url")
+                    .displayedName("URL")
+                    .description("URL format is tcp://hostname:port. This style has precedence.")
+                    .assignmentOptional().defaultValue("")
                     .commit();
 
             UINT32_ELEMENT(expected)
@@ -109,8 +117,18 @@ namespace karabo {
             , m_resolver(EventLoop::getIOService())
             , m_acceptor(EventLoop::getIOService()) {
 
-            input.get("hostname", m_hostname);
-            input.get("port", m_port);
+            string url;
+            input.get("url", url);
+            if (url.empty()) {
+                input.get("hostname", m_hostname);
+                input.get("port", m_port);
+            } else {
+                const boost::tuple<std::string, std::string,
+                                   std::string, std::string, std::string> parts = parseUrl(url);
+                assert(parts.get<0>() == "tcp");
+                m_hostname = parts.get<1>();
+                m_port = fromString<unsigned int>(parts.get<2>());
+            }
             input.get("type", m_connectionType);
             input.get("sizeofLength", m_sizeofLength);
             input.get("messageTagIsText", m_lengthIsTextFlag);
