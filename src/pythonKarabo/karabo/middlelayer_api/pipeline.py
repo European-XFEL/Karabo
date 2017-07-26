@@ -1,5 +1,5 @@
-from asyncio import (async, coroutine, get_event_loop, Lock, open_connection)
-from functools import partial
+from asyncio import (
+    coroutine, get_event_loop, IncompleteReadError, Lock, open_connection)
 import os
 from struct import pack, unpack, calcsize
 
@@ -7,6 +7,7 @@ from .enums import Assignment, AccessMode
 from .hash import Bool, Hash, VectorString, Schema, String
 from .schema import Configurable, Node
 from .serializers import decodeBinary, encodeBinary
+from .synchronization import background
 
 from .proxy import ProxyBase, ProxyFactory
 
@@ -53,8 +54,8 @@ class Channel(object):
 class NetworkInput(Configurable):
     """The input channel
 
-    This represents an input channel. It is typically not used directly, instead
-    you should just declare a :cls:`InputChannel`.
+    This represents an input channel. It is typically not used directly,
+    instead you should just declare a :cls:`InputChannel`.
     """
     @VectorString(
         displayedName="Connected Output Channels",
@@ -70,10 +71,8 @@ class NetworkInput(Configurable):
             self.connected[k].cancel()
         for output in outputs:
             if output not in self.connected:
-                task = async(self.start_channel(output))
+                task = background(self.start_channel(output))
                 self.connected[output] = task
-                task.add_done_callback(
-                    partial(self.connected.pop, output))
         self.connectedOutputChannels = list(self.connected)
 
     dataDistribution = String(
@@ -126,9 +125,22 @@ class NetworkInput(Configurable):
                        "onSlowness", self.onSlowness)
             channel.writeHash(cmd)
             cmd = Hash("reason", "update", "instanceId", self.parent.deviceId)
-            header = yield from channel.readHash()
-            while "endOfStream" not in header:
+            while True:
+                try:
+                    header = yield from channel.readHash()
+                except IncompleteReadError as e:
+                    if e.partial:
+                        raise
+                    else:
+                        self.parent.logger.info("stream %s finished", output)
+                        return
                 data = yield from channel.readBytes()
+                if "endOfStream" in header:
+                    meta = PipelineMetaData()
+                    meta._onChanged(Hash("source", output))
+                    yield from loop.run_coroutine_or_thread(
+                        self.handler, None, meta)
+                    continue
                 pos = 0
                 for length, meta_hash in zip(header["byteSizes"],
                                              header["sourceInfo"]):
@@ -145,7 +157,6 @@ class NetworkInput(Configurable):
                             self.handler, proxy, meta)
                     pos += length
                 channel.writeHash(cmd)
-                header = yield from channel.readHash()
         finally:
             self.connected.pop(output)
             self.connectedOutputChannels = list(self.connected)

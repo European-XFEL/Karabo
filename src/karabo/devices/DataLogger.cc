@@ -147,41 +147,57 @@ namespace karabo {
             }
 
             // Then connect to schema updates and afterwards request Schema (in other order we might miss an update).
-            const std::string failMsgBegin("Failed to connect to ");
             asyncConnect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated",
-                         util::bind_weak(&DataLogger::wrapRequestNoWaitBool, this,
-                                         m_deviceToBeLogged, "slotGetSchema", "", "slotSchemaUpdated", false),
-                         util::bind_weak(&DataLogger::errorToDieHandle, this, failMsgBegin + "signalSchemaUpdated")
+                         util::bind_weak(&DataLogger::handleSchemaConnected, this),
+                         util::bind_weak(&DataLogger::errorToDieHandle, this, "Failed to connect to signalSchemaUpdated")
                          );
-            // Finally connect concurrently both, signalStateChanged and signalChanged, to the same slot.
+            // Final steps until DataLogger is properly initialised are treated in a chain of async handlers:
+            // - If signalSchemaUpdated connected, request current schema;
+            // - if that arrived, connect to both signal(State)Changed;
+            // - if these two are connected, request initial configuration, start flushing and update state.
+        }
+
+
+        void DataLogger::handleSchemaConnected() {
+            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting slotGetSchema (receiveAsync)";
+
+            request(m_deviceToBeLogged, "slotGetSchema", false)
+                    .receiveAsync<karabo::util::Schema, std::string>
+                    (util::bind_weak(&DataLogger::handleSchemaReceived, this, _1, _2),
+                     util::bind_weak(&DataLogger::errorToDieHandle, this, "Failed to request schema")
+                     );
+        }
+
+
+        void DataLogger::handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId) {
+
+            // Set initial Schema - needed for receiving properly in slotChanged
+            slotSchemaUpdated(schema, deviceId);
+
+            // Now connect concurrently both, signalStateChanged and signalChanged, to the same slot.
             // The same pollConfig is callback (in case of success) for both connection requests. The second
             // time it is called it will request the configuration.
+            const std::string failMsgBegin("Failed to connect to ");
             asyncConnect(m_deviceToBeLogged, "signalStateChanged", "", "slotChanged",
-                         util::bind_weak(&DataLogger::pollConfig, this),
+                         util::bind_weak(&DataLogger::handleConfigConnected, this),
                          util::bind_weak(&DataLogger::errorToDieHandle, this, failMsgBegin + "signalStateChanged")
                          );
             asyncConnect(m_deviceToBeLogged, "signalChanged", "", "slotChanged",
-                         util::bind_weak(&DataLogger::pollConfig, this),
+                         util::bind_weak(&DataLogger::handleConfigConnected, this),
                          util::bind_weak(&DataLogger::errorToDieHandle, this, failMsgBegin + "signalChanged")
                          );
-
-            m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
-            m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
 
 
-        void DataLogger::wrapRequestNoWaitBool(const std::string& requestedId, const std::string& requestedSlot,
-                                               const std::string& replyId, const std::string& replySlot, bool arg) {
-            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting " << requestedSlot << " (no wait)";
-            requestNoWait<bool>(requestedId, requestedSlot, replyId, replySlot, arg);
-        }
-
-
-        void DataLogger::pollConfig() {
+        void DataLogger::handleConfigConnected() {
             boost::mutex::scoped_lock lock(m_numChangedConnectedMutex);
             if (++m_numChangedConnected == 2) {
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting slotGetConfiguration (no wait)";
                 requestNoWait(m_deviceToBeLogged, "slotGetConfiguration", "", "slotChanged");
+
+                m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
+                m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
+
                 // Done with initialisation:
                 updateState(State::NORMAL);
             }
@@ -244,7 +260,8 @@ namespace karabo {
             }
             if (m_schemaForSlotChanged.empty()) {
                 // DEBUG only since can happen when initialising, i.e. slot is connected, but Schema did not yet arrive.
-                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": slotChanged called, but no schema yet - ignore!";
+                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": slotChanged called with configuration of size "
+                        << configuration.size() << ", but no schema yet - ignore!";
                 return;
             }
 
