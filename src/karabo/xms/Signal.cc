@@ -106,21 +106,18 @@ namespace karabo {
                 // After filtering registeredSlots and connectedSlots may change
                 SignalSlotable::m_pointToPoint->filterConnectedAndGroupByUrl(registeredSlots, connectedSlots);
                 
-                // publish connected slots via shared point-to-point link
-                if (connectedSlots.size() > 0) {
-                    
-                    // Iterate over groups (device servers)
-                    for (P2PConnectedSlots::iterator ii = connectedSlots.begin(); ii != connectedSlots.end(); ++ii) {
-                        // ii->first => URL
-                        const SlotMap& slotMap = ii->second;
-                        
-                        // Update the header
-                        header = prepareHeader(slotMap);
-                        
-                        // Use any (first!) remote instanceId from the group: header will contain other destinations on server 
-                        SlotMap::const_iterator ir = slotMap.cbegin(); 
-                        SignalSlotable::m_pointToPoint->publish(ir->first, header, message, m_priority);
-                    }
+                // publish connected slots (if any) via shared point-to-point link ...
+                // Iterate over groups (device servers)
+                for (P2PConnectedSlots::iterator ii = connectedSlots.begin(); ii != connectedSlots.end(); ++ii) {
+                    // ii->first => URL
+                    const SlotMap& slotMap = ii->second;
+
+                    // Update the header
+                    header = prepareHeader(slotMap);
+
+                    // Use any (first!) remote instanceId from the group: header will contain other destinations on server 
+                    SlotMap::const_iterator ir = slotMap.cbegin();
+                    if (ir != slotMap.cend()) SignalSlotable::m_pointToPoint->publish(ir->first, header, message, m_priority);
                 }
 
                 // publish leftovers via broker
