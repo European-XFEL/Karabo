@@ -123,15 +123,14 @@ class ParameterTreeWidget(QTreeWidget):
         """
         key_event = event.key()
         if key_event in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Escape):
-            # TODO: this only works if the mouse position matches the widget
-            item = self.itemAt(self.mapFromGlobal(QCursor.pos())
+            # Get the last focused widget and its position in global coords
+            focus_widget = self.focusWidget()
+            focus_pos = focus_widget.mapToGlobal(focus_widget.pos())
+            # Convert the global position to an item
+            item = self.itemAt(self.mapFromGlobal(focus_pos)
                                - QPoint(0, self.header().height()))
-            # Check whether which widget has focus and apply changes
-            child_widget = self.focusWidget()
-            parent_widget = child_widget.parent()
-            # Maybe find the item via walking up til the tree until the parent is found...?!
-            print("child_widget", child_widget, parent_widget, parent_widget.parent().parent())
-            # We need to find the item which this widget belongs to
+
+            # Act on that item
             if key_event == Qt.Key_Escape:
                 self.decline_item_changes(item)
             else:
@@ -328,12 +327,11 @@ class ParameterTreeWidget(QTreeWidget):
         get_network().onReconfigure(boxes)
 
     def decline_all_changes(self):
-
         def recurse(item):
             for i in range(item.childCount()):
                 childItem = item.child(i)
                 self.decline_item_changes(childItem)
-                self.recurse(childItem)
+                recurse(childItem)
 
         recurse(self.invisibleRootItem())
 

@@ -3,21 +3,15 @@
 # Created on February 2, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-
-"""This module contains a class which represents a base class for all inherited
-   factory classes for creation of certain widgets and bundles main
-   functionalities.
-"""
-
 import numbers
 
 import numpy
-from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer
-from PyQt4.QtGui import QAction, QHBoxLayout, QToolButton, QWidget
+from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QTimer
+from PyQt4.QtGui import QHBoxLayout, QWidget
 
-from . import icons
+from karabo.common.api import State
 from . import messagebox
+from .indicators import STATE_COLORS
 from .singletons.api import get_network
 from .util import generateObjectName
 from .widget import EditableWidget, DisplayWidget, Widget
@@ -352,16 +346,18 @@ class EditableApplyLaterComponent(BaseComponent):
         if isEqualEditable:
             # No changes
             self.hasConflict = False
-            style_sheet = ("QWidget#{}".format(object_name) +
-                           " { border: 0px }")
+            style_sheet = ("QWidget#{} ".format(object_name) +
+                           "{ border: 0px }")
         elif self.hasConflict:
             # Conflict - the value on device got changed
-            style_sheet = ("QWidget#{}".format(object_name) +
-                        " { border: 2px solid rgb(255, 170, 0) }")
+            color = STATE_COLORS[State.UNKNOWN]
+            style_sheet = ("QWidget#{} ".format(object_name) +
+                           "{{ border: 2px solid rgb{} }}".format(color))
         else:
             # Something which can be changed
-            style_sheet = ("QWidget#{}".format(object_name) +
-                           " { border: 2px solid rgb(0, 170, 255) }")
+            color = STATE_COLORS[State.CHANGING]
+            style_sheet = ("QWidget#{} ".format(object_name) +
+                           "{{ border: 2px solid rgb{} }}".format(color))
 
         allowed = box.isAllowed()
         self.applyEnabled = allowed and not isEqualEditable
