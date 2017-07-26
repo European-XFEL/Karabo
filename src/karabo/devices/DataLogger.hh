@@ -109,11 +109,12 @@ namespace karabo {
             /// Helper used as error callback that triggers device suicide.
             void errorToDieHandle(const std::string& reason) const;
 
-            void wrapRequestNoWaitBool(const std::string& requestedId, const std::string& requestedSlot,
-                                       const std::string& replyId, const std::string& replySlot, bool arg);
+            void handleSchemaConnected();
+
+            void handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId);
 
             /// Helper for connecting to both signalChanged and signalStateChanged
-            void pollConfig();
+            void handleConfigConnected();
 
             int determineLastIndex(const std::string& deviceId);
 

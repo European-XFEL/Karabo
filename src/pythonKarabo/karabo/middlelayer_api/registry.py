@@ -2,6 +2,7 @@
 """ This module contains a little helper class which allows
 to register subclasses of one class """
 
+
 class Registry(object):
     @classmethod
     def register(cls, name, dict):
