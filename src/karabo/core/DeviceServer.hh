@@ -59,12 +59,6 @@ namespace karabo {
             bool m_serverIsRunning;
             std::vector<karabo::util::Hash> m_autoStart;
 
-            std::vector<std::pair<karabo::util::Hash, SignalSlotable::AsyncReply> > m_pendingInstantiations;
-            boost::mutex m_pendingInstantiationsMutex;
-            bool m_stopInstantiate;
-            boost::asio::deadline_timer m_instantiateTimer;
-            static const int m_instantiateIntervalInMs; /// interval to sleep before next round of instantiations
-
             karabo::util::Hash m_availableDevices;
             std::vector<std::string> m_deviceClasses;
 
@@ -192,7 +186,7 @@ namespace karabo {
 
             void slotStartDevice(const karabo::util::Hash& configuration);
 
-            void instantiateDevices(const boost::system::error_code& ec);
+            void startDevice(const karabo::util::Hash& configuration, const SignalSlotable::AsyncReply& reply);
 
             void onStateUpdate(const karabo::util::State& currentState);
 

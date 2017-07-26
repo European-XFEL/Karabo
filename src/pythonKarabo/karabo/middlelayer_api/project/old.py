@@ -12,7 +12,6 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import read_scene
-from karabo.middlelayer_api.hash import Hash
 from karabo.middlelayer_api.serializers import decodeXML, encodeXML
 
 
