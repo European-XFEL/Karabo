@@ -36,12 +36,14 @@ class MiddlelayerDevice(DeviceClientBase):
         self.marker = True
 
     @InputChannel()
+    @coroutine
     def channel(self, data, meta):
         self.channelcount += 1
         self.channeldata = data
         self.channelmeta = meta
 
     @channel.close
+    @coroutine
     def channel(self, output):
         self.channelclose = output
 
@@ -58,7 +60,8 @@ class Tests(DeviceTest):
     def lifetimeManager(cls):
         cls.device = MiddlelayerDevice(dict(
             _deviceId_="middlelayerDevice",
-            rawchannel=dict(connectedOutputChannels=["boundDevice:output2"]),
+            rawchannel=dict(connectedOutputChannels=["boundDevice:output2"],
+                            onSlowness="drop"),
             channel=dict(connectedOutputChannels=["boundDevice:output1"])))
         with cls.deviceManager(lead=cls.device):
             yield
@@ -197,11 +200,19 @@ class Tests(DeviceTest):
         yield from proxy.send()
         self.assertEqual(self.device.channelcount, 2)
         yield from proxy.end()
-        self.assertEqual(self.device.channelclose, "boundDevice:output1")
+        self.assertIsNone(self.device.channeldata)
+        self.assertEqual(self.device.channelmeta.source,
+                         "boundDevice:output1")
+        self.assertEqual(self.device.channelcount, 3)
+        yield from proxy.send()
+        self.assertEqual(self.device.channeldata.s, "hallo")
+        self.assertEqual(self.device.channelmeta.source, "boundDevice:output1")
+        self.assertEqual(self.device.channelcount, 4)
 
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
         yield from self.process.wait()
+        self.assertEqual(self.device.channelclose, "boundDevice:output1")
 
     @async_tst
     def test_history(self):
