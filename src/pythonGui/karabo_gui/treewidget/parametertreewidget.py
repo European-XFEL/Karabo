@@ -126,6 +126,12 @@ class ParameterTreeWidget(QTreeWidget):
             # TODO: this only works if the mouse position matches the widget
             item = self.itemAt(self.mapFromGlobal(QCursor.pos())
                                - QPoint(0, self.header().height()))
+            # Check whether which widget has focus and apply changes
+            child_widget = self.focusWidget()
+            parent_widget = child_widget.parent()
+            # Maybe find the item via walking up til the tree until the parent is found...?!
+            print("child_widget", child_widget, parent_widget, parent_widget.parent().parent())
+            # We need to find the item which this widget belongs to
             if key_event == Qt.Key_Escape:
                 self.decline_item_changes(item)
             else:
