@@ -53,8 +53,8 @@ class Channel(object):
 class NetworkInput(Configurable):
     """The input channel
 
-    This represents an input channel. It is typically not used directly, instead
-    you should just declare a :cls:`InputChannel`.
+    This represents an input channel. It is typically not used directly,
+    instead you should just declare a :cls:`InputChannel`.
     """
     @VectorString(
         displayedName="Connected Output Channels",
