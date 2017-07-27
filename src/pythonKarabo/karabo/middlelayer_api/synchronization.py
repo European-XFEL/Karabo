@@ -89,8 +89,8 @@ def _wait(return_when, *args, timeout=None, cancel_pending=True, **kwargs):
         for fut in pending:
             fut.cancel()
 
-    return ({names[f]: f.result() for f in done if not f.cancelled()
-                                                   and f.exception() is None},
+    return ({names[f]: f.result() for f in done
+             if not f.cancelled() and f.exception() is None},
             {names[f]: futures[names[f]] for f in pending},
             {names[f]: None if f.cancelled() else f.exception()
              for f in done if f.cancelled() or f.exception() is not None})
@@ -205,7 +205,7 @@ class FutureDict(object):
         futures.add(future)
         try:
             return (yield from future)
-        except:
+        except Exception:
             futures.discard(future)
             raise
 

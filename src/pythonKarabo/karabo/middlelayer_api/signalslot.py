@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
-from asyncio import (async, CancelledError, coroutine, Future,
-                     get_event_loop, sleep, TimeoutError, wait, wait_for)
+from asyncio import (async, CancelledError, coroutine, get_event_loop,
+                     TimeoutError, wait_for)
 import logging
 import random
 import sys
@@ -238,7 +238,7 @@ class SignalSlotable(Configurable):
             yield from get_event_loop().run_coroutine_or_thread(
                 self.onInitialization)
             self.__initialized = True
-        except:
+        except Exception:
             yield from self.slotKillDevice()
             raise
 
@@ -308,24 +308,18 @@ class SignalSlotable(Configurable):
             self._ss.loop.call_soon_threadsafe(self.update)
 
     @slot
-    def slotSchemaUpdated(self, schema, deviceId):
-        print("slot schema updated called:", deviceId)
-
-    @slot
     def slotChanged(self, configuration, deviceId):
         d = self._proxies.get(deviceId)
         if d is not None:
             d._onChanged(configuration)
-        loop = get_event_loop()
-        for f in loop.changedFutures:
-            f.set_result(None)
-        loop.changedFutures = set()
+        get_event_loop().something_changed()
 
     @slot
     def slotSchemaUpdated(self, schema, deviceId):
         d = self._proxies.get(deviceId)
         if d is not None:
             DeviceClientProxyFactory.updateSchema(d, schema)
+        get_event_loop().something_changed()
 
     @coslot
     def slotInstanceNew(self, instanceId, info):
@@ -333,6 +327,7 @@ class SignalSlotable(Configurable):
         proxy = self._proxies.get(instanceId)
         if proxy is not None:
             yield from proxy._notify_new()
+        get_event_loop().something_changed()
 
     @coroutine
     def _call_once_alive(self, deviceId, slot, *args):
@@ -356,6 +351,7 @@ class SignalSlotable(Configurable):
         device = self._proxies.get(instanceId)
         if device is not None:
             device._notify_gone()
+        get_event_loop().something_changed()
 
     @coroutine
     def onInitialization(self):
@@ -394,7 +390,7 @@ class SignalSlotable(Configurable):
         def logException(coro):
             try:
                 yield from coro
-            except:
+            except Exception:
                 logger.exception("error in error handler")
 
         loop = get_event_loop()
