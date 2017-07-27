@@ -213,7 +213,7 @@ def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
     # de-hard-code both.
 
     if (isinstance(prop, ProxyBase) or isinstance(prop, str)
-           and "." not in prop):
+            and "." not in prop):
         assert wait
         return _getHistory_old(prop, begin, end, maxNumData, timeout)
     else:
@@ -319,6 +319,7 @@ def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
         # including self, meaning that they cannot be collected. This
         # is why we sneak the proxy into method using a closure.
         closure_proxy = proxy
+
         @contextmanager
         def connectSchemaUpdated():
             nonlocal closure_proxy

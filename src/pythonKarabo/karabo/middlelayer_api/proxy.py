@@ -33,7 +33,7 @@ class ProxyBase(object):
         subs = ", ".join("{}={!r}".format(k, getattr(self, k))
                          for k, v in self.__class__.__dict__.items()
                          if isinstance(v, Descriptor)
-                             and not isinstance(v, Slot) and hasattr(self, k))
+                         and not isinstance(v, Slot) and hasattr(self, k))
         return "{}[{}]".format(self.__class__.__name__, subs)
 
     def _use(self):
@@ -115,7 +115,7 @@ class SubProxyBase(object):
         subs = ", ".join("{}={!r}".format(k, getattr(self, k))
                          for k, v in self.__class__.__dict__.items()
                          if isinstance(v, Descriptor)
-                             and not isinstance(v, Slot) and hasattr(self, k))
+                         and not isinstance(v, Slot) and hasattr(self, k))
         return "[{}]".format(subs)
 
     def _use(self):

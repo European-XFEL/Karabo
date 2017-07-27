@@ -187,14 +187,18 @@ class Broker:
                         if e.status == 2103:  # timeout
                             continue
                         elif e.status == 1116:  # concurrent access
-                            # Sometimes this error appears. It seems to be a race
-                            # condition within openmqc, but retrying just helps.
-                            loop.call_soon_threadsafe(self.logger.warning,
-                                'consumer of instance "%s" had a concurrent access',
+                            # Sometimes this error appears. It seems to be a
+                            # race condition within openmqc, but retrying just
+                            # helps.
+                            loop.call_soon_threadsafe(
+                                self.logger.warning,
+                                'consumer of instance "%s" had a concurrent '
+                                'access',
                                 self.deviceId)
                             continue
                         elif e.status == 3120:  # message dropped
-                            loop.call_soon_threadsafe(self.logger.warning,
+                            loop.call_soon_threadsafe(
+                                self.logger.warning,
                                 'consumer of instance "%s" dropped messages',
                                 self.deviceId)
                             message = e.message
@@ -218,7 +222,7 @@ class Broker:
     def handleMessage(self, message, device):
         try:
             slots, params = self.decodeMessage(message)
-        except:
+        except Exception:
             self.logger.exception("Malformed message")
             return
         try:
@@ -386,6 +390,7 @@ class KaraboFuture(object):
         """Add another callback to the future"""
         loop = get_event_loop()
         instance = loop.instance()
+
         def func(future):
             loop.create_task(loop.run_coroutine_or_thread(fn, self), instance)
         self.future.add_done_callback(func)
@@ -394,6 +399,7 @@ class KaraboFuture(object):
     def wait(self):
         """Wait for the result to be available, and return the result"""
         return (yield from self.future)
+
 
 for f in ["cancel", "cancelled", "done", "result", "exception"]:
     @wraps(getattr(Future, f))
@@ -502,7 +508,7 @@ class EventLoop(SelectorEventLoop):
             instance = context["future"].instance()
             instance._onException(None, context["exception"],
                                   context.get("source_traceback"))
-        except:
+        except Exception:
             self.default_exception_handler(context)
 
     def getBroker(self, deviceId, classId):
@@ -523,7 +529,7 @@ class EventLoop(SelectorEventLoop):
                 try:
                     self.connection = openmq.Connection(p, "guest", "guest")
                     break
-                except:
+                except Exception:
                     self.connection = None
             self.connection.start()
 
@@ -619,6 +625,11 @@ class EventLoop(SelectorEventLoop):
             yield from f
         finally:
             self.changedFutures.discard(f)
+
+    def something_changed(self):
+        for future in self.changedFutures:
+            future.set_result(None)
+        self.changedFutures = set()
 
     def sync(self, coro, timeout, wait):
         return coro
