@@ -20,6 +20,8 @@
 
 __all__ = ["EditableList"]
 
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget
 
 import karabo_gui.icons as icons
 from karabo_gui.listedit import ListEdit
@@ -27,8 +29,6 @@ from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import EditableWidget, DisplayWidget
 
 from karabo.middlelayer import Vector
-
-from PyQt4.QtGui import QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget
 
 
 class EditableList(EditableWidget, DisplayWidget):
@@ -65,6 +65,7 @@ class EditableList(EditableWidget, DisplayWidget):
         self.tbEdit.setToolTip(text)
         self.tbEdit.setIcon(icons.edit)
         self.tbEdit.setMaximumSize(25,25)
+        self.tbEdit.setFocusPolicy(Qt.NoFocus)
         self.tbEdit.clicked.connect(self.onEditClicked)
         self.hLayout.addWidget(self.tbEdit)
 

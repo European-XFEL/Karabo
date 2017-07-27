@@ -536,23 +536,36 @@ namespace karabo {
             // Each device adds two threads, one of them is permanently used for reading from broker.
             // Since finalizeInternalInitialization() blocks for > 1 s, we temporarily add another thread.
             EventLoop::addThread();
+            bool putInMap = false;
             try {
 
                 BaseDevice::Pointer device = BaseDevice::create(classId, config);
 
+                {
+                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                    if (m_deviceInstanceMap.find(deviceId) != m_deviceInstanceMap.end()) {
+                        throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId + "' already running/starting on this server.");
+                    }
+                    // Keep the device instance - doing this before finalizeInternalInitialization to enable the device
+                    // to kill itself during instantiation (see slotDeviceGone).
+                    m_deviceInstanceMap[deviceId] = device;
+                    putInMap = true;
+                }
+
                 // This will throw an exception if it can't be started (because of duplicated name for example)
                 device->finalizeInternalInitialization();
-
-                {
-                    // Keep the device instance
-                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-                    m_deviceInstanceMap[deviceId] = device;
-                }
 
                 // Answer initiation of device (KARABO_LOG_* is done by device)
                 asyncReply(true, deviceId);
 
             } catch (const std::exception& se) {
+                if (putInMap) { // Otherwise the device is not from this request.
+                    // To be precise, the following unlikely case is not excluded: The device was put in map above, but
+                    // killed itself during its initialization phase and slotStartDevice has been called once more for the
+                    // same deviceId and placed it into the map again before we get here to remove the one that killed itself.
+                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                    m_deviceInstanceMap.erase(deviceId);
+                }
                 const std::string message("Device '" + deviceId + "' of class '" + classId + "' could not be started: ");
                 KARABO_LOG_ERROR << message << se.what();
                 asyncReply(false, message + se.what());
