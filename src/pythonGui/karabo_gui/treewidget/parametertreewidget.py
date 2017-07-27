@@ -347,16 +347,17 @@ class ParameterTreeWidget(QTreeWidget):
     def apply_item_changes(self, item):
         if item is None:
             return
-        editableComponent = item.editableComponent
-        if (editableComponent is None
-                or isinstance(editableComponent, EditableNoApplyComponent)):
+        edit_comp = item.editableComponent
+        is_apply_later = isinstance(edit_comp, EditableApplyLaterComponent)
+        if not is_apply_later:
             return
-        editableComponent.apply_changes()
+        edit_comp.apply_changes()
 
     def decline_item_changes(self, item):
         if item is None:
             return
-        editableComponent = item.editableComponent
-        if editableComponent is None:
+        edit_comp = item.editableComponent
+        is_apply_later = isinstance(edit_comp, EditableApplyLaterComponent)
+        if not is_apply_later:
             return
-        editableComponent.decline_changes()
+        edit_comp.decline_changes()
