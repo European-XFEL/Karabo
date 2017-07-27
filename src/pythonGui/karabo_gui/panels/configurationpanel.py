@@ -679,16 +679,15 @@ class ConfigurationPanel(BasePanelWidget):
         self._getCurrentParameterEditor().onApplyAll()
 
     def onApplyAllRemoteChanges(self):
-        self._getCurrentParameterEditor().onApplyAllRemoteChanges()
+        self._getCurrentParameterEditor().decline_all_changes()
 
     def onApplySelectedRemoteChanges(self):
         twParameterEditor = self._getCurrentParameterEditor()
         selectedItems = twParameterEditor.selectedItems()
-        for item in selectedItems:
-            twParameterEditor.applyRemoteChanges(item)
+        [twParameterEditor.decline_item_changes(item) for item in selectedItems]
 
     def onResetAll(self):
-        self._getCurrentParameterEditor().resetAll()
+        self._getCurrentParameterEditor().decline_all()
 
     def onKillInstance(self):
         self.prevConfiguration.shutdown()

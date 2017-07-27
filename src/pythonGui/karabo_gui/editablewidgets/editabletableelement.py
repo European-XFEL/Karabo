@@ -810,6 +810,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
 
     def setReadOnly(self, ro):
         if ro:
+            self.widget.setFocusPolicy(Qt.NoFocus)
             self.role = Qt.DisplayRole
         else:
             self.role = Qt.EditRole
