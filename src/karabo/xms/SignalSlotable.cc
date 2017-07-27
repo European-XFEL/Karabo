@@ -262,17 +262,19 @@ namespace karabo {
 
 
         void SignalSlotable::deregisterFromShortcutMessaging() {
-            boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
-            auto it = m_instanceMap.find(m_instanceId);
-            // Let's be sure that we remove ourself:
-            if (it != m_instanceMap.end() && it->second == this) {
-                m_instanceMap.erase(it);
-            }
-            // Transfer the connection resources discovering duty to another SignalSlotable if any
-            if (m_discoverConnectionResourcesMode) {
-                it = m_instanceMap.begin();
-                if (it != m_instanceMap.end()) it->second->m_discoverConnectionResourcesMode = true;
-                m_discoverConnectionResourcesMode = false;
+            {
+                boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
+                auto it = m_instanceMap.find(m_instanceId);
+                // Let's be sure that we remove ourself:
+                if (it != m_instanceMap.end() && it->second == this) {
+                    m_instanceMap.erase(it);
+                }
+                // Transfer the connection resources discovering duty to another SignalSlotable if any
+                if (m_discoverConnectionResourcesMode) {
+                    it = m_instanceMap.begin();
+                    if (it != m_instanceMap.end()) it->second->m_discoverConnectionResourcesMode = true;
+                    m_discoverConnectionResourcesMode = false;
+                }
             }
             if (m_pointToPoint) m_pointToPoint->eraseFromLocalMap(m_instanceId);
             m_instanceInfo.erase("p2p_connection");
@@ -280,19 +282,21 @@ namespace karabo {
 
 
         void SignalSlotable::registerForShortcutMessaging() {
-            boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
-            SignalSlotable*& instance = m_instanceMap[m_instanceId];
-            if (!instance) {
-                instance = this;
-            } else if (instance != this) {
-                // Do not dare to call methods on instance - could already be destroyed...?
-                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Cannot register "
-                        << "for short-cut messaging since there is already another instance.";
-            }
-            if (!m_pointToPoint) {
-                m_pointToPoint = boost::make_shared<PointToPoint>();
-                m_discoverConnectionResourcesMode = true;
-                KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint local URL is \"" << m_pointToPoint->getLocalUrl() << "\"";
+            {
+                boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
+                SignalSlotable*& instance = m_instanceMap[m_instanceId];
+                if (!instance) {
+                    instance = this;
+                } else if (instance != this) {
+                    // Do not dare to call methods on instance - could already be destroyed...?
+                    KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Cannot register "
+                            << "for short-cut messaging since there is already another instance.";
+                }
+                if (!m_pointToPoint) {
+                    m_pointToPoint = boost::make_shared<PointToPoint>();
+                    m_discoverConnectionResourcesMode = true;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint local URL is \"" << m_pointToPoint->getLocalUrl() << "\"";
+                }
             }
             m_pointToPoint->insertToLocalMap(m_instanceId, this);
             m_instanceInfo.set("p2p_connection", m_pointToPoint->getLocalUrl());
@@ -2197,8 +2201,9 @@ namespace karabo {
 
 
         bool SignalSlotable::connectP2P(const std::string& remoteInstanceId) {
-            if (remoteInstanceId == m_instanceId || (m_pointToPoint && m_pointToPoint->isInLocalMap(remoteInstanceId))) return false;
-            if (m_pointToPoint && m_pointToPoint->isConnected(remoteInstanceId)) return true;
+            if (!m_pointToPoint) return false;
+            if (remoteInstanceId == m_instanceId || m_pointToPoint->isInLocalMap(remoteInstanceId)) return false;
+            if (m_pointToPoint->isConnected(remoteInstanceId)) return true;
 
             // Find connectionString of the remote instanceId
             string remoteUrl;
@@ -2230,13 +2235,13 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_INFO << "connectP2P \"" << m_instanceId << "\" to remote=\"" << remoteInstanceId
                     << "\" via URL=\"" << remoteUrl << "\".";
 
-            m_pointToPoint->connect(remoteInstanceId);  // synchronous connect!
-            return true;
+            return m_pointToPoint->connect(remoteInstanceId);  // synchronous connect!
         }
 
 
         void SignalSlotable::disconnectP2P(const std::string& remoteInstanceId) {
-            if (remoteInstanceId == m_instanceId || (m_pointToPoint && m_pointToPoint->isInLocalMap(remoteInstanceId))) return;
+            if (!m_pointToPoint) return;
+            if (remoteInstanceId == m_instanceId || m_pointToPoint->isInLocalMap(remoteInstanceId)) return;
             m_pointToPoint->disconnect(remoteInstanceId);
         }
 
