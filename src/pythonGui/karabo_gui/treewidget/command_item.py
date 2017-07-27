@@ -26,7 +26,8 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.treeWidget().setItemWidget(self, 0, self.__pbCommand)
         self.__pbCommand.clicked.connect(self.onCommandClicked)
 
-        box.configuration.boxvalue.state.signalUpdateComponent.connect(
+        self.connect_signal(
+            box.configuration.boxvalue.state.signalUpdateComponent,
             self.updateState)
         self.updateState()
 
@@ -41,11 +42,6 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
     @property
     def command(self):
         return self.__command
-
-    def destroy(self):
-        """Give item subclasses a chance to clean up signal connections"""
-        self.box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
-            self.updateState)
 
     def setReadOnly(self, readOnly):
         if readOnly is True:
