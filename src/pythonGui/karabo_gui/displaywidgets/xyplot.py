@@ -6,40 +6,88 @@ from karabo_gui.widget import DisplayWidget
 
 from karabo.middlelayer import Simple
 
-from PyQt4.Qwt5.Qwt import QwtPlot
-from guiqwt.plot import CurveDialog, PlotManager
-from guiqwt.builder import make
-from guiqwt.tools import ToggleTool
 
-from karabo_gui.mplwidget.mplplotwidgets import MplWidget
+if 'USEMPL' in os.environ:
+    from karabo_gui.mplwidget.mplplotwidgets import MplWidget
 
+    class XYPlot(DisplayWidget):
+        category = Simple
+        alias = "XY-Plot"
 
-class Activate(ToggleTool):
-    def __init__(self, manager, factory):
-        super().__init__(manager, "Active")
-        self.factory = factory
-        self.action.setChecked(True)
-
-    def activate_command(self, plot, checked):
-        self.factory.active = checked
-        if not checked:
-            return
-        self.factory.xvalues = []
-        self.factory.yvalues = []
-        self.factory.curve.set_data([], [])
-        plot.replot()
-
-
-class XYPlot(DisplayWidget):
-    category = Simple
-    alias = "XY-Plot"
-
-    def __init__(self, box, parent):
-        super(XYPlot, self).__init__(None)
-        self.usempl = os.environ.get('USEMPL', 0)
-        if self.usempl:
+        def __init__(self, box, parent):
+            super(XYPlot, self).__init__(None)
             self.widget = MplWidget()
-        else:
+            self.xbox = box
+            self.ybox = None
+            self.xvalues = []
+            self.yvalues = []
+            self.active = True
+
+            if box.hasValue():
+                self.lastxvalue = box.value
+            else:
+                self.lastxvalue = None
+
+        def typeChanged(self, box):
+            setlabel = 'set_xlabel' if box is self.xbox else 'set_ylabel'
+            self.widget.axes_call(setlabel, box.axisLabel())
+
+        def addBox(self, box):
+            if self.ybox is None:
+                self.ybox = box
+                self.widget.newCurve([], [], label="Random values")
+                return True
+            else:
+                return False
+
+        @property
+        def boxes(self):
+            if self.ybox is None:
+                return [self.xbox]
+            else:
+                return [self.xbox, self.ybox]
+
+        def valueChanged(self, box, value, timestamp=None):
+            if not self.active:
+                return
+            if box is self.xbox:
+                self.lastxvalue = value
+            elif box is self.ybox:
+                if self.lastxvalue is not None:
+                    self.xvalues.append(self.lastxvalue)
+                    self.yvalues.append(value)
+                    self.widget.updateCurve(self.xvalues, self.yvalues)
+            else:
+                raise RuntimeError("unknown box")
+else:
+    from PyQt4.Qwt5.Qwt import QwtPlot
+    from guiqwt.plot import CurveDialog, PlotManager
+    from guiqwt.builder import make
+    from guiqwt.tools import ToggleTool
+
+
+    class Activate(ToggleTool):
+        def __init__(self, manager, factory):
+            super().__init__(manager, "Active")
+            self.factory = factory
+            self.action.setChecked(True)
+
+        def activate_command(self, plot, checked):
+            self.factory.active = checked
+            if not checked:
+                return
+            self.factory.xvalues = []
+            self.factory.yvalues = []
+            self.factory.curve.set_data([], [])
+            plot.replot()
+
+
+    class XYPlot(DisplayWidget):
+        category = Simple
+        alias = "XY-Plot"
+
+        def __init__(self, box, parent):
+            super(XYPlot, self).__init__(None)
             self.widget = CurveDialog(edit=False, toolbar=True,
                                       wintitle="XY-Plot")
             self.plot = self.widget.get_plot()
@@ -54,58 +102,47 @@ class XYPlot(DisplayWidget):
 
             self.plot.setAxisAutoScale(QwtPlot.yLeft)
             self.plot.setAxisAutoScale(QwtPlot.xBottom)
-        self.xbox = box
-        self.ybox = None
-        self.xvalues = []
-        self.yvalues = []
-        self.active = True
+            self.xbox = box
+            self.ybox = None
+            self.xvalues = []
+            self.yvalues = []
+            self.active = True
 
-        if box.hasValue():
-            self.lastxvalue = box.value
-        else:
-            self.lastxvalue = None
+            if box.hasValue():
+                self.lastxvalue = box.value
+            else:
+                self.lastxvalue = None
 
-    def typeChanged(self, box):
-        if self.usempl:
-            setlabel = 'set_xlabel' if box is self.xbox else 'set_ylabel'
-            self.widget.axes_call(setlabel, box.axisLabel())
-        else:
+        def typeChanged(self, box):
             pos = QwtPlot.xBottom if box is self.xbox else QwtPlot.yLeft
             self.plot.setAxisTitle(pos, box.axisLabel())
 
-    def addBox(self, box):
-        if self.ybox is None:
-            self.ybox = box
-            if self.usempl:
-                self.widget.newCurve([], [], label="Random values")
-            else:
+        def addBox(self, box):
+            if self.ybox is None:
+                self.ybox = box
                 self.curve = make.curve([], [], 'Random values', "r")
                 self.plot.add_item(self.curve)
-            return True
-        else:
-            return False
+                return True
+            else:
+                return False
 
-    @property
-    def boxes(self):
-        if self.ybox is None:
-            return [self.xbox]
-        else:
-            return [self.xbox, self.ybox]
+        @property
+        def boxes(self):
+            if self.ybox is None:
+                return [self.xbox]
+            else:
+                return [self.xbox, self.ybox]
 
-    def valueChanged(self, box, value, timestamp=None):
-        if not self.active:
-            return
-        if box is self.xbox:
-            self.lastxvalue = value
-        elif box is self.ybox:
-            if self.lastxvalue is not None:
-                self.xvalues.append(self.lastxvalue)
-                self.yvalues.append(value)
-                if self.usempl:
-                    self.widget.updateCurve(self.xvalues, self.yvalues)
-                else:
+        def valueChanged(self, box, value, timestamp=None):
+            if not self.active:
+                return
+            if box is self.xbox:
+                self.lastxvalue = value
+            elif box is self.ybox:
+                if self.lastxvalue is not None:
+                    self.xvalues.append(self.lastxvalue)
+                    self.yvalues.append(value)
                     self.curve.set_data(self.yvalues, self.xvalues)
-        else:
-            raise RuntimeError("unknown box")
-        if not self.usempl:
+            else:
+                raise RuntimeError("unknown box")
             self.plot.replot()
