@@ -126,10 +126,26 @@ class WorkflowDeviceModel(HasStrictTraits):
             self.inputs = self.outputs = []
             return
 
+        # Collect all known channels for the current configuration
         box = self.device.current_configuration
-        self.inputs, self.outputs = self._find_channels(box)
+        inputs, outputs = self._collect_channels(box)
 
-    def _find_channels(self, box, inputs=None, outputs=None):
+        # If a channel was already found before, don't replace it with a new
+        # instance. Otherwise the swapping of "identical" WorkflowChannelModel
+        # objects will cause an infinite startMonitoring/stopMonitoring
+        # feedback loop with the GUI server.
+        def _avoid_duplicates(found, existing):
+            found = {ch.box.key(): ch for ch in found}
+            existing = {ch.box.key(): ch for ch in existing}
+            channels = [existing[key] if key in existing else value
+                        for key, value in found.items()]
+            channels.sort(key=lambda x: x.box.key())
+            return channels
+
+        self.inputs = _avoid_duplicates(inputs, self.inputs)
+        self.outputs = _avoid_duplicates(outputs, self.outputs)
+
+    def _collect_channels(self, box, inputs=None, outputs=None):
         """ Recursively find all input/output channels from a box
         """
         inputs = inputs or []
@@ -140,15 +156,15 @@ class WorkflowDeviceModel(HasStrictTraits):
                 sub_box = getattr(box.boxvalue, key, None)
                 if sub_box is None:
                     continue
-                # Now we check whether it is a display type. If yes, check for
+                # Now we check whether it has a display type. If yes, check for
                 # input/output channel and append in case.
                 # If not, we might have a node (i.e. Schema).
                 displayType = sub_box.descriptor.displayType
                 if displayType is None:
                     if hasattr(value, 'dict'):
                         # A Schema node that we have to dive into:
-                        self._find_channels(sub_box, inputs=inputs,
-                                            outputs=outputs)
+                        self._collect_channels(sub_box, inputs=inputs,
+                                               outputs=outputs)
                 elif displayType == CHANNEL_INPUT:
                     channel = WorkflowChannelModel(
                         box=sub_box, model=self.model,
@@ -299,9 +315,12 @@ class SceneWorkflowModel(HasStrictTraits):
     def _data_distribution_cb(self, box, value, timestamp):
         """ Callback when the data distribution type of a channel changes
         """
+        device_id = box.configuration.id
         path, data_dist = box.path[:-1], box.path[-1]
         assert data_dist == 'dataDistribution'
-        inputs = [ch for ch in self.input_channels if ch.box.path == path]
+        inputs = [ch for ch in self.input_channels
+                  if ch.box.configuration.id == device_id and
+                  ch.box.path == path]
         for conn in self.connections:
             if conn.input in inputs:
                 conn.data_distribution = value

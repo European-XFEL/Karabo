@@ -304,6 +304,10 @@ namespace karabo {
              */
             void byteSizeAvailableHandler(const size_t byteSize);
 
+            void readAsyncSizeInBytesImpl(const ReadSizeInBytesHandler& handler, bool allowNonAsync);
+
+            void readAsyncRawImpl(char* data, const size_t& size, const ReadRawHandler& handler, bool allowNonAsync);
+
             void managedWriteAsync(const WriteCompleteHandler& handler);
 
             void unmanagedWriteAsync(const char* data, const size_t& size, const WriteCompleteHandler& handler);

@@ -251,6 +251,7 @@ class StringlikeValue(KaraboValue):
         else:
             return super().__eq__(other)
 
+
 # if you override __eq__, __hash__ gets set to None to avoid incorrect
 # accidental inheritance. This fixes that.
 del BoolValue.__hash__

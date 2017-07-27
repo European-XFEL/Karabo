@@ -16,7 +16,6 @@
 #include <boost/filesystem.hpp>
 
 #include "karabo/core/Device.hh"
-#include "karabo/core/OkErrorFsm.hh"
 
 /**
  * The main karabo namespace
@@ -49,7 +48,7 @@ namespace karabo {
          *               allowing for load balancing.
          * 
          */
-        class DataLoggerManager : public karabo::core::Device<karabo::core::OkErrorFsm> {
+        class DataLoggerManager : public karabo::core::Device<> {
 
         public:
 
@@ -63,7 +62,9 @@ namespace karabo {
 
         private: // Functions
 
-            void okStateOnEntry();
+            void initialize();
+
+            void checkLoggerMap();
 
             void ensureLoggerRunning(const karabo::util::Hash& topologyEntry);
 
