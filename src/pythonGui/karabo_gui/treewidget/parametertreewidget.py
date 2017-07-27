@@ -119,13 +119,23 @@ class ParameterTreeWidget(QTreeWidget):
         super(QTreeWidget, self).mousePressEvent(event)
 
     def keyPressEvent(self, event):
-        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
-            item = self.itemAt(self.mapFromGlobal(QCursor.pos())
+        """Make sure that the defined key events are handles properly
+        """
+        key_event = event.key()
+        if key_event in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Escape):
+            # Get the last focused widget and its position in global coords
+            focus_widget = self.focusWidget()
+            focus_pos = focus_widget.mapToGlobal(focus_widget.pos())
+            # Convert the global position to an item
+            item = self.itemAt(self.mapFromGlobal(focus_pos)
                                - QPoint(0, self.header().height()))
-            if item:
-                self.setCurrentItem(item)
-                self.onApplyCurrentItemChanges()
-                return
+
+            # Act on that item
+            if key_event == Qt.Key_Escape:
+                self.decline_item_changes(item)
+            else:
+                self.apply_item_changes(item)
+            return
 
         super(QTreeWidget, self).keyPressEvent(event)
 
@@ -188,24 +198,14 @@ class ParameterTreeWidget(QTreeWidget):
                 for box in editableComponent.boxes
                 if box.isAccessible() and box.isAllowed()]
 
-    def applyRemoteChanges(self, item):
-        editableComponent = item.editableComponent
-        if editableComponent is None:
-            return
-
-        if not isinstance(editableComponent, EditableApplyLaterComponent):
-            return
-
-        editableComponent.onApplyRemoteChanges()
-
-    def resetAll(self):
+    def decline_all(self):
+        """Decline either all changes or only the selected ones
+        """
         nbSelectedItems = self.nbSelectedApplyEnabledItems()
         if nbSelectedItems > 0:
-            selectedItems = self.selectedItems()
-            for item in selectedItems:
-                self.applyRemoteChanges(item)
+            [self.decline_item_changes(item) for item in self.selectedItems()]
         else:
-            self.onApplyAllRemoteChanges()
+            self.decline_all_changes()
 
     def nbSelectedApplyEnabledItems(self):
         """Return only selected items for not applied yet
@@ -282,14 +282,6 @@ class ParameterTreeWidget(QTreeWidget):
             self.addItemDataToHash(childItem, config)
             self._r_applyAll(childItem, config)
 
-    def _r_applyAllRemoteChanges(self, item):
-        """Recursive function for tree to update the apply buttons
-        """
-        for i in range(item.childCount()):
-            childItem = item.child(i)
-            self.applyRemoteChanges(childItem)
-            self._r_applyAllRemoteChanges(childItem)
-
     def _r_applyButtonsEnabled(self, item):
         for i in range(item.childCount()):
             childItem = item.child(i)
@@ -334,8 +326,14 @@ class ParameterTreeWidget(QTreeWidget):
         # TODO: deviceGroups...
         get_network().onReconfigure(boxes)
 
-    def onApplyAllRemoteChanges(self):
-        self._r_applyAllRemoteChanges(self.invisibleRootItem())
+    def decline_all_changes(self):
+        def recurse(item):
+            for i in range(item.childCount()):
+                childItem = item.child(i)
+                self.decline_item_changes(childItem)
+                recurse(childItem)
+
+        recurse(self.invisibleRootItem())
 
     def onCustomContextMenuRequested(self, pos):
         item = self.itemAt(pos)
@@ -346,15 +344,19 @@ class ParameterTreeWidget(QTreeWidget):
 
         item.showContextMenu()
 
-    def onApplyCurrentItemChanges(self):
-        editableComponent = self.currentItem().editableComponent
+    def apply_item_changes(self, item):
+        if item is None:
+            return
+        editableComponent = item.editableComponent
         if (editableComponent is None
                 or isinstance(editableComponent, EditableNoApplyComponent)):
             return
-        editableComponent.onApplyClicked()
+        editableComponent.apply_changes()
 
-    def onApplyCurrentItemRemoteChanges(self):
-        editableComponent = self.currentItem().editableComponent
+    def decline_item_changes(self, item):
+        if item is None:
+            return
+        editableComponent = item.editableComponent
         if editableComponent is None:
             return
-        editableComponent.onApplyRemoteChanges()
+        editableComponent.decline_changes()
