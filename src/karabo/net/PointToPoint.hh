@@ -19,10 +19,12 @@
 #include "EventLoop.hh"
 
 
-typedef boost::function<void (const karabo::util::Hash::Pointer&, const karabo::util::Hash::Pointer&)> GlobalP2PReadHandler;
-
-
 namespace karabo {
+
+    namespace xms {
+        class SignalSlotable;  // forward declaration
+    }
+
     namespace net {
 
 
@@ -30,6 +32,8 @@ namespace karabo {
 
         public:
 
+            // Local map simply repeats the map in SignalSlotable
+            typedef std::map<std::string, karabo::xms::SignalSlotable*> LocalMap;
             // In SignalSlotable there is no serverId. We use url instead
             // mapping the instanceId to url
             typedef std::map<std::string, std::string> MapInstanceIdToUrl;
@@ -108,8 +112,25 @@ namespace karabo {
              * @return URL
              */
             std::string findUrlById(const std::string& remoteInstanceId);
-            
-            void registerP2PReadHandler(const GlobalP2PReadHandler& handler);
+
+            /**
+             * Register SignalSlotable in local map
+             * @param localId  instanceId
+             * @param ss       and related SignalSlotable pointer
+             */
+            void insertToLocalMap(const std::string& localId, karabo::xms::SignalSlotable* ss);
+
+            /**
+             * Remove SignalSlotable entry from the local map
+             * @param instanceId
+             */
+            void eraseFromLocalMap(const std::string& instanceId);
+
+            /**
+             * Check that instanceId is in the local map.
+             * @param true if instanceId entry is in the local map
+             */
+            bool isInLocalMap(const std::string& instanceId);
 
         private:
 
@@ -149,12 +170,12 @@ namespace karabo {
 
             int m_serverPort;
             std::string m_localUrl;
-            GlobalP2PReadHandler m_globalHandler;
             boost::mutex m_pointToPointMutex;
             MapInstanceIdToUrl m_instanceIdToUrl;
             MapUrlToInstanceIdSet m_urlToInstanceIdSet;
             MapUrlToConnection m_mapOpenConnections;
-
+            LocalMap m_localMap;
+            boost::shared_mutex m_localMapMutex;
         };
 
     }

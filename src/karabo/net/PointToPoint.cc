@@ -11,6 +11,7 @@
 #include "PointToPoint.hh"
 #include "EventLoop.hh"
 #include "karabo/util/MetaTools.hh"
+#include "karabo/xms/SignalSlotable.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -20,7 +21,7 @@ namespace karabo {
     namespace net {
 
 
-        PointToPoint::PointToPoint() : m_serverPort(0), m_localUrl(""), m_globalHandler() {
+        PointToPoint::PointToPoint() : m_serverPort(0), m_localUrl("") {
             // No bind_weak in constructor possible yet... call "second" constructor via EventLoop
             EventLoop::getIOService().post(boost::bind(&PointToPoint::init, this));
         }
@@ -40,11 +41,6 @@ namespace karabo {
 
 
         PointToPoint::~PointToPoint() {
-        }
-
-
-        void PointToPoint::registerP2PReadHandler(const GlobalP2PReadHandler& handler) {
-            m_globalHandler = handler;
         }
 
 
@@ -110,6 +106,25 @@ namespace karabo {
             auto it = m_instanceIdToUrl.find(remoteInstanceId);
             if (it == m_instanceIdToUrl.end()) return "";
             return it->second;
+        }
+
+
+        void PointToPoint::insertToLocalMap(const std::string& instanceId, karabo::xms::SignalSlotable* signalSlotable) {
+            boost::unique_lock<boost::shared_mutex> lock(m_localMapMutex);
+            m_localMap[instanceId] = signalSlotable;
+        }
+
+
+        void PointToPoint::eraseFromLocalMap(const std::string& instanceId) {
+            boost::unique_lock<boost::shared_mutex> lock(m_localMapMutex);
+            m_localMap.erase(instanceId);
+        }
+
+
+        bool PointToPoint::isInLocalMap(const std::string& instanceId) {
+            boost::shared_lock<boost::shared_mutex> lock(m_localMapMutex);
+            if (m_localMap.find(instanceId) == m_localMap.end()) return false;
+            return true;
         }
 
 
@@ -262,8 +277,45 @@ namespace karabo {
                 return;
             }
 
-            m_globalHandler(header, message);
-            
+            // We don't need to check the existence of "slotInstanceIds" in header. It is always there!
+            const string& slotInstanceIds = header->get<string>("slotInstanceIds");
+            // slotInstanceIds is defined like
+            // |slotInstanceId| or |*| or |slotInstanceId1||slotInstanceId2||...||slotInstanceIdN|
+            KARABO_LOG_FRAMEWORK_DEBUG << "SignalSlotable::onP2pMessage  slotInstanceIds : \"" << slotInstanceIds << "\"";
+            // strip vertical lines
+            string stripped = slotInstanceIds.substr(1, slotInstanceIds.size()-2);
+            size_t pos = stripped.find_first_of("|");
+            if (pos == std::string::npos) {
+                boost::shared_lock<boost::shared_mutex> lock(m_localMapMutex);
+                if (stripped == "*") {
+                    // "Broadcast" case:  |*|
+                    for (auto& i : m_localMap) {
+                        EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, i.second,
+                                                                 header, message, i.second->getEpochMillis()));
+                    }
+                } else {
+                    // "Specified" slotInstanceId case:  |slotInstaceId|
+                    for (auto& i : m_localMap) {
+                        if (stripped == i.first) {
+                            EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, i.second,
+                                                                     header, message, i.second->getEpochMillis()));
+                        }
+                    }
+                }
+            } else {
+                // Many slotInstanceIds : |slotInstaceId1||slotInstaceId2||slotInstaceId3|...|slotInstaceIdN|
+                std::vector<std::string> ids;
+                boost::split(ids, stripped, boost::is_any_of("|"), boost::token_compress_on);
+                boost::shared_lock<boost::shared_mutex> lock(m_localMapMutex);
+                for (auto& slotInstanceId : ids) {
+                    for (auto& i : m_localMap) {
+                        if (slotInstanceId == i.first) {
+                            EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, i.second,
+                                                                     header, message, i.second->getEpochMillis()));
+                        }
+                    }
+                }
+            }
             channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));
         }
 
