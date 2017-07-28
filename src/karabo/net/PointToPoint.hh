@@ -136,8 +136,6 @@ namespace karabo {
 
         private:
 
-            void init();
-
             /**
              * Passive connection: we simply wait for client to connect us.
              * Then, following the protocol: the client should send us the configuration Hash:

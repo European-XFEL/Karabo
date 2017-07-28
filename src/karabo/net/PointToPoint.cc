@@ -22,21 +22,9 @@ namespace karabo {
 
 
         PointToPoint::PointToPoint() : m_serverPort(0), m_localUrl("") {
-            // No bind_weak in constructor possible yet... call "second" constructor via EventLoop
-            EventLoop::getIOService().post(boost::bind(&PointToPoint::init, this));
-        }
-
-
-        void PointToPoint::init() {
-            try {
-                // We get an exception if the object is destroyed
-                boost::shared_ptr<PointToPoint> guard = shared_from_this();
-                // Here bind_weak is possible - second constructor
-                Connection::Pointer connection = Connection::create(Hash("Tcp.port", 0, "Tcp.type", "server"));
-                m_serverPort = connection->startAsync(bind_weak(&PointToPoint::onConnectServer, this, _1, _2, connection));
-                m_localUrl = "tcp://" + karabo::net::bareHostName() + ":" + toString(m_serverPort);
-            } catch (const std::exception&) {
-            }
+            Connection::Pointer connection = Connection::create(Hash("Tcp.port", 0, "Tcp.type", "server"));
+            m_serverPort = connection->startAsync(boost::bind(&PointToPoint::onConnectServer, this, _1, _2, connection));
+            m_localUrl = "tcp://" + karabo::net::bareHostName() + ":" + toString(m_serverPort);
         }
 
 
@@ -137,13 +125,17 @@ namespace karabo {
         void PointToPoint::onConnectServer(const ErrorCode& e,
                                            const Channel::Pointer& channel,
                                            const Connection::Pointer& connection) {
-            if (e) {
-                channelErrorHandler(e, channel);
-                return;
+            try {
+                boost::shared_ptr<PointToPoint> guard = shared_from_this();
+                if (e) {
+                    channelErrorHandler(e, channel);
+                    return;
+                }
+                // We can accept more connections
+                channel->getConnection()->startAsync(bind_weak(&PointToPoint::onConnectServer, this, _1, _2, connection));
+                channel->readAsyncHashPointer(bind_weak(&PointToPoint::onConnectServerBottomHalf, this, _1, channel, connection, _2));
+            } catch (const std::exception&) {
             }
-            // We can accept more connections
-            channel->getConnection()->startAsync(bind_weak(&PointToPoint::onConnectServer, this, _1, _2, connection));
-            channel->readAsyncHashPointer(bind_weak(&PointToPoint::onConnectServerBottomHalf, this, _1, channel, connection, _2));
         }
 
 
