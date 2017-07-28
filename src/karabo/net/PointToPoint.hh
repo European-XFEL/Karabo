@@ -132,6 +132,8 @@ namespace karabo {
              */
             bool isInLocalMap(const std::string& instanceId);
 
+            void printMaps();
+
         private:
 
             void init();
@@ -170,7 +172,7 @@ namespace karabo {
 
             int m_serverPort;
             std::string m_localUrl;
-            boost::mutex m_pointToPointMutex;
+            boost::shared_mutex m_pointToPointMutex;
             MapInstanceIdToUrl m_instanceIdToUrl;
             MapUrlToInstanceIdSet m_urlToInstanceIdSet;
             MapUrlToConnection m_mapOpenConnections;
