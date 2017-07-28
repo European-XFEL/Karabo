@@ -6,7 +6,7 @@
 from PyQt4.QtCore import Qt, QSize
 from PyQt4.QtGui import QAction, QMenu
 
-from karabo_gui.components import DisplayComponent
+from karabo_gui.displaywidgets.displaytableelement import DisplayTableElement
 import karabo_gui.icons as icons
 from karabo_gui.util import write_only_property
 from .base_item import BaseTreeWidgetItem
@@ -18,11 +18,7 @@ class TableTreeWidgetItem(BaseTreeWidgetItem):
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, icons.folder)
 
-        self.displayComponent = DisplayComponent("DisplayTableElement", box,
-                                                 self.treeWidget())
-        self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
-        self.treeWidget().resizeColumnToContents(1)
-
+        self.create_display_widget(DisplayTableElement, box)
         box.signalUpdateComponent.connect(self.onDisplayValueChanged)
 
     @write_only_property

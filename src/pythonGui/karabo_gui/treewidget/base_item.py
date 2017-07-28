@@ -26,13 +26,23 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
 
         self.box = box
 
-        # The components can be defined in Subclasses
-        self.displayComponent = None
         self.__editableComponent = None
         self._contextMenu = None
 
         # Popup widget for tooltip info
         self.popupWidget = None
+
+    def create_display_widget(self, klass, box):
+        tree_widget = self.treeWidget()
+        # Create a display widget
+        self.display_widget = klass(box, tree_widget)
+        box.signalUpdateComponent.connect(self.display_widget.valueChangedSlot)
+        if box.hasValue():
+            self.display_widget.valueChanged(box, box.value, box.timestamp)
+
+        self.display_widget.setReadOnly(True)
+        tree_widget.setItemWidget(self, 1, self.display_widget.widget)
+        tree_widget.resizeColumnToContents(1)
 
     @property
     def editableComponent(self):
@@ -63,8 +73,8 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         self._contextMenu.exec_(QCursor.pos())
 
     def setErrorState(self, isError):
-        if self.displayComponent:
-            self.displayComponent.setErrorState(isError)
+        if self.display_widget:
+            self.display_widget.setErrorState(isError)
 
     def setReadOnly(self, readOnly):
         if readOnly is True:
