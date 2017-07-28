@@ -9,12 +9,11 @@ from PyQt4.QtCore import pyqtSignal, QMimeData, QPoint, QRect, Qt
 from PyQt4.QtGui import (QAbstractItemView, QCursor, QHeaderView, QMenu,
                          QTreeWidget)
 
-from karabo_gui.components import (BaseComponent, EditableApplyLaterComponent,
-                                   EditableNoApplyComponent)
+from karabo_gui.components import BaseComponent, EditableApplyLaterComponent
 import karabo_gui.globals as krb_globals
 from karabo_gui.schema import ChoiceOfNodes
 from karabo_gui.singletons.api import get_network, get_topology
-from karabo_gui.widget import DisplayWidget, EditableWidget
+from karabo_gui.widget import DisplayWidget, EditableWidget, Widget
 from .command_item import CommandTreeWidgetItem
 from .property_item import PropertyTreeWidgetItem
 
@@ -73,7 +72,7 @@ class ParameterTreeWidget(QTreeWidget):
         super(ParameterTreeWidget, self).clear()
 
         for c in self.children():
-            if isinstance(c, BaseComponent):
+            if isinstance(c, (BaseComponent, Widget)):
                 c.setParent(None)
 
     def ensureMiddleColumnWidth(self):
@@ -162,10 +161,10 @@ class ParameterTreeWidget(QTreeWidget):
                 'key': box.key(),
                 'label': item.text(0),
             }
-            if item.displayComponent:
-                factory = DisplayWidget.getClass(box)
-                if factory is not None:
-                    data['display_widget_class'] = factory.__name__
+
+            factory = DisplayWidget.getClass(box)
+            if factory is not None:
+                data['display_widget_class'] = factory.__name__
             if item.editableComponent:
                 factory = EditableWidget.getClass(box)
                 if factory is not None:
