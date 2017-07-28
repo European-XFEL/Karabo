@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt4.QtGui import QPushButton
 
-from karabo_gui.components import DisplayComponent
+from karabo_gui.displaywidgets.displaylabel import DisplayLabel
 import karabo_gui.icons as icons
 from .base_item import BaseTreeWidgetItem
 
@@ -16,10 +16,7 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.setIcon(0, icons.slot)
 
         # Create empty label for 2nd column (current value on device)
-        self.displayComponent = DisplayComponent("DisplayLabel", box,
-                                                 self.treeWidget())
-        self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
-        self.treeWidget().resizeColumnToContents(1)
+        self.create_display_widget(DisplayLabel, box)
 
         # Name of command
         self.__command = command
