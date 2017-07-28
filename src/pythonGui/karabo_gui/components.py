@@ -14,7 +14,7 @@ from . import messagebox
 from .indicators import STATE_COLORS
 from .singletons.api import get_network
 from .util import generateObjectName
-from .widget import EditableWidget, DisplayWidget, Widget
+from .widget import EditableWidget, Widget
 
 
 class BaseComponent(QObject):
@@ -33,77 +33,6 @@ class BaseComponent(QObject):
     @property
     def boxes(self):
         return self.widgetFactory.boxes
-
-
-class DisplayComponent(BaseComponent):
-    Widget = DisplayWidget
-
-    def __init__(self, classAlias, box, parent):
-        W = Widget.widgets.get(classAlias)
-        if W is None:
-            self.widgetFactory = classAlias
-        else:
-            self.widgetFactory = W(box, parent)
-        super(DisplayComponent, self).__init__(parent)
-        self.widgetFactory.setReadOnly(True)
-        self.connectWidget(box)
-
-    def connectWidget(self, box):
-        BaseComponent.connectWidget(self, box)
-        box.signalUpdateComponent.connect(self.widgetFactory.valueChangedSlot)
-        if box.hasValue():
-            self.widgetFactory.valueChanged(box, box.value, box.timestamp)
-
-    def addBox(self, box):
-        if self.widgetFactory.addBox(box):
-            self.connectWidget(box)
-            return True
-        return False
-
-    @property
-    def widgetCategory(self):
-        return self.widgetFactory.category
-
-    # Returns the actual widget which is part of the composition
-    @property
-    def widget(self):
-        return self.widgetFactory.widget
-
-    @property
-    def displayWidget(self):
-        return self.widgetFactory
-
-    @property
-    def keys(self):
-        return self.widgetFactory.keys
-
-    @property
-    def value(self):
-        return self.widgetFactory.value
-
-    @value.setter
-    def value(self, value):
-        self.widgetFactory.value = value
-
-    def setErrorState(self, isError):
-        self.widgetFactory.setErrorState(isError)
-
-    def removeKey(self, key):
-        self.widgetFactory.removeKey(key)
-
-    def changeWidget(self, factory):
-        oldWidget = self.widgetFactory.widget
-        oldFactory = self.widgetFactory
-        self.widgetFactory.setParent(None)
-        self.widgetFactory = factory(oldFactory.boxes[0], oldWidget.parent())
-        self.widgetFactory.setReadOnly(True)
-        self.connectWidget(self.boxes[0])
-        for b in oldFactory.boxes[1:]:
-            self.widgetFactory.addBox(b)
-            self.connectWidget(b)
-        oldWidget.parent().setWidget(self.widgetFactory.widget)
-        oldWidget.setParent(None)
-        self.widgetFactory.widget.show()
 
 
 class EditableNoApplyComponent(BaseComponent):
