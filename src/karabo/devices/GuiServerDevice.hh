@@ -98,6 +98,9 @@ namespace karabo {
 
 
         private: // Functions
+            /** Wrapping requestNoWait */
+            void loggerMapConnectedHandler();
+
             /** Called if configuration changed from outside. */
             virtual void postReconfigure();
 
