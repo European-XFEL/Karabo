@@ -6,4 +6,6 @@ from karabo.usermacro_api.usermacro import UserMacro
 from karabo.usermacro_api.genericproxy import (
     Closable, Coolable, GenericProxy, Movable, Pumpable, Sensible
 )
-
+from karabo.usermacro_api.scans import (
+    AScan, AMesh, APathScan, DScan, DMesh
+)
