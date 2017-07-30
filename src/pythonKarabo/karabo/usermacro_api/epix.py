@@ -3,6 +3,6 @@
 from genericproxy import Sensible
 
 
-class LpdAsSensible(Sensible):
+class EpixAsSensible(Sensible):
     """Generalized interface to the ePIX detector"""
     generalizes = ['ePixReceiver']
