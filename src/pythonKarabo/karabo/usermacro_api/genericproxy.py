@@ -9,46 +9,48 @@ from karabo.middlelayer_api.proxy import ProxyBase
 
 class GenericProxy(object):
     """Base class for all generic proxies"""
-    proxy = ProxyBase()
+    _proxy = ProxyBase()
     locker = ""
-
-    def __init__(self, **kwargs):
-        self.proxy = kwargs.get('proxy')
 
     def __repr__(self):
         # For now, return the internal proxy representation
-        return self.proxy.__repr__()
+        return self._proxy.__repr__()
 
     @classmethod
-    def _create_generic_proxy(cls, proxy, *args, **kwargs):
-        return [cls.__new__(cls, proxy.deviceId, *args, **kwargs)
-                if proxy.deviceId in getattr(cls, 'generalizes')
-                else cls._create_generic_proxy(subclass, proxy,
-                                               *args, **kwargs)
-                for subclass in cls.__subclasses__()].pop()
+    def create_generic_proxy(cls, proxy):
+        """Create generalized interface"""
 
-    def __new__(cls, deviceId, *args, **kwargs):
+        if proxy.classId in getattr(cls, 'generalizes', []):
+            obj = object.__new__(cls)
+            obj._proxy = proxy
+            return obj
+        for subclass in cls.__subclasses__():
+            generic_proxy = subclass.create_generic_proxy(proxy)
+            if generic_proxy:
+                return generic_proxy
+
+    def __new__(cls, deviceId):
         proxy = getDevice(deviceId)
-        return cls._create_generic_proxy(cls, proxy, *args, **kwargs)
+        return cls.create_generic_proxy(proxy)
 
     @coroutine
     def lock_on(self, locker):
         """Lock device"""
-        current_locker = self.proxy.lockedBy
+        current_locker = self._proxy.lockedBy
         if locker != current_locker:
             raise KaraboError("{} is already locked by {}."
-                              .format(self.proxy.deviceId, current_locker))
-        self.proxy.lockedBy = locker
+                              .format(self._proxy.deviceId, current_locker))
+        self._proxy.lockedBy = locker
         self.locker = locker
 
     @coroutine
     def lock_off(self):
         """Release lock"""
-        current_locker = self.proxy.lockedBy
+        current_locker = self._proxy.lockedBy
         if self.locker != current_locker:
             raise KaraboError("{} is locked by {}."
-                              .format(self.proxy.deviceId, current_locker))
-        self.proxy.lockedBy = ""
+                              .format(self._proxy.deviceId, current_locker))
+        self._proxy.lockedBy = ""
 
 
 class Movable(GenericProxy):
@@ -138,3 +140,12 @@ class Closable(GenericProxy):
     def close(self):
         """Close it"""
         pass
+
+
+class BeckhoffMotorAsMovable(Movable):
+    """Generalized interface to BeckhoffSimple motors
+
+    This is currently required here to make the registration
+    of the *generalizes* list work
+    """
+    generalizes = ['BeckhoffSimpleMotor']
