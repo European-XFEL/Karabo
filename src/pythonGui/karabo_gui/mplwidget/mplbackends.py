@@ -73,7 +73,12 @@ class PlotToolbar(NavigationToolbar2QT):
         self.setIconSize(QSize(18, 18))
 
     def _icon(self, name):
-        return getattr(icons, name.split('.')[0])
+        nm = name.split('.')[0]
+        if hasattr(icons, nm):
+            return getattr(icons, nm)
+        else:
+            return super(PlotToolbar, self)._icon(name)
+
 
     def home(self, *args):
         super(NavigationToolbar2QT, self).home(*args)
