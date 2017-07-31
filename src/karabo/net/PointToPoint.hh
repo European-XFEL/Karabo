@@ -57,17 +57,28 @@ namespace karabo {
             std::string getLocalUrl() const;
 
             /**
-             * Actively requests to establish and register a P2P connection to the remote server where
-             * remoteInstanceId is located.
+             * Actively requests to establish and register a P2P connection to the remote server asynchronously
+             *  where the "remoteInstanceId" is running.
              * 
              * @param remoteInstanceId remote SignalSlotable instanceId on the remote server
-             * @param info is a Hash with the instanceInfo Hash with the remote serverId and connection string, and
-             *        vector<string> of all instanceIds on the remote server
+             * @return false if argument is not known (not in our bookkeeping structure) or is not "remote"
+             *         true if already connected or initiated successfully
              */
             bool connectAsync(const std::string& remoteInstanceId);
 
+            /**
+             * Try to connect synchronously to the remote device server running remoteInstanceId.
+             *
+             * @param remoteInstanceId
+             * @return false if local or unknown or connection failed, otherwise returns true
+             */
             bool connect(const std::string& remoteInstanceId);
 
+            /**
+             * Checks if we can access remoteInstanceId via point-to-point
+             * @param remoteInstanceId
+             * @return true if connected and false if not.
+             */
             bool isConnected(const std::string& remoteInstanceId);
 
             /**
@@ -91,6 +102,13 @@ namespace karabo {
                          const karabo::util::Hash::Pointer& body,
                          int prio);
             
+            /**
+             * Filter the input map of slot instanceIds to set of slot functions and create output
+             * map that groups all SlotMap entries with the same URL. The entries that got to the output
+             * will be erased from the input. Used for routing messages via P2P or broker
+             * @param in  map between instanceId and set of slot functions
+             * @param out map between URL and SlotMap entries with the this URL
+             */
             void filterConnectedAndGroupByUrl(SlotMap& in, std::map<std::string, SlotMap>& out);
             
             /**
