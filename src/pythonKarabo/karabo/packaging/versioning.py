@@ -4,6 +4,9 @@ import os.path as op
 import re
 import subprocess
 
+# NOTE: Only stdlib imports are allowed here! This module is used when
+# installing the karabo package.
+
 
 class SvnParseError(ValueError):
     pass
