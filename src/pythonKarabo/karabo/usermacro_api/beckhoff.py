@@ -1,5 +1,5 @@
 """Generalized interfaces to Beckhoff devices"""
-from genericproxy import Movable
+from .genericproxy import Movable
 
 
 class BeckhoffMotorAsMovable(Movable):

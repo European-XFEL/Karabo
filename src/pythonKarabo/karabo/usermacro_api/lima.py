@@ -1,5 +1,5 @@
 """Generalized interface to LIMA cameras"""
-from genericproxy import Sensible
+from .genericproxy import Sensible
 
 
 class LimaBaslerAsSensible(Sensible):

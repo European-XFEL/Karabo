@@ -1,6 +1,6 @@
 """Generalized interface to AGIPD
 """
-from genericproxy import Sensible
+from .genericproxy import Sensible
 
 
 class AgipdAsSensible(Sensible):
