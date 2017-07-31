@@ -1,6 +1,9 @@
 import os.path as op
+import sys
 
+from jupyter_client.kernelspec import install_kernel_spec
 from setuptools import setup, find_packages
+from setuptools.command.install import install
 
 VERSION_FILE_PATH = op.join('karabo', '_version.py')
 
@@ -71,6 +74,15 @@ is_released = {is_released}
     return fullversion
 
 
+class install_with_jupyter(install):
+    def run(self):
+        super().run()
+        install_kernel_spec(
+            op.join(op.dirname(__file__), "karabo",
+                    "interactive", "jupyter_spec"),
+            kernel_name="Karabo", prefix=sys.prefix)
+
+
 if __name__ == '__main__':
     version = _write_version_py()
 
@@ -82,6 +94,7 @@ if __name__ == '__main__':
         description="This is the Python interface of the Karabo control system",
         url="http://karabo.eu",
         packages=find_packages(),
+        cmdclass={"install": install_with_jupyter},
         package_data={
             'karabo.bound_api.tests': ['resources/*.*'],
             "karabo.common.scenemodel.tests": ["data/*.svg",
@@ -92,6 +105,7 @@ if __name__ == '__main__':
             'karabo.testing': ['resources/*.*'],
             'karabo.project_db': ['config_stubs/*.*'],
             'karabo.integration_tests': ['device_comm_test/CommTestDevice.egg-info/*.*'],
+            'karabo.interactive': ['jupyter_spec/kernel.json'],
         },
         entry_points={
             'console_scripts': [

@@ -1,0 +1,103 @@
+from asyncio import coroutine, get_event_loop, set_event_loop
+import os
+import socket
+import sys
+
+from tornado.platform.asyncio import AsyncIOMainLoop
+from zmq.asyncio import ZMQEventLoop
+from ipykernel.ipkernel import IPythonKernel
+from ipykernel.jsonutil import json_clean
+from ipykernel.kernelapp import IPKernelApp
+
+from karabo.middlelayer import background, DeviceClientBase, Device
+from karabo.middlelayer_api import eventloop
+
+
+class EventLoop(eventloop.EventLoop, ZMQEventLoop):
+    pass
+
+
+class KaraboKernel(IPythonKernel):
+    def execute_request(self, stream, ident, parent):
+        """ handle an execute_request
+
+        This is effectively a copy from ipykernel.kernelbase.Kernel.
+        The original version however blocks the event loop, which we cannot
+        do as Karabo functions still need to be connected to the broker.
+
+        So we offload every command into a thread.
+        """
+        try:
+            content = parent['content']
+            code = content['code']
+            silent = content['silent']
+            store_history = content.get('store_history', not silent)
+            user_expressions = content.get('user_expressions', {})
+            allow_stdin = content.get('allow_stdin', False)
+        except:
+            self.device.logger.exception("Got bad msg: %s", parent)
+            return
+
+        stop_on_error = content.get('stop_on_error', True)
+
+        metadata = self.init_metadata(parent)
+
+        # Re-broadcast our input for the benefit of listening clients, and
+        # start computing output
+        if not silent:
+            self.execution_count += 1
+            self._publish_execute_input(code, parent, self.execution_count)
+
+        @coroutine
+        def execute():
+            reply_content = yield from background(self.do_execute,
+                code, silent, store_history, user_expressions, allow_stdin)
+
+            # Flush output before sending the reply.
+            sys.stdout.flush()
+            sys.stderr.flush()
+
+            # Send the reply.
+            reply_content = json_clean(reply_content)
+            finished = self.finish_metadata(parent, metadata, reply_content)
+
+            reply_msg = self.session.send(
+                stream, 'execute_reply', reply_content, parent,
+                metadata=finished, ident=ident)
+
+            if (not silent and reply_msg['content']['status'] == 'error'
+                    and stop_on_error):
+                self._abort_queues()
+
+        get_event_loop().create_task(execute(), self.device)
+
+
+class JupyterDevice(DeviceClientBase, Device):
+    pass
+
+
+class KaraboKernelApp(IPKernelApp):
+    name = "karabo-kernel"
+    kernel_class = KaraboKernel
+    exec_lines = ["%pylab inline",
+                  "from karabo.middlelayer import *",
+                  "from karabo.middlelayer_api.numeric import *"]
+
+    def start(self):
+        hostname = socket.gethostname().split(".", 1)[0]
+        pid = os.getpid()
+        self.kernel.device = JupyterDevice(
+            {"_deviceId_": "jupyter-{}-{}".format(hostname, pid)})
+        get_event_loop().run_until_complete(
+            self.kernel.device.startInstance())
+        self.kernel.start()
+        get_event_loop().run_forever()
+
+
+if __name__ == "__main__":
+    loop = EventLoop()
+    set_event_loop(loop)
+    AsyncIOMainLoop().install()
+    app = KaraboKernelApp.instance()
+    app.initialize()
+    app.start()
