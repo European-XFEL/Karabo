@@ -1,5 +1,5 @@
 """"Scantool macros"""
-from usermacro import UserMacro
+from .usermacro import UserMacro
 
 
 class AScan(UserMacro):

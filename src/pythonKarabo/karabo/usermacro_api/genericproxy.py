@@ -19,7 +19,6 @@ class GenericProxy(object):
     @classmethod
     def create_generic_proxy(cls, proxy):
         """Create generalized interface"""
-
         if proxy.classId in getattr(cls, 'generalizes', []):
             obj = object.__new__(cls)
             obj._proxy = proxy
@@ -140,12 +139,3 @@ class Closable(GenericProxy):
     def close(self):
         """Close it"""
         pass
-
-
-class BeckhoffMotorAsMovable(Movable):
-    """Generalized interface to BeckhoffSimple motors
-
-    This is currently required here to make the registration
-    of the *generalizes* list work
-    """
-    generalizes = ['BeckhoffSimpleMotor']

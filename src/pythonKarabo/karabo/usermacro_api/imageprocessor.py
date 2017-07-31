@@ -1,5 +1,5 @@
 """"Generalized interface to the image processor"""
-from genericproxy import Sensible
+from .genericproxy import Sensible
 
 
 class ImageProcessorAsSensible(Sensible):
