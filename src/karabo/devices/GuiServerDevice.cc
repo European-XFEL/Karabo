@@ -915,6 +915,8 @@ namespace karabo {
                     connectPotentialAlarmService(topologyEntry);
                     registerPotentialProjectManager(topologyEntry);
                     connectPotentialRunConfigurator(topologyEntry);
+
+                    m_pointToPoint->printMaps();
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceNewHandler(): " << e.userFriendlyMsg();
