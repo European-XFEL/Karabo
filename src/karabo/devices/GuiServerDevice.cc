@@ -1361,8 +1361,8 @@ namespace karabo {
             if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
                 topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "RunConfigurator") {
 
-                asyncConnect(instanceId, "signalGroupSourceChanged", "", "slotRunConfigSourcesUpdate",
-                             boost::function<void()>()); // No need to to do an initial request for this information(?).
+                // No success handler since no need to to do an initial request for this information(?).
+                asyncConnect(instanceId, "signalGroupSourceChanged", "", "slotRunConfigSourcesUpdate");
             }
 
         }
