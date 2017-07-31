@@ -1,6 +1,6 @@
 """Generalzed interface to LPD
 """
-from genericproxy import Sensible
+from .genericproxy import Sensible
 
 
 class LpdAsSensible(Sensible):
