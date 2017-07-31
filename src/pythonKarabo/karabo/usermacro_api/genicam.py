@@ -1,6 +1,6 @@
 """Generalized interfaces to GenICam Cameras
 """
-from genericproxy import Sensible
+from .genericproxy import Sensible
 
 
 class GenicamBaslerAsSensible(Sensible):

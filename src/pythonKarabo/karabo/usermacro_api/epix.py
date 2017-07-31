@@ -1,6 +1,6 @@
 """Generalized interface to ePIX
 """
-from genericproxy import Sensible
+from .genericproxy import Sensible
 
 
 class EpixAsSensible(Sensible):
