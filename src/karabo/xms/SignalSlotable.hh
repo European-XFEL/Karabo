@@ -270,7 +270,7 @@ namespace karabo {
              * @param signalSignature is the signature of the signal
              * @param slotInstanceId is the instance ID of the slot (if empty use this instance)
              * @param slotSignature is the signature of the slot
-             * @param successHandler is called when connection is established
+             * @param successHandler is called when connection is established (maybe be empty [=default])
              * @param failureHandler is called when connection could not be established, in the same way as an
              *                            Requestor::AsyncErrorHandler - if Signal or Slot do not exist, the exception
              *                            is a SignalSlotException
@@ -279,7 +279,7 @@ namespace karabo {
              */
             void asyncConnect(const std::string& signalInstanceId, const std::string& signalSignature,
                               const std::string& slotInstanceId, const std::string& slotSignature,
-                              const boost::function<void ()>& successHandler,
+                              const boost::function<void ()>& successHandler = boost::function<void ()>(),
                               const boost::function<void ()>& failureHandler = boost::function<void ()>(),
                               int timeout = 0);
 
