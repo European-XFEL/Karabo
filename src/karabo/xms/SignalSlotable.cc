@@ -978,6 +978,8 @@ namespace karabo {
             }
 
             reconnectInputChannels(instanceId);
+
+            if (m_pointToPoint) m_pointToPoint->connectAsync(instanceId);
         }
 
 
