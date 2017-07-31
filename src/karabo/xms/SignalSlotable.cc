@@ -1587,8 +1587,7 @@ namespace karabo {
                         << it->m_signalInstanceId << "." << it->m_signal << "' to slot '"
                         << it->m_slotInstanceId << "." << it->m_slot << "'.";
                 // No success (nor failure) handler needed - there will be log error messages anyway.
-                asyncConnect(it->m_signalInstanceId, it->m_signal, it->m_slotInstanceId, it->m_slot,
-                             boost::function<void ()>());
+                asyncConnect(it->m_signalInstanceId, it->m_signal, it->m_slotInstanceId, it->m_slot);
             }
         }
 
