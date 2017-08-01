@@ -24,9 +24,9 @@ mkdir -p $DIST/bin
 
 cd ../../../src/pythonGui
 rm -rf dist/ build/
-if [ "$BUILD_OPTION" == "wheel" ]; then
-    $PYTHON setup.py bdist_wheel
-    $PIP --disable-pip-version-check install -U $PIP_EXTRA_ARGS dist/*.whl
+if [ "$BUILD_OPTION" == "normal" ]; then
+    # XXX: `pip install .` raises an exception! Just run setup.py
+    $PYTHON setup.py install
 else
     $PIP --disable-pip-version-check install $PIP_EXTRA_ARGS -e .
 fi
