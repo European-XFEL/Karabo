@@ -2,7 +2,7 @@ from asyncio import coroutine, gather
 from itertools import chain
 
 from .hash import Descriptor
-from .schema import Configurable, MetaConfigurable
+from .schema import Configurable, Overwrite, MetaConfigurable
 
 
 class MetaInjectable(MetaConfigurable):
@@ -16,6 +16,9 @@ class MetaInjectable(MetaConfigurable):
         self._added_attrs.append(name)
         if isinstance(value, Descriptor):
             value.key = name
+        elif isinstance(value, Overwrite):
+            setattr(self, name,
+                    value.overwrite(getattr(super(self, self), name)))
 
 
 class Injectable(Configurable):
@@ -70,7 +73,6 @@ class Injectable(Configurable):
       `publishInjectedParameters` used to inject other classes
     * deleted (del) injected classes are removed from the schema by calling
       `publishInjectedParameters`
-    
     """
 
     def __new__(cls, configuration={}):
