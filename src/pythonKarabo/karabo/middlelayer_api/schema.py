@@ -102,6 +102,17 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     def getDeviceSchema(self, state=None):
         return self.getClassSchema(self, state)
 
+    def configurationAsHash(self):
+        r = Hash()
+        for k in self._allattrs:
+            a = getattr(self, k, None)
+            if isSet(a):
+                v = getattr(type(self), k)
+                value, attrs = v.toDataAndAttrs(a)
+                r[k] = value
+                r[k, ...].update(attrs)
+        return r
+
     def __dir__(self):
         """Return all attributes of this object.
 
