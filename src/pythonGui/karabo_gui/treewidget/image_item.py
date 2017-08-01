@@ -3,7 +3,7 @@
 # Created on May 8, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from karabo_gui.components import DisplayComponent
+from karabo_gui.displaywidgets.displayimageelement import DisplayImageElement
 import karabo_gui.icons as icons
 from karabo_gui.util import write_only_property
 from .base_item import BaseTreeWidgetItem
@@ -14,10 +14,7 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
         super(ImageTreeWidgetItem, self).__init__(box, parent, parentItem)
 
         self.setIcon(0, icons.image)
-        self.displayComponent = DisplayComponent("DisplayImageElement", box,
-                                                 self.treeWidget())
-        self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
-        self.treeWidget().resizeColumnToContents(1)
+        self.create_display_widget(DisplayImageElement, box)
 
     @write_only_property
     def displayText(self, text):

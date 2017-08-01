@@ -366,7 +366,7 @@ class ConfigurationPanel(BasePanelWidget):
         if config is None:
             return
 
-        acceptable_types = ('class', 'projectClass', 'deviceGroupClass')
+        acceptable_types = ('class', 'projectClass')
         if deviceId == config.id and config.type not in acceptable_types:
             self.showConfiguration(None)
 
@@ -423,7 +423,7 @@ class ConfigurationPanel(BasePanelWidget):
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
         twParameterEditor.itemSelectionChanged.connect(self.onSelectionChanged)
 
-        if configuration.type in ("class", "projectClass", "deviceGroupClass"):
+        if configuration.type in ("class", "projectClass"):
             twParameterEditor.hideColumn(1)
 
         if configuration is not None:
@@ -578,7 +578,7 @@ class ConfigurationPanel(BasePanelWidget):
                                             configuration.type in vis_types)
 
         # Toggle device updates
-        visible_types = ('device', 'deviceGroup')
+        visible_types = ('device',)
         if (self.prevConfiguration not in (None, configuration) and
                 self.prevConfiguration.type in visible_types):
             self.prevConfiguration.removeVisible()

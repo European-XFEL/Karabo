@@ -1517,13 +1517,13 @@ namespace karabo {
             auto signalConnectedHandler = [ = ] (bool signalExists){//capture copies
                 if (signalExists) {
                     try {
-                        successHandler();
+                        if (successHandler) successHandler();
                     } catch (const std::exception& e) {
                         KARABO_LOG_FRAMEWORK_ERROR << "Trouble with successHandler of asyncConnect("
                                 << signalInstanceId << ", " << signalSignature << ", " << slotInstanceId << ", "
                                 << slotSignature << "):\n" << e.what();
                     }
-                } else if (failureHandler) {
+                } else {
                     callErrorHandler(failureHandler, signalInstanceId + " has no signal '" + signalSignature + "'.");
                 }
             };
@@ -1533,8 +1533,11 @@ namespace karabo {
                 if (hasSlot) {
                     auto requestor = request(signalInstanceId, "slotConnectToSignal", signalSignature, slotInstanceId, slotSignature);
                     if (timeout > 0) requestor.timeout(timeout);
-                    requestor.receiveAsync<bool>(signalConnectedHandler, failureHandler);
-                } else if (failureHandler) {
+                    requestor.receiveAsync<bool>(signalConnectedHandler,
+                                                 (failureHandler ? failureHandler : [signalInstanceId] {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Request '" << signalInstanceId << "'.slotConnectToSignal failed.";
+                    }));
+                } else {
                     callErrorHandler(failureHandler, slotInstanceId + " has no slot '" + slotSignature + "'.");
                 }
             }; // end of lambda definition of success handler for slotHasSlot
@@ -1542,22 +1545,29 @@ namespace karabo {
             // First check whether slot exists to avoid signal emits are send if no-one listens correctly.
             auto requestor = request(slotInstanceId, "slotHasSlot", slotSignature);
             if (timeout > 0) requestor.timeout(timeout);
-            requestor.receiveAsync<bool>(hasSlotSuccessHandler, failureHandler);
+            requestor.receiveAsync<bool>(hasSlotSuccessHandler,
+                                         (failureHandler ? failureHandler : [slotInstanceId] {
+                                             KARABO_LOG_FRAMEWORK_ERROR << "Request '" << slotInstanceId << "'.slotHasSlot  failed.";
+                                         }));
         }
 
 
         void SignalSlotable::callErrorHandler(const boost::function<void () > handler, const std::string& message) {
-            try {
-                throw KARABO_SIGNALSLOT_EXCEPTION(message);
-            } catch (const std::exception&) {
-                Exception::clearTrace();
-                // handler can now do 'try { throw; } catch (const SignalSLotException& e) { ... }'
+            if (handler) {
                 try {
-                    handler();
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Error handler for message '" << message << "' threw exception: "
-                            << e.what();
+                    throw KARABO_SIGNALSLOT_EXCEPTION(message);
+                } catch (const std::exception&) {
+                    Exception::clearTrace();
+                    // handler can now do 'try { throw; } catch (const SignalSlotException& e) { ... }'
+                    try {
+                        handler();
+                    } catch (const std::exception& e) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Error handler for message '" << message << "' threw exception: "
+                                << e.what();
+                    }
                 }
+            } else {
+                KARABO_LOG_FRAMEWORK_ERROR << message;
             }
         }
 
@@ -1574,13 +1584,13 @@ namespace karabo {
                 }
             }
 
-            // Must not call connect(..) under protection of m_signalSlotConnectionsMutex: deadlock!
             for (std::set<SignalSlotConnection>::const_iterator it = connections.begin(), iEnd = connections.end();
                  it != iEnd; ++it) {
                 KARABO_LOG_FRAMEWORK_DEBUG << this->getInstanceId() << " tries to reconnect signal '"
                         << it->m_signalInstanceId << "." << it->m_signal << "' to slot '"
                         << it->m_slotInstanceId << "." << it->m_slot << "'.";
-                this->connect(it->m_signalInstanceId, it->m_signal, it->m_slotInstanceId, it->m_slot);
+                // No success (nor failure) handler needed - there will be log error messages anyway.
+                asyncConnect(it->m_signalInstanceId, it->m_signal, it->m_slotInstanceId, it->m_slot);
             }
         }
 

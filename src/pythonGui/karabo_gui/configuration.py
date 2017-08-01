@@ -40,7 +40,7 @@ class Configuration(Box):
         """
 
         super().__init__((), descriptor, None)
-        assert type in ('class', 'projectClass', 'device', 'deviceGroupClass', 'deviceGroup')
+        assert type in ('class', 'projectClass', 'device')
         self.type = type
         self.id = id
         self._status = DeviceStatus.OFFLINE
