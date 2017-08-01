@@ -829,6 +829,9 @@ namespace karabo {
                 }
             }
 
+            // Better ensure/establish connection before requesting. Otherwise we might miss updates in between.
+            // If we are already connected, this is fast, but nevertheless needed to reset the ticking.
+            stayConnected(deviceId); // connect synchronously (if not yet connected...)
             if (result.empty()) { // Not found, request and cache
                 // Request configuration
                 Hash hash;
@@ -841,7 +844,6 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 result = m_runtimeSystemDescription.set(path, hash).getValue<Hash>();
             }
-            stayConnected(deviceId);
             return result;
         }
 
@@ -864,10 +866,21 @@ namespace karabo {
                 }
             }
 
-            // "stayConnected" is expensive under the high load due to contention on its mutex
-            stayConnected(deviceId);
+            auto weakSigSlotPtr = m_signalSlotable;
+            // Capturing member variable would capture a bare 'this' - which we want to avoid and thus capture a copy.
+            auto successHandler = [weakSigSlotPtr, deviceId] () {
+                karabo::xms::SignalSlotable::Pointer p = weakSigSlotPtr.lock();
+                if (p) p->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
+            };
+            auto failureHandler = [deviceId] () {
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_WARN << "getConfigurationNoWait failed to connect to '" << deviceId << "': " << e.what();
+                }
+            };
+            stayConnected(deviceId, successHandler, failureHandler);
 
-            m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
             return Hash();
         }
 
@@ -1048,14 +1061,27 @@ namespace karabo {
 
 
         void DeviceClient::registerDeviceMonitor(const std::string& deviceId, const boost::function<void (const std::string& /*deviceId*/, const karabo::util::Hash& /*config*/)> & callbackFunction) {
-            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
-            stayConnected(deviceId);
+            // Store handler
             {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 m_deviceChangedHandlers.set(deviceId + "._function", callbackFunction);
             }
-            m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
-            m_signalSlotable.lock()->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
+
+            // Take care that we are connected - and asynchronously request to connect if not yet connected
+            auto weakSigSlotPtr = m_signalSlotable; // Copy before capture to avoid that a bare 'this' is captured
+            auto successHandler = [weakSigSlotPtr, deviceId] () {
+                karabo::xms::SignalSlotable::Pointer p = weakSigSlotPtr.lock();
+                if (p) {
+                    p->requestNoWait(deviceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
+                    p->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
+                }
+            };
+            auto failureHandler = [deviceId] () {
+                KARABO_LOG_FRAMEWORK_WARN << "registerDeviceMonitor failed to connect to " << deviceId;
+            };
+            stayConnected(deviceId, successHandler, failureHandler);
+
+            // Take care that we will get updates "forever"
             immortalize(deviceId);
         }
 
@@ -1119,9 +1145,10 @@ namespace karabo {
 
 
         void DeviceClient::setNoWait(const std::string& instanceId, const karabo::util::Hash& values) {
-            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
-            //stayConnected(instanceId);
-            m_signalSlotable.lock()->call(instanceId, "slotReconfigure", values);
+            auto sigSlotPtr = m_signalSlotable.lock();
+            if (sigSlotPtr) {
+                sigSlotPtr->call(instanceId, "slotReconfigure", values);
+            }
         }
 
 
@@ -1144,13 +1171,35 @@ namespace karabo {
         }
 
 
-        void DeviceClient::stayConnected(const std::string & instanceId) {
-            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
-            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+        void DeviceClient::stayConnected(const std::string& instanceId,
+                                         const boost::function<void ()>& asyncSuccessHandler,
+                                         const boost::function<void ()>& asyncFailureHandler) {
             if (connectNeeded(instanceId)) { // Not there yet
-                p->connect(instanceId, "signalChanged", "", "_slotChanged");
-                p->connect(instanceId, "signalStateChanged", "", "_slotChanged");
-                p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
+                karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+                if (!p) return;
+                if (asyncSuccessHandler || asyncFailureHandler) { // async request
+                    typedef SignalSlotable::SignalSlotConnection Connection;
+                    const std::vector<Connection> cons{Connection(instanceId, "signalChanged", "", "_slotChanged"),
+                                                       Connection(instanceId, "signalStateChanged", "", "_slotChanged"),
+                                                       Connection(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated")};
+                    // One could 'extend' asyncFailureHandler by a wrapper that also disconnects all succeeded
+                    // connections (and stop the automatic reconnect of the others). But we let that be done by the
+                    // usual aging.
+                    p->asyncConnect(cons, asyncSuccessHandler, asyncFailureHandler);
+                } else {
+                    p->connect(instanceId, "signalChanged", "", "_slotChanged");
+                    p->connect(instanceId, "signalStateChanged", "", "_slotChanged");
+                    p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
+                }
+            } else if (asyncSuccessHandler) {
+                // No new connection needed, but asyncSuccessHandler should be called nevertheless.
+                // TODO:
+                // There is a little problem: A previous call to 'stayConnected' may have triggered a new connection.
+                // Whether that has been established already or not, we end up here and directly call the
+                // asyncSuccessHandler - which is (slightly) too early.
+                // The same problem arises in the synchronous case where the code executed after 'stayConnected' would
+                // be called too early.
+                asyncSuccessHandler();
             }
         }
 
@@ -1385,7 +1434,8 @@ if (nodeData) {\
                             for (size_t i = 0; i < forDisconnect.size(); ++i) {
                                 const string& instanceId = forDisconnect[i];
                                 KARABO_LOG_FRAMEWORK_DEBUG << "Disconnect '" << instanceId << "'.";
-
+                                // TODO: Use asyncDisconnect once available.
+                                //       But not urgent as long as 'age' runs in its own thread - which it shouldn't...
                                 p->disconnect(instanceId, "signalChanged", "", "_slotChanged");
                                 p->disconnect(instanceId, "signalStateChanged", "", "_slotChanged");
                                 p->disconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
