@@ -127,17 +127,6 @@ class Device(AlarmMixin, SignalSlotable):
     def slotGetConfiguration(self):
         return self.configurationAsHash(), self.deviceId
 
-    def configurationAsHash(self):
-        r = Hash()
-        for k in self._allattrs:
-            a = getattr(self, k, None)
-            if isSet(a):
-                v = getattr(type(self), k)
-                value, attrs = v.toDataAndAttrs(a)
-                r[k] = value
-                r[k, ...].update(attrs)
-        return r
-
     def _checkLocked(self, message):
         """return an error message if device is locked or None if not"""
         if (self.lockedBy and self.lockedBy !=
