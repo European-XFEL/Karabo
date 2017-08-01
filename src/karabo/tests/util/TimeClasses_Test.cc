@@ -217,6 +217,12 @@ void TimeClasses_Test::testTimeDuration() {
     const TimeDuration durK(111ull, oneSec - 100ull);
     CPPUNIT_ASSERT(durI + durK == TimeDuration(334ull, 4567889900ull));
     CPPUNIT_ASSERT(durI - durK == TimeDuration(110ull, 4567890100ull));
+    // 3) with hitting the border
+    const TimeDuration durQ(111ull, oneSec - 100ull);
+    const TimeDuration hundredAttoDur(0ull, 100ull);
+    const TimeDuration oneSecMinusHundredAttoDur(0ull, oneSec - 100ull);
+    CPPUNIT_ASSERT(durQ + hundredAttoDur == TimeDuration(112ull, 0ull));
+    CPPUNIT_ASSERT(durQ - oneSecMinusHundredAttoDur == TimeDuration(111ull, 0ull));
 
     // Testing operator* (operator *= implicitly tested since used inside operator*)
     // 1) without 'crossing' seconds border

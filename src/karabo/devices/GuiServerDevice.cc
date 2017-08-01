@@ -195,8 +195,10 @@ namespace karabo {
                 remote().registerSchemaUpdatedMonitor(boost::bind(&karabo::devices::GuiServerDevice::schemaUpdatedHandler, this, _1, _2));
                 remote().registerClassSchemaMonitor(boost::bind(&karabo::devices::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
-                connect(karabo::util::DATALOGMANAGER_ID, "signalLoggerMap", "", "slotLoggerMap");
-                requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
+                // If someone manages to bind_weak(&karabo::devices::GuiServerDevice::requestNoWait<>, this, ...),
+                // we would not need loggerMapConnectedHandler...
+                asyncConnect(karabo::util::DATALOGMANAGER_ID, "signalLoggerMap", "", "slotLoggerMap",
+                             bind_weak(&karabo::devices::GuiServerDevice::loggerMapConnectedHandler, this));
 
                 //scan topology to find additional alarm services
                 const Hash& topology = remote().getSystemTopology();
@@ -229,6 +231,11 @@ namespace karabo {
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in initialize(): " << e.userFriendlyMsg();
             }
+        }
+
+
+        void GuiServerDevice::loggerMapConnectedHandler() {
+            requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
         }
 
 
@@ -1340,9 +1347,11 @@ namespace karabo {
             typeAndInstanceFromTopology(topologyEntry, type, instanceId);
             if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
                 topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService") {
-                connect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate");
+                // Connect to signal and then
                 // actively ask this previously unknown device to submit its alarms as init messages on all channesl
-                onRequestAlarms(WeakChannelPointer(), Hash("alarmInstanceId", instanceId), true);
+                asyncConnect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate",
+                             bind_weak(&GuiServerDevice::onRequestAlarms, this,
+                                       WeakChannelPointer(), Hash("alarmInstanceId", instanceId), true));
             }
 
         }
@@ -1353,7 +1362,9 @@ namespace karabo {
             typeAndInstanceFromTopology(topologyEntry, type, instanceId);
             if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
                 topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "RunConfigurator") {
-                connect(instanceId, "signalGroupSourceChanged", "", "slotRunConfigSourcesUpdate");
+
+                // No success handler since no need to to do an initial request for this information(?).
+                asyncConnect(instanceId, "signalGroupSourceChanged", "", "slotRunConfigSourcesUpdate");
             }
 
         }
