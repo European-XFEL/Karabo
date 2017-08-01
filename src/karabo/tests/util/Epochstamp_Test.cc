@@ -278,6 +278,8 @@ void Epochstamp_Test::testOperators() {
     const TimeValue point7secInAtto = 700000000000000000ull;
     const TimeValue point9secInAtto = 900000000000000000ull;
 
+    const Epochstamp e1(8ull, point1secInAtto);
+    const TimeDuration d1(8ull, point1secInAtto);
     const Epochstamp e2(80ull, point2secInAtto);
     const TimeDuration d2(80ull, point2secInAtto);
     const Epochstamp e4(77ull, point4secInAtto);
@@ -285,7 +287,7 @@ void Epochstamp_Test::testOperators() {
     const Epochstamp e9(88ull, point9secInAtto);
     const TimeDuration d9(88ull, point9secInAtto);
 
-    // Test sums - with atto seconds sum below and above one second,
+    // Test sums - with atto seconds sum below, above and exactly one second,
     // for each test operator +(TimeDuration) and operator +=(TimeDuration).
     const Epochstamp sum24 = e2 + d4;
     CPPUNIT_ASSERT(sum24.getSeconds() == 157ull);
@@ -301,6 +303,13 @@ void Epochstamp_Test::testOperators() {
     sum29_2 += d9;
     CPPUNIT_ASSERT(sum29_2 == sum29);
 
+    const Epochstamp sum19 = e1 + d9;
+    CPPUNIT_ASSERT_EQUAL(97ull, sum19.getSeconds());
+    CPPUNIT_ASSERT_EQUAL(0ull, sum19.getFractionalSeconds());
+    Epochstamp sum19_2(e1);
+    sum19_2 += d9;
+    CPPUNIT_ASSERT(sum19_2 == sum19);
+
     // Test diffs - with second argument's fractions larger or smaller than those of the first argument,
     // for each test operator -(TimeDuration) and operator -=(TimeDuration),
     // but here we also have operator - (Epochstamp).
@@ -313,10 +322,8 @@ void Epochstamp_Test::testOperators() {
     const TimeDuration diff92_d = e9 - e2;
     CPPUNIT_ASSERT(diff92_d.getTotalSeconds() == 8ull);
     CPPUNIT_ASSERT(diff92_d.getFractions(ATTOSEC) == point7secInAtto);
-    // NOTE: Since TimeDuration supports (wrongly - GF!) only positive durations,
-    //       we cannot test e_A - e_B if e_B > e_A.
-    //    const TimeDuration diff29_d = e2 - e9;
-    //    CPPUNIT_ASSERT(diff29_d - diff92_d == TimeDuration(0ULL, 0ULL));
+    // TimeDuration is always positive (it's a duration, not a diff!), i.e. e2 - e9 == e9 - e2:
+    CPPUNIT_ASSERT(e2 - e9 == diff92_d);
 
     const Epochstamp diff24 = e2 - d4;
     CPPUNIT_ASSERT(diff24.getSeconds() == 2ull);
@@ -327,9 +334,8 @@ void Epochstamp_Test::testOperators() {
     const TimeDuration diff24_d = e2 - e4;
     CPPUNIT_ASSERT(diff24_d.getTotalSeconds() == 2ull);
     CPPUNIT_ASSERT(diff24_d.getFractions(ATTOSEC) == point8secInAtto);
-    // NOTE: See above...
-    //    const TimeDuration diff42_d = e4 - e2;
-    //    CPPUNIT_ASSERT(diff42_d - diff24_d == TimeDuration(0ULL, 0ULL));
+    // See above about positiveness of TimeDuration...
+    CPPUNIT_ASSERT(e4 - e2 == diff24_d);
 
     // Tests missing for the following operators:
     // o >, >=, <, <= (these are probably OK),
