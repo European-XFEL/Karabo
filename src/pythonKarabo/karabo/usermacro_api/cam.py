@@ -7,7 +7,8 @@ from karabo.middlelayer import waitUntil, State
 
 class CamAsSensible(Sensible):
     """Generalized interface to the Cameras """
-    generalizes = ['GenicamBaslerCamera', 'PhotonicScienceCamera', 'LimaBaslerCamera', 'LimaSimulatedCamera']
+    generalizes = ['GenicamBaslerCamera', 'PhotonicScienceCamera',
+                   'LimaBaslerCamera', 'LimaSimulatedCamera']
 
     @coroutine
     def acquire(self):
