@@ -26,7 +26,7 @@ class AgipdAsSensible(Sensible):
                 waitUntil(lambda: self._proxy.state == State.ON),
                 self.connection_timeout)
 
-            yield from self._proxy.start()
+        yield from self._proxy.start()
 
     @synchronize
     def stop(self):
