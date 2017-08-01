@@ -26,7 +26,7 @@ class LpdAsSensible(Sensible):
                 waitUntil(lambda: self._proxy.state == State.ON),
                 self.connection_timeout)
 
-            yield from self._proxy.startDAQ()
+        yield from self._proxy.startDAQ()
 
     @synchronize
     def stop(self):
