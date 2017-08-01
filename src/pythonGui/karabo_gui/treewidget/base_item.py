@@ -5,19 +5,38 @@
 #############################################################################
 from collections import OrderedDict, defaultdict
 import numbers
-import numpy
 
-from PyQt4.QtCore import pyqtSlot, Qt, QTimer
+import numpy
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QCursor, QHBoxLayout, QTreeWidgetItem, QWidget
 
 from karabo.common.api import State
 from karabo.middlelayer import Type
-from karabo_gui import messagebox
 from karabo_gui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.popupwidget import PopupWidget
-from karabo_gui.singletons.api import get_network
+from karabo_gui.schema import ChoiceOfNodes
 from karabo_gui.util import generateObjectName
+
+
+def _build_array_cmp(dtype):
+    """Builds a comparison function for numpy arrays"""
+    coerce = dtype.type
+    if coerce is numpy.bool_:
+        coerce = int
+
+    def _array_cmp(a, b):
+        try:
+            return coerce(a) == coerce(b)
+        except ValueError:
+            return False
+
+    return _array_cmp
+
+
+def _cmp(a, b):
+    """Normal comparison"""
+    return a == b
 
 
 class BaseTreeWidgetItem(QTreeWidgetItem):
@@ -36,10 +55,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         self.is_editable = False
         self.has_conflict = False
         self.apply_enabled = False
-        self.__current_value = None
-        self.__busy_timer = QTimer(parent)
-        self.__busy_timer.setSingleShot(True)
-        self.__busy_timer.timeout.connect(self._on_timeout)
+        self._editor_value_initialized = False
 
         self.display_widget = None
         self.editable_widget = None
@@ -199,13 +215,16 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         """Update the editable widget to reflect the current state of affairs
         """
         box = self.box
-        value = self.__current_value
+        value = box.value if box.hasValue() else None
+        if isinstance(box.descriptor, ChoiceOfNodes):
+            value = box.current  # ChoiceOfNodes is "special"
+        widget_value = self.editable_widget.value
 
         if value is None:
             no_changes = False
         elif (isinstance(value, (numbers.Complex, numpy.inexact))
                 and not isinstance(value, numbers.Integral)):
-            diff = abs(value - self.editable_widget.value)
+            diff = abs(value - widget_value)
             absErr = box.descriptor.absoluteError
             relErr = box.descriptor.relativeError
             if absErr is not None:
@@ -214,17 +233,20 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
                 no_changes = diff < abs(value * relErr)
             else:
                 no_changes = diff < 1e-4
-        elif isinstance(value, list):
-            if len(value) != len(self.editable_widget.value):
+        elif isinstance(value, (list, numpy.ndarray)):
+            if len(value) != len(widget_value):
                 no_changes = False
             else:
                 no_changes = True
+                cmp = _cmp
+                if isinstance(value, numpy.ndarray):
+                    cmp = _build_array_cmp(value.dtype)
                 for i in range(len(value)):
-                    if value[i] != self.editable_widget.value[i]:
+                    if not cmp(value[i], widget_value[i]):
                         no_changes = False
                         break
         else:
-            no_changes = (str(value) == str(self.editable_widget.value))
+            no_changes = (str(value) == str(widget_value))
 
         object_name = self.qt_edit_widget.objectName()
         if no_changes:
@@ -245,6 +267,13 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
 
         allowed = box.isAllowed()
         apply_changed = allowed and not no_changes
+        if apply_changed:
+            # Store the widget value in the Configuration object
+            box.configuration.setUserValue(box, widget_value)
+        else:
+            # Otherwise, clear the user value!
+            box.configuration.clearUserValue(box)
+
         if self.apply_enabled != apply_changed:
             self.apply_enabled = apply_changed
             # Let the tree widget know...
@@ -258,18 +287,14 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         if not self.is_editable:
             # Does not make sense for classes
             return
-        network = get_network()
-        changes = []
-        self.box.signalUserChanged.emit(
-            self.box, self.editable_widget.value, None)
-        if self.box.configuration.type == "macro":
-            self.box.set(self.editable_widget.value)
-        elif self.box.descriptor is not None:
-            changes.append((self.box, self.editable_widget.value))
 
-        if changes:
-            self.__busy_timer.start(5000)
-            network.onReconfigure(changes)
+        box = self.box
+        box.signalUserChanged.emit(box, self.editable_widget.value, None)
+        if box.configuration.type == "macro":
+            box.set(self.editable_widget.value)
+        elif box.descriptor is not None:
+            box.configuration.setUserValue(box, self.editable_widget.value)
+            box.configuration.sendUserValue(box)
 
     def decline_changes(self):
         """All changes of this component are declined and reset to the current
@@ -278,15 +303,18 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         if not self.is_editable:
             # Does not make sense for classes
             return
-        self.editable_widget.valueChanged(self.box, self.__current_value)
+
+        box = self.box
+        box.configuration.clearUserValue(box)
+        if box.hasValue():
+            self.editable_widget.valueChanged(box, box.value, box.timestamp)
         self._update_edit_widget()
 
     @pyqtSlot(object, object)
     def _on_display_value_change(self, box, value):
-        if self.__current_value is None:
+        if not self._editor_value_initialized:
             self.editable_widget.valueChanged(box, value)
-        self.__current_value = value
-        self.__busy_timer.stop()
+            self._editor_value_initialized = True
         self.has_conflict = True
         self._update_edit_widget()
 
@@ -300,13 +328,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
                 self.box.configuration.signalBoxChanged.emit()
         else:
             # Device related editable_widget
-            if self.__current_value is None:
-                return
             self._update_edit_widget()
-
-    def _on_timeout(self):
-        msg = "The property couldn't be set in the current state"
-        messagebox.show_warning(msg)
 
     @pyqtSlot(object, object, object)
     def _on_user_edit(self, box, value, timestamp=None):
