@@ -5,13 +5,14 @@
  *
  * Copyright (c) 2010-2012 European XFEL GmbH Hamburg. All rights reserved.
  */
+
+#ifndef KARABO_CORE_DEVICE_CLIENT_HH
+#define	KARABO_CORE_DEVICE_CLIENT_HH
+
 #include <karabo/xms/SignalSlotable.hh>
 #include <karabo/util/Timestamp.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/core/Lock.hh>
-
-#ifndef KARABO_CORE_DEVICE_CLIENT_HH
-#define	KARABO_CORE_DEVICE_CLIENT_HH
 
 #include <map>
 #include <set>
@@ -28,8 +29,7 @@ namespace karabo {
         // Forward
         template <class T>
         class Device;
-
-        /**
+/**
          * @class DeviceClient
          * @brief This class can be used to (remotely) control devices of the distributed system
          *        Synchronous calls (i.e. get()) are in fact asynchronous under the hood\
@@ -735,13 +735,17 @@ namespace karabo {
             void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&, const boost::any&)>& callbackFunction,
                                        const UserDataType& userData) {
 
-                // Make sure we are caching this instanceId
-                this->cacheAndGetConfiguration(instanceId);
+                // It would be better to use stayConnected with async handlers as in the non-templated version of
+                // registerDeviceMonitor - but since this version is probably not used at all (at least not in the
+                // framework, there is no pressure to do so...
+                stayConnected(instanceId);
                 {
                     boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                     m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction);
                     m_deviceChangedHandlers.set(instanceId + "._userData", userData);
                 }
+                m_signalSlotable.lock()->requestNoWait(instanceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
+                m_signalSlotable.lock()->requestNoWait(instanceId, "slotGetConfiguration", "", "_slotChanged");
                 immortalize(instanceId);
             }
 
@@ -911,7 +915,17 @@ namespace karabo {
 
             karabo::util::Hash cacheAndGetConfiguration(const std::string& instanceId);
 
-            void stayConnected(const std::string& instanceId);
+            /*
+             *  Keep connection to instanceId alive or establish if not there yet.
+             *
+             * If no handlers are given (default), do it synchronously, i.e. potentially block until connected.
+             * Otherwise:
+             *  - if connections are already established, just call asyncSuccessHandler (if not empty)
+             *  - else request connection asynchronously using given handlers as success and failure call backs
+             */
+            void stayConnected(const std::string& instanceId,
+                               const boost::function<void ()>& asyncSuccessHandler = boost::function<void ()>(),
+                               const boost::function<void ()>& asyncFailureHandler = boost::function<void ()>());
 
             void eraseFromInstanceUsage(const std::string& instanceId);
 
@@ -971,7 +985,7 @@ namespace karabo {
             void filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema, int accessMode, karabo::util::Hash& hash) const;
 
             void convertSchemaHash(const karabo::util::Hash& schemaHash, int accessMode, karabo::util::Hash & hash) const;
-            
+
             void recursivelyAddCompoundDataTypes(const karabo::util::Hash& schemaHash, karabo::util::Hash & hash) const;
         };
     }
