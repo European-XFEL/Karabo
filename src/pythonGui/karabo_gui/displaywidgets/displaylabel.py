@@ -98,7 +98,7 @@ class DisplayLabel(DisplayWidget):
             # Otherwise slowness is the case
             self._internal_widget.setText(value[:255])
             return
-        elif isinstance(value, bytes):
+        elif isinstance(value, (bytes, bytearray)):
             return
 
         try:

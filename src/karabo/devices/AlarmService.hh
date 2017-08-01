@@ -12,7 +12,6 @@
 #include <boost/atomic.hpp>
 
 #include "karabo/core/Device.hh"
-#include "karabo/core/OkErrorFsm.hh"
 
 
 /**
@@ -67,6 +66,11 @@ namespace karabo {
              * device to submit its current alarm state.
              */
             void registerNewDevice(const karabo::util::Hash& topologyEntry);
+
+            /**
+             * Callback for connecting to a device's "signalAlarmUpdate"
+             */
+            void connectedHandler(const std::string& deviceId);
 
             /**
              * Called when a device instance disappears from the distributed system. It will trigger the alarm

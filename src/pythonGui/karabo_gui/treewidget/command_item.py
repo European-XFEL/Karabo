@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt4.QtGui import QPushButton
 
-from karabo_gui.components import DisplayComponent
+from karabo_gui.displaywidgets.displaylabel import DisplayLabel
 import karabo_gui.icons as icons
 from .base_item import BaseTreeWidgetItem
 
@@ -16,10 +16,7 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.setIcon(0, icons.slot)
 
         # Create empty label for 2nd column (current value on device)
-        self.displayComponent = DisplayComponent("DisplayLabel", box,
-                                                 self.treeWidget())
-        self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
-        self.treeWidget().resizeColumnToContents(1)
+        self.create_display_widget(DisplayLabel, box)
 
         # Name of command
         self.__command = command
@@ -29,7 +26,8 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.treeWidget().setItemWidget(self, 0, self.__pbCommand)
         self.__pbCommand.clicked.connect(self.onCommandClicked)
 
-        box.configuration.boxvalue.state.signalUpdateComponent.connect(
+        self.connect_signal(
+            box.configuration.boxvalue.state.signalUpdateComponent,
             self.updateState)
         self.updateState()
 
@@ -44,11 +42,6 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
     @property
     def command(self):
         return self.__command
-
-    def destroy(self):
-        """Give item subclasses a chance to clean up signal connections"""
-        self.box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
-            self.updateState)
 
     def setReadOnly(self, readOnly):
         if readOnly is True:

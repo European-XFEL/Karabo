@@ -14,6 +14,7 @@
 #include <boost/interprocess/sync/sharable_lock.hpp>
 
 #include "karabo/util/State.hh"
+#include "karabo/util/MetaTools.hh"
 #include "karabo/io/TextSerializer.hh"
 
 #include "AlarmService.hh"
@@ -87,9 +88,10 @@ namespace karabo {
 
             updateState(State::INIT);
 
-            //set("registeredDevices", remote().getDevices());
-            //we listen on instance new events to connect to the instances "signalAlarmUpdate" signal
+            // listen on instance new events to connect to the instances' "signalAlarmUpdate" signal
             trackAllInstances();
+            // NOTE: boost::bind() is OK for these handlers because SignalSlotable calls them directly instead
+            // of dispatching them via the event loop.
             remote().registerInstanceNewMonitor(boost::bind(&AlarmService::registerNewDevice, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&AlarmService::instanceGoneHandler, this, _1, _2));
 
@@ -122,22 +124,18 @@ namespace karabo {
             //only act upon instance we do not know about yet coming up
             try {
                 const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
-                // const ref is fine even for temporary std::string+
                 if (type == "device") {
 
+                    // const ref is fine even for temporary std::string&
                     const std::string& deviceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
                                                    topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
 
-                    string tmp(deviceId);
                     if (deviceId == getInstanceId()) return; //prevent registering ourselves.
 
-                    boost::upgrade_lock<boost::shared_mutex> readLock(m_deviceRegisterMutex);
                     std::vector<std::string> devices = get<std::vector<std::string> >("registeredDevices");
                     if (std::find(devices.begin(), devices.end(), deviceId) == devices.end()) {
-                        connect(deviceId, "signalAlarmUpdate", "", "slotUpdateAlarms");
-                        devices.push_back(deviceId);
-                        boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
-                        set("registeredDevices", devices);
+                        asyncConnect(deviceId, "signalAlarmUpdate", "", "slotUpdateAlarms",
+                                     util::bind_weak(&AlarmService::connectedHandler, this, deviceId));
                     } else {
                         //we've known this instance before and might have alarms pending from it. We should ask
                         //for an update on these alarms.
@@ -147,18 +145,20 @@ namespace karabo {
                         request(deviceId, "slotReSubmitAlarms", alarmNode ? alarmNode->getValue<Hash>() : Hash())
                                 .receiveAsync<std::string, Hash>(boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2));
                     }
-
-
                 }
-
-            } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "In registerAlarmWithNewDevice:\n" << e;
             } catch (const std::exception& e) {
                 KARABO_LOG_ERROR << "In registerAlarmWithNewDevice: " << e.what() << ".";
-            } catch (...) {
-                KARABO_LOG_ERROR << "Unknown exception in registerAlarmWithNewDevice.";
             }
+        }
 
+
+        void AlarmService::connectedHandler(const std::string& deviceId) {
+            // Since there is no Device::appendVector(key, vectorItem), need an extra mutex lock to avid that
+            // "registeredDevices" changes in between 'get' and 'set':
+            boost::unique_lock<boost::shared_mutex> lock(m_deviceRegisterMutex);
+            std::vector<std::string> devices = get<std::vector<std::string> >("registeredDevices");
+            devices.push_back(deviceId);
+            set("registeredDevices", devices);
         }
 
 

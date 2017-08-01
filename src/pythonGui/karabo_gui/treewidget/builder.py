@@ -9,17 +9,15 @@ from karabo.middlelayer import (
 )
 from karabo.middlelayer_api.hash import ByteArray
 from karabo_gui.attributeediting.api import (
-    EDITABLE_ATTRIBUTE_NAMES, ATTRIBUTE_EDITOR_FACTORIES,
-    EditAttributeComponent
+    EDITABLE_ATTRIBUTE_NAMES, ATTRIBUTE_EDITOR_FACTORIES
 )
-from karabo_gui.components import (
-    ChoiceComponent, EditableApplyLaterComponent, EditableNoApplyComponent)
 import karabo_gui.icons as icons
 from karabo_gui.schema import (
     ChoiceOfNodes, ImageNode, ListOfNodes, OutputNode, Schema, SlotNode,
     TableNode
 )
 from karabo_gui.widget import EditableWidget
+from .attribute_item import AttributeTreeWidgetItem
 from .command_item import CommandTreeWidgetItem
 from .image_item import ImageTreeWidgetItem
 from .property_item import PropertyTreeWidgetItem
@@ -30,7 +28,7 @@ def fill_parameter_tree_widget(tree_widget, configuration):
     """Fill a `ParameterTreeWidget` with items which match up with the parts
     of `configuration`.
     """
-    class_types = ('class', 'projectClass', 'deviceGroupClass')
+    class_types = ('class', 'projectClass')
 
     configuration.parameterEditor = tree_widget
     descriptor = configuration.descriptor
@@ -60,16 +58,15 @@ def _build_recursive(descriptor, tree_widget, parent_item, box, is_class):
                 factory(value, tree_widget, parent_item, child, is_class)
 
 
-def _attribute_item_leaf(descriptor, tree_widget, item, box, attr_name):
+def _attribute_item_leaf(descriptor, tree_widget, parent_item, box, attr_name):
     """Build a single tree widget item for an attribute.
     """
-    item = PropertyTreeWidgetItem(box, tree_widget, item)
+    item = AttributeTreeWidgetItem(attr_name, box, tree_widget, parent_item)
     item.setIcon(0, _get_icon(descriptor))
-    item.enumeration = descriptor.options
 
     factory = ATTRIBUTE_EDITOR_FACTORIES[attr_name]
-    item.editableComponent = EditAttributeComponent(
-        factory, box, attr_name, tree_widget)
+    item.create_editable_widget(factory, box)
+    item.make_class_connections(box)
 
     item.requiredAccessLevel = descriptor.requiredAccessLevel
     item.displayText = attr_name
@@ -140,14 +137,14 @@ def _item_choice_of_nodes(descriptor, tree_widget, parent_item, box, is_class):
     item = PropertyTreeWidgetItem(box, tree_widget, parent_item)
     item.defaultValue = descriptor.defaultValue
     item.isChoiceElement = True
-    item.editableComponent = None
 
-    component = ChoiceComponent
+    item.create_editable_widget(EditableWidget.getClass(box), box)
     if is_class:
-        component = EditableNoApplyComponent
-
-    factory = EditableWidget.getClass(box)(box, tree_widget)
-    item.editableComponent = component(factory, box, tree_widget)
+        # XXX: Check for INITONLY and RECONFIGURABLE?
+        item.make_class_connections(box)
+    else:
+        # XXX: Check for RECONFIGURABLE?
+        item.make_device_connections(box)
     _finalize_build_node(descriptor, tree_widget, item, box, is_class)
 
     children = []
@@ -166,12 +163,11 @@ def _item_choice_of_nodes(descriptor, tree_widget, parent_item, box, is_class):
             if childKey != item.defaultValue:
                 child.setHidden(True)
 
-        if item.editableComponent is not None:
-            children.append(child)
-    item.editableComponent.widgetFactory.childItemList = children
+        children.append(child)
+    item.editable_widget.childItemList = children
 
     # Trigger change of combobox
-    item.editableComponent.widgetFactory.valueChanged(box, box.current)
+    item.editable_widget.valueChanged(box, box.current)
     return item
 
 
@@ -204,24 +200,16 @@ def _item_leaf(descriptor, tree_widget, parent_item, box, is_class,
 
     item = item_factory(box, tree_widget, parent_item)
     item.setIcon(0, _get_icon(descriptor))
-    item.enumeration = descriptor.options
-    item.editableComponent = None
 
-    component = None
     if is_class:
         if descriptor.accessMode in (AccessMode.INITONLY,
                                      AccessMode.RECONFIGURABLE):
-            component = EditableNoApplyComponent
+            item.create_editable_widget(EditableWidget.getClass(box), box)
+            item.make_class_connections(box)
     else:
         if descriptor.accessMode is AccessMode.RECONFIGURABLE:
-            component = EditableApplyLaterComponent
-
-    if component is not None:
-        factory = EditableWidget.getClass(box)(box, tree_widget)
-        item.editableComponent = component(factory, box, tree_widget)
-    if component is EditableApplyLaterComponent:
-        item.editableComponent.signalApplyChanged.connect(
-            tree_widget.onApplyChanged)
+            item.create_editable_widget(EditableWidget.getClass(box), box)
+            item.make_device_connections(box)
     _finalize_build_leaf(descriptor, tree_widget, item, box, is_class)
     return item
 
