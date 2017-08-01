@@ -296,7 +296,7 @@ namespace karabo {
         inline TimeDuration& TimeDuration::operator+=(const TimeDuration& other) {
             m_Seconds += other.m_Seconds;
             m_Fractions += other.m_Fractions;
-            if (m_Fractions > m_oneSecondInAtto) {
+            if (m_Fractions >= m_oneSecondInAtto) {
                 ++m_Seconds;
                 m_Fractions -= m_oneSecondInAtto;
             }
