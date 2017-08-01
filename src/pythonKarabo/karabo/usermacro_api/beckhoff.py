@@ -11,9 +11,11 @@ class BeckhoffMotorAsMovable(Movable):
     def moveto(self, pos):
         """Move to *pos*"""
         self._proxy.targetPosition = pos
-        yield from self._proxy.move(pos)
+        yield from self._proxy.move()
         yield from waitUntil(lambda: self._proxy.state != State.MOVING)
-        if self._proxy.state != State.ON:
+
+        # expected state ON for Simple Motor, STOPPED for MC2
+        if self._proxy.state != State.ON and self._proxy.state != State.STOPPED:
             # something went wrong
             self.error("moveto() failed: motor went "
                        "to state " + self._proxy.state.name)
@@ -24,7 +26,9 @@ class BeckhoffMotorAsMovable(Movable):
         yield from self._proxy.stop()
         yield from waitUntil(lambda: self._proxy.state == State.ON or not
                              self._proxy.state.isDerivedFrom(State.NORMAL))
-        if self._proxy.state != State.ON:
+
+        # expected state ON for Simple Motor, STOPPED for MC2
+        if self._proxy.state != State.ON and self._proxy.state != State.STOPPED:
             # something went wrong
             self.error("stop() failed: motor went "
                        "to state " + self._proxy.state.name)
@@ -34,7 +38,9 @@ class BeckhoffMotorAsMovable(Movable):
         """Home"""
         yield from self._proxy.home()
         yield from waitUntil(lambda: self._proxy.state != State.HOMING)
-        if self._proxy.state != State.ON:
+
+        # expected state ON for Simple Motor, STOPPED for MC2
+        if self._proxy.state != State.ON and self._proxy.state != State.STOPPED:
             # something went wrong
             self.error("home() failed: motor went "
                        "to state " + self._proxy.state.name)
@@ -71,6 +77,7 @@ class BeckhoffMc2AsMovable(BeckhoffMotorAsMovable):
 
         yield from waitUntil(lambda: self._proxy.state != State.MOVING)
 
-        if self._proxy.state != State.ON:
+        # expected state for MC2 is STOPPED. Will become ON in future versions
+        if self._proxy.state != State.ON and self._proxy.state != State.STOPPED:
             self.error("step() failed: motor went "
                        "to state " + self._proxy.state.name)
