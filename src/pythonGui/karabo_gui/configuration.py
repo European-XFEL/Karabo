@@ -5,9 +5,10 @@
 #############################################################################
 import weakref
 
-from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtCore import pyqtSignal, QTimer
 
 from karabo.common.api import DeviceStatus
+from karabo_gui import messagebox
 from karabo_gui.events import KaraboEventSender, broadcast_event
 from karabo_gui.schema import Schema, Box
 from karabo_gui.singletons.api import get_manager, get_network, get_topology
@@ -34,9 +35,9 @@ class Configuration(Box):
     signalBoxChanged = pyqtSignal()
 
     def __init__(self, id, type, descriptor=None):
-        """
-        Create a new Configuration for schema, type should be 'class',
-        'projectClass' or 'device'.
+        """Create a new Configuration for schema.
+
+        `type` should be 'class', 'projectClass' or 'device'.
         """
 
         super().__init__((), descriptor, None)
@@ -50,12 +51,49 @@ class Configuration(Box):
         self.bulk_list = {}
         self._topology_node_ref = None
 
+        self._user_values = {}
+        self._pending_keys = set()
+        self.__busy_timer = QTimer(self)
+        self.__busy_timer.setSingleShot(True)
+        self.__busy_timer.timeout.connect(_on_timeout)
+
         self.serverId = None
         self.classId = None
         self.index = None
 
+    def clearUserValue(self, box):
+        """Clear a user-entered value for the child Box `box`
+        """
+        # Use `pop` with a default value so this can be called blindly
+        self._user_values.pop(box.key(), None)
+
+    def clearUserValues(self):
+        """Clear all user-entered values for child Boxes
+        """
+        self._user_values = {}
+
+    def hasUserValue(self, box):
+        """Returns true if a user has entered a value for this Box
+        """
+        return box.key() in self._user_values
+
+    def sendUserValue(self, box):
+        """Sends a single user-entered value to the GUI server
+        """
+        key = box.key()
+        value = self._user_values[key]
+        get_network().onReconfigure([(box, value)])
+        self._pending_keys.add(key)
+        self.__busy_timer.start(5000)
+
+    def setUserValue(self, box, value):
+        """Store a user-entered value for the child Box `box`
+        """
+        self._user_values[box.key()] = value
+
     def setSchema(self, schema):
         if self.descriptor is not None:
+            self.clearUserValues()
             self.redummy()
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
         if self.status is DeviceStatus.REQUESTED:
@@ -135,6 +173,15 @@ class Configuration(Box):
         return False
 
     def boxChanged(self, box, value, timestamp):
+        """The remote device changed its value
+        """
+        # Clear pending status for the box
+        key = box.key()
+        if key in self._pending_keys:
+            self._pending_keys.remove(key)
+            if not self._pending_keys:
+                self.__busy_timer.stop()
+
         if self.bulk_changes:
             self.bulk_list[box] = value, timestamp
         else:
@@ -164,13 +211,14 @@ class Configuration(Box):
     def __exit__(self, a, b, c):
         self.removeVisible()
 
-    def refresh(self):
-        network = get_network()
-        network.onGetDeviceConfiguration(self)
-
     def shutdown(self):
         manager = get_manager()
         manager.shutdownDevice(self.id)
+
+
+def _on_timeout():
+    msg = "The property couldn't be set in the current state"
+    messagebox.show_warning(msg)
 
 
 def _start_device_monitoring(device_id):
