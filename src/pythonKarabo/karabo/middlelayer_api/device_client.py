@@ -405,57 +405,42 @@ def disconnectDevice(device):
     device.__exit__(None, None, None)
 
 
-class lock:
-    """A context manager to lock a device
+@synchronize
+def lock(proxy, wait_for_release=None):
+    """return a context manager to lock a device
 
     This allows to lock another devices for exclusive use::
 
-        with lock(device):
-            # do something on device
+        with (yield from lock(proxy)):
+            #do stuff
 
-    Normally, at the end of the block we wait until the lock has been
-    actually released. Set the attribute *wait_for_release* to *True*
-    if speed is an issue.
+    In a synchronous context, this function waits at the end of the block
+    until the lock is released, unless *wait_for_release* is *False*. In an
+    asynchronous context, we cannot wait for release, so we don't.
     """
-    def __init__(self, device, wait_for_release=None):
-        self.device = device
-        self.wait_for_release = wait_for_release
-        self.release = True
 
-    @synchronize
-    def __enter__(self):
-        myId = get_instance().deviceId
-        if self.device.lockedBy == myId:
-            self.release = False
-        self.device.lockedBy = myId
-        while self.device.lockedBy != myId:
-            yield from waitUntilNew(self.device.lockedBy)
-            if self.device.lockedBy == "":
-                self.device.lockedBy = myId
-        return self.device
+    myId = get_instance().deviceId
+    if proxy._lock_count == 0:
+        if proxy.lockedBy == myId:
+            yield from proxy._update()
+        while proxy.lockedBy != myId:
+            if proxy.lockedBy == "":
+                proxy.lockedBy = myId
+            yield from waitUntilNew(proxy.lockedBy)
 
-    @synchronize
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self.release:
-            self.device.lockedBy = ""
-            if self.wait_for_release or self.wait_for_release is None:
-                myId = get_instance().deviceId
-                while self.device.lockedBy == myId:
-                    yield from waitUntilNew(self.device.lockedBy)
-
-    def __iter__(self):
-        @contextmanager
-        def unlock():
-            try:
-                yield
-            finally:
-                if self.release:
-                    self.device.lockedBy = ""
-
-        if self.wait_for_release is not None and self.wait_for_release:
-            raise RuntimeError("cannot wait for release before Python 3.5!")
-        yield from self.__enter__()
-        return unlock()
+    @contextmanager
+    def context():
+        proxy._lock_count += 1
+        try:
+            yield
+        finally:
+            proxy._lock_count -= 1
+            if proxy._lock_count == 0:
+                if wait_for_release is False:
+                    setNoWait(proxy, lockedBy="")
+                else:
+                    proxy.lockedBy = ""
+    return context()
 
 
 def getDevices(serverId=None):
