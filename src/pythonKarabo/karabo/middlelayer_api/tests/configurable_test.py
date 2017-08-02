@@ -581,6 +581,7 @@ class Tests(TestCase):
                              unitSymbol=Unit.METER,
                              metricPrefixSymbol=MetricPrefix.MILLI,
                              options=["a", "b"])
+            state = String(enum=State)
 
         class Brian(Mandy):
             number = Overwrite(minExc=3, allowedStates={State.OFF},
@@ -590,6 +591,7 @@ class Tests(TestCase):
                                tags={"naughty"},
                                options=[6, 4])
             cookies = Overwrite()
+            state = Overwrite(options=[State.ON, State.OFF])
 
         self.assertEqual(Brian.number.key, "number")
         self.assertEqual(Mandy.number.minExc, 7)
@@ -619,6 +621,9 @@ class Tests(TestCase):
         self.assertEqual(Brian.cookies.units, unit.millimeter)
         self.assertEqual(Mandy.cookies.options, ["a", "b"])
         self.assertEqual(Brian.cookies.options, ["a", "b"])
+
+        self.assertIsNone(Mandy.state.options)
+        self.assertEqual(Brian.state.options, [State.ON, State.OFF])
 
     def test_overwrite_inject(self):
         class Mandy(Injectable):
