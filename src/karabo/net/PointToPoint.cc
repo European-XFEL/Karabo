@@ -145,8 +145,18 @@ namespace karabo {
             try {
                 // Get client URL to register an open connection
                 const string& remoteUrl = message->get<string>("url");
+                vector<string> remoteIds;
+                if (message->has("ids")) message->get("ids", remoteIds);
                 {
                     boost::unique_lock<boost::shared_mutex> lock(m_pointToPointMutex);
+                    // Clean from old entries with the same value : remoteUrl
+                    // because what we got is most up-to-date information
+                    for (MapInstanceIdToUrl::iterator it = m_instanceIdToUrl.begin(); it!=m_instanceIdToUrl.end(); ++it) {
+                        if (it->second == remoteUrl) m_instanceIdToUrl.erase(it);
+                    }
+                    for (auto& remoteInstanceId : remoteIds) m_instanceIdToUrl[remoteInstanceId] = remoteUrl;
+                    set<string> tmp(remoteIds.begin(), remoteIds.end());
+                    m_urlToInstanceIdSet[remoteUrl] = tmp;
                     m_mapOpenConnections[remoteUrl] = std::make_pair(channel, connection);
                 }
                 // Prepare to read from client
@@ -181,8 +191,13 @@ namespace karabo {
                 boost::unique_lock<boost::shared_mutex> lock(m_pointToPointMutex);
                 m_mapOpenConnections[remoteUrl] = std::make_pair(channel, connection);
             }
-            // Inform server about my local URL
-            channel->writeAsync(Hash("url", m_localUrl), 4);
+            // Inform server about my local URL and local instanceIds
+            vector<string> ids;
+            {
+                boost::shared_lock<boost::shared_mutex> lock(m_localMapMutex);
+                for (const auto& i : m_localMap) ids.push_back(i.first);
+            }
+            channel->writeAsync(Hash("url", m_localUrl, "ids", ids), 4);
             // Prepare to read from server
             channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));
             return true;
@@ -223,8 +238,13 @@ namespace karabo {
                 boost::unique_lock<boost::shared_mutex> lock(m_pointToPointMutex);
                 m_mapOpenConnections[remoteUrl] = std::make_pair(channel, connection);
             }
-            // inform server about my local URL
-            channel->writeAsync(Hash("url", m_localUrl), 4);
+            // inform server about my local URL and list of instanceIds
+            vector<string> ids;
+            {
+                boost::shared_lock<boost::shared_mutex> lock(m_localMapMutex);
+                for (const auto& i : m_localMap) ids.push_back(i.first);
+            }
+            channel->writeAsync(Hash("url", m_localUrl, "ids", ids), 4);
             // Prepare to read from server
             channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));
         }
@@ -310,7 +330,9 @@ namespace karabo {
 
 
         void PointToPoint::channelErrorHandler(const ErrorCode& ec, const Channel::Pointer& channel) {
-            KARABO_LOG_FRAMEWORK_ERROR << "Channel Exception #"<< ec.value() << " -- " << ec.message();
+            if (ec.value() != 2) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Channel Exception #"<< ec.value() << " -- " << ec.message();
+            }
         }
 
 
@@ -333,20 +355,21 @@ namespace karabo {
         }
 
 
-        void PointToPoint::printMaps() {
+        std::string PointToPoint::allMapsToString() {
+            ostringstream oss;
             vector<string> localIds;
             {
                 boost::shared_lock<boost::shared_mutex> lock(m_localMapMutex);
                 for (const auto& id : m_localMap) localIds.push_back(id.first);
             }
-            KARABO_LOG_FRAMEWORK_INFO << "Local map ..." << toString(localIds);
+            oss << "Local map   ... [" << toString(localIds) << "]\n";
             vector<string> remoteIds;
             {
                 boost::shared_lock<boost::shared_mutex> lock(m_pointToPointMutex);
                 for (const auto& id : m_instanceIdToUrl) remoteIds.push_back(id.first);
             }
-            KARABO_LOG_FRAMEWORK_INFO << "Remote map ..." << toString(remoteIds);
-            ostringstream oss;
+            oss << "InstanceIds ... [" << toString(remoteIds) << "]\n";
+            oss << "URLs .......\n";
             {
                 boost::shared_lock<boost::shared_mutex> lock(m_pointToPointMutex);
                 for (const auto& url : m_urlToInstanceIdSet) {
@@ -358,7 +381,7 @@ namespace karabo {
                     oss << url.first << "\" --> [" << toString(url.second) << "]\n";
                 }
             }
-            KARABO_LOG_FRAMEWORK_INFO << "URLs .......\n" << oss.str();
+            return oss.str();
         }
     }
 }
