@@ -3,9 +3,7 @@ Public interface to the User Macro API
 """
 
 from .usermacro_api.agipd import AgipdAsSensible
-from .usermacro_api.beckhoff import (
-    BeckhoffMc2AsMovable, BeckhoffMotorAsMovable
-)
+from .usermacro_api.beckhoff import BeckhoffMotorAsMovable
 from .usermacro_api.epix import EpixAsSensible
 from karabo.usermacro_api.genicam import (
     GenicamBaslerAsSensible, PhotonicScienceAsSensible
