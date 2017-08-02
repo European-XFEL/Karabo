@@ -8,14 +8,9 @@ from karabo.middlelayer_api.eventloop import synchronize
 
 class AgipdAsSensible(Sensible):
     """Generalized interface to the AGIPD detector"""
-    generalizes = ['AgipdControl']
+    generalizes = ('AgipdControl')
     state_mapping = {State.STARTED: State.ACQUIRING}
     connection_timeout = 10.0
-
-    @property
-    def state(self):
-        """Get state"""
-        return self.state_mapping.get(self._proxy.state, self._proxy.state)
 
     @synchronize
     def acquire(self):

@@ -1,16 +1,16 @@
 """The Generic Proxy module contains
 all generalized interface to devices
 """
-from asyncio import coroutine
 from karabo.middlelayer import getDevice
 from karabo.middlelayer import KaraboError
-from karabo.middlelayer_api.proxy import ProxyBase
+from karabo.middlelayer_api.proxy import ProxyBase, synchronize
 
 
 class GenericProxy(object):
     """Base class for all generic proxies"""
     _proxy = ProxyBase()
     locker = ""
+    state_mapping = {}
 
     def __repr__(self):
         # For now, return the internal proxy representation
@@ -32,7 +32,7 @@ class GenericProxy(object):
         proxy = getDevice(deviceId)
         return cls.create_generic_proxy(proxy)
 
-    @coroutine
+    @synchronize
     def lock_on(self, locker):
         """Lock device"""
         current_locker = self._proxy.lockedBy
@@ -42,7 +42,7 @@ class GenericProxy(object):
         self._proxy.lockedBy = locker
         self.locker = locker
 
-    @coroutine
+    @synchronize
     def lock_off(self):
         """Release lock"""
         current_locker = self._proxy.lockedBy
@@ -50,6 +50,11 @@ class GenericProxy(object):
             raise KaraboError("{} is locked by {}."
                               .format(self._proxy.deviceId, current_locker))
         self._proxy.lockedBy = ""
+
+    @property
+    def state(self):
+        """Get state"""
+        return self.state_mapping.get(self._proxy.state, self._proxy.state)
 
 
 class Movable(GenericProxy):
@@ -59,28 +64,27 @@ class Movable(GenericProxy):
     or wizard devices (those requiring human
     to press for e.g. a next button)
     """
-    position = 0
-    current_step = 0
+    @property
+    def position(self):
+        """"Position getter """
+        return self._proxy.encoderPosition
 
-    @coroutine
+    @position.setter
+    @synchronize
     def moveto(self, pos):
         """Move to *pos*"""
-        pass
+        self._proxy.targetPosition = pos
+        self._proxy.move()
 
-    @coroutine
+    @synchronize
     def stop(self):
         """Stop"""
-        pass
+        self._proxy.stop()
 
-    @coroutine
-    def step(self, stp):
-        """Move to step *stp*"""
-        self.current_step = stp
-
-    @coroutine
+    @synchronize
     def home(self):
         """Home"""
-        pass
+        self._proxy.home()
 
 
 class Sensible(GenericProxy):
@@ -89,53 +93,64 @@ class Sensible(GenericProxy):
     This is a generalized interface to detectors, sensors
     and image processors
     """
-    @coroutine
+    @synchronize
     def acquire(self):
         """Start acquisition"""
-        pass
+        self._proxy.acquire()
 
-    @coroutine
+    @synchronize
     def stop(self):
         """Stop acquisition"""
-        pass
+        self._proxy.stop()
 
 
 class Coolable(GenericProxy):
     """Generalized interface to coolers"""
-    temperature = 0
+    @property
+    def temperature(self):
+        """"Temperature getter """
+        return self._proxy.currentColdHeadTemperature
 
-    @coroutine
+    @temperature.setter
+    @synchronize
     def cool(self, temperature):
         """Cool to *temperature*"""
-        pass
+        self._proxy.targetCoolTemperature = temperature
+        self._proxy.cool()
 
-    @coroutine
+    @synchronize
     def stop(self):
         """Stop cooling"""
-        pass
+        self._proxy.stop()
 
 
 class Pumpable(GenericProxy):
     """Generalized interface to pumps"""
-    @coroutine
+
+    @property
+    def pressure(self):
+        """Pressure getter"""
+        return self._proxy.presssure
+
+    @synchronize
     def pump(self):
         """Start pumping"""
-        pass
+        self._proxy.pump()
 
-    @coroutine
+    @synchronize
     def stop(self):
         """Stop pumping"""
-        pass
+        self._proxy.stop()
 
 
 class Closable(GenericProxy):
     """Generalized interface to valves"""
-    @coroutine
+    @synchronize
     def open(self):
         """Open it"""
-        pass
+        self._proxy.open()
 
-    @coroutine
+    @synchronize
     def close(self):
         """Close it"""
-        pass
+        self._proxy.close()
