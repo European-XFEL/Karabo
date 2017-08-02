@@ -1,15 +1,14 @@
 """Generalized interface to ePIX
 """
-from .genericproxy import Sensible
 from karabo.middlelayer import State
 from karabo.middlelayer_api.eventloop import synchronize
+from .genericproxy import Sensible
 
 
 class EpixAsSensible(Sensible):
     """Generalized interface to the ePIX detector"""
     generalizes = ['ePixReceiver']
     state_mapping = {State.STARTED: State.ACQUIRING}
-    connection_timeout = 10.0
 
     @property
     def state(self):
