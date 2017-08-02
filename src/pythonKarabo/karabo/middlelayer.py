@@ -53,7 +53,7 @@ from .middlelayer_api.macro import Macro, Monitor
 from .middlelayer_api.device import Device
 from .middlelayer_api.registry import MetaRegistry, Registry
 from .middlelayer_api.schema import (
-    Configurable, Node, ChoiceOfNodes, ListOfNodes
+    Configurable, Node, ChoiceOfNodes, ListOfNodes, Overwrite
 )
 from .middlelayer_api.serializers import (
     decodeBinary, decodeXML, encodeBinary, encodeXML, writeBinary, writeXML,
