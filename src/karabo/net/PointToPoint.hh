@@ -150,7 +150,7 @@ namespace karabo {
              */
             bool isInLocalMap(const std::string& instanceId);
 
-            void printMaps();
+            std::string allMapsToString();
 
         private:
 
