@@ -211,6 +211,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     # ---------------------------------------------------------------------
     # Edit widget related code
 
+    @pyqtSlot()
     def _update_edit_widget(self):
         """Update the editable widget to reflect the current state of affairs
         """
@@ -280,6 +281,8 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
             self.treeWidget().onApplyChanged(self.box, self.apply_enabled)
         # Show colored border around the wrapper widget
         self.qt_edit_widget.setStyleSheet(style_sheet)
+        # Make sure to keep enabling in sync
+        self.editable_widget.widget.setEnabled(allowed)
 
     def apply_changes(self):
         """All changes of this component need to be send to the GuiServerDevice
