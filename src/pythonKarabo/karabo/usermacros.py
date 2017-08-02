@@ -5,12 +5,7 @@ Public interface to the User Macro API
 from .usermacro_api.agipd import AgipdAsSensible
 from .usermacro_api.beckhoff import BeckhoffMotorAsMovable
 from .usermacro_api.epix import EpixAsSensible
-from karabo.usermacro_api.genicam import (
-    GenicamBaslerAsSensible, PhotonicScienceAsSensible
-)
-from .usermacro_api.lima import (
-    LimaBaslerAsSensible, LimaSimulatedAsSensible
-)
+from karabo.usermacro_api.cam import CamAsSensible
 from .usermacro_api.lpd import LpdAsSensible
 from .usermacro_api.spectrometers import SpectrometerAsSensible
 from .usermacro_api.imageprocessor import ImageProcessorAsSensible
