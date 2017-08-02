@@ -1,83 +1,45 @@
 """Generalized interfaces to Beckhoff devices"""
 
 from .genericproxy import Movable
-from asyncio import coroutine
-from karabo.middlelayer import waitUntil, State
+from karabo.middlelayer import State
+from karabo.middlelayer_api.eventloop import synchronize
 
 
 class BeckhoffMotorAsMovable(Movable):
-    """base class to inheritate from for common methods"""
-    @coroutine
+
+    state_mapping = {
+        State.ON: State.STOPPED,  # needed  for current version of MC2 device
+    }
+
+    @property  # Will be later moved to the Generic Proxy class
+    def state(self):
+        return self.state_mapping.get(self._proxy.state, self._proxy.state)
+
+    """base class to be inherited from for common methods"""
+    @synchronize
     def moveto(self, pos):
         """Move to *pos*"""
         self._proxy.targetPosition = pos
         yield from self._proxy.move()
-        yield from waitUntil(lambda: self._proxy.state != State.MOVING)
 
-        # expected state ON for Simple Motor, STOPPED for MC2
-        if self._proxy.state != State.ON and self._proxy.state != State.STOPPED:
-            # something went wrong
-            self.error("moveto() failed: motor went "
-                       "to state " + self._proxy.state.name)
-
-    @coroutine
+    @synchronize
     def stop(self):
         """Stop"""
         yield from self._proxy.stop()
-        yield from waitUntil(lambda: self._proxy.state == State.ON or not
-                             self._proxy.state.isDerivedFrom(State.NORMAL))
 
-        # expected state ON for Simple Motor, STOPPED for MC2
-        if self._proxy.state != State.ON and self._proxy.state != State.STOPPED:
-            # something went wrong
-            self.error("stop() failed: motor went "
-                       "to state " + self._proxy.state.name)
-
-    @coroutine
+    @synchronize
     def home(self):
         """Home"""
         yield from self._proxy.home()
-        yield from waitUntil(lambda: self._proxy.state != State.HOMING)
-
-        # expected state ON for Simple Motor, STOPPED for MC2
-        if self._proxy.state != State.ON and self._proxy.state != State.STOPPED:
-            # something went wrong
-            self.error("home() failed: motor went "
-                       "to state " + self._proxy.state.name)
 
 
 class BeckhoffSimpleMotorAsMovable(BeckhoffMotorAsMovable):
     """Generalized interface to Beckhoff motors"""
     generalizes = ['BeckhoffSimpleMotor']
+    # generalizes = ['Device']  # use this for testing until
+                                # BeckhoffSim classid is fixed
 
-    @coroutine
-    def step(self, stp):
-        """Move stp steps, up if positive, down if negative"""
-        self.current_step = stp
-        for i in range(0, abs(stp)):
-            if stp > 0:
-                yield from self._proxy.stepUp()
-            elif stp < 0:
-                yield from self._proxy.stepDown()
-            if self._proxy.state != State.ON:
-                self.error("step() failed: motor went "
-                           "to state " + self._proxy.state.name)
-                break
 
 class BeckhoffMc2AsMovable(BeckhoffMotorAsMovable):
     """Generalized interface to Beckhoff MC2 motors"""
     generalizes = ['BeckhoffMC2Motor']
-
-    @coroutine
-    def step(self, stp):
-        """Move stp steps, up if positive, down if negative"""
-        self.current_step = stp
-        self._proxy.stepSize = stp
-        self._proxy.moveRelative()
-
-        yield from waitUntil(lambda: self._proxy.state != State.MOVING)
-
-        # expected state for MC2 is STOPPED. Will become ON in future versions
-        if self._proxy.state != State.ON and self._proxy.state != State.STOPPED:
-            self.error("step() failed: motor went "
-                       "to state " + self._proxy.state.name)
