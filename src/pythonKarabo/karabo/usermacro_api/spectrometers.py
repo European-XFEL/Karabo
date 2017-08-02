@@ -1,14 +1,14 @@
 """Generalized interface to the spectrometers"""
-from genericproxy import Sensible
+from .genericproxy import Sensible
 from karabo.middlelayer import State
 from karabo.middlelayer_api.eventloop import synchronize
 
 
 class SpectrometerAsSensible(Sensible):
     """Generalized interface to the hr4000 spectrometer device"""
-    generalizes = ['hr4000Spectrometer', 'stsSpectrometer']
+    generalizes = ['HR4000Spectrometer', 'StsSpectrometer']
 
-    state_mapping = {State.ACTIVE: State.ACQUIRING}
+    state_mapping = {State.ACTIVE: State.STOPPED}
 
     @property  # Will be later moved to the Generic Proxy class
     def state(self):
