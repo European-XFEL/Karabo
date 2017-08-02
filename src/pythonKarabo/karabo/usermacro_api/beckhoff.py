@@ -6,6 +6,7 @@ from karabo.middlelayer_api.eventloop import synchronize
 
 
 class BeckhoffMotorAsMovable(Movable):
+    generalizes = ['BeckhoffSimpleMotor', 'BeckhoffMC2Motor', 'Device']
 
     state_mapping = {
         State.ON: State.STOPPED,  # needed  for current version of MC2 device
@@ -32,14 +33,3 @@ class BeckhoffMotorAsMovable(Movable):
         """Home"""
         yield from self._proxy.home()
 
-
-class BeckhoffSimpleMotorAsMovable(BeckhoffMotorAsMovable):
-    """Generalized interface to Beckhoff motors"""
-    generalizes = ['BeckhoffSimpleMotor']
-    # generalizes = ['Device']  # use this for testing until
-                                # BeckhoffSim classid is fixed
-
-
-class BeckhoffMc2AsMovable(BeckhoffMotorAsMovable):
-    """Generalized interface to Beckhoff MC2 motors"""
-    generalizes = ['BeckhoffMC2Motor']
