@@ -1,8 +1,7 @@
 """Generalized interfaces to Cameras
 """
 from .genericproxy import Sensible
-from asyncio import coroutine
-from karabo.middlelayer import waitUntil, State
+from karabo.middlelayer_api.eventloop import synchronize
 
 
 class CamAsSensible(Sensible):
@@ -10,12 +9,17 @@ class CamAsSensible(Sensible):
     generalizes = ['GenicamBaslerCamera', 'PhotonicScienceCamera',
                    'LimaBaslerCamera', 'LimaSimulatedCamera']
 
-    @coroutine
+    @property
+    def state(self):
+        """Get state"""
+        return self._proxy.state
+
+    @synchronize
     def acquire(self):
         """ start data acquisition """
         yield from self._proxy.acquire()
 
-    @coroutine
+    @synchronize
     def stop(self):
-        """ start data acquisition """
+        """ stop data acquisition """
         yield from self._proxy.stop()
