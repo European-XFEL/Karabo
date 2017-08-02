@@ -7,7 +7,7 @@ from .alarm import AlarmMixin
 from .basetypes import isSet
 from .enums import AccessLevel, AccessMode, Assignment
 from .exceptions import KaraboError
-from .hash import Bool, Hash, HashType, Int32, SchemaHashType, String
+from .hash import Bool, HashType, Int32, SchemaHashType, String
 from .logger import Logger
 from .schema import Node
 from .signalslot import SignalSlotable, Signal, slot, coslot
