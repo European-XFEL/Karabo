@@ -57,13 +57,32 @@ class Tests(TestCase):
         self.assertIs(v.enum, E.a)
         self.assertEqual(v.value, 3)
         self.check_general(d, v)
+        schema, attrs = d.toSchemaAndAttrs(None, None)
+        self.assertEqual(attrs["options"], [3])
+
         with self.assertRaises(TypeError):
-            v = d.toKaraboValue(3)
+            d.toKaraboValue(3)
 
         class F(Enum):
             a = 3
         with self.assertRaises(TypeError):
-            v = d.toKaraboValue(F.a)
+            d.toKaraboValue(F.a)
+
+    def test_enum_options(self):
+        class E(Enum):
+            a = 1
+            b = 2
+            c = 3
+
+        d = Int8(enum=E, options=[E.b, E.c])
+        d.toKaraboValue(E.b)
+        schema, attrs = d.toSchemaAndAttrs(None, None)
+        self.assertEqual(list(attrs["options"]), [2, 3])
+
+        with self.assertRaises(ValueError):
+            d.toKaraboValue(E.a)
+        with self.assertRaises(TypeError):
+            Int8(enum=E, options=[1, 2])
 
     def test_bool(self):
         d = Bool()
@@ -133,6 +152,16 @@ class Tests(TestCase):
         with self.assertRaises(TypeError):
             Int16(unitSymbol="m")
         Int16(strict=False, unitSymbol="m", metricPrefixSymbol="m")
+
+    def test_options(self):
+        d = Int16(options=[3, 2, 4],
+                  unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.MILLI)
+        d.toKaraboValue(3)
+        with self.assertRaises(ValueError):
+            d.toKaraboValue(7)
+        d.toKaraboValue(4000 * unit.micrometer)
+        with self.assertRaises(ValueError):
+            d.toKaraboValue(4500 * unit.micrometer)
 
     def test_vector_ints(self):
         d = VectorInt8()
@@ -301,13 +330,32 @@ class Tests(TestCase):
         self.assertIs(v.enum, E.a)
         self.assertEqual(v.value, "bla")
         self.check_general(d, v)
+        schema, attrs = d.toSchemaAndAttrs(None, None)
+        self.assertEqual(attrs["options"], ["bla"])
+
         with self.assertRaises(TypeError):
-            v = d.toKaraboValue("bla")
+            d.toKaraboValue("bla")
 
         class F(Enum):
             a = "bla"
         with self.assertRaises(TypeError):
-            v = d.toKaraboValue(F.a)
+            d.toKaraboValue(F.a)
+
+    def test_enum_str_options(self):
+        class E(Enum):
+            a = "A"
+            b = "B"
+            c = "C"
+
+        d = String(enum=E, options=[E.b, E.c])
+        d.toKaraboValue(E.b)
+        schema, attrs = d.toSchemaAndAttrs(None, None)
+        self.assertEqual(attrs["options"], ["B", "C"])
+
+        with self.assertRaises(ValueError):
+            d.toKaraboValue(E.a)
+        with self.assertRaises(TypeError):
+            String(enum=E, options=["B", "C"])
 
     def test_vector_string(self):
         d = VectorString()
