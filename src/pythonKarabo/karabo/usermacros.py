@@ -12,6 +12,8 @@ from .usermacro_api.lima import (
     LimaBaslerAsSensible, LimaSimulatedAsSensible
 )
 from .usermacro_api.lpd import LpdAsSensible
+from .usermacro_api.spectrometers import SpectrometerAsSensible
+from .usermacro_api.imageprocessor import ImageProcessorAsSensible
 from .usermacro_api.usermacro import UserMacro
 from .usermacro_api.genericproxy import (
     Closable, Coolable, GenericProxy, Movable, Pumpable, Sensible
