@@ -1,18 +1,13 @@
 """"Generalized interface to SLS detectors"""
-from .genericproxy import Sensible
 from karabo.middlelayer import State
 from karabo.middlelayer_api.eventloop import synchronize
+from .genericproxy import Sensible
 
 
 class SlsDetectorAsSensible(Sensible):
     """Generalized interface to SLS detector devices"""
-    generalizes = ['GotthardDetector', 'JungfrauDetector']
+    generalizes = ('GotthardDetector', 'JungfrauDetector')
     state_mapping = {State.STARTED: State.ACQUIRING}
-
-    @property
-    def state(self):
-        """Get state"""
-        return self.state_mapping.get(self._proxy.state, self._proxy.state)
 
     @synchronize
     def acquire(self):

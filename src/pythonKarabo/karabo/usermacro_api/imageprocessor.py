@@ -1,22 +1,16 @@
 """"Generalized interface to the image processor"""
-from .genericproxy import Sensible
 from karabo.middlelayer import State
+from .genericproxy import Sensible
 
 
 class ImageProcessorAsSensible(Sensible):
     """"Generalized interface to the image processor device"""
-    generalizes = ['ImageProcessor']
+    generalizes = ('ImageProcessor')
 
-    state_mapping = {
-        State.NORMAL: State.ACQUIRING
-    }
-
-    @property  # Will be later moved to the Generic Proxy class
-    def state(self):
-        return self.state_mapping.get(self._proxy.state, self._proxy.state)
+    state_mapping = {State.NORMAL: State.ACQUIRING}
 
     def acquire(self):
-        pass  # No action is needed to put imageProcessor in acquisition
+        """No action is needed to put imageProcessor in acquisition"""
 
     def stop(self):
-        pass
+        """Can't stop acquisition once an imageprocessor in instantiated"""

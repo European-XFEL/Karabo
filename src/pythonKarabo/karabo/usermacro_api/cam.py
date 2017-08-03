@@ -1,18 +1,13 @@
 """Generalized interfaces to Cameras
 """
-from .genericproxy import Sensible
 from karabo.middlelayer_api.eventloop import synchronize
+from .genericproxy import Sensible
 
 
 class CamAsSensible(Sensible):
     """Generalized interface to the Cameras """
-    generalizes = ['GenicamBaslerCamera', 'PhotonicScienceCamera',
-                   'LimaBaslerCamera', 'LimaSimulatedCamera']
-
-    @property
-    def state(self):
-        """Get state"""
-        return self._proxy.state
+    generalizes = ('GenicamBaslerCamera', 'PhotonicScienceCamera',
+                   'LimaBaslerCamera', 'LimaSimulatedCamera')
 
     @synchronize
     def acquire(self):
