@@ -74,17 +74,17 @@ class Movable(GenericProxy):
     def moveto(self, pos):
         """Move to *pos*"""
         self._proxy.targetPosition = pos
-        self._proxy.move()
+        yield from self._proxy.move()
 
     @synchronize
     def stop(self):
         """Stop"""
-        self._proxy.stop()
+        yield from self._proxy.stop()
 
     @synchronize
     def home(self):
         """Home"""
-        self._proxy.home()
+        yield from self._proxy.home()
 
 
 class Sensible(GenericProxy):
@@ -96,12 +96,12 @@ class Sensible(GenericProxy):
     @synchronize
     def acquire(self):
         """Start acquisition"""
-        self._proxy.acquire()
+        yield from self._proxy.acquire()
 
     @synchronize
     def stop(self):
         """Stop acquisition"""
-        self._proxy.stop()
+        yield from self._proxy.stop()
 
 
 class Coolable(GenericProxy):
@@ -116,12 +116,12 @@ class Coolable(GenericProxy):
     def cool(self, temperature):
         """Cool to *temperature*"""
         self._proxy.targetCoolTemperature = temperature
-        self._proxy.cool()
+        yield from self._proxy.cool()
 
     @synchronize
     def stop(self):
         """Stop cooling"""
-        self._proxy.stop()
+        yield from self._proxy.stop()
 
 
 class Pumpable(GenericProxy):
@@ -135,12 +135,12 @@ class Pumpable(GenericProxy):
     @synchronize
     def pump(self):
         """Start pumping"""
-        self._proxy.pump()
+        yield from self._proxy.pump()
 
     @synchronize
     def stop(self):
         """Stop pumping"""
-        self._proxy.stop()
+        yield from self._proxy.stop()
 
 
 class Closable(GenericProxy):
@@ -148,9 +148,9 @@ class Closable(GenericProxy):
     @synchronize
     def open(self):
         """Open it"""
-        self._proxy.open()
+        yield from self._proxy.open()
 
     @synchronize
     def close(self):
         """Close it"""
-        self._proxy.close()
+        yield from self._proxy.close()
