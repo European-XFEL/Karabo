@@ -993,7 +993,7 @@ namespace karabo {
                 if (localInstanceInfo.has("p2p_connection")) {
                     localInstanceInfo.get("p2p_connection", localUrl);
                 }
-                const std::string remoteUrl = newInstanceInfo.get<std::string>("p2p_connection");
+                const std::string& remoteUrl = newInstanceInfo.get<std::string>("p2p_connection");
                 // Store only remote connection strings - even if local does not 'speak' p2p, it may discover for others.
                 if (remoteUrl != localUrl) {
                     m_pointToPoint->updateUrl(newInstanceId, remoteUrl);

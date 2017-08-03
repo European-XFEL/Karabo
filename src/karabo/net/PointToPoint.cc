@@ -155,8 +155,7 @@ namespace karabo {
                         if (it->second == remoteUrl) m_instanceIdToUrl.erase(it);
                     }
                     for (auto& remoteInstanceId : remoteIds) m_instanceIdToUrl[remoteInstanceId] = remoteUrl;
-                    set<string> tmp(remoteIds.begin(), remoteIds.end());
-                    m_urlToInstanceIdSet[remoteUrl] = tmp;
+                    m_urlToInstanceIdSet[remoteUrl] = set<string>(remoteIds.begin(), remoteIds.end());
                     m_mapOpenConnections[remoteUrl] = std::make_pair(channel, connection);
                 }
                 // Prepare to read from client
