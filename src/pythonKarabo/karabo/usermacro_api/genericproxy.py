@@ -65,11 +65,11 @@ class Movable(GenericProxy):
     to press for e.g. a next button)
     """
     @property
-    def actual_position(self):
+    def actualPosition(self):
         """"Position getter """
         return self._proxy.encoderPosition
 
-    @actual_position.setter
+    @actualPosition.setter
     @synchronize
     def moveto(self, pos):
         """Move to *pos*"""
@@ -107,11 +107,11 @@ class Sensible(GenericProxy):
 class Coolable(GenericProxy):
     """Generalized interface to coolers"""
     @property
-    def actual_temperature(self):
+    def actualTemperature(self):
         """"Temperature getter """
         return self._proxy.currentColdHeadTemperature
 
-    @actual_temperature.setter
+    @actualTemperature.setter
     @synchronize
     def cool(self, temperature):
         """Cool to *temperature*"""
