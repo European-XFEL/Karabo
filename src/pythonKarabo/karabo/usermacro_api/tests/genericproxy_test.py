@@ -10,9 +10,10 @@ Our chief weapons are handcrafted tests, and cheap coloured outputs.
 
 Expecting unit tests, were you!?
 
+Instantiate three BeckhoffSimpleMotor devices as testm{1,2,3}
 Open ikarabo and import this file:
 
-In[1]: import gpt
+In[1]: import karabo.usermacro_api.tests.genericproxy_test
 """
 
 print("TEST 1: ", end='')
