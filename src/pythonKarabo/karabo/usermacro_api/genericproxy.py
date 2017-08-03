@@ -74,19 +74,20 @@ class GenericProxy(object):
                 gproxies = []
                 for device in args:
                     if isinstance(device, GenericProxy):
-                        gproxies.append(device)
+                        gproxy = device
                     else:
                         # Assume it's a string, and delegate the problem
                         # to instantiation if it isn't
-                        gproxies.append(GenericProxy(device))
+                        gproxy = GenericProxy(device)
 
-                if all(isinstance(dev, type(gproxies[0]).__bases__[0])
-                                  for dev in gproxies):
-                        return cls.create_generic_proxy_container(gproxies)
-                cls.error("Provided different types of Devices")
-        else:
-            # Act as a container
-            pass
+                        if not gproxies or (gproxies and
+                            isinstance(gproxy, type(gproxies[0]).__bases__[0])):
+                            gproxies.append(gproxy)
+                        else:
+                            cls.error("Provided different types of Devices")
+                return cls.create_generic_proxy_container(gproxies)
+
+        #If args is none, act as a container
 
 
     @synchronize
