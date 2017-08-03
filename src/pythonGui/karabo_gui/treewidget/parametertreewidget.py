@@ -56,7 +56,7 @@ class ParameterTreeWidget(QTreeWidget):
         self.header().setResizeMode(QHeaderView.ResizeToContents)
 
     def clear(self):
-        """The components in the tree are children of this widget.
+        """The items in the tree are children of this widget.
         They must be deleted by Qt, otherwise they'll still receive
         signals.
         """
@@ -164,7 +164,7 @@ class ParameterTreeWidget(QTreeWidget):
             factory = DisplayWidget.getClass(box)
             if factory is not None:
                 data['display_widget_class'] = factory.__name__
-            if item.editableComponent:
+            if item.editable_widget:
                 factory = EditableWidget.getClass(box)
                 if factory is not None:
                     data['edit_widget_class'] = factory.__name__
@@ -266,7 +266,7 @@ class ParameterTreeWidget(QTreeWidget):
             self._r_applyAll(childItem, config)
 
     def onApplyChanged(self, box, enable):
-        """ Called when apply button of editableComponent changed
+        """ Called when apply button of an editable_widget changed
         Check if no apply button in tree is enabled/conflicted anymore
         """
         def recurse(item):
