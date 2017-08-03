@@ -192,7 +192,8 @@ class Overwrite(object):
 
     def overwrite(self, original):
         _, attrs = original.toSchemaAndAttrs(None, None)
-        ret = original.__class__(strict=False, **attrs)
+        attrs.pop("enum", None)
+        ret = original.__class__(strict=False, enum=original.enum, **attrs)
         ret.__init__(key=original.key, **self.kwargs)
         return ret
 
