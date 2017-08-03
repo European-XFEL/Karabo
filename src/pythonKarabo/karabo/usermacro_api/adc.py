@@ -14,8 +14,3 @@ class AdcAsSensible(Sensible):
     def acquire(self):
         """ start data acquisition """
         yield from self._proxy.start()
-
-    @synchronize
-    def stop(self):
-        """ Stop data acquisition """
-        yield from self._proxy.stop()
