@@ -142,27 +142,44 @@ class Movable(GenericProxy):
     @property
     def actualPosition(self):
         """"Position getter """
+        if self._generic_proxies:
+            raise NotImplementedError
+
         return self._proxy.encoderPosition
 
     @actualPosition.setter
     def actualPosition(self, value):
+        if self._generic_proxies:
+            raise NotImplementedError
+
         self.moveto(value)
 
     @synchronize
     def moveto(self, pos):
         """Move to *pos*"""
-        self._proxy.targetPosition = pos
-        yield from self._proxy.move()
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.move(next(pos))
+        else:
+            yield from self._proxy.move()
 
     @synchronize
     def stop(self):
         """Stop"""
-        yield from self._proxy.stop()
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.stop()
+        else:
+            yield from self._proxy.stop()
 
     @synchronize
     def home(self):
         """Home"""
-        yield from self._proxy.home()
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.home()
+        else:
+            yield from self._proxy.home()
 
 
 class Sensible(GenericProxy):
@@ -174,12 +191,20 @@ class Sensible(GenericProxy):
     @synchronize
     def acquire(self):
         """Start acquisition"""
-        yield from self._proxy.acquire()
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.acquire()
+        else:
+            yield from self._proxy.acquire()
 
     @synchronize
     def stop(self):
         """Stop acquisition"""
-        yield from self._proxy.stop()
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.stop()
+        else:
+            yield from self._proxy.stop()
 
 
 class Coolable(GenericProxy):
@@ -187,22 +212,36 @@ class Coolable(GenericProxy):
     @property
     def actualTemperature(self):
         """"Temperature getter """
+        if self._generic_proxies:
+            raise NotImplementedError
+
         return self._proxy.currentColdHeadTemperature
 
     @actualTemperature.setter
     def actualTemperature(self, value):
+        if self._generic_proxies:
+            raise NotImplementedError
+
         self.cool(value)
 
     @synchronize
     def cool(self, temperature):
         """Cool to *temperature*"""
-        self._proxy.targetCoolTemperature = temperature
-        yield from self._proxy.cool()
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.cool(next(temperature))
+        else:
+            self._proxy.targetCoolTemperature = temperature
+            yield from self._proxy.stop()
 
     @synchronize
     def stop(self):
         """Stop cooling"""
-        yield from self._proxy.stop()
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.stop()
+        else:
+            yield from self._proxy.stop()
 
 
 class Pumpable(GenericProxy):
@@ -211,17 +250,28 @@ class Pumpable(GenericProxy):
     @property
     def pressure(self):
         """Pressure getter"""
+        if self._generic_proxies:
+            raise NotImplementedError
+
         return self._proxy.pressure
 
     @synchronize
     def pump(self):
         """Start pumping"""
-        yield from self._proxy.pump()
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.pump()
+        else:
+            yield from self._proxy.pump()
 
     @synchronize
     def stop(self):
         """Stop pumping"""
-        yield from self._proxy.stop()
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.stop()
+        else:
+            yield from self._proxy.stop()
 
 
 class Closable(GenericProxy):
@@ -229,9 +279,17 @@ class Closable(GenericProxy):
     @synchronize
     def open(self):
         """Open it"""
-        yield from self._proxy.open()
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.open()
+        else:
+            yield from self._proxy.open()
 
     @synchronize
     def close(self):
         """Close it"""
-        yield from self._proxy.close()
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.close()
+        else:
+            yield from self._proxy.close()
