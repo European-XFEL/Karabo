@@ -328,8 +328,8 @@ void SignalSlotable_Test::testReceiveAsyncNoReply() {
     // All arguments match, so we expect the normalHandler to be called
     greeter->request("responder", "slotAnswer").receiveAsync(normalHandler, errHandler);
 
-    // Wait maximum 200 ms for message travel
-    int trials = 10;
+    // Wait maximum 400 ms for message travel
+    int trials = 20;
     while (--trials >= 0) {
         if (handlerCalled || errorCode != 0) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(20));
@@ -348,8 +348,8 @@ void SignalSlotable_Test::testReceiveAsyncNoReply() {
     // Now wrongArgHandler expects a Hash but slotAnswer placed (automatically) an empty reply
     greeter->request("responder", "slotAnswer").receiveAsync<karabo::util::Hash>(wrongArgHandler, errHandler);
 
-    // Wait maximum 200 ms for message travel
-    trials = 10;
+    // Wait maximum 400 ms for message travel
+    trials = 20;
     while (--trials >= 0) {
         if (handlerCalled || errorCode != 0) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(20));
@@ -662,7 +662,7 @@ void SignalSlotable_Test::testAsyncReply() {
     };
     sender->request("slotter", "slotAsyncReply", 3).receiveAsync<int>(successHandler, errorHandler);
     // Some time for message travel and execution until slot call is finished...
-    int counter = 20;
+    int counter = 100;
     while (--counter >= 0) {
         if (slotter->m_slotCallEnded) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -672,7 +672,7 @@ void SignalSlotable_Test::testAsyncReply() {
     CPPUNIT_ASSERT(!received);
 
     // Now wait until reply is received
-    counter = 20;
+    counter = 100;
     while (--counter >= 0) {
         if (received) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -707,7 +707,7 @@ void SignalSlotable_Test::testAsyncReply() {
 
     sender->request("slotter", "slotAsyncErrorReply").receiveAsync(successHandler2, errorHandler2);
     // Some time for message travel and execution until slot call is finished...
-    counter = 20;
+    counter = 100;
     while (--counter >= 0) {
         if (slotter->m_slotCallEnded_error) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -717,7 +717,7 @@ void SignalSlotable_Test::testAsyncReply() {
     CPPUNIT_ASSERT(!receivedSuccess && !receivedError);
 
     // Now wait until reply is received
-    counter = 20;
+    counter = 100;
     while (--counter >= 0) {
         if (receivedSuccess || receivedError) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -738,7 +738,7 @@ void SignalSlotable_Test::testAsyncReply() {
     CPPUNIT_ASSERT_NO_THROW(slotter->slotAsyncReply(3));
     CPPUNIT_ASSERT(slotter->m_slotCallEnded);
 
-    counter = 20;
+    counter = 100;
     while (--counter >= 0) {
         if (slotter->m_asynReplyHandlerCalled) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
