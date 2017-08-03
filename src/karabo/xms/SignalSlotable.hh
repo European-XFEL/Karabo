@@ -536,6 +536,12 @@ namespace karabo {
                 template <typename ...Args>
                 void operator()(const Args&... args) const;
 
+                /**
+                 * If a proper reply cannot be placed, please use this to reply an error
+                 * @param message is the text for the RemoteException
+                 */
+                void replyError(const std::string& message) const;
+
             private:
                 SignalSlotable* const m_signalSlotable; // pointer is const - but may call non-const methods
                 const std::string m_replyId;
@@ -786,6 +792,10 @@ namespace karabo {
 
             /// Template less part of asyncReply(id, args...)
             void asyncReplyImpl(const std::string& id);
+
+            /// Helper for asyncReplyImpl:
+            /// If info is found for id, it is returned and removed from map.
+            std::tuple<util::Hash::Pointer, std::string, bool> extractAsyncReplyInfo(const std::string& id);
 
             static std::string generateUUID();
 
@@ -1102,6 +1112,7 @@ namespace karabo {
             m_signalSlotable->reply(args...);
             m_signalSlotable->asyncReplyImpl(m_replyId);
         }
+
         /**** SignalSlotable Template Function Implementations ****/
 
         template <typename ...Args>
