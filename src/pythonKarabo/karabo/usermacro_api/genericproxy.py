@@ -33,7 +33,7 @@ class GenericProxy(object):
         return cls.create_generic_proxy(proxy)
 
     @synchronize
-    def lock_on(self, locker):
+    def lockon(self, locker):
         """Lock device"""
         current_locker = self._proxy.lockedBy
         if locker != current_locker:
@@ -43,7 +43,7 @@ class GenericProxy(object):
         self.locker = locker
 
     @synchronize
-    def lock_off(self):
+    def lockoff(self):
         """Release lock"""
         current_locker = self._proxy.lockedBy
         if self.locker != current_locker:
@@ -65,11 +65,11 @@ class Movable(GenericProxy):
     to press for e.g. a next button)
     """
     @property
-    def position(self):
+    def actual_position(self):
         """"Position getter """
         return self._proxy.encoderPosition
 
-    @position.setter
+    @actual_position.setter
     @synchronize
     def moveto(self, pos):
         """Move to *pos*"""
@@ -107,11 +107,11 @@ class Sensible(GenericProxy):
 class Coolable(GenericProxy):
     """Generalized interface to coolers"""
     @property
-    def temperature(self):
+    def actual_temperature(self):
         """"Temperature getter """
         return self._proxy.currentColdHeadTemperature
 
-    @temperature.setter
+    @actual_temperature.setter
     @synchronize
     def cool(self, temperature):
         """Cool to *temperature*"""
@@ -130,7 +130,7 @@ class Pumpable(GenericProxy):
     @property
     def pressure(self):
         """Pressure getter"""
-        return self._proxy.presssure
+        return self._proxy.pressure
 
     @synchronize
     def pump(self):

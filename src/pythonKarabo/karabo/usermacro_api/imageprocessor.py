@@ -11,8 +11,6 @@ class ImageProcessorAsSensible(Sensible):
 
     def acquire(self):
         """No action is needed to put imageProcessor in acquisition"""
-        pass
 
     def stop(self):
         """Can't stop acquisition once an imageprocessor in instantiated"""
-        pass
