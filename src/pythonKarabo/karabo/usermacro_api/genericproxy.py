@@ -71,7 +71,7 @@ class Movable(GenericProxy):
 
     @actualPosition.setter
     def actualPosition(self, value):
-        yield from self.moveto(value)
+        self.moveto(value)
 
     @synchronize
     def moveto(self, pos):
@@ -116,7 +116,7 @@ class Coolable(GenericProxy):
 
     @actualTemperature.setter
     def actualTemperature(self, value):
-        yield from self.cool(value)
+        self.cool(value)
 
     @synchronize
     def cool(self, temperature):
