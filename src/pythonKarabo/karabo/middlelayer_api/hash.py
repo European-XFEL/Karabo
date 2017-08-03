@@ -53,11 +53,12 @@ class Enumable(object):
                      "AlarmCondition": AlarmCondition}
 
     def __init__(self, enum=None, classId=None, **kwargs):
-        super().__init__(**kwargs)
         if classId is not None:
             enum = self.known_classes.get(classId)
-        assert enum is None or issubclass(enum, Enum)
-        self.enum = enum
+        if enum is not None:
+            assert issubclass(enum, Enum)
+            self.enum = enum
+        super().__init__(**kwargs)
 
     def cast(self, other):
         if isinstance(other, self.enum):
@@ -76,11 +77,17 @@ class Enumable(object):
         schema, attrs = super(Enumable, self).toSchemaAndAttrs(device, state)
         if self.enum is not None:
             attrs["classId"] = self.enum.__name__
+            if self.options is None:
+                attrs["options"] = [val.value
+                                    for val in self.enum.__members__.values()]
+            else:
+                attrs["options"] = [opt.value for opt in self.options]
         return schema, attrs
 
     def toKaraboValue(self, data, strict=True):
         if not strict and not isinstance(data, self.enum):
             data = self.enum(data)
+        self.check(data)
         return basetypes.EnumValue(data, descriptor=self)
 
 
@@ -145,6 +152,7 @@ class Simple(object):
                 self.maxInc is not None and ret > self.maxInc):
             raise ValueError("value {} of {} not in allowed range".
                              format(ret, self.key))
+        super().check(ret)
 
     def alarmCondition(self, data):
         if not basetypes.isSet(data):
@@ -185,7 +193,10 @@ class Simple(object):
         schema, attrs = super().toSchemaAndAttrs(device, state)
         if self.options is not None:
             # assure options are serialized correctly
-            attrs["options"] = np.array(self.options, dtype=self.numpy)
+            opts = self.options
+            if self.enum is not None:
+                opts = [opt.value for opt in self.options]
+            attrs["options"] = np.array(opts, dtype=self.numpy)
         return schema, attrs
 
 
@@ -551,14 +562,24 @@ class Type(Descriptor, Registry):
 
     options = Attribute()
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if self.options is not None:
-            self.options = [self.cast(o) for o in self.options]
+    def __init__(self, strict=True, **kwargs):
+        super().__init__(strict=strict, **kwargs)
         self.units = basetypes.QuantityValue(
                 1, unit=self.unitSymbol, metricPrefix=self.metricPrefixSymbol
             ).units
         self.dimensionality = self.units.dimensionality
+
+        # re-write the options. We first delete them so we don't check
+        # against ourselves while generating the options
+        options = self.options
+        self.options = None
+        if options is not None:
+            if self.enum is None:
+                self.options = [self.toKaraboValue(o, strict=False).value
+                                for o in options]
+            else:
+                self.options = [self.toKaraboValue(o, strict=strict).enum
+                                for o in options]
 
     def toKaraboValue(self, data, strict=True):
         """Convert data into a KaraboValue
@@ -573,6 +594,11 @@ class Type(Descriptor, Registry):
         conversions and timestamp handling by hand.
         """
         raise NotImplementedError
+
+    def check(self, ret):
+        if self.options is not None and ret not in self.options:
+            raise ValueError("value {} not in options {}"
+                             .format(ret, self.options))
 
     @classmethod
     def hashname(cls):
@@ -1067,6 +1093,7 @@ class String(Enumable, Type):
     def toKaraboValue(self, data, strict=True):
         if self.enum is not None:
             return Enumable.toKaraboValue(self, data, strict)
+        self.check(data)
         return basetypes.StringValue(data, descriptor=self)
 
 
