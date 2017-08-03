@@ -3,13 +3,27 @@
 # Created on August 3, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from itertools import islice
+import json
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PyQt4.QtCore import (
+    pyqtSlot, QAbstractItemModel, QMimeData, QModelIndex, Qt)
 
+from karabo.middlelayer import AccessMode
+import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
-from karabo_gui.schema import Schema
+from karabo_gui.schema import Dummy, Schema, SlotNode
+from karabo_gui.treewidget.parametertreewidget import getDeviceBox
+from karabo_gui.widget import DisplayWidget, EditableWidget
+
+
+def _get_property_names(node_descriptor):
+    """Filter by currently accessible properties
+    """
+    level = krb_globals.GLOBAL_ACCESS_LEVEL
+    assert isinstance(node_descriptor, Schema)
+    return [key for key, desc in node_descriptor.dict.items()
+            if desc.requiredAccessLevel <= level]
 
 
 class ConfigurationTreeModel(QAbstractItemModel):
@@ -42,13 +56,25 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def configuration(self, conf):
         """Set the `Configuration` instance that we're presenting to Qt
         """
-        self._model_index_refs.clear()
+        oldconf = self._configuration
+        if oldconf is not None:
+            oldconf.signalUpdateComponent.disconnect(self._config_update)
+            if oldconf.type == 'device':
+                sig = oldconf.boxvalue.state.signalUpdateComponent
+                sig.disconnect(self._state_update)
 
         try:
             self.beginResetModel()
+            self._model_index_refs.clear()
             self._configuration = conf
         finally:
             self.endResetModel()
+
+        if conf is not None:
+            conf.signalUpdateComponent.connect(self._config_update)
+            if conf.type == 'device':
+                sig = conf.boxvalue.state.signalUpdateComponent
+                sig.connect(self._state_update)
 
     # ----------------------------
     # Private interface
@@ -66,8 +92,29 @@ class ConfigurationTreeModel(QAbstractItemModel):
         else:
             parent = self._configuration
 
-        properties = list(parent.descriptor.dict.keys())
+        properties = _get_property_names(parent.descriptor)
         return properties.index(box_key)
+
+    @pyqtSlot(object, object, object)
+    def _config_update(self, box, value, timestamp):
+        """Notify the view of item updates
+
+        XXX: This is slightly clever (always dangerous!) in that we're only
+        connected to the signalUpdateComponent signal of the root Configuration
+        object. Therefore, we will only be called here when a configuration is
+        applied via the configuration's `fromHash` method.
+        """
+        last_row = self.rowCount()
+        first = self.index(0, 1)
+        last = self.index(last_row, 1)
+        self.dataChanged.emit(first, last)
+
+    @pyqtSlot(object, object, object)
+    def _state_update(self, box, state, timestamp):
+        """Respond to device instance state changes
+
+        XXX: This will eventually enable/disable slot buttons
+        """
 
     # ----------------------------
     # Qt methods
@@ -75,10 +122,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
         """
-        return 1
+        return 2
 
     def createIndex(self, row, col, box):
-        """Prophalaxis for QModelIndex.internalPointer...
+        """Prophylaxis for QModelIndex.internalPointer...
 
         QModelIndex stores internalPointer references weakly. This can be
         highly dangerous when a model index outlives the data it's referencing.
@@ -98,10 +145,20 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return None
 
         column = index.column()
-        if column == 0 and role == Qt.DisplayRole:
-            return box.path[-1]
-        elif column == 0 and role == Qt.DecorationRole:
-            return icons.undefined
+        if column == 0:
+            if role == Qt.DisplayRole:
+                return box.path[-1]
+            elif role == Qt.DecorationRole:
+                return icons.undefined
+        elif column == 1:
+            if role == Qt.DisplayRole:
+                if isinstance(box.descriptor, Schema):
+                    return ''
+
+                value = box.value
+                if isinstance(value, (Dummy, bytes, bytearray)):
+                    return ''
+                return str(value)
 
     def flags(self, index):
         """Reimplemented function of QAbstractItemModel.
@@ -109,14 +166,25 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if not index.isValid():
             return Qt.NoItemFlags
 
-        return super(ConfigurationTreeModel, self).flags(index)
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        box = self.box_ref(index)
+        if box is not None:
+            is_node = isinstance(box.descriptor, Schema)
+            is_slot = isinstance(box.descriptor, SlotNode)
+            if not is_node or is_slot:
+                flags |= Qt.ItemIsDragEnabled
+
+        return flags
 
     def headerData(self, section, orientation, role):
         """Reimplemented function of QAbstractItemModel.
         """
         if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal and section == 0:
-                return "Name"
+            if orientation == Qt.Horizontal:
+                if section == 0:
+                    return "Name"
+                elif section == 1:
+                    return "Value"
 
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -135,15 +203,55 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if parent_box is None or parent_box.descriptor is None:
             return QModelIndex()
 
-        # descriptor.dict is an OrderedDict of (path, descriptor) items
-        key = next(islice(parent_box.descriptor.dict, row, None))
+        names = _get_property_names(parent_box.descriptor)
+        key = names[row]
         box = getattr(parent_box.boxvalue, key)
         return self.createIndex(row, column, box)
 
     def mimeData(self, indices):
         """Reimplemented function of QAbstractItemModel.
         """
-        return None
+        if len(indices) == 0 or self._configuration.type == 'class':
+            return None
+
+        dragged = []
+        for index in indices:
+            if index.column() != 0:
+                continue  # Ignore other columns (all columns are the same box)
+
+            box = self.box_ref(index)
+            if box is None:
+                continue
+
+            # Get the box. "box" is in the project, "realbox" the
+            # one on the device. They are the same if not from a project
+            realbox = getDeviceBox(box)
+            if realbox.descriptor is not None:
+                box = realbox
+
+            # Collect the relevant information
+            data = {
+                'key': box.key(),
+                'label': box.path[-1],
+            }
+
+            factory = DisplayWidget.getClass(box)
+            if factory is not None:
+                data['display_widget_class'] = factory.__name__
+            if box.descriptor.accessMode == AccessMode.RECONFIGURABLE:
+                factory = EditableWidget.getClass(box)
+                if factory is not None:
+                    data['edit_widget_class'] = factory.__name__
+            # Add it to the list of dragged items
+            dragged.append(data)
+
+        if not dragged:
+            return None
+
+        mimeData = QMimeData()
+        mimeData.setData('source_type', 'ParameterTreeWidget')
+        mimeData.setData('tree_items', json.dumps(dragged))
+        return mimeData
 
     def parent(self, index):
         """Reimplemented function of QAbstractItemModel.
@@ -180,4 +288,4 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if not isinstance(descriptor, Schema):
             return 0
 
-        return len(descriptor.dict)
+        return len(_get_property_names(descriptor))
