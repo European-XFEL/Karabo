@@ -48,7 +48,8 @@ class TableTreeWidgetItem(BaseTreeWidgetItem):
 
     def setReadOnly(self, readOnly):
         if self.editable_widget is not None:
-            self.editable_widget.widget.setEnabled(not readOnly)
+            allowed = self.box.isAllowed()
+            self.editable_widget.widget.setEnabled(allowed and not readOnly)
         super(TableTreeWidgetItem, self).setReadOnly(readOnly)
 
     def onSetToDefault(self):
