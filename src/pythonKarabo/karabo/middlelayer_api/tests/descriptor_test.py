@@ -73,6 +73,8 @@ class Tests(TestCase):
             a = 1
             b = 2
             c = 3
+        class F(Enum):
+            a = 1
 
         d = Int8(enum=E, options=[E.b, E.c])
         d.toKaraboValue(E.b)
@@ -83,6 +85,8 @@ class Tests(TestCase):
             d.toKaraboValue(E.a)
         with self.assertRaises(TypeError):
             Int8(enum=E, options=[1, 2])
+        with self.assertRaises(TypeError):
+            Int8(enum=E, options=[F.a])
 
     def test_bool(self):
         d = Bool()
@@ -346,6 +350,8 @@ class Tests(TestCase):
             a = "A"
             b = "B"
             c = "C"
+        class F(Enum):
+            c = "C"
 
         d = String(enum=E, options=[E.b, E.c])
         d.toKaraboValue(E.b)
@@ -356,6 +362,8 @@ class Tests(TestCase):
             d.toKaraboValue(E.a)
         with self.assertRaises(TypeError):
             String(enum=E, options=["B", "C"])
+        with self.assertRaises(TypeError):
+            String(enum=E, options=[F.c])
 
     def test_vector_string(self):
         d = VectorString()
