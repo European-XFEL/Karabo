@@ -1,4 +1,4 @@
-"""Generalzed interface to LPD
+"""Generalized interface to LPD
 """
 from asyncio import wait_for
 from karabo.middlelayer import State, waitUntil
