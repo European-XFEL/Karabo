@@ -11,6 +11,7 @@ from karabo.middlelayer_api.hash import ByteArray
 from karabo_gui.attributeediting.api import (
     EDITABLE_ATTRIBUTE_NAMES, ATTRIBUTE_EDITOR_FACTORIES
 )
+from karabo_gui.configurator.api import ConfigurationTreeView
 import karabo_gui.icons as icons
 from karabo_gui.schema import (
     ChoiceOfNodes, ImageNode, ListOfNodes, OutputNode, Schema, SlotNode,
@@ -28,6 +29,12 @@ def fill_parameter_tree_widget(tree_widget, configuration):
     """Fill a `ParameterTreeWidget` with items which match up with the parts
     of `configuration`.
     """
+    # XXX: Handle the new-style configuration tree widget
+    if isinstance(tree_widget, ConfigurationTreeView):
+        tree_widget.model().configuration = configuration
+        configuration.parameterEditor = tree_widget
+        return
+
     class_types = ('class', 'projectClass')
 
     configuration.parameterEditor = tree_widget
