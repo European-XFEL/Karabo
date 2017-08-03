@@ -603,6 +603,7 @@ void SignalSlotable_Test::testAsyncReply() {
             , m_timer(karabo::net::EventLoop::getIOService()) {
 
             KARABO_SLOT(slotAsyncReply, int);
+            KARABO_SLOT(slotAsyncErrorReply);
         }
 
 
@@ -619,8 +620,26 @@ void SignalSlotable_Test::testAsyncReply() {
             m_slotCallEnded = true;
         }
 
+
+        void slotAsyncErrorReply() {
+            const AsyncReply reply(this);
+
+            // Let's stop this function call soon, but nevertheless send error reply in 100 ms (likely in another thread!)
+            m_timer.expires_from_now(boost::posix_time::milliseconds(100));
+            m_timer.async_wait([reply, this](const boost::system::error_code & ec) {
+                if (ec) return;
+                reply.replyError("Something nasty to be expected!");
+                this->m_asynReplyHandlerCalled_error = true;
+            });
+            m_slotCallEnded_error = true;
+        }
+
+
         bool m_slotCallEnded;
         bool m_asynReplyHandlerCalled;
+
+        bool m_slotCallEnded_error;
+        bool m_asynReplyHandlerCalled_error;
     private:
         boost::asio::deadline_timer m_timer;
 
@@ -663,6 +682,53 @@ void SignalSlotable_Test::testAsyncReply() {
     CPPUNIT_ASSERT(received);
     CPPUNIT_ASSERT(resultIs7);
     CPPUNIT_ASSERT(!errorHappened);
+
+    //
+    // Now check AsyncReply::replyError
+    //
+    bool receivedSuccess = false;
+    auto successHandler2 = [&receivedSuccess] () {
+        receivedSuccess = true;
+    };
+    bool receivedError = false;
+    bool remoteError = false;
+    std::string errorText;
+    auto errorHandler2 = [&receivedError, &remoteError, &errorText] () {
+        receivedError = true;
+        try {
+            throw;
+        } catch (const karabo::util::RemoteException& re) {
+            remoteError = true;
+            errorText = re.what();
+        } catch (const std::exception& e) {
+            errorText = e.what();
+        }
+    };
+
+    sender->request("slotter", "slotAsyncErrorReply").receiveAsync(successHandler2, errorHandler2);
+    // Some time for message travel and execution until slot call is finished...
+    counter = 20;
+    while (--counter >= 0) {
+        if (slotter->m_slotCallEnded_error) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+    CPPUNIT_ASSERT(slotter->m_slotCallEnded_error);
+    // ...but reply is not yet received
+    CPPUNIT_ASSERT(!receivedSuccess && !receivedError);
+
+    // Now wait until reply is received
+    counter = 20;
+    while (--counter >= 0) {
+        if (receivedSuccess || receivedError) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+    // Assert and also check result:
+    CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled_error);
+    CPPUNIT_ASSERT(receivedError);
+    CPPUNIT_ASSERT(!receivedSuccess);
+    // The text we have is part of the full exception message that e.g. also contains the time stamp
+    CPPUNIT_ASSERT(errorText.find("Something nasty to be expected!") != std::string::npos);
+    CPPUNIT_ASSERT(remoteError);
 
     //
     // Now check that we can call a slot with an async reply directly (although the reply does not matter)
