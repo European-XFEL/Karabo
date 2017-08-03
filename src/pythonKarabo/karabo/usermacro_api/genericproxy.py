@@ -70,6 +70,9 @@ class Movable(GenericProxy):
         return self._proxy.encoderPosition
 
     @actualPosition.setter
+    def actualPosition(self, value):
+        yield from self.moveto(value)
+
     @synchronize
     def moveto(self, pos):
         """Move to *pos*"""
@@ -112,6 +115,9 @@ class Coolable(GenericProxy):
         return self._proxy.currentColdHeadTemperature
 
     @actualTemperature.setter
+    def actualTemperature(self, value):
+        yield from self.cool(value)
+
     @synchronize
     def cool(self, temperature):
         """Cool to *temperature*"""
