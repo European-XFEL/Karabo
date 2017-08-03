@@ -1,25 +1,27 @@
 """The Generic Proxy module contains
 all generalized interface to devices
 """
-from asyncio import coroutine, wait_for
+from asyncio import wait_for
 from karabo.middlelayer import (connectDevice, KaraboError, Proxy,
                                 waitUntilNew)
+from karabo.middlelayer_api.proxy import synchronize
 
 
 class GenericProxy(object):
     """Base class for all generic proxies"""
     _proxy = Proxy()
-    _proxies = None
+    _generic_proxies = None
     locker = ""
+    state_mapping = {}
 
     def __repr__(self):
-        if self._proxies is None:
+        if self._generic_proxies is None:
             rep = "{}('{}')".format(type(self).__name__,
                                     self._proxy.deviceId)
         else:
             rep = "{}(".format(type(self).__name__)
-            for gp in self._proxies:
-                if gp._proxies is None:
+            for gp in self._generic_proxies:
+                if gp._generic_proxies is None:
                     rep += "'{}', ".format(gp._proxy.deviceId)
                 else:
                     rep += "{}, ".format(gp)
@@ -44,53 +46,51 @@ class GenericProxy(object):
 
     @classmethod
     def create_generic_proxy_container(cls, proxies):
-        if type(proxies[0]) in cls.__subclasses__():
-            obj = object.__new__(cls)
-            obj._proxies = proxies
-            return obj
-        for subclass in cls.__subclasses__():
-            gp_container = subclass.create_generic_proxy_container(proxies)
-            if gp_container:
-                return gp_container
+        for subclass in GenericProxy.__subclasses__():
+            if isinstance(proxies[0], subclass):
+                obj = object.__new__(subclass)
+                obj._generic_proxies = proxies
+                return obj
 
     def __new__(cls, *args):
-        if len(args) == 0:
+        if args:
+            if len(args) == 1:
+                deviceId = args[0]
+                if isinstance(deviceId, str):
+                    # Act as a generic proxy
+                    try:
+                        proxy = connectDevice(deviceId)
+                        return cls.create_generic_proxy(proxy)
+                    except:
+                        cls.error("Could not connect to {}. Is it on?"
+                                  .format(deviceId))
+                else:
+                    # Act as a container with a single generic proxy
+                    return cls.create_generic_proxy_container(args)
+
+            else:
+                # Act as container and instantiate all the proxies
+                # if they are not already
+                gproxies = []
+                for device in args:
+                    if isinstance(device, GenericProxy):
+                        gproxies.append(device)
+                    else:
+                        # Assume it's a string, and delegate the problem
+                        # to instantiation if it isn't
+                        gproxies.append(GenericProxy(device))
+
+                if all(isinstance(dev, type(gproxies[0]).__bases__[0])
+                                  for dev in gproxies):
+                        return cls.create_generic_proxy_container(gproxies)
+                cls.error("Provided different types of Devices")
+        else:
             # Act as a container
             pass
 
-        elif len(args) == 1:
-            deviceId = args[0]
-            if isinstance(deviceId, str):
-                # Act as a generic proxy
-                try:
-                    proxy = connectDevice(deviceId)
-                    return cls.create_generic_proxy(proxy)
-                except:
-                    cls.error("Could not connect to {}. Is it on?"
-                              .format(deviceId))
-            else:
-                # I'm a container with a single generic proxy
-                return cls.create_generic_proxy_container(args)
 
-        else:
-            # Act as container: instantiate all the proxies
-            # if they are not already
-            proxies = []
-            for device in args:
-                if isinstance(device, GenericProxy):
-                    proxies.append(device)
-                else:
-                    # Assume it's a string,
-                    # and delegate the problem to instantiation if it isn't
-                    proxy = connectDevice(device)
-                    proxies.append(cls.create_generic_proxy(proxy))
-            if all(isinstance(dev, type(proxies[0]).__bases__[0])
-                   for dev in proxies):
-                    return cls.create_generic_proxy_container(proxies)
-            cls.error("Provided different types of Devices")
-
-    @coroutine
-    def lock_on(self, locker):
+    @synchronize
+    def lockon(self, locker):
         """Lock device"""
         while self._proxy.lockedBy != locker:
             if self._proxy.lockedBy == "":
@@ -104,8 +104,8 @@ class GenericProxy(object):
                     self.error("Could not lock {}".format(self._proxy.classId))
         self.locker = locker
 
-    @coroutine
-    def lock_off(self):
+    @synchronize
+    def lockoff(self):
         """Release lock"""
         current_locker = self._proxy.lockedBy
         if self.locker != current_locker:
@@ -117,6 +117,11 @@ class GenericProxy(object):
     def deviceId(self):
         return self._proxy.deviceId
 
+    @property
+    def state(self):
+        """Get state"""
+        return self.state_mapping.get(self._proxy.state, self._proxy.state)
+
 
 class Movable(GenericProxy):
     """Movable generic proxy
@@ -125,33 +130,30 @@ class Movable(GenericProxy):
     or wizard devices (those requiring human
     to press for e.g. a next button)
     """
-    current_step = 0
-
     @property
-    def position(self):
-        """Get the position"""
-        raise NotImplementedError
+    def actualPosition(self):
+        """"Position getter """
+        return self._proxy.encoderPosition
 
-    @coroutine
+    @actualPosition.setter
+    def actualPosition(self, value):
+        self.moveto(value)
+
+    @synchronize
     def moveto(self, pos):
         """Move to *pos*"""
-        print("Montor will move to {}".format(pos))
-        raise NotImplementedError
+        self._proxy.targetPosition = pos
+        yield from self._proxy.move()
 
-    @coroutine
+    @synchronize
     def stop(self):
         """Stop"""
-        raise NotImplementedError
+        yield from self._proxy.stop()
 
-    @coroutine
-    def step(self, stp):
-        """Move to step *stp*"""
-        self.current_step = stp
-
-    @coroutine
+    @synchronize
     def home(self):
         """Home"""
-        raise NotImplementedError
+        yield from self._proxy.home()
 
 
 class Sensible(GenericProxy):
@@ -160,60 +162,67 @@ class Sensible(GenericProxy):
     This is a generalized interface to detectors, sensors
     and image processors
     """
-    @coroutine
+    @synchronize
     def acquire(self):
         """Start acquisition"""
-        print("Sensible will start acquire.")
-        raise NotImplementedError
+        yield from self._proxy.acquire()
 
-    @coroutine
+    @synchronize
     def stop(self):
         """Stop acquisition"""
-        print("Sensible will stop.")
-        raise NotImplementedError
+        yield from self._proxy.stop()
 
 
 class Coolable(GenericProxy):
     """Generalized interface to coolers"""
-
     @property
-    def temperature(self):
-        """Get the temperature from the device"""
-        raise NotImplementedError
+    def actualTemperature(self):
+        """"Temperature getter """
+        return self._proxy.currentColdHeadTemperature
 
-    @temperature.setter
-    @coroutine
+    @actualTemperature.setter
+    def actualTemperature(self, value):
+        self.cool(value)
+
+    @synchronize
     def cool(self, temperature):
         """Cool to *temperature*"""
-        raise NotImplementedError
+        self._proxy.targetCoolTemperature = temperature
+        yield from self._proxy.cool()
 
-    @coroutine
+    @synchronize
     def stop(self):
         """Stop cooling"""
-        raise NotImplementedError
+        yield from self._proxy.stop()
 
 
 class Pumpable(GenericProxy):
     """Generalized interface to pumps"""
-    @coroutine
+
+    @property
+    def pressure(self):
+        """Pressure getter"""
+        return self._proxy.pressure
+
+    @synchronize
     def pump(self):
         """Start pumping"""
-        raise NotImplementedError
+        yield from self._proxy.pump()
 
-    @coroutine
+    @synchronize
     def stop(self):
         """Stop pumping"""
-        raise NotImplementedError
+        yield from self._proxy.stop()
 
 
 class Closable(GenericProxy):
     """Generalized interface to valves"""
-    @coroutine
+    @synchronize
     def open(self):
         """Open it"""
-        raise NotImplementedError
+        yield from self._proxy.open()
 
-    @coroutine
+    @synchronize
     def close(self):
         """Close it"""
-        raise NotImplementedError
+        yield from self._proxy.close()
