@@ -1,7 +1,7 @@
 """The Generic Proxy module contains
 all generalized interface to devices
 """
-from karabo.middlelayer import getDevice
+from karabo.middlelayer import connectDevice
 from karabo.middlelayer import KaraboError
 from karabo.middlelayer_api.proxy import ProxyBase, synchronize
 
@@ -29,7 +29,7 @@ class GenericProxy(object):
                 return generic_proxy
 
     def __new__(cls, deviceId):
-        proxy = getDevice(deviceId)
+        proxy = connectDevice(deviceId)
         return cls.create_generic_proxy(proxy)
 
     @synchronize
