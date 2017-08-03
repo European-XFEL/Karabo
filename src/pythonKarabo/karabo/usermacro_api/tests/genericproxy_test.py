@@ -10,7 +10,8 @@ Our chief weapons are handcrafted tests, and cheap coloured outputs.
 
 Expecting unit tests, were you!?
 
-Instantiate three BeckhoffSimpleMotor devices as testm{1,2,3}
+Instantiate three BeckhoffSimpleMotor devices as testm{1,2,3}, and a lima
+camera as limasim.
 Open ikarabo and import this file:
 
 In[1]: import karabo.usermacro_api.tests.genericproxy_test
@@ -26,6 +27,7 @@ print('single generation as GP {}:\n{}'.format(OK, output))
 output = None
 output = GenericProxy('testm1', 'testm2', 'testm3')
 print("TEST 2: ", end='')
+
 if type(output) == Movable:
     print('triple generation as GP {}:\n{}'
           .format(OK, output))
