@@ -13,8 +13,3 @@ class SlsDetectorAsSensible(Sensible):
     def acquire(self):
         """Start acquisition"""
         yield from self._proxy.start()
-
-    @synchronize
-    def stop(self):
-        """Stop acquisition"""
-        yield from self._proxy.stop()
