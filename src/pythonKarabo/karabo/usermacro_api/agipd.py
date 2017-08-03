@@ -1,9 +1,10 @@
 """Generalized interface to AGIPD
 """
 from asyncio import wait_for
-from .genericproxy import Sensible
+
 from karabo.middlelayer import State, waitUntil
 from karabo.middlelayer_api.eventloop import synchronize
+from .genericproxy import Sensible
 
 
 class AgipdAsSensible(Sensible):
