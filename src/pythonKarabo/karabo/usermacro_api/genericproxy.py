@@ -9,32 +9,38 @@ from karabo.middlelayer_api.proxy import synchronize
 
 class GenericProxy(object):
     """Base class for all generic proxies"""
-    _proxy = Proxy()
-    _generic_proxies = None
-    locker = ""
     state_mapping = {}
+    locker = ""
+    _proxy = Proxy()
+    _generic_proxies = []
 
     def __repr__(self):
-        if self._generic_proxies is None:
-            rep = "{}('{}')".format(type(self).__name__,
-                                    self._proxy.deviceId)
-        else:
+        def _repr_gproxy(gproxy):
+            return "{}('{}'), ".format(type(gproxy).__name__,
+                                       gproxy._proxy.deviceId)
+
+        def _repr_gproxy_container(gproxy):
+            return "{}, ".format(gproxy)
+
+        if self._generic_proxies:
             rep = "{}(".format(type(self).__name__)
-            for gp in self._generic_proxies:
-                if gp._generic_proxies is None:
-                    rep += "'{}', ".format(gp._proxy.deviceId)
+            for gproxy in self._generic_proxies:
+                if gproxy._generic_proxies:
+                    rep += _repr_gproxy_container(gproxy)
                 else:
-                    rep += "{}, ".format(gp)
+                    rep += _repr_gproxy(gproxy)
             rep = rep[:-2] + ")"
+        else:
+            rep = _repr_gproxy(self)
         return rep
 
     @classmethod
-    def error(cls, msg):
+    def _error(cls, msg):
         raise KaraboError(msg)
 
     @classmethod
     def create_generic_proxy(cls, proxy):
-        """Create generalized interface"""
+        """Create generalized interface from device ID"""
         if proxy.classId in getattr(cls, 'generalizes', []):
             obj = object.__new__(cls)
             obj._proxy = proxy
@@ -45,11 +51,12 @@ class GenericProxy(object):
                 return generic_proxy
 
     @classmethod
-    def create_generic_proxy_container(cls, proxies):
+    def create_generic_proxy_container(cls, gproxies):
+        """Create generalized interface from generic proxies"""
         for subclass in GenericProxy.__subclasses__():
-            if isinstance(proxies[0], subclass):
+            if isinstance(gproxies[0], subclass):
                 obj = object.__new__(subclass)
-                obj._generic_proxies = proxies
+                obj._generic_proxies = gproxies
                 return obj
 
     def __new__(cls, *args):
@@ -62,8 +69,8 @@ class GenericProxy(object):
                         proxy = connectDevice(deviceId)
                         return cls.create_generic_proxy(proxy)
                     except:
-                        cls.error("Could not connect to {}. Is it on?"
-                                  .format(deviceId))
+                        cls._error("Could not connect to {}. Is it on?"
+                                   .format(deviceId))
                 else:
                     # Act as a container with a single generic proxy
                     return cls.create_generic_proxy_container(args)
@@ -80,15 +87,14 @@ class GenericProxy(object):
                         # to instantiation if it isn't
                         gproxy = GenericProxy(device)
 
-                        if not gproxies or (gproxies and
-                            isinstance(gproxy, type(gproxies[0]).__bases__[0])):
-                            gproxies.append(gproxy)
-                        else:
-                            cls.error("Provided different types of Devices")
+                    if not gproxies or (gproxies
+                                        and isinstance(gproxy,
+                                                       type(gproxies[0])
+                                                       .__bases__[0])):
+                        gproxies.append(gproxy)
+                    else:
+                        cls._error("Provided different types of Devices")
                 return cls.create_generic_proxy_container(gproxies)
-
-        #If args is none, act as a container
-
 
     @synchronize
     def lockon(self, locker):
@@ -102,7 +108,8 @@ class GenericProxy(object):
                     wait_for(waitUntilNew(self._proxy.lockedBy),
                              timeout=2)
                 except TimeoutError:
-                    self.error("Could not lock {}".format(self._proxy.classId))
+                    self._error("Could not lock {}"
+                                .format(self._proxy.classId))
         self.locker = locker
 
     @synchronize
@@ -110,12 +117,13 @@ class GenericProxy(object):
         """Release lock"""
         current_locker = self._proxy.lockedBy
         if self.locker != current_locker:
-            self.error("{} is locked by {}."
-                       .format(self._proxy.deviceId, current_locker))
+            self._error("{} is locked by {}."
+                        .format(self._proxy.deviceId, current_locker))
         self._proxy.lockedBy = ""
 
     @property
     def deviceId(self):
+        """Get device ID"""
         return self._proxy.deviceId
 
     @property
