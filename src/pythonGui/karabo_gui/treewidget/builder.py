@@ -33,6 +33,7 @@ def fill_parameter_tree_widget(tree_widget, configuration):
     if isinstance(tree_widget, ConfigurationTreeView):
         tree_widget.model().configuration = configuration
         configuration.parameterEditor = tree_widget
+        tree_widget.resizeColumnToContents(0)
         return
 
     class_types = ('class', 'projectClass')
