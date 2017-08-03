@@ -422,6 +422,7 @@ def lock(proxy, wait_for_release=None):
     myId = get_instance().deviceId
     if proxy._lock_count == 0:
         if proxy.lockedBy == myId:
+            # we just unlocked the device but didn't get a response yet
             yield from proxy._update()
         while proxy.lockedBy != myId:
             if proxy.lockedBy == "":
