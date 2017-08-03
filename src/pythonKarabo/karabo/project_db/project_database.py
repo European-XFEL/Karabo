@@ -98,14 +98,17 @@ class ProjectDatabase(ContextDecorator):
         Returns an etree xml object from xml_rep
         :param xml_rep: the xml
         :return: a root node for the xml object
-        :raises: AttributeError if the object passed is not of type str or type
+        :raises: ValueError if the object passed is not of type str or type
                  etree.ElementBase
         """
         if isinstance(xml_rep, etree._Element):
             return xml_rep
         if isinstance(xml_rep, str):
-            return etree.fromstring(xml_rep)
-        raise AttributeError("Cannot handle type {}".format(type(xml_rep)))
+            try:
+                return etree.fromstring(xml_rep)
+            except etree.XMLSyntaxError:
+                raise ValueError("XML syntax error encountered while parsing!")
+        raise ValueError("Cannot handle type {}".format(type(xml_rep)))
 
     @staticmethod
     def _make_str_if_needed(xml_rep):
@@ -113,7 +116,7 @@ class ProjectDatabase(ContextDecorator):
         Returns a string representation of xml_rep
         :param xml_rep: the xml
         :return: a string representation of xml_rep
-        :raises: AttributeError if the object passed is not of type str or type
+        :raises: ValueError if the object passed is not of type str or type
                  etree.ElementBase
         """
         if isinstance(xml_rep, str):
@@ -124,7 +127,7 @@ class ProjectDatabase(ContextDecorator):
                                        xml_declaration=False)
             return xml_bytes
 
-        raise AttributeError("Cannot handle type {}".format(type(xml_rep)))
+        raise ValueError("Cannot handle type {}".format(type(xml_rep)))
 
     def _check_for_modification(self, domain, uuid, old_date):
         """ Check whether the item with of the given `domain` and `uuid` was
@@ -209,7 +212,12 @@ class ProjectDatabase(ContextDecorator):
             self.add_domain(domain)
 
         # Extract some information
-        item_tree = self._make_xml_if_needed(item_xml)
+        try:
+            # NOTE: The client might send us garbage
+            item_tree = self._make_xml_if_needed(item_xml)
+        except ValueError:
+            msg = 'XML parse error for item "{}"'.format(uuid)
+            raise ProjectDBError(msg)
 
         if 'user' not in item_tree.attrib:
             item_tree.attrib['user'] = 'Karabo User'
