@@ -115,9 +115,24 @@ class ConfigurationTreeModel(QAbstractItemModel):
     @pyqtSlot(object, object, object)
     def _state_update(self, box, state, timestamp):
         """Respond to device instance state changes
-
-        XXX: This will eventually enable/disable slot buttons
         """
+        def recurse(box, parent):
+            descriptor = box.descriptor
+            if descriptor is None:
+                return
+            names = _get_property_names(descriptor)
+            for row, name in enumerate(names):
+                sub_box = getattr(box.boxvalue, name)
+                if sub_box is None:
+                    continue
+                sub_desc = sub_box.descriptor
+                sub_index = self.index(row, 0, parent)
+                if sub_desc.allowedStates is not None:
+                    self.dataChanged.emit(sub_index, sub_index)
+                if isinstance(sub_desc, Schema):
+                    recurse(sub_box, sub_index)
+
+        recurse(self._configuration, QModelIndex())
 
     # ----------------------------
     # Qt methods
