@@ -2,7 +2,7 @@
 
 from karabo.middlelayer import State
 from .genericproxy import Sensible
-from karabo.middlelayer_api.proxy import ProxyBase, synchronize
+from karabo.middlelayer_api.proxy import synchronize
 
 
 class EnergyMaxAsSensible(Sensible):
@@ -17,4 +17,3 @@ class EnergyMaxAsSensible(Sensible):
     def acquire(self):
         """Start acquisition"""
         yield from self._proxy.start()
-
