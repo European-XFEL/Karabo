@@ -34,7 +34,7 @@ namespace karabo {
 
         // Bookkeeping stuff
 
-        std::string PointToPoint::getLocalUrl() const {
+        const std::string& PointToPoint::getLocalUrl() const {
             return m_localUrl;
         }
 
@@ -142,28 +142,25 @@ namespace karabo {
             channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
             channel->setAsyncChannelPolicy(4, "LOSSLESS");
 
-            try {
-                // Get client URL to register an open connection
-                const string& remoteUrl = message->get<string>("url");
-                vector<string> remoteIds;
-                if (message->has("ids")) message->get("ids", remoteIds);
-                {
-                    boost::unique_lock<boost::shared_mutex> lock(m_pointToPointMutex);
-                    // Clean from old entries with the same value : remoteUrl
-                    // because what we got is most up-to-date information
-                    for (MapInstanceIdToUrl::iterator it = m_instanceIdToUrl.begin(); it!=m_instanceIdToUrl.end(); ++it) {
-                        if (it->second == remoteUrl) m_instanceIdToUrl.erase(it);
-                    }
-                    for (auto& remoteInstanceId : remoteIds) m_instanceIdToUrl[remoteInstanceId] = remoteUrl;
-                    m_urlToInstanceIdSet[remoteUrl] = set<string>(remoteIds.begin(), remoteIds.end());
-                    m_mapOpenConnections[remoteUrl] = std::make_pair(channel, connection);
+            if (!message || !message->has("url") || !message->has("ids")) return;
+                
+            // Get client URL to register an open connection
+            const string& remoteUrl = message->get<string>("url");
+            vector<string> remoteIds;
+            if (message->has("ids")) message->get("ids", remoteIds);
+            {
+                boost::unique_lock<boost::shared_mutex> lock(m_pointToPointMutex);
+                // Clean from old entries with the same value : remoteUrl
+                // because what we got is most up-to-date information
+                for (MapInstanceIdToUrl::iterator it = m_instanceIdToUrl.begin(); it!=m_instanceIdToUrl.end(); ++it) {
+                    if (it->second == remoteUrl) m_instanceIdToUrl.erase(it);
                 }
-                // Prepare to read from client
-                channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "PointToPoint::onConnectServerBottomHalf : exception -- " << e.what()
-                        << "\n**** message was ...\n" << message;
+                for (auto& remoteInstanceId : remoteIds) m_instanceIdToUrl[remoteInstanceId] = remoteUrl;
+                m_urlToInstanceIdSet[remoteUrl] = set<string>(remoteIds.begin(), remoteIds.end());
+                m_mapOpenConnections[remoteUrl] = std::make_pair(channel, connection);
             }
+            // Prepare to read from client
+            channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));
         }
 
 
@@ -183,6 +180,14 @@ namespace karabo {
             Channel::Pointer channel = connection->start();  // synchronous call
             if (!channel) return false;
 
+            finalizeConnectionProtocol(remoteUrl, channel, connection);
+            return true;
+        }
+
+
+        void PointToPoint::finalizeConnectionProtocol(const std::string& remoteUrl,
+                                                      const Channel::Pointer& channel,
+                                                      const Connection::Pointer& connection) {
             channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
             channel->setAsyncChannelPolicy(4, "LOSSLESS");
 
@@ -198,8 +203,7 @@ namespace karabo {
             }
             channel->writeAsync(Hash("url", m_localUrl, "ids", ids), 4);
             // Prepare to read from server
-            channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));
-            return true;
+            channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));            
         }
 
 
@@ -228,24 +232,9 @@ namespace karabo {
                 channelErrorHandler(e, channel);
                 return;
             }
-            
-            channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
-            channel->setAsyncChannelPolicy(4, "LOSSLESS");
-
+                        
             const string& remoteUrl = config.get<string>("url");
-            {
-                boost::unique_lock<boost::shared_mutex> lock(m_pointToPointMutex);
-                m_mapOpenConnections[remoteUrl] = std::make_pair(channel, connection);
-            }
-            // inform server about my local URL and list of instanceIds
-            vector<string> ids;
-            {
-                boost::shared_lock<boost::shared_mutex> lock(m_localMapMutex);
-                for (const auto& i : m_localMap) ids.push_back(i.first);
-            }
-            channel->writeAsync(Hash("url", m_localUrl, "ids", ids), 4);
-            // Prepare to read from server
-            channel->readAsyncHashPointerHashPointer(bind_weak(&PointToPoint::onP2PMessage, this, _1, channel, _2, _3));
+            finalizeConnectionProtocol(remoteUrl, channel, connection);
         }
 
 
@@ -263,7 +252,7 @@ namespace karabo {
             resultMap.clear();
             for (SlotMap::iterator it = input.begin(); it != input.end(); ++it) {
                 const string& remoteInstanceId = it->first;
-                const std::set<std::string>& remoteValue = it->second;
+                const std::set<std::string>& remoteSlots = it->second;
                 string remoteUrl = "";
                 {
                     boost::shared_lock<boost::shared_mutex> lock(m_pointToPointMutex);
@@ -272,8 +261,8 @@ namespace karabo {
                     remoteUrl = iter->second;
                     if (m_mapOpenConnections.find(remoteUrl) == m_mapOpenConnections.end()) continue;   // not connected
                 }
-                resultMap[remoteUrl][remoteInstanceId] = remoteValue;
-                input.erase(it); // filter out this entry ... left entries of input will be sent via broker
+                resultMap[remoteUrl][remoteInstanceId] = remoteSlots;
+                input.erase(it);
             }
         }
 
@@ -303,11 +292,10 @@ namespace karabo {
                     }
                 } else {
                     // "Specified" slotInstanceId case:  |slotInstaceId|
-                    for (auto& i : m_localMap) {
-                        if (stripped == i.first) {
-                            EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, i.second,
-                                                                     header, message, i.second->getEpochMillis()));
-                        }
+                    auto it = m_localMap.find(stripped);
+                    if (it != m_localMap.end()) {
+                        EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, it->second,
+                                                                 header, message, it->second->getEpochMillis()));
                     }
                 }
             } else {

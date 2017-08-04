@@ -32,16 +32,15 @@ namespace karabo {
 
         public:
 
-            // Local map simply repeats the map in SignalSlotable
+            // Map (local) instanceId into SignalSlotable*
             typedef std::map<std::string, karabo::xms::SignalSlotable*> LocalMap;
-            // In SignalSlotable there is no serverId. We use url instead
-            // mapping the instanceId to url
+            // Map instanceId into connection URL 
             typedef std::map<std::string, std::string> MapInstanceIdToUrl;
-            // mapping url to set of instanceIds
+            // Map connection URL into set of instanceIds
             typedef std::map<std::string, std::set<std::string> > MapUrlToInstanceIdSet;
-            // mapping url to connection (pair of channel and connection pointers)
+            // Map connection URL to the open connection (pair of channel and connection pointers)
             typedef std::map<std::string, std::pair<karabo::net::Channel::Pointer, karabo::net::Connection::Pointer> > MapUrlToConnection;
-            // This repeates map defined in karabo::xms::Signal class
+            // This repeates map defined in karabo::xms::Signal class: map slotInstanceId to set of signalFunctions
             typedef std::map<std::string, std::set<std::string> > SlotMap;
 
             KARABO_CLASSINFO(PointToPoint, "PointToPoint", "2.1")
@@ -54,7 +53,7 @@ namespace karabo {
              * Return a string specifying the host and port the p2p interface is connected to
              * @return 
              */
-            std::string getLocalUrl() const;
+            const std::string& getLocalUrl() const;
 
             /**
              * Actively requests to establish and register a P2P connection to the remote server asynchronously
@@ -107,7 +106,7 @@ namespace karabo {
              * map that groups all SlotMap entries with the same URL. The entries that got to the output
              * will be erased from the input. Used for routing messages via P2P or broker
              * @param in  map between instanceId and set of slot functions
-             * @param out map between URL and SlotMap entries with the this URL
+             * @param out map between URL and SlotMap entries with the URL
              */
             void filterConnectedAndGroupByUrl(SlotMap& in, std::map<std::string, SlotMap>& out);
             
@@ -176,6 +175,10 @@ namespace karabo {
                                  const Channel::Pointer& channel,
                                  const Connection::Pointer& connection,
                                  const karabo::util::Hash& config);
+            
+            void finalizeConnectionProtocol(const std::string& remoteUrl,
+                                            const karabo::net::Channel::Pointer& channel,
+                                            const karabo::net::Connection::Pointer& connection);
 
             void onP2PMessage(const ErrorCode& e,
                               const karabo::net::Channel::Pointer& channel,
