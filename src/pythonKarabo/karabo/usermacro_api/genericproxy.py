@@ -2,10 +2,11 @@
 all generalized interface to devices
 """
 from asyncio import wait_for
+
+from karabo.common.states import StateSignifier
 from karabo.middlelayer import (connectDevice, KaraboError, Proxy,
                                 waitUntilNew)
 from karabo.middlelayer_api.proxy import synchronize
-from karabo.common.states import StateSignifier
 
 
 class GenericProxy(object):
