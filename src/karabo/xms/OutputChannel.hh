@@ -107,6 +107,7 @@ namespace karabo {
             std::string m_hostname;
             unsigned int m_ownPort;
             int m_compression;
+            int m_port;
 
             karabo::net::Connection::Pointer m_dataConnection;
             std::set<TcpChannelPointer> m_dataChannels;

@@ -58,14 +58,23 @@ namespace karabo {
                     .metricPrefix(MetricPrefix::MEGA)
                     .assignmentOptional().defaultValue(-1)
                     .commit();
+            
+            INT32_ELEMENT(expected).key("port")
+                    .displayedName("Port")
+                    .description("Port number for TCP connection")
+                    .expertAccess()
+                    .assignmentOptional().defaultValue(0)
+                    .init()
+                    .commit();
         }
 
 
-        OutputChannel::OutputChannel(const karabo::util::Hash& config) : m_sharedInputIndex(0) {
+        OutputChannel::OutputChannel(const karabo::util::Hash& config) : m_sharedInputIndex(0), m_port(0) {
             //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::OutputChannel CTOR ***";
             config.get("distributionMode", m_distributionMode);
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
             config.get("hostname", m_hostname);
+            config.get("port", m_port);
             if (m_hostname == "default") m_hostname = boost::asio::ip::host_name();
             config.get("compression", m_compression);
 
@@ -84,14 +93,18 @@ namespace karabo {
             // Data networking
             // TODO: Use port 0
             int tryAgain = 50; // Try maximum 50 times to start a server
-            while (tryAgain > 0) {
+            while (tryAgain >= 0) {
                 try {
                     //m_ownPort = Statics::generateServerPort();
-                    karabo::util::Hash h("type", "server", "port", 0, "compressionUsageThreshold", m_compression * 1E6);
+                    karabo::util::Hash h("type", "server", "port", m_port, "compressionUsageThreshold", m_compression * 1E6);
                     m_dataConnection = karabo::net::Connection::create("Tcp", h);
                     // Cannot yet use bind_weak - we are still in constructor :-(.
                     m_ownPort = m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
                 } catch (const std::exception& ex) {
+                    if (m_port != 0) { // if output channel is started with defined port number
+                        throw KARABO_NETWORK_EXCEPTION(std::string("Could not start TcpServer for output channel (\"")
+                                + toString(m_channelId) + "\", port = " + toString(m_port) + ") : " + ex.what());
+                    }
                     if (tryAgain > 0) {
                         tryAgain--;
                         continue;
@@ -100,8 +113,8 @@ namespace karabo {
                                 + toString(m_channelId) + "\", port = " + toString(m_ownPort) + ") : " + ex.what());
                     }
                 }
-                tryAgain = 0;
                 KARABO_LOG_FRAMEWORK_DEBUG << "Started DeviceOutput-Server listening on port: " << m_ownPort;
+                break;
             }
         }
 
