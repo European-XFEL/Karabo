@@ -1,3 +1,4 @@
+from asyncio import coroutine
 import unittest
 from contextlib import contextmanager
 from karabo.middlelayer import Device, KaraboError, Slot
@@ -15,6 +16,7 @@ class TestDev(Injectable, Device):
     @Slot
     def ping(self):
         print("Ping!")
+
 
 class Tests(DeviceTest):
 
@@ -46,10 +48,9 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_single_motor_instantiation(self):
-        output = yield from GenericProxy('tm1')
+        output = GenericProxy('testm1')
         self.assertEqual(type(output), BeckhoffMotorAsMovable)
-        self.assertEqual(output.__repr__(), "BeckhoffMotorAsMovable('tm1')")
-        self.assertEqual(output.__repr__(), ")")
+        self.assertEqual(output.__repr__(), "BeckhoffMotorAsMovable('testm1')")
 
     @sync_tst
     def test_wrong_type_instantiation(self):
