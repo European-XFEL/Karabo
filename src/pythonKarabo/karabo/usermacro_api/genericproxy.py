@@ -5,6 +5,7 @@ from asyncio import wait_for
 from karabo.middlelayer import (connectDevice, KaraboError, Proxy,
                                 waitUntilNew)
 from karabo.middlelayer_api.proxy import synchronize
+from karabo.common.states import StateSignifier
 
 
 class GenericProxy(object):
@@ -129,7 +130,12 @@ class GenericProxy(object):
     @property
     def state(self):
         """Get state"""
-        return self.state_mapping.get(self._proxy.state, self._proxy.state)
+        if self._generic_proxies:
+            signifier = StateSignifier()
+            return signifier.returnMostSignificant(
+                [gproxy.state for gproxy in self._generic_proxies])
+        else:
+            return self.state_mapping.get(self._proxy.state, self._proxy.state)
 
 
 class Movable(GenericProxy):
