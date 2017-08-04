@@ -33,7 +33,7 @@ class GenericProxy(object):
                     rep += _repr_gproxy(gproxy)
             rep = rep[:-2] + ")"
         else:
-            rep = _repr_gproxy(self)
+            rep = _repr_gproxy(self)[:-2]
         return rep
 
     @classmethod
