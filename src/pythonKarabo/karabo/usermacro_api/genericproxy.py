@@ -1,20 +1,36 @@
 """The Generic Proxy module contains
 all generalized interface to devices
 """
-from karabo.middlelayer import connectDevice
-from karabo.middlelayer import KaraboError
-from karabo.middlelayer_api.proxy import ProxyBase, synchronize
+from asyncio import wait_for
+from karabo.middlelayer import (connectDevice, KaraboError, Proxy,
+                                waitUntilNew)
+from karabo.middlelayer_api.proxy import synchronize
 
 
 class GenericProxy(object):
     """Base class for all generic proxies"""
-    _proxy = ProxyBase()
+    _proxy = Proxy()
+    _generic_proxies = None
     locker = ""
     state_mapping = {}
 
     def __repr__(self):
-        # For now, return the internal proxy representation
-        return self._proxy.__repr__()
+        if self._generic_proxies is None:
+            rep = "{}('{}')".format(type(self).__name__,
+                                    self._proxy.deviceId)
+        else:
+            rep = "{}(".format(type(self).__name__)
+            for gp in self._generic_proxies:
+                if gp._generic_proxies is None:
+                    rep += "'{}', ".format(gp._proxy.deviceId)
+                else:
+                    rep += "{}, ".format(gp)
+            rep = rep[:-2] + ")"
+        return rep
+
+    @classmethod
+    def error(cls, msg):
+        raise KaraboError(msg)
 
     @classmethod
     def create_generic_proxy(cls, proxy):
@@ -28,18 +44,65 @@ class GenericProxy(object):
             if generic_proxy:
                 return generic_proxy
 
-    def __new__(cls, deviceId):
-        proxy = connectDevice(deviceId)
-        return cls.create_generic_proxy(proxy)
+    @classmethod
+    def create_generic_proxy_container(cls, proxies):
+        for subclass in GenericProxy.__subclasses__():
+            if isinstance(proxies[0], subclass):
+                obj = object.__new__(subclass)
+                obj._generic_proxies = proxies
+                return obj
+
+    def __new__(cls, *args):
+        if args:
+            if len(args) == 1:
+                deviceId = args[0]
+                if isinstance(deviceId, str):
+                    # Act as a generic proxy
+                    try:
+                        proxy = connectDevice(deviceId)
+                        return cls.create_generic_proxy(proxy)
+                    except:
+                        cls.error("Could not connect to {}. Is it on?"
+                                  .format(deviceId))
+                else:
+                    # Act as a container with a single generic proxy
+                    return cls.create_generic_proxy_container(args)
+
+            else:
+                # Act as container and instantiate all the proxies
+                # if they are not already
+                gproxies = []
+                for device in args:
+                    if isinstance(device, GenericProxy):
+                        gproxy = device
+                    else:
+                        # Assume it's a string, and delegate the problem
+                        # to instantiation if it isn't
+                        gproxy = GenericProxy(device)
+
+                        if not gproxies or (gproxies and
+                            isinstance(gproxy, type(gproxies[0]).__bases__[0])):
+                            gproxies.append(gproxy)
+                        else:
+                            cls.error("Provided different types of Devices")
+                return cls.create_generic_proxy_container(gproxies)
+
+        #If args is none, act as a container
+
 
     @synchronize
     def lockon(self, locker):
         """Lock device"""
-        current_locker = self._proxy.lockedBy
-        if locker != current_locker:
-            raise KaraboError("{} is already locked by {}."
-                              .format(self._proxy.deviceId, current_locker))
-        self._proxy.lockedBy = locker
+        while self._proxy.lockedBy != locker:
+            if self._proxy.lockedBy == "":
+                self._proxy.lockedBy = locker
+            else:
+                try:
+                    print("waiting for lock!")
+                    wait_for(waitUntilNew(self._proxy.lockedBy),
+                             timeout=2)
+                except TimeoutError:
+                    self.error("Could not lock {}".format(self._proxy.classId))
         self.locker = locker
 
     @synchronize
@@ -47,9 +110,13 @@ class GenericProxy(object):
         """Release lock"""
         current_locker = self._proxy.lockedBy
         if self.locker != current_locker:
-            raise KaraboError("{} is locked by {}."
-                              .format(self._proxy.deviceId, current_locker))
+            self.error("{} is locked by {}."
+                       .format(self._proxy.deviceId, current_locker))
         self._proxy.lockedBy = ""
+
+    @property
+    def deviceId(self):
+        return self._proxy.deviceId
 
     @property
     def state(self):
