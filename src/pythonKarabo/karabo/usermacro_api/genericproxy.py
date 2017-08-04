@@ -143,24 +143,23 @@ class Movable(GenericProxy):
     def actualPosition(self):
         """"Position getter """
         if self._generic_proxies:
-            raise NotImplementedError
-
-        return self._proxy.encoderPosition
+            return [gproxy.actualPosition for gproxy in self._generic_proxies]
+        else:
+            return self._proxy.encoderPosition
 
     @actualPosition.setter
     def actualPosition(self, value):
-        if self._generic_proxies:
-            raise NotImplementedError
-
         self.moveto(value)
 
     @synchronize
     def moveto(self, pos):
         """Move to *pos*"""
         if self._generic_proxies:
+            itpos = iter(pos)
             for gproxy in self._generic_proxies:
-                gproxy.move(next(pos))
+                yield from gproxy.moveto(next(itpos))
         else:
+            self._proxy.targetPosition = pos
             yield from self._proxy.move()
 
     @synchronize
@@ -168,7 +167,7 @@ class Movable(GenericProxy):
         """Stop"""
         if self._generic_proxies:
             for gproxy in self._generic_proxies:
-                gproxy.stop()
+                yield from gproxy.stop()
         else:
             yield from self._proxy.stop()
 
@@ -177,7 +176,7 @@ class Movable(GenericProxy):
         """Home"""
         if self._generic_proxies:
             for gproxy in self._generic_proxies:
-                gproxy.home()
+                yield from gproxy.home()
         else:
             yield from self._proxy.home()
 
@@ -193,7 +192,7 @@ class Sensible(GenericProxy):
         """Start acquisition"""
         if self._generic_proxies:
             for gproxy in self._generic_proxies:
-                gproxy.acquire()
+                yield from gproxy.acquire()
         else:
             yield from self._proxy.acquire()
 
@@ -202,7 +201,7 @@ class Sensible(GenericProxy):
         """Stop acquisition"""
         if self._generic_proxies:
             for gproxy in self._generic_proxies:
-                gproxy.stop()
+                yield from gproxy.stop()
         else:
             yield from self._proxy.stop()
 
@@ -213,23 +212,22 @@ class Coolable(GenericProxy):
     def actualTemperature(self):
         """"Temperature getter """
         if self._generic_proxies:
-            raise NotImplementedError
-
-        return self._proxy.currentColdHeadTemperature
+            return [gproxy.actualTemperature
+                    for gproxy in self._generic_proxies]
+        else:
+            return self._proxy.currentColdHeadTemperature
 
     @actualTemperature.setter
     def actualTemperature(self, value):
-        if self._generic_proxies:
-            raise NotImplementedError
-
         self.cool(value)
 
     @synchronize
     def cool(self, temperature):
         """Cool to *temperature*"""
         if self._generic_proxies:
+            ittemp = iter(temperature)
             for gproxy in self._generic_proxies:
-                gproxy.cool(next(temperature))
+                yield from gproxy.cool(next(ittemp))
         else:
             self._proxy.targetCoolTemperature = temperature
             yield from self._proxy.stop()
@@ -239,7 +237,7 @@ class Coolable(GenericProxy):
         """Stop cooling"""
         if self._generic_proxies:
             for gproxy in self._generic_proxies:
-                gproxy.stop()
+                yield from gproxy.stop()
         else:
             yield from self._proxy.stop()
 
@@ -251,16 +249,17 @@ class Pumpable(GenericProxy):
     def pressure(self):
         """Pressure getter"""
         if self._generic_proxies:
-            raise NotImplementedError
-
-        return self._proxy.pressure
+            return [gproxy.pressure
+                    for gproxy in self._generic_proxies]
+        else:
+            return self._proxy.pressure
 
     @synchronize
     def pump(self):
         """Start pumping"""
         if self._generic_proxies:
             for gproxy in self._generic_proxies:
-                gproxy.pump()
+                yield from gproxy.pump()
         else:
             yield from self._proxy.pump()
 
@@ -269,7 +268,7 @@ class Pumpable(GenericProxy):
         """Stop pumping"""
         if self._generic_proxies:
             for gproxy in self._generic_proxies:
-                gproxy.stop()
+                yield from gproxy.stop()
         else:
             yield from self._proxy.stop()
 
@@ -281,7 +280,7 @@ class Closable(GenericProxy):
         """Open it"""
         if self._generic_proxies:
             for gproxy in self._generic_proxies:
-                gproxy.open()
+                yield from gproxy.open()
         else:
             yield from self._proxy.open()
 
@@ -290,6 +289,6 @@ class Closable(GenericProxy):
         """Close it"""
         if self._generic_proxies:
             for gproxy in self._generic_proxies:
-                gproxy.close()
+                yield from gproxy.close()
         else:
             yield from self._proxy.close()
