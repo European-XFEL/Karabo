@@ -981,7 +981,9 @@ namespace karabo {
 
             if (m_pointToPoint) {
                 m_pointToPoint->connectAsync(instanceId);
-                KARABO_LOG_FRAMEWORK_DEBUG << (m_pointToPoint->allMapsToString());
+                if (m_discoverConnectionResourcesMode) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << (m_pointToPoint->allMapsToString());
+                }
             }
         }
 
@@ -1025,8 +1027,6 @@ namespace karabo {
             if (m_discoverConnectionResourcesMode) {
                 // No matter whether this instanceId is in the map - we have to ensure that it is not anymore:
                 m_pointToPoint->eraseUrl(instanceId);
-            }
-            if (m_pointToPoint) {
                 KARABO_LOG_FRAMEWORK_DEBUG << (m_pointToPoint->allMapsToString());
             }
         }
@@ -1039,8 +1039,6 @@ namespace karabo {
             if (m_discoverConnectionResourcesMode) {
                 // We are in charge to take care of global p2p_connection info (added, changed or even removed)
                 updateP2pConnectionStrings(instanceId, instanceInfo, m_instanceInfo);
-            }
-            if (m_pointToPoint) {
                 KARABO_LOG_FRAMEWORK_DEBUG << (m_pointToPoint->allMapsToString());
             }
         }
