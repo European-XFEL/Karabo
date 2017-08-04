@@ -96,6 +96,7 @@ class GenericProxy(object):
                         gproxies.append(gproxy)
                     else:
                         cls._error("Provided different types of Devices")
+
                 return cls.create_generic_proxy_container(gproxies)
 
     @synchronize
@@ -135,8 +136,8 @@ class GenericProxy(object):
             signifier = StateSignifier()
             return signifier.returnMostSignificant(
                 [gproxy.state for gproxy in self._generic_proxies])
-        else:
-            return self.state_mapping.get(self._proxy.state, self._proxy.state)
+
+        return self.state_mapping.get(self._proxy.state, self._proxy.state)
 
 
 class Movable(GenericProxy):
@@ -147,15 +148,15 @@ class Movable(GenericProxy):
     to press for e.g. a next button)
     """
     @property
-    def actualPosition(self):
+    def position(self):
         """"Position getter """
         if self._generic_proxies:
-            return [gproxy.actualPosition for gproxy in self._generic_proxies]
-        else:
-            return self._proxy.encoderPosition
+            return [gproxy.position for gproxy in self._generic_proxies]
 
-    @actualPosition.setter
-    def actualPosition(self, value):
+        return self._proxy.encoderPosition
+
+    @position.setter
+    def position(self, value):
         self.moveto(value)
 
     @synchronize
@@ -216,16 +217,15 @@ class Sensible(GenericProxy):
 class Coolable(GenericProxy):
     """Generalized interface to coolers"""
     @property
-    def actualTemperature(self):
+    def temperature(self):
         """"Temperature getter """
         if self._generic_proxies:
-            return [gproxy.actualTemperature
+            return [gproxy.temperature
                     for gproxy in self._generic_proxies]
-        else:
-            return self._proxy.currentColdHeadTemperature
+        return self._proxy.currentColdHeadTemperature
 
-    @actualTemperature.setter
-    def actualTemperature(self, value):
+    @temperature.setter
+    def temperature(self, value):
         self.cool(value)
 
     @synchronize
@@ -258,8 +258,7 @@ class Pumpable(GenericProxy):
         if self._generic_proxies:
             return [gproxy.pressure
                     for gproxy in self._generic_proxies]
-        else:
-            return self._proxy.pressure
+        return self._proxy.pressure
 
     @synchronize
     def pump(self):
