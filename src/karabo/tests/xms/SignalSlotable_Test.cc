@@ -305,37 +305,59 @@ void SignalSlotable_Test::testReceiveAsyncNoReply() {
     greeter->start();
     responder->start();
 
-    responder->registerSlot<karabo::util::Hash>([&responder](const karabo::util::Hash&) {
-        // No call to reply()!
+    responder->registerSlot([&responder]() {
+        // No call to reply() - reply without arguments is the default.
     }, "slotAnswer");
 
-    int result = 0;
-    const auto normalHandler = [&result](const karabo::util::Hash&) {
-        // We don't expect this handler to be called
-        result = 42;
+    bool handlerCalled = false;
+    const auto normalHandler = [&handlerCalled]() {
+        handlerCalled = true;
     };
-    const auto errHandler = [&result]() {
-        // Rather, our error handler will be called
+    int errorCode = 0;
+    const auto errHandler = [&errorCode]() {
         try {
             throw;
         } catch (const karabo::util::SignalSlotException&) {
-            // We should only be expecting this exception
-            result = 4200;
+            errorCode = 4200;
         } catch (...) {
             // Leave some breadcrumbs for the assert statement below
-            result = -4200;
+            errorCode = -4200;
         }
+        karabo::util::Exception::clearTrace();
     };
-    greeter->request("responder", "slotAnswer").receiveAsync<karabo::util::Hash>(normalHandler, errHandler);
+    // All arguments match, so we expect the normalHandler to be called
+    greeter->request("responder", "slotAnswer").receiveAsync(normalHandler, errHandler);
 
     // Wait maximum 200 ms for message travel
     int trials = 10;
     while (--trials >= 0) {
-        if (result != 0) break;
+        if (handlerCalled || errorCode != 0) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(20));
     }
-    // Assert that the correct exception was caught
-    CPPUNIT_ASSERT_EQUAL(4200, result);
+    CPPUNIT_ASSERT(handlerCalled);
+    CPPUNIT_ASSERT_EQUAL(0, errorCode);
+    //
+    // Now test reply argument mismatch of automatically placed reply()
+    //
+    errorCode = 0;
+    handlerCalled = false;
+    const auto wrongArgHandler = [&handlerCalled](const karabo::util::Hash & some) {
+        // We don't expect this handler to be called since its argument does not match the (empty) reply
+        handlerCalled = true;
+    };
+    // Now wrongArgHandler expects a Hash but slotAnswer placed (automatically) an empty reply
+    greeter->request("responder", "slotAnswer").receiveAsync<karabo::util::Hash>(wrongArgHandler, errHandler);
+
+    // Wait maximum 200 ms for message travel
+    trials = 10;
+    while (--trials >= 0) {
+        if (handlerCalled || errorCode != 0) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
+    }
+
+    // Assert that the handler was not called, but the error handler with the correct exception (due to argument mismatch)
+    CPPUNIT_ASSERT(!handlerCalled);
+    CPPUNIT_ASSERT_EQUAL(4200, errorCode);
 }
 
 
