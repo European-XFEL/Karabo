@@ -731,6 +731,12 @@ void SignalSlotable_Test::testAsyncReply() {
     CPPUNIT_ASSERT(remoteError);
 
     //
+    // Check also calling synchronously to a slot that answers an error via AsyncReply
+    //
+    CPPUNIT_ASSERT_THROW(sender->request("slotter", "slotAsyncErrorReply").timeout(500).receive(),
+                         karabo::util::RemoteException);
+
+    //
     // Now check that we can call a slot with an async reply directly (although the reply does not matter)
     //
     slotter->m_slotCallEnded = false;
