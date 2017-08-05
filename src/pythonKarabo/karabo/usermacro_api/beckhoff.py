@@ -1,5 +1,9 @@
-"""Generalized interfaces to Beckhoff devices"""
-from karabo.middlelayer import State
+"""Generalized interfaces to Beckhoff devices
+"""
+from asyncio import wait_for
+
+from karabo.middlelayer import State, waitUntil
+from karabo.middlelayer_api.eventloop import synchronize
 from .genericproxy import Movable
 
 
@@ -10,3 +14,12 @@ class BeckhoffMotorAsMovable(Movable):
     state_mapping = {
         State.STOPPED: State.ON,  # needed  for current version of MC2 device
     }
+
+    @synchronize
+    def prepare(self):
+        """Get ready for acquisition"""
+        if self._proxy.state == State.OFF:
+            yield from self._proxy.on()
+            yield from wait_for(
+                waitUntil(lambda: self._proxy.state == State.ON),
+                self.preparation_timeout)
