@@ -436,6 +436,7 @@ namespace karabo {
             if (timerAndHandler.first) timerAndHandler.first->cancel(); // message arrived before expiration
 
             // Check whether the reply is an error
+            bool asyncErrorHandlerCalled = false;
             boost::optional<Hash::Node&> errorNode = header->find("error");
             if (errorNode && errorNode->is<bool>() && errorNode->getValue<bool>()) {
                 // Handling an error, so double check that input is as expected, i.e. body has key "a1":
@@ -449,6 +450,7 @@ namespace karabo {
                     } catch (const std::exception&) {
                         try {
                             // Handler can do: try {throw;} catch(const karabo::util::RemoteException&) {...;}
+                            asyncErrorHandlerCalled = true;
                             timerAndHandler.second();
                         } catch (const std::exception& e) {
                             KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << ": Received error from '" << signalId
@@ -467,7 +469,7 @@ namespace karabo {
             // (if it timed out before, the slot will already be gone)
             SlotInstancePointer slot = getSlot(replyId);
             try {
-                if (slot) {
+                if (!asyncErrorHandlerCalled && slot) {
                     slot->callRegisteredSlotFunctions(*header, *body);
                 }
             } catch (const std::exception& e) {
