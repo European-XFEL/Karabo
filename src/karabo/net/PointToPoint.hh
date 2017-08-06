@@ -124,6 +124,13 @@ namespace karabo {
             void eraseUrl(const std::string& instanceId);
 
             /**
+             * Erase open connection by channel pointer
+             * @param channel shared pointer to the Channel instance
+             * @return remoteInstanceId of erased "connection pair"
+             */
+            std::string eraseOpenConnection(const karabo::net::Channel::Pointer& channel);
+
+            /**
              * Find URL (connection string) by remoteInstanceId
              * @param remoteInstanceId
              * @return URL
