@@ -79,6 +79,31 @@ namespace karabo {
         }
 
 
+        std::string PointToPoint::eraseOpenConnection(const karabo::net::Channel::Pointer& channel) {
+            std::string url = "";
+            boost::unique_lock<boost::shared_mutex> lock(m_pointToPointMutex);
+            for (MapUrlToConnection::iterator it = m_mapOpenConnections.begin(); it != m_mapOpenConnections.end(); ++it) {
+                if (it->second.first.get() == channel.get()) {
+                    url = it->first;
+                    m_mapOpenConnections.erase(it);
+                    break;
+                }
+            }
+            if (!url.empty()) {
+                // Check if we still have URL registered
+                auto idsIter = m_urlToInstanceIdSet.find(url);
+                if (idsIter != m_urlToInstanceIdSet.end()) {
+                    // Check if set of instanceIds is not empty and we can pick up some remoteInstanceId
+                    if (!idsIter->second.empty()) {                    
+                        // return the first remoteInstanceId
+                        return *(idsIter->second.begin());
+                    }
+                }
+            }
+            return "";
+        }
+
+
         std::string PointToPoint::findUrlById(const std::string& remoteInstanceId) {
             boost::shared_lock<boost::shared_mutex> lock(m_pointToPointMutex);
             auto it = m_instanceIdToUrl.find(remoteInstanceId);
@@ -271,6 +296,12 @@ namespace karabo {
                                         const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& message) {
             if (e) {
                 channelErrorHandler(e, channel);
+                // here we try to re-connect if needed
+                string remoteInstanceId = eraseOpenConnection(channel);
+                if (!remoteInstanceId.empty()) {
+                    // We still need to connect to some instanceId
+                    EventLoop::getIOService().post(boost::bind(&PointToPoint::connectAsync, shared_from_this(), remoteInstanceId));
+                }
                 return;
             }
 
@@ -278,7 +309,7 @@ namespace karabo {
             const string& slotInstanceIds = header->get<string>("slotInstanceIds");
             // slotInstanceIds is defined like
             // |slotInstanceId| or |*| or |slotInstanceId1||slotInstanceId2||...||slotInstanceIdN|
-            KARABO_LOG_FRAMEWORK_DEBUG << "SignalSlotable::onP2pMessage  slotInstanceIds : \"" << slotInstanceIds << "\"";
+
             // strip vertical lines
             string stripped = slotInstanceIds.substr(1, slotInstanceIds.size()-2);
             size_t pos = stripped.find_first_of("|");
