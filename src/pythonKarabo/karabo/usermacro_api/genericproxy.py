@@ -4,8 +4,9 @@ all generalized interface to devices
 from asyncio import wait_for
 
 from karabo.common.states import StateSignifier
-from karabo.middlelayer import (connectDevice, KaraboError, Proxy,
-                                waitUntilNew)
+from karabo.middlelayer import (
+    allCompleted, connectDevice, KaraboError,
+    Proxy, waitUntilNew)
 from karabo.middlelayer_api.proxy import synchronize
 
 
@@ -139,8 +140,8 @@ class GenericProxy(object):
     def prepare(self):
         """Get ready to be used"""
         if self._generic_proxies:
-            for gproxy in self._generic_proxies:
-                yield from gproxy.prepare()
+            yield from allCompleted(**{gproxy.deviceId: gproxy.prepare()
+                                       for gproxy in self._generic_proxies})
 
     @property
     def deviceId(self):
