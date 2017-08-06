@@ -72,7 +72,7 @@ class FigureCanvas(FigureCanvasQTAgg):
                 if self.highlighted != event.artist:
                     if self.highlighted is not None:
                         self.highlighted.set_markeredgewidth(0)
-                        self.highlighted = event.artist
+                    self.highlighted = event.artist
                     if self.highlighted.get_marker() == 'None':
                         self.highlighted.set_marker(".")
                     self.highlighted.set_markeredgecolor('yellow')
@@ -92,7 +92,7 @@ class PlotToolbar(NavigationToolbar2QT):
       ('Subplots', 'Config subplots', 'subplots', 'configure_subplots'),
       ('Save', 'Save to file', 'filesave', 'save_figure'),
       (None, None, None, None),
-      ('Help', 'Look at me!', 'helpcall', 'helpcall'),
+      ('Help', 'Plot widget help', 'helpcall', 'helpcall'),
     )
 
     def __init__(self, canvas, parent=None):
