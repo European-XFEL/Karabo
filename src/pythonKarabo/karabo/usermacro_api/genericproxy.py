@@ -1,7 +1,7 @@
 """The Generic Proxy module contains
 all generalized interface to devices
 """
-from asyncio import wait_for
+from asyncio import wait_for, TimeoutError
 
 from karabo.common.states import StateSignifier
 from karabo.middlelayer import (connectDevice, KaraboError, Proxy,
@@ -62,20 +62,21 @@ class GenericProxy(object):
                 return obj
 
     def __new__(cls, *args):
+        ret = None
         if args:
             if len(args) == 1:
                 deviceId = args[0]
                 if isinstance(deviceId, str):
                     # Act as a generic proxy
                     try:
-                        proxy = connectDevice(deviceId)
-                        return cls.create_generic_proxy(proxy)
-                    except:
+                        proxy = connectDevice(deviceId, timeout=2)
+                        ret = cls.create_generic_proxy(proxy)
+                    except TimeoutError:
                         cls._error("Could not connect to {}. Is it on?"
                                    .format(deviceId))
                 else:
                     # Act as a container with a single generic proxy
-                    return cls.create_generic_proxy_container(args)
+                    ret = cls.create_generic_proxy_container(args)
 
             else:
                 # Act as container and instantiate all the proxies
@@ -97,7 +98,10 @@ class GenericProxy(object):
                     else:
                         cls._error("Provided different types of Devices")
 
-                return cls.create_generic_proxy_container(gproxies)
+                ret = cls.create_generic_proxy_container(gproxies)
+        if ret is None:
+            cls._error("This configuration is not available")
+        return ret
 
     @synchronize
     def lockon(self, locker):
