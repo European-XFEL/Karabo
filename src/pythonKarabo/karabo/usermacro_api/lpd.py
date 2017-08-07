@@ -16,7 +16,7 @@ class LpdAsSensible(Sensible):
     def prepare(self):
         """Get ready for acquisition"""
         if self._proxy.state == State.UNKNOWN:
-            yield from self._proxy.connectFEM()
+            yield from self._proxy.connectFem()
             yield from wait_for(
                 waitUntil(lambda: self._proxy.state == State.ON),
                 self.preparation_timeout)
