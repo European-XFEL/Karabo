@@ -564,6 +564,33 @@ class Tests(TestCase):
         self.assertEqual(a.table.shape, (2,))
         self.assertEqual(a.table["name"][1], "fw")
 
+        a.table.append(("lll", 55))
+        self.assertEqual(len(a.table), 3)
+        self.assertEqual(a.table[2]["name"], "lll")
+        self.assertEqual(a.table["number"][2], 55)
+
+        a.table.extend([(str(i), i) for i in range(10)])
+        self.assertEqual(a.table[10]["number"], 7)
+
+        del a.table[10]
+        self.assertEqual(a.table[10]["number"], 8)
+        del a.table[10:12]
+        self.assertEqual(len(a.table), 10)
+
+        a.table[1] = ("k", 111)
+        self.assertEqual(a.table[1]["name"], "k")
+        self.assertEqual(len(a.table), 10)
+
+        a.table[5:7] = [("A", 2), ("B", 3)]
+        self.assertEqual(a.table[5]["name"], "A")
+        self.assertEqual(a.table["number"][6], 3)
+        self.assertEqual(a.table["number"][7], 4)
+
+        a.table.insert(2, ("C", 11))
+        self.assertEqual(a.table[2]["name"], "C")
+        self.assertEqual(a.table[3]["name"], "lll")
+        self.assertEqual(len(a.table), 11)
+
         a = A(Hash("table", [Hash("name", "bla", "number", 5)]))
         self.assertEqual(a.table.shape, (1,))
         self.assertEqual(a.table["name"][0], "bla")
