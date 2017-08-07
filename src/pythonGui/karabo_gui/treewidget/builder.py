@@ -1,7 +1,7 @@
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Descriptor,
-    Bool, Char, ComplexDouble, ComplexFloat, Double, Float, Integer,
-    Int16, Int32, Int64, Int8, Number, String, UInt16, UInt32, UInt64, UInt8,
+    Bool, Char, ComplexDouble, ComplexFloat, Double, Float,
+    Int16, Int32, Int64, Int8, String, UInt16, UInt32, UInt64, UInt8,
     VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
     VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
@@ -12,7 +12,6 @@ from karabo_gui.attributeediting.api import (
     EDITABLE_ATTRIBUTE_NAMES, ATTRIBUTE_EDITOR_FACTORIES
 )
 from karabo_gui.configurator.api import ConfigurationTreeView
-import karabo_gui.icons as icons
 from karabo_gui.schema import (
     ChoiceOfNodes, ImageNode, ListOfNodes, OutputNode, Schema, SlotNode,
     TableNode
@@ -23,6 +22,7 @@ from .command_item import CommandTreeWidgetItem
 from .image_item import ImageTreeWidgetItem
 from .property_item import PropertyTreeWidgetItem
 from .table_item import TableTreeWidgetItem
+from .utils import get_icon
 
 
 def fill_parameter_tree_widget(tree_widget, configuration):
@@ -70,7 +70,7 @@ def _attribute_item_leaf(descriptor, tree_widget, parent_item, box, attr_name):
     """Build a single tree widget item for an attribute.
     """
     item = AttributeTreeWidgetItem(attr_name, box, tree_widget, parent_item)
-    item.setIcon(0, _get_icon(descriptor))
+    item.setIcon(0, get_icon(descriptor))
 
     factory = ATTRIBUTE_EDITOR_FACTORIES[attr_name]
     item.create_editable_widget(factory, box)
@@ -117,28 +117,6 @@ def _finalize_build_leaf(descriptor, tree_widget, item, box, is_class):
                     and getattr(desc, 'unitSymbol') == ''):
                 continue
             _attribute_item_leaf(descriptor, tree_widget, item, box, name)
-
-
-def _get_icon(descriptor):
-    if descriptor.options is not None:
-        return icons.enum
-
-    icon = icons.undefined
-    if isinstance(descriptor, Char):
-        icon = icons.string
-    elif isinstance(descriptor, String):
-        if descriptor.displayType in ('directory', 'fileIn', 'fileOut'):
-            icon = icons.path
-        else:
-            icon = icons.string
-    elif isinstance(descriptor, Integer):
-        icon = icons.int
-    elif isinstance(descriptor, Number):
-        icon = icons.float
-    elif isinstance(descriptor, Bool):
-        icon = icons.boolean
-
-    return icon
 
 
 def _item_choice_of_nodes(descriptor, tree_widget, parent_item, box, is_class):
@@ -207,7 +185,7 @@ def _item_leaf(descriptor, tree_widget, parent_item, box, is_class,
                item_factory=PropertyTreeWidgetItem):
 
     item = item_factory(box, tree_widget, parent_item)
-    item.setIcon(0, _get_icon(descriptor))
+    item.setIcon(0, get_icon(descriptor))
 
     if is_class:
         if descriptor.accessMode in (AccessMode.INITONLY,

@@ -7,3 +7,4 @@ from .image_item import ImageTreeWidgetItem
 from .parametertreewidget import ParameterTreeWidget
 from .property_item import PropertyTreeWidgetItem
 from .table_item import TableTreeWidgetItem
+from .utils import get_icon

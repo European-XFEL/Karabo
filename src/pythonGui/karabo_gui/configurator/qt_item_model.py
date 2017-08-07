@@ -14,9 +14,9 @@ from karabo.middlelayer import AccessMode
 from karabo.common.api import State
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 import karabo_gui.globals as krb_globals
-import karabo_gui.icons as icons
 from karabo_gui.schema import Dummy, Schema, SlotNode
 from karabo_gui.treewidget.parametertreewidget import getDeviceBox
+from karabo_gui.treewidget.utils import get_icon
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
 
@@ -140,7 +140,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
         """
-        return 2
+        return 2  # Name, Value
 
     def createIndex(self, row, col, box):
         """Prophylaxis for QModelIndex.internalPointer...
@@ -167,7 +167,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             if role == Qt.DisplayRole:
                 return box.path[-1]
             elif role == Qt.DecorationRole:
-                return icons.undefined
+                return get_icon(box.descriptor)
         elif column == 1:
             if role == Qt.DisplayRole:
                 if isinstance(box.descriptor, Schema):
@@ -204,12 +204,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def headerData(self, section, orientation, role):
         """Reimplemented function of QAbstractItemModel.
         """
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal:
-                if section == 0:
-                    return "Name"
-                elif section == 1:
-                    return "Value"
+        names = ('Name', 'Value')
+        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
+            return names[section]
 
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
