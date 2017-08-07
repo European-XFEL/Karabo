@@ -15,6 +15,7 @@ class GenericProxy(object):
     locker = ""
     _proxy = Proxy()
     _generic_proxies = []
+    _gp_timeout = 2  # seconds
 
     def __repr__(self):
         def _repr_gproxy(gproxy):
@@ -69,7 +70,8 @@ class GenericProxy(object):
                 if isinstance(deviceId, str):
                     # Act as a generic proxy
                     try:
-                        proxy = connectDevice(deviceId, timeout=2)
+                        proxy = connectDevice(deviceId,
+                                              timeout=cls._gp_timeout)
                         ret = cls.create_generic_proxy(proxy)
                     except TimeoutError:
                         cls._error("Could not connect to {}. Is it on?"

@@ -1,11 +1,11 @@
-from asyncio import TimeoutError
 import unittest
 from contextlib import contextmanager
-from karabo.middlelayer import Device, KaraboError, Slot
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst, sync_tst
 
-from karabo.usermacros import (BeckhoffMotorAsMovable, CamAsSensible, GenericProxy,
-                               Movable, Sensible)
+from karabo.middlelayer import Device, KaraboError, Slot
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
+
+from karabo.usermacros import (BeckhoffMotorAsMovable, CamAsSensible,
+                               GenericProxy, Movable, Sensible)
 
 
 class TestDev(Device):
@@ -18,13 +18,16 @@ class TestDev(Device):
         print("Ping!")
 
 
-def getMockDevice(name):
-    return type(name, (TestDev,), {})
+def getMockDevice(name, **kwargs):
+    cls = type(name, (TestDev,), {})
+    return cls(kwargs)
 
 
 class Tests(DeviceTest):
-    """
-    The tests in this class run on behalf of the device "local".
+    """The tests in this class run on behalf of the device "local".
+
+    As this class inherits from :class:`DeviceTest`, it is possible to provide a
+    :func:`lifetimeManager`, such that the test can be run within an eventloop
     """
 
     @classmethod
@@ -33,19 +36,22 @@ class Tests(DeviceTest):
 
         cls.local = TestDev({"_deviceId_": "GenericProxy_UnitTests"})
 
-        cls.tm1 = getMockDevice("BeckhoffSimpleMotor")({"_deviceId_": "tm1",
-                                                        "stepLength": 0,
-                                                        "lockedBy": "YOLO"})
-        cls.tm2 = getMockDevice("BeckhoffSimpleMotor")({"_deviceId_": "tm2",
-                                                        "stepLength": 0,
-                                                        "lockedBy": ""})
-        cls.tm3 = getMockDevice("BeckhoffSimpleMotor")({"_deviceId_": "tm3",
-                                                        "stepLength": 0,
-                                                        "lockedBy": ""})
-        cls.lsim = getMockDevice("LimaSimulatedCamera")({"_deviceId_": "lsim",
-                                                         "cameraType":
-                                                         "Simulator",
-                                                         "lockedBy": ""})
+        cls.tm1 = getMockDevice("BeckhoffSimpleMotor",
+                                _deviceId_ = "tm1",
+                                stepLength = 0,
+                                lockedBy = "YOLO")
+        cls.tm2 = getMockDevice("BeckhoffSimpleMotor",
+                                _deviceId_ = "tm2",
+                                stepLength = 0,
+                                lockedBy = "")
+        cls.tm3 = getMockDevice("BeckhoffSimpleMotor",
+                                _deviceId_ = "tm3",
+                                stepLength = 0,
+                                lockedBy = "")
+        cls.lsim = getMockDevice("LimaSimulatedCamera",
+                                 _deviceId_ = "lsim",
+                                 cameraType = "Simulator",
+                                 lockedBy = "")
         with cls.deviceManager(cls.lsim, cls.tm2, cls.tm3,
                                cls.tm1, lead=cls.local):
             yield
@@ -102,9 +108,11 @@ class Tests(DeviceTest):
                         "BeckhoffMotorAsMovable('tm3')))")
 
         output = GenericProxy('tm1', Movable('tm2', 'tm3'))
+        self.assertIsInstance(output, Movable)
         self.assertEqual(output.__repr__(), containerRep)
 
         output = GenericProxy('tm1', GenericProxy('tm2', 'tm3'))
+        self.assertIsInstance(output, Movable)
         self.assertEqual(output.__repr__(), containerRep)
 
     @sync_tst
@@ -124,6 +132,7 @@ class Tests(DeviceTest):
     def test_timeout_error(self):
         with self.assertRaises(KaraboError):
             GenericProxy('some-non-existing-device')
+
 
 if __name__ == "__main__":
     unittest.main()
