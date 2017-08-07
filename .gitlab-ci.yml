@@ -17,6 +17,12 @@ before_script:
     - /^(\d+\.)(\d+\.)(\d+)((a|b|rc)\d+)?$/
   except:
     - branches
+    - schedules
+
+.nightly_build: &nightly-build
+  <<: *build
+  only:
+    - schedules
 
 .deps_build: &deps-build
   <<: *build
@@ -24,11 +30,14 @@ before_script:
     - /^deps-.+$/
   except:
     - branches
+    - schedules
 
 .integration_tests: &integration-tests
   <<: *test
   only:
     - master
+  except:
+    - schedules
 
 .unit_tests: &unit-tests
   <<: *test
@@ -36,6 +45,7 @@ before_script:
     - branches
   except:
     - master
+    - schedules
     - /^deps-mr-.+$/
 
 .deps_build_tests: &deps-build-tests
@@ -46,6 +56,7 @@ before_script:
     - /^deps-mr-.+$/
   except:
     - master
+    - schedules
 
 ### Jobs
 
@@ -66,6 +77,24 @@ release build ubuntu14:
 release build windows GUI:
   image: europeanxfel/karabo-ci:ubuntu-14
   <<: *release-build
+
+# nightly release build
+
+nightly build centos7:
+  image: europeanxfel/karabo-ci:centos-7
+  <<: *nightly-build
+
+nightly build ubuntu16:
+  image: europeanxfel/karabo-ci:ubuntu-16
+  <<: *nightly-build
+
+nightly build ubuntu14:
+  image: europeanxfel/karabo-ci:ubuntu-14
+  <<: *nightly-build
+
+nightly build windows GUI:
+  image: europeanxfel/karabo-ci:ubuntu-14
+  <<: *nightly-build
 
 # Dependencies build
 
