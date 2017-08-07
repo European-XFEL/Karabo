@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from textwrap import dedent
+
 from PyQt4.QtGui import QMessageBox
 
 
