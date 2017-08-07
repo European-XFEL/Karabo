@@ -4,14 +4,16 @@ all generalized interface to devices
 from asyncio import wait_for
 
 from karabo.common.states import StateSignifier
-from karabo.middlelayer import (connectDevice, KaraboError, Proxy,
-                                waitUntilNew)
+from karabo.middlelayer import (
+    allCompleted, connectDevice, KaraboError,
+    Proxy, waitUntilNew)
 from karabo.middlelayer_api.proxy import synchronize
 
 
 class GenericProxy(object):
     """Base class for all generic proxies"""
     state_mapping = {}
+    preparation_timeout = 10
     locker = ""
     _proxy = Proxy()
     _generic_proxies = []
@@ -102,27 +104,44 @@ class GenericProxy(object):
     @synchronize
     def lockon(self, locker):
         """Lock device"""
-        while self._proxy.lockedBy != locker:
-            if self._proxy.lockedBy == "":
-                self._proxy.lockedBy = locker
-            else:
-                try:
-                    print("waiting for lock!")
-                    wait_for(waitUntilNew(self._proxy.lockedBy),
-                             timeout=2)
-                except TimeoutError:
-                    self._error("Could not lock {}"
-                                .format(self._proxy.classId))
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                yield from gproxy.lockon(locker)
+        else:
+            while self._proxy.lockedBy != locker:
+                if self._proxy.lockedBy == "":
+                    self._proxy.lockedBy = locker
+                else:
+                    try:
+                        print("waiting for lock!")
+                        wait_for(waitUntilNew(self._proxy.lockedBy),
+                                 timeout=2)
+                    except TimeoutError:
+                        self._error("Could not lock {}"
+                                    .format(self._proxy.classId))
         self.locker = locker
 
     @synchronize
     def lockoff(self):
         """Release lock"""
-        current_locker = self._proxy.lockedBy
-        if self.locker != current_locker:
-            self._error("{} is locked by {}."
-                        .format(self._proxy.deviceId, current_locker))
-        self._proxy.lockedBy = ""
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                yield from gproxy.lockoff()
+        else:
+            current_locker = self._proxy.lockedBy
+            if self.locker != current_locker:
+                self._error("{} is locked by {}."
+                            .format(self._proxy.deviceId, current_locker))
+            self._proxy.lockedBy = ""
+
+        self.locker = None
+
+    @synchronize
+    def prepare(self):
+        """Get ready to be used"""
+        if self._generic_proxies:
+            yield from allCompleted(**{gproxy.deviceId: gproxy.prepare()
+                                       for gproxy in self._generic_proxies})
 
     @property
     def deviceId(self):
