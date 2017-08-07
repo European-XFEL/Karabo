@@ -52,6 +52,12 @@ class SlotButtonDelegate(QStyledItemDelegate):
             super(SlotButtonDelegate, self).paint(painter, option, index)
             return
 
+        if option.state & QStyle.State_Selected:
+            if option.state & QStyle.State_Active:
+                painter.fillRect(option.rect, option.palette.highlight())
+            elif not (option.state & QStyle.State_HasFocus):
+                painter.fillRect(option.rect, option.palette.background())
+
         self._draw_icon(painter, option)
         self._draw_button(painter, option, index, box)
 
@@ -85,7 +91,8 @@ class SlotButtonDelegate(QStyledItemDelegate):
         rect = option.rect
         pix_size = slot_pixmap.size()
         w, h = pix_size.width(), pix_size.height()
-        pix_rect = QRect(rect.x() + ICON_PADDING, rect.y(), w, h)
+        pix_rect = QRect(rect.x() + ICON_PADDING, rect.center().y() - h/2,
+                         w, h)
         QApplication.style().drawItemPixmap(painter, pix_rect, Qt.AlignCenter,
                                             slot_pixmap)
 
