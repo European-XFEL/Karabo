@@ -1,6 +1,7 @@
 from PyQt4.QtGui import QIcon
 import os.path
 
+
 class Icon(object):
     """A lazy-loading class for QIcons
 
@@ -10,14 +11,12 @@ class Icon(object):
         self.name = name
         self._icon = None
 
-
     @property
     def icon(self):
         if self._icon is None:
             self._icon = QIcon(os.path.join(os.path.dirname(__file__),
                                             self.name))
         return self._icon
-
 
     def __get__(self, instance, owner):
         return self.icon
@@ -147,3 +146,4 @@ runconfig = Icon("runconfig.svg")
 runconfiggroup = Icon("runconfiggroup.svg")
 arrowLeft = Icon("arrow-left.svg")
 arrowRight = Icon("arrow-right.svg")
+helpcall = Icon("helpcall.svg")
