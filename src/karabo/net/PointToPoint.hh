@@ -26,7 +26,7 @@ namespace karabo {
     }
 
     namespace net {
-
+        
 
         class PointToPoint : public boost::enable_shared_from_this<PointToPoint> {
 
@@ -42,12 +42,24 @@ namespace karabo {
             typedef std::map<std::string, std::pair<karabo::net::Channel::Pointer, karabo::net::Connection::Pointer> > MapUrlToConnection;
             // This repeates map defined in karabo::xms::Signal class: map slotInstanceId to set of signalFunctions
             typedef std::map<std::string, std::set<std::string> > SlotMap;
+            
+            typedef boost::function<void (const karabo::util::Hash::Pointer& /*header*/,
+                                          const karabo::util::Hash::Pointer& /*message*/)> CustomP2PReadHandler;
 
             KARABO_CLASSINFO(PointToPoint, "PointToPoint", "2.1")
             
             PointToPoint();
 
             virtual ~PointToPoint();
+            
+            /**
+             * Second constructor.  It is needed to use shared_from_this and bind_weak. It has 
+             * optional parameter that allows to register custom message handler that can replace
+             * default message processing: call processEvent on corresponding SignalSlotable.
+             * @param custom read handler.  Usually it should be empty but if it is defined
+             *        it will be called as message processing logic instead of the default one
+             */
+            void start(const CustomP2PReadHandler& handler = CustomP2PReadHandler());
 
             /**
              * Return a string specifying the host and port the p2p interface is connected to
@@ -198,10 +210,12 @@ namespace karabo {
 
             int m_serverPort;
             std::string m_localUrl;
+            CustomP2PReadHandler m_customReadHandler;
             boost::shared_mutex m_pointToPointMutex;
             MapInstanceIdToUrl m_instanceIdToUrl;
             MapUrlToInstanceIdSet m_urlToInstanceIdSet;
             MapUrlToConnection m_mapOpenConnections;
+            MapUrlToConnection m_mapLogConnections;   // loggers connections
             LocalMap m_localMap;
             boost::shared_mutex m_localMapMutex;
         };

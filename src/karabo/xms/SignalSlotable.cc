@@ -294,6 +294,7 @@ namespace karabo {
                 }
                 if (!m_pointToPoint) {
                     m_pointToPoint = boost::make_shared<PointToPoint>();
+                    m_pointToPoint->start();
                     m_discoverConnectionResourcesMode = true;
                     KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint local URL is \"" << m_pointToPoint->getLocalUrl() << "\"";
                 }
