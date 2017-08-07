@@ -362,6 +362,20 @@ class TableValue(MutableSequence, KaraboValue):
         for row in self.value:
             yield TableValue(row, self.units, timestamp=self.timestamp)
 
+    def __str__(self):
+        def inner():
+            for name in self.value.dtype.names:
+                yield "{:10} ".format(name)
+            yield "\n"
+            for _ in self.value.dtype.names:
+                yield "---------- "
+            yield "\n"
+            for row in self.value:
+                for val in row:
+                    yield "{:10} ".format(val)
+                yield "\n"
+        return "".join(inner())
+
 
 # Pint is based on the concept of a unit registry. For each unit registry,
 # a new class (!) is created, and quantities are only compatible if we
