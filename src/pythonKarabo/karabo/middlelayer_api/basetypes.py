@@ -3,6 +3,7 @@
 Karabo keeps some metadata with its values. This module contains the
 classes which have the metadata attached."""
 from enum import Enum
+from collections.abc import MutableSequence
 from functools import wraps
 import inspect
 from itertools import chain
@@ -299,7 +300,7 @@ class VectorStringValue(KaraboValue, list):
         return self
 
 
-class TableValue(KaraboValue):
+class TableValue(MutableSequence, KaraboValue):
     """This wraps numpy structured arrays. Pint cannot deal with them."""
     def __init__(self, value, units, **kwargs):
         super(TableValue, self).__init__(value, **kwargs)
@@ -326,6 +327,30 @@ class TableValue(KaraboValue):
                                  metricPrefix=units[1],
                                  timestamp=self.timestamp)
         return ret
+
+    def __setitem__(self, item, value):
+        if not isinstance(item, slice):
+            item = slice(item, item + 1)
+        converted = numpy.array(value, dtype=self.value.dtype)
+        if converted.shape == ():
+            converted.shape = (1,)
+        start, stop, stride = item.indices(len(self.value))
+        if item.step is not None or len(converted) == (stop - start) // stride:
+            newvalue = self.value.copy()
+            newvalue[item] = converted
+        else:
+            newvalue = numpy.concatenate(
+                (self.value[:start], converted, self.value[stop:]))
+        self.descriptor.__set__(self._parent, newvalue)
+
+    def __delitem__(self, item):
+        self[item] = []
+
+    def insert(self, index, value):
+        self[index:index] = value
+
+    def extend(self, value):
+        self[len(self.value):] = value
 
     def __len__(self):
         return len(self.value)
