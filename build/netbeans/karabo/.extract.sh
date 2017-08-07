@@ -103,8 +103,7 @@ if [ "x${interactive}x" = "xTRUEx" ]; then
 	echo " WARN: Found an existing Karabo installation ($(cat $installDir/karabo/VERSION))"
 	echo "       Continuing will upgrade the core," 
 	echo "       but leave config, log and history files untouched."
-	upgrade="y"
-	read -e -p "       Continue? [Y/n]: " upgrade
+	read -e -p "       Continue? [Y/n]: " -i y upgrade
 	if [ "x${upgrade}x" != "xyx" -a "x${upgrade}x" != "xYx" ]; then
 	    echo
 	    echo " Installation aborted."
