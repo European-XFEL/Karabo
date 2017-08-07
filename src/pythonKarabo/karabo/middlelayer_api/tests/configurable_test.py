@@ -1,5 +1,6 @@
 import asyncio
 from unittest import TestCase, main
+from zlib import adler32
 
 from karabo.middlelayer import (
     AccessMode, Assignment, Configurable, decodeBinary, encodeBinary, Hash,
@@ -590,6 +591,8 @@ class Tests(TestCase):
         self.assertEqual(a.table[2]["name"], "C")
         self.assertEqual(a.table[3]["name"], "lll")
         self.assertEqual(len(a.table), 11)
+
+        self.assertEqual(adler32(str(a.table).encode("ascii")), 1313745943)
 
         a = A(Hash("table", [Hash("name", "bla", "number", 5)]))
         self.assertEqual(a.table.shape, (1,))
