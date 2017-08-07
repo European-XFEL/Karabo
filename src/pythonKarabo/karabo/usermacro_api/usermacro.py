@@ -25,6 +25,6 @@ class UserMacro(Macro):
 
 
 def display(image):
-    """Display an mage into karabo GUI"""
+    """Display an image into karabo GUI"""
     instance = get_event_loop().instance()
     instance.outputChannel = image
