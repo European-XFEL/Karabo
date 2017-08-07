@@ -345,7 +345,12 @@ class Network(QObject):
         conf = Hash()
         for box, value in changes:
             assert id == box.configuration.id
-            conf[".".join(box.path)] = box.descriptor.cast(value)
+            try:
+                value = box.descriptor.cast(value)
+            except ValueError:
+                continue
+            conf[".".join(box.path)] = value
+
         h["configuration"] = conf
         self._tcpWriteHash(h)
 
