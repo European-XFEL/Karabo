@@ -8,8 +8,11 @@ from weakref import WeakValueDictionary
 
 from PyQt4.QtCore import (
     pyqtSlot, QAbstractItemModel, QMimeData, QModelIndex, Qt)
+from PyQt4.QtGui import QBrush, QColor
 
 from karabo.middlelayer import AccessMode
+from karabo.common.api import State
+from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
 from karabo_gui.schema import Dummy, Schema, SlotNode
@@ -159,6 +162,13 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 if isinstance(value, (Dummy, bytes, bytearray)):
                     return ''
                 return str(value)
+            elif role == Qt.BackgroundRole:
+                state = self.configuration.boxvalue.state.value
+                if isinstance(state, Dummy):
+                    return
+                in_error = State(state) == State.ERROR
+                color = ERROR_COLOR_ALPHA if in_error else OK_COLOR
+                return QBrush(QColor(*color))
 
     def flags(self, index):
         """Reimplemented function of QAbstractItemModel.
