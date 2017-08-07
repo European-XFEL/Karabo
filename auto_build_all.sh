@@ -186,6 +186,8 @@ elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
     safeRunCommand "cd $scriptDir/build/netbeans/brokerMessageLogger"
     rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
+    safeRunCommand "cd $scriptDir/build/netbeans/p2pMessageLogger"
+    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
     exit 0
 elif [[ $1 = "Dependencies" ]]; then
     echo "Building external dependencies"

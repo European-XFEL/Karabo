@@ -142,6 +142,10 @@ cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 cd ../brokerMessageLogger
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
+# p2pMessageLogger
+cd ../p2pMessageLogger
+cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
+
 # idxview
 cd ../tools/dataLoggerIndex/idxview
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
