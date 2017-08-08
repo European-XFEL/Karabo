@@ -493,11 +493,22 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: Queueing request to start device instance \""
                                            << deviceId << "\" on server \"" << serverId << "\"";
 
+                if (!deviceId.empty() && hash.has("schemaUpdates")) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Schema updates were provided for device " << deviceId;
+
+                    AttributeUpdates attrUpdates;
+                    attrUpdates.eventMask = 0;
+                    attrUpdates.updates = hash.get<std::vector<Hash> >("schemaUpdates");
+
+                    boost::mutex::scoped_lock lock(m_pendingAttributesMutex);
+                    m_pendingAttributeUpdates[deviceId] = attrUpdates;
+                }
+
                 DeviceInstantiation inst;
                 inst.channel = channel;
                 inst.hash = hash;
                 {
-                    boost::mutex::scoped_lock(m_pendingInstantiationsMutex);
+                    boost::mutex::scoped_lock lock(m_pendingInstantiationsMutex);
                     m_pendingDeviceInstantiations.push(inst);
                 }
             } catch (const Exception& e) {
@@ -514,7 +525,7 @@ namespace karabo {
 
             try {
 
-                boost::mutex::scoped_lock(m_pendingInstantiationsMutex);
+                boost::mutex::scoped_lock lock(m_pendingInstantiationsMutex);
                 if (!m_pendingDeviceInstantiations.empty()) {
                     const DeviceInstantiation& inst = m_pendingDeviceInstantiations.front();
                     const string& serverId = inst.hash.get<string>("serverId");
@@ -547,17 +558,8 @@ namespace karabo {
                 Hash h("type", "initReply", "deviceId", givenDeviceId, "success", success, "message", message);
                 safeClientWrite(channel, h);
 
-                // Handle schema updates contained in the Hash supplied to onInitDevice
-                if (success && givenConfig.has("schemaUpdates")) {
-                    const string& createdDeviceId = message; // "message"" is the created deviceId when success is true.
-                    const std::vector<Hash>& schemaUpdates = givenConfig.get<std::vector<Hash> >("schemaUpdates");
+                tryToUpdateNewInstanceAttributes(givenDeviceId, DEVICE_SERVER_REPLY_EVENT);
 
-                    {
-                        boost::mutex::scoped_lock(m_pendingAttributesMutex);
-                        std::vector<Hash>& pendingUpdatesSlot = m_pendingAttributeUpdates[createdDeviceId];
-                        pendingUpdatesSlot.insert(pendingUpdatesSlot.end(), schemaUpdates.begin(), schemaUpdates.end());
-                    }
-                }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in initReply " << e.userFriendlyMsg();
             }
@@ -917,7 +919,7 @@ namespace karabo {
                         requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
                     }
 
-                    updateNewInstanceAttributes(instanceId);
+                    tryToUpdateNewInstanceAttributes(instanceId, INSTANCE_NEW_EVENT);
 
                     connectPotentialAlarmService(topologyEntry);
                     registerPotentialProjectManager(topologyEntry);
@@ -959,6 +961,12 @@ namespace karabo {
                         // and remove the instance from channel
                         it->second.erase(instanceId);
                     }
+                }
+
+                {
+                    // Erase instance from the attribute update map (maybe)
+                    boost::mutex::scoped_lock lock(m_pendingAttributesMutex);
+                    m_pendingAttributeUpdates.erase(instanceId);
                 }
 
                 {
@@ -1232,21 +1240,31 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::updateNewInstanceAttributes(const std::string& deviceId) {
+        void GuiServerDevice::tryToUpdateNewInstanceAttributes(const std::string& deviceId, const int callerMask) {
             try {
-                boost::mutex::scoped_lock(m_pendingAttributesMutex);
+                boost::mutex::scoped_lock lock(m_pendingAttributesMutex);
                 const auto it = m_pendingAttributeUpdates.find(deviceId);
 
                 if (it != m_pendingAttributeUpdates.end()) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId;
-                    request(deviceId, "slotUpdateSchemaAttributes", it->second).receiveAsync<Hash>(bind_weak(&GuiServerDevice::onUpdateNewInstanceAttributesHandler, this, deviceId, _1));
+                    // Set the caller's bit in the event mask
+                    it->second.eventMask |= callerMask;
+                    if ((it->second.eventMask & FULL_MASK_EVENT) != FULL_MASK_EVENT) {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId
+                                                   << " still pending until all events received...";
+                        return;
+                    }
 
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId;
+
+                    request(deviceId, "slotUpdateSchemaAttributes", it->second.updates).receiveAsync<Hash>(
+                        bind_weak(&GuiServerDevice::onUpdateNewInstanceAttributesHandler, this, deviceId, _1));
                 }
+
             } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in updating attributes for device '"<<deviceId<<"': " << e.userFriendlyMsg();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in sending attribute update " << e.userFriendlyMsg();
             }
         }
-        
+
         void GuiServerDevice::onUpdateNewInstanceAttributesHandler(const std::string& deviceId, const Hash& response) {
              try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Handling attribute update response from "<<deviceId;
@@ -1261,7 +1279,7 @@ namespace karabo {
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in receiving attribute update response: " << e.userFriendlyMsg();
             }
-        };
+        }
 
 
         void GuiServerDevice::slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type, const karabo::util::Hash& updateRows) {
