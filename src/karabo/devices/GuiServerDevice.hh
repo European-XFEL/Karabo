@@ -46,6 +46,19 @@ namespace karabo {
                 karabo::util::Hash hash;
             };
 
+            enum NewInstanceAttributeUpdateEvents {
+
+                INSTANCE_NEW_EVENT = 0x01,
+                DEVICE_SERVER_REPLY_EVENT = 0x02,
+
+                FULL_MASK_EVENT = INSTANCE_NEW_EVENT | DEVICE_SERVER_REPLY_EVENT,
+            };
+
+            struct AttributeUpdates {
+                int eventMask;
+                std::vector<karabo::util::Hash> updates;
+            };
+
             typedef boost::weak_ptr<karabo::net::Channel> WeakChannelPointer;
             typedef std::multimap<karabo::xms::InputChannel::Pointer, NetworkConnection> NetworkMap;
 
@@ -58,7 +71,7 @@ namespace karabo {
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
             std::map<karabo::net::Channel::Pointer, std::set<std::string> > m_channels;
-            std::map<std::string, std::vector<karabo::util::Hash> > m_pendingAttributeUpdates;
+            std::map<std::string, AttributeUpdates> m_pendingAttributeUpdates;
             std::queue<DeviceInstantiation> m_pendingDeviceInstantiations;
             mutable boost::mutex m_channelMutex;
             mutable boost::mutex m_monitoredDevicesMutex;
@@ -746,7 +759,13 @@ namespace karabo {
              * Utility for getting a "name" from client connections.
              */
             std::string getChannelAddress(const karabo::net::Channel::Pointer& channel) const;
-            
+
+
+            /**
+             * Possibly update schema attributes on device
+             */
+            void tryToUpdateNewInstanceAttributes(const std::string& deviceId, const int callerMask);
+
             /**
              * Response handler for updating schema attributes on device
              */
