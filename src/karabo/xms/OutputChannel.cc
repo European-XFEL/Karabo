@@ -59,7 +59,7 @@ namespace karabo {
                     .assignmentOptional().defaultValue(-1)
                     .commit();
             
-            INT32_ELEMENT(expected).key("port")
+            UINT32_ELEMENT(expected).key("port")
                     .displayedName("Port")
                     .description("Port number for TCP connection")
                     .expertAccess()
