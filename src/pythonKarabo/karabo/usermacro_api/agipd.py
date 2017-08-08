@@ -9,22 +9,19 @@ from .genericproxy import Sensible
 
 class AgipdAsSensible(Sensible):
     """Generalized interface to the AGIPD detector"""
-    generalizes = ('AgipdControl')
+    generalizes = ('AgipdComposite')
     state_mapping = {State.STARTED: State.ACQUIRING}
-    connection_timeout = 10.0
 
     @synchronize
-    def acquire(self):
-        """Start acquisition"""
+    def prepare(self):
+        """Get ready for acquisition"""
         if self._proxy.state == State.UNKNOWN:
             yield from self._proxy.connect()
             yield from wait_for(
                 waitUntil(lambda: self._proxy.state == State.ON),
-                self.connection_timeout)
-
-        yield from self._proxy.start()
+                self.preparation_timeout)
 
     @synchronize
-    def stop(self):
-        """Stop acquisition"""
-        yield from self._proxy.stop()
+    def acquire(self):
+        """Start acquisition"""
+        yield from self._proxy.start()
