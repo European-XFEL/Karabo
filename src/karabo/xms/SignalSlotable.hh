@@ -425,6 +425,8 @@ namespace karabo {
 
             void disconnectP2P(const std::string& instanceId);
 
+            virtual bool usePointToPoint() const;
+
         protected:
 
             class Requestor {
