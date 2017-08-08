@@ -14,7 +14,7 @@ from karabo.middlelayer import AccessMode
 from karabo.common.api import State
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 import karabo_gui.globals as krb_globals
-from karabo_gui.schema import Dummy, Schema, SlotNode
+from karabo_gui.schema import Dummy, ImageNode, Schema, SlotNode
 from karabo_gui.treewidget.parametertreewidget import getDeviceBox
 from karabo_gui.treewidget.utils import get_icon
 from karabo_gui.widget import DisplayWidget, EditableWidget
@@ -195,8 +195,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
         box = self.box_ref(index)
         if box is not None:
             is_node = isinstance(box.descriptor, Schema)
-            is_slot = isinstance(box.descriptor, SlotNode)
-            if not is_node or is_slot:
+            is_special = isinstance(box.descriptor, (SlotNode, ImageNode))
+            if not is_node or is_special:
                 flags |= Qt.ItemIsDragEnabled
 
         return flags
