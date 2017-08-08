@@ -1,23 +1,22 @@
 """The Generic Proxy module contains
 all generalized interface to devices
 """
-from asyncio import wait_for, TimeoutError
-
+from asyncio import TimeoutError
 from karabo.common.states import StateSignifier
 from karabo.middlelayer import (
     allCompleted, connectDevice, KaraboError,
-    Proxy, waitUntilNew)
+    lock, Proxy)
 from karabo.middlelayer_api.proxy import synchronize
 
 
 class GenericProxy(object):
     """Base class for all generic proxies"""
     state_mapping = {}
+    proxy_ops_timeout = 2
     preparation_timeout = 10
     locker = ""
     _proxy = Proxy()
     _generic_proxies = []
-    _gp_timeout = 2  # seconds
 
     def __repr__(self):
         def _repr_gproxy(gproxy):
@@ -73,7 +72,7 @@ class GenericProxy(object):
                     # Act as a generic proxy
                     try:
                         proxy = connectDevice(deviceId,
-                                              timeout=cls._gp_timeout)
+                                              timeout=cls.proxy_ops_timeout)
                         ret = cls.create_generic_proxy(proxy)
                     except TimeoutError:
                         cls._error("Could not connect to {}. Is it on?"
@@ -114,18 +113,8 @@ class GenericProxy(object):
             for gproxy in self._generic_proxies:
                 yield from gproxy.lockon(locker)
         else:
-            while self._proxy.lockedBy != locker:
-                if self._proxy.lockedBy == "":
-                    self._proxy.lockedBy = locker
-                else:
-                    try:
-                        print("waiting for lock!")
-                        wait_for(waitUntilNew(self._proxy.lockedBy),
-                                 timeout=2)
-                    except TimeoutError:
-                        self._error("Could not lock {}"
-                                    .format(self._proxy.classId))
-        self.locker = locker
+            yield from lock(self._proxy).__enter__()
+            self.locker = locker
 
     @synchronize
     def lockoff(self):
@@ -134,12 +123,7 @@ class GenericProxy(object):
             for gproxy in self._generic_proxies:
                 yield from gproxy.lockoff()
         else:
-            current_locker = self._proxy.lockedBy
-            if self.locker != current_locker:
-                self._error("{} is locked by {}."
-                            .format(self._proxy.deviceId, current_locker))
-            self._proxy.lockedBy = ""
-
+            yield from lock(self._proxy).__exit__(None, None, None)
         self.locker = None
 
     @synchronize
