@@ -5,15 +5,7 @@
  * Created on August 7, 2017, 12:02 PM
  */
 
-#include <cstdlib>
 #include <iostream>
-#include <vector>
-#include <boost/shared_ptr.hpp>
-#include <boost/bind.hpp>
-#include <boost/thread.hpp>
-#include <karabo/util/Exception.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/log/Logger.hh>
 #include <karabo/core/DeviceClient.hh>
 #include <karabo/net/PointToPoint.hh>
 
@@ -26,7 +18,7 @@ using namespace karabo::core;
 
 void readHandler(const Hash::Pointer& header, const Hash::Pointer& message) {
 
-    cout << *header  << endl;
+    cout << *header << endl;
     cout << *message << endl;
     cout << "-----------------------------------------------------------------------" << endl << endl;
 }
@@ -35,7 +27,7 @@ void readHandler(const Hash::Pointer& header, const Hash::Pointer& message) {
 int main(int argc, char** argv) {
 
     try {
-        boost::thread t (EventLoop::work);
+        boost::thread t(EventLoop::work);
 
         // Start Logger
         Logger::configure(Hash("priority", "ERROR"));
@@ -46,7 +38,7 @@ int main(int argc, char** argv) {
         pointToPoint->start(boost::bind(readHandler, _1, _2));
 
         // Create device client
-        DeviceClient  client;
+        DeviceClient client;
 
         // Get system information
         vector<string> devices;
@@ -63,8 +55,8 @@ int main(int argc, char** argv) {
             const string& remoteInstanceId = it->second.getKey();
             if (!it->second.hasAttribute("type") || !it->second.hasAttribute("serverId")) continue;
             if (!it->second.hasAttribute("p2p_connection")) continue;
-            const string& remoteType     = it->second.getAttribute<string>("type");
-            const string& remoteUrl      = it->second.getAttribute<string>("p2p_connection");
+            const string& remoteType = it->second.getAttribute<string>("type");
+            const string& remoteUrl = it->second.getAttribute<string>("p2p_connection");
             if (remoteType != "device") continue;
             pointToPoint->updateUrl(remoteInstanceId, remoteUrl);
             devices.push_back(remoteInstanceId);
