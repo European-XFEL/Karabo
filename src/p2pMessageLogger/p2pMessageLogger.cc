@@ -6,14 +6,23 @@
  */
 
 #include <cstdlib>
-#include <karabo/karabo.hpp>
 #include <iostream>
-#include <fstream>
-#include <cassert>
-#include <iosfwd>
+#include <vector>
+#include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
+#include <boost/thread.hpp>
+#include <karabo/util/Exception.hh>
+#include <karabo/util/Hash.hh>
+#include <karabo/log/Logger.hh>
+#include <karabo/core/DeviceClient.hh>
+#include <karabo/net/PointToPoint.hh>
 
 using namespace std;
-USING_KARABO_NAMESPACES
+using namespace karabo::util;
+using namespace karabo::log;
+using namespace karabo::net;
+using namespace karabo::core;
+
 
 void readHandler(const Hash::Pointer& header, const Hash::Pointer& message) {
 
