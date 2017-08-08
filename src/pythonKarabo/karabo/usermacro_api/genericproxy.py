@@ -146,6 +146,8 @@ class GenericProxy(object):
     @property
     def deviceId(self):
         """Get device ID"""
+        if self._generic_proxies:
+            return repr(self)
         return self._proxy.deviceId
 
     @property
