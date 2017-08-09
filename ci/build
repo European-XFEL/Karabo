@@ -1,24 +1,35 @@
 __release_build() {
+    case "$2" in
+        nightly)
+            export REL_TAG=Nightly
+            export GUI_DEST_DIR=/var/www/html/karabo/karaboFramework/nightly
+            export FRAMEWORK_DEST_DIR=/var/www/html/karabo/karaboFramework/nightly
+            ;;
+        release)
+            export REL_TAG=$CI_COMMIT_REF_NAME
+            export GUI_DEST_DIR=/var/www/html/karabo/karaboGui
+            export FRAMEWORK_DEST_DIR=/var/www/html/karabo/karaboFramework/tags/$REL_TAG
+            ;;
+        *) echo "unknown job type: $2" ;;
+    esac
+
     case "$1" in
         windows) 
-            export REL_TAG=$CI_COMMIT_REF_NAME
-            export REL_ARTIFACT_DEST=karaboGui/KaraboGUI-$REL_TAG.win32.exe
+            export REL_ARTIFACT_DEST_PATH=$GUI_DEST_DIR/KaraboGUI-$REL_TAG.win32.exe
             bash ./auto_build_all.sh Release
             source karabo/activate
             cd build/python
             bash ./build.sh
-            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null KaraboGUI-*.exe xdata@exflserv05:/var/www/html/karabo/$REL_ARTIFACT_DEST
+            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null KaraboGUI-*.exe xdata@exflserv05:$REL_ARTIFACT_DEST_PATH
             ;;
         ubuntu*|centos*)
             export REL_OS_NAME=$(lsb_release -is)
             export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
-            export REL_TAG=$CI_COMMIT_REF_NAME
             export REL_ARTIFACT_NAME=karabo-$REL_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh
-            export REL_ARTIFACT_DEST=karaboFramework/tags/$REL_TAG
             bash ./auto_build_all.sh Release --bundle
             mv package/Release/$REL_OS_NAME/$REL_OS_VERS_LONG/x86_64/karabo-*.sh $REL_ARTIFACT_NAME
-            sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null xdata@exflserv05 "mkdir -p /var/www/html/karabo/$REL_ARTIFACT_DEST"
-            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME xdata@exflserv05:/var/www/html/karabo/$REL_ARTIFACT_DEST
+            sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null xdata@exflserv05 "mkdir -p $FRAMEWORK_DEST_DIR"
+            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME xdata@exflserv05:$FRAMEWORK_DEST_DIR
             ;;
         *) echo "unknown target OS: $1" ;;
     esac
@@ -54,7 +65,8 @@ JOB_TYPE=$(echo $1 | cut -f2 -d' ')
 TARGET_OS=$(echo $1 | cut -f3 -d' ')
 
 case "$JOB_SCOPE" in
-    release) __release_build $TARGET_OS ;;
+    release) __release_build $TARGET_OS $JOB_SCOPE ;;
+    nightly) __release_build $TARGET_OS $JOB_SCOPE ;;
     deps) __deps_build $JOB_TYPE ;;
     *) echo "unknow job scope: $JOB_SCOPE" ;;
 esac
