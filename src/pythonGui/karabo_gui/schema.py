@@ -10,6 +10,7 @@
 
 from collections import OrderedDict
 from functools import partial
+import weakref
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 
@@ -31,6 +32,35 @@ SCHEMA_ATTRIBUTE_NAMES = (
     'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy',
     'relativeError', 'absoluteError', 'rowSchema'
 )
+
+
+def get_editable_attributes(descriptor):
+    """Return the editable attribute names of a descriptor
+    """
+    names = []
+    for name in EDITABLE_ATTRIBUTE_NAMES:
+        # `descriptor` can be None!
+        value = getattr(descriptor, name, None)
+        if value is not None:
+            # Skip blank units
+            if name == 'unitSymbol' and value == '':
+                continue
+            # Skip metric prefixes with no associated units
+            if (name == 'metricPrefixSymbol' and value == ''
+                    and getattr(descriptor, 'unitSymbol', '') == ''):
+                continue
+            names.append(name)
+    return names
+
+
+class EditableAttributeInfo(object):
+    """This class records the editable attributes of a box. Each time
+    the descriptor of a box is changed, a new instance of this class should
+    be generated.
+    """
+    def __init__(self, box, descriptor):
+        self.names = get_editable_attributes(descriptor)
+        self.parent = weakref.proxy(box)
 
 
 class Box(QObject):
@@ -64,6 +94,7 @@ class Box(QObject):
         else:
             self.configuration = self
         self.timestamp = None
+        self.attributeInfo = None
         self._value = Dummy()
         self.initialized = False
         self.descriptor = descriptor
@@ -84,6 +115,7 @@ class Box(QObject):
     @descriptor.setter
     def descriptor(self, d):
         self._descriptor = d
+        self.attributeInfo = EditableAttributeInfo(self, d)
         if d is not None:
             self._value = self.dummyCast()
             self.signalNewDescriptor.emit(self)
