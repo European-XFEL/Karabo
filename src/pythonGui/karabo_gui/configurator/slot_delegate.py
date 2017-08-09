@@ -47,8 +47,9 @@ class SlotButtonDelegate(QStyledItemDelegate):
         """Reimplemented function of QStyledItemDelegate.
         """
         model = index.model()
-        box = model.box_ref(index)
-        if box is None or not isinstance(box.descriptor, SlotNode):
+        obj = model.index_ref(index)
+        if (obj is None or
+                not isinstance(getattr(obj, 'descriptor', None), SlotNode)):
             super(SlotButtonDelegate, self).paint(painter, option, index)
             return
 
@@ -59,14 +60,14 @@ class SlotButtonDelegate(QStyledItemDelegate):
                 painter.fillRect(option.rect, option.palette.background())
 
         self._draw_icon(painter, option)
-        self._draw_button(painter, option, index, box)
+        self._draw_button(painter, option, index, obj)
 
     def editorEvent(self, event, model, option, index):
         """Reimplemented function of QStyledItemDelegate.
         """
         handled_types = (QEvent.MouseButtonPress, QEvent.MouseButtonRelease)
         if event.type() in handled_types:
-            box = model.box_ref(index)
+            box = model.index_ref(index)
             if box is not None and isinstance(box.descriptor, SlotNode):
                 self._handle_event_state(box, event, option)
                 return True
