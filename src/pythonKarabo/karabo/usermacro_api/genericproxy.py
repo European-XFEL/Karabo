@@ -6,7 +6,7 @@ from asyncio import wait_for
 from karabo.common.states import StateSignifier
 from karabo.middlelayer import (
     allCompleted, connectDevice, KaraboError,
-    Proxy, waitUntilNew)
+    Proxy, State, waitUntilNew)
 from karabo.middlelayer_api.proxy import synchronize
 
 
@@ -154,7 +154,8 @@ class GenericProxy(object):
     def state(self):
         """Get state"""
         if self._generic_proxies:
-            signifier = StateSignifier()
+            # Give State.MOVING the highest significance
+            signifier = StateSignifier([State.ON, State.OFF, State.STOPPED, State.STOPPING, State.ACQUIRING, State.MOVING])
             return signifier.returnMostSignificant(
                 [gproxy.state for gproxy in self._generic_proxies])
 
@@ -174,7 +175,7 @@ class Movable(GenericProxy):
         if self._generic_proxies:
             return [gproxy.position for gproxy in self._generic_proxies]
 
-        return self._proxy.encoderPosition
+        return self._proxy.encoderPosition.magnitude
 
     @position.setter
     def position(self, value):
@@ -216,6 +217,23 @@ class Sensible(GenericProxy):
     This is a generalized interface to detectors, sensors
     and image processors
     """
+
+    @property
+    def exposureTime(self):
+        """"exposureTime getter """
+        if self._generic_proxies:
+            return [gproxy.exposureTime
+                    for gproxy in self._generic_proxies]
+        return self._proxy.exposureTime.magnitude
+
+    @exposureTime.setter
+    def exposureTime(self, value):
+        if self._generic_proxies:
+            for gproxy in self._generic_proxies:
+                gproxy.exposureTime = value
+        else:
+            self._proxy.exposureTime = value
+
     @synchronize
     def acquire(self):
         """Start acquisition"""
@@ -243,7 +261,7 @@ class Coolable(GenericProxy):
         if self._generic_proxies:
             return [gproxy.temperature
                     for gproxy in self._generic_proxies]
-        return self._proxy.currentColdHeadTemperature
+        return self._proxy.currentColdHeadTemperature.magnitude
 
     @temperature.setter
     def temperature(self, value):
