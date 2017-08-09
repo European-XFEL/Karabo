@@ -18,8 +18,8 @@ class TestDev(Device):
 
     def __init__(self, configuration):
         super().__init__(configuration)
-        lockedBy = ""
-        _lock_count = 0
+        self.lockedBy = ""
+        self._lock_count = 0
 
     @Slot()
     def ping(self):
@@ -152,18 +152,6 @@ class Tests(DeviceTest):
         self.assertEqual(output._proxy.lockedBy, "")
 
     @sync_tst
-    def test_lock_not_owned(self):
-        locker = "AELD (Arbitrary External Locking Device)"
-        self.tm1.lockedBy = locker
-
-        output = GenericProxy('tm1')
-        with self.assertRaises(KaraboError) as err:
-            output.lockon(self.local.deviceId)
-        self.assertTrue('Device locked by "{}"'.format(locker)
-                        in err.exception)
-        self.tm1.lockedBy = ""
-
-    @sync_tst
     def test_multiple_locks(self):
         output = GenericProxy('tm1')
 
@@ -174,10 +162,6 @@ class Tests(DeviceTest):
         output.lockon(self.local.deviceId)
         self.assertEqual(output._proxy.lockedBy, self.local.deviceId)
 
-        output.lockoff()
-        self.assertEqual(output._proxy.lockedBy, self.local.deviceId)
-        output.lockoff()
-        self.assertEqual(output._proxy.lockedBy, self.local.deviceId)
         output.lockoff()
         self.assertEqual(output._proxy.lockedBy, "")
 
