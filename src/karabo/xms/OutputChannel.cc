@@ -91,29 +91,22 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "Outputting data on channel " << m_channelId << " and chunk " << m_chunkId;
 
             // Data networking
-            // TODO: Use port 0
             int tryAgain = 50; // Try maximum 50 times to start a server
             while (tryAgain >= 0) {
                 try {
-                    //m_ownPort = Statics::generateServerPort();
                     karabo::util::Hash h("type", "server", "port", m_port, "compressionUsageThreshold", m_compression * 1E6);
                     m_dataConnection = karabo::net::Connection::create("Tcp", h);
                     // Cannot yet use bind_weak - we are still in constructor :-(.
-                    m_ownPort = m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
+                    m_port = m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
                 } catch (const std::exception& ex) {
-                    if (m_port != 0) { // if output channel is started with defined port number
-                        throw KARABO_NETWORK_EXCEPTION(std::string("Could not start TcpServer for output channel (\"")
-                                + toString(m_channelId) + "\", port = " + toString(m_port) + ") : " + ex.what());
-                    }
-                    if (tryAgain > 0) {
+                    if((tryAgain > 0) && (m_port == 0)) {
                         tryAgain--;
                         continue;
-                    } else {
-                        throw KARABO_NETWORK_EXCEPTION(std::string("Could not start TcpServer for output channel (\"")
-                                + toString(m_channelId) + "\", port = " + toString(m_ownPort) + ") : " + ex.what());
                     }
+                    throw KARABO_NETWORK_EXCEPTION(std::string("Could not start TcpServer for output channel (\"")
+                        + toString(m_channelId) + "\", port = " + toString(m_port) + ") : " + ex.what());
                 }
-                KARABO_LOG_FRAMEWORK_DEBUG << "Started DeviceOutput-Server listening on port: " << m_ownPort;
+                KARABO_LOG_FRAMEWORK_DEBUG << "Started DeviceOutput-Server listening on port: " << m_port;
                 break;
             }
         }
@@ -147,7 +140,7 @@ namespace karabo {
 
 
         karabo::util::Hash OutputChannel::getInformation() const {
-            return karabo::util::Hash("connectionType", "tcp", "hostname", m_hostname, "port", m_ownPort);
+            return karabo::util::Hash("connectionType", "tcp", "hostname", m_hostname, "port", m_port);
         }
 
 

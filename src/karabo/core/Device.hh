@@ -1519,8 +1519,7 @@ namespace karabo {
                             try {
                                 createOutputChannel(key, m_parameters);
                             } catch (const karabo::util::NetworkException& e) {
-                                std::string port = std::to_string(m_parameters.get<int>(key + ".port"));
-                                KARABO_LOG_ERROR << "could not initialize OutputChannel: '" << key << "' because selected port: '" << port << "' is already in use.";
+                                KARABO_LOG_ERROR << e.userFriendlyMsg();
                             }
                         } else if (displayType == "InputChannel") {
                             KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates input channel '" << key << "'";
