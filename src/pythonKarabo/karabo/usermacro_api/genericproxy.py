@@ -1,18 +1,18 @@
 """The Generic Proxy module contains
 all generalized interface to devices
 """
-from asyncio import wait_for
-
+from asyncio import TimeoutError
 from karabo.common.states import StateSignifier
 from karabo.middlelayer import (
     allCompleted, connectDevice, KaraboError,
-    Proxy, waitUntilNew)
+    lock, Proxy)
 from karabo.middlelayer_api.proxy import synchronize
 
 
 class GenericProxy(object):
     """Base class for all generic proxies"""
     state_mapping = {}
+    proxy_ops_timeout = 2
     preparation_timeout = 10
     locker = ""
     _proxy = Proxy()
@@ -64,20 +64,22 @@ class GenericProxy(object):
                 return obj
 
     def __new__(cls, *args):
+        ret = None
         if args:
             if len(args) == 1:
                 deviceId = args[0]
                 if isinstance(deviceId, str):
                     # Act as a generic proxy
                     try:
-                        proxy = connectDevice(deviceId)
-                        return cls.create_generic_proxy(proxy)
-                    except:
+                        proxy = connectDevice(deviceId,
+                                              timeout=cls.proxy_ops_timeout)
+                        ret = cls.create_generic_proxy(proxy)
+                    except TimeoutError:
                         cls._error("Could not connect to {}. Is it on?"
                                    .format(deviceId))
                 else:
                     # Act as a container with a single generic proxy
-                    return cls.create_generic_proxy_container(args)
+                    ret = cls.create_generic_proxy_container(args)
 
             else:
                 # Act as container and instantiate all the proxies
@@ -99,7 +101,10 @@ class GenericProxy(object):
                     else:
                         cls._error("Provided different types of Devices")
 
-                return cls.create_generic_proxy_container(gproxies)
+                ret = cls.create_generic_proxy_container(gproxies)
+        if ret is None:
+            cls._error("This configuration is not available")
+        return ret
 
     @synchronize
     def lockon(self, locker):
@@ -108,18 +113,8 @@ class GenericProxy(object):
             for gproxy in self._generic_proxies:
                 yield from gproxy.lockon(locker)
         else:
-            while self._proxy.lockedBy != locker:
-                if self._proxy.lockedBy == "":
-                    self._proxy.lockedBy = locker
-                else:
-                    try:
-                        print("waiting for lock!")
-                        wait_for(waitUntilNew(self._proxy.lockedBy),
-                                 timeout=2)
-                    except TimeoutError:
-                        self._error("Could not lock {}"
-                                    .format(self._proxy.classId))
-        self.locker = locker
+            yield from lock(self._proxy).__enter__()
+            self.locker = locker
 
     @synchronize
     def lockoff(self):
@@ -128,12 +123,7 @@ class GenericProxy(object):
             for gproxy in self._generic_proxies:
                 yield from gproxy.lockoff()
         else:
-            current_locker = self._proxy.lockedBy
-            if self.locker != current_locker:
-                self._error("{} is locked by {}."
-                            .format(self._proxy.deviceId, current_locker))
-            self._proxy.lockedBy = ""
-
+            yield from lock(self._proxy).__exit__(None, None, None)
         self.locker = None
 
     @synchronize
