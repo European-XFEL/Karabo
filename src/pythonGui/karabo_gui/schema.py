@@ -568,13 +568,16 @@ class ChoiceOfNodes(Schema):
 
     def toHash(self, box):
         ret, attrs = super(ChoiceOfNodes, self).toHash(box)
+        key = box.current
         if box.current is None:
-            return Hash()
-        else:
-            key = box.current
-            h = Hash(key, ret[key])
-            h[key, ...] = attrs
-            return h, {}
+            # Get a value somehow
+            if self.defaultValue:
+                key = self.defaultValue
+            else:
+                key = next(k for k in self.dict)
+        h = Hash(key, ret[key])
+        h[key, ...] = attrs
+        return h, {}
 
     def set(self, box, value, timestamp=None):
         """The value of this ChoiceElement is set.
