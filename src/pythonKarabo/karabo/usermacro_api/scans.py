@@ -92,30 +92,32 @@ class AScan(UserMacro):
 
         linelen = 80
         print("\n"+"-"*linelen)
+        if not self.steps:
+            print("Continuous Scan along trajectory {}".format(self._pos_list))
         # Iterate over positions
         for self.stepNum, pos in enumerate(self.build_trajectory(), start=1):
             yield from self._movable.moveto(pos)
 
-            if self.steps or self.stepNum == 1:
-                # Only wait once in case of continuous scans
-                yield from waitUntil(
-                    lambda: self._movable.state != State.MOVING
-                    and np.linalg.norm(
-                        np.subtract(self._movable.position,
-                                    pos)) < self.position_epsilon)
-                print("Step {} - Motors at {}"
-                      .format(self.stepNum, self._movable.position))
+            yield from waitUntil(
+                lambda: self._movable.state != State.MOVING
+                and np.linalg.norm(
+                    np.subtract(self._movable.position,
+                                pos)) < self.position_epsilon.magnitude**2)
 
+            if self.steps or self.stepNum == 1:
                 yield from self._sensible.acquire()
 
             if self.steps:
-                yield from sleep(self.exposureTime + self.time_epsilon)
+                print("Step {} - Motors at {}"
+                      .format(self.stepNum, self._movable.position))
+                print("  Acquiring for {}"
+                      .format(self.exposureTime + self.time_epsilon))
 
-            if self.steps:
+                yield from sleep(self.exposureTime + self.time_epsilon)
                 yield from self._sensible.stop()
 
         # Stop acquisition here for continuous scans
-        if not self.steps:
+        if not self.steps and self._sensible.state == State.ACQUIRING:
             yield from self._sensible.stop()
 
         print("-"*linelen)
@@ -149,11 +151,13 @@ class TScan(UserMacro):
     sensibleId = String(
         displayedName="SensibleId",
         accessMode=AccessMode.READONLY)
+
     exposureTime = Float(
         displayedName="Exposure time",
         defaultValue=0.1,
         unitSymbol=Unit.SECOND,
         accessMode=AccessMode.INITONLY)
+
     duration = Float(
         displayedName="Duration",
         defaultValue=1,
@@ -186,7 +190,7 @@ class TScan(UserMacro):
         linelen = 80
         print("\n"+"-"*linelen)
         # Iterate over positions
-        elaps = 0
+        elaps = self.time_epsilon * 0
         i = 0
         while elaps < self.duration:
             i += 1
@@ -208,8 +212,9 @@ class DMesh(AMesh):
                          **kwargs)
 
         # Convert position from relative to absolute
-        self._pos_list = np.array(
-            self._movable.position) + np.array(self._pos_list)
+        current_pos = np.array(self._movable.position)
+        pos_list = np.array(list(self._pos_list))
+        self._pos_list = pos_list + current_pos
 
 
 class AMove(UserMacro):
@@ -241,7 +246,8 @@ class AMove(UserMacro):
         yield from waitUntil(
             lambda: self._movable.state != State.MOVING and np.linalg.norm(
                 np.subtract(self._movable.position,
-                            self._position)) < self.position_epsilon)
+                            self._position))
+            < self.position_epsilon.magnitude**2)
         __print_motor_position()
 
 
