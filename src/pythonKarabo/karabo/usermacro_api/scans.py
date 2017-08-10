@@ -98,11 +98,18 @@ class AScan(UserMacro):
         for self.stepNum, pos in enumerate(self.build_trajectory(), start=1):
             yield from self._movable.moveto(pos)
 
+            unexpected = (State.ERROR, State.OFF, State.UNKNOWN)
+
             yield from waitUntil(
                 lambda: self._movable.state != State.MOVING
                 and np.linalg.norm(
                     np.subtract(self._movable.position,
-                                pos)) < self.position_epsilon.magnitude**2)
+                                pos)) < self.position_epsilon.magnitude**2
+                or self._movable.state in unexpected)
+
+            if self._movable.state in unexpected:
+                type(self)._error("Unexpected state during scan: {}"
+                                  .format(self._movable.state))
 
             if self.steps or self.stepNum == 1:
                 yield from self._sensible.acquire()
@@ -133,6 +140,9 @@ class AMesh(AScan):
 
 class APathScan(AScan):
     """Absolute Mesh scan"""
+    def __init__(self, movable, pos_list, sensible, exposureTime, **kwargs):
+        super().__init__(movable, pos_list, sensible,
+                         exposureTime, True, 0, **kwargs)
 
 
 class DScan(AScan):
@@ -240,14 +250,22 @@ class AMove(UserMacro):
             print("Motors at {}".format(self._movable.position))
             print("-"*linelen)
 
+        unexpected = (State.ERROR, State.OFF, State.UNKNOWN)
+
         __print_motor_position()
         yield from self._movable.prepare()
         yield from self._movable.moveto(self._position)
         yield from waitUntil(
-            lambda: self._movable.state != State.MOVING and np.linalg.norm(
+            lambda: self._movable.state != State.MOVING
+            and np.linalg.norm(
                 np.subtract(self._movable.position,
                             self._position))
-            < self.position_epsilon.magnitude**2)
+            < self.position_epsilon.magnitude**2
+            or self._movable.state in unexpected)
+
+        if self._movable.state in unexpected:
+            type(self)._error("Unexpected state after move: {}"
+                              .format(self._movable.state))
         __print_motor_position()
 
 
