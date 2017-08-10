@@ -4,18 +4,48 @@ import itertools
 import numpy as np
 
 from karabo.middlelayer import (
-    Bool, Float, Int32, State, String, sleep, waitUntil)
+    AccessMode, Bool, Float, Int32, State, String,
+    sleep, UInt32, Unit, VectorHash, waitUntil)
 from .usermacro import UserMacro
 from .genericproxy import Movable, Sensible
 
 
 class AScan(UserMacro):
     """Absolute scan"""
-    movableId = String(displayedName="Movable")
-    sensibleId = String(displayedName="Sensible")
-    exposureTime = Float(displayedName="Exposure time", defaultValue=0.1)
-    steps = Bool(displayedName="Steps", defaultValue=True)
-    number_of_steps = Int32(displayedName="Number of steps", defaultValue=0)
+    experimentId = String(
+        displayedName="ExperimentId",
+        defaultValue="",
+        accessMode=AccessMode.INITONLY)
+
+    movableId = String(
+        displayedName="Movable",
+        accessMode=AccessMode.READONLY)
+
+    sensibleId = String(
+        displayedName="Sensible",
+        accessMode=AccessMode.READONLY)
+
+    exposureTime = Float(
+        displayedName="Exposure time",
+        defaultValue=0.1,
+        unitSymbol=Unit.SECOND)
+
+    steps = Bool(
+        displayedName="HasSteps",
+        defaultValue=True)
+
+    number_of_steps = Int32(
+        displayedName="Number of steps",
+        defaultValue=0)
+
+    stepNum = UInt32(
+        displayedName="Current step",
+        defaultValue=0,
+        accessMode=AccessMode.READONLY)
+
+    # Should be later an AcquiredData object
+    data = VectorHash()
+
     _movable = Movable()
     _sensible = Sensible()
     _pos_list = []
@@ -26,22 +56,25 @@ class AScan(UserMacro):
         self._movable = (movable
                          if isinstance(movable, Movable)
                          else Movable(movable))
-        self._movableId = self._movable.deviceId
+        self.movableId = self._movable.deviceId
         self._pos_list = pos_list
         self._sensible = (sensible
                           if isinstance(sensible, Sensible)
                           else Sensible(sensible))
-        self._sensibleId = self._sensible.deviceId
-        self._exposureTime = exposureTime
-        self._steps = steps
-        self._number_of_steps = number_of_steps
+        self.exposureTime = exposureTime
+        self.steps = steps
+        self.number_of_steps = number_of_steps
+
+    def onInitialization(self):
+        if self.experimentId == "":
+            self.experimentId = self.deviceId
+        self.sensibleId = self._sensible.deviceId
 
     @coroutine
     def execute(self):
         """Body. Override UserMacro's"""
-
         # Prepare for move and acquisition
-        self._sensible.exposureTime = self._exposureTime
+        self._sensible.exposureTime = self.exposureTime
         yield from self._movable.prepare()
         yield from self._sensible.prepare()
 
@@ -59,7 +92,7 @@ class AScan(UserMacro):
                   .format(i + 1, self._movable.position))
 
             yield from self._sensible.acquire()
-            yield from sleep(self._exposureTime)
+            yield from sleep(self.exposureTime + self.time_epsilon)
             yield from self._sensible.stop()
         print("-"*linelen)
 
@@ -90,8 +123,10 @@ class DScan(AScan):
 class TScan(UserMacro):
     """Time scan"""
     sensibleId = String(displayedName="Sensible")
-    exposureTime = Float(displayedName="Exposure time", defaultValue=0.1)
-    duration = Float(displayedName="Duration", defaultValue=1)
+    exposureTime = Float(displayedName="Exposure time",
+                         defaultValue=0.1, unitSymbol=Unit.SECOND)
+    duration = Float(displayedName="Duration",
+                     defaultValue=1, unitSymbol=Unit.SECOND)
     _sensible = Sensible()
 
     def __init__(self, sensible, exposureTime, duration, **kwargs):
@@ -100,7 +135,7 @@ class TScan(UserMacro):
                           if isinstance(sensible, Sensible)
                           else Sensible(sensible))
         self._sensibleId = self._sensible.deviceId
-        self._exposureTime = exposureTime
+        self.exposureTime = exposureTime
         self.duration = duration
 
     @coroutine
@@ -108,19 +143,23 @@ class TScan(UserMacro):
         """Body. Override UserMacro's"""
 
         # Prepare for acquisition
-        self._sensible.exposureTime = self._exposureTime
+        self._sensible.exposureTime = self.exposureTime
         yield from self._sensible.prepare()
 
         linelen = 80
         print("\n"+"-"*linelen)
         # Iterate over positions
-        for i, instant in enumerate(range(self.duration, self.exposureTime)):
+        elaps = 0
+        i = 0
+        while elaps < self.duration:
+            i += 1
             print("Step {} - at time {}"
-                  .format(i + 1, instant))
-
+                  .format(i, elaps))
             yield from self._sensible.acquire()
-            yield from sleep(self.exposureTime)
+            yield from sleep(self.exposureTime + self.time_epsilon)
             yield from self._sensible.stop()
+            elaps += self.exposureTime + self.time_epsilon
+
         print("-"*linelen)
 
 

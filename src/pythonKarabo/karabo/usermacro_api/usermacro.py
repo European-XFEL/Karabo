@@ -14,6 +14,7 @@ from .pipeline import OutputChannel
 class UserMacro(Macro):
     """"Base class for user macros"""
     position_epsilon = 1e-2
+    time_epsilon = 1e-1
     outputChannel = OutputChannel()
 
     @Slot(displayedName="Start", allowedStates={State.PASSIVE})
