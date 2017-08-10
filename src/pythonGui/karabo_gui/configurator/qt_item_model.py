@@ -212,7 +212,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         column = index.column()
         if column == 1 and role == Qt.BackgroundRole:
             state = self.configuration.boxvalue.state.value
-            if isinstance(state, Dummy):
+            if self.configuration.type != 'device' or isinstance(state, Dummy):
                 return
             in_error = State(state) == State.ERROR
             color = ERROR_COLOR_ALPHA if in_error else OK_COLOR
@@ -234,24 +234,31 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if not index.isValid():
             return Qt.NoItemFlags
 
+        # All items have these properties
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
         obj = self.index_ref(index)
-        if obj is None or isinstance(obj, EditableAttributeInfo):
+        if obj is None:
             return flags
 
-        # We know that `obj` is a `Box` now
-        box = obj
+        # NOTE: `obj` can be a `Box` or an `EditableAttributeInfo`
 
-        is_node = isinstance(box.descriptor, Schema)
-        is_special = isinstance(box.descriptor, (SlotNode, ImageNode))
+        # Check for draggable rows
+        descriptor = getattr(obj, 'descriptor', None)
+        is_node = isinstance(descriptor, Schema)
+        is_special = isinstance(descriptor, (SlotNode, ImageNode))
         if not is_node or is_special:
             flags |= Qt.ItemIsDragEnabled
 
-        descriptor = box.descriptor
-        if descriptor is None:
+        # Below is the check for editability. Ignore the first column
+        if index.column() == 0:
             return flags
 
+        if isinstance(obj, EditableAttributeInfo):
+            flags |= Qt.ItemIsEditable
+            return flags
+
+        box = obj  # we know it's a `Box` now
         is_class = box.configuration.type in ('class', 'projectClass')
         is_editable_type = not is_node or isinstance(descriptor, ChoiceOfNodes)
         is_class_editable = (is_class and descriptor.accessMode in
@@ -395,3 +402,40 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         # otherwise no children
         return 0
+
+    def setData(self, index, value, role):
+        """Reimplemented function of QAbstractItemModel.
+        """
+        if role != Qt.EditRole:
+            return False
+
+        # Get the index's stored object
+        obj = self.index_ref(index)
+        if obj is None:
+            return False
+
+        if isinstance(obj, EditableAttributeInfo):
+            box = obj.parent
+            if box is None or box.descriptor is None:
+                return False
+            name = obj.names[index.row()]
+            descriptor = box.descriptor
+            setattr(descriptor, name, value)
+
+            # Configuration changed - so project needs to be informed
+            if box.configuration.type == 'projectClass':
+                box.configuration.signalBoxChanged.emit()
+        else:  # Normal property value setting
+            box = obj
+            box.signalUserChanged.emit(box, value, None)
+            if box.configuration.type == "macro":
+                box.set(value)
+            elif box.descriptor is not None:
+                if box.configuration.type == "device":
+                    box.configuration.setUserValue(box, value)
+                    box.configuration.sendUserValue(box)
+                else:
+                    box.set(value)
+
+        # A value was successfully set!
+        return True

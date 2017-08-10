@@ -5,7 +5,8 @@ import karabo_gui.icons as icons
 def get_icon(descriptor):
     """Get the proper icon to show next to a property in the configurator
     """
-    if descriptor.options is not None:
+    options = getattr(descriptor, 'options', None)
+    if options is not None:
         return icons.enum
 
     icon = icons.undefined
