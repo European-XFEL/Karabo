@@ -7,6 +7,7 @@ from PyQt4.QtCore import QSize
 from PyQt4.QtGui import QStyledItemDelegate
 
 from karabo.middlelayer import AccessMode
+from karabo_gui.schema import EditableAttributeInfo
 from karabo_gui.widget import EditableWidget
 from .edit_widget import EditWidgetWrapper
 
@@ -20,8 +21,8 @@ class ValueDelegate(QStyledItemDelegate):
         """Reimplemented function of QStyledItemDelegate.
         """
         model = index.model()
-        box = model.box_ref(index)
-        if box is None:
+        box = model.index_ref(index)
+        if box is None or isinstance(box, EditableAttributeInfo):
             return None
 
         descriptor = box.descriptor
@@ -49,8 +50,8 @@ class ValueDelegate(QStyledItemDelegate):
         through the item model.
         """
         model = index.model()
-        box = model.box_ref(index)
-        if box is None:
+        box = model.index_ref(index)
+        if box is None or isinstance(box, EditableAttributeInfo):
             return
 
         box.signalUserChanged.emit(box, editor.editable_widget.value, None)
@@ -58,7 +59,8 @@ class ValueDelegate(QStyledItemDelegate):
             box.set(editor.value)
         elif box.descriptor is not None:
             box.configuration.setUserValue(box, editor.editable_widget.value)
-            box.configuration.sendUserValue(box)
+            if box.configuration.type == "device":
+                box.configuration.sendUserValue(box)
 
     def sizeHint(self, option, index):
         """Reimplemented function of QStyledItemDelegate.
