@@ -8,7 +8,6 @@ from PyQt4.QtGui import QAbstractItemView, QTreeView
 
 from karabo_gui.events import (
     KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
-from .edit_widget import EditWidgetWrapper
 from .qt_item_model import ConfigurationTreeModel
 from .slot_delegate import SlotButtonDelegate
 from .value_delegate import ValueDelegate
@@ -45,11 +44,6 @@ class ConfigurationTreeView(QTreeView):
 
     # ------------------------------------
     # Event handlers
-
-    def closeEditor(self, editor, hint):
-        super(ConfigurationTreeView, self).closeEditor(editor, hint)
-        if isinstance(editor, EditWidgetWrapper):
-            editor.disconnect_signals()
 
     def closeEvent(self, event):
         event.accept()
