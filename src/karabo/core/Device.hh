@@ -339,7 +339,7 @@ namespace karabo {
                         .description("Decides whether to activate P2P communication automatically")
                         .init()
                         .adminAccess()
-                        .assignmentOptional().defaultValue(true)
+                        .assignmentOptional().defaultValue(false)
                         .commit();
 
                 INT32_ELEMENT(expected).key("progress")
