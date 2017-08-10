@@ -10,11 +10,11 @@ from PyQt4.QtCore import (
     pyqtSlot, QAbstractItemModel, QMimeData, QModelIndex, Qt)
 from PyQt4.QtGui import QBrush, QColor
 
-from karabo.middlelayer import AccessMode
+from karabo.middlelayer import AccessMode, VectorHash
 from karabo.common.api import State
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 import karabo_gui.globals as krb_globals
-from karabo_gui.schema import Dummy, ImageNode, Schema, SlotNode
+from karabo_gui.schema import ChoiceOfNodes, Dummy, ImageNode, Schema, SlotNode
 from karabo_gui.treewidget.parametertreewidget import getDeviceBox
 from karabo_gui.treewidget.utils import get_icon
 from karabo_gui.widget import DisplayWidget, EditableWidget
@@ -193,11 +193,29 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
         box = self.box_ref(index)
-        if box is not None:
-            is_node = isinstance(box.descriptor, Schema)
-            is_special = isinstance(box.descriptor, (SlotNode, ImageNode))
-            if not is_node or is_special:
-                flags |= Qt.ItemIsDragEnabled
+        if box is None:
+            return flags
+
+        is_node = isinstance(box.descriptor, Schema)
+        is_special = isinstance(box.descriptor, (SlotNode, ImageNode))
+        if not is_node or is_special:
+            flags |= Qt.ItemIsDragEnabled
+
+        descriptor = box.descriptor
+        if descriptor is None:
+            return flags
+
+        is_class = box.configuration.type in ('class', 'projectClass')
+        is_editable_type = not is_node or isinstance(descriptor, ChoiceOfNodes)
+        is_class_editable = (is_class and descriptor.accessMode in
+                             (AccessMode.INITONLY, AccessMode.RECONFIGURABLE))
+        is_inst_editable = (not is_class and box.isAllowed() and
+                            descriptor.accessMode is AccessMode.RECONFIGURABLE)
+        if is_editable_type and (is_class_editable or is_inst_editable):
+            flags |= Qt.ItemIsEditable
+            # XXX: Explicitly avoid the table editor!
+            if isinstance(descriptor, VectorHash):
+                flags &= ~Qt.ItemIsEditable
 
         return flags
 
