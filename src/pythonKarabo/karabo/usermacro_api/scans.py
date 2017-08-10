@@ -11,32 +11,37 @@ from .genericproxy import Movable, Sensible
 
 
 class AScan(UserMacro):
-    """Absolute scan"""
+    """Absolute scan
+    Base class for absolute step-wise scans
+    and *naive* continous scans"""
     experimentId = String(
         displayedName="ExperimentId",
         defaultValue="",
         accessMode=AccessMode.INITONLY)
 
     movableId = String(
-        displayedName="Movable",
+        displayedName="MovableId",
         accessMode=AccessMode.READONLY)
 
     sensibleId = String(
-        displayedName="Sensible",
+        displayedName="SensibleId",
         accessMode=AccessMode.READONLY)
 
     exposureTime = Float(
         displayedName="Exposure time",
         defaultValue=0.1,
-        unitSymbol=Unit.SECOND)
+        unitSymbol=Unit.SECOND,
+        accessMode=AccessMode.INITONLY)
 
     steps = Bool(
         displayedName="HasSteps",
-        defaultValue=True)
+        defaultValue=True,
+        accessMode=AccessMode.INITONLY)
 
     number_of_steps = Int32(
         displayedName="Number of steps",
-        defaultValue=0)
+        defaultValue=0,
+        accessMode=AccessMode.INITONLY)
 
     stepNum = UInt32(
         displayedName="Current step",
@@ -65,10 +70,17 @@ class AScan(UserMacro):
         self.steps = steps
         self.number_of_steps = number_of_steps
 
+    @coroutine
     def onInitialization(self):
+        """Overrides classclass  SignalSlotable's"""
         if self.experimentId == "":
             self.experimentId = self.deviceId
         self.sensibleId = self._sensible.deviceId
+
+    def build_trajectory(self):
+        """Generates a segmented trajectory"""
+        if self.number_of_steps == 0:
+            return self._pos_list
 
     @coroutine
     def execute(self):
@@ -81,19 +93,31 @@ class AScan(UserMacro):
         linelen = 80
         print("\n"+"-"*linelen)
         # Iterate over positions
-        for i, pos in enumerate(self._pos_list):
+        for self.stepNum, pos in enumerate(self.build_trajectory(), start=1):
             yield from self._movable.moveto(pos)
-            yield from waitUntil(
-                lambda: self._movable.state != State.MOVING
-                and np.linalg.norm(
-                    np.subtract(self._movable.position,
-                                pos)) < self.position_epsilon)
-            print("Step {} - Motors at {}"
-                  .format(i + 1, self._movable.position))
 
-            yield from self._sensible.acquire()
-            yield from sleep(self.exposureTime + self.time_epsilon)
+            if self.steps or self.stepNum == 1:
+                # Only wait once in case of continuous scans
+                yield from waitUntil(
+                    lambda: self._movable.state != State.MOVING
+                    and np.linalg.norm(
+                        np.subtract(self._movable.position,
+                                    pos)) < self.position_epsilon)
+                print("Step {} - Motors at {}"
+                      .format(self.stepNum, self._movable.position))
+
+                yield from self._sensible.acquire()
+
+            if self.steps:
+                yield from sleep(self.exposureTime + self.time_epsilon)
+
+            if self.steps:
+                yield from self._sensible.stop()
+
+        # Stop acquisition here for continuous scans
+        if not self.steps:
             yield from self._sensible.stop()
+
         print("-"*linelen)
 
 
@@ -122,11 +146,20 @@ class DScan(AScan):
 
 class TScan(UserMacro):
     """Time scan"""
-    sensibleId = String(displayedName="Sensible")
-    exposureTime = Float(displayedName="Exposure time",
-                         defaultValue=0.1, unitSymbol=Unit.SECOND)
-    duration = Float(displayedName="Duration",
-                     defaultValue=1, unitSymbol=Unit.SECOND)
+    sensibleId = String(
+        displayedName="SensibleId",
+        accessMode=AccessMode.READONLY)
+    exposureTime = Float(
+        displayedName="Exposure time",
+        defaultValue=0.1,
+        unitSymbol=Unit.SECOND,
+        accessMode=AccessMode.INITONLY)
+    duration = Float(
+        displayedName="Duration",
+        defaultValue=1,
+        unitSymbol=Unit.SECOND,
+        accessMode=AccessMode.INITONLY)
+
     _sensible = Sensible()
 
     def __init__(self, sensible, exposureTime, duration, **kwargs):
@@ -134,9 +167,13 @@ class TScan(UserMacro):
         self._sensible = (sensible
                           if isinstance(sensible, Sensible)
                           else Sensible(sensible))
-        self._sensibleId = self._sensible.deviceId
         self.exposureTime = exposureTime
         self.duration = duration
+
+    @coroutine
+    def onInitialization(self):
+        """Overrides class Device's"""
+        self.sensibleId = self._sensible.deviceId
 
     @coroutine
     def execute(self):
@@ -186,7 +223,7 @@ class AMove(UserMacro):
         self._movable = (movable
                          if isinstance(movable, Movable)
                          else Movable(movable))
-        self._movableId = self._movable.deviceId
+        self.movableId = self._movable.deviceId
         self._position = position
 
     @coroutine
