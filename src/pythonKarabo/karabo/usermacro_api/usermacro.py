@@ -6,15 +6,27 @@ from contextlib import closing
 import os
 import socket
 
-from karabo.middlelayer import Device, Macro, Slot, State
+from karabo.middlelayer import (
+    AccessMode, Float, Macro, MetricPrefix, Slot, State, Unit)
 from karabo.middlelayer_api.eventloop import EventLoop, NoEventLoop
 from .pipeline import OutputChannel
 
 
 class UserMacro(Macro):
     """"Base class for user macros"""
-    position_epsilon = 1e-2
-    time_epsilon = 1e-1
+    position_epsilon = Float(
+        displayedName="PositionEpsilon",
+        defaultValue=1e-1,
+        unitSymbol=Unit.METER,
+        metricPrefixSymbol=MetricPrefix.MILLI,
+        accessMode=AccessMode.INITONLY)
+
+    time_epsilon = Float(
+        displayedName="TimeEpsilon",
+        defaultValue=1e-1,
+        unitSymbol=Unit.SECOND,
+        accessMode=AccessMode.INITONLY)
+
     outputChannel = OutputChannel()
 
     @Slot(displayedName="Start", allowedStates={State.PASSIVE})
