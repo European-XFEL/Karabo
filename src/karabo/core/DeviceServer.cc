@@ -159,13 +159,13 @@ namespace karabo {
             config.get("timeServerId", m_timeServerId);
 
             // Should we use PointToPoint globally
-            m_usePointToPoint = true;
+            m_usePointToPoint = false;
             char* env = 0;
             env = getenv("KARABO_POINT2POINT");
             if (env) {
                 string variable(env);
                 boost::to_upper(variable);
-                if (variable == "OFF") m_usePointToPoint = false;
+                if (variable == "ON") m_usePointToPoint = true;
             }
 
             m_connection = Configurator<JmsConnection>::createNode("connection", config);
