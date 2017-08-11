@@ -170,6 +170,18 @@ class AMesh(AScan):
                  **kwargs):
         super().__init__(movable, itertools.product(pos_list1, pos_list2),
                          sensible, exposureTime, True, 0, **kwargs)
+        self._pos_list1 = pos_list1
+        self._pos_list2 = pos_list2
+
+    def __repr__(self):
+        # By default, itertools.product has an ugly representation.
+        # This may break on non-64bits machines.
+        rep = super().__repr__()
+        rep = "{begin}{list1}, {list2}{end}".format(begin=rep[:13],
+                                                    list1=self._pos_list1,
+                                                    list2=self._pos_list2,
+                                                    end=rep[57:])
+        return rep
 
 
 class APathScan(AScan):
