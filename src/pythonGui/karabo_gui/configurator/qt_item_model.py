@@ -3,11 +3,9 @@
 # Created on August 3, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import json
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import (
-    pyqtSlot, QAbstractItemModel, QMimeData, QModelIndex, Qt)
+from PyQt4.QtCore import pyqtSlot, QAbstractItemModel, QModelIndex, Qt
 from PyQt4.QtGui import QBrush, QColor
 
 from karabo.middlelayer import AccessMode, VectorHash
@@ -18,9 +16,8 @@ from karabo_gui.schema import (
     ChoiceOfNodes, Dummy, EditableAttributeInfo, ImageNode, Schema, SlotNode,
     get_editable_attributes
 )
-from karabo_gui.treewidget.parametertreewidget import getDeviceBox
 from karabo_gui.treewidget.utils import get_icon
-from karabo_gui.widget import DisplayWidget, EditableWidget
+from karabo_gui.util import dragged_configurator_items
 
 
 def _get_child_names(descriptor):
@@ -316,44 +313,11 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if len(indices) == 0 or self._configuration.type == 'class':
             return None
 
-        dragged = []
-        for index in indices:
-            if index.column() != 0:
-                continue  # Ignore other columns (all columns are the same box)
-
-            box = self.index_ref(index)
-            if box is None:
-                continue
-
-            # Get the box. "box" is in the project, "realbox" the
-            # one on the device. They are the same if not from a project
-            realbox = getDeviceBox(box)
-            if realbox.descriptor is not None:
-                box = realbox
-
-            # Collect the relevant information
-            data = {
-                'key': box.key(),
-                'label': box.path[-1],
-            }
-
-            factory = DisplayWidget.getClass(box)
-            if factory is not None:
-                data['display_widget_class'] = factory.__name__
-            if box.descriptor.accessMode == AccessMode.RECONFIGURABLE:
-                factory = EditableWidget.getClass(box)
-                if factory is not None:
-                    data['edit_widget_class'] = factory.__name__
-            # Add it to the list of dragged items
-            dragged.append(data)
-
-        if not dragged:
-            return None
-
-        mimeData = QMimeData()
-        mimeData.setData('source_type', 'ParameterTreeWidget')
-        mimeData.setData('tree_items', json.dumps(dragged))
-        return mimeData
+        # Only gather valid boxes for indices in the first column
+        # (Qt passes indices for each column in a row)
+        boxes = [self.index_ref(idx) for idx in indices
+                 if idx.column() == 0 and self.index_ref(idx) is not None]
+        return dragged_configurator_items(boxes)
 
     def parent(self, index):
         """Reimplemented function of QAbstractItemModel.
