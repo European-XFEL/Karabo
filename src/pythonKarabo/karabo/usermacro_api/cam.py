@@ -6,4 +6,4 @@ from .genericproxy import Sensible
 class CamAsSensible(Sensible):
     """Generalized interface to the Cameras """
     generalizes = ('GenicamBaslerCamera', 'PhotonicScienceCamera',
-                   'LimaBaslerCamera', 'LimaSimulatedCamera')
+                   'LimaBaslerCamera', 'LimaSimulatedCamera', 'SimulatedCameraPy')

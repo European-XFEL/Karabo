@@ -1,42 +1,299 @@
-""""Scantool macros"""
+"""Scantool macros"""
+from asyncio import coroutine
+import itertools
+import numpy as np
+
+from karabo.middlelayer import (
+    AccessMode, Bool, Float, Int32, State, String,
+    sleep, UInt32, Unit, VectorHash, waitUntil)
 from .usermacro import UserMacro
+from .genericproxy import Movable, Sensible
 
 
 class AScan(UserMacro):
-    """Absolute scan"""
-    pass
+    """Absolute scan
+    Base class for absolute step-wise scans
+    and *naive* continous scans"""
+    experimentId = String(
+        displayedName="ExperimentId",
+        defaultValue="",
+        accessMode=AccessMode.INITONLY)
+
+    movableId = String(
+        displayedName="MovableId",
+        accessMode=AccessMode.READONLY)
+
+    sensibleId = String(
+        displayedName="SensibleId",
+        accessMode=AccessMode.READONLY)
+
+    pos_list = String(
+        displayedName="Trajectory",
+        accessMode=AccessMode.READONLY)
+
+    exposureTime = Float(
+        displayedName="Exposure time",
+        defaultValue=0.1,
+        unitSymbol=Unit.SECOND,
+        accessMode=AccessMode.INITONLY)
+
+    steps = Bool(
+        displayedName="HasSteps",
+        defaultValue=True,
+        accessMode=AccessMode.INITONLY)
+
+    number_of_steps = Int32(
+        displayedName="Number of steps",
+        defaultValue=0,
+        accessMode=AccessMode.INITONLY)
+
+    stepNum = UInt32(
+        displayedName="Current step",
+        defaultValue=0,
+        accessMode=AccessMode.READONLY)
+
+    # Should be later an AcquiredData object
+    data = VectorHash()
+
+    _movable = Movable()
+    _sensible = Sensible()
+    _pos_list = []
+
+    def __init__(self, movable, pos_list, sensible, exposureTime,
+                 steps=True, number_of_steps=0, **kwargs):
+        super().__init__(kwargs)
+        self._movable = (movable
+                         if isinstance(movable, Movable)
+                         else Movable(movable))
+        self._sensible = (sensible
+                          if isinstance(sensible, Sensible)
+                          else Sensible(sensible))
+        self._pos_list = pos_list
+        self.exposureTime = exposureTime
+        self.steps = steps
+        self.number_of_steps = number_of_steps
+
+    @coroutine
+    def onInitialization(self):
+        """Overrides classclass  SignalSlotable's"""
+        if self.experimentId == "":
+            self.experimentId = self.deviceId
+        self.movableId = self._movable.deviceId
+        self.sensibleId = self._sensible.deviceId
+        self.pos_list = self._pos_list
+
+    @staticmethod
+    def split_trajectory(pos_list, number_of_steps):
+        """Generates a segmented trajectory"""
+        itpos = iter(pos_list)
+
+        if number_of_steps == 0:
+            while True:
+                # Instruct to pause at every point
+                yield next(itpos), True
+        else:
+                len_seg = []
+                len_traj = 0
+                pass
+
+    @coroutine
+    def execute(self):
+        """Body. Override UserMacro's"""
+        # Prepare for move and acquisition
+        self._sensible.exposureTime = self.exposureTime
+        yield from self._movable.prepare()
+        yield from self._sensible.prepare()
+
+        linelen = 80
+        print("\n"+"-"*linelen)
+        if not self.steps:
+            print("Continuous Scan along trajectory {}".format(self._pos_list))
+
+        # Iterate over position
+        for pos, pause in type(self).split_trajectory(
+                self._pos_list, self.number_of_steps):
+
+            yield from self._movable.moveto(pos)
+
+            unexpected = (State.ERROR, State.OFF, State.UNKNOWN)
+
+            yield from waitUntil(
+                lambda: self._movable.state != State.MOVING
+                and np.linalg.norm(
+                    np.subtract(self._movable.position,
+                                pos)) < self.position_epsilon.magnitude**2
+                or self._movable.state in unexpected)
+
+            if self._movable.state in unexpected:
+                type(self)._error("Unexpected state during scan: {}"
+                                  .format(self._movable.state))
+
+            if pause:
+                self.stepNum += 1
+
+                if self.steps or self.stepNum == 1:
+                    yield from self._sensible.acquire()
+
+                if self.steps:
+                    print("Step {} - Motors at {}"
+                          .format(self.stepNum.magnitude,
+                                  self._movable.position))
+                    print("  Acquiring for {}"
+                          .format(self.exposureTime + self.time_epsilon))
+
+                    yield from sleep(self.exposureTime + self.time_epsilon)
+                    yield from self._sensible.stop()
+
+        # Stop acquisition here for continuous scans
+        if self._sensible.state == State.ACQUIRING:
+            yield from self._sensible.stop()
+
+        print("-"*linelen)
 
 
 class AMesh(AScan):
     """Absolute Mesh scan"""
-    pass
+    def __init__(self, movable, pos_list1, pos_list2, sensible, exposureTime,
+                 **kwargs):
+        super().__init__(movable, itertools.product(pos_list1, pos_list2),
+                         sensible, exposureTime, True, 0, **kwargs)
 
 
 class APathScan(AScan):
     """Absolute Mesh scan"""
-    pass
+    def __init__(self, movable, pos_list, sensible, exposureTime, **kwargs):
+        super().__init__(movable, pos_list, sensible,
+                         exposureTime, True, 0, **kwargs)
 
 
 class DScan(AScan):
     """Delta scan"""
-    pass
+    def __init__(self, movable, pos_list, sensible, exposureTime,
+                 steps=True, number_of_steps=0, **kwargs):
+        super().__init__(movable, pos_list, sensible, exposureTime,
+                         steps, number_of_steps, **kwargs)
+
+        # Convert position from relative to absolute
+        self._pos_list = np.array(self._movable.position) + np.array(pos_list)
 
 
 class TScan(UserMacro):
     """Time scan"""
-    pass
+    sensibleId = String(
+        displayedName="SensibleId",
+        accessMode=AccessMode.READONLY)
+
+    exposureTime = Float(
+        displayedName="Exposure time",
+        defaultValue=0.1,
+        unitSymbol=Unit.SECOND,
+        accessMode=AccessMode.INITONLY)
+
+    duration = Float(
+        displayedName="Duration",
+        defaultValue=1,
+        unitSymbol=Unit.SECOND,
+        accessMode=AccessMode.INITONLY)
+
+    _sensible = Sensible()
+
+    def __init__(self, sensible, exposureTime, duration, **kwargs):
+        super().__init__(kwargs)
+        self._sensible = (sensible
+                          if isinstance(sensible, Sensible)
+                          else Sensible(sensible))
+        self.exposureTime = exposureTime
+        self.duration = duration
+
+    @coroutine
+    def onInitialization(self):
+        """Overrides class Device's"""
+        self.sensibleId = self._sensible.deviceId
+
+    @coroutine
+    def execute(self):
+        """Body. Override UserMacro's"""
+
+        # Prepare for acquisition
+        self._sensible.exposureTime = self.exposureTime
+        yield from self._sensible.prepare()
+
+        linelen = 80
+        print("\n"+"-"*linelen)
+        # Iterate over positions
+        elaps = self.time_epsilon * 0
+        i = 0
+        while elaps < self.duration:
+            i += 1
+            print("Step {} - at time {}"
+                  .format(i, elaps))
+            yield from self._sensible.acquire()
+            yield from sleep(self.exposureTime + self.time_epsilon)
+            yield from self._sensible.stop()
+            elaps += self.exposureTime + self.time_epsilon
+
+        print("-"*linelen)
 
 
-class DMesh(AScan):
+class DMesh(AMesh):
     """Delta Mesh scan"""
-    pass
+    def __init__(self, movable, pos_list1, pos_list2, sensible, exposureTime,
+                 **kwargs):
+        super().__init__(movable, pos_list1, pos_list2, sensible, exposureTime,
+                         **kwargs)
+
+        # Convert position from relative to absolute
+        current_pos = np.array(self._movable.position)
+        pos_list = np.array(list(self._pos_list))
+        self._pos_list = pos_list + current_pos
 
 
 class AMove(UserMacro):
     """Absolute move"""
-    pass
+    movableId = String(displayedName="Movable")
+    _movable = Movable()
+    _position = []
+
+    def __init__(self, movable, position, **kwargs):
+        super().__init__(kwargs)
+        self._movable = (movable
+                         if isinstance(movable, Movable)
+                         else Movable(movable))
+        self.movableId = self._movable.deviceId
+        self._position = position
+
+    @coroutine
+    def execute(self):
+        """Body. Override UserMacro's"""
+        def __print_motor_position():
+            linelen = 80
+            print("\n"+"-"*linelen)
+            print("Motors at {}".format(self._movable.position))
+            print("-"*linelen)
+
+        unexpected = (State.ERROR, State.OFF, State.UNKNOWN)
+
+        __print_motor_position()
+        yield from self._movable.prepare()
+        yield from self._movable.moveto(self._position)
+        yield from waitUntil(
+            lambda: self._movable.state != State.MOVING
+            and np.linalg.norm(
+                np.subtract(self._movable.position,
+                            self._position))
+            < self.position_epsilon.magnitude**2
+            or self._movable.state in unexpected)
+
+        if self._movable.state in unexpected:
+            type(self)._error("Unexpected state after move: {}"
+                              .format(self._movable.state))
+        __print_motor_position()
 
 
-class DMove(UserMacro):
+class DMove(AMove):
     """Delta move"""
-    pass
+    def __init__(self, movable, position, **kwargs):
+        super().__init__(movable, position, **kwargs)
+
+        # Convert position from relative to absolute
+        self._position = np.array(self._movable.position) + np.array(position)
