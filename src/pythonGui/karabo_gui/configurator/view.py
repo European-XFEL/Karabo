@@ -10,6 +10,7 @@ from karabo_gui.events import (
     KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
 from .qt_item_model import ConfigurationTreeModel
 from .slot_delegate import SlotButtonDelegate
+from .value_delegate import ValueDelegate
 
 
 class ConfigurationTreeView(QTreeView):
@@ -34,6 +35,9 @@ class ConfigurationTreeView(QTreeView):
         # Add a delegate for rows with slot buttons
         delegate = SlotButtonDelegate(parent=self)
         self.setItemDelegateForColumn(0, delegate)
+        # ... and a delegate for the Value column
+        delegate = ValueDelegate(parent=self)
+        self.setItemDelegateForColumn(1, delegate)
 
         # Don't forget to unregister!
         register_for_broadcasts(self)

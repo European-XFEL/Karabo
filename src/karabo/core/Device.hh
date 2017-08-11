@@ -1524,7 +1524,11 @@ namespace karabo {
                         const std::string& displayType = m_fullSchema.getDisplayType(key);
                         if (displayType == "OutputChannel") {
                             KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates output channel '" << key << "'";
-                            createOutputChannel(key, m_parameters);
+                            try {
+                                createOutputChannel(key, m_parameters);
+                            } catch (const karabo::util::NetworkException& e) {
+                                KARABO_LOG_ERROR << e.userFriendlyMsg();
+                            }
                         } else if (displayType == "InputChannel") {
                             KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates input channel '" << key << "'";
                             createInputChannel(key, m_parameters);
