@@ -372,6 +372,7 @@ class Descriptor(object):
             value = basetypes.NoneValue(value, descriptor=self)
         else:
             value = self.toKaraboValue(value)
+        value._parent = instance
         instance.setValue(self, value)
 
     def setter(self, instance, value):
