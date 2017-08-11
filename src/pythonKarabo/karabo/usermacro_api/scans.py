@@ -83,8 +83,9 @@ class AScan(UserMacro):
         self.pos_list = self._pos_list
 
     @staticmethod
-    def split_trajectory(pos_list, number_of_steps, pos_epsilon):
+    def split_trajectory(pos_list, number_of_steps):
         """Generates a segmented trajectory"""
+        epsilon = 1e-3
         if number_of_steps == 0:
             # Path Scan case
             itpos = iter(pos_list)
@@ -120,8 +121,8 @@ class AScan(UserMacro):
                 nv = np.linalg.norm(v)
                 if dl <= nv:
                     # Acquire in this segment
-                    if nv < pos_epsilon:
-                        p = pos
+                    if nv < epsilon:
+                        p = nextpos
                     else:
                         v1 = v / nv
                         p = pos + v1 * dl
@@ -153,8 +154,7 @@ class AScan(UserMacro):
         # Iterate over position
         for pos, pause in type(self).split_trajectory(
                 self._pos_list,
-                self.number_of_steps.magnitude,
-                self.position_epsilon.magnitude):
+                self.number_of_steps.magnitude):
 
             yield from self._movable.moveto(pos)
 
