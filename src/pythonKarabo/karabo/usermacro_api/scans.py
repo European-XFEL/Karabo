@@ -83,9 +83,9 @@ class AScan(UserMacro):
         self.pos_list = self._pos_list
 
     @staticmethod
-    def split_trajectory(pos_list, number_of_steps):
+    def splitTrajectory(pos_list, number_of_steps):
         """Generates a segmented trajectory"""
-        epsilon = 1e-3
+        fepsilon = 1e-3
         if number_of_steps == 0:
             # Path Scan case
             itpos = iter(pos_list)
@@ -106,36 +106,35 @@ class AScan(UserMacro):
 
             len_step = len_traj / number_of_steps
 
-            print("Trajectory length = {}, step length = {}"
-                  .format(len_traj, len_step))
-
             itpos = iter(pos_list)
             pos = next(itpos)
             nextpos = next(itpos)
             dl = len_step
-            pause = True
             yield pos, True
 
             while True:
                 v = np.subtract(nextpos, pos)
                 nv = np.linalg.norm(v)
-                if dl <= nv:
-                    # Acquire in this segment
-                    if nv < epsilon:
-                        p = nextpos
-                    else:
-                        v1 = v / nv
-                        p = pos + v1 * dl
-                    dl = len_step
-                    pause = True
-                else:
-                    # Move to next segment
+                if abs(dl - nv) < fepsilon * dl:
+                    # Acquire at the edge of this segment
                     p = nextpos
+                    dl = len_step
+                    yield p, True
                     nextpos = next(itpos)
-                    dl -= nv
-                    pause = False
-
-                yield p, pause
+                elif dl < nv:
+                    # Acquire in this segment
+                    v1 = v / nv
+                    p = pos + v1 * dl
+                    dl = len_step
+                    yield p, True
+                else:
+                    # The step spans to the next segment
+                    p = nextpos
+                    if nv > fepsilon * dl:
+                        # Only command significant motions
+                        dl -= nv
+                        yield p, False
+                    nextpos = next(itpos)
                 pos = p
 
     @coroutine
@@ -152,7 +151,7 @@ class AScan(UserMacro):
             print("Continuous Scan along trajectory {}".format(self._pos_list))
 
         # Iterate over position
-        for pos, pause in type(self).split_trajectory(
+        for pos, pause in type(self).splitTrajectory(
                 self._pos_list,
                 self.number_of_steps.magnitude):
 
