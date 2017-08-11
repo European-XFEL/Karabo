@@ -11,9 +11,13 @@ import numpy as np
 
 from karabo.middlelayer import Device, Slot
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
-from karabo.usermacros import (AScan, GenericProxy, meshTrajectory,
-                               splitTrajectory)
+from karabo.usermacros import (AMesh, APathScan, AScan, DScan GenericProxy,
+                               meshTrajectory, splitTrajectory)
 
+
+class Kwargator(object):
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
 class TestDev(Device):
 
@@ -21,6 +25,7 @@ class TestDev(Device):
         super().__init__(configuration)
         self.lockedBy = ""
         self._lock_count = 0
+        self.encoderPosition = Kwargator(magnitude = 10)
 
     @Slot()
     def ping(self):
@@ -65,18 +70,38 @@ class Tests(DeviceTest):
     @sync_tst
     def setUp(self):
         self.m1 = GenericProxy('tm1')
-        self.pos = [(0, 0), (10, 10), (15, 15)]
+        self.pos1 = [(0, 0), (10, 10), (15, 15)]
+        self.pos2 = [(15, 15), (10, 10), (0, 0)]
         self.sens = GenericProxy('lsim')
         self.expo = 5
 
     @sync_tst
-    def test_single_device_instantiation(self):
+    def test_scans_initializations(self):
         expected_rep = ("AScan('tm1', [(0, 0), (10, 10), (15, 15)], "
                         "'lsim', 5, steps=True, number_of_steps=0)")
 
-        scaney = AScan(self.m1, self.pos, self.sens, self.expo)
-        self.assertEqual(type(scaney), AScan)
-        self.assertEqual(scaney.__repr__(), expected_rep)
+        ascaney = AScan(self.m1, self.pos1, self.sens, self.expo)
+        self.assertEqual(type(ascaney), AScan)
+        self.assertEqual(ascaney.__repr__(), expected_rep)
+
+        expected_rep = ("AMesh('tm1', [(0, 0), (10, 10), (15, 15)], "
+                        "[(15, 15), (10, 10), (0, 0)], 'lsim', 5, steps=True, "
+                        "number_of_steps=0)")
+        ameshy = AMesh(self.m1, self.pos1, self.pos2, self.sens, self.expo)
+        self.assertEqual(type(ameshy), AMesh)
+        self.assertEqual(ameshy.__repr__(), expected_rep)
+
+        expected_rep = ("APathScan('tm1', [(0, 0), (10, 10), (15, 15)], "
+                        "'lsim', 5, steps=True, number_of_steps=0)")
+        apathy = APathScan(self.m1, self.pos1, self.sens, self.expo) # Pun int.
+        self.assertEqual(type(apathy), APathScan)
+        self.assertEqual(apathy.__repr__(), expected_rep)
+
+        expected_rep = ("DScan('tm1', [(0, 0), (10, 10), (15, 15)], "
+                        "'lsim', 5, steps=True, number_of_steps=0)")
+        dscaney = DScan(self.m1, self.pos1, self.sens, self.expo)
+        self.assertEqual(type(dscaney), DScan)
+        self.assertEqual(dscaney.__repr__(), expected_rep)
 
     @sync_tst
     def test_len_2_1D_trajectory_split_2(self):
