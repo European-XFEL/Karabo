@@ -9,7 +9,7 @@ from contextlib import contextmanager
 import unittest
 import numpy as np
 
-from karabo.middlelayer import Device, KaraboError, Slot
+from karabo.middlelayer import Device, Slot
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
 from karabo.usermacros import (AScan, GenericProxy, meshTrajectory,
                                splitTrajectory)
@@ -44,7 +44,7 @@ class Tests(DeviceTest):
     @contextmanager
     def lifetimeManager(cls):
 
-        cls.local = TestDev({"_deviceId_": "GenericProxy_UnitTests"})
+        cls.local = TestDev({"_deviceId_": "Scans_UnitTests"})
 
         cls.tm1 = getMockDevice("BeckhoffSimpleMotor",
                                 _deviceId_="tm1",
@@ -65,7 +65,7 @@ class Tests(DeviceTest):
     @sync_tst
     def setUp(self):
         self.m1 = GenericProxy('tm1')
-        self.pos = [(0,0), (10, 10), (15, 15)]
+        self.pos = [(0, 0), (10, 10), (15, 15)]
         self.sens = GenericProxy('lsim')
         self.expo = 5
 
@@ -139,6 +139,7 @@ class Tests(DeviceTest):
                   (2, 0), (2, 1), (2, 2)]
 
         self.assertEqual(result, oracle)
+
 
 if __name__ == "__main__":
     unittest.main()
