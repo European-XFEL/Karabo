@@ -76,6 +76,10 @@ class Tests(DeviceTest):
     def test_invalid_input_instantiation(self):
         with self.assertRaises(KaraboError):
             GenericProxy(42)
+    @sync_tst
+    def test_no_input_instantiation(self):
+        output = GenericProxy()
+        self.assertEqual(output, None)
 
     @sync_tst
     def test_single_container_instantiation(self):
