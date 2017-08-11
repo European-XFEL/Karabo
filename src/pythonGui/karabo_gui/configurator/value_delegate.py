@@ -68,7 +68,7 @@ class EditWidgetWrapper(QWidget):
         if isinstance(obj, EditableAttributeInfo):
             name = obj.names[index.row()]
             klass = _ATTR_EDITOR_FACTORIES[name]
-            box = obj.parent
+            box = obj.parent()
             self.editable_widget = klass(box, parent=self)
         else:
             klass = EditableWidget.getClass(obj)
