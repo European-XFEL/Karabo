@@ -38,6 +38,8 @@ namespace karabo {
             typedef std::map<std::string, std::string> MapInstanceIdToUrl;
             // Map connection URL into set of instanceIds
             typedef std::map<std::string, std::set<std::string> > MapUrlToInstanceIdSet;
+            // Map url into serverId
+            typedef std::map<std::string, std::string> MapUrlToServerId;
             // Map connection URL to the open connection (pair of channel and connection pointers)
             typedef std::map<std::string, std::pair<karabo::net::Channel::Pointer, karabo::net::Connection::Pointer> > MapUrlToConnection;
             // This repeates map defined in karabo::xms::Signal class: map slotInstanceId to set of signalFunctions
@@ -130,6 +132,13 @@ namespace karabo {
             void updateUrl(const std::string& remoteInstanceId, const std::string& remoteUrl);
 
             /**
+             * Map url to serverId
+             * @param url
+             * @param serverId
+             */
+            void updateServerId(const std::string& url, const std::string& serverId);
+
+            /**
              * Erase entry from InstanceIdToUrl map
              * @param instanceId
              */
@@ -169,6 +178,8 @@ namespace karabo {
             bool isInLocalMap(const std::string& instanceId);
 
             std::string allMapsToString();
+
+            karabo::util::Hash queueInfo();
 
         private:
 
@@ -214,6 +225,7 @@ namespace karabo {
             boost::shared_mutex m_pointToPointMutex;
             MapInstanceIdToUrl m_instanceIdToUrl;
             MapUrlToInstanceIdSet m_urlToInstanceIdSet;
+            MapUrlToServerId m_urlToServerId;
             MapUrlToConnection m_mapOpenConnections;
             MapUrlToConnection m_mapLogConnections;   // loggers connections
             LocalMap m_localMap;

@@ -39,6 +39,12 @@ namespace karabo {
         PointToPoint::Pointer SignalSlotable::m_pointToPoint;
 
 
+        karabo::util::Hash SignalSlotable::queueInfoPointToPoint() {
+            if (m_pointToPoint) return m_pointToPoint->queueInfo();
+            return Hash();
+        }
+
+
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId,
                                                const karabo::util::Hash::Pointer& header,
                                                const karabo::util::Hash::Pointer& body) const {
@@ -300,7 +306,10 @@ namespace karabo {
                 }
             }
             m_pointToPoint->insertToLocalMap(m_instanceId, this);
-            m_instanceInfo.set("p2p_connection", m_pointToPoint->getLocalUrl());
+            const string& localUrl = m_pointToPoint->getLocalUrl();
+            m_instanceInfo.set("p2p_connection", localUrl);
+            const string localServerId = m_instanceInfo.has("serverId")? m_instanceInfo.get<string>("serverId") : "_none_";
+            m_pointToPoint->updateServerId(localUrl, localServerId);
         }
 
 
@@ -1007,6 +1016,8 @@ namespace karabo {
                 // Store only remote connection strings - even if local does not 'speak' p2p, it may discover for others.
                 if (remoteUrl != localUrl) {
                     m_pointToPoint->updateUrl(newInstanceId, remoteUrl);
+                    const string remoteServerId = newInstanceInfo.has("serverId")? newInstanceInfo.get<string>("serverId"):"_none_";
+                    m_pointToPoint->updateServerId(remoteUrl, remoteServerId);
                 } else {
                     // Usually should not be in map, but ensure that
                     m_pointToPoint->eraseUrl(newInstanceId);

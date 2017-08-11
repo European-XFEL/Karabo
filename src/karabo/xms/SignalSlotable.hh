@@ -427,6 +427,8 @@ namespace karabo {
 
             virtual bool usePointToPoint() const;
 
+            static karabo::util::Hash queueInfoPointToPoint();
+
         protected:
 
             class Requestor {

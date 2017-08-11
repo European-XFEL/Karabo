@@ -7,6 +7,7 @@
 #include <boost/thread/shared_mutex.hpp>
 
 #include "karabo/log.hpp"
+#include "karabo/net/TcpChannel.hh"
 #include "utils.hh"
 #include "PointToPoint.hh"
 #include "EventLoop.hh"
@@ -65,6 +66,12 @@ namespace karabo {
         }
 
 
+        void PointToPoint::updateServerId(const std::string& url, const std::string& serverId) {
+            boost::unique_lock<boost::shared_mutex> lock(m_pointToPointMutex);
+            m_urlToServerId[url] = serverId;
+        }
+
+
         void PointToPoint::eraseUrl(const std::string& instanceId) {
             boost::unique_lock<boost::shared_mutex> lock(m_pointToPointMutex);
             auto it = m_instanceIdToUrl.find(instanceId);
@@ -79,6 +86,8 @@ namespace karabo {
                 ids.erase(instanceId);
                 if (!ids.empty()) return;  // Keep open connection
                 m_urlToInstanceIdSet.erase(idsIter); // no entries left
+                auto urlToServerIdIter = m_urlToServerId.find(url);
+                if (urlToServerIdIter != m_urlToServerId.end()) m_urlToServerId.erase(urlToServerIdIter);
             }
             m_mapOpenConnections.erase(url);
         }
@@ -421,6 +430,21 @@ namespace karabo {
                 }
             }
             return oss.str();
+        }
+
+
+        karabo::util::Hash PointToPoint::queueInfo() {
+            Hash info;
+            boost::shared_lock<boost::shared_mutex> lock(m_pointToPointMutex);
+            for (auto i : m_mapOpenConnections) {
+                const string& url = i.first;
+                string serverId = "_none_";
+                auto iter = m_urlToServerId.find(url);
+                if (iter != m_urlToServerId.end()) serverId = iter->second;
+                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(i.second.first);
+                info.set(url, Hash("queueInfo", tcpChannel->queueInfo(), "serverId", serverId));
+            }
+            return info;
         }
     }
 }
