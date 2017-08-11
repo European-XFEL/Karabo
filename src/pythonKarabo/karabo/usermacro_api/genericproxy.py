@@ -5,7 +5,7 @@ from asyncio import TimeoutError
 from karabo.common.states import StateSignifier
 from karabo.middlelayer import (
     allCompleted, connectDevice, KaraboError,
-    Proxy, State, waitUntilNew)
+    lock, Proxy, State, waitUntilNew)
 from karabo.middlelayer_api.proxy import synchronize
 
 
@@ -102,8 +102,10 @@ class GenericProxy(object):
                         cls._error("Provided different types of Devices")
 
                 ret = cls.create_generic_proxy_container(gproxies)
-        if ret is None:
-            cls._error("This configuration is not available")
+
+            if ret is None:
+                cls._error("This configuration is not available")
+
         return ret
 
     @synchronize
