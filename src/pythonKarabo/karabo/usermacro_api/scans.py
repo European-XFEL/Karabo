@@ -85,16 +85,47 @@ class AScan(UserMacro):
     @staticmethod
     def split_trajectory(pos_list, number_of_steps):
         """Generates a segmented trajectory"""
-        itpos = iter(pos_list)
 
         if number_of_steps == 0:
+            # Path Scan case
+            itpos = iter(pos_list)
             while True:
                 # Instruct to pause at every point
                 yield next(itpos), True
         else:
-                len_seg = []
-                len_traj = 0
-                pass
+            # Step-scan case
+            len_traj = 0
+            itpos = iter(pos_list)
+            pos = next(itpos)
+
+            for nextpos in itpos:
+                v = np.subtract(nextpos, pos)
+                nv = np.linalg.norm(v)
+                pos = nextpos
+                len_traj += nv
+
+            len_step = len_trj / number_of_steps
+
+            print("Trajectory length = {}, step length = {}"
+                  .format(len_traj, len_step))
+
+            itpos = iter(pos_list)
+
+            pos = next(itpos)
+            yield pos, True
+            dl = len_step
+            while True:
+                nextpos = next(itpos)
+                v = np.substract(nextpos, pos)
+                nv = np.linalg.norm(v)
+                v1 = v / nv
+                p = v1 * dl if dl <= v else v1 * (dl - nv)
+                yield p, True
+                if dl <= v:
+                    dl = len_step
+                else:
+                    dl -= nv
+                pos = p
 
     @coroutine
     def execute(self):
