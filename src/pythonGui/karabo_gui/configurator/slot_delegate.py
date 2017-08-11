@@ -47,20 +47,27 @@ class SlotButtonDelegate(QStyledItemDelegate):
         """Reimplemented function of QStyledItemDelegate.
         """
         model = index.model()
-        box = model.box_ref(index)
-        if box is None or not isinstance(box.descriptor, SlotNode):
+        obj = model.index_ref(index)
+        if (obj is None or
+                not isinstance(getattr(obj, 'descriptor', None), SlotNode)):
             super(SlotButtonDelegate, self).paint(painter, option, index)
             return
 
+        if option.state & QStyle.State_Selected:
+            if option.state & QStyle.State_Active:
+                painter.fillRect(option.rect, option.palette.highlight())
+            elif not (option.state & QStyle.State_HasFocus):
+                painter.fillRect(option.rect, option.palette.background())
+
         self._draw_icon(painter, option)
-        self._draw_button(painter, option, index, box)
+        self._draw_button(painter, option, index, obj)
 
     def editorEvent(self, event, model, option, index):
         """Reimplemented function of QStyledItemDelegate.
         """
         handled_types = (QEvent.MouseButtonPress, QEvent.MouseButtonRelease)
         if event.type() in handled_types:
-            box = model.box_ref(index)
+            box = model.index_ref(index)
             if box is not None and isinstance(box.descriptor, SlotNode):
                 self._handle_event_state(box, event, option)
                 return True
@@ -85,7 +92,8 @@ class SlotButtonDelegate(QStyledItemDelegate):
         rect = option.rect
         pix_size = slot_pixmap.size()
         w, h = pix_size.width(), pix_size.height()
-        pix_rect = QRect(rect.x() + ICON_PADDING, rect.y(), w, h)
+        pix_rect = QRect(rect.x() + ICON_PADDING, rect.center().y() - h/2,
+                         w, h)
         QApplication.style().drawItemPixmap(painter, pix_rect, Qt.AlignCenter,
                                             slot_pixmap)
 
