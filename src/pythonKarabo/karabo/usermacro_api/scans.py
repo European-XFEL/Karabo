@@ -27,6 +27,10 @@ class AScan(UserMacro):
         displayedName="SensibleId",
         accessMode=AccessMode.READONLY)
 
+    pos_list = String(
+        displayedName="Trajectory",
+        accessMode=AccessMode.READONLY)
+
     exposureTime = Float(
         displayedName="Exposure time",
         defaultValue=0.1,
@@ -61,11 +65,10 @@ class AScan(UserMacro):
         self._movable = (movable
                          if isinstance(movable, Movable)
                          else Movable(movable))
-        self.movableId = self._movable.deviceId
-        self._pos_list = pos_list
         self._sensible = (sensible
                           if isinstance(sensible, Sensible)
                           else Sensible(sensible))
+        self._pos_list = pos_list
         self.exposureTime = exposureTime
         self.steps = steps
         self.number_of_steps = number_of_steps
@@ -75,12 +78,19 @@ class AScan(UserMacro):
         """Overrides classclass  SignalSlotable's"""
         if self.experimentId == "":
             self.experimentId = self.deviceId
+        self.movableId = self._movable.deviceId
         self.sensibleId = self._sensible.deviceId
+        self.pos_list = self._pos_list
 
-    def build_trajectory(self):
+    @staticmethod
+    def split_trajectory(pos_list, number_of_steps):
         """Generates a segmented trajectory"""
-        if self.number_of_steps == 0:
-            return self._pos_list
+        itpos = iter(pos_list)
+        while True:
+            if number_of_steps == 0:
+                yield next(itpos), True
+            else:
+                pass
 
     @coroutine
     def execute(self):
@@ -94,8 +104,11 @@ class AScan(UserMacro):
         print("\n"+"-"*linelen)
         if not self.steps:
             print("Continuous Scan along trajectory {}".format(self._pos_list))
-        # Iterate over positions
-        for self.stepNum, pos in enumerate(self.build_trajectory(), start=1):
+
+        # Iterate over position
+        for pos, pause in type(self).split_trajectory(
+                self._pos_list, self.number_of_steps):
+
             yield from self._movable.moveto(pos)
 
             unexpected = (State.ERROR, State.OFF, State.UNKNOWN)
@@ -111,20 +124,24 @@ class AScan(UserMacro):
                 type(self)._error("Unexpected state during scan: {}"
                                   .format(self._movable.state))
 
-            if self.steps or self.stepNum == 1:
-                yield from self._sensible.acquire()
+            if pause:
+                self.stepNum += 1
 
-            if self.steps:
-                print("Step {} - Motors at {}"
-                      .format(self.stepNum, self._movable.position))
-                print("  Acquiring for {}"
-                      .format(self.exposureTime + self.time_epsilon))
+                if self.steps or self.stepNum == 1:
+                    yield from self._sensible.acquire()
 
-                yield from sleep(self.exposureTime + self.time_epsilon)
-                yield from self._sensible.stop()
+                if self.steps:
+                    print("Step {} - Motors at {}"
+                          .format(self.stepNum.magnitude,
+                                  self._movable.position))
+                    print("  Acquiring for {}"
+                          .format(self.exposureTime + self.time_epsilon))
+
+                    yield from sleep(self.exposureTime + self.time_epsilon)
+                    yield from self._sensible.stop()
 
         # Stop acquisition here for continuous scans
-        if not self.steps and self._sensible.state == State.ACQUIRING:
+        if self._sensible.state == State.ACQUIRING:
             yield from self._sensible.stop()
 
         print("-"*linelen)
