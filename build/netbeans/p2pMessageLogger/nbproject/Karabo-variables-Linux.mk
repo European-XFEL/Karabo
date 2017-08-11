@@ -16,9 +16,9 @@ CND_PACKAGE_NAME_Debug=p2pmessagelogger.tar
 CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/p2pmessagelogger.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux-x86
-CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86
-CND_ARTIFACT_NAME_Release=p2pmessagelogger
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/p2pmessagelogger
+CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86/bin
+CND_ARTIFACT_NAME_Release=karabo-p2pmessagelogger
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/bin/karabo-p2pmessagelogger
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=p2pmessagelogger.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/p2pmessagelogger.tar
