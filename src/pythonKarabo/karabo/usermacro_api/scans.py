@@ -73,6 +73,19 @@ class AScan(UserMacro):
         self.steps = steps
         self.number_of_steps = number_of_steps
 
+    def __repr__(self):
+        rep = "{cls}('{mov}', {pos}, '{sens}', {exp}, ".format(
+              cls = type(self).__name__,
+              mov = self._movable.deviceId,
+              pos = self._pos_list,
+              sens = self._sensible.deviceId,
+              exp = str(self.exposureTime)[:1])
+
+        rep += "steps={steps}, number_of_steps={num})".format(
+                steps = self.steps,
+                num = str(self.number_of_steps)[:1])
+        return rep
+
     @coroutine
     def onInitialization(self):
         """Overrides classclass  SignalSlotable's"""
