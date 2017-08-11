@@ -161,11 +161,11 @@ namespace karabo {
             // Should we use PointToPoint globally
             m_usePointToPoint = false;
             char* env = 0;
-            env = getenv("KARABO_POINT2POINT");
+            env = getenv("KARABO_ENABLE_POINT2POINT");
             if (env) {
                 string variable(env);
                 boost::to_upper(variable);
-                if (variable == "ON") m_usePointToPoint = true;
+                if (variable == "TRUE") m_usePointToPoint = true;
             }
 
             m_connection = Configurator<JmsConnection>::createNode("connection", config);

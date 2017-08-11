@@ -992,7 +992,9 @@ namespace karabo {
             reconnectInputChannels(instanceId);
 
             if (m_pointToPoint) {
-                if (usePointToPoint()) m_pointToPoint->connectAsync(instanceId);
+                if (usePointToPoint()) {
+                    m_pointToPoint->connectAsync(instanceId);
+                }
                 if (m_discoverConnectionResourcesMode) {
                     KARABO_LOG_FRAMEWORK_DEBUG << (m_pointToPoint->allMapsToString());
                 }

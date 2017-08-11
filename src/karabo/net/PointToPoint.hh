@@ -177,8 +177,17 @@ namespace karabo {
              */
             bool isInLocalMap(const std::string& instanceId);
 
+            /**
+             * Output the content of internal maps to the string
+             * @return output string
+             */
             std::string allMapsToString();
 
+            /**
+             * This hash contains URLs as keys and queueInfo hashes as values.
+             * The queueInfo reflects state of internal queues and some statistics
+             * @return 
+             */
             karabo::util::Hash queueInfo();
 
         private:
@@ -196,6 +205,17 @@ namespace karabo {
                                  const karabo::net::Channel::Pointer& channel,
                                  const karabo::net::Connection::Pointer& connection);
 
+            /**
+             * The second part of connection procedure ("bottom half" is the keyword widely used in Linux kernel development)
+             * because we expect to read information about client side environment and URL to finalize connection registration.
+             * Unless we get these, the connection will not be treated as established.  This allows to level the difference
+             * between client and server, make it symmetric: they know the similar info about each other.
+             * 
+             * @param e           error_code object
+             * @param channel     channel pointer
+             * @param connection  connection pointer
+             * @param message     contains client side info
+             */
             void onConnectServerBottomHalf(const ErrorCode& e,
                                            const karabo::net::Channel::Pointer& channel,
                                            const karabo::net::Connection::Pointer& connection,
