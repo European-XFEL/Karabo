@@ -224,6 +224,16 @@ class AMesh(AScan):
                          sensible, exposureTime, steps,
                          number_of_steps, **kwargs)
 
+    def __repr__(self):
+        # By default, itertools.product has an ugly representation.
+        # This may break on non-64bits machines.
+        rep = super().__repr__()
+        rep = "{begin}{list1}, {list2}{end}".format(begin=rep[:13],
+                                                    list1=self._pos_list1,
+                                                    list2=self._pos_list2,
+                                                    end=rep[57:])
+        return rep
+
 
 class APathScan(AScan):
     """Absolute Mesh scan"""
