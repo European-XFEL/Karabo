@@ -86,10 +86,14 @@ class AScan(UserMacro):
     def split_trajectory(pos_list, number_of_steps):
         """Generates a segmented trajectory"""
         itpos = iter(pos_list)
-        while True:
-            if number_of_steps == 0:
+
+        if number_of_steps == 0:
+            while True:
+                # Instruct to pause at every point
                 yield next(itpos), True
-            else:
+        else:
+                len_seg = []
+                len_traj = 0
                 pass
 
     @coroutine
