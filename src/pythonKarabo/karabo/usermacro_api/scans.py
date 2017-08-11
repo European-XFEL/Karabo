@@ -83,9 +83,8 @@ class AScan(UserMacro):
         self.pos_list = self._pos_list
 
     @staticmethod
-    def split_trajectory(pos_list, number_of_steps):
+    def split_trajectory(pos_list, number_of_steps, pos_epsilon):
         """Generates a segmented trajectory"""
-
         if number_of_steps == 0:
             # Path Scan case
             itpos = iter(pos_list)
@@ -104,27 +103,38 @@ class AScan(UserMacro):
                 pos = nextpos
                 len_traj += nv
 
-            len_step = len_trj / number_of_steps
+            len_step = len_traj / number_of_steps
 
             print("Trajectory length = {}, step length = {}"
                   .format(len_traj, len_step))
 
             itpos = iter(pos_list)
-
             pos = next(itpos)
-            yield pos, True
+            nextpos = next(itpos)
             dl = len_step
+            pause = True
+            yield pos, True
+
             while True:
-                nextpos = next(itpos)
-                v = np.substract(nextpos, pos)
+                v = np.subtract(nextpos, pos)
                 nv = np.linalg.norm(v)
-                v1 = v / nv
-                p = v1 * dl if dl <= v else v1 * (dl - nv)
-                yield p, True
-                if dl <= v:
+                if dl <= nv:
+                    # Acquire in this segment
+                    if nv < pos_epsilon:
+                        p = pos
+                    else:
+                        v1 = v / nv
+                        p = pos + v1 * dl
                     dl = len_step
+                    pause = True
                 else:
+                    # Move to next segment
+                    p = nextpos
+                    nextpos = next(itpos)
                     dl -= nv
+                    pause = False
+
+                yield p, pause
                 pos = p
 
     @coroutine
@@ -142,7 +152,9 @@ class AScan(UserMacro):
 
         # Iterate over position
         for pos, pause in type(self).split_trajectory(
-                self._pos_list, self.number_of_steps):
+                self._pos_list,
+                self.number_of_steps.magnitude,
+                self.position_epsilon.magnitude):
 
             yield from self._movable.moveto(pos)
 
@@ -160,9 +172,7 @@ class AScan(UserMacro):
                                   .format(self._movable.state))
 
             if pause:
-                self.stepNum += 1
-
-                if self.steps or self.stepNum == 1:
+                if self.steps or self.stepNum == 0:
                     yield from self._sensible.acquire()
 
                 if self.steps:
@@ -174,6 +184,8 @@ class AScan(UserMacro):
 
                     yield from sleep(self.exposureTime + self.time_epsilon)
                     yield from self._sensible.stop()
+
+                self.stepNum += 1
 
         # Stop acquisition here for continuous scans
         if self._sensible.state == State.ACQUIRING:
