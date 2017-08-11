@@ -89,6 +89,12 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
+          <standard>8</standard>
+          <incDir>
+            <pElem>../../../src</pElem>
+            <pElem>${KARABO}/include</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
+          </incDir>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -96,6 +102,33 @@
         <asmTool>
           <developmentMode>5</developmentMode>
         </asmTool>
+        <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-p2pmessagelogger</output>
+          <linkerAddLib>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>\$$ORIGIN/../lib</pElem>
+            <pElem>\$$ORIGIN/../extern/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../karabo"
+                            CT="2"
+                            CN="Release"
+                            AC="false"
+                            BL="false"
+                            WD="../karabo"
+                            BC="${MAKE} -j8 -f Makefile CONF=Release"
+                            CC="${MAKE} -j8 -f Makefile CONF=Release clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
+            <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
+          </linkerLibItems>
+          <commandLine>-Wl,-rpath-link,${KARABO}/extern/lib</commandLine>
+        </linkerTool>
       </compileType>
       <item path="../../../src/p2pMessageLogger/p2pMessageLogger.cc"
             ex="false"

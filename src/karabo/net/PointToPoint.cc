@@ -38,7 +38,8 @@ namespace karabo {
         }
 
 
-        // Bookkeeping stuff
+        // Bookkeeping stuff:  API for adding and removing entries in internal tables:
+        // m_instanceIdToUrl, m_urlToInstanceIdSet, m_mapOpenConnections, m_urlToServerId, m_localMap
 
         const std::string& PointToPoint::getLocalUrl() const {
             return m_localUrl;
@@ -47,7 +48,7 @@ namespace karabo {
 
         void PointToPoint::updateUrl(const std::string& newInstanceId, const std::string& remoteUrl) {
             boost::unique_lock<boost::shared_mutex> lock(m_pointToPointMutex);
-            auto it = m_instanceIdToUrl.find(newInstanceId);
+            const auto it = m_instanceIdToUrl.find(newInstanceId);
             if (it != m_instanceIdToUrl.end()) {
                 // found -- clean up old info
                 const std::string& oldUrl = it->second;
@@ -57,7 +58,7 @@ namespace karabo {
                     // Don't keep entry with the empty id's set
                     m_urlToInstanceIdSet.erase(idsIter);
                     // No reference left to the old connection
-                    // This will close obsolete connection (by destroying their shared pointers)
+                    // This will close obsolete connection (by destroying its shared pointers)
                     m_mapOpenConnections.erase(oldUrl);
                 }
             }
@@ -161,18 +162,14 @@ namespace karabo {
         void PointToPoint::onConnectServer(const ErrorCode& e,
                                            const Channel::Pointer& channel,
                                            const Connection::Pointer& connection) {
-            try {
-                boost::shared_ptr<PointToPoint> guard = shared_from_this();
-                if (e) {
-                    channelErrorHandler(e, channel);
-                    return;
-                }
-                // We can accept more connections
-                connection->startAsync(bind_weak(&PointToPoint::onConnectServer, this, _1, _2, connection));
-                // Read client side info about open connection before registration
-                channel->readAsyncHashPointer(bind_weak(&PointToPoint::onConnectServerBottomHalf, this, _1, channel, connection, _2));
-            } catch (const boost::bad_weak_ptr&) {
+            if (e) {
+                channelErrorHandler(e, channel);
+                return;
             }
+            // We can accept more connections
+            connection->startAsync(bind_weak(&PointToPoint::onConnectServer, this, _1, _2, connection));
+            // Read client side info about open connection before registration
+            channel->readAsyncHashPointer(bind_weak(&PointToPoint::onConnectServerBottomHalf, this, _1, channel, connection, _2));
         }
 
 
@@ -193,9 +190,13 @@ namespace karabo {
             // Get client URL to register an open connection
             const string& remoteUrl = message->get<string>("url");
             vector<string> remoteIds;
-            if (message->has("ids")) message->get("ids", remoteIds);
+            if (message->has("ids")) {
+                message->get("ids", remoteIds);
+            }
             bool isLog = false;
-            if (message->has("log")) message->get("log", isLog);
+            if (message->has("log")) {
+                message->get("log", isLog);
+            }
             if (!isLog) {
                 boost::unique_lock<boost::shared_mutex> lock(m_pointToPointMutex);
                 // Clean from old entries with the same value : remoteUrl
@@ -359,7 +360,7 @@ namespace karabo {
                     std::vector<std::string> ids;
                     boost::split(ids, stripped, boost::is_any_of("|"), boost::token_compress_on);
                     boost::shared_lock<boost::shared_mutex> lock(m_localMapMutex);
-                    for (auto& slotInstanceId : ids) {
+                    for (const auto& slotInstanceId : ids) {
                         for (auto& i : m_localMap) {
                             if (slotInstanceId == i.first) {
                                 EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, i.second,
@@ -376,6 +377,7 @@ namespace karabo {
 
 
         void PointToPoint::channelErrorHandler(const ErrorCode& ec, const Channel::Pointer& channel) {
+            // The "normal" program flow gives here the code 2 -- "End of file", which means the connection is closed. 
             if (ec.value() != 2) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Channel Exception #"<< ec.value() << " -- " << ec.message();
             }
