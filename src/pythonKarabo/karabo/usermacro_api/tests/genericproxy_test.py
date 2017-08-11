@@ -1,6 +1,6 @@
 """
 These tests are part of the karabo.usermacros API.
-To run all tests, excecute:
+To run all tests, execute:
    python -m unittest discover -p *_test.py
 """
 
