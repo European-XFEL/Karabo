@@ -25,6 +25,7 @@ def splitTrajectory(pos_list, number_of_steps):
         itpos1, itpos2 = itertools.tee(iter(pos_list), 2)
         pos = next(itpos1)
 
+        # Compute the trajectory length
         for nextpos in itpos1:
             v = np.subtract(nextpos, pos)
             nv = np.linalg.norm(v)
@@ -32,7 +33,8 @@ def splitTrajectory(pos_list, number_of_steps):
             len_traj += nv
 
         len_step = len_traj / number_of_steps
-
+        
+        # Yield segment edges and pause points
         pos = next(itpos2)
         nextpos = next(itpos2)
         dl = len_step
