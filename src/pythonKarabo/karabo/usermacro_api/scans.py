@@ -22,7 +22,7 @@ def splitTrajectory(pos_list, number_of_steps):
     else:
         # Step-scan case
         len_traj = 0
-        itpos1, itpos2 = itertools.tee(iter(pos_list), 2)
+        itpos1, itpos2 = itertools.tee(iter(pos_list))
         pos = next(itpos1)
 
         # Compute the trajectory length
