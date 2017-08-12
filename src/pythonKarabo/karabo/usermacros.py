@@ -15,5 +15,5 @@ from .usermacro_api.genericproxy import (
     Closable, Coolable, GenericProxy, Movable, Pumpable, Sensible
 )
 from .usermacro_api.scans import (
-    AScan, AMesh, AMove, APathScan, DScan, DMesh, DMove, TScan
+    AScan, AMesh, AMove, APathScan, DScan, DMesh, DMove, meshTrajectory, TScan, splitTrajectory
 )
