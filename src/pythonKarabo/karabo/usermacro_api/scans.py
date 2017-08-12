@@ -33,7 +33,7 @@ def splitTrajectory(pos_list, number_of_steps):
             len_traj += nv
 
         len_step = len_traj / number_of_steps
-        
+
         # Yield segment edges and pause points
         pos = next(itpos2)
         nextpos = next(itpos2)
