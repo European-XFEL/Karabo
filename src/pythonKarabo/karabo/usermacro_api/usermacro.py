@@ -6,8 +6,8 @@ import argparse
 from asyncio import (
     coroutine, get_event_loop, set_event_loop)
 from contextlib import closing
-import os
 import socket
+import uuid
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Bool, Device, Float, Macro,
@@ -75,7 +75,7 @@ class UserMacro(Macro):
     def __init__(self, **kwargs):
         bareHostName = socket.gethostname().partition('.')[0]
         deviceId = "{}_{}_{}".format(
-            type(self).__name__, bareHostName, os.getpid())
+            type(self).__name__, bareHostName, str(uuid.uuid4()))
         if "deviceId" in kwargs:
             kwargs["_deviceId_"] = kwargs["deviceId"]
         else:

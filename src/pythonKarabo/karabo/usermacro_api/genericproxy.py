@@ -75,7 +75,7 @@ class GenericProxy(object):
                             deviceId, timeout=cls.proxy_ops_timeout)
                         ret = cls.create_generic_proxy(proxy)
                     except TimeoutError:
-                        cls._error("Could not connect to {}. Is it on?"
+                        cls._error("Could not connect to {}."
                                    .format(deviceId))
                 else:
                     # Act as a container with a single generic proxy
@@ -99,12 +99,12 @@ class GenericProxy(object):
                                                        .__bases__[0])):
                         gproxies.append(gproxy)
                     else:
-                        cls._error("Provided different types of Devices")
+                        cls._error("Provided different types of Devices.")
 
                 ret = cls.create_generic_proxy_container(gproxies)
 
             if ret is None:
-                cls._error("This configuration is not available")
+                cls._error("This configuration is not available.")
 
         return ret
 
