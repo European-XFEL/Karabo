@@ -20,11 +20,11 @@ def run_in_event_loop(macro):
     """ To run macro"""
     loop = get_event_loop()
     if not isinstance(loop, EventLoop):
-        loop = (
-            EventLoop.global_loop
-            if EventLoop.global_loop is not None
-            else EventLoop())
-        set_event_loop(loop)
+        if EventLoop.global_loop is None:
+            loop = EventLoop()
+            set_event_loop(loop)
+        else: 
+            loop = EventLoop.global_loop
 
     @coroutine
     def __run():
