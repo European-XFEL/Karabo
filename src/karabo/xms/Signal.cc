@@ -100,18 +100,31 @@ namespace karabo {
                 }
 
                 // Check the leftovers for p2p shortcutting
-                if (registeredSlots.size() > 0) {
+                typedef std::map<std::string, SlotMap> P2PConnectedSlots;
+                P2PConnectedSlots connectedSlots;
+                
+                // After filtering registeredSlots and connectedSlots may change
+                SignalSlotable::m_pointToPoint->filterConnectedAndGroupByUrl(registeredSlots, connectedSlots);
+                
+                // publish connected slots (if any) via shared point-to-point link ...
+                // Iterate over groups (device servers)
+                for (P2PConnectedSlots::iterator ii = connectedSlots.begin(); ii != connectedSlots.end(); ++ii) {
+                    // ii->first => URL
+                    const SlotMap& slotMap = ii->second;
 
                     // Update the header
-                    header = prepareHeader(registeredSlots);
+                    header = prepareHeader(slotMap);
 
-                    // publish if P2P connected slots and filter them out. After call, registeredSlots and header are updated
-                    SignalSlotable::m_pointToPoint->publishIfConnected(registeredSlots, header, message, m_priority);
-
+                    // Use any (first!) remote instanceId from the group: header will contain other destinations on server 
+                    SlotMap::const_iterator ir = slotMap.cbegin();
+                    if (ir != slotMap.cend()) SignalSlotable::m_pointToPoint->publish(ir->first, header, message, m_priority);
                 }
 
                 // publish leftovers via broker
                 if (registeredSlots.size() > 0) {
+                    
+                    // Update the header
+                    header = prepareHeader(registeredSlots);
                     // header contains updated slot leftovers
                     m_channel->write(m_topic, *header, *message, m_priority, m_messageTimeToLive);
                 }
