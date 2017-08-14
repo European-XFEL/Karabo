@@ -168,6 +168,9 @@ class AScan(UserMacro):
                 self._pos_list,
                 self.number_of_steps.magnitude):
 
+            if self.cancelled:
+                break
+
             yield from self._movable.moveto(pos)
 
             unexpected = (State.ERROR, State.OFF, State.UNKNOWN)
@@ -283,6 +286,8 @@ class TScan(UserMacro):
         elaps = self.time_epsilon * 0
         i = 0
         while elaps < self.duration:
+            if self.cancelled:
+                break
             i += 1
             print("Step {} - at time {}"
                   .format(i, elaps))
