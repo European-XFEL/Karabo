@@ -242,8 +242,9 @@ namespace karabo {
              *
              * @param ec error code indicating whether deadline timer was cancelled
              * @param id: current train id
+             * @param realTick   True if the tick comes from TimeServer and false if generated locally
              */
-            void timeTick(const boost::system::error_code ec, unsigned long long newId);
+            void timeTick(const boost::system::error_code ec, unsigned long long newId, bool realTick);
 
             /**
              * A hook which is called if the device receives a time-server update, i.e. if slotTimeTick is called.
