@@ -1,13 +1,17 @@
+#!/usr/bin/env python3
 """Scantool macros"""
+from ast import literal_eval
 from asyncio import coroutine
 import itertools
+import ntpath
 import numpy as np
+import sys
 
 from karabo.middlelayer import (
     AccessMode, Bool, Float, Int32, State, String,
     sleep, UInt32, Unit, VectorHash, waitUntil)
-from .usermacro import UserMacro
-from .genericproxy import Movable, Sensible
+from karabo.usermacro_api.genericproxy import Movable, Sensible
+from karabo.usermacro_api.usermacro import UserMacro
 
 
 def splitTrajectory(pos_list, number_of_steps):
@@ -126,21 +130,20 @@ class AScan(UserMacro):
 
     def __init__(self, movable, pos_list, sensible, exposureTime,
                  steps=True, number_of_steps=0, **kwargs):
-        super().__init__(kwargs)
+        super().__init__(**kwargs)
         self._movable = (movable
                          if isinstance(movable, Movable)
                          else Movable(movable))
         self._sensible = (sensible
                           if isinstance(sensible, Sensible)
                           else Sensible(sensible))
-        self._pos_list = pos_list
+        self._pos_list = (
+            literal_eval(pos_list)
+            if isinstance(pos_list, str) else pos_list)
         self.exposureTime = exposureTime
         self.steps = steps
         self.number_of_steps = number_of_steps
 
-    @coroutine
-    def onInitialization(self):
-        """Overrides classclass  SignalSlotable's"""
         if self.experimentId == "":
             self.experimentId = self.deviceId
         self.movableId = self._movable.deviceId
@@ -207,6 +210,12 @@ class AMesh(AScan):
     """Absolute Mesh scan"""
     def __init__(self, movable, pos_list1, pos_list2, sensible, exposureTime,
                  steps=True, number_of_steps=0, **kwargs):
+        pos_list1 = (
+            literal_eval(pos_list1)
+            if isinstance(pos_list1, str) else pos_list1)
+        pos_list2 = (
+            literal_eval(pos_list2)
+            if isinstance(pos_list2, str) else pos_list2)
         super().__init__(movable, meshTrajectory(pos_list1, pos_list2),
                          sensible, exposureTime, steps,
                          number_of_steps, **kwargs)
@@ -227,7 +236,8 @@ class DScan(AScan):
                          steps, number_of_steps, **kwargs)
 
         # Convert position from relative to absolute
-        self._pos_list = np.array(self._movable.position) + np.array(pos_list)
+        self._pos_list = np.array(
+            self._movable.position) + np.array(self._pos_list)
 
 
 class TScan(UserMacro):
@@ -257,10 +267,6 @@ class TScan(UserMacro):
                           else Sensible(sensible))
         self.exposureTime = exposureTime
         self.duration = duration
-
-    @coroutine
-    def onInitialization(self):
-        """Overrides class Device's"""
         self.sensibleId = self._sensible.deviceId
 
     @coroutine
@@ -308,12 +314,15 @@ class AMove(UserMacro):
     _position = []
 
     def __init__(self, movable, position, **kwargs):
-        super().__init__(kwargs)
+        super().__init__(**kwargs)
         self._movable = (movable
                          if isinstance(movable, Movable)
                          else Movable(movable))
         self.movableId = self._movable.deviceId
-        self._position = position
+        self._position = (
+            literal_eval(position)
+            if isinstance(position, str)
+            else position)
 
     @coroutine
     def execute(self):
@@ -349,4 +358,10 @@ class DMove(AMove):
         super().__init__(movable, position, **kwargs)
 
         # Convert position from relative to absolute
-        self._position = np.array(self._movable.position) + np.array(position)
+        self._position = np.array(
+            self._movable.position) + np.array(self._position)
+
+
+if __name__ == "__main__":
+    cls = eval(ntpath.basename(sys.argv[0]))
+    cls.main()
