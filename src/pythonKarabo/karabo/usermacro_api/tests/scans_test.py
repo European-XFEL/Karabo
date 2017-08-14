@@ -4,14 +4,13 @@ To run all tests, execute:
   nosetests -v
 """
 
-from asyncio import coroutine
 from contextlib import contextmanager
 import unittest
 import numpy as np
 
 from karabo.middlelayer import Device, Slot
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
-from karabo.usermacros import (AMesh, APathScan, AScan, DScan GenericProxy,
+from karabo.usermacros import (AMesh, APathScan, AScan, DScan, GenericProxy,
                                meshTrajectory, splitTrajectory)
 
 
@@ -19,13 +18,13 @@ class Kwargator(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-class TestDev(Device):
 
+class TestDev(Device):
     def __init__(self, configuration):
         super().__init__(configuration)
         self.lockedBy = ""
         self._lock_count = 0
-        self.encoderPosition = Kwargator(magnitude = 10)
+        self.encoderPosition = Kwargator(magnitude=10)
 
     @Slot()
     def ping(self):
@@ -53,16 +52,20 @@ class Tests(DeviceTest):
 
         cls.tm1 = getMockDevice("BeckhoffSimpleMotor",
                                 _deviceId_="tm1",
-                                stepLength=0)
+                                stepLength=0,
+                                _encoderPosition_=10)
         cls.tm2 = getMockDevice("BeckhoffSimpleMotor",
                                 _deviceId_="tm2",
-                                stepLength=0)
+                                stepLength=0,
+                                encoderPosition=10)
         cls.tm3 = getMockDevice("BeckhoffSimpleMotor",
                                 _deviceId_="tm3",
-                                stepLength=0)
+                                stepLength=0,
+                                encoderPosition=10)
         cls.lsim = getMockDevice("LimaSimulatedCamera",
                                  _deviceId_="lsim",
                                  cameraType="Simulator")
+
         with cls.deviceManager(cls.lsim, cls.tm2, cls.tm3,
                                cls.tm1, lead=cls.local):
             yield
@@ -75,35 +78,6 @@ class Tests(DeviceTest):
         self.sens = GenericProxy('lsim')
         self.expo = 5
 
-    @sync_tst
-    def test_scans_initializations(self):
-        expected_rep = ("AScan('tm1', [(0, 0), (10, 10), (15, 15)], "
-                        "'lsim', 5, steps=True, number_of_steps=0)")
-
-        ascaney = AScan(self.m1, self.pos1, self.sens, self.expo)
-        self.assertEqual(type(ascaney), AScan)
-        self.assertEqual(ascaney.__repr__(), expected_rep)
-
-        expected_rep = ("AMesh('tm1', [(0, 0), (10, 10), (15, 15)], "
-                        "[(15, 15), (10, 10), (0, 0)], 'lsim', 5, steps=True, "
-                        "number_of_steps=0)")
-        ameshy = AMesh(self.m1, self.pos1, self.pos2, self.sens, self.expo)
-        self.assertEqual(type(ameshy), AMesh)
-        self.assertEqual(ameshy.__repr__(), expected_rep)
-
-        expected_rep = ("APathScan('tm1', [(0, 0), (10, 10), (15, 15)], "
-                        "'lsim', 5, steps=True, number_of_steps=0)")
-        apathy = APathScan(self.m1, self.pos1, self.sens, self.expo) # Pun int.
-        self.assertEqual(type(apathy), APathScan)
-        self.assertEqual(apathy.__repr__(), expected_rep)
-
-        expected_rep = ("DScan('tm1', [(0, 0), (10, 10), (15, 15)], "
-                        "'lsim', 5, steps=True, number_of_steps=0)")
-        dscaney = DScan(self.m1, self.pos1, self.sens, self.expo)
-        self.assertEqual(type(dscaney), DScan)
-        self.assertEqual(dscaney.__repr__(), expected_rep)
-
-    @sync_tst
     def test_len_2_1D_trajectory_split_2(self):
         """Test the split in 2 of a 2 points 1D trajectory"""
         result = [point for point in splitTrajectory([0, 20], 2)]
@@ -114,7 +88,7 @@ class Tests(DeviceTest):
         result = [(tuple(point), pause)
                   for point, pause in
                   splitTrajectory([(0, 0, 0), (1, 1, 1),
-                                         (20, 20, 20)], 4)]
+                                   (20, 20, 20)], 4)]
 
         oracle = [((0, 0, 0), True), ((1, 1, 1), False),
                   ((5, 5, 5), True), ((10, 10, 10), True),
@@ -127,8 +101,7 @@ class Tests(DeviceTest):
         result = [(tuple(point), pause)
                   for point, pause in
                   splitTrajectory([(0, -5, 1), (0, 0, 1),
-                                         (10, 0, 1), (10, -5, 1)], 2)]
-        print(result)
+                                   (10, 0, 1), (10, -5, 1)], 2)]
         oracle = [((0, -5, 1), True), ((0, 0, 1), False), ((5, 0, 1), True),
                   ((10, 0, 1), False), ((10, -5, 1), True)]
 
@@ -164,6 +137,35 @@ class Tests(DeviceTest):
                   (2, 0), (2, 1), (2, 2)]
 
         self.assertEqual(result, oracle)
+
+    @sync_tst
+    def test_scans_initializations(self):
+        expected_rep = ("AScan('tm1', [(0, 0), (10, 10), (15, 15)], "
+                        "'lsim', 5, steps=True, number_of_steps=0)")
+
+        ascaney = AScan(self.m1, self.pos1, self.sens, self.expo)
+        self.assertEqual(type(ascaney), AScan)
+        self.assertEqual(ascaney.__repr__(), expected_rep)
+
+        expected_rep = ("AMesh('tm1', [(0, 0), (10, 10), (15, 15)], "
+                        "[(15, 15), (10, 10), (0, 0)], 'lsim', 5, steps=True, "
+                        "number_of_steps=0)")
+        ameshy = AMesh(self.m1, self.pos1, self.pos2, self.sens, self.expo)
+        self.assertEqual(type(ameshy), AMesh)
+        self.assertEqual(ameshy.__repr__(), expected_rep)
+
+        expected_rep = ("APathScan('tm1', [(0, 0), (10, 10), (15, 15)], "
+                        "'lsim', 5, steps=True, number_of_steps=0)")
+        # Pun intented
+        apathy = APathScan(self.m1, self.pos1, self.sens, self.expo)
+        self.assertEqual(type(apathy), APathScan)
+        self.assertEqual(apathy.__repr__(), expected_rep)
+
+        expected_rep = ("DScan('tm1', [(0, 0), (10, 10), (15, 15)], "
+                        "'lsim', 5, steps=True, number_of_steps=0)")
+        dscaney = DScan(self.m1, self.pos1, self.sens, self.expo)
+        self.assertEqual(type(dscaney), DScan)
+        self.assertEqual(dscaney.__repr__(), expected_rep)
 
 
 if __name__ == "__main__":
