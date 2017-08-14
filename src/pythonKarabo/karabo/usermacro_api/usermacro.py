@@ -16,18 +16,23 @@ from karabo.middlelayer_api.eventloop import EventLoop
 from karabo.usermacro_api.pipeline import OutputChannel
 
 
-def run_in_event_loop(macro):
-    """ To run macro"""
+def run_in_event_loop(macro, *args, **kwargs):
+    """ Runs a macro"""
     loop = get_event_loop()
     if not isinstance(loop, EventLoop):
         if EventLoop.global_loop is None:
             loop = EventLoop()
             set_event_loop(loop)
-        else: 
+        else:
             loop = EventLoop.global_loop
 
     @coroutine
     def __run():
+        nonlocal macro
+        if isinstance(macro, type):
+            # macro is a class, instantiate
+            macro = macro(*args, **kwargs)
+
         macro._lastloop = loop
         macro.state = State.ACTIVE
         macro.currentSlot = "start"
@@ -116,7 +121,7 @@ class UserMacro(Macro):
         if args:
             del kwargs["arg"]
 
-        run_in_event_loop(cls(*args, **kwargs))
+        run_in_event_loop(cls, *args, **kwargs)
 
 
 def display(image):
