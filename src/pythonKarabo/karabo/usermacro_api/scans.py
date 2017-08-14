@@ -149,6 +149,7 @@ class AScan(UserMacro):
         rep += "steps={steps}, number_of_steps={num})".format(
                 steps=self.steps,
                 num=str(self.number_of_steps).split()[0])
+
         return rep
 
     @coroutine
