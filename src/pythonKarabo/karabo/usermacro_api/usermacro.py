@@ -3,26 +3,21 @@
    domain-level routines for Light-Source operations
 """
 import argparse
-from asyncio import coroutine, get_event_loop, set_event_loop
+from asyncio import (
+    coroutine, get_event_loop, set_event_loop)
 from contextlib import closing
 import os
 import socket
 
 from karabo.middlelayer import (
-    AccessMode, Device, Float, Macro, MetricPrefix, Slot, State, Unit)
+    AccessLevel, AccessMode, Bool, Device, Float, Macro,
+    MetricPrefix, Slot, State, Unit)
 from karabo.middlelayer_api.eventloop import EventLoop
 from karabo.usermacro_api.pipeline import OutputChannel
 
 
 def run_in_event_loop(macro):
     """ To run macro"""
-    @coroutine
-    def __run():
-        macro.state = State.ACTIVE
-        yield from macro.execute()
-        macro.state = State.PASSIVE
-        yield from macro.slotKillDevice()
-
     loop = get_event_loop()
     if not isinstance(loop, EventLoop):
         loop = (
@@ -30,6 +25,16 @@ def run_in_event_loop(macro):
             if EventLoop.global_loop is not None
             else EventLoop())
         set_event_loop(loop)
+
+    @coroutine
+    def __run():
+        macro._lastloop = loop
+        macro.state = State.ACTIVE
+        macro.currentSlot = "start"
+        yield from macro.execute()
+        macro.currentSlot = ""
+        macro.state = State.PASSIVE
+        yield from macro.slotKillDevice()
 
     if loop.is_running():
         loop.call_soon_threadsafe(
@@ -54,6 +59,12 @@ class UserMacro(Macro):
         unitSymbol=Unit.SECOND,
         accessMode=AccessMode.INITONLY)
 
+    cancelled = Bool(
+        displayedName="Cancelled",
+        defaultValue=False,
+        accessMode=AccessMode.READONLY,
+        requiredAccessLevel=AccessLevel.EXPERT)
+
     outputChannel = OutputChannel()
 
     def __init__(self, **kwargs):
@@ -70,6 +81,11 @@ class UserMacro(Macro):
     def start(self):
         """Start the user macro"""
         self.__call__()
+
+    @Slot(displayedName="Cancel", allowedStates={State.ACTIVE})
+    def cancel(self):
+        """Duplicated here due to a bug in the Macro class"""
+        self.cancelled = True
 
     @coroutine
     def _run(self, **kwargs):
