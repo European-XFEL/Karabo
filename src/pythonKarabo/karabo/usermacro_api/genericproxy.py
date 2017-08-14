@@ -5,7 +5,7 @@ from asyncio import TimeoutError
 from karabo.common.states import StateSignifier
 from karabo.middlelayer import (
     allCompleted, connectDevice, KaraboError,
-    lock, Proxy, State, waitUntilNew)
+    lock, Proxy, State)
 from karabo.middlelayer_api.proxy import synchronize
 
 
@@ -71,8 +71,8 @@ class GenericProxy(object):
                 if isinstance(deviceId, str):
                     # Act as a generic proxy
                     try:
-                        proxy = connectDevice(deviceId,
-                                              timeout=cls.proxy_ops_timeout)
+                        proxy = connectDevice(
+                            deviceId, timeout=cls.proxy_ops_timeout)
                         ret = cls.create_generic_proxy(proxy)
                     except TimeoutError:
                         cls._error("Could not connect to {}. Is it on?"
@@ -147,7 +147,9 @@ class GenericProxy(object):
         """Get state"""
         if self._generic_proxies:
             # Give State.MOVING the highest significance
-            signifier = StateSignifier([State.ON, State.OFF, State.STOPPED, State.STOPPING, State.ACQUIRING, State.MOVING])
+            signifier = StateSignifier([State.ON, State.OFF,
+                                        State.STOPPED, State.STOPPING,
+                                        State.ACQUIRING, State.MOVING])
             return signifier.returnMostSignificant(
                 [gproxy.state for gproxy in self._generic_proxies])
 
