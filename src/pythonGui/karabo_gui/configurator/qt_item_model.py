@@ -253,7 +253,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         else:
             parent_obj = self.index_ref(parent)
 
-        if isinstance(parent_obj, (Box, EditableAttributeInfo)):
+        if isinstance(parent_obj, Box):
             descriptor = parent_obj.descriptor
             names = _get_child_names(descriptor)
             if isinstance(descriptor, Schema):
@@ -446,7 +446,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return None
             descriptor = parent_box.descriptor
             row = parent_box.value[descriptor.rowsInfo.index(parent_row)]
-            return row[cell_info.name]
+            return str(row[cell_info.name])
 
     def _vector_row_data(self, row_info, role, column, row):
         """data() implementation for VectorHash rows"""

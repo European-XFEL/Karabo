@@ -673,9 +673,9 @@ class VectorHashCellInfo(object):
     """A proxy for VectorHash cells (row & column) which is used by the
     configurator item model
     """
-    def __init__(self, row, name, klass):
+    def __init__(self, row, name, obj):
         self.name = name
-        self.klass = klass
+        self.obj = obj
         self.parent = weakref.ref(row)
 
 
@@ -684,6 +684,7 @@ class VectorHashRowInfo(object):
     model
     """
     def __init__(self, box):
-        self.columns = [VectorHashCellInfo(self, k, hashmod.Type.fromname[a["valueType"]])
-                        for k, v, a in box.descriptor.rowSchema.hash.iterall()]
+        self.columns = [VectorHashCellInfo(
+            self, k, hashmod.Type.fromname[a["valueType"]](strict=False, **a))
+            for k, v, a in box.descriptor.rowSchema.hash.iterall()]
         self.parent = weakref.ref(box)
