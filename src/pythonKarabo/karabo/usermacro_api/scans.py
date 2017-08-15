@@ -145,12 +145,25 @@ class AScan(UserMacro):
         self.exposureTime = float(exposureTime)
         self.steps = bool(steps)
         self.number_of_steps = int(number_of_steps)
-
         if self.experimentId == "":
             self.experimentId = self.deviceId
         self.movableId = self._movable.deviceId
         self.sensibleId = self._sensible.deviceId
         self.pos_list = self._pos_list
+
+    def __repr__(self):
+        rep = "{cls}('{mov}', {pos}, '{sens}', {exp}, ".format(
+              cls=type(self).__name__,
+              mov=self._movable.deviceId,
+              pos=self._pos_list,
+              sens=self._sensible.deviceId,
+              exp=str(self.exposureTime).split()[0])
+
+        rep += "steps={steps}, number_of_steps={num})".format(
+                steps=self.steps,
+                num=str(self.number_of_steps).split()[0])
+
+        return rep
 
     @coroutine
     def execute(self):
@@ -224,6 +237,19 @@ class AMesh(AScan):
         super().__init__(movable, meshTrajectory(pos_list1, pos_list2),
                          sensible, exposureTime, steps,
                          number_of_steps, **kwargs)
+        self._pos_list1 = pos_list1
+        self._pos_list2 = pos_list2
+
+    def __repr__(self):
+        # By default, meshTrajectory has an ugly representation.
+        # This may break on non-64bits machines.
+
+        rep = super().__repr__()
+        rep = "{begin}{list1}, {list2}{end}".format(begin=rep[:13],
+                                                    list1=self._pos_list1,
+                                                    list2=self._pos_list2,
+                                                    end=rep[64:])
+        return rep
 
 
 class APathScan(AScan):
@@ -243,6 +269,20 @@ class DScan(AScan):
         # Convert position from relative to absolute
         self._pos_list = np.array(
             self._movable.position) + np.array(self._pos_list)
+        # Only used for representation
+        self._raw_pos_list = self._pos_list
+
+    def __repr__(self):
+        """ np.arrays are pretty printed, and have new lines in them,
+            with user input, before the positions delta calculated
+        """
+        rep = super().__repr__().split(',')
+        rep = rep[0] + ", {},".format(self._raw_pos_list) + ",".join(rep[2:])
+        return rep
+
+    def __str__(self):
+        """ This outputs the position list with the values already delta """
+        return super().__repr__().replace('\n', ',')
 
 
 class TScan(UserMacro):
