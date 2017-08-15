@@ -18,7 +18,7 @@ from karabo.usermacro_api.pipeline import OutputChannel
 def run_in_event_loop(macro, *args, **kwargs):
     """ Runs a macro"""
     class DeviceHelper(Macro, DeviceClientBase):
-        pass
+        """Provide the device client machinery"""
     loop = get_event_loop()
 
     eventThread = None
@@ -30,8 +30,15 @@ def run_in_event_loop(macro, *args, **kwargs):
             # to provide services like connectDevice() on __init__.
             eventThread = EventThread()
             eventThread.start()
-            helper = DeviceHelper(_deviceId_=uuid.uuid4())
+
+            bareHostName = socket.gethostname().partition('.')[0]
+            unique_id = uuid.uuid4()
+            helper = DeviceHelper(_deviceId_="DeviceHelper_{}_{}"
+                                  .format(bareHostName, unique_id))
+            kwargs["uuid"] = unique_id
+
             set_event_loop(NoEventLoop(helper))
+
         loop = EventLoop.global_loop
 
         if isinstance(macro, type):
@@ -53,7 +60,8 @@ def run_in_event_loop(macro, *args, **kwargs):
     loop.call_soon_threadsafe(loop.create_task, __run())
     # Must wait here due to the scope EventThread
     if eventThread:
-            eventThread.join()
+        eventThread.join()
+
 
 class UserMacro(Macro):
     """"Base class for user macros"""
@@ -81,7 +89,9 @@ class UserMacro(Macro):
     def __init__(self, **kwargs):
         bareHostName = socket.gethostname().partition('.')[0]
         deviceId = "{}_{}_{}".format(
-            type(self).__name__, bareHostName, str(uuid.uuid4()))
+            type(self).__name__, bareHostName,
+            kwargs.get("uuid", str(uuid.uuid4())))
+
         if "deviceId" in kwargs:
             kwargs["_deviceId_"] = kwargs["deviceId"]
         else:
