@@ -266,7 +266,7 @@ class TScan(UserMacro):
     _sensible = Sensible()
 
     def __init__(self, sensible, exposureTime, duration, **kwargs):
-        super().__init__(kwargs)
+        super().__init__(**kwargs)
         self._sensible = (sensible
                           if isinstance(sensible, Sensible)
                           else Sensible(sensible))
