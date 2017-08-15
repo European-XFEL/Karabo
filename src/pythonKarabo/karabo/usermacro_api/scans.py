@@ -255,6 +255,20 @@ class DScan(AScan):
 
         # Convert position from relative to absolute
         self._pos_list = np.array(self._movable.position) + np.array(pos_list)
+        # Only used for representation
+        self._raw_pos_list = pos_list
+
+    def __repr__(self):
+        """ np.arrays are pretty printed, and have new lines in them,
+            with user input, before the positions delta calculated
+        """
+        rep = super().__repr__().split(',')
+        rep = rep[0] + ", {},".format(self._raw_pos_list) + ",".join(rep[2:])
+        return rep
+
+    def __str__(self):
+        """ This outputs the position list with the values already delta """
+        return super().__repr__().replace('\n', ',')
 
 
 class TScan(UserMacro):

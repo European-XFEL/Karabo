@@ -25,7 +25,6 @@ class TestDev(Device):
         super().__init__(configuration)
         self.lockedBy = ""
         self._lock_count = 0
-        self.encoderPosition = Kwargator(magnitude=10)
 
     @Slot()
     def ping(self):
@@ -53,16 +52,13 @@ class Tests(DeviceTest):
 
         cls.tm1 = getMockDevice("BeckhoffSimpleMotor",
                                 _deviceId_="tm1",
-                                stepLength=0,
-                                encoderPosition=10)
+                                stepLength=0)
         cls.tm2 = getMockDevice("BeckhoffSimpleMotor",
                                 _deviceId_="tm2",
-                                stepLength=0,
-                                encoderPosition=10)
+                                stepLength=0)
         cls.tm3 = getMockDevice("BeckhoffSimpleMotor",
                                 _deviceId_="tm3",
-                                stepLength=0,
-                                encoderPosition=10)
+                                stepLength=0)
         cls.lsim = getMockDevice("LimaSimulatedCamera",
                                  _deviceId_="lsim",
                                  cameraType="Simulator")
@@ -141,6 +137,7 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_scans_initializations(self):
+        """Test the initialization of all different scan objects"""
         expected_rep = ("AScan('tm1', [(0, 0), (10, 10), (15, 15)], "
                         "'lsim', 5, steps=True, number_of_steps=0)")
 
@@ -162,11 +159,14 @@ class Tests(DeviceTest):
         self.assertEqual(type(apathy), APathScan)
         self.assertEqual(apathy.__repr__(), expected_rep)
 
-        #expected_rep = ("DScan('tm1', [(0, 0), (10, 10), (15, 15)], "
-        #                "'lsim', 5, steps=True, number_of_steps=0)")
-        #dscaney = DScan(self.m1, self.pos1, self.sens, self.expo)
-        #self.assertEqual(type(dscaney), DScan)
-        #self.assertEqual(dscaney.__repr__(), expected_rep)
+        self.m1._proxy.encoderPosition = Kwargator(magnitude=10)
+
+        expected_rep = ("DScan('tm1', [(0, 0), (10, 10), (15, 15)], "
+                        "'lsim', 5, steps=True, number_of_steps=0)")
+        dscaney = DScan(self.m1, self.pos1, self.sens, self.expo)
+        print(dscaney)
+        self.assertEqual(type(dscaney), DScan)
+        self.assertEqual(dscaney.__repr__(), expected_rep)
 
 
 if __name__ == "__main__":
