@@ -5,6 +5,7 @@ from asyncio import coroutine
 import itertools
 import ntpath
 import numpy as np
+import os
 import sys
 
 from karabo.middlelayer import (
@@ -141,9 +142,9 @@ class AScan(UserMacro):
         self._pos_list = (
             literal_eval(pos_list)
             if isinstance(pos_list, str) else pos_list)
-        self.exposureTime = exposureTime
-        self.steps = steps
-        self.number_of_steps = number_of_steps
+        self.exposureTime = float(exposureTime)
+        self.steps = bool(steps)
+        self.number_of_steps = int(number_of_steps)
 
         if self.experimentId == "":
             self.experimentId = self.deviceId
@@ -269,8 +270,8 @@ class TScan(UserMacro):
         self._sensible = (sensible
                           if isinstance(sensible, Sensible)
                           else Sensible(sensible))
-        self.exposureTime = exposureTime
-        self.duration = duration
+        self.exposureTime = float(exposureTime)
+        self.duration = float(duration)
         self.sensibleId = self._sensible.deviceId
 
     @coroutine
@@ -371,3 +372,4 @@ class DMove(AMove):
 if __name__ == "__main__":
     cls = eval(ntpath.basename(sys.argv[0]))
     cls.main()
+    os._exit(0)
