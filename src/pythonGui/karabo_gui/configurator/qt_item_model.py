@@ -263,7 +263,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 obj = descriptor.rowsInfo[row]
             else:
                 # Leaves have attributes as children
-                obj = parent_obj.attributeInfo
+                obj = descriptor.attributeInfo
         elif isinstance(parent_obj, VectorHashRowInfo):
             obj = parent_obj.columns[row]
         else:
