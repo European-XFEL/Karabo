@@ -1,39 +1,45 @@
-#!/usr/bin/env python3
 """User Macros implement as-simple-as-possible
    domain-level routines for Light-Source operations
 """
 import argparse
 from asyncio import (
     coroutine, get_event_loop, set_event_loop)
-from contextlib import closing
 import socket
 import uuid
 
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Bool, Device, Float, Macro,
-    MetricPrefix, Slot, State, Unit)
-from karabo.middlelayer_api.eventloop import EventLoop
+    AccessLevel, AccessMode, Bool, Device, DeviceClientBase,
+    Float, Macro, MetricPrefix, Slot, State, Unit)
+from karabo.middlelayer_api.eventloop import EventLoop, NoEventLoop
+from karabo.middlelayer_api.macro import EventThread
 from karabo.usermacro_api.pipeline import OutputChannel
 
 
 def run_in_event_loop(macro, *args, **kwargs):
     """ Runs a macro"""
+    class DeviceHelper(Macro, DeviceClientBase):
+        pass
     loop = get_event_loop()
+
+    eventThread = None
+
     if not isinstance(loop, EventLoop):
         if EventLoop.global_loop is None:
-            loop = EventLoop()
-            set_event_loop(loop)
-        else:
-            loop = EventLoop.global_loop
+            # The user macro is started from command line for e.g.
+            # In this case, start a device helper in a new event thread
+            # to provide services like connectDevice() on __init__.
+            eventThread = EventThread()
+            eventThread.start()
+            helper = DeviceHelper(_deviceId_=uuid.uuid4())
+            set_event_loop(NoEventLoop(helper))
+        loop = EventLoop.global_loop
 
-    @coroutine
-    def __run():
-        nonlocal macro
         if isinstance(macro, type):
             # macro is a class, instantiate
             macro = macro(*args, **kwargs)
 
-        macro._lastloop = loop
+    @coroutine
+    def __run():
         macro.state = State.ACTIVE
         macro.currentSlot = "start"
         yield from macro.execute()
@@ -41,13 +47,13 @@ def run_in_event_loop(macro, *args, **kwargs):
         macro.state = State.PASSIVE
         yield from macro.slotKillDevice()
 
-    if loop.is_running():
-        loop.call_soon_threadsafe(
-            loop.create_task, __run())
-    else:
-        with closing(loop):
-            loop.run_until_complete(__run())
+        if eventThread:
+            eventThread.stop()
 
+    loop.call_soon_threadsafe(loop.create_task, __run())
+    # Must wait here due to the scope EventThread
+    if eventThread:
+            eventThread.join()
 
 class UserMacro(Macro):
     """"Base class for user macros"""

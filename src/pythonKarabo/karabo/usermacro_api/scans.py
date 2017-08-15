@@ -12,6 +12,7 @@ from karabo.middlelayer import (
     sleep, UInt32, Unit, VectorHash, waitUntil)
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
+from karabo.usermacro_api.generalized import *
 
 
 def splitTrajectory(pos_list, number_of_steps):
