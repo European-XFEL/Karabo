@@ -65,7 +65,6 @@ class Box(QObject):
         else:
             self.configuration = self
         self.timestamp = None
-        self.attributeInfo = None
         self._value = Dummy()
         self.initialized = False
         self.descriptor = descriptor
@@ -86,7 +85,6 @@ class Box(QObject):
     @descriptor.setter
     def descriptor(self, d):
         self._descriptor = d
-        self.attributeInfo = EditableAttributeInfo(self, d)
         if d is not None:
             self._value = self.dummyCast()
             self.signalNewDescriptor.emit(self)
@@ -225,6 +223,7 @@ class Type(hashmod.Type, metaclass=Monkey):
     # Means that parent class is overwritten/updated
 
     def set(self, box, value, timestamp=None):
+        self.attributeInfo = EditableAttributeInfo(box, box.descriptor)
         box._set(value, timestamp)
 
     def dispatchUserChanges(self, box, hash, attrs=None):
@@ -244,6 +243,7 @@ class Type(hashmod.Type, metaclass=Monkey):
 
     def fromHash(self, box, data, attrs=None, timestamp=None):
         self._copyAttrs(box, attrs)
+        self.attributeInfo = EditableAttributeInfo(box, box.descriptor)
         box._set(data, timestamp)
 
     def redummy(self, box):
