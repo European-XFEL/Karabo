@@ -1,5 +1,7 @@
 from collections import deque
+import time
 
+from karabo.middlelayer_api.device_client import getHistory
 
 class AcquiredData(object):
     """ Acquired Data is an iterable object that queries various
@@ -57,3 +59,38 @@ class AcquiredData(object):
 
     def __len__(self):
         return len(self._fifo)
+
+class AcquiredFromLog(AcquiredData):
+    """
+    Child class to retrieve 'slow' data from datalogger history
+    """
+    def queryData(self):
+
+        # retrieve steps from scan history assuming there have been only one
+        # scan with given deviceId from the big-bang up to now
+        steps = getHistory("{}.stepNum".format(self.experimentId),
+                           "01-01-1970T00:00:00",
+                           time.strftime('%Y-%m-%dT%H:%M:%S'))
+        # steps has the following format:
+        # [(seconds_from_1970, train_id, is_last_of_set, value) ]
+
+        # begin of the scan = timestamp of first step
+        begin = time.strftime('%Y-%m-%dT%H:%M:%S',time.localtime(steps[0][0]))
+        # end of the scan = timestamp of last step
+        end = time.strftime('%Y-%m-%dT%H:%M:%S',
+                            time.localtime(steps[0][len(steps)]))
+
+        print(steps) #TODO remove thios line
+
+        # retrieve parameters from history
+        # TODO
+
+        # keep only values whith same train_id of scan steps
+        # TODO
+
+        # format them into a hash
+        # TODO
+
+        # append to fifo with self.append()
+        # TODO
+
