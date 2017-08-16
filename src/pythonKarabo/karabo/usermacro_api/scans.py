@@ -133,12 +133,25 @@ class AScan(UserMacro):
     def __init__(self, movable, pos_list, sensible, exposureTime,
                  steps=True, number_of_steps=0, **kwargs):
         super().__init__(**kwargs)
-        self._movable = (movable
-                         if isinstance(movable, Movable)
-                         else Movable(movable))
-        self._sensible = (sensible
-                          if isinstance(sensible, Sensible)
-                          else Sensible(sensible))
+
+        if isinstance(movable, Movable):
+            self._movable = movable
+        else:
+            try:
+                movable = literal_eval(movable)
+                self._movable = Movable(*movable)
+            except ValueError:
+                self._movable = Movable(movable)
+
+        if isinstance(sensible, Sensible):
+            self._sensible = sensible
+        else:
+            try:
+                sensible = literal_eval(sensible)
+                self._sensible = Sensible(*sensible)
+            except ValueError:
+                self._sensible = Sensible(sensible)
+            
         self._pos_list = (
             literal_eval(pos_list)
             if isinstance(pos_list, str) else pos_list)
@@ -307,9 +320,16 @@ class TScan(UserMacro):
 
     def __init__(self, sensible, exposureTime, duration, **kwargs):
         super().__init__(**kwargs)
-        self._sensible = (sensible
-                          if isinstance(sensible, Sensible)
-                          else Sensible(sensible))
+
+        if isinstance(sensible, Sensible):
+            self._sensible = sensible
+        else:
+            try:
+                sensible = literal_eval(sensible)
+                self._sensible = Sensible(*sensible)
+            except ValueError:
+                self._sensible = Sensible(sensible)
+
         self.exposureTime = float(exposureTime)
         self.duration = float(duration)
         self.sensibleId = self._sensible.deviceId
@@ -362,9 +382,16 @@ class AMove(UserMacro):
 
     def __init__(self, movable, position, **kwargs):
         super().__init__(**kwargs)
-        self._movable = (movable
-                         if isinstance(movable, Movable)
-                         else Movable(movable))
+
+        if isinstance(movable, Movable):
+            self._movable = movable
+        else:
+            try:
+                movable = literal_eval(movable)
+                self._movable = Movable(*movable)
+            except ValueError:
+                self._movable = Movable(movable)
+
         self.movableId = self._movable.deviceId
         self._position = (
             literal_eval(position)
