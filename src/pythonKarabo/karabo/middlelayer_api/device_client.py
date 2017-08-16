@@ -12,6 +12,7 @@ import asyncio
 from asyncio import get_event_loop, sleep
 from contextlib import contextmanager
 from decimal import Decimal
+from functools import partial
 from weakref import ref
 
 import dateutil.parser
@@ -260,6 +261,21 @@ def waitUntil(condition):
     yield from sleep(0)
     while not condition():
         yield from loop.waitForChanges()
+
+
+@synchronize
+def waitWhile(condition):
+    """Wait while the condition is True
+
+    The condition is typically a lambda function, as in::
+
+        waitWhile(lambda: state == State.MOVING)
+
+    The condition will be evaluated each time something changes. Note
+    that for this to work, it is necessary that all the devices used in the
+    condition are connected while we are waiting (so typically they appear
+    in a with statement)"""
+    yield from waitUntil(partial(lambda f: not f(), condition))
 
 
 @synchronize
