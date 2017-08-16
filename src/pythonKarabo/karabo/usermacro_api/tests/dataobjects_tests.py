@@ -4,6 +4,14 @@ from karabo.usermacros import AcquiredData
 
 
 class TestAD(unittest.TestCase):
+    def test_initialization(self):
+        ad = AcquiredData()
+        self.assertEqual(ad.__repr__(), "AcquiredData(None, size=10)")
+        self.assertEqual(str(ad), "Unknown Experiment: []")
+
+        ad = AcquiredData(107)
+        self.assertEqual(ad.__repr__(), "AcquiredData(107, size=10)")
+        self.assertEqual(str(ad), "Experiment 107: []")
 
     def test_ad_fifo_behaviour(self):
         ad = AcquiredData()
