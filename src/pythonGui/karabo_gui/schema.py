@@ -34,35 +34,6 @@ SCHEMA_ATTRIBUTE_NAMES = (
 )
 
 
-def get_editable_attributes(descriptor):
-    """Return the editable attribute names of a descriptor
-    """
-    names = []
-    for name in EDITABLE_ATTRIBUTE_NAMES:
-        # `descriptor` can be None!
-        value = getattr(descriptor, name, None)
-        if value is not None:
-            # Skip blank units
-            if name == 'unitSymbol' and value == '':
-                continue
-            # Skip metric prefixes with no associated units
-            if (name == 'metricPrefixSymbol' and value == ''
-                    and getattr(descriptor, 'unitSymbol', '') == ''):
-                continue
-            names.append(name)
-    return names
-
-
-class EditableAttributeInfo(object):
-    """This class records the editable attributes of a box. Each time
-    the descriptor of a box is changed, a new instance of this class should
-    be generated.
-    """
-    def __init__(self, box, descriptor):
-        self.names = get_editable_attributes(descriptor)
-        self.parent = weakref.proxy(box)
-
-
 class Box(QObject):
     """This class represents one value of a device or a device class.
     It has signals that are emitted whenever the value changes.
@@ -94,7 +65,6 @@ class Box(QObject):
         else:
             self.configuration = self
         self.timestamp = None
-        self.attributeInfo = None
         self._value = Dummy()
         self.initialized = False
         self.descriptor = descriptor
@@ -115,7 +85,6 @@ class Box(QObject):
     @descriptor.setter
     def descriptor(self, d):
         self._descriptor = d
-        self.attributeInfo = EditableAttributeInfo(self, d)
         if d is not None:
             self._value = self.dummyCast()
             self.signalNewDescriptor.emit(self)
@@ -254,6 +223,7 @@ class Type(hashmod.Type, metaclass=Monkey):
     # Means that parent class is overwritten/updated
 
     def set(self, box, value, timestamp=None):
+        self.attributeInfo = EditableAttributeInfo(box, box.descriptor)
         box._set(value, timestamp)
 
     def dispatchUserChanges(self, box, hash, attrs=None):
@@ -273,6 +243,7 @@ class Type(hashmod.Type, metaclass=Monkey):
 
     def fromHash(self, box, data, attrs=None, timestamp=None):
         self._copyAttrs(box, attrs)
+        self.attributeInfo = EditableAttributeInfo(box, box.descriptor)
         box._set(data, timestamp)
 
     def redummy(self, box):
@@ -653,3 +624,67 @@ class ListOfNodes(hashmod.Descriptor):
         box._value = Dummy()
         box.initialized = False
         box.descriptor = None
+
+# ----------------------------------------------------------------------------
+# Configuration editing extensions
+# These are used by `karabo_gui.configurator.qt_item_model`
+
+
+def get_editable_attributes(descriptor):
+    """Return the editable attribute names of a descriptor
+    """
+    names = []
+    for name in EDITABLE_ATTRIBUTE_NAMES:
+        # `descriptor` can be None!
+        value = getattr(descriptor, name, None)
+        if value is not None:
+            # Skip blank units
+            if name == 'unitSymbol' and value == '':
+                continue
+            # Skip metric prefixes with no associated units
+            if (name == 'metricPrefixSymbol' and value == ''
+                    and getattr(descriptor, 'unitSymbol', '') == ''):
+                continue
+            names.append(name)
+    return names
+
+
+class EditableAttributeInfo(object):
+    """This class records the editable attributes of a box. Each time
+    the descriptor of a box is changed, a new instance of this class should
+    be generated.
+    """
+    def __init__(self, box, descriptor):
+        self.names = get_editable_attributes(descriptor)
+        self.parent = weakref.ref(box)
+
+
+class VectorHash(hashmod.VectorHash, metaclass=Monkey):
+    def set(self, box, value, timestamp=None):
+        self.rowsInfo = [VectorHashRowInfo(box) for row in value]
+        box._set(value, timestamp)
+
+    def fromHash(self, box, value, attrs=None, timestamp=None):
+        self.rowsInfo = [VectorHashRowInfo(box) for row in value]
+        Type.fromHash(self, box, value, attrs=attrs, timestamp=timestamp)
+
+
+class VectorHashCellInfo(object):
+    """A proxy for VectorHash cells (row & column) which is used by the
+    configurator item model
+    """
+    def __init__(self, row, name, obj):
+        self.name = name
+        self.obj = obj
+        self.parent = weakref.ref(row)
+
+
+class VectorHashRowInfo(object):
+    """A proxy for VectorHash rows which is used by the configurator item
+    model
+    """
+    def __init__(self, box):
+        self.columns = [VectorHashCellInfo(
+            self, k, hashmod.Type.fromname[a["valueType"]](strict=False, **a))
+            for k, v, a in box.descriptor.rowSchema.hash.iterall()]
+        self.parent = weakref.ref(box)

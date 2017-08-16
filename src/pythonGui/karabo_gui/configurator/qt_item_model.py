@@ -8,12 +8,13 @@ from weakref import WeakValueDictionary
 from PyQt4.QtCore import pyqtSlot, QAbstractItemModel, QModelIndex, Qt
 from PyQt4.QtGui import QBrush, QColor
 
-from karabo.middlelayer import AccessMode, VectorHash
+from karabo.middlelayer import AccessMode
 from karabo.common.api import State
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 import karabo_gui.globals as krb_globals
 from karabo_gui.schema import (
-    ChoiceOfNodes, Dummy, EditableAttributeInfo, ImageNode, Schema, SlotNode,
+    Box, ChoiceOfNodes, Dummy, EditableAttributeInfo, ImageNode, Schema,
+    SlotNode, VectorHash, VectorHashCellInfo, VectorHashRowInfo,
     get_editable_attributes
 )
 from karabo_gui.treewidget.utils import get_icon
@@ -89,42 +90,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
     # ----------------------------
     # Private interface
 
-    def _attribute_data(self, attr_info, role, column, row):
-        """data() implementation for property attributes
-        """
-        box = attr_info.parent
-        if box is None:
-            return
-
-        name = attr_info.names[row]
-        if column == 0:
-            if role == Qt.DisplayRole:
-                return name
-            elif role == Qt.DecorationRole:
-                return get_icon(box.descriptor)
-        elif column == 1:
-            if role == Qt.DisplayRole:
-                value = getattr(box.descriptor, name)
-                return str(value)
-
-    def _box_data(self, box, role, column):
-        """data() implementation for properties
-        """
-        if column == 0:
-            if role == Qt.DisplayRole:
-                return box.descriptor.displayedName
-            elif role == Qt.DecorationRole:
-                return get_icon(box.descriptor)
-        elif column == 1:
-            if role == Qt.DisplayRole:
-                if isinstance(box.descriptor, Schema):
-                    return ''
-
-                value = box.value
-                if isinstance(value, (Dummy, bytes, bytearray)):
-                    return ''
-                return str(value)
-
     def _box_row(self, box):
         """Return the row for the given ``box``
         """
@@ -132,9 +97,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 self._configuration.descriptor is None):
             return 0
 
-        # Make sure we were actually passed a `Box` and not an
-        # `EditableAttributeInfo` instance
-        assert not isinstance(box, EditableAttributeInfo)
+        # Make sure we were actually passed a `Box` and not something else
+        assert isinstance(box, Box)
 
         parent_path, box_key = box.path[:-1], box.path[-1]
         if parent_path:
@@ -158,6 +122,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         first = self.index(0, 1)
         last = self.index(last_row, 1)
         self.dataChanged.emit(first, last)
+        self.layoutChanged.emit()
 
     @pyqtSlot(object, object, object)
     def _state_update(self, box, state, timestamp):
@@ -184,7 +149,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
     # ----------------------------
     # Qt methods
 
-    def columnCount(self, parentIndex=QModelIndex()):
+    def columnCount(self, parentIndex=None):
         """Reimplemented function of QAbstractItemModel.
         """
         return 2  # Name, Value
@@ -222,6 +187,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         if isinstance(obj, EditableAttributeInfo):
             return self._attribute_data(obj, role, column, index.row())
+        elif isinstance(obj, VectorHashCellInfo):
+            return self._vector_col_data(obj, role, column)
+        elif isinstance(obj, VectorHashRowInfo):
+            return self._vector_row_data(obj, role, column, index.row())
         else:
             return self._box_data(obj, role, column)
 
@@ -244,29 +213,22 @@ class ConfigurationTreeModel(QAbstractItemModel):
         descriptor = getattr(obj, 'descriptor', None)
         is_node = isinstance(descriptor, Schema)
         is_special = isinstance(descriptor, (SlotNode, ImageNode))
-        if not is_node or is_special:
+        if is_special or (descriptor is not None and not is_node):
             flags |= Qt.ItemIsDragEnabled
 
-        # Below is the check for editability. Ignore the first column
+        # Below are the value flags. Ignore the first column
         if index.column() == 0:
             return flags
 
+        # Value-specific flags
         if isinstance(obj, EditableAttributeInfo):
-            flags |= Qt.ItemIsEditable
-            return flags
-
-        box = obj  # we know it's a `Box` now
-        is_class = box.configuration.type in ('class', 'projectClass')
-        is_editable_type = not is_node or isinstance(descriptor, ChoiceOfNodes)
-        is_class_editable = (is_class and descriptor.accessMode in
-                             (AccessMode.INITONLY, AccessMode.RECONFIGURABLE))
-        is_inst_editable = (not is_class and box.isAllowed() and
-                            descriptor.accessMode is AccessMode.RECONFIGURABLE)
-        if is_editable_type and (is_class_editable or is_inst_editable):
-            flags |= Qt.ItemIsEditable
-            # XXX: Explicitly avoid the table editor!
-            if isinstance(descriptor, VectorHash):
-                flags &= ~Qt.ItemIsEditable
+            flags |= self._attribute_flags(obj)
+        elif isinstance(obj, VectorHashCellInfo):
+            flags |= self._vector_col_flags(obj)
+        elif isinstance(obj, VectorHashRowInfo):
+            flags |= self._vector_row_flags(obj)
+        else:
+            flags |= self._box_flags(obj)
 
         return flags
 
@@ -287,21 +249,26 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return QModelIndex()
 
         if not parent.isValid():
-            parent_box = self._configuration
+            parent_obj = self._configuration
         else:
-            parent_box = self.index_ref(parent)
-            assert not isinstance(parent_box, EditableAttributeInfo)
+            parent_obj = self.index_ref(parent)
 
-        if parent_box is None or parent_box.descriptor is None:
+        if isinstance(parent_obj, Box):
+            descriptor = parent_obj.descriptor
+            names = _get_child_names(descriptor)
+            if isinstance(descriptor, Schema):
+                # Nodes have properties as children
+                obj = getattr(parent_obj.boxvalue, names[row])
+            elif isinstance(descriptor, VectorHash):
+                obj = descriptor.rowsInfo[row]
+            else:
+                # Leaves have attributes as children
+                obj = descriptor.attributeInfo
+        elif isinstance(parent_obj, VectorHashRowInfo):
+            obj = parent_obj.columns[row]
+        else:
             return QModelIndex()
 
-        names = _get_child_names(parent_box.descriptor)
-        if isinstance(parent_box.descriptor, Schema):
-            # Nodes have properties as children
-            obj = getattr(parent_box.boxvalue, names[row])
-        else:
-            # Leaves have attributes as children
-            obj = parent_box.attributeInfo
         return self.createIndex(row, column, obj)
 
     def mimeData(self, indices):
@@ -332,18 +299,28 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if child_obj is None:
             return QModelIndex()
 
-        # Handle attribute indices correctly
-        if isinstance(child_obj, EditableAttributeInfo):
-            parent_box = child_obj.parent
+        # Handle special indices correctly
+        if isinstance(child_obj, VectorHashCellInfo):
+            parent_row = child_obj.parent()
+            if parent_row is None:
+                return QModelIndex()
+            parent_box = parent_row.parent()
             if parent_box is None:
                 return QModelIndex()
-            parent_path = parent_box.path
+            row = parent_box.descriptor.rowsInfo.index(parent_row)
+            return self.createIndex(row, 0, parent_row)
+
+        elif isinstance(child_obj, (EditableAttributeInfo, VectorHashRowInfo)):
+            parent_box = child_obj.parent()
+            if parent_box is None:
+                return QModelIndex()
+            parent_box = self._configuration.getBox(parent_box.path)
         else:
             parent_path = child_obj.path[:-1]
+            if not parent_path:
+                return QModelIndex()
+            parent_box = self._configuration.getBox(parent_path)
 
-        if not parent_path:
-            return QModelIndex()
-        parent_box = self._configuration.getBox(parent_path)
         return self.createIndex(self._box_row(parent_box), 0, parent_box)
 
     def rowCount(self, parent=QModelIndex()):
@@ -354,14 +331,26 @@ class ConfigurationTreeModel(QAbstractItemModel):
         else:
             box = self.index_ref(parent)
 
-        # `box` might be an ``EditableAttributeInfo``!
-        if box is None or isinstance(box, EditableAttributeInfo):
+        if box is None:
             return 0
 
-        is_class = self._configuration.type != 'device'
+        # `box` might be a special marker
+        if isinstance(box, (EditableAttributeInfo, VectorHashCellInfo)):
+            return 0
+        elif isinstance(box, VectorHashRowInfo):
+            return len(box.columns)
+
+        # From here, we know `box` is really a `Box` instance
         descriptor = box.descriptor
-        if isinstance(descriptor, Schema) or is_class:
-            # Schemas and class properties can have children
+        if isinstance(descriptor, Schema):
+            # Schemas have children
+            return len(_get_child_names(descriptor))
+        elif isinstance(descriptor, VectorHash):
+            # VectorHash have as many children as they have rows
+            value = box.value
+            return 0 if isinstance(value, Dummy) else len(value)
+        elif self._configuration.type != 'device':
+            # class properties can have children (attributes)
             return len(_get_child_names(descriptor))
 
         # otherwise no children
@@ -379,7 +368,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return False
 
         if isinstance(obj, EditableAttributeInfo):
-            box = obj.parent
+            box = obj.parent()
             if box is None or box.descriptor is None:
                 return False
             name = obj.names[index.row()]
@@ -403,3 +392,98 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         # A value was successfully set!
         return True
+
+    # ----------------------------
+    # data() and flags() helper methods
+
+    def _attribute_data(self, attr_info, role, column, row):
+        """data() implementation for property attributes"""
+        box = attr_info.parent()
+        if box is None:
+            return
+
+        name = attr_info.names[row]
+        if column == 0:
+            if role == Qt.DisplayRole:
+                return name
+            elif role == Qt.DecorationRole:
+                return get_icon(box.descriptor)
+        elif column == 1:
+            if role == Qt.DisplayRole:
+                value = getattr(box.descriptor, name)
+                return str(value)
+
+    def _box_data(self, box, role, column):
+        """data() implementation for properties"""
+        if column == 0:
+            if role == Qt.DisplayRole:
+                return box.descriptor.displayedName
+            elif role == Qt.DecorationRole:
+                return get_icon(box.descriptor)
+        elif column == 1:
+            if role == Qt.DisplayRole:
+                if isinstance(box.descriptor, (Schema, VectorHash)):
+                    return ''
+
+                value = box.value
+                if isinstance(value, (Dummy, bytes, bytearray)):
+                    return ''
+                return str(value)
+
+    def _vector_col_data(self, cell_info, role, column):
+        """data() implementation for VectorHash columns"""
+        if column == 0:
+            if role == Qt.DisplayRole:
+                return cell_info.name
+            elif role == Qt.DecorationRole:
+                return get_icon(None)
+        elif column == 1 and role == Qt.DisplayRole:
+            parent_row = cell_info.parent()
+            if parent_row is None:
+                return None
+            parent_box = parent_row.parent()
+            if parent_box is None:
+                return None
+            descriptor = parent_box.descriptor
+            row = parent_box.value[descriptor.rowsInfo.index(parent_row)]
+            return str(row[cell_info.name])
+
+    def _vector_row_data(self, row_info, role, column, row):
+        """data() implementation for VectorHash rows"""
+        if column == 0:
+            if role == Qt.DisplayRole:
+                return str(row + 1)
+            elif role == Qt.DecorationRole:
+                return get_icon(None)
+        elif column == 1 and role == Qt.DisplayRole:
+            return ''
+
+    def _attribute_flags(self, attr_info):
+        """flags() implementation for property attributes"""
+        return Qt.ItemIsEditable
+
+    def _box_flags(self, box):
+        """flags() implementation for properties"""
+        flags = 0
+        descriptor = box.descriptor
+        is_class = box.configuration.type in ('class', 'projectClass')
+        is_node = isinstance(descriptor, Schema)
+        is_editable_type = not is_node or isinstance(descriptor, ChoiceOfNodes)
+        is_class_editable = (is_class and descriptor.accessMode in
+                             (AccessMode.INITONLY, AccessMode.RECONFIGURABLE))
+        is_inst_editable = (not is_class and box.isAllowed() and
+                            descriptor.accessMode is AccessMode.RECONFIGURABLE)
+        if is_editable_type and (is_class_editable or is_inst_editable):
+            flags |= Qt.ItemIsEditable
+            # XXX: Explicitly avoid the table editor!
+            if isinstance(descriptor, VectorHash):
+                flags &= ~Qt.ItemIsEditable
+        return flags
+
+    def _vector_col_flags(self, cell_info):
+        """flags() implementation for VectorHash columns"""
+        return 0  # Qt.ItemIsEditable
+
+    def _vector_row_flags(self, row_info):
+        """flags() implementation for VectorHash rows"""
+        return 0
