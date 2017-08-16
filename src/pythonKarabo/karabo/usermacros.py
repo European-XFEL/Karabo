@@ -12,7 +12,6 @@ from .usermacro_api.generalized import (
 )
 from .usermacro_api.pipeline import OutputChannel
 from .usermacro_api.dataobjects import AcquiredData
-from .usermacro_api.dataobjects import AcquiredData
 
 from .usermacro_api.scans import (
     AScan, AMesh, AMove, APathScan, DScan, DMesh, DMove, meshTrajectory,
