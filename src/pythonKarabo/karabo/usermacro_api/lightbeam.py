@@ -1,4 +1,4 @@
-"""Generalized interface to simulated Lightbeam
+"""Generalized interface to simulated LightBeam
 """
 from karabo.middlelayer import State
 from karabo.middlelayer_api.eventloop import synchronize
