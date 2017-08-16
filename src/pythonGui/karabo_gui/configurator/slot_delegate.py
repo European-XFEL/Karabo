@@ -68,7 +68,8 @@ class SlotButtonDelegate(QStyledItemDelegate):
         handled_types = (QEvent.MouseButtonPress, QEvent.MouseButtonRelease)
         if event.type() in handled_types:
             box = model.index_ref(index)
-            if box is not None and isinstance(box.descriptor, SlotNode):
+            descriptor = getattr(box, 'descriptor', None)
+            if box is not None and isinstance(descriptor, SlotNode):
                 self._handle_event_state(box, event, option)
                 return True
 
