@@ -1,5 +1,7 @@
 from collections import deque
+import time
 
+<<<<<<< c6c398538f8fcd47a7a7ae67872dea8907163c45
 # These are currently under another import, as they will be unecessary
 # and removed once the actual query functions will be implemented
 from karabo.middlelayer import (background, Hash, Int8, MetricPrefix, Unit)
@@ -7,6 +9,9 @@ import time
 
 from karabo.middlelayer_api.device_client import getHistory
 
+=======
+from karabo.middlelayer_api.device_client import getHistory
+>>>>>>> added mock-up for AcquiredFromLog child class
 
 class AcquiredData(object):
     """ Acquired Data is an iterable object that queries various
