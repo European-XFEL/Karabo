@@ -31,10 +31,9 @@ class AcquiredData(object):
         self._fifo = deque([], self._max_fifo_size)
 
     def __repr__(self):
-        rep = "{cls}({exp}, {src}, size={size})".format(
+        rep = "{cls}({exp}, size={size})".format(
               cls=type(self).__name__,
               exp=self.experimentId,
-              src=self.pipelineSource,
               size=self._max_fifo_size)
         return rep
 
