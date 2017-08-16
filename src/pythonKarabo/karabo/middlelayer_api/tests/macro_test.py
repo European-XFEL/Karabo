@@ -8,8 +8,8 @@ import weakref
 from karabo.common.states import State
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
-    waitUntilNew, waitUntil, setWait, setNoWait, getDevice, executeNoWait,
-    updateDevice, Queue, connectDevice, lock)
+    waitUntilNew, waitUntil, waitWhile, setWait, setNoWait, getDevice,
+    executeNoWait, updateDevice, Queue, connectDevice, lock)
 from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.exceptions import KaraboError
 from karabo.middlelayer_api.hash import Int32 as Int, Slot
@@ -224,6 +224,16 @@ class Tests(DeviceTest):
             self.assertEqual(d.counter, 11)
             with self.assertRaises(TimeoutError):
                 waitUntil(lambda: d.counter > 40, timeout=0.1)
+
+    @sync_tst
+    def test_waitWhile(self):
+        """test the waitWhile function"""
+        with getDevice("remote") as d:
+            d.counter = 0
+            self.assertEqual(d.counter, 0)
+            executeNoWait(d, "count")
+            waitWhile(lambda: d.counter <= 10)
+            self.assertGreaterEqual(d.counter, 10)
 
     @sync_tst
     def test_waituntilnew(self):
