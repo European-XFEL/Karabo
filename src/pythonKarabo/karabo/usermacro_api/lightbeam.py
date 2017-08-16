@@ -19,4 +19,3 @@ class LightBeamAsSensible(Sensible):
     @synchronize
     def stop(self):
         """Stop acquisition"""
-        yield from self._proxy.stopTicker()
