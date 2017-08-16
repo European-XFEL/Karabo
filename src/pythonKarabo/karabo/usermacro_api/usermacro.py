@@ -133,6 +133,11 @@ class UserMacro(Macro):
         parser.add_argument(
             "arg", nargs="*", type=str, help="Argument")
         kwargs = vars(parser.parse_args())
+
+        if kwargs.get("id"):
+            kwargs["deviceId"] = kwargs["id"]
+            del kwargs["id"]
+
         args = kwargs["arg"]
         if args:
             del kwargs["arg"]
