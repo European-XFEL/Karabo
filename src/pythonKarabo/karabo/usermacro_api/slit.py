@@ -1,4 +1,4 @@
-"""Generalized interfaces to Beckhoff devices
+"""Generalized interfaces to the simulated Slit System
 """
 from karabo.middlelayer_api.eventloop import synchronize
 from .genericproxy import Movable
