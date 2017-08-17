@@ -79,3 +79,7 @@ class AcquiredOnline(AcquiredData):
         x['data'] = data
         x['meta'] = meta
         super().append(x)
+
+
+class AcquiredOffline(AcquiredData):
+    raise NotImplementedError
