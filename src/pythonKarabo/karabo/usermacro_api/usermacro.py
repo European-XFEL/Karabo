@@ -98,6 +98,12 @@ class UserMacro(Macro):
             kwargs["_deviceId_"] = kwargs["deviceId"] = deviceId
         super().__init__(kwargs)
 
+    def _initInfo(self):
+        info = super()._initInfo()
+        # Needed for being seen in the topology and being loggeed
+        info["type"] = "device"
+        return info
+
     @Slot(displayedName="Start", allowedStates={State.PASSIVE})
     def start(self):
         """Start the user macro"""
