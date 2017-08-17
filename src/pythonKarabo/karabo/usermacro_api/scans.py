@@ -9,11 +9,12 @@ import os
 import sys
 
 from karabo.middlelayer import (
-    AccessMode, Bool, Float, Int32, State, String,
-    sleep, UInt32, Unit, VectorHash, waitUntil)
+    AccessMode, Bool, Float, Int32, InputChannel, State, String,
+    sleep, UInt32, Unit, waitUntil)
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
 from karabo.usermacro_api.generalized import *
+from karabo.usermacros import AcquiredOffline, AcquiredOnline
 
 
 def splitTrajectory(pos_list, number_of_steps):
@@ -123,8 +124,7 @@ class AScan(UserMacro):
         defaultValue=0,
         accessMode=AccessMode.READONLY)
 
-    # Should be later an AcquiredData object
-    data = VectorHash()
+    data = AcquiredOnline()
 
     _movable = Movable()
     _sensible = Sensible()
@@ -151,7 +151,7 @@ class AScan(UserMacro):
                 self._sensible = Sensible(*sensible)
             except ValueError:
                 self._sensible = Sensible(sensible)
-            
+
         self._pos_list = (
             literal_eval(pos_list)
             if isinstance(pos_list, str) else pos_list)
@@ -163,6 +163,9 @@ class AScan(UserMacro):
         self.movableId = self._movable.deviceId
         self.sensibleId = self._sensible.deviceId
         self.pos_list = self._pos_list
+
+        self.data = AcquiredOnline(self.experimentId,
+                                   self._update.connectedOutputChannels)
 
     def __repr__(self):
         rep = "{cls}('{mov}', {pos}, '{sens}', {exp}, ".format(
@@ -235,6 +238,13 @@ class AScan(UserMacro):
             yield from self._sensible.stop()
 
         print("-"*linelen)
+
+        return AcquiredOffline(self.experimentId)
+
+    @InputChannel(displayedName="Online data source")
+    @coroutine
+    def _update(self, meta, data):
+        self.data.append(meta, data)
 
 
 class AMesh(AScan):
