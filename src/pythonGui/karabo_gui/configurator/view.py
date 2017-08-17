@@ -30,17 +30,32 @@ class ConfigurationTreeView(QTreeView):
 
         model = ConfigurationTreeModel(parent=self)
         self.setModel(model)
-        model.configuration = conf
+        self._set_model_configuration(conf)
 
         # Add a delegate for rows with slot buttons
         delegate = SlotButtonDelegate(parent=self)
         self.setItemDelegateForColumn(0, delegate)
-        # ... and a delegate for the Value column
+        # ... and a delegate for the editable value column
         delegate = ValueDelegate(parent=self)
-        self.setItemDelegateForColumn(1, delegate)
+        self.setItemDelegateForColumn(2, delegate)
 
         # Don't forget to unregister!
         register_for_broadcasts(self)
+
+    # ------------------------------------
+    # Private methods
+
+    def _set_model_configuration(self, conf):
+        self.model().configuration = conf
+        if conf is None:
+            return
+
+        if conf.type == 'device':
+            # Show second column only for devices
+            self.setColumnHidden(1, False)
+        else:
+            # Hide second column for others
+            self.setColumnHidden(1, True)
 
     # ------------------------------------
     # Event handlers
@@ -54,8 +69,8 @@ class ConfigurationTreeView(QTreeView):
         if sender is KaraboEventSender.AccessLevelChanged:
             model = self.model()
             config = model.configuration
-            model.configuration = None
-            model.configuration = config
+            self._set_model_configuration(None)
+            self._set_model_configuration(config)
 
         return False
 
@@ -73,7 +88,7 @@ class ConfigurationTreeView(QTreeView):
         pass
 
     def clear(self):
-        self.model().configuration = None
+        self._set_model_configuration(None)
 
     def decline_all(self):
         pass
