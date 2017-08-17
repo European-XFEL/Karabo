@@ -8,4 +8,6 @@ from .energymax import EnergyMaxAsSensible
 from .epix import EpixAsSensible
 from .imageprocessor import ImageProcessorAsSensible
 from .lpd import LpdAsSensible
+from .lightbeam import LightBeamAsSensible
+from .slit import SlitSystemAsMovable
 from .spectrometers import SpectrometerAsSensible
