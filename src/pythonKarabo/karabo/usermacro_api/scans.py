@@ -151,7 +151,7 @@ class AScan(UserMacro):
                 self._sensible = Sensible(*sensible)
             except ValueError:
                 self._sensible = Sensible(sensible)
-            
+
         self._pos_list = (
             literal_eval(pos_list)
             if isinstance(pos_list, str) else pos_list)
