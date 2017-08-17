@@ -299,30 +299,41 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_timeChangeMutex);
 
-                if (m_timeIdLastTick >= newId) return;
-
                 id = m_timeId;
-                stamp = util::Epochstamp(m_timeSec, m_timeFrac);
                 period = m_timePeriod;
+                stamp = util::Epochstamp(m_timeSec, m_timeFrac);
 
-                if (!realTick) {
-                    // Calculate how many ids we are away from last external update and adjust stamp
-                    const unsigned long long delta = newId - id; // newId >= id is fulfilled
-                    const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
-                                                            (period % 1000000ull) * 1000000000000ull); // '* 10^12': micro- to attoseconds
+                const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
+                                                        (period % 1000000ull) * 1000000000000ull); // '* 10^12': micro- to attoseconds
+                // Calculate how many ids we are away from last external update and adjust stamp
+                const unsigned long long delta = newId - id; // newId >= id is fulfilled
+                if (delta > 0) {
                     const util::TimeDuration sinceId(periodDuration * delta);
                     stamp += sinceId;
                 }
 
-                // Call hook that indicates next id. In case the internal ticker was too slow, call it for
-                // each otherwise missed id (with same time...). If it was too fast, do not call again.
                 if (m_timeIdLastTick == 0ull) m_timeIdLastTick = newId - 1; // first time tick
-                while (m_timeIdLastTick < newId) {
-                    onTimeUpdate(++m_timeIdLastTick, stamp.getSeconds(), stamp.getFractionalSeconds(), period);
+
+                // Check if internal ticker is too fast ...
+                if (m_timeIdLastTick >= newId) {
+                    if (!realTick) return;
+                    // slow down a bit ... have to re-establish the timer
+                    m_timeTickerTimer.cancel();
+                    // synchronize with the real tick
+                    m_timeIdLastTick = newId;
+                } else {
+                    // Call hook that indicates next id. In case the internal ticker was too slow, call it for
+                    // each otherwise missed id (with same time...).
+                    while (m_timeIdLastTick < newId) {
+                        onTimeUpdate(++m_timeIdLastTick, stamp.getSeconds(), stamp.getFractionalSeconds(), period);
+                    }
                 }
+                // set next "absolute" time I want to be waked up again.
+                // use remote "timing system" time...
+                stamp += periodDuration;
             }
-            // reload timer for next id:
-            m_timeTickerTimer.expires_from_now(boost::posix_time::microseconds(period));
+            // reload timer for the next id:
+            m_timeTickerTimer.expires_at(stamp.getPtime());
             m_timeTickerTimer.async_wait(util::bind_weak(&DeviceServer::timeTick, this,
                                                          boost::asio::placeholders::error, ++newId, false));
         }
