@@ -45,9 +45,11 @@ class ValueDelegate(QStyledItemDelegate):
     def setModelData(self, editor, model, index):
         """Reimplemented function of QStyledItemDelegate.
         """
+        column = index.column()
         # Set the data via the model
         model = index.model()
-        model.setData(index, editor.editable_widget.value, Qt.EditRole)
+        if column == 2:
+            model.setData(index, editor.editable_widget.value, Qt.EditRole)
 
     def sizeHint(self, option, index):
         """Reimplemented function of QStyledItemDelegate.
