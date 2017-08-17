@@ -100,7 +100,7 @@ class UserMacro(Macro):
 
     def _initInfo(self):
         info = super()._initInfo()
-        # Needed for being seen in the topology and being loggeed
+        # Needed for being seen in the topology and being logged
         info["type"] = "device"
         return info
 
