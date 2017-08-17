@@ -6,9 +6,9 @@
 from weakref import WeakValueDictionary
 
 from PyQt4.QtCore import pyqtSlot, QAbstractItemModel, QModelIndex, Qt
-from PyQt4.QtGui import QBrush, QColor
+from PyQt4.QtGui import QBrush, QColor, QFont
 
-from karabo.middlelayer import AccessMode
+from karabo.middlelayer import AccessMode, Assignment
 from karabo.common.api import State
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 import karabo_gui.globals as krb_globals
@@ -418,6 +418,11 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if column == 0:
             if role == Qt.DisplayRole:
                 return box.descriptor.displayedName
+            elif role == Qt.FontRole:
+                if box.descriptor.assignment == Assignment.MANDATORY.value:
+                    font = QFont()
+                    font.setBold(True)
+                    return font
             elif role == Qt.DecorationRole:
                 return get_icon(box.descriptor)
         elif column == 1:
