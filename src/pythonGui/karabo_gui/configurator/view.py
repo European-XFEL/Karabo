@@ -24,6 +24,7 @@ class ConfigurationTreeView(QTreeView):
         self.setDragEnabled(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setEditTriggers(QAbstractItemView.AllEditTriggers)
 
         # For compatibility with ConfigurationPanel
         self.conf = conf
