@@ -6,7 +6,7 @@ from .usermacro_api.agipd import AgipdAsSensible
 from .usermacro_api.beckhoff import BeckhoffMotorAsMovable
 from .usermacro_api.cam import CamAsSensible
 from .usermacro_api.dataobjects import (
-    AcquiredData, AcquiredOnline
+    AcquiredOffline, AcquiredOnline
 )
 from .usermacro_api.energymax import EnergyMaxAsSensible
 from .usermacro_api.epix import EpixAsSensible
