@@ -1,4 +1,5 @@
 from collections import deque
+from karabo.middlelayer import Hash
 
 
 class AcquiredData(object):
@@ -57,3 +58,24 @@ class AcquiredData(object):
 
     def __len__(self):
         return len(self._fifo)
+
+
+class AcquiredOnline(AcquiredData):
+
+    def __init__(self, experimentId=None, channel=None, size=10):
+        super().__init__(experimentId=experimentId, size=size)
+        self.channel = channel
+
+    def __repr__(self):
+        rep = super().__repr__()
+        rep = rep[:-1] + ", channel={})".format(self.channel)
+        return rep
+
+    def append(self, data, meta):
+        """ This function is to be called by the owner within their
+        @InputChannel
+        """
+        x = Hash()
+        x['data'] = data
+        x['meta'] = meta
+        super().append(x)
