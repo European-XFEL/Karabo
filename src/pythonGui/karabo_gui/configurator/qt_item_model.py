@@ -41,6 +41,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         super(ConfigurationTreeModel, self).__init__(parent)
         self._configuration = None
         self._model_index_refs = WeakValueDictionary()
+        self._header_labels = ['Property', 'Current value on device', 'Value']
 
     # ----------------------------
     # Public interface
@@ -152,7 +153,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def columnCount(self, parentIndex=None):
         """Reimplemented function of QAbstractItemModel.
         """
-        return 2  # Name, Value
+        return len(self._header_labels)
 
     def createIndex(self, row, col, obj):
         """Prophylaxis for QModelIndex.internalPointer...
@@ -175,7 +176,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if column == 1 and role == Qt.BackgroundRole:
             state = self.configuration.boxvalue.state.value
             if self.configuration.type != 'device' or isinstance(state, Dummy):
-                return
+                return None
             in_error = State(state) == State.ERROR
             color = ERROR_COLOR_ALPHA if in_error else OK_COLOR
             return QBrush(QColor(*color))
@@ -216,8 +217,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if is_special or (descriptor is not None and not is_node):
             flags |= Qt.ItemIsDragEnabled
 
-        # Below are the value flags. Ignore the first column
-        if index.column() == 0:
+        # Below are the value flags. Ignore the first and second column
+        if index.column() in (0, 1):
             return flags
 
         # Value-specific flags
@@ -235,9 +236,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def headerData(self, section, orientation, role):
         """Reimplemented function of QAbstractItemModel.
         """
-        names = ('Name', 'Value')
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return names[section]
+            return self._header_labels[section]
 
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -408,13 +408,29 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return name
             elif role == Qt.DecorationRole:
                 return get_icon(box.descriptor)
-        elif column == 1:
-            if role == Qt.DisplayRole:
+        elif column in (1, 2) and role == Qt.DisplayRole:
                 value = getattr(box.descriptor, name)
                 return str(value)
 
     def _box_data(self, box, role, column):
         """data() implementation for properties"""
+
+        def _get_value(is_edit_col=False):
+            descriptor = box.descriptor
+            if isinstance(descriptor, (Schema, VectorHash)):
+                return ''
+
+            value = box.value
+            if isinstance(value, (Dummy, bytes, bytearray)):
+                return ''
+            if is_edit_col:
+                is_editable = (descriptor.accessMode in
+                               (AccessMode.INITONLY,
+                                AccessMode.RECONFIGURABLE))
+                if not is_editable:
+                    return ''
+            return str(value)
+
         if column == 0:
             if role == Qt.DisplayRole:
                 return box.descriptor.displayedName
@@ -425,24 +441,15 @@ class ConfigurationTreeModel(QAbstractItemModel):
                     return font
             elif role == Qt.DecorationRole:
                 return get_icon(box.descriptor)
-        elif column == 1:
-            if role == Qt.DisplayRole:
-                if isinstance(box.descriptor, (Schema, VectorHash)):
-                    return ''
-
-                value = box.value
-                if isinstance(value, (Dummy, bytes, bytearray)):
-                    return ''
-                return str(value)
+        elif column == 1 and role == Qt.DisplayRole:
+            return _get_value()
+        elif column == 2 and role == Qt.DisplayRole:
+            return _get_value(is_edit_col=True)
 
     def _vector_col_data(self, cell_info, role, column):
         """data() implementation for VectorHash columns"""
-        if column == 0:
-            if role == Qt.DisplayRole:
-                return cell_info.name
-            elif role == Qt.DecorationRole:
-                return get_icon(None)
-        elif column == 1 and role == Qt.DisplayRole:
+
+        def _get_value(is_edit_col=False):
             parent_row = cell_info.parent()
             if parent_row is None:
                 return None
@@ -450,8 +457,25 @@ class ConfigurationTreeModel(QAbstractItemModel):
             if parent_box is None:
                 return None
             descriptor = parent_box.descriptor
+            if is_edit_col:
+                is_editable = (descriptor.accessMode in
+                               (AccessMode.INITONLY,
+                                AccessMode.RECONFIGURABLE))
+                if not is_editable:
+                    return ''
+
             row = parent_box.value[descriptor.rowsInfo.index(parent_row)]
             return str(row[cell_info.name])
+
+        if column == 0:
+            if role == Qt.DisplayRole:
+                return cell_info.name
+            elif role == Qt.DecorationRole:
+                return get_icon(None)
+        elif column == 1 and role == Qt.DisplayRole:
+            return _get_value()
+        elif column == 2 and role == Qt.DisplayRole:
+            return _get_value(is_edit_col=True)
 
     def _vector_row_data(self, row_info, role, column, row):
         """data() implementation for VectorHash rows"""
@@ -460,7 +484,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return str(row + 1)
             elif role == Qt.DecorationRole:
                 return get_icon(None)
-        elif column == 1 and role == Qt.DisplayRole:
+        elif column in (1, 2) and role == Qt.DisplayRole:
             return ''
 
     def _attribute_flags(self, attr_info):
