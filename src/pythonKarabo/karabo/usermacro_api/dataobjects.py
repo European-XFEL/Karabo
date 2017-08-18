@@ -63,7 +63,7 @@ class AcquiredData(object):
 class AcquiredOnline(AcquiredData):
 
     def __init__(self, experimentId=None, channel=None, size=10):
-        super().__init__(experimentId=experimentId, size=size)
+        super().__init__(experimentId, size)
         self.channel = channel
 
     def __repr__(self):
@@ -71,15 +71,25 @@ class AcquiredOnline(AcquiredData):
         rep = rep[:-1] + ", channel={})".format(self.channel)
         return rep
 
+    def flatten(self, h):
+        """ Given a hash, it will unify it such that all hashes within
+            it are at the same level.
+        """
+        out = Hash()
+        for k in h.getKeys():
+            if isinstance(h[k], Hash):
+                out.update(self.flatten(h[k]))
+            else:
+                out[k] = h[k]
+        return out
+
     def append(self, data, meta):
         """ This function is to be called by the owner within their
         @InputChannel
         """
-        x = Hash()
-        x['data'] = data
-        x['meta'] = meta
+        x = Hash([('data', data), ('meta', meta)])
+        x = self.flatten(x)
         super().append(x)
 
 
 class AcquiredOffline(AcquiredData):
-    raise NotImplementedError
