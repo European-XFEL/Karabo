@@ -9,6 +9,8 @@ import time
 
 from karabo.middlelayer_api.device_client import getHistory
 
+from .utils import getConfigurationFromPast
+
 
 def parseDevicesFromGenericproxyId(gid):
     """
@@ -145,6 +147,10 @@ class AcquiredFromLog(AcquiredData):
         his = getHistory("{}.sensibleId".format(self.experimentId), begin, end)
         measid = his[0][3]
         measurables = parseDevicesFromGenericproxyId(measid)
+
+        for m in movables:
+            h,s = getConfigurationFromPast(m, begin)
+            properties = h.getKeys()
 
 
 #        pos_history = []
