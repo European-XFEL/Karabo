@@ -188,10 +188,8 @@ class PythonDevice(NoFsm):
                         .commit(),
 
             STRING_ELEMENT(expected).key("timeServerId")
-                    .displayedName("Last command")
-                    .description("The last slot called.")
-                    .init()
-                    .expertAccess()
+                    .displayedName("TimeServer ID")
+                    .description("The instance id uniquely identifies a TimeServer instance in the distributed system")
                     .assignmentOptional().defaultValue("")
                     .commit(),
 
