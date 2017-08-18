@@ -201,16 +201,16 @@ class AScan(UserMacro):
 
             yield from self._movable.moveto(pos)
 
-            unexpected = (State.ERROR, State.OFF, State.UNKNOWN)
+            expected = (State.MOVING, State.ON)
 
             yield from waitUntil(
                 lambda: self._movable.state != State.MOVING
                 and np.linalg.norm(
                     np.subtract(self._movable.position,
                                 pos)) < self.position_epsilon.magnitude**2
-                or self._movable.state in unexpected)
+                or self._movable.state not in expected)
 
-            if self._movable.state in unexpected:
+            if self._movable.state != State.ON:
                 type(self)._error("Unexpected state during scan: {}"
                                   .format(self._movable.state))
 
@@ -407,7 +407,7 @@ class AMove(UserMacro):
             print("Motors at {}".format(self._movable.position))
             print("-"*linelen)
 
-        unexpected = (State.ERROR, State.OFF, State.UNKNOWN)
+        expected = (State.MOVING, State.ON)
 
         __print_motor_position()
         yield from self._movable.prepare()
@@ -418,9 +418,9 @@ class AMove(UserMacro):
                 np.subtract(self._movable.position,
                             self._position))
             < self.position_epsilon.magnitude**2
-            or self._movable.state in unexpected)
+            or self._movable.state not in expected)
 
-        if self._movable.state in unexpected:
+        if self._movable.state != State.ON:
             type(self)._error("Unexpected state after move: {}"
                               .format(self._movable.state))
         __print_motor_position()
