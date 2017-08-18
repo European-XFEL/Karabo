@@ -34,7 +34,7 @@ def parseDevicesFromGenericproxyId(gid):
 
     return dids
 
-class AcquiredData():
+class AcquiredData(object):
     """ Acquired Data is an iterable object that queries various
         data sources.
         It has a buffer of a specified `_max_fifo_size` size.
@@ -133,13 +133,9 @@ class AcquiredFromLog(AcquiredData):
         begin = "2010-01-01T00:00:00"
         end = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
 
-        # retrieve parameters from history
-
+        # get IDs of devices used by Scan:
         # At the moment the only way to get bound devices IDs from Ascan is to
         # parse movableId and sensibleId
-
-        print(begin, end)
-
         his = getHistory("{}.movableId".format(self.experimentId), begin, end)
         movid = his[0][3]
         movables = parseDevicesFromGenericproxyId(movid)
@@ -148,6 +144,7 @@ class AcquiredFromLog(AcquiredData):
         measid = his[0][3]
         measurables = parseDevicesFromGenericproxyId(measid)
 
+        # get properties for each device
         for m in movables:
             h,s = getConfigurationFromPast(m, begin)
             properties = h.getKeys()
