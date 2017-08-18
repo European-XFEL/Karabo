@@ -69,14 +69,12 @@ class UserMacro(Macro):
         displayedName="PositionEpsilon",
         defaultValue=1e-1,
         unitSymbol=Unit.METER,
-        metricPrefixSymbol=MetricPrefix.MILLI,
-        accessMode=AccessMode.INITONLY)
+        metricPrefixSymbol=MetricPrefix.MILLI)
 
     time_epsilon = Float(
         displayedName="TimeEpsilon",
         defaultValue=1e-1,
-        unitSymbol=Unit.SECOND,
-        accessMode=AccessMode.INITONLY)
+        unitSymbol=Unit.SECOND)
 
     cancelled = Bool(
         displayedName="Cancelled",
