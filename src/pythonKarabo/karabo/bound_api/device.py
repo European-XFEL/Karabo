@@ -177,6 +177,7 @@ class PythonDevice(NoFsm):
                         .assignmentOptional().defaultValue(True)
                         .commit(),
 
+            # This parameter is obsolete and should be removed.  Replaced by "timeServerId"
             BOOL_ELEMENT(expected).key("useTimeserver")
                         .displayedName("Use Timeserver")
                         .description("Decides whether to use time and train ID"
@@ -185,6 +186,12 @@ class PythonDevice(NoFsm):
                         .expertAccess()
                         .assignmentOptional().defaultValue(False)
                         .commit(),
+
+            STRING_ELEMENT(expected).key("timeServerId")
+                    .displayedName("TimeServer ID")
+                    .description("The instance id uniquely identifies a TimeServer instance in the distributed system")
+                    .assignmentOptional().defaultValue("")
+                    .commit(),
 
             INT32_ELEMENT(expected).key("progress")
                     .displayedName("Progress")
@@ -325,6 +332,7 @@ class PythonDevice(NoFsm):
         self._timeSec = 0
         self._timeFrac = 0
         self._timePeriod = 0
+        self.timeServerId = self.parameters["timeServerId"]
 
         # Setup the validation classes
         self.validatorIntern   = Validator()
@@ -423,9 +431,9 @@ class PythonDevice(NoFsm):
 
         self.set("pid", pid)
 
-        if self.get("useTimeserver"):
-            self.log.DEBUG("Connecting to time server")
-            self._ss.connect("Karabo_TimeServer", "signalTimeTick",
+        if self.timeServerId:
+            self.log.DEBUG("Connecting to time server : \"{}\"".format(self.timeServerId))
+            self._ss.connect(self.timeServerId, "signalTimeTick",
                              "", "slotTimeTick")
 
 
@@ -1351,10 +1359,15 @@ class PythonDevice(NoFsm):
                             "requestedUpdate", updates))
 
     def slotTimeTick(self, id, sec, frac, period):
+        epochNow = Epochstamp()
         with self._timeLock:
             self._timeId = id
             self._timeSec = sec
             self._timeFrac = frac
+            # Fallback to the local timing ...
+            if sec == 0:
+                self._timeSec  = epochNow.getSeconds()
+                self._timeFrac = epochNow.getFractionalSeconds()
             self._timePeriod = period
         self.onTimeUpdate(id, sec, frac, period)
 
@@ -1367,7 +1380,7 @@ class PythonDevice(NoFsm):
         """
         Returns the actual timestamp. The Trainstamp part of Timestamp is
         extrapolated from the last values received via slotTimeTick (or zero
-        if no time ticks received, i.e. useTimeserver is false).
+        if no time ticks received, i.e. timeServerId is empty).
 
         :return: the actual timestamp
         """
@@ -1377,7 +1390,7 @@ class PythonDevice(NoFsm):
             if self._timePeriod > 0:
                 epochLastReceived = Epochstamp(self._timeSec, self._timeFrac)
                 duration = epochNow.elapsed(epochLastReceived)
-                nPeriods = int((duration.getTotalSeconds() * 1000000 + duration.getFractions() / 1000) / self._timePeriod)
+                nPeriods = int((duration.getTotalSeconds() * 1000000 + duration.getFractions() // 1000) // self._timePeriod)
                 id = self._timeId + nPeriods
         return Timestamp(epochNow, Trainstamp(int(id)))
 
