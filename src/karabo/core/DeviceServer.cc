@@ -279,11 +279,17 @@ namespace karabo {
 
 
         void DeviceServer::slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            karabo::util::Epochstamp epochNow;
             {
                 boost::mutex::scoped_lock lock(m_timeChangeMutex);
                 m_timeId = id;
-                m_timeSec = sec;
+                m_timeSec  = sec;
                 m_timeFrac = frac;
+                // Fallback to the local timing ...
+                if (sec == 0) {
+                    m_timeSec  = epochNow.getSeconds();
+                    m_timeFrac = epochNow.getFractionalSeconds();
+                }
                 m_timePeriod = period;
             }
             timeTick(boost::system::error_code(), id, true);
