@@ -17,3 +17,4 @@ from .usermacro_api.scans import (
 )
 from .usermacro_api.spectrometers import SpectrometerAsSensible
 from .usermacro_api.usermacro import UserMacro
+from .usermacro_api.utils import getConfigurationFromPast
