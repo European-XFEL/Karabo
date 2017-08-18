@@ -9,6 +9,29 @@ import time
 
 from karabo.middlelayer_api.device_client import getHistory
 
+
+def parseDevicesFromGenericproxyId(gid):
+    """
+    :param gid: genericProxyId 
+    e.g.: Movable(BeckhoffMotorAsMovable('M1'), BeckhoffMotorAsMovable('M2')) 
+    :return:
+    list of bound devices IDs
+    e.g.: ['M1', 'M2']
+    """
+    dids = []
+    if "('" in gid:
+        while True:
+            d = gid[gid.find("('")+2: gid.find("')")]
+            if d:
+                dids.append(d)
+            else:
+                break
+            gid = gid[gid.find("')") + 2:]
+    else: # in case of single proxy gid IS deviceId
+        dids = [gid]
+
+    return dids
+
 class AcquiredData():
     """ Acquired Data is an iterable object that queries various
         data sources.
@@ -86,44 +109,52 @@ class AcquiredFromLog(AcquiredData):
         # steps has the following format:
         # [(seconds_from_1970, train_id, is_last_of_set, value) ]
 
-        print(steps) #TODO remove this line
 
+        # TODO this should be the proper way assuming correct timestamping
         # begin of the scan = timestamp of first step
         begin = time.strftime('%Y-%m-%dT%H:%M:%S',time.localtime(steps[0][0]))
+
         # end of the scan = timestamp of last step
         end = time.strftime('%Y-%m-%dT%H:%M:%S',
                             time.localtime(steps[len(steps)-1][0]))
 
+        # TODO this is to workaround tha fact that
+        # for some reason stepNum values have all the same timestamp in logged
+        # data. I assume it to be the beginning and assume that the scan is
+        # over
+        if(begin >= end):
+            end = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
+
+
+        # TODO this just get everything about the scan since timestamps
+        # are apparently random ...
+        begin = "2010-01-01T00:00:00"
+        end = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
 
         # retrieve parameters from history
 
         # At the moment the only way to get bound devices IDs from Ascan is to
         # parse movableId and sensibleId
 
-        #TODO this works only when scan is instantiaded: get movableId from archive_schema.txt
-        # wich is calling DataLogReader::slotGetConfigurationFromPast
-        # by using usermacro.utils.DeviceHelper or something like this
-        scan = getDevice(self.experimentId)
-        s = scan.movableId
+        print(begin, end)
+
+        his = getHistory("{}.movableId".format(self.experimentId), begin, end)
+        movid = his[0][3]
+        movables = parseDevicesFromGenericproxyId(movid)
+
+        his = getHistory("{}.sensibleId".format(self.experimentId), begin, end)
+        measid = his[0][3]
+        measurables = parseDevicesFromGenericproxyId(measid)
 
 
-        motids = []
-        while True:
-            d = s[s.find("('") + 2:s.find("')")]
-            if d:
-                motids.append(d)
-            else:
-                break
-            s = s[s.find("')") + 2:]
-
-        pos_history = []
-        for mid in motids:
-            dev = getDevice(mid)
-            state_history = getHistory(dev.state, begin, end )
-            pos_history = getHistory(dev.encoderPosition, begin, end )
-            print(state_history)
-            print(pos_history)
-            print("=========")
+#        pos_history = []
+#        for mid in motids:
+#            dev = getDevice(mid)
+#            state_history = getHistory(dev.state, begin, end )
+#            pos_history = getHistory(dev.encoderPosition, begin, end )
+#            print(state_history)
+#            print(pos_history)
+#            print("=========")
 
 
         # keep only values whith same train_id of scan steps
