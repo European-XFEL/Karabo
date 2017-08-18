@@ -9,7 +9,6 @@ from karabo.middlelayer_api.eventloop import synchronize
 def _getConfigurationFromPast(deviceId, timepoint):
     instance = get_instance()
     did = "DataLogger-{}".format(deviceId)
-    print(did)
     if did not in instance.loggerMap:
         instance.loggerMap = yield from instance.call(
             "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
@@ -17,7 +16,6 @@ def _getConfigurationFromPast(deviceId, timepoint):
             raise KaraboError('no logger for device "{}"'.
                               format(deviceId))
     reader = "DataLogReader0-{}".format(instance.loggerMap[did])
-    print(reader)
 
     h, s = yield from get_instance().call(
         reader, "slotGetConfigurationFromPast", deviceId, timepoint)
