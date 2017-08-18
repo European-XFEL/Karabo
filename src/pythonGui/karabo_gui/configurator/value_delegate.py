@@ -66,6 +66,7 @@ class EditWidgetWrapper(QWidget):
     """
     def __init__(self, obj, index, parent=None):
         super(EditWidgetWrapper, self).__init__(parent)
+        self.setAutoFillBackground(True)
 
         if isinstance(obj, EditableAttributeInfo):
             name = obj.names[index.row()]
