@@ -1,6 +1,7 @@
 from collections import deque
 import unittest
 from karabo.usermacros import AcquiredData, AcquiredOnline
+from karabo.middlelayer import Hash
 
 
 class TestAD(unittest.TestCase):
@@ -51,6 +52,15 @@ class TestAcquiredOnline(unittest.TestCase):
         self.assertEqual(str(ao[0]), "<data{}: 10, meta{}: 10>")
         next(ao)
         self.assertEqual(len(ao), 0)
+
+    def test_flattening(self):
+        """Test AcquiredOnline Hash flatenning"""
+        ao = AcquiredOnline()
+        expOut = Hash([('x', -1), ('y', -2), ('a', 1), ('b', 2), ('c', 3)])
+        inputHash = Hash([('x', -1),
+                          ('y', -2),
+                          ('z', Hash([('a', 1), ('b', 2), ('c', 3)]))])
+        self.assertEqual(str(expOut), str(ao.flatten(inputHash)))
 
 
 if __name__ == "__main__":
