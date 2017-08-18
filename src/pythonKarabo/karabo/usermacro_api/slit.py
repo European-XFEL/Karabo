@@ -30,23 +30,21 @@ class SlitSystemAsMovable(Movable):
         if abs(self._proxy.targetPositionX
                - self._proxy.actualPositionX) > self.fepsilon:
             yield from self._proxy.moveX()
-            yield from sleep(0.5)
-            yield from waitUntil(lambda: self._proxy.state != State.MOVING)
 
         if abs(self._proxy.targetPositionY
                - self._proxy.actualPositionY) > self.fepsilon:
-            yield from self._proxy.moveY()
             yield from sleep(0.5)
             yield from waitUntil(lambda: self._proxy.state != State.MOVING)
+            yield from self._proxy.moveY()
 
         if abs(self._proxy.targetGapX
                - self._proxy.actualGapX) > self.fepsilon:
-            yield from self._proxy.moveGapX()
             yield from sleep(0.5)
             yield from waitUntil(lambda: self._proxy.state != State.MOVING)
+            yield from self._proxy.moveGapX()
 
         if abs(self._proxy.targetGapY
                - self._proxy.actualGapY) > self.fepsilon:
-            yield from self._proxy.moveGapY()
             yield from sleep(0.5)
             yield from waitUntil(lambda: self._proxy.state != State.MOVING)
+            yield from self._proxy.moveGapY()
