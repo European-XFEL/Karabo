@@ -1359,10 +1359,15 @@ class PythonDevice(NoFsm):
                             "requestedUpdate", updates))
 
     def slotTimeTick(self, id, sec, frac, period):
+        epochNow = Epochstamp()
         with self._timeLock:
             self._timeId = id
             self._timeSec = sec
             self._timeFrac = frac
+            # Fallback to the local timing ...
+            if sec == 0:
+                self._timeSec  = epochNow.getSeconds()
+                self._timeFrac = epochNow.getFractionalSeconds()
             self._timePeriod = period
         self.onTimeUpdate(id, sec, frac, period)
 
