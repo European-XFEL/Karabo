@@ -1,19 +1,15 @@
 from collections import deque
 import time
 
-<<<<<<< c6c398538f8fcd47a7a7ae67872dea8907163c45
 # These are currently under another import, as they will be unecessary
 # and removed once the actual query functions will be implemented
-from karabo.middlelayer import (background, Hash, Int8, MetricPrefix, Unit)
+from karabo.middlelayer import (background, Hash, Int8, MetricPrefix, Unit,
+                                getDevice)
 import time
 
 from karabo.middlelayer_api.device_client import getHistory
 
-=======
-from karabo.middlelayer_api.device_client import getHistory
->>>>>>> added mock-up for AcquiredFromLog child class
-
-class AcquiredData(object):
+class AcquiredData():
     """ Acquired Data is an iterable object that queries various
         data sources.
         It has a buffer of a specified `_max_fifo_size` size.
@@ -85,21 +81,50 @@ class AcquiredFromLog(AcquiredData):
         # retrieve steps from scan history assuming there have been only one
         # scan with given deviceId from the big-bang up to now
         steps = getHistory("{}.stepNum".format(self.experimentId),
-                           "01-01-1970T00:00:00",
+                           "2010-01-01T00:00:00",
                            time.strftime('%Y-%m-%dT%H:%M:%S'))
         # steps has the following format:
         # [(seconds_from_1970, train_id, is_last_of_set, value) ]
+
+        print(steps) #TODO remove this line
 
         # begin of the scan = timestamp of first step
         begin = time.strftime('%Y-%m-%dT%H:%M:%S',time.localtime(steps[0][0]))
         # end of the scan = timestamp of last step
         end = time.strftime('%Y-%m-%dT%H:%M:%S',
-                            time.localtime(steps[0][len(steps)]))
+                            time.localtime(steps[len(steps)-1][0]))
 
-        print(steps) #TODO remove thios line
 
         # retrieve parameters from history
-        # TODO
+
+        # At the moment the only way to get bound devices IDs from Ascan is to
+        # parse movableId and sensibleId
+
+        #TODO this works only when scan is instantiaded: get movableId from archive_schema.txt
+        # wich is calling DataLogReader::slotGetConfigurationFromPast
+        # by using usermacro.utils.DeviceHelper or something like this
+        scan = getDevice(self.experimentId)
+        s = scan.movableId
+
+
+        motids = []
+        while True:
+            d = s[s.find("('") + 2:s.find("')")]
+            if d:
+                motids.append(d)
+            else:
+                break
+            s = s[s.find("')") + 2:]
+
+        pos_history = []
+        for mid in motids:
+            dev = getDevice(mid)
+            state_history = getHistory(dev.state, begin, end )
+            pos_history = getHistory(dev.encoderPosition, begin, end )
+            print(state_history)
+            print(pos_history)
+            print("=========")
+
 
         # keep only values whith same train_id of scan steps
         # TODO
