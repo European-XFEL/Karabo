@@ -24,8 +24,8 @@ class EnumAttributeEditor(AttributeWidget):
     # Subclasses should define this
     enumClass =_DummyEnum
 
-    def __init__(self, box, attributeName, parent=None):
-        super(EnumAttributeEditor, self).__init__(box, attributeName)
+    def __init__(self, box, parent=None):
+        super(EnumAttributeEditor, self).__init__(box, parent)
 
         instMsg = "Don't instantiate EnumAttributeEditor directly!"
         assert self.enumClass is not _DummyEnum, instMsg
