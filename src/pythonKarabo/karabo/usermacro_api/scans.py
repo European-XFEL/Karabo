@@ -281,12 +281,12 @@ class DScan(AScan):
                  steps=True, number_of_steps=0, **kwargs):
         super().__init__(movable, pos_list, sensible, exposureTime,
                          steps, number_of_steps, **kwargs)
+        # Only used for representation
+        self._raw_pos_list = pos_list
 
         # Convert position from relative to absolute
         self._pos_list = np.array(
             self._movable.position) + np.array(self._pos_list)
-        # Only used for representation
-        self._raw_pos_list = self._pos_list
 
     def __repr__(self):
         """ np.arrays are pretty printed, and have new lines in them,
