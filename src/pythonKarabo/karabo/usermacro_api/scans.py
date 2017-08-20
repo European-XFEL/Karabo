@@ -9,10 +9,11 @@ import os
 import sys
 
 from karabo.middlelayer import (
-    AccessMode, Bool, Float, Int32, State, String,
+    AccessMode, Bool, Float, Int32, State, String, VectorString,
     sleep, UInt32, Unit, VectorHash, waitUntil)
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
+from karabo.usermacro_api.util import flatten
 from karabo.usermacro_api.generalized import *
 
 
@@ -98,6 +99,14 @@ class AScan(UserMacro):
         displayedName="SensibleId",
         accessMode=AccessMode.READONLY)
 
+    boundMovables = VectorString(
+        displayedName="BoundMovables",
+        accessMode=AccessMode.READONLY)
+
+    boundSensibles = VectorString(
+        displayedName="BoundSensibles",
+        accessMode=AccessMode.READONLY)
+
     pos_list = String(
         displayedName="Trajectory",
         accessMode=AccessMode.READONLY)
@@ -161,7 +170,9 @@ class AScan(UserMacro):
         if self.experimentId == "":
             self.experimentId = self.deviceId
         self.movableId = self._movable.deviceId
+        self.boundMovables = flatten(self._movable.getBoundDevices())
         self.sensibleId = self._sensible.deviceId
+        self.boundSensibles = flatten(self._sensible.getBoundDevices())
         self.pos_list = self._pos_list
 
     def __repr__(self):
@@ -307,6 +318,10 @@ class TScan(UserMacro):
         displayedName="SensibleId",
         accessMode=AccessMode.READONLY)
 
+    boundSensibles = VectorString(
+        displayedName="BoundSensibles",
+        accessMode=AccessMode.READONLY)
+
     exposureTime = Float(
         displayedName="Exposure time",
         defaultValue=0.1,
@@ -336,6 +351,7 @@ class TScan(UserMacro):
         self.exposureTime = float(exposureTime)
         self.duration = float(duration)
         self.sensibleId = self._sensible.deviceId
+        self.boundSensibles = flatten(self._sensible.getBoundDevices())
 
     @coroutine
     def execute(self):
@@ -379,7 +395,14 @@ class DMesh(AMesh):
 
 class AMove(UserMacro):
     """Absolute move"""
-    movableId = String(displayedName="Movable")
+    movableId = String(
+        displayedName="Movable",
+        accessMode=AccessMode.READONLY)
+
+    boundMovables = VectorString(
+        displayedName="BoundMovables",
+        accessMode=AccessMode.READONLY)
+
     _movable = Movable()
     _position = []
 
@@ -396,6 +419,8 @@ class AMove(UserMacro):
                 self._movable = Movable(movable)
 
         self.movableId = self._movable.deviceId
+        self.boundMovables = flatten(self._movable.getBoundDevices())
+
         self._position = (
             literal_eval(position)
             if isinstance(position, str)
