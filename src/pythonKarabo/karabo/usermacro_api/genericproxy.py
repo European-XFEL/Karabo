@@ -108,6 +108,11 @@ class GenericProxy(object):
 
         return ret
 
+    def getBoundDevices(self):
+        return (self._proxy.deviceId if not self._generic_proxies
+                else [gproxy.getBoundDevices()
+                      for gproxy in self._generic_proxies])
+
     @synchronize
     def lockon(self, locker):
         """Lock device"""
