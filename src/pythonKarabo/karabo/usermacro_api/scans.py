@@ -191,6 +191,7 @@ class AScan(UserMacro):
         if not self.steps:
             print("Continuous Scan along trajectory {}".format(self._pos_list))
 
+        step_num = 0
         # Iterate over position
         for pos, pause in splitTrajectory(
                 self._pos_list,
@@ -215,7 +216,9 @@ class AScan(UserMacro):
                                   .format(self._movable.state))
 
             if pause:
-                if self.steps or self.stepNum == 0:
+                if self.steps or step_num == 0:
+                    self.stepNum = step_num
+                    self.update()
                     yield from self._sensible.acquire()
 
                 if self.steps:
@@ -228,7 +231,7 @@ class AScan(UserMacro):
                     yield from sleep(self.exposureTime + self.time_epsilon)
                     yield from self._sensible.stop()
 
-                self.stepNum += 1
+                step_num += 1
 
         # Stop acquisition here for continuous scans
         if self._sensible.state == State.ACQUIRING:
