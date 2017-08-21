@@ -1,7 +1,8 @@
 from collections import deque
 import unittest
-from karabo.usermacros import AcquiredData, AcquiredOnline
 from karabo.middlelayer import Hash
+from karabo.usermacros import AcquiredOffline, AcquiredOnline
+from karabo.usermacro_api.dataobjects import AcquiredData
 
 
 class TestAD(unittest.TestCase):
@@ -60,6 +61,7 @@ class TestAcquiredOnline(unittest.TestCase):
         inputHash = Hash([('x', -1),
                           ('y', -2),
                           ('z', Hash([('a', 1), ('b', 2), ('c', 3)]))])
+        # Equality testing isn't implemented in k-hashes, so check the repr
         self.assertEqual(str(expOut), str(ao.flatten(inputHash)))
 
 
