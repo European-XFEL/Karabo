@@ -786,7 +786,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::AsyncReply::replyError(const std::string& message) const {
+        void SignalSlotable::AsyncReply::error(const std::string& message) const {
             // See SignalSlotable::registerAsyncReply() about empty id
             if (m_replyId.empty()) return;
             util::Hash::Pointer header;
@@ -794,7 +794,7 @@ namespace karabo {
                 header = std::get<0>(m_signalSlotable->extractAsyncReplyInfo(m_replyId));
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR_C("SignalSlotable::AsyncReply") << m_signalSlotable->getInstanceId()
-                        << "replyError failed to extract header when replying '" << message << "' :" << e.what();
+                        << " AsyncReply::replyError failed to extract header when replying '" << message << "' :" << e.what();
             }
             if (header) {
                 m_signalSlotable->replyException(*header, message);

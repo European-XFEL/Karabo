@@ -628,7 +628,7 @@ void SignalSlotable_Test::testAsyncReply() {
             m_timer.expires_from_now(boost::posix_time::milliseconds(100));
             m_timer.async_wait([reply, this](const boost::system::error_code & ec) {
                 if (ec) return;
-                reply.replyError("Something nasty to be expected!");
+                reply.error("Something nasty to be expected!");
                 this->m_asynReplyHandlerCalled_error = true;
             });
             m_slotCallEnded_error = true;
@@ -684,7 +684,7 @@ void SignalSlotable_Test::testAsyncReply() {
     CPPUNIT_ASSERT(!errorHappened);
 
     //
-    // Now check AsyncReply::replyError
+    // Now check AsyncReply::error
     //
     bool receivedSuccess = false;
     auto successHandler2 = [&receivedSuccess] () {
