@@ -20,6 +20,7 @@ def flatten(lis):
             else:
                 yield e
 
+
 @synchronize
 def _getConfigurationFromPast(deviceId, timepoint):
     instance = get_instance()
