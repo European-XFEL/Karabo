@@ -4,6 +4,8 @@ from karabo.middlelayer import Hash
 from karabo.usermacros import AcquiredOffline, AcquiredOnline
 from karabo.usermacro_api.dataobjects import AcquiredData
 
+class ShittyObjectWithShittyName(object):
+    pass
 
 class TestAD(unittest.TestCase):
     def test_initialization(self):
@@ -47,22 +49,52 @@ class TestAcquiredOnline(unittest.TestCase):
         expRep = "AcquiredOnline(10, size=10, channel=source:channel)"
         self.assertEqual(ao.__repr__(), expRep)
 
-        ao.append(10, 10)
+    def test_append(self):
+        ao = AcquiredOnline()
+        data = Hash([('header', Hash([('trainId', 65535)]))])
+        timestamp = ShittyObjectWithShittyName()
+        timestamp.timestamp = 1
+        meta = ShittyObjectWithShittyName()
+        meta.timestamp = timestamp
+        expected_hash = Hash([('timestamp', 1),
+                             ('trainId', 65535),
+                             ('data', data),
+                             ('meta', meta)])
+        ao.append(data, meta)
 
         self.assertEqual(len(ao), 1)
-        self.assertEqual(str(ao[0]), "<data{}: 10, meta{}: 10>")
+        # k-hashes don't have equality tests, test again their representation
+        self.assertEqual(str(ao[0]), str(expected_hash))
         next(ao)
         self.assertEqual(len(ao), 0)
 
-    def test_flattening(self):
-        """Test AcquiredOnline Hash flatenning"""
-        ao = AcquiredOnline()
-        expOut = Hash([('x', -1), ('y', -2), ('a', 1), ('b', 2), ('c', 3)])
-        inputHash = Hash([('x', -1),
-                          ('y', -2),
-                          ('z', Hash([('a', 1), ('b', 2), ('c', 3)]))])
-        # Equality testing isn't implemented in k-hashes, so check the repr
-        self.assertEqual(str(expOut), str(ao.flatten(inputHash)))
+
+
+class TestAcquiredOffline(unittest.TestCase):
+    def test_initalization(self):
+        """Test AcquiredOffline object initialization"""
+        ao = AcquiredOffline()
+        expRep = "AcquiredOffline(None, size=10)"
+        self.assertEqual(ao.__repr__(), expRep)
+
+    def test_append(self):
+        ao = AcquiredOffline()
+        data = Hash([('header', Hash([('trainId', 65535)]))])
+        timestamp = ShittyObjectWithShittyName()
+        timestamp.timestamp = 1
+        meta = ShittyObjectWithShittyName()
+        meta.timestamp = timestamp
+        expected_hash = Hash([('timestamp', 1),
+                             ('trainId', 65535),
+                             ('data', data),
+                             ('meta', meta)])
+        ao.append(data, meta)
+
+        self.assertEqual(len(ao), 1)
+        # k-hashes don't have equality tests, test again their representation
+        self.assertEqual(str(ao[0]), str(expected_hash))
+        next(ao)
+        self.assertEqual(len(ao), 0)
 
 
 if __name__ == "__main__":
