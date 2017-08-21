@@ -14,17 +14,28 @@ class RunConfiguration(object):
         print("int called")
 
     def addDataSource(self, deviceName, groupName):
-
+        """
+        Adds data source to 'UserSources' table of given
+        configuration group
+        """
         msg = '{} is not online!'.format(groupName)
         assert groupName in getDevices(), msg
         self.configurationTable = connectDevice(groupName)
         msg = '{} is not online!'.format(deviceName)
         assert deviceName in getDevices(), msg
-        self.configurationTable.group.user\
-            = append(self.configurationTable.group.user.value,
-                     array([(deviceName, 'Control', 'record-all',
-                             False)],
-                           dtype=self.configurationTable.group.user.value.dtype))
+        if self.configurationTable.group.user:
+            self.configurationTable.group.user\
+                = append(self.configurationTable.group.user.value,
+                         array([(deviceName, 'Control', 'record-all',
+                                 False)],
+                               dtype=self.configurationTable.group.user.value.dtype
+                               ))
+        else:
+            self.configurationTable.group.user\
+                = array([(deviceName, 'Control', 'record-all', False)],
+                        dtype=[('source', 'O'), ('type', 'O'),
+                               ('behavior', 'O'), ('monitored', '?')])
+
 
     def configure(self, configuratorName):
 
@@ -52,5 +63,3 @@ class RunConfiguration(object):
         runController= connectDevice(runControllerName)
         runController.tune()
         runController.ignore()
-
-
