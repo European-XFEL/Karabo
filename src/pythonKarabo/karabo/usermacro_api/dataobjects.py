@@ -4,7 +4,7 @@ import heapq
 
 # These are currently under another import, as they will be unecessary
 # and removed once the actual query functions will be implemented
-from karabo.middlelayer import (Hash, Int8, MetricPrefix, Unit, getHistory)
+from karabo.middlelayer import (Hash, getHistory)
 
 from .util import getConfigurationFromPast
 
@@ -102,10 +102,11 @@ class AcquiredOnline(AcquiredData):
 class AcquiredOffline(AcquiredData):
     pass
 
+
 class AcquiredFromLog(AcquiredData):
     """
     Child class to retrieve 'slow' data from datalogger history
-    
+
     self.movableIds: list of bound devices IDs used in the scan as movables
     self.measurableIds: list of bound devices IDs used in the scan
       as measurables
@@ -156,7 +157,6 @@ class AcquiredFromLog(AcquiredData):
             for p in properties:
                 self.bound_devices_properties[m].append(p)
 
-
     def queryData(self, *args):
         """
         :param: a list of property strings with the form 'deviceId.property'
@@ -179,7 +179,7 @@ class AcquiredFromLog(AcquiredData):
 
         for val in sorted_histories:
 
-            #TODO review hash data format according to DAQ specs
+            # TODO review hash data format according to DAQ specs
 
             # pack tuple into hash
             h = Hash()
