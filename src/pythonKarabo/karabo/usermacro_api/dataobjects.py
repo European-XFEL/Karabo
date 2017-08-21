@@ -4,9 +4,7 @@ import heapq
 
 # These are currently under another import, as they will be unecessary
 # and removed once the actual query functions will be implemented
-from karabo.middlelayer import (Hash, Int8, MetricPrefix, Unit)
-
-from karabo.middlelayer_api.device_client import getHistory
+from karabo.middlelayer import (Hash, Int8, MetricPrefix, Unit, getHistory)
 
 from .utils import getConfigurationFromPast
 
@@ -67,6 +65,41 @@ class AcquiredData(object):
 
     def __len__(self):
         return len(self._fifo)
+
+
+class AcquiredOnline(AcquiredData):
+
+    def __init__(self, experimentId=None, channel=None, size=10):
+        super().__init__(experimentId, size)
+        self.channel = channel
+
+    def __repr__(self):
+        rep = super().__repr__()
+        rep = rep[:-1] + ", channel={})".format(self.channel)
+        return rep
+
+    def flatten(self, h):
+        """ Given a hash, it will unify it such that all hashes within
+            it are at the same level.
+        """
+        out = Hash()
+        for k in h.getKeys():
+            if isinstance(h[k], Hash):
+                out.update(self.flatten(h[k]))
+            else:
+                out[k] = h[k]
+        return out
+
+    def append(self, data, meta):
+        """ This function is to be called by the owner within their
+        @InputChannel
+        """
+        x = Hash([('data', data), ('meta', meta)])
+        x = self.flatten(x)
+        super().append(x)
+
+
+class AcquiredOffline(AcquiredData):
 
     def queryDataReader(self):
         # This is a tiny mock implementation
@@ -173,4 +206,3 @@ class AcquiredFromLog(AcquiredData):
 
             # put hash into fifo
             self.append(h)
-
