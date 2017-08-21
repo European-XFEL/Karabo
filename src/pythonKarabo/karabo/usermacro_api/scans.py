@@ -10,7 +10,7 @@ import sys
 
 from karabo.middlelayer import (
     AccessMode, Bool, Float, Int32, InputChannel, State, String,
-    sleep, UInt32, Unit, waitUntil)
+    sleep, UInt32, Unit, waitUntil, VectorString)
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
 from karabo.usermacro_api.util import flatten

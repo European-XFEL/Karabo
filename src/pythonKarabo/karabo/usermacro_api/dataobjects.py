@@ -6,7 +6,7 @@ import heapq
 # and removed once the actual query functions will be implemented
 from karabo.middlelayer import (Hash, Int8, MetricPrefix, Unit, getHistory)
 
-from .utils import getConfigurationFromPast
+from .util import getConfigurationFromPast
 
 
 class AcquiredData(object):
@@ -100,17 +100,19 @@ class AcquiredOnline(AcquiredData):
 
 
 class AcquiredOffline(AcquiredData):
-
-    def queryDataReader(self):
-        # This is a tiny mock implementation
-        d = Int8(unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.NANO)
-        return Hash('position', d.toKaraboValue(7))
-
+    pass
 
 class AcquiredFromLog(AcquiredData):
     """
     Child class to retrieve 'slow' data from datalogger history
+    
+    self.movableIds: list of bound devices IDs used in the scan as movables
+    self.measurableIds: list of bound devices IDs used in the scan
+      as measurables
+    self.bound_devices_properties[deviceId] list of logged properties logged
+      for the device
     """
+
     def __init__(self, experimentId=None, size=10):
         super().__init__(experimentId, size)
 
@@ -138,36 +140,22 @@ class AcquiredFromLog(AcquiredData):
         # get IDs of devices used by Scan:
         his = getHistory("{}.boundMovables".format(self.experimentId),
                          self.begin, self.end)
-        self.movablesId = his[0][3]
+        self.movableIds = his[0][3]
 
         his = getHistory("{}.boundSensibles".format(self.experimentId),
                          self.begin, self.end)
-        self.measurablesId = his[0][3]
+        self.measurableIds = his[0][3]
 
         # get properties for each device
         self.bound_devices_properties = {}
 
-        for m in self.movablesId + self.measurablesId:
+        for m in self.movableIds + self.measurableIds:
             self.bound_devices_properties[m] = []
             h, s = getConfigurationFromPast(m, self.begin)
             properties = h.getKeys()
             for p in properties:
                 self.bound_devices_properties[m].append(p)
 
-    def getMovablesId(self):
-        """ returns a list of bound devices IDs used
-        in the scan as movables """
-        return self.movablesId
-
-    def getMeasurablesId(self):
-        """ returns a list of bound devices IDs used
-        in the scan as measurables """
-        return self.measurablesId
-
-    def getBoundDeviceProperties(self, deviceId):
-        """ returns the list of logged properties logged
-        for the given device """
-        return self.bound_devices_properties[deviceId]
 
     def queryData(self, *args):
         """
@@ -176,13 +164,13 @@ class AcquiredFromLog(AcquiredData):
         """
 
         histories = []
-        for property in args:
-            his = getHistory(property, self.begin, self.end)
+        for prop in args:
+            his = getHistory(prop, self.begin, self.end)
 
             # add property name to tuples
             his2 = []
             for h in his:
-                h = h + (property,)
+                h = h + (prop,)
                 his2.append(h)
 
             histories.append(his2)
