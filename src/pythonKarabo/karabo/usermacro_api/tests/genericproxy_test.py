@@ -67,15 +67,18 @@ class Tests(DeviceTest):
 
         self.assertIsInstance(output, BeckhoffMotorAsMovable)
         self.assertEqual(output.__repr__(), "BeckhoffMotorAsMovable('tm1')")
+        self.assertEqual(output.getBoundDevices(), 'tm1')
 
         output = GenericProxy('lsim')
         self.assertIsInstance(output, CamAsSensible)
         self.assertEqual(output.__repr__(), "CamAsSensible('lsim')")
+        self.assertEqual(output.getBoundDevices(), 'lsim')
 
     @sync_tst
     def test_invalid_input_instantiation(self):
         with self.assertRaises(KaraboError):
             GenericProxy(42)
+
     @sync_tst
     def test_no_input_instantiation(self):
         output = GenericProxy()
@@ -88,18 +91,22 @@ class Tests(DeviceTest):
         output = Movable(Movable('tm1'))
         self.assertIsInstance(output, Movable)
         self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(output.getBoundDevices(), ['tm1'])
 
         output = GenericProxy(Movable('tm1'))
         self.assertIsInstance(output, Movable)
         self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(output.getBoundDevices(), ['tm1'])
 
         output = Movable(GenericProxy('tm1'))
         self.assertIsInstance(output, Movable)
         self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(output.getBoundDevices(), ['tm1'])
 
         output = GenericProxy(GenericProxy('tm1'))
         self.assertIsInstance(output, Movable)
         self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(output.getBoundDevices(), ['tm1'])
 
     @sync_tst
     def test_triplet_instantiation(self):
@@ -110,10 +117,12 @@ class Tests(DeviceTest):
         output = GenericProxy('tm1', 'tm2', 'tm3')
         self.assertIsInstance(output, Movable)
         self.assertEqual(output.__repr__(), tripletRep)
+        self.assertEqual(output.getBoundDevices(), ['tm1', 'tm2', 'tm3'])
 
         output = Movable('tm1', 'tm2', 'tm3')
         self.assertIsInstance(output, Movable)
         self.assertEqual(output.__repr__(), tripletRep)
+        self.assertEqual(output.getBoundDevices(), ['tm1', 'tm2', 'tm3'])
 
     @sync_tst
     def test_triplet_container_instantiation(self):
@@ -124,10 +133,12 @@ class Tests(DeviceTest):
         output = GenericProxy('tm1', Movable('tm2', 'tm3'))
         self.assertIsInstance(output, Movable)
         self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(output.getBoundDevices(), ['tm1', ['tm2', 'tm3']])
 
         output = GenericProxy('tm1', GenericProxy('tm2', 'tm3'))
         self.assertIsInstance(output, Movable)
         self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(output.getBoundDevices(), ['tm1', ['tm2', 'tm3']])
 
     @sync_tst
     def test_wrong_type_instantiation(self):
