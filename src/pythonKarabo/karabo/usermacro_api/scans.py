@@ -10,9 +10,10 @@ import sys
 
 from karabo.middlelayer import (
     AccessMode, Bool, Float, Int32, State, String,
-    sleep, UInt32, Unit, VectorHash, waitUntil)
+    sleep, UInt32, Unit, VectorHash, VectorString, waitUntil)
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
+from karabo.usermacro_api.util import flatten
 from karabo.usermacro_api.generalized import *
 
 
@@ -98,6 +99,14 @@ class AScan(UserMacro):
         displayedName="SensibleId",
         accessMode=AccessMode.READONLY)
 
+    boundMovables = VectorString(
+        displayedName="BoundMovables",
+        accessMode=AccessMode.READONLY)
+
+    boundSensibles = VectorString(
+        displayedName="BoundSensibles",
+        accessMode=AccessMode.READONLY)
+
     pos_list = String(
         displayedName="Trajectory",
         accessMode=AccessMode.READONLY)
@@ -161,20 +170,22 @@ class AScan(UserMacro):
         if self.experimentId == "":
             self.experimentId = self.deviceId
         self.movableId = self._movable.deviceId
+        self.boundMovables = flatten(self._movable.getBoundDevices())
         self.sensibleId = self._sensible.deviceId
+        self.boundSensibles = flatten(self._sensible.getBoundDevices())
         self.pos_list = self._pos_list
 
     def __repr__(self):
         rep = "{cls}('{mov}', {pos}, '{sens}', {exp}, ".format(
-              cls=type(self).__name__,
-              mov=self._movable.deviceId,
-              pos=self._pos_list,
-              sens=self._sensible.deviceId,
-              exp=str(self.exposureTime).split()[0])
+            cls=type(self).__name__,
+            mov=self._movable.deviceId,
+            pos=self._pos_list,
+            sens=self._sensible.deviceId,
+            exp=str(self.exposureTime).split()[0])
 
         rep += "steps={steps}, number_of_steps={num})".format(
-                steps=self.steps,
-                num=str(self.number_of_steps).split()[0])
+            steps=self.steps,
+            num=str(self.number_of_steps).split()[0])
 
         return rep
 
@@ -191,6 +202,7 @@ class AScan(UserMacro):
         if not self.steps:
             print("Continuous Scan along trajectory {}".format(self._pos_list))
 
+        step_num = 0
         # Iterate over position
         for pos, pause in splitTrajectory(
                 self._pos_list,
@@ -201,21 +213,23 @@ class AScan(UserMacro):
 
             yield from self._movable.moveto(pos)
 
-            unexpected = (State.ERROR, State.OFF, State.UNKNOWN)
+            expected = (State.MOVING, State.ON)
 
             yield from waitUntil(
                 lambda: self._movable.state != State.MOVING
                 and np.linalg.norm(
                     np.subtract(self._movable.position,
                                 pos)) < self.position_epsilon.magnitude**2
-                or self._movable.state in unexpected)
+                or self._movable.state not in expected)
 
-            if self._movable.state in unexpected:
+            if self._movable.state != State.ON:
                 type(self)._error("Unexpected state during scan: {}"
                                   .format(self._movable.state))
 
             if pause:
-                if self.steps or self.stepNum == 0:
+                if self.steps or step_num == 0:
+                    self.stepNum = step_num
+                    self.update()
                     yield from self._sensible.acquire()
 
                 if self.steps:
@@ -228,7 +242,7 @@ class AScan(UserMacro):
                     yield from sleep(self.exposureTime + self.time_epsilon)
                     yield from self._sensible.stop()
 
-                self.stepNum += 1
+                step_num += 1
 
         # Stop acquisition here for continuous scans
         if self._sensible.state == State.ACQUIRING:
@@ -278,12 +292,12 @@ class DScan(AScan):
                  steps=True, number_of_steps=0, **kwargs):
         super().__init__(movable, pos_list, sensible, exposureTime,
                          steps, number_of_steps, **kwargs)
+        # Only used for representation
+        self._raw_pos_list = pos_list
 
         # Convert position from relative to absolute
         self._pos_list = np.array(
             self._movable.position) + np.array(self._pos_list)
-        # Only used for representation
-        self._raw_pos_list = self._pos_list
 
     def __repr__(self):
         """ np.arrays are pretty printed, and have new lines in them,
@@ -302,6 +316,10 @@ class TScan(UserMacro):
     """Time scan"""
     sensibleId = String(
         displayedName="SensibleId",
+        accessMode=AccessMode.READONLY)
+
+    boundSensibles = VectorString(
+        displayedName="BoundSensibles",
         accessMode=AccessMode.READONLY)
 
     exposureTime = Float(
@@ -333,6 +351,7 @@ class TScan(UserMacro):
         self.exposureTime = float(exposureTime)
         self.duration = float(duration)
         self.sensibleId = self._sensible.deviceId
+        self.boundSensibles = flatten(self._sensible.getBoundDevices())
 
     @coroutine
     def execute(self):
@@ -376,7 +395,14 @@ class DMesh(AMesh):
 
 class AMove(UserMacro):
     """Absolute move"""
-    movableId = String(displayedName="Movable")
+    movableId = String(
+        displayedName="Movable",
+        accessMode=AccessMode.READONLY)
+
+    boundMovables = VectorString(
+        displayedName="BoundMovables",
+        accessMode=AccessMode.READONLY)
+
     _movable = Movable()
     _position = []
 
@@ -393,6 +419,8 @@ class AMove(UserMacro):
                 self._movable = Movable(movable)
 
         self.movableId = self._movable.deviceId
+        self.boundMovables = flatten(self._movable.getBoundDevices())
+
         self._position = (
             literal_eval(position)
             if isinstance(position, str)
@@ -407,7 +435,7 @@ class AMove(UserMacro):
             print("Motors at {}".format(self._movable.position))
             print("-"*linelen)
 
-        unexpected = (State.ERROR, State.OFF, State.UNKNOWN)
+        expected = (State.MOVING, State.ON)
 
         __print_motor_position()
         yield from self._movable.prepare()
@@ -418,9 +446,9 @@ class AMove(UserMacro):
                 np.subtract(self._movable.position,
                             self._position))
             < self.position_epsilon.magnitude**2
-            or self._movable.state in unexpected)
+            or self._movable.state not in expected)
 
-        if self._movable.state in unexpected:
+        if self._movable.state != State.ON:
             type(self)._error("Unexpected state after move: {}"
                               .format(self._movable.state))
         __print_motor_position()
