@@ -16,4 +16,4 @@ class ImageProcessorAsSensible(Sensible):
 
     @synchronize
     def stop(self):
-        """Can't stop acquisition once an imageprocessor in instantiated"""
+        """Can't stop acquisition once an imageProcessor in instantiated"""

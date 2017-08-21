@@ -9,8 +9,8 @@ import os
 import sys
 
 from karabo.middlelayer import (
-    AccessMode, Bool, Float, Int32, State, String, VectorString,
-    sleep, UInt32, Unit, VectorHash, waitUntil)
+    AccessMode, Bool, Float, Int32, State, String,
+    sleep, UInt32, Unit, VectorHash, VectorString, waitUntil)
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
 from karabo.usermacro_api.util import flatten
@@ -177,15 +177,15 @@ class AScan(UserMacro):
 
     def __repr__(self):
         rep = "{cls}('{mov}', {pos}, '{sens}', {exp}, ".format(
-              cls=type(self).__name__,
-              mov=self._movable.deviceId,
-              pos=self._pos_list,
-              sens=self._sensible.deviceId,
-              exp=str(self.exposureTime).split()[0])
+            cls=type(self).__name__,
+            mov=self._movable.deviceId,
+            pos=self._pos_list,
+            sens=self._sensible.deviceId,
+            exp=str(self.exposureTime).split()[0])
 
         rep += "steps={steps}, number_of_steps={num})".format(
-                steps=self.steps,
-                num=str(self.number_of_steps).split()[0])
+            steps=self.steps,
+            num=str(self.number_of_steps).split()[0])
 
         return rep
 
