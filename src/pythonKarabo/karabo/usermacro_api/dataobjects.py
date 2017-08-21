@@ -82,3 +82,17 @@ class AcquiredOnline(AcquiredData):
         super().append(formatted_hash)
 
 
+class AcquiredOffline(AcquiredData):
+    def __init__(self, experimentId=None, size=10):
+        super().__init__(experimentId, size)
+
+    def append(self, data, meta):
+        """ This function is to be called by the owner within their
+        @InputChannel. The InputChannel must have the `raw` parameter
+        set to True.
+        """
+        formatted_hash = Hash([('timestamp', meta.timestamp.timestamp),
+                               ('trainId', data['header']['trainId']),
+                               ('data', data),
+                               ('meta', meta)])
+        super().append(formatted_hash)
