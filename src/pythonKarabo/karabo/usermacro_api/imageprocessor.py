@@ -1,6 +1,6 @@
 """"Generalized interface to the image processor"""
 from karabo.middlelayer import State
-from karabo.middlelayer_api import synchronize
+from karabo.middlelayer_api.device_client import synchronize
 from .genericproxy import Sensible
 
 
@@ -16,4 +16,4 @@ class ImageProcessorAsSensible(Sensible):
 
     @synchronize
     def stop(self):
-        """Can't stop acquisition once an imageprocessor in instantiated"""
+        """Can't stop acquisition once an imageProcessor in instantiated"""
