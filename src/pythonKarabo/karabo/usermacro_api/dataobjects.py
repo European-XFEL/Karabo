@@ -126,7 +126,7 @@ class AcquiredFromLog(AcquiredData):
         in the scan as movables """
         return self.movablesId
 
-    def getMeasurablesIds(self):
+    def getMeasurablesId(self):
         """ returns a list of bound devices IDs used
         in the scan as measurables """
         return self.measurablesId
@@ -144,16 +144,33 @@ class AcquiredFromLog(AcquiredData):
 
         histories = []
         for property in args:
-            histories.append(getHistory(property, self.begin, self.end))
+            his = getHistory(property, self.begin, self.end)
+
+            # add property name to tuples
+            his2 = []
+            for h in his:
+                h = h + (property,)
+                his2.append(h)
+
+            histories.append(his2)
 
         sorted_histories = heapq.merge(*histories)
 
         for val in sorted_histories:
+
+            #TODO review hash data format according to DAQ specs
+
             # pack tuple into hash
             h = Hash()
-            h.set("timestamp", val[0])
-            h.set("trainid", val[1])
-            h.set("value", val[3])
 
-            # put into fifo
+            devid = val[4].split(".")[0]
+            propid = val[4].split(".")[1]
+
+            h.set("timestamp", val[0])
+            h.set("trainId", val[1])
+            h.set("deviceId", devid)
+            h.set(propid, val[3])
+
+            # put hash into fifo
             self.append(h)
+
