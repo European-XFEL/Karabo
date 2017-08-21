@@ -540,7 +540,7 @@ namespace karabo {
                  * If a proper reply cannot be placed, please use this to reply an error
                  * @param message is the text for the RemoteException
                  */
-                void replyError(const std::string& message) const;
+                void error(const std::string& message) const;
 
             private:
                 SignalSlotable* const m_signalSlotable; // pointer is const - but may call non-const methods
