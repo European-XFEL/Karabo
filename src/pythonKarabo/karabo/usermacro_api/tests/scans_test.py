@@ -139,21 +139,21 @@ class Tests(DeviceTest):
     def test_scans_initializations(self):
         """Test the initialization of all different scan objects"""
         expected_rep = ("AScan('tm1', [(0, 0), (10, 10), (15, 15)], "
-                        "'lsim', 5, steps=True, number_of_steps=0)")
+                        "'lsim', 5.0, steps=True, number_of_steps=0)")
 
         ascaney = AScan(self.m1, self.pos1, self.sens, self.expo)
         self.assertEqual(type(ascaney), AScan)
         self.assertEqual(ascaney.__repr__(), expected_rep)
 
         expected_rep = ("AMesh('tm1', [(0, 0), (10, 10), (15, 15)], "
-                        "[(15, 15), (10, 10), (0, 0)], 'lsim', 5, steps=True, "
+                        "[(15, 15), (10, 10), (0, 0)], 'lsim', 5.0, steps=True, "
                         "number_of_steps=0)")
         ameshy = AMesh(self.m1, self.pos1, self.pos2, self.sens, self.expo)
         self.assertEqual(type(ameshy), AMesh)
         self.assertEqual(ameshy.__repr__(), expected_rep)
 
         expected_rep = ("APathScan('tm1', [(0, 0), (10, 10), (15, 15)], "
-                        "'lsim', 5, steps=True, number_of_steps=0)")
+                        "'lsim', 5.0, steps=True, number_of_steps=0)")
         # Pun intented
         apathy = APathScan(self.m1, self.pos1, self.sens, self.expo)
         self.assertEqual(type(apathy), APathScan)
@@ -162,9 +162,8 @@ class Tests(DeviceTest):
         self.m1._proxy.encoderPosition = Kwargator(magnitude=10)
 
         expected_rep = ("DScan('tm1', [(0, 0), (10, 10), (15, 15)], "
-                        "'lsim', 5, steps=True, number_of_steps=0)")
+                        "'lsim', 5.0, steps=True, number_of_steps=0)")
         dscaney = DScan(self.m1, self.pos1, self.sens, self.expo)
-        print(dscaney)
         self.assertEqual(type(dscaney), DScan)
         self.assertEqual(dscaney.__repr__(), expected_rep)
 
