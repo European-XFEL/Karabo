@@ -21,8 +21,8 @@ class IntValidator(QValidator):
 
 
 class NumberAttributeEditor(AttributeWidget):
-    def __init__(self, box, attributeName, parent=None):
-        super(NumberAttributeEditor, self).__init__(box, attributeName)
+    def __init__(self, box, parent=None):
+        super(NumberAttributeEditor, self).__init__(box, parent)
         self.widget = QLineEdit(parent)
 
         if isinstance(box.descriptor, Integer):

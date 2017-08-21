@@ -10,7 +10,7 @@ from .base_item import BaseTreeWidgetItem
 
 
 class AttributeTreeWidgetItem(BaseTreeWidgetItem):
-    def __init__(self, attr_name, box, parent, parentItem=None):
+    def __init__(self, box, attr_name, parent, parentItem=None):
         super(AttributeTreeWidgetItem, self).__init__(box, parent, parentItem)
         self.setIcon(0, icons.signal)
         self.create_display_widget(DisplayLabel, box)
@@ -18,6 +18,7 @@ class AttributeTreeWidgetItem(BaseTreeWidgetItem):
 
     def make_class_connections(self, box):
         # Overwrite base class method here
+        self.editable_widget.attr_name = self._attr_name
         value = getattr(box.descriptor, self._attr_name)
         self.editable_widget.attributeValueChanged(value)
 

@@ -69,7 +69,7 @@ def _build_recursive(descriptor, tree_widget, parent_item, box, is_class):
 def _attribute_item_leaf(descriptor, tree_widget, parent_item, box, attr_name):
     """Build a single tree widget item for an attribute.
     """
-    item = AttributeTreeWidgetItem(attr_name, box, tree_widget, parent_item)
+    item = AttributeTreeWidgetItem(box, attr_name, tree_widget, parent_item)
     item.setIcon(0, get_icon(descriptor))
 
     factory = ATTRIBUTE_EDITOR_FACTORIES[attr_name]
