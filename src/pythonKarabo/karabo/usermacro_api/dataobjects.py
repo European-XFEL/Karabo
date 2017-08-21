@@ -1,38 +1,15 @@
 from collections import deque
 import time
+import heapq
 
 # These are currently under another import, as they will be unecessary
 # and removed once the actual query functions will be implemented
-from karabo.middlelayer import (background, Hash, Int8, MetricPrefix, Unit,
-                                getDevice)
-import time
+from karabo.middlelayer import (Hash, Int8, MetricPrefix, Unit)
 
 from karabo.middlelayer_api.device_client import getHistory
 
 from .utils import getConfigurationFromPast
 
-
-def parseDevicesFromGenericproxyId(gid):
-    """
-    :param gid: genericProxyId 
-    e.g.: Movable(BeckhoffMotorAsMovable('M1'), BeckhoffMotorAsMovable('M2')) 
-    :return:
-    list of bound devices IDs
-    e.g.: ['M1', 'M2']
-    """
-    dids = []
-    if "('" in gid:
-        while True:
-            d = gid[gid.find("('")+2: gid.find("')")]
-            if d:
-                dids.append(d)
-            else:
-                break
-            gid = gid[gid.find("')") + 2:]
-    else: # in case of single proxy gid IS deviceId
-        dids = [gid]
-
-    return dids
 
 class AcquiredData(object):
     """ Acquired Data is an iterable object that queries various
@@ -101,71 +78,82 @@ class AcquiredFromLog(AcquiredData):
     """
     Child class to retrieve 'slow' data from datalogger history
     """
-    def queryData(self):
+    def __init__(self, experimentId=None, size=10):
+        super().__init__(experimentId, size)
 
         # retrieve steps from scan history assuming there have been only one
         # scan with given deviceId from the big-bang up to now
-        steps = getHistory("{}.stepNum".format(self.experimentId),
-                           "2010-01-01T00:00:00",
-                           time.strftime('%Y-%m-%dT%H:%M:%S'))
+        self.steps = getHistory("{}.stepNum".format(self.experimentId),
+                                "2010-01-01T00:00:00",
+                                time.strftime('%Y-%m-%dT%H:%M:%S'))
         # steps has the following format:
         # [(seconds_from_1970, train_id, is_last_of_set, value) ]
 
-
-        # TODO this should be the proper way assuming correct timestamping
         # begin of the scan = timestamp of first step
-        begin = time.strftime('%Y-%m-%dT%H:%M:%S',time.localtime(steps[0][0]))
+        self.begin = time.strftime('%Y-%m-%dT%H:%M:%S',
+                                   time.localtime(self.steps[0][0]))
 
         # end of the scan = timestamp of last step
-        end = time.strftime('%Y-%m-%dT%H:%M:%S',
-                            time.localtime(steps[len(steps)-1][0]))
+        self.end = time.strftime('%Y-%m-%dT%H:%M:%S',
+                                 time.localtime(
+                                     self.steps[len(self.steps)-1][0]))
 
-        # TODO this is to workaround tha fact that
-        # for some reason stepNum values have all the same timestamp in logged
-        # data. I assume it to be the beginning and assume that the scan is
-        # over
-        if(begin >= end):
-            end = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
-
-
-        # TODO this just get everything about the scan since timestamps
-        # are apparently random ...
-        begin = "2010-01-01T00:00:00"
-        end = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
+        # if for any reason end value is wrong, assume end is now
+        if(self.begin >= self.end):
+            self.end = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
 
         # get IDs of devices used by Scan:
-        # At the moment the only way to get bound devices IDs from Ascan is to
-        # parse movableId and sensibleId
-        his = getHistory("{}.movableId".format(self.experimentId), begin, end)
-        movid = his[0][3]
-        movables = parseDevicesFromGenericproxyId(movid)
+        his = getHistory("{}.boundMovables".format(self.experimentId),
+                         self.begin, self.end)
+        self.movablesId = his[0][3]
 
-        his = getHistory("{}.sensibleId".format(self.experimentId), begin, end)
-        measid = his[0][3]
-        measurables = parseDevicesFromGenericproxyId(measid)
+        his = getHistory("{}.boundSensibles".format(self.experimentId),
+                         self.begin, self.end)
+        self.measurablesId = his[0][3]
 
         # get properties for each device
-        for m in movables:
-            h,s = getConfigurationFromPast(m, begin)
+        self.bound_devices_properties = {}
+
+        for m in self.movablesId + self.measurablesId:
+            self.bound_devices_properties[m] = []
+            h, s = getConfigurationFromPast(m, self.begin)
             properties = h.getKeys()
+            for p in properties:
+                self.bound_devices_properties[m].append(p)
 
+    def getMovablesId(self):
+        """ returns a list of bound devices IDs used
+        in the scan as movables """
+        return self.movablesId
 
-#        pos_history = []
-#        for mid in motids:
-#            dev = getDevice(mid)
-#            state_history = getHistory(dev.state, begin, end )
-#            pos_history = getHistory(dev.encoderPosition, begin, end )
-#            print(state_history)
-#            print(pos_history)
-#            print("=========")
+    def getMeasurablesIds(self):
+        """ returns a list of bound devices IDs used
+        in the scan as measurables """
+        return self.measurablesId
 
+    def getBoundDeviceProperties(self, deviceId):
+        """ returns the list of logged properties logged
+        for the given device """
+        return self.bound_devices_properties[deviceId]
 
-        # keep only values whith same train_id of scan steps
-        # TODO
+    def queryData(self, *args):
+        """
+        :param: a list of property strings with the form 'deviceId.property'
+        retrieved data are queued in self.data, sorted by timestamp
+        """
 
-        # format them into a hash
-        # TODO
+        histories = []
+        for property in args:
+            histories.append(getHistory(property, self.begin, self.end))
 
-        # append to fifo with self.append()
-        # TODO
+        sorted_histories = heapq.merge(*histories)
 
+        for val in sorted_histories:
+            # pack tuple into hash
+            h = Hash()
+            h.set("timestamp", val[0])
+            h.set("trainid", val[1])
+            h.set("value", val[3])
+
+            # put into fifo
+            self.append(h)
