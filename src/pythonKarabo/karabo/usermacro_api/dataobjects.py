@@ -71,18 +71,6 @@ class AcquiredOnline(AcquiredData):
         rep = rep[:-1] + ", channel={})".format(self.channel)
         return rep
 
-    def flatten(self, h):
-        """ Given a hash, it will unify it such that all hashes within
-            it are at the same level.
-        """
-        out = Hash()
-        for k in h.getKeys():
-            if isinstance(h[k], Hash):
-                out.update(self.flatten(h[k]))
-            else:
-                out[k] = h[k]
-        return out
-
     def append(self, data, meta):
         """ This function is to be called by the owner within their
         @InputChannel
