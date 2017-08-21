@@ -14,6 +14,7 @@ class KaraboStream:
 
     def write(self, data):
         try:
+            print("In data KaraboStream")
             get_event_loop().instance().printToConsole(data)
         except Exception:
             self.base.write(data)

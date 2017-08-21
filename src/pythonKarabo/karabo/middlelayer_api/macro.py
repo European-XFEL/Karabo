@@ -210,6 +210,7 @@ class Macro(Device):
                             format(m.key, self.deviceId))
 
     def printToConsole(self, data):
+        print("printToConsole: {}".format(data))
         self.print = data
         self.doNotCompressEvents += 1
         self.update()
