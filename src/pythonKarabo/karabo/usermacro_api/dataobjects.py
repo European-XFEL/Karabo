@@ -14,9 +14,9 @@ class AcquiredData(object):
 
         Although not mandatory, the hash is expected to contain these
         entries:
-            - a timestamp
-            - a trainId
-            - value (which is a hash itself)
+            - timestamp
+            - trainId
+            - data (which is a hash itself)
     """
 
     def __init__(self, experimentId=None, size=10):
@@ -87,9 +87,10 @@ class AcquiredOnline(AcquiredData):
         """ This function is to be called by the owner within their
         @InputChannel
         """
-        x = Hash([('data', data), ('meta', meta)])
-        x = self.flatten(x)
-        super().append(x)
+        formatted_hash = Hash([('timestamp', meta.timestamp.timestamp),
+                               ('trainId', data['header']['trainId']),
+                               ('data', data),
+                               ('meta', meta)])
+        super().append(formatted_hash)
 
 
-class AcquiredOffline(AcquiredData):
