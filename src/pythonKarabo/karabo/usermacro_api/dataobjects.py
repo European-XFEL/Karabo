@@ -87,15 +87,23 @@ class AcquiredOnline(AcquiredData):
         super().append(formatted_hash)
 
 
-class AcquiredOffline(AcquiredData):
-    def __init__(self, experimentId=None, size=10):
-        super().__init__(experimentId, size)
+class AcquiredOffline(AcquiredData, DeviceClientBase):
 
+    def __init__(self, experimentId=None, size=10, source=None):
+        configuration = dict(_deviceId_="OfflineData-{}".format(experimentId),
+                             append=dict(connectedOutputChannels=[source]))
+        DeviceClientBase.__init__(self, configuration=configuration)
+        AcquiredData.__init__(self, experimentId, size)
+
+        @coroutine
+        def __run():
+            yield from self.startInstance()
+        loop = EventLoop.global_loop
+        loop.call_soon_threadsafe(loop.create_task, __run())
+
+    @InputChannel(raw=True)
+    @coroutine
     def append(self, data, meta):
-        """ This function is to be called by the owner within their
-        @InputChannel. The InputChannel must have the `raw` parameter
-        set to True.
-        """
         formatted_hash = Hash([('timestamp', meta.timestamp.timestamp),
                                ('trainId', data['header']['trainId']),
                                ('data', data),
