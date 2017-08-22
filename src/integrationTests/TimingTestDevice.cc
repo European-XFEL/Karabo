@@ -61,29 +61,12 @@ USING_KARABO_NAMESPACES
     TimingTestDevice::TimingTestDevice(const karabo::util::Hash& config) : Device<>(config),
         m_started(false) {
 
-        KARABO_INITIAL_FUNCTION(initialize);
-
         KARABO_SLOT(start);
         KARABO_SLOT(stop);
     }
 
 
     TimingTestDevice::~TimingTestDevice() {
-    }
-
-
-    void TimingTestDevice::initialize() {
-        // FIXME:
-        // This sleep here is a workaround to ensure that our slotTimeTick stays registered at the time servers
-        // 'signalTimeTick'
-        // as is done at the end of Device::finalizeInternalInitialization. This initialize() method is called via
-        // startFsm() a few lines above that.
-        // Without this delay, the signal connection is completed (via inner process shortcut communication) before the
-        // time server receives (via broker communication since it is a broadcast to '*') its call to slotInstanceNew
-        // for this device. And slotInstanceNew removes our slotTimeTick again from 'signalTimeTick'...
-        // A proper solution could be to delay establishing shortcut communication to the very end of the initialisation
-        // process (which is probably outside the hands of Sig)nalSlotable...:-().
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
     }
 
 
