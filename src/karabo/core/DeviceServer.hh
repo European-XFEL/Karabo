@@ -81,7 +81,6 @@ namespace karabo {
             mutable boost::mutex m_timeChangeMutex;
             unsigned long long m_timeIdLastTick; // only for onTimeTick, no need for mutex protection
             boost::asio::deadline_timer m_timeTickerTimer;
-            bool m_usePointToPoint;
 
         public:
 
@@ -268,12 +267,6 @@ namespace karabo {
              * @param period: interval between ids microseconds
              */
             void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
-
-            /**
-             * This function overrides the implementation of base class (SignalSlotable)
-             * @return value of configuration parameter "usePointToPoint"
-             */
-            bool usePointToPoint() const;
 
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
         };
