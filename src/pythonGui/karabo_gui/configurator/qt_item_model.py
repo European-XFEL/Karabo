@@ -390,6 +390,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                     box.configuration.sendUserValue(box)
                 else:
                     box.set(value)
+                    box.configuration.signalBoxChanged.emit()
 
         # A value was successfully set!
         return True
