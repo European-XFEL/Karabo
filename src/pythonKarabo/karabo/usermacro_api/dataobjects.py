@@ -67,13 +67,13 @@ class AcquiredData(object):
 
 class AcquiredOnline(AcquiredData):
 
-    def __init__(self, experimentId=None, channel=None, size=10):
+    def __init__(self, experimentId=None, source=None, size=10):
         super().__init__(experimentId, size)
-        self.channel = channel
+        self.source = source
 
     def __repr__(self):
         rep = super().__repr__()
-        rep = rep[:-1] + ", channel={})".format(self.channel)
+        rep = rep[:-1] + ", source={})".format(self.source)
         return rep
 
     def append(self, data, meta):
@@ -100,6 +100,12 @@ class AcquiredOffline(AcquiredData, DeviceClientBase):
             yield from self.startInstance()
         loop = EventLoop.global_loop
         loop.call_soon_threadsafe(loop.create_task, __run())
+
+    def __repr__(self):
+        rep = super().__repr__()
+        rep = rep[:-1]
+        rep += ", source={})".format(self.append.connectedOutputChannels)
+        return rep
 
     @InputChannel(raw=True)
     @coroutine

@@ -45,11 +45,11 @@ class TestAcquiredOnline(unittest.TestCase):
     def test_initalization(self):
         """Test AcquiredOnline object initialization"""
         ao = AcquiredOnline()
-        expRep = "AcquiredOnline(None, size=10, channel=None)"
+        expRep = "AcquiredOnline(None, size=10, source=None)"
         self.assertEqual(ao.__repr__(), expRep)
 
         ao = AcquiredOnline(10, 'source:channel')
-        expRep = "AcquiredOnline(10, size=10, channel=source:channel)"
+        expRep = "AcquiredOnline(10, size=10, source=source:channel)"
         self.assertEqual(ao.__repr__(), expRep)
 
     def test_append(self):
