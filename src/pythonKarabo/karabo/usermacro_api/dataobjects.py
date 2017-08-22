@@ -2,8 +2,6 @@ from collections import deque
 import time
 import heapq
 
-# These are currently under another import, as they will be unecessary
-# and removed once the actual query functions will be implemented
 from karabo.middlelayer import (Hash, getHistory)
 
 from .util import getConfigurationFromPast
@@ -92,7 +90,6 @@ class AcquiredOnline(AcquiredData):
 class AcquiredOffline(AcquiredData):
     def __init__(self, experimentId=None, size=10):
         super().__init__(experimentId, size)
-
 
     def append(self, data, meta):
         """ This function is to be called by the owner within their
