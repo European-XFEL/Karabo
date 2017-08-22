@@ -1,10 +1,13 @@
+from asyncio import coroutine
 from collections import deque
-import time
 import heapq
+import time
 
-from karabo.middlelayer import (Hash, getHistory)
+from karabo.middlelayer import (DeviceClientBase, getHistory,
+                                Hash, InputChannel, State)
+from karabo.middlelayer_api.eventloop import EventLoop
 
-from .util import getConfigurationFromPast
+from karabo.usermacro_api.util import getConfigurationFromPast
 
 
 class AcquiredData(object):
@@ -49,9 +52,6 @@ class AcquiredData(object):
         if index >= len(self):
             raise IndexError("buffer index out of range")
         return self._fifo[index]
-
-    def _fillUp(self):
-            raise NotImplementedError
 
     def __iter__(self):
         return self
