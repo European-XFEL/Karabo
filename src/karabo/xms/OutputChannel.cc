@@ -69,7 +69,7 @@ namespace karabo {
         }
 
 
-        OutputChannel::OutputChannel(const karabo::util::Hash& config) : m_sharedInputIndex(0), m_port(0) {
+        OutputChannel::OutputChannel(const karabo::util::Hash& config) : m_port(0), m_sharedInputIndex(0) {
             //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::OutputChannel CTOR ***";
             config.get("distributionMode", m_distributionMode);
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
