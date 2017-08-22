@@ -23,6 +23,10 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         self._internal_widget = QLineEdit(parent)
         self._internal_widget.setAlignment(Qt.AlignLeft | Qt.AlignAbsolute)
         self._internal_widget.setValidator(self.validator)
+        # Store real value for internal widget
+        self._internal_value = None
+        # Store displayed value
+        self._display_value = ''
         self.widget = add_unit_label(box, self._internal_widget, parent=parent)
         self.normalPalette = self._internal_widget.palette()
         self.errorPalette = QPalette(self.normalPalette)
@@ -43,6 +47,18 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
                    else self.errorPalette)
         self._internal_widget.setPalette(palette)
         if self._internal_widget.hasAcceptableInput():
+            if isinstance(self.validator, QDoubleValidator):
+                if len(text) > len(self._internal_value):
+                    # Overwrite
+                    self._internal_value = text
+                else:
+                    # Replace old displayed value with new one
+                    curr_text = self._display_value
+                    self._internal_value = self._internal_value.replace(
+                        curr_text, text, len(text))
+                    self._display_value = text
+            else:
+                self._internal_value = text
             self.signalEditingFinished.emit(self.boxes[0], self.value)
 
     def typeChanged(self, box):
@@ -55,10 +71,10 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         This function validates the current value of the widget and returns
         on sucess the value or in failure 0.
         """
-        if not self._internal_widget.text():
+        if not self._internal_value:
             return 0
 
-        value = self._internal_widget.text()
+        value = self._internal_value
         state, _, _ = self.validator.validate(value, 0)
         if state == QValidator.Invalid or state == QValidator.Intermediate:
             value = 0
@@ -93,10 +109,13 @@ class DoubleLineEdit(NumberLineEdit):
 
         if value is None:
             value = 0
+        self._internal_value = str(value)
+
         format_str = ("{}" if self.decimals == -1
                       else "{{:.{}f}}".format(self.decimals))
         with SignalBlocker(self._internal_widget):
-            self._internal_widget.setText(format_str.format(value))
+            self._display_value = format_str.format(value)
+            self._internal_widget.setText(self._display_value)
 
     def _showDecimalDialog(self):
         num_decimals, ok = QInputDialog.getInt(self.widget, "Decimal",
@@ -162,5 +181,7 @@ class IntLineEdit(NumberLineEdit):
         if value is None:
             value = 0
 
+        self._internal_value = str(value)
         with SignalBlocker(self._internal_widget):
-            self._internal_widget.setText("{}".format(value))
+            self._display_value = "{}".format(value)
+            self._internal_widget.setText(self._display_value)
