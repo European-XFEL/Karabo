@@ -12,8 +12,9 @@ from PyQt4.QtGui import (
 
 from karabo.middlelayer import Integer, MetricPrefix, Unit
 from karabo_gui.attributeediting.api import EDITABLE_ATTRIBUTE_NAMES
-from karabo_gui.schema import Dummy, EditableAttributeInfo
+from karabo_gui.schema import EditableAttributeInfo, VectorHashCellInfo
 from karabo_gui.widget import EditableWidget
+from .utils import get_attribute_data, get_box_value, get_vector_col_value
 
 FIXED_ROW_HEIGHT = 30
 
@@ -40,11 +41,11 @@ class ValueDelegate(QStyledItemDelegate):
             return
 
         if isinstance(obj, EditableAttributeInfo):
-            box = obj.parent()
-            name = obj.names[index.row()]
-            value = getattr(box.descriptor, name)
+            _, _, value = get_attribute_data(obj, index.row())
+        elif isinstance(obj, VectorHashCellInfo):
+            value = get_vector_col_value(obj, is_edit_col=(index.column() == 2))
         else:
-            value = None if isinstance(obj.value, Dummy) else obj.value
+            value = get_box_value(obj, is_edit_col=(index.column() == 2))
 
         editor.editable_widget.valueChanged(obj, value)
 
