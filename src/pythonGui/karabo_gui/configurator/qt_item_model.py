@@ -19,6 +19,7 @@ from karabo_gui.schema import (
 )
 from karabo_gui.treewidget.utils import get_icon
 from karabo_gui.util import dragged_configurator_items
+from .utils import get_attribute_data, get_box_value, get_vector_col_value
 
 
 def _get_child_names(descriptor):
@@ -398,39 +399,17 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
     def _attribute_data(self, attr_info, role, column, row):
         """data() implementation for property attributes"""
-        box = attr_info.parent()
-        if box is None:
-            return
-
-        name = attr_info.names[row]
+        name, descriptor, value = get_attribute_data(attr_info, row)
         if column == 0:
             if role == Qt.DisplayRole:
                 return name
             elif role == Qt.DecorationRole:
-                return get_icon(box.descriptor)
+                return get_icon(descriptor)
         elif column in (1, 2) and role == Qt.DisplayRole:
-                value = getattr(box.descriptor, name)
-                return str(value)
+            return str(value)
 
     def _box_data(self, box, role, column):
         """data() implementation for properties"""
-
-        def _get_value(is_edit_col=False):
-            descriptor = box.descriptor
-            if isinstance(descriptor, (Schema, VectorHash)):
-                return ''
-
-            value = box.value
-            if isinstance(value, (Dummy, bytes, bytearray)):
-                return ''
-            if is_edit_col:
-                is_editable = (descriptor.accessMode in
-                               (AccessMode.INITONLY,
-                                AccessMode.RECONFIGURABLE))
-                if not is_editable:
-                    return ''
-            return str(value)
-
         if column == 0:
             if role == Qt.DisplayRole:
                 return box.descriptor.displayedName
@@ -442,40 +421,21 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif role == Qt.DecorationRole:
                 return get_icon(box.descriptor)
         elif column == 1 and role == Qt.DisplayRole:
-            return _get_value()
+            return str(get_box_value(box))
         elif column == 2 and role == Qt.DisplayRole:
-            return _get_value(is_edit_col=True)
+            return str(get_box_value(box, is_edit_col=True))
 
     def _vector_col_data(self, cell_info, role, column):
         """data() implementation for VectorHash columns"""
-
-        def _get_value(is_edit_col=False):
-            parent_row = cell_info.parent()
-            if parent_row is None:
-                return None
-            parent_box = parent_row.parent()
-            if parent_box is None:
-                return None
-            descriptor = parent_box.descriptor
-            if is_edit_col:
-                is_editable = (descriptor.accessMode in
-                               (AccessMode.INITONLY,
-                                AccessMode.RECONFIGURABLE))
-                if not is_editable:
-                    return ''
-
-            row = parent_box.value[descriptor.rowsInfo.index(parent_row)]
-            return str(row[cell_info.name])
-
         if column == 0:
             if role == Qt.DisplayRole:
                 return cell_info.name
             elif role == Qt.DecorationRole:
                 return get_icon(None)
         elif column == 1 and role == Qt.DisplayRole:
-            return _get_value()
+            return str(get_vector_col_value(cell_info))
         elif column == 2 and role == Qt.DisplayRole:
-            return _get_value(is_edit_col=True)
+            return str(get_vector_col_value(cell_info, is_edit_col=True))
 
     def _vector_row_data(self, row_info, role, column, row):
         """data() implementation for VectorHash rows"""
