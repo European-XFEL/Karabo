@@ -58,4 +58,3 @@ build/python/*.exe
 /build/netbeans/deviceServer/build/
 /build/netbeans/brokerMessageLogger/build/
 /build/netbeans/integrationTests/build/
-/build/netbeans/p2pMessageLogger/build/
