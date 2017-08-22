@@ -12,7 +12,7 @@ from PyQt4.QtGui import (
 
 from karabo.middlelayer import Integer, MetricPrefix, Unit
 from karabo_gui.attributeediting.api import EDITABLE_ATTRIBUTE_NAMES
-from karabo_gui.schema import EditableAttributeInfo
+from karabo_gui.schema import Dummy, EditableAttributeInfo
 from karabo_gui.widget import EditableWidget
 
 FIXED_ROW_HEIGHT = 30
@@ -39,7 +39,13 @@ class ValueDelegate(QStyledItemDelegate):
         if obj is None:
             return
 
-        value = model.data(index, role=Qt.DisplayRole)
+        if isinstance(obj, EditableAttributeInfo):
+            box = obj.parent()
+            name = obj.names[index.row()]
+            value = getattr(box.descriptor, name)
+        else:
+            value = None if isinstance(obj.value, Dummy) else obj.value
+
         editor.editable_widget.valueChanged(obj, value)
 
     def setModelData(self, editor, model, index):
@@ -76,6 +82,10 @@ class EditWidgetWrapper(QWidget):
         else:
             klass = EditableWidget.getClass(obj)
             self.editable_widget = klass(obj, self)
+            # XXX: Enable editing for that widget - this should be revisited
+            # since all widgets are editable now
+            self.editable_widget.setReadOnly(False)
+            self.setFocusProxy(self.editable_widget.widget)
 
         # Introduce layout to have some border to show
         layout = QHBoxLayout(self)
