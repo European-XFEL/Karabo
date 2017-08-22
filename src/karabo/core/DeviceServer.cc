@@ -158,16 +158,6 @@ namespace karabo {
             // What is the TimeServer ID
             config.get("timeServerId", m_timeServerId);
 
-            // Should we use PointToPoint globally
-            m_usePointToPoint = false;
-            char* env = 0;
-            env = getenv("KARABO_ENABLE_POINT2POINT");
-            if (env) {
-                string variable(env);
-                boost::to_upper(variable);
-                if (variable == "TRUE") m_usePointToPoint = true;
-            }
-
             m_connection = Configurator<JmsConnection>::createNode("connection", config);
             m_connection->connect();
 
@@ -527,9 +517,6 @@ namespace karabo {
                 // Inject connection
                 config.set("_connection_", m_connection);
 
-                // Inject usePointToPoint flag
-                config.set("usePointToPoint", m_usePointToPoint);
-
                 return boost::make_tuple(config.get<std::string>("_deviceId_"), classId, config);
             } else {
                 // Old style, e.g. used for auto started devices
@@ -551,9 +538,6 @@ namespace karabo {
 
                 // Inject connection
                 tmp.set("_connection_", m_connection);
-
-                // Inject usePointToPoint flag
-                tmp.set("usePointToPoint", m_usePointToPoint);
 
                 const std::pair<std::string, util::Hash>& idCfg
                         = util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
@@ -688,11 +672,6 @@ namespace karabo {
             string oldprio = Logger::getPriority();
             Logger::setPriority(newprio);
             KARABO_LOG_INFO << "Logger Priority changed : " << oldprio << " ==> " << newprio;
-        }
-
-
-        bool DeviceServer::usePointToPoint() const {
-            return m_usePointToPoint;
         }
     }
 }
