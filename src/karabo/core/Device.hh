@@ -334,14 +334,6 @@ namespace karabo {
                         .assignmentOptional().defaultValue(false)
                         .commit();
 
-                BOOL_ELEMENT(expected).key("usePointToPoint")
-                        .displayedName("P2P activated")
-                        .description("Decides whether to activate P2P communication automatically")
-                        .init()
-                        .adminAccess()
-                        .assignmentOptional().defaultValue(false)
-                        .commit();
-
                 INT32_ELEMENT(expected).key("progress")
                         .displayedName("Progress")
                         .description("The progress of the current action")
@@ -1895,11 +1887,6 @@ namespace karabo {
              */
             void slotClearLock() {
                 set("lockedBy", std::string());
-            }
-
-
-            bool usePointToPoint() const {
-                return get<bool>("usePointToPoint");
             }
         };
 
