@@ -19,8 +19,10 @@ from .usermacro_api.generalized import (
     EpixAsSensible, ImageProcessorAsSensible, LpdAsSensible
 )
 from .usermacro_api.pipeline import OutputChannel
+from .usermacro_api.dataobjects import AcquiredData, AcquiredFromLog
 from .usermacro_api.scans import (
     AScan, AMesh, AMove, APathScan, DScan, DMesh, DMove, meshTrajectory,
     splitTrajectory, TScan
 )
 from .usermacro_api.usermacro import UserMacro
+from .usermacro_api.util import getConfigurationFromPast
