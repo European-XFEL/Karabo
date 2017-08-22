@@ -177,20 +177,15 @@ class AcquiredFromLog(AcquiredData):
 
         sorted_histories = heapq.merge(*histories)
 
-        for val in sorted_histories:
-
+        for history in sorted_histories:
             # TODO review hash data format according to DAQ specs
-
             # pack tuple into hash
-            h = Hash()
+            devId = history[4].split(".")[0]
+            propId = history[4].split(".")[1]
 
-            devid = val[4].split(".")[0]
-            propid = val[4].split(".")[1]
-
-            h.set("timestamp", val[0])
-            h.set("trainId", val[1])
-            h.set("deviceId", devid)
-            h.set(propid, val[3])
-
+            formatted_hash = Hash([('timestamp', history[0]),
+                                   ('trainId', history[1]),
+                                   ('deviceId', devId),
+                                   (propId, history[3])])
             # put hash into fifo
-            self.append(h)
+            self.append(formatted_hash)
