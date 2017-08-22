@@ -308,6 +308,14 @@ namespace karabo {
                 stamp = util::Epochstamp(m_timeSec, m_timeFrac);
                 period = m_timePeriod;
             }
+
+            // Internal ticking might have been too slow while external update could not cancel the timer (because
+            // timeTick was already posted to the event loop, but did not yet reach the timer reload).
+            // So change input as if the cancel was successful:
+            if (newId < id) {
+                newId = id;
+            }
+
             // Calculate how many ids we are away from last external update and adjust stamp
             const unsigned long long delta = newId - id; // newId >= id is fulfilled
             const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
