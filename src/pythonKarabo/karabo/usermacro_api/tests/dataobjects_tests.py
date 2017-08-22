@@ -4,8 +4,11 @@ from karabo.middlelayer import Hash
 from karabo.usermacros import AcquiredOffline, AcquiredOnline
 from karabo.usermacro_api.dataobjects import AcquiredData
 
-class ShittyObjectWithShittyName(object):
+
+class Abstract(object):
+    """ Abstracts more complex properties real devices would have """
     pass
+
 
 class TestAD(unittest.TestCase):
     def test_initialization(self):
@@ -52,9 +55,9 @@ class TestAcquiredOnline(unittest.TestCase):
     def test_append(self):
         ao = AcquiredOnline()
         data = Hash([('header', Hash([('trainId', 65535)]))])
-        timestamp = ShittyObjectWithShittyName()
+        timestamp = Abstract()
         timestamp.timestamp = 1
-        meta = ShittyObjectWithShittyName()
+        meta = Abstract()
         meta.timestamp = timestamp
         expected_hash = Hash([('timestamp', 1),
                              ('trainId', 65535),
@@ -69,7 +72,6 @@ class TestAcquiredOnline(unittest.TestCase):
         self.assertEqual(len(ao), 0)
 
 
-
 class TestAcquiredOffline(unittest.TestCase):
     def test_initalization(self):
         """Test AcquiredOffline object initialization"""
@@ -80,9 +82,9 @@ class TestAcquiredOffline(unittest.TestCase):
     def test_append(self):
         ao = AcquiredOffline()
         data = Hash([('header', Hash([('trainId', 65535)]))])
-        timestamp = ShittyObjectWithShittyName()
+        timestamp = Abstract()
         timestamp.timestamp = 1
-        meta = ShittyObjectWithShittyName()
+        meta = Abstract()
         meta.timestamp = timestamp
         expected_hash = Hash([('timestamp', 1),
                              ('trainId', 65535),
