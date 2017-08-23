@@ -270,6 +270,7 @@ namespace karabo {
 
         void DeviceServer::slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             karabo::util::Epochstamp epochNow;
+            bool firstCall = false;
             {
                 boost::mutex::scoped_lock lock(m_timeChangeMutex);
                 m_timeId = id;
@@ -281,12 +282,21 @@ namespace karabo {
                     m_timeFrac = epochNow.getFractionalSeconds();
                 }
                 m_timePeriod = period;
+                firstCall = m_noTimeTickYet;
+                m_noTimeTickYet = false;
             }
-            timeTick(boost::system::error_code(), id, true);
+            // Take care that 'onTimeUpdate' is called every period:
+            // Cancel pending timer if we had an update from the time server...
+            if (m_timeTickerTimer.cancel() > 0 || firstCall) { // order matters if timer was already running
+                // ...but start again (or the first time), freshly synchronized.
+                timeTick(boost::system::error_code(), id);
+            }
+            // Call hook for each external time tick update.
+            onTimeTick(id, sec, frac, period);
         }
 
 
-        void DeviceServer::timeTick(const boost::system::error_code ec, unsigned long long newId, bool realTick) {
+        void DeviceServer::timeTick(const boost::system::error_code ec, unsigned long long newId) {
             if (ec) return;
 
             // Get values of last 'external' update via slotTimeTick.
@@ -294,54 +304,43 @@ namespace karabo {
             util::Epochstamp stamp(0ull, 0ull);
             {
                 boost::mutex::scoped_lock lock(m_timeChangeMutex);
-
                 id = m_timeId;
-                period = m_timePeriod;
                 stamp = util::Epochstamp(m_timeSec, m_timeFrac);
-
-                const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
-                                                        (period % 1000000ull) * 1000000000000ull); // '* 10^12': micro- to attoseconds
-                // Calculate how many ids we are away from last external update and adjust stamp
-                const unsigned long long delta = newId - id; // newId >= id is fulfilled
-                if (delta > 0) {
-                    const util::TimeDuration sinceId(periodDuration * delta);
-                    stamp += sinceId;
-                }
-
-                if (m_timeIdLastTick == 0ull) m_timeIdLastTick = newId - 1; // first time tick
-
-                // Check if internal ticker is too fast ...
-                if (m_timeIdLastTick >= newId) {
-                    if (!realTick) return;
-                    // slow down a bit ... have to re-establish the timer
-                    m_timeTickerTimer.cancel();
-                    // synchronize with the real tick
-                    m_timeIdLastTick = newId;
-                } else {
-                    // Call hook that indicates next id. In case the internal ticker was too slow, call it for
-                    // each otherwise missed id (with same time...).
-                    while (m_timeIdLastTick < newId) {
-                        onTimeUpdate(++m_timeIdLastTick, stamp.getSeconds(), stamp.getFractionalSeconds(), period);
-                    }
-                }
-                // set next "absolute" time I want to be waked up again.
-                // use remote "timing system" time...
-                stamp += periodDuration;
+                period = m_timePeriod;
             }
-            // reload timer for the next id:
-            m_timeTickerTimer.expires_at(stamp.getPtime());
+
+            // Internal ticking might have been too slow while external update could not cancel the timer (because
+            // timeTick was already posted to the event loop, but did not yet reach the timer reload).
+            // So change input as if the cancel was successful:
+            if (newId < id) {
+                newId = id;
+            }
+
+            // Calculate how many ids we are away from last external update and adjust stamp
+            const unsigned long long delta = newId - id; // newId >= id is fulfilled
+            const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
+                                                    (period % 1000000ull) * 1000000000000ull); // '* 10^12': micro- to attoseconds
+            const util::TimeDuration sinceId(periodDuration * delta);
+            stamp += sinceId;
+
+            // Call hook that indicates next id. In case the internal ticker was too slow, call it for
+            // each otherwise missed id (with same time...). If it was too fast, do not call again.
+            if (m_timeIdLastTick == 0ull) m_timeIdLastTick = newId - 1; // first time tick
+            while (m_timeIdLastTick < newId) {
+                onTimeUpdate(++m_timeIdLastTick, stamp.getSeconds(), stamp.getFractionalSeconds(), period);
+            }
+
+            // reload timer for next id:
+            m_timeTickerTimer.expires_at((stamp += periodDuration).getPtime());
             m_timeTickerTimer.async_wait(util::bind_weak(&DeviceServer::timeTick, this,
-                                                         boost::asio::placeholders::error, ++newId, false));
+                                                         boost::asio::placeholders::error, ++newId));
         }
 
 
         void DeviceServer::onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-            m_timeIdLastTick = id;
-            // Cancel pending timer
-            m_timeTickerTimer.cancel();
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-            for (auto& kv : m_deviceInstanceMap) {
-                if (kv.second && kv.second->useTimeServer()) {
+            for (auto& kv : m_devicesForTimingMap) {
+                if (kv.second) {
                     EventLoop::getIOService().post(util::bind_weak(&BaseDevice::onTimeTick, kv.second.get(),
                                                                    id, sec, frac, period));
                 }
@@ -351,8 +350,8 @@ namespace karabo {
 
         void DeviceServer::onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-            for (auto& kv : m_deviceInstanceMap) {
-                if (kv.second && kv.second->useTimeServer()) kv.second->slotTimeTick(id, sec, frac, period);
+            for (auto& kv : m_devicesForTimingMap) {
+                if (kv.second) kv.second->slotTimeTick(id, sec, frac, period);
             }
         }
 
@@ -453,7 +452,8 @@ namespace karabo {
                 }
 
                 m_deviceInstanceMap.clear();
-                KARABO_LOG_FRAMEWORK_DEBUG << "stopServer() device map cleared";
+                m_devicesForTimingMap.clear();
+                KARABO_LOG_FRAMEWORK_DEBUG << "stopServer() device maps cleared";
             }
 
             // TODO Remove from here and use the one from run() method
@@ -570,6 +570,9 @@ namespace karabo {
                 // This will throw an exception if it can't be started (because of duplicated name for example)
                 device->finalizeInternalInitialization();
 
+                if (device->useTimeServer()) { // If device requires, add to map for receiving timing info.
+                    m_devicesForTimingMap[deviceId] = device;
+                }
                 // Answer initiation of device (KARABO_LOG_* is done by device)
                 asyncReply(true, deviceId);
 
@@ -580,6 +583,9 @@ namespace karabo {
                     // same deviceId and placed it into the map again before we get here to remove the one that killed itself.
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
                     m_deviceInstanceMap.erase(deviceId);
+                    // Device should not be in there since expect exception in 'finalizeInternalInitialization', but be
+                    // sure that nothing stays in the timing map that is not in the other.
+                    m_devicesForTimingMap.erase(deviceId);
                 }
                 const std::string message("Device '" + deviceId + "' of class '" + classId + "' could not be started: ");
                 KARABO_LOG_ERROR << message << se.what();
@@ -644,6 +650,9 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
             if (m_deviceInstanceMap.erase(instanceId) > 0) {
                 KARABO_LOG_INFO << "Device '" << instanceId << "' removed from server.";
+            }
+            if (m_devicesForTimingMap.erase(instanceId) > 0) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Device '" << instanceId << "' removed from timing map.";
             }
         }
 

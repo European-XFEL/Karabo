@@ -35,7 +35,8 @@ void Timing_Test::setUp() {
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
     {
-        Hash config("serverId", "testServerTiming", "scanPlugins", false, "Logger.priority", "FATAL", "timeServerId", "Karabo_TimeServer");
+        // No need to connect the server hosting the time server device to any time server...
+        Hash config("serverId", "testServerTiming", "scanPlugins", false, "Logger.priority", "FATAL");
         m_deviceServer = DeviceServer::create("DeviceServer", config);
         m_deviceServer->finalizeInternalInitialization();
     }
@@ -72,7 +73,7 @@ void Timing_Test::appTestRunner() {
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
-    size_t nDevices = 20;
+    const size_t nDevices = 20;
 
     for (size_t i = 1; i <= nDevices; ++i) {
         success = m_deviceClient->instantiate("testServerTimingClient", "TimingTestDevice",
@@ -81,14 +82,12 @@ void Timing_Test::appTestRunner() {
         CPPUNIT_ASSERT(success.first);
     }
 
-    m_lastCheck = karabo::util::Epochstamp();
-
     // Give some time to connect the timing slot.
     for (size_t i = 1; i <= nDevices; ++i) {
         int counter = 0;
         while (true) {
             if (m_deviceClient->get<bool>("timeTester_" + toString(i), "slot_connected")) break;
-            CPPUNIT_ASSERT(counter++ < 500);
+            CPPUNIT_ASSERT_MESSAGE("'timeTester_" + toString(i) += "' not yet connected", counter++ < 500);
             boost::this_thread::sleep(boost::posix_time::milliseconds(5));
         }
     }
@@ -120,7 +119,7 @@ void Timing_Test::appTestRunner() {
         unsigned long long lastId = ids[0];
         karabo::util::Epochstamp lastStamp(seconds[0], fractions[0]);
         for (size_t i = 1; i < ids.size(); ++i) {
-            CPPUNIT_ASSERT_EQUAL(ids[i], lastId + 1ull);
+            CPPUNIT_ASSERT_EQUAL(lastId + 1ull, ids[i]); // (expected, actual)
 
             const karabo::util::Epochstamp currentStamp(seconds[i], fractions[i]);
             CPPUNIT_ASSERT(currentStamp >= lastStamp);
@@ -146,7 +145,7 @@ void Timing_Test::appTestRunner() {
         unsigned long long lastIdTick = idsTick[0];
         karabo::util::Epochstamp lastStampTick(secondsTick[0], fractionsTick[0]);
         for (size_t i = 1; i < idsTick.size(); ++i) {
-            CPPUNIT_ASSERT_EQUAL(idsTick[i], lastIdTick + static_cast<unsigned long long> (tickCountdown));
+            CPPUNIT_ASSERT_EQUAL(lastIdTick + static_cast<unsigned long long> (tickCountdown), idsTick[i]);
 
             const karabo::util::Epochstamp currentStamp(secondsTick[i], fractionsTick[i]);
             CPPUNIT_ASSERT(currentStamp > lastStampTick);
