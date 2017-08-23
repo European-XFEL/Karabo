@@ -48,15 +48,16 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         self._internal_widget.setPalette(palette)
         if self._internal_widget.hasAcceptableInput():
             if isinstance(self.validator, QDoubleValidator):
-                if len(text) > len(self._internal_value):
-                    # Overwrite
-                    self._internal_value = text
+                intdci = text.split('.')
+                if len(intdci) > 1:
+                    part2 = intdci[1]
+                    tail = self._internal_value.split('.')[1]
+                    if len(tail) > len(part2):
+                        part2 += tail[len(part2):]
                 else:
-                    # Replace old displayed value with new one
-                    curr_text = self._display_value
-                    self._internal_value = self._internal_value.replace(
-                        curr_text, text, len(text))
-                    self._display_value = text
+                    part2 = ''
+                self._internal_value = '.'.join([intdci[0], part2])
+                self._display_value = text
             else:
                 self._internal_value = text
             self.signalEditingFinished.emit(self.boxes[0], self.value)
