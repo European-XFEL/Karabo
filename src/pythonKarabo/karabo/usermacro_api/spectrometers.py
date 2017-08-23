@@ -1,5 +1,6 @@
 """Generalized interface to the spectrometers"""
-from karabo.middlelayer import State, synchronize
+from karabo.middlelayer import State
+from karabo.middlelayer_api.device_client import synchronize
 from .genericproxy import Sensible
 
 
