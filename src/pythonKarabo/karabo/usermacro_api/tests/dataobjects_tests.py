@@ -1,6 +1,20 @@
+"""
+These tests are part of the karabo.usermacros API.
+To run all tests, execute:
+   python -m unittest discover -p *_test.py
+"""
+
+from asyncio import async, coroutine, create_subprocess_exec, get_event_loop, sleep
 from collections import deque
+from contextlib import contextmanager
 import unittest
-from karabo.middlelayer import Hash
+from subprocess import PIPE
+import sys
+
+from karabo.middlelayer import Device, getDevice, Hash, Slot
+from karabo.middlelayer_api.tests.eventloop import (DeviceTest, sync_tst,
+                                                   async_tst)
+
 from karabo.usermacros import AcquiredOffline, AcquiredOnline
 from karabo.usermacro_api.dataobjects import AcquiredData
 
@@ -8,6 +22,23 @@ from karabo.usermacro_api.dataobjects import AcquiredData
 class Abstract(object):
     """ Abstracts more complex properties real devices would have """
     pass
+
+
+class TestDev(Device):
+
+    def __init__(self, configuration):
+        super().__init__(configuration)
+        self.lockedBy = ""
+        self._lock_count = 0
+
+    @Slot()
+    def ping(self):
+        print("Ping!")
+
+
+def getMockDevice(name, **kwargs):
+    cls = type(name, (TestDev,), {})
+    return cls(kwargs)
 
 
 class TestAD(unittest.TestCase):
@@ -72,29 +103,51 @@ class TestAcquiredOnline(unittest.TestCase):
         self.assertEqual(len(ao), 0)
 
 
-class TestAcquiredOffline(unittest.TestCase):
-    def test_initalization(self):
-        """Test AcquiredOffline object initialization"""
-        ao = AcquiredOffline()
-        expRep = "AcquiredOffline(None, size=10)"
-        self.assertEqual(ao.__repr__(), expRep)
+class TestAcquiredOffline(DeviceTest):
+    """The tests in this class run on behalf of the device "local".
 
+    As this class inherits from :class:`DeviceTest`, it is possible to provide
+    a :func:`lifetimeManager`, such that the test can be run within an
+    eventloop
+    """
+
+    @classmethod
+    @contextmanager
+    def lifetimeManager(cls):
+        cls.local = TestDev({"_deviceId_": "AcquiredData_UnitTests"})
+        with cls.deviceManager(lead=cls.local):
+            yield
+
+    @sync_tst
+    def test_failed_initalization(self):
+        """Test AcquiredOffline object failed initialization"""
+        with self.assertRaises(TypeError):
+            ao = AcquiredOffline()
+
+    @async_tst
     def test_append(self):
-        ao = AcquiredOffline()
+        # It takes a couple of seconds for the bound device to start
+        self.process = yield from create_subprocess_exec(
+            sys.executable, "-m", "karabo.bound_api.launcher",
+            "run", "karabo.bound_device_test", "TestDevice",
+            stdin=PIPE)
+        self.process.stdin.write(b"<_deviceId_>boundDevice</_deviceId_>")
+        self.process.stdin.close()
+
+        proxy = yield from getDevice("boundDevice")
+        yield from proxy.injectSchema()
+
         data = Hash([('header', Hash([('trainId', 65535)]))])
-        timestamp = Abstract()
-        timestamp.timestamp = 1
-        meta = Abstract()
-        meta.timestamp = timestamp
-        expected_hash = Hash([('timestamp', 1),
-                             ('trainId', 65535),
-                             ('data', data),
-                             ('meta', meta)])
-        ao.append(data, meta)
+
+        ao = AcquiredOffline(source="boundDevice:output2")
+        #proxy.output2 = data
+        yield from proxy.send()
+        expected_hash_keys = ['timestamp', 'trainId', 'data', 'meta']
 
         self.assertEqual(len(ao), 1)
         # k-hashes don't have equality tests, test again their representation
-        self.assertEqual(str(ao[0]), str(expected_hash))
+        self.assertEqual(ao[0].getKeys(), expected_hash_keys)
+        selg.assertEqual(ao[0]['trainId'], 65535)
         next(ao)
         self.assertEqual(len(ao), 0)
 
