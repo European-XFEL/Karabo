@@ -18,6 +18,3 @@ class SimulatedCamAsSensible(Sensible):
     """Generalized interface to a simulated camera"""
     generalizes = ('SimulatedCameraPy')
 
-    @property
-    def value(self):
-        return self._proxy.frameCount
