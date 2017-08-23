@@ -113,6 +113,12 @@ class GenericProxy(object):
                 else [gproxy.getBoundDevices()
                       for gproxy in self._generic_proxies])
 
+    @property
+    def value(self):
+        """"Generic value getter """
+        if self._generic_proxies:
+            return [gproxy.value for gproxy in self._generic_proxies]
+
     @synchronize
     def lockon(self, locker):
         """Lock device"""
@@ -179,6 +185,10 @@ class Movable(GenericProxy):
     @position.setter
     def position(self, value):
         self.moveto(value)
+
+    @property
+    def value(self):
+        return self.position
 
     @synchronize
     def moveto(self, pos):
@@ -266,6 +276,10 @@ class Coolable(GenericProxy):
     def temperature(self, value):
         self.cool(value)
 
+    @property
+    def value(self):
+        return self.temperature
+
     @synchronize
     def cool(self, temperature):
         """Cool to *temperature*"""
@@ -298,6 +312,10 @@ class Pumpable(GenericProxy):
                     for gproxy in self._generic_proxies]
         return self._proxy.pressure
 
+    @property
+    def value(self):
+        return self.pressure
+
     @synchronize
     def pump(self):
         """Start pumping"""
@@ -327,6 +345,10 @@ class Closable(GenericProxy):
                 yield from gproxy.open()
         else:
             yield from self._proxy.open()
+
+    @property
+    def value(self):
+        return self.state
 
     @synchronize
     def close(self):
