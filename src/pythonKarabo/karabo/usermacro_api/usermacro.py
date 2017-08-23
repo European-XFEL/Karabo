@@ -56,11 +56,14 @@ def run_in_event_loop(macro, *args, **kwargs):
 
         if eventThread:
             eventThread.stop()
-
-    loop.call_soon_threadsafe(loop.create_task, __run())
-    # Must wait here due to the scope EventThread
-    if eventThread:
-        eventThread.join()
+    try:
+        loop.call_soon_threadsafe(loop.create_task, __run())
+        # Must wait here due to the scope EventThread
+        if eventThread:
+            eventThread.join()
+    except KeyboardInterrupt:
+        macro.cancelled = True
+        print("{} cancelled.".format(macro.deviceId))
 
 
 class UserMacro(Macro):
