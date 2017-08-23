@@ -37,7 +37,6 @@ private:
     boost::thread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
-    karabo::util::Epochstamp m_lastCheck;
 };
 
 #endif	/* TIMING_TEST_HH */
