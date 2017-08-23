@@ -14,7 +14,7 @@ from karabo.middlelayer import (
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
 from karabo.usermacro_api.util import flatten
-from karabo.usermacro_api.generalized import *
+import karabo.usermacro_api.generalized
 
 
 def splitTrajectory(pos_list, number_of_steps):
@@ -242,6 +242,10 @@ class AScan(UserMacro):
                     yield from sleep(self.exposureTime + self.time_epsilon)
                     yield from self._sensible.stop()
 
+                    v = self._sensible.value
+                    if v:
+                        print("  Value: {}".format(v))
+
                 step_num += 1
 
         # Stop acquisition here for continuous scans
@@ -378,11 +382,13 @@ class TScan(UserMacro):
             if self.cancelled:
                 break
             i += 1
-            print("Step {} - at time {}"
-                  .format(i, elaps))
+            print("Step {} - at time {}".format(i, elaps))
             yield from self._sensible.acquire()
             yield from sleep(self.exposureTime + self.time_epsilon)
             yield from self._sensible.stop()
+            v = self._sensible.value
+            if v:
+                print("  Value: {}".format(self._sensible.value))
             elaps += self.exposureTime + self.time_epsilon
 
         print("-"*linelen)
