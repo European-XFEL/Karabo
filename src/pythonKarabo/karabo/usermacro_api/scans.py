@@ -14,7 +14,7 @@ from karabo.middlelayer import (
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
 from karabo.usermacro_api.util import flatten
-from karabo.usermacro_api.generalized import *
+import karabo.usermacro_api.generalized
 
 
 def splitTrajectory(pos_list, number_of_steps):
@@ -242,6 +242,9 @@ class AScan(UserMacro):
                     yield from sleep(self.exposureTime + self.time_epsilon)
                     yield from self._sensible.stop()
 
+                    if self._sensible.value:
+                        print("  Value: {}".format(self._sensible.value))
+
                 step_num += 1
 
         # Stop acquisition here for continuous scans
@@ -311,6 +314,14 @@ class DScan(AScan):
         """ This outputs the position list with the values already delta """
         return super().__repr__().replace('\n', ',')
 
+    @coroutine
+    def execute(self):
+        """Overriden for moving Movable back to its initial position"""
+        pos0 = self._movable.position
+        yield from super().execute()
+        yield from self._movable.moveto(pos0)
+        print("Moving back to {}".format(pos0))
+
 
 class TScan(UserMacro):
     """Time scan"""
@@ -370,11 +381,14 @@ class TScan(UserMacro):
             if self.cancelled:
                 break
             i += 1
-            print("Step {} - at time {}"
-                  .format(i, elaps))
+            print("Step {} - at time {}".format(i, elaps))
             yield from self._sensible.acquire()
             yield from sleep(self.exposureTime + self.time_epsilon)
             yield from self._sensible.stop()
+
+            if self._sensible.value:
+                print("  Value: {}".format(self._sensible.value))
+
             elaps += self.exposureTime + self.time_epsilon
 
         print("-"*linelen)
@@ -391,6 +405,14 @@ class DMesh(AMesh):
         current_pos = np.array(self._movable.position)
         pos_list = np.array(list(self._pos_list))
         self._pos_list = pos_list + current_pos
+
+    @coroutine
+    def execute(self):
+        """Overriden for moving Movable back to its initial position"""
+        pos0 = self._movable.position
+        yield from super().execute()
+        yield from self._movable.moveto(pos0)
+        print("Moving back to {}".format(pos0))
 
 
 class AMove(UserMacro):
