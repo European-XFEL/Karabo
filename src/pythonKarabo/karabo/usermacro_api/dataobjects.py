@@ -3,8 +3,7 @@ from collections import deque
 import heapq
 import time
 
-from karabo.middlelayer import (DeviceClientBase, getHistory,
-                                Hash, InputChannel, State)
+from karabo.middlelayer import DeviceClientBase, getHistory, Hash, InputChannel
 from karabo.middlelayer_api.eventloop import EventLoop
 
 from karabo.usermacro_api.util import getConfigurationFromPast
@@ -13,7 +12,7 @@ from karabo.usermacro_api.util import getConfigurationFromPast
 class AcquiredData(object):
     """ Acquired Data is an iterable object that queries various
         data sources.
-        It has a buffer of a specified `_max_fifo_size` size.
+        It has a buffer of a length specified by`size`.
         It returns a k-hash::
 
             data = AcquiredData(experimentId=1)
@@ -25,6 +24,10 @@ class AcquiredData(object):
             - timestamp
             - trainId
             - data (which is a hash itself)
+
+        The `experimentId` parameter is used for logging purposes.
+        This Id should be the Id of the experiment of which the data
+        we want to retrieve.
     """
 
     def __init__(self, experimentId=None, size=10):
@@ -42,7 +45,7 @@ class AcquiredData(object):
     def __str__(self):
         exp = ("Experiment " + str(self.experimentId) if self.experimentId
                else "Unknown Experiment")
-        srep = ','.join('{}'.format(dat) for dat in self._fifo)
+        srep = ', '.join('{}'.format(dat['trainId']) for dat in self._fifo)
         return exp + ': [' + srep + ']'
 
     def append(self, data):
@@ -90,11 +93,20 @@ class AcquiredOnline(AcquiredData):
 class AcquiredOffline(AcquiredData, DeviceClientBase):
 
     def __init__(self, experimentId=None, size=10, source=None):
+        """
+            :param experimentId: the experimentId, used for logging, __str__
+            :param size: the size of the fifo buffer, default is 10
+            :param source: the output channel to listen to. The format should
+                           respect the Karabo `deviceId:channelId`  convention
+        """
         configuration = dict(_deviceId_="OfflineData-{}".format(experimentId),
                              append=dict(connectedOutputChannels=[source]))
         DeviceClientBase.__init__(self, configuration=configuration)
         AcquiredData.__init__(self, experimentId, size)
 
+        # The following is used as to get a grip on the event loop and allow
+        # us to run as a `DeviceClientBase` on our own within Karabo
+        # With this, we are able to have our own InputChannel!
         @coroutine
         def __run():
             yield from self.startInstance()
