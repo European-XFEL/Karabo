@@ -242,9 +242,8 @@ class AScan(UserMacro):
                     yield from sleep(self.exposureTime + self.time_epsilon)
                     yield from self._sensible.stop()
 
-                    v = self._sensible.value
-                    if v:
-                        print("  Value: {}".format(v))
+                    if self._sensible.value:
+                        print("  Value: {}".format(self._sensible.value))
 
                 step_num += 1
 
@@ -386,9 +385,10 @@ class TScan(UserMacro):
             yield from self._sensible.acquire()
             yield from sleep(self.exposureTime + self.time_epsilon)
             yield from self._sensible.stop()
-            v = self._sensible.value
-            if v:
+
+            if self._sensible.value:
                 print("  Value: {}".format(self._sensible.value))
+
             elaps += self.exposureTime + self.time_epsilon
 
         print("-"*linelen)
