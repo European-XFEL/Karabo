@@ -311,6 +311,14 @@ class DScan(AScan):
         """ This outputs the position list with the values already delta """
         return super().__repr__().replace('\n', ',')
 
+    @coroutine
+    def execute(self):
+        """Overriden for moving Movable back to its initial position"""
+        pos0 = self._movable.position
+        yield from super().execute()
+        yield from self._movable.moveto(pos0)
+        print("Moving back to {}".format(pos0))
+
 
 class TScan(UserMacro):
     """Time scan"""
@@ -391,6 +399,14 @@ class DMesh(AMesh):
         current_pos = np.array(self._movable.position)
         pos_list = np.array(list(self._pos_list))
         self._pos_list = pos_list + current_pos
+
+    @coroutine
+    def execute(self):
+        """Overriden for moving Movable back to its initial position"""
+        pos0 = self._movable.position
+        yield from super().execute()
+        yield from self._movable.moveto(pos0)
+        print("Moving back to {}".format(pos0))
 
 
 class AMove(UserMacro):
