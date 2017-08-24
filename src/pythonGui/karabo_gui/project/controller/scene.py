@@ -15,8 +15,8 @@ from karabo.middlelayer_api.project.api import read_project_model
 from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui import icons
 from karabo_gui import messagebox
-from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
-from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
+from karabo_gui.project.dialog.object_handle import (
+    ObjectDuplicateDialog, ObjectEditDialog)
 from karabo_gui.project.utils import show_no_configuration
 from karabo_gui.singletons.api import get_db_conn, get_panel_wrangler
 from karabo_gui.util import getSaveFileName
@@ -77,7 +77,7 @@ class SceneController(BaseProjectController):
                         {'models': [scene]})
 
     def _edit_scene(self):
-        dialog = SceneHandleDialog(self.model)
+        dialog = ObjectEditDialog(object_type='scene', model=self.model)
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
