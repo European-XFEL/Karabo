@@ -600,6 +600,8 @@ void SignalSlotable_Test::testAsyncReply() {
             : karabo::xms::SignalSlotable(instanceId)
             , m_slotCallEnded(false)
             , m_asynReplyHandlerCalled(false)
+            , m_slotCallEnded_error(false)
+            , m_asynReplyHandlerCalled_error(false)
             , m_timer(karabo::net::EventLoop::getIOService()) {
 
             KARABO_SLOT(slotAsyncReply, int);
