@@ -14,7 +14,18 @@
 #include <cppunit/TestRunner.h>
 
 
+#include "boost/thread.hpp"
+
+#include "karabo/net/EventLoop.hh"
+
+
 int main() {
+
+    // uncomment this if ever testing against a local broker
+    // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
+
+    boost::thread t(karabo::net::EventLoop::work);
+
     // Create the event manager and test controller
     CPPUNIT_NS::TestResult controller;
 
