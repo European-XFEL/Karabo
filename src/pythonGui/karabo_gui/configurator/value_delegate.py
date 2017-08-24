@@ -86,6 +86,7 @@ class EditWidgetWrapper(QWidget):
             # XXX: Enable editing for that widget - this should be revisited
             # since all widgets are editable now
             self.editable_widget.setReadOnly(False)
+            self.editable_widget.typeChanged(obj)
             self.setFocusProxy(self.editable_widget.widget)
 
         # Introduce layout to have some border to show
