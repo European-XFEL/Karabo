@@ -7,7 +7,7 @@
    panel containing the items for the host, device server instance and device
    class/instance.
 """
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import QAbstractItemView, QAction, QCursor, QMenu, QTreeView
 
 import karabo_gui.icons as icons
@@ -41,7 +41,7 @@ class NavigationTreeView(QTreeView):
         self.setDragEnabled(True)
 
         # by default all path are expanded
-        self.treeExpanded = True
+        self.expanded = True
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
     def _setupContextMenu(self):
@@ -197,9 +197,10 @@ class NavigationTreeView(QTreeView):
         if self._current_configuration is not None:
             saveConfigurationToFile(self._current_configuration)
 
+    @pyqtSlot()
     def onDoubleClickHeader(self):
-        if self.treeExpanded:
+        if self.expanded:
             self.collapseAll()
         else:
             self.expandAll()
-        self.treeExpanded = not self.treeExpanded
+        self.expanded = not self.expanded
