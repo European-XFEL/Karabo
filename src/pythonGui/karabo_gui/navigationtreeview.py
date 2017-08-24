@@ -40,6 +40,10 @@ class NavigationTreeView(QTreeView):
             self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
 
+        # by default all path are expanded
+        self.treeExpanded = True
+        self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
+
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
 
@@ -192,3 +196,10 @@ class NavigationTreeView(QTreeView):
     def onSaveToFile(self):
         if self._current_configuration is not None:
             saveConfigurationToFile(self._current_configuration)
+
+    def onDoubleClickHeader(self):
+        if self.treeExpanded:
+            self.collapseAll()
+        else:
+            self.expandAll()
+        self.treeExpanded = not self.treeExpanded
