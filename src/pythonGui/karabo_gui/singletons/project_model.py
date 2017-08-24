@@ -17,6 +17,8 @@ from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.indicators import get_state_icon_for_status
 from karabo_gui.project.controller.build import (
     create_project_controller, destroy_project_controller)
+from karabo_gui.project.controller.device_config import (
+    DeviceConfigurationController)
 from karabo_gui.project.controller.device import DeviceInstanceController
 from karabo_gui.project.utils import show_no_configuration
 from karabo_gui.singletons.api import get_topology
@@ -188,7 +190,13 @@ class ProjectViewItemModel(QAbstractItemModel):
         if not index.isValid():
             return Qt.NoItemFlags
 
-        return super(ProjectViewItemModel, self).flags(index)
+        # All items have these properties
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        controller = self.controller_ref(index)
+        if isinstance(controller, DeviceConfigurationController):
+            flags |= Qt.ItemIsUserCheckable
+
+        return flags
 
     def data(self, index, role=Qt.DisplayRole):
         """Reimplemented function of QAbstractItemModel.
@@ -219,6 +227,27 @@ class ProjectViewItemModel(QAbstractItemModel):
                 return get_alarm_icon(ui_data.alarm_type)
             elif column == STATUS_COLUMN and role == Qt.DecorationRole:
                 return get_state_icon_for_status(ui_data.status)
+
+    def setData(self, index, value, role):
+        """Reimplemented function of QAbstractItemModel.
+        """
+        if role != Qt.CheckStateRole:
+            return False
+
+        if index.column() == PROJECT_COLUMN:
+            controller = self.controller_ref(index)
+            if controller is None:
+                return False
+            if isinstance(controller, DeviceConfigurationController):
+                config_model = controller.model
+                parent_controller = self.controller_ref(index.parent())
+                if value != Qt.Checked:
+                    return False
+                # Only interested in checked to set new active config
+                parent_controller.active_config_changed(config_model)
+
+        # Value was successfully updated
+        return True
 
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
