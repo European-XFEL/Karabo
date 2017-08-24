@@ -792,7 +792,7 @@ ${OBJECTDIR}/_ext/1103122747/Statics.o: ../../../src/karabo/xms/Statics.cc
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/1033645296/Runner_Test.o ${TESTDIR}/_ext/1033645296/coreTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/1033645296/DeviceClient_Test.o ${TESTDIR}/_ext/1033645296/Runner_Test.o ${TESTDIR}/_ext/1033645296/coreTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f7 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -819,6 +819,12 @@ ${TESTDIR}/TestFiles/f6: ${TESTDIR}/_ext/1856679435/Authenticate_Test.o ${TESTDI
 ${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/ImageData_Test.o ${TESTDIR}/_ext/936508045/InputOutputChannel_Test.o ${TESTDIR}/_ext/936508045/Memory_Test.o ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f5 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
+
+
+${TESTDIR}/_ext/1033645296/DeviceClient_Test.o: ../../../src/karabo/tests/core/DeviceClient_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033645296
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/DeviceClient_Test.o ../../../src/karabo/tests/core/DeviceClient_Test.cc
 
 
 ${TESTDIR}/_ext/1033645296/Runner_Test.o: ../../../src/karabo/tests/core/Runner_Test.cc 
