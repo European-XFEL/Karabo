@@ -5,9 +5,10 @@ from karabo.middlelayer_api.eventloop import synchronize
 from .genericproxy import Movable
 
 
-class SlitSystemAsMovable(Movable):
+class OffsetMirrorAsMovable(Movable):
     """Generalized interface to Offset Mirrors"""
     generalizes = ('OffsetMirror')
+    state_mapping = {State.STOPPED: State.ON}
     fepsilon = 1e-3
 
     @property
