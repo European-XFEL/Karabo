@@ -1,5 +1,8 @@
 #include "PropertyTest.hh"
 
+#include "karabo/util/Schema.hh"
+#include "karabo/util/Hash.hh"
+#include "karabo/util/State.hh"
 
 
 namespace karabo {
