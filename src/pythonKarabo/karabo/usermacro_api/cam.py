@@ -18,3 +18,19 @@ class SimulatedCamAsSensible(Sensible):
     """Generalized interface to a simulated camera"""
     generalizes = ('SimulatedCameraPy')
 
+
+class TestImagerAsSensible(Sensible):
+    """Generalized interface to a Test imager"""
+    generalizes = ('TestImager')
+
+    @property
+    def exposureTime(self):
+        """No exposure time"""
+
+    @exposureTime.setter
+    def exposureTime(self, value):
+        """No exposure time"""
+
+    @property
+    def value(self):
+        return self._proxy.triggerCount
