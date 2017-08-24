@@ -201,14 +201,16 @@ namespace karabo {
             vector<string> v;
             string s = subscription;
             boost::split(v, s, boost::is_any_of(" "));
-            const string& slotInstanceId = v[0];
-            const string& command = v[1];
+            if (v.size() == 2) {
+                const string& slotInstanceId = v[0];
+                const string& command = v[1];
 
-            boost::unique_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
-            if (command == "SUBSCRIBE")
-                m_registeredChannels[channel].insert(slotInstanceId);
-            else if (command == "UNSUBSCRIBE")
-                m_registeredChannels[channel].erase(slotInstanceId);
+                boost::unique_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
+                if (command == "SUBSCRIBE")
+                    m_registeredChannels[channel].insert(slotInstanceId);
+                else if (command == "UNSUBSCRIBE")
+                    m_registeredChannels[channel].erase(slotInstanceId);
+            }
             // wait for next command
             channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
         }
