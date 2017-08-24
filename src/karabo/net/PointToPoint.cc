@@ -210,6 +210,12 @@ namespace karabo {
                     m_registeredChannels[channel].insert(slotInstanceId);
                 else if (command == "UNSUBSCRIBE")
                     m_registeredChannels[channel].erase(slotInstanceId);
+            } else {
+                // Likely new version of p2p:
+                KARABO_LOG_FRAMEWORK_WARN << "'onSubscribe' received incompatible subscription message: "
+                        << subscription;
+                channel->close();
+                return;
             }
             // wait for next command
             channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
