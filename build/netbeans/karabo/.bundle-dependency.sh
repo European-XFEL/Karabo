@@ -65,26 +65,8 @@ if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
     DISTRO_RELEASE=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
 fi
-# temporary solution
-if tmp=$(svn info . | grep URL)
-then
-    tmp=${tmp%%-*}
-    DEPVERSION=${tmp##*/}
-    if [ "$DEPVERSION" = "trunk" ]; then
-        tmp=$(svn info . | grep Revision)
-        DEPVERSION=r${tmp##*: }
-    fi
-elif tmp=$(jsvn info . | grep URL)
-then
-    tmp=${tmp%%-*}
-    DEPVERSION=${tmp##*/}
-    if [ "$DEPVERSION" = "trunk" ]; then
-        tmp=$(jsvn info . | grep Revision)
-        DEPVERSION=r${tmp##*: }
-    fi
-else
-    DEPVERSION=$(git rev-parse --short HEAD)
-fi
+
+DEPVERSION=$(git rev-parse --short HEAD)
 
 DEPNAME=`basename $originalPwd`
 PACKAGENAME=$DEPNAME-$DEPVERSION-$KARABOVERSION
