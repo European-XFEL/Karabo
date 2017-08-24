@@ -59,3 +59,22 @@ class ObjectDuplicateDialog(QDialog):
             dupe_name = '{}{}'.format(self.leTitle.text(), index)
             simple_names.append(dupe_name)
         return simple_names
+
+
+class ObjectEditDialog(QDialog):
+    def __init__(self, object_type='object', model=None, parent=None):
+        super(ObjectEditDialog, self).__init__(parent)
+        filepath = op.join(op.abspath(op.dirname(__file__)),
+                           'object_edit.ui')
+        uic.loadUi(filepath, self)
+
+        if model is None:
+            title = 'Add {}'.format(object_type)
+        else:
+            title = 'Edit {}'.format(object_type)
+            self.leTitle.setText(model.simple_name)
+        self.setWindowTitle(title)
+
+    @property
+    def simple_name(self):
+        return self.leTitle.text()
