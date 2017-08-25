@@ -63,10 +63,6 @@ def run_in_event_loop(macro, *args, **kwargs):
             # macro is a class, instantiate
             macro = macro(*args, **kwargs)
 
-    # Must wait here due to the scope EventThread
-    if eventThread:
-        eventThread.join()
-
     try:
         future = Future()
         task = loop.create_task(run_usermacro(macro, eventThread))
