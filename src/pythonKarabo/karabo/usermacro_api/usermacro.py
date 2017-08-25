@@ -79,7 +79,7 @@ class UserMacro(Macro):
 
     time_epsilon = Float(
         displayedName="TimeEpsilon",
-        defaultValue=1e-1,
+        defaultValue=1e-4,
         unitSymbol=Unit.SECOND)
 
     cancelled = Bool(
