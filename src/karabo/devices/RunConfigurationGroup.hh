@@ -8,12 +8,18 @@
 #ifndef KARABO_DEVICES_RUNCONFIGURATIONGROUP_HH
 #define	KARABO_DEVICES_RUNCONFIGURATIONGROUP_HH
 
-#include <karabo/util.hpp>
-#include <karabo/core.hpp>
+#include <vector>
+
+#include "karabo/util/Hash.hh"
+#include "karabo/core/Device.hh"
 
 #define OUTPUT_CHANNEL_SEPARATOR ":"
 
 namespace karabo {
+    // Forward declare
+    namespace util {
+        class Schema;
+    }
     namespace devices {
 
 

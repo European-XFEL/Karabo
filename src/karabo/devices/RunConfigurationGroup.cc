@@ -1,7 +1,9 @@
 #include "RunConfigurationGroup.hh"
+#include "karabo/util/Schema.hh"
 #include "karabo/util/GenericElement.hh"
 #include "karabo/util/LeafElement.hh"
 #include "karabo/util/ChoiceElement.hh"
+#include "karabo/util/State.hh"
 #include "karabo/xms/SlotElement.hh"
 #include "karabo/core/Device.hh"
 

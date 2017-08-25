@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Macro</class>
- <widget class="QDialog" name="Macro">
+ <class>Object</class>
+ <widget class="QDialog" name="Object">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>267</width>
+    <width>264</width>
     <height>90</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
      <item>
       <widget class="QLabel" name="laTitle">
        <property name="text">
-        <string>Enter macro title:</string>
+        <string>Name:</string>
        </property>
       </widget>
      </item>
@@ -45,7 +45,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>Macro</receiver>
+   <receiver>Object</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -61,7 +61,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>Macro</receiver>
+   <receiver>Object</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

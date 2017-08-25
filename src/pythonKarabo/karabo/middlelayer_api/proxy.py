@@ -256,6 +256,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._running_tasks = set()
             self._last_update_task = None
             self._schemaUpdateConnected = False
+            self._lock_count = 0
 
         def _notifyChanged(self, descriptor, value):
             for q in self._queues[descriptor.longkey]:

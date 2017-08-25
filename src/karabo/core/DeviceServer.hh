@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <utility>
+#include <unordered_map>
 
 /**
  * The main European XFEL namespace
@@ -62,7 +63,7 @@ namespace karabo {
             karabo::util::Hash m_availableDevices;
             std::vector<std::string> m_deviceClasses;
 
-            typedef std::map<std::string, boost::shared_ptr<BaseDevice> > DeviceInstanceMap;
+            typedef std::unordered_map<std::string, boost::shared_ptr<BaseDevice> > DeviceInstanceMap;
             DeviceInstanceMap m_deviceInstanceMap;
             boost::mutex m_deviceInstanceMutex;
             std::map<std::string, unsigned int> m_deviceInstanceCount;
@@ -72,6 +73,7 @@ namespace karabo {
 
             std::string m_serverId;
 
+            DeviceInstanceMap m_devicesForTimingMap; // protect via m_deviceInstanceMutex!
             std::string m_timeServerId;
             unsigned long long m_timeId;
             unsigned long long m_timeSec; // seconds

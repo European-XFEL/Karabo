@@ -11,7 +11,7 @@ import signal
 
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
-    UINT32_ELEMENT, NODE_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
+    UINT32_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, ChannelMetaData, JmsConnection,
     EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
@@ -156,6 +156,11 @@ class PythonDevice(NoFsm):
                         .expertAccess()
                         .commit(),
 
+            SLOT_ELEMENT(expected).key("slotClearLock")
+                        .displayedName("Clear Lock")
+                        .expertAccess()
+                        .commit(),
+
             STRING_ELEMENT(expected).key("lastCommand")
                     .displayedName("Last command")
                     .description("The last slot called.")
@@ -172,6 +177,7 @@ class PythonDevice(NoFsm):
                         .assignmentOptional().defaultValue(True)
                         .commit(),
 
+            # This parameter is obsolete and should be removed.  Replaced by "timeServerId"
             BOOL_ELEMENT(expected).key("useTimeserver")
                         .displayedName("Use Timeserver")
                         .description("Decides whether to use time and train ID"
@@ -180,6 +186,12 @@ class PythonDevice(NoFsm):
                         .expertAccess()
                         .assignmentOptional().defaultValue(False)
                         .commit(),
+
+            STRING_ELEMENT(expected).key("timeServerId")
+                    .displayedName("TimeServer ID")
+                    .description("The instance id uniquely identifies a TimeServer instance in the distributed system")
+                    .assignmentOptional().defaultValue("")
+                    .commit(),
 
             INT32_ELEMENT(expected).key("progress")
                     .displayedName("Progress")
@@ -320,6 +332,7 @@ class PythonDevice(NoFsm):
         self._timeSec = 0
         self._timeFrac = 0
         self._timePeriod = 0
+        self.timeServerId = self.parameters["timeServerId"]
 
         # Setup the validation classes
         self.validatorIntern   = Validator()
@@ -418,9 +431,9 @@ class PythonDevice(NoFsm):
 
         self.set("pid", pid)
 
-        if self.get("useTimeserver"):
-            self.log.DEBUG("Connecting to time server")
-            self._ss.connect("Karabo_TimeServer", "signalTimeTick",
+        if self.timeServerId:
+            self.log.DEBUG("Connecting to time server : \"{}\"".format(self.timeServerId))
+            self._ss.connect(self.timeServerId, "signalTimeTick",
                              "", "slotTimeTick")
 
 
@@ -1227,16 +1240,14 @@ class PythonDevice(NoFsm):
     def slotCallGuard(self, slotName, callee):
         # Check whether the slot is mentioned in the expectedParameters
         # as the call guard only works on those and will ignore all others
-        if slotName not in self.fullSchema:
-            return
+        isSchemaSlot = self.fullSchema.has(slotName)
 
         # Check whether the slot can be called given the current locking state
-        isSchemaSlot = self.fullSchema.has(slotName)
         lockableSlot = isSchemaSlot or slotName == "slotReconfigure"
         if self.allowLock() and lockableSlot and slotName != "slotClearLock":
             self._ensureSlotIsValidUnderCurrentLock(slotName, callee)
 
-        if self.fullSchema.hasAllowedStates(slotName):
+        if isSchemaSlot and self.fullSchema.hasAllowedStates(slotName):
             allowedStates = self.fullSchema.getAllowedStates(slotName)
             if allowedStates:
                 currentState = self["state"]
@@ -1246,7 +1257,8 @@ class PythonDevice(NoFsm):
                     raise RuntimeError(msg)
 
         # Log the call of this slot by setting a parameter of the device
-        self.set("lastCommand", slotName)
+        if isSchemaSlot:
+            self.set("lastCommand", slotName)
 
     def allowLock(self):
         """
@@ -1347,10 +1359,15 @@ class PythonDevice(NoFsm):
                             "requestedUpdate", updates))
 
     def slotTimeTick(self, id, sec, frac, period):
+        epochNow = Epochstamp()
         with self._timeLock:
             self._timeId = id
             self._timeSec = sec
             self._timeFrac = frac
+            # Fallback to the local timing ...
+            if sec == 0:
+                self._timeSec  = epochNow.getSeconds()
+                self._timeFrac = epochNow.getFractionalSeconds()
             self._timePeriod = period
         self.onTimeUpdate(id, sec, frac, period)
 
@@ -1363,7 +1380,7 @@ class PythonDevice(NoFsm):
         """
         Returns the actual timestamp. The Trainstamp part of Timestamp is
         extrapolated from the last values received via slotTimeTick (or zero
-        if no time ticks received, i.e. useTimeserver is false).
+        if no time ticks received, i.e. timeServerId is empty).
 
         :return: the actual timestamp
         """
@@ -1373,7 +1390,7 @@ class PythonDevice(NoFsm):
             if self._timePeriod > 0:
                 epochLastReceived = Epochstamp(self._timeSec, self._timeFrac)
                 duration = epochNow.elapsed(epochLastReceived)
-                nPeriods = int((duration.getTotalSeconds() * 1000000 + duration.getFractions() / 1000) / self._timePeriod)
+                nPeriods = int((duration.getTotalSeconds() * 1000000 + duration.getFractions() // 1000) // self._timePeriod)
                 id = self._timeId + nPeriods
         return Timestamp(epochNow, Trainstamp(int(id)))
 

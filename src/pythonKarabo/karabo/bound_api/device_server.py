@@ -101,6 +101,13 @@ class DeviceServer(object):
             OVERWRITE_ELEMENT(expected).key("Logger.file.filename")
                     .setNewDefaultValue("device-server.log")
                     .commit()
+                    ,
+            STRING_ELEMENT(expected).key("timeServerId")
+                    .description("The instance id uniquely identifies a TimeServer instance in the distributed system")
+                    .displayedName("TimeServer ID")
+                    .assignmentOptional().defaultValue("")
+                    .commit()
+                    ,
         )
 
     def setupFsm(self):
@@ -173,6 +180,7 @@ class DeviceServer(object):
         self.needScanPlugins = True
         self.autoStart = config.get("autoStart")
         self.deviceClasses = config.get("deviceClasses")
+        self.timeServerId = config.get("timeServerId")
 
         if 'serverId' in config:
             self.serverid = config['serverId']
@@ -328,6 +336,9 @@ class DeviceServer(object):
 
         # Add connection type and parameters used by device server for connecting to broker
         config['_connection_'] = self.connectionParameters
+
+        # Add time server ID configured for device server
+        config['timeServerId'] = self.timeServerId
 
         # create temporary instance to check the configuration parameters are valid
         try:
