@@ -1,6 +1,7 @@
 """The Generic Proxy module contains
 all generalized interface to devices
 """
+import asyncio
 
 from karabo.common.states import StateSignifier
 from karabo.middlelayer import (
@@ -69,17 +70,17 @@ class GenericProxy(object):
         ret = None
         if args:
             if len(args) == 1:
-                l = args[0].split('@')
-                deviceId = l[0]
-
-                if isinstance(deviceId, str):
+                if isinstance(args[0], str):
                     # Act as a generic proxy
+                    l = args[0].split('@')
+                    deviceId = l[0]
                     try:
                         proxy = connectDevice(
                             deviceId, timeout=cls.proxy_ops_timeout)
                         ret = cls.create_generic_proxy(proxy)
-                        ret._param_regex = l[1] if len(l) == 2 else None
-                    except TimeoutError:
+                        if ret:
+                            ret._param_regex = l[1] if len(l) == 2 else None
+                    except (asyncio.TimeoutError, TimeoutError):
                         cls._error("Could not connect to {}."
                                    .format(deviceId))
                 else:
@@ -203,7 +204,7 @@ class Movable(GenericProxy):
 
     @property
     def value(self):
-        return self.position
+        return super().value if super().value else self.position
 
     @synchronize
     def moveto(self, pos):
@@ -329,7 +330,7 @@ class Pumpable(GenericProxy):
 
     @property
     def value(self):
-        return self.pressure
+        return super().value if super().value else self.pressure
 
     @synchronize
     def pump(self):
@@ -363,7 +364,7 @@ class Closable(GenericProxy):
 
     @property
     def value(self):
-        return self.state
+        return super().value if super().value else self.state
 
     @synchronize
     def close(self):
