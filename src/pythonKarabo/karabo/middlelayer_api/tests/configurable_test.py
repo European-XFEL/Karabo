@@ -1,9 +1,12 @@
 import asyncio
 from unittest import TestCase, main
+from zlib import adler32
 
 from karabo.middlelayer import (
     AccessMode, Assignment, Configurable, decodeBinary, encodeBinary, Hash,
-    Int32, isSet, KaraboError, Node, String, Unit, unit, VectorHash)
+    Int32, isSet, KaraboError, MetricPrefix, Node, Overwrite, State, String,
+    Unit, unit, VectorHash)
+from karabo.middlelayer_api.injectable import Injectable
 
 
 class StoreChanges(Configurable):
@@ -562,9 +565,140 @@ class Tests(TestCase):
         self.assertEqual(a.table.shape, (2,))
         self.assertEqual(a.table["name"][1], "fw")
 
+        a.table.append(("lll", 55))
+        self.assertEqual(len(a.table), 3)
+        self.assertEqual(a.table[2]["name"], "lll")
+        self.assertEqual(a.table["number"][2], 55)
+
+        a.table.extend([(str(i), i) for i in range(10)])
+        self.assertEqual(a.table[10]["number"], 7)
+
+        del a.table[10]
+        self.assertEqual(a.table[10]["number"], 8)
+        del a.table[10:12]
+        self.assertEqual(len(a.table), 10)
+
+        a.table[1] = ("k", 111)
+        self.assertEqual(a.table[1]["name"], "k")
+        self.assertEqual(len(a.table), 10)
+
+        a.table[5:7] = [("A", 2), ("B", 3)]
+        self.assertEqual(a.table[5]["name"], "A")
+        self.assertEqual(a.table["number"][6], 3)
+        self.assertEqual(a.table["number"][7], 4)
+
+        a.table.insert(2, ("C", 11))
+        self.assertEqual(a.table[2]["name"], "C")
+        self.assertEqual(a.table[3]["name"], "lll")
+        self.assertEqual(len(a.table), 11)
+
+        self.assertEqual(adler32(str(a.table).encode("ascii")), 1313745943)
+
         a = A(Hash("table", [Hash("name", "bla", "number", 5)]))
         self.assertEqual(a.table.shape, (1,))
         self.assertEqual(a.table["name"][0], "bla")
+
+    def test_overwrite(self):
+        class Mandy(Configurable):
+            number = Int32(displayedName="whatever", minExc=7,
+                           accessMode=AccessMode.READONLY,
+                           allowedStates={State.ON}, tags=set(),
+                           unitSymbol=Unit.METER,
+                           metricPrefixSymbol=MetricPrefix.MILLI,
+                           options=[8, 9, 10])
+            cookies = String(allowedStates={State.HOMING},
+                             displayedName="else",
+                             unitSymbol=Unit.METER,
+                             metricPrefixSymbol=MetricPrefix.MILLI,
+                             options=["a", "b"])
+            state = String(enum=State)
+
+        class Brian(Mandy):
+            number = Overwrite(minExc=3, allowedStates={State.OFF},
+                               accessMode=AccessMode.INITONLY,
+                               unitSymbol=Unit.SECOND,
+                               metricPrefixSymbol=MetricPrefix.MEGA,
+                               tags={"naughty"},
+                               options=[6, 4])
+            cookies = Overwrite()
+            state = Overwrite(options=[State.ON, State.OFF])
+
+        self.assertEqual(Brian.number.key, "number")
+        self.assertEqual(Mandy.number.minExc, 7)
+        self.assertEqual(Brian.number.minExc, 3)
+        self.assertEqual(Mandy.number.displayedName, "whatever")
+        self.assertEqual(Brian.number.displayedName, "whatever")
+        self.assertEqual(Mandy.number.allowedStates, {State.ON})
+        self.assertEqual(Brian.number.allowedStates, {State.OFF})
+        self.assertEqual(Mandy.number.tags, set())
+        self.assertEqual(Brian.number.tags, {"naughty"})
+        self.assertIs(Mandy.number.accessMode, AccessMode.READONLY)
+        self.assertIs(Brian.number.accessMode, AccessMode.INITONLY)
+        self.assertIs(Mandy.number.unitSymbol, Unit.METER)
+        self.assertIs(Brian.number.unitSymbol, Unit.SECOND)
+        self.assertEqual(Mandy.number.units, unit.millimeter)
+        self.assertEqual(Brian.number.units, unit.megasecond)
+        self.assertEqual(Mandy.number.options, [8, 9, 10])
+        self.assertEqual(Brian.number.options, [6, 4])
+
+        self.assertEqual(Mandy.cookies.allowedStates, {State.HOMING})
+        self.assertEqual(Brian.cookies.allowedStates, {State.HOMING})
+        self.assertEqual(Mandy.cookies.displayedName, "else")
+        self.assertEqual(Brian.cookies.displayedName, "else")
+        self.assertIs(Mandy.cookies.unitSymbol, Unit.METER)
+        self.assertIs(Brian.cookies.unitSymbol, Unit.METER)
+        self.assertEqual(Mandy.cookies.units, unit.millimeter)
+        self.assertEqual(Brian.cookies.units, unit.millimeter)
+        self.assertEqual(Mandy.cookies.options, ["a", "b"])
+        self.assertEqual(Brian.cookies.options, ["a", "b"])
+
+        self.assertIsNone(Mandy.state.options)
+        self.assertEqual(Brian.state.options, [State.ON, State.OFF])
+
+    def test_overwrite_inject(self):
+        class Mandy(Injectable):
+            number = Int32(displayedName="whatever", minExc=7,
+                           accessMode=AccessMode.READONLY,
+                           allowedStates={State.ON}, tags=set(),
+                           unitSymbol=Unit.METER,
+                           metricPrefixSymbol=MetricPrefix.MILLI,
+                           options=[8, 9, 10])
+
+            deviceId = None
+
+            def _register_slots(self):
+                pass
+
+            def _notifyNewSchema(self):
+                pass
+
+            def signalChanged(self, deviceId, hsh):
+                pass
+
+        mandy = Mandy()
+        mandy.__class__.number = Overwrite(
+            minExc=3, allowedStates={State.OFF}, accessMode=AccessMode.INITONLY,
+            unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MEGA,
+            tags={"naughty"}, options=[6, 4])
+        run_coro(mandy.publishInjectedParameters())
+
+        self.assertEqual(mandy.number.descriptor.key, "number")
+        self.assertEqual(Mandy.number.minExc, 7)
+        self.assertEqual(mandy.number.descriptor.minExc, 3)
+        self.assertEqual(Mandy.number.displayedName, "whatever")
+        self.assertEqual(mandy.number.descriptor.displayedName, "whatever")
+        self.assertEqual(Mandy.number.allowedStates, {State.ON})
+        self.assertEqual(mandy.number.descriptor.allowedStates, {State.OFF})
+        self.assertEqual(Mandy.number.tags, set())
+        self.assertEqual(mandy.number.descriptor.tags, {"naughty"})
+        self.assertIs(Mandy.number.accessMode, AccessMode.READONLY)
+        self.assertIs(mandy.number.descriptor.accessMode, AccessMode.INITONLY)
+        self.assertIs(Mandy.number.unitSymbol, Unit.METER)
+        self.assertIs(mandy.number.descriptor.unitSymbol, Unit.SECOND)
+        self.assertEqual(Mandy.number.units, unit.millimeter)
+        self.assertEqual(mandy.number.descriptor.units, unit.megasecond)
+        self.assertEqual(Mandy.number.options, [8, 9, 10])
+        self.assertEqual(mandy.number.descriptor.options, [6, 4])
 
 
 if __name__ == "__main__":

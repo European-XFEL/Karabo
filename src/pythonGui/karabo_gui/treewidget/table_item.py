@@ -13,27 +13,25 @@ from .base_item import BaseTreeWidgetItem
 
 
 class TableTreeWidgetItem(BaseTreeWidgetItem):
+
     def __init__(self, box, parent, parentItem=None):
         super(TableTreeWidgetItem, self).__init__(box, parent, parentItem)
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, icons.folder)
 
         self.create_display_widget(DisplayTableElement, box)
-        box.signalUpdateComponent.connect(self.onDisplayValueChanged)
+        self.connect_signal(box.signalUpdateComponent,
+                            self.onDisplayValueChanged)
 
     @write_only_property
     def displayText(self, text):
         self.setText(0, text)
         self.treeWidget().resizeColumnToContents(0)
 
-    def destroy(self):
-        """Give item subclasses a chance to clean up signal connections"""
-        self.box.signalUpdateComponent.disconnect(self.onDisplayValueChanged)
-
     def setupContextMenu(self):
         # item specific menu
         # add actions from attributeWidget
-        if self.editableComponent is None:
+        if self.editable_widget is None:
             return None
 
         menu = QMenu()
@@ -49,8 +47,9 @@ class TableTreeWidgetItem(BaseTreeWidgetItem):
         return menu
 
     def setReadOnly(self, readOnly):
-        if self.editableComponent is not None:
-            self.editableComponent.setEnabled(not readOnly)
+        if self.editable_widget is not None:
+            allowed = self.box.isAllowed()
+            self.editable_widget.widget.setEnabled(allowed and not readOnly)
         super(TableTreeWidgetItem, self).setReadOnly(readOnly)
 
     def onSetToDefault(self):

@@ -97,18 +97,6 @@ namespace karabo {
             virtual void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
 
             /**
-             * If the device receives time-server updates via slotTimeTick, this hook will be called for every id,
-             * irrespective of the frequency of the calls to slotTimeTick.
-             * Can be overwritten by derived classes
-             *
-             * @param id: train id
-             * @param sec: unix seconds
-             * @param frac: fractional seconds (i.e. attoseconds)
-             * @param period: interval between ids microseconds
-             */
-            virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
-
-            /**
              * A hook which is called if the device receives external time-server update, i.e. if slotTimeTick on the 
              * device server is called.
              * Can be overwritten by derived classes.
@@ -174,6 +162,8 @@ namespace karabo {
             unsigned long long m_timeFrac; // attoseconds
             unsigned long long m_timePeriod; // microseconds
             mutable boost::mutex m_timeChangeMutex;
+            unsigned long long m_lastTimeIdUpdated; // used only in onTimeUpdateHelper
+            mutable boost::mutex m_lastTimeIdUpdatedMutex;
 
             krb_log4cpp::Category* m_log;
 
@@ -431,6 +421,7 @@ namespace karabo {
              */
             Device(const karabo::util::Hash& configuration)
                 : m_errorRegex(".*error.*", boost::regex::icase)
+                , m_lastTimeIdUpdated(0ull)
                 , m_globalAlarmCondition(karabo::util::AlarmCondition::NONE)
                 , m_lastBrokerErrorStamp(0ull, 0ull) {
 
@@ -773,13 +764,13 @@ namespace karabo {
                             if (typeid (T) == typeid (karabo::util::State)) {
                                 return *reinterpret_cast<const T*> (&karabo::util::State::fromString(m_parameters.get<std::string>(key)));
                             }
-                            KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
+                            throw KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
                         }
                         if (leafType == karabo::util::Schema::ALARM_CONDITION) {
                             if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
                                 return *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(m_parameters.get<std::string>(key)));
                             }
-                            KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
+                            throw KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
                         }
                     }
 
@@ -1118,6 +1109,17 @@ namespace karabo {
                         << "\" does not allow a transition for event \"" << eventName << "\".";
             }
 
+            /**
+             * If the device receives time-server updates via slotTimeTick, this hook will be called for every id
+             * in sequential order. The time stamps (sec + frac) of subsequent ids might be identical - though they
+             * are usually spaced by period.
+             * Can be overwritten in derived classes.
+             *
+             * @param id: train id
+             * @param sec: unix seconds
+             * @param frac: fractional seconds (i.e. attoseconds)
+             * @param period: interval between ids microseconds
+             */
             virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
 
@@ -1297,7 +1299,9 @@ namespace karabo {
                     m_timeFrac = frac;
                     m_timePeriod = period;
                 }
-                karabo::net::EventLoop::getIOService().post(karabo::util::bind_weak(&Device<FSM>::onTimeUpdate, this,
+                // Since directly called from DeviceServer for all devices in sequence, we post the helper since it
+                // might be blocking.
+                karabo::net::EventLoop::getIOService().post(karabo::util::bind_weak(&Device<FSM>::onTimeUpdateHelper, this,
                                                                                     id, sec, frac, period));
             }
 
@@ -1516,7 +1520,11 @@ namespace karabo {
                         const std::string& displayType = m_fullSchema.getDisplayType(key);
                         if (displayType == "OutputChannel") {
                             KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates output channel '" << key << "'";
-                            createOutputChannel(key, m_parameters);
+                            try {
+                                createOutputChannel(key, m_parameters);
+                            } catch (const karabo::util::NetworkException& e) {
+                                KARABO_LOG_ERROR << e.userFriendlyMsg();
+                            }
                         } else if (displayType == "InputChannel") {
                             KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates input channel '" << key << "'";
                             createInputChannel(key, m_parameters);
@@ -1883,6 +1891,32 @@ namespace karabo {
              */
             void slotClearLock() {
                 set("lockedBy", std::string());
+            }
+
+            /**
+             * Internal helper for slotTimeTick
+             */
+            void onTimeUpdateHelper(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+                // This ensure that onTimeUpdate is called with strong monotonically increasing ids:
+                // If some where missing, call with them now - with same time stamp...
+                // If this is called with an id smaller or equal than before, it just skips calling onTimeUpdate with
+                // this id since that has already been done.
+                // This protection is needed since in DeviceServer::onTimeUpdate directly calls
+                // (Base)Device::slotTimeTick with the guarantee to be sequential, but then this helper is posted on
+                // the event loop which does not guarantee to keep the order (and in praxis ids are rarely swapped!).
+                // Another solution would be to use one boost::asio::io_service::strand per Device in DeviceServer,
+                // post slotTimeTick through that and do not post again in Device::slotTimeTick.
+
+                // Protect since several onTimeUpdateHelper could run in parallel:
+                boost::mutex::scoped_lock lock(m_lastTimeIdUpdatedMutex);
+
+                if (m_lastTimeIdUpdated == 0ull) { // Called the first time
+                    m_lastTimeIdUpdated = id - 1ull;
+                }
+
+                while (m_lastTimeIdUpdated < id) {
+                    onTimeUpdate(++m_lastTimeIdUpdated, sec, frac, period);
+                }
             }
         };
 

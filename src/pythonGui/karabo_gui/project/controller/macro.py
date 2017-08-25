@@ -16,8 +16,8 @@ from karabo_gui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
     KaraboEventSender)
 from karabo_gui.indicators import get_project_device_status_icon
-from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
-from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
+from karabo_gui.project.dialog.object_handle import (
+    ObjectDuplicateDialog, ObjectEditDialog)
 from karabo_gui.project.topo_listener import SystemTopologyListener
 from karabo_gui.project.utils import run_macro
 from karabo_gui.singletons.api import get_manager, get_topology
@@ -180,7 +180,7 @@ class MacroController(BaseProjectGroupController):
                         {'models': [macro]})
 
     def _edit_macro(self):
-        dialog = MacroHandleDialog(self.model)
+        dialog = ObjectEditDialog(object_type='macro', model=self.model)
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name

@@ -10,9 +10,9 @@ class AttributeWidget(Widget):
     factories = {}
     signalEditingFinished = pyqtSignal(object, object)
 
-    def __init__(self, box, attributeName, parent=None):
+    def __init__(self, box, parent=None):
         super(AttributeWidget, self).__init__(box)
-        self._attributeName = attributeName
+        self.attr_name = None
         box.configuration.boxvalue.state.signalUpdateComponent.connect(
             self.updateStateSlot)
 
@@ -28,5 +28,6 @@ class AttributeWidget(Widget):
 
     def valueChanged(self, box, value, timestamp=None):
         # `value` is the box's value, replace it with the attribute value.
-        value = getattr(box.descriptor, self._attributeName)
+        assert self.attr_name is not None
+        value = getattr(box.descriptor, self.attr_name)
         self.attributeValueChanged(value)

@@ -3,11 +3,14 @@
 # Created on November 3, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import os
+
 from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QMenu, QPalette, QPushButton,
                          QScrollArea, QSplitter, QStackedWidget, QToolButton,
                          QVBoxLayout, QWidget)
 
+from karabo_gui.configurator.api import ConfigurationTreeView
 from karabo_gui.events import register_for_broadcasts, KaraboEventSender
 import karabo_gui.icons as icons
 from karabo_gui.navigationtreeview import NavigationTreeView
@@ -20,6 +23,13 @@ from karabo_gui.util import (
     get_spin_widget, loadConfigurationFromFile, saveConfigurationToFile
 )
 from .base import BasePanelWidget
+
+# XXX: Hide the refactored configuration tree view with a feature flag
+if 'NEW_CONFIGURATOR' in os.environ:
+    # Use the new lazily-built configurator
+    ParameterTreeKlass = ConfigurationTreeView
+else:
+    ParameterTreeKlass = ParameterTreeWidget
 
 
 class ConfigurationPanel(BasePanelWidget):
@@ -64,7 +74,7 @@ class ConfigurationPanel(BasePanelWidget):
         # Stacked widget for configuration parameters
         self.__swParameterEditor = QStackedWidget(None)
         # Initial page
-        twInitalParameterEditorPage = ParameterTreeWidget()
+        twInitalParameterEditorPage = ParameterTreeKlass()
         twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
         self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
 
@@ -366,7 +376,7 @@ class ConfigurationPanel(BasePanelWidget):
         if config is None:
             return
 
-        acceptable_types = ('class', 'projectClass', 'deviceGroupClass')
+        acceptable_types = ('class', 'projectClass')
         if deviceId == config.id and config.type not in acceptable_types:
             self.showConfiguration(None)
 
@@ -410,7 +420,7 @@ class ConfigurationPanel(BasePanelWidget):
             self.showConfiguration(configuration)
 
     def _createNewParameterPage(self, configuration):
-        twParameterEditor = ParameterTreeWidget(configuration)
+        twParameterEditor = ParameterTreeKlass(configuration)
         twParameterEditor.setHeaderLabels([
             "Parameter", "Current value on device", "Value"])
 
@@ -423,7 +433,7 @@ class ConfigurationPanel(BasePanelWidget):
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
         twParameterEditor.itemSelectionChanged.connect(self.onSelectionChanged)
 
-        if configuration.type in ("class", "projectClass", "deviceGroupClass"):
+        if configuration.type in ("class", "projectClass"):
             twParameterEditor.hideColumn(1)
 
         if configuration is not None:
@@ -578,7 +588,7 @@ class ConfigurationPanel(BasePanelWidget):
                                             configuration.type in vis_types)
 
         # Toggle device updates
-        visible_types = ('device', 'deviceGroup')
+        visible_types = ('device',)
         if (self.prevConfiguration not in (None, configuration) and
                 self.prevConfiguration.type in visible_types):
             self.prevConfiguration.removeVisible()

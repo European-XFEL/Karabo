@@ -105,7 +105,7 @@ namespace karabo {
 
             // Server related
             std::string m_hostname;
-            unsigned int m_ownPort;
+            unsigned int m_port;
             int m_compression;
 
             karabo::net::Connection::Pointer m_dataConnection;
