@@ -7,7 +7,7 @@ from .alarm import AlarmMixin
 from .basetypes import isSet
 from .enums import AccessLevel, AccessMode, Assignment
 from .exceptions import KaraboError
-from .hash import Bool, Hash, HashType, Int32, SchemaHashType, String
+from .hash import Bool, HashType, Int32, SchemaHashType, String
 from .logger import Logger
 from .schema import Node
 from .signalslot import SignalSlotable, Signal, slot, coslot
@@ -126,17 +126,6 @@ class Device(AlarmMixin, SignalSlotable):
     @slot
     def slotGetConfiguration(self):
         return self.configurationAsHash(), self.deviceId
-
-    def configurationAsHash(self):
-        r = Hash()
-        for k in self._allattrs:
-            a = getattr(self, k, None)
-            if isSet(a):
-                v = getattr(type(self), k)
-                value, attrs = v.toDataAndAttrs(a)
-                r[k] = value
-                r[k, ...].update(attrs)
-        return r
 
     def _checkLocked(self, message):
         """return an error message if device is locked or None if not"""

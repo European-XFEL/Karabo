@@ -204,7 +204,7 @@ class DeviceInstanceController(BaseProjectGroupController):
     # ----------------------------------------------------------------------
     # Util methods
 
-    def _active_config_changed(self, config_model):
+    def active_config_changed(self, config_model):
         """Whenever the active config is changed from the context menu, update
         the relevant device ``Configuration`` object
         """
@@ -275,7 +275,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         for dev_conf in self.model.configs:
             conf_action = QAction(dev_conf.simple_name, config_menu)
             conf_action.setCheckable(True)
-            callback = partial(self._active_config_changed, dev_conf)
+            callback = partial(self.active_config_changed, dev_conf)
             conf_action.triggered.connect(callback)
             is_active = self.model.active_config_ref == dev_conf.uuid
             conf_action.setChecked(is_active)

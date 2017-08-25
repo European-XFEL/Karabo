@@ -11,11 +11,16 @@
 #include <map>
 #include <vector>
 #include <string>
-#include <karabo/util.hpp>
-#include <karabo/util/SimpleElement.hh>
+
+#include "karabo/util/Hash.hh"
+#include "karabo/util/SimpleElement.hh"
 #include "karabo/core/Device.hh"
 
 namespace karabo {
+    // forward declare
+    namespace util {
+        class Schema;
+    }
     namespace devices {
 
         class RunConfigurator : public karabo::core::Device<> {

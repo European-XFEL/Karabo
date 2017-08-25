@@ -3,31 +3,17 @@
 # Created on February 2, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import json
-
-from PyQt4.QtCore import pyqtSignal, QMimeData, QPoint, QRect, Qt
+from PyQt4.QtCore import pyqtSignal, QPoint, QRect, Qt
 from PyQt4.QtGui import (QAbstractItemView, QCursor, QHeaderView, QMenu,
                          QTreeWidget)
 
-from karabo_gui.components import BaseComponent, EditableApplyLaterComponent
 import karabo_gui.globals as krb_globals
 from karabo_gui.schema import ChoiceOfNodes
-from karabo_gui.singletons.api import get_network, get_topology
-from karabo_gui.widget import DisplayWidget, EditableWidget, Widget
+from karabo_gui.singletons.api import get_network
+from karabo_gui.widget import Widget
+from karabo_gui.util import dragged_configurator_items
 from .command_item import CommandTreeWidgetItem
 from .property_item import PropertyTreeWidgetItem
-
-
-def getDeviceBox(box):
-    """Return a box that belongs to an active device
-
-    if the box already is part of a running device, return it,
-    if it is from a class in a project, return the corresponding
-    instantiated device's box.
-    """
-    if box.configuration.type == "projectClass":
-        return get_topology().get_device(box.configuration.id).getBox(box.path)
-    return box
 
 
 class ParameterTreeWidget(QTreeWidget):
@@ -57,7 +43,7 @@ class ParameterTreeWidget(QTreeWidget):
         self.header().setResizeMode(QHeaderView.ResizeToContents)
 
     def clear(self):
-        """The components in the tree are children of this widget.
+        """The items in the tree are children of this widget.
         They must be deleted by Qt, otherwise they'll still receive
         signals.
         """
@@ -72,7 +58,7 @@ class ParameterTreeWidget(QTreeWidget):
         super(ParameterTreeWidget, self).clear()
 
         for c in self.children():
-            if isinstance(c, (BaseComponent, Widget)):
+            if isinstance(c, Widget):
                 c.setParent(None)
 
     def ensureMiddleColumnWidth(self):
@@ -144,57 +130,18 @@ class ParameterTreeWidget(QTreeWidget):
         if len(items) == 0 or self.conf.type == 'class':
             return None
 
-        dragged = []
-        for item in items:
-            if isinstance(item.box.descriptor, ChoiceOfNodes):
-                continue  # Skip ChoiceOfNodes
-
-            # Get the box. "box" is in the project, "realbox" the
-            # one on the device. They are the same if not from a project
-            box = item.box
-            realbox = getDeviceBox(box)
-            if realbox.descriptor is not None:
-                box = realbox
-
-            # Collect the relevant information
-            data = {
-                'key': box.key(),
-                'label': item.text(0),
-            }
-
-            factory = DisplayWidget.getClass(box)
-            if factory is not None:
-                data['display_widget_class'] = factory.__name__
-            if item.editableComponent:
-                factory = EditableWidget.getClass(box)
-                if factory is not None:
-                    data['edit_widget_class'] = factory.__name__
-            # Add it to the list of dragged items
-            dragged.append(data)
-
-        if not dragged:
-            return None
-
-        mimeData = QMimeData()
-        mimeData.setData('source_type', 'ParameterTreeWidget')
-        mimeData.setData('tree_items', json.dumps(dragged))
-        return mimeData
-
-    def checkApplyButtonsEnabled(self):
-        # Returns a tuple containing the enabled and the conflicted state
-        return self._r_applyButtonsEnabled(self.invisibleRootItem())
+        boxes = [item.box for item in items
+                 if not isinstance(item.box.descriptor, ChoiceOfNodes)]
+        return dragged_configurator_items(boxes)
 
     def applyItem(self, item):
         """Return a list of pairs (box, value) to be applied
         """
-        editableComponent = item.editableComponent
-        if (editableComponent is None or
-                not isinstance(editableComponent, EditableApplyLaterComponent)
-                or not editableComponent.applyEnabled):
+        if not (item.is_editable and item.apply_enabled):
             return []
-
-        return [(box, editableComponent.widgetFactory.value)
-                for box in editableComponent.boxes
+        # TODO: find out why value is same for all boxes
+        return [(box, item.editable_widget.value)
+                for box in item.editable_widget.boxes
                 if box.isAccessible() and box.isAllowed()]
 
     def decline_all(self):
@@ -211,13 +158,7 @@ class ParameterTreeWidget(QTreeWidget):
         """
         counter = 0
         for item in self.selectedItems():
-            editableComponent = item.editableComponent
-            if editableComponent is None:
-                continue
-            if not isinstance(editableComponent, EditableApplyLaterComponent):
-                continue
-
-            if editableComponent.applyEnabled:
+            if item.is_editable and item.apply_enabled:
                 counter += 1
         return counter
 
@@ -255,16 +196,14 @@ class ParameterTreeWidget(QTreeWidget):
 
     def _r_globalAccessLevelChanged(self, item):
         global_level = krb_globals.GLOBAL_ACCESS_LEVEL
-        if (item.requiredAccessLevel > global_level or
-                (self.conf.type == "deviceGroup" and
-                 item.editableComponent is None)):
+        if item.requiredAccessLevel > global_level:
             item.setHidden(True)
         else:
             item.setHidden(False)
 
-        if item.editableComponent is not None:
+        if item.editable_widget is not None:
             # Let editable widgets make their own adjustments
-            item.editableComponent.widgetFactory.updateState()
+            item.editable_widget.updateState()
 
         if isinstance(item, CommandTreeWidgetItem):
             item.updateState()
@@ -281,28 +220,27 @@ class ParameterTreeWidget(QTreeWidget):
             self.addItemDataToHash(childItem, config)
             self._r_applyAll(childItem, config)
 
-    def _r_applyButtonsEnabled(self, item):
-        for i in range(item.childCount()):
-            childItem = item.child(i)
-            if isinstance(childItem, PropertyTreeWidgetItem):
-                result = self._r_applyButtonsEnabled(childItem)
-                if result[0]:  # Bug: returns but
-                    return result
-
-        if (not isinstance(item, PropertyTreeWidgetItem) or
-            item.editableComponent is None or
-            not isinstance(item.editableComponent,
-                           EditableApplyLaterComponent)):
-            return False, False
-
-        return (item.editableComponent.applyEnabled,
-                item.editableComponent.hasConflict)
-
     def onApplyChanged(self, box, enable):
-        """ Called when apply button of editableComponent changed
+        """ Called when apply button of an editable_widget changed
         Check if no apply button in tree is enabled/conflicted anymore
         """
-        result = self.checkApplyButtonsEnabled()
+        def recurse(item):
+            # Returns a tuple containing the enabled and the conflicted
+            # state
+            for i in range(item.childCount()):
+                childItem = item.child(i)
+                if isinstance(childItem, PropertyTreeWidgetItem):
+                    result = recurse(childItem)
+                    if result[0]:  # Bug: returns but
+                        return result
+
+            if (not isinstance(item, PropertyTreeWidgetItem) or
+                    not item.is_editable):
+                return False, False
+
+            return (item.apply_enabled, item.has_conflict)
+
+        result = recurse(self.invisibleRootItem())
         self.signalApplyChanged.emit(box, result[0], result[1])
 
     def allItems(self):
@@ -322,7 +260,6 @@ class ParameterTreeWidget(QTreeWidget):
         else:
             selectedItems = self.allItems()
         boxes = sum([self.applyItem(item) for item in selectedItems], [])
-        # TODO: deviceGroups...
         get_network().onReconfigure(boxes)
 
     def decline_all_changes(self):
@@ -344,19 +281,11 @@ class ParameterTreeWidget(QTreeWidget):
         item.showContextMenu()
 
     def apply_item_changes(self, item):
-        if item is None:
+        if item is None or not item.is_editable:
             return
-        edit_comp = item.editableComponent
-        is_apply_later = isinstance(edit_comp, EditableApplyLaterComponent)
-        if not is_apply_later:
-            return
-        edit_comp.apply_changes()
+        item.apply_changes()
 
     def decline_item_changes(self, item):
-        if item is None:
+        if item is None or not item.is_editable:
             return
-        edit_comp = item.editableComponent
-        is_apply_later = isinstance(edit_comp, EditableApplyLaterComponent)
-        if not is_apply_later:
-            return
-        edit_comp.decline_changes()
+        item.decline_changes()

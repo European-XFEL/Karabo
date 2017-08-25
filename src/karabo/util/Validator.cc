@@ -593,7 +593,7 @@ namespace karabo {
             boost::shared_lock<boost::shared_mutex> lock(m_rollingStatMutex);
             std::map<std::string, RollingWindowStatistics::Pointer>::const_iterator stats = m_parameterRollingStats.find(scope);
             if (stats == m_parameterRollingStats.end()) {
-                KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + scope + "'!");
+                throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + scope + "'!");
             }
 
             return stats->second;

@@ -71,10 +71,15 @@ class TestProjectDatabase(TestCase):
     password = "karabo"
 
     def test__make_xml_if_needed(self):
-            xml_rep = "<test>foo</test>"
-            ret = ProjectDatabase._make_xml_if_needed(xml_rep)
-            self.assertEqual(ret.tag, "test")
-            self.assertEqual(ret.text, "foo")
+        xml_rep = "<test>foo</test>"
+        ret = ProjectDatabase._make_xml_if_needed(xml_rep)
+        self.assertEqual(ret.tag, "test")
+        self.assertEqual(ret.text, "foo")
+
+    def test_malformed_xml_inputs(self):
+        xml_rep = "<test>foo</test><bad|symbols></bad|symbols>"
+        self.assertRaises(ValueError, ProjectDatabase._make_xml_if_needed,
+                          xml_rep)
 
     def test__make_str_if_needed(self):
         element = etree.Element('test')
@@ -126,6 +131,13 @@ class TestProjectDatabase(TestCase):
                 self.assertEqual(doctree.text, 'foo')
                 self.assertTrue('domain' in meta)
                 self.assertTrue('uuid' in meta)
+
+            with self.subTest(msg='test_save_bad_item'):
+                xml_rep = """
+                <xml uuid="{uuid}"><foo|bar/></xml>
+                """.format(uuid=testproject)
+                self.assertRaises(ProjectDBError, db.save_item, 'LOCAL',
+                                  testproject, xml_rep)
 
             with self.subTest(msg='load_items'):
                 items = [testproject, testproject2]
