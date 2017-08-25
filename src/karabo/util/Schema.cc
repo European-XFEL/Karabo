@@ -705,7 +705,7 @@ namespace karabo {
 
         unsigned int Schema::getRollingStatsEvalInterval(const std::string& path) const {
             if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
-                KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
+                throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
             }
             return m_hash.getAttribute<unsigned int>(path, KARABO_SCHEMA_ROLLING_STATS_EVAL);
         }
