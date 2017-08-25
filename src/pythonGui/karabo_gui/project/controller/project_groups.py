@@ -16,8 +16,7 @@ from karabo_gui import icons
 from karabo_gui import messagebox
 from karabo_gui.enums import KaraboSettings
 from karabo_gui.project.dialog.device_scenes import DeviceScenesDialog
-from karabo_gui.project.dialog.macro_handle import MacroHandleDialog
-from karabo_gui.project.dialog.scene_handle import SceneHandleDialog
+from karabo_gui.project.dialog.object_handle import ObjectEditDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
 from karabo_gui.project.utils import handle_scene_from_server
 from karabo_gui.request import call_device_slot
@@ -122,7 +121,7 @@ def _add_macro(project_controller):
     """ Add a macro to the associated project
     """
     project = project_controller.model
-    dialog = MacroHandleDialog()
+    dialog = ObjectEditDialog(object_type='macro')
     if dialog.exec() == QDialog.Accepted:
         classname = dialog.simple_name.title()
         classname = "".join(c for c in classname if c.isalpha())
@@ -159,7 +158,7 @@ def _add_scene(project_controller):
     """ Add a scene to the associated project
     """
     project = project_controller.model
-    dialog = SceneHandleDialog()
+    dialog = ObjectEditDialog(object_type='scene')
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
         scene = SceneModel(simple_name=dialog.simple_name)
