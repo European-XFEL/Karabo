@@ -13,6 +13,7 @@ from karabo.middlelayer import (
 from karabo.middlelayer_api.eventloop import EventLoop, NoEventLoop
 from karabo.middlelayer_api.macro import EventThread
 from karabo.usermacro_api.pipeline import OutputChannel
+from karabo.middlelayer_api.eventloop import synchronize
 
 
 @coroutine
@@ -130,10 +131,10 @@ class UserMacro(Macro):
         super().__init__(kwargs)
 
     @Slot(displayedName="Start", allowedStates={State.PASSIVE})
-    @coroutine
+    @synchronize
     def start(self):
         """Start the user macro"""
-        yield from run_usermacro(self)
+        yield from self.__call__()
 
     @Slot(displayedName="Cancel", allowedStates={State.ACTIVE})
     def cancel(self):
@@ -146,8 +147,9 @@ class UserMacro(Macro):
         self.state = State.PASSIVE
         yield from Device._run(self, **kwargs)
 
+    @synchronize
     def __call__(self):
-        run_in_event_loop(self)
+        yield from run_usermacro(self)
 
     @coroutine
     def execute(self):
