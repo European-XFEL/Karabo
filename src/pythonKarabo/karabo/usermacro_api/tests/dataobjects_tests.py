@@ -123,7 +123,10 @@ class TestAcquiredOffline(DeviceTest):
         """Test AcquiredOffline object failed initialization"""
         with self.assertRaises(TypeError):
             ao = AcquiredOffline()
-
+    #
+    # It is known that this test is disabled. Its implementation
+    # is not finished. That will be addressed.
+    #
     #@async_tst
     #def test_append(self):
     #    # Initialise a bound device, that has an OuputChannel,
