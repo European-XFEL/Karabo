@@ -463,13 +463,13 @@ namespace karabo {
                             if (typeid (T) == typeid (karabo::util::State)) {
                                 return *reinterpret_cast<const T*> (&karabo::util::State::fromString(cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
                             }
-                            KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
+                            throw KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
                         }
                         if (leafType == karabo::util::Schema::ALARM_CONDITION) {
                             if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
                                 return *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
                             }
-                            KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
+                            throw KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
                         }
                     }
                     return cacheAndGetConfiguration(instanceId).get<T > (key, keySep);
@@ -487,7 +487,7 @@ namespace karabo {
              *
              * @param instanceId to retrieve the property from
              * @param key identifying the property
-             * @param value reference to write the propety value to
+             * @param value reference to write the property value to
              * @param keySep path separator
              * @raise TypeException if the templated type does not match the property type.
              */
@@ -502,14 +502,14 @@ namespace karabo {
                                 value = *reinterpret_cast<const T*> (&karabo::util::State::fromString(cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
                                 return;
                             }
-                            KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
+                            throw KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
                         }
                         if (leafType == karabo::util::Schema::ALARM_CONDITION) {
                             if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
                                 value = *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
                                 return;
                             }
-                            KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
+                            throw KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
                         }
                     }
                     return cacheAndGetConfiguration(instanceId).get(key, value, keySep);

@@ -37,6 +37,14 @@ void AlarmCondition_Test::tearDown() {
 }
 
 
+void AlarmCondition_Test::testOperators() {
+    CPPUNIT_ASSERT(karabo::util::AlarmCondition::WARN == karabo::util::AlarmCondition::WARN);
+    CPPUNIT_ASSERT(!(karabo::util::AlarmCondition::WARN != karabo::util::AlarmCondition::WARN));
+
+    CPPUNIT_ASSERT(!(karabo::util::AlarmCondition::WARN == karabo::util::AlarmCondition::WARN_LOW));
+    CPPUNIT_ASSERT(karabo::util::AlarmCondition::WARN != karabo::util::AlarmCondition::WARN_LOW);
+}
+
 void AlarmCondition_Test::testStringAssignmentRoundTrip() {
     karabo::util::AlarmCondition condition = karabo::util::AlarmCondition::fromString("warn");
     std::string conditionString = condition;
