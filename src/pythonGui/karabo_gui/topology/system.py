@@ -98,6 +98,8 @@ class SystemTopology(HasStrictTraits):
         if klass is None:
             path = "{}.{}".format(*key)
             klass = Configuration(path, 'class')
+            klass.serverId = server_id
+            klass.classId = class_id
             self._class_configurations[key] = klass
 
         statuses = (DeviceStatus.REQUESTED, DeviceStatus.SCHEMA)

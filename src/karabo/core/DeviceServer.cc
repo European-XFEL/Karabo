@@ -269,12 +269,18 @@ namespace karabo {
 
 
         void DeviceServer::slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            karabo::util::Epochstamp epochNow;
             bool firstCall = false;
             {
                 boost::mutex::scoped_lock lock(m_timeChangeMutex);
                 m_timeId = id;
-                m_timeSec = sec;
+                m_timeSec  = sec;
                 m_timeFrac = frac;
+                // Fallback to the local timing ...
+                if (sec == 0) {
+                    m_timeSec  = epochNow.getSeconds();
+                    m_timeFrac = epochNow.getFractionalSeconds();
+                }
                 m_timePeriod = period;
                 firstCall = m_noTimeTickYet;
                 m_noTimeTickYet = false;
@@ -302,6 +308,14 @@ namespace karabo {
                 stamp = util::Epochstamp(m_timeSec, m_timeFrac);
                 period = m_timePeriod;
             }
+
+            // Internal ticking might have been too slow while external update could not cancel the timer (because
+            // timeTick was already posted to the event loop, but did not yet reach the timer reload).
+            // So change input as if the cancel was successful:
+            if (newId < id) {
+                newId = id;
+            }
+
             // Calculate how many ids we are away from last external update and adjust stamp
             const unsigned long long delta = newId - id; // newId >= id is fulfilled
             const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
@@ -325,8 +339,8 @@ namespace karabo {
 
         void DeviceServer::onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-            for (auto& kv : m_deviceInstanceMap) {
-                if (kv.second && kv.second->useTimeServer()) {
+            for (auto& kv : m_devicesForTimingMap) {
+                if (kv.second) {
                     EventLoop::getIOService().post(util::bind_weak(&BaseDevice::onTimeTick, kv.second.get(),
                                                                    id, sec, frac, period));
                 }
@@ -336,8 +350,8 @@ namespace karabo {
 
         void DeviceServer::onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-            for (auto& kv : m_deviceInstanceMap) {
-                if (kv.second && kv.second->useTimeServer()) kv.second->slotTimeTick(id, sec, frac, period);
+            for (auto& kv : m_devicesForTimingMap) {
+                if (kv.second) kv.second->slotTimeTick(id, sec, frac, period);
             }
         }
 
@@ -438,7 +452,8 @@ namespace karabo {
                 }
 
                 m_deviceInstanceMap.clear();
-                KARABO_LOG_FRAMEWORK_DEBUG << "stopServer() device map cleared";
+                m_devicesForTimingMap.clear();
+                KARABO_LOG_FRAMEWORK_DEBUG << "stopServer() device maps cleared";
             }
 
             // TODO Remove from here and use the one from run() method
@@ -555,6 +570,9 @@ namespace karabo {
                 // This will throw an exception if it can't be started (because of duplicated name for example)
                 device->finalizeInternalInitialization();
 
+                if (device->useTimeServer()) { // If device requires, add to map for receiving timing info.
+                    m_devicesForTimingMap[deviceId] = device;
+                }
                 // Answer initiation of device (KARABO_LOG_* is done by device)
                 asyncReply(true, deviceId);
 
@@ -565,6 +583,9 @@ namespace karabo {
                     // same deviceId and placed it into the map again before we get here to remove the one that killed itself.
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
                     m_deviceInstanceMap.erase(deviceId);
+                    // Device should not be in there since expect exception in 'finalizeInternalInitialization', but be
+                    // sure that nothing stays in the timing map that is not in the other.
+                    m_devicesForTimingMap.erase(deviceId);
                 }
                 const std::string message("Device '" + deviceId + "' of class '" + classId + "' could not be started: ");
                 KARABO_LOG_ERROR << message << se.what();
@@ -629,6 +650,9 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
             if (m_deviceInstanceMap.erase(instanceId) > 0) {
                 KARABO_LOG_INFO << "Device '" << instanceId << "' removed from server.";
+            }
+            if (m_devicesForTimingMap.erase(instanceId) > 0) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Device '" << instanceId << "' removed from timing map.";
             }
         }
 

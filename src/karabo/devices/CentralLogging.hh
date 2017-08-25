@@ -9,7 +9,8 @@
 #define	KARABO_CORE_CENTRALLOGGING_HH
 
 #include "karabo/core/Device.hh"
-
+#include "karabo/util/Hash.hh"
+#include "karabo/net/JmsConsumer.hh"
 /**
  * The main karabo namespace
  */

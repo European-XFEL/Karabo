@@ -118,7 +118,11 @@ namespace karabo {
              */
             const AlarmCondition & returnMoreSignificant(const AlarmCondition & other) const;
 
+            bool operator==(const AlarmCondition& other) const;
 
+            bool operator!=(const AlarmCondition& other) const {
+                return !(*this == other);
+            }
 
         private:
 

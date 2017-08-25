@@ -26,7 +26,7 @@ class NavigationPanel(BasePanelWidget):
         sender = event.sender
         data = event.data
         if sender is KaraboEventSender.AccessLevelChanged:
-            self._init_search_filter()
+            self._init_search_filter(connected_to_server=True)
         elif sender is KaraboEventSender.NetworkConnectStatus:
             self._init_search_filter(data.get('status', False))
 

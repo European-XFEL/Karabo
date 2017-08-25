@@ -433,6 +433,7 @@ namespace karabo {
             if (timerAndHandler.first) timerAndHandler.first->cancel(); // message arrived before expiration
 
             // Check whether the reply is an error
+            bool asyncErrorHandlerCalled = false;
             boost::optional<Hash::Node&> errorNode = header->find("error");
             if (errorNode && errorNode->is<bool>() && errorNode->getValue<bool>()) {
                 // Handling an error, so double check that input is as expected, i.e. body has key "a1":
@@ -446,6 +447,7 @@ namespace karabo {
                     } catch (const std::exception&) {
                         try {
                             // Handler can do: try {throw;} catch(const karabo::util::RemoteException&) {...;}
+                            asyncErrorHandlerCalled = true;
                             timerAndHandler.second();
                         } catch (const std::exception& e) {
                             KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << ": Received error from '" << signalId
@@ -464,7 +466,7 @@ namespace karabo {
             // (if it timed out before, the slot will already be gone)
             SlotInstancePointer slot = getSlot(replyId);
             try {
-                if (slot) {
+                if (!asyncErrorHandlerCalled && slot) {
                     slot->callRegisteredSlotFunctions(*header, *body);
                 }
             } catch (const std::exception& e) {
@@ -614,6 +616,13 @@ namespace karabo {
                     handleReply(header, body);
                     return;
                 }
+                // TODO: To check for remote errors reported after requestNoWait, do e.g.
+                //
+                // boost::optional<Hash::Node&> errorNode = header->find("error");
+                // if (errorNode && errorNode->is<bool>() && errorNode->getValue<bool>()) {
+                //   ...
+                // }
+                // as in handleReply (or better find a unified solution)
 
                 /* The header of each event (message)
                  * should contain all slotFunctions that must be a called
@@ -752,23 +761,43 @@ namespace karabo {
         void SignalSlotable::asyncReplyImpl(const std::string& id) {
             // reply has just been placed...
             try {
-                std::tuple<Hash::Pointer, std::string, bool> headerSlotnameGlobalflag;
-                {
-                    boost::mutex::scoped_lock lock(m_asyncReplyInfosMutex);
-                    auto replyIt = m_asyncReplyInfos.find(id);
-                    if (replyIt == m_asyncReplyInfos.end()) {
-                        throw KARABO_SIGNALSLOT_EXCEPTION("No asyncReply registered for " + id);
-                    } else {
-                        headerSlotnameGlobalflag.swap(replyIt->second);
-                        m_asyncReplyInfos.erase(replyIt);
-                    }
-                }
+                const std::tuple < Hash::Pointer, std::string, bool> headerSlotnameGlobalflag(extractAsyncReplyInfo(id));
 
                 sendPotentialReply(*std::get<0>(headerSlotnameGlobalflag), std::get<1>(headerSlotnameGlobalflag),
                                    std::get<2>(headerSlotnameGlobalflag));
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in asyncReply for id " << id << "': " << e.what();
                 // Would like to do "replyException(...);" but I miss the header for that...
+            }
+        }
+
+
+        std::tuple<util::Hash::Pointer, std::string, bool> SignalSlotable::extractAsyncReplyInfo(const std::string& id) {
+            std::tuple < util::Hash::Pointer, std::string, bool> headerSlotnameGlobalflag;
+            boost::mutex::scoped_lock lock(m_asyncReplyInfosMutex);
+            auto replyIt = m_asyncReplyInfos.find(id);
+            if (replyIt == m_asyncReplyInfos.end()) {
+                throw KARABO_SIGNALSLOT_EXCEPTION("No asyncReply registered for " + id);
+            } else {
+                headerSlotnameGlobalflag.swap(replyIt->second);
+                m_asyncReplyInfos.erase(replyIt);
+            }
+            return headerSlotnameGlobalflag;
+        }
+
+
+        void SignalSlotable::AsyncReply::error(const std::string& message) const {
+            // See SignalSlotable::registerAsyncReply() about empty id
+            if (m_replyId.empty()) return;
+            util::Hash::Pointer header;
+            try {
+                header = std::get<0>(m_signalSlotable->extractAsyncReplyInfo(m_replyId));
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR_C("SignalSlotable::AsyncReply") << m_signalSlotable->getInstanceId()
+                        << " AsyncReply::replyError failed to extract header when replying '" << message << "' :" << e.what();
+            }
+            if (header) {
+                m_signalSlotable->replyException(*header, message);
             }
         }
 
@@ -790,6 +819,9 @@ namespace karabo {
                 Hash::Pointer replyBody = boost::make_shared<Hash>("a1", message);
                 doSendMessage(targetInstanceId, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             }
+            // else {
+            // TODO: care about header.has("replyInstanceIds") (i.e. requestNoWait) as well!
+            //}
         }
 
 
@@ -1587,8 +1619,7 @@ namespace karabo {
                         << it->m_signalInstanceId << "." << it->m_signal << "' to slot '"
                         << it->m_slotInstanceId << "." << it->m_slot << "'.";
                 // No success (nor failure) handler needed - there will be log error messages anyway.
-                asyncConnect(it->m_signalInstanceId, it->m_signal, it->m_slotInstanceId, it->m_slot,
-                             boost::function<void ()>());
+                asyncConnect(it->m_signalInstanceId, it->m_signal, it->m_slotInstanceId, it->m_slot);
             }
         }
 

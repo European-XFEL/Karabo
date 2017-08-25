@@ -303,14 +303,6 @@ class BaseWidgetContainer(QWidget):
             b.signalUserChanged.emit(b, widget.value, None)
             if b.configuration.type == "macro":
                 b.set(widget.value)
-            elif b.configuration.type == "deviceGroup":
-                b.set(widget.value)
-                # Broadcast changes for all devices belonging to this group
-                for d in b.configuration.devices:
-                    device_box = d.getBox(b.path)
-                    device_box.set(widget.value)
-                    # Send to network per device
-                    network.onReconfigure([(device_box, widget.value)])
             elif b.descriptor is not None:
                 changes.append((b, widget.value))
 

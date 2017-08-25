@@ -46,8 +46,6 @@ namespace karabo {
 
     private:
 
-        void initialize();
-
         void start();
         void stop();
 

@@ -12,9 +12,10 @@ from .common.states import State, StateSignifier
 
 from .middlelayer_api.device_client import (
     connectDevice, DeviceClientBase, disconnectDevice, lock, getHistory,
-    waitUntilNew, waitUntil, setWait, instantiate, instantiateNoWait, isAlive,
-    shutdown, shutdownNoWait, setNoWait, getClasses, getDevice, getDevices,
-    getServers, execute, executeNoWait, updateDevice, Queue
+    waitUntilNew, waitUntil, waitWhile, setWait, instantiate,
+    instantiateNoWait, isAlive, shutdown, shutdownNoWait, setNoWait,
+    getClasses, getDevice, getDevices, getServers, execute, executeNoWait,
+    updateDevice, Queue
 )
 from .middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxySlotBase as ProxySlot,
@@ -53,7 +54,7 @@ from .middlelayer_api.macro import Macro, Monitor
 from .middlelayer_api.device import Device
 from .middlelayer_api.registry import MetaRegistry, Registry
 from .middlelayer_api.schema import (
-    Configurable, Node, ChoiceOfNodes, ListOfNodes
+    Configurable, Node, ChoiceOfNodes, ListOfNodes, Overwrite
 )
 from .middlelayer_api.serializers import (
     decodeBinary, decodeXML, encodeBinary, encodeXML, writeBinary, writeXML,

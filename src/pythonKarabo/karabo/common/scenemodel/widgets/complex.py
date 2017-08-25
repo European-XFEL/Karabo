@@ -21,7 +21,7 @@ class DoubleLineEditModel(BaseWidgetObjectData):
     """ A model for DisplayBool Widget"""
 
     # The floating point precision
-    decimals = Int
+    decimals = Int(-1)
 
 
 class DisplayStateColorModel(BaseWidgetObjectData):
