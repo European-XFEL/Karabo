@@ -3,10 +3,13 @@ from collections import deque
 import heapq
 import time
 
-from karabo.middlelayer import DeviceClientBase, getHistory, Hash, InputChannel
+from karabo.middlelayer import (DeviceClientBase, getHistory,
+                                Hash, InputChannel, State)
 from karabo.middlelayer_api.eventloop import EventLoop
 
 from karabo.usermacro_api.util import getConfigurationFromPast
+
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
 
 class AcquiredData(object):
@@ -75,13 +78,14 @@ class AcquiredOnline(AcquiredData):
         self.source = source
 
     def __repr__(self):
-        rep = super().__repr__()
-        rep = rep[:-1] + ", source={})".format(self.source)
-        return rep
+        base_rep = super().__repr__()[:-1]
+        return "{}, source={})".format(base_rep, self.source)
 
     def append(self, data, meta):
         """ This function is to be called by the owner within their
-        @InputChannel
+        @InputChannel.
+        :param data: a k-hash provided by the InputChannel
+        :param meta: a PipelineMetaData object provided by the InputChannel
         """
         formatted_hash = Hash([('timestamp', meta.timestamp.timestamp),
                                ('trainId', data['header']['trainId']),
@@ -97,7 +101,7 @@ class AcquiredOffline(AcquiredData, DeviceClientBase):
             :param experimentId: the experimentId, used for logging, __str__
             :param size: the size of the fifo buffer, default is 10
             :param source: the output channel to listen to. The format should
-                           respect the Karabo `deviceId:channelId`  convention
+                           respect the Karabo `deviceId:channelId` convention
         """
         configuration = dict(_deviceId_="OfflineData-{}".format(experimentId),
                              append=dict(connectedOutputChannels=[source]))
@@ -112,21 +116,28 @@ class AcquiredOffline(AcquiredData, DeviceClientBase):
             yield from self.startInstance()
         loop = EventLoop.global_loop
         loop.call_soon_threadsafe(loop.create_task, __run())
+        self.state = State.ON
+        self.status = "Ready"
 
     def __repr__(self):
-        rep = super().__repr__()
-        rep = rep[:-1]
-        rep += ", source={})".format(self.append.connectedOutputChannels)
-        return rep
-
+        return "{}, source={})".format(super().__repr__()[:-1],
+                                       self.append.connectedOutputChannels)
+    def __str__(self):
+        return "{} - {} - {}".format(super().__str__(),
+                                    self.state,
+                                    self.status)
     @InputChannel(raw=True)
     @coroutine
     def append(self, data, meta):
+        self.state = State.ACQUIRING
+        self.status = "Incoming"
         formatted_hash = Hash([('timestamp', meta.timestamp.timestamp),
                                ('trainId', data['header']['trainId']),
                                ('data', data),
                                ('meta', meta)])
         super().append(formatted_hash)
+        self.state = State.ON
+        self.status = "Received Data"
 
 
 class AcquiredFromLog(AcquiredData):
@@ -147,22 +158,22 @@ class AcquiredFromLog(AcquiredData):
         # scan with given deviceId from the big-bang up to now
         self.steps = getHistory("{}.stepNum".format(self.experimentId),
                                 "2010-01-01T00:00:00",
-                                time.strftime('%Y-%m-%dT%H:%M:%S'))
+                                time.strftime(DATE_FORMAT))
         # steps has the following format:
         # [(seconds_from_1970, train_id, is_last_of_set, value) ]
 
         # begin of the scan = timestamp of first step
-        self.begin = time.strftime('%Y-%m-%dT%H:%M:%S',
+        self.begin = time.strftime(DATE_FORMAT,
                                    time.localtime(self.steps[0][0]))
 
         # end of the scan = timestamp of last step
-        self.end = time.strftime('%Y-%m-%dT%H:%M:%S',
+        self.end = time.strftime(DATE_FORMAT,
                                  time.localtime(
                                      self.steps[len(self.steps)-1][0]))
 
         # if for any reason end value is wrong, assume end is now
         if(self.begin >= self.end):
-            self.end = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
+            self.end = time.strftime(DATE_FORMAT, time.localtime())
 
         # get IDs of devices used by Scan:
         his = getHistory("{}.boundMovables".format(self.experimentId),
