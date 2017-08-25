@@ -3,20 +3,24 @@
 """
 import argparse
 from asyncio import (
-    coroutine, get_event_loop, set_event_loop)
+    coroutine, Future, get_event_loop, set_event_loop)
 import socket
 import uuid
+import functools
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Bool, Device, DeviceClientBase,
     Float, Macro, MetricPrefix, Slot, State, Unit)
-from karabo.middlelayer_api.eventloop import EventLoop, NoEventLoop
+from karabo.middlelayer_api.eventloop import (
+    EventLoop, NoEventLoop, synchronize)
 from karabo.middlelayer_api.macro import EventThread
 from karabo.usermacro_api.pipeline import OutputChannel
 
 
+@synchronize
 def run_in_event_loop(macro, *args, **kwargs):
     """ Runs a macro"""
+
     class DeviceHelper(Macro, DeviceClientBase):
         """Provide the device client machinery"""
     loop = get_event_loop()
@@ -49,18 +53,27 @@ def run_in_event_loop(macro, *args, **kwargs):
     def __run():
         macro.state = State.ACTIVE
         macro.currentSlot = "start"
-        yield from macro.execute()
+        data = yield from macro.execute()
         macro.currentSlot = ""
         macro.state = State.PASSIVE
         yield from macro.slotKillDevice()
 
         if eventThread:
             eventThread.stop()
+        return data
 
-    loop.call_soon_threadsafe(loop.create_task, __run())
+    def __add_task(future, coro):
+        task = loop.create_task(coro)
+        future.set_result(task)
+    future = Future()
+    p = functools.partial(__add_task, future, __run())
+    loop.call_soon_threadsafe(p)
+
     # Must wait here due to the scope EventThread
     if eventThread:
         eventThread.join()
+
+    return future
 
 
 class UserMacro(Macro):
@@ -105,7 +118,7 @@ class UserMacro(Macro):
     @Slot(displayedName="Start", allowedStates={State.PASSIVE})
     def start(self):
         """Start the user macro"""
-        self.__call__()
+        return self.__call__()
 
     @Slot(displayedName="Cancel", allowedStates={State.ACTIVE})
     def cancel(self):
@@ -119,7 +132,7 @@ class UserMacro(Macro):
         yield from Device._run(self, **kwargs)
 
     def __call__(self):
-        run_in_event_loop(self)
+        return run_in_event_loop(self)
 
     @coroutine
     def execute(self):
