@@ -18,8 +18,9 @@ class EnergyMaxAsSensible(Sensible):
     @property
     def value(self):
         """Return a dict of statistics"""
-        return {"Pulse": self._proxy.measurement.pulse,
-                "Min": self._proxy.measurement.min,
-                "Max": self._proxy.measurement.max,
-                "Mean": self._proxy.measurement.mean,
-                "Stdv": self._proxy.measurement.stdv}
+        return (super().value if super().value else
+                {"Pulse": self._proxy.measurement.pulse,
+                 "Min": self._proxy.measurement.min,
+                 "Max": self._proxy.measurement.max,
+                 "Mean": self._proxy.measurement.mean,
+                 "Stdv": self._proxy.measurement.stdv})

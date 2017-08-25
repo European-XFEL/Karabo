@@ -20,4 +20,5 @@ class SpectrometerAsSensible(Sensible):
     @property
     def value(self):
         """Return the acquired spectrum"""
-        return self._proxy.spectrum
+        return (super().value if super().value
+                else self._proxy.spectrum)

@@ -165,7 +165,11 @@ class AScan(UserMacro):
             literal_eval(pos_list)
             if isinstance(pos_list, str) else pos_list)
         self.exposureTime = float(exposureTime)
-        self.steps = bool(steps)
+
+        self.steps = (
+                bool(steps)
+                if isinstance(steps, bool)
+                else literal_eval(steps))
         self.number_of_steps = int(number_of_steps)
         if self.experimentId == "":
             self.experimentId = self.deviceId
@@ -239,16 +243,19 @@ class AScan(UserMacro):
                     print("  Acquiring for {}"
                           .format(self.exposureTime + self.time_epsilon))
 
+                    yield from waitUntil(
+                        lambda: self._sensible.state == State.ACQUIRING)
                     yield from sleep(self.exposureTime + self.time_epsilon)
                     yield from self._sensible.stop()
 
                     if self._sensible.value:
-                        print("  Value: {}".format(self._sensible.value))
+                        v = repr(self._sensible.value).replace("Quantity", "")
+                        print("  Value: {}".format(v))
 
                 step_num += 1
 
         # Stop acquisition here for continuous scans
-        if self._sensible.state == State.ACQUIRING:
+        if (not self.steps) and self._sensible.state == State.ACQUIRING:
             yield from self._sensible.stop()
 
         print("-"*linelen)
@@ -387,7 +394,8 @@ class TScan(UserMacro):
             yield from self._sensible.stop()
 
             if self._sensible.value:
-                print("  Value: {}".format(self._sensible.value))
+                v = repr(self._sensible.value).replace("Quantity", "")
+                print("  Value: {}".format(v))
 
             elaps += self.exposureTime + self.time_epsilon
 

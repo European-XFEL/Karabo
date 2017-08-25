@@ -11,7 +11,8 @@ class CamAsSensible(Sensible):
 
     @property
     def value(self):
-        return self._proxy.frameRate
+        return (super().value if super().value
+                else self._proxy.frameRate)
 
 
 class SimulatedCamAsSensible(Sensible):
@@ -33,4 +34,5 @@ class TestImagerAsSensible(Sensible):
 
     @property
     def value(self):
-        return self._proxy.triggerCount
+        return (super().value if super().value
+                else self._proxy.triggerCount)
