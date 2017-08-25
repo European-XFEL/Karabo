@@ -1601,6 +1601,109 @@ namespace karabo {
         }
 
 
+        void SignalSlotable::asyncConnect(const std::vector<SignalSlotConnection>& signalSlotConnections,
+                                          const boost::function<void ()>& successHandler,
+                                          const boost::function<void ()>& failureHandler,
+                                          int timeout) {
+
+            // Store book keeping structure
+            const std::string uuid(generateUUID());
+            {
+                boost::mutex::scoped_lock lock(m_currentMultiAsyncConnectsMutex);
+                m_currentMultiAsyncConnects[uuid] = std::make_tuple(vector<bool>(signalSlotConnections.size(), false),
+                                                                    successHandler, failureHandler);
+            }
+
+            // Send individual requests
+            for (size_t i = 0; i < signalSlotConnections.size(); ++i) {
+                const SignalSlotConnection& con = signalSlotConnections[i];
+                asyncConnect(con.m_signalInstanceId, con.m_signal, con.m_slotInstanceId, con.m_slot,
+                             bind_weak(&SignalSlotable::multiAsyncConnectSuccessHandler, this, uuid, i),
+                             bind_weak(&SignalSlotable::multiAsyncConnectFailureHandler, this, uuid),
+                             timeout);
+            }
+        }
+
+
+        void SignalSlotable::multiAsyncConnectSuccessHandler(const std::string& uuid, size_t requestNum) {
+
+            // Find corresponding info
+            boost::mutex::scoped_lock lock(m_currentMultiAsyncConnectsMutex);
+            auto infoIter = m_currentMultiAsyncConnects.find(uuid);
+            if (infoIter == m_currentMultiAsyncConnects.end()) {
+                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << "::multiAsyncConnectSuccessHandler(" << uuid << ", "
+                        << requestNum << "): Cannot find corresponding info - probably another requestNum failed.";
+                return;
+            }
+            MultiAsyncConnectInfo& info = infoIter->second;
+
+            // Mark that 'requestNum' succeeded
+            vector<bool>& doneFlags = std::get<0>(info);
+            if (requestNum < doneFlags.size()) {
+                doneFlags[requestNum] = true;
+            } else {
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << "::multiAsyncConnectSuccessHandler: RequestNum "
+                        << requestNum << " out of range (max. is " << doneFlags.size() - 1 << ").";
+            }
+
+            // Check whether now all requests have succeeded
+            bool allSucceeded = true;
+            for (bool success : doneFlags) {
+                if (!success) allSucceeded = false;
+            }
+
+            // If all succeeded, call handler and clean up
+            if (allSucceeded) {
+                // Better post the success handler to release lock...
+                const auto& successHandler = std::get<1>(info);
+                if (successHandler) EventLoop::getIOService().post(successHandler);
+                m_currentMultiAsyncConnects.erase(infoIter);
+            }
+        }
+
+
+        void SignalSlotable::multiAsyncConnectFailureHandler(const std::string& uuid) {
+
+            boost::function<void()> failureHandler;
+
+            {
+                // Find corresponding info
+                boost::mutex::scoped_lock lock(m_currentMultiAsyncConnectsMutex);
+                auto infoIter = m_currentMultiAsyncConnects.find(uuid);
+                if (infoIter == m_currentMultiAsyncConnects.end()) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << "::multiAsyncConnectFailureHandler(" << uuid
+                            << "): Cannot find corresponding info - probably already another requestNum failed.";
+                    return;
+                }
+                MultiAsyncConnectInfo& info = infoIter->second;
+
+                //  Clean up after copying failure handler (to release lock)
+                failureHandler = std::get<2>(info);
+                m_currentMultiAsyncConnects.erase(infoIter);
+            }
+
+            try {
+                // Re-throw exception in which's context we are called
+                // (to be able to do so, we cannot just post the failureHandler to the event loop):
+                throw;
+            } catch (const std::exception& e) {
+                if (failureHandler) {
+                    try {
+                        // handler can now do 'try { throw; } catch (const XxxxException& e) { ... }'
+                        failureHandler();
+                        Exception::clearTrace(); // since we do not 'print' e
+                    } catch (const std::exception& eHandler) {
+                        KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << "::multiAsyncConnectFailureHandler: One request "
+                                << "failed since: " << e.what() << " and failure handler threw exception: " << eHandler.what();
+                    }
+                } else {
+                    KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << "::multiAsyncConnectFailureHandler: One request "
+                            << "failed since: " << e.what();
+                }
+            }
+        }
+
+
         void SignalSlotable::reconnectSignals(const std::string& newInstanceId) {
 
             std::set<SignalSlotConnection> connections;
