@@ -149,7 +149,7 @@ class AScan(UserMacro):
             try:
                 movable = literal_eval(movable)
                 self._movable = Movable(*movable)
-            except ValueError:
+            except (SyntaxError, ValueError):
                 self._movable = Movable(movable)
 
         if isinstance(sensible, Sensible):
@@ -158,7 +158,7 @@ class AScan(UserMacro):
             try:
                 sensible = literal_eval(sensible)
                 self._sensible = Sensible(*sensible)
-            except ValueError:
+            except (SyntaxError, ValueError):
                 self._sensible = Sensible(sensible)
 
         self._pos_list = (
@@ -244,7 +244,7 @@ class AScan(UserMacro):
                           .format(self.exposureTime + self.time_epsilon))
 
                     yield from waitUntil(
-                        lambda: self._sensible.state == State.ACQUIRING)
+                        lambda: self._sensible.state != State.STOPPED)
                     yield from sleep(self.exposureTime + self.time_epsilon)
                     yield from self._sensible.stop()
 
@@ -363,7 +363,7 @@ class TScan(UserMacro):
             try:
                 sensible = literal_eval(sensible)
                 self._sensible = Sensible(*sensible)
-            except ValueError:
+            except (SyntaxError, ValueError):
                 self._sensible = Sensible(sensible)
 
         self.exposureTime = float(exposureTime)
@@ -390,6 +390,8 @@ class TScan(UserMacro):
             i += 1
             print("Step {} - at time {}".format(i, elaps))
             yield from self._sensible.acquire()
+            yield from waitUntil(
+                lambda: self._sensible.state != State.STOPPED)
             yield from sleep(self.exposureTime + self.time_epsilon)
             yield from self._sensible.stop()
 
@@ -445,7 +447,7 @@ class AMove(UserMacro):
             try:
                 movable = literal_eval(movable)
                 self._movable = Movable(*movable)
-            except ValueError:
+            except (SyntaxError, ValueError):
                 self._movable = Movable(movable)
 
         self.movableId = self._movable.deviceId
