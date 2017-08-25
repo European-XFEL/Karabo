@@ -3,7 +3,7 @@
 """
 import argparse
 from asyncio import (
-    coroutine, Future, get_event_loop, set_event_loop)
+    async, coroutine, Future, get_event_loop, set_event_loop)
 import socket
 import uuid
 
@@ -31,7 +31,6 @@ def run_usermacro(macro, eventThread=None):
     return data
 
 
-@synchronize
 def run_in_event_loop(macro, *args, **kwargs):
     """ Runs a macro"""
 
@@ -64,14 +63,12 @@ def run_in_event_loop(macro, *args, **kwargs):
             macro = macro(*args, **kwargs)
 
     try:
-        future = Future()
         task = loop.create_task(run_usermacro(macro, eventThread))
-        future.set_result(task)
-        loop.call_soon_threadsafe(task)
+        loop.call_soon_threadsafe(async, task)
         # Must wait here due to the scope EventThread
         if eventThread:
             eventThread.join()
-        return future
+        return task
 
     except KeyboardInterrupt:
         macro.cancelled = True
