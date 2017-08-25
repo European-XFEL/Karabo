@@ -283,6 +283,42 @@ namespace karabo {
                               const boost::function<void ()>& failureHandler = boost::function<void ()>(),
                               int timeout = 0);
 
+            // FIXME: move to better place!
+            struct SignalSlotConnection {
+
+                SignalSlotConnection(const std::string& signalInstanceId, const std::string& signal,
+                                     const std::string& slotInstanceId, const std::string& slot) :
+                    m_signalInstanceId(signalInstanceId), m_signal(signal),
+                    m_slotInstanceId(slotInstanceId), m_slot(slot) {
+                }
+
+                // needed to put into std::set:
+                bool operator<(const SignalSlotConnection& other) const;
+
+                std::string m_signalInstanceId;
+                std::string m_signal;
+                std::string m_slotInstanceId;
+                std::string m_slot;
+            };
+
+            /**
+             * This function tries to establish asynchronously a connection between several signals and slots.
+             *
+             * One of the two handlers will be called exactly once.
+             * The failureHandler will be called if any signal slot connection failed, no matter whether connections
+             * succeeded or not.
+             *
+             * @param signalSlotConnections FIXME
+             * @param successHandler is called when all connections are established (maybe be empty [=default])
+             * @param failureHandler is called when any of the connections could not be established, no matter whether
+             *                            the others failed or not, in the same way as a Requestor::AsyncErrorHandler.
+             * @param timeout in milliseconds for internal async requests - non-positive (default) means the very long
+             *                            default timeout
+             */
+            void asyncConnect(const std::vector<SignalSlotConnection>& signalSlotConnections,
+                              const boost::function<void ()>& successHandler = boost::function<void ()>(),
+                              const boost::function<void ()>& failureHandler = boost::function<void ()>(),
+                              int timeout = 0);
             /**
              * Disconnects a slot from a signal, identified both by their
              * respective instance IDs and signatures.
@@ -547,22 +583,6 @@ namespace karabo {
                 const std::string m_replyId;
             };
 
-            struct SignalSlotConnection {
-
-                SignalSlotConnection(const std::string& signalInstanceId, const std::string& signal,
-                                     const std::string& slotInstanceId, const std::string& slot) :
-                    m_signalInstanceId(signalInstanceId), m_signal(signal),
-                    m_slotInstanceId(slotInstanceId), m_slot(slot) {
-                }
-
-                // needed to put into std::set:
-                bool operator<(const SignalSlotConnection& other) const;
-
-                std::string m_signalInstanceId;
-                std::string m_signal;
-                std::string m_slotInstanceId;
-                std::string m_slot;
-            };
 
             // Use (mutex, condition variable) pair for waiting simultaneously many events
 
@@ -617,6 +637,11 @@ namespace karabo {
             typedef std::unordered_map<std::string, std::tuple<karabo::util::Hash::Pointer, std::string, bool> > AsyncReplyInfos;
             AsyncReplyInfos m_asyncReplyInfos;
             mutable boost::mutex m_asyncReplyInfosMutex;
+
+            // which one succeeded, successHandler, errorHandler
+            typedef std::tuple<std::vector<bool>, boost::function<void()>, boost::function<void()> > MultiAsyncConnectInfo;
+            std::unordered_map<std::string, MultiAsyncConnectInfo> m_currentMultiAsyncConnects;
+            boost::mutex m_currentMultiAsyncConnectsMutex;
 
             static boost::uuids::random_generator m_uuidGenerator;
 
@@ -967,6 +992,10 @@ namespace karabo {
             ///
             /// @param message text given to the SignalSlotException
             static void callErrorHandler(const boost::function<void () > handler, const std::string& message);
+
+            void multiAsyncConnectSuccessHandler(const std::string& uuid, size_t requestNum);
+
+            void multiAsyncConnectFailureHandler(const std::string& uuid);
 
         private: // Members
 
