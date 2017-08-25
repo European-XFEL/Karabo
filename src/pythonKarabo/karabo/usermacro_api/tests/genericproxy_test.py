@@ -141,6 +141,20 @@ class Tests(DeviceTest):
         self.assertEqual(output.getBoundDevices(), ['tm1', ['tm2', 'tm3']])
 
     @sync_tst
+    def test_paramregex_instantiation(self):
+        """Test the support of regex parameter"""
+        output = GenericProxy('tm1@.?tate$')
+
+        self.assertIsInstance(output, BeckhoffMotorAsMovable)
+        self.assertEqual(output.value, {'state': output._proxy.state})
+
+        output = Sensible('lsim@(^(?i)deviceid$|^(?i)classid$)')
+        self.assertIsInstance(output, CamAsSensible)
+        self.assertEqual(
+            output.value,
+            {'deviceId': 'lsim', 'classId': 'LimaSimulatedCamera'})
+
+    @sync_tst
     def test_wrong_type_instantiation(self):
         with self.assertRaises(KaraboError):
             Movable('lsim')
