@@ -10,17 +10,17 @@ import uuid
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Bool, Device, DeviceClientBase,
     Float, Macro, MetricPrefix, Slot, State, Unit)
-from karabo.middlelayer_api.eventloop import EventLoop, NoEventLoop
+from karabo.middlelayer_api.eventloop import (
+    EventLoop, NoEventLoop, synchronize)
 from karabo.middlelayer_api.macro import EventThread
 from karabo.usermacro_api.pipeline import OutputChannel
-from karabo.middlelayer_api.eventloop import synchronize
 
 
 @coroutine
 def run_usermacro(macro, eventThread=None):
     macro.state = State.ACTIVE
     macro.currentSlot = "start"
-    yield from macro.execute()
+    data = yield from macro.execute()
     macro.currentSlot = ""
     macro.state = State.PASSIVE
     yield from macro.slotKillDevice()
@@ -28,9 +28,13 @@ def run_usermacro(macro, eventThread=None):
     if eventThread:
         eventThread.stop()
 
+    return data
 
+
+@synchronize
 def run_in_event_loop(macro, *args, **kwargs):
     """ Runs a macro"""
+
     class DeviceHelper(Macro, DeviceClientBase):
         """Provide the device client machinery"""
     loop = get_event_loop()
@@ -58,12 +62,17 @@ def run_in_event_loop(macro, *args, **kwargs):
         if isinstance(macro, type):
             # macro is a class, instantiate
             macro = macro(*args, **kwargs)
+
     try:
-        loop.call_soon_threadsafe(loop.create_task,
-                                  run_usermacro(macro, eventThread), macro)
+        future = Future()
+        task = loop.create_task(run_usermacro(macro, eventThread))
+        future.set_result(task)
+        loop.call_soon_threadsafe(task)
         # Must wait here due to the scope EventThread
         if eventThread:
             eventThread.join()
+        return future
+
     except KeyboardInterrupt:
         macro.cancelled = True
         print("{} cancelled.".format(macro.deviceId))
@@ -134,7 +143,8 @@ class UserMacro(Macro):
     @synchronize
     def start(self):
         """Start the user macro"""
-        yield from self.__call__()
+        fut = yield from self.__call__()
+        return fut
 
     @Slot(displayedName="Cancel", allowedStates={State.ACTIVE})
     def cancel(self):
@@ -149,7 +159,8 @@ class UserMacro(Macro):
 
     @synchronize
     def __call__(self):
-        yield from run_usermacro(self)
+        fut = yield from run_usermacro(self)
+        return fut
 
     @coroutine
     def execute(self):
