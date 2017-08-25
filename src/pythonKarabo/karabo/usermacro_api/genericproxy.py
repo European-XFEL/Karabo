@@ -131,7 +131,6 @@ class GenericProxy(object):
             # Returns the parameters matching the regular expression
             l = {}
             for k, v in self._proxy.__dict__.items():
-                print(k)
                 if proc.match(k):
                     l.update({k: v})
             return l
