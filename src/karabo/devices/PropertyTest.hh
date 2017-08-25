@@ -8,10 +8,14 @@
 #ifndef KARABO_DEVICES_PROPERTYTEST_HH
 #define KARABO_DEVICES_PROPERTYTEST_HH
 
-#include <boost/shared_ptr.hpp>
-#include <karabo/karabo.hpp>
+#include "karabo/core/Device.hh"
 
 namespace karabo {
+    namespace util {
+        class Schema;
+        class Hash;
+    }
+
     namespace devices {
         
         
