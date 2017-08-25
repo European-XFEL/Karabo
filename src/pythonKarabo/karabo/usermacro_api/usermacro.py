@@ -69,15 +69,13 @@ def run_in_event_loop(macro, *args, **kwargs):
     def __add_task(future, coro):
         task = loop.create_task(coro)
         future.set_result(task)
-    future = Future()
-    p = functools.partial(__add_task, future, __run())
-    loop.call_soon_threadsafe(p)
 
     # Must wait here due to the scope EventThread
     if eventThread:
         eventThread.join()
 
     try:
+        future = Future()
         partial = functools.partial(__add_task,
                                     future,
                                     run_usermacro(macro, eventThread))
@@ -85,8 +83,8 @@ def run_in_event_loop(macro, *args, **kwargs):
         # Must wait here due to the scope EventThread
         if eventThread:
             eventThread.join()
-
         return future
+
     except KeyboardInterrupt:
         macro.cancelled = True
         print("{} cancelled.".format(macro.deviceId))
