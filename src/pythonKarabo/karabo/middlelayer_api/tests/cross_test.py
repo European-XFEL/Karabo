@@ -269,7 +269,12 @@ class Tests(DeviceTest):
             device.value, before.isoformat(), after.isoformat())
 
         for hist in old_history, str_history, proxy_history:
-            self.assertEqual([h for _, _, _, h in hist[-5:]], list(range(5)))
+            # Sort according to timestamp - order is not guaranteed!
+            # (E.g. if shortcut communication between logged device and
+            #  logger is switched on...)
+            hist.sort(key=lambda x: x[0])
+            self.assertEqual([v for _, _, _, v in hist[-5:]], list(range(5)))
+
 
         node_history = yield from getHistory(
             "middlelayerDevice.child.number", before.isoformat(),
@@ -278,7 +283,9 @@ class Tests(DeviceTest):
             device.child.number, before.isoformat(), after.isoformat())
 
         for hist in node_history, node_proxy_history:
-            self.assertEqual([-h for _, _, _, h in hist[-5:]], list(range(5)))
+            # Sort needed - see above.
+            hist.sort(key=lambda x: x[0])
+            self.assertEqual([-v for _, _, _, v in hist[-5:]], list(range(5)))
 
         yield from get_event_loop().instance()._ss.request(
             "Karabo_DLManagerServer", "slotKillServer")
