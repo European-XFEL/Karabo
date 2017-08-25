@@ -9,12 +9,13 @@ import os
 import sys
 
 from karabo.middlelayer import (
-    AccessMode, Bool, Float, Int32, State, String,
-    sleep, UInt32, Unit, VectorHash, VectorString, waitUntil)
+    AccessMode, Bool, Float, Int32, InputChannel, State, String,
+    sleep, UInt32, Unit, waitUntil, VectorString)
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
 from karabo.usermacro_api.util import flatten
 import karabo.usermacro_api.generalized
+from karabo.usermacros import AcquiredOffline, AcquiredOnline
 
 
 def splitTrajectory(pos_list, number_of_steps):
@@ -132,8 +133,12 @@ class AScan(UserMacro):
         defaultValue=0,
         accessMode=AccessMode.READONLY)
 
-    # Should be later an AcquiredData object
-    data = VectorHash()
+    dataReader = String(
+        displayedName="Offline data source",
+        description="",
+        defaultValue="datareader:output")
+
+    data = AcquiredOnline()
 
     _movable = Movable()
     _sensible = Sensible()
@@ -178,6 +183,9 @@ class AScan(UserMacro):
         self.sensibleId = self._sensible.deviceId
         self.boundSensibles = flatten(self._sensible.getBoundDevices())
         self.pos_list = self._pos_list
+
+        self.data = AcquiredOnline(self.experimentId,
+                                   self._update.connectedOutputChannels)
 
     def __repr__(self):
         rep = "{cls}('{mov}', {pos}, '{sens}', {exp}, ".format(
@@ -259,6 +267,14 @@ class AScan(UserMacro):
             yield from self._sensible.stop()
 
         print("-"*linelen)
+
+        return  AcquiredOffline(self.experimentId,
+                            source=self.dataReader)
+
+    @InputChannel(displayedName="Online data source")
+    @coroutine
+    def _update(self, meta, data):
+        self.data.append(meta, data)
 
 
 class AMesh(AScan):
@@ -352,6 +368,13 @@ class TScan(UserMacro):
         unitSymbol=Unit.SECOND,
         accessMode=AccessMode.INITONLY)
 
+    dataReader = String(
+        displayedName="Offline data source",
+        description="",
+        defaultValue="datareader:output")
+
+    data = AcquiredOnline()
+
     _sensible = Sensible()
 
     def __init__(self, sensible, exposureTime, duration, **kwargs):
@@ -370,6 +393,7 @@ class TScan(UserMacro):
         self.duration = float(duration)
         self.sensibleId = self._sensible.deviceId
         self.boundSensibles = flatten(self._sensible.getBoundDevices())
+        self.data = AcquiredOnline(source=self._update.connectedOutputChannels)
 
     @coroutine
     def execute(self):
@@ -400,6 +424,13 @@ class TScan(UserMacro):
             elaps += self.exposureTime + self.time_epsilon
 
         print("-"*linelen)
+
+        return AcquiredOffline(source=self.dataReader)
+
+    @InputChannel(displayedName="Online data source")
+    @coroutine
+    def _update(self, meta, data):
+        self.data.append(meta, data)
 
 
 class DMesh(AMesh):
