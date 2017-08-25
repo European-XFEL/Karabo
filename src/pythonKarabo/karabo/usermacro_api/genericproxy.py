@@ -1,12 +1,13 @@
 """The Generic Proxy module contains
 all generalized interface to devices
 """
-from asyncio import TimeoutError
+
 from karabo.common.states import StateSignifier
 from karabo.middlelayer import (
     allCompleted, connectDevice, KaraboError,
     lock, Proxy, State)
 from karabo.middlelayer_api.proxy import synchronize
+import re
 
 
 class GenericProxy(object):
@@ -17,6 +18,7 @@ class GenericProxy(object):
     locker = ""
     _proxy = Proxy()
     _generic_proxies = []
+    _param_regex = None
 
     def __repr__(self):
         def _repr_gproxy(gproxy):
@@ -67,13 +69,16 @@ class GenericProxy(object):
         ret = None
         if args:
             if len(args) == 1:
-                deviceId = args[0]
+                l = args[0].split('@')
+                deviceId = l[0]
+
                 if isinstance(deviceId, str):
                     # Act as a generic proxy
                     try:
                         proxy = connectDevice(
                             deviceId, timeout=cls.proxy_ops_timeout)
                         ret = cls.create_generic_proxy(proxy)
+                        ret._param_regex = l[1] if len(l) == 2 else None
                     except TimeoutError:
                         cls._error("Could not connect to {}."
                                    .format(deviceId))
@@ -112,6 +117,22 @@ class GenericProxy(object):
         return (self._proxy.deviceId if not self._generic_proxies
                 else [gproxy.getBoundDevices()
                       for gproxy in self._generic_proxies])
+
+    @property
+    def value(self):
+        """"Generic value getter """
+        if self._generic_proxies:
+            return [gproxy.value for gproxy in self._generic_proxies]
+
+        if self._param_regex:
+            proc = re.compile(self._param_regex)
+
+            # Returns the parameters matching the regular expression
+            l = {}
+            for k, v in self._proxy.__dict__.items():
+                if proc.match(k):
+                    l.update({k: v})
+            return l
 
     @synchronize
     def lockon(self, locker):
@@ -179,6 +200,10 @@ class Movable(GenericProxy):
     @position.setter
     def position(self, value):
         self.moveto(value)
+
+    @property
+    def value(self):
+        return self.position
 
     @synchronize
     def moveto(self, pos):
@@ -266,6 +291,10 @@ class Coolable(GenericProxy):
     def temperature(self, value):
         self.cool(value)
 
+    @property
+    def value(self):
+        return self.temperature
+
     @synchronize
     def cool(self, temperature):
         """Cool to *temperature*"""
@@ -298,6 +327,10 @@ class Pumpable(GenericProxy):
                     for gproxy in self._generic_proxies]
         return self._proxy.pressure
 
+    @property
+    def value(self):
+        return self.pressure
+
     @synchronize
     def pump(self):
         """Start pumping"""
@@ -327,6 +360,10 @@ class Closable(GenericProxy):
                 yield from gproxy.open()
         else:
             yield from self._proxy.open()
+
+    @property
+    def value(self):
+        return self.state
 
     @synchronize
     def close(self):
