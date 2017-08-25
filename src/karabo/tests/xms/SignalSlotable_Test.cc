@@ -597,7 +597,7 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
 
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
-        CPPUNIT_ASSERT(signalerA->disconnect(con.m_signalInstanceId, con.m_signal, con.m_slotInstanceId, con.m_slot));
+        CPPUNIT_ASSERT(signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -641,7 +641,7 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
         // Do not test return value - the correct connections should be connected, but maybe not yet...
-        signalerA->disconnect(con.m_signalInstanceId, con.m_signal, con.m_slotInstanceId, con.m_slot);
+        signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot);
     }
     ///////////////////////////////////////////////////////////////////////////
     // Test failureHandler again - now non-existing slot gives same exception type, but other message
@@ -668,7 +668,7 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
         // Do not test return value - the correct connections should be connected, but maybe not yet...
-        signalerA->disconnect(con.m_signalInstanceId, con.m_signal, con.m_slotInstanceId, con.m_slot);
+        signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -694,7 +694,7 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
         // Do not test return value - the correct connections should be connected, but maybe not yet...
-        signalerA->disconnect(con.m_signalInstanceId, con.m_signal, con.m_slotInstanceId, con.m_slot);
+        signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot);
     }
 
     ///////////////////////////////////////////////////////////////////////////
