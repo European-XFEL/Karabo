@@ -21,7 +21,8 @@ class ImageProcessorAsSensible(Sensible):
     @property
     def value(self):
         """Return a dict of statistics"""
-        return ({"FrameRate": self._proxy.frameRate,
+        return (super().value if super().value else
+                {"FrameRate": self._proxy.frameRate,
                  "MinPxValue": self._proxy.minPxValue,
                  "MaxPxValue": self._proxy.maxPxValue,
                  "MeanPxValue": self._proxy.meanPxValue}
