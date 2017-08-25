@@ -1605,6 +1605,9 @@ namespace karabo {
                                           const boost::function<void ()>& successHandler,
                                           const boost::function<void ()>& failureHandler,
                                           int timeout) {
+            if (signalSlotConnections.empty()) {
+                return; // Nothing to do, so don't create book keeping structure that can never be cleared.
+            }
 
             // Store book keeping structure
             const std::string uuid(generateUUID());
@@ -1617,7 +1620,7 @@ namespace karabo {
             // Send individual requests
             for (size_t i = 0; i < signalSlotConnections.size(); ++i) {
                 const SignalSlotConnection& con = signalSlotConnections[i];
-                asyncConnect(con.m_signalInstanceId, con.m_signal, con.m_slotInstanceId, con.m_slot,
+                asyncConnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot,
                              bind_weak(&SignalSlotable::multiAsyncConnectSuccessHandler, this, uuid, i),
                              bind_weak(&SignalSlotable::multiAsyncConnectFailureHandler, this, uuid),
                              timeout);
@@ -1719,10 +1722,10 @@ namespace karabo {
             for (std::set<SignalSlotConnection>::const_iterator it = connections.begin(), iEnd = connections.end();
                  it != iEnd; ++it) {
                 KARABO_LOG_FRAMEWORK_DEBUG << this->getInstanceId() << " tries to reconnect signal '"
-                        << it->m_signalInstanceId << "." << it->m_signal << "' to slot '"
-                        << it->m_slotInstanceId << "." << it->m_slot << "'.";
+                        << it->signalInstanceId << "." << it->signal << "' to slot '"
+                        << it->slotInstanceId << "." << it->slot << "'.";
                 // No success (nor failure) handler needed - there will be log error messages anyway.
-                asyncConnect(it->m_signalInstanceId, it->m_signal, it->m_slotInstanceId, it->m_slot);
+                asyncConnect(it->signalInstanceId, it->signal, it->slotInstanceId, it->slot);
             }
         }
 
@@ -2012,8 +2015,8 @@ namespace karabo {
 
         bool SignalSlotable::SignalSlotConnection::operator<(const SignalSlotConnection& other) const {
             // Compare members in sequence. Since arrays of references are not allowed, so use pointers.
-            const std::string * const mine[] = {&m_signalInstanceId, &m_signal, &m_slotInstanceId, &m_slot};
-            const std::string * const others[] = {&other.m_signalInstanceId, &other.m_signal, &other.m_slotInstanceId, &other.m_slot};
+            const std::string * const mine[] = {&signalInstanceId, &signal, &slotInstanceId, &slot};
+            const std::string * const others[] = {&other.signalInstanceId, &other.signal, &other.slotInstanceId, &other.slot};
             const size_t numMembers = sizeof (mine) / sizeof (mine[0]);
 
             for (size_t i = 0; i < numMembers; ++i) {

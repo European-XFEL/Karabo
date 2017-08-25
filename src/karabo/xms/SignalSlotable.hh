@@ -92,6 +92,23 @@ namespace karabo {
 
             typedef std::map<std::string, OutputChannel::Pointer> OutputChannels;
 
+            /// A structure to keep information of a signal-slot connection
+            struct SignalSlotConnection {
+
+                SignalSlotConnection(const std::string& signalInstanceId, const std::string& signal,
+                                     const std::string& slotInstanceId, const std::string& slot) :
+                    signalInstanceId(signalInstanceId), signal(signal),
+                    slotInstanceId(slotInstanceId), slot(slot) {
+                }
+
+                // needed to put into std::set:
+                bool operator<(const SignalSlotConnection& other) const;
+
+                std::string signalInstanceId;
+                std::string signal;
+                std::string slotInstanceId;
+                std::string slot;
+            };
 
             /**
              * This constructor does nothing. Call init() afterwards for setting up.
@@ -283,32 +300,14 @@ namespace karabo {
                               const boost::function<void ()>& failureHandler = boost::function<void ()>(),
                               int timeout = 0);
 
-            // FIXME: move to better place!
-            struct SignalSlotConnection {
-
-                SignalSlotConnection(const std::string& signalInstanceId, const std::string& signal,
-                                     const std::string& slotInstanceId, const std::string& slot) :
-                    m_signalInstanceId(signalInstanceId), m_signal(signal),
-                    m_slotInstanceId(slotInstanceId), m_slot(slot) {
-                }
-
-                // needed to put into std::set:
-                bool operator<(const SignalSlotConnection& other) const;
-
-                std::string m_signalInstanceId;
-                std::string m_signal;
-                std::string m_slotInstanceId;
-                std::string m_slot;
-            };
-
             /**
              * This function tries to establish asynchronously a connection between several signals and slots.
              *
              * One of the two handlers will be called exactly once.
-             * The failureHandler will be called if any signal slot connection failed, no matter whether connections
-             * succeeded or not.
+             * The failureHandler will be called if any signal slot connection failed, no matter whether other
+             * connections succeeded or not.
              *
-             * @param signalSlotConnections FIXME
+             * @param signalSlotConnections e.g. vector<SignalSlotConnection>{SignalSlotConnection("sigInst", "signal", "slotInst", "slot"), ...}
              * @param successHandler is called when all connections are established (maybe be empty [=default])
              * @param failureHandler is called when any of the connections could not be established, no matter whether
              *                            the others failed or not, in the same way as a Requestor::AsyncErrorHandler.
