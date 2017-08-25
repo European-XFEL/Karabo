@@ -28,14 +28,19 @@ from .device_client import (
 from .eventloop import NoEventLoop
 from .macro import EventThread, Macro
 from .synchronization import sleep
-
+from karabo.usermacros import (
+    AScan, AMesh, AMove, APathScan, Closable, Coolable, DScan, DMesh,
+    DMove, GenericProxy, Movable, Pumpable, Sensible, TScan)
 
 # NOTE: This is the namespace for ikarabo
 __all__ = ["connectDevice", "disconnectDevice", "execute",
            "executeNoWait", "getClasses", "getDevice", "getDevices",
            "getHistory", "getServers", "instantiate", "instantiateNoWait",
            "karabo", "setWait", "setNoWait", "shutdown",
-           "shutdownNoWait", "sleep", "State", "waitUntil", "waitUntilNew"]
+           "shutdownNoWait", "sleep", "State", "waitUntil", "waitUntilNew",
+           "AScan", "AMesh", "AMove", "APathScan", "Closable", "Coolable",
+           "DScan", "DMesh", "DMove", "GenericProxy", "Movable", "Pumpable",
+           "Sensible", "TScan"]
 
 
 class DeviceClient(Macro, DeviceClientBase):
