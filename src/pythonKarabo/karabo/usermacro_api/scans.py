@@ -133,6 +133,11 @@ class AScan(UserMacro):
         defaultValue=0,
         accessMode=AccessMode.READONLY)
 
+    dataReader = String(
+        displayedName="Offline data source",
+        description="",
+        defaultValue="datareader:output")
+
     data = AcquiredOnline()
 
     _movable = Movable()
@@ -253,7 +258,8 @@ class AScan(UserMacro):
 
         print("-"*linelen)
 
-        return AcquiredOffline(self.experimentId)
+        return  AcquiredOffline(self.experimentId,
+                            source=self.dataReader)
 
     @InputChannel(displayedName="Online data source")
     @coroutine
@@ -344,6 +350,13 @@ class TScan(UserMacro):
         unitSymbol=Unit.SECOND,
         accessMode=AccessMode.INITONLY)
 
+    dataReader = String(
+        displayedName="Offline data source",
+        description="",
+        defaultValue="datareader:output")
+
+    data = AcquiredOnline()
+
     _sensible = Sensible()
 
     def __init__(self, sensible, exposureTime, duration, **kwargs):
@@ -362,6 +375,7 @@ class TScan(UserMacro):
         self.duration = float(duration)
         self.sensibleId = self._sensible.deviceId
         self.boundSensibles = flatten(self._sensible.getBoundDevices())
+        self.data = AcquiredOnline(source=self._update.connectedOutputChannels)
 
     @coroutine
     def execute(self):
@@ -388,6 +402,13 @@ class TScan(UserMacro):
             elaps += self.exposureTime + self.time_epsilon
 
         print("-"*linelen)
+
+        return AcquiredOffline(source=self.dataReader)
+
+    @InputChannel(displayedName="Online data source")
+    @coroutine
+    def _update(self, meta, data):
+        self.data.append(meta, data)
 
 
 class DMesh(AMesh):
