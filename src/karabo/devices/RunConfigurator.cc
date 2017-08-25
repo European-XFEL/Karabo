@@ -1,7 +1,11 @@
 #include <string>
 #include "RunConfigurator.hh"
 #include "RunConfigurationGroup.hh"
-#include "AlarmService.hh"
+
+#include "karabo/util/Schema.hh"
+#include "karabo/util/State.hh"
+#include "karabo/util/TableElement.hh"
+#include "karabo/util/MetaTools.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -113,8 +117,8 @@ namespace karabo {
 
             // Register handlers here: it will switch on multi-threading!
 
-            remote().registerInstanceNewMonitor(boost::bind(&RunConfigurator::newDeviceHandler, this, _1));
-            remote().registerInstanceGoneMonitor(boost::bind(&RunConfigurator::deviceGoneHandler, this, _1, _2));
+            remote().registerInstanceNewMonitor(bind_weak(&RunConfigurator::newDeviceHandler, this, _1));
+            remote().registerInstanceGoneMonitor(bind_weak(&RunConfigurator::deviceGoneHandler, this, _1, _2));
 
             initAvailableGroups();
 
