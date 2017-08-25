@@ -99,7 +99,14 @@ namespace karabo {
                 return iter->second;
             }
         }
-        
+
+
+        bool AlarmCondition::operator==(const AlarmCondition& other) const {
+            // criticality check might be redundant, but it should be fast and might return false without
+            // going through string comparison
+            return isSameCriticality(other) && asString() == other.asString();
+        }
+
  
         const AlarmCondition AlarmCondition::NONE(KARABO_ALARM_NONE, 0);
         const AlarmCondition AlarmCondition::WARN(KARABO_WARN, 1);

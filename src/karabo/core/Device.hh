@@ -764,13 +764,13 @@ namespace karabo {
                             if (typeid (T) == typeid (karabo::util::State)) {
                                 return *reinterpret_cast<const T*> (&karabo::util::State::fromString(m_parameters.get<std::string>(key)));
                             }
-                            KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
+                            throw KARABO_PARAMETER_EXCEPTION("State element at " + key + " may only return state objects");
                         }
                         if (leafType == karabo::util::Schema::ALARM_CONDITION) {
                             if (typeid (T) == typeid (karabo::util::AlarmCondition)) {
                                 return *reinterpret_cast<const T*> (&karabo::util::AlarmCondition::fromString(m_parameters.get<std::string>(key)));
                             }
-                            KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
+                            throw KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key + " may only return alarm condition objects");
                         }
                     }
 
