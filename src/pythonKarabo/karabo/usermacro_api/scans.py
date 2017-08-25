@@ -14,7 +14,7 @@ from karabo.middlelayer import (
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
 from karabo.usermacro_api.util import flatten
-from karabo.usermacro_api.generalized import *
+import karabo.usermacro_api.generalized
 from karabo.usermacros import AcquiredOffline, AcquiredOnline
 
 
@@ -170,7 +170,11 @@ class AScan(UserMacro):
             literal_eval(pos_list)
             if isinstance(pos_list, str) else pos_list)
         self.exposureTime = float(exposureTime)
-        self.steps = bool(steps)
+
+        self.steps = (
+                bool(steps)
+                if isinstance(steps, bool)
+                else literal_eval(steps))
         self.number_of_steps = int(number_of_steps)
         if self.experimentId == "":
             self.experimentId = self.deviceId
@@ -247,13 +251,19 @@ class AScan(UserMacro):
                     print("  Acquiring for {}"
                           .format(self.exposureTime + self.time_epsilon))
 
+                    yield from waitUntil(
+                        lambda: self._sensible.state == State.ACQUIRING)
                     yield from sleep(self.exposureTime + self.time_epsilon)
                     yield from self._sensible.stop()
+
+                    if self._sensible.value:
+                        v = repr(self._sensible.value).replace("Quantity", "")
+                        print("  Value: {}".format(v))
 
                 step_num += 1
 
         # Stop acquisition here for continuous scans
-        if self._sensible.state == State.ACQUIRING:
+        if (not self.steps) and self._sensible.state == State.ACQUIRING:
             yield from self._sensible.stop()
 
         print("-"*linelen)
@@ -327,6 +337,14 @@ class DScan(AScan):
         """ This outputs the position list with the values already delta """
         return super().__repr__().replace('\n', ',')
 
+    @coroutine
+    def execute(self):
+        """Overriden for moving Movable back to its initial position"""
+        pos0 = self._movable.position
+        yield from super().execute()
+        yield from self._movable.moveto(pos0)
+        print("Moving back to {}".format(pos0))
+
 
 class TScan(UserMacro):
     """Time scan"""
@@ -394,11 +412,15 @@ class TScan(UserMacro):
             if self.cancelled:
                 break
             i += 1
-            print("Step {} - at time {}"
-                  .format(i, elaps))
+            print("Step {} - at time {}".format(i, elaps))
             yield from self._sensible.acquire()
             yield from sleep(self.exposureTime + self.time_epsilon)
             yield from self._sensible.stop()
+
+            if self._sensible.value:
+                v = repr(self._sensible.value).replace("Quantity", "")
+                print("  Value: {}".format(v))
+
             elaps += self.exposureTime + self.time_epsilon
 
         print("-"*linelen)
@@ -422,6 +444,14 @@ class DMesh(AMesh):
         current_pos = np.array(self._movable.position)
         pos_list = np.array(list(self._pos_list))
         self._pos_list = pos_list + current_pos
+
+    @coroutine
+    def execute(self):
+        """Overriden for moving Movable back to its initial position"""
+        pos0 = self._movable.position
+        yield from super().execute()
+        yield from self._movable.moveto(pos0)
+        print("Moving back to {}".format(pos0))
 
 
 class AMove(UserMacro):
