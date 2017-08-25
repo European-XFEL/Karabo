@@ -6,7 +6,6 @@ from asyncio import (
     coroutine, Future, get_event_loop, set_event_loop)
 import socket
 import uuid
-import functools
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Bool, Device, DeviceClientBase,
@@ -15,7 +14,6 @@ from karabo.middlelayer_api.eventloop import (
     EventLoop, NoEventLoop, synchronize)
 from karabo.middlelayer_api.macro import EventThread
 from karabo.usermacro_api.pipeline import OutputChannel
-from karabo.middlelayer_api.eventloop import synchronize
 
 
 @coroutine
@@ -65,7 +63,6 @@ def run_in_event_loop(macro, *args, **kwargs):
             # macro is a class, instantiate
             macro = macro(*args, **kwargs)
 
-
     def __add_task(future, coro):
         task = loop.create_task(coro)
         future.set_result(task)
@@ -76,10 +73,9 @@ def run_in_event_loop(macro, *args, **kwargs):
 
     try:
         future = Future()
-        partial = functools.partial(__add_task,
-                                    future,
-                                    run_usermacro(macro, eventThread))
-        loop.call_soon_threadsafe(partial)
+        task = loop.create_task(run_usermacro(macro, eventThread))
+        future.set_result(task)
+        loop.call_soon_threadsafe(task)
         # Must wait here due to the scope EventThread
         if eventThread:
             eventThread.join()
@@ -88,7 +84,6 @@ def run_in_event_loop(macro, *args, **kwargs):
     except KeyboardInterrupt:
         macro.cancelled = True
         print("{} cancelled.".format(macro.deviceId))
-
 
 
 class UserMacro(Macro):
