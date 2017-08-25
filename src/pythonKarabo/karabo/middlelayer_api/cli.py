@@ -19,6 +19,9 @@ import IPython
 
 import karabo
 from karabo.common.states import State
+from karabo.usermacros import (
+    AScan, AMesh, AMove, APathScan, Closable, Coolable, DScan, DMesh,
+    DMove, GenericProxy, Movable, Pumpable, Sensible, TScan)
 from . import device_client
 from .device_client import (
     DeviceClientBase, disconnectDevice, execute, executeNoWait, getClasses,
@@ -28,9 +31,6 @@ from .device_client import (
 from .eventloop import NoEventLoop
 from .macro import EventThread, Macro
 from .synchronization import sleep
-from karabo.usermacros import (
-    AScan, AMesh, AMove, APathScan, Closable, Coolable, DScan, DMesh,
-    DMove, GenericProxy, Movable, Pumpable, Sensible, TScan)
 
 # NOTE: This is the namespace for ikarabo
 __all__ = ["connectDevice", "disconnectDevice", "execute",
