@@ -5,8 +5,13 @@
  * Created on November 9, 2015, 12:28 PM
  */
 
-#include "karabo/core.hpp"
-#include "karabo/util.hpp"
+#include <vector>
+
+#include "karabo/core/Device.hh"
+#include "karabo/util/Hash.hh"
+#include "karabo/util/Schema.hh"
+#include "karabo/util/Exception.hh"
+#include "karabo/util/MetaTools.hh"
 
 #include "CentralLogging.hh"
 
@@ -90,7 +95,7 @@ namespace karabo {
                 m_lastIndex = determineLastIndex();
 
                 m_timer.expires_from_now(boost::posix_time::seconds(get<int>("flushInterval")));
-                m_timer.async_wait(boost::bind(&CentralLogging::flushHandler, this, boost::asio::placeholders::error));
+                m_timer.async_wait(bind_weak(&CentralLogging::flushHandler, this, boost::asio::placeholders::error));
                 m_svcThread = boost::thread(boost::bind(&karabo::net::runProtected, m_svc, this->getInstanceId(),
                                                         "for flushing to file", 100));
                 // Produce some information
@@ -117,7 +122,7 @@ namespace karabo {
                 }
             }
             m_timer.expires_from_now(boost::posix_time::seconds(get<int>("flushInterval")));
-            m_timer.async_wait(boost::bind(&CentralLogging::flushHandler, this, boost::asio::placeholders::error));
+            m_timer.async_wait(bind_weak(&CentralLogging::flushHandler, this, boost::asio::placeholders::error));
         }
 
 
