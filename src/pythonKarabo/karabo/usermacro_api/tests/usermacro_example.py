@@ -1,7 +1,7 @@
 # ==== Boilerplate: To be hidden in the future ======
 from asyncio import coroutine
 
-from karabo.middlelayer import Macro, String
+from karabo.middlelayer import String
 from karabo.usermacros import AMove, UserMacro
 
 
