@@ -7,7 +7,7 @@ from karabo.middlelayer import (DeviceClientBase, getHistory,
                                 Hash, InputChannel, State)
 from karabo.middlelayer_api.eventloop import EventLoop
 
-from karabo.usermacro_api.util import getConfigurationFromPast
+from .util import getConfigurationFromPast
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
@@ -15,12 +15,12 @@ DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 class AcquiredData(object):
     """ Acquired Data is an iterable object that queries various
         data sources.
-        It has a buffer of a length specified by`size`.
+        It has a buffer of a length specified by `size`.
         It returns a k-hash::
 
             data = AcquiredData(experimentId=1)
             h = next(data)
-            type(h) == Hash
+            isinstance(h, Hash)
 
         Although not mandatory, the hash is expected to contain these
         entries:
@@ -35,21 +35,20 @@ class AcquiredData(object):
 
     def __init__(self, experimentId=None, size=10):
         self.experimentId = experimentId
-        self._max_fifo_size = size
-        self._fifo = deque([], self._max_fifo_size)
+        self._fifo = deque([], size)
 
     def __repr__(self):
         rep = "{cls}({exp}, size={size})".format(
               cls=type(self).__name__,
               exp=self.experimentId,
-              size=self._max_fifo_size)
+              size=self._fifo.maxlen)
         return rep
 
     def __str__(self):
         exp = ("Experiment " + str(self.experimentId) if self.experimentId
                else "Unknown Experiment")
         srep = ', '.join('{}'.format(dat['trainId']) for dat in self._fifo)
-        return exp + ': [' + srep + ']'
+        return "{}: [{}]".format(exp, srep)
 
     def append(self, data):
         self._fifo.append(data)
