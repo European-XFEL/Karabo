@@ -2,13 +2,13 @@
 all generalized interface to devices
 """
 import asyncio
+import re
 
 from karabo.common.states import StateSignifier
 from karabo.middlelayer import (
     allCompleted, connectDevice, KaraboError,
-    lock, Proxy, State)
+    lock, Proxy, setWait, State)
 from karabo.middlelayer_api.proxy import synchronize
-import re
 
 
 class GenericProxy(object):
@@ -20,6 +20,7 @@ class GenericProxy(object):
     _proxy = Proxy()
     _generic_proxies = []
     _param_regex = None
+    _lock_context = None
 
     def __repr__(self):
         def _repr_gproxy(gproxy):
@@ -142,7 +143,8 @@ class GenericProxy(object):
             for gproxy in self._generic_proxies:
                 yield from gproxy.lockon(locker)
         else:
-            yield from lock(self._proxy).__enter__()
+            self._lock_context = yield from lock(self._proxy)
+            self._lock_context.__enter__()
             self.locker = locker
 
     @synchronize
@@ -152,7 +154,9 @@ class GenericProxy(object):
             for gproxy in self._generic_proxies:
                 yield from gproxy.lockoff()
         else:
-            yield from lock(self._proxy).__exit__(None, None, None)
+            if self._lock_context:
+                self._lock_context.__exit__(None, None, None)
+                yield from setWait(self._proxy)
         self.locker = None
 
     @synchronize
