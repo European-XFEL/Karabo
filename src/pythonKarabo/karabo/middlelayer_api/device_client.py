@@ -222,6 +222,36 @@ def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
                                timeout=timeout, wait=wait)
 
 
+@synchronize
+def getConfigurationFromPast(deviceId, timepoint):
+    """ get the configuration of a device at a given time::
+
+        getConfigurationFromPast(device, "12:30")
+
+    returns a karabo hash and the schema of the device as it was at that
+    time.
+
+    The date of the time point is parsed using :func:`dateutil.parser.parse`,
+    allowing many ways to write the date.
+
+    This effectively calls :func:`dataLogReader.slotGetConfigurationFromPast`.
+    """
+
+    timepoint = _parse_date(timepoint)
+    instance = get_instance()
+    logger_id = "DataLogger-{}".format(deviceId)
+
+    if logger_id not in instance.loggerMap:
+        raise KaraboError('no logger for device "{}"'.format(deviceId))
+
+    reader = "DataLogReader0-{}".format(instance.loggerMap[logger_id])
+    h, s = yield from get_instance().call(reader,
+                                          "slotGetConfigurationFromPast",
+                                          deviceId,
+                                          timepoint)
+    return h, s
+
+
 class Queue(object):
     """A queue of property changes
 
