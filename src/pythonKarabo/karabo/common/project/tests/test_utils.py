@@ -1,6 +1,7 @@
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
-    MacroModel, ProjectModel, device_instance_exists, find_parent_object
+    MacroModel, ProjectModel, device_config_exists, device_instance_exists,
+    find_parent_object
 )
 from nose.tools import assert_raises
 
@@ -89,3 +90,36 @@ def test_device_instance_exists():
     proj.subprojects.append(sub_proj)
     assert device_instance_exists(sub_proj, 'blahDevice')
     assert device_instance_exists(proj, 'blahDevice')
+
+
+def test_device_config_exists():
+    dev0 = DeviceConfigurationModel(class_id='BazClass')
+    foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
+                              configs=[dev0])
+    serv0 = DeviceServerModel(server_id='fooServer', host='serverserverFoo',
+                              devices=[foo])
+    dev1 = DeviceConfigurationModel(class_id='QuxClass',
+                                    simple_name='new-conf1')
+    bar = DeviceInstanceModel(class_id='QuxClass', instance_id='barDevice',
+                              configs=[dev1])
+    serv1 = DeviceServerModel(server_id='barServer', host='serverserverFoo',
+                              devices=[bar])
+
+    proj = ProjectModel(servers=[serv0])
+    assert device_config_exists(proj, 'default')
+    assert not device_config_exists(proj, 'new-conf1')
+    proj.servers.append(serv1)
+    assert device_config_exists(proj, 'default')
+    assert not device_config_exists(proj, 'new-conf2')
+    assert device_config_exists(proj, ('default', 'new-conf1'))
+
+    dev0 = DeviceConfigurationModel(class_id='BazClass',
+                                    simple_name='new-conf2')
+    blah = DeviceInstanceModel(class_id='BazClass', instance_id='blahDevice',
+                               configs=[dev0])
+    serv0 = DeviceServerModel(server_id='blahServer', host='serverserverBlah',
+                              devices=[blah])
+    sub_proj = ProjectModel(servers=[serv0])
+    proj.subprojects.append(sub_proj)
+    assert device_config_exists(sub_proj, 'new-conf2')
+    assert device_config_exists(proj, 'new-conf2')
