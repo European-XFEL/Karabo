@@ -299,7 +299,7 @@ class Tests(DeviceTest):
             yield from getConfigurationFromPast("aDeviceNotInHistory",
                                                 time)
 
-        h, s = getConfigurationFromPast("middlelayerDevice", time)
+        h, s = yield from getConfigurationFromPast("middlelayerDevice", time)
         self.assertEqual(type(h), Hash)
         self.assertEqual(type(s), Schema)
 
