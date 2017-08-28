@@ -190,9 +190,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         self._update_icon(self.ui_data)
         status = self.project_device.status
         if status in (DeviceStatus.NOPLUGIN, DeviceStatus.NOSERVER):
-            configuration = self.project_device.current_configuration
-            # Clear configuration but do not reset (redummy) the descriptor
-            clear_configuration_instance(configuration, redummy=False)
+            self._clear_configurator()
         else:
             # Show the device's configuration, iff it was already showing
             self._update_configurator()
@@ -224,6 +222,11 @@ class DeviceInstanceController(BaseProjectGroupController):
         if configuration is not None:
             broadcast_event(KaraboEventSender.ShowConfiguration,
                             {'configuration': configuration})
+
+    def _clear_configurator(self):
+        configuration = self.project_device.current_configuration
+        # Clear configuration but do not reset (redummy) the descriptor
+        clear_configuration_instance(configuration, redummy=False)
 
     def _update_icon(self, ui_data):
         # Get current status of device
@@ -294,6 +297,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                                           DeviceServerModel)
         if device in server_model.devices:
             server_model.devices.remove(device)
+            self._clear_configurator()
 
     def _edit_device(self, project_controller):
         # Watch for incomplete model initialization
