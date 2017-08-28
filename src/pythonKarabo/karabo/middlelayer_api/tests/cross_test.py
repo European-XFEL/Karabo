@@ -11,10 +11,10 @@ from unittest import main
 from zlib import adler32
 
 from karabo.middlelayer import (
-    AccessLevel, AlarmCondition, Assignment, background, Configurable, Device,
-    DeviceClientBase, getDevice, getHistory, isSet, InputChannel, Int32,
-    MetricPrefix, Node, shutdown, sleep, Slot, State, unit, Unit, waitUntil,
-    waitUntilNew)
+    AccessLevel, AlarmCondition, Assignment, background, Configurable,
+    DeviceClientBase, getConfigurationFromPast, getDevice, getHistory, Hash,
+    isSet, InputChannel, Int32, KaraboError, MetricPrefix, Node, Schema,
+    shutdown, sleep, Slot, State, unit, Unit, waitUntil, waitUntilNew)
 
 from .eventloop import DeviceTest, async_tst
 
@@ -275,7 +275,6 @@ class Tests(DeviceTest):
             hist.sort(key=lambda x: x[0])
             self.assertEqual([v for _, _, _, v in hist[-5:]], list(range(5)))
 
-
         node_history = yield from getHistory(
             "middlelayerDevice.child.number", before.isoformat(),
             after.isoformat())
@@ -291,6 +290,18 @@ class Tests(DeviceTest):
             "Karabo_DLManagerServer", "slotKillServer")
         yield from self.process.wait()
     test_history.slow = True
+
+    @async_tst
+    def test_getConfigurationFromPast(self):
+        time = datetime.now().isoformat()
+
+        with self.assertRaises(KaraboError):
+            yield from getConfigurationFromPast("aDeviceNotInHistory",
+                                                time)
+
+        h, s = getConfigurationFromPast("middlelayerDevice", time)
+        self.assertEqual(type(h), Hash)
+        self.assertEqual(type(s), Schema)
 
 
 if __name__ == "__main__":
