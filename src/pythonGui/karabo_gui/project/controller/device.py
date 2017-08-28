@@ -22,7 +22,8 @@ from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.indicators import get_project_device_status_icon
 from karabo_gui.project.dialog.device_handle import DeviceHandleDialog
 from karabo_gui.project.dialog.object_handle import ObjectDuplicateDialog
-from karabo_gui.project.utils import check_device_instance_exists
+from karabo_gui.project.utils import (
+    check_device_config_exists, check_device_instance_exists)
 from karabo_gui.singletons.api import get_manager, get_topology
 from karabo_gui.topology.api import (clear_configuration_instance,
                                      ProjectDeviceInstance)
@@ -335,6 +336,10 @@ class DeviceInstanceController(BaseProjectGroupController):
                                     model=device, add_config=True)
         result = dialog.exec()
         if result == QDialog.Accepted:
+            # Check for existing device configuration
+            if check_device_config_exists(dialog.configuration_name):
+                return
+
             config_model = DeviceConfigurationModel(
                 class_id=dialog.class_id, configuration=Hash(),
                 simple_name=dialog.configuration_name,
