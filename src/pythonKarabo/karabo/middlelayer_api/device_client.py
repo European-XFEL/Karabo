@@ -108,6 +108,20 @@ def _parse_date(date):
     return d.astimezone(dateutil.tz.tzutc()).replace(tzinfo=None).isoformat()
 
 
+@synchronize
+def _getLogReaderId(deviceId):
+    instance = get_instance()
+    did = "DataLogger-{}".format(deviceId)
+    if did not in instance.loggerMap:
+        instance.loggerMap = yield from instance.call(
+            "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
+        if did not in instance.loggerMap:
+            raise KaraboError('no logger for device "{}"'.
+                              format(deviceId))
+    reader = "DataLogReader0-{}".format(instance.loggerMap[did])
+    return reader
+
+
 class _getHistory_old:
     def __init__(self, proxy, begin, end, maxNumData, timeout):
         self.proxy = proxy
@@ -133,15 +147,8 @@ class _getHistory_old:
             deviceId = self.proxy._deviceId
         else:
             deviceId = str(self.proxy)
-        instance = get_instance()
-        did = "DataLogger-{}".format(deviceId)
-        if did not in instance.loggerMap:
-            instance.loggerMap = yield from instance.call(
-                "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
-            if did not in instance.loggerMap:
-                raise KaraboError('no logger for device "{}"'.
-                                  format(deviceId))
-        reader = "DataLogReader0-{}".format(instance.loggerMap[did])
+
+        reader = yield from _getLogReaderId(deviceId)
         r_deviceId, r_attr, data = yield from get_instance().call(
             reader, "slotGetPropertyHistory", deviceId, attr,
             Hash("from", self.begin, "to", self.end,
@@ -162,16 +169,7 @@ def _getHistory_new(prop, begin, end, maxNumData):
 
     begin = _parse_date(begin)
     end = _parse_date(end)
-
-    instance = get_instance()
-    did = "DataLogger-{}".format(deviceId)
-    if did not in instance.loggerMap:
-        instance.loggerMap = yield from instance.call(
-            "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
-        if did not in instance.loggerMap:
-            raise KaraboError('no logger for device "{}"'.
-                              format(deviceId))
-    reader = "DataLogReader0-{}".format(instance.loggerMap[did])
+    reader = yield from _getLogReaderId(deviceId)
     r_deviceId, r_attr, data = yield from get_instance().call(
         reader, "slotGetPropertyHistory", deviceId, attr,
         Hash("from", begin, "to", end, "maxNumData", maxNumData))
@@ -239,16 +237,9 @@ def getConfigurationFromPast(deviceId, timepoint):
 
     timepoint = _parse_date(timepoint)
     instance = get_instance()
-    logger_id = "DataLogger-{}".format(deviceId)
-
-    if logger_id not in instance.loggerMap:
-        raise KaraboError('no logger for device "{}"'.format(deviceId))
-
-    reader = "DataLogReader0-{}".format(instance.loggerMap[logger_id])
-    h, s = yield from get_instance().call(reader,
-                                          "slotGetConfigurationFromPast",
-                                          deviceId,
-                                          timepoint)
+    reader = yield from _getLogReaderId(deviceId)
+    h, s = yield from instance.call(reader, "slotGetConfigurationFromPast",
+                                    deviceId, timepoint)
     return h, s
 
 
