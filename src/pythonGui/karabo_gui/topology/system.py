@@ -204,7 +204,7 @@ class SystemTopology(HasStrictTraits):
         """
         key = (server_id, class_id)
         if key not in self._class_configurations:
-            print('Unrequested schema for classId {} arrived'.format(class_id))
+            # unrequested schema arrived
             return None
 
         # Save a clean copy
@@ -256,7 +256,9 @@ class SystemTopology(HasStrictTraits):
         exists and is initialized.
         """
         if device_id not in self._online_devices:
-            print('Unrequested schema for device {} arrived'.format(device_id))
+            # unrequested schema arrived
+            # XXX: TODO on the gui server side only send schema update to
+            # clients which is monitoring the device
             return None
 
         conf = self._online_devices[device_id]
