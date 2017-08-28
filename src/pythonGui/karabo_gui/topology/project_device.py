@@ -66,6 +66,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         self._offline_dev_config.signalBoxChanged.disconnect(config_changed)
 
         clear_configuration_instance(self._offline_dev_config)
+        self._initial_config_hash = None
 
     def rename(self, device_id='', class_id='', server_id=''):
         """Assign a new device_id, class_id, or server_id.
@@ -73,11 +74,6 @@ class ProjectDeviceInstance(HasStrictTraits):
         device_id = device_id or self.device_id
         class_id = class_id or self.class_id
         server_id = server_id or self.server_id
-
-        # First check to see if anything is changing!
-        if (device_id == self.device_id and class_id == self.class_id
-                and server_id == self.server_id):
-            return
 
         self.destroy()
         self._init_object_state(device_id, class_id, server_id)
