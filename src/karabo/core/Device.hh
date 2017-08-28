@@ -358,11 +358,11 @@ namespace karabo {
                         .displayedName("Messaging problems")
                         .description("If true, there is a problem consuming broker messages")
                         .expertAccess()
+                        // threshold is exclusive: value true fulfills "> false" and triggers alarm whereas false does not
+                        // .alarmHigh(false)
+                        // .info("Unreliable broker message consumption - consider restarting device!")
+                        // .needsAcknowledging(true)
                         .readOnly().initialValue(false)
-                        // threshold is exclusive: value true fulfils "> false" and triggers alarm whereas false does not
-                        .alarmHigh(false)
-                        .info("Unreliable broker message consumption - consider restarting device!")
-                        .needsAcknowledging(true)
                         .commit();
 
                 BOOL_ELEMENT(expected).key("performanceStatistics.enable")
