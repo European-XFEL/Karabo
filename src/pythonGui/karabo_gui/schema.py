@@ -668,6 +668,10 @@ class VectorHash(hashmod.VectorHash, metaclass=Monkey):
         self.rowsInfo = [VectorHashRowInfo(box) for row in value]
         Type.fromHash(self, box, value, attrs=attrs, timestamp=timestamp)
 
+    def setDefault(self, box):
+        if self.defaultValue is not None:
+            box._set(self.defaultValue, None)
+
 
 class VectorHashCellInfo(object):
     """A proxy for VectorHash cells (row & column) which is used by the
