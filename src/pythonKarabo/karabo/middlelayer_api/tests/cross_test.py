@@ -293,16 +293,37 @@ class Tests(DeviceTest):
 
     @async_tst
     def test_getConfigurationFromPast(self):
-        time = datetime.now().isoformat()
-
         with self.assertRaises(KaraboError):
             yield from getConfigurationFromPast("aDeviceNotInHistory",
-                                                time)
+                                                datetime.now().isoformat())
+        # Start a logging device with the specs in historytest.xml
+        karabo = os.environ["KARABO"]
+        xml = os.path.abspath('historytest.xml')
+        self.process = yield from create_subprocess_exec(
+            os.path.join(karabo, "bin", "karabo-cppserver"),
+            xml, stderr=PIPE, stdout=PIPE)
+
+        with (yield from getDevice("DataLogger-middlelayerDevice")) as logger:
+            yield from waitUntil(lambda: logger.state == State.NORMAL)
+
+        # wait until the new archive and index files are flushed
+        self.device.value = 42
+        self.device.update()
+        time = datetime.now().isoformat()
+        yield from sleep(1.1)
+
+        self.device.value = 0
+        self.device.update()
 
         h, s = yield from getConfigurationFromPast("middlelayerDevice", time)
-        self.assertEqual(type(h), Hash)
-        self.assertEqual(type(s), Schema)
+        self.assertIsInstance(h, Hash)
+        self.assertIsInstance(s, Schema)
+        self.assertEqual(h['value'], 42)
 
+        # Remove the logging device
+        yield from get_event_loop().instance()._ss.request(
+            "Karabo_DLManagerServer", "slotKillServer")
+        yield from self.process.wait()
 
 if __name__ == "__main__":
     main()
