@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Scantool macros"""
 from ast import literal_eval
 from asyncio import coroutine
