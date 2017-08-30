@@ -225,7 +225,7 @@ class NavigationTreeModel(QAbstractItemModel):
         """Reimplemented function of QAbstractItemModel.
         """
         if parent.column() > 0:
-            return None
+            return 0
 
         if not parent.isValid():
             parent_node = self.tree.root
