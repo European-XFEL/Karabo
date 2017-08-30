@@ -532,6 +532,191 @@ void SignalSlotable_Test::testConnectAsync() {
     CPPUNIT_ASSERT(connectFailedMsg.empty());
 }
 
+
+void SignalSlotable_Test::testConnectAsyncMulti() {
+
+    // One instance with and signalA and slotB...
+    auto signalerA = boost::make_shared<SignalSlotable>("signalA_slotB");
+    signalerA->registerSignal<int>("signalA");
+    bool slotCalledB = false;
+    int inSlotB = -10;
+    auto slotFuncB = [&slotCalledB, &inSlotB] (int i) {
+        inSlotB += i;
+        slotCalledB = true;
+    };
+    signalerA->registerSlot<int>(slotFuncB, "slotB");
+    signalerA->start();
+
+    // .. and one with and signalB and slotA...
+    auto signalerB = boost::make_shared<SignalSlotable>("signalB_slotA");
+    signalerB->registerSignal<int>("signalB");
+    bool slotCalledA = false;
+    int inSlotA = -10;
+    auto slotFuncA = [&slotCalledA, &inSlotA] (int i) {
+        inSlotA += i;
+        slotCalledA = true;
+    };
+    signalerB->registerSlot<int>(slotFuncA, "slotA");
+    signalerB->start();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // First test successful connectAsync
+    bool connected = false;
+    auto connectedHandler = [&connected]() {
+        connected = true;
+    };
+    bool connectFailed = false;
+    auto failureHandler = [&connectFailed]() {
+        connectFailed = true;
+    };
+    // Cross connect the instances
+    typedef SignalSlotable::SignalSlotConnection SignalSlotConnection;
+    const std::vector<SignalSlotConnection> connections{SignalSlotConnection("signalA_slotB", "signalA", "signalB_slotA", "slotA"),
+                                                        SignalSlotConnection("signalB_slotA", "signalB", "signalA_slotB", "slotB")};
+    signalerA->asyncConnect(connections, connectedHandler, failureHandler);
+    // Give some time to connect
+    for (int i = 0; i < 200; ++i) {
+        if (connected) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    };
+    CPPUNIT_ASSERT(connected);
+    CPPUNIT_ASSERT(!connectFailed);
+
+    signalerA->emit("signalA", 52);
+    signalerB->emit("signalB", -32);
+
+    // Give signal some time to travel
+    for (int i = 0; i < 200; ++i) {
+        if (slotCalledA && slotCalledB) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    };
+    CPPUNIT_ASSERT(slotCalledA);
+    CPPUNIT_ASSERT(slotCalledB);
+    CPPUNIT_ASSERT_EQUAL(42, inSlotA);
+    CPPUNIT_ASSERT_EQUAL(-42, inSlotB);
+
+    // Clean up established connections (synchronously)
+    for (const SignalSlotConnection& con : connections) {
+        CPPUNIT_ASSERT(signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Now test failureHandler - non-existing signal gives specific exception type and message
+
+    // Re-use connectedHandler, but reset its flag to check that it is never called
+    connected = false;
+
+    connectFailed = false; // re-used variable
+    bool connectTimeout = false;
+    std::string connectFailedMsg;
+    auto connectFailedHandler = [&connectFailed, &connectTimeout, &connectFailedMsg] () {
+        connectFailed = true;
+        try {
+            throw;
+        } catch (const karabo::util::TimeoutException& e) {
+            connectTimeout = true;
+        } catch (const karabo::util::SignalSlotException& e) {
+            connectFailedMsg = e.what();
+        } catch (...) { // Avoid that an exception leaks out and crashes the test program.
+        }
+    };
+
+    std::vector<SignalSlotConnection> badConnections(connections);
+    badConnections.push_back(SignalSlotConnection("signalA_slotB", "NOT_A_signal", "signalB_slotA", "slotA"));
+
+    signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler);
+
+    // Give some time to find out that signal is not there
+    for (int i = 0; i < 100; ++i) {
+        if (connected || connectFailed) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    };
+    CPPUNIT_ASSERT(connectFailed);
+    CPPUNIT_ASSERT(!connected);
+    CPPUNIT_ASSERT(!connectTimeout);
+    // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
+    // check that the original message is part of it
+    CPPUNIT_ASSERT(connectFailedMsg.find("signalA_slotB has no signal 'NOT_A_signal'.") != std::string::npos);
+
+    // Clean up established connections (synchronously)
+    for (const SignalSlotConnection& con : connections) {
+        // Do not test return value - the correct connections should be connected, but maybe not yet...
+        signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot);
+    }
+    ///////////////////////////////////////////////////////////////////////////
+    // Test failureHandler again - now non-existing slot gives same exception type, but other message
+    connected = false;
+    connectFailed = false;
+    connectTimeout = false;
+    connectFailedMsg = "";
+    // replace bad connection by another bad one...
+    badConnections.back() = SignalSlotConnection("signalA_slotB", "signalA", "signalB_slotA", "NOT_A_slot");
+    signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler);
+
+    // Give some time to find out that slot is not there
+    for (int i = 0; i < 100; ++i) {
+        if (connected || connectFailed) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    };
+    CPPUNIT_ASSERT(connectFailed);
+    CPPUNIT_ASSERT(!connected);
+    CPPUNIT_ASSERT(!connectTimeout);
+    // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
+    // check that the original message is part of it
+    CPPUNIT_ASSERT(connectFailedMsg.find("signalB_slotA has no slot 'NOT_A_slot'.") != std::string::npos);
+
+    // Clean up established connections (synchronously)
+    for (const SignalSlotConnection& con : connections) {
+        // Do not test return value - the correct connections should be connected, but maybe not yet...
+        signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Another test for failureHandler - non-existing signalInstanceId gives TimeoutException
+    connected = false;
+    connectFailed = false;
+    connectTimeout = false;
+    connectFailedMsg = "";
+    // replace bad connection by another bad one...
+    badConnections.back() = SignalSlotConnection("NOT_A_signalInstance", "signalA", "signalB_slotA", "slotA");
+
+    // Timeout of 50 allows 25 ms per message travel (without setting this, we would have to wait for ages)
+    signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler, 50);
+
+    // The first request will succeed, the second (to "NOT_A_sig...") not - so wait 4 * 25 ms plus margin to be sure
+    boost::this_thread::sleep(boost::posix_time::milliseconds(105));
+
+    CPPUNIT_ASSERT(connectFailed);
+    CPPUNIT_ASSERT(!connected);
+    CPPUNIT_ASSERT(connectTimeout);
+    CPPUNIT_ASSERT(connectFailedMsg.empty());
+
+    // Clean up established connections (synchronously)
+    for (const SignalSlotConnection& con : connections) {
+        // Do not test return value - the correct connections should be connected, but maybe not yet...
+        signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Final test for failureHandler - non-existing slotInstanceId gives again TimeoutException
+    connected = false;
+    connectFailed = false;
+    connectTimeout = false;
+    connectFailedMsg = "";
+    // replace bad connection by another bad one...
+    badConnections.back() = SignalSlotConnection("signalA_slotB", "signalA", "NOT_A_slotInstance", "slotA");
+    // Timeout of 50 allows 25 ms per message travel
+    signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler, 50);
+    // The first request (to "NOT_A_slot...") will fail, so allow for 2 * 25 ms plus margin to be sure
+    boost::this_thread::sleep(boost::posix_time::milliseconds(55));
+
+    CPPUNIT_ASSERT(connectFailed);
+    CPPUNIT_ASSERT(!connected);
+    CPPUNIT_ASSERT(connectTimeout);
+    CPPUNIT_ASSERT(connectFailedMsg.empty());
+}
+
+
 void SignalSlotable_Test::testMethod() {
 
     const std::string instanceId("SignalSlotDemo");
