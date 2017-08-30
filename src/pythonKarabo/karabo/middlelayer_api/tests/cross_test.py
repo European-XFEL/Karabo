@@ -325,5 +325,7 @@ class Tests(DeviceTest):
             "Karabo_DLManagerServer", "slotKillServer")
         yield from self.process.wait()
 
+    test_getConfigurationFromPast.slow = True
+
 if __name__ == "__main__":
     main()
