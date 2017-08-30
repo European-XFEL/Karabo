@@ -3,6 +3,7 @@ from traits.api import Instance, List
 from karabo.common.api import walk_traits_object
 from .bases import BaseProjectObjectModel
 from .device import DeviceInstanceModel
+from .device_config import DeviceConfigurationModel
 
 
 def find_parent_object(model, ancestor_model, search_klass):
@@ -47,6 +48,26 @@ def device_instance_exists(project, instance_ids):
         nonlocal found
         if isinstance(obj, DeviceInstanceModel):
             if obj.instance_id in instance_ids:
+                found = True
+
+    walk_traits_object(project, visitor)
+    return found
+
+
+def device_config_exists(project, config_names):
+    """Check whether the a ``project`` already has a device[s] configuration
+    with the given ``config_names`` and return ``True`` or ``False``
+    """
+    found = False
+
+    # Allow one or more device configuration names
+    if isinstance(config_names, str):
+        config_names = (config_names,)
+
+    def visitor(obj):
+        nonlocal found
+        if isinstance(obj, DeviceConfigurationModel):
+            if obj.simple_name in config_names:
                 found = True
 
     walk_traits_object(project, visitor)
