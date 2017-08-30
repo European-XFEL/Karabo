@@ -214,6 +214,9 @@ class DeviceInstanceController(BaseProjectGroupController):
         if self.project_device.online:
             configuration.dispatchUserChanges(config_model.configuration)
         else:
+            if configuration.descriptor is None:
+                # Do nothing
+                return
             configuration.fromHash(config_model.configuration)
         device.active_config_ref = config_model.uuid
 
@@ -283,6 +286,10 @@ class DeviceInstanceController(BaseProjectGroupController):
             is_active = self.model.active_config_ref == dev_conf.uuid
             conf_action.setChecked(is_active)
             config_menu.addAction(conf_action)
+
+        status = self.project_device.status
+        if status in (DeviceStatus.NOPLUGIN, DeviceStatus.NOSERVER):
+            config_menu.setEnabled(False)
 
         return config_menu
 
