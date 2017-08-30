@@ -118,8 +118,7 @@ def _getLogReaderId(deviceId):
         if did not in instance.loggerMap:
             raise KaraboError('no logger for device "{}"'.
                               format(deviceId))
-    reader = "DataLogReader0-{}".format(instance.loggerMap[did])
-    return reader
+    return "DataLogReader0-{}".format(instance.loggerMap[did])
 
 
 class _getHistory_old:
