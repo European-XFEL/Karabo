@@ -82,6 +82,15 @@ class Enumable(object):
                                     for val in self.enum.__members__.values()]
             else:
                 attrs["options"] = [opt.value for opt in self.options]
+            # HACK to comply with C++:
+            # Schema entries of State and AlarmCondition have leaf type
+            # attributes, required e.g. in
+            # DeviceClient::get<T>(instanceId, key, keySep)
+            KARABO_SCHEMA_LEAF_TYPE = "leafType"  # see util/Schema.hh
+            if self.enum is State:
+                attrs[KARABO_SCHEMA_LEAF_TYPE] = 2  # LeafType::STATE
+            elif self.enum is AlarmCondition:
+                attrs[KARABO_SCHEMA_LEAF_TYPE] = 3  # LeafType::ALARM_CONDITION
         return schema, attrs
 
     def toKaraboValue(self, data, strict=True):
