@@ -529,7 +529,7 @@ namespace karabo {
 
         karabo::util::Schema DeviceClient::cacheAndGetActiveSchema(const std::string& instanceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Schema());
-            std::string state = this->get<std::string > (instanceId, "state");
+            const std::string state(get<State>(instanceId, "state").name());
             std::string path;
             {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);

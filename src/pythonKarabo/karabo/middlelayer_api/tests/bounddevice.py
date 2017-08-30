@@ -5,9 +5,10 @@ API cross test
 import numpy
 
 from karabo.bound import (
-    AMPERE, Hash, DOUBLE_ELEMENT, Epochstamp, KARABO_CLASSINFO, KILO, METER,
-    MILLI, NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL, PythonDevice, Schema,
-    SLOT_ELEMENT, State, STRING_ELEMENT, TABLE_ELEMENT, Timestamp, Trainstamp)
+    AMPERE, AlarmCondition, Hash, DOUBLE_ELEMENT, Epochstamp, KARABO_CLASSINFO,
+    KILO, METER, MILLI, NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL,
+    PythonDevice, Schema, SLOT_ELEMENT, State, STRING_ELEMENT, TABLE_ELEMENT,
+    Timestamp, Trainstamp)
 
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
@@ -112,6 +113,17 @@ class TestDevice(PythonDevice):
 
     def backfire(self):
         remote = self.remote()
+
+        state = remote.get("middlelayerDevice", "state")
+        # 'isinstance' instead of 'is' allows inheritance in future
+        if not isinstance(state, State):
+            raise RuntimeError("Middle layer 'state' property is of type",
+                               type(state).__name__)
+        alarm = remote.get("middlelayerDevice", "alarmCondition")
+        if not isinstance(alarm, AlarmCondition):
+            raise RuntimeError("Middle layer 'alarmCondition' property "
+                               "is of type", type(alarm).__name__)
+
         remote.set("middlelayerDevice", "value", 99)
         remote.execute("middlelayerDevice", "slot")
 
