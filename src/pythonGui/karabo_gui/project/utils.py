@@ -12,8 +12,8 @@ from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.common.api import set_modified_flag, walk_traits_object
 from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
-    DeviceServerModel, ProjectModel, device_instance_exists,
-    recursive_save_object, read_lazy_object
+    DeviceServerModel, ProjectModel, device_config_exists,
+    device_instance_exists, recursive_save_object, read_lazy_object
 )
 from karabo.common.scenemodel.api import SceneLinkModel, SceneModel, read_scene
 from karabo.middlelayer import Hash, read_project_model
@@ -122,6 +122,21 @@ def check_device_instance_exists(instance_id):
                '<br>already exists! Therefore it will not be '
                'added!').format(instance_id)
         messagebox.show_warning(msg, title='Device already exists')
+        return True
+    return False
+
+
+def check_device_config_exists(config_name):
+    """Check whether the incoming ``simple_name`` already exists in the current
+    projects and return ``True`` if that is the case else ``False``.
+    """
+    root_project = get_project_model().traits_data_model
+    if device_config_exists(root_project, config_name):
+        msg = ('Another device configuration with the same name \"<b>{}</b>\" '
+               '<br>already exists! Therefore it will not be '
+               'added!').format(config_name)
+        messagebox.show_warning(msg,
+                                title='Device configuration already exists')
         return True
     return False
 

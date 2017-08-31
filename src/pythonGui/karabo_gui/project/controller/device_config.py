@@ -13,6 +13,7 @@ from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, find_parent_object)
 from karabo_gui import messagebox
 from karabo_gui.project.dialog.object_handle import ObjectEditDialog
+from karabo_gui.project.utils import check_device_config_exists
 from .bases import BaseProjectController, ProjectControllerUiData
 
 
@@ -74,4 +75,9 @@ class DeviceConfigurationController(BaseProjectController):
                                   model=self.model)
         result = dialog.exec()
         if result == QDialog.Accepted:
+            # Check for existing device configuration
+            renamed = self.model.simple_name != dialog.simple_name
+            if renamed and check_device_config_exists(dialog.simple_name):
+                return
+
             self.model.simple_name = dialog.simple_name
