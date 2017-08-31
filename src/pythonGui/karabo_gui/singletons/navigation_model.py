@@ -222,10 +222,12 @@ class NavigationTreeModel(QAbstractItemModel):
         return self.createIndex(parent_node.row(), 0, parent_node)
 
     def rowCount(self, parent=QModelIndex()):
-        """Reimplemented function of QAbstractItemModel.
+        """Reimplemented function of QAbstractItemModel. Counts number of
+        Children for a given node in the tree view.
         """
         if parent.column() > 0:
-            return None
+            # parent with column number > 0 don't have children
+            return 0
 
         if not parent.isValid():
             parent_node = self.tree.root
