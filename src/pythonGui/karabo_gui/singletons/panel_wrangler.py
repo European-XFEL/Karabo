@@ -196,8 +196,6 @@ class PanelWrangler(QObject):
             panel = AlarmPanel(instance_id, title)
             main_win.addPanel(panel, PanelAreaEnum.MiddleBottom)
             self._alarm_panels[instance_id] = panel
-        else:
-            main_win.selectPanel(panel, PanelAreaEnum.MiddleBottom)
 
     def _open_run_configurator(self, instance_id):
         if self.main_window is None:
