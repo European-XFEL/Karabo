@@ -1,11 +1,12 @@
-from asyncio import coroutine
+from asyncio import coroutine, sleep
 from collections import deque
 import heapq
 import time
 
-from karabo.middlelayer import (DeviceClientBase, getHistory,
-                                Hash, InputChannel, State)
-from karabo.middlelayer_api.eventloop import EventLoop
+from karabo.middlelayer import (DeviceClientBase, getDevice, getHistory,
+                                Hash, InputChannel, shutdown, State,
+                                waitUntilNew)
+from karabo.middlelayer_api.eventloop import EventLoop, synchronize
 
 from .util import getConfigurationFromPast
 
@@ -121,13 +122,29 @@ class AcquiredOffline(AcquiredData, DeviceClientBase):
     def __repr__(self):
         return "{}, source={})".format(super().__repr__()[:-1],
                                        self.append.connectedOutputChannels)
+
     def __str__(self):
         return "{} - {} - {}".format(super().__str__(),
-                                    self.state,
-                                    self.status)
+                                     self.state,
+                                     self.status)
+
     @InputChannel(raw=True)
     @coroutine
     def append(self, data, meta):
+        """
+        Here, the assumption is that the datareader is set with its default
+        configuration, and specifically that datareader.output.noInputShared
+        is set to wait.
+
+        This allows us to to keep a fifo of limited size, to consume data at
+        our leisure, and not miss any entires.
+        As such this function has a busy loop that waits, at the end, for
+        data to be consumed, thus not returning, thus putting this
+        InputChannel in noInputShared mode.
+
+        :param data: a k-hash provided by the InputChannel
+        :param meta: a PipelineMetaData object provided by the InputChannel
+        """
         self.state = State.ACQUIRING
         self.status = "Incoming"
         formatted_hash = Hash([('timestamp', meta.timestamp.timestamp),
@@ -137,6 +154,22 @@ class AcquiredOffline(AcquiredData, DeviceClientBase):
         super().append(formatted_hash)
         self.state = State.ON
         self.status = "Received Data"
+
+        while len(self) is self._fifo.maxlen:
+            yield from sleep(.1)
+
+    @synchronize
+    def query(self):
+        data_reader = self.append.connectedOutputChannels[0].split(':')[0]
+        with (yield from getDevice(data_reader)) as dev:
+            if dev.state == State.STARTED:
+                yield from dev.stop()
+                yield from waitUntilNew(dev.state)
+            if dev.state == State.STOPPED:
+                yield from dev.start()
+
+    def __del__(self):
+        shutdown(self.deviceId)
 
 
 class AcquiredFromLog(AcquiredData):
