@@ -10,6 +10,7 @@ from karabo.middlelayer_api.eventloop import synchronize
 import datetime
 import matplotlib.pyplot as pl
 import matplotlib.dates as mdates
+from IPython import get_ipython
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
 
@@ -72,6 +73,9 @@ def plotLoggedData(data, begin, end):
 
     """
 
+    if get_ipython():
+        get_ipython().run_line_magic('matplotlib', 'qt4')
+
     begin = datetime.datetime.strptime(_parse_date(begin), DATE_FORMAT)
     end = datetime.datetime.strptime(_parse_date(end), DATE_FORMAT)
 
@@ -79,7 +83,6 @@ def plotLoggedData(data, begin, end):
 
     for d in data:
         ts = datetime.datetime.fromtimestamp(d.get('timestamp'))
-        print(ts)
         if ts < begin or ts > end:
             print(ts, "out of range", begin, end)
             continue
