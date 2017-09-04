@@ -8,7 +8,7 @@ from karabo.middlelayer_api.eventloop import synchronize
 
 # imports used for plotLoggedData
 import datetime
-import matplotlib.pyplot as pl
+import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from IPython import get_ipython
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -59,7 +59,7 @@ def plotLoggedData(data, begin, end):
     :param d: an AcquiredFromLog object with loaded data
     :param begin: date and time when the required time interval starts
     :param end: date and time when the required time interval ends
-    :return: data formatted in a conveinient form to plot with matplotlib, i.e.
+    :return: data formatted in a convenient form to plot with matplotlib, i.e.
             a dictionary which keys are plot names with the form
             'deviceId.property', and values are in turn dictionaries
             with 'value' and 'timestamp' as keys and list of data as values
@@ -81,25 +81,24 @@ def plotLoggedData(data, begin, end):
 
     data4plots = {}
 
-    for d in data:
-        ts = datetime.datetime.fromtimestamp(d.get('timestamp'))
+    for datum in data:
+        ts = datetime.datetime.fromtimestamp(datum.get('timestamp'))
         if ts < begin or ts > end:
-            print(ts, "out of range", begin, end)
             continue
 
-        did = d.get('deviceId')
-        propname = d.getKeys()[3]
+        did = datum.get('deviceId')
+        propname = datum.getKeys()[3]
 
         plotname = "{}.{}".format(did, propname)
         if plotname not in data4plots.keys():
             data4plots[plotname] = {'timestamp': [], 'value': []}
 
         data4plots[plotname]['timestamp'].append(ts)
-        data4plots[plotname]['value'].append(d.get(propname))
+        data4plots[plotname]['value'].append(datum.get(propname))
 
     # draw default plot
     ax = None
-    fig = pl.figure(figsize=(8, 6))
+    fig = plt.figure()
     ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
 
     for plotname in data4plots.keys():
@@ -111,8 +110,8 @@ def plotLoggedData(data, begin, end):
         for l in ax.get_xticklabels():
             l.set_rotation(45)
         ax.legend()
-        pl.grid(b=True, which='major', color='b', linestyle=':')
-        pl.title(data.experimentId)
+        plt.grid(b=True, which='major', color='b', linestyle=':')
+        plt.title(data.experimentId)
 
     # return easy to plot data
     return data4plots
