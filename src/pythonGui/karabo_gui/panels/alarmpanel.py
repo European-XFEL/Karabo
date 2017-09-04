@@ -37,8 +37,7 @@ class AlarmPanel(BasePanelWidget):
         self._color_timer.setInterval(self.TIMER_INTERVAL)
         self._color_timer.timeout.connect(self._color_timeout)
 
-        # Register for KaraboBroadcastEvent
-        # NOTE: unregister_from_broadcasts will be called by closeEvent()
+        # Register to broadcast events
         register_for_broadcasts(self)
 
     def karaboBroadcastEvent(self, event):
@@ -215,7 +214,8 @@ class ButtonDelegate(QStyledItemDelegate):
             self._updateButton(button, text, clickable)
             return button
         else:
-            return super(ButtonDelegate, self).createEditor(parent, option, index)
+            return super(ButtonDelegate, self).createEditor(parent, option,
+                                                            index)
 
     def setEditorData(self, button, index):
         isRelevant, text, clickable = self._isRelevantColumn(index)

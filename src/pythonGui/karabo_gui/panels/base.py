@@ -5,6 +5,7 @@
 #############################################################################
 from enum import Enum
 
+from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import (QAction, QFrame, QHBoxLayout, QSizePolicy,
                          QVBoxLayout, QWidget)
 
@@ -28,6 +29,8 @@ class BasePanelWidget(QFrame):
     independent top-level windows or tabs within the main window of the Karabo
     gui.
     """
+    signalPanelClosed = pyqtSignal(str)
+
     def __init__(self, title):
         super(BasePanelWidget, self).__init__(parent=None)
         self.setWindowTitle(title)
@@ -137,6 +140,7 @@ class BasePanelWidget(QFrame):
 
         broadcast_event(KaraboEventSender.MaximizePanel,
                         {'container': self.panel_container})
+        self.panel_container.maximized = True
 
     def onMinimize(self):
         self._update_toolbar_buttons(PanelActions.Minimize)
@@ -149,9 +153,11 @@ class BasePanelWidget(QFrame):
             self.panel_container.insertTab(pan.index, pan, pan.windowTitle())
 
         self.panel_container.setCurrentIndex(self.index)
+        self.panel_container._remove_alarmpanel_close_bt()
 
         broadcast_event(KaraboEventSender.MinimizePanel,
                         {'container': self.panel_container})
+        self.panel_container.maximized = False
 
     # --------------------------------------
     # private methods
