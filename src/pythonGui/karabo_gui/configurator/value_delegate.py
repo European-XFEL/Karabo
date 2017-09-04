@@ -5,16 +5,20 @@
 #############################################################################
 from enum import Enum
 
-from PyQt4.QtCore import pyqtSlot, QSize, Qt
-from PyQt4.QtGui import (
-    QComboBox, QDoubleValidator, QHBoxLayout, QLineEdit, QPalette,
-    QStyledItemDelegate, QValidator, QWidget)
+from PyQt4.QtCore import QEvent, QSize, Qt, pyqtSlot
+from PyQt4.QtGui import (QApplication, QComboBox, QDialog, QDoubleValidator,
+                         QHBoxLayout, QLineEdit, QPalette, QStyle,
+                         QStyledItemDelegate, QStyleOptionButton, QValidator,
+                         QWidget)
 
 from karabo.middlelayer import Integer, MetricPrefix, Unit
 from karabo_gui.attributeediting.api import EDITABLE_ATTRIBUTE_NAMES
-from karabo_gui.schema import EditableAttributeInfo, VectorHashCellInfo
+from karabo_gui.configurator.dialog.table_edit import TableEditDialog
+from karabo_gui.schema import (EditableAttributeInfo, VectorHash,
+                               VectorHashCellInfo)
 from karabo_gui.widget import EditableWidget
-from .utils import get_attribute_data, get_box_value, get_vector_col_value
+from .utils import (ButtonState, get_attribute_data, get_box_value,
+                    get_vector_col_value, handle_default_state)
 
 FIXED_ROW_HEIGHT = 30
 
@@ -22,12 +26,16 @@ FIXED_ROW_HEIGHT = 30
 class ValueDelegate(QStyledItemDelegate):
     """A QStyledItemDelegate for configurator values
     """
+    def __init__(self, parent=None):
+        super(ValueDelegate, self).__init__(parent)
+        self._button_states = {}
+
     def createEditor(self, parent, option, index):
         """Reimplemented function of QStyledItemDelegate.
         """
         model = index.model()
         obj = model.index_ref(index)
-        if obj is None:
+        if obj is None or isinstance(obj, VectorHash):
             return None
 
         return EditWidgetWrapper(obj, index, parent=parent)
@@ -43,7 +51,8 @@ class ValueDelegate(QStyledItemDelegate):
         if isinstance(obj, EditableAttributeInfo):
             _, _, value = get_attribute_data(obj, index.row())
         elif isinstance(obj, VectorHashCellInfo):
-            value = get_vector_col_value(obj, is_edit_col=(index.column() == 2))
+            value = get_vector_col_value(
+                obj, is_edit_col=(index.column() == 2))
         else:
             value = get_box_value(obj, is_edit_col=(index.column() == 2))
 
@@ -66,6 +75,77 @@ class ValueDelegate(QStyledItemDelegate):
         here.
         """
         return QSize(option.rect.width(), FIXED_ROW_HEIGHT)
+
+    def paint(self, painter, option, index):
+        """Reimplemented function of QStyledItemDelegate.
+        """
+        model = index.model()
+        obj = model.index_ref(index)
+        if (obj is None or
+                not isinstance(getattr(obj, 'descriptor', None), VectorHash)):
+            super(ValueDelegate, self).paint(painter, option, index)
+            return
+
+        if option.state & QStyle.State_Selected:
+            if option.state & QStyle.State_Active:
+                painter.fillRect(option.rect, option.palette.highlight())
+            elif not (option.state & QStyle.State_HasFocus):
+                painter.fillRect(option.rect, option.palette.background())
+
+        self._draw_button(painter, option, index, obj)
+
+    def editorEvent(self, event, model, option, index):
+        """Reimplemented function of QStyledItemDelegate.
+        """
+        handled_types = (QEvent.MouseButtonPress, QEvent.MouseButtonRelease)
+        if event.type() in handled_types:
+            box = model.index_ref(index)
+            descriptor = getattr(box, 'descriptor', None)
+            if box is not None and isinstance(descriptor, VectorHash):
+                self._handle_event_state(box, event, model, option, index)
+                return True
+
+        return super(ValueDelegate, self).editorEvent(
+            event, model, option, index)
+
+    def _draw_button(self, painter, option, index, box):
+        """Draw a button
+        """
+        key = box.key()
+        state = self._button_states.get(key, ButtonState.DISABLED)
+        allowed = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
+        button_state = handle_default_state(allowed, state)
+        self._button_states[key] = state
+        button = QStyleOptionButton()
+        button.state = button_state.value
+        button.rect = option.rect
+        button.text = 'Edit Table'
+        button.features = QStyleOptionButton.AutoDefaultButton
+        QApplication.style().drawControl(QStyle.CE_PushButton, button, painter)
+
+    def _handle_event_state(self, box, event, model, option, index):
+        """Determine the state of a given box's button during user interaction.
+        """
+        key = box.key()
+        state = self._button_states.get(key, ButtonState.DISABLED)
+        allowed = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
+        if allowed:
+            if option.rect.contains(event.pos()):
+                if event.type() == QEvent.MouseButtonPress:
+                    state = ButtonState.PRESSED
+                elif state == ButtonState.PRESSED:
+                    dialog = TableEditDialog(box)
+                    result = dialog.exec()
+                    if result == QDialog.Accepted:
+                        # XXX: Note that the dialog is passed as an editor here
+                        # Ensure that the dialog has a member called
+                        # `editable_widget`
+                        self.setModelData(dialog, model, index)
+            if (state == ButtonState.PRESSED and
+                    event.type() == QEvent.MouseButtonRelease):
+                state = ButtonState.ENABLED
+        self._button_states[key] = state
+        return state
 
 
 class EditWidgetWrapper(QWidget):
