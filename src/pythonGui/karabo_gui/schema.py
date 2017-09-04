@@ -70,6 +70,7 @@ class Box(QObject):
         self.descriptor = descriptor
         self.current = None  # Support for choice of nodes
         self.visible = 0
+        self.rowsInfo = []
 
     def key(self):
         return self.configuration.id + '.' + '.'.join(self.path)
@@ -661,11 +662,11 @@ class EditableAttributeInfo(object):
 
 class VectorHash(hashmod.VectorHash, metaclass=Monkey):
     def set(self, box, value, timestamp=None):
-        self.rowsInfo = [VectorHashRowInfo(box) for row in value]
+        box.rowsInfo = [VectorHashRowInfo(box) for row in value]
         box._set(value, timestamp)
 
     def fromHash(self, box, value, attrs=None, timestamp=None):
-        self.rowsInfo = [VectorHashRowInfo(box) for row in value]
+        box.rowsInfo = [VectorHashRowInfo(box) for row in value]
         Type.fromHash(self, box, value, attrs=attrs, timestamp=timestamp)
 
     def setDefault(self, box):
