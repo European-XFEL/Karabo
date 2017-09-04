@@ -5,7 +5,9 @@
 #############################################################################
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
-from karabo_gui.events import register_for_broadcasts, KaraboEventSender
+from karabo_gui.events import (
+    register_for_broadcasts, KaraboEventSender, unregister_from_broadcasts
+)
 import karabo_gui.icons as icons
 from karabo_gui.logwidget import LogWidget
 from karabo_gui.toolbar import ToolBar
@@ -15,9 +17,8 @@ from .base import BasePanelWidget
 class LoggingPanel(BasePanelWidget):
     def __init__(self):
         super(LoggingPanel, self).__init__("Log")
-
+        self.doesDockOnClose = False
         # Register for broadcast events.
-        # This object lives as long as the app. No need to unregister.
         register_for_broadcasts(self)
 
     def get_content_widget(self):
@@ -60,3 +61,12 @@ class LoggingPanel(BasePanelWidget):
             messages = event.data.get('messages', [])
             self.__logWidget.onLogDataAvailable(messages)
         return False
+
+    def closeEvent(self, event):
+        """Unregister from broadcast events, tell main window to enable
+        the button to add me back.
+        """
+        super(LoggingPanel, self).closeEvent(event)
+        if event.isAccepted():
+            self.signalPanelClosed.emit('Log')
+            unregister_from_broadcasts(self)

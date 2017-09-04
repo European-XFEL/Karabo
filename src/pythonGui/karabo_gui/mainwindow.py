@@ -6,6 +6,7 @@
 
 from collections import OrderedDict
 from enum import Enum
+from functools import partial
 import os.path
 
 from PyQt4.QtCore import QEvent, Qt, pyqtSlot
@@ -45,6 +46,13 @@ class PanelAreaEnum(Enum):
     MiddleBottom = 2
     MiddleTop = 3
     Right = 4
+
+
+_CLOSEABLE_PANELS = {
+    'Log': (LoggingPanel, PanelAreaEnum.MiddleBottom),
+    'Notifications': (NotificationPanel, PanelAreaEnum.MiddleBottom),
+    'Console': (ScriptingPanel, PanelAreaEnum.MiddleBottom)
+}
 
 
 class _PatternMatcher(object):
@@ -214,6 +222,15 @@ class MainWindow(QMainWindow):
         self.acExit.setShortcut('Ctrl+Q')
         self.acExit.triggered.connect(self.onExit)
 
+        # Create actions to restore the closeable tabs
+        self._acPanels = {}
+        for name in _CLOSEABLE_PANELS.keys():
+            self._acPanels[name] = QAction(name, self)
+            act = partial(self.onAddCloseablePanel, name)
+            # use partial to pass the name, because QAction triggered
+            # don't take argument
+            self._acPanels[name].triggered.connect(act)
+
         self.acHelpAbout = QAction("About", self)
         self.acHelpAbout.triggered.connect(self.onHelpAbout)
 
@@ -221,11 +238,16 @@ class MainWindow(QMainWindow):
         self.acHelpAboutQt.triggered.connect(qApp.aboutQt)
 
     def _setupMenuBar(self):
+        menuBar = self.menuBar()
 
-        mFileMenu = self.menuBar().addMenu("&File")
+        mFileMenu = menuBar.addMenu("&File")
         mFileMenu.addAction(self.acExit)
 
-        mHelpMenu = self.menuBar().addMenu("&Help")
+        mViewMenu = menuBar.addMenu("&View")
+        for name in _CLOSEABLE_PANELS.keys():
+            mViewMenu.addAction(self._acPanels[name])
+
+        mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
         mHelpMenu.addAction(self.acHelpAboutQt)
 
@@ -258,11 +280,8 @@ class MainWindow(QMainWindow):
         self.addPanel(ProjectPanel(), PanelAreaEnum.LeftBottom)
 
         # Middle
-        # XXX: Hide the logging panel with a feature flag
-        if 'HIDE_LOGGING_PANEL' not in os.environ:
-            self.addPanel(LoggingPanel(), PanelAreaEnum.MiddleBottom)
-        self.addPanel(ScriptingPanel(), PanelAreaEnum.MiddleBottom)
-        self.addPanel(NotificationPanel(), PanelAreaEnum.MiddleBottom)
+        for name in _CLOSEABLE_PANELS.keys():
+            self.onAddCloseablePanel(name)
 
         # Right
         configuration = ConfigurationPanel()
@@ -293,7 +312,8 @@ class MainWindow(QMainWindow):
         # Set up the middle area
         middle_top = PanelContainer("Custom view", middle_area,
                                     allow_closing=True, handle_empty=True)
-        middle_bottom = PanelContainer("Output", middle_area)
+        middle_bottom = PanelContainer("Output", middle_area,
+                                       allow_closing=True)
         self._panel_areas[PanelAreaEnum.MiddleTop] = middle_top
         self._panel_areas[PanelAreaEnum.MiddleBottom] = middle_bottom
         middle_area.setStretchFactor(0, 6)
@@ -385,6 +405,14 @@ class MainWindow(QMainWindow):
     # Qt slots
 
     @pyqtSlot()
+    def onAddCloseablePanel(self, name):
+        klass, area_enum = _CLOSEABLE_PANELS.get(name)
+        panel = klass()
+        panel.signalPanelClosed.connect(self.onPanelClose)
+        self.addPanel(panel, area_enum)
+        self._acPanels[name].setEnabled(False)
+
+    @pyqtSlot()
     def onExit(self):
         if not self._quit():
             return
@@ -415,6 +443,11 @@ class MainWindow(QMainWindow):
         else:
             # Either connecting or no need to save before disconnecting
             get_network().onServerConnection(connect)
+
+    @pyqtSlot(str)
+    def onPanelClose(self, name):
+        _, area_enum = _CLOSEABLE_PANELS[name]
+        self._acPanels[name].setEnabled(True)
 
     @pyqtSlot(bool)
     def onServerConnectionChanged(self, isConnected):
