@@ -259,7 +259,9 @@ class MainWindow(QMainWindow):
         self.addPanel(ProjectPanel(), PanelAreaEnum.LeftBottom)
 
         # Middle
-        self.addPanel(LoggingPanel(), PanelAreaEnum.MiddleBottom)
+        # XXX: Hide the logging panel with a feature flag
+        if 'HIDE_LOGGING_PANEL' not in os.environ:
+            self.addPanel(LoggingPanel(), PanelAreaEnum.MiddleBottom)
         self.addPanel(ScriptingPanel(), PanelAreaEnum.MiddleBottom)
         self.addPanel(NotificationPanel(), PanelAreaEnum.MiddleBottom)
 
