@@ -614,13 +614,7 @@ namespace karabo {
                 karabo::util::Hash validated;
                 std::pair<bool, std::string> result;
 
-
-                const bool hadPreviousAlarm = m_validatorIntern.hasParametersInWarnOrAlarm();
-                Hash previousParametersInAlarm;
-                if (hadPreviousAlarm) {
-                    previousParametersInAlarm = m_validatorIntern.getParametersInWarnOrAlarm(); //copies on purpose
-                }
-
+                const Hash previousParametersInAlarm(m_validatorIntern.getParametersInWarnOrAlarm());
 
                 result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
 
@@ -629,7 +623,8 @@ namespace karabo {
                 }
 
                 // Check for parameters being in a bad condition
-                std::pair<bool, const AlarmCondition> resultingCondition = this->evaluateAndUpdateAlarmCondition(hadPreviousAlarm);
+                const std::pair<bool, const AlarmCondition> resultingCondition =
+                        evaluateAndUpdateAlarmCondition(!previousParametersInAlarm.empty(), previousParametersInAlarm, false);
                 if (resultingCondition.first && resultingCondition.second.asString() != m_parameters.get<std::string>("alarmCondition")) {
                     Hash::Node& node = validated.set("alarmCondition", resultingCondition.second.asString());
                     Hash::Attributes& attributes = node.getAttributes();
@@ -1205,7 +1200,7 @@ namespace karabo {
                 m_globalAlarmCondition = condition;
                 m_accumulatedGlobalAlarms.insert(previousGlobal);
 
-                std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true);
+                std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true, Hash(), true);
                 if (result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")) {
                     lock.unlock();
                     Hash h;
@@ -1736,7 +1731,9 @@ namespace karabo {
                 }
             }
 
-            const std::pair<bool, const karabo::util::AlarmCondition> evaluateAndUpdateAlarmCondition(bool forceUpate) {
+            const std::pair<bool, const karabo::util::AlarmCondition> evaluateAndUpdateAlarmCondition(bool forceUpdate,
+                                                                                                      const karabo::util::Hash& previousParametersInAlarm,
+                                                                                                      bool silent) {
                 using namespace karabo::util;
                 if (m_validatorIntern.hasParametersInWarnOrAlarm()) {
                     const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
@@ -1747,12 +1744,20 @@ namespace karabo {
                     for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                         using std::string;
                         const Hash& desc = it->getValue<Hash>();
-                        KARABO_LOG_WARN << desc.get<string>("type") << ": " << desc.get<string>("message");
-                        emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_deviceId);
-                        v.push_back(AlarmCondition::fromString(desc.get<string>("type")));
+                        const string& type = desc.get<string>("type");
+                        if (!silent) {
+                            const string& propertyName = it->getKey();
+                            // log message only if alarm is new on property or of new type
+                            if (!previousParametersInAlarm.has(propertyName)
+                                || previousParametersInAlarm.get<string>(propertyName + ".type") != type) {
+                                    KARABO_LOG_WARN << type << ": " << desc.get<string>("message");
+                                    emit("signalNotification", type, desc.get<string>("message"), string(), m_deviceId);
+                                }
+                        }
+                        v.push_back(AlarmCondition::fromString(type));
                     }
                     return std::pair<bool, const AlarmCondition > (true, AlarmCondition::returnMostSignificant(v));
-                } else if (forceUpate) {
+                } else if (forceUpdate) {
                     return std::pair<bool, const AlarmCondition > (true, m_globalAlarmCondition);
                 }
                 return std::pair<bool, const AlarmCondition > (false, AlarmCondition::NONE);
