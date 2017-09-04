@@ -70,5 +70,5 @@ def get_vector_col_value(cell_info, is_edit_col=False):
         if not is_editable:
             return ''
 
-    row = parent_box.value[descriptor.rowsInfo.index(parent_row)]
+    row = parent_box.value[parent_box.rowsInfo.index(parent_row)]
     return row[cell_info.name]

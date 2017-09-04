@@ -261,7 +261,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 # Nodes have properties as children
                 obj = getattr(parent_obj.boxvalue, names[row])
             elif isinstance(descriptor, VectorHash):
-                obj = descriptor.rowsInfo[row]
+                obj = parent_obj.rowsInfo[row]
             else:
                 # Leaves have attributes as children
                 obj = descriptor.attributeInfo
@@ -308,7 +308,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             parent_box = parent_row.parent()
             if parent_box is None:
                 return QModelIndex()
-            row = parent_box.descriptor.rowsInfo.index(parent_row)
+            row = parent_box.rowsInfo.index(parent_row)
             return self.createIndex(row, 0, parent_row)
 
         elif isinstance(child_obj, (EditableAttributeInfo, VectorHashRowInfo)):
