@@ -670,7 +670,7 @@ class VectorHash(hashmod.VectorHash, metaclass=Monkey):
 
     def setDefault(self, box):
         if self.defaultValue is not None:
-            box._set(self.defaultValue, None)
+            self.set(box, self.defaultValue)
 
 
 class VectorHashCellInfo(object):
