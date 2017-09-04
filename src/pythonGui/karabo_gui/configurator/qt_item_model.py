@@ -391,6 +391,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 else:
                     box.set(value)
                     box.configuration.signalBoxChanged.emit()
+                self.layoutChanged.emit()
 
         # A value was successfully set!
         return True
@@ -465,9 +466,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
                             descriptor.accessMode is AccessMode.RECONFIGURABLE)
         if is_editable_type and (is_class_editable or is_inst_editable):
             flags |= Qt.ItemIsEditable
-            # XXX: Explicitly avoid the table editor!
-            if isinstance(descriptor, VectorHash):
-                flags &= ~Qt.ItemIsEditable
         return flags
 
     def _vector_col_flags(self, cell_info):

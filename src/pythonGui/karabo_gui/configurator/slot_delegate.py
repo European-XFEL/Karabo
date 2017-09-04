@@ -3,8 +3,6 @@
 # Created on August 4, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from enum import Enum
-
 from PyQt4.QtCore import QEvent, QRect, Qt
 from PyQt4.QtGui import (
     QApplication, QStyle, QStyleOptionButton, QStyledItemDelegate
@@ -12,16 +10,11 @@ from PyQt4.QtGui import (
 
 from karabo_gui.icons import slot as slot_icon
 from karabo_gui.schema import SlotNode
+from .utils import ButtonState, handle_default_state
 
 ICON_SIZE = 32
 ICON_PADDING = 3
 slot_pixmap = slot_icon.pixmap(ICON_SIZE)
-
-
-class ButtonState(Enum):
-    PRESSED = QStyle.State_Enabled | QStyle.State_Sunken
-    ENABLED = QStyle.State_Enabled | QStyle.State_Raised | QStyle.State_Off
-    DISABLED = QStyle.State_On
 
 
 def _get_button_rect(rect):
@@ -79,7 +72,10 @@ class SlotButtonDelegate(QStyledItemDelegate):
     def _draw_button(self, painter, option, index, box):
         """Draw a button
         """
-        button_state = self._handle_default_state(box)
+        key = box.key()
+        state = self._button_states.get(key, ButtonState.DISABLED)
+        button_state = handle_default_state(box.isAllowed(), state)
+        self._button_states[key] = state
         button = QStyleOptionButton()
         button.state = button_state.value
         button.rect = _get_button_rect(option.rect)
@@ -97,19 +93,6 @@ class SlotButtonDelegate(QStyledItemDelegate):
                          w, h)
         QApplication.style().drawItemPixmap(painter, pix_rect, Qt.AlignCenter,
                                             slot_pixmap)
-
-    def _handle_default_state(self, box):
-        """Determine the resting state of a given box's button.
-        """
-        key = box.key()
-        allowed = box.isAllowed()
-        state = self._button_states.get(key, ButtonState.DISABLED)
-        if allowed and state != ButtonState.PRESSED:
-            state = ButtonState.ENABLED
-        if not allowed:
-            state = ButtonState.DISABLED
-        self._button_states[key] = state
-        return state
 
     def _handle_event_state(self, box, event, option):
         """Determine the state of a given box's button during user interaction.
