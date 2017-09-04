@@ -4,8 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QCursor, QTabWidget
+from PyQt4.QtGui import QCursor, QTabBar, QTabWidget
 
+from .alarmpanel import AlarmPanel
 from .placeholderpanel import PlaceholderPanel
 
 
@@ -19,6 +20,7 @@ class PanelContainer(QTabWidget):
         self.allow_closing = allow_closing
         self.handle_empty = handle_empty
         self.minimized = False
+        self.maximized = False
         self.tabCloseRequested.connect(self.onCloseTab)
 
         self._add_placeholder()
@@ -35,10 +37,15 @@ class PanelContainer(QTabWidget):
         # XXX: Circular references hurrah!
         panel.attach_to_container(self)
 
-        index = self.addTab(panel, panel.windowTitle())
-        panel.index = index
+        # if the container is currently maximized, quitely add the new
+        # tab in the background
+        if not self.maximized:
+            index = self.addTab(panel, panel.windowTitle())
+            panel.index = index
 
         # The container might have been hidden
+        # XXX: currently no way to know if other container is maximized,
+        # so that we can decide if this container should stay hidden.
         if self.count() == 1:
             self.show()
 
@@ -61,6 +68,8 @@ class PanelContainer(QTabWidget):
         self._update_tabs_closable()
 
         self._add_placeholder()
+        if self.count() == 0:
+            self.hide()
 
     def minimize(self, minimized):
         """Minimize/unminimize a tab container.
@@ -83,7 +92,12 @@ class PanelContainer(QTabWidget):
                 if self.widget(i) is not None:
                     self.widget(i).index = i
 
-            self.setCurrentIndex(index)
+            if self.maximized:
+                # newly docked tab shouldn't appear and steal the focus if
+                # the container is maximized with other panels
+                self.removeTab(index)
+            else:
+                self.setCurrentIndex(index)
             self._update_tabs_closable()
 
             if not self.minimized:
@@ -133,7 +147,13 @@ class PanelContainer(QTabWidget):
         panel.setParent(None)
         self.panel_set.remove(panel)
 
+        if self.maximized:
+            panel.onMinimize()
+
         self._add_placeholder()
+        # if all tabs are closed, hide myself
+        if self.count() == 0:
+            self.hide()
 
     # ----------------------------------------------------------------------
     # private methods
@@ -164,3 +184,19 @@ class PanelContainer(QTabWidget):
         elif self.count() == 1:
             is_placeholder = isinstance(self.widget(0), PlaceholderPanel)
             self.setTabsClosable(self.allow_closing and not is_placeholder)
+        self._remove_alarmpanel_close_bt()
+
+    def _remove_alarmpanel_close_bt(self):
+        """Remove the close button of AlarmPanel
+        """
+        # use index instead of loop through set, because need the index
+        # for tabBar button anyway.
+        i = self.count()
+        while i > -1:
+            i -= 1
+            if isinstance(self.widget(i), AlarmPanel):
+                # some system put close button on the left
+                for p in (QTabBar.LeftSide, QTabBar.RightSide):
+                    bt = self.tabBar().tabButton(i, p)
+                    if bt is not None:
+                        bt.resize(0, 0)
