@@ -121,10 +121,12 @@ class AcquiredOffline(AcquiredData, DeviceClientBase):
     def __repr__(self):
         return "{}, source={})".format(super().__repr__()[:-1],
                                        self.append.connectedOutputChannels)
+
     def __str__(self):
         return "{} - {} - {}".format(super().__str__(),
-                                    self.state,
-                                    self.status)
+                                     self.state,
+                                     self.status)
+
     @InputChannel(raw=True)
     @coroutine
     def append(self, data, meta):
