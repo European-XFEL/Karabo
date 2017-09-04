@@ -104,7 +104,8 @@ class AcquiredOffline(AcquiredData, DeviceClientBase):
                            respect the Karabo `deviceId:channelId` convention
         """
         configuration = dict(_deviceId_="OfflineData-{}".format(experimentId),
-                             append=dict(connectedOutputChannels=[source]))
+                             append=dict(connectedOutputChannels=[source]),
+                             archive=False)
         DeviceClientBase.__init__(self, configuration=configuration)
         AcquiredData.__init__(self, experimentId, size)
 
