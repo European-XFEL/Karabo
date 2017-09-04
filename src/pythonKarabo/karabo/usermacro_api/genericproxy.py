@@ -73,14 +73,25 @@ class GenericProxy(object):
             if len(args) == 1:
                 if isinstance(args[0], str):
                     # Act as a generic proxy
-                    l = args[0].split('@')
-                    deviceId = l[0]
+                    devparam = args[0].split('@')
+                    deviceId = devparam[0]
                     try:
                         proxy = connectDevice(
                             deviceId, timeout=cls.proxy_ops_timeout)
                         ret = cls.create_generic_proxy(proxy)
+
+                        if not (ret or cls is GenericProxy):
+                           # No custom adapter found. Use directly
+                           # the default implementation in Generic classes
+                           # Movable, Sensible...
+                           ret = object.__new__(cls)
+                           ret._proxy = proxy
+
                         if ret:
-                            ret._param_regex = l[1] if len(l) == 2 else None
+                            # Get the monitor parameters if any
+                            ret._param_regex = (
+                                devparam[1] if len(devparam) == 2
+                                else None)
                     except (asyncio.TimeoutError, TimeoutError):
                         cls._error("Could not connect to {}."
                                    .format(deviceId))
@@ -116,6 +127,7 @@ class GenericProxy(object):
         return ret
 
     def getBoundDevices(self):
+        """Get recursively the bound devices"""
         return (self._proxy.deviceId if not self._generic_proxies
                 else [gproxy.getBoundDevices()
                       for gproxy in self._generic_proxies])
@@ -130,11 +142,11 @@ class GenericProxy(object):
             proc = re.compile(self._param_regex)
 
             # Returns the parameters matching the regular expression
-            l = {}
+            params = {}
             for k, v in self._proxy.__dict__.items():
                 if proc.match(k):
-                    l.update({k: v})
-            return l
+                    params.update({k: v})
+            return params
 
     @synchronize
     def lockon(self, locker):
