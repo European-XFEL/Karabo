@@ -1,5 +1,24 @@
+from enum import Enum
+from PyQt4.QtGui import QStyle
+
 from karabo.middlelayer import AccessMode
 from karabo_gui.schema import Dummy, Schema, VectorHash
+
+
+class ButtonState(Enum):
+    PRESSED = QStyle.State_Enabled | QStyle.State_Sunken
+    ENABLED = QStyle.State_Enabled | QStyle.State_Raised | QStyle.State_Off
+    DISABLED = QStyle.State_On
+
+
+def handle_default_state(allowed, state):
+    """Determine the resting state of a given box's button.
+    """
+    if allowed and state != ButtonState.PRESSED:
+        state = ButtonState.ENABLED
+    if not allowed:
+        state = ButtonState.DISABLED
+    return state
 
 
 def get_attribute_data(attr_info, row):
