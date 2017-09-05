@@ -1,15 +1,18 @@
 # ==== Boilerplate: To be hidden in the future ======
-from asyncio import coroutine
+from asyncio import coroutine, get_event_loop
 
 from karabo.middlelayer import String
-from karabo.usermacros import AMove, UserMacro
+from karabo.usermacros import AScan, UserMacro
 
 
-class UserMacroExample(UserMacro):
-    name = String(defaultValue="UserMacroExample")
-# ========== To be hidden in the future =============
+class UserTest(UserMacro):
+    name = String(defaultValue="UserTest")
 
     @coroutine
     def execute(self):
+# ========== To be hidden in the future =============
         print("Running {}".format(self.name))
-        AMove("motor1", 0)()
+        loop = get_event_loop()
+        ascan = yield from loop.run_coroutine_or_thread(
+            AScan, "motor1", [1, 10], "cam1", 0.1, True, 5)
+        yield from ascan()
