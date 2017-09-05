@@ -1,10 +1,7 @@
 """This module contains helper routines"""
 import collections
-from karabo.middlelayer_api.device_client import (
-    _parse_date, get_instance, KaraboError
-)
-
-from karabo.middlelayer_api.eventloop import synchronize
+from .middlelayer import (
+    _parse_date, get_instance, KaraboError, synchronize)
 
 # imports used for plotLoggedData
 import datetime

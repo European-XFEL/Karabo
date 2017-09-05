@@ -4,12 +4,11 @@ To run all tests, execute:
    python -m unittest discover -p *_test.py
 """
 
-import unittest
 from contextlib import contextmanager
+import unittest
 
-from karabo.middlelayer import Device, KaraboError, Slot
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
-
+from karabo.usermacro_api.middlelayer import (
+    Device, KaraboError, Slot, DeviceTest, sync_tst)
 from karabo.usermacros import (BeckhoffMotorAsMovable, CamAsSensible,
                                GenericProxy, Movable, Sensible)
 
@@ -58,7 +57,7 @@ class Tests(DeviceTest):
                                  _deviceId_="lsim",
                                  cameraType="Simulator")
         cls.unknown = getMockDevice("UnknownClassId",
-                                 _deviceId_="unknown")
+                                    _deviceId_="unknown")
         with cls.deviceManager(cls.lsim, cls.tm2, cls.tm3,
                                cls.tm1, cls.unknown, lead=cls.local):
             yield

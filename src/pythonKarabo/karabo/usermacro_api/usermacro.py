@@ -7,12 +7,10 @@ from asyncio import (
 import socket
 import uuid
 
-from karabo.middlelayer import (
+from karabo.usermacro_api.middlelayer import (
     AccessLevel, AccessMode, Bool, Device, DeviceClientBase,
-    Float, Macro, MetricPrefix, Slot, State, Unit)
-from karabo.middlelayer_api.eventloop import (
-    EventLoop, NoEventLoop, synchronize)
-from karabo.middlelayer_api.macro import EventThread
+    EventThread, EventLoop, Float, Macro, MetricPrefix,
+    NoEventLoop, Slot, State, synchronize, Unit)
 from karabo.usermacro_api.pipeline import OutputChannel
 
 

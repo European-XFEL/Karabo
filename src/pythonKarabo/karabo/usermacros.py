@@ -16,7 +16,7 @@ from .usermacro_api.genericproxy import (
 from .usermacro_api.generalized import (
     AgipdAsSensible, BeckhoffMotorAsMovable,
     CamAsSensible, EnergyMaxAsSensible, SpectrometerAsSensible,
-    EpixAsSensible, ImageProcessorAsSensible, LpdAsSensible
+    EpixAsSensible, ImageProcessorAsSensible, LpdAsSensible, TestImagerAsSensible
 )
 from .usermacro_api.pipeline import OutputChannel
 from .usermacro_api.dataobjects import AcquiredData, AcquiredFromLog
