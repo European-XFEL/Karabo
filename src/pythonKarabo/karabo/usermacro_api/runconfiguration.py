@@ -1,7 +1,7 @@
 from numpy import array
 from numpy import append
 
-from karabo.middlelayer import connectDevice, getDevices
+from .middlelayer import connectDevice, getDevices
 
 
 class RunConfiguration(object):

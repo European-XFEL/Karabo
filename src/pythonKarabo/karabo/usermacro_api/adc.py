@@ -1,8 +1,7 @@
 """Generalized interface to the ADC"""
-from karabo.middlelayer_api.eventloop import synchronize
-from karabo.middlelayer import State
 
 from .genericproxy import Sensible
+from .middlelayer import State, synchronize
 
 
 class AdcAsSensible(Sensible):

@@ -3,11 +3,9 @@ from collections import deque
 import heapq
 import time
 
-from karabo.middlelayer import (DeviceClientBase, getDevice, getHistory,
-                                Hash, InputChannel, shutdown, State,
-                                waitUntilNew)
-from karabo.middlelayer_api.eventloop import EventLoop, synchronize
-
+from .middlelayer import (
+    DeviceClientBase, EventLoop, getDevice, getHistory, Hash,
+    InputChannel, shutdown, State, synchronize, waitUntilNew)
 from .util import getConfigurationFromPast
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"

@@ -4,19 +4,14 @@ To run all tests, execute:
    nostetests -v usermacro_api
 """
 
-from asyncio import async, coroutine, create_subprocess_exec, get_event_loop, sleep
 from collections import deque
 from contextlib import contextmanager
 import unittest
-from subprocess import PIPE
-import sys
 
-from karabo.middlelayer import Device, getDevice, Hash, Slot
-from karabo.middlelayer_api.tests.eventloop import (DeviceTest, sync_tst,
-                                                   async_tst)
-
-from karabo.usermacros import AcquiredOffline, AcquiredOnline
-from karabo.usermacro_api.dataobjects import AcquiredData
+from karabo.usermacro_api.middlelayer import (
+    Device, DeviceTest, Hash, Slot, sync_tst)
+from karabo.usermacro_api.dataobjects import (
+    AcquiredData, AcquiredOffline, AcquiredOnline)
 
 
 class Abstract(object):
@@ -122,7 +117,7 @@ class TestAcquiredOffline(DeviceTest):
     def test_failed_initalization(self):
         """Test AcquiredOffline object failed initialization"""
         with self.assertRaises(TypeError):
-            ao = AcquiredOffline()
+            AcquiredOffline()
     #
     # It is known that this test is disabled. Its implementation
     # is not finished. That will be addressed.
