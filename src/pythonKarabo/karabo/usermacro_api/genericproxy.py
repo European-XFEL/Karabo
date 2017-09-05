@@ -49,7 +49,7 @@ class GenericProxy(object):
     @classmethod
     def create_generic_proxy(cls, proxy):
         """Create generalized interface from device ID"""
-        if proxy.classId in getattr(cls, 'generalizes', []):
+        if proxy.classId in getattr(cls, "generalizes", []):
             obj = object.__new__(cls)
             obj._proxy = proxy
             return obj
@@ -81,11 +81,11 @@ class GenericProxy(object):
                         ret = cls.create_generic_proxy(proxy)
 
                         if not (ret or cls is GenericProxy):
-                           # No custom adapter found. Use directly
-                           # the default implementation in Generic classes
-                           # Movable, Sensible...
-                           ret = object.__new__(cls)
-                           ret._proxy = proxy
+                            # No custom adapter found. Use directly
+                            # the default implementation in Generic classes
+                            # Movable, Sensible...
+                            ret = object.__new__(cls)
+                            ret._proxy = proxy
 
                         if ret:
                             # Get the monitor parameters if any
@@ -265,7 +265,8 @@ class Sensible(GenericProxy):
         if self._generic_proxies:
             return [gproxy.exposureTime
                     for gproxy in self._generic_proxies]
-        return self._proxy.exposureTime.magnitude
+        if hasattr(self._proxy, "exposureTime"):
+            return self._proxy.exposureTime.magnitude
 
     @exposureTime.setter
     def exposureTime(self, value):
@@ -273,7 +274,8 @@ class Sensible(GenericProxy):
             for gproxy in self._generic_proxies:
                 gproxy.exposureTime = value
         else:
-            self._proxy.exposureTime = value
+            if hasattr(self._proxy, "exposureTime"):
+                self._proxy.exposureTime = value
 
     @synchronize
     def acquire(self):
@@ -282,7 +284,12 @@ class Sensible(GenericProxy):
             for gproxy in self._generic_proxies:
                 yield from gproxy.acquire()
         else:
-            yield from self._proxy.acquire()
+            # Allow both start() and acquire()
+            acq = getattr(self._proxy, "acquire", None)
+            if acq is None:
+                acq = getattr(self._proxy, "start", None)
+            if callable(acq):
+                yield from acq()
 
     @synchronize
     def stop(self):
@@ -291,7 +298,9 @@ class Sensible(GenericProxy):
             for gproxy in self._generic_proxies:
                 yield from gproxy.stop()
         else:
-            yield from self._proxy.stop()
+            stp = getattr(self._proxy, "stop", None)
+            if callable(stp):
+                yield from stp()
 
 
 class Coolable(GenericProxy):
