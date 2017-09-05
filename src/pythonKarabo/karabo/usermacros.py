@@ -24,6 +24,6 @@ from .usermacro_api.scans import (
     AScan, AMesh, AMove, APathScan, DScan, DMesh, DMove, meshTrajectory,
     splitTrajectory, TScan
 )
-from .usermacro_api.usermacro import UserMacro
+from .usermacro_api.usermacro import run_in_event_loop, UserMacro
 from .usermacro_api.runconfiguration import RunConfiguration
 from .usermacro_api.util import getConfigurationFromPast
