@@ -77,6 +77,28 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 sig = conf.boxvalue.state.signalUpdateComponent
                 sig.connect(self._state_update)
 
+    def clear_index_modification(self, index):
+        """Clear any stored modifications for the box referenced by `index`
+        """
+        box = self.index_ref(index)
+        if box is None or not isinstance(box, Box):
+            return
+
+        if box.descriptor is not None and box.configuration.type == "device":
+            box.configuration.clearUserValue(box)
+            self.layoutChanged.emit()
+
+    def flush_index_modification(self, index):
+        """Send any stored modification for the box referenced by `index`
+        """
+        box = self.index_ref(index)
+        if box is None or not isinstance(box, Box):
+            return
+
+        if box.descriptor is not None and box.configuration.type == "device":
+            if box.configuration.hasUserValue(box):
+                box.configuration.sendUserValue(box)
+
     def index_ref(self, index):
         """Get the object from a ``QModelIndex`` which was created by this
         model. This is essentially equivalent to a weakref and _might_ return
@@ -387,7 +409,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif box.descriptor is not None:
                 if box.configuration.type == "device":
                     box.configuration.setUserValue(box, value)
-                    box.configuration.sendUserValue(box)
                 else:
                     box.set(value)
                     box.configuration.signalBoxChanged.emit()
