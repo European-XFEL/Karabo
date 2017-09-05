@@ -18,7 +18,8 @@ from karabo_gui.schema import (EditableAttributeInfo, VectorHash,
                                VectorHashCellInfo)
 from karabo_gui.widget import EditableWidget
 from .utils import (ButtonState, get_attribute_data, get_box_value,
-                    get_vector_col_value, handle_default_state)
+                    get_vector_col_value, handle_default_state,
+                    set_fill_rect)
 
 FIXED_ROW_HEIGHT = 30
 
@@ -86,11 +87,7 @@ class ValueDelegate(QStyledItemDelegate):
             super(ValueDelegate, self).paint(painter, option, index)
             return
 
-        if option.state & QStyle.State_Selected:
-            if option.state & QStyle.State_Active:
-                painter.fillRect(option.rect, option.palette.highlight())
-            elif not (option.state & QStyle.State_HasFocus):
-                painter.fillRect(option.rect, option.palette.background())
+        set_fill_rect(option, painter)
 
         self._draw_button(painter, option, index, obj)
 
@@ -139,7 +136,7 @@ class ValueDelegate(QStyledItemDelegate):
                     if result == QDialog.Accepted:
                         # XXX: Note that the dialog is passed as an editor here
                         # Ensure that the dialog has a member called
-                        # `editable_widget`
+                        # `editable_widget` to enable fetching the data of it
                         self.setModelData(dialog, model, index)
             if (state == ButtonState.PRESSED and
                     event.type() == QEvent.MouseButtonRelease):

@@ -10,7 +10,7 @@ from PyQt4.QtGui import (
 
 from karabo_gui.icons import slot as slot_icon
 from karabo_gui.schema import SlotNode
-from .utils import ButtonState, handle_default_state
+from .utils import ButtonState, handle_default_state, set_fill_rect
 
 ICON_SIZE = 32
 ICON_PADDING = 3
@@ -46,11 +46,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
             super(SlotButtonDelegate, self).paint(painter, option, index)
             return
 
-        if option.state & QStyle.State_Selected:
-            if option.state & QStyle.State_Active:
-                painter.fillRect(option.rect, option.palette.highlight())
-            elif not (option.state & QStyle.State_HasFocus):
-                painter.fillRect(option.rect, option.palette.background())
+        set_fill_rect(option, painter)
 
         self._draw_icon(painter, option)
         self._draw_button(painter, option, index, obj)
