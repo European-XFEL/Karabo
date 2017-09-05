@@ -30,7 +30,9 @@ class ConfigurationTreeView(QTreeView):
         self.setDragEnabled(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setEditTriggers(QAbstractItemView.AllEditTriggers)
+        triggers = (QAbstractItemView.CurrentChanged |
+                    QAbstractItemView.SelectedClicked)
+        self.setEditTriggers(triggers)
 
         # For compatibility with ConfigurationPanel
         self.conf = conf
@@ -43,8 +45,8 @@ class ConfigurationTreeView(QTreeView):
         delegate = SlotButtonDelegate(parent=self)
         self.setItemDelegateForColumn(0, delegate)
         # ... and a delegate for the editable value column
-        delegate = ValueDelegate(parent=self)
-        self.setItemDelegateForColumn(2, delegate)
+        self.value_delegate = ValueDelegate(parent=self)
+        self.setItemDelegateForColumn(2, self.value_delegate)
 
         # Widget for more information of an index
         self.popup_widget = None
@@ -142,9 +144,22 @@ class ConfigurationTreeView(QTreeView):
     # ------------------------------------
     # Event handlers
 
+    def closeEditor(self, editor, hint):
+        """XXX: PyQt does not send this signal properly in the item delegate,
+        so we avoid signals altogether and call it directly...
+        """
+        self.value_delegate.close_editor(editor, hint)
+        super(ConfigurationTreeView, self).closeEditor(editor, hint)
+
     def closeEvent(self, event):
         event.accept()
         unregister_from_broadcasts(self)
+
+    def currentChanged(self, current, previous):
+        """Pass selection changes along to the value delegate
+        """
+        self.value_delegate.current_changed(current)
+        super(ConfigurationTreeView, self).currentChanged(current, previous)
 
     def karaboBroadcastEvent(self, event):
         sender = event.sender

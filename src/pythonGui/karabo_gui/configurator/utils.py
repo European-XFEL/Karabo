@@ -52,7 +52,7 @@ def get_box_value(box, is_edit_col=False):
     if isinstance(descriptor, (Schema, VectorHash)):
         return ''
 
-    value = box.value
+    value = _box_value(box, is_edit_col)
     if isinstance(value, (Dummy, bytes, bytearray)):
         return ''
     if is_edit_col:
@@ -81,5 +81,16 @@ def get_vector_col_value(cell_info, is_edit_col=False):
         if not is_editable:
             return ''
 
-    row = parent_box.value[parent_box.rowsInfo.index(parent_row)]
+    value = _box_value(parent_box, is_edit_col)
+    row = value[parent_box.rowsInfo.index(parent_row)]
     return row[cell_info.name]
+
+
+def _box_value(box, is_edit_col):
+    """If a value is needed from the editable column, then get the value via
+    the configuration. This is in case the user has made a change which was not
+    yet applied.
+    """
+    if is_edit_col:
+        return box.configuration.getUserValue(box)
+    return box.value
