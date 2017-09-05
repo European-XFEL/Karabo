@@ -32,8 +32,8 @@ def run_usermacro(macro, eventThread=None):
     return data
 
 
-def get_prepared_loop():
-    """Attach a helper device to the current thread """
+def run_in_event_loop(macro, *args, **kwargs):
+    """ Runs a macro"""
 
     class DeviceHelper(Macro, DeviceClientBase):
         """Provide the device client machinery"""
@@ -45,32 +45,23 @@ def get_prepared_loop():
     if not isinstance(loop, EventLoop):
         if EventLoop.global_loop is None:
             # The user macro is started from command line for e.g.
-            # In this case, start a device helper in a new event thread
+            # In this case, start the unique event loop in a separated thread,
+            # and provide a device helper in the current thread
             # to provide services like connectDevice() on __init__.
             eventThread = EventThread()
             eventThread.start()
 
             bareHostName = socket.gethostname().partition('.')[0]
-            helper_uuid = uuid.uuid4()
+            kwargs["uuid"] = uuid.uuid4()
             helper = DeviceHelper(_deviceId_="DeviceHelper_{}_{}"
                                   .format(bareHostName, helper_uuid))
-
             set_event_loop(NoEventLoop(helper))
 
         loop = EventLoop.global_loop
-    return loop, helper_uuid, eventThread
 
-
-def run_in_event_loop(macro, *args, **kwargs):
-    """ Runs a macro"""
-    loop, helper_uuid, eventThread = get_prepared_loop()
-
-    if isinstance(macro, type):
-        # macro is a class, instantiate
-        if helper_uuid:
-            kwargs["uuid"] = helper_uuid
-        macro = macro(*args, **kwargs)
-
+        if isinstance(macro, type):
+            # macro is a class, instantiate
+            macro = macro(*args, **kwargs)
     try:
         task = loop.create_task(run_usermacro(macro, eventThread))
         loop.call_soon_threadsafe(async, task)
@@ -144,7 +135,6 @@ class UserMacro(Macro):
             else:
                 kwargs["_deviceId_"] = kwargs["deviceId"] = deviceId
 
-        get_prepared_loop()
         super().__init__(kwargs)
 
     def _initInfo(self):
