@@ -36,7 +36,8 @@ class ValueDelegate(QStyledItemDelegate):
         """
         model = index.model()
         obj = model.index_ref(index)
-        if obj is None or isinstance(obj, VectorHash):
+        if (obj is None or
+                isinstance(getattr(obj, 'descriptor', None), VectorHash)):
             return None
 
         return EditWidgetWrapper(obj, index, parent=parent)
