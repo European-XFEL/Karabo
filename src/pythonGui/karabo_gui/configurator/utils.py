@@ -21,6 +21,17 @@ def handle_default_state(allowed, state):
     return state
 
 
+def set_fill_rect(option, painter):
+    """ Update the rectangle of the given `painter` depending on the given
+    `options`
+    """
+    if option.state & QStyle.State_Selected:
+        if option.state & QStyle.State_Active:
+            painter.fillRect(option.rect, option.palette.highlight())
+        elif not (option.state & QStyle.State_HasFocus):
+            painter.fillRect(option.rect, option.palette.background())
+
+
 def get_attribute_data(attr_info, row):
     """Return the `name`, the `descriptor` and the actual value of the given
     `attr_info`
