@@ -8,8 +8,8 @@ from contextlib import contextmanager
 import unittest
 import numpy as np
 
-from karabo.middlelayer import Device, Slot
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
+from karabo.usermacro_api.middlelayer import (
+    Device, DeviceTest, Slot, sync_tst)
 from karabo.usermacros import (AMesh, APathScan, AScan, DScan, GenericProxy,
                                meshTrajectory, splitTrajectory)
 

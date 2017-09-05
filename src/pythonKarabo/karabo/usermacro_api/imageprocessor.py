@@ -1,6 +1,5 @@
 """"Generalized interface to the image processor"""
-from karabo.middlelayer import State
-from karabo.middlelayer_api.device_client import synchronize
+from .middlelayer import State, synchronize
 from .genericproxy import Sensible
 
 

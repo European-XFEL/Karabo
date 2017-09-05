@@ -1,8 +1,7 @@
 """Generalized interface to EnergyMax device """
 
-from karabo.middlelayer import State
-from karabo.middlelayer_api.proxy import synchronize
 from .genericproxy import Sensible
+from .middlelayer import State, synchronize
 
 
 class EnergyMaxAsSensible(Sensible):

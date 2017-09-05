@@ -2,9 +2,8 @@
 """
 from asyncio import wait_for
 
-from karabo.middlelayer import State, waitUntil
-from karabo.middlelayer_api.eventloop import synchronize
 from .genericproxy import Movable
+from .middlelayer import State, synchronize, waitUntil
 
 
 class BeckhoffMotorAsMovable(Movable):

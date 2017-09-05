@@ -5,10 +5,9 @@ import asyncio
 import re
 
 from karabo.common.states import StateSignifier
-from karabo.middlelayer import (
+from .middlelayer import (
     allCompleted, connectDevice, KaraboError,
-    lock, Proxy, setWait, State)
-from karabo.middlelayer_api.proxy import synchronize
+    lock, Proxy, setWait, State, synchronize)
 
 
 class GenericProxy(object):

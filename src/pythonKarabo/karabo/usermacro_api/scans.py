@@ -8,14 +8,18 @@ import numpy as np
 import os
 import sys
 
-from karabo.middlelayer import (
+from karabo.usermacro_api.middlelayer import (
     AccessMode, Bool, Float, Int32, InputChannel, State, String,
     sleep, UInt32, Unit, waitUntil, VectorString)
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
 from karabo.usermacro_api.util import flatten
-import karabo.usermacro_api.generalized
-from karabo.usermacros import AcquiredOffline, AcquiredOnline
+from karabo.usermacro_api.dataobjects import (
+    AcquiredOffline, AcquiredOnline)
+# This is required for GenericProxy to
+# find all its subclasses when scans are run standalone
+# (from command line for example)
+import karabo.usermacro_api.generalized  # noqa
 
 
 def splitTrajectory(pos_list, number_of_steps):
