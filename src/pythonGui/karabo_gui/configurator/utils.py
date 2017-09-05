@@ -1,5 +1,35 @@
+from enum import Enum
+from PyQt4.QtGui import QStyle
+
 from karabo.middlelayer import AccessMode
 from karabo_gui.schema import Dummy, Schema, VectorHash
+
+
+class ButtonState(Enum):
+    PRESSED = QStyle.State_Enabled | QStyle.State_Sunken
+    ENABLED = QStyle.State_Enabled | QStyle.State_Raised | QStyle.State_Off
+    DISABLED = QStyle.State_On
+
+
+def handle_default_state(allowed, state):
+    """Determine the resting state of a given box's button.
+    """
+    if allowed and state != ButtonState.PRESSED:
+        state = ButtonState.ENABLED
+    if not allowed:
+        state = ButtonState.DISABLED
+    return state
+
+
+def set_fill_rect(option, painter):
+    """ Update the rectangle of the given `painter` depending on the given
+    `options`
+    """
+    if option.state & QStyle.State_Selected:
+        if option.state & QStyle.State_Active:
+            painter.fillRect(option.rect, option.palette.highlight())
+        elif not (option.state & QStyle.State_HasFocus):
+            painter.fillRect(option.rect, option.palette.background())
 
 
 def get_attribute_data(attr_info, row):
@@ -51,5 +81,5 @@ def get_vector_col_value(cell_info, is_edit_col=False):
         if not is_editable:
             return ''
 
-    row = parent_box.value[descriptor.rowsInfo.index(parent_row)]
+    row = parent_box.value[parent_box.rowsInfo.index(parent_row)]
     return row[cell_info.name]
