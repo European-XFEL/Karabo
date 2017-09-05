@@ -72,6 +72,11 @@ class Configuration(Box):
         """
         self._user_values = {}
 
+    def getUserValue(self, box):
+        """Returns the user-entered value for a Box
+        """
+        return self._user_values.get(box.key(), box.value)
+
     def hasUserValue(self, box):
         """Returns true if a user has entered a value for this Box
         """
@@ -177,6 +182,7 @@ class Configuration(Box):
         """
         # Clear pending status for the box
         key = box.key()
+        self._user_values.pop(key, None)
         if key in self._pending_keys:
             self._pending_keys.remove(key)
             if not self._pending_keys:
