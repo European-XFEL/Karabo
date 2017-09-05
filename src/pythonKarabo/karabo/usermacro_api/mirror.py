@@ -1,7 +1,6 @@
 """Generalized interface to Offset Mirrors
 """
-from karabo.middlelayer import State, waitUntil
-from karabo.middlelayer_api.eventloop import synchronize
+from .middlelayer import State, synchronize, waitUntil
 from .genericproxy import Movable
 
 

@@ -1,8 +1,7 @@
 """Generalized interface to simulated LightBeam
 """
-from karabo.middlelayer import State
-from karabo.middlelayer_api.eventloop import synchronize
 from .genericproxy import Sensible
+from .middlelayer import State, synchronize
 
 
 class LightBeamAsSensible(Sensible):

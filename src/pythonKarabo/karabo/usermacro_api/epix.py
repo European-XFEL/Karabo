@@ -1,7 +1,6 @@
 """Generalized interface to ePIX
 """
-from karabo.middlelayer import State
-from karabo.middlelayer_api.eventloop import synchronize
+from .middlelayer import State, synchronize
 from .genericproxy import Sensible
 
 
