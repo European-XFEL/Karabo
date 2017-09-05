@@ -15,11 +15,6 @@ class CamAsSensible(Sensible):
                 else self._proxy.frameRate)
 
 
-class SimulatedCamAsSensible(Sensible):
-    """Generalized interface to a simulated camera"""
-    generalizes = ('SimulatedCameraPy')
-
-
 class TestImagerAsSensible(Sensible):
     """Generalized interface to a Test imager"""
     generalizes = ('TestImager')
