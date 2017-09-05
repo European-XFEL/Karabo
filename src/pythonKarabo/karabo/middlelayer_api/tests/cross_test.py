@@ -11,10 +11,10 @@ from unittest import main
 from zlib import adler32
 
 from karabo.middlelayer import (
-    AccessLevel, AlarmCondition, Assignment, background, Configurable, Device,
-    DeviceClientBase, getDevice, getHistory, isSet, InputChannel, Int32,
-    MetricPrefix, Node, shutdown, sleep, Slot, State, unit, Unit, waitUntil,
-    waitUntilNew)
+    AccessLevel, AlarmCondition, Assignment, background, Configurable,
+    DeviceClientBase, getConfigurationFromPast, getDevice, getHistory, Hash,
+    isSet, InputChannel, Int32, KaraboError, MetricPrefix, Node, Schema,
+    shutdown, sleep, Slot, State, unit, Unit, waitUntil, waitUntilNew)
 
 from .eventloop import DeviceTest, async_tst
 
@@ -275,7 +275,6 @@ class Tests(DeviceTest):
             hist.sort(key=lambda x: x[0])
             self.assertEqual([v for _, _, _, v in hist[-5:]], list(range(5)))
 
-
         node_history = yield from getHistory(
             "middlelayerDevice.child.number", before.isoformat(),
             after.isoformat())
@@ -292,6 +291,41 @@ class Tests(DeviceTest):
         yield from self.process.wait()
     test_history.slow = True
 
+    @async_tst
+    def test_getConfigurationFromPast(self):
+        with self.assertRaises(KaraboError):
+            yield from getConfigurationFromPast("aDeviceNotInHistory",
+                                                datetime.now().isoformat())
+        # Start a logging device with the specs in historytest.xml
+        karabo = os.environ["KARABO"]
+        xml = os.path.abspath('historytest.xml')
+        self.process = yield from create_subprocess_exec(
+            os.path.join(karabo, "bin", "karabo-cppserver"),
+            xml, stderr=PIPE, stdout=PIPE)
+
+        with (yield from getDevice("DataLogger-middlelayerDevice")) as logger:
+            yield from waitUntil(lambda: logger.state == State.NORMAL)
+
+        # wait until the new archive and index files are flushed
+        self.device.value = 42
+        self.device.update()
+        time = datetime.now().isoformat()
+        yield from sleep(1.1)
+
+        self.device.value = 0
+        self.device.update()
+
+        h, s = yield from getConfigurationFromPast("middlelayerDevice", time)
+        self.assertIsInstance(h, Hash)
+        self.assertIsInstance(s, Schema)
+        self.assertEqual(h['value'], 42)
+
+        # Remove the logging device
+        yield from get_event_loop().instance()._ss.request(
+            "Karabo_DLManagerServer", "slotKillServer")
+        yield from self.process.wait()
+
+    test_getConfigurationFromPast.slow = True
 
 if __name__ == "__main__":
     main()
