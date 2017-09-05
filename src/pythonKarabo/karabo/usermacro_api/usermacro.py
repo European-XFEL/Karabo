@@ -18,6 +18,7 @@ from karabo.usermacro_api.pipeline import OutputChannel
 
 @coroutine
 def run_usermacro(macro, eventThread=None):
+    """Run and terminate a User Macro"""
     macro.state = State.ACTIVE
     macro.currentSlot = "start"
     data = yield from macro.execute()
@@ -31,14 +32,15 @@ def run_usermacro(macro, eventThread=None):
     return data
 
 
-def run_in_event_loop(macro, *args, **kwargs):
-    """ Runs a macro"""
+def get_prepared_loop():
+    """Attach a helper device to the current thread """
 
     class DeviceHelper(Macro, DeviceClientBase):
         """Provide the device client machinery"""
-    loop = get_event_loop()
 
+    loop = get_event_loop()
     eventThread = None
+    helper_uuid = None
 
     if not isinstance(loop, EventLoop):
         if EventLoop.global_loop is None:
@@ -49,18 +51,25 @@ def run_in_event_loop(macro, *args, **kwargs):
             eventThread.start()
 
             bareHostName = socket.gethostname().partition('.')[0]
-            unique_id = uuid.uuid4()
+            helper_uuid = uuid.uuid4()
             helper = DeviceHelper(_deviceId_="DeviceHelper_{}_{}"
-                                  .format(bareHostName, unique_id))
-            kwargs["uuid"] = unique_id
+                                  .format(bareHostName, helper_uuid))
 
             set_event_loop(NoEventLoop(helper))
 
         loop = EventLoop.global_loop
+    return loop, helper_uuid, eventThread
 
-        if isinstance(macro, type):
-            # macro is a class, instantiate
-            macro = macro(*args, **kwargs)
+
+def run_in_event_loop(macro, *args, **kwargs):
+    """ Runs a macro"""
+    loop, helper_uuid, eventThread = get_prepared_loop()
+
+    if isinstance(macro, type):
+        # macro is a class, instantiate
+        if helper_uuid:
+            kwargs["uuid"] = helper_uuid
+        macro = macro(*args, **kwargs)
 
     try:
         task = loop.create_task(run_usermacro(macro, eventThread))
@@ -134,6 +143,8 @@ class UserMacro(Macro):
                 kwargs["_deviceId_"] = kwargs["deviceId"]
             else:
                 kwargs["_deviceId_"] = kwargs["deviceId"] = deviceId
+
+        get_prepared_loop()
         super().__init__(kwargs)
 
     def _initInfo(self):

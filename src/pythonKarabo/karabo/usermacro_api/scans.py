@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Scantool macros"""
 from ast import literal_eval
 from asyncio import coroutine
@@ -21,7 +22,7 @@ def splitTrajectory(pos_list, number_of_steps):
     """Generates a segmented trajectory
 
     :param pos_list: the trajectory to be segmented.
-      It is a list whose elements are cartesian positions
+      It is a list whose elements are cartesian coordinates
       to be passed to the moveto(pos) method
       of a Movable.
       For example, the trajectory might be:
