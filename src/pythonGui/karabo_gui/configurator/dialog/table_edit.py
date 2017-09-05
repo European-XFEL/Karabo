@@ -25,10 +25,12 @@ class TableEditDialog(QDialog):
                            'table_edit.ui')
         uic.loadUi(filepath, self)
 
-        config_hsh = obj.toHash()
-        # XXX: Do not change the name of this variable
+        config_hsh, _ = obj.toHash()
+        # XXX: Do not change the name of this variable since the
+        # `ValueDelegate` method `setModelData` refers to this dialog as the
+        # passed `editor` and fetches the data of the `editable_widget`
         self.editable_widget = EditableTableElement(obj, self)
-        self.editable_widget.valueChanged(obj, config_hsh[0])
+        self.editable_widget.valueChanged(obj, config_hsh)
         layout = QHBoxLayout()
         layout.setContentsMargins(2, 2, 2, 2)
         layout.addWidget(self.editable_widget.widget)
