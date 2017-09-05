@@ -57,8 +57,10 @@ class Tests(DeviceTest):
         cls.lsim = getMockDevice("LimaSimulatedCamera",
                                  _deviceId_="lsim",
                                  cameraType="Simulator")
+        cls.unknown = getMockDevice("UnknownClassId",
+                                 _deviceId_="unknown")
         with cls.deviceManager(cls.lsim, cls.tm2, cls.tm3,
-                               cls.tm1, lead=cls.local):
+                               cls.tm1, cls.unknown, lead=cls.local):
             yield
 
     @sync_tst
@@ -156,8 +158,14 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_wrong_type_instantiation(self):
+        output = Movable('lsim')
+        self.assertIsInstance(output, Movable)
+
+        output = Sensible('unknown')
+        self.assertIsInstance(output, Sensible)
+
         with self.assertRaises(KaraboError):
-            Movable('lsim')
+            GenericProxy('unknown')
 
     @sync_tst
     def test_wrong_type_mixes(self):

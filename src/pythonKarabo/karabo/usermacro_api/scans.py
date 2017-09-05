@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Scantool macros"""
 from ast import literal_eval
 from asyncio import coroutine
@@ -18,7 +19,29 @@ from karabo.usermacros import AcquiredOffline, AcquiredOnline
 
 
 def splitTrajectory(pos_list, number_of_steps):
-    """Generates a segmented trajectory"""
+    """Generates a segmented trajectory
+
+    :param pos_list: the trajectory to be segmented.
+      It is a list whose elements are cartesian coordinates
+      to be passed to the moveto(pos) method
+      of a Movable.
+      For example, the trajectory might be:
+
+      [1,10] if the movable is a simple motor
+      with a single degree of freedom
+
+      or [(1,1,1), (2,2,10), (10,10,10)]
+       in case of a (virtual) compound movable
+        with three degrees of freedom.
+
+    :param number_steps: the number of segments
+      to split the trajectory into.
+
+    This function generates breaking points as pos, boolean
+    pairs that are either replicating the vectices in pos_list
+    or new points the scan must pause on. The boolean if True
+    indicates such a mandatory pause (i.e. a step marker).
+    """
     fepsilon = 1e-3
     if number_of_steps == 0:
         # Path Scan case
@@ -171,9 +194,9 @@ class AScan(UserMacro):
         self.exposureTime = float(exposureTime)
 
         self.steps = (
-                bool(steps)
-                if isinstance(steps, bool)
-                else literal_eval(steps))
+            bool(steps)
+            if isinstance(steps, bool)
+            else literal_eval(steps))
         self.number_of_steps = int(number_of_steps)
         if self.experimentId == "":
             self.experimentId = self.deviceId
@@ -267,8 +290,8 @@ class AScan(UserMacro):
 
         print("-"*linelen)
 
-        return  AcquiredOffline(self.experimentId,
-                            source=self.dataReader)
+        return AcquiredOffline(self.experimentId,
+                               source=self.dataReader)
 
     @InputChannel(displayedName="Online data source")
     @coroutine
