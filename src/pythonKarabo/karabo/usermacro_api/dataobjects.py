@@ -181,15 +181,50 @@ class AcquiredFromLog(AcquiredData):
     self.bound_devices_properties[deviceId] list of logged properties logged
       for the device
     """
+    steps = []
+    begin = None
+    end = None
+    index = 0
 
-    def __init__(self, experimentId=None, size=1000):
+    def __init__(self, experimentId=None, size=100000):
         super().__init__(experimentId, size)
+
+    def __next__(self):
+        if self.index >= len(self):
+            self.index = 0
+            raise StopIteration
+
+        item = self.__getitem__(self.index)
+        self.index += 1
+        return item
+
+    @synchronize
+    def queryData(self, *args):
+        """
+        :param: a list of property strings with the form 'deviceId.property'
+        retrieved data are queued in self.data, sorted by timestamp
+        """
+        @coroutine
+        def attempt(coro, *args, **kwargs):
+            attempts = 120
+            ret = None
+            while (not ret) and attempts:
+                attempts -= 1
+                ret = yield from coro(*args, **kwargs)
+
+                if (not ret) and attempts:
+                    yield from sleep(0.5)
+            return ret
+
+        self.index = 0
 
         # retrieve steps from scan history assuming there have been only one
         # scan with given deviceId from the big-bang up to now
-        self.steps = getHistory("{}.stepNum".format(self.experimentId),
-                                "2010-01-01T00:00:00",
-                                time.strftime(DATE_FORMAT))
+
+        self.steps = yield from attempt(getHistory, "{}.stepNum".format(self.experimentId),
+                                    "2010-01-01T00:00:00",
+                                    time.strftime(DATE_FORMAT))
+
         # steps has the following format:
         # [(seconds_from_1970, train_id, is_last_of_set, value) ]
 
@@ -207,12 +242,12 @@ class AcquiredFromLog(AcquiredData):
             self.end = time.strftime(DATE_FORMAT, time.localtime())
 
         # get IDs of devices used by Scan:
-        his = getHistory("{}.boundMovables".format(self.experimentId),
-                         self.begin, self.end)
+        his = yield from attempt(getHistory,"{}.boundMovables".format(self.experimentId),
+                                    self.begin, self.end)
         self.movableIds = his[0][3]
 
-        his = getHistory("{}.boundSensibles".format(self.experimentId),
-                         self.begin, self.end)
+        his = yield from attempt(getHistory, "{}.boundSensibles".format(self.experimentId),
+                                    self.begin, self.end)
         self.measurableIds = his[0][3]
 
         # get properties for each device
@@ -220,20 +255,14 @@ class AcquiredFromLog(AcquiredData):
 
         for m in self.movableIds + self.measurableIds:
             self.bound_devices_properties[m] = []
-            h, s = getConfigurationFromPast(m, self.begin)
+            h, s = yield from getConfigurationFromPast(m, self.begin)
             properties = h.getKeys()
             for p in properties:
                 self.bound_devices_properties[m].append(p)
 
-    def queryData(self, *args):
-        """
-        :param: a list of property strings with the form 'deviceId.property'
-        retrieved data are queued in self.data, sorted by timestamp
-        """
-
         histories = []
         for prop in args:
-            his = getHistory(prop, self.begin, self.end)
+            his = yield from attempt(getHistory, prop, self.begin, self.end)
 
             # add property name to tuples
             his2 = []
