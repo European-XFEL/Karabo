@@ -8,7 +8,8 @@ from .middlelayer import State, synchronize, waitUntil
 
 class BeckhoffMotorAsMovable(Movable):
     """Generalized interface to Beckhoff motors"""
-    generalizes = ('BeckhoffSimpleMotor', 'BeckhoffMC2Motor')
+    # generalizes = ('BeckhoffSimpleMotor', 'BeckhoffMC2Motor')
+    generalizes = ('BeckhoffSimpleMotor',)
 
     state_mapping = {
         State.STOPPED: State.ON,  # needed  for current version of MC2 device
