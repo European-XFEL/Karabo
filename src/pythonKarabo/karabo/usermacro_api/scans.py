@@ -79,7 +79,7 @@ class AScan(UserMacro):
 
     daqDone = Bool(
         displayedName="DAQDone",
-        defaultValue=True,
+        defaultValue=False,
         accessMode=AccessMode.READONLY)
 
     data = AcquiredOnline()
@@ -321,7 +321,7 @@ class TScan(UserMacro):
 
     daqDone = Bool(
         displayedName="DAQDone",
-        defaultValue=True,
+        defaultValue=False,
         accessMode=AccessMode.READONLY)
 
     data = AcquiredOnline()
