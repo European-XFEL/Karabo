@@ -1,14 +1,122 @@
 """This module contains helper routines"""
 import collections
-from .middlelayer import (
-    _parse_date, get_instance, KaraboError, synchronize)
 
 # imports used for plotLoggedData
 import datetime
+import itertools
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import numpy as np
 from IPython import get_ipython
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
+
+from .middlelayer import (
+    _parse_date, get_instance, KaraboError, synchronize)
+
+
+def splitTrajectory(pos_list, number_of_steps):
+    """Generates a segmented trajectory
+
+    :param pos_list: the trajectory to be segmented.
+      It is a list whose elements are cartesian coordinates
+      to be passed to the moveto(pos) method
+      of a Movable.
+      For example, the trajectory might be:
+
+      [1,10] if the movable is a simple motor
+      with a single degree of freedom
+
+      or [(1,1,1), (2,2,10), (10,10,10)]
+       in case of a (virtual) compound movable
+        with three degrees of freedom.
+
+    :param number_steps: the number of segments
+      to split the trajectory into.
+
+    This function generates breaking points as pos, boolean
+    pairs that are either replicating the vectices in pos_list
+    or new points the scan must pause on. The boolean if True
+    indicates such a mandatory pause (i.e. a step marker).
+    """
+    fepsilon = 1e-3
+    if number_of_steps == 0:
+        # Path Scan case
+        itpos = iter(pos_list)
+        while True:
+            # Instruct to pause at every point
+            yield next(itpos), True
+    else:
+        # Step-scan case
+        len_traj = 0
+        itpos1, itpos2 = itertools.tee(iter(pos_list))
+        pos = next(itpos1)
+
+        # Compute the trajectory length
+        for nextpos in itpos1:
+            v = np.subtract(nextpos, pos)
+            nv = np.linalg.norm(v)
+            pos = nextpos
+            len_traj += nv
+
+        len_step = len_traj / number_of_steps
+
+        # Yield segment edges and pause points
+        pos = next(itpos2)
+        nextpos = next(itpos2)
+        dl = len_step
+        yield pos, True
+
+        while True:
+            v = np.subtract(nextpos, pos)
+            nv = np.linalg.norm(v)
+            if abs(dl - nv) < fepsilon * dl:
+                # Acquire at the edge of this segment
+                p = nextpos
+                dl = len_step
+                yield p, True
+                nextpos = next(itpos2)
+            elif dl < nv:
+                # Acquire in this segment
+                v1 = v / nv
+                p = pos + v1 * dl
+                dl = len_step
+                yield p, True
+            else:
+                # The step spans to the next segment
+                p = nextpos
+                if nv > fepsilon * dl:
+                    # Only command significant motions
+                    dl -= nv
+                    yield p, False
+                nextpos = next(itpos2)
+            pos = p
+
+
+def meshTrajectory(pos_list1, pos_list2):
+    """Generates a mesh trajectory
+
+       :param pos_list1: The first motion axis
+       :param pos_list2: The second motion axis
+       The resulting 2D trajectory looks like:
+        *--*---*
+               |
+        *--*---*
+        |
+        *--*---*
+        This differs from a cartesian product, which gives:
+        *--*---*
+        |
+        *--*---*
+        |
+        *--*---*
+        and mandatorily and uncessarily leads to a return
+        the row start.
+    """
+    reverse = False
+    for pos1 in pos_list1:
+        for pos2 in reversed(pos_list2) if reverse else pos_list2:
+            yield pos1, pos2
+        reverse = not reverse
 
 
 def flatten(lis):
@@ -69,7 +177,7 @@ def plotLoggedData(data, begin=None, end=None):
     Unless specified otherwise, your local timezone is assumed.
     If matplotlib backend is set properly (e.g. %matplotlib qt) charts are
     drawn in a default plot.
-    
+
     usage example of returned dictionary:
     pd = plotLoggedData(acquired_data)
     x = pd['deviceId.property']['timestamp']
@@ -99,7 +207,8 @@ def plotLoggedData(data, begin=None, end=None):
 
         plotname = "{}.{}".format(did, propname)
 
-        plotdata = data4plots.setdefault(plotname, {'timestamp': [], 'value': []})
+        plotdata = data4plots.setdefault(
+            plotname, {'timestamp': [], 'value': []})
         plotdata['timestamp'].append(ts)
         plotdata['value'].append(datum.get(propname))
 

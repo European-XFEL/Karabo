@@ -20,8 +20,9 @@ import IPython
 import karabo
 from karabo.common.states import State
 from karabo.usermacros import (
-    AScan, AMesh, AMove, APathScan, Closable, Coolable, DScan, DMesh,
-    DMove, GenericProxy, Movable, Pumpable, Sensible, TScan)
+    AcquiredFromLog, AcquiredOffline, AScan, AMesh, AMove, APathScan,
+    Closable, Coolable, DScan, DMesh, DMove, GenericProxy, Movable,
+    Pumpable, Sensible, TScan)
 from . import device_client
 from .device_client import (
     DeviceClientBase, disconnectDevice, execute, executeNoWait, getClasses,
@@ -38,9 +39,9 @@ __all__ = ["connectDevice", "disconnectDevice", "execute",
            "getHistory", "getServers", "instantiate", "instantiateNoWait",
            "karabo", "setWait", "setNoWait", "shutdown",
            "shutdownNoWait", "sleep", "State", "waitUntil", "waitUntilNew",
-           "AScan", "AMesh", "AMove", "APathScan", "Closable", "Coolable",
-           "DScan", "DMesh", "DMove", "GenericProxy", "Movable", "Pumpable",
-           "Sensible", "TScan"]
+           "AcquiredFromLog", "AcquiredOffline", "AScan", "AMesh", "AMove",
+           "APathScan", "Closable", "Coolable", "DScan", "DMesh", "DMove",
+           "GenericProxy", "Movable", "Pumpable", "Sensible", "TScan"]
 
 
 class DeviceClient(Macro, DeviceClientBase):
