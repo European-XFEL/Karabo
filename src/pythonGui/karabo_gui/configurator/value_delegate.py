@@ -6,10 +6,11 @@
 from enum import Enum
 
 from PyQt4.QtCore import QEvent, QSize, Qt, pyqtSlot
-from PyQt4.QtGui import (QApplication, QComboBox, QDialog, QDoubleValidator,
-                         QHBoxLayout, QLineEdit, QPalette, QStyle,
-                         QStyledItemDelegate, QStyleOptionButton, QValidator,
-                         QWidget)
+from PyQt4.QtGui import (
+    QApplication, QAbstractItemDelegate, QComboBox, QDialog, QDoubleValidator,
+    QHBoxLayout, QLineEdit, QPalette, QStyle, QStyleOptionButton,
+    QStyledItemDelegate, QValidator, QWidget
+)
 
 from karabo.middlelayer import Integer, MetricPrefix, Unit
 from karabo_gui.attributeediting.api import EDITABLE_ATTRIBUTE_NAMES
@@ -30,6 +31,30 @@ class ValueDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
         super(ValueDelegate, self).__init__(parent)
         self._button_states = {}
+        self._selection_changed = False
+
+    # ----------------------------------------------------------------------
+    # Public interface
+
+    def close_editor(self, editor, hint):
+        """Workaround for shitty PyQt behavior.
+        """
+        model = self.parent().model()
+        if hint == QAbstractItemDelegate.SubmitModelCache:
+            if not self._selection_changed:
+                model.flush_index_modification(editor.index)
+        elif hint == QAbstractItemDelegate.RevertModelCache:
+            model.clear_index_modification(editor.index)
+
+        self._selection_changed = False
+
+    def current_changed(self, index):
+        """The view is telling us that the selection changed
+        """
+        self._selection_changed = True
+
+    # ----------------------------------------------------------------------
+    # Qt interface
 
     def createEditor(self, parent, option, index):
         """Reimplemented function of QStyledItemDelegate.
@@ -106,6 +131,9 @@ class ValueDelegate(QStyledItemDelegate):
         return super(ValueDelegate, self).editorEvent(
             event, model, option, index)
 
+    # ----------------------------------------------------------------------
+    # Private interface
+
     def _draw_button(self, painter, option, index, box):
         """Draw a button
         """
@@ -171,6 +199,9 @@ class EditWidgetWrapper(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(2, 2, 2, 2)
         layout.addWidget(self.editable_widget.widget)
+
+        # Keep a model index reference for use when the editor is closed by Qt
+        self.index = index
 
 
 # -----------------------------------------------------------------------------
