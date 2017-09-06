@@ -157,7 +157,7 @@ def getConfigurationFromPast(deviceId, timepoint):
     return _getConfigurationFromPast(deviceId, timepoint)
 
 
-def plotLoggedData(data, begin=None, end=None):
+def plot(data, begin=None, end=None):
     """
     Plots logged scan data, optionally in a limited time interval
 
@@ -179,7 +179,7 @@ def plotLoggedData(data, begin=None, end=None):
     drawn in a default plot.
 
     usage example of returned dictionary:
-    pd = plotLoggedData(acquired_data)
+    pd = plot(acquired_data)
     x = pd['deviceId.property']['timestamp']
     y = pd['deviceId.property']['value']
     aPlotFunction(x,y)
