@@ -21,5 +21,5 @@ from .usermacro_api.scans import (
 from .usermacro_api.usermacro import run_in_event_loop, UserMacro
 from .usermacro_api.runconfiguration import RunConfiguration
 from .usermacro_api.util import (
-    getConfigurationFromPast, meshTrajectory, plotLoggedData,
+    getConfigurationFromPast, meshTrajectory, plot,
     splitTrajectory)
