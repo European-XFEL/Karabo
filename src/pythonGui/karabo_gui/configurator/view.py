@@ -28,6 +28,7 @@ class ConfigurationTreeView(QTreeView):
     def __init__(self, conf=None, parent=None):
         super(ConfigurationTreeView, self).__init__(parent)
         self.setDragEnabled(True)
+        self.setTabKeyNavigation(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         triggers = (QAbstractItemView.CurrentChanged |
