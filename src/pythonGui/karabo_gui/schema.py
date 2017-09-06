@@ -234,6 +234,8 @@ class Type(hashmod.Type, metaclass=Monkey):
     def setDefault(self, box):
         if self.defaultValue is not None:
             self.set(box, self.defaultValue)
+        else:
+            self.attributeInfo = EditableAttributeInfo(box, box.descriptor)
 
     def toHash(self, box):
         desc = box.descriptor
