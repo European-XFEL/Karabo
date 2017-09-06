@@ -2,7 +2,7 @@ from enum import Enum
 from PyQt4.QtGui import QStyle
 
 from karabo.middlelayer import AccessMode
-from karabo_gui.schema import Dummy, Schema, VectorHash
+from karabo_gui.schema import ChoiceOfNodes, Dummy, Schema, VectorHash
 
 
 class ButtonState(Enum):
@@ -49,6 +49,8 @@ def get_box_value(box, is_edit_col=False):
     requested for an editable column
     """
     descriptor = box.descriptor
+    if isinstance(descriptor, ChoiceOfNodes):
+        return box.current or ''
     if isinstance(descriptor, (Schema, VectorHash)):
         return ''
 
