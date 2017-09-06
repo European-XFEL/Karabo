@@ -555,6 +555,11 @@ class ChoiceOfNodes(Schema):
         self.unitSymbol = ''
         return self
 
+    def cast(self, other):
+        if isinstance(other, (str, self.getClass())):
+            return other
+        return Schema.cast(self, other)
+
     def fromHash(self, box, value, attrs=None, timestamp=None):
         for k in value:
             box.current = k
@@ -574,13 +579,7 @@ class ChoiceOfNodes(Schema):
 
     def toHash(self, box):
         ret, attrs = super(ChoiceOfNodes, self).toHash(box)
-        key = box.current
-        if box.current is None:
-            # Get a value somehow
-            if self.defaultValue:
-                key = self.defaultValue
-            else:
-                key = next(k for k in self.dict)
+        key = self.getCurrent(box)
         h = Hash(key, ret[key])
         h[key, ...] = attrs
         return h, {}
@@ -601,6 +600,14 @@ class ChoiceOfNodes(Schema):
         """Value is another choice element to copy from
         """
         self.set(box, otherbox.current)
+
+    def getCurrent(self, box):
+        current = box.current
+        if current is None:
+            current = self.defaultValue
+        if current is None:
+            current = next(k for k in self.dict)
+        return current
 
 
 class ListOfNodes(hashmod.Descriptor):
