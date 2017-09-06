@@ -6,7 +6,7 @@ from .genericproxy import Sensible
 
 class EpixAsSensible(Sensible):
     """Generalized interface to the ePIX detector"""
-    generalizes = ('ePixReceiver')
+    generalizes = ('ePixReceiver',)
     state_mapping = {State.STARTED: State.ACQUIRING}
 
     @synchronize

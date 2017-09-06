@@ -145,8 +145,8 @@ class UserMacro(Macro):
     @synchronize
     def start(self):
         """Start the user macro"""
-        fut = yield from self.__call__()
-        return fut
+        data = yield from self.__call__()
+        return data
 
     @Slot(displayedName="Cancel", allowedStates={State.ACTIVE})
     def cancel(self):
@@ -161,8 +161,8 @@ class UserMacro(Macro):
 
     @synchronize
     def __call__(self):
-        fut = yield from run_usermacro(self)
-        return fut
+        data = yield from run_usermacro(self)
+        return data
 
     @coroutine
     def execute(self):

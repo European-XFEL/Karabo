@@ -6,7 +6,7 @@ from .middlelayer import State, synchronize
 
 class LightBeamAsSensible(Sensible):
     """Generalized interface to the LightBeam"""
-    generalizes = ('LightBeam')
+    generalizes = ('LightBeam',)
 
     state_mapping = {State.ON: State.ACQUIRING}
 

@@ -5,7 +5,7 @@ from .genericproxy import Sensible
 
 class ImageProcessorAsSensible(Sensible):
     """"Generalized interface to the image processor device"""
-    generalizes = ('ImageProcessor')
+    generalizes = ('ImageProcessor',)
 
     state_mapping = {State.NORMAL: State.ACQUIRING}
 
