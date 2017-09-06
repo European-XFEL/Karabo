@@ -3,6 +3,8 @@
 # Created on August 3, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import numbers
+import numpy
 from weakref import WeakValueDictionary
 
 from PyQt4.QtCore import pyqtSlot, QAbstractItemModel, QModelIndex, Qt
@@ -36,6 +38,26 @@ def _get_child_names(descriptor):
 
     # `get_editable_attributes` returns an empty list if descriptor is None
     return get_editable_attributes(descriptor)
+
+
+def _build_array_cmp(dtype):
+    """Builds a comparison function for numpy arrays"""
+    coerce = dtype.type
+    if coerce is numpy.bool_:
+        coerce = int
+
+    def _array_cmp(a, b):
+        try:
+            return coerce(a) == coerce(b)
+        except ValueError:
+            return False
+
+    return _array_cmp
+
+
+def _cmp(a, b):
+    """Normal comparison"""
+    return a == b
 
 
 class ConfigurationTreeModel(QAbstractItemModel):
@@ -133,6 +155,49 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         properties = _get_child_names(parent.descriptor)
         return properties.index(box_key)
+
+    def _update_box_data(self, box, new_value):
+        """Check for actual box changes by the user before sending it away.
+        """
+        value = box.value if box.hasValue() else None
+        if isinstance(box.descriptor, ChoiceOfNodes):
+            value = box.current  # ChoiceOfNodes is "special"
+
+        if value is None:
+            no_changes = False
+        elif (isinstance(value, (numbers.Complex, numpy.inexact))
+                and not isinstance(value, numbers.Integral)):
+            diff = abs(value - new_value)
+            absErr = box.descriptor.absoluteError
+            relErr = box.descriptor.relativeError
+            if absErr is not None:
+                no_changes = diff < absErr
+            elif relErr is not None:
+                no_changes = diff < abs(value * relErr)
+            else:
+                no_changes = diff < 1e-4
+        elif isinstance(value, (list, numpy.ndarray)):
+            if len(value) != len(new_value):
+                no_changes = False
+            else:
+                no_changes = True
+                cmp = _cmp
+                if isinstance(value, numpy.ndarray):
+                    cmp = _build_array_cmp(value.dtype)
+                for i in range(len(value)):
+                    if not cmp(value[i], new_value[i]):
+                        no_changes = False
+                        break
+        else:
+            no_changes = (str(value) == str(new_value))
+
+        allowed = box.isAllowed()
+        apply_changed = allowed and not no_changes
+        if apply_changed:
+            # Store the widget value in the Configuration object
+            box.configuration.setUserValue(box, new_value)
+        else:
+            box.configuration.clearUserValue(box)
 
     @pyqtSlot(object, object, object)
     def _config_update(self, box, value, timestamp):
@@ -409,7 +474,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 box.set(value)
             elif box.descriptor is not None:
                 if box.configuration.type == "device":
-                    box.configuration.setUserValue(box, value)
+                    self._update_box_data(box, value)
                 else:
                     box.set(value)
                     box.configuration.signalBoxChanged.emit()
