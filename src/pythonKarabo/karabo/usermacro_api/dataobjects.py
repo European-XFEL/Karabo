@@ -182,7 +182,7 @@ class AcquiredFromLog(AcquiredData):
       for the device
     """
 
-    def __init__(self, experimentId=None, size=10):
+    def __init__(self, experimentId=None, size=1000):
         super().__init__(experimentId, size)
 
         # retrieve steps from scan history assuming there have been only one

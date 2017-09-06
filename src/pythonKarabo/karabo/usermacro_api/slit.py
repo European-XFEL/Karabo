@@ -6,7 +6,7 @@ from .middlelayer import State, synchronize, waitUntil
 
 class SlitSystemAsMovable(Movable):
     """Generalized interface to Slit System"""
-    generalizes = ('SlitSystem')
+    generalizes = ('SlitSystem',)
     fepsilon = 1e-3
 
     @property
