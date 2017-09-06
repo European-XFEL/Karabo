@@ -8,7 +8,7 @@ from .middlelayer import State, synchronize, waitUntil
 
 class LpdAsSensible(Sensible):
     """Generalized interface to the LPD detector"""
-    generalizes = ('LpdComposite')
+    generalizes = ('LpdComposite',)
     state_mapping = {State.STARTED: State.ACQUIRING}
 
     @synchronize

@@ -8,7 +8,7 @@ from .genericproxy import Sensible
 
 class AgipdAsSensible(Sensible):
     """Generalized interface to the AGIPD detector"""
-    generalizes = ('AgipdComposite')
+    generalizes = ('AgipdComposite',)
     state_mapping = {State.STARTED: State.ACQUIRING}
 
     @synchronize

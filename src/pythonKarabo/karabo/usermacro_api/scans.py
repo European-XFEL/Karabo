@@ -2,7 +2,6 @@
 """Scantool macros"""
 from ast import literal_eval
 from asyncio import coroutine
-import itertools
 import ntpath
 import numpy as np
 import os
@@ -13,100 +12,14 @@ from karabo.usermacro_api.middlelayer import (
     sleep, UInt32, Unit, waitUntil, VectorString)
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
-from karabo.usermacro_api.util import flatten
+from karabo.usermacro_api.util import (
+    flatten, meshTrajectory, splitTrajectory)
 from karabo.usermacro_api.dataobjects import (
-    AcquiredOffline, AcquiredOnline)
+    AcquiredFromLog, AcquiredOffline, AcquiredOnline)
 # This is required for GenericProxy to
 # find all its subclasses when scans are run standalone
 # (from command line for example)
 import karabo.usermacro_api.generalized  # noqa
-
-
-def splitTrajectory(pos_list, number_of_steps):
-    """Generates a segmented trajectory
-
-    :param pos_list: the trajectory to be segmented.
-      It is a list whose elements are cartesian coordinates
-      to be passed to the moveto(pos) method
-      of a Movable.
-      For example, the trajectory might be:
-
-      [1,10] if the movable is a simple motor
-      with a single degree of freedom
-
-      or [(1,1,1), (2,2,10), (10,10,10)]
-       in case of a (virtual) compound movable
-        with three degrees of freedom.
-
-    :param number_steps: the number of segments
-      to split the trajectory into.
-
-    This function generates breaking points as pos, boolean
-    pairs that are either replicating the vectices in pos_list
-    or new points the scan must pause on. The boolean if True
-    indicates such a mandatory pause (i.e. a step marker).
-    """
-    fepsilon = 1e-3
-    if number_of_steps == 0:
-        # Path Scan case
-        itpos = iter(pos_list)
-        while True:
-            # Instruct to pause at every point
-            yield next(itpos), True
-    else:
-        # Step-scan case
-        len_traj = 0
-        itpos1, itpos2 = itertools.tee(iter(pos_list))
-        pos = next(itpos1)
-
-        # Compute the trajectory length
-        for nextpos in itpos1:
-            v = np.subtract(nextpos, pos)
-            nv = np.linalg.norm(v)
-            pos = nextpos
-            len_traj += nv
-
-        len_step = len_traj / number_of_steps
-
-        # Yield segment edges and pause points
-        pos = next(itpos2)
-        nextpos = next(itpos2)
-        dl = len_step
-        yield pos, True
-
-        while True:
-            v = np.subtract(nextpos, pos)
-            nv = np.linalg.norm(v)
-            if abs(dl - nv) < fepsilon * dl:
-                # Acquire at the edge of this segment
-                p = nextpos
-                dl = len_step
-                yield p, True
-                nextpos = next(itpos2)
-            elif dl < nv:
-                # Acquire in this segment
-                v1 = v / nv
-                p = pos + v1 * dl
-                dl = len_step
-                yield p, True
-            else:
-                # The step spans to the next segment
-                p = nextpos
-                if nv > fepsilon * dl:
-                    # Only command significant motions
-                    dl -= nv
-                    yield p, False
-                nextpos = next(itpos2)
-            pos = p
-
-
-def meshTrajectory(pos_list1, pos_list2):
-    """Generates a mesh trajectory"""
-    reverse = False
-    for pos1 in pos_list1:
-        for pos2 in reversed(pos_list2) if reverse else pos_list2:
-            yield pos1, pos2
-        reverse = not reverse
 
 
 class AScan(UserMacro):
@@ -163,6 +76,11 @@ class AScan(UserMacro):
         displayedName="Offline data source",
         description="",
         defaultValue="datareader:output")
+
+    daqDone = Bool(
+        displayedName="DAQDone",
+        defaultValue=False,
+        accessMode=AccessMode.READONLY)
 
     data = AcquiredOnline()
 
@@ -294,8 +212,9 @@ class AScan(UserMacro):
 
         print("-"*linelen)
 
-        return AcquiredOffline(self.experimentId,
-                               source=self.dataReader)
+        return (AcquiredOffline(self.experimentId,
+                                source=self.dataReader) if self.daqDone
+                else AcquiredFromLog(self.experimentId))
 
     @InputChannel(displayedName="Online data source")
     @coroutine
@@ -367,9 +286,10 @@ class DScan(AScan):
     def execute(self):
         """Overriden for moving Movable back to its initial position"""
         pos0 = self._movable.position
-        yield from super().execute()
+        data = yield from super().execute()
         yield from self._movable.moveto(pos0)
         print("Moving back to {}".format(pos0))
+        return data
 
 
 class TScan(UserMacro):
@@ -398,6 +318,11 @@ class TScan(UserMacro):
         displayedName="Offline data source",
         description="",
         defaultValue="datareader:output")
+
+    daqDone = Bool(
+        displayedName="DAQDone",
+        defaultValue=False,
+        accessMode=AccessMode.READONLY)
 
     data = AcquiredOnline()
 
@@ -453,7 +378,9 @@ class TScan(UserMacro):
 
         print("-"*linelen)
 
-        return AcquiredOffline(source=self.dataReader)
+        return (AcquiredOffline(self.deviceId,
+                                source=self.dataReader) if self.daqDone
+                else AcquiredFromLog(self.experimentId))
 
     @InputChannel(displayedName="Online data source")
     @coroutine
@@ -477,9 +404,10 @@ class DMesh(AMesh):
     def execute(self):
         """Overriden for moving Movable back to its initial position"""
         pos0 = self._movable.position
-        yield from super().execute()
+        data = yield from super().execute()
         yield from self._movable.moveto(pos0)
         print("Moving back to {}".format(pos0))
+        return data
 
 
 class AMove(UserMacro):
