@@ -344,7 +344,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         if isinstance(parent_obj, Box):
             descriptor = parent_obj.descriptor
-            names = _get_child_names(descriptor)
+            if isinstance(descriptor, ChoiceOfNodes):
+                names = [descriptor.getCurrent(parent_obj)]
+            else:
+                names = _get_child_names(descriptor)
             if isinstance(descriptor, Schema):
                 # Nodes have properties as children
                 obj = getattr(parent_obj.boxvalue, names[row])
@@ -431,7 +434,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         # From here, we know `box` is really a `Box` instance
         descriptor = box.descriptor
-        if isinstance(descriptor, Schema):
+        if isinstance(descriptor, ChoiceOfNodes):
+            # ChoiceOfNodes only ever appears to have one child
+            return 1
+        elif isinstance(descriptor, Schema):
             # Schemas have children
             return len(_get_child_names(descriptor))
         elif isinstance(descriptor, VectorHash):
