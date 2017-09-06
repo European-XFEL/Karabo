@@ -6,7 +6,7 @@ from .genericproxy import Movable
 
 class OffsetMirrorAsMovable(Movable):
     """Generalized interface to Offset Mirrors"""
-    generalizes = ('OffsetMirror')
+    generalizes = ('OffsetMirror',)
     state_mapping = {State.STOPPED: State.ON}
     fepsilon = 1e-3
 

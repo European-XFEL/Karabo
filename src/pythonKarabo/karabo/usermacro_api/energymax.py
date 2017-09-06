@@ -6,7 +6,7 @@ from .middlelayer import State, synchronize
 
 class EnergyMaxAsSensible(Sensible):
     """Generalized interface to EnergyMax class """
-    generalizes = ('EnergyMax')
+    generalizes = ('EnergyMax',)
     state_mapping = {State.STARTED: State.ACQUIRING}
 
     @synchronize
