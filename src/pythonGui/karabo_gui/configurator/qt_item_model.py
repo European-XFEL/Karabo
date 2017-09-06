@@ -12,6 +12,7 @@ from karabo.middlelayer import AccessMode, Assignment
 from karabo.common.api import State
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 import karabo_gui.globals as krb_globals
+from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.schema import (
     Box, ChoiceOfNodes, Dummy, EditableAttributeInfo, ImageNode, Schema,
     SlotNode, VectorHash, VectorHashCellInfo, VectorHashRowInfo,
@@ -445,8 +446,15 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return get_icon(box.descriptor)
         elif column == 1 and role == Qt.DisplayRole:
             return str(get_box_value(box))
-        elif column == 2 and role == Qt.DisplayRole:
-            return str(get_box_value(box, is_edit_col=True))
+        elif column == 2:
+            if role == Qt.DisplayRole:
+                return str(get_box_value(box, is_edit_col=True))
+            elif role == Qt.BackgroundRole:
+                conf = box.configuration
+                if conf.hasUserValue(box):
+                    color = QColor(*STATE_COLORS[State.CHANGING])
+                    color.setAlpha(128)
+                    return QBrush(color)
 
     def _vector_col_data(self, cell_info, role, column):
         """data() implementation for VectorHash columns"""
