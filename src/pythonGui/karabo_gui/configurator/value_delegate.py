@@ -46,8 +46,6 @@ class ValueDelegate(QStyledItemDelegate):
         elif hint == QAbstractItemDelegate.RevertModelCache:
             model.clear_index_modification(editor.index)
 
-        self._selection_changed = False
-
     def current_changed(self, index):
         """The view is telling us that the selection changed
         """
@@ -65,6 +63,7 @@ class ValueDelegate(QStyledItemDelegate):
                 isinstance(getattr(obj, 'descriptor', None), VectorHash)):
             return None
 
+        self._selection_changed = False
         return EditWidgetWrapper(obj, index, parent=parent)
 
     def setEditorData(self, editor, index):
