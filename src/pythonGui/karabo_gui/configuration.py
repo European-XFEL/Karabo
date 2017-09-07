@@ -77,10 +77,30 @@ class Configuration(Box):
         """
         return self._user_values.get(box.key(), box.value)
 
+    def hasAnyUserValues(self):
+        """Returns true if a user has entered any values for this Configuration
+        """
+        return bool(self._user_values)
+
     def hasUserValue(self, box):
         """Returns true if a user has entered a value for this Box
         """
         return box.key() in self._user_values
+
+    def sendAllUserValues(self):
+        """Sends all user-entered values to the GUI server
+        """
+        changes = []
+        for key, value in self._user_values.items():
+            if key in self._pending_keys:
+                continue
+            path = key.split('.', 1)[-1].split('.')
+            changes.append((self.getBox(path), value))
+            self._pending_keys.add(key)
+
+        if changes:
+            get_network().onReconfigure(changes)
+            self.__busy_timer.start(5000)
 
     def sendUserValue(self, box):
         """Sends a single user-entered value to the GUI server

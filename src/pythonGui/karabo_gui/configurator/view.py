@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import OrderedDict
-from PyQt4.QtCore import pyqtSignal, QRect, Qt
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QRect, Qt
 from PyQt4.QtGui import QAbstractItemView, QCursor, QTreeView
 
 from karabo.middlelayer import Type
@@ -22,7 +22,7 @@ from .value_delegate import ValueDelegate
 class ConfigurationTreeView(QTreeView):
     """A tree view for `Configuration` instances
     """
-    signalApplyChanged = pyqtSignal()
+    signalApplyChanged = pyqtSignal(object, bool, bool)
     itemSelectionChanged = pyqtSignal()
 
     def __init__(self, conf=None, parent=None):
@@ -41,6 +41,7 @@ class ConfigurationTreeView(QTreeView):
         model = ConfigurationTreeModel(parent=self)
         self.setModel(model)
         self._set_model_configuration(conf)
+        model.signalHasModifications.connect(self._update_apply_buttons)
 
         # Add a delegate for rows with slot buttons
         delegate = SlotButtonDelegate(parent=self)
@@ -142,6 +143,13 @@ class ConfigurationTreeView(QTreeView):
         self.popup_widget.move(pos)
         self.popup_widget.show()
 
+    @pyqtSlot(bool)
+    def _update_apply_buttons(self, buttons_enabled):
+        """The model is telling us to enable/disable the apply/decline buttons
+        """
+        configuration = self.model().configuration
+        self.signalApplyChanged.emit(configuration, buttons_enabled, False)
+
     # ------------------------------------
     # Event handlers
 
@@ -196,7 +204,10 @@ class ConfigurationTreeView(QTreeView):
         self._set_model_configuration(None)
 
     def decline_all(self):
-        pass
+        configuration = self.model().configuration
+        configuration.clearUserValues()
+        self.signalApplyChanged.emit(configuration, False, False)
+        self.model().layoutChanged.emit()
 
     def decline_all_changes(self):
         pass
@@ -211,7 +222,8 @@ class ConfigurationTreeView(QTreeView):
         pass
 
     def onApplyAll(self):
-        pass
+        configuration = self.model().configuration
+        configuration.sendAllUserValues()
 
     def nbSelectedApplyEnabledItems(self):
         """Return only selected items for not applied yet
