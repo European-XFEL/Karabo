@@ -152,7 +152,6 @@ class MainWindow(QMainWindow):
         """
         container = self._panel_areas[area_enum]
         container.addPanel(panel)
-        container.setCurrentWidget(panel)
 
     def removePanel(self, panel, area_enum):
         """Remove a panel from a container in this window
