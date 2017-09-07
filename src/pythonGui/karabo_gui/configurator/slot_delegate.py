@@ -46,7 +46,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
             super(SlotButtonDelegate, self).paint(painter, option, index)
             return
 
-        set_fill_rect(option, painter)
+        set_fill_rect(painter, option, index)
 
         self._draw_icon(painter, option)
         self._draw_button(painter, option, index, obj)
