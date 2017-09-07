@@ -1,4 +1,4 @@
-from asyncio import async, CancelledError, coroutine, TimeoutError
+from asyncio import async, CancelledError, coroutine, Future, TimeoutError
 from pint import DimensionalityError
 from unittest import main
 import time
@@ -261,6 +261,28 @@ class Tests(DeviceTest):
         self.assertEqual(done, {"fast": "result"})
         self.assertEqual(error, {"err": exception})
         self.assertEqual(set(pending.keys()), {0, "slow"})
+
+    @async_tst
+    def test_allCompleted_cancelled(self):
+        running = Future()
+        done = Future()
+        raises = Future()
+        cancelled = Future()
+
+        task = background(allCompleted(running, done, raises, cancelled))
+        yield from sleep(0)
+        done.set_result(None)
+        raises.set_exception(None)
+        cancelled.cancel()
+        yield from sleep(0)
+        task.cancel()
+        with self.assertRaises(CancelledError):
+            yield from task
+
+        self.assertTrue(running.cancelled())
+        self.assertTrue(cancelled.cancelled())
+        self.assertFalse(done.cancelled())
+        self.assertFalse(raises.cancelled())
 
     @async_tst
     def test_firstException(self):
