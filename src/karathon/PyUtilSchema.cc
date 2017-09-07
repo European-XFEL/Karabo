@@ -2286,7 +2286,12 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("setNodeSchema"
                      , &TableElement::setNodeSchema, (bp::arg("nodeSchema"))
-                     , bp::return_internal_reference<> ())
+                     , bp::return_internal_reference<> ()
+                     , "DEPRECATED - use 'setColumns' instead")
+                .def("setColumns"
+                     , &TableElement::setColumns, (bp::arg("schema"))
+                     , bp::return_internal_reference<> ()
+                     , "Set Schema describing the columns")
                 /*.def("addRow"
                      , (TableElement & (TableElement::*)(const Hash&))&TableElement::addRow, (bp::arg("nodeHash") = Hash())
                      , bp::return_internal_reference<> ())
