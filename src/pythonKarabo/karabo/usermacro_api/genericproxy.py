@@ -131,21 +131,35 @@ class GenericProxy(object):
                 else [gproxy.getBoundDevices()
                       for gproxy in self._generic_proxies])
 
-    @property
-    def value(self):
-        """"Generic value getter """
+    def getBoundParameters(self, prefix=True):
+        """"Get recursively params matching a regular expression
+
+            :param prefix: if prefix is True, prefix parameters
+                            with the deviceId
+        """
         if self._generic_proxies:
-            return [gproxy.value for gproxy in self._generic_proxies]
+            param_list = []
+            for gproxy in self._generic_proxies:
+                params = gproxy.getBoundParameters()
+                if params:
+                    param_list.append(params)
+            return param_list
 
         if self._param_regex:
-            proc = re.compile(self._param_regex)
+            proc = re.compile(self._param_regex, re.IGNORECASE)
 
             # Returns the parameters matching the regular expression
             params = {}
             for k, v in self._proxy.__dict__.items():
                 if proc.match(k):
-                    params.update({k: v})
+                    params.update(
+                        {".".join((self.deviceId, k)) if prefix else k: v})
             return params
+
+    @property
+    def value(self):
+        """"Generic value getter """
+        return self.getBoundParameters(False)
 
     @synchronize
     def lockon(self, locker):
