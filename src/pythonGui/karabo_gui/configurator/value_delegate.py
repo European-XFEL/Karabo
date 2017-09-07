@@ -5,7 +5,7 @@
 #############################################################################
 from enum import Enum
 
-from PyQt4.QtCore import QEvent, QSize, Qt, pyqtSlot
+from PyQt4.QtCore import QEvent, QRect, QSize, Qt, pyqtSlot
 from PyQt4.QtGui import (
     QApplication, QAbstractItemDelegate, QComboBox, QDialog, QDoubleValidator,
     QHBoxLayout, QLineEdit, QPalette, QStyle, QStyleOptionButton,
@@ -23,6 +23,19 @@ from .utils import (ButtonState, get_attribute_data, get_box_value,
                     set_fill_rect)
 
 FIXED_ROW_HEIGHT = 30
+TABLE_BUTTON_TEXT = 'Edit Table'
+BUTTON_LABEL_PADDING = 5
+
+
+def _get_table_button_rect(option):
+    """Calculate the rectangle of the table edit button based on the given
+    `QStyleOptionViewItem` instance
+    """
+    rect = QRect(option.rect)
+    font_metrics = option.fontMetrics
+    width = font_metrics.size(Qt.TextSingleLine, TABLE_BUTTON_TEXT).width()
+    rect.setWidth(width + BUTTON_LABEL_PADDING * 2)
+    return rect
 
 
 class ValueDelegate(QStyledItemDelegate):
@@ -112,7 +125,7 @@ class ValueDelegate(QStyledItemDelegate):
             super(ValueDelegate, self).paint(painter, option, index)
             return
 
-        set_fill_rect(option, painter)
+        set_fill_rect(painter, option, index)
 
         self._draw_button(painter, option, index, obj)
 
@@ -143,8 +156,8 @@ class ValueDelegate(QStyledItemDelegate):
         self._button_states[key] = state
         button = QStyleOptionButton()
         button.state = button_state.value
-        button.rect = option.rect
-        button.text = 'Edit Table'
+        button.rect = _get_table_button_rect(option)
+        button.text = TABLE_BUTTON_TEXT
         button.features = QStyleOptionButton.AutoDefaultButton
         QApplication.style().drawControl(QStyle.CE_PushButton, button, painter)
 
@@ -155,7 +168,8 @@ class ValueDelegate(QStyledItemDelegate):
         state = self._button_states.get(key, ButtonState.DISABLED)
         allowed = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
         if allowed:
-            if option.rect.contains(event.pos()):
+            rect = _get_table_button_rect(option)
+            if rect.contains(event.pos()):
                 if event.type() == QEvent.MouseButtonPress:
                     state = ButtonState.PRESSED
                 elif state == ButtonState.PRESSED:

@@ -1,4 +1,5 @@
 from enum import Enum
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QStyle
 
 from karabo.middlelayer import AccessMode
@@ -21,7 +22,7 @@ def handle_default_state(allowed, state):
     return state
 
 
-def set_fill_rect(option, painter):
+def set_fill_rect(painter, option, index):
     """ Update the rectangle of the given `painter` depending on the given
     `options`
     """
@@ -30,6 +31,10 @@ def set_fill_rect(option, painter):
             painter.fillRect(option.rect, option.palette.highlight())
         elif not (option.state & QStyle.State_HasFocus):
             painter.fillRect(option.rect, option.palette.background())
+    else:
+        brush = index.data(Qt.BackgroundRole)
+        if brush is not None:
+            painter.fillRect(option.rect, brush)
 
 
 def get_attribute_data(attr_info, row):
