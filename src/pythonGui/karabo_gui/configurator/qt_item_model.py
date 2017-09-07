@@ -7,7 +7,8 @@ import numbers
 import numpy
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import pyqtSlot, QAbstractItemModel, QModelIndex, Qt
+from PyQt4.QtCore import (pyqtSignal, pyqtSlot, QAbstractItemModel,
+                          QModelIndex, Qt)
 from PyQt4.QtGui import QBrush, QColor, QFont
 
 from karabo.middlelayer import AccessMode, Assignment
@@ -61,6 +62,8 @@ def _cmp(a, b):
 
 
 class ConfigurationTreeModel(QAbstractItemModel):
+    signalHasModifications = pyqtSignal(bool)
+
     def __init__(self, parent=None):
         super(ConfigurationTreeModel, self).__init__(parent)
         self._configuration = None
@@ -199,6 +202,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
         else:
             box.configuration.clearUserValue(box)
 
+        apply_enabled = apply_changed or box.configuration.hasAnyUserValues()
+        self.signalHasModifications.emit(apply_enabled)
+
     @pyqtSlot(object, object, object)
     def _config_update(self, box, value, timestamp):
         """Notify the view of item updates
@@ -213,6 +219,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
         last = self.index(last_row, 1)
         self.dataChanged.emit(first, last)
         self.layoutChanged.emit()
+
+        self.signalHasModifications.emit(self.configuration.hasAnyUserValues())
 
     @pyqtSlot(object, object, object)
     def _state_update(self, box, state, timestamp):
