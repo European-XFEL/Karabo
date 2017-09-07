@@ -171,6 +171,7 @@ class NavigationTreeView(QTreeView):
         type = self.currentIndexType()
         # Show context menu for DEVICE_CLASS and DEVICE_INSTANCE
         if type is NavigationItemTypes.SERVER:
+            self.acAbout.setVisible(True)
             self.mServerItem.exec_(QCursor.pos())
         elif type is NavigationItemTypes.CLASS:
             self.acKillDevice.setVisible(False)
