@@ -250,7 +250,7 @@ class PanelWrangler(QObject):
             panel.onUndock()
 
     def _show_project_item_panel(self, model, panel):
-        new_panel = model in self._project_item_panels
+        has_panel = model in self._project_item_panels
         self._project_item_panels[model] = panel
 
         if self.splash is not None:
@@ -259,10 +259,10 @@ class PanelWrangler(QObject):
 
         if self.main_window is None:
             panel.show()
-        elif new_panel:
-            self.main_window.selectPanel(panel, PanelAreaEnum.MiddleTop)
-        else:
+            return
+        if not has_panel:
             self.main_window.addPanel(panel, PanelAreaEnum.MiddleTop)
+        self.main_window.selectPanel(panel, PanelAreaEnum.MiddleTop)
 
     def _update_scenes(self):
         for model, panel in self._project_item_panels.items():
