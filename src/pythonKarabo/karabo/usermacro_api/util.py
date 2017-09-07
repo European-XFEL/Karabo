@@ -7,6 +7,8 @@ import itertools
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
+import re
+
 from IPython import get_ipython
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
@@ -109,8 +111,8 @@ def meshTrajectory(pos_list1, pos_list2):
         *--*---*
         |
         *--*---*
-        and mandatorily and uncessarily leads to a return
-        the row start.
+        and mandatorily and unnecessarily leads to a return
+        to the row start.
     """
     reverse = False
     for pos1 in pos_list1:
@@ -120,8 +122,10 @@ def meshTrajectory(pos_list1, pos_list2):
 
 
 def flatten(lis):
-    """ Flattens a list that may contain sublists"""
-    if isinstance(lis, (str, bytes)):
+    """ Flattens collections that may contain subcollections"""
+    if lis is None:
+        raise StopIteration
+    elif isinstance(lis, (str, bytes)):
         yield lis
     else:
         for e in lis:
@@ -231,3 +235,18 @@ def plot(data, begin=None, end=None):
 
     # return easy to plot data
     return data4plots
+
+
+def reformat(obj):
+    """Reshape some class representations
+
+    For example:
+    <Quantity(magnitude, unit)> will be
+    returned as magnitude (unit)
+    """
+    proc = re.compile("(.*)<Quantity\((.+), '(.+)'\)>(.*)")
+    match = proc.match(repr(obj))
+    return ("{}{} ({}){}".format(
+                match.group(1), match.group(2),
+                match.group(3), match.group(4))
+            if match else obj)
