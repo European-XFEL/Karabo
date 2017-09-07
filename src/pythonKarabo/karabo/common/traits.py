@@ -6,9 +6,15 @@
 from traits.api import HasTraits, Instance, List
 
 
-def walk_traits_object(traits_obj, visitor_func):
+def walk_traits_object(traits_obj, visitor_func, pass_parent=False):
     """ Walk a Traits object by recursing into List(Instance(HasTraits))
     child traits.
+
+    :param traits_obj: A HasTraits instance to walk
+    :param visitor_func: A callable which will be called on each HasTraits
+                         object in the tree rooted at `traits_obj`
+    :param pass_parent: If True, pass the parent of each node to the visitor
+                        along with the node itself.
     """
     def _is_list_of_has_traits(trait):
         if not isinstance(trait.trait_type, List):
@@ -24,16 +30,19 @@ def walk_traits_object(traits_obj, visitor_func):
         return [name for name in obj.copyable_trait_names()
                 if _is_list_of_has_traits(obj.trait(name))]
 
-    def _tree_iter(obj):
+    def _tree_iter(obj, parent=None):
         # Yield the root
-        yield obj
+        yield obj, parent
         # Then iteratively yield the children
         iterables = _find_iterables(obj)
         for name in iterables:
             children = getattr(obj, name)
             for child in children:
-                for subchild in _tree_iter(child):
-                    yield subchild
+                for subchild, subparent in _tree_iter(child, parent=obj):
+                    yield subchild, subparent
 
-    for leaf in _tree_iter(traits_obj):
-        visitor_func(leaf)
+    for leaf, parent in _tree_iter(traits_obj):
+        if pass_parent:
+            visitor_func(leaf, parent)
+        else:
+            visitor_func(leaf)

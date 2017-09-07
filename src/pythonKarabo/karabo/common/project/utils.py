@@ -7,31 +7,34 @@ from .device_config import DeviceConfigurationModel
 
 
 def find_parent_object(model, ancestor_model, search_klass):
-    """ Given a project child object and a project object which is the child's
+    """Given a project child object and a project object which is the child's
     ancestor, find the immediate parent of the child.
 
     :param model: A project object instance
     :param ancestor_model: A project object model which is the ancestor of
                            ``model``.
-    :param search_klass: The type of parent object to look for
+    :param search_klass: The type of parent object to look for. This can be a
+                         class, type, or tuple as it is passed to `isinstance`.
     :return: A parent project object model or None
     """
     class _Visitor(object):
-        last_object = None
-        parent = None
+        found_parent = None
 
-        def __call__(self, obj):
+        def __call__(self, obj, parent):
             if obj is model:
-                if self.parent is not None:
+                if self.found_parent is not None:
                     msg = "Object {} has more than one parent!"
                     raise RuntimeError(msg.format(obj))
-                self.parent = self.last_object
-            if isinstance(obj, search_klass):
-                self.last_object = obj
+                if parent is not None and not isinstance(parent, search_klass):
+                    msg = ("Object {} has parent with wrong class '{}'"
+                           " (expected '{}')!")
+                    msg = msg.format(obj, type(parent), search_klass)
+                    raise RuntimeError(msg)
+                self.found_parent = parent
 
     visitor = _Visitor()
-    walk_traits_object(ancestor_model, visitor)
-    return visitor.parent
+    walk_traits_object(ancestor_model, visitor, pass_parent=True)
+    return visitor.found_parent
 
 
 def device_instance_exists(project, instance_ids):
