@@ -186,11 +186,7 @@ class SceneLinkDialog(QDialog):
             self.lwScenes.addItem(scene)
 
         flags = Qt.MatchExactly | Qt.MatchCaseSensitive
-        items = self.lwScenes.findItems(model.target, flags)
-        if items:
-            # Select first result
-            self.lwScenes.setCurrentItem(items[0])
-        self._selectedScene = self.lwScenes.currentRow()
+        self._select_item(model.target, flags)
 
         self._selectedTargetWin = model.target_window
         radioButtons = {
@@ -215,7 +211,14 @@ class SceneLinkDialog(QDialog):
                 collected.add(target)
 
         walk_traits_object(project, visitor)
-        return list(collected)
+        return sorted(collected)
+
+    def _select_item(self, text, flags):
+        items = self.lwScenes.findItems(text, flags)
+        if items:
+            # Select first result
+            self.lwScenes.setCurrentItem(items[0])
+        self._selectedScene = self.lwScenes.currentRow()
 
     @property
     def selectedScene(self):
@@ -239,6 +242,9 @@ class SceneLinkDialog(QDialog):
         if checked:
             self._selectedTargetWin = SceneTargetWindow.MainWindow
 
+    @pyqtSlot(str)
+    def on_leFilter_textChanged(self, text):
+        self._select_item(text, Qt.MatchStartsWith)
 
 class ReplaceDialog(QDialog):
 
