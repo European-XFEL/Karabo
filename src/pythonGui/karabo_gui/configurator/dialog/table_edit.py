@@ -14,10 +14,10 @@ from karabo_gui.editablewidgets.editabletableelement import (
 
 
 class TableEditDialog(QDialog):
-    def __init__(self, obj, parent=None):
+    def __init__(self, box, parent=None):
         """ A dialog to configure a VectorHash
 
-        :param obj: The data object representing the VectorHash
+        :param box: The `Box` object representing the VectorHash
         :param parent: The parent of the dialog
         """
         super(TableEditDialog, self).__init__(parent)
@@ -25,12 +25,14 @@ class TableEditDialog(QDialog):
                            'table_edit.ui')
         uic.loadUi(filepath, self)
 
-        config_hsh, _ = obj.toHash()
         # XXX: Do not change the name of this variable since the
         # `ValueDelegate` method `setModelData` refers to this dialog as the
         # passed `editor` and fetches the data of the `editable_widget`
-        self.editable_widget = EditableTableElement(obj, self)
-        self.editable_widget.valueChanged(obj, config_hsh)
+        self.editable_widget = EditableTableElement(box, self)
+
+        value = box.configuration.getUserValue(box)
+        self.editable_widget.valueChanged(box, value)
+
         layout = QHBoxLayout()
         layout.setContentsMargins(2, 2, 2, 2)
         layout.addWidget(self.editable_widget.widget)
