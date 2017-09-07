@@ -622,6 +622,9 @@ class PythonDevice(NoFsm):
         :param forceUpdate: if set to true  the global alarm condition will
                             always be returned, even if no parameter based
                             alarm conditions are present.
+        :param prevParamsInAlarm: parameters in alarm before current update,
+                                  needed only if silent=False
+        :silent: If True, suppress any log messages about changed alarms
         :return:
         """
         if self.validatorIntern.hasParametersInWarnOrAlarm():
