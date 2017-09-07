@@ -1,5 +1,6 @@
 from asyncio import (
-    coroutine, get_event_loop, IncompleteReadError, Lock, open_connection)
+    coroutine, get_event_loop, IncompleteReadError, Lock, open_connection,
+    shield)
 import os
 from struct import pack, unpack, calcsize
 
@@ -93,14 +94,20 @@ class NetworkInput(Configurable):
     def __init__(self, config):
         super().__init__(config)
         self.connected = {}
+        self.handler_lock = Lock()
 
     @coroutine
     def close_handler(self, cls):
         pass
 
     @coroutine
+    def call_handler(self, data, meta):
+        with (yield from self.handler_lock):
+            yield from get_event_loop().run_coroutine_or_thread(
+                self.handler, data, meta)
+
+    @coroutine
     def start_channel(self, output):
-        loop = get_event_loop()
         try:
             instance, name = output.split(":")
             ok, info = yield from self.parent._call_once_alive(
@@ -138,8 +145,7 @@ class NetworkInput(Configurable):
                 if "endOfStream" in header:
                     meta = PipelineMetaData()
                     meta._onChanged(Hash("source", output))
-                    yield from loop.run_coroutine_or_thread(
-                        self.handler, None, meta)
+                    yield from shield(self.call_handler(None, meta))
                     continue
                 pos = 0
                 for length, meta_hash in zip(header["byteSizes"],
@@ -148,19 +154,19 @@ class NetworkInput(Configurable):
                     meta = PipelineMetaData()
                     meta._onChanged(meta_hash)
                     if self.raw:
-                        yield from loop.run_coroutine_or_thread(
-                            self.handler, chunk, meta)
+                        yield from shield(self.call_handler(chunk, meta))
                     else:
                         proxy = cls()
                         proxy._onChanged(chunk)
-                        yield from loop.run_coroutine_or_thread(
-                            self.handler, proxy, meta)
+                        yield from shield(self.call_handler(proxy, meta))
                     pos += length
                 channel.writeHash(cmd)
         finally:
             self.connected.pop(output)
             self.connectedOutputChannels = list(self.connected)
-            yield from loop.run_coroutine_or_thread(self.close_handler, output)
+            with (yield from self.handler_lock):
+                yield from shield(get_event_loop().run_coroutine_or_thread(
+                                  self.close_handler, output))
 
 
 class InputChannel(Node):
