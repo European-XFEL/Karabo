@@ -1,8 +1,8 @@
 """This module contains some synchronization routines for users"""
 
 import asyncio
-from asyncio import (async, coroutine, Future, get_event_loop, iscoroutine,
-                     iscoroutinefunction)
+from asyncio import (async, CancelledError, coroutine, Future, get_event_loop,
+                     iscoroutine, iscoroutinefunction)
 from functools import wraps
 
 from .basetypes import KaraboValue, unit_registry as unit
@@ -83,8 +83,18 @@ def _wait(return_when, *args, timeout=None, cancel_pending=True, **kwargs):
     names = {
         f.future if isinstance(f, KaraboFuture) else f: k
         for k, f in futures.items()}
-    done, pending = yield from asyncio.wait(names, return_when=return_when,
-                                            timeout=timeout)
+    try:
+        done, pending = yield from asyncio.wait(names, return_when=return_when,
+                                                timeout=timeout)
+    except CancelledError:
+        for fut in names:
+            if fut.done() and not fut.cancelled():
+                # we need to retrieve the exception which is reported otherwise
+                fut.exception()
+            else:
+                fut.cancel()
+        raise
+
     if cancel_pending:
         for fut in pending:
             fut.cancel()
