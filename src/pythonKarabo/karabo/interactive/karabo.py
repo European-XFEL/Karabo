@@ -83,14 +83,6 @@ def parse_commandline():
                             action='store_true',
                             help='Installs device in develop mode')
 
-    parser_chk.add_argument('-c', '--config',
-                            type=str,
-                            metavar='',
-                            choices=['Debug', 'Release', 'Simulation'],
-                            default='Debug',
-                            help='Build configuration {Debug|Release|'
-                                 'Simulation}')
-
     parser_ins = sps.add_parser('install',
                                 help='Installs an existing device')
     parser_ins.set_defaults(command=install)
@@ -103,31 +95,6 @@ def parse_commandline():
                             type=str,
                             help='The tag to install')
 
-    parser_ins.add_argument('-c', '--config',
-                            type=str,
-                            metavar='',
-                            choices=['Debug', 'Release', 'Simulation'],
-                            default='Debug',
-                            help='Build configuration {Debug|Release|'
-                                 'Simulation}')
-
-    parser_insf = sps.add_parser('install-file',
-                                 help='Installs devices given in the '
-                                      'configuration file')
-    parser_insf.set_defaults(command=install_file)
-
-    parser_insf.add_argument('filename',
-                             type=str,
-                             help='Path to the configuration file')
-
-    parser_insf.add_argument('-c', '--config',
-                             type=str,
-                             metavar='',
-                             choices=['Debug', 'Release', 'Simulation'],
-                             default='Debug',
-                             help='Build configuration {Debug|Release|'
-                                  'Simulation}')
-
     parser_uins = sps.add_parser('uninstall',
                                  help='Uninstalls an existing device')
     parser_uins.set_defaults(command=uninstall)
@@ -135,15 +102,6 @@ def parse_commandline():
     parser_uins.add_argument('device',
                              type=str,
                              help='The name of the device package')
-
-    parser_uinsf = sps.add_parser('uninstall-file',
-                                  help='Uninstalls devices given in the '
-                                       'configuration file')
-    parser_uinsf.set_defaults(command=uninstall_file)
-
-    parser_uinsf.add_argument('filename',
-                              type=str,
-                              help='Path to the configuration file')
 
     parser_dev = sps.add_parser('develop',
                                 help='Activates develop mode for a given '
@@ -154,14 +112,6 @@ def parse_commandline():
                             type=str,
                             help='The name of the device package')
 
-    parser_dev.add_argument('-c', '--config',
-                            type=str,
-                            metavar='',
-                            choices=['Debug', 'Release', 'Simulation'],
-                            default='Debug',
-                            help='Build configuration {Debug|Release|'
-                                 'Simulation}')
-
     parser_udev = sps.add_parser('undevelop',
                                  help='Deactivates develop mode for a given'
                                       'device')
@@ -171,10 +121,23 @@ def parse_commandline():
                              type=str,
                              help='The name of the device package')
 
+    parser.add_argument('-c', '--config',
+                        type=str,
+                        choices=['Debug', 'Release', 'Simulation'],
+                        default='Release',
+                        help='Build configuration {Debug|Release|Simulation}')
+
     parser.add_argument('-g', '--git',
                         type=str,
                         default='ssh://git@git.xfel.eu:10022',
                         help='URL to the git repository')
+
+    parser.add_argument('-r', '--repo',
+                        type=str,
+                        default='',
+                        help='URL to the binary repository, example '
+                             'http://exflserv05.desy.de/karabo/'
+                             'karaboDevices/')
 
     parser.add_argument('-j', '--jobs',
                         type=int,
@@ -226,13 +189,48 @@ def checkout(args):
         else:
             print('Downloading {}... '.format(args.device), end='', flush=True)
             run_cmd('git clone {}/karaboDevices/{}.git {}'.format(args.git,
-                                                              args.device,
-                                                              path))
+                                                                  args.device,
+                                                                  path))
             print('done.')
             print('Device package was added to: {}'
                   .format(os.path.abspath(path)))
     if hasattr(args, 'develop') and args.develop:
         develop(args)
+
+
+def download(args):
+    """
+    attempts the download of a package
+
+    :return: the path of the package or None in case of failure
+    """
+    if args.repo == '':
+        return None
+    with pushd_popd():
+        karabo_tag = run_cmd('cat VERSION').decode("utf-8").rstrip()
+        dist_name = run_cmd('lsb_release -is').decode("utf-8").rstrip()
+        dist_ver = run_cmd('lsb_release -rs').decode("utf-8").split('.')[0].rstrip()
+        arch_name = os.uname().machine
+        filename = '{device}-{tag}-{ktag}-{dist_name}-' \
+                   '{dist_ver}-{arch}-{config}.sh'.format(device=args.device,
+                                                          tag=args.tag,
+                                                          ktag=karabo_tag,
+                                                          dist_name=dist_name,
+                                                          dist_ver=dist_ver,
+                                                          arch=arch_name,
+                                                          config=args.config)
+        dest = os.path.join('installed', args.device, filename)
+        cmd = 'curl -f {repo}/{device}/tags/{tag}/{filename} ' \
+              '-o {dest}'.format(device=args.device, tag=args.tag,
+                                 repo=args.repo, filename=filename, dest=dest)
+        try:
+            global DEV_NULL
+            subprocess.check_output(cmd, shell=True, stderr=DEV_NULL)
+            return dest
+        except subprocess.CalledProcessError as e:
+            print("Problem dowloading {device}-{tag}: {e}"
+                  "".format(device=args.device, tag=args.tag, e=e))
+        return None
 
 
 def install(args):
@@ -241,7 +239,7 @@ def install(args):
         if os.path.isdir(path):
             run_cmd('rm -rf {}'.format(path))
         os.makedirs(path, exist_ok=True)
-        print('Downloading {}... '.format(args.device), end='', flush=True)
+        print('Downloading source for {}... '.format(args.device), end='', flush=True)
         run_cmd('git clone {}/karaboDevices/{}.git --depth 1 -b {}\
                 --single-branch {}'
                 .format(args.git, args.device, args.tag, path))
@@ -250,26 +248,25 @@ def install(args):
         if os.path.isfile('DEPENDS'):
             install_dependencies(args)
         if os.path.isfile('Makefile'):
-            print('Compiling, please wait... ', end='', flush=True)
-            run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
-            print('done.')
-            if os.path.isdir('dist'):
-                src = os.path.join('dist', args.config, '*', '*.so')
-                tgt = os.path.join('..', '..', 'plugins')
-                run_cmd('cp -f {} {}'.format(src, tgt))
+            # download needs to happen after the processing of DEPENDS
+            package = download(args)
+            tgt = os.path.join(os.environ['KARABO'], 'plugins')
+            if package:
+                print('Installing binaries, please wait... ',
+                      end='', flush=True)
+                cmd = os.path.join(os.environ['KARABO'], package)
+                run_cmd('bash {} --prefix={} '.format(cmd, tgt))
+                print('done.')
+            else:
+                print('Compiling, please wait... ', end='', flush=True)
+                run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
+                print('done.')
+                if os.path.isdir('dist'):
+                    src = os.path.join('dist', args.config, '*', '*.so')
+                    run_cmd('cp -f {} {}'.format(src, tgt))
         else:
             run_cmd('pip install --upgrade .')
         print("Installation succeeded.")
-
-
-def install_file(args):
-    global INVOKE_DIR
-    filename = os.path.join(INVOKE_DIR, args.filename)
-    devices = parse_configuration_file(filename)
-    for item in devices:
-        args.device = item[0]
-        args.tag = item[1]
-        install(args)
 
 
 def parse_configuration_file(filename):
@@ -292,15 +289,6 @@ def uninstall(args):
     else:
         run_cmd('pip uninstall -y {}'.format(args.device))
     print('{} was successfully uninstalled'.format(args.device))
-
-
-def uninstall_file(args):
-    global INVOKE_DIR
-    filename = os.path.join(INVOKE_DIR, args.filename)
-    devices = parse_configuration_file(filename)
-    for item in devices:
-        args.device = item[0]
-        uninstall(args)
 
 
 def develop(args):
