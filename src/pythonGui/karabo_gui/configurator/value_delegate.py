@@ -52,17 +52,26 @@ class ValueDelegate(QStyledItemDelegate):
     def close_editor(self, editor, hint):
         """Workaround for shitty PyQt behavior.
         """
-        model = self.parent().model()
-        if hint == QAbstractItemDelegate.SubmitModelCache:
-            if not self._selection_changed:
-                model.flush_index_modification(editor.index)
-        elif hint == QAbstractItemDelegate.RevertModelCache:
-            model.clear_index_modification(editor.index)
+        self.update_model_data(editor.index, hint)
 
     def current_changed(self, index):
         """The view is telling us that the selection changed
         """
         self._selection_changed = True
+
+    def update_model_data(self, index, hint):
+        model = self.parent().model()
+        if hint == QAbstractItemDelegate.SubmitModelCache:
+            obj = model.index_ref(index)
+            # XXX: some extra handling for VectorHashes since they are not
+            # editable via an editor
+            editable = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
+            is_table = isinstance(getattr(obj, 'descriptor', None),
+                                  VectorHash)
+            if not self._selection_changed or (editable and is_table):
+                model.flush_index_modification(index)
+        elif hint == QAbstractItemDelegate.RevertModelCache:
+            model.clear_index_modification(index)
 
     # ----------------------------------------------------------------------
     # Qt interface
