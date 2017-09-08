@@ -54,11 +54,19 @@ class BasePanelWidget(QFrame):
         raise NotImplementedError
 
     def dock(self):
-        """Called when this panel is docked into the main window.
+        """Called before this panel is docked into the main window.
         """
 
     def undock(self):
-        """Called when this panel is undocked from the main window.
+        """Called before this panel is undocked from the main window.
+        """
+
+    def maximize(self):
+        """Called before this panel is maximized to fill the main window.
+        """
+
+    def minimize(self):
+        """Called before this panel is minimized after filling the main window.
         """
 
     def update_tab_text_color(self, color=None):
@@ -131,6 +139,7 @@ class BasePanelWidget(QFrame):
 
     def onMaximize(self):
         self._update_toolbar_buttons(PanelActions.Maximize)
+        self.maximize()
         i = self.panel_container.count()
         while i > -1:
             i -= 1
@@ -144,6 +153,7 @@ class BasePanelWidget(QFrame):
 
     def onMinimize(self):
         self._update_toolbar_buttons(PanelActions.Minimize)
+        self.minimize()
         self.panel_container.removeTab(0)
         # Add the tabs back to the container in sorted order
         panels = sorted(self.panel_container.panel_set, key=lambda x: x.index)
