@@ -425,7 +425,10 @@ class Schema(hashmod.Descriptor):
                 pass
                 # print 'bullshit in', k, vv, vv.descriptor
             else:
-                s(v, attrs=a, timestamp=ts)
+                try:
+                    s(v, attrs=a, timestamp=ts)
+                except (AttributeError, ValueError, TypeError):
+                    print('Ignoring bad configuration value for', vv.key())
         box._set(box._value, timestamp)
 
     def dispatchUserChanges(self, box, hash, attrs=None):
