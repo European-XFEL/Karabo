@@ -1304,6 +1304,24 @@ namespace karabo {
             void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
 
+            /**
+             * Update Schema "maxSize" attribute in place if the path is correct, otherwise throw exception
+             * @param path
+             * @param value
+             * @param emitFlag
+             */
+            void updateSchemaMaxSize(const std::string& path, unsigned int value, bool emitFlag = true) {
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                if (!m_fullSchema.has(path)) {
+                    throw KARABO_PARAMETER_EXCEPTION("Path \"" + path + "\" not found in the device schema.");
+                }
+                m_stateDependentSchema.clear();
+                m_fullSchema.setMaxSize(path, value);
+                if (m_staticSchema.has(path)) m_staticSchema.setMaxSize(path, value);
+                if (m_injectedSchema.has(path)) m_injectedSchema.setMaxSize(path, value);
+                // Notify the distributed system if needed
+                if (emitFlag) emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+            }
 
         protected: // Functions and Classes
 
