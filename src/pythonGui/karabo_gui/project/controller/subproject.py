@@ -3,6 +3,8 @@
 # Created on January 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from collections import defaultdict
+
 from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance, List, on_trait_change
 
@@ -76,6 +78,18 @@ class SubprojectController(ProjectSubgroupController):
     # util methods
 
     def _check_and_add_project(self, project):
+        """Make sure a subproject doesn't have conflicts with the open project
+        """
+        root_project = get_project_model().traits_data_model
+        if self._check_for_duplicate_projects(project, root_project):
+            return
+        if self._check_for_duplicate_devices(project, root_project):
+            return
+
+        # Finally add the subproject
+        self.model.subprojects.append(project)
+
+    def _check_for_duplicate_devices(self, project, root_project):
         """Make sure a subproject doesn't have conflicting device IDs
         """
         device_ids = []
@@ -88,14 +102,34 @@ class SubprojectController(ProjectSubgroupController):
         walk_traits_object(project, visitor)
 
         # ... and make sure they don't already exist in any project
-        root_project = get_project_model().traits_data_model
         if device_instance_exists(root_project, device_ids):
             # Computer says no....
             msg = ('The subproject which you wish to load contains devices<br>'
                    'which already exist in the current project. Therefore <br>'
                    'it will not be added.')
             messagebox.show_warning(msg, title='Device already exists')
-            return
+            return True
+        return False
 
-        # Finally add the subproject
-        self.model.subprojects.append(project)
+    def _check_for_duplicate_projects(self, project, root_project):
+        """Make sure a subproject doesn't include any projects which are
+        already loaded.
+        """
+        project_uuids = defaultdict(int)
+
+        def _visitor(model):
+            """Count the number of times each UUID appears in the tree"""
+            nonlocal project_uuids
+            if isinstance(model, ProjectModel):
+                project_uuids[model.uuid] += 1
+
+        # Walk both projects and count the instances of project models
+        walk_traits_object(project, _visitor)
+        walk_traits_object(root_project, _visitor)
+
+        # If a UUID appeared more than once, we have a problem!
+        if any(v > 1 for v in project_uuids.values()):
+            msg = 'That project OR one of its sub-projects is already loaded!'
+            messagebox.show_warning(msg, title='Load Subproject Failed')
+            return True
+        return False
