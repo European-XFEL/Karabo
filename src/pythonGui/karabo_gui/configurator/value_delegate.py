@@ -147,7 +147,6 @@ class ValueDelegate(QStyledItemDelegate):
             descriptor = getattr(box, 'descriptor', None)
             if box is not None and isinstance(descriptor, VectorHash):
                 self._handle_event_state(box, event, model, option, index)
-                return True
 
         return super(ValueDelegate, self).editorEvent(
             event, model, option, index)
