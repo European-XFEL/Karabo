@@ -246,7 +246,7 @@ namespace karabo {
 
             if (!m_timeServerId.empty()) {
                 KARABO_LOG_FRAMEWORK_DEBUG << m_serverId << ": Connecting to time server \"" << m_timeServerId << "\"";
-                connect(m_timeServerId, "signalTimeTick", "", "slotTimeTick");
+                asyncConnect(m_timeServerId, "signalTimeTick", "", "slotTimeTick");
             }
         }
 
