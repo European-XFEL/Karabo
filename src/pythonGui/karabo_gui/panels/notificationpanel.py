@@ -4,7 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from karabo_gui.events import register_for_broadcasts, KaraboEventSender
+from karabo_gui.events import (
+    register_for_broadcasts, KaraboEventSender, unregister_from_broadcasts
+)
 from karabo_gui.logwidget import LogWidget
 from .base import BasePanelWidget
 
@@ -12,9 +14,8 @@ from .base import BasePanelWidget
 class NotificationPanel(BasePanelWidget):
     def __init__(self):
         super(NotificationPanel, self).__init__("Notifications")
-
+        self.doesDockOnClose = False
         # Register for broadcast events.
-        # This object lives as long as the app. No need to unregister.
         register_for_broadcasts(self)
 
     def get_content_widget(self):
@@ -34,3 +35,12 @@ class NotificationPanel(BasePanelWidget):
             handler = self.logWidget.onNotificationAvailable
             handler(device_id, message_type, short_msg, detailed_msg)
         return False
+
+    def closeEvent(self, event):
+        """Unregister from broadcast events, tell main window to enable
+        the button to add me back.
+        """
+        super(NotificationPanel, self).closeEvent(event)
+        if event.isAccepted():
+            self.signalPanelClosed.emit('Notifications')
+            unregister_from_broadcasts(self)
