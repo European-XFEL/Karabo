@@ -15,6 +15,7 @@ from .base import BasePanelWidget
 class ScriptingPanel(BasePanelWidget):
     def __init__(self):
         super(ScriptingPanel, self).__init__("Console")
+        self.doesDockOnClose = False
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -58,3 +59,9 @@ class ScriptingPanel(BasePanelWidget):
             self.mainLayout.removeWidget(self.console)
             self.console.setParent(None)
             self.console = None
+
+    def closeEvent(self, event):
+        super(ScriptingPanel, self).closeEvent(event)
+        if event.isAccepted():
+            self.signalPanelClosed.emit('Console')
+            self.stopIPython()
