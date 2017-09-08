@@ -881,6 +881,28 @@ class PythonDevice(NoFsm):
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.log.INFO("Schema appended")
 
+    def updateSchemaMaxSize(self, path, value, flag = True):
+        """
+        Update Schema "maxSize" attribute in place if the path is correct,
+        otherwise throw exception
+        :param path indicates the parameter
+        :param value for KARABO_SCHEMA_MAX_SIZE attribute of the parameter
+        :param flag indicates if the GUI should be informed (expensive)
+                    It allows to combine the changes together.
+        """
+        with self._stateChangeLock:
+            if not self.fullSchema.has(path):
+                self._stateDependentSchema = {}
+                self.fullSchema.setMaxSize(path, value)
+            else:
+                raise ValueError("Path \"{}\" not found in the device schema.".format(path))
+            if self.staticSchema.has(path):
+                self.staticSchema.setMaxSize(path, value)
+            if self._injectedSchema.has(path):
+                self._injectedSchema.setMaxSize(path, value)
+            if flag:
+                self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
+
     def setProgress(self, value, associatedText = ""):
         """
         Set progress indicator on this device, use this for processing on
