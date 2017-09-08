@@ -19,6 +19,8 @@ from karabo_gui.util import is_database_processing, set_treeview_header
 from .controller.bases import BaseProjectGroupController
 from .controller.device import DeviceInstanceController
 from .controller.project import ProjectController
+from .controller.project_groups import ProjectSubgroupController
+from .controller.subproject import SubprojectController
 
 
 class ProjectView(QTreeView):
@@ -165,9 +167,10 @@ class ProjectView(QTreeView):
     def _project_controller(self, controller):
         """ Find the parent project controller of a given controller
         """
+        parent_types = (ProjectController, ProjectSubgroupController,
+                        SubprojectController)
         root_controller = self.model().root_controller
-        return find_parent_object(controller, root_controller,
-                                  ProjectController)
+        return find_parent_object(controller, root_controller, parent_types)
 
     def _rename_project(self, project):
         """ Change the ``simple_name`` of the given ``project``
