@@ -5,7 +5,8 @@
 #############################################################################
 from collections import OrderedDict
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QRect, Qt
-from PyQt4.QtGui import QAbstractItemView, QCursor, QTreeView
+from PyQt4.QtGui import (QAbstractItemDelegate, QAbstractItemView, QCursor,
+                         QTreeView)
 
 from karabo.middlelayer import Type
 from karabo_gui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
@@ -186,6 +187,27 @@ class ConfigurationTreeView(QTreeView):
             if index.isValid() and index.column() == 0:
                 self._show_popup_widget(index, event.pos())
         super(ConfigurationTreeView, self).mousePressEvent(event)
+
+    def keyPressEvent(self, event):
+        """Reimplemented function of QTreeView.
+        """
+        key_event = event.key()
+        if key_event in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Escape):
+            # Get current index
+            indexes = self.selectionModel().selectedIndexes()
+            if indexes:
+                index = [idx for idx in indexes if idx.column() == 2][0]
+                # Act on that item
+                if key_event in (Qt.Key_Return, Qt.Key_Enter):
+                    self.value_delegate.update_model_data(
+                        index, QAbstractItemDelegate.SubmitModelCache)
+                    return
+                elif key_event == Qt.Key_Escape:
+                    self.value_delegate.update_model_data(
+                        index, QAbstractItemDelegate.RevertModelCache)
+                    return
+
+        super(ConfigurationTreeView, self).keyPressEvent(event)
 
     # ------------------------------------
     # NOTE: All of these methods are to stay compatible with the existing
