@@ -38,9 +38,9 @@ class AcquiredData(object):
 
     def __repr__(self):
         rep = "{cls}({exp}, size={size})".format(
-              cls=type(self).__name__,
-              exp=self.experimentId,
-              size=self._fifo.maxlen)
+            cls=type(self).__name__,
+            exp=self.experimentId,
+            size=self._fifo.maxlen)
         return rep
 
     def __str__(self):
@@ -185,8 +185,14 @@ class AcquiredFromLog(AcquiredData):
     begin = None
     end = None
     index = 0
+    attrs = []
 
-    def __init__(self, experimentId=None, size=100000):
+    def __init__(self, experimentId, *args):
+        size = 1000000
+        if args and isinstance(args[-1], int):
+            size = args[-1]
+            del args[-1]
+        self.attrs = args
         super().__init__(experimentId, size)
 
     def __next__(self):
@@ -199,31 +205,35 @@ class AcquiredFromLog(AcquiredData):
         return item
 
     @synchronize
-    def queryData(self, *args):
+    def query(self, *attrs, max_attempts=120):
         """
         :param: a list of property strings with the form 'deviceId.property'
         retrieved data are queued in self.data, sorted by timestamp
         """
+        if not attrs:
+            attrs = self.attrs
+
         @coroutine
-        def attempt(coro, *args, **kwargs):
-            attempts = 120
+        def attempt(func, *args, **kwargs):
+            attempts = max_attempts
             ret = None
             while (not ret) and attempts:
                 attempts -= 1
-                ret = yield from coro(*args, **kwargs)
-
+                ret = yield from func(*args, **kwargs)
                 if (not ret) and attempts:
                     yield from sleep(0.5)
             return ret
+
+        print("Fetching {} from logs ...".format(attrs))
 
         self.index = 0
 
         # retrieve steps from scan history assuming there have been only one
         # scan with given deviceId from the big-bang up to now
 
-        self.steps = yield from attempt(getHistory, "{}.stepNum".format(self.experimentId),
-                                    "2010-01-01T00:00:00",
-                                    time.strftime(DATE_FORMAT))
+        self.steps = yield from attempt(
+            getHistory, "{}.stepNum".format(self.experimentId),
+            "2010-01-01T00:00:00", time.strftime(DATE_FORMAT))
 
         # steps has the following format:
         # [(seconds_from_1970, train_id, is_last_of_set, value) ]
@@ -238,16 +248,18 @@ class AcquiredFromLog(AcquiredData):
                                      self.steps[len(self.steps)-1][0]))
 
         # if for any reason end value is wrong, assume end is now
-        if(self.begin >= self.end):
+        if self.begin >= self.end:
             self.end = time.strftime(DATE_FORMAT, time.localtime())
 
         # get IDs of devices used by Scan:
-        his = yield from attempt(getHistory,"{}.boundMovables".format(self.experimentId),
-                                    self.begin, self.end)
+        his = yield from attempt(
+            getHistory, "{}.boundMovables".format(self.experimentId),
+            self.begin, self.end)
         self.movableIds = his[0][3]
 
-        his = yield from attempt(getHistory, "{}.boundSensibles".format(self.experimentId),
-                                    self.begin, self.end)
+        his = yield from attempt(
+            getHistory, "{}.boundSensibles".format(self.experimentId),
+            self.begin, self.end)
         self.measurableIds = his[0][3]
 
         # get properties for each device
@@ -261,7 +273,7 @@ class AcquiredFromLog(AcquiredData):
                 self.bound_devices_properties[m].append(p)
 
         histories = []
-        for prop in args:
+        for prop in attrs:
             his = yield from attempt(getHistory, prop, self.begin, self.end)
 
             # add property name to tuples
@@ -274,6 +286,7 @@ class AcquiredFromLog(AcquiredData):
 
         sorted_histories = heapq.merge(*histories)
 
+        self._fifo.clear()
         for history in sorted_histories:
             # TODO review hash data format according to DAQ specs
             # pack tuple into hash

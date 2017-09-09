@@ -13,7 +13,7 @@ from karabo.usermacro_api.middlelayer import (
 from karabo.usermacro_api.genericproxy import Movable, Sensible
 from karabo.usermacro_api.usermacro import UserMacro
 from karabo.usermacro_api.util import (
-    flatten, meshTrajectory, splitTrajectory)
+    flatten, meshTrajectory, reformat, splitTrajectory)
 from karabo.usermacro_api.dataobjects import (
     AcquiredFromLog, AcquiredOffline, AcquiredOnline)
 # This is required for GenericProxy to
@@ -201,8 +201,8 @@ class AScan(UserMacro):
                     yield from self._sensible.stop()
 
                     if self._sensible.value:
-                        v = repr(self._sensible.value).replace("Quantity", "")
-                        print("  Value: {}".format(v))
+                        print("  Value: {}".format(
+                            reformat(self._sensible.value)))
 
                 step_num += 1
 
@@ -212,9 +212,15 @@ class AScan(UserMacro):
 
         print("-"*linelen)
 
-        return (AcquiredOffline(self.experimentId,
-                                source=self.dataReader) if self.daqDone
-                else AcquiredFromLog(self.experimentId))
+        if self.daqDone:
+            return AcquiredOffline(self.experimentId,
+                                   source=self.dataReader)
+        else:
+            attrs = (
+                ["{}.stepNum".format(self.deviceId)]
+                + [k for k in flatten(self._movable.getBoundParameters())]
+                + [k for k in flatten(self._sensible.getBoundParameters())])
+            return AcquiredFromLog(self.deviceId, *attrs)
 
     @InputChannel(displayedName="Online data source")
     @coroutine
@@ -314,6 +320,11 @@ class TScan(UserMacro):
         unitSymbol=Unit.SECOND,
         accessMode=AccessMode.INITONLY)
 
+    stepNum = UInt32(
+        displayedName="Current step",
+        defaultValue=0,
+        accessMode=AccessMode.READONLY)
+
     dataReader = String(
         displayedName="Offline data source",
         description="",
@@ -364,6 +375,8 @@ class TScan(UserMacro):
                 break
             i += 1
             print("Step {} - at time {}".format(i, elaps))
+            self.stepNum = i
+            self.update()
             yield from self._sensible.acquire()
             yield from waitUntil(
                 lambda: self._sensible.state != State.STOPPED)
@@ -371,16 +384,20 @@ class TScan(UserMacro):
             yield from self._sensible.stop()
 
             if self._sensible.value:
-                v = repr(self._sensible.value).replace("Quantity", "")
-                print("  Value: {}".format(v))
+                print("  Value: {}".format(
+                    reformat(self._sensible.value)))
 
             elaps += self.exposureTime + self.time_epsilon
 
         print("-"*linelen)
 
-        return (AcquiredOffline(self.deviceId,
-                                source=self.dataReader) if self.daqDone
-                else AcquiredFromLog(self.experimentId))
+        if self.daqDone:
+            return AcquiredOffline(self.deviceId,
+                                   source=self.dataReader)
+        else:
+            attrs = [k for k in flatten(
+                self._sensible.getBoundParameters())]
+            return AcquiredFromLog(self.deviceId, *attrs)
 
     @InputChannel(displayedName="Online data source")
     @coroutine

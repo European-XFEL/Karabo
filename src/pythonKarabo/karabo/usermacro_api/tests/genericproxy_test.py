@@ -155,6 +155,12 @@ class Tests(DeviceTest):
             output.value,
             {'deviceId': 'lsim', 'classId': 'LimaSimulatedCamera'})
 
+        output = Sensible('lsim@classid')
+        self.assertIsInstance(output, CamAsSensible)
+        self.assertEqual(
+            output.value,
+            {'classId': 'LimaSimulatedCamera'})
+
     @sync_tst
     def test_wrong_type_instantiation(self):
         output = Movable('lsim')
