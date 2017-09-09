@@ -216,16 +216,11 @@ class AScan(UserMacro):
             return AcquiredOffline(self.experimentId,
                                    source=self.dataReader)
         else:
-            data = AcquiredFromLog(self.deviceId)
-            params = (
+            attrs = (
                 ["{}.stepNum".format(self.deviceId)]
                 + [k for k in flatten(self._movable.getBoundParameters())]
                 + [k for k in flatten(self._sensible.getBoundParameters())])
-            if params:
-                print("Fetching acquired data for {} from logs ..."
-                      .format(params))
-                data.query(*params)
-            return data
+            return AcquiredFromLog(self.deviceId, *attrs)
 
     @InputChannel(displayedName="Online data source")
     @coroutine
@@ -400,13 +395,9 @@ class TScan(UserMacro):
             return AcquiredOffline(self.deviceId,
                                    source=self.dataReader)
         else:
-            data = AcquiredFromLog(self.deviceId)
-            params = [k for k in flatten(
+            attrs = [k for k in flatten(
                 self._sensible.getBoundParameters())]
-            if params:
-                print("Fetching acquired data from logs ...")
-                data.query(*params)
-            return data
+            return AcquiredFromLog(self.deviceId, *attrs)
 
     @InputChannel(displayedName="Online data source")
     @coroutine
