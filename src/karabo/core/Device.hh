@@ -1306,9 +1306,12 @@ namespace karabo {
 
             /**
              * Update Schema "maxSize" attribute in place if the path is correct, otherwise throw exception
-             * @param path
-             * @param value
-             * @param emitFlag
+             * @param path  indicates the parameter
+             * @param value is the new maximum size of the parameter
+             *                 (which should be a vector or TableElement)
+             * @param emitFlag indicates if others should be informed about this Schema update.
+             *                 If this method is called for a bunch of paths, it is recommended to 
+             *                 set this to True only for the last call.
              */
             void updateSchemaMaxSize(const std::string& path, unsigned int value, bool emitFlag = true) {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);

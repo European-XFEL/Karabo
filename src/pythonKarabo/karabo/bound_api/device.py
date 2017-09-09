@@ -886,16 +886,18 @@ class PythonDevice(NoFsm):
         Update Schema "maxSize" attribute in place if the path is correct,
         otherwise throw exception
         :param path indicates the parameter
-        :param value for KARABO_SCHEMA_MAX_SIZE attribute of the parameter
-        :param flag indicates if the GUI should be informed (expensive)
-                    It allows to combine the changes together.
+        :param value is the new maximum size of the parameter
+                (which should be a vector or TableElement)
+        :param flag indicates if others should be informed about this Schema update.
+                If this method is called for a bunch of paths, it is recommended to 
+                set this to True only for the last call.
         """
         with self._stateChangeLock:
             if not self.fullSchema.has(path):
                 self._stateDependentSchema = {}
                 self.fullSchema.setMaxSize(path, value)
             else:
-                raise ValueError("Path \"{}\" not found in the device schema.".format(path))
+                raise KeyError("Path \"{}\" not found in the device schema.".format(path))
             if self.staticSchema.has(path):
                 self.staticSchema.setMaxSize(path, value)
             if self._injectedSchema.has(path):
