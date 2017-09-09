@@ -1,18 +1,22 @@
 # ==== Boilerplate: To be hidden in the future ======
-from asyncio import coroutine, get_event_loop
+from asyncio import coroutine
 
-from karabo.middlelayer import String
+from karabo.middlelayer import background, String
 from karabo.usermacros import AScan, UserMacro
 
 
 class UserTest(UserMacro):
     name = String(defaultValue="UserTest")
+# ========== To be hidden in the future =============
 
     @coroutine
     def execute(self):
-# ========== To be hidden in the future =============
         print("Running {}".format(self.name))
-        loop = get_event_loop()
-        ascan = yield from loop.run_coroutine_or_thread(
-            AScan, "motor1", [1, 10], "cam1", 0.1, True, 5)
-        yield from ascan()
+
+        # Run an AScan and get the data
+        ascan = yield from background(
+            AScan, "motor1@targetPos*", [1, 10], "cam1", 0.1, True, 5)
+        data = yield from ascan()
+
+        # Print the acquired train IDs
+        print(data)
