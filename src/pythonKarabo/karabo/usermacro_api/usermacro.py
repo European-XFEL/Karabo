@@ -23,10 +23,10 @@ def run_usermacro(macro, eventThread=None):
     macro.currentSlot = ""
     macro.state = State.PASSIVE
     yield from macro.slotKillDevice()
+    yield from data.query()
 
     if eventThread:
         eventThread.stop()
-
     return data
 
 
@@ -56,6 +56,8 @@ def run_in_event_loop(macro, *args, **kwargs):
             set_event_loop(NoEventLoop(helper))
 
         loop = EventLoop.global_loop
+        # Mute the event loop
+        loop.set_debug(False)
 
         if isinstance(macro, type):
             # macro is a class, instantiate
