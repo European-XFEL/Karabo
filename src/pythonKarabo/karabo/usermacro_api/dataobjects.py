@@ -1,4 +1,4 @@
-from asyncio import coroutine, get_event_loop, sleep
+from asyncio import coroutine, sleep
 from collections import deque
 import heapq
 import time
@@ -38,9 +38,9 @@ class AcquiredData(object):
 
     def __repr__(self):
         rep = "{cls}({exp}, size={size})".format(
-              cls=type(self).__name__,
-              exp=self.experimentId,
-              size=self._fifo.maxlen)
+            cls=type(self).__name__,
+            exp=self.experimentId,
+            size=self._fifo.maxlen)
         return rep
 
     def __str__(self):
@@ -185,8 +185,14 @@ class AcquiredFromLog(AcquiredData):
     begin = None
     end = None
     index = 0
+    attrs = []
 
-    def __init__(self, experimentId=None, size=100000):
+    def __init__(self, experimentId, *args):
+        size = 1000000
+        if args and isinstance(args[-1], int):
+            size = args[-1]
+            del args[-1]
+        self.attrs = args
         super().__init__(experimentId, size)
 
     def __next__(self):
@@ -199,24 +205,26 @@ class AcquiredFromLog(AcquiredData):
         return item
 
     @synchronize
-    def query(self, *args, max_attempts=120):
+    def query(self, *attrs, max_attempts=120):
         """
         :param: a list of property strings with the form 'deviceId.property'
         retrieved data are queued in self.data, sorted by timestamp
         """
+        if not attrs:
+            attrs = self.attrs
+
         @coroutine
         def attempt(func, *args, **kwargs):
             attempts = max_attempts
             ret = None
             while (not ret) and attempts:
                 attempts -= 1
-                loop = get_event_loop()
-                ret = yield from loop.run_coroutine_or_thread(
-                    func, *args, **kwargs)
-
+                ret = yield from func(*args, **kwargs)
                 if (not ret) and attempts:
                     yield from sleep(0.5)
             return ret
+
+        print("Fetching {} from logs ...".format(attrs))
 
         self.index = 0
 
@@ -240,7 +248,7 @@ class AcquiredFromLog(AcquiredData):
                                      self.steps[len(self.steps)-1][0]))
 
         # if for any reason end value is wrong, assume end is now
-        if(self.begin >= self.end):
+        if self.begin >= self.end:
             self.end = time.strftime(DATE_FORMAT, time.localtime())
 
         # get IDs of devices used by Scan:
@@ -265,7 +273,7 @@ class AcquiredFromLog(AcquiredData):
                 self.bound_devices_properties[m].append(p)
 
         histories = []
-        for prop in args:
+        for prop in attrs:
             his = yield from attempt(getHistory, prop, self.begin, self.end)
 
             # add property name to tuples
