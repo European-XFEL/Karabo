@@ -2,7 +2,8 @@ from enum import Enum
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QStyle
 
-from karabo.middlelayer import AccessMode
+from karabo.middlelayer import AccessMode, Bool, Char, Integer, Number, String
+import karabo_gui.icons as icons
 from karabo_gui.schema import ChoiceOfNodes, Dummy, Schema, VectorHash
 
 
@@ -69,6 +70,31 @@ def get_box_value(box, is_edit_col=False):
             return ''
 
     return value
+
+
+def get_icon(descriptor):
+    """Get the proper icon to show next to a property in the configurator
+    """
+    options = getattr(descriptor, 'options', None)
+    if options is not None:
+        return icons.enum
+
+    icon = icons.undefined
+    if isinstance(descriptor, Char):
+        icon = icons.string
+    elif isinstance(descriptor, String):
+        if descriptor.displayType in ('directory', 'fileIn', 'fileOut'):
+            icon = icons.path
+        else:
+            icon = icons.string
+    elif isinstance(descriptor, Integer):
+        icon = icons.int
+    elif isinstance(descriptor, Number):
+        icon = icons.float
+    elif isinstance(descriptor, Bool):
+        icon = icons.boolean
+
+    return icon
 
 
 def get_vector_col_value(cell_info, is_edit_col=False):
