@@ -4,37 +4,122 @@ from karabo.common.api import State, StateSignifier
 
 
 class States_TestCase(unittest.TestCase):
-    def test_states_signifier(self):
-        s = [State.DISABLED, State.COOLED, State.DECREASING]
-        signifier = StateSignifier()
+    def test_states_signifier_default(self):
+        s = [State.DISABLED, State.COOLED, State.WARM]
+        signifier = StateSignifier(staticMoreSignificant=State.PASSIVE,
+                                   changingMoreSignificant=State.DECREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.WARM)
+        s.append(State.RUNNING)
+        self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
+        s.append(State.HEATING)
+        self.assertIs(signifier.returnMostSignificant(s), State.HEATING)
+        s.append(State.INCREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.INCREASING)
+        s.append(State.COOLING)
+        self.assertIs(signifier.returnMostSignificant(s), State.COOLING)
+        s.append(State.DECREASING)
         self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
-        s.append(State.RAMPING_UP)
+        s.append(State.MOVING)
         self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
-        signifier = StateSignifier(staticMoreSignificant=State.ACTIVE,
-                                   changingMoreSignificant=State.INCREASING)
-        self.assertIs(signifier.returnMostSignificant(s), State.RAMPING_UP)
+        s.append(State.CHANGING)
+        self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
         s.append(State.INTERLOCKED)
         self.assertIs(signifier.returnMostSignificant(s), State.INTERLOCKED)
+        s.append(State.ERROR)
+        self.assertIs(signifier.returnMostSignificant(s), State.ERROR)
+        s.append(State.INIT)
+        self.assertIs(signifier.returnMostSignificant(s), State.INIT)
         s.append(State.UNKNOWN)
         self.assertIs(signifier.returnMostSignificant(s), State.UNKNOWN)
 
-    def test_init_trumps_normal_states(self):
-        signifier = StateSignifier()
-        states = [State.INIT, State.NORMAL, State.CHANGING, State.ACTIVE,
-                  State.PASSIVE]
-        self.assertIs(signifier.returnMostSignificant(states), State.INIT)
+    def test_states_signifier_active_decreasing(self):
+        s = [State.DISABLED, State.COOLED, State.WARM]
+        signifier = StateSignifier(staticMoreSignificant=State.ACTIVE,
+                                   changingMoreSignificant=State.DECREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.COOLED)
+        s.append(State.RUNNING)
+        self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
+        s.append(State.HEATING)
+        self.assertIs(signifier.returnMostSignificant(s), State.HEATING)
+        s.append(State.INCREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.INCREASING)
+        s.append(State.COOLING)
+        self.assertIs(signifier.returnMostSignificant(s), State.COOLING)
+        s.append(State.DECREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
+        s.append(State.MOVING)
+        self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
+        s.append(State.CHANGING)
+        self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
+        s.append(State.INTERLOCKED)
+        self.assertIs(signifier.returnMostSignificant(s), State.INTERLOCKED)
+        s.append(State.ERROR)
+        self.assertIs(signifier.returnMostSignificant(s), State.ERROR)
+        s.append(State.INIT)
+        self.assertIs(signifier.returnMostSignificant(s), State.INIT)
+        s.append(State.UNKNOWN)
+        self.assertIs(signifier.returnMostSignificant(s), State.UNKNOWN)
 
-    def test_interlock_trumps_normal_states(self):
-        signifier = StateSignifier()
-        states = [State.NORMAL, State.CHANGING, State.ACTIVE, State.PASSIVE,
-                  State.INTERLOCKED]
-        self.assertIs(signifier.returnMostSignificant(states),
-                      State.INTERLOCKED)
+    def test_states_signifier_passive_increasing(self):
+        s = [State.DISABLED, State.COOLED, State.WARM]
+        signifier = StateSignifier(staticMoreSignificant=State.PASSIVE,
+                                   changingMoreSignificant=State.INCREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.WARM)
+        s.append(State.RUNNING)
+        self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
+        s.append(State.COOLING)  # decrease
+        self.assertIs(signifier.returnMostSignificant(s), State.COOLING)
+        s.append(State.DECREASING)  # decrease parent
+        self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
+        s.append(State.HEATING)  # increase
+        self.assertIs(signifier.returnMostSignificant(s), State.HEATING)
+        s.append(State.INCREASING)  # increase parent
+        self.assertIs(signifier.returnMostSignificant(s), State.INCREASING)
+        s.append(State.MOVING)  # any other changing state
+        self.assertIs(signifier.returnMostSignificant(s), State.INCREASING)
+        s.append(State.CHANGING)
+        self.assertIs(signifier.returnMostSignificant(s), State.INCREASING)
+        s.append(State.INTERLOCKED)
+        self.assertIs(signifier.returnMostSignificant(s), State.INTERLOCKED)
+        s.append(State.ERROR)
+        self.assertIs(signifier.returnMostSignificant(s), State.ERROR)
+        s.append(State.INIT)
+        self.assertIs(signifier.returnMostSignificant(s), State.INIT)
+        s.append(State.UNKNOWN)
+        self.assertIs(signifier.returnMostSignificant(s), State.UNKNOWN)
+
+    def test_states_signifier_active_increasing(self):
+        s = [State.DISABLED, State.COOLED, State.WARM]
+        signifier = StateSignifier(staticMoreSignificant=State.ACTIVE,
+                                   changingMoreSignificant=State.INCREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.COOLED)
+        s.append(State.RUNNING)
+        self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
+        s.append(State.COOLING)  # decrease
+        self.assertIs(signifier.returnMostSignificant(s), State.COOLING)
+        s.append(State.DECREASING)  # decrease parent
+        self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
+        s.append(State.HEATING)  # increase
+        self.assertIs(signifier.returnMostSignificant(s), State.HEATING)
+        s.append(State.INCREASING)  # increase parent
+        self.assertIs(signifier.returnMostSignificant(s), State.INCREASING)
+        s.append(State.MOVING)
+        self.assertIs(signifier.returnMostSignificant(s), State.INCREASING)
+        s.append(State.CHANGING)
+        self.assertIs(signifier.returnMostSignificant(s), State.INCREASING)
+        s.append(State.INTERLOCKED)
+        self.assertIs(signifier.returnMostSignificant(s), State.INTERLOCKED)
+        s.append(State.ERROR)
+        self.assertIs(signifier.returnMostSignificant(s), State.ERROR)
+        s.append(State.INIT)
+        self.assertIs(signifier.returnMostSignificant(s), State.INIT)
+        s.append(State.UNKNOWN)
+        self.assertIs(signifier.returnMostSignificant(s), State.UNKNOWN)
 
     def test_states_signifier_non_def_list(self):
         trumpList = [State.INTERLOCKED, State.UNKNOWN, State.KNOWN]
         s = [State.DISABLED, State.CHANGING, State.COOLED, State.DECREASING,
-             State.UNKNOWN, State.INTERLOCKED]
+             State.RUNNING, State.UNKNOWN, State.INTERLOCKED]
         signifier = StateSignifier(trumplist=trumpList)
         self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
 
@@ -47,9 +132,13 @@ class States_TestCase(unittest.TestCase):
 
     def test_hierarchy(self):
         # direct parentage
+        self.assertTrue(State.RUNNING.isDerivedFrom(State.NORMAL))
         self.assertTrue(State.CHANGING.isDerivedFrom(State.NORMAL))
+        self.assertTrue(State.INCREASING.isDerivedFrom(State.CHANGING))
+        self.assertTrue(State.DECREASING.isDerivedFrom(State.CHANGING))
         # direct parentage the other way round
         self.assertFalse(State.NORMAL.isDerivedFrom(State.CHANGING))
+        self.assertFalse(State.NORMAL.isDerivedFrom(State.RUNNING))
         # no parentage
         self.assertFalse(State.CHANGING.isDerivedFrom(State.ERROR))
         # the other way round

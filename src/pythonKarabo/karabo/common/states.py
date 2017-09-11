@@ -125,6 +125,7 @@ class State(StateBase, metaclass=ParentEnumMeta):
 
     NORMAL = KNOWN
     STATIC = NORMAL
+
     INTERLOCK_OK = STATIC
 
     CHANGING = NORMAL
@@ -163,6 +164,8 @@ class State(StateBase, metaclass=ParentEnumMeta):
     ENGAGING = INCREASING
     SWITCHING_ON = INCREASING
 
+    RUNNING = NORMAL
+
     PASSIVE = STATIC
     WARM = PASSIVE
     COLD = PASSIVE
@@ -185,8 +188,8 @@ class State(StateBase, metaclass=ParentEnumMeta):
     STARTED = ACTIVE
     LOCKED = ACTIVE
     ENGAGED = ACTIVE
-    ACQUIRING = ACTIVE
     MONITORING = ACTIVE
+    ACQUIRING = ACTIVE
 
     DISABLED = KNOWN
     INTERLOCK_BROKEN = DISABLED
@@ -246,12 +249,12 @@ class StateSignifier:
         """return the most significant state in `iterable`"""
         return min(iterable, key=self.trumpdict.get)
 
-    post = [State.INIT, State.DISABLED]
-
     passive_decrease = []
     active_decrease = [State.INTERLOCKED, State.NORMAL, State.ACTIVE,
-                       State.PASSIVE] + post
+                       State.PASSIVE, State.DISABLED]
     passive_increase = [State.INTERLOCKED, State.INCREASING, State.CHANGING,
-                        State.DECREASING, State.STATIC] + post
+                        State.DECREASING, State.RUNNING, State.STATIC,
+                        State.DISABLED]
     active_increase = [State.INTERLOCKED, State.INCREASING, State.CHANGING,
-                       State.DECREASING, State.ACTIVE, State.PASSIVE] + post
+                       State.DECREASING, State.RUNNING, State.ACTIVE,
+                       State.PASSIVE, State.DISABLED]
