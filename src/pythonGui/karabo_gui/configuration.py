@@ -3,6 +3,8 @@
 # Created on March 7, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import numbers
+import numpy
 import weakref
 
 from PyQt4.QtCore import pyqtSignal, QTimer
@@ -10,8 +12,61 @@ from PyQt4.QtCore import pyqtSignal, QTimer
 from karabo.common.api import DeviceStatus
 from karabo_gui import messagebox
 from karabo_gui.events import KaraboEventSender, broadcast_event
-from karabo_gui.schema import Schema, Box
+from karabo_gui.schema import Box, ChoiceOfNodes, Schema
 from karabo_gui.singletons.api import get_manager, get_network, get_topology
+
+
+def _build_array_cmp(dtype):
+    """Builds a comparison function for numpy arrays"""
+    coerce = dtype.type
+    if coerce is numpy.bool_:
+        coerce = int
+
+    def _array_cmp(a, b):
+        try:
+            return coerce(a) == coerce(b)
+        except ValueError:
+            return False
+
+    return _array_cmp
+
+
+def _cmp(a, b):
+    """Normal comparison"""
+    return a == b
+
+
+def box_has_changes(descriptor, old_value, new_value):
+    """Check whether the given `old_value` differs from the given `new_value`
+    """
+    if old_value is None:
+        has_changes = True
+    elif (isinstance(old_value, (numbers.Complex, numpy.inexact))
+            and not isinstance(old_value, numbers.Integral)):
+        diff = abs(old_value - new_value)
+        absErr = descriptor.absoluteError
+        relErr = descriptor.relativeError
+        if absErr is not None:
+            has_changes = diff >= absErr
+        elif relErr is not None:
+            has_changes = diff >= abs(old_value * relErr)
+        else:
+            has_changes = diff >= 1e-4
+    elif isinstance(old_value, (list, numpy.ndarray)):
+        if len(old_value) != len(new_value):
+            has_changes = True
+        else:
+            has_changes = False
+            cmp = _cmp
+            if isinstance(old_value, numpy.ndarray):
+                cmp = _build_array_cmp(old_value.dtype)
+            for i in range(len(old_value)):
+                if not cmp(old_value[i], new_value[i]):
+                    has_changes = True
+                    break
+    else:
+        has_changes = (str(old_value) != str(new_value))
+    return has_changes
 
 
 class BulkNotifications(object):
@@ -202,11 +257,20 @@ class Configuration(Box):
         """
         # Clear pending status for the box
         key = box.key()
-        self._user_values.pop(key, None)
         if key in self._pending_keys:
+            box.has_conflict = False
             self._pending_keys.remove(key)
+            self._user_values.pop(key, None)
             if not self._pending_keys:
                 self.__busy_timer.stop()
+
+        if key in self._user_values:
+            old_value = self._user_values[key]
+            if box_has_changes(box.descriptor, old_value, value):
+                box.has_conflict = True
+            else:
+                box.has_conflict = False
+                self._user_values.pop(key, None)
 
         if self.bulk_changes:
             self.bulk_list[box] = value, timestamp
