@@ -205,7 +205,9 @@ class AScan(UserMacro):
                             reformat(self._sensible.value)))
 
                 step_num += 1
-
+        # Add an extra step to upper bound last measurements time-wise
+        self.stepNum = step_num
+        self.update()
         # Stop acquisition here for continuous scans
         if (not self.steps) and self._sensible.state == State.ACQUIRING:
             yield from self._sensible.stop()
@@ -389,6 +391,9 @@ class TScan(UserMacro):
 
             elaps += self.exposureTime + self.time_epsilon
 
+        # Add an extra step to upper bound last measurements time-wise
+        self.stepNum += 1
+        self.update()
         print("-"*linelen)
 
         if self.daqDone:

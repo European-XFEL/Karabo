@@ -6,7 +6,7 @@ from karabo.middlelayer import (
     shutdown, sleep, Slot, String, State, Unit, UInt32, VectorUInt8,
     VectorString, waitUntil, waitUntilNew)
 from karabo.middlelayer_api.device_client import (
-    _parse_date, get_instance, _getHistory_new, KaraboError)
+    _parse_date, get_instance, KaraboError)
 from karabo.middlelayer_api.eventloop import (
     EventLoop, NoEventLoop, synchronize)
 from karabo.middlelayer_api.macro import EventThread
