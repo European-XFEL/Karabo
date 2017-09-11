@@ -20,9 +20,10 @@ from karabo_gui.schema import (
     SlotNode, VectorHash, VectorHashCellInfo, VectorHashRowInfo,
     get_editable_attributes
 )
-from karabo_gui.treewidget.utils import get_icon
 from karabo_gui.util import dragged_configurator_items
-from .utils import get_attribute_data, get_box_value, get_vector_col_value
+from .utils import (
+    get_attribute_data, get_box_value, get_icon, get_vector_col_value
+)
 
 
 def _get_child_names(descriptor):
