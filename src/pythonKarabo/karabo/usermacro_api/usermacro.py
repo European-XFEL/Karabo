@@ -3,15 +3,16 @@
 """
 import argparse
 from asyncio import (
-    async, coroutine, Future, get_event_loop, set_event_loop)
+    async, coroutine, Future, get_event_loop, set_event_loop, sleep)
 import socket
 import uuid
 
 from karabo.usermacro_api.middlelayer import (
-    AccessLevel, AccessMode, Bool, Device, DeviceClientBase,
-    EventThread, EventLoop, Float, Macro, MetricPrefix,
-    NoEventLoop, Slot, State, synchronize, Unit)
+    AccessLevel, AccessMode, Bool, connectDevice, Device, DeviceClientBase,
+    EventThread, EventLoop, Float, getDevices, Macro, MetricPrefix,
+    NoEventLoop, Slot, State, synchronize, Unit, waitUntil)
 from karabo.usermacro_api.pipeline import OutputChannel
+from karabo.usermacro_api.util import reformat
 
 
 @coroutine
@@ -22,7 +23,17 @@ def run_usermacro(macro, eventThread=None):
     data = yield from macro.execute()
     macro.currentSlot = ""
     macro.state = State.PASSIVE
+    loggerId = "DataLogger-" + macro.deviceId
+    logger = yield from connectDevice(loggerId)
+    # Data loggers do not flush in their destructor.
+    # and can't the flush interval can't be reconfigured.
+    # Hence, we must wait for data the be flushed.
+    print("Waiting for {} to ensure data logger flush ..."
+          .format(reformat(logger.flushInterval)))
+    yield from sleep(logger.flushInterval.magnitude)
     yield from macro.slotKillDevice()
+    yield from waitUntil(
+        lambda: loggerId not in getDevices())
     yield from data.query()
 
     if eventThread:
