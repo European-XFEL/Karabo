@@ -512,8 +512,6 @@ class PythonDevice(NoFsm):
 
         """
         pars = tuple(args)
-        hadPreviousParameterAlarm = self.validatorIntern\
-                                        .hasParametersInWarnOrAlarm()
         validate = kwargs.get("validate", True)
 
         with self._stateChangeLock:
@@ -636,8 +634,9 @@ class PythonDevice(NoFsm):
                 key = node.getKey()
                 alarmType = desc["type"]
                 if (not silent and
-                    (not key in prevParamsInAlarm
+                    (key not in prevParamsInAlarm
                      or prevParamsInAlarm.get(key + ".type") != alarmType)):
+                    # A new alarm - so it is worth to notify the sysyem:
                     self.log.WARN("{}: {}".format(alarmType, desc["message"]))
                     self._ss.emit("signalNotification", alarmType,
                                   desc["message"], "", self.deviceid)
@@ -1315,7 +1314,7 @@ class PythonDevice(NoFsm):
         try:
             validated = self.validatorExtern.validate(whiteList, unvalidated, self.getActualTimestamp())
         except RuntimeError as e:
-            errorText = str(e) + " in \"" + str(currentState) + "\""
+            errorText = str(e) + " in '" + str(currentState) + "'"
             return (False, errorText, unvalidated)
         self.log.DEBUG("Validated reconfiguration:\n{}".format(validated))
         return (True,"",validated)
