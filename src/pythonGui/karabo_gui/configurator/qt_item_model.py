@@ -3,8 +3,6 @@
 # Created on August 3, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import numbers
-import numpy
 from weakref import WeakValueDictionary
 
 from PyQt4.QtCore import (pyqtSignal, pyqtSlot, QAbstractItemModel,
@@ -14,6 +12,7 @@ from PyQt4.QtGui import QBrush, QColor, QFont
 from karabo.middlelayer import AccessMode, Assignment
 from karabo.common.api import State
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
+from karabo_gui.configuration import box_has_changes
 import karabo_gui.globals as krb_globals
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.schema import (
@@ -39,26 +38,6 @@ def _get_child_names(descriptor):
 
     # `get_editable_attributes` returns an empty list if descriptor is None
     return get_editable_attributes(descriptor)
-
-
-def _build_array_cmp(dtype):
-    """Builds a comparison function for numpy arrays"""
-    coerce = dtype.type
-    if coerce is numpy.bool_:
-        coerce = int
-
-    def _array_cmp(a, b):
-        try:
-            return coerce(a) == coerce(b)
-        except ValueError:
-            return False
-
-    return _array_cmp
-
-
-def _cmp(a, b):
-    """Normal comparison"""
-    return a == b
 
 
 class ConfigurationTreeModel(QAbstractItemModel):
@@ -162,40 +141,12 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def _update_box_data(self, box, new_value):
         """Check for actual box changes by the user before sending it away.
         """
-        value = box.value if box.hasValue() else None
+        old_value = box.value if box.hasValue() else None
         if isinstance(box.descriptor, ChoiceOfNodes):
-            value = box.current  # ChoiceOfNodes is "special"
-
-        if value is None:
-            no_changes = False
-        elif (isinstance(value, (numbers.Complex, numpy.inexact))
-                and not isinstance(value, numbers.Integral)):
-            diff = abs(value - new_value)
-            absErr = box.descriptor.absoluteError
-            relErr = box.descriptor.relativeError
-            if absErr is not None:
-                no_changes = diff < absErr
-            elif relErr is not None:
-                no_changes = diff < abs(value * relErr)
-            else:
-                no_changes = diff < 1e-4
-        elif isinstance(value, (list, numpy.ndarray)):
-            if len(value) != len(new_value):
-                no_changes = False
-            else:
-                no_changes = True
-                cmp = _cmp
-                if isinstance(value, numpy.ndarray):
-                    cmp = _build_array_cmp(value.dtype)
-                for i in range(len(value)):
-                    if not cmp(value[i], new_value[i]):
-                        no_changes = False
-                        break
-        else:
-            no_changes = (str(value) == str(new_value))
-
+            old_value = box.current  # ChoiceOfNodes is "special"
+        has_changes = box_has_changes(box.descriptor, old_value, new_value)
         allowed = box.isAllowed()
-        apply_changed = allowed and not no_changes
+        apply_changed = allowed and has_changes
         if apply_changed:
             # Store the widget value in the Configuration object
             box.configuration.setUserValue(box, new_value)
@@ -531,7 +482,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif role == Qt.BackgroundRole:
                 conf = box.configuration
                 if conf.hasUserValue(box):
-                    color = QColor(*STATE_COLORS[State.CHANGING])
+                    if box.has_conflict:
+                        color = QColor(*STATE_COLORS[State.UNKNOWN])
+                    else:
+                        color = QColor(*STATE_COLORS[State.CHANGING])
                     color.setAlpha(128)
                     return QBrush(color)
 

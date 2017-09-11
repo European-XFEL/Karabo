@@ -71,6 +71,7 @@ class Box(QObject):
         self.current = None  # Support for choice of nodes
         self.visible = 0
         self.rowsInfo = []
+        self.has_conflict = False
 
     def key(self):
         return self.configuration.id + '.' + '.'.join(self.path)
