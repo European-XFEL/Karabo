@@ -102,6 +102,7 @@ namespace karabo {
             static const State ERROR;
             static const State NORMAL;
             static const State STATIC;
+            static const State RUNNING;
             static const State CHANGING;
             static const State PASSIVE;
             static const State ACTIVE;
@@ -164,9 +165,10 @@ namespace karabo {
             static const State SWITCHING_OFF;
 
             static const State HOMING;
+            static const State IGNORING;
+
             static const State ACQUIRING;
             static const State MONITORING;
-            static const State IGNORING;
 
             static const State INTERLOCK_BROKEN;
             static const State INTERLOCK_OK;
