@@ -183,9 +183,9 @@ class AScan(UserMacro):
                                   .format(self._movable.state))
 
             if pause:
+                self.stepNum = step_num
+                self.update()
                 if self.steps or step_num == 0:
-                    self.stepNum = step_num
-                    self.update()
                     yield from self._sensible.acquire()
 
                 if self.steps:
@@ -198,20 +198,17 @@ class AScan(UserMacro):
                     yield from waitUntil(
                         lambda: self._sensible.state != State.STOPPED)
                     yield from sleep(self.exposureTime + self.time_epsilon)
-                    yield from self._sensible.stop()
 
+                if self.steps or step_num == 1:
+                    yield from self._sensible.stop()
                     if self._sensible.value:
                         print("  Value: {}".format(
                             reformat(self._sensible.value)))
 
                 step_num += 1
         # Add an extra step to upper bound last measurements time-wise
-        self.stepNum = step_num
+        self.stepNum += 1
         self.update()
-        # Stop acquisition here for continuous scans
-        if (not self.steps) and self._sensible.state == State.ACQUIRING:
-            yield from self._sensible.stop()
-
         print("-"*linelen)
 
         if self.daqDone:
