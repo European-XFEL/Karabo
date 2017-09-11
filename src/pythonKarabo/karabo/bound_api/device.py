@@ -592,6 +592,11 @@ class PythonDevice(NoFsm):
                     
                 else:
                     validated = hash
+                    # Add timestamps
+                    for path in validated.getPaths():
+                        node = validated.getNode(path)
+                        attributes = node.getAttributes()
+                        stamp.toHashAttributes(attributes)
 
                 if not validated.empty():
                     self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
