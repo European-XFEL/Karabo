@@ -19,18 +19,16 @@ def find_parent_object(model, ancestor_model, search_klass):
     """
     class _Visitor(object):
         found_parent = None
+        parent_candidate = None
 
         def __call__(self, obj, parent):
+            if isinstance(parent, search_klass):
+                self.parent_candidate = parent
             if obj is model:
                 if self.found_parent is not None:
                     msg = "Object {} has more than one parent!"
                     raise RuntimeError(msg.format(obj))
-                if parent is not None and not isinstance(parent, search_klass):
-                    msg = ("Object {} has parent with wrong class '{}'"
-                           " (expected '{}')!")
-                    msg = msg.format(obj, type(parent), search_klass)
-                    raise RuntimeError(msg)
-                self.found_parent = parent
+                self.found_parent = self.parent_candidate
 
     visitor = _Visitor()
     walk_traits_object(ancestor_model, visitor, pass_parent=True)

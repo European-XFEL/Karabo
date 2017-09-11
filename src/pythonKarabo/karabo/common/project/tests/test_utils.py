@@ -25,16 +25,14 @@ def test_find_parent_object():
     parent = find_parent_object(dev0, proj, DeviceServerModel)
     assert parent is serv0
 
-    with assert_raises(RuntimeError):
-        # Give the wrong class for the parent (should be `ProjectModel`)
-        find_parent_object(macro, proj, MacroModel)
-
 
 def test_find_parent_project():
     mac0 = MacroModel()
     mac1 = MacroModel()
+    dev0 = DeviceInstanceModel(instance_id='dev0')
+    serv0 = DeviceServerModel(server_id='serv0', devices=[dev0])
     sub_proj0 = ProjectModel(macros=[mac0])
-    sub_proj1 = ProjectModel(macros=[mac1])
+    sub_proj1 = ProjectModel(macros=[mac1], servers=[serv0])
     proj = ProjectModel(subprojects=[sub_proj0, sub_proj1])
     parentless = MacroModel()
 
@@ -42,6 +40,9 @@ def test_find_parent_project():
     assert parent is sub_proj0
 
     parent = find_parent_object(mac1, proj, ProjectModel)
+    assert parent is sub_proj1
+
+    parent = find_parent_object(dev0, proj, ProjectModel)
     assert parent is sub_proj1
 
     parent = find_parent_object(sub_proj0, proj, ProjectModel)
