@@ -8,6 +8,7 @@ import sys
 import socket
 import re
 import signal
+import traceback
 
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
@@ -511,8 +512,6 @@ class PythonDevice(NoFsm):
 
         """
         pars = tuple(args)
-        hadPreviousParameterAlarm = self.validatorIntern\
-                                        .hasParametersInWarnOrAlarm()
         validate = kwargs.get("validate", True)
 
         with self._stateChangeLock:
@@ -568,21 +567,25 @@ class PythonDevice(NoFsm):
 
                 validated = None
 
-                prevAlarmParams = Hash()
-                if self.validatorIntern.hasParametersInWarnOrAlarm():
-                    prevAlarmParams = self.validatorIntern \
-                        .getParametersInWarnOrAlarm()
+                prevAlarmParams = self.validatorIntern \
+                    .getParametersInWarnOrAlarm()
 
                 if validate:
                     validated = self.validatorIntern.validate(self.fullSchema,
                                                               hash,
                                                               stamp)
-                    resultingCondition = self._evaluateAndUpdateAlarmCondition(forceUpdate=hadPreviousParameterAlarm)
-                    if resultingCondition is not None and resultingCondition.asString() != self.parameters.get("alarmCondition"):
-                        validated.set("alarmCondition", resultingCondition.asString())
-                        node = validated.getNode("alarmCondition")
-                        attributes = node.getAttributes()
-                        stamp.toHashAttributes(attributes)
+                    resultingCondition = self._evaluateAndUpdateAlarmCondition(
+                        forceUpdate=not prevAlarmParams.empty(),
+                        prevParamsInAlarm=prevAlarmParams, silent=False)
+                    # set the overal alarm condition if needed
+                    if (resultingCondition is not None
+                        and resultingCondition.asString()
+                        != self.parameters.get("alarmCondition")):
+                            validated.set("alarmCondition",
+                                          resultingCondition.asString())
+                            node = validated.getNode("alarmCondition")
+                            attributes = node.getAttributes()
+                            stamp.toHashAttributes(attributes)
                     changedAlarms = self._evaluateAlarmUpdates(prevAlarmParams)
 
                     if not changedAlarms.get("toClear").empty() or not \
@@ -614,25 +617,35 @@ class PythonDevice(NoFsm):
                     self._ss.emit("signalChanged", validated, self.deviceid)
                     
 
-    def _evaluateAndUpdateAlarmCondition(self, forceUpdate):
+    def _evaluateAndUpdateAlarmCondition(self, forceUpdate, prevParamsInAlarm,
+                                         silent):
         """
         Evaluate the device's alarm condition as the most severe alarm condition
         present on its properties or explicitly set via `setAlarmCondition`.
         :param forceUpdate: if set to true  the global alarm condition will
                             always be returned, even if no parameter based
                             alarm conditions are present.
+        :param prevParamsInAlarm: parameters in alarm before current update,
+                                  needed only if silent=False
+        :silent: If True, suppress any log messages about changed alarms
         :return:
         """
         if self.validatorIntern.hasParametersInWarnOrAlarm():
             warnings = self.validatorIntern.getParametersInWarnOrAlarm()
             conditions = [self.globalAlarmCondition]
 
-            for key in warnings:
-                desc = warnings[key]
-                self.log.WARN("{}: {}".format(desc["type"],desc["message"]))
-                self._ss.emit("signalNotification", desc["type"],
-                              desc["message"], "", self.deviceid)
-                conditions.append(AlarmCondition.fromString(desc["type"]))
+            for node in warnings:
+                desc = warnings[node]
+                key = node.getKey()
+                alarmType = desc["type"]
+                if (not silent and
+                    (key not in prevParamsInAlarm
+                     or prevParamsInAlarm.get(key + ".type") != alarmType)):
+                    # A new alarm - so it is worth to notify the sysyem:
+                    self.log.WARN("{}: {}".format(alarmType, desc["message"]))
+                    self._ss.emit("signalNotification", alarmType,
+                                  desc["message"], "", self.deviceid)
+                conditions.append(AlarmCondition.fromString(alarmType))
 
             mostSignificantCondition = AlarmCondition\
                                         .returnMostSignificant(conditions)
@@ -1306,7 +1319,7 @@ class PythonDevice(NoFsm):
         try:
             validated = self.validatorExtern.validate(whiteList, unvalidated, self.getActualTimestamp())
         except RuntimeError as e:
-            errorText = str(e) + " in state: \"" + currentState + "\""
+            errorText = str(e) + " in '" + str(currentState) + "'"
             return (False, errorText, unvalidated)
         self.log.DEBUG("Validated reconfiguration:\n{}".format(validated))
         return (True,"",validated)
@@ -1461,7 +1474,9 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             self.globalAlarmCondition = condition
             resultingCondition = \
-                self._evaluateAndUpdateAlarmCondition(forceUpdate=True)
+                self._evaluateAndUpdateAlarmCondition(forceUpdate=True,
+                                                      prevParamsInAlarm=Hash(),
+                                                      silent=True)
             currentCondition = self.parameters.get("alarmCondition")
 
         if (resultingCondition is not None
@@ -1637,6 +1652,7 @@ def launchPythonDevice():
 
         t.join()
         device.__del__()
-    except Exception as e:
-        print("Exception caught: " + str(e))
+    except Exception:
+        print("Exception caught when trying to run a '{}':".format(classid))
+        traceback.print_exc()
     os._exit(77)
