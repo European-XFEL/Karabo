@@ -4,17 +4,18 @@
 
 namespace karabo {
     namespace util {
-        
+
 #define KARABO_INIT_BASE_STATE(X) const State  State::X(#X, NULL);
-        
+
+
         KARABO_INIT_BASE_STATE(UNKNOWN)
         KARABO_INIT_BASE_STATE(KNOWN)
         KARABO_INIT_BASE_STATE(INIT)
 
 #undef KARABO_INIT_BASE_STATE                
-        
 
-                    
+
+
 #define KARABO_INIT_FIXED_STATE(X,Y) const State State::X(#X, &Y);\
                     
         KARABO_INIT_FIXED_STATE(DISABLED, KNOWN)
@@ -22,6 +23,8 @@ namespace karabo {
         KARABO_INIT_FIXED_STATE(ERROR, KNOWN)
 
         KARABO_INIT_FIXED_STATE(NORMAL, KNOWN)
+
+        KARABO_INIT_FIXED_STATE(RUNNING, NORMAL)
 
         KARABO_INIT_FIXED_STATE(STATIC, NORMAL)
 
@@ -59,6 +62,10 @@ namespace karabo {
 
         KARABO_INIT_FIXED_STATE(ENGAGED, ACTIVE)
 
+        KARABO_INIT_FIXED_STATE(MONITORING, ACTIVE)
+
+        KARABO_INIT_FIXED_STATE(ACQUIRING, ACTIVE)
+
 
         KARABO_INIT_FIXED_STATE(WARM, PASSIVE)
 
@@ -78,6 +85,10 @@ namespace karabo {
 
         KARABO_INIT_FIXED_STATE(DISENGAGED, PASSIVE)
 
+        KARABO_INIT_FIXED_STATE(IGNORING, PASSIVE)
+
+
+        KARABO_INIT_FIXED_STATE(HOMING, CHANGING)
 
         KARABO_INIT_FIXED_STATE(ROTATING, CHANGING)
 
@@ -88,6 +99,8 @@ namespace karabo {
         KARABO_INIT_FIXED_STATE(OPENING, CHANGING)
 
         KARABO_INIT_FIXED_STATE(CLOSING, CHANGING)
+
+        KARABO_INIT_FIXED_STATE(SEARCHING, CHANGING)
 
 
         KARABO_INIT_FIXED_STATE(HEATING, INCREASING)
@@ -134,49 +147,46 @@ namespace karabo {
         KARABO_INIT_FIXED_STATE(DISENGAGING, DECREASING)
 
         KARABO_INIT_FIXED_STATE(SWITCHING_OFF, DECREASING)
-        
-        KARABO_INIT_FIXED_STATE(HOMING, CHANGING)
-        KARABO_INIT_FIXED_STATE(ACQUIRING, ACTIVE)
-        KARABO_INIT_FIXED_STATE(MONITORING, ACTIVE)
-        KARABO_INIT_FIXED_STATE(IGNORING, PASSIVE)
-        
-        
+
+
         KARABO_INIT_FIXED_STATE(INTERLOCK_BROKEN, DISABLED)
-        
+
         KARABO_INIT_FIXED_STATE(INTERLOCK_OK, STATIC)
-        
-        KARABO_INIT_FIXED_STATE(SEARCHING, CHANGING)
-        
-        
+
+
+
 
 #undef KARABO_INIT_FIXED_STATE
-        
+
         State::State(const std::string& name, const State* parent) : m_stateName(name), m_parent(parent) {
-            
+
         }
-        
+
+
         bool State::isDerivedFrom(const State& s) const {
             if (m_stateName == s.m_stateName) return true;
             if (m_parent && m_parent->isDerivedFrom(s)) return true;
             return false;
         }
-        
+
         std::map<std::string, const State & > State::m_stateFactory;
-        
+
+
         const State & State::fromString(const std::string & state) {
-            
-            if (m_stateFactory.empty()){
-                #define KARABO_INSERT_STATE_TO_FACTORY(state) m_stateFactory.insert(std::pair<std::string, const State& >(std::string(#state), State::state));
-                
+
+            if (m_stateFactory.empty()) {
+#define KARABO_INSERT_STATE_TO_FACTORY(state) m_stateFactory.insert(std::pair<std::string, const State& >(std::string(#state), State::state));
+
                 KARABO_INSERT_STATE_TO_FACTORY(UNKNOWN)
                 KARABO_INSERT_STATE_TO_FACTORY(KNOWN)
                 KARABO_INSERT_STATE_TO_FACTORY(INIT)
-                        
+
                 KARABO_INSERT_STATE_TO_FACTORY(DISABLED)
                 KARABO_INSERT_STATE_TO_FACTORY(ERROR)
                 KARABO_INSERT_STATE_TO_FACTORY(NORMAL)
                 KARABO_INSERT_STATE_TO_FACTORY(STATIC)
                 KARABO_INSERT_STATE_TO_FACTORY(CHANGING)
+                KARABO_INSERT_STATE_TO_FACTORY(RUNNING)
                 KARABO_INSERT_STATE_TO_FACTORY(PASSIVE)
                 KARABO_INSERT_STATE_TO_FACTORY(ACTIVE)
                 KARABO_INSERT_STATE_TO_FACTORY(DECREASING)
@@ -192,7 +202,8 @@ namespace karabo {
                 KARABO_INSERT_STATE_TO_FACTORY(STARTED)
                 KARABO_INSERT_STATE_TO_FACTORY(LOCKED)
                 KARABO_INSERT_STATE_TO_FACTORY(ENGAGED)
-                
+                KARABO_INSERT_STATE_TO_FACTORY(ACQUIRING)
+
                 KARABO_INSERT_STATE_TO_FACTORY(WARM)
                 KARABO_INSERT_STATE_TO_FACTORY(COLD)
                 KARABO_INSERT_STATE_TO_FACTORY(PRESSURIZED)
@@ -202,7 +213,7 @@ namespace karabo {
                 KARABO_INSERT_STATE_TO_FACTORY(STOPPED)
                 KARABO_INSERT_STATE_TO_FACTORY(UNLOCKED)
                 KARABO_INSERT_STATE_TO_FACTORY(DISENGAGED)
-                        
+
                 KARABO_INSERT_STATE_TO_FACTORY(ROTATING)
                 KARABO_INSERT_STATE_TO_FACTORY(MOVING)
                 KARABO_INSERT_STATE_TO_FACTORY(SWITCHING)
@@ -214,48 +225,47 @@ namespace karabo {
                 KARABO_INSERT_STATE_TO_FACTORY(MOVING_UP)
                 KARABO_INSERT_STATE_TO_FACTORY(MOVING_FORWARD)
                 KARABO_INSERT_STATE_TO_FACTORY(ROTATING_CLK)
-                KARABO_INSERT_STATE_TO_FACTORY(RAMPING_UP)    
-                KARABO_INSERT_STATE_TO_FACTORY(INSERTING)    
-                KARABO_INSERT_STATE_TO_FACTORY(STARTING)    
-                KARABO_INSERT_STATE_TO_FACTORY(FILLING)    
-                KARABO_INSERT_STATE_TO_FACTORY(ENGAGING)    
+                KARABO_INSERT_STATE_TO_FACTORY(RAMPING_UP)
+                KARABO_INSERT_STATE_TO_FACTORY(INSERTING)
+                KARABO_INSERT_STATE_TO_FACTORY(STARTING)
+                KARABO_INSERT_STATE_TO_FACTORY(FILLING)
+                KARABO_INSERT_STATE_TO_FACTORY(ENGAGING)
                 KARABO_INSERT_STATE_TO_FACTORY(SWITCHING_ON)
-                        
+
                 KARABO_INSERT_STATE_TO_FACTORY(COOLING)
                 KARABO_INSERT_STATE_TO_FACTORY(MOVING_LEFT)
                 KARABO_INSERT_STATE_TO_FACTORY(MOVING_DOWN)
                 KARABO_INSERT_STATE_TO_FACTORY(MOVING_BACK)
                 KARABO_INSERT_STATE_TO_FACTORY(ROTATING_CNTCLK)
-                KARABO_INSERT_STATE_TO_FACTORY(RAMPING_DOWN)    
-                KARABO_INSERT_STATE_TO_FACTORY(EXTRACTING)    
-                KARABO_INSERT_STATE_TO_FACTORY(STOPPING)    
-                KARABO_INSERT_STATE_TO_FACTORY(EMPTYING)    
-                KARABO_INSERT_STATE_TO_FACTORY(DISENGAGING)    
-                KARABO_INSERT_STATE_TO_FACTORY(SWITCHING_OFF)   
-                        
-                KARABO_INSERT_STATE_TO_FACTORY(HOMING) 
-                KARABO_INSERT_STATE_TO_FACTORY(ACQUIRING) 
-                KARABO_INSERT_STATE_TO_FACTORY(MONITORING) 
-                KARABO_INSERT_STATE_TO_FACTORY(IGNORING) 
-                        
-                KARABO_INSERT_STATE_TO_FACTORY(INTERLOCK_BROKEN)    
-                KARABO_INSERT_STATE_TO_FACTORY(INTERLOCK_OK)    
-                KARABO_INSERT_STATE_TO_FACTORY(INTERLOCKED)  
-                   
+                KARABO_INSERT_STATE_TO_FACTORY(RAMPING_DOWN)
+                KARABO_INSERT_STATE_TO_FACTORY(EXTRACTING)
+                KARABO_INSERT_STATE_TO_FACTORY(STOPPING)
+                KARABO_INSERT_STATE_TO_FACTORY(EMPTYING)
+                KARABO_INSERT_STATE_TO_FACTORY(DISENGAGING)
+                KARABO_INSERT_STATE_TO_FACTORY(SWITCHING_OFF)
 
-                #undef KARABO_INSERT_STATE_TO_FACTORY
-                
+                KARABO_INSERT_STATE_TO_FACTORY(HOMING)
+                KARABO_INSERT_STATE_TO_FACTORY(MONITORING)
+                KARABO_INSERT_STATE_TO_FACTORY(IGNORING)
+
+                KARABO_INSERT_STATE_TO_FACTORY(INTERLOCK_BROKEN)
+                KARABO_INSERT_STATE_TO_FACTORY(INTERLOCK_OK)
+                KARABO_INSERT_STATE_TO_FACTORY(INTERLOCKED)
+
+
+#undef KARABO_INSERT_STATE_TO_FACTORY
+
             }
-            
-            std::map<std::string, const State &>::const_iterator iter =m_stateFactory.find(state);
-            if(iter == m_stateFactory.end()){
-                throw KARABO_LOGIC_EXCEPTION("State condition  "+state+" does not exist!");
+
+            std::map<std::string, const State &>::const_iterator iter = m_stateFactory.find(state);
+            if (iter == m_stateFactory.end()) {
+                throw KARABO_LOGIC_EXCEPTION("State condition  " + state + " does not exist!");
             } else {
                 return iter->second;
             }
         }
-        
-        
-        
+
+
+
     }
 }
