@@ -1,21 +1,13 @@
 #!/usr/bin/env python
 
-__author__="gero.flucke@xfel.eu"
-__date__ ="September, 2017, 13:45 PM"
-__copyright__="Copyright (c) 2010-2017 European XFEL GmbH Hamburg. All rights reserved."
-
-#import datetime
-#import os
-#import random
-#import threading
-#import time
-#
-#from PIL import Image
-#import numpy as np
+__author__ = "gero.flucke@xfel.eu"
+__date__ = "September, 2017, 13:45 PM"
+__copyright__ = """Copyright (c) 2010-2017 European XFEL GmbH Hamburg.
+All rights reserved."""
 
 from karabo.bound import (
-    KARABO_CLASSINFO, PythonDevice, launchPythonDevice, Hash, #ImageData,
-    Schema, State, Unit, OVERWRITE_ELEMENT,
+    KARABO_CLASSINFO, PythonDevice, Hash,
+    Schema, State, OVERWRITE_ELEMENT,
     ADMIN, AlarmCondition,
     BOOL_ELEMENT, FLOAT_ELEMENT, DOUBLE_ELEMENT, INT32_ELEMENT, UINT32_ELEMENT,
     INT64_ELEMENT, UINT64_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT, STRING_ELEMENT,
@@ -34,9 +26,8 @@ class PropertyTest(PythonDevice):
     def __init__(self, configuration):
         # always call PythonDevice constructor first!
         super(PropertyTest, self).__init__(configuration)
-        # Define the first function to be called after the constructor has finished
+        # Define first function to be called after the constructor has finished
         self.registerInitialFunction(self.initialization)
-
 
     @staticmethod
     def expectedParameters(expected):
@@ -306,14 +297,14 @@ class PropertyTest(PythonDevice):
             .assignmentOptional().defaultValue(-3.14)
             .reconfigurable()
             .commit(),
-            
+
             DOUBLE_ELEMENT(columns).key("e5")
             .displayedName("E5")
             .description("E5 property")
             .assignmentOptional().defaultValue(3.14)
             .reconfigurable()
             .commit(),
-            
+
             TABLE_ELEMENT(expected).key("table")
             .displayedName("Table property")
             .description("Table containing one node.")
@@ -347,18 +338,13 @@ class PropertyTest(PythonDevice):
                 bulkSets[readOnlyProp] = self[prop]
         if bulkSets:
             self.set(bulkSets)
-        
 
     def setAlarm(self):
         try:
             alarm = AlarmCondition.fromString(self["stringProperty"])
         except ValueError as e:
-            self.log.WARN("'{}' is not a valid alarm condition - please adjust "
-                          "'stringProperty'".format(self["stringProperty"]))
+            self.log.WARN("'{}' is not a valid alarm condition - please adjust"
+                          " 'stringProperty'".format(self["stringProperty"]))
         else:
             self.setAlarmCondition(alarm,
                                    description="Converted from stringProperty")
-   
-# This entry used by device server
-if __name__ == "__main__":
-    launchPythonDevice()
