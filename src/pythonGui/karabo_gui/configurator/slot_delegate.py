@@ -60,7 +60,6 @@ class SlotButtonDelegate(QStyledItemDelegate):
             descriptor = getattr(box, 'descriptor', None)
             if box is not None and isinstance(descriptor, SlotNode):
                 self._handle_event_state(box, event, option)
-                return True
 
         return super(SlotButtonDelegate, self).editorEvent(
             event, model, option, index)
