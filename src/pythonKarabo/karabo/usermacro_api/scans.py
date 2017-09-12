@@ -26,7 +26,7 @@ Before setting up a scan you need to define:
  - the exposure time for sensibles (i.e. the amount of time in seconds the
    movable will stop at a given position ) i.e. my_exposure_time=0.1
 
-To run an absolute scan you can now execute
+To run an absolute scan you can now execute:
 
     my_scan = AScan(my_movable, my_positions, my_sensible, my_exposure_time)()
 
@@ -44,8 +44,9 @@ You can run a delta scan by calling:
 
     my_scan = DScan( ... )()
 
-which has the same properties of AScan but position list is interpreted as
-increments relative to current position of movables.
+which has the same properties of AScan but the position list is interpreted as
+increments relative to current position of movables, and the movables will home
+to their starting positions.
 
 
 The scan returns an AcquiredData object that can come from one of these
@@ -57,6 +58,8 @@ During a scan, you can obtain live, lossy data, from the DAQ system, by
 querying the scan:
 
     print(my_scan.data)
+    datum = next(my_scan.data)
+    datum.trainId
 
 The data is stored in the form of hashes in a limited fifo, with the intention
 to be used to check on your scan. To do more advanced analysis, use the
@@ -64,14 +67,14 @@ Offline DAQ data which is provided to you at the end of a scan
 
 Offline DAQ:
 
-Once a scan is done, you will be return an object that obtains scan data from
+Once a scan is done, you will get in return an object that obtains scan data from
 the datalogger, and another that queries the DAQ, granted that its configuration
-could be retrieve.
+could be retrieved.
 
 The offline DAQ object accesses the data stored in the run's HDF5 files, via a
 DataReader. This object is non-lossy, but only stores a limited amount of train
 data in memory, as to not be overwhelming memory intensive. The object will wait
-for an entry to be consumed (that is, poped from the fifo) before receiving the
+for an entry to be consumed (that is, popped from the fifo) before receiving the
 next train data.
 
 Use it as follows:
@@ -96,7 +99,7 @@ function:
     plotdata = plot(my_scan)
 
 It displays a simple default plot windows and returns data in a convenient
-format for custom plots. For more details about this you can run
+format for custom plots. For more details about this you can run:
 
     help(plot)
 
