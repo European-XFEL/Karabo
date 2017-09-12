@@ -25,9 +25,6 @@ from .utils import (
     get_attribute_data, get_box_value, get_icon, get_vector_col_value
 )
 
-DEVICE_HEADERS = ('Property', 'Current value on device', 'Value')
-CLASS_HEADERS = (DEVICE_HEADERS[0], DEVICE_HEADERS[2])
-
 
 def _get_child_names(descriptor):
     """Return all the names of a descriptor's accessible children.
@@ -51,7 +48,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         super(ConfigurationTreeModel, self).__init__(parent)
         self._configuration = None
         self._model_index_refs = WeakValueDictionary()
-        self._header_labels = ()
+        self._header_labels = ('Property', 'Current value on device', 'Value')
 
     # ----------------------------
     # Public interface
@@ -85,9 +82,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
             if conf.type == 'device':
                 sig = conf.boxvalue.state.signalUpdateComponent
                 sig.connect(self._state_update)
-                self._header_labels = DEVICE_HEADERS
-            else:
-                self._header_labels = CLASS_HEADERS
 
     def clear_index_modification(self, index):
         """Clear any stored modifications for the box referenced by `index`
