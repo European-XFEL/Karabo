@@ -1360,6 +1360,15 @@ class Schema(Special):
     def getValueType(self, key):
         return Type.fromname[self.hash[key, "valueType"]]
 
+    def filterByTags(self, *args):
+        args = set(args)
+        h = Hash()
+        for k in self.hash.paths():
+            tags = self.hash[k, ...].get("tags", ())
+            if not args.isdisjoint(tags):
+                h[k] = self.hash[k]
+        return h
+
     def __repr__(self):
         return "Schema('{}', {})".format(self.name, self.hash)
 
