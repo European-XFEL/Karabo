@@ -75,7 +75,8 @@ Optional arguments are:
 - a steps boolean: True by default and impying step-wise scans or False for continuous scans
 
 - the number_of_steps (0 by default) that defines the number
-of steps the trajectory will be split in.
+of steps the trajectory will be split in. If this number is 0, and steps=True,
+the scan will pause at every point of the movable trajectory.
 
 You can run a delta scan by calling:
 
