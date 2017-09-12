@@ -1,13 +1,12 @@
-from asyncio import coroutine, sleep
+from asyncio import coroutine, gather, sleep
 from collections import deque
 import heapq
 import time
 
 from .middlelayer import (
     connectDevice, DeviceClientBase, EventLoop, getDevice, getDevices,
-    getHistory, Hash, InputChannel, shutdown, State,
-    synchronize, waitUntilNew)
-from .util import getConfigurationFromPast, reformat
+    getHistory, Hash, InputChannel, shutdown, State, synchronize, waitUntilNew)
+from .util import getConfigurationFromPast
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
@@ -211,6 +210,8 @@ class AcquiredFromLog(AcquiredData):
         :param: a list of property strings with the form 'deviceId.property'
         retrieved data are queued in self.data, sorted by timestamp
         """
+        minWaitTime = 1
+
         if not attrs:
             attrs = self.attrs
 
@@ -222,14 +223,11 @@ class AcquiredFromLog(AcquiredData):
                 attempts -= 1
                 ret = yield from func(*args, **kwargs)
                 if (not ret) and attempts:
-                    yield from sleep(0.5)
+                    yield from sleep(minWaitTime)
             return ret
-
-        waitForFlush = True
 
         @coroutine
         def _flushLogger(deviceId):
-            nonlocal waitForFlush
             loggerId = "DataLogger-" + deviceId
 
             if loggerId in getDevices():
@@ -237,19 +235,23 @@ class AcquiredFromLog(AcquiredData):
                 flush = getattr(logger, "flush", None)
                 if callable(flush):
                     yield from flush()
-                elif waitForFlush:
+                    return minWaitTime
+                else:
                     # Older data loggers do not flush in their destructor.
                     # and don't have a flush slot
                     # Hence, we must wait for data to be flushed.
-                    print("Waiting for {} to ensure data logger flush ..."
-                          .format(reformat(logger.flushInterval)))
-                    yield from sleep(logger.flushInterval.magnitude)
+                    return logger.flushInterval.magnitude
+            return 0
 
-                    # Inform subsequent calls to this function to not wait
-                    waitForFlush = False
+        deviceIds = (attr.split(".", 1)[0] for attr in attrs)
+        flushes = [_flushLogger(deviceId) for deviceId in deviceIds]
+        waitingTimes = yield from gather(*flushes)
 
-        for deviceId in (attr.split(".", 1)[0] for attr in attrs):
-            yield from _flushLogger(deviceId)
+        waitTime = max(waitingTimes)
+        if waitTime:
+            print("Waiting for {} s to ensure data logger flush ..."
+                  .format(waitTime))
+            yield from sleep(waitTime)
 
         print("Fetching {} from logs ...".format(attrs))
         self.index = 0
