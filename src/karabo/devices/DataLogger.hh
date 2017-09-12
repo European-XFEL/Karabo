@@ -123,6 +123,9 @@ namespace karabo {
             void flushActor(const boost::system::error_code& e);
 
             void doFlush();
+
+            // The flush slot
+            void flush();
             
             /**
              * This device may not be locked
