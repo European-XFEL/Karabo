@@ -51,8 +51,8 @@ class ConfigurationTreeView(QTreeView):
         # Correct row height for middle column
         self.setItemDelegateForColumn(1, ValueDelegate(parent=self))
         # ... and a delegate for the editable value column
-        self.value_delegate = EditDelegate(parent=self)
-        self.setItemDelegateForColumn(2, self.value_delegate)
+        self.edit_delegate = EditDelegate(parent=self)
+        self.setItemDelegateForColumn(2, self.edit_delegate)
 
         # Widget for more information of an index
         self.popup_widget = None
@@ -149,7 +149,7 @@ class ConfigurationTreeView(QTreeView):
         """XXX: PyQt does not send this signal properly in the item delegate,
         so we avoid signals altogether and call it directly...
         """
-        self.value_delegate.close_editor(editor, hint)
+        self.edit_delegate.close_editor(editor, hint)
         super(ConfigurationTreeView, self).closeEditor(editor, hint)
 
     def closeEvent(self, event):
@@ -159,7 +159,7 @@ class ConfigurationTreeView(QTreeView):
     def currentChanged(self, current, previous):
         """Pass selection changes along to the value delegate
         """
-        self.value_delegate.current_changed(current)
+        self.edit_delegate.current_changed(current)
         super(ConfigurationTreeView, self).currentChanged(current, previous)
 
     def karaboBroadcastEvent(self, event):
@@ -190,11 +190,11 @@ class ConfigurationTreeView(QTreeView):
                 index = [idx for idx in indexes if idx.column() == 2][0]
                 # Act on that item
                 if key_event in (Qt.Key_Return, Qt.Key_Enter):
-                    self.value_delegate.update_model_data(
+                    self.edit_delegate.update_model_data(
                         index, QAbstractItemDelegate.SubmitModelCache)
                     return
                 elif key_event == Qt.Key_Escape:
-                    self.value_delegate.update_model_data(
+                    self.edit_delegate.update_model_data(
                         index, QAbstractItemDelegate.RevertModelCache)
                     return
 
