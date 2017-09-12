@@ -1,20 +1,53 @@
 #!/usr/bin/env python3
 
-"""Scantool macros
+"""Scan macros
 
-Scantool macros are currently meant to be run interactively in ikarabo console.
+Scan macros is meant to be run:
+    either interactively in ikarabo or the GUI console,
+    or from a User Macro script.
 
-Before setting up a scan you need to define:
+The general syntax is:
+
+data = AScan|DScan(movable, positions, sensible, exposure_time,
+                   steps=True, number_of_steps=0)
+
+data = AMesh|DMesh(movable, positions_on_axis1, positions_on_axis2, sensible,
+                   exposure_time, steps=True, number_of_steps=0)
+
+data = TScan(sensible, exposure_time, duration)
+
+Before setting up a scan you need to define at least:
  - a movable, which is the set of devices that will be controlled
-   by the scan (e.g. motors),
+   by the scan (e.g. motors, slits),
    Example of movable definition:
    my_movable = Movable('motorId1', 'motorId2', 'motorId3')
 
+   An extended syntax, using case insensitive regular expressions
+   (https://docs.python.org/2/library/re.html), allows to specify
+   the parameters to be fetched from logs at the end of the scan.
+
+   Example of movable definition with parameters-of-interest:
+   my_movable = Movable('motorId1@(encoderPosition|targetPosition)', 'motorId2@.*position$', 'motorId3')
+   Observe that the parameter specification follows a '@' sign. Also note that
+   the second parameter specification *.position$ extends the first specification
+   (encoderPosition|targetPosition) in matching stepCounterPosition and saveLimitPosition as well
+   for Beckhoff simple motors.
+
  - a sensible (measurable), which is the set of devices to acquire scan data
-   from (e.g. detectors, cameras or any other sensor)
+   from (e.g. detectors, cameras, image processors, spectrometers, ADC or any sensor)
    Example of sensible (measurable) definition:
    my_sensible = Sensible('aCameraId1, 'anotherCameraId1', 'aSensorId',
                           'anImageProcessorId')
+
+   An extended syntax, using case insensitive regular expressions allows
+   here also, specifying the set of parameters to be displayed
+   in the console as the scan goes, and to be fetched from the logs
+   when the scan ends.
+   Example of sensible (measurable) definition with parameters-of-interest:
+   my_sensible = Sensible('aCameraId1@frameRate, 'anotherCameraId1@frameCount', 'aSensorId',
+                          'anImageProcessorId@(.*PxValues|[xy]0$)')
+   Here (.*PxValues|[xy]0$) means select Mean, Min and Max Pixels values from the image processor
+   as well as the centers of mass (i.e. x0 and y0).
 
  - a list of positions for the movable, wich contains the coordinates of the
    positions that define movable trajectory (i.e. a list of tuples where the
@@ -23,50 +56,101 @@ Before setting up a scan you need to define:
    Example:
    my_positions = [(0, 1, 1), (1, 2, 2), (4, 6, 6.5), (7, 10, 9.5)]
 
- - the exposure time for sensibles (i.e. the amount of time in seconds the
-   movable will stop at a given position ) i.e. my_exposure_time=0.1
+ - the exposure time for sensibles. The movable will always pause between
+   steps for at least this duration.
+   e.g. my_exposure_time=0.1
 
 To run an absolute scan you can now execute:
 
-    my_scan = AScan(my_movable, my_positions, my_sensible, my_exposure_time)()
+    data = AScan(my_movable, my_positions, my_sensible, my_exposure_time)()
 
-this form will also work:
+This form will also work:
 
-    my_scan = AScan(Movable('motorId1', 'motorId2'),
+    data = AScan(Movable('motorId1', 'motorId2', 'motorId3'),
                     [(0, 1, 1), (1, 2, 2)],
                     Sensible('aCameraId1', 'anImageProcessorId'),
                     0.1)()
 
-optional arguments are number_of_steps (0 by default) that defines the number
-of steps the trajectory will be split in, and steps boolean (True by default)
+Optional arguments are:
+- a steps boolean: True by default and impying step-wise scans or False for continuous scans
+
+- the number_of_steps (0 by default) that defines the number
+of steps the trajectory will be split in.
 
 You can run a delta scan by calling:
 
-    my_scan = DScan( ... )()
+    data = DScan( ... )()
 
 which has the same properties of AScan but the position list is interpreted as
 increments relative to current position of movables, and the movables will home
 to their starting positions.
 
+You can run an Absolute Mesh scan by calling:
+
+    data = AMesh(movable, positions1, positions2, sensible, ...)()
+
+The Delta Mesh scan is denoted DMesh.
+
+A time scan (TScan) runs in a similar way, but does not use movables.
+It only repeatedly acquires then stops a sensible (measurable) after a bit more
+than the exposure time, during a given duration. It sensible
+supports the extended syntax described above and an AcquiredData object is
+also returned.
+
+The helper macro AMove(movable, position) and DMove(movable, position)
+might be useful to switch on and move a given movable in a single command.
 
 The scan returns an AcquiredData object that can come from one of these
-three sources: online DAQ, offline DAQ and data logger.
+three sources: data loggers, online DAQ, offline DAQ.
+
+Data Loggers:
+-------------
+The data object returned by a command line that uses the extended syntax
+data = AScan(...@param1, ...@param2, ....)()
+is ready for plotting. Just type 
+
+     plot(data)
+
+You can also manually load the values of the properties you are interested in 
+into the acquired data fifo:
+
+    data.query('motorId1.aMotorProperty',
+                      'aCameraId1.aCameraProperty',
+                      'anImageProcessorId.aProcessorProperty')
+
+Then you can plot of data by calling the plot()
+function:
+
+    plotdata = plot(data)
+
+It displays a simple default plot windows and returns data in a convenient
+format for custom plots. For more details about this you can run:
+
+    help(plot)
 
 Online DAQ:
+----------
+Let us assume one instantiates an AScan without running it:
+
+    ascan = AScan(Movable('motorId1', 'motorId2'),
+                    [(0, 1), (1, 2)],
+                    Sensible('aCameraId1', 'anImageProcessorId'),
+                    0.1)
+    ascan()
 
 During a scan, you can obtain live, lossy data, from the DAQ system, by
 querying the scan:
 
-    print(my_scan.data)
+    print(ascan.data)
     datum = next(my_scan.data)
     datum.trainId
 
 The data is stored in the form of hashes in a limited fifo, with the intention
 to be used to check on your scan. To do more advanced analysis, use the
-Offline DAQ data which is provided to you at the end of a scan
+Offline DAQ data which is provided to you at the end of a scan.
 
 Offline DAQ:
-
+-----------
 Once a scan is done, you will get in return an object that obtains scan data from
 the datalogger, and another that queries the DAQ, granted that its configuration
 could be retrieved.
@@ -79,30 +163,10 @@ next train data.
 
 Use it as follows:
 
-    log_data, daq_data = myscan([...])()
+    log_data, daq_data = AScan(...)()
     for train_data in daq_data:
         image_frame = NDArray().toKaraboValue(train_data['data.image.data'])
         plt.imshow(image_frame[0, 0, :, :])
-
-Data Logger
-
-You can load the values of the properties you are interested into the
-acquired data fifo:
-
-    my_scan.queryData('motorId1.aMotorProperty',
-                      'aCameraId1.aCameraProperty',
-                      'anImageProcessorId.aProcessorProperty')
-
-Then you can plot of data by calling the plot()
-function:
-
-    plotdata = plot(my_scan)
-
-It displays a simple default plot windows and returns data in a convenient
-format for custom plots. For more details about this you can run:
-
-    help(plot)
-
 """
 
 from ast import literal_eval
