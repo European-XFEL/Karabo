@@ -15,6 +15,7 @@ from karabo_gui.events import (
 from karabo_gui.popupwidget import PopupWidget
 from karabo_gui.schema import (
     EditableAttributeInfo, VectorHashCellInfo, VectorHashRowInfo)
+from .edit_delegate import EditDelegate
 from .qt_item_model import ConfigurationTreeModel
 from .slot_delegate import SlotButtonDelegate
 from .value_delegate import ValueDelegate
@@ -41,14 +42,16 @@ class ConfigurationTreeView(QTreeView):
 
         model = ConfigurationTreeModel(parent=self)
         self.setModel(model)
-        self._set_model_configuration(conf)
+        model.configuration = conf
         model.signalHasModifications.connect(self._update_apply_buttons)
 
         # Add a delegate for rows with slot buttons
         delegate = SlotButtonDelegate(parent=self)
         self.setItemDelegateForColumn(0, delegate)
+        # Correct row height for middle column
+        self.setItemDelegateForColumn(1, ValueDelegate(parent=self))
         # ... and a delegate for the editable value column
-        self.value_delegate = ValueDelegate(parent=self)
+        self.value_delegate = EditDelegate(parent=self)
         self.setItemDelegateForColumn(2, self.value_delegate)
 
         # Widget for more information of an index
@@ -59,18 +62,6 @@ class ConfigurationTreeView(QTreeView):
 
     # ------------------------------------
     # Private methods
-
-    def _set_model_configuration(self, conf):
-        self.model().configuration = conf
-        if conf is None:
-            return
-
-        if conf.type == 'device':
-            # Show second column only for devices
-            self.setColumnHidden(1, False)
-        else:
-            # Hide second column for others
-            self.setColumnHidden(1, True)
 
     def _show_popup_widget(self, index, event_pos):
         # Only if the icon was clicked
@@ -176,8 +167,8 @@ class ConfigurationTreeView(QTreeView):
         if sender is KaraboEventSender.AccessLevelChanged:
             model = self.model()
             config = model.configuration
-            self._set_model_configuration(None)
-            self._set_model_configuration(config)
+            model.configuration = None
+            model.configuration = config
 
         return False
 
@@ -223,7 +214,7 @@ class ConfigurationTreeView(QTreeView):
         pass
 
     def clear(self):
-        self._set_model_configuration(None)
+        self.model().configuration = None
 
     def decline_all(self):
         configuration = self.model().configuration
