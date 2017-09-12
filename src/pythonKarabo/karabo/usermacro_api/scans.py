@@ -28,21 +28,21 @@ Before setting up a scan you need to define:
 
 To run an absolute scan you can now execute:
 
-    my_scan = AScan(my_movable, my_positions, my_sensible, my_exposure_time)()
+    data = AScan(my_movable, my_positions, my_sensible, my_exposure_time)()
 
 this form will also work:
 
-    my_scan = AScan(Movable('motorId1', 'motorId2'),
-                    [(0, 1, 1), (1, 2, 2)],
-                    Sensible('aCameraId1', 'anImageProcessorId'),
-                    0.1)()
+    data = AScan(Movable('motorId1', 'motorId2'),
+                 [(0, 1, 1), (1, 2, 2)],
+                 Sensible('aCameraId1', 'anImageProcessorId'),
+                 0.1)()
 
 optional arguments are number_of_steps (0 by default) that defines the number
 of steps the trajectory will be split in, and steps boolean (True by default)
 
 You can run a delta scan by calling:
 
-    my_scan = DScan( ... )()
+    data = DScan( ... )()
 
 which has the same properties of AScan but the position list is interpreted as
 increments relative to current position of movables, and the movables will home
@@ -89,9 +89,9 @@ Data Logger
 You can load the values of the properties you are interested into the
 acquired data fifo:
 
-    my_scan.queryData('motorId1.aMotorProperty',
-                      'aCameraId1.aCameraProperty',
-                      'anImageProcessorId.aProcessorProperty')
+    log_data.query('motorId1.aMotorProperty',
+                   'aCameraId1.aCameraProperty',
+                   'anImageProcessorId.aProcessorProperty')
 
 Then you can plot of data by calling the plot()
 function:
