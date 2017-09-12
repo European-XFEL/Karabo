@@ -167,6 +167,7 @@ Use it as follows:
     for train_data in daq_data:
         image_frame = NDArray().toKaraboValue(train_data['data.image.data'])
         plt.imshow(image_frame[0, 0, :, :])
+
 """
 
 from ast import literal_eval
