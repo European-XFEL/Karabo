@@ -5,75 +5,101 @@
 Scantool macros are currently meant to be run interactively in ikarabo console.
 
 Before setting up a scan you need to define:
- - a movable, which is the set of devices that will be controlled 
-   by the scan (e.g. motors), 
+ - a movable, which is the set of devices that will be controlled
+   by the scan (e.g. motors),
    Example of movable definition:
-   my_movable = Movable('motorId1', 'motorId2', 'motorId3') 
-   
- - a sensible (measurable), which is the set of devices to acquire scan data 
+   my_movable = Movable('motorId1', 'motorId2', 'motorId3')
+
+ - a sensible (measurable), which is the set of devices to acquire scan data
    from (e.g. detectors, cameras or any other sensor)
    Example of sensible (measurable) definition:
-   my_sensible = Sensible('aCameraId1, 'anotherCameraId1', 'aSensorId', 
-                          'anImageProcessorId') 
-      
- - a list of positions for the movable, wich contains the coordinates of the 
-   positions that define movable trajectory (i.e. a list of tuples where the 
-   number of coordinates must be equal to the number of devices the movable is 
+   my_sensible = Sensible('aCameraId1, 'anotherCameraId1', 'aSensorId',
+                          'anImageProcessorId')
+
+ - a list of positions for the movable, wich contains the coordinates of the
+   positions that define movable trajectory (i.e. a list of tuples where the
+   number of coordinates must be equal to the number of devices the movable is
    made up of)
    Example:
    my_positions = [(0, 1, 1), (1, 2, 2), (4, 6, 6.5), (7, 10, 9.5)]
-   
- - the exposure time for sensibles (i.e. the amount of time in seconds the 
+
+ - the exposure time for sensibles (i.e. the amount of time in seconds the
    movable will stop at a given position ) i.e. my_exposure_time=0.1
-   
+
 To run an absolute scan you can now execute
 
-my_scan = AScan(my_movable, my_positions, my_sensible, my_exposure_time)()
+    my_scan = AScan(my_movable, my_positions, my_sensible, my_exposure_time)()
 
 this form will also work:
-my_scan = AScan(Movable('motorId1', 'motorId2'), [(0, 1, 1), (1, 2, 2)],
-                Sensible('aCameraId1', 'anImageProcessorId'), 0.1)()
 
-optional arguments are number_of_steps (0 by default) that defines the number 
+    my_scan = AScan(Movable('motorId1', 'motorId2'),
+                    [(0, 1, 1), (1, 2, 2)],
+                    Sensible('aCameraId1', 'anImageProcessorId'),
+                    0.1)()
+
+optional arguments are number_of_steps (0 by default) that defines the number
 of steps the trajectory will be split in, and steps boolean (True by default)
-  
-You can run a delta scan by calling
-my_scan = DScan( ... )()
-which has the same properties of AScan but position list is interpreted as 
+
+You can run a delta scan by calling:
+
+    my_scan = DScan( ... )()
+
+which has the same properties of AScan but position list is interpreted as
 increments relative to current position of movables.
 
 
-The scan returns an AcquiredData object that can come from one of these 
-three sources: online DAQ, offline DAQ and data logger. 
+The scan returns an AcquiredData object that can come from one of these
+three sources: online DAQ, offline DAQ and data logger.
 
 Online DAQ:
 
-TODO ...
+During a scan, you can obtain live, lossy data, from the DAQ system, by
+querying the scan:
+
+    print(my_scan.data)
+
+The data is stored in the form of hashes in a limited fifo, with the intention
+to be used to check on your scan. To do more advanced analysis, use the
+Offline DAQ data which is provided to you at the end of a scan
 
 Offline DAQ:
 
-TODO ...
+Once a scan is done, you will be return an object that obtains scan data from
+the datalogger, and another that queries the DAQ, granted that its configuration
+could be retrieve.
 
+The offline DAQ object accesses the data stored in the run's HDF5 files, via a
+DataReader. This object is non-lossy, but only stores a limited amount of train
+data in memory, as to not be overwhelming memory intensive. The object will wait
+for an entry to be consumed (that is, poped from the fifo) before receiving the
+next train data.
+
+Use it as follows:
+
+    log_data, daq_data = myscan([...])()
+    for train_data in daq_data:
+        image_frame = NDArray().toKaraboValue(train_data['data.image.data'])
+        plt.imshow(image_frame[0, 0, :, :])
 
 Data Logger
 
 You can load the values of the properties you are interested into the
 acquired data fifo:
-my_scan.queryData('motorId1.aMotorProperty', 
-                         'aCameraId1.aCameraProperty', 
-                         'anImageProcessorId.aProcessorProperty')
-                         
-Then you can plot of data by calling the plot() 
+
+    my_scan.queryData('motorId1.aMotorProperty',
+                      'aCameraId1.aCameraProperty',
+                      'anImageProcessorId.aProcessorProperty')
+
+Then you can plot of data by calling the plot()
 function:
 
-plotdata = plot(my_scan)
+    plotdata = plot(my_scan)
 
-It displays a simple default plot windows and returns data in a convenient 
+It displays a simple default plot windows and returns data in a convenient
 format for custom plots. For more details about this you can run
 
-help(plot)
+    help(plot)
 
- 
 """
 
 from ast import literal_eval
