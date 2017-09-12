@@ -4,9 +4,10 @@ import heapq
 import time
 
 from .middlelayer import (
-    DeviceClientBase, EventLoop, getDevice, getHistory, Hash,
-    InputChannel, shutdown, State, synchronize, waitUntilNew)
-from .util import getConfigurationFromPast
+    connectDevice, DeviceClientBase, EventLoop, getDevice, getDevices,
+    getHistory, Hash, InputChannel, shutdown, State,
+    synchronize, waitUntilNew)
+from .util import getConfigurationFromPast, reformat
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
@@ -214,7 +215,7 @@ class AcquiredFromLog(AcquiredData):
             attrs = self.attrs
 
         @coroutine
-        def attempt(func, *args, **kwargs):
+        def _attempt(func, *args, **kwargs):
             attempts = max_attempts
             ret = None
             while (not ret) and attempts:
@@ -224,14 +225,39 @@ class AcquiredFromLog(AcquiredData):
                     yield from sleep(0.5)
             return ret
 
-        print("Fetching {} from logs ...".format(attrs))
+        waitForFlush = True
 
+        @coroutine
+        def _flushLogger(deviceId):
+            nonlocal waitForFlush
+            loggerId = "DataLogger-" + deviceId
+
+            if loggerId in getDevices():
+                logger = yield from connectDevice(loggerId)
+                flush = getattr(logger, "flush", None)
+                if callable(flush):
+                    flush()
+                elif waitForFlush:
+                    # Older data loggers do not flush in their destructor.
+                    # and don't have a flush slot
+                    # Hence, we must wait for data to be flushed.
+                    print("Waiting for {} to ensure data logger flush ..."
+                          .format(reformat(logger.flushInterval)))
+                    yield from sleep(logger.flushInterval.magnitude)
+
+                    # Inform subsequent calls to this function to not wait
+                    waitForFlush = False
+
+        for deviceId in (attr.split(".", 1)[0] for attr in attrs):
+            yield from _flushLogger(deviceId)
+
+        print("Fetching {} from logs ...".format(attrs))
         self.index = 0
 
         # retrieve steps from scan history assuming there have been only one
         # scan with given deviceId from the big-bang up to now
 
-        self.steps = yield from attempt(
+        self.steps = yield from _attempt(
             getHistory, "{}.stepNum".format(self.experimentId),
             "2010-01-01T00:00:00", time.strftime(DATE_FORMAT))
 
@@ -252,12 +278,12 @@ class AcquiredFromLog(AcquiredData):
             self.end = time.strftime(DATE_FORMAT, time.localtime())
 
         # get IDs of devices used by Scan:
-        his = yield from attempt(
+        his = yield from _attempt(
             getHistory, "{}.boundMovables".format(self.experimentId),
             self.begin, self.end)
         self.movableIds = his[0][3]
 
-        his = yield from attempt(
+        his = yield from _attempt(
             getHistory, "{}.boundSensibles".format(self.experimentId),
             self.begin, self.end)
         self.measurableIds = his[0][3]
@@ -274,7 +300,7 @@ class AcquiredFromLog(AcquiredData):
 
         histories = []
         for prop in attrs:
-            his = yield from attempt(getHistory, prop, self.begin, self.end)
+            his = yield from _attempt(getHistory, prop, self.begin, self.end)
 
             # add property name to tuples
             his2 = []
