@@ -6,6 +6,9 @@ from karabo.middlelayer import AccessMode, Bool, Char, Integer, Number, String
 import karabo_gui.icons as icons
 from karabo_gui.schema import ChoiceOfNodes, Dummy, Schema, VectorHash
 
+# The fixed height of rows in the configurator
+FIXED_ROW_HEIGHT = 30
+
 
 class ButtonState(Enum):
     PRESSED = QStyle.State_Enabled | QStyle.State_Sunken
