@@ -573,7 +573,11 @@ namespace karabo {
 
 
         void SignalSlotable::startEmittingHeartbeats() {
-            m_heartbeatTimer.expires_from_now(boost::posix_time::milliseconds(10));
+            // Do not immediately emit a heartbeat: All others just got notified about us. If they are interested to
+            // track us, they will not miss our heartbeat before (five times...) our heartbeat interval.
+            // But if we send the heartbeat immediately, in a busy system this first heartbeat might be processed before
+            // our instanceNew which is weird.
+            m_heartbeatTimer.expires_from_now(boost::posix_time::seconds(m_heartbeatInterval / 2 + 1));
             m_heartbeatTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::emitHeartbeat, this,
                                                   boost::asio::placeholders::error));
         }
