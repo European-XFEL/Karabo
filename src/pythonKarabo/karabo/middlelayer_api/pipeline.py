@@ -23,10 +23,11 @@ class Channel(object):
     """This class is responsible for reading and writing Hashes to TCP"""
     sizeCode = "<I"
 
-    def __init__(self, reader, writer):
+    def __init__(self, reader, writer, channelName=None):
         self.reader = reader
         self.writer = writer
         self.drain_lock = Lock()
+        self.channelName = channelName
 
     @coroutine
     def readBytes(self):
@@ -120,7 +121,9 @@ class NetworkInput(Configurable):
             if not ok:
                 return
 
-            if not self.raw:
+            if self.raw:
+                cls = None
+            else:
                 schema = info.get("schema")
                 if schema is None:
                     schema, _ = yield from self.parent.call(
@@ -129,8 +132,9 @@ class NetworkInput(Configurable):
                 cls = ProxyFactory.createProxy(
                     Schema(name=name, hash=schema.hash[name]["schema"]))
 
-            channel = Channel(*(yield from open_connection(info["hostname"],
-                                                           int(info["port"]))))
+            reader, writer = yield from open_connection(
+                info["hostname"], int(info["port"]))
+            channel = Channel(reader, writer, channelName=output)
             with closing(channel):
                 cmd = Hash("reason", "hello",
                            "instanceId", self.parent.deviceId,
@@ -140,35 +144,7 @@ class NetworkInput(Configurable):
                 channel.writeHash(cmd)
                 cmd = Hash("reason", "update",
                            "instanceId", self.parent.deviceId)
-                while True:
-                    try:
-                        header = yield from channel.readHash()
-                    except IncompleteReadError as e:
-                        if e.partial:
-                            raise
-                        else:
-                            self.parent.logger.info(
-                                "stream %s finished", output)
-                            return
-                    data = yield from channel.readBytes()
-                    if "endOfStream" in header:
-                        meta = PipelineMetaData()
-                        meta._onChanged(Hash("source", output))
-                        yield from shield(self.call_handler(None, meta))
-                        continue
-                    pos = 0
-                    for length, meta_hash in zip(header["byteSizes"],
-                                                 header["sourceInfo"]):
-                        chunk = decodeBinary(data[pos:pos + length])
-                        meta = PipelineMetaData()
-                        meta._onChanged(meta_hash)
-                        if self.raw:
-                            yield from shield(self.call_handler(chunk, meta))
-                        else:
-                            proxy = cls()
-                            proxy._onChanged(chunk)
-                            yield from shield(self.call_handler(proxy, meta))
-                        pos += length
+                while (yield from self.readChunk(channel, cls)):
                     channel.writeHash(cmd)
         finally:
             self.connected.pop(output)
@@ -176,6 +152,38 @@ class NetworkInput(Configurable):
             with (yield from self.handler_lock):
                 yield from shield(get_event_loop().run_coroutine_or_thread(
                                   self.close_handler, output))
+
+    @coroutine
+    def readChunk(self, channel, cls):
+        try:
+            header = yield from channel.readHash()
+        except IncompleteReadError as e:
+            if e.partial:
+                raise
+            else:
+                self.parent.logger.info("stream %s finished",
+                                        channel.channelName)
+                return False
+        data = yield from channel.readBytes()
+        if "endOfStream" in header:
+            meta = PipelineMetaData()
+            meta._onChanged(Hash("source", channel.channelName))
+            yield from shield(self.call_handler(None, meta))
+            return True
+        pos = 0
+        for length, meta_hash in zip(header["byteSizes"],
+                                     header["sourceInfo"]):
+            chunk = decodeBinary(data[pos:pos + length])
+            meta = PipelineMetaData()
+            meta._onChanged(meta_hash)
+            if self.raw:
+                yield from shield(self.call_handler(chunk, meta))
+            else:
+                proxy = cls()
+                proxy._onChanged(chunk)
+                yield from shield(self.call_handler(proxy, meta))
+            pos += length
+        return True
 
 
 class InputChannel(Node):
