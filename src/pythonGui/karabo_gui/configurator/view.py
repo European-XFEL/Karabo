@@ -16,7 +16,9 @@ from karabo_gui.events import (
 import karabo_gui.icons as icons
 from karabo_gui.popupwidget import PopupWidget
 from karabo_gui.schema import (
-    Box, EditableAttributeInfo, VectorHashCellInfo, VectorHashRowInfo)
+    Box, EditableAttributeInfo, VectorHash, VectorHashCellInfo,
+    VectorHashRowInfo
+)
 from .edit_delegate import EditDelegate
 from .qt_item_model import ConfigurationTreeModel
 from .slot_delegate import SlotButtonDelegate
@@ -244,14 +246,21 @@ class ConfigurationTreeView(QTreeView):
 
     def keyPressEvent(self, event):
         """Reimplemented function of QTreeView.
+
+        Emulates the QTreeView enter/escape key behavior for rows containing
+        tables. NOTE: All other row types are ignored!
         """
         key_event = event.key()
         if key_event in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Escape):
             # Get current index
             selected_index = self._selected_editable_index()
             if selected_index is not None:
+                # NOTE: Ensure this is a VectorHash!
+                obj = self.model().index_ref(selected_index)
+                is_table = isinstance(getattr(obj, 'descriptor', None),
+                                      VectorHash)
                 # Act on that item
-                if key_event in (Qt.Key_Return, Qt.Key_Enter):
+                if is_table and key_event in (Qt.Key_Return, Qt.Key_Enter):
                     self.edit_delegate.update_model_data(
                         selected_index, QAbstractItemDelegate.SubmitModelCache)
                     return
