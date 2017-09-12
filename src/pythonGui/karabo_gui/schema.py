@@ -17,7 +17,6 @@ from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 from karabo.middlelayer import (
     AccessMode, AccessLevel, NodeType, Hash, Timestamp)
 import karabo.middlelayer_api.hash as hashmod
-from karabo_gui.attributeediting.api import EDITABLE_ATTRIBUTE_NAMES
 import karabo_gui.globals as krb_globals
 from karabo_gui.registry import Monkey
 from karabo_gui.singletons.api import get_network
@@ -31,6 +30,12 @@ SCHEMA_ATTRIBUTE_NAMES = (
     'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
     'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy',
     'relativeError', 'absoluteError', 'rowSchema'
+)
+# The names of attributes which can be edited prior to class instantiation
+EDITABLE_ATTRIBUTE_NAMES = (
+    'minExc', 'maxExc', 'minInc', 'maxInc', 'absoluteError', 'relativeError',
+    'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh', 'metricPrefixSymbol',
+    'unitSymbol'
 )
 
 

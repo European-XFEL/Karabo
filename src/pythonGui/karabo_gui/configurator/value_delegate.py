@@ -13,10 +13,10 @@ from PyQt4.QtGui import (
 )
 
 from karabo.middlelayer import Integer, MetricPrefix, Unit
-from karabo_gui.attributeediting.api import EDITABLE_ATTRIBUTE_NAMES
 from karabo_gui.configurator.dialog.table_edit import TableEditDialog
-from karabo_gui.schema import (EditableAttributeInfo, VectorHash,
-                               VectorHashCellInfo)
+from karabo_gui.schema import (
+    EditableAttributeInfo, VectorHash, VectorHashCellInfo,
+    EDITABLE_ATTRIBUTE_NAMES)
 from karabo_gui.widget import EditableWidget
 from .utils import (ButtonState, get_attribute_data, get_box_value,
                     get_vector_col_value, handle_default_state,
