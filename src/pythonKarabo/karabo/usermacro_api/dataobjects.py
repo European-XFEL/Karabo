@@ -236,7 +236,7 @@ class AcquiredFromLog(AcquiredData):
                 logger = yield from connectDevice(loggerId)
                 flush = getattr(logger, "flush", None)
                 if callable(flush):
-                    flush()
+                    yield from flush()
                 elif waitForFlush:
                     # Older data loggers do not flush in their destructor.
                     # and don't have a flush slot

@@ -12,6 +12,7 @@
 #include "karabo/io/TextSerializer.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/MetaTools.hh"
+#include "karabo/xms/SlotElement.hh"
 
 #include "DataLogger.hh"
 
@@ -22,6 +23,7 @@ namespace karabo {
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
+        using namespace karabo::xms;
 
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger)
@@ -75,6 +77,12 @@ namespace karabo {
             OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
                     .setNewDefaultValue(60)
                     .commit();
+
+            SLOT_ELEMENT(expected).key("flush")
+                    .displayedName("Flush")
+                    .description("Persist buffered data")
+                    .allowedStates(State::NORMAL)
+                    .commit();
         }
 
 
@@ -98,6 +106,7 @@ namespace karabo {
             KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
             KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
             KARABO_SLOT(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
+            KARABO_SLOT(flush);
 
             KARABO_INITIAL_FUNCTION(initialize)
         }
@@ -105,7 +114,8 @@ namespace karabo {
 
         DataLogger::~DataLogger() {
             m_doFlushFiles = false;
-            m_flushDeadline.cancel();
+            if (m_flushDeadline.cancel())
+                doFlush();
 
             slotTagDeviceToBeDiscontinued(true, 'L');
             KARABO_LOG_FRAMEWORK_INFO << this->getInstanceId() << ": dead.";
@@ -426,6 +436,16 @@ namespace karabo {
                 if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
             }
             m_idxMap.clear();
+        }
+
+
+        void DataLogger::flush() {
+            // If the related asynchronous operation cannot be cancelled, the flush might already be running
+            if (m_flushDeadline.cancel()) {
+                doFlush();
+                m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
+                m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
+            }
         }
 
 
