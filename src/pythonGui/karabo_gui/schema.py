@@ -10,8 +10,10 @@
 
 from collections import OrderedDict
 from functools import partial
+import numbers
 import weakref
 
+import numpy as np
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from karabo.middlelayer import (
@@ -37,6 +39,57 @@ EDITABLE_ATTRIBUTE_NAMES = (
     'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh', 'metricPrefixSymbol',
     'unitSymbol'
 )
+
+
+def box_has_changes(descriptor, old_value, new_value):
+    """Check whether the given `old_value` differs from the given `new_value`
+    """
+    def _build_array_cmp(dtype):
+        """Builds a comparison function for numpy arrays"""
+        coerce = dtype.type
+        if coerce is np.bool_:
+            coerce = int
+
+        def _array_cmp(a, b):
+            try:
+                return coerce(a) == coerce(b)
+            except ValueError:
+                return False
+
+        return _array_cmp
+
+    def _cmp(a, b):
+        return a == b
+
+    # Check if changes were made
+    if old_value is None:
+        has_changes = True
+    elif (isinstance(old_value, (numbers.Complex, np.inexact))
+            and not isinstance(old_value, numbers.Integral)):
+        diff = abs(old_value - new_value)
+        absErr = descriptor.absoluteError
+        relErr = descriptor.relativeError
+        if absErr is not None:
+            has_changes = diff >= absErr
+        elif relErr is not None:
+            has_changes = diff >= abs(old_value * relErr)
+        else:
+            has_changes = diff >= 1e-4
+    elif isinstance(old_value, (list, np.ndarray)):
+        if len(old_value) != len(new_value):
+            has_changes = True
+        else:
+            has_changes = False
+            cmp = _cmp
+            if isinstance(old_value, np.ndarray):
+                cmp = _build_array_cmp(old_value.dtype)
+            for i in range(len(old_value)):
+                if not cmp(old_value[i], new_value[i]):
+                    has_changes = True
+                    break
+    else:
+        has_changes = (str(old_value) != str(new_value))
+    return has_changes
 
 
 class Box(QObject):
@@ -233,9 +286,12 @@ class Type(hashmod.Type, metaclass=Monkey):
         self.attributeInfo = EditableAttributeInfo(box, box.descriptor)
         box._set(value, timestamp)
 
-    def dispatchUserChanges(self, box, hash, attrs=None):
+    def dispatchUserChanges(self, box, value, attrs=None):
         self._copyAttrs(box, attrs)
-        box.signalUserChanged.emit(box, box.descriptor.cast(hash), None)
+        value = box.descriptor.cast(value)
+        if box_has_changes(box.descriptor, box.value, value):
+            box.configuration.setUserValue(box, value)
+        box.signalUserChanged.emit(box, value, None)
 
     def setDefault(self, box):
         if self.defaultValue is not None:
@@ -437,9 +493,10 @@ class Schema(hashmod.Descriptor):
                     print('Ignoring bad configuration value for', vv.key())
         box._set(box._value, timestamp)
 
-    def dispatchUserChanges(self, box, hash, attrs=None):
-        for k, v, a in hash.iterall():
+    def dispatchUserChanges(self, box, value, attrs=None):
+        for k, v, a in value.iterall():
             getattr(box.boxvalue, k).dispatchUserChanges(v, attrs=a)
+        box.signalUserChanged.emit(box, value, None)
 
     def setDefault(self, box):
         box._value = self.getClass()(box)
