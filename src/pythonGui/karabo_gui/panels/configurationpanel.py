@@ -3,8 +3,6 @@
 # Created on November 3, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os
-
 from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QMenu, QPalette, QPushButton,
                          QScrollArea, QSplitter, QStackedWidget, QToolButton,
@@ -17,19 +15,10 @@ from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.project.view import ProjectView
 from karabo_gui.singletons.api import get_manager
 from karabo_gui.toolbar import ToolBar
-from karabo_gui.treewidget.api import (
-    ParameterTreeWidget, fill_parameter_tree_widget)
 from karabo_gui.util import (
     get_spin_widget, loadConfigurationFromFile, saveConfigurationToFile
 )
 from .base import BasePanelWidget
-
-# XXX: Hide the refactored configuration tree view with a feature flag
-if 'NEW_CONFIGURATOR' in os.environ:
-    # Use the new lazily-built configurator
-    ParameterTreeKlass = ConfigurationTreeView
-else:
-    ParameterTreeKlass = ParameterTreeWidget
 
 
 class ConfigurationPanel(BasePanelWidget):
@@ -74,8 +63,7 @@ class ConfigurationPanel(BasePanelWidget):
         # Stacked widget for configuration parameters
         self.__swParameterEditor = QStackedWidget(None)
         # Initial page
-        twInitalParameterEditorPage = ParameterTreeKlass()
-        twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
+        twInitalParameterEditorPage = ConfigurationTreeView()
         self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
 
         # Wait page
@@ -294,8 +282,6 @@ class ConfigurationPanel(BasePanelWidget):
         elif event.sender is KaraboEventSender.NetworkConnectStatus:
             if not data['status']:
                 self._resetPanel()
-        elif event.sender is KaraboEventSender.AccessLevelChanged:
-            self.onGlobalAccessLevelChanged()
 
         return False
 
@@ -396,9 +382,8 @@ class ConfigurationPanel(BasePanelWidget):
         elif configuration.parameterEditor is None:
             # The configuration needs its editor rebuilt
             index = configuration.index
-            twParameterEditor = self.__swParameterEditor.widget(index)
-            twParameterEditor.clear()
-            fill_parameter_tree_widget(twParameterEditor, configuration)
+            tree_widget = self.__swParameterEditor.widget(index)
+            self._set_tree_widget_configuration(tree_widget, configuration)
         else:
             # Everything is ready to go!
             index = configuration.index
@@ -420,27 +405,19 @@ class ConfigurationPanel(BasePanelWidget):
             self.showConfiguration(configuration)
 
     def _createNewParameterPage(self, configuration):
-        twParameterEditor = ParameterTreeKlass(configuration)
-        twParameterEditor.setHeaderLabels([
-            "Parameter", "Current value on device", "Value"])
+        tree_widget = ConfigurationTreeView(configuration)
 
-        twParameterEditor.addContextMenu(self.openMenu)
-        twParameterEditor.addContextMenu(self.saveMenu)
-        twParameterEditor.addContextSeparator()
-        twParameterEditor.addContextAction(self.acKillInstance)
-        twParameterEditor.addContextAction(self.acApplyAll)
-        twParameterEditor.addContextAction(self.acResetAll)
-        twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
-        twParameterEditor.itemSelectionChanged.connect(self.onSelectionChanged)
+        tree_widget.signalApplyChanged.connect(self.onApplyChanged)
+        self._set_tree_widget_configuration(tree_widget, configuration)
 
-        if configuration.type in ("class", "projectClass"):
-            twParameterEditor.hideColumn(1)
-
-        if configuration is not None:
-            fill_parameter_tree_widget(twParameterEditor, configuration)
-
-        index = self.__swParameterEditor.addWidget(twParameterEditor)
+        index = self.__swParameterEditor.addWidget(tree_widget)
         return index
+
+    def _set_tree_widget_configuration(self, tree_widget, configuration):
+        tree_widget.model().configuration = configuration
+        configuration.parameterEditor = tree_widget
+        tree_widget.resizeColumnToContents(0)
+        tree_widget.resizeColumnToContents(1)
 
     # ----------------------------------------------------------------------
     # getter functions
@@ -670,13 +647,6 @@ class ConfigurationPanel(BasePanelWidget):
         self._setResetAllEnabled(box.configuration, enable)
         self.hasConflicts = hasConflicts
 
-    def onSelectionChanged(self):
-        """Update the apply and reset buttons
-        """
-        conf = self.sender().conf
-        self.updateApplyAllActions(conf)
-        self.updateResetAllActions(conf)
-
     def onOpenFromFile(self):
         if self.prevConfiguration is not None:
             loadConfigurationFromFile(self.prevConfiguration)
@@ -727,9 +697,3 @@ class ConfigurationPanel(BasePanelWidget):
         deviceId = indexInfo.get('deviceId')
         config = indexInfo.get('config')
         get_manager().initDevice(serverId, classId, deviceId, config)
-
-    def onGlobalAccessLevelChanged(self):
-        for index in range(self.__swParameterEditor.count()):
-            twParameterEditor = self.__swParameterEditor.widget(index)
-            if isinstance(twParameterEditor, ParameterTreeWidget):
-                twParameterEditor.globalAccessLevelChanged()
