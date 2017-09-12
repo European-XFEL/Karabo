@@ -4,17 +4,19 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import OrderedDict
+from functools import partial
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QRect, Qt
-from PyQt4.QtGui import (QAbstractItemDelegate, QAbstractItemView, QCursor,
-                         QTreeView)
+from PyQt4.QtGui import (QAbstractItemDelegate, QAbstractItemView, QAction,
+                         QCursor, QMenu, QTreeView)
 
 from karabo.middlelayer import Type
 from karabo_gui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
 from karabo_gui.events import (
     KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
+import karabo_gui.icons as icons
 from karabo_gui.popupwidget import PopupWidget
 from karabo_gui.schema import (
-    EditableAttributeInfo, VectorHashCellInfo, VectorHashRowInfo)
+    Box, EditableAttributeInfo, VectorHashCellInfo, VectorHashRowInfo)
 from .edit_delegate import EditDelegate
 from .qt_item_model import ConfigurationTreeModel
 from .slot_delegate import SlotButtonDelegate
@@ -59,6 +61,9 @@ class ConfigurationTreeView(QTreeView):
 
         # Don't forget to unregister!
         register_for_broadcasts(self)
+
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._show_context_menu)
 
     # ------------------------------------
     # Private methods
@@ -146,6 +151,53 @@ class ConfigurationTreeView(QTreeView):
         self.popup_widget.move(pos)
         self.popup_widget.show()
 
+    def _selected_editable_index(self):
+        """Return the currently selected editable index
+        """
+        indexes = self.selectionModel().selectedIndexes()
+        if indexes:
+            last_column = self.model().columnCount() - 1
+            index = [idx for idx in indexes if idx.column() == last_column][0]
+            if index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable:
+                return index
+
+    @pyqtSlot(object)
+    def _show_context_menu(self, event):
+        """Show a custom context menu
+        """
+        selected_index = self._selected_editable_index()
+        if selected_index is None:
+            return None
+
+        selected_obj = self.model().index_ref(selected_index)
+        descriptor = getattr(selected_obj, 'descriptor', None)
+        if (isinstance(selected_obj, Box) and descriptor is not None and
+                descriptor.defaultValue is not None):
+            menu = QMenu()
+            text = "Reset to default"
+            acResetToDefault = QAction(icons.revert, text, None)
+            acResetToDefault.setStatusTip(text)
+            acResetToDefault.setToolTip(text)
+            acResetToDefault.setIconVisibleInMenu(True)
+            acResetToDefault.triggered.connect(partial(self._reset_to_default,
+                                                       selected_obj))
+            menu.addAction(acResetToDefault)
+            menu.exec(QCursor.pos())
+
+    @pyqtSlot(object)
+    def _reset_to_default(self, box):
+        """Reset the value of the given `box` to the default
+        """
+        descriptor = box.descriptor
+        if descriptor is not None:
+            default_value = descriptor.defaultValue
+            configuration = box.configuration
+            if configuration.type == "device":
+                configuration.setUserValue(box, default_value)
+            else:
+                box.set(default_value)
+                configuration.signalBoxChanged.emit()
+
     @pyqtSlot(bool)
     def _update_apply_buttons(self, buttons_enabled):
         """The model is telling us to enable/disable the apply/decline buttons
@@ -196,17 +248,16 @@ class ConfigurationTreeView(QTreeView):
         key_event = event.key()
         if key_event in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Escape):
             # Get current index
-            indexes = self.selectionModel().selectedIndexes()
-            if indexes:
-                index = [idx for idx in indexes if idx.column() == 2][0]
+            selected_index = self._selected_editable_index()
+            if selected_index is not None:
                 # Act on that item
                 if key_event in (Qt.Key_Return, Qt.Key_Enter):
                     self.edit_delegate.update_model_data(
-                        index, QAbstractItemDelegate.SubmitModelCache)
+                        selected_index, QAbstractItemDelegate.SubmitModelCache)
                     return
                 elif key_event == Qt.Key_Escape:
                     self.edit_delegate.update_model_data(
-                        index, QAbstractItemDelegate.RevertModelCache)
+                        selected_index, QAbstractItemDelegate.RevertModelCache)
                     return
 
         super(ConfigurationTreeView, self).keyPressEvent(event)
