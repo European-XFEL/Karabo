@@ -98,6 +98,8 @@ namespace karabo {
             // Note that SignalSlotable registered already a function for "slotInstanceUpdated" - both will be called
             p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated");
             p->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::_slotLoggerMap, this, _1), "_slotLoggerMap");
+
+            // No advantage from asyncConnect since connecting to one's own signal is just a call chain:
             p->connect("", "signalInstanceNew", "", "_slotInstanceNew");
             p->connect("", "signalInstanceGone", "", "_slotInstanceGone");
         }
