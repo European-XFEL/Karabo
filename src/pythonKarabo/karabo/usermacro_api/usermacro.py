@@ -24,7 +24,6 @@ def run_usermacro(macro, eventThread=None):
     data = yield from macro.execute()
     macro.currentSlot = ""
     macro.state = State.PASSIVE
-    yield from data.query()
     yield from macro.slotKillDevice()
 
     if eventThread:
