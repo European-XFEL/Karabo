@@ -1,6 +1,7 @@
 from asyncio import (
     coroutine, get_event_loop, IncompleteReadError, Lock, open_connection,
     shield)
+from contextlib import closing
 import os
 from struct import pack, unpack, calcsize
 
@@ -50,6 +51,10 @@ class Channel(object):
     def drain(self):
         with (yield from self.drain_lock):
             yield from self.writer.drain()
+
+    def close(self):
+        # WHY IS THE READER NOT CLOSEABLE??
+        self.writer.close()
 
 
 class NetworkInput(Configurable):
@@ -126,41 +131,45 @@ class NetworkInput(Configurable):
 
             channel = Channel(*(yield from open_connection(info["hostname"],
                                                            int(info["port"]))))
-            cmd = Hash("reason", "hello", "instanceId", self.parent.deviceId,
-                       "memoryLocation", "remote",
-                       "dataDistribution", self.dataDistribution,
-                       "onSlowness", self.onSlowness)
-            channel.writeHash(cmd)
-            cmd = Hash("reason", "update", "instanceId", self.parent.deviceId)
-            while True:
-                try:
-                    header = yield from channel.readHash()
-                except IncompleteReadError as e:
-                    if e.partial:
-                        raise
-                    else:
-                        self.parent.logger.info("stream %s finished", output)
-                        return
-                data = yield from channel.readBytes()
-                if "endOfStream" in header:
-                    meta = PipelineMetaData()
-                    meta._onChanged(Hash("source", output))
-                    yield from shield(self.call_handler(None, meta))
-                    continue
-                pos = 0
-                for length, meta_hash in zip(header["byteSizes"],
-                                             header["sourceInfo"]):
-                    chunk = decodeBinary(data[pos:pos + length])
-                    meta = PipelineMetaData()
-                    meta._onChanged(meta_hash)
-                    if self.raw:
-                        yield from shield(self.call_handler(chunk, meta))
-                    else:
-                        proxy = cls()
-                        proxy._onChanged(chunk)
-                        yield from shield(self.call_handler(proxy, meta))
-                    pos += length
+            with closing(channel):
+                cmd = Hash("reason", "hello",
+                           "instanceId", self.parent.deviceId,
+                           "memoryLocation", "remote",
+                           "dataDistribution", self.dataDistribution,
+                           "onSlowness", self.onSlowness)
                 channel.writeHash(cmd)
+                cmd = Hash("reason", "update",
+                           "instanceId", self.parent.deviceId)
+                while True:
+                    try:
+                        header = yield from channel.readHash()
+                    except IncompleteReadError as e:
+                        if e.partial:
+                            raise
+                        else:
+                            self.parent.logger.info(
+                                "stream %s finished", output)
+                            return
+                    data = yield from channel.readBytes()
+                    if "endOfStream" in header:
+                        meta = PipelineMetaData()
+                        meta._onChanged(Hash("source", output))
+                        yield from shield(self.call_handler(None, meta))
+                        continue
+                    pos = 0
+                    for length, meta_hash in zip(header["byteSizes"],
+                                                 header["sourceInfo"]):
+                        chunk = decodeBinary(data[pos:pos + length])
+                        meta = PipelineMetaData()
+                        meta._onChanged(meta_hash)
+                        if self.raw:
+                            yield from shield(self.call_handler(chunk, meta))
+                        else:
+                            proxy = cls()
+                            proxy._onChanged(chunk)
+                            yield from shield(self.call_handler(proxy, meta))
+                        pos += length
+                    channel.writeHash(cmd)
         finally:
             self.connected.pop(output)
             self.connectedOutputChannels = list(self.connected)
