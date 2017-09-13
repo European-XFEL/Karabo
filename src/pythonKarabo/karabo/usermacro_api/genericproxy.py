@@ -49,16 +49,25 @@ class GenericProxy(object):
         raise KaraboError(msg)
 
     @classmethod
-    def create_generic_proxy(cls, proxy):
+    def create_generic_proxy(cls, proxy, firstcls):
         """Create generalized interface from device ID"""
         if proxy.classId in getattr(cls, "generalizes", []):
             obj = object.__new__(cls)
             obj._proxy = proxy
             return obj
+
         for subclass in cls.__subclasses__():
-            generic_proxy = subclass.create_generic_proxy(proxy)
+            generic_proxy = subclass.create_generic_proxy(proxy, firstcls)
             if generic_proxy:
                 return generic_proxy
+
+        if cls is not GenericProxy and cls is firstcls:
+            # No custom adapter found. Use directly
+            # the default implementation in Generic classes
+            # Movable, Sensible...
+            obj = object.__new__(firstcls)
+            obj._proxy = proxy
+            return obj
 
     @classmethod
     def create_generic_proxy_container(cls, gproxies):
@@ -80,12 +89,12 @@ class GenericProxy(object):
                     try:
                         proxy = connectDevice(
                             deviceId, timeout=cls.proxy_ops_timeout)
-                        ret = cls.create_generic_proxy(proxy)
+                        ret = cls.create_generic_proxy(proxy, cls)
 
                         if not (ret or cls is GenericProxy):
-                            # No custom adapter found. Use directly
-                            # the default implementation in Generic classes
-                            # Movable, Sensible...
+                            # No custom adapter found.
+                            # But the class is not so generic
+                            # use it then.
                             ret = object.__new__(cls)
                             ret._proxy = proxy
 
@@ -111,7 +120,7 @@ class GenericProxy(object):
                     else:
                         # Assume it's a string, and delegate the problem
                         # to instantiation if it isn't
-                        gproxy = GenericProxy(device)
+                        gproxy = cls(device)
 
                     if not gproxies or (gproxies
                                         and isinstance(gproxy,
