@@ -42,7 +42,7 @@ def splitTrajectory(pos_list, number_of_steps):
     """
     fepsilon = 1e-3
     if number_of_steps == 0:
-        # Path Scan case
+        # Path scan / Continuous scan case
         itpos = iter(pos_list)
         while True:
             # Instruct to pause at every point
