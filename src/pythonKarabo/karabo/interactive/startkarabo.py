@@ -300,18 +300,20 @@ def adddeviceserver():
     tmpdir = mkdtemp(dir=absolute("var", "service"), prefix=".tmp-")
 
     try:
-        # the "opener" argument magically makes the file executable
-        with open(osp.join(tmpdir, "run"), "w", opener=os.open) as fout:
+        with open(osp.join(tmpdir, "run"), "w") as fout:
             fout.write(server_template.format(
                 server_type=server_type, server_id=server_id,
                 options="'{}'".format("' '".join(options)) if options else ""))
+            # make file executable, but not writable
+            os.chmod(fout.fileno(), 0o555)
         open(osp.join(tmpdir, "down"), "w").close()
         open(osp.join(tmpdir, "orphanage"), "w").close()
         with open(osp.join(tmpdir, "name"), "w") as fout:
             fout.write(server_id)
         os.mkdir(osp.join(tmpdir, "log"))
-        with open(osp.join(tmpdir, "log", "run"), "w", opener=os.open) as fout:
+        with open(osp.join(tmpdir, "log", "run"), "w") as fout:
             fout.write(logger_template.format(target_dir=target_dir))
+            os.chmod(fout.fileno(), 0o555)
         os.rename(tmpdir, abs_target)
     except:
         shutil.rmtree(tmpdir)
