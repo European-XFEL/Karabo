@@ -1440,6 +1440,11 @@ class HashElement(object):
         self.data = data
         self.attrs = attrs
 
+    def __eq__(self, other):
+        if isinstance(other, HashElement):
+            return self.data == other.data and self.attrs == other.attrs
+        return super().__eq__(other)
+
 
 class Hash(OrderedDict):
     """This is the serialization data structure of Karabo
