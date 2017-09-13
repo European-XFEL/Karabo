@@ -244,9 +244,8 @@ def reformat(obj):
     <Quantity(magnitude, unit)> will be
     returned as magnitude (unit)
     """
-    proc = re.compile("(.*)<Quantity\((.+), '(.+)'\)>(.*)")
-    match = proc.match(repr(obj))
-    return ("{}{} ({}){}".format(
-                match.group(1), match.group(2),
-                match.group(3), match.group(4))
-            if match else obj)
+    def _repl(match):
+        return "{} ({})".format(match.group(1), match.group(2))
+
+    proc = re.compile("<Quantity\(([-+]?\d*\.\d+|\d+), '([^']*)'\)>")
+    return proc.sub(_repl, repr(obj))
