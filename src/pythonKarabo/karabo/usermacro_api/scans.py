@@ -381,6 +381,8 @@ class TScan(UserMacro):
                 lambda: self._sensible.state != State.STOPPED)
             yield from sleep(self.exposureTime + self.time_epsilon)
             yield from self._sensible.stop()
+            yield from waitUntil(
+                lambda: self._sensible.state != State.ACQUIRING)
 
             if self._sensible.value:
                 print("  Value: {}".format(
@@ -397,8 +399,9 @@ class TScan(UserMacro):
             return AcquiredOffline(self.deviceId,
                                    source=self.dataReader)
         else:
-            attrs = [k for k in flatten(
-                self._sensible.getBoundParameters())]
+            attrs = (
+                ["{}.stepNum".format(self.deviceId)]
+                + [k for k in flatten(self._sensible.getBoundParameters())])
             return AcquiredFromLog(self.deviceId, *attrs)
 
     @InputChannel(displayedName="Online data source")

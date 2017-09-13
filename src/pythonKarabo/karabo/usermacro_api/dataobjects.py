@@ -205,7 +205,7 @@ class AcquiredFromLog(AcquiredData):
         return item
 
     @synchronize
-    def query(self, *attrs, max_attempts=120):
+    def query(self, *attrs, max_attempts=60):
         """
         :param: a list of property strings with the form 'deviceId.property'
         retrieved data are queued in self.data, sorted by timestamp

@@ -4,8 +4,10 @@
 import argparse
 from asyncio import (
     async, coroutine, Future, get_event_loop, set_event_loop)
+import tempfile
 import socket
 import uuid
+import sys
 
 from karabo.usermacro_api.middlelayer import (
     AccessLevel, AccessMode, Bool, Device, DeviceClientBase,
@@ -136,6 +138,11 @@ class UserMacro(Macro):
                 kwargs["_deviceId_"] = kwargs["deviceId"] = deviceId
 
         super().__init__(kwargs)
+
+    def __del__(self):
+        # Silencing this method
+        sys.stderr = tempfile.NamedTemporaryFile()
+        super.__del__()
 
     def _initInfo(self):
         info = super()._initInfo()
