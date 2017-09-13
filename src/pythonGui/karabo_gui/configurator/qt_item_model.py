@@ -238,11 +238,11 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if isinstance(obj, EditableAttributeInfo):
             return self._attribute_data(obj, role, column, index.row())
         elif isinstance(obj, VectorHashCellInfo):
-            return self._vector_col_data(obj, role, column)
+            return self._vector_col_data(index, obj, role, column)
         elif isinstance(obj, VectorHashRowInfo):
             return self._vector_row_data(obj, role, column, index.row())
         else:
-            return self._box_data(obj, role, column)
+            return self._box_data(index, obj, role, column)
 
     def flags(self, index):
         """Reimplemented function of QAbstractItemModel.
@@ -463,7 +463,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         elif column in (1, 2) and role == Qt.DisplayRole:
             return str(value)
 
-    def _box_data(self, box, role, column):
+    def _box_data(self, index, box, role, column):
         """data() implementation for properties"""
         if column == 0:
             if role == Qt.DisplayRole:
@@ -476,10 +476,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif role == Qt.DecorationRole:
                 return get_icon(box.descriptor)
         elif column == 1 and role == Qt.DisplayRole:
-            return str(get_box_value(box))
+            return str(get_box_value(index, box))
         elif column == 2:
             if role == Qt.DisplayRole:
-                return str(get_box_value(box, is_edit_col=True))
+                return str(get_box_value(index, box, is_edit_col=True))
             elif role == Qt.BackgroundRole:
                 conf = box.configuration
                 if conf.hasUserValue(box):
@@ -490,7 +490,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                     color.setAlpha(128)
                     return QBrush(color)
 
-    def _vector_col_data(self, cell_info, role, column):
+    def _vector_col_data(self, index, cell_info, role, column):
         """data() implementation for VectorHash columns"""
         if column == 0:
             if role == Qt.DisplayRole:
@@ -498,9 +498,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif role == Qt.DecorationRole:
                 return get_icon(None)
         elif column == 1 and role == Qt.DisplayRole:
-            return str(get_vector_col_value(cell_info))
+            return str(get_vector_col_value(index, cell_info))
         elif column == 2 and role == Qt.DisplayRole:
-            return str(get_vector_col_value(cell_info, is_edit_col=True))
+            return str(get_vector_col_value(index, cell_info,
+                                            is_edit_col=True))
 
     def _vector_row_data(self, row_info, role, column, row):
         """data() implementation for VectorHash rows"""
