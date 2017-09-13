@@ -3,7 +3,7 @@ from collections import OrderedDict
 from weakref import WeakKeyDictionary
 
 from karabo.common.alarm_conditions import AlarmCondition
-from .basetypes import KaraboValue, isSet
+from .basetypes import isSet, KaraboValue, NoneValue
 from .enums import NodeType
 from .hash import Attribute, Descriptor, Hash, Schema, HashList
 from .registry import Registry
@@ -146,6 +146,13 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     def setChildValue(self, key, value, desc):
         for parent, parentkey in self._parents.items():
             parent.setChildValue("{}.{}".format(parentkey, key), value, desc)
+
+    def _getValue(self, key):
+        ret = self.__dict__.get(key)
+        if ret is None:
+            ret = NoneValue(descriptor=getattr(self.__class__, key))
+            ret._parent = self
+        return ret
 
     @coroutine
     def slotReconfigure(self, config):
