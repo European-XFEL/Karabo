@@ -221,15 +221,19 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def data(self, index, role=Qt.DisplayRole):
         """Reimplemented function of QAbstractItemModel.
         """
-        # short circuit for the state color background
+        # short circuit for the state color background and text alignment
         column = index.column()
-        if column == 1 and role == Qt.BackgroundRole:
-            state = self.configuration.boxvalue.state.value
-            if self.configuration.type != 'device' or isinstance(state, Dummy):
-                return None
-            in_error = State(state) == State.ERROR
-            color = ERROR_COLOR_ALPHA if in_error else OK_COLOR
-            return QBrush(QColor(*color))
+        if column == 1:
+            if role == Qt.BackgroundRole:
+                state = self.configuration.boxvalue.state.value
+                if (self.configuration.type != 'device' or
+                        isinstance(state, Dummy)):
+                    return None
+                in_error = State(state) == State.ERROR
+                color = ERROR_COLOR_ALPHA if in_error else OK_COLOR
+                return QBrush(QColor(*color))
+            elif role == Qt.TextAlignmentRole:
+                return Qt.AlignCenter
 
         # Get the index's stored object
         obj = self.index_ref(index)
