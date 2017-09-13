@@ -142,7 +142,7 @@ class UserMacro(Macro):
     def __del__(self):
         # Silencing this method
         sys.stderr = tempfile.NamedTemporaryFile()
-        super.__del__()
+        super().__del__()
 
     def _initInfo(self):
         info = super()._initInfo()
