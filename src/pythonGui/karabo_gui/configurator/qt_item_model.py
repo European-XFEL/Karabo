@@ -12,13 +12,12 @@ from PyQt4.QtGui import QBrush, QColor, QFont
 from karabo.middlelayer import AccessMode, Assignment
 from karabo.common.api import State
 from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
-from karabo_gui.configuration import box_has_changes
 import karabo_gui.globals as krb_globals
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.schema import (
     Box, ChoiceOfNodes, Dummy, EditableAttributeInfo, ImageNode, Schema,
     SlotNode, VectorHash, VectorHashCellInfo, VectorHashRowInfo,
-    get_editable_attributes
+    get_editable_attributes, box_has_changes
 )
 from karabo_gui.util import dragged_configurator_items
 from .utils import (
@@ -66,6 +65,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         oldconf = self._configuration
         if oldconf is not None:
             oldconf.signalUpdateComponent.disconnect(self._config_update)
+            oldconf.signalUserChanged.disconnect(self._config_update)
             if oldconf.type == 'device':
                 sig = oldconf.boxvalue.state.signalUpdateComponent
                 sig.disconnect(self._state_update)
@@ -79,6 +79,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         if conf is not None:
             conf.signalUpdateComponent.connect(self._config_update)
+            conf.signalUserChanged.connect(self._config_update)
             if conf.type == 'device':
                 sig = conf.boxvalue.state.signalUpdateComponent
                 sig.connect(self._state_update)
