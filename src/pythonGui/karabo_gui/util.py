@@ -240,6 +240,7 @@ def loadConfigurationFromFile(configuration):
         messagebox.show_error("Configuration load failed")
         return
     configuration.dispatchUserChanges(config[classId])
+    configuration.signalBoxChanged.emit()
 
     # Save the directory information
     set_setting(KaraboSettings.CONFIG_DIR, op.dirname(filename))
