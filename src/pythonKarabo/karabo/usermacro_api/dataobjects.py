@@ -1,11 +1,11 @@
-from asyncio import coroutine, sleep
+from asyncio import coroutine, gather, sleep
 from collections import deque
 import heapq
 import time
 
 from .middlelayer import (
-    DeviceClientBase, EventLoop, getDevice, getHistory, Hash,
-    InputChannel, shutdown, State, synchronize, waitUntilNew)
+    connectDevice, DeviceClientBase, EventLoop, getDevice, getDevices,
+    getHistory, Hash, InputChannel, shutdown, State, synchronize, waitUntilNew)
 from .util import getConfigurationFromPast
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -205,35 +205,72 @@ class AcquiredFromLog(AcquiredData):
         return item
 
     @synchronize
-    def query(self, *attrs, max_attempts=120):
+    def query(self, *attrs, max_attempts=30):
         """
         :param: a list of property strings with the form 'deviceId.property'
         retrieved data are queued in self.data, sorted by timestamp
         """
+        minWaitTime = 1
+
         if not attrs:
             attrs = self.attrs
 
         @coroutine
-        def attempt(func, *args, **kwargs):
-            attempts = max_attempts
+        def _attempt(func, *args, **kwargs):
+            attempts = kwargs.get("max_attempts", max_attempts)
+
             ret = None
             while (not ret) and attempts:
                 attempts -= 1
-                ret = yield from func(*args, **kwargs)
+                ret = yield from func(*args)
                 if (not ret) and attempts:
-                    yield from sleep(0.5)
+                    yield from sleep(minWaitTime)
             return ret
 
-        print("Fetching {} from logs ...".format(attrs))
+        @coroutine
+        def _flushLogger(deviceId):
+            loggerId = "DataLogger-" + deviceId
 
+            if loggerId in getDevices():
+                logger = yield from connectDevice(loggerId)
+                flush = getattr(logger, "flush", None)
+                if callable(flush):
+                    yield from flush()
+                    return minWaitTime
+                else:
+                    # Older data loggers do not flush in their destructor.
+                    # and don't have a flush slot
+                    # Hence, we must wait for data to be flushed.
+                    return logger.flushInterval.magnitude
+            return 0
+
+        deviceIds = (attr.split(".", 1)[0] for attr in attrs)
+        flushes = [_flushLogger(deviceId) for deviceId in deviceIds]
+        waitingTimes = yield from gather(*flushes)
+
+        if not waitingTimes:
+            print("No data found.")
+            return
+
+        waitTime = max(waitingTimes)
+        if waitTime:
+            print("Waiting for {} s to ensure data logger flush ..."
+                  .format(waitTime))
+            yield from sleep(waitTime)
+
+        print("Fetching {} from logs ...".format(attrs))
         self.index = 0
 
         # retrieve steps from scan history assuming there have been only one
         # scan with given deviceId from the big-bang up to now
 
-        self.steps = yield from attempt(
+        self.steps = yield from _attempt(
             getHistory, "{}.stepNum".format(self.experimentId),
             "2010-01-01T00:00:00", time.strftime(DATE_FORMAT))
+
+        if not self.steps:
+            print("No data found.")
+            return
 
         # steps has the following format:
         # [(seconds_from_1970, train_id, is_last_of_set, value) ]
@@ -242,25 +279,27 @@ class AcquiredFromLog(AcquiredData):
         self.begin = time.strftime(DATE_FORMAT,
                                    time.localtime(self.steps[0][0]))
 
-        # end of the scan = timestamp of last step
+        # end of the scan = timestamp of last step  rounded to the next second
         self.end = time.strftime(DATE_FORMAT,
                                  time.localtime(
-                                     self.steps[len(self.steps)-1][0]))
+                                     self.steps[len(self.steps)-1][0] + 1))
 
         # if for any reason end value is wrong, assume end is now
         if self.begin >= self.end:
             self.end = time.strftime(DATE_FORMAT, time.localtime())
 
-        # get IDs of devices used by Scan:
-        his = yield from attempt(
+        # get IDs of devices used by Scans
+        # TScans don't have BoundMovables. Don't try hard
+        his = yield from _attempt(
             getHistory, "{}.boundMovables".format(self.experimentId),
-            self.begin, self.end)
-        self.movableIds = his[0][3]
+            self.begin, self.end, max_attempts=2)
 
-        his = yield from attempt(
+        self.movableIds = his[0][3] if his else []
+
+        his = yield from _attempt(
             getHistory, "{}.boundSensibles".format(self.experimentId),
             self.begin, self.end)
-        self.measurableIds = his[0][3]
+        self.measurableIds = his[0][3] if his else []
 
         # get properties for each device
         self.bound_devices_properties = {}
@@ -274,7 +313,7 @@ class AcquiredFromLog(AcquiredData):
 
         histories = []
         for prop in attrs:
-            his = yield from attempt(getHistory, prop, self.begin, self.end)
+            his = yield from _attempt(getHistory, prop, self.begin, self.end)
 
             # add property name to tuples
             his2 = []
