@@ -255,7 +255,8 @@ namespace karabo {
                                               "flushInterval", get<int>("flushInterval"));
                             const Hash hash("classId", "DataLogger", "deviceId", loggerId, "configuration", config);
                             remote().instantiateNoWait(serverId, hash);
-                            KARABO_LOG_FRAMEWORK_INFO << "ensureLoggerRunning [device] : logger '" << loggerId << "' STARTED";
+                            KARABO_LOG_FRAMEWORK_INFO << "Instantiate '" << loggerId << "' on server '"
+                                    << serverId << "' since device '" << deviceId << "' appeared (or its logger died)";
                             // First instantiate the new logger - now we have time to update the logger map file.
                             if (newMap) {
                                 karabo::io::saveToFile(m_loggerMap, m_loggerMapFile);
@@ -292,7 +293,7 @@ namespace karabo {
                                 devicesToLog.push_back(deviceId);
                             }
                         }
-                        // Now, without mutex lock, treat the collected deviceIds ('exists' can take long...)
+                        // Now, without mutex lock, treat the collected deviceIds (to keep mutex lock short)
                         const Hash config("directory", get<string>("directory"),
                                           "maximumFileSize", get<int>("maximumFileSize"),
                                           "flushInterval", get<int>("flushInterval"));
@@ -301,23 +302,18 @@ namespace karabo {
 
                         BOOST_FOREACH(const std::string& deviceId, devicesToLog) {
                             const string loggerId = DATALOGGER_PREFIX + deviceId;
-                            // Check if loggerId already started based on real-time
-                            if (remote().exists(deviceId).first && !remote().exists(loggerId).first) {
-                                hash.set("deviceId", loggerId);
-                                hash.set("configuration.deviceToBeLogged", deviceId);
-                                remote().instantiateNoWait(serverId, hash);
-                                KARABO_LOG_FRAMEWORK_INFO << "ensureLoggerRunning [server] : logger '" << loggerId << "' STARTED";
-                            }
+                            // No need to check whether loggerId already exists: if yes, this instantiation will fail
+                            hash.set("deviceId", loggerId);
+                            hash.set("configuration.deviceToBeLogged", deviceId);
+                            remote().instantiateNoWait(serverId, hash);
+                            KARABO_LOG_FRAMEWORK_INFO << "Instantiate '" << loggerId << "' on server '" << serverId
+                                    << "' which just appeared";
                         }
                     }
                 }
 
-            } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "In ensureLoggerRunning:\n" << e;
             } catch (const std::exception& e) {
-                KARABO_LOG_ERROR << "In ensureLoggerRunning: " << e.what() << ".";
-            } catch (...) {
-                KARABO_LOG_ERROR << "Unknown exception in ensureLoggerRunning.";
+                KARABO_LOG_FRAMEWORK_ERROR << "In ensureLoggerRunning: " << e.what();
             }
         }
 
