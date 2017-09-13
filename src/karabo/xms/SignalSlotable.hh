@@ -701,7 +701,7 @@ namespace karabo {
 
         protected: // Functions
 
-            void startEmittingHeartbeats();
+            void delayedEmitHeartbeat(int delayInSeconds);
 
             void stopEmittingHearbeats();
 
