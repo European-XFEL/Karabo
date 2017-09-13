@@ -2,7 +2,7 @@
 
 """Scan macros
 
-Scan macros is meant to be run:
+Scan macros are meant to be run:
     either interactively in ikarabo or the GUI console,
     or from a User Macro script.
 
@@ -552,8 +552,6 @@ class TScan(UserMacro):
                 lambda: self._sensible.state != State.STOPPED)
             yield from sleep(self.exposureTime + self.time_epsilon)
             yield from self._sensible.stop()
-            yield from waitUntil(
-                lambda: self._sensible.state != State.ACQUIRING)
 
             if self._sensible.value:
                 print("  Value: {}".format(
