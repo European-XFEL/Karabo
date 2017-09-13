@@ -66,6 +66,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if oldconf is not None:
             oldconf.signalUpdateComponent.disconnect(self._config_update)
             oldconf.signalUserChanged.disconnect(self._config_update)
+            oldconf.signalReconfiguration.disconnect(self._reconfig_update)
             if oldconf.type == 'device':
                 sig = oldconf.boxvalue.state.signalUpdateComponent
                 sig.disconnect(self._state_update)
@@ -80,6 +81,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if conf is not None:
             conf.signalUpdateComponent.connect(self._config_update)
             conf.signalUserChanged.connect(self._config_update)
+            conf.signalReconfiguration.connect(self._reconfig_update)
             if conf.type == 'device':
                 sig = conf.boxvalue.state.signalUpdateComponent
                 sig.connect(self._state_update)
@@ -175,6 +177,12 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         self.signalHasModifications.emit(self.configuration.hasAnyUserValues())
 
+    @pyqtSlot()
+    def _reconfig_update(self):
+        """The configuration started/completed sending values to the device
+        """
+        self.layoutChanged.emit()
+
     @pyqtSlot(object, object, object)
     def _state_update(self, box, state, timestamp):
         """Respond to device instance state changes
@@ -253,6 +261,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
         """Reimplemented function of QAbstractItemModel.
         """
         if not index.isValid():
+            return Qt.NoItemFlags
+
+        if self.configuration and self.configuration.isReconfiguring():
+            # We're waiting to hear back from a device about a thing
             return Qt.NoItemFlags
 
         # All items have these properties
