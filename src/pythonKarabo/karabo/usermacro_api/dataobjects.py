@@ -205,7 +205,7 @@ class AcquiredFromLog(AcquiredData):
         return item
 
     @synchronize
-    def query(self, *attrs, max_attempts=60):
+    def query(self, *attrs, max_attempts=30):
         """
         :param: a list of property strings with the form 'deviceId.property'
         retrieved data are queued in self.data, sorted by timestamp
@@ -217,11 +217,12 @@ class AcquiredFromLog(AcquiredData):
 
         @coroutine
         def _attempt(func, *args, **kwargs):
-            attempts = max_attempts
+            attempts = kwargs.get("max_attempts", max_attempts)
+
             ret = None
             while (not ret) and attempts:
                 attempts -= 1
-                ret = yield from func(*args, **kwargs)
+                ret = yield from func(*args)
                 if (not ret) and attempts:
                     yield from sleep(minWaitTime)
             return ret
@@ -247,6 +248,10 @@ class AcquiredFromLog(AcquiredData):
         flushes = [_flushLogger(deviceId) for deviceId in deviceIds]
         waitingTimes = yield from gather(*flushes)
 
+        if not waitingTimes:
+            print("No data found.")
+            return
+
         waitTime = max(waitingTimes)
         if waitTime:
             print("Waiting for {} s to ensure data logger flush ..."
@@ -263,6 +268,10 @@ class AcquiredFromLog(AcquiredData):
             getHistory, "{}.stepNum".format(self.experimentId),
             "2010-01-01T00:00:00", time.strftime(DATE_FORMAT))
 
+        if not self.steps:
+            print("No data found.")
+            return
+
         # steps has the following format:
         # [(seconds_from_1970, train_id, is_last_of_set, value) ]
 
@@ -270,25 +279,27 @@ class AcquiredFromLog(AcquiredData):
         self.begin = time.strftime(DATE_FORMAT,
                                    time.localtime(self.steps[0][0]))
 
-        # end of the scan = timestamp of last step
+        # end of the scan = timestamp of last step  rounded to the next second
         self.end = time.strftime(DATE_FORMAT,
                                  time.localtime(
-                                     self.steps[len(self.steps)-1][0]))
+                                     self.steps[len(self.steps)-1][0] + 1))
 
         # if for any reason end value is wrong, assume end is now
         if self.begin >= self.end:
             self.end = time.strftime(DATE_FORMAT, time.localtime())
 
-        # get IDs of devices used by Scan:
+        # get IDs of devices used by Scans
+        # TScans don't have BoundMovables. Don't try hard
         his = yield from _attempt(
             getHistory, "{}.boundMovables".format(self.experimentId),
-            self.begin, self.end)
-        self.movableIds = his[0][3]
+            self.begin, self.end, max_attempts=2)
+
+        self.movableIds = his[0][3] if his else []
 
         his = yield from _attempt(
             getHistory, "{}.boundSensibles".format(self.experimentId),
             self.begin, self.end)
-        self.measurableIds = his[0][3]
+        self.measurableIds = his[0][3] if his else []
 
         # get properties for each device
         self.bound_devices_properties = {}
