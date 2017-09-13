@@ -3,6 +3,9 @@ all generalized interface to devices
 """
 import asyncio
 import re
+import sys
+import tempfile
+
 
 from karabo.common.states import StateSignifier
 from .middlelayer import (
@@ -124,6 +127,10 @@ class GenericProxy(object):
                 cls._error("This configuration is not available.")
 
         return ret
+
+    def __del__(self):
+        # Silencing this method
+        sys.stderr = tempfile.NamedTemporaryFile()
 
     def getBoundDevices(self):
         """Get recursively the bound devices"""

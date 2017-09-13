@@ -183,9 +183,9 @@ class AScan(UserMacro):
                                   .format(self._movable.state))
 
             if pause:
+                self.stepNum = step_num
+                self.update()
                 if self.steps or step_num == 0:
-                    self.stepNum = step_num
-                    self.update()
                     yield from self._sensible.acquire()
 
                 if self.steps:
@@ -198,18 +198,17 @@ class AScan(UserMacro):
                     yield from waitUntil(
                         lambda: self._sensible.state != State.STOPPED)
                     yield from sleep(self.exposureTime + self.time_epsilon)
-                    yield from self._sensible.stop()
 
+                if self.steps or step_num == 1:
+                    yield from self._sensible.stop()
                     if self._sensible.value:
                         print("  Value: {}".format(
                             reformat(self._sensible.value)))
 
                 step_num += 1
-
-        # Stop acquisition here for continuous scans
-        if (not self.steps) and self._sensible.state == State.ACQUIRING:
-            yield from self._sensible.stop()
-
+        # Add an extra step to upper bound last measurements time-wise
+        self.stepNum += 1
+        self.update()
         print("-"*linelen)
 
         if self.daqDone:
@@ -382,6 +381,8 @@ class TScan(UserMacro):
                 lambda: self._sensible.state != State.STOPPED)
             yield from sleep(self.exposureTime + self.time_epsilon)
             yield from self._sensible.stop()
+            yield from waitUntil(
+                lambda: self._sensible.state != State.ACQUIRING)
 
             if self._sensible.value:
                 print("  Value: {}".format(
@@ -389,14 +390,18 @@ class TScan(UserMacro):
 
             elaps += self.exposureTime + self.time_epsilon
 
+        # Add an extra step to upper bound last measurements time-wise
+        self.stepNum += 1
+        self.update()
         print("-"*linelen)
 
         if self.daqDone:
             return AcquiredOffline(self.deviceId,
                                    source=self.dataReader)
         else:
-            attrs = [k for k in flatten(
-                self._sensible.getBoundParameters())]
+            attrs = (
+                ["{}.stepNum".format(self.deviceId)]
+                + [k for k in flatten(self._sensible.getBoundParameters())])
             return AcquiredFromLog(self.deviceId, *attrs)
 
     @InputChannel(displayedName="Online data source")
