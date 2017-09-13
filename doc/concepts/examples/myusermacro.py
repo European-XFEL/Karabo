@@ -16,7 +16,7 @@ class UserTest(UserMacro, DeviceClientBase):
 
         # Run an AScan and get the data
         ascan = yield from background(
-            AScan, "motor1@targetPos*", [1, 10],
+            AScan, "motor1@.*Position", [1, 10],
             "cam1@frameRate", 0.1, True, 5)
         data = yield from ascan()
 
