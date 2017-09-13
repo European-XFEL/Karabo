@@ -23,3 +23,6 @@ from .usermacro_api.runconfiguration import RunConfiguration
 from .usermacro_api.util import (
     getConfigurationFromPast, meshTrajectory, plot,
     splitTrajectory)
+
+# For having simplified access to scan documentation via help(scans)
+from .usermacro_api import scans
