@@ -3,7 +3,7 @@ from collections import defaultdict
 import time
 from weakref import WeakSet
 
-from .basetypes import KaraboValue
+from .basetypes import KaraboValue, NoneValue
 from .enums import NodeType
 from .eventloop import synchronize
 from .exceptions import KaraboError
@@ -13,17 +13,8 @@ from .timestamp import Timestamp
 from .weak import Weak
 
 
-class ProxyBase(object):
-    """The base for proxies to a Karabo device
-
-    The :class:`ProxyFactory` will subclass this class and add
-    the necessary descriptors.
-    """
+class _ProxyBase(object):
     _parent = Weak()
-
-    def __init__(self):
-        super().__init__()
-        self._parent = self
 
     @classmethod
     def __dir__(cls):
@@ -34,7 +25,29 @@ class ProxyBase(object):
                          for k, v in self.__class__.__dict__.items()
                          if isinstance(v, Descriptor)
                          and not isinstance(v, Slot) and hasattr(self, k))
-        return "{}[{}]".format(self.__class__.__name__, subs)
+        return "[{}]".format(subs)
+
+    def _getValue(self, key):
+        self._parent._use()
+        ret = self.__dict__.get(key)
+        if ret is None:
+            ret = NoneValue(descriptor=getattr(self.__class__, key))
+            ret._parent = self._parent
+        return ret
+
+
+class ProxyBase(_ProxyBase):
+    """The base for proxies to a Karabo device
+
+    The :class:`ProxyFactory` will subclass this class and add
+    the necessary descriptors.
+    """
+    def __init__(self):
+        super().__init__()
+        self._parent = self
+
+    def __repr__(self):
+        return self.__class__.__name__ + super().__repr__()
 
     def _use(self):
         pass
@@ -103,24 +116,8 @@ class ProxySlotBase(Slot, Descriptor):
         return method.__get__(instance, owner)
 
 
-class SubProxyBase(object):
+class SubProxyBase(_ProxyBase):
     """The base class for nodes in a Proxy"""
-    _parent = Weak()
-
-    @classmethod
-    def __dir__(cls):
-        return cls._allattrs
-
-    def __repr__(self):
-        subs = ", ".join("{}={!r}".format(k, getattr(self, k))
-                         for k, v in self.__class__.__dict__.items()
-                         if isinstance(v, Descriptor)
-                         and not isinstance(v, Slot) and hasattr(self, k))
-        return "[{}]".format(subs)
-
-    def _use(self):
-        self._parent._use()
-
     def setValue(self, desc, value):
         return self._parent.setValue(desc, value)
 
