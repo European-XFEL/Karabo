@@ -338,9 +338,15 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id " << m_instanceId;
             m_randPing = 0; // Allows to answer on slotPing with argument rand = 0.
             registerForShortcutMessaging();
-            startEmittingHeartbeats();
             startPerformanceMonitor();
             call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
+            // Start emitting heartbeats, but do not send one immediately: All others will just got notified about us.
+            // If they are interested to track us, they will not miss our heartbeat before (five times [see
+            // letInstanceSlowlyDieWithoutHeartbeat]) our heartbeat interval. But if we send the heartbeat immediately,
+            // in a busy system this first heartbeat might be processed before our instanceNew which is weird.
+            // - '/ 2' protects us from changing factor five to one or close to one.
+            // - '+ 1' protects us from 0 (for the crazy interval of 1).
+            delayedEmitHeartbeat(m_heartbeatInterval / 2 + 1);
         }
 
 
@@ -531,7 +537,6 @@ namespace karabo {
 
 
         void SignalSlotable::startPerformanceMonitor() {
-            // Countdown and finally timeout registered heartbeats
             m_performanceTimer.expires_from_now(boost::posix_time::milliseconds(10));
             m_performanceTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::updatePerformanceStatistics,
                                                     this, boost::asio::placeholders::error));
@@ -569,18 +574,6 @@ namespace karabo {
             m_performanceTimer.expires_from_now(boost::posix_time::seconds(5));
             m_performanceTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::updatePerformanceStatistics,
                                                     this, boost::asio::placeholders::error));
-        }
-
-
-        void SignalSlotable::startEmittingHeartbeats() {
-            m_heartbeatTimer.expires_from_now(boost::posix_time::milliseconds(10));
-            m_heartbeatTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::emitHeartbeat, this,
-                                                  boost::asio::placeholders::error));
-        }
-
-
-        void SignalSlotable::stopEmittingHearbeats() {
-            m_heartbeatTimer.cancel();
         }
 
 
@@ -1072,16 +1065,22 @@ namespace karabo {
             if (e) return;
             try {
                 emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, m_instanceInfo);
-            } catch (Exception &e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "emitHeartbeat triggered an exception: " << e;
             } catch (std::exception &e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "emitHeartbeat triggered a standard exception: " << e.what();
-            } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << "emitHeartbeat triggered an unknown exception";
+                KARABO_LOG_FRAMEWORK_ERROR << "emitHeartbeat triggered an exception: " << e.what();
             }
-            m_heartbeatTimer.expires_from_now(boost::posix_time::seconds(m_heartbeatInterval));
+            delayedEmitHeartbeat(m_heartbeatInterval);
+        }
+
+
+        void SignalSlotable::delayedEmitHeartbeat(int delayInSeconds) {
+            m_heartbeatTimer.expires_from_now(boost::posix_time::seconds(delayInSeconds));
             m_heartbeatTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::emitHeartbeat, this,
                                                   boost::asio::placeholders::error));
+        }
+
+
+        void SignalSlotable::stopEmittingHearbeats() {
+            m_heartbeatTimer.cancel();
         }
 
 
