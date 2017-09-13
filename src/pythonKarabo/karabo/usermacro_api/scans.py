@@ -580,7 +580,7 @@ class TScan(UserMacro):
                 ["{}.stepNum".format(self.deviceId)]
                 + [k for k in flatten(self._sensible.getBoundParameters())])
             data = AcquiredFromLog(self.deviceId, *attrs)
-            data.query()
+            yield from data.query()
             return data
 
     @InputChannel(displayedName="Online data source")
