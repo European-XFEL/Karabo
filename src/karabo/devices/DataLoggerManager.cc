@@ -14,12 +14,10 @@
 
 #include "karabo/io/Input.hh"
 #include "karabo/io/FileTools.hh"
+#include "karabo/util/DataLogUtils.hh"
 
 #include "DataLoggerManager.hh"
 
-#define DATALOGGER_PREFIX "DataLogger-"
-#define DATALOGREADER_PREFIX "DataLogReader"
-#define DATALOGREADERS_PER_SERVER 2
 
 namespace karabo {
     namespace devices {
@@ -191,13 +189,13 @@ namespace karabo {
 
 
         void DataLoggerManager::instantiateReaders(const std::string& serverId) {
-            for (int i = 0; i < DATALOGREADERS_PER_SERVER; i++) {
+            for (unsigned int i = 0; i < DATALOGREADERS_PER_SERVER; ++i) {
                 const std::string readerId = DATALOGREADER_PREFIX + toString(i) + "-" + serverId;
                 if (!remote().exists(readerId).first) {
                     const Hash hash("classId", "DataLogReader", "deviceId", readerId,
                                     "configuration.directory", get<string>("directory"));
+                    KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << readerId << "' on server '" << serverId << "'";
                     remote().instantiateNoWait(serverId, hash);
-                    KARABO_LOG_FRAMEWORK_INFO << "instantiateReaders: reader '" << readerId << "' started on server '" << serverId << "'";
                 }
             }
         }
@@ -254,9 +252,9 @@ namespace karabo {
                                               "maximumFileSize", get<int>("maximumFileSize"),
                                               "flushInterval", get<int>("flushInterval"));
                             const Hash hash("classId", "DataLogger", "deviceId", loggerId, "configuration", config);
+                            KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' on server '"
+                                    << serverId << "' since device '" << deviceId << "' appeared";
                             remote().instantiateNoWait(serverId, hash);
-                            KARABO_LOG_FRAMEWORK_INFO << "Instantiate '" << loggerId << "' on server '"
-                                    << serverId << "' since device '" << deviceId << "' appeared (or its logger died)";
                             // First instantiate the new logger - now we have time to update the logger map file.
                             if (newMap) {
                                 karabo::io::saveToFile(m_loggerMap, m_loggerMapFile);
@@ -305,9 +303,9 @@ namespace karabo {
                             // No need to check whether loggerId already exists: if yes, this instantiation will fail
                             hash.set("deviceId", loggerId);
                             hash.set("configuration.deviceToBeLogged", deviceId);
-                            remote().instantiateNoWait(serverId, hash);
-                            KARABO_LOG_FRAMEWORK_INFO << "Instantiate '" << loggerId << "' on server '" << serverId
+                            KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' on server '" << serverId
                                     << "' which just appeared";
+                            remote().instantiateNoWait(serverId, hash);
                         }
                     }
                 }
