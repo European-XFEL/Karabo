@@ -99,9 +99,10 @@ class EditDelegate(QStyledItemDelegate):
             _, _, value = get_attribute_data(obj, index.row())
         elif isinstance(obj, VectorHashCellInfo):
             value = get_vector_col_value(
-                obj, is_edit_col=(index.column() == 2))
+                index, obj, is_edit_col=(index.column() == 2))
         else:
-            value = get_box_value(obj, is_edit_col=(index.column() == 2))
+            value = get_box_value(
+                index, obj, is_edit_col=(index.column() == 2))
 
         editor.editable_widget.valueChanged(obj, value)
 
