@@ -169,8 +169,29 @@ class Tests(DeviceTest):
         output = Sensible('unknown')
         self.assertIsInstance(output, Sensible)
 
+        output = Sensible('lsim', 'unknown')
+        self.assertIsInstance(output, Sensible)
+
+        containerRep = ("Sensible(CamAsSensible('lsim'), "
+                        "Sensible('unknown'))")
+        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(output.getBoundDevices(), ['lsim', 'unknown'])
+
+
+        output = Movable('lsim', 'unknown')
+        self.assertIsInstance(output, Movable)
+
+        containerRep = ("Movable(Movable('lsim'), "
+                        "Movable('unknown'))")
+        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(output.getBoundDevices(), ['lsim', 'unknown'])
+
+
         with self.assertRaises(KaraboError):
             GenericProxy('unknown')
+
+        with self.assertRaises(KaraboError):
+            Sensible('lsim', GenericProxy('unknown'))
 
     @sync_tst
     def test_wrong_type_mixes(self):
