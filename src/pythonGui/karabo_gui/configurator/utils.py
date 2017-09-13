@@ -53,10 +53,14 @@ def get_attribute_data(attr_info, row):
     return name, descriptor, getattr(descriptor, name)
 
 
-def get_box_value(box, is_edit_col=False):
+def get_box_value(index, box, is_edit_col=False):
     """Return the actual value of the given `box`, depending on whether this is
     requested for an editable column
     """
+    is_editable = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
+    if is_edit_col and not is_editable:
+        return ''
+
     descriptor = box.descriptor
     if isinstance(descriptor, ChoiceOfNodes):
         return box.current or ''
@@ -66,11 +70,6 @@ def get_box_value(box, is_edit_col=False):
     value = _box_value(box, is_edit_col)
     if isinstance(value, (Dummy, bytes, bytearray)):
         return ''
-    if is_edit_col:
-        is_editable = (descriptor.accessMode in
-                       (AccessMode.INITONLY, AccessMode.RECONFIGURABLE))
-        if not is_editable:
-            return ''
 
     return value
 
@@ -100,22 +99,20 @@ def get_icon(descriptor):
     return icon
 
 
-def get_vector_col_value(cell_info, is_edit_col=False):
+def get_vector_col_value(index, cell_info, is_edit_col=False):
     """Return the actual value of the given `cell_info`, depending on whether
     this is requested for an editable column
     """
+    is_editable = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
+    if is_edit_col and not is_editable:
+        return ''
+
     parent_row = cell_info.parent()
     if parent_row is None:
         return ''
     parent_box = parent_row.parent()
     if parent_box is None:
         return ''
-    descriptor = parent_box.descriptor
-    if is_edit_col:
-        is_editable = (descriptor.accessMode in
-                       (AccessMode.INITONLY, AccessMode.RECONFIGURABLE))
-        if not is_editable:
-            return ''
 
     value = _box_value(parent_box, is_edit_col)
     row = value[parent_box.rowsInfo.index(parent_row)]
