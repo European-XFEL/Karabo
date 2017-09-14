@@ -31,7 +31,7 @@ class BasePanelWidget(QFrame):
     """
     signalPanelClosed = pyqtSignal(str)
 
-    def __init__(self, title):
+    def __init__(self, title, allow_closing=False):
         super(BasePanelWidget, self).__init__(parent=None)
         self.setWindowTitle(title)
         self.setFrameStyle(QFrame.Box | QFrame.Plain)
@@ -39,6 +39,7 @@ class BasePanelWidget(QFrame):
 
         self.index = -1
         self.doesDockOnClose = True
+        self.allow_closing = allow_closing
         self.panel_container = None
         self.is_docked = False
         self.tab_text_color = None
@@ -154,16 +155,7 @@ class BasePanelWidget(QFrame):
     def onMinimize(self):
         self._update_toolbar_buttons(PanelActions.Minimize)
         self.minimize()
-        self.panel_container.removeTab(0)
-        # Add the tabs back to the container in sorted order
-        panels = sorted(self.panel_container.panel_set, key=lambda x: x.index)
-        for pan in panels:
-            if not pan.is_docked:
-                continue
-            self.panel_container.insertTab(pan.index, pan, pan.windowTitle())
-
-        self.panel_container.setCurrentIndex(self.index)
-        self.panel_container._remove_alarmpanel_close_bt()
+        self.panel_container.insert_panels_after_maximize(self.index)
 
         broadcast_event(KaraboEventSender.MinimizePanel,
                         {'container': self.panel_container})
