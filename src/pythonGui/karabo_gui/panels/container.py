@@ -6,18 +6,16 @@
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QCursor, QTabBar, QTabWidget
 
-from .alarmpanel import AlarmPanel
 from .placeholderpanel import PlaceholderPanel
 
 
 class PanelContainer(QTabWidget):
     """A container for ``BasePanelWidget`` instances
     """
-    def __init__(self, title, parent, allow_closing=False, handle_empty=False):
+    def __init__(self, title, parent, handle_empty=False):
         super(PanelContainer, self).__init__(parent)
         self.setWindowTitle(title)
         self.panel_set = set()
-        self.allow_closing = allow_closing
         self.handle_empty = handle_empty
         self.minimized = False
         self.maximized = False
@@ -114,6 +112,21 @@ class PanelContainer(QTabWidget):
             if self.count() == 0:
                 self.hide()
 
+    def insert_panels_after_maximize(self, current_index):
+        """When maximized, all panels are removed except for the selected one.
+        This undoes that when the panel/container is minimized.
+        """
+        self.removeTab(0)
+        # Add the tabs back to the container in sorted order
+        panels = sorted(self.panel_set, key=lambda x: x.index)
+        for pan in panels:
+            if not pan.is_docked:
+                continue
+            self.insertTab(pan.index, pan, pan.windowTitle())
+
+        self.setCurrentIndex(current_index)
+        self._hide_close_buttons()
+
     def update_tab_text_color(self, panel, color):
         if panel.is_docked:
             index = self.indexOf(panel)
@@ -180,21 +193,22 @@ class PanelContainer(QTabWidget):
 
     def _update_tabs_closable(self):
         if self.count() > 1:
-            self.setTabsClosable(self.allow_closing)
+            self.setTabsClosable(True)
         elif self.count() == 1:
             is_placeholder = isinstance(self.widget(0), PlaceholderPanel)
-            self.setTabsClosable(self.allow_closing and not is_placeholder)
-        self._remove_alarmpanel_close_bt()
+            self.setTabsClosable(not is_placeholder)
+        self._hide_close_buttons()
 
-    def _remove_alarmpanel_close_bt(self):
-        """Remove the close button of AlarmPanel
+    def _hide_close_buttons(self):
+        """Remove the close button non-closable panels
         """
         # use index instead of loop through set, because need the index
         # for tabBar button anyway.
         i = self.count()
         while i > -1:
             i -= 1
-            if isinstance(self.widget(i), AlarmPanel):
+            widget = self.widget(i)
+            if widget is not None and not widget.allow_closing:
                 # some system put close button on the left
                 for p in (QTabBar.LeftSide, QTabBar.RightSide):
                     bt = self.tabBar().tabButton(i, p)

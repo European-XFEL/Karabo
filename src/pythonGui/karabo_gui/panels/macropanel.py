@@ -28,7 +28,7 @@ from .base import BasePanelWidget
 class MacroPanel(BasePanelWidget):
     def __init__(self, model):
         self.model = model
-        super(MacroPanel, self).__init__(model.simple_name)
+        super(MacroPanel, self).__init__(model.simple_name, allow_closing=True)
 
         # NOTE: We want to close when undocked!
         self.doesDockOnClose = False

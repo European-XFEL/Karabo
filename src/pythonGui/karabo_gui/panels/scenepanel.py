@@ -34,7 +34,7 @@ class ScenePanel(BasePanelWidget):
         # cache a reference to the scene model
         self.model = model
         self.connected_to_server_at_init = connected_to_server
-        super(ScenePanel, self).__init__(model.simple_name)
+        super(ScenePanel, self).__init__(model.simple_name, allow_closing=True)
 
         # NOTE: We want to close when undocked!
         self.doesDockOnClose = False

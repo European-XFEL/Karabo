@@ -16,7 +16,7 @@ from .base import BasePanelWidget
 
 class LoggingPanel(BasePanelWidget):
     def __init__(self):
-        super(LoggingPanel, self).__init__("Log")
+        super(LoggingPanel, self).__init__("Log", allow_closing=True)
         self.doesDockOnClose = False
         # Register for broadcast events.
         register_for_broadcasts(self)
