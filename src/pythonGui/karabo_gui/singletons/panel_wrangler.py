@@ -129,9 +129,18 @@ class PanelWrangler(QObject):
         elif sender is KaraboEventSender.NetworkConnectStatus:
             self.connected_to_server = data.get('status', False)
             if not self.connected_to_server:
+                # Close alarm panels
                 alarm_ids = list(self._alarm_panels.keys())
                 for inst_id in alarm_ids:
                     self._close_alarm_panel(inst_id)
+                # Close run configuration panels
+                instance_ids = list(self._run_config_panels.keys())
+                for inst_id in instance_ids:
+                    self._close_run_configurator(inst_id)
+                # Close run configuration group panels
+                instance_ids = list(self._run_config_group_panels.keys())
+                for inst_id in instance_ids:
+                    self._close_run_config_group(inst_id)
 
         elif sender is KaraboEventSender.CreateMainWindow:
             self._create_main_window()
