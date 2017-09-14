@@ -288,16 +288,9 @@ class SystemTree(HasStrictTraits):
                 self._append_child_node(host_node, server_node)
             server_node.visibility = visibility
             server_node.attributes = attrs
-
             for class_id, vis in zip(attrs.get('deviceClasses', []),
                                      attrs.get('visibilities', [])):
-                path = '{}.{}'.format(server_id, class_id)
-                class_node = server_node.child(class_id)
-                if class_node is None:
-                    class_node = SystemTreeNode(node_id=class_id,
-                                                path=path, parent=server_node)
-                    self._append_child_node(server_node, class_node)
-                class_node.visibility = AccessLevel(vis)
+                self._handle_class_data(server_node, class_id, vis)
 
     def _handle_device_data(self, device_type, system_hash):
         """Put the contents of Hash `system_hash` into the internal tree
@@ -349,7 +342,11 @@ class SystemTree(HasStrictTraits):
                                                 parent=server_node)
                     self._append_child_node(server_node, class_node)
                 else:
-                    continue
+                    # XXX: a fix to see running devices - the actual bug lies
+                    # in the DeviceClient of the GuiServerDevice which _forgot_
+                    # about the attributes "deviceClasses" and "visibilities"
+                    class_node = self._handle_class_data(server_node, class_id,
+                                                         visibility)
 
             # Device node
             device_node = class_node.child(device_id)
@@ -367,3 +364,14 @@ class SystemTree(HasStrictTraits):
             device_node.capabilities = capabilities
 
         return new_dev_nodes
+
+    def _handle_class_data(self, server_node, class_id, visibility):
+        class_node = server_node.child(class_id)
+        if class_node is None:
+            server_id = server_node.node_id
+            path = '{}.{}'.format(server_id, class_id)
+            class_node = SystemTreeNode(node_id=class_id,
+                                        path=path, parent=server_node)
+            self._append_child_node(server_node, class_node)
+        class_node.visibility = AccessLevel(visibility)
+        return class_node
