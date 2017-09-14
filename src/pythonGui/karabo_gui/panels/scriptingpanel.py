@@ -14,7 +14,7 @@ from .base import BasePanelWidget
 
 class ScriptingPanel(BasePanelWidget):
     def __init__(self):
-        super(ScriptingPanel, self).__init__("Console")
+        super(ScriptingPanel, self).__init__("Console", allow_closing=True)
         self.doesDockOnClose = False
 
     def get_content_widget(self):
