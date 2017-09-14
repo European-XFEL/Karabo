@@ -311,9 +311,8 @@ class MainWindow(QMainWindow):
 
         # Set up the middle area
         middle_top = PanelContainer("Custom view", middle_area,
-                                    allow_closing=True, handle_empty=True)
-        middle_bottom = PanelContainer("Output", middle_area,
-                                       allow_closing=True)
+                                    handle_empty=True)
+        middle_bottom = PanelContainer("Output", middle_area)
         self._panel_areas[PanelAreaEnum.MiddleTop] = middle_top
         self._panel_areas[PanelAreaEnum.MiddleBottom] = middle_bottom
         middle_area.setStretchFactor(0, 6)
