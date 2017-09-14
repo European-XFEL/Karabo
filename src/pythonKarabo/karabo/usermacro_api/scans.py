@@ -27,14 +27,17 @@ Before setting up a scan you need to define at least:
    the parameters to be fetched from logs at the end of the scan.
 
    Example of movable definition with parameters-of-interest:
-   my_movable = Movable('motorId1@(encoderPosition|targetPosition)', 'motorId2@.*position$', 'motorId3')
+   my_movable = Movable('motorId1@(encoderPosition|targetPosition)',
+                        'motorId2@.*position$', 'motorId3')
    Observe that the parameter specification follows a '@' sign. Also note that
-   the second parameter specification *.position$ extends the first specification
-   (encoderPosition|targetPosition) in matching stepCounterPosition and saveLimitPosition as well
-   for Beckhoff simple motors.
+   the second parameter specification *.position$ extends the first
+   specification (encoderPosition|targetPosition) in matching
+   stepCounterPosition and saveLimitPosition as well for Beckhoff
+   simple motors.
 
  - a sensible (measurable), which is the set of devices to acquire scan data
-   from (e.g. detectors, cameras, image processors, spectrometers, ADC or any sensor)
+   from (e.g. detectors, cameras, image processors, spectrometers, ADC
+   or any sensor).
    Example of sensible (measurable) definition:
    my_sensible = Sensible('aCameraId1, 'anotherCameraId1', 'aSensorId',
                           'anImageProcessorId')
@@ -44,9 +47,11 @@ Before setting up a scan you need to define at least:
    in the console as the scan goes, and to be fetched from the logs
    when the scan ends.
    Example of sensible (measurable) definition with parameters-of-interest:
-   my_sensible = Sensible('aCameraId1@frameRate, 'anotherCameraId1@frameCount', 'aSensorId',
+   my_sensible = Sensible('aCameraId1@frameRate, 'anotherCameraId1@frameCount',
+                          'aSensorId',
                           'anImageProcessorId@(.*PxValues|[xy]0$)')
-   Here (.*PxValues|[xy]0$) means select Mean, Min and Max Pixels values from the image processor
+   Here (.*PxValues|[xy]0$) means select Mean, Min and Max Pixels values
+   from the image processor
    as well as the centers of mass (i.e. x0 and y0).
 
  - a list of positions for the movable, wich contains the coordinates of the
@@ -72,7 +77,8 @@ This form will also work:
                     0.1)()
 
 Optional arguments are:
-- a steps boolean: True by default and impying step-wise scans or False for continuous scans
+- a steps boolean: True by default and impying step-wise scans or False
+  for continuous scans
 
 - the number_of_steps (0 by default) that defines the number
 of steps the trajectory will be split in. If this number is 0, and steps=True,
@@ -108,11 +114,11 @@ Data Loggers:
 -------------
 The data object returned by a command line that uses the extended syntax
 data = AScan(...@param1, ...@param2, ....)()
-is ready for plotting. Just type 
+is ready for plotting. Just type
 
      plot(data)
 
-You can also manually load the values of the properties you are interested in 
+You can also manually load the values of the properties you are interested in
 into the acquired data fifo:
 
     data.query('motorId1.aMotorProperty',
@@ -152,15 +158,15 @@ Offline DAQ data which is provided to you at the end of a scan.
 
 Offline DAQ:
 -----------
-Once a scan is done, you will get in return an object that obtains scan data from
-the datalogger, and another that queries the DAQ, granted that its configuration
-could be retrieved.
+Once a scan is done, you will get in return an object that obtains scan data
+from the datalogger, and another that queries the DAQ, granted that its
+configuration could be retrieved.
 
 The offline DAQ object accesses the data stored in the run's HDF5 files, via a
 DataReader. This object is non-lossy, but only stores a limited amount of train
-data in memory, as to not be overwhelming memory intensive. The object will wait
-for an entry to be consumed (that is, popped from the fifo) before receiving the
-next train data.
+data in memory, as to not be overwhelming memory intensive. The object will
+wait for an entry to be consumed (that is, popped from the fifo) before
+receiving the next train data.
 
 Use it as follows:
 
@@ -390,7 +396,9 @@ class AScan(UserMacro):
                 ["{}.stepNum".format(self.deviceId)]
                 + [k for k in flatten(self._movable.getBoundParameters())]
                 + [k for k in flatten(self._sensible.getBoundParameters())])
-            return AcquiredFromLog(self.deviceId, *attrs)
+            data = AcquiredFromLog(self.deviceId, *attrs)
+            yield from data.query()
+            return data
 
     @InputChannel(displayedName="Online data source")
     @coroutine
@@ -571,7 +579,9 @@ class TScan(UserMacro):
             attrs = (
                 ["{}.stepNum".format(self.deviceId)]
                 + [k for k in flatten(self._sensible.getBoundParameters())])
-            return AcquiredFromLog(self.deviceId, *attrs)
+            data = AcquiredFromLog(self.deviceId, *attrs)
+            yield from data.query()
+            return data
 
     @InputChannel(displayedName="Online data source")
     @coroutine
