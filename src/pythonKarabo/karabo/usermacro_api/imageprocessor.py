@@ -6,8 +6,9 @@ from .genericproxy import Sensible
 class ImageProcessorAsSensible(Sensible):
     """"Generalized interface to the image processor device"""
     generalizes = ('ImageProcessor',)
-
-    state_mapping = {State.NORMAL: State.ACQUIRING}
+    # Map the image processor state to UNKNOWN in order to ignore it
+    # Needed for neglecting its state when coupled with other sensibles
+    state_mapping = {State.NORMAL: State.UNKNOWN}
 
     @synchronize
     def acquire(self):
