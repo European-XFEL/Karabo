@@ -1,14 +1,26 @@
+SSH_USER_HOST=xdata@exflserv05
+SSH_PREFIX=$SSH_USER_HOST:/var/www/html/karabo
+CURL_PREFIX=http://exflserv05.desy.de/karabo
+
+__check_existence() {
+    curl --silent --head --fail --output /dev/null "$1"
+    if [ $? -eq 0 -a "$REL_TAG" != "Nightly" ]; then
+        echo "That build exists already!"
+        exit 1
+    fi
+}
+
 __release_build() {
     case "$2" in
         nightly)
             export REL_TAG=Nightly
-            export GUI_DEST_DIR=/var/www/html/karabo/karaboFramework/nightly
-            export FRAMEWORK_DEST_DIR=/var/www/html/karabo/karaboFramework/nightly
+            export FRAMEWORK_DEST_DIR=karaboFramework/nightly
+            export GUI_DEST_DIR=$FRAMEWORK_DEST_DIR
             ;;
         release)
             export REL_TAG=$CI_COMMIT_REF_NAME
-            export GUI_DEST_DIR=/var/www/html/karabo/karaboGui
-            export FRAMEWORK_DEST_DIR=/var/www/html/karabo/karaboFramework/tags/$REL_TAG
+            export FRAMEWORK_DEST_DIR=karaboFramework/tags/$REL_TAG
+            export GUI_DEST_DIR=karaboGui
             ;;
         *) echo "unknown job type: $2" ;;
     esac
@@ -16,20 +28,22 @@ __release_build() {
     case "$1" in
         windows) 
             export REL_ARTIFACT_DEST_PATH=$GUI_DEST_DIR/KaraboGUI-$REL_TAG.win32.exe
+            __check_existence $CURL_PREFIX/$REL_ARTIFACT_DEST_PATH
             bash ./auto_build_all.sh Release
             source karabo/activate
             cd build/python
             bash ./build.sh
-            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null KaraboGUI-*.exe xdata@exflserv05:$REL_ARTIFACT_DEST_PATH
+            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null KaraboGUI-*.exe $SSH_PREFIX/$REL_ARTIFACT_DEST_PATH
             ;;
         ubuntu*|centos*)
             export REL_OS_NAME=$(lsb_release -is)
             export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
             export REL_ARTIFACT_NAME=karabo-$REL_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh
+            __check_existence $CURL_PREFIX/$FRAMEWORK_DEST_DIR/$REL_ARTIFACT_NAME
             bash ./auto_build_all.sh Release --bundle
             mv package/Release/$REL_OS_NAME/$REL_OS_VERS_LONG/x86_64/karabo-*.sh $REL_ARTIFACT_NAME
-            sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null xdata@exflserv05 "mkdir -p $FRAMEWORK_DEST_DIR"
-            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME xdata@exflserv05:$FRAMEWORK_DEST_DIR
+            sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $FRAMEWORK_DEST_DIR"
+            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$FRAMEWORK_DEST_DIR
             ;;
         *) echo "unknown target OS: $1" ;;
     esac
