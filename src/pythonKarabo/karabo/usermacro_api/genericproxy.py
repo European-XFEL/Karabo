@@ -91,13 +91,6 @@ class GenericProxy(object):
                             deviceId, timeout=cls.proxy_ops_timeout)
                         ret = cls.create_generic_proxy(proxy, cls)
 
-                        if not (ret or cls is GenericProxy):
-                            # No custom adapter found.
-                            # But the class is not so generic
-                            # use it then.
-                            ret = object.__new__(cls)
-                            ret._proxy = proxy
-
                         if ret:
                             # Get the monitor parameters if any
                             ret._param_regex = (
