@@ -4,8 +4,6 @@ import collections
 # imports used for plotLoggedData
 import datetime
 import itertools
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import numpy as np
 import re
 
@@ -189,6 +187,8 @@ def plot(data, begin=None, end=None):
     aPlotFunction(x,y)
 
     """
+    import matplotlib.pyplot as plt
+    import matplotlib.dates as mdates
 
     if get_ipython():
         get_ipython().run_line_magic('matplotlib', 'qt4')
