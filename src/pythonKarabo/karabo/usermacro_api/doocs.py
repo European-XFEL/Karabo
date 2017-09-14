@@ -4,7 +4,7 @@ from .middlelayer import synchronize
 
 class TangerineAsMovable(Movable):
     """Generalized interface for the doocsTangerine phase shifter"""
-    generalizes = ('doocsTangerine',)
+    generalizes = ('DoocsTangerine',)
 
     @property
     def position(self):
