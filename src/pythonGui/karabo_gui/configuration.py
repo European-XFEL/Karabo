@@ -33,6 +33,7 @@ class BulkNotifications(object):
 class Configuration(Box):
     signalStatusChanged = pyqtSignal(object, object, bool)
     signalBoxChanged = pyqtSignal()
+    signalReconfiguration = pyqtSignal()
 
     def __init__(self, id, type, descriptor=None):
         """Create a new Configuration for schema.
@@ -55,7 +56,7 @@ class Configuration(Box):
         self._pending_keys = set()
         self.__busy_timer = QTimer(self)
         self.__busy_timer.setSingleShot(True)
-        self.__busy_timer.timeout.connect(_on_timeout)
+        self.__busy_timer.timeout.connect(self._on_timeout)
 
         self.serverId = None
         self.classId = None
@@ -87,6 +88,11 @@ class Configuration(Box):
         """
         return box.key() in self._user_values
 
+    def isReconfiguring(self):
+        """Returns True if a configuration was sent to the device.
+        """
+        return self.__busy_timer.isActive()
+
     def sendAllUserValues(self):
         """Sends all user-entered values to the GUI server
         """
@@ -99,17 +105,15 @@ class Configuration(Box):
             self._pending_keys.add(key)
 
         if changes:
-            get_network().onReconfigure(changes)
-            self.__busy_timer.start(5000)
+            self._initiate_reconfiguration(changes)
 
     def sendUserValue(self, box):
         """Sends a single user-entered value to the GUI server
         """
         key = box.key()
         value = self._user_values[key]
-        get_network().onReconfigure([(box, value)])
         self._pending_keys.add(key)
-        self.__busy_timer.start(5000)
+        self._initiate_reconfiguration([(box, value)])
 
     def setUserValue(self, box, value):
         """Store a user-entered value for the child Box `box`
@@ -212,6 +216,7 @@ class Configuration(Box):
             self._user_values.pop(key, None)
             if not self._pending_keys:
                 self.__busy_timer.stop()
+                self.signalReconfiguration.emit()
 
         if key in self._user_values:
             old_value = self._user_values[key]
@@ -254,10 +259,17 @@ class Configuration(Box):
         manager = get_manager()
         manager.shutdownDevice(self.id)
 
+    def _initiate_reconfiguration(self, changes):
+        get_network().onReconfigure(changes)
+        self.__busy_timer.start(5000)
+        self.signalReconfiguration.emit()
 
-def _on_timeout():
-    msg = "The property couldn't be set in the current state"
-    messagebox.show_warning(msg)
+    def _on_timeout(self):
+        """Called when `__busy_timer` timed out
+        """
+        msg = "The property couldn't be set in the current state"
+        messagebox.show_warning(msg)
+        self.signalReconfiguration.emit()
 
 
 def _start_device_monitoring(device_id):
