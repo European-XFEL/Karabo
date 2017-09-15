@@ -13,7 +13,8 @@ from .base import BasePanelWidget
 
 class NotificationPanel(BasePanelWidget):
     def __init__(self):
-        super(NotificationPanel, self).__init__("Notifications")
+        super(NotificationPanel, self).__init__("Notifications",
+                                                allow_closing=True)
         self.doesDockOnClose = False
         # Register for broadcast events.
         register_for_broadcasts(self)
