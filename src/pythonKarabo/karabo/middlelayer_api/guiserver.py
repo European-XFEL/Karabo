@@ -235,13 +235,6 @@ class GuiServer(DeviceClientBase):
         for c in self.channels:
             self.respond(c, "deviceSchema", deviceId=deviceId, schema=schema)
 
-    @slot
-    def slotNotification(self, type, shortMessage, detailedMessage, deviceId):
-        for c in self.channels:
-            self.respond(c, "notification", deviceId=deviceId,
-                         messageType=type, shortMsg=shortMessage,
-                         detailedMsg=detailedMessage)
-
     @coroutine
     def log_handler(self):
         consumer = openmq.Consumer(self._ss.session, self._ss.destination,
