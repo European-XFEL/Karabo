@@ -643,8 +643,6 @@ class PythonDevice(NoFsm):
                      or prevParamsInAlarm.get(key + ".type") != alarmType)):
                     # A new alarm - so it is worth to notify the sysyem:
                     self.log.WARN("{}: {}".format(alarmType, desc["message"]))
-                    self._ss.emit("signalNotification", alarmType,
-                                  desc["message"], "", self.deviceid)
                 conditions.append(AlarmCondition.fromString(alarmType))
 
             mostSignificantCondition = AlarmCondition\
@@ -1012,7 +1010,6 @@ class PythonDevice(NoFsm):
         :return:
         """
         self.log.ERROR("{} -- {}".format(shortMessage, detailedMessage))
-        self._ss.emit("signalNotification", "ERROR", shortMessage, detailedMessage, self.deviceid)
 
     def preReconfigure(self, incomingReconfiguration):
         """
@@ -1088,8 +1085,6 @@ class PythonDevice(NoFsm):
         """
 
         self.log.ERROR(shortMessage + " -- " + detailedMessage)
-        self._ss.emit("signalNotification", "EXCEPTION", shortMessage,
-                      detailedMessage, self.deviceid)
 
     def noStateTransition(self, currentState, currentEvent):
         """
@@ -1138,8 +1133,6 @@ class PythonDevice(NoFsm):
         #-------------------------------------------- register intrinsic signals
         self._ss.registerSignal("signalChanged", Hash, str)                # changeHash, instanceId
         self._ss.registerSystemSignal("signalStateChanged", Hash, str)                # changeHash, instanceId
-
-        self._ss.registerSystemSignal("signalNotification", str, str, str, str)     # type, shortMessage, detailedMessage, deviceId
 
         self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
 
