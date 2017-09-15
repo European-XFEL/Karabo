@@ -457,8 +457,6 @@ namespace karabo {
 
             void logHandler(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
-            void slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string& deviceId);
-
             void slotLoggerMap(const karabo::util::Hash& loggerMap);
 
             void slotDumpDebugInfo(const karabo::util::Hash& info);
