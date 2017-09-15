@@ -151,7 +151,6 @@ namespace karabo {
 
             KARABO_INITIAL_FUNCTION(initialize)
 
-            KARABO_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
             KARABO_SLOT(slotAlarmSignalsUpdate, std::string, std::string, karabo::util::Hash );
             KARABO_SLOT(slotRunConfigSourcesUpdate, karabo::util::Hash, std::string);
@@ -1065,22 +1064,6 @@ namespace karabo {
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in schemaUpdatedHandler(): " << e.userFriendlyMsg();
-            }
-        }
-
-
-        void GuiServerDevice::slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string & deviceId) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting notification";
-                Hash h("type", "notification", "deviceId", deviceId,
-                       "messageType", type, "shortMsg", shortMessage,
-                       "detailedMsg", detailedMessage);
-
-                // Broadcast to all GUIs
-                safeAllClientsWrite(h);
-
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in slotNotification(): " << e.userFriendlyMsg();
             }
         }
 
