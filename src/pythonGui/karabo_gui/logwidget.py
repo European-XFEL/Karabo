@@ -21,12 +21,9 @@ from karabo_gui.util import getSaveFileName
 
 
 class LogWidget(QWidget):
-    def __init__(self, parent=None, isLogData=True):
+    def __init__(self, parent=None):
         # parent - parent widget
-        # isLogData - describes whether this widget is a normal log or an notification widget
         super(LogWidget, self).__init__(parent)
-
-        self.isLogData = isLogData
 
         # Main layout
         vLayout = QVBoxLayout(self)
@@ -215,79 +212,15 @@ class LogWidget(QWidget):
         self.pbFilterError.setChecked(True)
         self.pbFilterError.clicked.connect(self.onFilterChanged)
 
-        text = "Show alarm messages"
-        self.pbFilterAlarm = QToolButton()
-        self.pbFilterAlarm.setIcon(icons.logAlarm)
-        self.pbFilterAlarm.setMinimumSize(32,32)
-        self.pbFilterAlarm.setStatusTip(text)
-        self.pbFilterAlarm.setToolTip(text)
-        self.pbFilterAlarm.setCheckable(True)
-        self.pbFilterAlarm.setChecked(True)
-        self.pbFilterAlarm.clicked.connect(self.onFilterChanged)
-
-        text = "Show warning messages"
-        self.pbFilterWarning = QToolButton()
-        self.pbFilterWarning.setIcon(icons.logWarning)
-        self.pbFilterWarning.setMinimumSize(32,32)
-        self.pbFilterWarning.setStatusTip(text)
-        self.pbFilterWarning.setToolTip(text)
-        self.pbFilterWarning.setCheckable(True)
-        self.pbFilterWarning.setChecked(True)
-        self.pbFilterWarning.clicked.connect(self.onFilterChanged)
-
         hFilterLayout.setContentsMargins(5,5,5,5)
         hFilterLayout.addWidget(self.laFilter)
         hFilterLayout.addWidget(self.pbFilterDebug)
         hFilterLayout.addWidget(self.pbFilterInfo)
         hFilterLayout.addWidget(self.pbFilterWarn)
         hFilterLayout.addWidget(self.pbFilterError)
-        hFilterLayout.addWidget(self.pbFilterAlarm)
-        hFilterLayout.addWidget(self.pbFilterWarning)
         hFilterLayout.addStretch()
 
-        if self.isLogData:
-            # Show these buttons
-            self.pbFilterDebug.setChecked(True)
-            self.pbFilterDebug.setVisible(True)
-            self.pbFilterInfo.setChecked(True)
-            self.pbFilterInfo.setVisible(True)
-            self.pbFilterWarn.setChecked(True)
-            self.pbFilterWarn.setVisible(True)
-            self.pbFilterError.setChecked(True)
-            self.pbFilterError.setVisible(True)
-            # Do not show these buttons
-            self.pbFilterAlarm.setChecked(True)
-            self.pbFilterAlarm.setVisible(False)
-            self.pbFilterWarning.setChecked(True)
-            self.pbFilterWarning.setVisible(False)
-        else:
-            # Do not show these buttons
-            self.pbFilterDebug.setChecked(True)
-            self.pbFilterDebug.setVisible(False)
-            self.pbFilterInfo.setChecked(True)
-            self.pbFilterInfo.setVisible(False)
-            self.pbFilterWarn.setChecked(True)
-            self.pbFilterWarn.setVisible(False)
-            # Show these buttons
-            self.pbFilterError.setChecked(True)
-            self.pbFilterError.setVisible(True)
-            self.pbFilterAlarm.setChecked(True)
-            self.pbFilterAlarm.setVisible(True)
-            self.pbFilterWarning.setChecked(True)
-            self.pbFilterWarning.setVisible(True)
-
         return filterWidget
-
-    def onNotificationAvailable(self, deviceId, messageType, shortMsg,
-                                detailedMsg):
-        new = Log(self.tailindex, messageType=messageType,
-                  instanceId=deviceId, description=shortMsg,
-                  additionalDescription=detailedMsg,
-                  dateTime=QDateTime.currentDateTime())
-        self.tailindex += 1
-        self.logs.append(new)
-        self.queryModel.add(new)
-        self.prune()
 
     def onLogDataAvailable(self, logData):
         new = [Log(i, messageType=log["type"], instanceId=log["category"],
@@ -331,15 +264,8 @@ class LogWidget(QWidget):
 
     def filter(self, g):
         """ filter relevant items from generator g"""
-        if self.isLogData:
-            buttons = dict(DEBUG=self.pbFilterDebug, INFO=self.pbFilterInfo,
-                           WARN=self.pbFilterWarn, ERROR=self.pbFilterError)
-        else:
-            buttons = dict(ERROR=self.pbFilterError,
-                           ALARM_LOW=self.pbFilterAlarm,
-                           ALARM_HIGH=self.pbFilterAlarm,
-                           WARN_LOW=self.pbFilterWarning,
-                           WARN_HIGH=self.pbFilterWarning)
+        buttons = dict(DEBUG=self.pbFilterDebug, INFO=self.pbFilterInfo,
+                       WARN=self.pbFilterWarn, ERROR=self.pbFilterError)
         types = {k for k, v in buttons.items() if v.isChecked()}
         if types:
             g = (log for log in g if (log.messageType in types))
