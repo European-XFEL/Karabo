@@ -1474,8 +1474,6 @@ namespace karabo {
 
                 KARABO_SYSTEM_SIGNAL2("signalStateChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
 
-                KARABO_SYSTEM_SIGNAL4("signalNotification", string /*type*/, string /*messageShort*/, string /*messageDetail*/, string /*deviceId*/);
-
                 KARABO_SYSTEM_SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
 
                 KARABO_SIGNAL2("signalAlarmUpdate", std::string, karabo::util::Hash);
@@ -1751,7 +1749,6 @@ namespace karabo {
                             if (!previousParametersInAlarm.has(propertyName)
                                 || previousParametersInAlarm.get<string>(propertyName + ".type") != type) {
                                     KARABO_LOG_WARN << type << ": " << desc.get<string>("message");
-                                    emit("signalNotification", type, desc.get<string>("message"), string(), m_deviceId);
                                 }
                         }
                         v.push_back(AlarmCondition::fromString(type));

@@ -391,11 +391,7 @@ class Manager(QObject):
     # ---------------------------------------------------------------------
 
     def handle_notification(self, device, message, short, detailed):
-        data = {'device_id': device,
-                'message_type': message,
-                'short_msg': short,
-                'detailed_msg': detailed}
-        broadcast_event(KaraboEventSender.NotificationMessage, data)
+        pass
 
     def handle_networkData(self, name, data):
         """This method handles the big data chucks coming from directly

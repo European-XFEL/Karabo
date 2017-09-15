@@ -27,7 +27,6 @@ class KaraboEventSender(Enum):
     MinimizePanel = "Minimize a panel"
     MiddlePanelClosed = "Middle panel closed"
     NetworkConnectStatus = "Network connection changed"
-    NotificationMessage = "Notification message"
     OpenSceneLink = "Scene link"
     ProcessingDelay = "Delay"
     RemoveAlarmServices = "Remove alarm services"
