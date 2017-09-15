@@ -1,12 +1,3 @@
-# this script is loaded at the beginning of a cli session
-# it has side-effects while importing (like showing a banner)
-# so don't use it for anything else
-
-# when expanding this script, assure that afterwards it is still
-# easily importable, which is important for the tests. No side effects
-# should happend if this script is just imported as a module, so
-# all side effects should be added to the if statement below.
-
 from asyncio import set_event_loop
 import functools
 import os
@@ -17,32 +8,10 @@ import sys
 
 import IPython
 
-import karabo
-from karabo.common.states import State
-from karabo.usermacros import (
-    AcquiredFromLog, AcquiredOffline, AScan, AMesh, AMove, APathScan,
-    Closable, Coolable, DScan, DMesh, DMove, GenericProxy, Movable,
-    plot, Pumpable, scans, Sensible, TScan)
 from . import device_client
-from .device_client import (
-    DeviceClientBase, disconnectDevice, execute, executeNoWait, getClasses,
-    getDevice, getDevices, getHistory, getServers, instantiate,
-    instantiateNoWait, setWait, setNoWait, shutdown, shutdownNoWait,
-    waitUntil, waitUntilNew)
+from .device_client import DeviceClientBase, getDevice
 from .eventloop import NoEventLoop
 from .macro import EventThread, Macro
-from .synchronization import sleep
-
-# NOTE: This is the namespace for ikarabo
-__all__ = ["connectDevice", "disconnectDevice", "execute",
-           "executeNoWait", "getClasses", "getDevice", "getDevices",
-           "getHistory", "getServers", "instantiate", "instantiateNoWait",
-           "karabo", "setWait", "setNoWait", "shutdown",
-           "shutdownNoWait", "sleep", "State", "waitUntil", "waitUntilNew",
-           "AcquiredFromLog", "AcquiredOffline", "AScan", "AMesh", "AMove",
-           "APathScan", "Closable", "Coolable", "DScan", "DMesh", "DMove",
-           "GenericProxy", "Movable", "plot", "Pumpable", "scans", "Sensible",
-           "TScan"]
 
 
 class DeviceClient(Macro, DeviceClientBase):
@@ -95,14 +64,8 @@ def start_device_client():
 
     return thread
 
-# here starts the main part of this script. It does not use the
-# standard if __name__ == "__main__" idiom, instead it checks whether
-# this script is started from within ipython, in which case it installs
-# everything needed into the ipython kernel.
 
-
-ip = IPython.get_ipython()
-if ip is not None:
+def start_ikarabo():
     with open(osp.join(osp.dirname(sys.base_prefix), "VERSION"), "r") as fin:
         version = fin.read()
 
@@ -112,6 +75,7 @@ if ip is not None:
 
     start_device_client()
 
+    ip = IPython.get_ipython()
     ip.set_hook("complete_command", device_completer,
                 re_key=".*((get|connect)Device|execute(NoWait)?|"
                        "set(No)?Wait|shutdown(NoWait)?|getHistory)\(")
