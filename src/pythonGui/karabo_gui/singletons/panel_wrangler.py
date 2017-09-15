@@ -164,7 +164,7 @@ class PanelWrangler(QObject):
             return
         del self._run_config_panels[instance_id]
         if self.main_window is not None:
-            self.main_window.removePanel(panel, PanelAreaEnum.Right)
+            self.main_window.removePanel(panel, PanelAreaEnum.MiddleBottom)
 
     def _close_run_config_group(self, instance_id):
         panel = self._run_config_group_panels.get(instance_id)
@@ -172,7 +172,7 @@ class PanelWrangler(QObject):
             return
         del self._run_config_group_panels[instance_id]
         if self.main_window is not None:
-            self.main_window.removePanel(panel, PanelAreaEnum.Right)
+            self.main_window.removePanel(panel, PanelAreaEnum.MiddleBottom)
 
     def _close_project_item_panels(self, models):
         for model in models:
@@ -217,7 +217,7 @@ class PanelWrangler(QObject):
             if len(self._run_config_panels) == 0:
                 title = "RunConfig"
             panel = RunConfigPanel(instance_id, title)
-            main_win.addPanel(panel, PanelAreaEnum.Right)
+            main_win.addPanel(panel, PanelAreaEnum.MiddleBottom)
             self._run_config_panels[instance_id] = panel
 
     def _open_run_config_group(self, instance_id):
@@ -229,7 +229,7 @@ class PanelWrangler(QObject):
         if panel is None:
             title = instance_id
             panel = RunConfigGroupPanel(instance_id, title)
-            main_win.addPanel(panel, PanelAreaEnum.Right)
+            main_win.addPanel(panel, PanelAreaEnum.MiddleBottom)
             self._run_config_group_panels[instance_id] = panel
 
     def _open_macro(self, model):
