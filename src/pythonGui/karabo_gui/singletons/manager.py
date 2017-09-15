@@ -390,6 +390,9 @@ class Manager(QObject):
 
     # ---------------------------------------------------------------------
 
+    def handle_notification(self, device, message, short, detailed):
+        pass
+
     def handle_networkData(self, name, data):
         """This method handles the big data chucks coming from directly
         connected devices (p2p) to `GuiServerDevice`. To keep the GUI
