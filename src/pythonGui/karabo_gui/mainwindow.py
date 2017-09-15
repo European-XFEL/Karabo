@@ -24,7 +24,6 @@ from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.container import PanelContainer
 from karabo_gui.panels.loggingpanel import LoggingPanel
 from karabo_gui.panels.navigationpanel import NavigationPanel
-from karabo_gui.panels.notificationpanel import NotificationPanel
 from karabo_gui.panels.projectpanel import ProjectPanel
 from karabo_gui.panels.scriptingpanel import ScriptingPanel
 from karabo_gui.singletons.api import (get_db_conn, get_network,
@@ -50,7 +49,6 @@ class PanelAreaEnum(Enum):
 
 _CLOSEABLE_PANELS = {
     'Log': (LoggingPanel, PanelAreaEnum.MiddleBottom),
-    'Notifications': (NotificationPanel, PanelAreaEnum.MiddleBottom),
     'Console': (ScriptingPanel, PanelAreaEnum.MiddleBottom)
 }
 
