@@ -7,8 +7,6 @@ class ImageProcessorAsSensible(Sensible):
     """"Generalized interface to the image processor device"""
     generalizes = ('ImageProcessor',)
 
-    state_mapping = {State.NORMAL: State.ACQUIRING}
-
     @synchronize
     def acquire(self):
         """No action is needed to put imageProcessor in acquisition"""

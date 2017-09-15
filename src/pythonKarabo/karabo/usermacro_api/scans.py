@@ -366,7 +366,7 @@ class AScan(UserMacro):
                     yield from self._sensible.acquire()
 
                 if self.steps:
-                    print("Step {} - Motors at {}"
+                    print("Step {} - Movable at {}"
                           .format(self.stepNum.magnitude,
                                   self._movable.position))
                     print("  Acquiring for {}"
@@ -650,7 +650,7 @@ class AMove(UserMacro):
         def __print_motor_position():
             linelen = 80
             print("\n"+"-"*linelen)
-            print("Motors at {}".format(self._movable.position))
+            print("Movable at {}".format(self._movable.position))
             print("-"*linelen)
 
         expected = (State.MOVING, State.ON)
