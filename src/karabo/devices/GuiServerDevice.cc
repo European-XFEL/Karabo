@@ -102,6 +102,14 @@ namespace karabo {
                     .readOnly().initialValue(0)
                     .commit();
 
+            STRING_ELEMENT(expected).key("logForwardingLevel")
+                    .displayedName("Log Forwarding Level")
+                    .description("The lowest log message level which will be forwarded to GUI clients.")
+                    .options("ERROR,WARN,INFO,DEBUG")
+                    .assignmentOptional().defaultValue("ERROR")
+                    .reconfigurable()
+                    .commit();
+
             NODE_ELEMENT(expected).key("networkPerformance")
                     .displayedName("Network performance monitoring")
                     .description("Contains information about how much data is being read/written from/to the network")
@@ -166,6 +174,7 @@ namespace karabo {
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading
 
             m_loggerInput = config;
+            m_loggerMinForwardingPriority = krb_log4cpp::Priority::getPriorityValue(config.get<std::string>("logForwardingLevel"));
         }
 
 
@@ -240,6 +249,7 @@ namespace karabo {
 
         void GuiServerDevice::postReconfigure() {
             remote().setDeviceMonitorInterval(get<int>("propertyUpdateInterval"));
+            m_loggerMinForwardingPriority = krb_log4cpp::Priority::getPriorityValue(get<std::string>("logForwardingLevel"));
 
             // One might also want to react on possible changes of "delayOnInput",
             // i.e. change delay value for existing input channels.
@@ -1070,9 +1080,23 @@ namespace karabo {
 
         void GuiServerDevice::logHandler(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
             try {
-                Hash h("type", "log", "messages", body->get<std::vector<util::Hash> >("messages"));
-                // Broadcast to all GUIs
-                safeAllClientsWrite(h, REMOVE_OLDEST);
+                // Filter the messages before forwarding!
+                const std::vector<util::Hash>& inMessages = body->get<std::vector<util::Hash> >("messages");
+                std::vector<util::Hash> outMessages;
+
+                BOOST_FOREACH(const util::Hash& msg, inMessages) {
+                    const krb_log4cpp::Priority::Value priority(krb_log4cpp::Priority::getPriorityValue(msg.get<std::string>("type")));
+                    // The lower the number, the higher the priority
+                    if (priority <= m_loggerMinForwardingPriority) {
+                        outMessages.push_back(msg);
+                    }
+                }
+
+                if (outMessages.size() > 0){
+                    Hash h("type", "log", "messages", outMessages);
+                    // Broadcast to all GUIs
+                    safeAllClientsWrite(h, REMOVE_OLDEST);
+                }
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();
