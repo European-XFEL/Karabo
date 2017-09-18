@@ -367,13 +367,7 @@ class Descriptor(object):
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        else:
-            instance._use()
-            if self.key not in instance.__dict__:
-                ret = basetypes.NoneValue(descriptor=self)
-                ret._parent = instance
-                return ret
-            return instance.__dict__[self.key]
+        return instance._getValue(self.key)
 
     def __set__(self, instance, value):
         if (self.assignment is Assignment.OPTIONAL and
