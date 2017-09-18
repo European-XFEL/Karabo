@@ -15,6 +15,7 @@ class GroupLayout(BaseLayout, QLayout):
     def __init__(self, model, parent=None):
         super(GroupLayout, self).__init__(model, parent)
         self._children = []
+        self._child_bounds = None
 
     def _add_layout(self, layout):
         self.addItem(layout)
@@ -27,9 +28,11 @@ class GroupLayout(BaseLayout, QLayout):
 
     def addItem(self, item):
         self._children.append(item)
+        self._child_bounds = None
 
     def removeItem(self, item):
         self._children.remove(item)
+        self._child_bounds = None
         super(GroupLayout, self).removeItem(item)
 
     def itemAt(self, index):
@@ -40,6 +43,7 @@ class GroupLayout(BaseLayout, QLayout):
 
     def takeAt(self, index):
         item = self._children.pop(index)
+        self._child_bounds = None
         layout = item.layout()
         if layout is not None and layout.parent() is self:
             layout.setParent(None)
@@ -59,7 +63,7 @@ class GroupLayout(BaseLayout, QLayout):
         model = self.model
         rect = QRect(model.x, model.y, model.width, model.height)
         if rect.isEmpty():
-            rect = QRect(*calc_bounding_rect(self._children))
+            rect = QRect(*self._child_bounding_rect())
         return rect
 
     def maximumSize(self):
@@ -69,7 +73,7 @@ class GroupLayout(BaseLayout, QLayout):
         return self.sizeHint()
 
     def sizeHint(self):
-        x, y, w, h = calc_bounding_rect(self._children)
+        x, y, w, h = self._child_bounding_rect()
         return QSize(w, h)
 
     def setGeometry(self, rect):
@@ -88,6 +92,14 @@ class GroupLayout(BaseLayout, QLayout):
                 item.translate(offset)
 
         super(GroupLayout, self).setGeometry(rect)
+
+    def _child_bounding_rect(self):
+        """Cache the result of calc_bounding_rect to avoid expensive
+        recalculation.
+        """
+        if self._child_bounds is None:
+            self._child_bounds = calc_bounding_rect(self._children)
+        return self._child_bounds
 
 
 class BoxLayout(BaseLayout, QBoxLayout):
