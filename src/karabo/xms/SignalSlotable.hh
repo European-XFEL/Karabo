@@ -210,7 +210,7 @@ namespace karabo {
              */
             void updateInstanceInfo(const karabo::util::Hash& update, bool remove = false);
 
-            const karabo::util::Hash& getInstanceInfo() const;
+            karabo::util::Hash getInstanceInfo() const;
 
             // TODO This hook is dead-code currently, bring back in shape with event-loop refactoring
             void registerInstanceNewHandler(const InstanceInfoHandler& instanceNewHandler);
@@ -597,6 +597,7 @@ namespace karabo {
             };
 
             std::string m_instanceId;
+            mutable boost::shared_mutex m_instanceInfoMutex;
             karabo::util::Hash m_instanceInfo;
             std::string m_username;
 
