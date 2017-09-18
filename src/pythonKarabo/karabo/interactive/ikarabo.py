@@ -1,9 +1,21 @@
 from IPython import start_ipython
 
+SCRIPT = """
+# This provides the namespace
+from karabo.middlelayer.cli import *
+from karabo.usermacros.cli import *
+
+# This initializes everything
+from karabo.middlelayer_api import ikarabo
+ikarabo.start_ikarabo()
+# get the devices global which is lazily initialized in the ikarabo module
+devices = ikarabo.devices
+del ikarabo
+"""
+
 
 def main():
-    code_to_run = 'from karabo.middlelayer_api.cli import *'
-    start_ipython(code_to_run=code_to_run, force_interact=True,
+    start_ipython(code_to_run=SCRIPT, force_interact=True,
                   display_banner=False)
 
 
