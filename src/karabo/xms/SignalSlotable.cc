@@ -257,6 +257,7 @@ namespace karabo {
                 stopEmittingHearbeats();
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << m_instanceId << "\" shuts cleanly down";
+                boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
                 call("*", "slotInstanceGone", m_instanceId, m_instanceInfo);
             }
             EventLoop::removeThread();
@@ -264,38 +265,44 @@ namespace karabo {
 
 
         void SignalSlotable::deregisterFromShortcutMessaging() {
-            boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
-            auto it = m_instanceMap.find(m_instanceId);
-            // Let's be sure that we remove ourself:
-            if (it != m_instanceMap.end() && it->second == this) {
-                m_instanceMap.erase(it);
+            {
+                boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
+                auto it = m_instanceMap.find(m_instanceId);
+                // Let's be sure that we remove ourself:
+                if (it != m_instanceMap.end() && it->second == this) {
+                    m_instanceMap.erase(it);
+                }
+                // Transfer the connection resources discovering duty to another SignalSlotable if any
+                if (m_discoverConnectionResourcesMode) {
+                    it = m_instanceMap.begin();
+                    if (it != m_instanceMap.end()) it->second->m_discoverConnectionResourcesMode = true;
+                    m_discoverConnectionResourcesMode = false;
+                }
             }
-            // Transfer the connection resources discovering duty to another SignalSlotable if any
-            if (m_discoverConnectionResourcesMode) {
-                it = m_instanceMap.begin();
-                if (it != m_instanceMap.end()) it->second->m_discoverConnectionResourcesMode = true;
-                m_discoverConnectionResourcesMode = false;
-            }
+            boost::unique_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
             m_instanceInfo.erase("p2p_connection");
         }
 
 
         void SignalSlotable::registerForShortcutMessaging() {
-            boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
-            SignalSlotable*& instance = m_instanceMap[m_instanceId];
-            if (!instance) {
-                instance = this;
-            } else if (instance != this) {
-                // Do not dare to call methods on instance - could already be destructed...?
-                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Cannot register "
-                        << "for short-cut messaging since there is already another instance.";
+            {
+                boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
+                SignalSlotable*& instance = m_instanceMap[m_instanceId];
+                if (!instance) {
+                    instance = this;
+                } else if (instance != this) {
+                    // Do not dare to call methods on instance - could already be destructed...?
+                    KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Cannot register "
+                            << "for short-cut messaging since there is already another instance.";
+                }
+                if (!m_pointToPoint) {
+                    m_pointToPoint = boost::make_shared<PointToPoint>();
+                    m_discoverConnectionResourcesMode = true;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint producer connection string is \""
+                            << m_pointToPoint->getConnectionString() << "\"";
+                }
             }
-            if (!m_pointToPoint) {
-                m_pointToPoint = boost::make_shared<PointToPoint>();
-                m_discoverConnectionResourcesMode = true;
-                KARABO_LOG_FRAMEWORK_DEBUG << "PointToPoint producer connection string is \""
-                        << m_pointToPoint->getConnectionString() << "\"";
-            }
+            boost::unique_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
             m_instanceInfo.set("p2p_connection", m_pointToPoint->getConnectionString());
         }
 
@@ -307,6 +314,7 @@ namespace karabo {
             m_instanceId = instanceId;
             m_connection = connection;
             m_heartbeatInterval = heartbeatInterval;
+            // Threading not yet established for this instance, so no mutex lock needed
             m_instanceInfo = instanceInfo;
 
             // Currently only removes dots
@@ -325,6 +333,7 @@ namespace karabo {
 
             registerDefaultSignalsAndSlots();
 
+            // No mutex lock needed yet, see above
             m_instanceInfo.set("heartbeatInterval", m_heartbeatInterval);
             m_instanceInfo.set("karaboVersion", karabo::util::Version::getVersion());
         }
@@ -339,7 +348,10 @@ namespace karabo {
             m_randPing = 0; // Allows to answer on slotPing with argument rand = 0.
             registerForShortcutMessaging();
             startPerformanceMonitor();
-            call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
+            {
+                boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
+                call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
+            }
             // Start emitting heartbeats, but do not send one immediately: All others will just got notified about us.
             // If they are interested to track us, they will not miss our heartbeat before (five times [see
             // letInstanceSlowlyDieWithoutHeartbeat]) our heartbeat interval. But if we send the heartbeat immediately,
@@ -996,6 +1008,7 @@ namespace karabo {
             reconnectSignals(instanceId);
 
             if (m_discoverConnectionResourcesMode) {
+                boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
                 updateP2pConnectionStrings(instanceId, instanceInfo, m_instanceInfo);
             }
 
@@ -1051,6 +1064,7 @@ namespace karabo {
 
             if (m_discoverConnectionResourcesMode) {
                 // We are in charge to take care of global p2p_connection info (added, changed or even removed)
+                boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
                 updateP2pConnectionStrings(instanceId, instanceInfo, m_instanceInfo);
             }
         }
@@ -1064,6 +1078,7 @@ namespace karabo {
         void SignalSlotable::emitHeartbeat(const boost::system::error_code& e) {
             if (e) return;
             try {
+                boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
                 emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, m_instanceInfo);
             } catch (std::exception &e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "emitHeartbeat triggered an exception: " << e.what();
@@ -1132,11 +1147,13 @@ namespace karabo {
                         // 1) It is not me, so that guy must not come up: tell him. Note: Two guys coming up
                         //    at the same time with the same id might both fail here.
                         // 2) I just reply my existence.
+                        boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
                         reply(m_instanceInfo);
                     }
                 }
             } else if (!m_randPing) {
                 // I should only answer, if my name got accepted which is indicated by a value of m_randPing==0
+                boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
                 call(instanceId, "slotPingAnswer", m_instanceId, m_instanceInfo);
             }
         }
@@ -1229,6 +1246,7 @@ namespace karabo {
 
 
         void SignalSlotable::updateInstanceInfo(const karabo::util::Hash& update, bool remove) {
+            boost::unique_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
             if (remove) {
                 m_instanceInfo.subtract(update);
             } else {
@@ -1238,7 +1256,8 @@ namespace karabo {
         }
 
 
-        const karabo::util::Hash& SignalSlotable::getInstanceInfo() const {
+        karabo::util::Hash SignalSlotable::getInstanceInfo() const {
+            boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
             return m_instanceInfo;
         }
 
