@@ -10,6 +10,7 @@
 #ifndef KARABO_CORE_GUISERVERDEVICE_HH
 #define	KARABO_CORE_GUISERVERDEVICE_HH
 
+#include <krb_log4cpp/Priority.hh>
 #include "karabo/net/JmsProducer.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/xms/InputChannel.hh"
@@ -93,6 +94,7 @@ namespace karabo {
 
             karabo::util::Hash m_loggerMap;
             karabo::util::Hash m_loggerInput;
+            krb_log4cpp::Priority::Value m_loggerMinForwardingPriority;
 
             std::set<std::string> m_projectManagers;
             mutable boost::shared_mutex m_projectManagerMutex;
