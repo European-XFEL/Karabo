@@ -67,3 +67,24 @@ from .middlelayer_api.synchronization import (
 )
 from .middlelayer_api.timestamp import Timestamp
 from .middlelayer_api import numeric
+
+
+def _create_cli_submodule():
+    """Create the namespace used by ikarabo."""
+    import karabo
+    from karabo.common.api import create_module
+    from .middlelayer_api.ikarabo import connectDevice
+
+    # NOTE: This is the middlelayer part of the ikarabo namespace
+    symbols = (
+        connectDevice, disconnectDevice, execute, executeNoWait, getClasses,
+        getDevice, getDevices, getHistory, getServers, instantiate,
+        instantiateNoWait, karabo, setWait, setNoWait, shutdown,
+        shutdownNoWait, sleep, State, waitUntil, waitUntilNew
+    )
+    module = create_module('karabo.middlelayer.cli', *symbols)
+    module.__file__ = __file__  # looks nicer when repr(cli) is used
+    return module
+
+cli = _create_cli_submodule()
+del _create_cli_submodule
