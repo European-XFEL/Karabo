@@ -90,6 +90,11 @@ class EditDelegate(QStyledItemDelegate):
     def setEditorData(self, editor, index):
         """Reimplemented function of QStyledItemDelegate.
         """
+        if editor.initialized:
+            # Don't mess with editors which already received a value!
+            # This avoids resetting cursor positions against the user's will.
+            return
+
         model = index.model()
         obj = model.index_ref(index)
         if obj is None:
@@ -105,6 +110,7 @@ class EditDelegate(QStyledItemDelegate):
                 index, obj, is_edit_col=(index.column() == 2))
 
         editor.editable_widget.valueChanged(obj, value)
+        editor.initialized = True
 
     def setModelData(self, editor, model, index):
         """Reimplemented function of QStyledItemDelegate.
@@ -223,6 +229,7 @@ class EditWidgetWrapper(QWidget):
 
         # Keep a model index reference for use when the editor is closed by Qt
         self.index = index
+        self.initialized = False
 
 
 # -----------------------------------------------------------------------------
