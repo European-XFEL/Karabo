@@ -48,10 +48,17 @@ class PanelAreaEnum(Enum):
     Right = 4
 
 
-_CLOSEABLE_PANELS = {
+_SINGLETON_PANELS = {
+    # Title: (class, position)
+    'Configuration Editor': (ConfigurationPanel, PanelAreaEnum.Right),
+    'Console': (ScriptingPanel, PanelAreaEnum.MiddleBottom),
     'Log': (LoggingPanel, PanelAreaEnum.MiddleBottom),
-    'Console': (ScriptingPanel, PanelAreaEnum.MiddleBottom)
+    'Navigation': (NavigationPanel, PanelAreaEnum.LeftTop),
+    'Projects': (ProjectPanel, PanelAreaEnum.LeftBottom),
 }
+
+
+VIEW_MENU_TITLE = '&View'
 
 
 class MainWindow(QMainWindow):
@@ -72,7 +79,8 @@ class MainWindow(QMainWindow):
 
         self._panel_areas = {}
         self._setupPanelAreas()
-        self._addFixedPanels()
+        for name in _SINGLETON_PANELS:
+            self._open_singleton_panel(name)
 
         title = "European XFEL - Karabo GUI " + krb_globals.GUI_VERSION_LONG
         self.setWindowTitle(title)
@@ -143,6 +151,41 @@ class MainWindow(QMainWindow):
             panel.activateWindow()
             panel.raise_()
 
+    def addViewMenuAction(self, action, name=VIEW_MENU_TITLE, icon=None):
+        """Add a QAction to the view menu, If name is not VIEW_MENU_TITLE,
+        put the action in a sub menu.
+
+        :param action: a QAction to a panel
+        :param name: name of the submenu or VIEW_MENU_TITLE
+        :param icon: icon of the submenu, it is not used if
+            name==VIEW_MENU_TITLE
+        """
+        viewMenus = self.viewMenus
+        if name not in viewMenus:
+            viewMenus[name] = viewMenus[VIEW_MENU_TITLE].addMenu(name)
+            submenu = viewMenus[name]
+            if icon is not None:
+                submenu.setIcon(icon)
+        else:
+            submenu = viewMenus[name]
+        submenu.addAction(action)
+        self.updateViewMenu()
+
+    def removeViewMenuAction(self, action, name=VIEW_MENU_TITLE):
+        """Remove an action from the view menu.
+        """
+        submenu = self.viewMenus.get(name)
+        if submenu is not None:
+            submenu.removeAction(action)
+            self.updateViewMenu()
+
+    def updateViewMenu(self):
+        """This method should be called every time an action in the sub menu
+        of the view menu is changed.
+        """
+        for submenu in self.viewMenus.values():
+            submenu.setEnabled(not submenu.isEmpty())
+
     # --------------------------------------
     # private methods
 
@@ -172,6 +215,9 @@ class MainWindow(QMainWindow):
         self.onUpdateAccessLevel()
         self.tbAccessLevel.setMenu(self.mAccessLevel)
 
+        # Store actions to reopen panels
+        self.panelActions = {}
+
         text = "Connect to server"
         self.acServerConnect = QAction(icons.remote, "&{}".format(text), self)
         self.acServerConnect.setStatusTip(text)
@@ -186,15 +232,6 @@ class MainWindow(QMainWindow):
         self.acExit.setShortcut('Ctrl+Q')
         self.acExit.triggered.connect(self.onExit)
 
-        # Create actions to restore the closeable tabs
-        self._acPanels = {}
-        for name in _CLOSEABLE_PANELS.keys():
-            self._acPanels[name] = QAction(name, self)
-            act = partial(self.onAddCloseablePanel, name)
-            # use partial to pass the name, because QAction triggered
-            # don't take argument
-            self._acPanels[name].triggered.connect(act)
-
         self.acHelpAbout = QAction("About", self)
         self.acHelpAbout.triggered.connect(self.onHelpAbout)
 
@@ -207,9 +244,10 @@ class MainWindow(QMainWindow):
         mFileMenu = menuBar.addMenu("&File")
         mFileMenu.addAction(self.acExit)
 
-        mViewMenu = menuBar.addMenu("&View")
-        for name in _CLOSEABLE_PANELS.keys():
-            mViewMenu.addAction(self._acPanels[name])
+        # Display actions to reopen panels
+        mViewMenu = menuBar.addMenu(VIEW_MENU_TITLE)
+        # reference to view menu and its submenus {menuName: QMenu}
+        self.viewMenus = {VIEW_MENU_TITLE: mViewMenu}
 
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
@@ -234,22 +272,6 @@ class MainWindow(QMainWindow):
 
     def _setupStatusBar(self):
         self.statusBar().showMessage('Ready...')
-
-    def _addFixedPanels(self):
-        """Add panels which only need to be created once
-        """
-        # Left
-        navigation = NavigationPanel()
-        self.addPanel(navigation, PanelAreaEnum.LeftTop)
-        self.addPanel(ProjectPanel(), PanelAreaEnum.LeftBottom)
-
-        # Middle
-        for name in _CLOSEABLE_PANELS.keys():
-            self.onAddCloseablePanel(name)
-
-        # Right
-        configuration = ConfigurationPanel()
-        self.addPanel(configuration, PanelAreaEnum.Right)
 
     def _setupPanelAreas(self):
         """Build the main splitter structure of the main window
@@ -318,6 +340,24 @@ class MainWindow(QMainWindow):
         for panel in container.panel_set:
             panel.setEnabled(enable)
 
+    def _open_singleton_panel(self, name):
+        panel_info = _SINGLETON_PANELS.get(name)
+        if panel_info is None:
+            return
+
+        klass, area_enum = panel_info
+        panel = klass()
+        self.addPanel(panel, area_enum)
+        if panel.allow_closing:
+            if name not in self.panelActions:
+                callback = partial(self._open_singleton_panel, name)
+                action = QAction(name, self)
+                action.triggered.connect(callback)
+                self.addViewMenuAction(action)
+                self.panelActions[name] = action
+            panel.signalPanelClosed.connect(self.onPanelClose)
+            self.panelActions[name].setEnabled(False)
+
     def _panelContainerMaximized(self, panel_container):
         """The given `panel_container` is about to be maximized.
         """
@@ -368,14 +408,6 @@ class MainWindow(QMainWindow):
     # Qt slots
 
     @pyqtSlot()
-    def onAddCloseablePanel(self, name):
-        klass, area_enum = _CLOSEABLE_PANELS.get(name)
-        panel = klass()
-        panel.signalPanelClosed.connect(self.onPanelClose)
-        self.addPanel(panel, area_enum)
-        self._acPanels[name].setEnabled(False)
-
-    @pyqtSlot()
     def onExit(self):
         if not self._quit():
             return
@@ -408,8 +440,9 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(str)
     def onPanelClose(self, name):
-        _, area_enum = _CLOSEABLE_PANELS[name]
-        self._acPanels[name].setEnabled(True)
+        action = self.panelActions.get(name)
+        if action is not None:
+            action.setEnabled(True)
 
     @pyqtSlot(bool)
     def onServerConnectionChanged(self, isConnected):

@@ -26,11 +26,11 @@ class AlarmPanel(BasePanelWidget):
     BLACK_COLOR = QColor(Qt.black)
     RED_COLOR = QColor(*ALARM_COLOR)
 
-    def __init__(self, instanceId, title):
+    def __init__(self, instanceId):
         self.instanceId = instanceId
 
         # Important: call the BasePanelWidget initializer
-        super(AlarmPanel, self).__init__(title)
+        super(AlarmPanel, self).__init__(instanceId)
 
         self._color_toggle = False
         self._color_timer = QTimer()

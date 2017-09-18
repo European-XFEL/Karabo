@@ -95,15 +95,16 @@ class RunConfigGroupModel:
 
 
 class RunConfigGroupPanel(BasePanelWidget):
-    def __init__(self, instanceId, title):
-        super(RunConfigGroupPanel, self).__init__(title)
+    def __init__(self, instanceId):
+        super(RunConfigGroupPanel, self).__init__(
+            instanceId, allow_closing=True)
         self.instanceId = instanceId
         self.model = None
 
         # make title slimmer by displaying icon instead
         # we split off only the last part of the instance id and add slashes
-        self.fullTitle = title
-        tparts = title.split("/")
+        self.fullTitle = instanceId
+        tparts = instanceId.split("/")
         tlast = tparts[-1]
         self.shortTitle = "{}...".format(tlast[:min(6, len(tlast))])
         self.setWindowTitle(self.shortTitle)
@@ -171,6 +172,7 @@ class RunConfigGroupPanel(BasePanelWidget):
         super(RunConfigGroupPanel, self).closeEvent(event)
         if event.isAccepted():
             unregister_from_broadcasts(self)
+            self.signalPanelClosed.emit(self.instanceId)
 
     def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts

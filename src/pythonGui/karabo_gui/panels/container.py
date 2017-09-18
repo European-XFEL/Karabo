@@ -54,7 +54,7 @@ class PanelContainer(QTabWidget):
     def removePanel(self, panel):
         # trigger this to class closeEvent for panels and destroy connections
         # properly
-        panel.force_close()
+        panel.close()
         # Then go about the removal of the tab
         index = self.indexOf(panel)
         if index < 0:
@@ -63,6 +63,9 @@ class PanelContainer(QTabWidget):
         self.removeTab(index)
         panel.setParent(None)
         self.panel_set.remove(panel)
+        if self.maximized:
+            # restore other tabs before remove it
+            panel.onMinimize()
         self._update_tabs_closable()
 
         self._add_placeholder()
@@ -153,7 +156,7 @@ class PanelContainer(QTabWidget):
         # Get panel, which is about to be closed
         panel = self.widget(index)
         # Close panel (if possible) before removing it from tab
-        if not panel.force_close():
+        if not panel.close():
             return
         # Remove panel from tab
         self.removeTab(index)
