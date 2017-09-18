@@ -19,14 +19,14 @@ from .base import BasePanelWidget
 
 
 class RunConfigPanel(BasePanelWidget):
-    def __init__(self, instanceId, title):
-        super(RunConfigPanel, self).__init__(title)
+    def __init__(self, instanceId):
+        super(RunConfigPanel, self).__init__(instanceId, allow_closing=True)
 
         self.instanceId = instanceId
         self.availableGroups = {}
         self.groupBox = None
         self.sendBox = None
-        self.title = title
+        self.title = instanceId
         self.setWindowIcon(icons.runconfig)
         self._setIconAndTooltip()
 
@@ -80,6 +80,7 @@ class RunConfigPanel(BasePanelWidget):
         super(RunConfigPanel, self).closeEvent(event)
         if event.isAccepted():
             unregister_from_broadcasts(self)
+            self.signalPanelClosed.emit(self.instanceId)
 
     def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
