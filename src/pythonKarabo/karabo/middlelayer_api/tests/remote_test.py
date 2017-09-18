@@ -495,13 +495,16 @@ class Tests(DeviceTest):
     def test_waituntilnew(self):
         """test the waitUntilNew coroutine for properties"""
         self.remote.counter = None
+        self.remote.nested.val = None
         with (yield from getDevice("remote")) as d:
             d.counter = 0
-            # we test that d.counter is still None (it must be, no yield from
-            # since last line). This asserts that waitUntilNew also works
-            # with uninitialized values, which had been a bug before.
+            # we test that d.counter and d.nested.val are still None (it
+            # must be, no yield from since last line). This asserts that
+            # waitUntilNew also works with uninitialized values, which
+            # had been a bug before.
             self.assertEqual(d.counter, None)
-            yield from waitUntilNew(d.value, d.counter)
+            self.assertEqual(d.nested.val, None)
+            yield from waitUntilNew(d.value, d.counter, d.nested.val)
             task = async(d.count())
             try:
                 for i in range(30):
@@ -818,7 +821,7 @@ class Tests(DeviceTest):
 
         a = A({"_deviceId_": "devicenode"})
         yield from a.startInstance()
-        self.assertIs(a.dn, None)
+        self.assertEqual(a.dn, None)
 
     @async_tst
     def test_prenatal_proxy(self):
