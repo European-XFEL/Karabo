@@ -1,26 +1,25 @@
-from asyncio import (async, coroutine, get_event_loop, set_event_loop, sleep,
-    wait_for)
+from asyncio import (
+    async, coroutine, get_event_loop, set_event_loop, sleep, wait_for)
 from contextlib import closing
 import gc
 from itertools import count
 import os
 import socket
-import sys
 import time
 from unittest import TestCase, main, skip
 import uuid
 import weakref
 
-from karabo.middlelayer_api.cli import (connectDevice, DeviceClient,
-                                        start_device_client)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.devicenode import DeviceNode
 from karabo.middlelayer_api.device_client import (
-    getDevice, instantiate, shutdown, getDevices, getServers, getClasses)
+    getDevice, shutdown, getDevices)
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.middlelayer_api.exceptions import KaraboError
 from karabo.middlelayer_api.hash import Hash, Int32 as Int, Slot
+from karabo.middlelayer_api.ikarabo import (
+    connectDevice, DeviceClient, start_device_client)
 from karabo.middlelayer_api.macro import Macro, EventThread, RemoteDevice
 
 from .eventloop import setEventLoop
