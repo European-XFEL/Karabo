@@ -9,17 +9,18 @@ from enum import Enum
 from functools import partial
 import os.path
 
-from PyQt4.QtCore import QEvent, Qt, pyqtSlot
+from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (
     QAction, QActionGroup, QLabel, QMainWindow, QMenu, QMessageBox,
     QSizePolicy, QSplitter, QToolButton, QWidget, qApp
 )
 
-import karabo_gui.icons as icons
+from karabo_gui import icons
 from karabo.middlelayer import AccessLevel
-import karabo_gui.globals as krb_globals
+from karabo_gui.dialogs.dialogs import AboutDialog
 from karabo_gui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts)
+import karabo_gui.globals as krb_globals
 from karabo_gui.panels.configurationpanel import ConfigurationPanel
 from karabo_gui.panels.container import PanelContainer
 from karabo_gui.panels.loggingpanel import LoggingPanel
@@ -53,27 +54,6 @@ _CLOSEABLE_PANELS = {
 }
 
 
-class _PatternMatcher(object):
-    """A tiny state machine which watches for a single pattern.
-
-    Useful for watching for specific key sequences...
-    """
-    def __init__(self, pattern):
-        self.pattern = pattern
-        self.index = 0
-
-    def check(self, letter):
-        if letter == self.pattern[self.index]:
-            self.index += 1
-            if self.index == len(self.pattern):
-                self.index = 0
-                return True
-        else:
-            self.index = 0
-
-        return False
-
-
 class MainWindow(QMainWindow):
     """The main window of the application which includes all relevant panels
     and the main toolbar.
@@ -103,10 +83,6 @@ class MainWindow(QMainWindow):
         network.signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
 
-        # Listen for application events
-        qApp.installEventFilter(self)
-        self._net_monitor_matcher = _PatternMatcher('chooch')
-
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary for self due to the fact that the singleton mediator
         # object and `self` are being destroyed when the GUI exists
@@ -122,16 +98,6 @@ class MainWindow(QMainWindow):
 
         event.accept()
         QMainWindow.closeEvent(self, event)
-
-    def eventFilter(self, obj, event):
-        """Listen for key press events
-        """
-        if event.type() == QEvent.KeyPress:
-            if self._net_monitor_matcher.check(event.text()):
-                get_network().togglePerformanceMonitor()
-                self.networkPerfDisplay.setText('')
-
-        return super(MainWindow, self).eventFilter(obj, event)
 
     def karaboBroadcastEvent(self, event):
         sender = event.sender
@@ -417,8 +383,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def onHelpAbout(self):
-        # TODO: add about dialog for karabo including version etc.
-        print("onHelpAbout")
+        AboutDialog(parent=self).open()
 
     @pyqtSlot(object)
     def onChangeAccessLevel(self, action):
