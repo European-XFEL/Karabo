@@ -13,7 +13,58 @@ from PyQt4.QtGui import (QColorDialog, QComboBox, QDialog, QDialogButtonBox,
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
-from karabo_gui.singletons.api import get_project_model
+from karabo_gui import icons
+from karabo_gui.singletons.api import get_project_model, get_network
+
+
+class _PatternMatcher(object):
+    """A tiny state machine which watches for a single pattern.
+
+    Useful for watching for specific key sequences...
+    """
+    def __init__(self, pattern):
+        self.pattern = pattern
+        self.index = 0
+
+    def check(self, letter):
+        if letter == self.pattern[self.index]:
+            self.index += 1
+            if self.index == len(self.pattern):
+                self.index = 0
+                return True
+        else:
+            self.index = 0
+
+        return False
+
+
+class AboutDialog(QDialog):
+    """The about box for our application.
+
+    NOTE: We watch for "cheat codes" here to enable/disable certain application
+    features.
+    """
+    def __init__(self, parent=None):
+        super(AboutDialog, self).__init__(parent)
+        uic.loadUi(op.join(op.dirname(__file__), 'about.ui'), self)
+
+        splash_path = op.join(op.dirname(icons.__file__), 'splash.png')
+        splash_img = QPixmap(splash_path)
+        self.imgLabel.setPixmap(splash_img)
+
+        # Pattern matchers for a specific key combos
+        self._cheat_codes = {
+            _PatternMatcher('chooch'):
+                lambda: get_network().togglePerformanceMonitor()
+        }
+
+    def keyPressEvent(self, event):
+        text = event.text()
+        for matcher, trigger in self._cheat_codes.items():
+            if matcher.check(text):
+                trigger()
+
+        return super(AboutDialog, self).keyPressEvent(event)
 
 
 class PenDialog(QDialog):
