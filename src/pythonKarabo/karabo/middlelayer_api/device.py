@@ -7,7 +7,7 @@ from .alarm import AlarmMixin
 from .basetypes import isSet
 from .enums import AccessLevel, AccessMode, Assignment
 from .exceptions import KaraboError
-from .hash import Bool, HashType, Int32, SchemaHashType, String
+from .hash import Bool, Hash, HashType, Int32, SchemaHashType, String
 from .logger import Logger
 from .schema import Node
 from .signalslot import SignalSlotable, Signal, slot, coslot
@@ -30,12 +30,18 @@ class Device(AlarmMixin, SignalSlotable):
         assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
         defaultValue="__none__")
 
-    visibility = Int32(
+    @Int32(
         enum=AccessLevel, displayedName="Visibility",
         description="Configures who is allowed to see this device at all",
         assignment=Assignment.OPTIONAL, defaultValue=AccessLevel.OBSERVER,
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.RECONFIGURABLE)
+    def visibility(self, newValue):
+        if (newValue != self.visibility):
+            # This setter is already called during initialisation:
+            if hasattr(self, '_ss') and self._ss is not None:
+                self.updateInstanceInfo(Hash("visibility", newValue))
+        self.visibility = newValue
 
     classId = String(
         displayedName="ClassID",
@@ -74,13 +80,19 @@ class Device(AlarmMixin, SignalSlotable):
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
         requiredAccessLevel=AccessLevel.EXPERT, defaultValue="")
 
-    archive = Bool(
+    @Bool(
         displayedName="Archive",
         description="Decides whether the properties of this device "
                     "will be logged or not",
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
         defaultValue=True)
+    def archive(self, newValue):
+        if (newValue != self.archive):
+            # This setter is already called during initialisation:
+            if hasattr(self, '_ss') and self._ss is not None:
+                self.updateInstanceInfo(Hash("archive", newValue))
+        self.archive = newValue
 
     log = Node(Logger,
                description="Logging settings",
