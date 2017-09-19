@@ -83,8 +83,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (void (SignalSlotable::*)(const karabo::util::Hash&, bool))(&SignalSlotable::updateInstanceInfo)
                  , (bp::arg("update"), bp::arg("remove") = false))
             .def("getInstanceInfo"
-                 , (const karabo::util::Hash & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceInfo)
-                 , bp::return_value_policy<bp::copy_const_reference>())
+                 , static_cast<karabo::util::Hash (SignalSlotable::*)() const> (&SignalSlotable::getInstanceInfo))
             .def("registerInstanceNewHandler", &SignalSlotableWrap::registerInstanceNewHandlerPy,
                  (bp::arg("handler")))
 
