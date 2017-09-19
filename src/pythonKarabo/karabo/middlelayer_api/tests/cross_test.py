@@ -209,6 +209,14 @@ class Tests(DeviceTest):
         self.assertEqual(self.device.channelmeta.source, "boundDevice:output1")
         self.assertEqual(self.device.channelcount, 4)
 
+        proxy.output1.connect()
+        task = background(waitUntilNew(proxy.output1.schema.s))
+        while not task.done():
+            # unfortunately, connecting takes time and nobody knows how much
+            yield from proxy.send()
+        yield from task
+        self.assertEqual(proxy.output1.schema.s, "hallo")
+
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
         yield from self.process.wait()
