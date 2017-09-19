@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>    // std::find
+#include <string.h>     // strlen
 
 #include <boost/algorithm/string.hpp>
 
@@ -253,7 +254,7 @@ namespace karabo {
                                               "flushInterval", get<int>("flushInterval"));
                             const Hash hash("classId", "DataLogger", "deviceId", loggerId, "configuration", config);
                             KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' on server '"
-                                    << serverId << "' since device '" << deviceId << "' appeared";
+                                    << serverId << "' since device '" << deviceId << "' appeared (or its logger died)";
                             remote().instantiateNoWait(serverId, hash);
                             // First instantiate the new logger - now we have time to update the logger map file.
                             if (newMap) {
@@ -325,25 +326,47 @@ namespace karabo {
 
             KARABO_LOG_FRAMEWORK_INFO << "instanceGoneHandler -->  instanceId : '"
                     << instanceId << "', type : " << type << " on server '" << serverId << "'";
+            try {
+                if (type == "device") {
+                    const vector<string> onlineDevices = remote().getDevices();
+                    boost::optional<const Hash::Node&> classIdNode = instanceInfo.find("classId");
+                    if (classIdNode && classIdNode->is<std::string>() && classIdNode->getValue<std::string>() == "DataLogger"
+                        && instanceId.find(DATALOGGER_PREFIX) == 0) {
+                        // A DataLogger with the expected prefix - check whether its logged device is still running:
+                        const std::string loggedId(instanceId.substr(strlen(DATALOGGER_PREFIX))); // cut prefix
+                        const bool loggedExists = std::find(onlineDevices.begin(), onlineDevices.end(), loggedId) != onlineDevices.end();
+                        if (loggedExists) {
+                            // Logged device still online - restart logger:
+                            const Hash runtimeInfo = remote().getSystemInformation();
+                            const Hash::Node& deviceNode = runtimeInfo.getNode("device." + loggedId);
+                            // Topology entry as understood by ensureLoggerRunning (see also restartReadersAndLoggers):
+                            // Hash with path "device.<deviceId>"
+                            Hash topologyEntry("device", Hash());
+                            // Copy node with key "<deviceId>" and attributes into the single Hash in topologyEntry:
+                            topologyEntry.begin()->getValue<Hash>().setNode(deviceNode);
+                            // NOTE: This will trigger (the try of) instantiation of the logger, even if it was gone
+                            //       due to a clean shutdown of the logger server. But that does not harm, the
+                            //       instantiation is not run on the server being shut down: Thanks to util::bind_weak,
+                            //       the server does not listen anymore when its destructor runs.
+                            // NOTE 2: If the automatic restart of the logger is not the desired behaviour, one can
+                            //         set the 'archive' flag of the logged device to 'false'.
+                            ensureLoggerRunning(topologyEntry);
+                        }
+                    } else {
+                        const string loggerId = DATALOGGER_PREFIX + instanceId;
 
-            if (type == "device") {
-                const string loggerId = DATALOGGER_PREFIX + instanceId;
-                const vector<string> onlineDevices = remote().getDevices();
+                        const bool deviceExists = std::find(onlineDevices.begin(), onlineDevices.end(), instanceId) != onlineDevices.end();
+                        const bool loggerExists = std::find(onlineDevices.begin(), onlineDevices.end(), loggerId) != onlineDevices.end();
 
-                bool deviceExists = std::find(onlineDevices.begin(), onlineDevices.end(), instanceId) != onlineDevices.end(); //remote().exists(instanceId).first;
-                bool loggerExists = std::find(onlineDevices.begin(), onlineDevices.end(), loggerId) != onlineDevices.end(); //remote().exists(loggerId).first;
-
-                // Safety check
-                if (!deviceExists) {
-                    try {
-                        if (loggerExists) {
+                        // Safety check
+                        if (!deviceExists && loggerExists) {
                             this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
                             remote().killDeviceNoWait(loggerId);
                         }
-                    } catch (const Exception& e) {
-                        KARABO_LOG_ERROR << e;
                     }
                 }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "In instanceGoneHandler: " << e.what();
             }
         }
     }
