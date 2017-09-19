@@ -348,6 +348,8 @@ namespace karabo {
                             //       due to a clean shutdown of the logger server. But that does not harm, the
                             //       instantiation is not run on the server being shut down: Thanks to util::bind_weak,
                             //       the server does not listen anymore when its destructor runs.
+                            // NOTE 2: If the automatic restart of the logger is not the desired behaviour, one can
+                            //         set the 'archive' flag of the logged device to 'false'.
                             ensureLoggerRunning(topologyEntry);
                         }
                     } else {
