@@ -15,12 +15,10 @@ from PyQt4.QtGui import (
 from karabo.middlelayer import Integer, MetricPrefix, Unit
 from karabo_gui.configurator.dialog.table_edit import TableEditDialog
 from karabo_gui.schema import (
-    EditableAttributeInfo, VectorHash, VectorHashCellInfo,
-    EDITABLE_ATTRIBUTE_NAMES)
+    EditableAttributeInfo, VectorHash, EDITABLE_ATTRIBUTE_NAMES)
 from karabo_gui.widget import EditableWidget
-from .utils import (ButtonState, get_attribute_data, get_box_value,
-                    get_vector_col_value, handle_default_state,
-                    set_fill_rect, FIXED_ROW_HEIGHT)
+from .utils import (
+    ButtonState, handle_default_state, set_fill_rect, FIXED_ROW_HEIGHT)
 
 TABLE_BUTTON_TEXT = 'Edit Table'
 BUTTON_LABEL_PADDING = 5
@@ -100,15 +98,7 @@ class EditDelegate(QStyledItemDelegate):
         if obj is None:
             return
 
-        if isinstance(obj, EditableAttributeInfo):
-            _, _, value = get_attribute_data(obj, index.row())
-        elif isinstance(obj, VectorHashCellInfo):
-            value = get_vector_col_value(
-                index, obj, is_edit_col=(index.column() == 2))
-        else:
-            value = get_box_value(
-                index, obj, is_edit_col=(index.column() == 2))
-
+        value = index.data(Qt.EditRole)
         editor.editable_widget.valueChanged(obj, value)
         editor.initialized = True
 
