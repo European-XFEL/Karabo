@@ -7,11 +7,10 @@ from struct import pack, unpack, calcsize
 
 from .enums import Assignment, AccessMode
 from .hash import Bool, Hash, VectorString, Schema, String
+from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
 from .schema import Configurable, Node
 from .serializers import decodeBinary, encodeBinary
 from .synchronization import background
-
-from .proxy import ProxyBase, ProxyFactory
 
 
 class PipelineMetaData(ProxyBase):
@@ -240,3 +239,69 @@ class InputChannel(Node):
             self.description = handler.__doc__
         self.handler = handler
         return self
+
+
+class OutputProxyNode(ProxyNodeBase):
+    """Descriptor representing a Proxy for an output channel"""
+    def __init__(self, key, node, prefix, **kwargs):
+        self.longkey = "{}{}.".format(prefix, key)
+        sub = ProxyFactory.createNamespace(node, self.longkey)
+        cls = type(key, (OutputProxy,), sub)
+        super().__init__(key=key, cls=cls, **kwargs)
+
+    def __get__(self, instance, owner):
+        ret = super().__get__(instance, owner)
+        ret.longkey = self.longkey
+        return ret
+
+
+ProxyFactory.node_factories["OutputChannel"] = OutputProxyNode
+
+
+class OutputProxy(SubProxyBase):
+    """A Proxy for an output channel
+
+    This represents an output channel on a device. Output channels are
+    not connected automatically, but may be connected using :meth:`connect`.
+    """
+    def __init__(self):
+        self.networkInput = NetworkInput(dict(
+            dataDistribution="copy", onSlowness="drop"))
+        self.networkInput.raw = True
+        self.networkInput.handler = self.handler
+        self.task = None
+        self.initialized = False
+
+    @coroutine
+    def handler(self, data, meta):
+        self._parent._onChanged_r(data, self.schema)
+
+    def connect(self):
+        """Connect to the output channel
+
+        The connection is always a copy/drop connection, meaning only samples
+        of the data reach this proxy, without influencing other consumer.
+        For a fully featured input write a device with a
+        :class:`InputChannel`.
+        """
+        if self.task is not None:
+            return
+        output = ":".join((self._parent.deviceId, self.longkey))
+        self.networkInput.parent = self._parent._device
+        self.task = background(self._connect(output))
+
+    @coroutine
+    def _connect(self, output):
+        try:
+            if not self.initialized:
+                yield from self.networkInput._run()
+                self.initialized = True
+            self.networkInput.connected[output] = self.task
+            yield from self.networkInput.start_channel(output)
+        finally:
+            self.task = None
+
+    def disconnect(self):
+        """Disconnect from the output channel"""
+        if self.task is not None:
+            self.task.cancel()
