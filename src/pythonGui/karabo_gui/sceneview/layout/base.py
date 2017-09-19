@@ -11,7 +11,7 @@ class BaseLayout(object):
     def __init__(self, model, *args):
         super(BaseLayout, self).__init__(*args)
         self.model = model
-        self._shape_items = []
+        self._drawable_items = []
 
     def __iter__(self):
         """ Implement the Python iterator protocol for all layouts.
@@ -20,16 +20,16 @@ class BaseLayout(object):
             yield self.itemAt(i)
 
     def _add_layout(self, layout):
-        """ Needs to be reimplemented in the inherited classes to add a layout.
+        """This MUST be called by inherited classes if they overload it!
         """
-        raise NotImplementedError("BaseLayout._add_layout")
+        self._drawable_items.append(layout)
 
     def _add_shape(self, shape):
         """ Use our special hacky workaround for adding shapes to the layout.
         """
         item = ShapeLayoutItem(shape)
         self._add_layout(item)
-        self._shape_items.append(item)
+        self._drawable_items.append(item)
 
     def _add_widget(self, widget):
         """ Needs to be reimplemented in the inherited classes to add a widget.
@@ -38,21 +38,22 @@ class BaseLayout(object):
 
     def _remove_layout(self, layout):
         self.removeItem(layout)
+        self._drawable_items.remove(layout)
 
     def _remove_shape(self, shape):
         for item in self:
             if isinstance(item, ShapeLayoutItem) and item.model is shape.model:
                 # Call QLayout::removeItem()
                 self.removeItem(item)
-                self._shape_items.remove(item)
+                self._drawable_items.remove(item)
                 return
 
     def _remove_widget(self, widget):
         self.removeWidget(widget)
 
     def draw(self, painter):
-        """Draw all the shapes"""
-        for item in self._shape_items:
+        """Draw all the things which have a draw() method"""
+        for item in self._drawable_items:
             item.draw(painter)
 
     def hide(self):

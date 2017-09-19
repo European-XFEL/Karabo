@@ -19,6 +19,7 @@ class GroupLayout(BaseLayout, QLayout):
 
     def _add_layout(self, layout):
         self.addItem(layout)
+        super(GroupLayout, self)._add_layout(layout)
 
     def _add_widget(self, widget):
         self.addWidget(widget)
@@ -109,6 +110,7 @@ class BoxLayout(BaseLayout, QBoxLayout):
 
     def _add_layout(self, layout):
         self.addItem(layout)
+        super(BoxLayout, self)._add_layout(layout)
 
     def _add_widget(self, widget):
         self.addWidget(widget)
@@ -121,6 +123,7 @@ class GridLayout(BaseLayout, QGridLayout):
     def _add_layout(self, layout):
         ld = layout.model.layout_data
         self.addLayout(layout, ld.row, ld.col, ld.rowspan, ld.colspan)
+        super(GridLayout, self)._add_layout(layout)
 
     def _add_widget(self, widget):
         ld = widget.model.layout_data
