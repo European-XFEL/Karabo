@@ -11,11 +11,11 @@ from .common.scenemodel.api import SceneModel, read_scene, write_scene
 from .common.states import State, StateSignifier
 
 from .middlelayer_api.device_client import (
-    connectDevice, DeviceClientBase, disconnectDevice, lock,
-    getConfigurationFromPast, getHistory, waitUntilNew, waitUntil,
-    waitWhile, setWait, instantiate, instantiateNoWait, isAlive, shutdown,
-    shutdownNoWait, setNoWait, getClasses, getDevice, getDevices, getServers,
-    execute, executeNoWait, updateDevice, Queue
+    connectDevice, DeviceClientBase, disconnectDevice, execute, executeNoWait,
+    filterByTags, getClasses, getConfigurationFromPast, getDevice, getDevices,
+    getDescriptors, getServers, getHistory, isAlive, instantiate,
+    instantiateNoWait, lock, waitUntilNew, waitUntil, waitWhile, setWait,
+    shutdown, shutdownNoWait, setNoWait, updateDevice, Queue
 )
 from .middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxySlotBase as ProxySlot,

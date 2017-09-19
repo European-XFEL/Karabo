@@ -28,14 +28,14 @@ class Tests(TestCase):
         h["c", "valueType"] = "INT32"
         h["c", "description"] = "c's description"
         h["c", "allowedStates"] = ["INIT", "UNKNOWN"]
-        h["c", "unitSymbol"] = "mA"
+        h["c", "unitSymbol"] = "A"
         h["c", "defaultValue"] = 17.5
         h["c", "tags"] = ["mpod"]
         h["d", "nodeType"] = NodeType.Leaf.value
         h["d", "valueType"] = "INT32"
         h["d", "description"] = "d's description"
         h["d", "allowedStates"] = ["INIT", "UNKNOWN"]
-        h["d", "unitSymbol"] = "pA"
+        h["d", "unitSymbol"] = "A"
         h["d", "defaultValue"] = 27.5
         h["d", "tags"] = ["mpod", "plc"]
 
