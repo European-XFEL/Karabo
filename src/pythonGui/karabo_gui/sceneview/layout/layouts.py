@@ -91,6 +91,8 @@ class GroupLayout(BaseLayout, QLayout):
                 item.widget().translate(offset)
             else:
                 item.translate(offset)
+        # Invalidate the cached bounds!
+        self._child_bounds = None
 
         super(GroupLayout, self).setGeometry(rect)
 
