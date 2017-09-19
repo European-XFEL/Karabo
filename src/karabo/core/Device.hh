@@ -1918,9 +1918,9 @@ namespace karabo {
                 if (m_lastTimeIdUpdated == 0ull) { // Called the first time
                     m_lastTimeIdUpdated = id - 1ull;
                 }
-                const unsigned long long largestOnTimeUpdateBacklog = 10000000ull; // 10^7
+                const unsigned long long largestOnTimeUpdateBacklog = 600000000ull / period; // 6*10^8: 10 min in microsec
                 if (id > m_lastTimeIdUpdated + largestOnTimeUpdateBacklog) {
-                    // Avoid the loop below to spin longer than 10 s if calling onTimeUpdate runs 10^-6 seconds
+                    // Don't treat an 'id' older than 10 min - for a period of 100 millisec that is 6000 ids in the past
                     KARABO_LOG_WARN << "Big gap between trainIds: from " << m_lastTimeIdUpdated << " to " << id
                             << ". Call hook for time updates only for last " << largestOnTimeUpdateBacklog << " ids.";
                     m_lastTimeIdUpdated += largestOnTimeUpdateBacklog;
