@@ -2,7 +2,7 @@ from enum import Enum
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QStyle
 
-from karabo.middlelayer import AccessMode, Bool, Char, Integer, Number, String
+from karabo.middlelayer import Bool, Char, Integer, Number, String
 import karabo_gui.icons as icons
 from karabo_gui.schema import ChoiceOfNodes, Dummy, Schema, VectorHash
 
