@@ -93,18 +93,6 @@ def set_fill_rect(painter, option, index):
             painter.fillRect(option.rect, brush)
 
 
-def get_attribute_data(attr_info, row):
-    """Return the `name`, the `descriptor` and the actual value of the given
-    `attr_info`
-    """
-    name = attr_info.names[row]
-    box = attr_info.parent()
-    if box is None:
-        return name, None, ''
-    descriptor = box.descriptor
-    return name, descriptor, getattr(descriptor, name)
-
-
 def get_box_value(index, box, is_edit_col=False):
     """Return the actual value of the given `box`, depending on whether this is
     requested for an editable column
