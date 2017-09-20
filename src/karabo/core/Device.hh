@@ -1923,7 +1923,7 @@ namespace karabo {
                     // Don't treat an 'id' older than 10 min - for a period of 100 millisec that is 6000 ids in the past
                     KARABO_LOG_WARN << "Big gap between trainIds: from " << m_lastTimeIdUpdated << " to " << id
                             << ". Call hook for time updates only for last " << largestOnTimeUpdateBacklog << " ids.";
-                    m_lastTimeIdUpdated += largestOnTimeUpdateBacklog;
+                    m_lastTimeIdUpdated = id - largestOnTimeUpdateBacklog;
                 }
 
                 while (m_lastTimeIdUpdated < id) {
