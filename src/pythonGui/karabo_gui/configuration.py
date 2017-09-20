@@ -66,12 +66,16 @@ class Configuration(Box):
         """Clear a user-entered value for the child Box `box`
         """
         # Use `pop` with a default value so this can be called blindly
-        self._user_values.pop(box.key(), None)
+        user_value = self._user_values.pop(box.key(), None)
+        if user_value is not None:
+            box.signalUserChanged.emit(box, box.value, None)
 
     def clearUserValues(self):
         """Clear all user-entered values for child Boxes
         """
-        self._user_values = {}
+        boxes = [self._box_from_key(key) for key in self._user_values]
+        for box in boxes:
+            self.clearUserValue(box)
 
     def getUserValue(self, box):
         """Returns the user-entered value for a Box
@@ -100,8 +104,7 @@ class Configuration(Box):
         for key, value in self._user_values.items():
             if key in self._pending_keys:
                 continue
-            path = key.split('.', 1)[-1].split('.')
-            changes.append((self.getBox(path), value))
+            changes.append((self._box_from_key(key), value))
             self._pending_keys.add(key)
 
         if changes:
@@ -123,6 +126,8 @@ class Configuration(Box):
         else:
             # class & projectClass just get the value immediately
             box.set(value)
+            box.configuration.signalBoxChanged.emit()
+        box.signalUserChanged.emit(box, value, None)
 
     def setSchema(self, schema):
         if self.descriptor is not None:
@@ -258,6 +263,10 @@ class Configuration(Box):
     def shutdown(self):
         manager = get_manager()
         manager.shutdownDevice(self.id)
+
+    def _box_from_key(self, key):
+        path = key.split('.', 1)[-1].split('.')
+        return self.getBox(path)
 
     def _initiate_reconfiguration(self, changes):
         get_network().onReconfigure(changes)
