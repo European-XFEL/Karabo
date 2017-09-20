@@ -37,10 +37,10 @@ class Device(AlarmMixin, SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.RECONFIGURABLE)
     def visibility(self, newValue):
-        if (newValue != self.visibility):
-            # This setter is already called during initialisation:
-            if hasattr(self, '_ss') and self._ss is not None:
-                self.updateInstanceInfo(Hash("visibility", newValue))
+        # This setter is already called during initialisation and then there is
+        # no need to publish yet:
+        if newValue != self.visibility and self._ss is not None:
+            self.updateInstanceInfo(Hash("visibility", newValue))
         self.visibility = newValue
 
     classId = String(
@@ -88,10 +88,10 @@ class Device(AlarmMixin, SignalSlotable):
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
         defaultValue=True)
     def archive(self, newValue):
-        if (newValue != self.archive):
-            # This setter is already called during initialisation:
-            if hasattr(self, '_ss') and self._ss is not None:
-                self.updateInstanceInfo(Hash("archive", newValue))
+        # This setter is already called during initialisation and then there is
+        # no need to publish yet:
+        if newValue != self.archive and self._ss is not None:
+            self.updateInstanceInfo(Hash("archive", newValue))
         self.archive = newValue
 
     log = Node(Logger,
