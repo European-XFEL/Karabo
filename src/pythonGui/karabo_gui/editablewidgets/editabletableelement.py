@@ -246,6 +246,8 @@ class TableModel(QAbstractTableModel):
                 value = True if value == Qt.Checked else False
                 self.cdata[row][columnKey] = value
                 self.dataChanged.emit(idx, idx)
+                if not fromValueChanged:
+                    self.editingFinished(self.cdata)
                 return True
 
         if role == Qt.EditRole or role == Qt.DisplayRole:
