@@ -2346,6 +2346,70 @@ namespace karabo {
         }
 
 
+        void SignalSlotable::asyncConnectP2p(const std::string& signalInstanceId,
+                                             const boost::function<void()>& successHandler,
+                                             const SignalSlotable::Requestor::AsyncErrorHandler& errHandler) {
+
+            if (signalInstanceId == m_instanceId) {
+                if (errHandler) {
+                    try {
+                        throw KARABO_SIGNALSLOT_EXCEPTION("'" + signalInstanceId + "' refuses to self-connect via p2p");
+                    } catch (const std::exception& e) {
+                        errHandler();
+                    }
+                }
+                return;
+            }
+
+            // Try to find connection string (URI) locally in global table: m_connectionStrings
+            std::string signalConnectionString;
+            {
+                boost::mutex::scoped_lock lock(m_connectionStringsMutex);
+                std::map<std::string, std::string>::iterator it = m_connectionStrings.find(signalInstanceId);
+                if (it != m_connectionStrings.end()) {
+                    signalConnectionString = it->second;
+                }
+            }
+
+            // If connection string not found, request instance info that should contain it
+            if (signalConnectionString.empty()) {
+                request(signalInstanceId, "slotPing", signalInstanceId, 1, false)
+                        .receiveAsync<Hash>(bind_weak(&SignalSlotable::connectP2pInfoHandler, this,
+                                                      _1, signalInstanceId, successHandler, errHandler, true),
+                                            errHandler);
+            } else {
+                // directly call handler
+                connectP2pInfoHandler(Hash("p2p_connection", signalConnectionString),
+                                      signalInstanceId, successHandler, errHandler, false);
+            }
+        }
+
+
+        void SignalSlotable::connectP2pInfoHandler(const karabo::util::Hash& instanceInfo,
+                                                   const std::string& signalInstanceId,
+                                                   const boost::function<void()>& successHandler,
+                                                   const SignalSlotable::Requestor::AsyncErrorHandler& errHandler,
+                                                   bool storeConnection) {
+            if (instanceInfo.has("p2p_connection")) {
+                const std::string& signalConnectionString = instanceInfo.get<std::string>("p2p_connection");
+                if (storeConnection) {
+                    boost::mutex::scoped_lock lock(m_connectionStringsMutex);
+                    m_connectionStrings[signalInstanceId] = signalConnectionString;
+                }
+                m_pointToPoint->connect(signalInstanceId, m_instanceId, signalConnectionString,
+                                        bind_weak(&SignalSlotable::onP2pMessage, this, _1, _2));
+                if (successHandler) successHandler();
+            } else if (errHandler) {
+                try {
+                    // Expected for middlelayer in Karabo 2.1.17
+                    throw KARABO_SIGNALSLOT_EXCEPTION("'" + signalInstanceId + "' does not provide p2p");
+                } catch (const std::exception& e) {
+                    errHandler();
+                }
+            }
+        }
+
+
         bool SignalSlotable::connectP2P(const std::string& signalInstanceId) {
             if (signalInstanceId == m_instanceId) return false;
             string signalConnectionString;

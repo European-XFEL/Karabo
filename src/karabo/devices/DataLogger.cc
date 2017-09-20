@@ -148,10 +148,21 @@ namespace karabo {
 
             // First try to establish p2p before connecting signals - i.e. don't to spam the broker with signalChanged.
             if (std::getenv("KARABO_DISABLE_LOGGER_P2P") == NULL) {
-                if (!connectP2P(m_deviceToBeLogged)) { // This should become asynchronous!
-                    // As of now (2017-07-07), this is expected for middlelayer...
-                    KARABO_LOG_FRAMEWORK_WARN << "Could not establish p2p to " << m_deviceToBeLogged;
-                }
+                // copy to avoid capture of bare 'this'
+                const std::string deviceToBeLogged = m_deviceToBeLogged;
+                auto successHandler = [deviceToBeLogged] () {
+                    KARABO_LOG_FRAMEWORK_INFO << "Going to establish p2p to '" << deviceToBeLogged << "'";
+                };
+                auto failureHandler = [deviceToBeLogged] () {
+                    try {
+                        throw;
+                    } catch (const std::exception& e) {
+                        // As of now (2017-09-20), this is expected for middlelayer...
+                        KARABO_LOG_FRAMEWORK_WARN << "Cannot establish p2p to '" << deviceToBeLogged << "' since:\n"
+                                << e.what();
+                    }
+                };
+                asyncConnectP2p(m_deviceToBeLogged, successHandler, failureHandler);
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "Data logging via p2p has been disabled for loggers!";
             }
