@@ -132,8 +132,9 @@ class SignalSlotable(Configurable):
         assignment=Assignment.OPTIONAL, defaultValue=20,
         requiredAccessLevel=AccessLevel.ADMIN)
 
+    _ss = None
+
     def __init__(self, configuration):
-        self._ss = None
         self._sethash = {"ignore": "this"}
         for k in dir(type(self)):
             if isinstance(getattr(self, k, None), Signal):
