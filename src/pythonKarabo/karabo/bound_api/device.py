@@ -212,12 +212,13 @@ class PythonDevice(NoFsm):
                                  "broker messages")
                     .expertAccess()
                     .readOnly().initialValue(False)
-                    # Threshold is exclusive: value True fulfils "> False"
-                    # and triggers alarm whereas False does not:
-                    .alarmHigh(False)
-                    .info("Unreliable broker message consumption - "
-                          "consider restarting device!")
-                    .needsAcknowledging(True)
+                    # Alarm commented as long as it dominates alarm handling:
+                    ## Threshold is exclusive: value True fulfils "> False"
+                    ## and triggers alarm whereas False does not:
+                    #.alarmHigh(False)
+                    #.info("Unreliable broker message consumption - "
+                    #      "consider restarting device!")
+                    #.needsAcknowledging(True)
                     .commit(),
 
             BOOL_ELEMENT(expected).key("performanceStatistics.enable")
