@@ -40,6 +40,14 @@ def _get_child_names(descriptor):
     return get_editable_attributes(descriptor)
 
 
+def _units_repr(box, value):
+    """Return a user-friendly value with units displayed.
+    """
+    units = box.unitLabel()
+    value = str(value)
+    return value + (' ' + units if units and value else '')
+
+
 class ConfigurationTreeModel(QAbstractItemModel):
     signalHasModifications = pyqtSignal(bool)
 
@@ -477,8 +485,11 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return name
             elif role == Qt.DecorationRole:
                 return get_icon(descriptor)
-        elif column in (1, 2) and role == Qt.DisplayRole:
-            return str(value)
+        elif column in (1, 2):
+            if role == Qt.DisplayRole:
+                return str(value)
+            elif role == Qt.EditRole:
+                return value
 
     def _box_data(self, index, box, role, column):
         """data() implementation for properties"""
@@ -493,11 +504,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif role == Qt.DecorationRole:
                 return get_icon(box.descriptor)
         elif column == 1 and role == Qt.DisplayRole:
-            return str(get_box_value(index, box))
+            return _units_repr(box, get_box_value(index, box))
         elif column == 2:
-            if role == Qt.DisplayRole:
-                return str(get_box_value(index, box, is_edit_col=True))
-            elif role == Qt.BackgroundRole:
+            if role == Qt.BackgroundRole:
                 conf = box.configuration
                 if conf.hasUserValue(box):
                     if box.has_conflict:
@@ -506,6 +515,12 @@ class ConfigurationTreeModel(QAbstractItemModel):
                         color = QColor(*STATE_COLORS[State.CHANGING])
                     color.setAlpha(128)
                     return QBrush(color)
+            elif role in (Qt.DisplayRole, Qt.EditRole):
+                value = get_box_value(index, box, is_edit_col=True)
+                if role == Qt.DisplayRole:
+                    return _units_repr(box, value)
+                elif role == Qt.EditRole:
+                    return value
 
     def _vector_col_data(self, index, cell_info, role, column):
         """data() implementation for VectorHash columns"""
@@ -516,9 +531,12 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return get_icon(None)
         elif column == 1 and role == Qt.DisplayRole:
             return str(get_vector_col_value(index, cell_info))
-        elif column == 2 and role == Qt.DisplayRole:
-            return str(get_vector_col_value(index, cell_info,
-                                            is_edit_col=True))
+        elif column == 2:
+            value = get_vector_col_value(index, cell_info, is_edit_col=True)
+            if role == Qt.DisplayRole:
+                return str(value)
+            elif role == Qt.EditRole:
+                return value
 
     def _vector_row_data(self, row_info, role, column, row):
         """data() implementation for VectorHash rows"""
