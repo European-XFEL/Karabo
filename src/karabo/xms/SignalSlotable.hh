@@ -452,9 +452,28 @@ namespace karabo {
             template <class T>
             static std::string generateInstanceId();
 
-            void setDeviceServerPointer(boost::any serverPtr);
-
+            /**
+             * Semi-synchronous request to connect p2p to 'signalInstanceId'.
+             *
+             * @param instanceId is the sender requested to send to us by-passing the broker
+             * @return true if instanceId supports p2p - don't care whether later connect request fails
+             */
             bool connectP2P(const std::string& instanceId);
+
+            /*
+             * Fully asynchronous request to connect via p2p to 'signalInstanceId'.
+             *
+             * Note that the handlers are called depending on whether 'signalInstanceId' supports p2p - the connect
+             * request might still fail if successHandler is called.
+             *
+             * @param signalInstanceId the instance that should send us via p2p
+             * @param successHandler callback if signalInstanceId supports p2p
+             * @param errHandler callback if signalInstanceId does not support p2p (or we cannot find out),
+             *        can do "try { throw; } catch (std::exception& e) { e.what();}" to find info about failure reason
+             */
+            void asyncConnectP2p(const std::string& signalInstanceId,
+                                 const boost::function<void()>& successHandler,
+                                 const boost::function<void()>& errHandler);
 
             void disconnectP2P(const std::string& instanceId);
 
@@ -714,7 +733,12 @@ namespace karabo {
 
             void onP2pMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
-            void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+            void connectP2pInfoHandler(const karabo::util::Hash& instanceInfo, const std::string& signalInstanceId,
+                                       const boost::function<void()>& successHandler,
+                                       const SignalSlotable::Requestor::AsyncErrorHandler& errHandler,
+                                       bool storeConnection);
+
+            void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer & body);
 
             void processEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
                               long long whenPostedEpochMs);
