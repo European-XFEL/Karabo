@@ -20,8 +20,7 @@ from karabo_gui.schema import (
     get_editable_attributes, box_has_changes
 )
 from .utils import (
-    dragged_configurator_items, get_attribute_data, get_box_value, get_icon,
-    get_vector_col_value
+    dragged_configurator_items, get_box_value, get_icon, get_vector_col_value
 )
 
 
@@ -324,7 +323,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 obj = parent_obj.rowsInfo[row]
             else:
                 # Leaves have attributes as children
-                obj = descriptor.attributeInfo
+                obj = parent_obj.attributeInfo
         elif isinstance(parent_obj, VectorHashRowInfo):
             obj = parent_obj.columns[row]
         else:
@@ -413,7 +412,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             # VectorHash have as many children as they have rows
             value = box.value
             return 0 if isinstance(value, Dummy) else len(value)
-        elif self._configuration.type != 'device':
+        elif self._configuration.type == 'projectClass':
             # class properties can have children (attributes)
             return len(_get_child_names(descriptor))
 
@@ -435,9 +434,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
             box = obj.parent()
             if box is None or box.descriptor is None:
                 return False
-            name = obj.names[index.row()]
-            descriptor = box.descriptor
-            setattr(descriptor, name, value)
+
+            name, _ = obj.get_data_by_index(index.row())
+            obj.attrs[name] = value
 
             # Configuration changed - so project needs to be informed
             if box.configuration.type == 'projectClass':
@@ -471,12 +470,13 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
     def _attribute_data(self, attr_info, role, column, row):
         """data() implementation for property attributes"""
-        name, descriptor, value = get_attribute_data(attr_info, row)
+        name, value = attr_info.get_data_by_index(row)
         if column == 0:
             if role == Qt.DisplayRole:
                 return name
             elif role == Qt.DecorationRole:
-                return get_icon(descriptor)
+                box = attr_info.parent()
+                return get_icon(box.descriptor if box is not None else None)
         elif column in (1, 2):
             if role == Qt.DisplayRole:
                 return str(value)
