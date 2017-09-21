@@ -1,23 +1,22 @@
 from contextlib import contextmanager
-import json
 import os
 import os.path as op
 from tempfile import mkstemp
+from types import MethodType
 from uuid import uuid4
+import weakref
 
-from PyQt4.QtCore import QMimeData, QPoint, QSize, Qt, QSettings
+from PyQt4.QtCore import QPoint, QSize, Qt, QSettings
 from PyQt4.QtGui import (
     QBrush, QDialog, QFileDialog, QHeaderView, QLabel, QMovie, QPainter, QPen,
     QWidget)
 
-from karabo.middlelayer import (
-    AccessMode, decodeXML, Hash, MetricPrefix, Unit, writeXML)
+from karabo.middlelayer import decodeXML, Hash, MetricPrefix, Unit, writeXML
 import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
 from karabo_gui import messagebox
 from karabo_gui.enums import KaraboSettings
-from karabo_gui.singletons.api import get_db_conn, get_topology
-from karabo_gui.widget import DisplayWidget, EditableWidget
+from karabo_gui.singletons.api import get_db_conn
 
 
 class PlaceholderWidget(QWidget):
@@ -63,62 +62,32 @@ class SignalBlocker(object):
         self.object.blockSignals(self.state)
 
 
-class write_only_property(object):
-    """Like @property but for attribute which can only be assigned to.
+class WeakMethodRef(object):
+    """ A weakref.ref() for bound methods
     """
-    def __init__(self, func):
-        self.func = func
+    def __init__(self, bound_method, num_args=-1):
+        # Preconditions...
+        # bound_method MUST be a bound method
+        assert type(bound_method) is MethodType
+        if num_args > -1:
+            # bound_method MUST take N args (- 1 because of self)!
+            needed_args = bound_method.__func__.__code__.co_argcount - 1
+            assert needed_args == num_args
 
-    def __set__(self, obj, value):
-        return self.func(obj, value)
+        obj = bound_method.__self__
+        if obj is not None:
+            self.obj = weakref.ref(obj, self._owner_deleted)
+            self.name = bound_method.__name__
 
+    def __call__(self, *args, **kwargs):
+        if self.obj is not None:
+            obj = self.obj()
+            if obj is not None:
+                method = getattr(obj, self.name)
+                method(*args, **kwargs)
 
-def dragged_configurator_items(boxes):
-    """Create a QMimeData object containing items dragged from the configurator
-    """
-    def getDeviceBox(box):
-        """Return a box that belongs to an active device
-
-        if the box already is part of a running device, return it,
-        if it is from a class in a project, return the corresponding
-        instantiated device's box.
-        """
-        if box.configuration.type == "projectClass":
-            topology = get_topology()
-            return topology.get_device(box.configuration.id).getBox(box.path)
-        return box
-
-    dragged = []
-    for box in boxes:
-        # Get the box. "box" is in the project, "realbox" the
-        # one on the device. They are the same if not from a project
-        realbox = getDeviceBox(box)
-        if realbox.descriptor is not None:
-            box = realbox
-
-        # Collect the relevant information
-        data = {
-            'key': box.key(),
-            'label': box.descriptor.displayedName,
-        }
-
-        factory = DisplayWidget.getClass(box)
-        if factory is not None:
-            data['display_widget_class'] = factory.__name__
-        if box.descriptor.accessMode == AccessMode.RECONFIGURABLE:
-            factory = EditableWidget.getClass(box)
-            if factory is not None:
-                data['edit_widget_class'] = factory.__name__
-        # Add it to the list of dragged items
-        dragged.append(data)
-
-    if not dragged:
-        return None
-
-    mimeData = QMimeData()
-    mimeData.setData('source_type', 'ParameterTreeWidget')
-    mimeData.setData('tree_items', json.dumps(dragged))
-    return mimeData
+    def _owner_deleted(self, ref):
+        self.obj = None
 
 
 def generateObjectName(widget):
