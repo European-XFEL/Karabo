@@ -255,6 +255,20 @@ class SceneView(QWidget):
     # ----------------------------
     # Public methods
 
+    def apply_editor_changes(self):
+        """Apply user edits to a remote device instance
+        """
+        for obj in self._scene_obj_cache.values():
+            if is_widget(obj):
+                obj.apply_changes()
+
+    def decline_editor_changes(self):
+        """Decline user edits in editor widgets
+        """
+        for obj in self._scene_obj_cache.values():
+            if is_widget(obj):
+                obj.decline_changes()
+
     def destroy(self):
         """ Do some cleanup of the scene's objects before death.
         """

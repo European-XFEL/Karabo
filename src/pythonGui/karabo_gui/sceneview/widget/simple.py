@@ -53,6 +53,12 @@ class LabelWidget(QLabel):
     def add_boxes(self, boxes):
         """ Satisfy the informal widget interface. """
 
+    def apply_changes(self):
+        """ Satisfy the informal widget interface. """
+
+    def decline_changes(self):
+        """ Satisfy the informal widget interface. """
+
     def destroy(self):
         """ Satisfy the informal widget interface. """
 
@@ -126,6 +132,12 @@ class SceneLinkWidget(QPushButton):
     def add_boxes(self, boxes):
         """ Satisfy the informal widget interface. """
 
+    def apply_changes(self):
+        """ Satisfy the informal widget interface. """
+
+    def decline_changes(self):
+        """ Satisfy the informal widget interface. """
+
     def destroy(self):
         """ Satisfy the informal widget interface. """
 
@@ -192,6 +204,12 @@ class UnknownSvgWidget(QWidget):
     def add_boxes(self, boxes):
         """ Satisfy the informal widget interface. """
 
+    def apply_changes(self):
+        """ Satisfy the informal widget interface. """
+
+    def decline_changes(self):
+        """ Satisfy the informal widget interface. """
+
     def destroy(self):
         """ Satisfy the informal widget interface. """
 
@@ -221,6 +239,12 @@ class UnknownWidget(PlaceholderWidget):
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
 
     def add_boxes(self, boxes):
+        """ Satisfy the informal widget interface. """
+
+    def apply_changes(self):
+        """ Satisfy the informal widget interface. """
+
+    def decline_changes(self):
         """ Satisfy the informal widget interface. """
 
     def destroy(self):
@@ -283,6 +307,12 @@ class WorkflowItemWidget(QWidget):
         return self.minimumSize()
 
     def add_boxes(self, boxes):
+        """ Satisfy the informal widget interface. """
+
+    def apply_changes(self):
+        """ Satisfy the informal widget interface. """
+
+    def decline_changes(self):
         """ Satisfy the informal widget interface. """
 
     def destroy(self):
