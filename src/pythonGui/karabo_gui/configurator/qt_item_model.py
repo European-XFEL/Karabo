@@ -19,9 +19,9 @@ from karabo_gui.schema import (
     SlotNode, VectorHash, VectorHashCellInfo, VectorHashRowInfo,
     get_editable_attributes, box_has_changes
 )
-from karabo_gui.util import dragged_configurator_items
 from .utils import (
-    get_attribute_data, get_box_value, get_icon, get_vector_col_value
+    dragged_configurator_items, get_attribute_data, get_box_value, get_icon,
+    get_vector_col_value
 )
 
 
