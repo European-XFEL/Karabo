@@ -3,7 +3,8 @@ from weakref import ref
 
 from karabo.middlelayer import (Hash, isSet, Proxy, ProxyNode, ProxySlot,
                                 Schema, State, SubProxy, Timestamp, Unit, unit)
-from karabo.middlelayer_api.device_client import filterByTags, getDescriptors
+from karabo.middlelayer_api.device_client import (
+    filterByTags, getAliasFromKey, getDescriptors, getKeyFromAlias)
 from karabo.middlelayer_api.enums import NodeType
 from karabo.middlelayer_api.proxy import ProxyFactory
 
@@ -14,6 +15,7 @@ class Tests(TestCase):
         h["node", "nodeType"] = NodeType.Node.value
         h["node.b", "nodeType"] = NodeType.Leaf.value
         h["node.b", "valueType"] = "STRING"
+        h["node.b", "alias"] = "AStop"
         h["node.b", "tags"] = ["plc"]
         h["a", "nodeType"] = NodeType.Leaf.value
         h["a", "valueType"] = "INT32"
@@ -21,6 +23,7 @@ class Tests(TestCase):
         h["a", "allowedStates"] = ["INIT", "UNKNOWN"]
         h["a", "unitSymbol"] = "A"
         h["a", "defaultValue"] = 22.5
+        h["a", "alias"] = "AStart"
         h["a", "tags"] = ["mpod", "plc"]
         h["setA", "nodeType"] = NodeType.Node.value
         h["setA", "displayType"] = "Slot"
@@ -153,6 +156,7 @@ class Tests(TestCase):
 
         descriptors = list(getDescriptors(proxy))
         paths = [k.longkey for k in descriptors]
+
         self.assertEqual(["node.b", "a", "setA"], paths)
 
     def test_filterByTag(self):
@@ -166,6 +170,26 @@ class Tests(TestCase):
         descriptors = filterByTags(proxy, "plc")
         paths = [k.longkey for k in descriptors]
         self.assertEqual(["node.b", "a"], paths)
+
+    def test_getAliasFromKey(self):
+        cls = ProxyFactory.createProxy(self.schema)
+        proxy = cls()
+
+        alias = getAliasFromKey(proxy, "a")
+        self.assertEqual("AStart", alias)
+
+        alias = getAliasFromKey(proxy, "node.b")
+        self.assertEqual("AStop", alias)
+
+    def test_getKeyFromAlias(self):
+        cls = ProxyFactory.createProxy(self.schema)
+        proxy = cls()
+
+        key = getKeyFromAlias(proxy, "AStart")
+        self.assertEqual("a", key)
+
+        alias = getKeyFromAlias(proxy, "AStop")
+        self.assertEqual("node.b", alias)
 
 
 if __name__ == "__main__":
