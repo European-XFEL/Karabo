@@ -101,6 +101,9 @@ class ScenePanel(BasePanelWidget):
 
         always_visible_tb = ToolBar(parent=self)
         always_visible_tb.addAction(self.ac_design_mode)
+        always_visible_tb.addSeparator()
+        always_visible_tb.addAction(self.ac_apply_all)
+        always_visible_tb.addAction(self.ac_decline_all)
         always_visible_tb.add_expander()
 
         tool_bar = ToolBar("Drawing", parent=self)
@@ -164,6 +167,11 @@ class ScenePanel(BasePanelWidget):
         self.ac_design_mode.setEnabled(connected_to_server)
         self.ac_design_mode.toggled.connect(self.design_mode_changed)
 
+        self.ac_apply_all = QAction(icons.apply, 'Apply All Changes', self)
+        self.ac_apply_all.triggered.connect(self.apply_editor_changes)
+        self.ac_decline_all = QAction(icons.no, 'Decline All Changes', self)
+        self.ac_decline_all.triggered.connect(self.decline_editor_changes)
+
         self.qactions = []
         mode_qactions = self.create_mode_qactions()
         self._build_qaction_group(mode_qactions)
@@ -189,6 +197,14 @@ class ScenePanel(BasePanelWidget):
 
         self.qactions.extend(self._build_qaction(a)
                              for a in self.create_order_actions())
+
+    @pyqtSlot()
+    def apply_editor_changes(self):
+        self.scene_view.apply_editor_changes()
+
+    @pyqtSlot()
+    def decline_editor_changes(self):
+        self.scene_view.decline_editor_changes()
 
     def design_mode_text(self, is_design_mode):
         if is_design_mode:
