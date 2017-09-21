@@ -5,6 +5,7 @@
 #############################################################################
 
 from numpy import log2
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QLineEdit
 
 from karabo.middlelayer import Integer
@@ -29,6 +30,9 @@ class Hexadecimal(EditableWidget, DisplayWidget):
         if not ro:
             self._internal_widget.textChanged.connect(self.onEditingFinished)
 
+        focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
+        self._internal_widget.setFocusPolicy(focus_policy)
+
     @property
     def value(self):
         if self._internal_widget.text() not in ('', '-'):
@@ -48,5 +52,6 @@ class Hexadecimal(EditableWidget, DisplayWidget):
         with SignalBlocker(self._internal_widget):
             self._internal_widget.setText("{:x}".format(value))
 
+    @pyqtSlot(str)
     def onEditingFinished(self, value):
         EditableWidget.onEditingFinished(self, self.value)
