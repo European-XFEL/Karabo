@@ -75,6 +75,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             oldconf.signalUpdateComponent.disconnect(self._config_update)
             oldconf.signalUserChanged.disconnect(self._config_update)
             oldconf.signalReconfiguration.disconnect(self._reconfig_update)
+            oldconf.signalUpdateConfigurator.disconnect(self.layoutChanged)
             if oldconf.type == 'device':
                 sig = oldconf.boxvalue.state.signalUpdateComponent
                 sig.disconnect(self._state_update)
@@ -90,6 +91,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             conf.signalUpdateComponent.connect(self._config_update)
             conf.signalUserChanged.connect(self._config_update)
             conf.signalReconfiguration.connect(self._reconfig_update)
+            conf.signalUpdateConfigurator.connect(self.layoutChanged)
             if conf.type == 'device':
                 sig = conf.boxvalue.state.signalUpdateComponent
                 sig.connect(self._state_update)
