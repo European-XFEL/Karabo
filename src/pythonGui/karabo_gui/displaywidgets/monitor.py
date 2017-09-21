@@ -1,6 +1,7 @@
 import csv
 from datetime import datetime
 
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QInputDialog, QPushButton
 
 from karabo.middlelayer import Simple, String
@@ -17,6 +18,7 @@ class Monitor(DisplayWidget):
         super().__init__(None)
         self.widget = QPushButton("Monitor", parent)
         self.widget.setCheckable(True)
+        self.widget.setFocusPolicy(Qt.NoFocus)
         self.widget.toggled.connect(self.toggled)
         self.boxes = [box]
         self.interval = 0

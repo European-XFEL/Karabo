@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import QEvent
+from PyQt4.QtCore import QEvent, Qt
 from PyQt4.QtGui import QSpinBox
 
 from karabo.middlelayer import Integer
@@ -29,6 +29,9 @@ class EditableSpinBox(EditableWidget, DisplayWidget):
         if not ro:
             self._internal_widget.installEventFilter(self)
             self._internal_widget.valueChanged.connect(self.onEditingFinished)
+
+        focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
+        self._internal_widget.setFocusPolicy(focus_policy)
 
     def eventFilter(self, object, event):
         # Block wheel event on QSpinBox

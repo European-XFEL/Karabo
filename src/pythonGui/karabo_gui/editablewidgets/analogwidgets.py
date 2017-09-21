@@ -39,6 +39,7 @@ class Slider(_AnalogEditorWidget):
         super(Slider, self).__init__(box)
         slider = QSlider(Qt.Horizontal, parent)
         slider.setTickPosition(QSlider.TicksBelow)
+        slider.setFocusPolicy(Qt.StrongFocus)
         self.widget = slider
         self.widget.valueChanged.connect(self.onEditingFinished)
 
@@ -50,5 +51,6 @@ class Knob(_AnalogEditorWidget):
         super(Knob, self).__init__(box)
         dial = QDial(parent)
         dial.setNotchesVisible(True)
+        dial.setFocusPolicy(Qt.StrongFocus)
         self.widget = dial
         self.widget.valueChanged.connect(self.onEditingFinished)
