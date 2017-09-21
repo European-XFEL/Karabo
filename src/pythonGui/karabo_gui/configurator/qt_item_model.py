@@ -150,24 +150,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
         properties = _get_child_names(parent.descriptor)
         return properties.index(box_key)
 
-    def _update_box_data(self, box, new_value):
-        """Check for actual box changes by the user before sending it away.
-        """
-        old_value = box.value if box.hasValue() else None
-        if isinstance(box.descriptor, ChoiceOfNodes):
-            old_value = box.current  # ChoiceOfNodes is "special"
-        has_changes = box_has_changes(box.descriptor, old_value, new_value)
-        allowed = box.isAllowed()
-        apply_changed = allowed and has_changes
-        if apply_changed:
-            # Store the widget value in the Configuration object
-            box.configuration.setUserValue(box, new_value)
-        else:
-            box.configuration.clearUserValue(box)
-
-        apply_enabled = apply_changed or box.configuration.hasAnyUserValues()
-        self.signalHasModifications.emit(apply_enabled)
-
     @pyqtSlot(object, object, object)
     def _config_update(self, box, value, timestamp):
         """Notify the view of item updates
@@ -460,16 +442,24 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 box.configuration.signalBoxChanged.emit()
         else:  # Normal property value setting
             box = obj
-            box.signalUserChanged.emit(box, value, None)
-            if box.configuration.type == "macro":
-                box.set(value)
-            elif box.descriptor is not None:
-                if box.configuration.type == "device":
-                    self._update_box_data(box, value)
-                else:
-                    box.set(value)
-                    box.configuration.signalBoxChanged.emit()
-                self.layoutChanged.emit()
+            if box.descriptor is None:
+                return False
+
+            configuration = box.configuration
+            old_value = box.value if box.hasValue() else None
+            if isinstance(box.descriptor, ChoiceOfNodes):
+                old_value = box.current  # ChoiceOfNodes is "special"
+            has_changes = box_has_changes(box.descriptor, old_value, value)
+            allowed = box.isAllowed() or configuration.type != 'device'
+            apply_changed = allowed and has_changes
+            if apply_changed:
+                configuration.setUserValue(box, value)  # Store in config
+            else:
+                configuration.clearUserValue(box)  # Remove from config
+
+            apply_enabled = apply_changed or configuration.hasAnyUserValues()
+            self.signalHasModifications.emit(apply_enabled)
+            self.layoutChanged.emit()
 
         # A value was successfully set!
         return True
