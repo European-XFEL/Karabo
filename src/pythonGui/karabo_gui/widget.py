@@ -166,5 +166,6 @@ class EditableWidget(Widget):
     def setReadOnly(self, ro):
         assert not ro, "combined Editable and Display widgets: set setReadOnly"
 
+    @pyqtSlot(object)
     def onEditingFinished(self, value):
         self.signalEditingFinished.emit(self.boxes[0], value)

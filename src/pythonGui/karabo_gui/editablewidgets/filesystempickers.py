@@ -34,6 +34,7 @@ class FileSystemPicker(EditableWidget):
         self.tbPath.setToolTip(self.pickerText)
         self.tbPath.setIcon(self.buttonIcon)
         self.tbPath.setMaximumSize(25, 25)
+        self.tbPath.setFocusPolicy(Qt.NoFocus)
         self.tbPath.clicked.connect(self.onButtonClicked)
         hLayout.addWidget(self.tbPath)
 
