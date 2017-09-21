@@ -7,6 +7,7 @@
 # define package editablewidgets
 
 __all__ = [
+    "analogwidgets",
     "editablecheckbox",
     "editablechoiceelement",
     "editablecombobox",
@@ -21,5 +22,4 @@ __all__ = [
     "floatspinbox",
     "hexoct",
     "numberlineedit",
-    "qwtwidgets",
 ]
