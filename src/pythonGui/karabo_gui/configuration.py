@@ -68,6 +68,7 @@ class Configuration(Box):
         # Use `pop` with a default value so this can be called blindly
         user_value = self._user_values.pop(box.key(), None)
         if user_value is not None:
+            box.has_conflict = False
             box.signalUserChanged.emit(box, box.value, None)
 
     def clearUserValues(self):
