@@ -34,6 +34,7 @@ class Configuration(Box):
     signalStatusChanged = pyqtSignal(object, object, bool)
     signalBoxChanged = pyqtSignal()
     signalReconfiguration = pyqtSignal()
+    signalUpdateConfigurator = pyqtSignal()
 
     def __init__(self, id, type, descriptor=None):
         """Create a new Configuration for schema.
@@ -70,6 +71,7 @@ class Configuration(Box):
         if user_value is not None:
             box.has_conflict = False
             box.signalUserChanged.emit(box, box.value, None)
+        self.signalUpdateConfigurator.emit()
 
     def clearUserValues(self):
         """Clear all user-entered values for child Boxes
@@ -129,6 +131,7 @@ class Configuration(Box):
             box.set(value)
             box.configuration.signalBoxChanged.emit()
         box.signalUserChanged.emit(box, value, None)
+        self.signalUpdateConfigurator.emit()
 
     def setSchema(self, schema):
         if self.descriptor is not None:
