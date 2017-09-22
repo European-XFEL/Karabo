@@ -4,10 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QEvent, QObject
 
 from karabo_gui import background
 from karabo_gui.registry import Registry
+from karabo_gui.util import WeakMethodRef
 
 
 class Widget(Registry, QObject):
@@ -122,11 +123,6 @@ class Widget(Registry, QObject):
         Overwrite this method to run long-running code, and call
         *updateLater* instead. The default implementation does nothing."""
 
-    @property
-    def project(self):
-        # XXX: this is crazy - hopefully can be removed
-        return self.widget.parent().parent().parent().project
-
 
 class DisplayWidget(Widget):
     """All widgets displaying a value should inherit from this subclass
@@ -157,6 +153,27 @@ class EditableWidget(Widget):
         Widget.__init__(self, box)
         box.configuration.boxvalue.state.signalUpdateComponent.connect(
             self.updateStateSlot)
+
+    @property
+    def editWidget(self):
+        """Overload this if the Qt edit widget for this object is not
+        self.widget
+        """
+        return self.widget
+
+    def enableFocusMonitoring(self, handler):
+        """Add a handler function which will be called when `self.editWidget`
+        gains and loses focus.
+        """
+        self.focusHandler = WeakMethodRef(handler, num_args=1)
+        self.editWidget.installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        """Listen for focus events on the monitored object
+        """
+        if event.type() in (QEvent.FocusIn, QEvent.FocusOut):
+            self.focusHandler(event.type() == QEvent.FocusIn)
+        return super(EditableWidget, self).eventFilter(obj, event)
 
     @staticmethod
     def getClasses(box):
