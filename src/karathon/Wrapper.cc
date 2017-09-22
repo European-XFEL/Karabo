@@ -8,10 +8,12 @@
 #include "Wrapper.hh"
 #include <iostream>
 #include <algorithm>
+
 #include <boost/filesystem.hpp>
+
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
-#include "PyXmsInputOutputChannel.hh"
+#include <karabo/xms/ImageData.hh>
 
 using namespace std;
 //using namespace karabo::util;

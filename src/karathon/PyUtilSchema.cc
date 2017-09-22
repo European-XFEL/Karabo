@@ -484,6 +484,26 @@ struct OverwriteElementWrap {
     }
 
 
+    static OverwriteElement& setNewMinSize(OverwriteElement& self, const bp::object& obj) {
+        try {
+            return self.setNewMinSize(karathon::Wrapper::toInteger<unsigned int>(obj));
+        } catch (const karabo::util::CastException& e) {
+            KARABO_RETHROW_AS(e);
+            return self; // please compiler
+        }
+    }
+
+
+    static OverwriteElement& setNewMaxSize(OverwriteElement& self, const bp::object& obj) {
+        try {
+            return self.setNewMaxSize(karathon::Wrapper::toInteger<unsigned int>(obj));
+        } catch (const karabo::util::CastException& e) {
+            KARABO_RETHROW_AS(e);
+            return self; // please compiler
+        }
+    }
+
+
     static bp::object setNewAllowedStates(bp::tuple args, bp::dict kwargs) {
         OverwriteElement& self = bp::extract<OverwriteElement&>(args[0]);
         std::vector<karabo::util::State> states;
@@ -2498,6 +2518,14 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("setNewMaxExc"
                      , &OverwriteElementWrap().setNewMaxExc
+                     , (bp::arg("value"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewMinSize"
+                     , &OverwriteElementWrap().setNewMinSize
+                     , (bp::arg("value"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewMaxSize"
+                     , &OverwriteElementWrap().setNewMaxSize
                      , (bp::arg("value"))
                      , bp::return_internal_reference<> ())
                 .def("setNewOptions", bp::raw_function(&OverwriteElementWrap::setNewOptions, 2))
