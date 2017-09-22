@@ -1,4 +1,5 @@
 from numpy import log10
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QAction, QDoubleSpinBox, QInputDialog
 
 from karabo.middlelayer import Number
@@ -21,6 +22,7 @@ class FloatSpinBox(EditableWidget, DisplayWidget):
         action.triggered.connect(self.changeStep)
         self.widget.addAction(action)
 
+    @pyqtSlot()
     def changeStep(self):
         step, ok = QInputDialog.getDouble(
             self.widget, "Single Step", "Enter size of a single step",
@@ -34,8 +36,12 @@ class FloatSpinBox(EditableWidget, DisplayWidget):
             self._internal_widget.valueChanged[float].connect(
                 self.onValueChanged)
 
+        focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
+        self._internal_widget.setFocusPolicy(focus_policy)
+
+    @pyqtSlot(float)
     def onValueChanged(self, value):
-        self.signalEditingFinished.emit(self.boxes[0], value)
+        EditableWidget.onEditingFinished(self, value)
 
     def typeChanged(self, box):
         self._internal_widget.setRange(*box.descriptor.getMinMax())

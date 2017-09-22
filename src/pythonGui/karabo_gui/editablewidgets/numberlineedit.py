@@ -60,7 +60,7 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
                 self._display_value = text
             else:
                 self._internal_value = text
-            self.signalEditingFinished.emit(self.boxes[0], self.value)
+            EditableWidget.onEditingFinished(self, self.value)
 
     def typeChanged(self, box):
         min, max = box.descriptor.getMinMax()
@@ -118,6 +118,7 @@ class DoubleLineEdit(NumberLineEdit):
             self._display_value = format_str.format(value)
             self._internal_widget.setText(self._display_value)
 
+    @pyqtSlot()
     def _showDecimalDialog(self):
         num_decimals, ok = QInputDialog.getInt(self.widget, "Decimal",
                                                "Floating point precision:",

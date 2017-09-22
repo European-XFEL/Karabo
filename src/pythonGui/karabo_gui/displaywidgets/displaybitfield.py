@@ -64,6 +64,11 @@ class Bitfield(EditableWidget, DisplayWidget):
 
     def setReadOnly(self, ro):
         self._internal_widget.readonly = ro
+        if not ro:
+            self._internal_widget.valueChanged.connect(self.onEditingFinished)
+
+        focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
+        self._internal_widget.setFocusPolicy(focus_policy)
 
     @property
     def value(self):
@@ -75,6 +80,3 @@ class Bitfield(EditableWidget, DisplayWidget):
         self._internal_widget.value = value
         self.widget.updateLabel(box)
         self.widget.update()
-
-    def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.boxes[0], value)
