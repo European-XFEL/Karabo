@@ -1309,7 +1309,7 @@ class PythonDevice(NoFsm):
     def _validate(self, unvalidated):
         currentState = self["state"]
         whiteList = self._getStateDependentSchema(currentState)
-        self.log.DEBUG("Incoming (un-validated) reconfiguration:\n{}".format(unvalidated))
+
         try:
             validated = self.validatorExtern.validate(whiteList, unvalidated, self.getActualTimestamp())
         except RuntimeError as e:
@@ -1319,9 +1319,18 @@ class PythonDevice(NoFsm):
         return (True,"",validated)
 
     def _applyReconfiguration(self, reconfiguration):
+
+        instanceInfoUpdate = Hash()
         with self._stateChangeLock:
+            for prop in ["archive", "visibility"]:
+                node = reconfiguration.find(prop)
+                if (node and node.getValue() != self.parameters.get(prop)):
+                    instanceInfoUpdate.set(prop, node.getValue())
             self.parameters += reconfiguration
-        self.log.DEBUG("After user interaction:\n{}".format(reconfiguration))
+
+        if not instanceInfoUpdate.empty():
+            self.updateInstanceInfo(instanceInfoUpdate)
+
         if self.validatorExtern.hasReconfigurableParameter():
             self._ss.emit("signalStateChanged", reconfiguration, self.deviceid)
         else:
