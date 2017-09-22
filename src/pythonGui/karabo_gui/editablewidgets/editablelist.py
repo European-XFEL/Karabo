@@ -34,6 +34,10 @@ class EditableList(EditableWidget, DisplayWidget):
         # input
         self.lastCursorPos = 0
 
+    @property
+    def editWidget(self):
+        return self.leList
+
     def setReadOnly(self, ro):
         self.leList.setReadOnly(ro)
         self.leList.setFocusPolicy(Qt.NoFocus if ro else Qt.StrongFocus)
@@ -75,7 +79,7 @@ class EditableList(EditableWidget, DisplayWidget):
     def onEditingFinished(self, text):
         self.lastCursorPos = self.leList.cursorPosition()
         if text:
-            self.valueList = text.split(',')
+            self.valueList = [val for val in text.split(',') if val != '']
         else:
             self.valueList = []
         EditableWidget.onEditingFinished(self, self.valueList)

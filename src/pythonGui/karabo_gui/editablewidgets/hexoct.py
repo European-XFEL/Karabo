@@ -25,6 +25,10 @@ class Hexadecimal(EditableWidget, DisplayWidget):
         self._internal_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self.widget = add_unit_label(box, self._internal_widget, parent=parent)
 
+    @property
+    def editWidget(self):
+        return self._internal_widget
+
     def setReadOnly(self, ro):
         self._internal_widget.setReadOnly(ro)
         if not ro:

@@ -30,6 +30,7 @@ class BaseWidgetContainer(QWidget):
         self._editor_initialized = False
         self._is_editable = False
         self._style_sheet = ''
+        self._pending_edits = {}
 
         self.alarm_symbol = QLabel("", self)
         self.status_symbol = QLabel("", self)
@@ -92,6 +93,8 @@ class BaseWidgetContainer(QWidget):
         if not (self._is_editable and self._visible):
             return
 
+        self._flush_pending_edits()
+
         for box in self.old_style_widget.boxes:
             if box.configuration.hasUserValue(box):
                 box.configuration.sendUserValue(box)
@@ -105,6 +108,7 @@ class BaseWidgetContainer(QWidget):
         for b in self.old_style_widget.boxes:
             b.configuration.clearUserValue(b)
         self._update_background_color()
+        self._pending_edits.clear()
 
     def destroy(self):
         """ Disconnect the box signals
@@ -118,6 +122,7 @@ class BaseWidgetContainer(QWidget):
                 signal.disconnect(recvr)
         self._connected_signals.clear()
         self._configuration_connections.clear()
+        self._pending_edits.clear()
 
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
@@ -272,6 +277,8 @@ class BaseWidgetContainer(QWidget):
         if self.model.parent_component == 'EditableApplyLaterComponent':
             self._is_editable = True
             layout.setContentsMargins(2, 2, 2, 2)
+            self.old_style_widget.enableFocusMonitoring(
+                self._widget_focus_changed)
         else:
             layout.setContentsMargins(0, 0, 0, 0)
 
@@ -297,6 +304,13 @@ class BaseWidgetContainer(QWidget):
     # ---------------------------------------------------------------------
     # Editing related code
 
+    def _flush_pending_edits(self):
+        """Apply all pending editor values to their respective boxes.
+        """
+        for box, value in self._pending_edits.items():
+            self._update_box_value(box, value)
+        self._pending_edits.clear()
+
     @pyqtSlot(object, object)
     def _on_display_value_change(self, box, value):
         widget = self.old_style_widget
@@ -307,12 +321,18 @@ class BaseWidgetContainer(QWidget):
 
     @pyqtSlot(object, object)
     def _on_editing_finished(self, box, value):
-        self._update_box_value(box, value)
+        self._pending_edits[box] = value
 
     @pyqtSlot(object, object, object)
     def _on_user_edit(self, box, value, timestamp=None):
         self.old_style_widget.valueChangedSlot(box, value, timestamp)
         self._update_background_color()
+
+    def _widget_focus_changed(self, has_focus):
+        """Called when the editor widget gains/loses focus.
+        """
+        if not has_focus and self._pending_edits:
+            self._flush_pending_edits()
 
     def _update_background_color(self):
         if not (self._is_editable and self.boxes):
