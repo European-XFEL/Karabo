@@ -45,7 +45,8 @@ class Hexadecimal(EditableWidget, DisplayWidget):
         mask = 'h' * int(log2(max(abs(rmax), abs(rmin))) // 4 + 1)
         if rmin < 0:
             mask = "#" + mask
-        self._internal_widget.setInputMask(mask)
+        with SignalBlocker(self._internal_widget):
+            self._internal_widget.setInputMask(mask)
 
     def valueChanged(self, box, value, timestamp=None):
         self.widget.updateLabel(box)
