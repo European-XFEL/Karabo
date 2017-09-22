@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import QSize, Qt
+from PyQt4.QtCore import QRect, QSize, Qt
 from PyQt4.QtGui import QHBoxLayout, QTextEdit, QWidget
 
 
@@ -41,13 +41,15 @@ class PopupWidget(QWidget):
 class TextEdit(QTextEdit):
     def __init__(self, parent=None):
         super(TextEdit, self).__init__(parent)
-        self.__fittedHeight = QSize()
+        self._fittedWidth = 310
+        self._fittedHeight = 0
 
     def sizeHint(self):
         sizeHint = QTextEdit.sizeHint(self)
-        sizeHint.setHeight(self.__fittedHeight)
+        sizeHint.setWidth(self._fittedWidth)
+        sizeHint.setHeight(self._fittedHeight)
         return sizeHint
 
     def fitHeightToContent(self, nbInfoKeys):
-        self.__fittedHeight = self.fontMetrics().height() * nbInfoKeys
+        self._fittedHeight = self.fontMetrics().height() * nbInfoKeys
         self.updateGeometry()
