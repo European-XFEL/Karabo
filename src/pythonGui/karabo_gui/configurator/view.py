@@ -139,11 +139,21 @@ class ConfigurationTreeView(QTreeView):
         if obj.configuration.type == "device":
             info["Value on device"] = obj.value
 
-        alarms = [('Warn low', WARN_LOW), ('Warn high', WARN_HIGH),
-                  ('Alarm low', ALARM_LOW), ('Alarm high', ALARM_HIGH)]
-        for label, alarm in alarms:
-            this_alarm = getattr(descriptor, alarm)
-            info[label] = 'n/a' if this_alarm is None else this_alarm
+        # Unit related attributes
+        additional_attrs = ['metricPrefixSymbol', 'unitSymbol']
+        for attr_name in additional_attrs:
+            attr = getattr(descriptor, attr_name)
+            info[attr_name] = attr
+
+        # Other additional attributes
+        additional_attrs = [
+            ('Warn low', WARN_LOW), ('Warn high', WARN_HIGH),
+            ('Alarm low', ALARM_LOW), ('Alarm high', ALARM_HIGH),
+            ('minExc', 'minExc'), ('maxExc', 'maxExc'),
+            ('minInc', 'minInc'), ('maxInc', 'maxInc')]
+        for label, attr_name in additional_attrs:
+            attr = getattr(descriptor, attr_name)
+            info[label] = 'n/a' if attr is None else attr
 
         self.popup_widget.setInfo(info)
 
