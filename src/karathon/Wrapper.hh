@@ -11,8 +11,13 @@
 #include "FromNumpy.hh"
 #include "ToNumpy.hh"
 
+#include <typeinfo>
+#include <string>
+
 #include <boost/python.hpp>
 #include <boost/any.hpp>
+
+#include <karabo/util/Exception.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/NDArray.hh>
 
@@ -398,6 +403,15 @@ namespace karathon {
 
         static bp::object toCustomObject(karabo::util::Hash::Node& node);
 
+        /**
+         * Convert obj to desired IntegerType which should be unsigned short, int, long long, etc.
+         *
+         * @param obj must be a Python object representing an integer - if not, a karabo::util::CastException is thrown
+         * @return the properly typed integer value
+         */
+        template <class IntegerType>
+        static IntegerType toInteger(const bp::object& obj);
+
         static karabo::util::Types::ReferenceType toAny(const bp::object& operand, boost::any& any);
 
         static bp::object fromStdVectorToPyListNone(const std::vector<karabo::util::CppNone>& v) {
@@ -442,6 +456,18 @@ namespace karathon {
     template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned long long>& v, bool numpyFlag);
     template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<float>& v, bool numpyFlag);
     template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<double>& v, bool numpyFlag);
+
+    // Implementations of template code
+    template <class IntegerType>
+    IntegerType Wrapper::toInteger(const bp::object& obj) {
+        if (PyLong_Check(obj.ptr())) {
+            const PY_LONG_LONG value = PyLong_AsLongLong(obj.ptr());
+            return static_cast<IntegerType> (value);
+        } else {
+            throw KARABO_CAST_EXCEPTION("Cannot cast Python object to '" + std::string(typeid(IntegerType).name()) += "'");
+            return static_cast<IntegerType> (0); // please the compiler
+        }
+    }
 }
 
 #endif	/* WRAPPER_HH */
