@@ -12,7 +12,8 @@ import traceback
 
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
-    UINT32_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
+    UINT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
+    STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, ChannelMetaData, JmsConnection,
     EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
@@ -880,6 +881,42 @@ class PythonDevice(NoFsm):
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.log.INFO("Schema appended")
+
+    def appendSchemaMaxSize(self, path, value, emitFlag=True):
+        """
+        Append Schema to change/set maximum size information for path.
+        If paths does not exist, raise KeyError.
+
+        This is similar to the more general appendSchema, but dedicated to a
+        common use case.
+
+        :param path  indicates the parameter which should be a
+                     Vector- or TableElement
+        :param value is the new maximum size of the element
+        :param emitFlag indicates if others should be informed about this
+                        Schema update. If this method is called for a bunch of
+                        paths, it is recommended to set this to True only for
+                        the last call.
+        """
+        with self._stateChangeLock:
+            if not self.fullSchema.has(path):
+                raise KeyError("Path '{}' not found in the device schema."
+                               .format(path))
+
+            self._stateDependentSchema = {}
+            # Do not touch static schema - that must be restorable via
+            # updateSchema(Schema())
+            # OVERWRITE_ELEMENT checks whether max size attribute makes sense
+            # for path
+            (OVERWRITE_ELEMENT(self.fullSchema).key(path)
+             .setNewMaxSize(value).commit(),)
+            if self._injectedSchema.has(path):
+                (OVERWRITE_ELEMENT(self._injectedSchema).key(path)
+                 .setNewMaxSize(value).commit(),)
+
+            if emitFlag:
+                self._ss.emit("signalSchemaUpdated",
+                              self.fullSchema, self.deviceid)
 
     def setProgress(self, value, associatedText = ""):
         """
