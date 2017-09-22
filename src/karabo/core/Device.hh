@@ -19,6 +19,7 @@
 #include "karabo/util/State.hh"
 #include "karabo/util.hpp"
 #include "karabo/util/StackTrace.hh"
+#include "karabo/util/OverwriteElement.hh"
 #include "karabo/util/RollingWindowStatistics.hh"
 #include "karabo/net/utils.hh"
 #include "karabo/xms/SlotElement.hh"
@@ -1304,6 +1305,34 @@ namespace karabo {
             void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
 
+            /**
+             * Append Schema to change/set maximum size information for path - if paths does not exist, throw exception
+             *
+             * This is similar to the more general appendSchema, but dedicated to a common use case.
+             *
+             * @param path  indicates the parameter which should be a Vector- or TableElement
+             * @param value is the new maximum size of the parameter
+             * @param emitFlag indicates if others should be informed about this Schema update.
+             *                 If this method is called for a bunch of paths, it is recommended to
+             *                 set this to true only for the last call.
+             */
+            void appendSchemaMaxSize(const std::string& path, unsigned int value, bool emitFlag = true) {
+                using karabo::util::OVERWRITE_ELEMENT;
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                if (!m_fullSchema.has(path)) {
+                    throw KARABO_PARAMETER_EXCEPTION("Path \"" + path + "\" not found in the device schema.");
+                }
+                m_stateDependentSchema.clear();
+                // Do not touch static schema - that must be restorable via updateSchema(Schema())
+                // OVERWRITE_ELEMENT checks whether max size attribute makes sense for path
+                OVERWRITE_ELEMENT(m_fullSchema).key(path).setNewMaxSize(value).commit();
+                if (m_injectedSchema.has(path)) {
+                    OVERWRITE_ELEMENT(m_injectedSchema).key(path).setNewMaxSize(value).commit();
+                }
+
+                // Notify the distributed system if needed
+                if (emitFlag) emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+            }
 
         protected: // Functions and Classes
 
