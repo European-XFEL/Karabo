@@ -22,6 +22,10 @@ class FloatSpinBox(EditableWidget, DisplayWidget):
         action.triggered.connect(self.changeStep)
         self.widget.addAction(action)
 
+    @property
+    def editWidget(self):
+        return self._internal_widget
+
     @pyqtSlot()
     def changeStep(self):
         step, ok = QInputDialog.getDouble(

@@ -9,6 +9,7 @@ from PyQt4.QtGui import (
 
 from karabo.middlelayer import String
 import karabo_gui.icons as icons
+from karabo_gui.schema import Dummy
 from karabo_gui.util import getOpenFileName, getSaveFileName, SignalBlocker
 from karabo_gui.widget import EditableWidget
 
@@ -43,6 +44,10 @@ class FileSystemPicker(EditableWidget):
         self.lastCursorPos = 0
 
     @property
+    def editWidget(self):
+        return self.lePath
+
+    @property
     def widget(self):
         return self.compositeWidget
 
@@ -51,7 +56,7 @@ class FileSystemPicker(EditableWidget):
         return self.lePath.text()
 
     def valueChanged(self, box, value, timestamp=None):
-        if value is None:
+        if value is None or isinstance(value, Dummy):
             value = ''
 
         with SignalBlocker(self.lePath):
