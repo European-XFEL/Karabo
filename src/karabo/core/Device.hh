@@ -19,6 +19,7 @@
 #include "karabo/util/State.hh"
 #include "karabo/util.hpp"
 #include "karabo/util/StackTrace.hh"
+#include "karabo/util/OverwriteElement.hh"
 #include "karabo/util/RollingWindowStatistics.hh"
 #include "karabo/net/utils.hh"
 #include "karabo/xms/SlotElement.hh"
@@ -1305,23 +1306,30 @@ namespace karabo {
             }
 
             /**
-             * Update Schema "maxSize" attribute in place if the path is correct, otherwise throw exception
-             * @param path  indicates the parameter
+             * Append Schema to change/set maximum size information for path - if paths does not exist, throw exception
+             *
+             * This is similar to the more general appendSchema, but dedicated to a common use case.
+             *
+             * @param path  indicates the parameter which should be a Vector- or TableElement
              * @param value is the new maximum size of the parameter
-             *                 (which should be a vector or TableElement)
              * @param emitFlag indicates if others should be informed about this Schema update.
-             *                 If this method is called for a bunch of paths, it is recommended to 
-             *                 set this to True only for the last call.
+             *                 If this method is called for a bunch of paths, it is recommended to
+             *                 set this to true only for the last call.
              */
-            void updateSchemaMaxSize(const std::string& path, unsigned int value, bool emitFlag = true) {
+            void appendSchemaMaxSize(const std::string& path, unsigned int value, bool emitFlag = true) {
+                using karabo::util::OVERWRITE_ELEMENT;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 if (!m_fullSchema.has(path)) {
                     throw KARABO_PARAMETER_EXCEPTION("Path \"" + path + "\" not found in the device schema.");
                 }
                 m_stateDependentSchema.clear();
-                m_fullSchema.setMaxSize(path, value);
-                if (m_staticSchema.has(path)) m_staticSchema.setMaxSize(path, value);
-                if (m_injectedSchema.has(path)) m_injectedSchema.setMaxSize(path, value);
+                // Do not touch static schema - that must be restorable via updateSchema(Schema())
+                // OVERWRITE_ELEMENT checks whether max size attribute makes sense for path
+                OVERWRITE_ELEMENT(m_fullSchema).key(path).setNewMaxSize(value).commit();
+                if (m_injectedSchema.has(path)) {
+                    OVERWRITE_ELEMENT(m_injectedSchema).key(path).setNewMaxSize(value).commit();
+                }
+
                 // Notify the distributed system if needed
                 if (emitFlag) emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
             }
