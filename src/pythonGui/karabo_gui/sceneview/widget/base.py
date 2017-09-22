@@ -307,8 +307,6 @@ class BaseWidgetContainer(QWidget):
 
     @pyqtSlot(object, object)
     def _on_editing_finished(self, box, value):
-        if not self._editor_initialized:
-            return
         self._update_box_value(box, value)
 
     @pyqtSlot(object, object, object)
