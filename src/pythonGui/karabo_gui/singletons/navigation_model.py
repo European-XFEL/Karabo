@@ -10,7 +10,7 @@ from contextlib import contextmanager
 import json
 
 from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
-                          Qt, pyqtSignal)
+                          Qt, pyqtSignal, pyqtSlot)
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 from traits.api import HasStrictTraits, WeakRef
 
@@ -113,6 +113,8 @@ class NavigationTreeModel(QAbstractItemModel):
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
+        self.showDeviceOnly = False
+
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary for self due to the fact that the singleton mediator
         # object and `self` are being destroyed when the GUI exists
@@ -192,6 +194,9 @@ class NavigationTreeModel(QAbstractItemModel):
         if child_node is not None:
             # Consider visibility
             if child_node.visibility > krb_globals.GLOBAL_ACCESS_LEVEL:
+                return QModelIndex()
+            # If only show device is on, hide childless classes and hosts
+            if self.showDeviceOnly and child_node.device_counter < 1:
                 return QModelIndex()
 
             return self.createIndex(row, column, child_node)
@@ -358,3 +363,8 @@ class NavigationTreeModel(QAbstractItemModel):
         the view needs to be updated
         """
         self.layoutChanged.emit()
+
+    @pyqtSlot(bool)
+    def onDeviceOnly(self, checked):
+        self.showDeviceOnly = checked
+        self._needs_update()
