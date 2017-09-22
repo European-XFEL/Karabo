@@ -11,7 +11,6 @@ from .base import BasePanelWidget
 class PlaceholderPanel(BasePanelWidget):
     def __init__(self):
         super(PlaceholderPanel, self).__init__("Start Page")
-        self.doesDockOnClose = False
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.

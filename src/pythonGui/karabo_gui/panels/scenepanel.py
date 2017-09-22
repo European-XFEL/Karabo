@@ -36,8 +36,6 @@ class ScenePanel(BasePanelWidget):
         self.connected_to_server_at_init = connected_to_server
         super(ScenePanel, self).__init__(model.simple_name, allow_closing=True)
 
-        # NOTE: We want to close when undocked!
-        self.doesDockOnClose = False
         # A flag which is set when docking/undocking/minimizing
         self._temporary_hide_flag = False
 
