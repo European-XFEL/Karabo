@@ -6,7 +6,7 @@
 from PyQt4.QtCore import QObject
 
 from karabo_gui.events import KaraboEventSender
-from .utils import WeakMethodRef
+from karabo_gui.util import WeakMethodRef
 
 
 class SystemTopologyListener(QObject):
