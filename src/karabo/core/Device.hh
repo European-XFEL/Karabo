@@ -1061,7 +1061,8 @@ namespace karabo {
                             updateInstanceInfo(karabo::util::Hash("status", "error"));
                         } else {
                             // Reset the error status - protect against non-initialised instanceInfo
-                            if (!getInstanceInfo().has("status") || getInstanceInfo().get<std::string>("status") == "error") {
+                            const karabo::util::Hash info(getInstanceInfo());
+                            if (!info.has("status") || info.get<std::string>("status") == "error") {
                                 updateInstanceInfo(karabo::util::Hash("status", "ok"));
                             }
                         }
@@ -1667,9 +1668,24 @@ namespace karabo {
 
             void applyReconfiguration(const karabo::util::Hash& reconfiguration) {
 
+                karabo::util::Hash instanceInfoUpdate;
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+
+                    boost::optional<const karabo::util::Hash::Node&> node = reconfiguration.find("archive");
+                    if (node && node->getValue<bool>() != m_parameters.get<bool>("archive")) {
+                        instanceInfoUpdate.set("archive", node->getValue<bool>());
+                    }
+                    node = reconfiguration.find("visibility");
+                    if (node && node->getValue<int>() != m_parameters.get<int>("visibility")) {
+                        instanceInfoUpdate.set("visibility", node->getValue<int>());
+                    }
+
                     m_parameters.merge(reconfiguration);
+                }
+
+                if (!instanceInfoUpdate.empty()) {
+                    updateInstanceInfo(instanceInfoUpdate);
                 }
 
                 KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
