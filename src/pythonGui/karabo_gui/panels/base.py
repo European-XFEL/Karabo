@@ -38,7 +38,6 @@ class BasePanelWidget(QFrame):
         self.setLineWidth(1)
 
         self.index = -1
-        self.doesDockOnClose = True
         self.allow_closing = allow_closing
         self.panel_container = None
         self.is_docked = False
@@ -96,14 +95,6 @@ class BasePanelWidget(QFrame):
         self.standard_toolbar.setVisible(container is not None)
         self.toolbar.setVisible(container is not None)
 
-    def force_close(self):
-        """
-        This function sets the member variable to False which decides whether
-        this widget should be closed on dockonevent and calls closeEvent.
-        """
-        self.doesDockOnClose = False
-        return self.close()
-
     def set_title(self, name):
         """Set the title of this panel whether its docked or undocked.
         """
@@ -119,7 +110,7 @@ class BasePanelWidget(QFrame):
     # Qt slots and callbacks
 
     def closeEvent(self, event):
-        if self.doesDockOnClose and self.panel_container is not None:
+        if not self.allow_closing and self.panel_container is not None:
             self.onDock()
             event.ignore()
         else:

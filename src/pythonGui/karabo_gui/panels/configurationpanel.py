@@ -9,7 +9,7 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QMenu, QPalette, QPushButton,
                          QVBoxLayout, QWidget)
 
 from karabo_gui.configurator.api import ConfigurationTreeView
-from karabo_gui.events import register_for_broadcasts, KaraboEventSender
+from karabo_gui.events import KaraboEventSender, register_for_broadcasts
 import karabo_gui.icons as icons
 from karabo_gui.navigationtreeview import NavigationTreeView
 from karabo_gui.project.view import ProjectView

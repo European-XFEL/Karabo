@@ -29,10 +29,7 @@ class MacroPanel(BasePanelWidget):
     def __init__(self, model):
         self.model = model
         super(MacroPanel, self).__init__(model.simple_name, allow_closing=True)
-
-        # NOTE: We want to close when undocked!
-        self.doesDockOnClose = False
-
+        
         self.already_connected = set()
 
         # Register to KaraboBroadcastEvent

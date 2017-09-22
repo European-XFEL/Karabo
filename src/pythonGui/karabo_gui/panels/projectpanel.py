@@ -11,7 +11,7 @@ from PyQt4.QtGui import QAction, QDialog
 from karabo.common.api import set_modified_flag
 from karabo.common.project.api import ProjectModel
 from karabo.middlelayer import OldProject, convert_old_project
-from karabo_gui.events import register_for_broadcasts, KaraboEventSender
+from karabo_gui.events import KaraboEventSender, register_for_broadcasts
 import karabo_gui.icons as icons
 from karabo_gui.actions import KaraboAction, build_qaction
 from karabo_gui.project.dialog.project_handle import NewProjectDialog
