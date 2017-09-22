@@ -3,14 +3,13 @@
 # Created on March 2, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QLineEdit
 
 from karabo.middlelayer import String
 from karabo_gui.const import WIDGET_MIN_HEIGHT
 from karabo_gui.util import SignalBlocker
 from karabo_gui.widget import DisplayWidget
-
-from PyQt4.QtGui import QLineEdit
 
 
 class DisplayLineEdit(DisplayWidget):
@@ -24,12 +23,11 @@ class DisplayLineEdit(DisplayWidget):
         self.widget = QLineEdit(parent)
         self.widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self.widget.setReadOnly(True)
-
+        self.widget.setFocusPolicy(Qt.NoFocus)
 
     @property
     def value(self):
         return self.widget.text()
-
 
     def valueChanged(self, box, value, timestamp=None):
         if value is None:

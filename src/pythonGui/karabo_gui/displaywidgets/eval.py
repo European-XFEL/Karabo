@@ -1,5 +1,7 @@
 
 import traceback
+
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QInputDialog, QLineEdit
 
 from karabo.middlelayer import String, Simple
@@ -23,6 +25,7 @@ class Evaluator(DisplayWidget):
         self._internal_widget = QLineEdit(parent)
         self._internal_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self._internal_widget.setReadOnly(True)
+        self._internal_widget.setFocusPolicy(Qt.NoFocus)
         self.widget = add_unit_label(box, self._internal_widget, parent=parent)
         self.text = "x"
         self.value = None
