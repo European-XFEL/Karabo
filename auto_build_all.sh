@@ -281,6 +281,7 @@ fi
 
 if [ "$RUNTESTS" = "y" ]; then
     runUnitTests
+    runIntegrationTests # REMOVE THIS!
 fi
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
     runIntegrationTests
