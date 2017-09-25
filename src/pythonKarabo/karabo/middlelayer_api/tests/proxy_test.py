@@ -3,6 +3,7 @@ from weakref import ref
 
 from karabo.middlelayer import (Hash, isSet, Proxy, ProxyNode, ProxySlot,
                                 Schema, State, SubProxy, Timestamp, Unit, unit)
+from karabo.middlelayer_api.device_client import filterByTags, getDescriptors
 from karabo.middlelayer_api.enums import NodeType
 from karabo.middlelayer_api.proxy import ProxyFactory
 
@@ -13,12 +14,14 @@ class Tests(TestCase):
         h["node", "nodeType"] = NodeType.Node.value
         h["node.b", "nodeType"] = NodeType.Leaf.value
         h["node.b", "valueType"] = "STRING"
+        h["node.b", "tags"] = ["plc"]
         h["a", "nodeType"] = NodeType.Leaf.value
         h["a", "valueType"] = "INT32"
         h["a", "description"] = "a's description"
         h["a", "allowedStates"] = ["INIT", "UNKNOWN"]
         h["a", "unitSymbol"] = "A"
         h["a", "defaultValue"] = 22.5
+        h["a", "tags"] = ["mpod", "plc"]
         h["setA", "nodeType"] = NodeType.Node.value
         h["setA", "displayType"] = "Slot"
         h["setA", "description"] = "setA's description"
@@ -143,6 +146,26 @@ class Tests(TestCase):
                               "a", Hash("c", "bla")))
         self.assertEqual(proxy.a.c, "bla")
         self.assertEqual(proxy.node.c, "whatever")
+
+    def test_get_descriptors(self):
+        cls = ProxyFactory.createProxy(self.schema)
+        proxy = cls()
+
+        descriptors = list(getDescriptors(proxy))
+        paths = [k.longkey for k in descriptors]
+        self.assertEqual(["node.b", "a", "setA"], paths)
+
+    def test_filterByTag(self):
+        cls = ProxyFactory.createProxy(self.schema)
+        proxy = cls()
+
+        descriptors = filterByTags(proxy, "mpod")
+        paths = [k.longkey for k in descriptors]
+        self.assertEqual(["a"], paths)
+
+        descriptors = filterByTags(proxy, "plc")
+        paths = [k.longkey for k in descriptors]
+        self.assertEqual(["node.b", "a"], paths)
 
 
 if __name__ == "__main__":
