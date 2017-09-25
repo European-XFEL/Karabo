@@ -6,7 +6,8 @@ from PyQt4.QtGui import QStyle
 
 from karabo.middlelayer import AccessMode, Bool, Char, Integer, Number, String
 import karabo_gui.icons as icons
-from karabo_gui.schema import ChoiceOfNodes, Dummy, Schema, VectorHash
+from karabo_gui.schema import (
+    ChoiceOfNodes, Dummy, ListOfNodes, Schema, VectorHash)
 from karabo_gui.singletons.api import get_topology
 from karabo_gui.widget import DisplayWidget, EditableWidget
 
@@ -102,7 +103,7 @@ def get_box_value(index, box, is_edit_col=False):
         return ''
 
     descriptor = box.descriptor
-    if isinstance(descriptor, ChoiceOfNodes):
+    if isinstance(descriptor, (ChoiceOfNodes, ListOfNodes)):
         return box.current or ''
     if isinstance(descriptor, (Schema, VectorHash)):
         return ''

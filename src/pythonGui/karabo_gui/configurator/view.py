@@ -152,7 +152,7 @@ class ConfigurationTreeView(QTreeView):
             ('minExc', 'minExc'), ('maxExc', 'maxExc'),
             ('minInc', 'minInc'), ('maxInc', 'maxInc')]
         for label, attr_name in additional_attrs:
-            attr = getattr(descriptor, attr_name)
+            attr = getattr(descriptor, attr_name, None)
             info[label] = 'n/a' if attr is None else attr
 
         self.popup_widget.setInfo(info)
