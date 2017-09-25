@@ -1351,23 +1351,39 @@ namespace karabo {
 
             /**
              * Returns the actual timestamp. The Trainstamp part of Timestamp is extrapolated from the last values
-             * received via slotTimeTick (or zero if no time ticks received, i.e. useTimeserver is false).
+             * received via slotTimeTick (or zero if no time ticks received yet, e.g. if useTimeserver is false).
              *
              * @return the actual timestamp
              */
-            karabo::util::Timestamp getActualTimestamp() {
-                karabo::util::Epochstamp epochNow;
+            inline karabo::util::Timestamp getActualTimestamp() const {
+                return getTimestamp(karabo::util::Epochstamp()); // i.e. epochstamp for now
+            }
+
+            /**
+             * Returns the Timestamp for given Epochstamp. The Trainstamp part of Timestamp is extrapolated forward or
+             * backward from the last values received via slotTimeTick
+             * (or zero if no time ticks received yet, e.g. if useTimeserver is false).
+             *
+             * @param epoch for that the time stamp is searched for
+             * @return the matching timestamp, consisting of epoch and the corresponding Trainstamp
+             */
+            karabo::util::Timestamp getTimestamp(const karabo::util::Epochstamp& epoch) const {
                 unsigned long long id = 0;
                 {
                     boost::mutex::scoped_lock lock(m_timeChangeMutex);
                     if (m_timePeriod > 0) {
-                        karabo::util::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
-                        karabo::util::TimeDuration duration = epochNow.elapsed(epochLastReceived);
-                        unsigned int nPeriods = (duration.getTotalSeconds() * 1000000 + duration.getFractions(karabo::util::MICROSEC)) / m_timePeriod;
-                        id = m_timeId + nPeriods;
+                        const karabo::util::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
+                        // duration is always positive, irrespective whether epoch or epochLastReceived is more recent
+                        const karabo::util::TimeDuration duration = epoch.elapsed(epochLastReceived);
+                        const unsigned int nPeriods = (duration.getTotalSeconds() * 1000000 + duration.getFractions(karabo::util::MICROSEC)) / m_timePeriod;
+                        if (epochLastReceived <= epoch) {
+                            id = m_timeId + nPeriods;
+                        } else {
+                            id = m_timeId - nPeriods - 1ull;
+                        }
                     }
                 }
-                return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
+                return karabo::util::Timestamp(epoch, karabo::util::Trainstamp(id));
             }
 
         private: // Functions
