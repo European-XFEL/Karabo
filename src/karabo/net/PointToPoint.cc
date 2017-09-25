@@ -3,6 +3,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <tuple>
+#include <list>
 
 #include <boost/asio.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -147,7 +148,7 @@ namespace karabo {
             ConnectedInstances m_connectedInstances;
             boost::mutex m_connectedInstancesMutex;
             // key is signalConnectionString, value is vector of tuple(slotInstanceId, signalInstanceId, handler)
-            typedef std::unordered_map<std::string, std::vector<std::tuple<std::string, std::string, karabo::net::ConsumeHandler> > > PendingSubscriptionsMap;
+            typedef std::unordered_map<std::string, std::list<std::tuple<std::string, std::string, karabo::net::ConsumeHandler> > > PendingSubscriptionsMap;
             PendingSubscriptionsMap m_pendingSubscriptions; // to be protected by m_connectedInstancesMutex
 
         };
@@ -408,10 +409,10 @@ namespace karabo {
                 // Also for pending stuff:
                 auto iter = m_pendingSubscriptions.find(signalConnectionString);
                 if (iter != m_pendingSubscriptions.end()) {
-                    const auto& vecOfTuples = iter->second;
-                    KARABO_LOG_FRAMEWORK_INFO << "Treat " << vecOfTuples.size() << " pending subscriptions to "
+                    const auto& allTuples = iter->second;
+                    KARABO_LOG_FRAMEWORK_INFO << "Treat " << allTuples.size() << " pending subscriptions to "
                             << signalConnectionString; // FIXME: DEBUG?
-                    for (const auto& tuple : vecOfTuples) {
+                    for (const auto& tuple : allTuples) {
                         storeSignalSlotConnectionInfo(std::get<0>(tuple), std::get<1>(tuple), signalConnectionString, std::get<2>(tuple));
                         pendingInstanceIds.push_back(std::get<1>(tuple));
                     }
@@ -454,6 +455,8 @@ namespace karabo {
                     }
 
                     // Store empty connection/channel pointers to mark that we are preparing them.
+                    KARABO_LOG_FRAMEWORK_INFO << "Store empty connection pointer for " << signalInstanceId << " to "
+                            << slotInstanceId << " (" << signalConnectionString << ")";
                     storeTcpConnectionInfo(signalConnectionString, Connection::Pointer(), Channel::Pointer());
 
                     Connection::Pointer connection = Connection::create(Hash("Tcp", params));
@@ -461,6 +464,8 @@ namespace karabo {
                                                      signalInstanceId, signalConnectionString, handler, connection, _2));
 
                 } else if (connectionsIter->second.first) { // connection already there
+                    KARABO_LOG_FRAMEWORK_INFO << "Use established connection pointer for " << signalInstanceId << " to "
+                            << slotInstanceId << " (" << signalConnectionString << ")";
                     // bookkeeping ...
                     storeSignalSlotConnectionInfo(slotInstanceId, signalInstanceId, signalConnectionString, handler);
 
@@ -472,9 +477,9 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_INFO << "connection to " << signalConnectionString
                             << " (for " << slotInstanceId << ") is already being established";
                     // store what later has to be done for subscription: storeSignalSlotConnectionInfo, write
-                    auto& vec = m_pendingSubscriptions[signalConnectionString];
+                    auto& allTuples = m_pendingSubscriptions[signalConnectionString];
                     const auto& tup = std::make_tuple(slotInstanceId, signalInstanceId, handler);
-                    vec.push_back(tup);
+                    allTuples.push_back(tup);
                 }
 
             }
@@ -492,16 +497,17 @@ namespace karabo {
                 // Instance not yet connected, but check also pending stuff:
                 for (PendingSubscriptionsMap::iterator itPending = m_pendingSubscriptions.begin(),
                      itEnd = m_pendingSubscriptions.end(); itPending != itEnd;) {
-                    // key is signalConnectionString, value is vector of tuple(slotInstanceId, signalInstanceId, handler)
-                    auto& vecOfTuples = itPending->second;
-                    for (size_t index = 0; index < vecOfTuples.size(); ++index) {
-                        auto& tup = vecOfTuples[index];
-                        if (std::get<1>(tup) == signalInstanceId) {
+                    // key is signalConnectionString, value is list of tuple(slotInstanceId, signalInstanceId, handler)
+                    auto& allTuples = itPending->second;
+                    for (auto itTuple = allTuples.begin(), itEnd = allTuples.end(); itTuple != itEnd;) {
+                        if (std::get<1>(*itTuple) == signalInstanceId) {
                             KARABO_LOG_FRAMEWORK_INFO << "Disconnect pending " << signalInstanceId; // FIXME: DEBUG?
-                            ; // FIXME: remove index - better use list?
+                            allTuples.erase(itTuple++); // post-increment: erase old iterator
+                        } else {
+                            ++itTuple;
                         }
                     }
-                    if (vecOfTuples.empty()) {
+                    if (allTuples.empty()) {
                         KARABO_LOG_FRAMEWORK_INFO << "Disconnect " << itPending->first << " completely from pending "; // FIXME: DEBUG?
                         m_pendingSubscriptions.erase(itPending++); // post-increment: erase old iterator
                     } else {
