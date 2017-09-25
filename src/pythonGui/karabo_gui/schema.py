@@ -677,30 +677,62 @@ class ChoiceOfNodes(Schema):
         return current
 
 
-class ListOfNodes(hashmod.Descriptor):
+class ListOfNodes(Type):
+    """A ListOfNodes is a list type whose schema contains a number of child
+    node schemas which describe the values which can be added to the list.
+
+    This doesn't really fit the whole Box/Configuration view of the world very
+    well, so we resort to a very ugly hack here to get basic value storage
+    and default values correct.
+
+    This hack is being put in place to aid debris removal which will allow
+    easier extraction of Box and it's associated black magic.
+    """
+    _hashname = 'LIST'
+
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
-        descr = ListOfNodes()
-        descr.metricPrefixSymbol = ''
-        descr.unitSymbol = ''
-        return descr
+        # XXX: This. This should not be allowed to last long.
+        from .configuration import Configuration
 
-    def setDefault(self, box):
-        return
+        self = cls(strict=False, **attrs)
+        node_schemata = {}
+        for k, h, a in hash.iterall():
+            node_schemata[k] = Schema.parse(k, h, a)
 
-    def setAssignment(self, item):
-        return
+        if not (self.defaultValue is None or
+                all(name in node_schemata for name in self.defaultValue)):
+            msg = 'the default value "{}" is not in {} for node {}'
+            raise AssertionError(msg.format(self.defaultValue,
+                                            list(hash.keys()), key))
+        self.objs = {k: Configuration(k, 'class', descriptor=v)
+                     for k, v in node_schemata.items()}
+        self.metricPrefixSymbol = ''
+        self.unitSymbol = ''
+        return self
+
+    def cast(self, other):
+        assert_msg = '"{}" is not in the allowed classes ({})'
+
+        retval = []
+        for val in other:
+            if isinstance(val, str):
+                assert val in self.objs, assert_msg.format(val, self.objs)
+                hsh = Hash(val, self.objs[val].toHash()[0])
+                retval.append(hsh)
+            else:
+                name = list(val.keys())[0]
+                assert name in self.objs, assert_msg.format(name, self.objs)
+                # XXX: Use a stored Configuration object to validate the
+                # contents of the hash before adding it
+                validator = self.objs[name]
+                validator.fromHash(val[name])
+                retval.append(val)
+        return retval
 
     def toHash(self, box):
-        return [], {}
-
-    def dummyCast(self, box):
-        return box.value
-
-    def redummy(self, box):
-        box._value = Dummy()
-        box.initialized = False
-        box.descriptor = None
+        # box.value is already a list of Hashes
+        return box.value, {}
 
 # ----------------------------------------------------------------------------
 # Configuration editing extensions

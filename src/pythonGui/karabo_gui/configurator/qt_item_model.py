@@ -15,8 +15,8 @@ from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 import karabo_gui.globals as krb_globals
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.schema import (
-    Box, ChoiceOfNodes, Dummy, EditableAttributeInfo, ImageNode, Schema,
-    SlotNode, VectorHash, VectorHashCellInfo, VectorHashRowInfo,
+    Box, ChoiceOfNodes, Dummy, EditableAttributeInfo, ImageNode, ListOfNodes,
+    Schema, SlotNode, VectorHash, VectorHashCellInfo, VectorHashRowInfo,
     get_editable_attributes, box_has_changes
 )
 from .utils import (
@@ -405,11 +405,14 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if isinstance(descriptor, ChoiceOfNodes):
             # ChoiceOfNodes only ever appears to have one child
             return 1
+        elif isinstance(descriptor, ListOfNodes):
+            # XXX: ListOfNodes is toxic
+            return 0
         elif isinstance(descriptor, Schema):
             # Schemas have children
             return len(_get_child_names(descriptor))
         elif isinstance(descriptor, VectorHash):
-            # VectorHash have as many children as they have rows
+            # ListOfNodes/VectorHash have as many children as they have rows
             value = box.value
             return 0 if isinstance(value, Dummy) else len(value)
         elif self._configuration.type == 'projectClass':
@@ -549,8 +552,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
         flags = 0
         descriptor = box.descriptor
         is_class = box.configuration.type in ('class', 'projectClass')
-        is_node = isinstance(descriptor, Schema)
-        is_editable_type = not is_node or isinstance(descriptor, ChoiceOfNodes)
+        is_uneditable_node = isinstance(descriptor, (ListOfNodes, Schema))
+        is_editable_type = (not is_uneditable_node or
+                            isinstance(descriptor, ChoiceOfNodes))
         is_class_editable = (is_class and descriptor.accessMode in
                              (AccessMode.INITONLY, AccessMode.RECONFIGURABLE))
         is_inst_editable = (not is_class and box.isAllowed() and
