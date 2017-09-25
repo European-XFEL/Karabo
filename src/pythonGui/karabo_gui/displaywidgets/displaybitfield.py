@@ -58,6 +58,10 @@ class Bitfield(EditableWidget, DisplayWidget):
         self._internal_widget = BitfieldWidget(parent)
         self.widget = add_unit_label(box, self._internal_widget, parent=parent)
 
+    @property
+    def editWidget(self):
+        return self._internal_widget
+
     def typeChanged(self, box):
         self._internal_widget.size = box.descriptor.numpy().nbytes * 8
         self.widget.update()
