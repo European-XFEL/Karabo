@@ -199,7 +199,7 @@ class EditWidgetWrapper(QWidget):
         self.setAutoFillBackground(True)
 
         if isinstance(obj, EditableAttributeInfo):
-            name = obj.names[index.row()]
+            name, _ = obj.get_data_by_index(index.row())
             klass = _ATTR_EDITOR_FACTORIES[name]
             box = obj.parent()
             self.editable_widget = klass(box, parent=self)
