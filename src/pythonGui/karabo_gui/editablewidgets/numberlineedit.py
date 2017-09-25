@@ -32,6 +32,10 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         self.errorPalette = QPalette(self.normalPalette)
         self.errorPalette.setColor(QPalette.Text, Qt.red)
 
+    @property
+    def editWidget(self):
+        return self._internal_widget
+
     def setReadOnly(self, ro):
         self._internal_widget.setReadOnly(ro)
         if not ro:
