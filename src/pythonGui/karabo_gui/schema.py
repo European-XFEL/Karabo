@@ -229,12 +229,15 @@ class Box(QObject):
             self.visibilityChanged.emit(False)
 
     def unitLabel(self):
-        """The unit strings are only available, if the descriptor is properly
-        set, otherwise nothing is returned.
+        """The unit strings are only available, if the attributeInfo is
+        properly set, otherwise nothing is returned.
         """
-        descr = self.descriptor
-        if descr is not None:
-            return descr.metricPrefixSymbol + descr.unitSymbol
+        if not hasattr(self, 'attributeInfo'):
+            return ''
+
+        attrs = self.attributeInfo.attrs
+        prefix_symbol = attrs.get('metricPrefixSymbol', '')
+        return prefix_symbol + attrs.get('unitSymbol', '')
 
     def axisLabel(self):
         """This function returns the axis label string.
@@ -283,11 +286,13 @@ class Type(hashmod.Type, metaclass=Monkey):
     # Means that parent class is overwritten/updated
 
     def set(self, box, value, timestamp=None):
-        self.attributeInfo = EditableAttributeInfo(box, box.descriptor)
+        if not hasattr(box, 'attributeInfo'):
+            box.attributeInfo = EditableAttributeInfo(box, box.descriptor)
         box._set(value, timestamp)
 
     def dispatchUserChanges(self, box, value, attrs=None):
-        self._copyAttrs(box, attrs)
+        attrs = {} if attrs is None else attrs
+        box.attributeInfo.update(attrs)
         value = box.descriptor.cast(value)
         if box_has_changes(box.descriptor, box.value, value):
             box.configuration.setUserValue(box, value)
@@ -297,18 +302,20 @@ class Type(hashmod.Type, metaclass=Monkey):
         if self.defaultValue is not None:
             self.set(box, self.defaultValue)
         else:
-            self.attributeInfo = EditableAttributeInfo(box, box.descriptor)
+            if not hasattr(box, 'attributeInfo'):
+                box.attributeInfo = EditableAttributeInfo(box, box.descriptor)
 
     def toHash(self, box):
-        desc = box.descriptor
-        attributes = {key: getattr(desc, key)
-                      for key in EDITABLE_ATTRIBUTE_NAMES
-                      if hasattr(desc, key) and getattr(desc, key) is not None}
-        return box.value, attributes
+        attr_info = getattr(box, 'attributeInfo', None)
+        attrs = {} if attr_info is None else dict(attr_info.attrs)
+        return box.value, attrs
 
     def fromHash(self, box, data, attrs=None, timestamp=None):
-        self._copyAttrs(box, attrs)
-        self.attributeInfo = EditableAttributeInfo(box, box.descriptor)
+        if not hasattr(box, 'attributeInfo'):
+            box.attributeInfo = EditableAttributeInfo(box, box.descriptor,
+                                                      attrs)
+        else:
+            box.attributeInfo.update(attrs)
         box._set(data, timestamp)
 
     def redummy(self, box):
@@ -327,12 +334,6 @@ class Type(hashmod.Type, metaclass=Monkey):
             return self.cast(box.value)
         else:
             return box.value
-
-    def _copyAttrs(self, box, attrs):
-        attrs = attrs if attrs is not None else {}
-        desc = box.descriptor
-        for name, value in attrs.items():
-            setattr(desc, name, value)
 
 
 class Object(object):
@@ -730,9 +731,29 @@ class EditableAttributeInfo(object):
     the descriptor of a box is changed, a new instance of this class should
     be generated.
     """
-    def __init__(self, box, descriptor):
-        self.names = get_editable_attributes(descriptor)
+    def __init__(self, box, descriptor, attrs=None):
+        attrs = attrs or {}
+        names = get_editable_attributes(descriptor)
+        self.attrs = OrderedDict([(name,
+                                   attrs.get(name, getattr(descriptor, name)))
+                                  for name in names])
         self.parent = weakref.ref(box)
+
+    def update(self, attrs):
+        """Update the data with the given `attrs`
+        """
+        self.attrs.update(attrs)
+
+    def get_data_by_index(self, index):
+        """Return a tuple with the `name` and the `value` behind the given
+        `index`
+        """
+        tuple_list = list(self.attrs.items())
+        try:
+            name, value = tuple_list[index]
+        except IndexError:
+            return '', None
+        return name, value
 
 
 class VectorHash(hashmod.VectorHash, metaclass=Monkey):
