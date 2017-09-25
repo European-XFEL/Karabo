@@ -689,3 +689,41 @@ def getDescriptors(proxy):
                 yield descr
 
     yield from recurse(proxy)
+
+
+def getAliasFromKey(proxy, key):
+    """Retrieve the property alias for a given key from a proxy
+
+    This method returns the related alias in the proxy::
+
+        proxy = connectDevice("someDevice")
+
+        alias = getAliasFromKey(proxy, "encoderPosition")
+
+    """
+    assert isinstance(proxy, ProxyBase)
+
+    for desc in getDescriptors(proxy):
+        if desc.longkey == key:
+            return desc.alias
+    else:
+        raise KeyError("Key not found in device schema.")
+
+
+def getKeyFromAlias(proxy, alias):
+    """Retrieve the property key for a given alias from a proxy
+
+    This method returns the related key in the proxy::
+
+        proxy = connectDevice("someDevice")
+
+        key = getKeyFromAlias(proxy, "AEncoderPosition")
+
+    """
+    assert isinstance(proxy, ProxyBase)
+
+    for desc in getDescriptors(proxy):
+        if desc.alias == alias:
+            return desc.longkey
+    else:
+        raise KeyError("Alias not found in device schema.")
