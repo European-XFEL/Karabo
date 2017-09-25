@@ -23,8 +23,8 @@ from .device import Device
 from .eventloop import EventLoop, synchronize
 from .exceptions import KaraboError
 from .hash import Hash, Type
-from .proxy import (ProxyBase, AutoDisconnectProxyFactory,
-                    DeviceClientProxyFactory)
+from .proxy import (AutoDisconnectProxyFactory, DeviceClientProxyFactory,
+                    ProxyBase, ProxyNodeBase)
 from .signalslot import coslot, slot
 from .synchronization import firstCompleted
 
@@ -646,3 +646,46 @@ def isAlive(proxy):
     """Check whether a device represented by a proxy is still running"""
     assert isinstance(proxy, ProxyBase)
     return proxy._alive
+
+
+def filterByTags(proxy, *tags):
+    """Device proxy is filtered by provided tags
+
+    This method returns a list of all descriptors which contain the tags::
+
+        proxy = connectDevice("someDevice")
+
+        for desc in filterByTags(proxy, "mytag"):
+            ... do something
+    """
+    assert isinstance(proxy, ProxyBase)
+    tags = frozenset(tags)
+    filtered = [desc for desc in getDescriptors(proxy)
+                if desc.tags is not None
+                and not tags.isdisjoint(desc.tags)]
+
+    return filtered
+
+
+def getDescriptors(proxy):
+    """Device proxy is searched for descriptors
+
+    This generator returns all descriptors in the proxy::
+
+        proxy = connectDevice("someDevice")
+
+        for descr in getDescriptors(proxy):
+            ... do something
+    """
+    assert isinstance(proxy, ProxyBase)
+
+    def recurse(proxy):
+        klass = proxy.__class__
+        for key in proxy._allattrs:
+            descr = getattr(klass, key)
+            if isinstance(descr, ProxyNodeBase):  # recurse Nodes
+                yield from recurse(getattr(proxy, descr.key))
+            else:
+                yield descr
+
+    yield from recurse(proxy)
