@@ -1,0 +1,233 @@
+#############################################################################
+# Author: <john.wiggins@xfel.eu>
+# Created on September 26, 2017
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+import os
+import os.path as op
+
+from karabo.bound import (
+    PythonDevice, Hash, loadFromFile, saveToFile, Schema, State,
+    ADMIN, EXPERT, KARABO_CLASSINFO,
+    BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT,
+    STRING_ELEMENT, TABLE_ELEMENT
+)
+
+OUTPUT_CHANNEL_SEPARATOR = ':'
+SAVED_GROUPS_DIR = 'run_config_groups'
+
+
+@KARABO_CLASSINFO('RunControlDataSource', '2.2')
+class RunControlDataSource(object):
+    """The description of a single run control data source.
+    """
+    @staticmethod
+    def expectedParameters(expected):
+        (
+            OVERWRITE_ELEMENT(expected).key('visibility')
+            .setNewDefaultValue(ADMIN)
+            .commit(),
+
+            STRING_ELEMENT(expected).key('source')
+            .displayedName('Source')
+            .description("Data source's full name, like "
+                         "SASE1/SPB/SAMP/INJ_CAM_1")
+            .assignmentOptional().defaultValue('Source')
+            .reconfigurable()
+            .commit(),
+
+            STRING_ELEMENT(expected).key('type')
+            .displayedName('Type')
+            .description("Data source's type")
+            # XXX: Uncommenting the following line causes the GUI to crash...
+            # .options('control,instrument')
+            .assignmentOptional().defaultValue('control')
+            .reconfigurable()
+            .commit(),
+
+            STRING_ELEMENT(expected).key('behavior')
+            .displayedName('Behavior')
+            .description("Configure data source's behavior")
+            .options('init,read-only,record-all')
+            .assignmentOptional().defaultValue('record-all')
+            .reconfigurable()
+            .commit(),
+
+            BOOL_ELEMENT(expected).key('monitored')
+            .displayedName('Monitor out')
+            .description("If true, the selected data will be output to the "
+                         "online pipeline outputs in the DAQ's monitoring "
+                         "and recording states.")
+            .assignmentOptional().defaultValue(False)
+            .reconfigurable()
+            .commit(),
+        )
+
+
+@KARABO_CLASSINFO('RunConfigurationGroup', '2.2')
+class RunConfigurationGroup(PythonDevice):
+
+    def __init__(self, configuration):
+        # always call PythonDevice constructor first!
+        super(RunConfigurationGroup, self).__init__(configuration)
+        # Define first function to be called after the constructor has finished
+        self.registerInitialFunction(self.initialization)
+
+    @staticmethod
+    def expectedParameters(expected):
+        """Description of device parameters
+        """
+        sourceSchema = Schema()
+        RunControlDataSource.expectedParameters(sourceSchema)
+
+        (
+            OVERWRITE_ELEMENT(expected).key('state')
+            .setNewOptions(State.INIT, State.NORMAL, State.ERROR)
+            .setNewDefaultValue(State.INIT)
+            .commit(),
+
+            OVERWRITE_ELEMENT(expected).key('visibility')
+            .setNewDefaultValue(EXPERT)
+            .commit(),
+
+            NODE_ELEMENT(expected).key('group')
+            .displayedName('Group')
+            .description('Structure describing data sources logically '
+                         'belonging together.')
+            .commit(),
+
+            STRING_ELEMENT(expected).key('group.id')
+            .displayedName('Name')
+            .description('Name of run configuration group.')
+            .assignmentMandatory()
+            .commit(),
+
+            STRING_ELEMENT(expected).key('group.description')
+            .displayedName('Description')
+            .description('Description of current run configuration group.')
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit(),
+
+            TABLE_ELEMENT(expected).key('group.expert')
+            .displayedName('Mandatory sources')
+            .description('Expert configurations for mandatory data sources')
+            .setColumns(sourceSchema)
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit(),
+
+            TABLE_ELEMENT(expected).key('group.user')
+            .displayedName('Optional sources')
+            .description('User selectable data sources.')
+            .setColumns(sourceSchema)
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit(),
+
+            # Converted internally into group_saveGroupConfiguration
+            SLOT_ELEMENT(expected).key('group.saveGroupConfiguration')
+            .displayedName('Save configuration')
+            .description("Push the button to save configuration in "
+                         "run_config_group' folder.")
+            .commit(),
+        )
+
+    def initialization(self):
+        # Define the signals & slots
+        self._ss.registerSystemSignal('signalGetGroup', str, Hash)
+        self.KARABO_SLOT(self.slotGetGroup)
+        self.KARABO_SLOT(self.group_saveGroupConfiguration)
+
+        os.makedirs(SAVED_GROUPS_DIR, exist_ok=True)
+
+        group = Hash()
+        path = op.join(SAVED_GROUPS_DIR, self.getInstanceId() + '.xml')
+        if op.exists(path):
+            loadFromFile(group, path)
+        self.set('group', group)
+
+        self.updateState(State.NORMAL)
+
+    def preReconfigure(self, incomingReconfiguration):
+        self.log.DEBUG('RunConfigurationGroup.preReconfigure ... '
+                       'incomingReconfiguration ==> ...\n'
+                       '{}'.format(incomingReconfiguration))
+
+        if not incomingReconfiguration.has('group'):
+            return
+
+        inputGroup = incomingReconfiguration.get('group')
+        currentGroup = self.get('group')
+
+        if inputGroup.has('expert'):
+            experts = []
+            currentExperts = currentGroup.get('expert', default=[])
+            inputExperts = inputGroup.get('expert')
+            experts = self._fillTable(currentExperts, inputExperts)
+            # update expert table
+            inputGroup.set('expert', experts)
+
+        if inputGroup.has('user'):
+            currentUsers = currentGroup.get('user', default=[])
+            inputUsers = inputGroup.get('user')
+            users = self._fillTable(currentUsers, inputUsers)
+            # set new version of user table
+            inputGroup.set('user', users)
+
+    def slotGetGroup(self):
+        self._ss.emit('signalGetGroup',
+                      self.getInstanceId(), self.get('group'))
+
+    def group_saveGroupConfiguration(self):
+        """The group.saveGroupConfiguration Slot
+        """
+        group = self.get('group')
+        path = op.join(SAVED_GROUPS_DIR, self.getInstanceId() + '.xml')
+        saveToFile(group, path)
+
+    def _fillTable(self, currentSources, inputSources):
+        retSources = []
+        for source in inputSources:
+            deviceId = source.get('source')
+
+            if OUTPUT_CHANNEL_SEPARATOR in deviceId:
+                source.setAttribute('source', 'pipeline', False)
+            else:
+                source.setAttribute('source', 'pipeline', True)
+
+            retSources.append(source)
+
+            if source.getAttribute('source', 'pipeline'):
+                continue  # output channel already added for the source
+
+            ochannels = self.remote().getOutputChannelNames(deviceId)
+            if _findDataSource(currentSources, deviceId) is None:
+                # ... is new one ... get its output channels and add them
+                # to the retSources ...
+                for name in ochannels:
+                    fullName = deviceId + OUTPUT_CHANNEL_SEPARATOR + name
+                    retSources.append(_buildSource(fullName))
+            else:
+                # ... exists. Check if its output channels are in the
+                # retSources and ... if not, add them to the retSources ...
+                for name in ochannels:
+                    fullName = deviceId + OUTPUT_CHANNEL_SEPARATOR + name
+                    if _findDataSource(currentSources, fullName) is None:
+                        # Existing device still missing output channel
+                        retSources.append(_buildSource(fullName))
+        return retSources
+
+
+def _buildSource(name):
+    source = Hash('source', name, 'type', 'control',
+                  'behavior', 'read-only', 'monitored', False)
+    source.setAttribute('source', 'pipeline', True)
+    return source
+
+
+def _findDataSource(hashes, instance_id):
+    for hsh in hashes:
+        if hsh.get('source', default='') == instance_id:
+            return hsh
+    return None
