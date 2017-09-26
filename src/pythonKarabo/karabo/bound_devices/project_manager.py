@@ -262,7 +262,10 @@ class ProjectManager(PythonDevice):
                     h = Hash('uuid', r['uuid'],
                              'item_type', r['item_type'],
                              'simple_name', r['simple_name'],
-                             'is_trashed',  r['is_trashed'])
+                             'is_trashed',  r['is_trashed'],
+                             'date', r['date'],
+                             'user', r['user'])
+                    h.set('description', r['description'])
                     resHashes.append(h)
             except ProjectDBError as e:
                 exceptionReason = str(e)
