@@ -12,7 +12,8 @@ import os.path as op
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
 from PyQt4.QtGui import (QAction, QButtonGroup, QCursor, QDialog,
-                         QDialogButtonBox, QItemSelectionModel, QMenu)
+                         QDialogButtonBox, QHeaderView, QItemSelectionModel,
+                         QMenu)
 
 from karabo_gui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
@@ -20,22 +21,20 @@ from karabo_gui.events import (
 from karabo_gui import messagebox
 from karabo_gui.project.utils import show_trash_project_message
 from karabo_gui.singletons.api import get_db_conn
-from karabo_gui.util import SignalBlocker
+from karabo_gui.util import SignalBlocker, utc_to_local
 
 SIMPLE_NAME = 'simple_name'
+LAST_MODIFIED = 'last_modified'
 UUID = 'uuid'
 AUTHOR = 'author'
-PUBLISHED = 'published'
 DESCRIPTION = 'description'
-DOCUMENTATION = 'documentation'
 
 PROJECT_DATA = OrderedDict()
 PROJECT_DATA[SIMPLE_NAME] = 'Name'
+PROJECT_DATA[LAST_MODIFIED] = 'Last Modified'
 PROJECT_DATA[UUID] = 'UUID'
 PROJECT_DATA[AUTHOR] = 'Author'
-PROJECT_DATA[PUBLISHED] = 'Published'
 PROJECT_DATA[DESCRIPTION] = 'Description'
-PROJECT_DATA[DOCUMENTATION] = 'Documentation'
 ProjectEntry = namedtuple('ProjectEntry', [key for key in PROJECT_DATA.keys()])
 
 
@@ -70,6 +69,8 @@ class LoadProjectDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setText('Load')
 
         # QTableview in ui file
+        self.twProjects.horizontalHeader().setResizeMode(
+            QHeaderView.ResizeToContents)
         self.twProjects.setModel(TableModel(parent=self))
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
@@ -358,6 +359,9 @@ class TableModel(QAbstractTableModel):
                      - 'simple_name' - The name for displaying
                      - 'item_type' - Should be project in that case
                      - 'is_trashed' - Flag if project is marked as trashed
+                     - 'user' - The user who created the project
+                     - 'date' - The date the project was last modified
+                     - 'description' - The description of the project
         """
         # XXX: this only works if the sent list of uuids is complete
         self.beginResetModel()
@@ -369,11 +373,10 @@ class TableModel(QAbstractTableModel):
                     continue
                 entry = ProjectEntry(
                     simple_name=it.get('simple_name'),
+                    last_modified=utc_to_local(it.get('date')),
                     uuid=(it.get('uuid'), is_trashed),
-                    author='',
-                    published='',
-                    description='description',
-                    documentation='documentation',
+                    author=it.get('user', ''),
+                    description=it.get('description', ''),
                     )
                 self.entries.append(entry)
         finally:
