@@ -8,9 +8,14 @@ import os.path as op
 
 from karabo.bound import (
     PythonDevice, Hash, loadFromFile, saveToFile, Schema, State,
+    TextSerializerSchema,
     ADMIN, EXPERT, KARABO_CLASSINFO,
     BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT,
-    STRING_ELEMENT, TABLE_ELEMENT
+    STRING_ELEMENT, TABLE_ELEMENT, VECTOR_STRING_ELEMENT
+)
+from karabo.common.scenemodel.api import (
+    BoxLayoutModel, DisplayCommandModel, FixedLayoutModel, LabelModel,
+    LineEditModel, SceneModel, TableElementModel, write_scene
 )
 
 OUTPUT_CHANNEL_SEPARATOR = ':'
@@ -131,6 +136,10 @@ class RunConfigurationGroup(PythonDevice):
             .description("Push the button to save configuration in "
                          "run_config_group' folder.")
             .commit(),
+
+            VECTOR_STRING_ELEMENT(expected).key('availableScenes')
+            .readOnly().initialValue(['scene'])
+            .commit(),
         )
 
     def initialization(self):
@@ -138,6 +147,7 @@ class RunConfigurationGroup(PythonDevice):
         self._ss.registerSystemSignal('signalGetGroup', str, Hash)
         self.KARABO_SLOT(self.slotGetGroup)
         self.KARABO_SLOT(self.group_saveGroupConfiguration)
+        self.KARABO_SLOT(self.requestScene)
 
         os.makedirs(SAVED_GROUPS_DIR, exist_ok=True)
 
@@ -186,6 +196,26 @@ class RunConfigurationGroup(PythonDevice):
         path = op.join(SAVED_GROUPS_DIR, self.getInstanceId() + '.xml')
         saveToFile(group, path)
 
+    def requestScene(self, params):
+        """Fulfill a scene request from another device.
+
+        NOTE: Required by Scene Supply Protocol, which is defined in KEP 21.
+              The format of the reply is also specified there.
+
+        :param params: A `Hash` containing the method parameters
+        """
+        payload = Hash('success', False)
+
+        name = params.get('name', default='')
+        if name == 'scene':
+            payload.set('success', True)
+            payload.set('name', name)
+            payload.set('data', _generateDeviceScene(self.getInstanceId()))
+
+        self.reply(Hash('type', 'deviceScene',
+                        'origin', self.getInstanceId(),
+                        'payload', payload))
+
     def _fillTable(self, currentSources, inputSources):
         retSources = []
         for source in inputSources:
@@ -231,3 +261,59 @@ def _findDataSource(hashes, instance_id):
         if hsh.get('source', default='') == instance_id:
             return hsh
     return None
+
+
+def _generateDeviceScene(instance_id):
+    DEFAULT_FONT = ",10,-1,5,50,0,0,0,0,0"
+
+    button_key = instance_id + '.group.saveGroupConfiguration'
+    button = DisplayCommandModel(keys=[button_key],
+                                 x=475, y=525, height=30, width=135)
+    user_label = LabelModel(text="User Sources", font=DEFAULT_FONT,
+                            x=25, y=315, height=30, width=90)
+    expert_label = LabelModel(text="Expert Sources", font=DEFAULT_FONT,
+                              x=20, y=100, height=30, width=100)
+
+    descr_key = instance_id + '.group.description'
+    descr_label = LabelModel(text="Description", font=DEFAULT_FONT,
+                             x=40, y=50, height=30, width=80)
+    descr_disp = LineEditModel(klass='DisplayLineEdit', keys=[descr_key],
+                               x=120, y=50, height=30, width=170)
+    descr_edit = LineEditModel(klass='EditableLineEdit', keys=[descr_key],
+                               x=290, y=50, height=30, width=170)
+    descr_layout = BoxLayoutModel(direction=0,
+                                  x=35, y=50, height=45, width=430,
+                                  children=[descr_label, descr_disp,
+                                            descr_edit])
+
+    name_key = instance_id + '.group.id'
+    name_label = LabelModel(text="Name", font=DEFAULT_FONT,
+                            x=80, y=15, height=30, width=40)
+    name_disp = LineEditModel(klass='DisplayLineEdit', keys=[name_key],
+                              x=120, y=15, height=30, width=130)
+    name_layout = BoxLayoutModel(direction=0, x=75, y=10, height=40, width=180,
+                                 children=[name_label, name_disp])
+
+    # Generate the table schema
+    column_schema = Schema()
+    RunControlDataSource.expectedParameters(column_schema)
+    serializer = TextSerializerSchema.create('Xml')
+    column_schema = serializer.save(column_schema)
+
+    expert_key = instance_id + '.group.expert'
+    expert_table = TableElementModel(klass='EditableTableElement',
+                                     keys=[expert_key],
+                                     column_schema=column_schema,
+                                     x=120, y=90, height=210, width=500)
+
+    user_key = instance_id + '.group.user'
+    user_table = TableElementModel(klass='EditableTableElement',
+                                   keys=[user_key],
+                                   column_schema=column_schema,
+                                   x=120, y=310, height=210, width=500)
+
+    root_layout = FixedLayoutModel(x=10, y=10, height=550, width=600,
+                                   children=[button, user_label, expert_label,
+                                             descr_layout, name_layout,
+                                             expert_table, user_table])
+    return write_scene(SceneModel(children=[root_layout]))
