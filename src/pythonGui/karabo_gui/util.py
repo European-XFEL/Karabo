@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from datetime import datetime
 import os
 import os.path as op
 from tempfile import mkstemp
@@ -6,6 +7,7 @@ from types import MethodType
 from uuid import uuid4
 import weakref
 
+from dateutil.tz import tzlocal, tzutc
 from PyQt4.QtCore import QPoint, QSize, Qt, QSettings
 from PyQt4.QtGui import (
     QBrush, QDialog, QFileDialog, QHeaderView, QLabel, QMovie, QPainter, QPen,
@@ -317,3 +319,14 @@ def set_setting(attr, value):
     """ This function is used to set an attribute in the QSettings file """
     assert isinstance(attr, KaraboSettings)
     QSettings().setValue(attr.name, value)
+
+
+def utc_to_local(utc_str, format='%Y-%m-%d %H:%M:%S'):
+    """Convert given `utc_str` in a given `format` to the local time string
+    """
+    if not utc_str:
+        return ''
+
+    utc_ts = datetime.strptime(utc_str, format)
+    local_ts = utc_ts.replace(tzinfo=tzutc()).astimezone(tzlocal())
+    return datetime.strftime(local_ts, format)
