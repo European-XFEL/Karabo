@@ -61,6 +61,8 @@ namespace karabo {
 
 
         void IndexBuilderService::build(const std::string& commandLineArguments) {
+            // The 'system' call is blocking, so better add a thread to keep event loop alive.
+            karabo::net::EventLoop::addThread();
             try {
                 const std::string command = "karabo-idxbuild " + commandLineArguments;
                 KARABO_LOG_FRAMEWORK_INFO << "********* Index File Building *********\n"
@@ -70,6 +72,8 @@ namespace karabo {
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_INFO << "*** Standard Exception in 'build' method : " << e.what();
             }
+            karabo::net::EventLoop::removeThread(); // ... and remove the thread again
+
             // Remove the request to allow another try even if we failed here.
             boost::mutex::scoped_lock lock(m_mutex);
             m_cache.erase(commandLineArguments);
