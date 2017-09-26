@@ -251,6 +251,11 @@ namespace karathon {
             return this->DeviceClient::getOutputChannelSchema(deviceId, outputChannelName);
         }
 
+        std::vector<std::string> getOutputChannelNames(const std::string & deviceId) {
+            ScopedGILRelease nogil;
+            return this->DeviceClient::getOutputChannelNames(deviceId);
+        }
+
         bp::object getDataSourceSchemaAsHashPy(const std::string& dataSourceId, int access) {
             ScopedGILRelease nogil;
             karabo::util::Hash properties;
