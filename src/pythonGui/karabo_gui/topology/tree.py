@@ -8,7 +8,7 @@ from contextlib import contextmanager
 import re
 
 from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
-                        Int, List, String, WeakRef)
+                        Int, List, on_trait_change, String, WeakRef)
 
 from karabo.common.api import DeviceStatus
 from karabo.middlelayer import AccessLevel
@@ -29,6 +29,9 @@ class SystemTreeNode(HasStrictTraits):
     # Struct to keep track of all alarms related to this
     alarm_info = Instance(AlarmInfo, args=())
     monitoring = Bool(False)
+
+    # Child device counter, always 1 for device node
+    device_counter = Int(0)
 
     parent = WeakRef('SystemTreeNode')
     children = List(Instance('SystemTreeNode'))
@@ -80,6 +83,13 @@ class SystemTreeNode(HasStrictTraits):
         or remove ``alarm_type`` from dict
         """
         self.alarm_info.remove_alarm_type(dev_property, alarm_type)
+
+    @on_trait_change('children.device_counter')
+    def _recount(self):
+        count = 0
+        for child in self.children:
+            count += child.device_counter
+        self.device_counter = count
 
 
 class SystemTree(HasStrictTraits):
@@ -178,7 +188,9 @@ class SystemTree(HasStrictTraits):
     def remove_device(self, instance_id):
         """Remove the entry for a device from the tree
         """
-        nodes = self.find(instance_id)
+        # XXX: TODO remove dependence on the AccessLevel in the model 
+        # Use admin level to find all nodes, leave no orphan node behind
+        nodes = self.find(instance_id, access_level=AccessLevel.ADMIN)
         for node in nodes:
             with self.update_context.removal_context(node):
                 node.parent.children.remove(node)
@@ -352,7 +364,8 @@ class SystemTree(HasStrictTraits):
             device_node = class_node.child(device_id)
             if device_node is None:
                 device_node = SystemTreeNode(node_id=device_id, path=device_id,
-                                             parent=class_node)
+                                             parent=class_node,
+                                             device_counter=1)
                 self._append_child_node(class_node, device_node)
                 device_node.monitoring = False
                 # new nodes should be returned
