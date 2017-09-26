@@ -328,11 +328,18 @@ class ProjectDatabase(ContextDecorator):
         let $simple_name := $doc/@simple_name
         let $item_type := $doc/@item_type
         let $is_trashed := functx:if-absent($doc/@is_trashed, 'false')
-        group by $uuid, $simple_name, $item_type, $is_trashed
+        let $user := functx:if-absent($doc/@user, '')
+        let $date := functx:if-absent($doc/@date, '')
+        let $description := functx:if-absent($doc/@description, '')
+        group by $uuid, $simple_name, $item_type, $is_trashed, $user, $date,
+        $description
         return <item uuid="{{$uuid}}"
                 simple_name="{{$simple_name}}"
                 item_type="{{$item_type}}"
-                is_trashed="{{$is_trashed}}" />
+                is_trashed="{{$is_trashed}}"
+                user="{{$user}}"
+                date="{{$date}}"
+                description="{{$description}}" />
         }}</items>
         """
         maybe_let, maybe_where = '', ''
@@ -349,7 +356,10 @@ class ProjectDatabase(ContextDecorator):
             return [{'uuid': r.attrib['uuid'],
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name'],
-                     'is_trashed': r.attrib['is_trashed']}
+                     'is_trashed': r.attrib['is_trashed'],
+                     'user': r.attrib['user'],
+                     'date': r.attrib['date'],
+                     'description': r.attrib['description']}
                     for r in res.results[0].getchildren()]
         except ExistDBException as e:
                 raise ProjectDBError(e)
