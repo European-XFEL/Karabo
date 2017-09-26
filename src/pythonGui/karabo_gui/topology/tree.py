@@ -188,10 +188,9 @@ class SystemTree(HasStrictTraits):
     def remove_device(self, instance_id):
         """Remove the entry for a device from the tree
         """
-        # XXX: Because find takes into account access level, a device not
-        # visible to operator in navigation panel but killed in the project
-        # will not be removed from topology but remains invisible.
-        nodes = self.find(instance_id)
+        # XXX: TODO remove dependence on the AccessLevel in the model 
+        # Use admin level to find all nodes, leave no orphan node behind
+        nodes = self.find(instance_id, access_level=AccessLevel.ADMIN)
         for node in nodes:
             with self.update_context.removal_context(node):
                 node.parent.children.remove(node)
