@@ -2,7 +2,7 @@ from .genericproxy import Movable, Sensible
 from .middlelayer import State, synchronize
 
 
-class beamConditionsAsSensible(Sensible):
+class BeamConditionsAsSensible(Sensible):
     """Generalized interface to DoocsBeamConditions class """
     generalizes = ('DoocsBeamConditions',)
     state_mapping = {State.ON: State.ACQUIRING}
@@ -30,15 +30,10 @@ class TangerineAsMovable(Movable):
         yield from self._proxy.move()
 
 
-class xgmAsSensible(Sensible):
+class XgmAsSensible(Sensible):
     """Generalized interface to XgmDoocs class """
     generalizes = ('XgmDoocs',)
     state_mapping = {State.ON: State.ACQUIRING}
-
-    @synchronize
-    def acquire(self):
-        """Start acquisition"""
-        yield from self._proxy.start()
 
     @property
     def value(self):
