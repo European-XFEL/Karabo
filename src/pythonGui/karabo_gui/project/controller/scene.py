@@ -5,6 +5,7 @@
 #############################################################################
 from functools import partial
 from io import StringIO
+import os.path as op
 
 from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance
@@ -12,6 +13,7 @@ from traits.api import Instance
 from karabo.common.project.api import get_user_cache
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.project.api import read_project_model
+from karabo_gui.enums import KaraboSettings
 from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui import icons
 from karabo_gui import messagebox
@@ -19,7 +21,7 @@ from karabo_gui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabo_gui.project.utils import show_no_configuration
 from karabo_gui.singletons.api import get_db_conn, get_panel_wrangler
-from karabo_gui.util import getSaveFileName
+from karabo_gui.util import getSaveFileName, get_setting, set_setting
 from .bases import BaseProjectController, ProjectControllerUiData
 
 
@@ -113,13 +115,20 @@ class SceneController(BaseProjectController):
         scene.modified = False
 
     def _save_scene_to_file(self):
+        path = get_setting(KaraboSettings.SCENE_DIR)
+        directory = path if path and op.isdir(path) else ""
+
         scene = self.model
         fn = getSaveFileName(caption='Save scene to file',
                              filter='SVG (*.svg)',
                              suffix='svg',
-                             selectFile=scene.simple_name)
+                             selectFile=scene.simple_name,
+                             directory=directory)
         if not fn:
             return
+
+        # Store old scene dialog path
+        set_setting(KaraboSettings.SCENE_DIR, op.dirname(fn))
 
         if not fn.endswith('.svg'):
             fn = '{}.svg'.format(fn)
