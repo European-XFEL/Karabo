@@ -64,7 +64,7 @@ runIntegrationTests() {
         source $scriptDir/karabo/activate
     fi
 
-    local testNames="AlarmService_ DeviceServerRunner_ LockTest_ PipelinedProcessing_ PropertyTest_ RunTimeSchemaAttributes_ SceneProvider_ Timing_"
+    local testNames="AlarmService_ DeviceServerRunner_ Device_ LockTest_ PipelinedProcessing_ PropertyTest_ RunTimeSchemaAttributes_ SceneProvider_ Timing_"
     local testDir=$scriptDir/build/netbeans/integrationTests
 
     echo
