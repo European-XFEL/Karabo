@@ -1375,11 +1375,16 @@ namespace karabo {
                         const karabo::util::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
                         // duration is always positive, irrespective whether epoch or epochLastReceived is more recent
                         const karabo::util::TimeDuration duration = epoch.elapsed(epochLastReceived);
-                        const unsigned int nPeriods = (duration.getTotalSeconds() * 1000000 + duration.getFractions(karabo::util::MICROSEC)) / m_timePeriod;
+                        const unsigned long long nPeriods = (duration.getTotalSeconds() * 1000000ull + duration.getFractions(karabo::util::MICROSEC)) / m_timePeriod;
                         if (epochLastReceived <= epoch) {
                             id = m_timeId + nPeriods;
-                        } else {
+                        } else if (m_timeId >= nPeriods + 1ull) { // sanity check
                             id = m_timeId - nPeriods - 1ull;
+                        } else {
+                          KARABO_LOG_FRAMEWORK_WARN << "Bad input: (train)Id zero since "
+                              << "epoch = " << epoch.toIso8601()
+                              << "; from time server: epoch = " << epochLastReceived.toIso8601()
+                              << ", id = " << m_timeId << ", period = " << m_timePeriod << " mus";
                         }
                     }
                 }

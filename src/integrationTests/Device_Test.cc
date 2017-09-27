@@ -177,4 +177,11 @@ void Device_Test::testGetTimestamp() {
                                               11499999999ull, 5ull * periodInAttoSec + 1110ull)
                             .timeout(timeOutInMs).receive(id));
     CPPUNIT_ASSERT_EQUAL(93ull, id);
+
+    // 8) so much in the past that a negative id would be calculated which leads to zero
+    id = 1111ull;
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotIdOfEpochstamp",
+                                              11499999000ull, 1110ull)
+                            .timeout(timeOutInMs).receive(id));
+    CPPUNIT_ASSERT_EQUAL(0ull, id);
 }
