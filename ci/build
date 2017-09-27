@@ -3,8 +3,9 @@ SSH_PREFIX=$SSH_USER_HOST:/var/www/html/karabo
 CURL_PREFIX=http://exflserv05.desy.de/karabo
 
 __check_existence() {
-    curl --silent --head --fail --output /dev/null "$1"
-    if [ $? -eq 0 -a "$REL_TAG" != "Nightly" ]; then
+    local status=$(curl --silent --head -r 0-0 "$1" | head -n 1)
+    local fileNotFound=$(echo $status | grep 404)
+    if [ -z "$fileNotFound" -a "$REL_TAG" != "Nightly" ]; then
         echo "That build exists already!"
         exit 1
     fi
