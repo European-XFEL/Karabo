@@ -524,7 +524,7 @@ void AlarmService_Test::testRecovery() {
     int pop = 0;
     bool popsuccess = false;
     while (pop < maxPops) {
-        for (int i = 0; i < messageQs.size(); ++i) {
+        for (size_t i = 0; i < messageQs.size(); ++i) {
             popsuccess = messageQs[i]->pop(lastMessage);
             if (popsuccess) {
                 if (lastMessage.has("topologyEntry.device.testAlarmService")) topologyMessage = true;
