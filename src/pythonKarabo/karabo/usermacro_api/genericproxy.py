@@ -149,7 +149,7 @@ class GenericProxy(object):
         if self._generic_proxies:
             param_list = []
             for gproxy in self._generic_proxies:
-                params = gproxy.getBoundParameters()
+                params = gproxy.getBoundParameters(prefix)
                 if params:
                     param_list.append(params)
             return param_list
@@ -168,6 +168,14 @@ class GenericProxy(object):
     @property
     def value(self):
         """"Generic value getter """
+        if self._generic_proxies:
+            param_list = []
+            for gproxy in self._generic_proxies:
+                params = gproxy.value
+                if params:
+                    param_list.append(params)
+            return param_list
+
         return self.getBoundParameters(False)
 
     @synchronize
