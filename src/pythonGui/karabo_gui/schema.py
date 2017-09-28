@@ -714,6 +714,12 @@ class ListOfNodes(Type):
     def cast(self, other):
         assert_msg = '"{}" is not in the allowed classes ({})'
 
+        if isinstance(other, Hash):
+            # XXX: We're talking to a middlelayer device. The ML implementation
+            # of ListOfNodes might as well be a different class, because it
+            # doesn't have the same type for property values as Bound/C++ APIs
+            return []  # No value for you!
+
         retval = []
         for val in other:
             if isinstance(val, str):
@@ -721,7 +727,8 @@ class ListOfNodes(Type):
                 hsh = Hash(val, self.objs[val].toHash()[0])
                 retval.append(hsh)
             else:
-                name = list(val.keys())[0]
+                assert isinstance(val, Hash)
+                name = next(iter(val))
                 assert name in self.objs, assert_msg.format(name, self.objs)
                 # XXX: Use a stored Configuration object to validate the
                 # contents of the hash before adding it
