@@ -150,6 +150,27 @@ namespace karathon {
             return this->DeviceClient::cacheAndGetConfiguration(deviceId);
         }
 
+        void registerInstanceNewMonitor(const bp::object& handler) {
+            // boost::bind is safe here because the handler is dispatched
+            // directly and not via the event loop
+            this->DeviceClient::registerInstanceNewMonitor(
+                boost::bind(&DeviceClientWrap::proxyInstanceNewAndUpdatedMonitor, this, handler, _1));
+        }
+
+        void registerInstanceUpdatedMonitor(const bp::object& handler) {
+            // boost::bind is safe here because the handler is dispatched
+            // directly and not via the event loop
+            this->DeviceClient::registerInstanceUpdatedMonitor(
+                boost::bind(&DeviceClientWrap::proxyInstanceNewAndUpdatedMonitor, this, handler, _1));
+        }
+
+        void registerInstanceGoneMonitor(const bp::object& handler) {
+            // boost::bind is safe here because the handler is dispatched
+            // directly and not via the event loop
+            this->DeviceClient::registerInstanceGoneMonitor(
+                boost::bind(&DeviceClientWrap::proxyInstanceGoneMonitor, this, handler, _1, _2));
+        }
+
         void registerDeviceMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
             std::cout << "DeviceClientWrap::registerDeviceMonitor on instanceId : \"" << instanceId << "\"" << std::endl;
             this->cacheAndGetConfiguration(instanceId);
@@ -392,6 +413,30 @@ namespace karathon {
                     }
                 }
                 if (it->is<karabo::util::Hash>()) callMonitor(instanceId, registered, it->getValue<karabo::util::Hash>(), currentPath);
+            }
+        }
+
+        void proxyInstanceNewAndUpdatedMonitor(const bp::object& handler, const karabo::util::Hash& topologyEntry) {
+            ScopedGILAcquire gil;
+            try {
+                if (handler) handler(bp::object(topologyEntry));
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+        void proxyInstanceGoneMonitor(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            ScopedGILAcquire gil;
+            try {
+                if (handler) handler(bp::object(instanceId), bp::object(instanceInfo));
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
             }
         }
 
