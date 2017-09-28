@@ -199,6 +199,13 @@ namespace karabo {
             std::pair<bool, std::string> exists(const std::string& instanceId);
 
             /**
+             * Subscribes to the heartbeats of all devices in the system.
+             *
+             * NOTE: There is a performance cost to tracking all devices. Use wisely!
+             */
+            void enableInstanceTracking();
+
+            /**
              * Returns the full information about the current (runtime) distributed system
              * @return a Hash containing the full system description
              */
