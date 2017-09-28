@@ -332,6 +332,18 @@ namespace karabo {
             }
         }
 
+        void DeviceClient::enableInstanceTracking() {
+            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+            if (p) {
+                // Switch on the heartbeat tracking
+                p->trackAllInstances();
+                // First call : trigger the process of gathering the info about network presence
+                initTopology();
+            }
+            else {
+                KARABO_LOG_FRAMEWORK_INFO << "Instance tracking requires a valid SignalSlotable instance!";
+            }
+        }
 
         Hash DeviceClient::getSystemInformation() {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());

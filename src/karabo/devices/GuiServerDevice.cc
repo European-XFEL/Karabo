@@ -187,12 +187,11 @@ namespace karabo {
 
             try {
 
-                trackAllInstances();
+                // Switch on instance tracking
+                remote().enableInstanceTracking();
 
                 // Protect clients from too frequent updates of a single property:
                 remote().setDeviceMonitorInterval(get<int>("propertyUpdateInterval"));
-
-                remote().getSystemInformation();
 
                 // Register handlers
                 // NOTE: boost::bind() is OK for these handlers because SignalSlotable calls them directly instead
