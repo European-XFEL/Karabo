@@ -190,18 +190,8 @@ class NavigationTreeModel(QAbstractItemModel):
         else:
             parent_node = parent.internalPointer()
 
-        child_node = parent_node.children[row]
-        if child_node is not None:
-            # Consider visibility
-            if child_node.visibility > krb_globals.GLOBAL_ACCESS_LEVEL:
-                return QModelIndex()
-            # If only show device is on, hide childless classes and hosts
-            if self.showDeviceOnly and child_node.device_counter < 1:
-                return QModelIndex()
-
-            return self.createIndex(row, column, child_node)
-        else:
-            return QModelIndex()
+        children = parent_node.get_children(check_counter=self.showDeviceOnly)
+        return self.createIndex(row, column, children[row])
 
     def parent(self, index):
         """Reimplemented function of QAbstractItemModel.
@@ -220,10 +210,6 @@ class NavigationTreeModel(QAbstractItemModel):
         if parent_node == self.tree.root:
             return QModelIndex()
 
-        # Consider visibility
-        if parent_node.visibility > krb_globals.GLOBAL_ACCESS_LEVEL:
-            return QModelIndex()
-
         return self.createIndex(parent_node.row(), 0, parent_node)
 
     def rowCount(self, parent=QModelIndex()):
@@ -239,7 +225,7 @@ class NavigationTreeModel(QAbstractItemModel):
         else:
             parent_node = parent.internalPointer()
 
-        return len(parent_node.children)
+        return len(parent_node.get_children(check_counter=self.showDeviceOnly))
 
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
