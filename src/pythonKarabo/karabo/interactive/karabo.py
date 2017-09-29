@@ -85,7 +85,6 @@ def parse_commandline():
 
     parser_ins = sps.add_parser('install',
                                 help='Installs an existing device')
-    parser_ins.set_defaults(command=install)
 
     parser_ins.add_argument('device',
                             type=str,
@@ -94,6 +93,12 @@ def parse_commandline():
     parser_ins.add_argument('tag',
                             type=str,
                             help='The tag to install')
+
+    parser_ins.add_argument("-c", "--copy",
+                            type=str, default='True',
+                            help='artifacts will be copied in the plugins folder')
+
+    parser_ins.set_defaults(command=install)
 
     parser_uins = sps.add_parser('uninstall',
                                  help='Uninstalls an existing device')
@@ -235,6 +240,7 @@ def download(args):
 
 def install(args):
     with pushd_popd():
+        copyFlag = args.copy
         path = os.path.join('installed', args.device)
         if os.path.isdir(path):
             run_cmd('rm -rf {}'.format(path))
@@ -261,23 +267,29 @@ def install(args):
                 print('Compiling, please wait... ', end='', flush=True)
                 run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
                 print('done.')
-                if os.path.isdir('dist'):
+                if os.path.isdir('dist') and str2bool(copyFlag):
                     src = os.path.join('dist', args.config, '*', '*.so')
                     run_cmd('cp -f {} {}'.format(src, tgt))
         else:
             run_cmd('pip install --upgrade .')
         print("Installation succeeded.")
 
+def str2bool(v):
+    return v.lower() in ("yes", "true", "t", "1")
 
 def parse_configuration_file(filename):
     devices = []
     with open(filename, 'r') as csvfile:
         rows = csv.reader(csvfile, delimiter=',')
         for row in rows:
-            if len(row) != 2 or '#' in row[0]:
+            if len(row) < 2 or len(row) > 3 or '#' in row[0]:
                 continue
             row[0] = row[0].strip()
             row[1] = row[1].strip()
+            if len(row) == 2:
+                row.append('False')
+            else:
+                row[2] = row[2].strip()
             devices.append(row)
     return devices
 
@@ -326,6 +338,7 @@ def install_dependencies(args):
     for item in devices:
         args.device = item[0]
         args.tag = item[1]
+        args.copy = item[2]
         install(args)
 
 
