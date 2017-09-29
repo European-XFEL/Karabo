@@ -14,6 +14,7 @@ from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.exceptions import KaraboError
 from karabo.middlelayer_api.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro
+from karabo.middlelayer_api.schema import Configurable, Node
 from karabo.middlelayer_api.synchronization import background, sleep
 
 from .eventloop import DeviceTest, sync_tst, async_tst
@@ -24,10 +25,14 @@ class Superslot(Slot):
     def method(self, device):
         device.value = 22
 
+class MyNode(Configurable):
+    value = Int(defaultValue=7)
+    counter = Int(defaultValue=-1)
 
 class Remote(Device):
     value = Int(defaultValue=7)
     counter = Int(defaultValue=-1)
+    deep = Node(MyNode)
 
     @Int()
     def other(self, value):
@@ -200,11 +205,25 @@ class Tests(DeviceTest):
         self.assertEqual(self.remote.value, 200)
         self.assertEqual(self.remote.counter, 300)
 
+        # test the setWait function with args
+        setWait(d, "value", 400, "counter", 400)
+        self.assertEqual(self.remote.value, 400)
+        self.assertEqual(self.remote.counter, 400)
+        with self.assertRaises(RuntimeError):
+            setWait(d, "value", 1, "counter")
+
+        setWait(d, "deep.value", 400, "deep.counter", 400)
+        self.assertEqual(self.remote.deep.counter, 400)
+        self.assertEqual(self.remote.deep.value, 400)
+
     @sync_tst
     def test_setnowait(self):
         """test the setNoWait function"""
         self.remote.value = 0
         self.remote.counter = 0
+        self.remote.deep.value = 0
+        self.remote.deep.counter = 0
+
         d = getDevice("remote")
         setNoWait(d, value=200, counter=300)
         self.assertEqual(self.remote.value, 0)
@@ -212,6 +231,23 @@ class Tests(DeviceTest):
         time.sleep(0.1)
         self.assertEqual(self.remote.value, 200)
         self.assertEqual(self.remote.counter, 300)
+
+        # test the setNoWait function with args
+        setNoWait(d, "value", 0, "counter", 0)
+        self.assertEqual(self.remote.value, 200)
+        self.assertEqual(self.remote.counter, 300)
+        time.sleep(0.1)
+        self.assertEqual(self.remote.value, 0)
+        self.assertEqual(self.remote.counter, 0)
+        with self.assertRaises(RuntimeError):
+            setNoWait(d, "value", 0, 100)
+
+        setNoWait(d, "deep.value", 400, "deep.counter", 400)
+        self.assertEqual(self.remote.deep.counter, 0)
+        self.assertEqual(self.remote.deep.value, 0)
+        time.sleep(0.1)
+        self.assertEqual(self.remote.deep.counter, 400)
+        self.assertEqual(self.remote.deep.value, 400)
 
     @sync_tst
     def test_waituntil(self):
