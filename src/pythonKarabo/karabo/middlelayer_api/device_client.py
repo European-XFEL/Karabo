@@ -587,18 +587,14 @@ def setWait(device, *args, **kwargs):
         yield from device._update()
         device = device._deviceId
 
+    kwargs.update(zip(args[::2], args[1::2]))
     h = Hash()
-
-    def _put(k, v):
+    for k, v in kwargs.items():
         if isinstance(v, KaraboValue):
             h[k] = v.value
         else:
             h[k] = v
 
-    for k, v in zip(args[::2], args[1::2]):
-        _put(k, v)
-    for k, v in kwargs.items():
-        _put(k, v)
     yield from get_instance().call(device, "slotReconfigure", h)
 
 
@@ -610,18 +606,14 @@ def setNoWait(device, *args, **kwargs):
     if isinstance(device, ProxyBase):
         device = device._deviceId
 
+    kwargs.update(zip(args[::2], args[1::2]))
     h = Hash()
-
-    def _put(k, v):
+    for k, v in kwargs.items():
         if isinstance(v, KaraboValue):
             h[k] = v.value
         else:
             h[k] = v
 
-    for k, v in zip(args[::2], args[1::2]):
-        _put(k, v)
-    for k, v in kwargs.items():
-        _put(k, v)
     get_instance()._ss.emit("call", {device: ["slotReconfigure"]}, h)
 
 
