@@ -42,6 +42,12 @@ class SystemTreeNode(HasStrictTraits):
                 return child
         return None
 
+    def get_children(self, check_counter):
+        def visible(node):
+            return not (node.visibility > krb_globals.GLOBAL_ACCESS_LEVEL or
+                        (check_counter and node.device_counter < 1))
+        return [c for c in self.children if visible(c)]
+
     def info(self):
         level = self.level()
         if level == 0:
