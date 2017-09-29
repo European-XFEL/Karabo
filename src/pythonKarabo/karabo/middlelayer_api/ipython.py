@@ -13,6 +13,7 @@ from karabo.common.states import State
 from .device import Device
 from .enums import AccessLevel, AccessMode, Assignment
 from .hash import Bool, Int32, Slot, VectorChar
+from karabo.interactive.ikarabo import SCRIPT
 from .signalslot import coslot
 
 
@@ -110,7 +111,7 @@ class IPythonKernel(Device):
         yield from super()._run(**kwargs)
         self.manager = KernelManager(client_factory=Client)
         self.manager.start_kernel(
-            extra_arguments=["-c", "from karabo.middlelayer_api.cli import *",
+            extra_arguments=["-c", SCRIPT,
                              "--IPCompleter.limit_to__all__=True",
                              "--matplotlib=inline"])
         self.client = self.manager.client()
