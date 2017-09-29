@@ -10,10 +10,10 @@ from jupyter_client.client import KernelClient
 from jupyter_client.manager import KernelManager
 
 from karabo.common.states import State
+from karabo.interactive.ikarabo import SCRIPT
 from .device import Device
 from .enums import AccessLevel, AccessMode, Assignment
 from .hash import Bool, Int32, Slot, VectorChar
-from karabo.interactive.ikarabo import SCRIPT
 from .signalslot import coslot
 
 
