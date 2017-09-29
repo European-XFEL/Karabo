@@ -562,7 +562,7 @@ def shutdownNoWait(device):
 
 
 @synchronize
-def setWait(device, **kwargs):
+def setWait(device, *args, **kwargs):
     """Set properties of a device
 
     device may either be a device proxy as returned by :func:`getDevice`, or
@@ -570,6 +570,7 @@ def setWait(device, **kwargs):
     arguments, as in::
 
         setWait("someDevice", speed=3, position=5)
+        setWait("someDevice", "speed", 3, "position", 5)
 
     Note that for proxy devices this method is normally not necessary,
     you may just write::
@@ -579,28 +580,48 @@ def setWait(device, **kwargs):
 
     the function waits until the device has acknowledged that the values
     have been set."""
+    if len(args) % 2 > 0:
+        raise RuntimeError("Arguments passed need to be pairs!")
+
     if isinstance(device, ProxyBase):
         yield from device._update()
         device = device._deviceId
+
     h = Hash()
-    for k, v in kwargs.items():
+
+    def _put(k, v):
         if isinstance(v, KaraboValue):
             h[k] = v.value
         else:
             h[k] = v
+
+    for k, v in zip(args[::2], args[1::2]):
+        _put(k, v)
+    for k, v in kwargs.items():
+        _put(k, v)
     yield from get_instance().call(device, "slotReconfigure", h)
 
 
-def setNoWait(device, **kwargs):
+def setNoWait(device, *args, **kwargs):
     """Same as :func:`setWait`, but don't wait for acknowledgement"""
+    if len(args) % 2 > 0:
+        raise RuntimeError("Arguments passed need to be pairs!")
+
     if isinstance(device, ProxyBase):
         device = device._deviceId
+
     h = Hash()
-    for k, v in kwargs.items():
+
+    def _put(k, v):
         if isinstance(v, KaraboValue):
             h[k] = v.value
         else:
             h[k] = v
+
+    for k, v in zip(args[::2], args[1::2]):
+        _put(k, v)
+    for k, v in kwargs.items():
+        _put(k, v)
     get_instance()._ss.emit("call", {device: ["slotReconfigure"]}, h)
 
 
