@@ -96,7 +96,7 @@ def parse_commandline():
 
     parser_ins.add_argument("-c", "--copy",
                             type=str, default='True',
-                            help='artifacts will be copied in the plugins folder')
+                            help='artifacts will be copied into the plugins folder unless --copy=False')
 
     parser_ins.set_defaults(command=install)
 
