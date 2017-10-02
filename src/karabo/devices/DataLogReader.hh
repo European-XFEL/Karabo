@@ -13,6 +13,8 @@
 #include "karabo/core/Device.hh"
 #include "karabo/core/OkErrorFsm.hh"
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/net/Strand.hh"
+
 
 
 /**
@@ -77,11 +79,6 @@ namespace karabo {
             KARABO_CLASSINFO(IndexBuilderService, "IndexBuilderService", "1.4")
 
         private:
-            static Pointer m_instance;
-
-            std::set<std::string> m_cache;
-
-            boost::mutex m_mutex;
 
             IndexBuilderService();
 
@@ -114,7 +111,11 @@ namespace karabo {
             bool allowLock() const {
                 return false;
             }
-
+            
+            static Pointer m_instance;
+            std::set<std::string> m_cache;
+            boost::mutex m_mutex;
+            karabo::net::Strand::Pointer m_idxBuildStrand;
         };
 
         /**
