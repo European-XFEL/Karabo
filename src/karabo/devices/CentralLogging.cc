@@ -135,12 +135,17 @@ namespace karabo {
                     string logname = get<string>("directory") + "/log_" + toString(m_lastIndex) + ".txt";
                     m_logstream.open(logname.c_str(), ios::out | ios::app);
                     if (!m_logstream.is_open()) {
-                        KARABO_LOG_FRAMEWORK_ERROR << "Failed to open \"" << logname << "\". Check permissions.";
-                        return;
+                        KARABO_LOG_ERROR << "Failed to open \"" << logname << "\" for writing. Check file permissions.";
+                        this->updateState(State::ERROR);
+                        set("status", "Failed to open \"" + logname + "\" for writing. Check file permissions.");
+                        setAlarmCondition(AlarmCondition::ALARM, false, "Failed to open '" + logname + "' for writing. Check file permissions and re-instantiate the device.");
+                        m_loggerConsumer.reset();
+                        return;        
+                    } else {
+                        if (m_logstream.tellp() > 0) m_logstream << "\n";
                     }
-                    if (m_logstream.tellp() > 0) m_logstream << "\n";
                 }
-
+                
                 if (data->has("messages")) {
                     const vector<Hash>& vechash = data->get<std::vector<util::Hash> >("messages");
                     KARABO_LOG_FRAMEWORK_DEBUG << "Log " << vechash.size();
