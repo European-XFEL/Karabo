@@ -1,5 +1,5 @@
-from karabo.bound import (PythonDevice, Hash, SLOT_ELEMENT, STRING_ELEMENT,
-                          KARABO_CLASSINFO, launchPythonDevice)
+from karabo.bound import (Epochstamp, PythonDevice, Hash, SLOT_ELEMENT,
+                          STRING_ELEMENT, KARABO_CLASSINFO, launchPythonDevice)
 from karabo.common.states import State
 
 
@@ -33,10 +33,14 @@ class CommTestDevice(PythonDevice):
         self.registerSlot(self.slotEmitToSlotWithoutArgs)
         self.registerSlot(self.slotEmitToSlotWithArgs)
         self.registerSlot(self.slotCallSomething)
+        # not for a communication test, but...:
+        self.registerSlot(self.slotIdOfEpochstamp)
+
         self.registerSignal("callSlotWithArgs", str, Hash)
         self.connect("", "callSlotWithArgs", "", "slotWithArguments")
         self.registerSignal("callSlotWithoutArgs")
         self.connect("", "callSlotWithoutArgs", "", "slotWithoutArguments")
+
         self.registerInitialFunction(self.initialize)
 
     def initialize(self):
@@ -62,6 +66,13 @@ class CommTestDevice(PythonDevice):
 
     def slotCallSomething(self):
         self.call(self.get("remote"), "slotWithoutArguments")
+
+    def slotIdOfEpochstamp(self, sec, frac):
+        epoch = Epochstamp(sec, frac)
+        stamp = self.getTimestamp(epoch)
+
+        self.reply(stamp.getTrainId())
+
 
 # This entry used by device server
 if __name__ == "__main__":

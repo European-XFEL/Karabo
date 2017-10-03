@@ -114,3 +114,75 @@ class TestDeviceDeviceComm(TestCase):
             sleep(3)
             res = self.dc.get("testComm1", "someString")
             self.assertEqual(res, "slotWithoutArguments was called")
+
+        with self.subTest(msg="Test getTimestamp"):
+            # This is basically a copy of  Device_Test::testGetTimestamp
+            #
+            # Need a communication helper to call slots with arguments:
+            sigSlotA = SignalSlotable("sigSlotA")
+            sigSlotA.start()
+
+            timeOutInMs = 250;
+            periodInMicroSec = 100000  # some tests below assume 0.1 s
+            periodInAttoSec = periodInMicroSec * 1000000000000
+            # Before first received time tick, always return train id 0
+            ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp", 1, 2
+                                  ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], 0)
+
+            # Now send a time tick...
+            sigSlotA.request("testComm1", "slotTimeTick",
+                             # id,     sec,    frac (attosec), period (microsec)
+                             100, 11500000000, 2 * periodInAttoSec + 1100,
+                             periodInMicroSec
+                            ).waitForReply(timeOutInMs)
+            # ...and test real calculations of id
+            # 1) exact match
+            ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
+                                   11500000000, 2 * periodInAttoSec + 1100
+                                  ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], 100)
+
+            # 2) end of id
+            ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
+                                   11500000000, 3 * periodInAttoSec + 1099
+                                  ).waitForReply(timeOutInMs)
+            self.assertEqual(100, ret[0])
+
+            # 3) multiple of period above - but same second
+            ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
+                                   11500000000, 5 * periodInAttoSec + 1100
+                                  ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], 103)
+
+            # 4) multiple of period plus a bit above - next second
+            ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
+                                   11500000001, 5 * periodInAttoSec + 1105
+                                  ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], 113)
+
+            # 5) just before
+            ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
+                                   11500000000, 2 * periodInAttoSec + 1090
+                                  ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], 99)
+
+            # 6) several before - but same second
+            ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
+                                   11500000000, 1
+                                  ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], 97)
+
+            # 7) several before - previous second
+            ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
+                                   11499999999, 5 * periodInAttoSec + 1110
+                                  ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], 93)
+
+            # 8) so much in the past that a negative id would be calculated
+            #    which leads to zero
+            ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
+                                   11499999000, 1110
+                                  ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], 0)
+
