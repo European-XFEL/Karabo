@@ -125,7 +125,7 @@ runPythonIntegrationTests() {
     echo
     echo Running Karabo Python integration tests ...
     echo 
-    cd src/pythonKarabo/karabo/integration_tests/
+    cd $scriptDir/src/pythonKarabo/karabo/integration_tests/
     cd device_comm_test
     safeRunCommand "python3 -m unittest discover -v"
     cd ..
@@ -280,8 +280,8 @@ else
 fi
 
 if [ "$RUNTESTS" = "y" ]; then
-    runUnitTests
     runPythonIntegrationTests
+    runUnitTests
 fi
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
     runIntegrationTests
