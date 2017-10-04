@@ -84,8 +84,6 @@ class TestDeviceDeviceComm(TestCase):
     def test_in_sequence(self):
         # tests are run in sequence as sub tests
         # device server thus is only instantiated once
-        # we allow for sleeps in the integration tests as some messaging
-        # is async.
         with self.subTest(msg="Test execute slots"):
             self.dc.execute("testComm1", "slotWithoutArguments")
             res = self.dc.get("testComm1", "someString")
@@ -93,25 +91,27 @@ class TestDeviceDeviceComm(TestCase):
 
         with self.subTest(msg="Test emit without arguments"):
             self.dc.execute("testComm2", "slotEmitToSlotWithoutArgs")
-            sleep(3)
+            self.waitUntilEqual("testComm2", "someString",
+                                "slotWithoutArguments was called", 30)
             res = self.dc.get("testComm2", "someString")
             self.assertEqual(res, "slotWithoutArguments was called")
 
         with self.subTest(msg="Test emit with arguments"):
             self.dc.execute("testComm2", "slotEmitToSlotWithArgs")
-            sleep(3)
+            self.waitUntilEqual("testComm2", "someString", "foo", 30)
             res = self.dc.get("testComm2", "someString")
             self.assertEqual(res, "foo")
 
         with self.subTest(msg="Test request-reply"):
             self.dc.execute("testComm1", "slotRequestArgs")
-            sleep(3)
+            self.waitUntilEqual("testComm1", "someString", "one", 30)
             res = self.dc.get("testComm1", "someString")
             self.assertEqual(res, "one")
 
         with self.subTest(msg="Test call"):
             self.dc.execute("testComm2", "slotCallSomething")
-            sleep(3)
+            self.waitUntilEqual("testComm1", "someString",
+                                "slotWithoutArguments was called", 30)
             res = self.dc.get("testComm1", "someString")
             self.assertEqual(res, "slotWithoutArguments was called")
 
@@ -122,7 +122,7 @@ class TestDeviceDeviceComm(TestCase):
             sigSlotA = SignalSlotable("sigSlotA")
             sigSlotA.start()
 
-            timeOutInMs = 250;
+            timeOutInMs = 500;  # more than in C++ - here it goes via broker...
             periodInMicroSec = 100000  # some tests below assume 0.1 s
             periodInAttoSec = periodInMicroSec * 1000000000000
             # Before first received time tick, always return train id 0
@@ -186,3 +186,18 @@ class TestDeviceDeviceComm(TestCase):
                                   ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], 0)
 
+
+    def waitUntilEqual(self, devId, propertyName, whatItShouldBe, maxTries):
+        """
+        Wait until property 'propertyName' of device 'deviceId' equals
+        'whatItShouldBe'.
+        Do up to 'maxTries' checks and wait 0.1 s between tries.
+        """
+        counter = maxTries
+        while counter > 0:
+            res = self.dc.get(devId, propertyName)
+            if res == whatItShouldBe:
+                return
+            else:
+                counter -= 1
+                sleep(.1)
