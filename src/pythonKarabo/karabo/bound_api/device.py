@@ -1457,18 +1457,20 @@ class PythonDevice(NoFsm):
         :return: the matching Timestamp, consisting of epoch and the
                  corresponding Trainstamp
         """
-        id = 0
+        resultId = 0
         with self._timeLock:
             if self._timePeriod > 0:
                 epochLastReceived = Epochstamp(self._timeSec, self._timeFrac)
                 # duration is always positive, irrespective whether epoch or
                 # epochLastReceived is earlier
                 duration = epoch.elapsed(epochLastReceived)
-                nPeriods = int((duration.getTotalSeconds() * 1000000 + duration.getFractions(MICROSEC)) // self._timePeriod)
+                nPeriods = (duration.getTotalSeconds() * 1000000
+                            + duration.getFractions(MICROSEC)
+                           ) // self._timePeriod
                 if epochLastReceived <= epoch:
-                    id = self._timeId + nPeriods
+                    resultId = self._timeId + nPeriods
                 elif self._timeId >= nPeriods + 1:  # sanity check
-                    id = self._timeId - nPeriods - 1
+                    resultId = self._timeId - nPeriods - 1
                 elif self.log:  # if 'log' is not yet initialised
                     self.log.WARN("Bad input: (train)Id zero since epoch = {}; "
                                   "from time server: epoch = {}, id = {}, "
@@ -1476,7 +1478,7 @@ class PythonDevice(NoFsm):
                                   .format(epoch.toIso8601(),
                                           epochLastReceived.toIso8601(),
                                           self._timeId, self._timePeriod))
-        return Timestamp(epoch, Trainstamp(int(id)))
+        return Timestamp(epoch, Trainstamp(resultId))
 
     @karabo_deprecated
     def _getActualTimestamp(self):
