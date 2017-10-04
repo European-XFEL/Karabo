@@ -287,6 +287,8 @@ class PythonDevice(NoFsm):
 
         )
 
+    log = None  # make always available, at least as None
+
     def __init__(self, configuration):
         """
         The initialization method of a device expects a configuration passed
@@ -1465,9 +1467,9 @@ class PythonDevice(NoFsm):
                 nPeriods = int((duration.getTotalSeconds() * 1000000 + duration.getFractions(MICROSEC)) // self._timePeriod)
                 if epochLastReceived <= epoch:
                     id = self._timeId + nPeriods
-                elif self._timeId >= self._timePeriod + 1:  # sanity check
+                elif self._timeId >= nPeriods + 1:  # sanity check
                     id = self._timeId - nPeriods - 1
-                else:
+                elif self.log:  # if 'log' is not yet initialised
                     self.log.WARN("Bad input: (train)Id zero since epoch = {}; "
                                   "from time server: epoch = {}, id = {}, "
                                   "period = {} mus"
