@@ -36,7 +36,13 @@ void exportPyCoreDeviceClient() {
             .def("getInternalTimeout", (int (DeviceClient::*)() const) (&DeviceClient::getInternalTimeout))
             .def("exists", &DeviceClientWrap::existsPy, (bp::arg("instanceId")))
             .def("enableInstanceTracking", &DeviceClient::enableInstanceTracking,
-                 "enableInstanceTracking(): Enables tracking of new and departing device instances\n")
+                 "Enables tracking of new and departing device instances\n\n"
+                 "The handlers registered with registerInstance[New|Gone|Updated]Monitor\n"
+                 "will be called accordingly. If the handler for instanceNew is registered before\n"
+                 "calling this method, it will be called for each device currently in the system.\n\n"
+                 "NOTE: Use wisely!\n"
+                 "There is a performance cost to tracking all devices since it means\n"
+                 "subscribing to the heartbeats of all servers and devices in the system.")
             .def("getSystemInformation", (Hash(DeviceClient::*)())(&DeviceClient::getSystemInformation))
             .def("getSystemTopology", (Hash(DeviceClient::*)())(&DeviceClient::getSystemTopology))
             .def("getServers", &DeviceClientWrap::getServersPy)
