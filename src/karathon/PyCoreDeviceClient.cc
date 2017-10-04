@@ -35,6 +35,14 @@ void exportPyCoreDeviceClient() {
             .def("setInternalTimeout", (void (DeviceClient::*)(const unsigned int))(&DeviceClient::setInternalTimeout), bp::arg("internalTimeout"))
             .def("getInternalTimeout", (int (DeviceClient::*)() const) (&DeviceClient::getInternalTimeout))
             .def("exists", &DeviceClientWrap::existsPy, (bp::arg("instanceId")))
+            .def("enableInstanceTracking", &DeviceClient::enableInstanceTracking,
+                 "Enables tracking of new and departing device instances\n\n"
+                 "The handlers registered with registerInstance[New|Gone|Updated]Monitor\n"
+                 "will be called accordingly. If the handler for instanceNew is registered before\n"
+                 "calling this method, it will be called for each device currently in the system.\n\n"
+                 "NOTE: Use wisely!\n"
+                 "There is a performance cost to tracking all devices since it means\n"
+                 "subscribing to the heartbeats of all servers and devices in the system.")
             .def("getSystemInformation", (Hash(DeviceClient::*)())(&DeviceClient::getSystemInformation))
             .def("getSystemTopology", (Hash(DeviceClient::*)())(&DeviceClient::getSystemTopology))
             .def("getServers", &DeviceClientWrap::getServersPy)
@@ -61,9 +69,17 @@ void exportPyCoreDeviceClient() {
             .def("getFromPast", &DeviceClientWrap::getFromPastPy, (bp::arg("deviceId"), bp::arg("key"), bp::arg("from"), bp::arg("to") = "", bp::arg("maxNumData") = 0))
             .def("getPropertyHistory", &DeviceClientWrap::getPropertyHistoryPy, (bp::arg("deviceId"), bp::arg("key"), bp::arg("from"), bp::arg("to") = "", bp::arg("maxNumData") = 0))
             .def("getConfigurationFromPast", &DeviceClientWrap::getConfigurationFromPastPy, (bp::arg("deviceId"), bp::arg("timePoint")))
-            .def("registerInstanceNewMonitor", &DeviceClientWrap::registerInstanceNewMonitor, bp::arg("callbackFunction"))
-            .def("registerInstanceUpdatedMonitor", &DeviceClientWrap::registerInstanceUpdatedMonitor, bp::arg("callbackFunction"))
-            .def("registerInstanceGoneMonitor", &DeviceClientWrap::registerInstanceGoneMonitor, bp::arg("callbackFunction"))
+            .def("registerInstanceNewMonitor", &DeviceClientWrap::registerInstanceNewMonitor, bp::arg("callbackFunction"),
+                 "registerInstanceNewMonitor(handler): Register callback handler \"handler\" to be called when new instances come online\n"
+                 "The handler function should have the signature handler(topologyEntry) where \"topologyEntry\" is a Hash")
+            .def("registerInstanceUpdatedMonitor", &DeviceClientWrap::registerInstanceUpdatedMonitor, bp::arg("callbackFunction"),
+                 "registerInstanceUpdatedMonitor(handler): Register callback handler \"handler\" to be called when instances update their instanceInfo\n"
+                 "The handler function should have the signature handler(topologyEntry) where \"topologyEntry\" is a Hash")
+            .def("registerInstanceGoneMonitor", &DeviceClientWrap::registerInstanceGoneMonitor, bp::arg("callbackFunction"),
+                 "registerInstanceGoneMonitor(handler): Register callback handler \"handler\" to be called when instances go offline\n"
+                 "The handler function should have the signature handler(instanceId, instanceInfo) where:\n"
+                 "\"instanceId\" is a string containing name of the device which went offline\n"
+                 "\"instanceInfo\" is a Hash")
             .def("registerPropertyMonitor", (bool (DeviceClientWrap::*)(const string&, const string&, const bp::object&, const bp::object&))(&DeviceClientWrap::registerPropertyMonitor), (bp::arg("instanceId"), bp::arg("key"), bp::arg("callbackFunction"), bp::arg("userData") = bp::object()))
             .def("registerDeviceMonitor", (void (DeviceClientWrap::*)(const string&, const bp::object&, const bp::object&))(&DeviceClientWrap::registerDeviceMonitor), (bp::arg("instanceId"), bp::arg("callbackFunction"), bp::arg("userData") = bp::object()))
             .def("setDeviceMonitorInterval", (void (DeviceClient::*)(long int))(&DeviceClient::setDeviceMonitorInterval), bp::arg("milliseconds"))
