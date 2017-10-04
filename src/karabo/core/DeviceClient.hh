@@ -199,9 +199,15 @@ namespace karabo {
             std::pair<bool, std::string> exists(const std::string& instanceId);
 
             /**
-             * Subscribes to the heartbeats of all devices in the system.
+             * Enables tracking of new and departing device instances
              *
-             * NOTE: There is a performance cost to tracking all devices. Use wisely!
+             * The handlers registered with registerInstance[New|Gone|Updated]Monitor
+             * will be called accordingly. If the handler for instanceNew is registered before
+             * calling this method, it will be called for each device currently in the system.
+             *
+             * NOTE: Use wisely!
+             * There is a performance cost to tracking all devices since it means
+             * subscribing to the heartbeats of all servers and devices in the system.
              */
             void enableInstanceTracking();
 
