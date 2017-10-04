@@ -337,5 +337,5 @@ class ListOfNodes(Node):
                 value, attrs = getattr(t, k).toDataAndAttrs(getattr(v, k))
                 r[k] = value
                 r[k, ...] = attrs
-            ret.append(r)
-        return Hash(self.key, ret), {}
+            ret.append(Hash(t.__name__, r))
+        return ret, {}
