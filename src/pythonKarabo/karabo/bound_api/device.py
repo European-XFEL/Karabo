@@ -12,7 +12,7 @@ import traceback
 
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
-    UINT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
+    UINT32_ELEMENT, MICROSEC, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
     STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, READ, WRITE, INIT,
     AccessLevel, AccessType, AssemblyRules, ChannelMetaData, JmsConnection,
@@ -286,6 +286,8 @@ class PythonDevice(NoFsm):
                     .commit(),
 
         )
+
+    log = None  # make always available, at least as None
 
     def __init__(self, configuration):
         """
@@ -1442,15 +1444,41 @@ class PythonDevice(NoFsm):
 
         :return: the actual timestamp
         """
-        epochNow = Epochstamp()
-        id = 0
+        return self.getTimestamp(Epochstamp())  # i.e. for now
+
+    def getTimestamp(self, epoch):
+        """
+        Returns the Timestamp for given Epochstamp. The Trainstamp part of
+        Timestamp is extrapolated forward or backward from the last values
+        received via slotTimeTick (or zero if no time ticks received yet,
+        e.g. if useTimeserver is false).
+
+        :param epoch: Epochstamp for that the time stamp is searched for
+        :return: the matching Timestamp, consisting of epoch and the
+                 corresponding Trainstamp
+        """
+        resultId = 0
         with self._timeLock:
             if self._timePeriod > 0:
                 epochLastReceived = Epochstamp(self._timeSec, self._timeFrac)
-                duration = epochNow.elapsed(epochLastReceived)
-                nPeriods = int((duration.getTotalSeconds() * 1000000 + duration.getFractions() // 1000) // self._timePeriod)
-                id = self._timeId + nPeriods
-        return Timestamp(epochNow, Trainstamp(int(id)))
+                # duration is always positive, irrespective whether epoch or
+                # epochLastReceived is earlier
+                duration = epoch.elapsed(epochLastReceived)
+                nPeriods = (duration.getTotalSeconds() * 1000000
+                            + duration.getFractions(MICROSEC)
+                           ) // self._timePeriod
+                if epochLastReceived <= epoch:
+                    resultId = self._timeId + nPeriods
+                elif self._timeId >= nPeriods + 1:  # sanity check
+                    resultId = self._timeId - nPeriods - 1
+                elif self.log:  # if 'log' is not yet initialised
+                    self.log.WARN("Bad input: (train)Id zero since epoch = {}; "
+                                  "from time server: epoch = {}, id = {}, "
+                                  "period = {} mus"
+                                  .format(epoch.toIso8601(),
+                                          epochLastReceived.toIso8601(),
+                                          self._timeId, self._timePeriod))
+        return Timestamp(epoch, Trainstamp(resultId))
 
     @karabo_deprecated
     def _getActualTimestamp(self):
