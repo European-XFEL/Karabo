@@ -20,7 +20,7 @@ class CommTestDevice(PythonDevice):
                 .commit()
             ,
             STRING_ELEMENT(expected).key("someString")
-                .readOnly()
+                .readOnly().initialValue("")
                 .commit()
             ,
         )
