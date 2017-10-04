@@ -3,7 +3,7 @@ from threading import Thread
 from time import sleep
 from unittest import TestCase
 
-from karabo.bound import DeviceClient, EventLoop, Hash
+from karabo.bound import DeviceClient, EventLoop, Hash, SignalSlotable
 from karabo.common.states import State
 from karabo.integration_tests.utils import start_bound_api_server
 
