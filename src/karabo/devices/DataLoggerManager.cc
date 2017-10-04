@@ -115,10 +115,8 @@ namespace karabo {
 
             checkLoggerMap(); // throws if loggerMap and serverList are inconsistent
 
-            // Switch on the heartbeat tracking 
-            trackAllInstances();
-            // First call : trigger the process of gathering the info about network presence
-            remote().getSystemInformation();
+            // Switch on instance tracking
+            remote().enableInstanceTracking();
 
             // Register handlers here: it will switch on multi-threading!
 
