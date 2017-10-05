@@ -316,7 +316,16 @@ class ListOfNodes(Node):
         if isinstance(value, Hash):
             new = [self.cls._subclasses[k](v) for k, v in value.items()]
         else:
-            new = [self.cls._subclasses[k](Hash()) for k in value]
+            new = []
+            for vv in value:
+                if isinstance(vv, Hash):
+                    # If it is a Hash, we have a single key which is the name
+                    # of the class and the value for that key is the config
+                    klassname = next(iter(vv))
+                    new.append(self.cls._subclasses[klassname](vv[klassname]))
+                # We might get strings as defaults or values
+                elif isinstance(vv, str):
+                    new.append(self.cls._subclasses[vv](Hash()))
         old = instance.__dict__.get(self.key, [])
         for obj in old:
             obj._parents.pop(self, None)
