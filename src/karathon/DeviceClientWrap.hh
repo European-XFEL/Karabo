@@ -154,41 +154,31 @@ namespace karathon {
             // boost::bind is safe here because the handler is dispatched
             // directly and not via the event loop
             this->DeviceClient::registerInstanceNewMonitor(
-                boost::bind(&DeviceClientWrap::proxyInstanceNewAndUpdatedMonitor, this, handler, _1));
+                boost::bind(&DeviceClientWrap::proxyPythonCallbackHash, this, handler, _1));
         }
 
         void registerInstanceUpdatedMonitor(const bp::object& handler) {
             // boost::bind is safe here because the handler is dispatched
             // directly and not via the event loop
             this->DeviceClient::registerInstanceUpdatedMonitor(
-                boost::bind(&DeviceClientWrap::proxyInstanceNewAndUpdatedMonitor, this, handler, _1));
+                boost::bind(&DeviceClientWrap::proxyPythonCallbackHash, this, handler, _1));
         }
 
         void registerInstanceGoneMonitor(const bp::object& handler) {
             // boost::bind is safe here because the handler is dispatched
             // directly and not via the event loop
             this->DeviceClient::registerInstanceGoneMonitor(
-                boost::bind(&DeviceClientWrap::proxyInstanceGoneMonitor, this, handler, _1, _2));
+                boost::bind(&DeviceClientWrap::proxyPythonCallbackStringHash, this, handler, _1, _2));
         }
 
-        void registerDeviceMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
-            std::cout << "DeviceClientWrap::registerDeviceMonitor on instanceId : \"" << instanceId << "\"" << std::endl;
-            this->cacheAndGetConfiguration(instanceId);
-            if (Wrapper::hasattr(callbackFunction, "__self__")) {
-                const bp::object & selfObject(callbackFunction.attr("__self__"));
-                std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
-                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-                m_deviceChangedHandlers.set(instanceId + "._function", funcName);
-                m_deviceChangedHandlers.set(instanceId + "._selfObject", selfObject.ptr());
+        void registerDeviceMonitor(const std::string& instanceId, const bp::object& handler, const bp::object& userData = bp::object()) {
+            if (userData.is_none()) {
+                this->DeviceClient::registerDeviceMonitor(instanceId,
+                    boost::bind(&DeviceClientWrap::proxyPythonCallbackStringHash, this, handler, _1, _2));
             } else {
-                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-                m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction.ptr());
+                this->DeviceClient::registerDeviceMonitor(instanceId,
+                    boost::bind(&DeviceClientWrap::proxyPythonCallbackStringHashAny, this, handler, _1, _2, _3), userData);
             }
-            if (!userData.is_none()) {
-                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-                m_deviceChangedHandlers.set(instanceId + "._userData", userData);
-            }
-            immortalize(instanceId);
         }
 
         bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
@@ -315,48 +305,6 @@ namespace karathon {
 
     private:
 
-        void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
-
-            karabo::util::Hash registeredMonitors;
-            {
-                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-                boost::optional<karabo::util::Hash::Node&> node = m_deviceChangedHandlers.find(instanceId);
-
-                if (node) {
-                    registeredMonitors = node->getValue<karabo::util::Hash>();
-                }
-            }
-
-            if (!registeredMonitors.empty()) {
-                boost::optional<karabo::util::Hash::Node&> nodeFunc = registeredMonitors.find("_function");
-                boost::optional<karabo::util::Hash::Node&> nodeSelfObject = registeredMonitors.find("_selfObject");
-                boost::optional<karabo::util::Hash::Node&> nodeData = registeredMonitors.find("_userData");
-
-                try {
-                    if (nodeSelfObject) {
-                        if (nodeData) {
-                            ScopedGILAcquire gil;
-                            bp::call_method<void>(nodeSelfObject->getValue<PyObject*>(), nodeFunc->getValue<std::string>().c_str(), instanceId, hash, nodeData->getValue<bp::object >());
-                        } else {
-                            ScopedGILAcquire gil;
-                            bp::call_method<void>(nodeSelfObject->getValue<PyObject*>(), nodeFunc->getValue<std::string>().c_str(), instanceId, hash);
-                        }
-                    } else {
-                        if (nodeData) {
-                            ScopedGILAcquire gil;
-                            bp::call<void>(nodeFunc->getValue<PyObject*>(), instanceId, hash, nodeData->getValue<bp::object >());
-                        } else {
-                            ScopedGILAcquire gil;
-                            bp::call<void>(nodeFunc->getValue<PyObject*>(), instanceId, hash);
-                        }
-                    }
-                } catch (const karabo::util::Exception& e) {
-
-                    std::cout << e.userFriendlyMsg();
-                }
-            }
-        }
-
         void notifyPropertyChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
             karabo::util::Hash registeredMonitors;
             {
@@ -416,10 +364,10 @@ namespace karathon {
             }
         }
 
-        void proxyInstanceNewAndUpdatedMonitor(const bp::object& handler, const karabo::util::Hash& topologyEntry) {
+        void proxyPythonCallbackHash(const bp::object& handler, const karabo::util::Hash& arg1) {
             ScopedGILAcquire gil;
             try {
-                if (handler) handler(bp::object(topologyEntry));
+                if (handler) handler(bp::object(arg1));
             } catch (const bp::error_already_set& e) {
                 if (PyErr_Occurred()) PyErr_Print();
                 throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
@@ -428,10 +376,22 @@ namespace karathon {
             }
         }
 
-        void proxyInstanceGoneMonitor(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+        void proxyPythonCallbackStringHash(const bp::object& handler, const std::string& arg1, const karabo::util::Hash& arg2) {
             ScopedGILAcquire gil;
             try {
-                if (handler) handler(bp::object(instanceId), bp::object(instanceInfo));
+                if (handler) handler(bp::object(arg1), bp::object(arg2));
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+        void proxyPythonCallbackStringHashAny(const bp::object& handler, const std::string& arg1, const karabo::util::Hash& arg2, const boost::any& arg3) {
+            ScopedGILAcquire gil;
+            try {
+                if (handler) handler(bp::object(arg1), bp::object(arg2), boost::any_cast<const bp::object&>(arg3));
             } catch (const bp::error_already_set& e) {
                 if (PyErr_Occurred()) PyErr_Print();
                 throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
