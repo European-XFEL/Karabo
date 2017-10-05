@@ -14,11 +14,11 @@ __all__ = [
     "editablelineedit",
     "editablelist",
     "editablelistelement",
-    "editablelistofnodes",
     "editablespinbox",
     "editabletableelement",
     "filesystempickers",
     "floatspinbox",
     "hexoct",
     "numberlineedit",
+    "runconfiguratoredit",
 ]
