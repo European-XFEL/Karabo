@@ -30,7 +30,7 @@ def run_cmd(cmd):
         return output
     except subprocess.CalledProcessError as e:
         print("Problem with system call: {}".format(e))
-        exit()
+        exit(e.returncode)
 
 
 @contextlib.contextmanager
