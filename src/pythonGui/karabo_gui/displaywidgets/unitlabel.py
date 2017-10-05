@@ -1,5 +1,5 @@
 
-from PyQt4.QtGui import QHBoxLayout, QLabel, QSizePolicy, QWidget
+from PyQt4.QtGui import QFrame, QHBoxLayout, QLabel, QSizePolicy
 
 
 def add_unit_label(box, widget, parent=None):
@@ -14,13 +14,12 @@ def add_unit_label(box, widget, parent=None):
     if box is not None:
         unit_label = box.unitLabel()
 
-    widget_group = QWidget(parent)
+    widget_group = QFrame(parent)
     layout = QHBoxLayout(widget_group)
     layout.setSizeConstraint(QHBoxLayout.SetMinimumSize)
     layout.addWidget(widget)
     label = QLabel(unit_label, parent)
     label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-    label.setAutoFillBackground(False)
     layout.addWidget(label)
     layout.setContentsMargins(0, 0, 0, 0)
     # Add an `updateLabel` "method" for keeping things synced
