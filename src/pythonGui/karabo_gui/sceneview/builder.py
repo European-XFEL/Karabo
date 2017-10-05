@@ -11,9 +11,9 @@ from karabo.common.scenemodel.api import (
     FileInModel, FileOutModel, FixedLayoutModel, FloatSpinBoxModel,
     GridLayoutModel, HexadecimalModel, IntLineEditModel, KnobModel,
     LabelModel, LampModel, LineEditModel, LineModel, LinePlotModel,
-    MonitorModel, PathModel, PopUpModel, RectangleModel, SceneLinkModel,
-    ScientificImageModel, SelectionIconsModel, SingleBitModel, SliderModel,
-    SparklineModel,  StatefulIconWidgetModel, TableElementModel,
+    MonitorModel, PathModel, PopUpModel, RectangleModel, RunConfiguratorModel,
+    SceneLinkModel, ScientificImageModel, SelectionIconsModel, SingleBitModel,
+    SliderModel, SparklineModel,  StatefulIconWidgetModel, TableElementModel,
     TextIconsModel, UnknownWidgetDataModel, UnknownXMLDataModel,
     VacuumWidgetModel, WebcamImageModel, WorkflowItemModel, XYPlotModel
 )
@@ -77,6 +77,7 @@ _SCENE_OBJ_FACTORIES = {
     FileInModel: DisplayEditableWidgetContainer,
     FileOutModel: DisplayEditableWidgetContainer,
     LineEditModel: DisplayEditableWidgetContainer,
+    RunConfiguratorModel: GenericWidgetContainer,
     ColorBoolModel: ColorBoolContainer,
     DisplayStateColorModel: DisplayStateColorContainer,
     DigitIconsModel: IconsContainer,

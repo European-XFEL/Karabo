@@ -662,7 +662,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
 
     @classmethod
     def isCompatible(cls, box, readonly):
-        return box.descriptor.rowSchema is not None
+        return getattr(box.descriptor, 'rowSchema', None) is not None
 
     @property
     def value(self):
