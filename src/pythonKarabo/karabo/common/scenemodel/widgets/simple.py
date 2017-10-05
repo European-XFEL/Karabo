@@ -129,6 +129,11 @@ class PopUpModel(BaseWidgetObjectData):
     """ A model for a pop up window """
 
 
+class RunConfiguratorModel(BaseWidgetObjectData):
+    """ A model for RunConfigurator ListOfNodes editor
+    """
+
+
 class SceneLinkModel(BaseWidgetObjectData):
     """ A model for a scene link
     """
@@ -266,8 +271,8 @@ def _build_empty_widget_readers_and_writers():
              'DisplayLabelModel', 'DisplayPlotModel',
              'EditableListModel', 'EditableListElementModel',
              'EditableSpinBoxModel', 'HexadecimalModel', 'IntLineEditModel',
-             'KnobModel', 'LampModel', 'PopUpModel', 'SliderModel',
-             'XYPlotModel')
+             'KnobModel', 'LampModel', 'PopUpModel', 'RunConfiguratorModel',
+             'SliderModel', 'XYPlotModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]
