@@ -105,8 +105,11 @@ class NavigationTreeView(QTreeView):
         index = self.currentIndex()
         if not index.isValid():
             return NavigationItemTypes.UNDEFINED
+        node = self.model().index_ref(index)
+        if node is None:
+            return NavigationItemTypes.UNDEFINED
 
-        level = index.internalPointer().level()
+        level = node.level()
         if level == 0:
             return NavigationItemTypes.HOST
         elif level == 1:
@@ -145,7 +148,9 @@ class NavigationTreeView(QTreeView):
 
     def onAbout(self):
         index = self.currentIndex()
-        node = index.internalPointer()
+        node = self.model().index_ref(index)
+        if node is None:
+            return
         popupWidget = PopupWidget(self)
         popupWidget.setInfo(node.attributes)
 
