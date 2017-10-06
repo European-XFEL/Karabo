@@ -8,6 +8,8 @@ hierarchical navigation in a treeview."""
 
 from contextlib import contextmanager
 import json
+from weakref import WeakValueDictionary
+
 
 from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
                           Qt, pyqtSignal, pyqtSlot)
@@ -103,6 +105,8 @@ class NavigationTreeModel(QAbstractItemModel):
     def __init__(self, parent=None):
         super(NavigationTreeModel, self).__init__(parent)
 
+        self._model_index_refs = WeakValueDictionary()
+
         # Our hierarchy tree
         self.tree = get_topology().system_tree
         self.tree.update_context = _UpdateContext(item_model=self)
@@ -132,6 +136,34 @@ class NavigationTreeModel(QAbstractItemModel):
         elif sender is KaraboEventSender.AccessLevelChanged:
             self._needs_update()
         return False
+
+    def index_ref(self, model_index):
+        """Get the system node object for a ``QModelIndex``. This is
+        essentially equivalent to a weakref and might return None.
+
+        NOTE: We're doing a rather complicated dance here with `internalId` to
+        avoid PyQt's behaviour of casting pointers into Python objects, because
+        those objects might now be invalid.
+        """
+        key = model_index.internalId()
+        return self._model_index_refs.get(key)
+
+    def createIndex(self, row, column, node):
+        """Prophylaxis for QModelIndex.internalPointer...
+
+        We need a nice way to get back to our node objects from a QModelIndex.
+        So, we store node instances in model indices, but indirectly. This is
+        because QModelIndex is not a strong reference AND these objects will
+        tend to outlive the node objects which they reference. So the solution
+        is to use a WeakValueDictionary as indirection between Qt and our model
+        layer.
+
+        Awesome. QAbstractItemModel can go DIAF.
+        """
+        key = id(node)
+        if key not in self._model_index_refs:
+            self._model_index_refs[key] = node
+        return super(NavigationTreeModel, self).createIndex(row, column, key)
 
     def clear(self):
         self.tree.clear_all()
@@ -188,7 +220,9 @@ class NavigationTreeModel(QAbstractItemModel):
         if not parent.isValid():
             parent_node = self.tree.root
         else:
-            parent_node = parent.internalPointer()
+            parent_node = self.index_ref(parent)
+            if parent_node is None:
+                return QModelIndex()
 
         children = parent_node.get_children(check_counter=self.showDeviceOnly)
         return self.createIndex(row, column, children[row])
@@ -199,7 +233,7 @@ class NavigationTreeModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
 
-        child_node = index.internalPointer()
+        child_node = self.index_ref(index)
         if child_node is None:
             return QModelIndex()
 
@@ -223,7 +257,9 @@ class NavigationTreeModel(QAbstractItemModel):
         if not parent.isValid():
             parent_node = self.tree.root
         else:
-            parent_node = parent.internalPointer()
+            parent_node = self.index_ref(parent)
+            if parent_node is None:
+                return 0
 
         return len(parent_node.get_children(check_counter=self.showDeviceOnly))
 
@@ -235,8 +271,11 @@ class NavigationTreeModel(QAbstractItemModel):
     def data(self, index, role=Qt.DisplayRole):
         """Reimplemented function of QAbstractItemModel.
         """
+        node = self.index_ref(index)
+        if node is None:
+            return
+
         column = index.column()
-        node = index.internalPointer()
         hierarchyLevel = node.level()
 
         if column == 0 and role == Qt.DisplayRole:
@@ -270,8 +309,12 @@ class NavigationTreeModel(QAbstractItemModel):
         if not index.isValid():
             return Qt.NoItemFlags
 
+        node = self.index_ref(index)
+        if node is None:
+            return Qt.NoItemFlags
+
         ret = Qt.ItemIsEnabled | Qt.ItemIsSelectable
-        if index.internalPointer().level() > 0:
+        if node.level() > 0:
             ret |= Qt.ItemIsDragEnabled
         return ret
 
@@ -285,7 +328,12 @@ class NavigationTreeModel(QAbstractItemModel):
     def indexInfo(self, index):
         if not index.isValid():
             return {}
-        return index.internalPointer().info()
+
+        node = self.index_ref(index)
+        if node is None:
+            return {}
+
+        return node.info()
 
     def mimeData(self, indices):
         """Reimplemented function of QAbstractItemModel.
@@ -293,10 +341,14 @@ class NavigationTreeModel(QAbstractItemModel):
         Provide data for Drag & Drop operations.
         """
         # Get one selection per row
-        nodes = {idx.row(): idx.internalPointer() for idx in indices
-                 if idx.isValid()}
+        rows = {idx.row(): idx for idx in indices if idx.isValid()}
         # Extract info() dictionaries from SystemTreeNode instances
-        data = [n.info() for n in nodes.values()]
+        data = []
+        for idx in rows.values():
+            n = self.index_ref(idx)
+            if n is None:
+                continue
+            data.append(n.info())
 
         mimeData = QMimeData()
         mimeData.setData('treeItems', json.dumps(data))
@@ -308,13 +360,14 @@ class NavigationTreeModel(QAbstractItemModel):
         if not selectedIndexes:
             return
 
-        index = selectedIndexes[0]
-
         node = None
+        index = selectedIndexes[0]
         if not index.isValid():
             level = 0
         else:
-            node = index.internalPointer()
+            node = self.index_ref(index)
+            if node is None:
+                return
             level = node.level()
 
         if level == 0:

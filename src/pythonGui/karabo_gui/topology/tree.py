@@ -128,7 +128,7 @@ class SystemTree(HasStrictTraits):
 
         for server_id in server_hash.keys():
             # Check, if server_id is already in tree
-            if not self.find(server_id):
+            if not self.find(server_id, full_match=True):
                 continue
 
             server_class_keys.extend(self.remove_server(server_id))
@@ -136,7 +136,7 @@ class SystemTree(HasStrictTraits):
 
         for device_id in device_hash.keys():
             # Check, if device_id is already in tree
-            if not self.find(device_id):
+            if not self.find(device_id, full_match=True):
                 continue
 
             self.remove_device(device_id)
@@ -194,9 +194,10 @@ class SystemTree(HasStrictTraits):
     def remove_device(self, instance_id):
         """Remove the entry for a device from the tree
         """
-        # XXX: TODO remove dependence on the AccessLevel in the model 
+        # XXX: TODO remove dependence on the AccessLevel in the model
         # Use admin level to find all nodes, leave no orphan node behind
-        nodes = self.find(instance_id, access_level=AccessLevel.ADMIN)
+        nodes = self.find(instance_id, access_level=AccessLevel.ADMIN,
+                          full_match=True)
         for node in nodes:
             with self.update_context.removal_context(node):
                 node.parent.children.remove(node)
@@ -204,7 +205,7 @@ class SystemTree(HasStrictTraits):
     def remove_server(self, instance_id):
         """Remove the entry for a server from the tree
         """
-        server_nodes = self.find(instance_id)
+        server_nodes = self.find(instance_id, full_match=True)
         server_class_keys = []
 
         for server_node in server_nodes:
