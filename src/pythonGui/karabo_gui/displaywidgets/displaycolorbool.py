@@ -1,11 +1,20 @@
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QAction, QLabel
+#############################################################################
+# Author: <dennis.goeries@xfel.eu>
+# Created on October 9, 2017
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+import os.path as op
 
-from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
-from karabo_gui.indicators import STATE_COLORS
-from karabo_gui.util import generateObjectName
-from karabo_gui.widget import DisplayWidget
+from PyQt4.QtCore import QByteArray, pyqtSlot
+from PyQt4.QtGui import QAction
+from PyQt4.QtSvg import QSvgWidget
+
 from karabo.middlelayer import Bool, State
+from karabo_gui import icons
+from karabo_gui.indicators import STATE_COLORS
+from karabo_gui.icons.statefulicons.color_change_icon import (
+    get_color_change_icon)
+from karabo_gui.widget import DisplayWidget
 
 
 class DisplayColorBool(DisplayWidget):
@@ -15,37 +24,29 @@ class DisplayColorBool(DisplayWidget):
     def __init__(self, box, parent):
         super(DisplayColorBool, self).__init__(box)
         self.invert = False
-        self.widget = QLabel(parent)
-        self.widget.setAlignment(Qt.AlignCenter)
-        self.widget.setFixedSize(24, 24)
-        objectName = generateObjectName(self)
-        self._styleSheet = ("QLabel#{}".format(objectName) +
-                            " {{ background-color : rgba{}; "
-                            "border: 2px solid black;"
-                            "border-radius:12px; }} ")
-        self.widget.setObjectName(objectName)
+        self.widget = QSvgWidget(parent)
+        self.widget.setMaximumSize(24, 24)
+        self.widget.resize(20, 20)
 
         logicAction = QAction("Invert color logic", self.widget)
-        logicAction.triggered.connect(lambda: self._setInvert(not self.invert))
+        logicAction.triggered.connect(self.logic_action)
         self.widget.addAction(logicAction)
 
-    def setErrorState(self, isError):
-        color = ERROR_COLOR_ALPHA if isError else OK_COLOR
-        self.setBackground(color)
+        path = op.join(op.dirname(icons.__file__), 'switch-bool.svg')
+        self.icon = get_color_change_icon(path)
 
     def valueChanged(self, box, value, timestamp=None):
         if not self.invert:
-            bg_color = (STATE_COLORS[State.ACTIVE]
-                        if value else STATE_COLORS[State.PASSIVE])
+            color_state = State.ACTIVE if value else State.PASSIVE
         else:
-            bg_color = (STATE_COLORS[State.PASSIVE]
-                        if value else STATE_COLORS[State.ACTIVE])
+            color_state = State.PASSIVE if value else State.ACTIVE
 
-        self.setBackground(bg_color)
+        svg = self.icon.with_color(STATE_COLORS[color_state])
+        self.widget.load(QByteArray(svg))
 
-    def setBackground(self, color):
-        style = self._styleSheet.format(color)
-        self.widget.setStyleSheet(style)
+    @pyqtSlot()
+    def logic_action(self):
+        self._setInvert(not self.invert)
 
     def _setInvert(self, value):
         self.invert = value
