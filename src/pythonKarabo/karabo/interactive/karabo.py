@@ -1,4 +1,5 @@
 import argparse
+import glob
 import subprocess
 import sys
 import os
@@ -6,10 +7,11 @@ import contextlib
 import multiprocessing
 import csv
 
+from pkg_resources import iter_entry_points
+
 from karabo.packaging.device_template import configure_template
 
 DEV_NULL = open(os.devnull, 'w')
-INVOKE_DIR = os.getcwd()
 
 
 def run_local():
@@ -96,7 +98,8 @@ def parse_commandline():
 
     parser_ins.add_argument("-c", "--copy",
                             type=str, default='True',
-                            help='artifacts will be copied into the plugins folder unless --copy=False')
+                            help='artifacts will be copied into the plugins '
+                                 'folder unless --copy=False')
 
     parser_ins.set_defaults(command=install)
 
@@ -125,6 +128,14 @@ def parse_commandline():
     parser_udev.add_argument('device',
                              type=str,
                              help='The name of the device package')
+
+    parser_list = sps.add_parser('list',
+                                 help='List all installed devices')
+    parser_list.set_defaults(command=list_devices)
+    parser_list.add_argument('-i', '--internal', action='store_true',
+                             help='Show internal plugins as well')
+    parser_list.add_argument('-m', '--machine', action='store_true',
+                             help='Machine-parseable output')
 
     parser.add_argument('-c', '--config',
                         type=str,
@@ -245,9 +256,10 @@ def install(args):
         if os.path.isdir(path):
             run_cmd('rm -rf {}'.format(path))
         os.makedirs(path, exist_ok=True)
-        print('Downloading source for {}... '.format(args.device), end='', flush=True)
-        run_cmd('git clone {}/karaboDevices/{}.git --depth 1 -b {}\
-                --single-branch {}'
+        print('Downloading source for {}... '.format(args.device),
+              end='', flush=True)
+        run_cmd('git clone {}/karaboDevices/{}.git --depth 1 -b {}'
+                '--single-branch {}'
                 .format(args.git, args.device, args.tag, path))
         print('done.')
         os.chdir(path)
@@ -274,8 +286,10 @@ def install(args):
             run_cmd('pip install --upgrade .')
         print("Installation succeeded.")
 
+
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
+
 
 def parse_configuration_file(filename):
     devices = []
@@ -292,6 +306,65 @@ def parse_configuration_file(filename):
                 row[2] = row[2].strip()
             devices.append(row)
     return devices
+
+
+def list_devices(args):
+    APIS = [
+        ('Bound Devices', 'karabo.bound_device'),
+        ('Middlelayer Devices', 'karabo.middlelayer_device'),
+        ('C++ Devices', 'cpp')
+    ]
+    collected = {}
+    for name, api in APIS:
+        if api == 'cpp':
+            # C++ is 'special'
+            cpp_dir = os.path.join(os.environ['KARABO'], 'plugins')
+            for path in glob.glob(os.path.join(cpp_dir, '*.so')):
+                path = path[len(cpp_dir) + 1:]
+                collected.setdefault(name, []).append(path)
+        else:
+            # Python devices
+            for ep in iter_entry_points(api):
+                if args.internal or ep.dist.project_name != 'karabo':
+                    collected.setdefault(name, []).append(ep)
+
+    def _show_py_devices(name, entries):
+        # Three columns with left, center, and right alignment
+        TEMPLATE = '{:<26}{:^26}{:>26}'
+        print('{}:'.format(name))
+        print(TEMPLATE.format('Class', 'Package', 'Version'))
+        print('=' * 79)
+        for ep in entries:
+            print(TEMPLATE.format(ep.name, ep.dist.project_name,
+                                  ep.dist.version))
+        print()
+
+    def _show_py_machine(entries):
+        print('\n'.join(ep.name for ep in entries))
+
+    def _show_cpp_devices(name, entries):
+        print(name + ':\n' + '=' * 79)
+        for ent in entries:
+            print(ent)
+        print()
+
+    def _show_cpp_machine(entries):
+        print('\n'.join(entries))
+
+    for name, api in APIS:
+        entries = collected.get(name, [])
+        if not entries:
+            continue  # No devices of this type were found
+        if api == 'cpp':
+            if args.machine:
+                _show_cpp_machine(entries)
+            else:
+                _show_cpp_devices(name, entries)
+        else:
+            if args.machine:
+                _show_py_machine(entries)
+            else:
+                _show_py_devices(name, entries)
 
 
 def uninstall(args):
