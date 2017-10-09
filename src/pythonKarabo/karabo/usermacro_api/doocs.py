@@ -16,9 +16,9 @@ class BeamConditionsAsSensible(Sensible):
                  })
 
 
-class TangerineAsMovable(Movable):
-    """Generalized interface for the doocsTangerine phase shifter"""
-    generalizes = ('DoocsTangerine',)
+class PhaseshifterAsMovable(Movable):
+    """Generalized interface for the phase shifter"""
+    generalizes = ('DoocsPhaseshifter',)
 
     @property
     def position(self):
