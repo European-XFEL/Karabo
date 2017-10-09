@@ -5,7 +5,7 @@ from .agipd import AgipdAsSensible
 from .beckhoff import BeckhoffMotorAsMovable
 from .cam import CamAsSensible, TestImagerAsSensible
 from .ccmon import CcmonAsSensible
-from .doocs import BeamConditionsAsSensible, TangerineAsMovable, XgmAsSensible
+from .doocs import BeamConditionsAsSensible, PhaseshifterAsMovable, XgmAsSensible
 from .energymax import EnergyMaxAsSensible
 from .epix import EpixAsSensible
 from .imageprocessor import ImageProcessorAsSensible
