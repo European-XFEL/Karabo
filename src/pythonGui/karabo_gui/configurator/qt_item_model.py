@@ -11,7 +11,8 @@ from PyQt4.QtGui import QBrush, QColor, QFont
 
 from karabo.middlelayer import AccessMode, Assignment
 from karabo.common.api import State
-from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
+from karabo_gui.const import (
+    OK_COLOR, ERROR_COLOR_ALPHA, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 import karabo_gui.globals as krb_globals
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.schema import (
@@ -220,24 +221,30 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def data(self, index, role=Qt.DisplayRole):
         """Reimplemented function of QAbstractItemModel.
         """
-        # short circuit for the state color background and text alignment
+        # short circuit for the text alignment
         column = index.column()
-        if column == 1:
-            if role == Qt.BackgroundRole:
-                state = self.configuration.boxvalue.state.value
-                if (self.configuration.type != 'device' or
-                        isinstance(state, Dummy)):
-                    return None
-                in_error = State(state) == State.ERROR
-                color = ERROR_COLOR_ALPHA if in_error else OK_COLOR
-                return QBrush(QColor(*color))
-            elif role == Qt.TextAlignmentRole:
-                return Qt.AlignCenter
+        if column == 1 and role == Qt.TextAlignmentRole:
+            return Qt.AlignCenter
 
         # Get the index's stored object
         obj = self.index_ref(index)
         if obj is None:
             return None
+
+        # background color is sorta special
+        if column == 1 and role == Qt.BackgroundRole:
+            state = self.configuration.boxvalue.state.value
+            if (self.configuration.type != 'device' or
+                    isinstance(state, Dummy)):
+                return None
+
+            # Properties have a color depending on alarm/warn
+            color = self._box_color(obj) if isinstance(obj, Box) else None
+            if color is None:
+                # Use device state for color
+                in_error = State(state) == State.ERROR
+                color = ERROR_COLOR_ALPHA if in_error else OK_COLOR
+            return QBrush(QColor(*color))
 
         if isinstance(obj, EditableAttributeInfo):
             return self._attribute_data(obj, role, column, index.row())
@@ -485,6 +492,18 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return str(value)
             elif role == Qt.EditRole:
                 return value
+
+    def _box_color(self, box):
+        """data(role=Qt.ColorRole) for properties."""
+        desc = box.descriptor
+        value = box.value
+        if ((desc.alarmLow is not None and value < desc.alarmLow) or
+                (desc.alarmHigh is not None and value > desc.alarmHigh)):
+            return PROPERTY_ALARM_COLOR
+        elif ((desc.warnLow is not None and value < desc.warnLow) or
+                (desc.warnHigh is not None and value > desc.warnHigh)):
+            return PROPERTY_WARN_COLOR
+        return None  # indicate no color
 
     def _box_data(self, index, box, role, column):
         """data() implementation for properties"""
