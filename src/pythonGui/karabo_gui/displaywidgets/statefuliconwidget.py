@@ -10,8 +10,6 @@ from PyQt4.QtGui import (QPixmap, QDialog, QListView, QStandardItemModel,
 from PyQt4.QtSvg import QSvgWidget
 
 from karabo.middlelayer import State, String
-from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
-from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.icons.statefulicons import ICONS
@@ -36,9 +34,6 @@ class StatefulIconWidget(DisplayWidget):
         else:
             self._setIcon(icon)
         self.widget = QSvgWidget(parent)
-        objectName = generateObjectName(self)
-        self.widget.setObjectName(objectName)
-        self.setErrorState(False)
 
     def _setIcon(self, icon):
         self.icon = icon
@@ -88,12 +83,6 @@ class StatefulIconWidget(DisplayWidget):
         :param svg: An XML for the icon
         """
         self.widget.load(QByteArray(svg))
-
-    def setErrorState(self, isError):
-        if isError:
-            self._setSVG(self.icon.with_color(ERROR_COLOR_ALPHA))
-        else:
-            self._setSVG(self.icon.with_color(OK_COLOR))
 
     def valueChanged(self, box, value, timestamp=None):
         if State(value).isDerivedFrom(State.CHANGING):

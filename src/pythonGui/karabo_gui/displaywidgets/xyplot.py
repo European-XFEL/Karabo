@@ -1,10 +1,8 @@
 
-__all__ = ["XYPlot"]
 import os
 
-from karabo_gui.widget import DisplayWidget
-
 from karabo.middlelayer import Simple
+from karabo_gui.widget import DisplayWidget
 
 
 if 'USEMPL' in os.environ:

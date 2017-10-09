@@ -5,11 +5,10 @@
 #############################################################################
 import re
 
+from guiqwt.builder import make
 import numpy as np
 from PyQt4.QtGui import (QComboBox, QHBoxLayout, QImage, QLabel, QSlider,
                          QSpinBox, QVBoxLayout, QWidget)
-
-from guiqwt.builder import make
 
 from karabo_gui.images import (get_dimensions_and_format, get_image_data,
                                KaraboImageDialog)

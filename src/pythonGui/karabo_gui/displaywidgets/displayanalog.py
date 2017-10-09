@@ -4,13 +4,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
 from PyQt4.QtCore import Qt, QRectF
 from PyQt4.QtGui import QColor, QLabel, QPainter, QPainterPath, QPixmap, QPen
 
 from karabo.middlelayer import Float
-from karabo_gui.alarms.api import ALARM_COLOR, NORM_COLOR, WARN_COLOR
 from karabo_gui import messagebox
+from karabo_gui.alarms.api import ALARM_COLOR, NORM_COLOR, WARN_COLOR
 from karabo_gui.widget import DisplayWidget
 
 B_ALOW, B_WLOW, B_WHIGH, B_AHIGH = (0.1, 0.3, 0.7, 0.9)
