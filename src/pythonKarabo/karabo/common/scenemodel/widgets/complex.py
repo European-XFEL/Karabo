@@ -43,6 +43,7 @@ class FloatSpinBoxModel(BaseWidgetObjectData):
     """
     # The step size
     step = Float
+    decimals = Int(3)
 
 
 class MonitorModel(BaseWidgetObjectData):
@@ -92,10 +93,9 @@ def _display_color__bool_writer(write_func, model, parent):
 @register_scene_reader('DoubleLineEdit', version=1)
 def _display_color_bool_reader(read_func, element):
     traits = read_base_widget_data(element)
-    try:
-        traits['decimals'] = int(element.get(NS_KARABO + 'decimals', "-1"))
-    except ValueError:
-        traits['decimals'] = -1
+    decimals = element.get(NS_KARABO + 'decimals', '')
+    if decimals:
+        traits['decimals'] = int(decimals)
     return DoubleLineEditModel(**traits)
 
 
@@ -141,6 +141,9 @@ def _evaluator_writer(write_func, model, parent):
 def _float_spin_box_reader(read_func, element):
     traits = read_base_widget_data(element)
     traits['step'] = float(element.get(NS_KARABO + 'step', 1.0))
+    decimals = element.get(NS_KARABO + 'decimals', '')
+    if decimals:
+        traits['decimals'] = int(decimals)
     return FloatSpinBoxModel(**traits)
 
 
@@ -149,6 +152,7 @@ def _float_spin_box_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'FloatSpinBox')
     element.set(NS_KARABO + 'step', str(model.step))
+    element.set(NS_KARABO + 'decimals', str(model.decimals))
     return element
 
 
