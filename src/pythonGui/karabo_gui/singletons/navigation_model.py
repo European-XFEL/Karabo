@@ -18,6 +18,7 @@ from traits.api import HasStrictTraits, WeakRef
 
 from karabo.common.api import DeviceStatus
 from karabo_gui.alarms.api import get_alarm_icon
+from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.events import KaraboEventSender, register_for_broadcasts
 import karabo_gui.globals as krb_globals
 import karabo_gui.icons as icons
@@ -390,6 +391,9 @@ class NavigationTreeModel(QAbstractItemModel):
 
     def _toggleMonitoring(self, device_id, monitoring):
         nodes = self.tree.find(device_id, full_match=True)
+        # XXX: SystemTree.find is a bit greedy. We only want devices.
+        nodes = [n for n in nodes
+                 if n.info()['type'] == NavigationItemTypes.DEVICE]
         assert len(nodes) <= 1
         if nodes:
             node = nodes[0]
