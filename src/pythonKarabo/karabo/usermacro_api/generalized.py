@@ -14,3 +14,4 @@ from .lightbeam import LightBeamAsSensible
 from .mirror import OffsetMirrorAsMovable
 from .slit import SlitSystemAsMovable
 from .spectrometers import SpectrometerAsSensible
+from .timer import X2TimerAsMovable
