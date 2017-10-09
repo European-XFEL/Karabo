@@ -1,15 +1,19 @@
 #############################################################################
-# Author: <kerstin.weger@xfel.eu>
-# Created on March 2, 2012
+# Author: <dennis.goeries@xfel.eu>
+# Created on October 9, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import os.path as op
 
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QCheckBox
+from PyQt4.QtSvg import QSvgWidget
 
-from karabo_gui.util import SignalBlocker
+from karabo_gui import icons
 from karabo_gui.widget import DisplayWidget
 from karabo.middlelayer import Bool
+
+ICONS = op.dirname(icons.__file__)
+CHECKED = op.join(ICONS, "checkbox-checked.svg")
+UNCHECKED = op.join(ICONS, "checkbox-unchecked.svg")
 
 
 class DisplayCheckBox(DisplayWidget):
@@ -20,13 +24,11 @@ class DisplayCheckBox(DisplayWidget):
     def __init__(self, box, parent):
         super(DisplayCheckBox, self).__init__(box)
 
-        self.widget = QCheckBox(parent)
-        self.widget.setEnabled(False)
-
-    @property
-    def value(self):
-        return self.widget.checkState() == Qt.Checked
+        self.widget = QSvgWidget(parent)
+        self.widget.setFixedSize(20, 20)
+        self.value = False
 
     def valueChanged(self, box, value, timestamp=None):
-        with SignalBlocker(self.widget):
-            self.widget.setCheckState(Qt.Checked if value else Qt.Unchecked)
+        svg = CHECKED if value else UNCHECKED
+        self.widget.load(svg)
+        self.value = value
