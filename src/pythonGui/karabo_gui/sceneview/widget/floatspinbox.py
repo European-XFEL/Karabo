@@ -9,11 +9,16 @@ class _FloatSpinBoxWrapper(FloatSpinBox):
     def __init__(self, model, box, parent):
         super(_FloatSpinBoxWrapper, self).__init__(box, parent)
         self.model = model
-        super(_FloatSpinBoxWrapper, self)._setStep(self.model.step)
+        super(_FloatSpinBoxWrapper, self)._set_step(self.model.step)
+        super(_FloatSpinBoxWrapper, self)._set_decimals(self.model.decimals)
 
-    def _setStep(self, step):
-        super(_FloatSpinBoxWrapper, self)._setStep(step)
+    def _set_step(self, step):
+        super(_FloatSpinBoxWrapper, self)._set_step(step)
         self.model.step = step
+
+    def _set_decimals(self, decimals):
+        super(_FloatSpinBoxWrapper, self)._set_decimals(decimals)
+        self.model.decimals = decimals
 
 
 class FloatSpinBoxContainer(BaseWidgetContainer):
