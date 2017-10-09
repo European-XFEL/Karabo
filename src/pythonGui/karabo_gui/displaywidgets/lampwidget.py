@@ -1,12 +1,9 @@
-
 import os.path
 
 from PyQt4.QtGui import QLabel, QPixmap
 
 from karabo.middlelayer import State, String
-from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 from karabo_gui import icons
-from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 
 
@@ -30,13 +27,7 @@ class LampWidget(DisplayWidget):
         DisplayWidget.__init__(self, box)
 
         self.widget = QLabel(parent)
-
-        objectName = generateObjectName(self)
-        self._styleSheet = ("QLabel#{}".format(objectName) +
-                            " {{ background-color : rgba{}; }}")
-        self.widget.setObjectName(objectName)
         self.widget.setScaledContents(True)
-        self.setErrorState(False)
 
     value = None
 
@@ -49,11 +40,6 @@ class LampWidget(DisplayWidget):
         self.widget.setPixmap(p)
         self.widget.setMaximumWidth(p.width())
         self.widget.setMaximumHeight(p.height())
-
-    def setErrorState(self, isError):
-        color = ERROR_COLOR_ALPHA if isError else OK_COLOR
-        ss = self._styleSheet.format(color)
-        self.widget.setStyleSheet(ss)
 
     def valueChanged(self, box, value, timestamp=None):
         if State(value).isDerivedFrom(State.CHANGING):
