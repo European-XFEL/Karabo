@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
 from numbers import Number
 
 from numpy import log10, ndarray, number
