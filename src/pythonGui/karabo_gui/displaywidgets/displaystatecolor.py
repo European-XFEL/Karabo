@@ -3,6 +3,7 @@ from PyQt4.QtGui import QAction, QInputDialog, QFrame, QLabel
 
 from karabo_gui.const import WIDGET_MIN_HEIGHT
 from karabo_gui.indicators import STATE_COLORS
+from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 from karabo.middlelayer import String, State
 
@@ -23,6 +24,11 @@ class DisplayStateColor(DisplayWidget):
         self.widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self.widget.setWordWrap(True)
         self.widget.setFrameStyle(QFrame.Box | QFrame.Plain)
+
+        objectName = generateObjectName(self)
+        self._styleSheet = ("QLabel#{}".format(objectName) +
+                            " {{ background-color : rgba{}; }}")
+        self.widget.setObjectName(objectName)
 
         textAction = QAction("Edit Static Text...", self.widget)
         textAction.triggered.connect(self._onChangeStaticText)
