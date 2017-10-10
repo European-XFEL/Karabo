@@ -30,21 +30,9 @@ def handle_device_state_change(box, value, timestamp):
     """This forwards a device descriptor's state to the configuration panel
     """
     configuration = box.configuration
-
-    if State(value).isDerivedFrom(State.CHANGING):
-        # Only a state change
-        data = {'configuration': configuration, 'is_changing': True}
-        broadcast_event(KaraboEventSender.DeviceStateChanged, data)
-    else:
-        # First the error state
-        data = {'configuration': configuration,
-                'is_changing': State(value) is State.ERROR}
-        broadcast_event(KaraboEventSender.DeviceErrorChanged, data)
-
-        # Then a regular state change notification
-        data = {'configuration': configuration,
-                'is_changing': False}
-        broadcast_event(KaraboEventSender.DeviceStateChanged, data)
+    data = {'configuration': configuration,
+            'is_changing': State(value).isDerivedFrom(State.CHANGING)}
+    broadcast_event(KaraboEventSender.DeviceStateChanged, data)
 
 
 def project_db_handler(fall_through=False):
