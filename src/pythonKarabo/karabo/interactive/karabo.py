@@ -258,7 +258,7 @@ def install(args):
         os.makedirs(path, exist_ok=True)
         print('Downloading source for {}... '.format(args.device),
               end='', flush=True)
-        run_cmd('git clone {}/karaboDevices/{}.git --depth 1 -b {}'
+        run_cmd('git clone {}/karaboDevices/{}.git --depth 1 -b {} '
                 '--single-branch {}'
                 .format(args.git, args.device, args.tag, path))
         print('done.')
