@@ -959,10 +959,10 @@ namespace karabo {
             // Function request
             KARABO_SLOT1(slotGetAvailableFunctions, string /*functionType*/)
 
-            // Provides information about p2p connectivity
+            // Provides information about pipeline connectivity
             KARABO_SLOT2(slotGetOutputChannelInformation, string /*ioChannelId*/, int /*pid*/)
 
-            // Establishes/Releases P2P connections
+            // Establishes/Releases pipeline connections
             KARABO_SLOT3(slotConnectToOutputChannel, string /*inputChannelName*/, karabo::util::Hash /*outputChannelInfo */, bool /*connect/disconnect*/)
 
             KARABO_SLOT0(slotGetOutputChannelNames)

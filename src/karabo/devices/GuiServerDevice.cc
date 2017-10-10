@@ -1160,7 +1160,7 @@ namespace karabo {
                             m_networkConnections.erase(iter++);
                         } else ++iter;
                     }
-                    KARABO_LOG_FRAMEWORK_INFO << m_networkConnections.size() << " p2p channel(s) left.";
+                    KARABO_LOG_FRAMEWORK_INFO << m_networkConnections.size() << " pipeline channel(s) left.";
                 }
 
             } catch (const Exception& e) {
