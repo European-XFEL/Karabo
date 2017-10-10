@@ -1133,47 +1133,63 @@ namespace karabo {
 
         bool DeviceClient::registerChannelMonitor(const std::string& instanceId, const std::string& channel,
                                                   const karabo::xms::SignalSlotable::DataHandler& dataHandler,
-                                                  karabo::util::Hash inputChannelCfg,
+                                                  const karabo::util::Hash& inputChannelCfg,
                                                   const karabo::xms::SignalSlotable::InputHandler& eosHandler) {
             auto sigSlotPtr = m_signalSlotable.lock();
             if (!sigSlotPtr) return false;
 
             boost::mutex::scoped_lock lock(m_monitoredChannelsMutex);
-            auto optionalInstanceNode = m_monitoredChannels.find(instanceId);
-            Hash& instance = (optionalInstanceNode ? optionalInstanceNode->getValue<Hash>()
-                              : m_monitoredChannels.bindReference<Hash>(instanceId));
-            if (instance.has(channel)) return false;
+            auto& channelSet = m_monitoredChannels[instanceId]; // created if not yet there
+            if (channelSet.find(channel) != channelSet.end()) {
+                return false;
+            }
+            // Insert channel - if already there, bail out:
+            if (!channelSet.insert(channel).second) {
+                return false;
+            }
 
-            // Create InputChannel, register handlers, connect to OutputChannel and store InputChannel:
-            inputChannelCfg.set("connectedOutputChannels", std::vector<std::string>(1, instanceId + ":" + channel));
-            if (!inputChannelCfg.has("onSlowness")) {
+            // Prepare input configuration Hash for createInputChannel
+            const std::string channelName(instanceId + ":" + channel);
+            Hash masterCfg;
+            Hash& channelCfg = masterCfg.set(channelName, inputChannelCfg).getValue<Hash>();
+            channelCfg.set("connectedOutputChannels", std::vector<std::string>(1, channelName));
+            if (!channelCfg.has("onSlowness")) {
                 // overwrite default which is "wait" (should we tolerate "wait" at all?)
-                inputChannelCfg.set("onSlowness", "drop");
+                channelCfg.set("onSlowness", "drop");
             }
-            InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", inputChannelCfg);
-            input->setInstanceId(sigSlotPtr->getInstanceId());
-            input->registerDataHandler(dataHandler);
-            if (eosHandler) {
-                input->registerEndOfStreamEventHandler(eosHandler);
-            }
-            sigSlotPtr->connectInputChannel(input); // asynchronous
-            instance.set(channel, input);
+            // Create InputChannel with handlers (this also enables auto-reconnect):
+            InputChannel::Pointer input = sigSlotPtr->createInputChannel(channelName, masterCfg, dataHandler,
+                                                                         SignalSlotable::InputHandler(), eosHandler);
+            // Asynchronously connect to OutputChannel:
+            sigSlotPtr->connectInputChannel(input);
 
             return true;
         }
 
 
         bool DeviceClient::unregisterChannelMonitor(const std::string& instanceId, const std::string& channel) {
+            auto sigSlotPtr = m_signalSlotable.lock();
+            if (!sigSlotPtr) return false;
+
             boost::mutex::scoped_lock lock(m_monitoredChannelsMutex);
 
-            const bool result = m_monitoredChannels.erase(instanceId + "." + channel);
-
-            if (result && m_monitoredChannels.get<Hash>(instanceId).empty()) { // result guarantees that instanceId is there
-                // Clean instanceId if no other channel
-                m_monitoredChannels.erase(instanceId);
+            // Find if we have any channel of that instance:
+            auto instanceIter = m_monitoredChannels.find(instanceId);
+            if (instanceIter == m_monitoredChannels.end()) {
+                return false;
             }
 
-            return result;
+            // Erase channel if there - and erase instanceId if no other channel!
+            auto& channelSet = instanceIter->second;
+            const bool result = (channelSet.erase(channel) > 0);
+            if (channelSet.empty()) {
+                m_monitoredChannels.erase(instanceIter);
+            }
+
+            // Finally, try to remove the channel and return
+            const std::string channelName(instanceId + ":" + channel);
+
+            return (result && sigSlotPtr->removeInputChannel(channelName));
         }
 
 
