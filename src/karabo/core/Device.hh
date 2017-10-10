@@ -1545,7 +1545,7 @@ namespace karabo {
             }
 
             /**
-             *  Called in beginning of run() to setup p2p channels, will
+             *  Called in beginning of run() to setup pipeline channels, will
              *  recursively go through the schema of the device
              *  *
              *  * @param topLevel: std::string: empty or existing path of full
