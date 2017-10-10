@@ -38,7 +38,7 @@ class ColorChangeIcon(object):
         return tostring(root, encoding='unicode')
 
 
-def _get_color_change_icon(path):
+def get_color_change_icon(path):
     """Icon from an SVG file which contain regions with a
     fill color of white.
 
@@ -85,7 +85,7 @@ def get_color_change_icons(path):
     for in_file in listdir(path):
         fpath = join(path, in_file)
         if isfile(fpath) and splitext(fpath)[-1] == '.svg':
-            icon = _get_color_change_icon(join(path, in_file))
+            icon = get_color_change_icon(join(path, in_file))
             if icon is not None:
                 icons[icon.name] = icon
 
