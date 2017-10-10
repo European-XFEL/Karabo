@@ -19,7 +19,6 @@ class KaraboEventSender(Enum):
     DatabaseIsBusy = "Database is busy"
     DeviceDataReceived = "Device class/schema/config received"
     DeviceInitReply = "Device instantiate reply"
-    DeviceErrorChanged = "Device error state changed"
     DeviceStateChanged = "Device state changed"
     LoginUserChanged = "User changed"
     LogMessages = "Log messages"

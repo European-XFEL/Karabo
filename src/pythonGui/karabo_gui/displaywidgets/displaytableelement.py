@@ -4,26 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
+from PyQt4.QtCore import Qt
 
-"""This module contains a class which represents a widget plugin for attributes
-   and is created by the factory class EditableWidget.
-   
-   Each plugin needs to implement the following interface:
-   
-   def getCategoryAliasClassName():
-       pass
-   
-    class Maker:
-        def make(self, **params):
-            return Attribute*(**params)
-"""
-
-__all__ = ["DisplayTableElement"]
-
-
-from karabo_gui.editablewidgets.editabletableelement import *
-from PyQt4.QtCore import *
-from karabo.middlelayer import Hash, VectorHash
+from karabo.middlelayer import VectorHash
+from karabo_gui.editablewidgets.editabletableelement import (
+    EditableTableElement)
 
 
 class DisplayTableElement(EditableTableElement):
@@ -32,20 +17,11 @@ class DisplayTableElement(EditableTableElement):
     alias = "Display Table Element"
 
     def __init__(self, box, parent):
-        super(DisplayTableElement, self).__init__(box, parent, role=Qt.DisplayRole)
-        
-      
-
-    def setErrorState(self, state):
-        """"""
-        
-    
+        super(DisplayTableElement, self).__init__(box, parent,
+                                                  role=Qt.DisplayRole)
 
     def copy(self, item):
         copyWidget = DisplayTableElement(item=item)
-
         copyWidget.tableModel.setHashList(self.tableModel.getHashList())
 
         return copyWidget
-    
-    
