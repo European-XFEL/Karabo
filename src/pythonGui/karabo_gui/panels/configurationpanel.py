@@ -275,10 +275,6 @@ class ConfigurationPanel(BasePanelWidget):
             configuration = data.get('configuration')
             is_changing = data.get('is_changing')
             self.onChangingState(configuration, is_changing)
-        elif event.sender is KaraboEventSender.DeviceErrorChanged:
-            configuration = data.get('configuration')
-            is_changing = data.get('is_changing')
-            self.onErrorState(configuration, is_changing)
         elif event.sender is KaraboEventSender.NetworkConnectStatus:
             if not data['status']:
                 self._resetPanel()
@@ -619,11 +615,6 @@ class ConfigurationPanel(BasePanelWidget):
             if conf.index is not None:
                 parameterEditor = self.__swParameterEditor.widget(conf.index)
                 parameterEditor.setReadOnly(False)
-
-    def onErrorState(self, conf, inErrorState):
-        if conf.index is not None:
-            parameterEditor = self.__swParameterEditor.widget(conf.index)
-            parameterEditor.setErrorState(inErrorState)
 
     def onTimeOut(self):
         timer = self.sender()
