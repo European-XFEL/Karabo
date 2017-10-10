@@ -8,10 +8,8 @@ import numpy as np
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
 
-from karabo_gui.const import ERROR_COLOR_ALPHA, OK_COLOR
 from karabo_gui.images import get_image_data, get_dimensions_and_format
 from karabo_gui.schema import ImageNode
-from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 
 
@@ -32,21 +30,11 @@ class DisplayImageElement(DisplayWidget):
         self.image.setMinimumWidth(125)
         self.image.setWordWrap(True)
 
-        objectName = generateObjectName(self)
-        self._styleSheet = ("QLabel#{}".format(objectName) +
-                            " {{ background-color : rgba{}; }}")
-        self.image.setObjectName(objectName)
-        self.setErrorState(False)
         self.value = None
 
     @property
     def widget(self):
         return self.image
-
-    def setErrorState(self, isError):
-        color = ERROR_COLOR_ALPHA if isError else OK_COLOR
-        ss = self._styleSheet.format(color)
-        self.image.setStyleSheet(ss)
 
     def valueChanged(self, box, value, timestamp=None):
         if self.value is not None or value == self.value:

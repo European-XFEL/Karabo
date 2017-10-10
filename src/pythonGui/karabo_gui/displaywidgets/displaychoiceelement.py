@@ -4,13 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
-__all__ = ["DisplayChoiceElement"]
-
-
 from karabo_gui.schema import ChoiceOfNodes
 from karabo_gui.widget import DisplayWidget
 
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QComboBox
 
 
@@ -25,15 +22,12 @@ class DisplayChoiceElement(DisplayWidget):
         self.widget.setFrame(False)
         self.widget.currentIndexChanged.connect(self.onEditingFinished)
 
-
     @property
     def value(self):
         return self.widget.currentText()
 
-
     def typeChanged(self, box):
         print(box, box.descriptor)
-
 
     def valueChanged(self, box, value, timestamp=None):
         if not isinstance(value, str):
@@ -45,7 +39,7 @@ class DisplayChoiceElement(DisplayWidget):
 
         self.widget.setCurrentIndex(index)
 
-
+    @pyqtSlot(int)
     def onEditingFinished(self, index):
         if index > -1 and index < len(self.childItemList):
             for i in range(len(self.childItemList)):

@@ -5,7 +5,6 @@ from PyQt4.QtGui import QAction, QInputDialog, QLabel
 
 from karabo.common.api import State
 from karabo.middlelayer import Integer
-from karabo_gui.const import OK_COLOR, ERROR_COLOR_ALPHA
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.schema import Dummy
 from karabo_gui.util import generateObjectName
@@ -39,10 +38,6 @@ class SingleBit(DisplayWidget):
         changeAction.triggered.connect(self._onChangeBit)
         self.widget.addAction(logicAction)
         self.widget.addAction(changeAction)
-
-    def setErrorState(self, isError):
-        color = ERROR_COLOR_ALPHA if isError else OK_COLOR
-        self._setBackground(color)
 
     def setReadOnly(self, ro):
         self._internal_widget.setEnabled(not ro)
