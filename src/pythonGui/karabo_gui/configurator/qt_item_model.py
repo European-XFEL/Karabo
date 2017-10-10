@@ -495,13 +495,16 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
     def _box_color(self, box):
         """data(role=Qt.ColorRole) for properties."""
-        desc = box.descriptor
         value = box.value
-        if ((desc.alarmLow is not None and value < desc.alarmLow) or
-                (desc.alarmHigh is not None and value > desc.alarmHigh)):
+        alarmLow = getattr(box.descriptor, 'alarmLow', None)
+        alarmHigh = getattr(box.descriptor, 'alarmHigh', None)
+        warnLow = getattr(box.descriptor, 'warnLow', None)
+        warnHigh = getattr(box.descriptor, 'warnHigh', None)
+        if ((alarmLow is not None and value < alarmLow) or
+                (alarmHigh is not None and value > alarmHigh)):
             return PROPERTY_ALARM_COLOR
-        elif ((desc.warnLow is not None and value < desc.warnLow) or
-                (desc.warnHigh is not None and value > desc.warnHigh)):
+        elif ((warnLow is not None and value < warnLow) or
+                (warnHigh is not None and value > warnHigh)):
             return PROPERTY_WARN_COLOR
         return None  # indicate no color
 
