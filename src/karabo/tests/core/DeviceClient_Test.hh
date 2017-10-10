@@ -18,7 +18,7 @@ class DeviceClient_Test : public CPPUNIT_NS::TestFixture {
 
 
     CPPUNIT_TEST_SUITE(DeviceClient_Test);
-    CPPUNIT_TEST(testGet);
+    CPPUNIT_TEST(testAll);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -28,7 +28,11 @@ public:
     void tearDown();
 
 private:
+    void testAll();
+
     void testGet();
+
+    void testMonitorChannel();
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     karabo::core::DeviceClient::Pointer m_deviceClient;
