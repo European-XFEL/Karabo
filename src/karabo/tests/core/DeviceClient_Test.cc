@@ -107,6 +107,8 @@ void DeviceClient_Test::testMonitorChannel() {
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
                                                                        Hash("deviceId", "TestedDevice2"),
                                                                        KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
     // Cannot unregister if nothing is registered
     CPPUNIT_ASSERT(!m_deviceClient->unregisterChannelMonitor("TestedDevice2", "output")); // existing channel
     CPPUNIT_ASSERT(!m_deviceClient->unregisterChannelMonitor("TestedDevice2", "notExistingoutput")); // non-existing channel
@@ -138,7 +140,7 @@ void DeviceClient_Test::testMonitorChannel() {
     CPPUNIT_ASSERT(!m_deviceClient->registerChannelMonitor("TestedDevice2", "output", dataHandler));
 
     // Sleep a bit to ensure that input channel is connected (no callback to wait for... :-()
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // TODO: make dynamic?
+    boost::this_thread::sleep(boost::posix_time::milliseconds(50)); // TODO: How to make dynamic?
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
     int counter = 0;
@@ -159,14 +161,14 @@ void DeviceClient_Test::testMonitorChannel() {
     // unregister and trigger channel again
     CPPUNIT_ASSERT(m_deviceClient->unregisterChannelMonitor("TestedDevice2", "output"));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
-    // Give some time to any data that would travel - though there is non... Any way around this sleep?
-    boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+    // Give some time to any data that would travel - though there is none... Any way around this sleep?
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     // Since writing output is not monitored, int32inChannel stays as it is, i.e. we miss the '2'
     CPPUNIT_ASSERT_EQUAL(1, int32inChannel);
 
     // Register again and trigger channel once more
     CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice2", "output", dataHandler));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // TODO: make dynamic?
+    boost::this_thread::sleep(boost::posix_time::milliseconds(50)); // TODO: How to make dynamic?
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
     // Now should get the next number, i.e. 3
@@ -177,25 +179,26 @@ void DeviceClient_Test::testMonitorChannel() {
     }
     CPPUNIT_ASSERT_EQUAL(3, int32inChannel);
 
-    // Now kill and instantiate sender device again - should automatically reconnect.
+    // Now kill and re-instantiate sender device - should automatically reconnect.
     success = m_deviceClient->killDevice("TestedDevice2", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    // Reconnection does not yet work - but keep test already:
-    //    // Give the server a chance to react to be able to instantiate the same device again
-    //    boost::this_thread::sleep(boost::posix_time::milliseconds(50)); // TODO: make smaller
-    //
-    //    success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
-    //                                          Hash("deviceId", "TestedDevice2"), KRB_TEST_MAX_TIMEOUT);
-    //    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
-    //
-    //    int32inChannel = -1;
-    //    counter = 0;
-    //    while (counter++ < 200) {
-    //        if (int32inChannel > 0) break;
-    //        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
-    //        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-    //    }
-    //    // Do not care the exact value of int32inChannel since auto reconnect might take time
-    //    CPPUNIT_ASSERT(int32inChannel > 0);
+    success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
+                                          Hash("deviceId", "TestedDevice2"), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    int32inChannel = -1;
+    counter = 0;
+    while (counter++ < 100) {
+        if (int32inChannel > 0) break; // see comment below
+        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+    // Do not care about the exact value of int32inChannel since auto-reconnect might take time
+    CPPUNIT_ASSERT(int32inChannel > 0);
+    CPPUNIT_ASSERT(int32inChannel <= counter);
+
+    // Final clean-up
+    success = m_deviceClient->killDevice("TestedDevice2", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 }

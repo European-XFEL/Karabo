@@ -15,7 +15,9 @@
 #include <karabo/core/Lock.hh>
 
 #include <map>
+#include <unordered_map>
 #include <set>
+#include <unordered_set>
 #include <string>
 
 #define KARABO_GET_SHARED_FROM_WEAK(sp, wp) \
@@ -134,7 +136,8 @@ namespace karabo {
 
         private:
             boost::mutex m_monitoredChannelsMutex;
-            karabo::util::Hash m_monitoredChannels;
+            // key is instanceId, value is set of channelIds
+            std::unordered_map<std::string, std::unordered_set<std::string> > m_monitoredChannels;
 
         public:
 
@@ -788,7 +791,7 @@ namespace karabo {
              */
             bool registerChannelMonitor(const std::string& instanceId, const std::string& channel,
                                         const karabo::xms::SignalSlotable::DataHandler& dataHandler,
-                                        karabo::util::Hash inputChannelCfg = karabo::util::Hash(),
+                                        const karabo::util::Hash& inputChannelCfg = karabo::util::Hash(),
                                         const karabo::xms::SignalSlotable::InputHandler& eosHandler = karabo::xms::SignalSlotable::InputHandler());
 
             /**
