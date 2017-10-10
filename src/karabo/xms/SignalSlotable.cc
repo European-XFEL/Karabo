@@ -1323,6 +1323,7 @@ namespace karabo {
 
         void SignalSlotable::slotConnectToOutputChannel(const std::string& inputName, const karabo::util::Hash& outputChannelInfo, bool connect) {
             // Loop channels
+            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             InputChannels::const_iterator it = m_inputChannels.find(inputName);
             if (it != m_inputChannels.end()) {
                 if (connect) it->second->connect(outputChannelInfo); // Synchronous
@@ -2063,7 +2064,10 @@ namespace karabo {
             if (channelConfig.has("schema")) channelConfig.erase("schema");
             InputChannel::Pointer channel = Configurator<InputChannel>::create("InputChannel", channelConfig);
             channel->setInstanceId(m_instanceId);
-            m_inputChannels[channelName] = channel;
+            {
+                boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
+                m_inputChannels[channelName] = channel;
+            }
             // in fact, only one of the following two can be set...
             if (onDataAvailableHandler) {
                 this->registerDataHandler(channelName, onDataAvailableHandler);
@@ -2078,6 +2082,13 @@ namespace karabo {
         }
 
 
+        bool SignalSlotable::removeInputChannel(const std::string& channelName) {
+
+            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
+            return (m_inputChannels.erase(channelName) > 0);
+        }
+
+
         OutputChannel::Pointer SignalSlotable::createOutputChannel(const std::string& channelName,
                                                                    const karabo::util::Hash& config,
                                                                    const OutputHandler& onOutputPossibleHandler) {
@@ -2089,24 +2100,32 @@ namespace karabo {
             if (onOutputPossibleHandler) {
                 channel->registerIOEventHandler(onOutputPossibleHandler);
             }
-            m_outputChannels[channelName] = channel;
+            {
+                boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
+                m_outputChannels[channelName] = channel;
+            }
             return channel;
         }
 
 
-        const SignalSlotable::InputChannels& SignalSlotable::getInputChannels() const {
+        SignalSlotable::InputChannels SignalSlotable::getInputChannels() const {
+            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             return m_inputChannels;
         }
 
 
-        const SignalSlotable::OutputChannels& SignalSlotable::getOutputChannels() const {
+        SignalSlotable::OutputChannels SignalSlotable::getOutputChannels() const {
+            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             return m_outputChannels;
         }
 
 
         std::vector<std::string> SignalSlotable::getOutputChannelNames() const {
             vector<string> names;
-            for (const auto& x : m_outputChannels) names.push_back(x.first);
+            {
+                boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
+                for (const auto& x : m_outputChannels) names.push_back(x.first);
+            }
             return names;
         }
 
@@ -2117,23 +2136,45 @@ namespace karabo {
         }
 
 
-        const OutputChannel::Pointer& SignalSlotable::getOutputChannel(const std::string& name) {
+        OutputChannel::Pointer SignalSlotable::getOutputChannelNoThrow(const std::string& name) {
 
+            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             OutputChannels::const_iterator it = m_outputChannels.find(name);
             if (it != m_outputChannels.end()) {
                 return it->second;
             }
-            throw KARABO_PARAMETER_EXCEPTION("OutputChannel \"" + name + " \" does not exist");
+            return OutputChannel::Pointer();
         }
 
 
-        const InputChannel::Pointer& SignalSlotable::getInputChannel(const std::string& name) {
+        OutputChannel::Pointer SignalSlotable::getOutputChannel(const std::string& name) {
 
+            auto result = getOutputChannelNoThrow(name);
+            if (!result) {
+                throw KARABO_PARAMETER_EXCEPTION("OutputChannel \"" + name + " \" does not exist");
+            }
+            return result;
+        }
+
+
+        InputChannel::Pointer SignalSlotable::getInputChannelNoThrow(const std::string& name) {
+
+            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             InputChannels::const_iterator it = m_inputChannels.find(name);
             if (it != m_inputChannels.end()) {
                 return it->second;
             }
-            throw KARABO_PARAMETER_EXCEPTION("InputChannel \"" + name + "\" does not exist");
+            return InputChannel::Pointer();
+        }
+
+
+        InputChannel::Pointer SignalSlotable::getInputChannel(const std::string& name) {
+
+            auto result = getInputChannelNoThrow(name);
+            if (!result) {
+                throw KARABO_PARAMETER_EXCEPTION("InputChannel \"" + name + "\" does not exist");
+            }
+            return result;
         }
 
 
@@ -2154,6 +2195,7 @@ namespace karabo {
 
         void SignalSlotable::connectInputChannels() {
             // Loop channels
+            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
                 connectInputChannel(it->second);
             }
@@ -2163,6 +2205,7 @@ namespace karabo {
         void SignalSlotable::reconnectInputChannels(const std::string& instanceId) {
 
             // Loop channels
+            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
                 const InputChannel::Pointer& channel = it->second;
                 const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
@@ -2275,6 +2318,7 @@ namespace karabo {
 
 
         void SignalSlotable::slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId) {
+            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);
             if (it != m_outputChannels.end()) {
                 karabo::util::Hash h(it->second->getInformation());
