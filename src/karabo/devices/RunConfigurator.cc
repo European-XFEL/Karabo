@@ -1,6 +1,5 @@
 #include <string>
 #include "RunConfigurator.hh"
-#include "RunConfigurationGroup.hh"
 
 #include "karabo/util/Schema.hh"
 #include "karabo/util/State.hh"
@@ -19,7 +18,57 @@ namespace karabo {
     namespace devices {
 
 
+        KARABO_REGISTER_FOR_CONFIGURATION(RunControlDataSource)
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, RunConfigurator)
+
+        void RunControlDataSource::expectedParameters(karabo::util::Schema& expected) {
+
+            OVERWRITE_ELEMENT(expected).key("visibility")
+                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
+                    .commit();
+
+            STRING_ELEMENT(expected).key("source")
+                    .displayedName("Source")
+                    .description("Data source's full name, like SASE1/SPB/SAMP/INJ_CAM_1")
+                    .assignmentOptional().defaultValue("Source")
+                    .reconfigurable()
+                    .commit();
+
+            STRING_ELEMENT(expected).key("type")
+                    .displayedName("Type")
+                    .description("Data source's type")
+                    //.options("control, instrument")
+                    .assignmentOptional().defaultValue("control")
+                    .reconfigurable()
+                    .commit();
+
+            STRING_ELEMENT(expected).key("behavior")
+                    .displayedName("Behavior")
+                    .description("Configure data source's behavior")
+                    .options("init,read-only,record-all")
+                    .assignmentOptional().defaultValue("record-all")
+                    .reconfigurable()
+                    .commit();
+
+            BOOL_ELEMENT(expected).key("monitored")
+                    .displayedName("Monitor out")
+                    .description("If true, the selected data will be output to the online pipeline outputs in the DAQ's monitoring and recording states.")
+                    .assignmentOptional().defaultValue(false)
+                    .reconfigurable()
+                    .commit();
+
+        }
+
+
+        RunControlDataSource::RunControlDataSource(const karabo::util::Hash& input) {
+
+            if (input.empty() || !input.has("source") || input.get<string>("source").empty())
+                throw KARABO_PARAMETER_EXCEPTION("Invalid input configuration ....\n" + toString(input));
+        }
+
+
+        RunControlDataSource::~RunControlDataSource() {
+        }
 
 
         void RunConfigurator::expectedParameters(Schema& expected) {
