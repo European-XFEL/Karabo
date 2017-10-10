@@ -37,7 +37,7 @@ namespace karabo {
 
             VECTOR_STRING_ELEMENT(expected).key("connectedOutputChannels")
                     .displayedName("Connected Output Channels")
-                    .description("Defines the inter-device connectivity for p-2-p data transfer (use format: <instanceId>:<channelName>)")
+                    .description("Defines the inter-device connectivity for pipeline data transfer (use format: <instanceId>:<channelName>)")
                     .assignmentOptional().noDefaultValue()
                     .init()
                     .commit();
