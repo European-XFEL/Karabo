@@ -327,9 +327,6 @@ class ConfigurationTreeView(QTreeView):
     def selectedItems(self):
         return []
 
-    def setErrorState(self, inErrorState):
-        pass
-
     def setHeaderLabels(self, labels):
         pass
 
