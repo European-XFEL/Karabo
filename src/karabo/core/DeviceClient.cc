@@ -1131,6 +1131,52 @@ namespace karabo {
         }
 
 
+        bool DeviceClient::registerChannelMonitor(const std::string& instanceId, const std::string& channel,
+                                                  const karabo::xms::SignalSlotable::DataHandler& dataHandler,
+                                                  karabo::util::Hash inputChannelCfg,
+                                                  const karabo::xms::SignalSlotable::InputHandler& eosHandler) {
+            auto sigSlotPtr = m_signalSlotable.lock();
+            if (!sigSlotPtr) return false;
+
+            boost::mutex::scoped_lock lock(m_monitoredChannelsMutex);
+            auto optionalInstanceNode = m_monitoredChannels.find(instanceId);
+            Hash& instance = (optionalInstanceNode ? optionalInstanceNode->getValue<Hash>()
+                              : m_monitoredChannels.bindReference<Hash>(instanceId));
+            if (instance.has(channel)) return false;
+
+            // Create InputChannel, register handlers, connect to OutputChannel and store InputChannel:
+            inputChannelCfg.set("connectedOutputChannels", std::vector<std::string>(1, instanceId + ":" + channel));
+            if (!inputChannelCfg.has("onSlowness")) {
+                // overwrite default which is "wait" (should we tolerate "wait" at all?)
+                inputChannelCfg.set("onSlowness", "drop");
+            }
+            InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", inputChannelCfg);
+            input->setInstanceId(sigSlotPtr->getInstanceId());
+            input->registerDataHandler(dataHandler);
+            if (eosHandler) {
+                input->registerEndOfStreamEventHandler(eosHandler);
+            }
+            sigSlotPtr->connectInputChannel(input); // asynchronous
+            instance.set(channel, input);
+
+            return true;
+        }
+
+
+        bool DeviceClient::unregisterChannelMonitor(const std::string& instanceId, const std::string& channel) {
+            boost::mutex::scoped_lock lock(m_monitoredChannelsMutex);
+
+            const bool result = m_monitoredChannels.erase(instanceId + "." + channel);
+
+            if (result && m_monitoredChannels.get<Hash>(instanceId).empty()) { // result guarantees that instanceId is there
+                // Clean instanceId if no other channel
+                m_monitoredChannels.erase(instanceId);
+            }
+
+            return result;
+        }
+
+
         void DeviceClient::set(const std::string& instanceId, const karabo::util::Hash& values,
                                int timeoutInSeconds) {
 
