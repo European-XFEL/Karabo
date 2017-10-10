@@ -3,10 +3,9 @@
 # Created on May 8, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from guiqwt.builder import make
 from PyQt4.QtGui import (QCheckBox, QComboBox, QHBoxLayout, QImage, QLabel,
                          QSlider, QSpinBox, QVBoxLayout, QWidget)
-
-from guiqwt.builder import make
 
 from karabo_gui.images import (get_dimensions_and_format, get_image_data,
                                KaraboImageDialog)

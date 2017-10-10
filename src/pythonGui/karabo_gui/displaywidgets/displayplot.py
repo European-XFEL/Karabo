@@ -4,8 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-__all__ = ["DisplayPlot"]
-
 from guiqwt.plot import CurveDialog
 from guiqwt.builder import make
 from numpy import arange
@@ -22,21 +20,18 @@ class DisplayPlot(DisplayWidget):
 
     def __init__(self, box, parent):
         super(DisplayPlot, self).__init__(None)
-        
+
         self.widget = CurveDialog(edit=False, toolbar=True,
                                   wintitle="Plot")
         self.plot = self.widget.get_plot()
-        self.curves = { }
+        self.curves = {}
         self.addBox(box)
-
 
     @property
     def boxes(self):
         return list(self.curves.keys())
 
-
     value = None
-
 
     def addBox(self, box):
         curve = make.curve([0, 1], [0, 1], box.path[-1],
@@ -44,7 +39,6 @@ class DisplayPlot(DisplayWidget):
         self.curves[box] = curve
         self.plot.add_item(curve)
         return True
-
 
     def valueChanged(self, box, value, timestamp=None):
         self.curves[box].set_data(arange(len(value)), value)
