@@ -16,6 +16,11 @@ from karabo_gui.alarms.api import AlarmInfo
 from karabo_gui.enums import NavigationItemTypes
 import karabo_gui.globals as krb_globals
 
+HOST_LEVEL = 0
+SERVER_LEVEL = 1
+CLASS_LEVEL = 2
+DEVICE_LEVEL = 3
+
 
 class SystemTreeNode(HasStrictTraits):
     """A node in the SystemTree
@@ -50,17 +55,17 @@ class SystemTreeNode(HasStrictTraits):
 
     def info(self):
         level = self.level()
-        if level == 0:
+        if level == HOST_LEVEL:
             return {'type': NavigationItemTypes.HOST}
-        elif level == 1:
+        elif level == SERVER_LEVEL:
             return {'type': NavigationItemTypes.SERVER,
                     'serverId': self.node_id}
-        elif level == 2:
+        elif level == CLASS_LEVEL:
             return {'type': NavigationItemTypes.CLASS,
                     'serverId': self.parent.node_id,
                     'classId': self.node_id,
                     'deviceId': ''}
-        elif level == 3:
+        elif level == DEVICE_LEVEL:
             return {'type': NavigationItemTypes.DEVICE,
                     'classId': self.parent.node_id,
                     'deviceId': self.node_id}
@@ -127,19 +132,16 @@ class SystemTree(HasStrictTraits):
         device_hash = system_hash.get('device', {})
 
         for server_id in server_hash.keys():
-            # Check, if server_id is already in tree
-            if not self.find(server_id, full_match=True):
-                continue
-
-            server_class_keys.extend(self.remove_server(server_id))
-            existing_devices.append(server_id)
+            server_classes = self.remove_server(server_id)
+            server_class_keys.extend(server_classes)
+            # Check, if server_id was in tree
+            if server_classes:
+                existing_devices.append(server_id)
 
         for device_id in device_hash.keys():
-            # Check, if device_id is already in tree
-            if not self.find(device_id, full_match=True):
+            # device_id might not be in the tree
+            if not self.remove_device(device_id):
                 continue
-
-            self.remove_device(device_id)
             existing_devices.append(device_id)
 
         return existing_devices, server_class_keys
@@ -198,9 +200,15 @@ class SystemTree(HasStrictTraits):
         # Use admin level to find all nodes, leave no orphan node behind
         nodes = self.find(instance_id, access_level=AccessLevel.ADMIN,
                           full_match=True)
+        removed = False
         for node in nodes:
+            if node.level() != DEVICE_LEVEL:
+                continue  # Don't remove things which are not devices!
             with self.update_context.removal_context(node):
                 node.parent.children.remove(node)
+            removed = True
+
+        return removed
 
     def remove_server(self, instance_id):
         """Remove the entry for a server from the tree
@@ -209,6 +217,9 @@ class SystemTree(HasStrictTraits):
         server_class_keys = []
 
         for server_node in server_nodes:
+            if server_node.level() != SERVER_LEVEL:
+                continue  # Don't remove things which are not servers!
+
             # Take care of removing all children from bottom to top
             while server_node.children:
                 class_node = server_node.children[-1]
