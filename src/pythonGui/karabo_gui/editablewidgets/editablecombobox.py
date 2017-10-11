@@ -44,7 +44,8 @@ class EditableComboBox(EditableWidget):
 
     @classmethod
     def isCompatible(cls, box, readonly):
-        return not readonly and box.descriptor.options is not None
+        options = getattr(box.descriptor, "options", None)
+        return not readonly and options is not None
 
 
     def typeChanged(self, box):
