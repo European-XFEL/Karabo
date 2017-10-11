@@ -22,7 +22,8 @@ class DisplayComboBox(DisplayWidget):
 
     @classmethod
     def isCompatible(cls, box, readonly):
-        return readonly and box.descriptor.options is not None
+        options = getattr(box.descriptor, "options", None)
+        return readonly and options is not None
 
     def typeChanged(self, box):
         with SignalBlocker(self.widget):

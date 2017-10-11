@@ -189,7 +189,8 @@ class Icons(DisplayWidget):
 
     @classmethod
     def isCompatible(self, box, ro):
-        return super().isCompatible(box, ro) and box.descriptor.options is None
+        options = getattr(box.descriptor, "options", None)
+        return super().isCompatible(box, ro) and options is None
 
     def showDialog(self):
         box = self.boxes[0]
@@ -301,7 +302,8 @@ class SelectionIcons(Icons):
 
     @classmethod
     def isCompatible(self, box, ro):
-        return ro and box.descriptor.options is not None
+        options = getattr(box.descriptor, "options", None)
+        return ro and options is not None
 
     def typeChanged(self, box):
         items = list(self.items)
