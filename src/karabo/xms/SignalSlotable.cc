@@ -1329,6 +1329,7 @@ namespace karabo {
                 if (connect) it->second->connect(outputChannelInfo); // Synchronous
                 else it->second->disconnect(outputChannelInfo);
                 reply(true);
+                return; // otherwise following 'reply(false)' will overwrite the 'true' above
             }
 
             reply(false);
@@ -2205,8 +2206,8 @@ namespace karabo {
         void SignalSlotable::reconnectInputChannels(const std::string& instanceId) {
 
             // Loop channels
-            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
-            for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
+            InputChannels inputChannels(getInputChannels()); // copy to avoid need for locking mutex while iterating
+            for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
                 const InputChannel::Pointer& channel = it->second;
                 const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
                 for (std::map<std::string, karabo::util::Hash>::const_iterator ii = outputChannels.begin(); ii != outputChannels.end(); ++ii) {
