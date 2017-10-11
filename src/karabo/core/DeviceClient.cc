@@ -1136,20 +1136,13 @@ namespace karabo {
                                                   const karabo::util::Hash& inputChannelCfg,
                                                   const karabo::xms::SignalSlotable::InputHandler& eosHandler) {
             auto sigSlotPtr = m_signalSlotable.lock();
-            if (!sigSlotPtr) return false;
-
-            boost::mutex::scoped_lock lock(m_monitoredChannelsMutex);
-            auto& channelSet = m_monitoredChannels[instanceId]; // created if not yet there
-            if (channelSet.find(channel) != channelSet.end()) {
-                return false;
-            }
-            // Insert channel - if already there, bail out:
-            if (!channelSet.insert(channel).second) {
+            const std::string channelName(instanceId + ":" + channel);
+            // No signal slotable or channel already there? ==> Fail!
+            if (!sigSlotPtr || sigSlotPtr->getInputChannelNoThrow(channelName)) {
                 return false;
             }
 
             // Prepare input configuration Hash for createInputChannel
-            const std::string channelName(instanceId + ":" + channel);
             Hash masterCfg;
             Hash& channelCfg = masterCfg.set(channelName, inputChannelCfg).getValue<Hash>();
             channelCfg.set("connectedOutputChannels", std::vector<std::string>(1, channelName));
@@ -1168,28 +1161,10 @@ namespace karabo {
 
 
         bool DeviceClient::unregisterChannelMonitor(const std::string& instanceId, const std::string& channel) {
-            auto sigSlotPtr = m_signalSlotable.lock();
-            if (!sigSlotPtr) return false;
-
-            boost::mutex::scoped_lock lock(m_monitoredChannelsMutex);
-
-            // Find if we have any channel of that instance:
-            auto instanceIter = m_monitoredChannels.find(instanceId);
-            if (instanceIter == m_monitoredChannels.end()) {
-                return false;
-            }
-
-            // Erase channel if there - and erase instanceId if no other channel!
-            auto& channelSet = instanceIter->second;
-            const bool result = (channelSet.erase(channel) > 0);
-            if (channelSet.empty()) {
-                m_monitoredChannels.erase(instanceIter);
-            }
-
-            // Finally, try to remove the channel and return
             const std::string channelName(instanceId + ":" + channel);
+            auto sigSlotPtr = m_signalSlotable.lock();
 
-            return (result && sigSlotPtr->removeInputChannel(channelName));
+            return (sigSlotPtr && sigSlotPtr->removeInputChannel(channelName));
         }
 
 
