@@ -1137,8 +1137,12 @@ namespace karabo {
                                                   const karabo::xms::SignalSlotable::InputHandler& eosHandler) {
             auto sigSlotPtr = m_signalSlotable.lock();
             const std::string channelName(instanceId + ":" + channel);
-            // No signal slotable or channel already there? ==> Fail!
+            // No SignalSlotable or channel already there? ==> Fail!
             if (!sigSlotPtr || sigSlotPtr->getInputChannelNoThrow(channelName)) {
+                if (sigSlotPtr) {
+                    KARABO_LOG_FRAMEWORK_WARN << sigSlotPtr->getInstanceId() << " cannot register channel monitor for '"
+                            << channelName << "' since such an input channel already exists.";
+                }
                 return false;
             }
 
