@@ -263,27 +263,32 @@ def install(args):
                 .format(args.git, args.device, args.tag, path))
         print('done.')
         os.chdir(path)
-        if os.path.isfile('DEPENDS'):
+        if os.path.exists('DEPENDS'):
             install_dependencies(args)
-        if os.path.isfile('Makefile'):
+        if os.path.exists('Makefile'):
             # download needs to happen after the processing of DEPENDS
             package = download(args)
             tgt = os.path.join(os.environ['KARABO'], 'plugins')
             if package:
-                print('Installing binaries, please wait... ',
+                print('Installing {} binaries, please wait...'
+                      ''.format(args.device),
                       end='', flush=True)
                 cmd = os.path.join(os.environ['KARABO'], package)
                 run_cmd('bash {} --prefix={} '.format(cmd, tgt))
                 print('done.')
             else:
-                print('Compiling, please wait... ', end='', flush=True)
+                print('Compiling {}, please wait... '.format(args.device),
+                      end='', flush=True)
                 run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
                 print('done.')
                 if os.path.isdir('dist') and str2bool(copyFlag):
                     src = os.path.join('dist', args.config, '*', '*.so')
                     run_cmd('cp -f {} {}'.format(src, tgt))
-        else:
+        elif os.path.exists('setup.py'):
             run_cmd('pip install --upgrade .')
+        else:
+            print('package {} has no clear'
+                  ' installation path'.format(args.device))
         print("Installation succeeded.")
 
 
@@ -382,17 +387,20 @@ def develop(args):
         if not os.path.isdir(path):
             checkout(args)
         os.chdir(path)
-        if os.path.isfile('DEPENDS'):
+        if os.path.exists('DEPENDS'):
             install_dependencies(args)
-        if os.path.isfile('Makefile'):
+        if os.path.exists('Makefile'):
             print('Compiling, please wait... ', end='', flush=True)
             run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
             print('done.')
             os.chdir(os.path.join('..', '..', 'plugins'))
             lib = os.path.join('..', path, 'dist', args.config, '*', '*.so')
             run_cmd('ln -sf {}'.format(lib))
-        else:
+        elif os.path.exists('setup.py'):
             run_cmd('pip install -e .')
+        else:
+            print('package {} has no clear'
+                  ' installation path'.format(args.device))
         print("Develop installation succeeded.")
 
 
