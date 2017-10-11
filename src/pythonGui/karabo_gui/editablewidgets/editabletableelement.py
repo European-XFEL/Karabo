@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 """
-This module contains a class which represents a widget plugin for tables and
+This module contains a class which represents a widget for tables and
 is created as a composition of EditableWidget and DisplayWidget. Rendering in
 read-only mode is controlled via the set readOnly method.
 
@@ -20,17 +20,10 @@ For string fields with options supplied the cell is rendered as a drop down
 menu.
 Boolean fields are rendered as check boxes.
 
-Additional manipulation functionality includes, adding, deleting and duplicating
-rows (the latter require a cell or row to be selected).
+Additional manipulation functionality includes, adding, deleting and
+duplicating rows (the latter require a cell or row to be selected).
 
-A right-click will display the cells data type both in Display and Edit mode. In
-edit mode additionally a pop-up menue is available which allows selection of
-device properties from instanciated devices. In this case the cell will "mirror"
-the selected propertiy and the field in the underlying Hash of this row will
-have
-an "isAliasing=PARAM_PATH" added. This should be evaluated on device side
-whenever
-the current value of the parameter is needed.
+A right-click will display the cells data type both in Display and Edit mode.
 
 The Table widget supports drag and drop of deviceId's from the navigation and
 project panel. Dropping on a string cell will replace the string with the
@@ -42,22 +35,16 @@ import copy
 import json
 
 from PyQt4.QtCore import (pyqtSlot, Qt, QAbstractTableModel, QModelIndex,
-                          QObject, SIGNAL, SLOT, QTimer)
-from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QDialog,
-                         QComboBox, QVBoxLayout, QWidget, QDialogButtonBox,
-                         QCheckBox, QItemDelegate, QStyledItemDelegate)
+                          QTimer)
+from PyQt4.QtGui import (QTableView, QAbstractItemView, QMenu, QComboBox,
+                         QItemDelegate, QStyledItemDelegate)
 
-from karabo.common.api import DeviceStatus
 from karabo.middlelayer import (
-    AccessMode, Bool, Hash, String, Type, Vector, VectorHash
+    AccessMode, Bool, Hash, String, Vector, VectorHash
 )
-from karabo_gui.widget import DisplayWidget, EditableWidget
-import karabo_gui.icons as icons
 from karabo_gui.enums import NavigationItemTypes
-from karabo_gui.events import (
-    KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
 from karabo_gui.schema import Dummy
-from karabo_gui.singletons.api import get_topology
+from karabo_gui.widget import DisplayWidget, EditableWidget
 
 
 class TableModel(QAbstractTableModel):
@@ -65,11 +52,9 @@ class TableModel(QAbstractTableModel):
         super(QAbstractTableModel, self).__init__(parent, *args)
 
         self.columnSchema = columnSchema
-        self.columnHash = self.columnSchema.hash if self.columnSchema is not \
-                                                    None else Hash()
+        self.columnHash = (self.columnSchema.hash
+                           if self.columnSchema is not None else Hash())
         self.cdata = []
-        self.connectedMonitors = {}
-        self.connectedMonitorsByCell = {}
         self.editingFinished = editingFinished
         self.role = Qt.EditRole
 
@@ -83,7 +68,6 @@ class TableModel(QAbstractTableModel):
         return len(self.columnHash)
 
     def data(self, idx, role):
-        """"""
         if not idx.isValid():
             return None
             # return QVariant()
@@ -100,41 +84,18 @@ class TableModel(QAbstractTableModel):
             value = row[columnKey]
             valueType = self.columnSchema.getValueType(columnKey)()
             if isinstance(valueType, Bool):
-                return Qt.Checked if value == True else Qt.Unchecked
+                return Qt.Checked if value else Qt.Unchecked
 
         if role == Qt.DisplayRole or role == Qt.EditRole:
             row = self.cdata[idx.row()]
             columnKey = self.columnHash.getKeys()[idx.column()]
-
-            value = None
-            alias = self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing")
-            if  alias and role == Qt.EditRole:
-                value = "=" + self.cdata[idx.row()].getAttribute(columnKey,
-                                                                 "isAliasing")
-            else:
-                value = row[columnKey]
-
+            value = row[columnKey]
             valueType = self.columnSchema.getValueType(columnKey)()
             if isinstance(valueType, Vector):
-                return ", ".join(value)
+                # Guard against None values
+                value = [] if value is None else value
+                return ", ".join(str(v) for v in value)
             return str(value)
-
-        if role == Qt.DecorationRole:
-            columnKey = self.columnHash.getKeys()[idx.column()]
-            alias = self.cdata[idx.row()].hasAttribute(columnKey, "isAliasing")
-            if alias:
-                alias = self.cdata[idx.row()].getAttribute(columnKey,
-                                                           "isAliasing")
-                monitoredDeviceId = alias.split(":")[0]
-
-                status = get_topology().get_device(monitoredDeviceId).status
-                if status in (DeviceStatus.MONITORING, DeviceStatus.ALIVE):
-                    return icons.tableOnline.pixmap(10, 10)
-                elif status in (DeviceStatus.ONLINE, DeviceStatus.REQUESTED,
-                                DeviceStatus.SCHEMA):
-                    return icons.tablePending.pixmap(10, 10)
-                else:
-                    return icons.tableOffline.pixmap(10, 10)
 
         return None
 
@@ -156,7 +117,6 @@ class TableModel(QAbstractTableModel):
         return None
 
     def flags(self, idx):
-        """"""
         if not idx.isValid():
             return Qt.ItemIsEnabled
 
@@ -167,72 +127,17 @@ class TableModel(QAbstractTableModel):
 
             if accessMode == AccessMode.READONLY:
                 return (Qt.ItemIsUserCheckable | Qt.ItemIsSelectable
-                     & ~Qt.ItemIsEnabled)
+                        & ~Qt.ItemIsEnabled)
 
             return (Qt.ItemIsUserCheckable | Qt.ItemIsSelectable
                     | Qt.ItemIsEnabled)
-
 
         if accessMode == AccessMode.READONLY:
             return QAbstractTableModel.flags(self, idx) & ~Qt.ItemIsEditable
 
         return QAbstractTableModel.flags(self, idx) | Qt.ItemIsEditable
 
-    def _removeMonitor(self, row, col, role):
-        if "{}.{}".format(row, col) in self.connectedMonitorsByCell:
-            cKey = self.columnHash.getKeys()[col]
-            resp = self.connectedMonitorsByCell["{}.{}".format(row, col)]
-            del self.connectedMonitorsByCell["{}.{}".format(row, col)]
-
-            # need to remove attribute
-            item = Hash()
-            for k, v, a in self.cdata[row].iterall():
-                item[k] = v
-                for aa in a:
-
-                    if aa != "isAliasing" or k != cKey:
-                        item.setAttribute(k, aa,
-                                          self.cdata[row].getAttribute(k, aa))
-            self.cdata[row] = item
-
-            self.connectedMonitors[resp].remove((row, col))
-            if len(self.connectedMonitors[resp]) == 0:
-                del self.connectedMonitors[resp]
-                try:
-                    deviceId,  deviceProperty = resp.split(":")
-                    device = get_topology().get_device(deviceId)
-                    box = device.getBox(deviceProperty.split("."))
-                    if role == Qt.DisplayRole:
-                        signal = box.signalUpdateComponent
-                        signal.disconnect(self.monitorChanged)
-                except (TypeError, ValueError):
-                    pass # catch signals which were not connected
-
-    def _addMonitor(self, row, col, resp, role):
-        cKey = self.columnHash.getKeys()[col]
-        deviceId = resp.split(".")[0]
-        deviceProperty = ".".join(resp.split(".")[1:])
-        device = get_topology().get_device(deviceId)
-        box = device.getBox(deviceProperty.split("."))
-
-
-        # set these as attributes cell
-        self.cdata[row].setAttribute(cKey, "isAliasing", resp)
-        if resp not in self.connectedMonitors:
-            self.connectedMonitors[resp] = [(row, col)]
-            if role == Qt.DisplayRole:
-                box.signalUpdateComponent.connect(self.monitorChanged)
-        elif "{}.{}".format(row, col) in self.connectedMonitorsByCell:
-            return box.value
-        else:
-            self.connectedMonitors[resp].append((row, col))
-
-        self.connectedMonitorsByCell["{}.{}".format(row, col)] = resp
-        return box.value
-
-    def setData(self, idx, value, role, isAliasing=None,
-                fromValueChanged=False):
-        """"""
+    def setData(self, idx, value, role, fromValueChanged=False):
         if not idx.isValid():
             return False
 
@@ -263,19 +168,6 @@ class TableModel(QAbstractTableModel):
             cKey = self.columnHash.getKeys()[col]
             valueType = self.columnSchema.getValueType(cKey)()
 
-            self._removeMonitor(row, col, role)
-            # handle monitor requests from editor
-            if (isinstance(value, str)) and role == Qt.EditRole:
-                # remove monitor if one exists
-
-                if "=" in value and not fromValueChanged:
-                    resp = value[1:]
-                    value = self._addMonitor(row, col, resp, role)
-                elif fromValueChanged and isAliasing is not None:
-                    value = self._addMonitor(row, col, isAliasing, role)
-
-            if isAliasing is not None:
-                value = self._addMonitor(row, col, isAliasing, role)
             # now display value
             if isinstance(valueType, Vector) and not fromValueChanged:
                 # this will be a list of individual chars we need to join
@@ -294,17 +186,6 @@ class TableModel(QAbstractTableModel):
             return True
 
         return False
-
-    def monitorChanged(self, box, value, timestamp=None):
-        key = box.key()
-        affectedCells = self.connectedMonitors[key]
-        for c in affectedCells:
-            cKey = self.columnHash.getKeys()[c[1]]
-            valueType = self.columnSchema.getValueType(cKey)()
-            value = valueType.cast(value)
-            self.cdata[c[0]][cKey] = value
-            idx = self.index(c[0], c[1], QModelIndex())
-            self.dataChanged.emit(idx, idx)
 
     def insertRows(self, pos, rows, idx, iRowHash=None):
         self.beginInsertRows(QModelIndex(), pos, pos + rows - 1)
@@ -362,103 +243,6 @@ class TableModel(QAbstractTableModel):
 
     def setHashList(self, data):
         self.cdata = data
-
-
-class FromPropertyPopUp(QDialog):
-    def __init__(self):
-        super(QWidget, self).__init__()
-
-        self.selectedDeviceId = None
-        self.selectedProperty = None
-
-        self.layout = QVBoxLayout(self)
-
-        self.propertyCombo = QComboBox()
-        self.propertyCombo.setEditable(True)
-        self.propertyCombo.currentIndexChanged['QString'].connect(
-            self.propertySelectionChanged)
-
-        self.deviceCombo = QComboBox()
-        self.deviceCombo.setEditable(True)
-        availableDevices = self.getCurrentDeviceInstances()
-        self.deviceCombo.addItems(availableDevices)
-        if len(availableDevices) > 0:
-            self.selectedDeviceId = availableDevices[0]
-            self.deviceIdSelectionChanged(availableDevices[0])
-        self.deviceCombo.currentIndexChanged['QString'].connect(
-            self.deviceIdSelectionChanged)
-
-        self.actAsMonitorCheck = QCheckBox("Act as monitor")
-        self.actAsMonitorCheck.setChecked(True)
-
-        # buttons for return
-        self.buttonBox = QDialogButtonBox(self)
-        self.buttonBox.setOrientation(Qt.Horizontal)
-        self.buttonBox.setStandardButtons(
-            QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
-        QObject.connect(self.buttonBox, SIGNAL("accepted()"), self.accept)
-        QObject.connect(self.buttonBox, SIGNAL("rejected()"), self.reject)
-
-        self.layout.addWidget(self.deviceCombo)
-        self.layout.addWidget(self.propertyCombo)
-        self.layout.addWidget(self.actAsMonitorCheck)
-        self.layout.addWidget(self.buttonBox)
-
-        # Register for events, Note: unregister_from_broadcasts is necessary
-        # when this dialog disappears!
-        register_for_broadcasts(self)
-
-    def closeEvent(self, event):
-        """Unregister from receiving broadcast events when closing
-        """
-        # QDialog also implements this method
-        super(FromPropertyPopUp, self).closeEvent(event)
-        unregister_from_broadcasts(self)
-
-    def karaboBroadcastEvent(self, event):
-        """Router for incoming broadcasts
-        """
-        if event.sender is KaraboEventSender.DeviceDataReceived:
-            self.delayedSchema()
-        return False
-
-    def getCurrentDeviceInstances(self):
-        instance_ids = set()
-
-        def visitor(node):
-            dev_id = node.node_id
-            if (node.attributes.get('type') == 'device' and
-                    "Gui" not in dev_id and "Log" not in dev_id
-                    and "ProjectManager" not in dev_id):
-                instance_ids.add(dev_id)
-
-        get_topology().visit_system_tree(visitor)
-        return list(instance_ids)
-
-    def deviceIdSelectionChanged(self, deviceId):
-        self.propertyCombo.clear()
-        self.selectedDeviceId = deviceId
-        descriptor = get_topology().get_device(deviceId).descriptor
-        if descriptor is not None:
-            properties = []
-            for i, v in descriptor.dict.items():
-                if isinstance(v, Type) and not isinstance(v, VectorHash):
-                    # the latter won't work as it would result in a non-flat
-                    # table
-                    properties.append(i)
-
-            self.propertyCombo.addItems(properties)
-
-    def delayedSchema(self):
-        if self.propertyCombo.count() == 0:
-            self.deviceIdSelectionChanged(self.selectedDeviceId)
-
-    def propertySelectionChanged(self, property):
-        self.selectedProperty = property
-
-    def getValues(self):
-        return self.selectedDeviceId, self.selectedProperty, \
-               self.actAsMonitorCheck.isChecked()
 
 
 # from http://stackoverflow.com/questions/17615997/pyqt-how-to-set-qcombobox
@@ -697,10 +481,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             ckeys = row.getKeys()
             for c, col in enumerate(ckeys):
                 idx = self.tableModel.index(r, c, QModelIndex())
-                isAliasing = None
-                if row.hasAttribute(col, "isAliasing"):
-                    isAliasing = row.getAttribute(col, "isAliasing")
-                self.tableModel.setData(idx, row[col], self.role, isAliasing,
+                self.tableModel.setData(idx, row[col], self.role,
                                         fromValueChanged=True)
 
     def onEditingFinished(self, value):
@@ -746,7 +527,7 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                                                1, QModelIndex())
         # avoid self triggering of the menu
         self.recentContextTrigger = True
-        triggerTime = QTimer.singleShot(200, self._clearContextTrigger)
+        QTimer.singleShot(200, self._clearContextTrigger)
 
     def _clearContextTrigger(self):
         self.recentContextTrigger = False
@@ -764,11 +545,6 @@ class EditableTableElement(EditableWidget, DisplayWidget):
                                            QModelIndex())
             return
 
-        # action to pop up from property field
-        setFromPropertyAction = None
-        if self.role == Qt.EditRole:
-            setFromPropertyAction = menu.addAction("From device property")
-
         # check if this cell can be set to a default value
         col = idx.column()
 
@@ -778,9 +554,8 @@ class EditableTableElement(EditableWidget, DisplayWidget):
         if col >= 0 and col < len(self.columnHash):
             cKey = self.columnHash.getKeys()[col]
 
-            if self.columnHash.hasAttribute(cKey,
-                                            "defaultValue") and self.role == \
-                    Qt.EditRole:
+            if (self.columnHash.hasAttribute(cKey, "defaultValue") and
+                    self.role == Qt.EditRole):
                 setDefaultAction = menu.addAction("Set to Default")
 
             # add a hint to the object type
@@ -789,20 +564,10 @@ class EditableTableElement(EditableWidget, DisplayWidget):
             typeDummyAction.setEnabled(False)
 
         action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
-        if action == setDefaultAction and cKey is not None and setDefaultAction \
-                is not None:
+        if (action == setDefaultAction and cKey is not None and
+                setDefaultAction is not None):
             defaultValue = self.columnHash.getAttribute(cKey, "defaultValue")
             self.tableModel.setData(idx, defaultValue, Qt.EditRole)
-
-        if action == setFromPropertyAction and setFromPropertyAction is not None:
-            propertyPopUp = FromPropertyPopUp()
-            if propertyPopUp.exec_():
-                deviceId, deviceProperty, isMonitor = propertyPopUp.getValues()
-                if isMonitor:
-                    value = "={}:{}".format(deviceId, deviceProperty)
-                else:
-                    value = "{}:{}".format(deviceId, deviceProperty)
-                self.tableModel.setData(idx, value, Qt.EditRole)
 
     def copy(self, item):
         copyWidget = EditableTableElement(item=item)
