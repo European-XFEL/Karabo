@@ -15,9 +15,7 @@
 #include <karabo/core/Lock.hh>
 
 #include <map>
-#include <unordered_map>
 #include <set>
-#include <unordered_set>
 #include <string>
 
 #define KARABO_GET_SHARED_FROM_WEAK(sp, wp) \
@@ -133,11 +131,6 @@ namespace karabo {
             mutable boost::mutex m_immortalsMutex;
 
             int m_accessLevel = karabo::util::Schema::ADMIN;
-
-        private:
-            boost::mutex m_monitoredChannelsMutex;
-            // key is instanceId, value is set of channelIds
-            std::unordered_map<std::string, std::unordered_set<std::string> > m_monitoredChannels;
 
         public:
 
