@@ -405,25 +405,67 @@ namespace karabo {
             bool disconnectChannels(const std::string& outputInstanceId, const std::string& outputName,
                                     const std::string& inputInstanceId, const std::string& inputName);
 
+            /**
+             * Create and register an InputChannel together with handlers
+             *
+             * Note: Pass only onDataAvailableHandler OR onInputAvailableHandler!
+             * @param channelName name of the channel, e.g. its path in the schema
+             * @param config is a Hash with a Hash at 'channelName' which will be passed to InputChannel::create
+             * @param onDataAvailableHandler is a DataHandler called for each data item coming through the pipeline
+             * @param onInputAvailableHandler is an InputHandler called when new data arrives - user has to loop over all items
+             * @param onEndOfStreamEventHandler is an InputHandler called when EOS is received
+             * @return the created InputChannel - better do not store it anywhere, it can be received via getInputChannel(channelName)
+             */
             virtual InputChannel::Pointer createInputChannel(const std::string& channelName,
                                                              const karabo::util::Hash& config,
                                                              const DataHandler& onDataAvailableHandler = DataHandler(),
                                                              const InputHandler& onInputAvailableHandler = InputHandler(),
                                                              const InputHandler& onEndOfStreamEventHandler = InputHandler());
 
+            /**
+             * Remove the InputChannel created via createInputChannel
+             *
+             * @param channelName identifies the channel (first argument that was given to createOutputChannel)
+             * @return true if such a channel existed and could be removed
+             */
+            virtual bool removeInputChannel(const std::string& channelName);
+
             virtual OutputChannel::Pointer createOutputChannel(const std::string& channelName,
                                                                const karabo::util::Hash& config,
                                                                const OutputHandler& onOutputPossibleHandler = OutputHandler());
 
-            const InputChannels& getInputChannels() const;
+            InputChannels getInputChannels() const;
 
-            const OutputChannels& getOutputChannels() const;
+            OutputChannels getOutputChannels() const;
 
-            const OutputChannel::Pointer& getOutputChannel(const std::string& name);
+            /**
+             * Access pointer to OutputChannel with given name. Throws ParameterException if no such output channel.
+             * @param name of output channel (e.g. path in expectedParameters)
+             * @return OutpuChannel::Pointer
+             */
+            OutputChannel::Pointer getOutputChannel(const std::string& name);
+
+            /**
+             * Access pointer to OutputChannel with given name.
+             * @param name of output channel (e.g. path in expectedParameters)
+             * @return OutputChannel::Pointer - empty if no channel of that name
+             */
+            OutputChannel::Pointer getOutputChannelNoThrow(const std::string& name);
 
             std::vector<std::string> getOutputChannelNames() const;
 
-            const InputChannel::Pointer& getInputChannel(const std::string& name);
+            /**
+             * Access pointer to InputChannel with given name. Throws ParameterException if no such input channel.
+             * @return InputChannel::Pointer
+             */
+            InputChannel::Pointer getInputChannel(const std::string& name);
+
+            /**
+             * Access pointer to InputChannel with given name.
+             * @param name of input channel (e.g. path in expectedParameters)
+             * @return InputChannel::Pointer - empty if no channel of that name
+             */
+            InputChannel::Pointer getInputChannelNoThrow(const std::string& name);
 
             void registerInputHandler(const std::string& channelName, const InputHandler& handler);
 
@@ -693,6 +735,7 @@ namespace karabo {
             std::vector<std::pair<std::string, karabo::util::Hash> > m_availableInstances;
 
             // IO channel related
+            mutable boost::mutex m_pipelineChannelsMutex;
             InputChannels m_inputChannels;
             OutputChannels m_outputChannels;
 
