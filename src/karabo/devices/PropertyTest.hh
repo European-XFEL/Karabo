@@ -50,8 +50,12 @@ namespace karabo {
             ~PropertyTest();
             
         private:
-            
+
             void initialize();
+
+            void writeOutput();
+
+            long long m_outputCounter;
             
         };
     } 
