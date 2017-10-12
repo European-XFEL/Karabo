@@ -821,9 +821,12 @@ class Char(Simple, Type):
     def toKaraboValue(self, data, strict=True):
         if isinstance(data, bytes) and len(data) == 1:
             data = data[0]
+        elif isinstance(data, str) and len(data) == 1:
+            data = ord(data)
         elif not (0 <= data < 256):
             raise ValueError(
-                "Character must be bytes of length 1 or positive number < 256")
+                "Character must be bytes or string of length 1 "
+                "or positive number < 256")
         return basetypes.QuantityValue(data, descriptor=self)
 
 
