@@ -3,6 +3,9 @@
 #include "karabo/util/Schema.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/State.hh"
+#include "karabo/util/Dims.hh"
+#include "karabo/util/NDArray.hh"
+#include "karabo/xms/ImageData.hh"
 
 
 namespace karabo {
@@ -14,6 +17,7 @@ namespace karabo {
         using namespace karabo::net;
         using namespace karabo::xms;
 
+        const unsigned int defVectorMaxSize = 100;
 
         KARABO_REGISTER_FOR_CONFIGURATION(NestedClass)
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, PropertyTest)
@@ -311,11 +315,58 @@ namespace karabo {
                     .commit();
 
 
+            Schema pipeData;
+            NODE_ELEMENT(pipeData).key("node")
+                    .displayedName("Node for DAQ")
+                    .description("An intermediate node needed by DAQ")
+                    .setDaqDataType(karabo::util::TRAIN)
+                    .commit();
+
+            INT32_ELEMENT(pipeData).key("node.int32")
+                    .description("A signed 32-bit integer sent via the pipeline")
+                    .readOnly()
+                    .commit();
+
+            STRING_ELEMENT(pipeData).key("node.string")
+                    .description("A string send via the pipeline")
+                    .readOnly()
+                    .commit();
+
+            VECTOR_INT64_ELEMENT(pipeData).key("node.vecInt64")
+                    .description("A vector of signed 64-bit integers sent via the pipeline")
+                    .maxSize(defVectorMaxSize) // DAQ needs that
+                    .readOnly()
+                    .commit();
+
+            NDARRAY_ELEMENT(pipeData).key("node.ndarray")
+                    .description("A multi dimensional array of floats sent via the pipeline")
+                    .dtype(Types::FLOAT)
+                    .shape("100,200")
+                    .commit();
+
+            IMAGEDATA_ELEMENT(pipeData).key("node.image")
+                    .description("An image with pixels as 16-bit unsigned integers sent via the pipeline")
+                    .setDimensions("400,500")
+                    .setEncoding(Encoding::GRAY)
+                    // guess that DAQ needs more...
+                    .commit();
+
+            OUTPUT_CHANNEL(expected).key("output")
+                    .displayedName("Output")
+                    .dataSchema(pipeData)
+                    .commit();
+
+            SLOT_ELEMENT(expected).key("writeOutput")
+                    .displayedName("Write to Output")
+                    .description("Write once to output channel 'Output'")
+                    .commit();
         }
 
 
-        PropertyTest::PropertyTest(const Hash& input) : Device<>(input) {
+        PropertyTest::PropertyTest(const Hash& input) : Device<>(input), m_outputCounter(0ll) {
             KARABO_INITIAL_FUNCTION(initialize);
+
+            KARABO_SLOT(writeOutput);
         }
 
 
@@ -328,5 +379,24 @@ namespace karabo {
             updateState(State::NORMAL);
         }
 
+
+        void PropertyTest::writeOutput() {
+
+            ++m_outputCounter;
+
+            // Set all numbers inside to m_outputCounter:
+            Hash data;
+            Hash& node = data.bindReference<Hash>("node");
+            node.set("int32", static_cast<int> (m_outputCounter));
+            node.set("string", toString(m_outputCounter));
+            node.set("vecInt64", std::vector<long long>(defVectorMaxSize, m_outputCounter));
+            node.set("ndarray", NDArray(Dims(100ull, 200ull), static_cast<float> (m_outputCounter)));
+            node.set("image", ImageData(NDArray(Dims(400ull, 500ull), static_cast<unsigned short> (m_outputCounter)),
+                                        Dims(), // use Dims of NDArray
+                                        Encoding::GRAY, // gray scale as is default
+                                        16)); // unsigned short is 16 bits
+
+            writeChannel("output", data);
+        }
     }
 }
