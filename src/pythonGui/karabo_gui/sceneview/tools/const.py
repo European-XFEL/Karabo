@@ -1,15 +1,16 @@
 from karabo.common.scenemodel.api import (
-    AnalogModel, BitfieldModel, ColorBoolModel, CheckBoxModel, ChoiceElementModel,
-    ComboBoxModel, DigitIconsModel, DirectoryModel, DisplayAlignedImageModel,
-    DisplayCommandModel, DisplayIconsetModel, DisplayImageElementModel,
-    DisplayImageModel, DisplayLabelModel, DisplayPlotModel,
-    DisplayStateColorModel, DoubleLineEditModel, EditableListElementModel,
-    EditableListModel, EditableSpinBoxModel, EvaluatorModel, FileInModel,
-    FileOutModel, FloatSpinBoxModel, HexadecimalModel, IntLineEditModel,
-    KnobModel, LampModel, LineEditModel, LinePlotModel, MonitorModel,
-    PopUpModel, ScientificImageModel, SelectionIconsModel, SingleBitModel,
-    SliderModel, SparklineModel, TableElementModel, TextIconsModel,
-    WebcamImageModel, XYPlotModel, StatefulIconWidgetModel
+    AnalogModel, BitfieldModel, ColorBoolModel, CheckBoxModel,
+    ChoiceElementModel, ComboBoxModel, DigitIconsModel, DirectoryModel,
+    DisplayAlignedImageModel, DisplayCommandModel, DisplayIconsetModel,
+    DisplayImageElementModel, DisplayImageModel, DisplayLabelModel,
+    DisplayPlotModel, DisplayStateColorModel, DoubleLineEditModel,
+    EditableListElementModel, EditableListModel, EditableSpinBoxModel,
+    EvaluatorModel, FileInModel, FileOutModel, FloatSpinBoxModel,
+    HexadecimalModel, IntLineEditModel, KnobModel, LampModel, LineEditModel,
+    LinePlotModel, MonitorModel, PopUpModel, RunConfiguratorModel,
+    ScientificImageModel, SelectionIconsModel, SingleBitModel, SliderModel,
+    SparklineModel, TableElementModel, TextIconsModel, WebcamImageModel,
+    XYPlotModel, StatefulIconWidgetModel
 )
 
 
@@ -48,6 +49,7 @@ WIDGET_FACTORIES = {
     'DisplayLabel': DisplayLabelModel,
     'DisplayLineEdit': LineEditModel,
     'EditableLineEdit': LineEditModel,
+    'RunConfiguratorEdit': RunConfiguratorModel,
     'EditableList': EditableListModel,
     'EditableListElement': EditableListElementModel,
     'DisplayPlot': DisplayPlotModel,
