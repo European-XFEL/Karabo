@@ -491,6 +491,21 @@ class QuantityValue(KaraboValue, Quantity):
         ret.timestamp = newest_timestamp(objs)
         return ret
 
+    def __str__(self):
+        try:
+            if self.descriptor.displayType.startswith("bin|"):
+                fields = self.descriptor.displayType[4:].split(",")
+                fields = (field.split(":") for field in fields)
+                fields = ((int(bit), name) for bit, name in fields)
+                res = "|".join(name for bit, name in fields
+                               if self.value & (1 << bit))
+                return "{{{}}}".format(res)
+            formats = dict(hex="0x{:x}", oct="0o{:o}", bin="0b{:b}")
+            return formats[self.descriptor.displayType].format(self.value)
+        except AttributeError:
+            pass
+        return super().__str__()
+
 
 # Whenever Pint does calculations, it returns the results as an objecti
 # of the registries' Quantity class. We set that to our own class so
