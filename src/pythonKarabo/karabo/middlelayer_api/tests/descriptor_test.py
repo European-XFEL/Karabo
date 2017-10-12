@@ -111,8 +111,10 @@ class Tests(TestCase):
         self.check_general(d, v)
         with self.assertRaises(TypeError):
             d.toKaraboValue(b"123")
+        v = d.toKaraboValue("3")
+        self.assertEqual(v, 51)
         with self.assertRaises(TypeError):
-            d.toKaraboValue("a")
+            d.toKaraboValue("123")
 
     def test_vector_char(self):
         d = VectorChar()
