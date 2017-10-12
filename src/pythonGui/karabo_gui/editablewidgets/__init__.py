@@ -20,4 +20,5 @@ __all__ = [
     "floatspinbox",
     "hexoct",
     "numberlineedit",
+    "runconfiguratoredit",
 ]
