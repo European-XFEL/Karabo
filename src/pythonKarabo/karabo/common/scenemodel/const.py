@@ -15,6 +15,9 @@ class SceneTargetWindow(enum.Enum):
     MainWindow = 'mainwin'  # The default; a tab in the main window
     Dialog = 'dialog'  # An undocked window
 
+    def __repr__(self):
+        return self.__str__()
+
 
 # Define some XML namespaces that we might encounter
 NS_INKSCAPE = "{http://www.inkscape.org/namespaces/inkscape}"
