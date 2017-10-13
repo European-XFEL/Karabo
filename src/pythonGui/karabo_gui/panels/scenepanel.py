@@ -65,7 +65,13 @@ class ScenePanel(BasePanelWidget):
         self.scene_view.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         # Avoid scene_view.set_tab_visible()
-        self._temporary_hide_flag = True
+        if self.parent() is None:
+            # NOTE: PanelWrangler calls onDock() when opening a scene for the
+            # first time. However, it is called _after_ adding the panel
+            # to the main window. In that case, parent() will not be None and
+            # we can avoid setting this flag, because we are NOT about to be
+            # hidden.
+            self._temporary_hide_flag = True
 
     def undock(self):
         """Called before this panel is undocked from the main window.
