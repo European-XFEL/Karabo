@@ -17,13 +17,11 @@ from karabo_gui import messagebox
 from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.macropanel import MacroPanel
 from karabo_gui.panels.runconfigpanel import RunConfigPanel
-from karabo_gui.panels.runconfiggrouppanel import RunConfigGroupPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.singletons.api import get_project_model
 
 _ICONS = {
     RunConfigPanel: icons.runconfig,
-    RunConfigGroupPanel: icons.runconfiggroup,
 }
 
 # Map open instance panel event to the corresponding panel class
@@ -31,8 +29,6 @@ _ICONS = {
 _EVENT_PANEL_MAP = {
     KaraboEventSender.AddRunConfigurator:
         (RunConfigPanel, PanelAreaEnum.MiddleBottom),
-    KaraboEventSender.AddRunConfigGroup:
-        (RunConfigGroupPanel, PanelAreaEnum.MiddleBottom),
 }
 
 
@@ -125,8 +121,7 @@ class PanelWrangler(QObject):
                 self._request_instance_panel(inst_id, sender)
 
         elif sender in (KaraboEventSender.RemoveAlarmServices,
-                        KaraboEventSender.RemoveRunConfigurator,
-                        KaraboEventSender.RemoveRunConfigGroup):
+                        KaraboEventSender.RemoveRunConfigurator):
             instance_ids = data.get('instanceIds')
             for inst_id in instance_ids:
                 self._close_instance_panel(inst_id)
