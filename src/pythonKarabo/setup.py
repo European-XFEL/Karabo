@@ -115,6 +115,7 @@ if __name__ == '__main__':
                 'karabo-cli=karabo.interactive.ideviceclient:main',
                 'ikarabo=karabo.interactive.ikarabo:main',
                 'convert-karabo-device=karabo.interactive.convert_device_project:main',
+                'karabo-scene2py=karabo.interactive.scene2python:main',
                 'karabo-start=karabo.interactive.startkarabo:startkarabo',
                 'karabo-stop=karabo.interactive.startkarabo:stopkarabo',
                 'karabo-kill=karabo.interactive.startkarabo:killkarabo',
