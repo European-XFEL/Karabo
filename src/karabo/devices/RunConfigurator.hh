@@ -23,6 +23,18 @@ namespace karabo {
     }
     namespace devices {
 
+        class RunControlDataSource {
+        public:
+            KARABO_CLASSINFO(RunControlDataSource, "RunControlDataSource", "1.5")
+            KARABO_CONFIGURATION_BASE_CLASS
+
+            static void expectedParameters(karabo::util::Schema& expected);
+
+            RunControlDataSource(const karabo::util::Hash& input);
+            virtual ~RunControlDataSource();
+        };
+
+
         class RunConfigurator : public karabo::core::Device<> {
 
         public:
