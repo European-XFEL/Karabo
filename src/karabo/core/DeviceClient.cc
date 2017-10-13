@@ -1131,6 +1131,47 @@ namespace karabo {
         }
 
 
+        bool DeviceClient::registerChannelMonitor(const std::string& instanceId, const std::string& channel,
+                                                  const karabo::xms::SignalSlotable::DataHandler& dataHandler,
+                                                  const karabo::util::Hash& inputChannelCfg,
+                                                  const karabo::xms::SignalSlotable::InputHandler& eosHandler) {
+            auto sigSlotPtr = m_signalSlotable.lock();
+            const std::string channelName(instanceId + ":" + channel);
+            // No SignalSlotable or channel already there? ==> Fail!
+            if (!sigSlotPtr || sigSlotPtr->getInputChannelNoThrow(channelName)) {
+                if (sigSlotPtr) {
+                    KARABO_LOG_FRAMEWORK_WARN << sigSlotPtr->getInstanceId() << " cannot register channel monitor for '"
+                            << channelName << "' since such an input channel already exists.";
+                }
+                return false;
+            }
+
+            // Prepare input configuration Hash for createInputChannel
+            Hash masterCfg;
+            Hash& channelCfg = masterCfg.set(channelName, inputChannelCfg).getValue<Hash>();
+            channelCfg.set("connectedOutputChannels", std::vector<std::string>(1, channelName));
+            if (!channelCfg.has("onSlowness")) {
+                // overwrite default which is "wait" (should we tolerate "wait" at all?)
+                channelCfg.set("onSlowness", "drop");
+            }
+            // Create InputChannel with handlers (this also enables auto-reconnect):
+            InputChannel::Pointer input = sigSlotPtr->createInputChannel(channelName, masterCfg, dataHandler,
+                                                                         SignalSlotable::InputHandler(), eosHandler);
+            // Asynchronously connect to OutputChannel:
+            sigSlotPtr->connectInputChannel(input);
+
+            return true;
+        }
+
+
+        bool DeviceClient::unregisterChannelMonitor(const std::string& instanceId, const std::string& channel) {
+            const std::string channelName(instanceId + ":" + channel);
+            auto sigSlotPtr = m_signalSlotable.lock();
+
+            return (sigSlotPtr && sigSlotPtr->removeInputChannel(channelName));
+        }
+
+
         void DeviceClient::set(const std::string& instanceId, const karabo::util::Hash& values,
                                int timeoutInSeconds) {
 
