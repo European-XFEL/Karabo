@@ -147,6 +147,35 @@ namespace karabo {
                 return m_defaultValue;
             }
 
+            /**
+             * The <b>init</b> method serves for setting up an access type property that allows the element
+             * to be included in initial schema.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            virtual ListElement& init() {
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
+                return *this;
+            }
+
+            /**
+             * The <b>reconfigurable</b> method serves for setting up an access type property that allows the element
+             * to be included in initial, reconfiguration and monitoring schemas.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            virtual ListElement& reconfigurable() {
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
+                return *this;
+            }
+
+             /**
+             * Enable modification of the displayType of the element.
+             * @param displayType
+             * @return reference to the Element (to allow method's chaining)
+             */
+            ListElement& setSpecialDisplayType(const std::string& displayType) {
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, displayType);
+                return *this;
+            }
 
         protected:
 
