@@ -33,7 +33,7 @@ if 'USEMPL' in os.environ:
         def addBox(self, box):
             if self.ybox is None:
                 self.ybox = box
-                self.widget.newCurve([], [], label="Random values")
+                self.widget.new_curve([], [], label="Random values")
                 return True
             else:
                 return False
@@ -54,7 +54,7 @@ if 'USEMPL' in os.environ:
                 if self.lastxvalue is not None:
                     self.xvalues.append(self.lastxvalue)
                     self.yvalues.append(value)
-                    self.widget.updateCurve(self.xvalues, self.yvalues)
+                    self.widget.update_curve(self.xvalues, self.yvalues)
             else:
                 raise RuntimeError("unknown box")
 else:
