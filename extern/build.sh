@@ -12,8 +12,8 @@ nose py pytest pytest_runner pillow sip backports backports_abc tornado
 pyparsing dateutil pytz pexpect pyzmq markupsafe jinja2 pygments docutils
 alabaster babel snowballstemmer sphinx_rtd_theme imagesize sphinx decorator
 ipykernel ipython_genutils jupyter_core jupyter_client pickleshare wcwidth
-prompt_toolkit simplegeneric traitlets dill ipython h5py pyusb parse suds
-jsonschema ecdsa pycrypto paramiko tzlocal httplib2 pssh traits pint nbformat
+prompt_toolkit simplegeneric traitlets dill ipython pkgconfig h5py pyusb parse
+suds jsonschema ecdsa pycrypto paramiko tzlocal httplib2 pssh traits pint nbformat
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml requests
 ply psutil pycodestyle pyflakes mccabe flake8 )
 
@@ -21,7 +21,7 @@ DEPENDENCIES_DB=(eulxml eulexist existDB)
 
 DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole pyqwt5 guidata guiqwt )
 
-DEPENDENCIES_DARWIN=( wheel pyqwt5 guidata guiqwt boost openmqc hdf5 h5py
+DEPENDENCIES_DARWIN=( wheel pyqwt5 guidata guiqwt boost openmqc hdf5 pkgconfig h5py
 log4cpp cppunit parse snappy traits pint )
 
 ##############################################################################
