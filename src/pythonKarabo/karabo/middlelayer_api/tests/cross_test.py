@@ -295,7 +295,7 @@ class Tests(DeviceTest):
             self.assertEqual([-v for _, _, _, v in hist[-5:]], list(range(5)))
 
         yield from get_event_loop().instance()._ss.request(
-            "Karabo_DLManagerServer", "slotKillServer")
+            "karabo/dataLogger", "slotKillServer")
         yield from self.process.wait()
     test_history.slow = True
 
