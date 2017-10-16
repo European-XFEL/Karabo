@@ -132,6 +132,9 @@ runPythonIntegrationTests() {
     cd device_provided_scenes_test
     safeRunCommand "python3 -m unittest discover -v"
     cd ..
+    cd run_configuration_group
+    safeRunCommand "python3 -m unittest discover -v"
+    cd ..
     echo
     echo Integration tests complete
     echo
