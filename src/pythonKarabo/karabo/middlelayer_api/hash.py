@@ -798,7 +798,7 @@ class Char(Simple, Type):
         return data
 
     @classmethod
-    def fromstring(self, s):
+    def fromstring(cls, s):
         return s
 
     @classmethod
@@ -857,7 +857,7 @@ class VectorChar(Vector):
         return base64.b64encode(data).decode("ascii")
 
     @classmethod
-    def fromstring(self, s):
+    def fromstring(cls, s):
         return base64.b64decode(s)
 
     @classmethod
@@ -893,7 +893,7 @@ class ByteArray(Vector):
         return base64.b64encode(data).decode("ascii")
 
     @classmethod
-    def fromstring(self, s):
+    def fromstring(cls, s):
         return base64.b64decode(s)
 
     @classmethod
@@ -1261,7 +1261,7 @@ class VectorHash(Vector):
         return data, {}
 
     @classmethod
-    def yieldXML(self, data):
+    def yieldXML(cls, data):
         for d in data:
             yield "<KRB_Item>"
             yield from HashType.yieldXML(d)
@@ -1383,7 +1383,7 @@ class None_(Type):
         return ''
 
     @classmethod
-    def fromstring(self, s):
+    def fromstring(cls, s):
         return None
 
     @classmethod
