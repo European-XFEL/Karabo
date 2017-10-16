@@ -9,9 +9,10 @@ from karabo.bound import (
     AlarmCondition, DaqDataType, State
 )
 from .configuration_example_classes import (
-    Base, GraphicsRenderer, GraphicsRenderer1, Shape, SomeClass, TestStruct1,
-    ArrayContainer
+    Base, GraphicsRenderer, GraphicsRenderer1, GraphicsRenderer2, SomeClass,
+    TestStruct1, ArrayContainer
 )
+
 
 class  Schema_TestCase(unittest.TestCase):
     #def setUp(self):
@@ -595,6 +596,11 @@ class  Schema_TestCase(unittest.TestCase):
         assert schema.getSkipValidation("exampleKey16")
         assert schema.getSkipValidation("exampleKey17")
         assert not schema.getSkipValidation("exampleKey18")
+
+    def test_listElement(self):
+        schema = Configurator(GraphicsRenderer2).getSchema("GraphicsRenderer2")
+        self.assertEqual(schema.getDisplayType("chars"), "unitTest")
+        self.assertEqual(schema.isAccessReconfigurable("chars"), True)
 
     def test_getDisplayType(self):
         try:    
