@@ -34,12 +34,18 @@ class SystemTreeNode(HasStrictTraits):
     # Struct to keep track of all alarms related to this
     alarm_info = Instance(AlarmInfo, args=())
     monitoring = Bool(False)
-
-    # Child device counter, always 1 for device node
-    device_counter = Int(0)
+    level = Int(-1)
 
     parent = WeakRef('SystemTreeNode')
     children = List(Instance('SystemTreeNode'))
+    _visible_children = List(Instance('SystemTreeNode'))
+    clear_cache = Bool(True)
+
+    # cached current visibility
+    is_visible = Bool(True)
+
+    def _is_visible_default(self):
+        return not (self.visibility > krb_globals.GLOBAL_ACCESS_LEVEL)
 
     def child(self, node_id):
         for child in self.children:
@@ -47,14 +53,8 @@ class SystemTreeNode(HasStrictTraits):
                 return child
         return None
 
-    def get_children(self, check_counter):
-        def visible(node):
-            return not (node.visibility > krb_globals.GLOBAL_ACCESS_LEVEL or
-                        (check_counter and node.device_counter < 1))
-        return [c for c in self.children if visible(c)]
-
     def info(self):
-        level = self.level()
+        level = self.level
         if level == HOST_LEVEL:
             return {'type': NavigationItemTypes.HOST}
         elif level == SERVER_LEVEL:
@@ -69,14 +69,6 @@ class SystemTreeNode(HasStrictTraits):
             return {'type': NavigationItemTypes.DEVICE,
                     'classId': self.parent.node_id,
                     'deviceId': self.node_id}
-
-    def level(self):
-        level = -1
-        temp = self
-        while temp.parent is not None:
-            level += 1
-            temp = temp.parent
-        return level
 
     def row(self):
         if self.parent is None:
@@ -95,12 +87,15 @@ class SystemTreeNode(HasStrictTraits):
         """
         self.alarm_info.remove_alarm_type(dev_property, alarm_type)
 
-    @on_trait_change('children.device_counter')
-    def _recount(self):
-        count = 0
-        for child in self.children:
-            count += child.device_counter
-        self.device_counter = count
+    @on_trait_change('children[]')
+    def _register_clear_cache(self):
+        self.clear_cache = True
+
+    def get_visible_children(self):
+        if self.clear_cache:
+            self._visible_children = [c for c in self.children if c.is_visible]
+            self.clear_cache = False
+        return self._visible_children
 
 
 class SystemTree(HasStrictTraits):
@@ -202,7 +197,7 @@ class SystemTree(HasStrictTraits):
                           full_match=True)
         removed = False
         for node in nodes:
-            if node.level() != DEVICE_LEVEL:
+            if node.level != DEVICE_LEVEL:
                 continue  # Don't remove things which are not devices!
             with self.update_context.removal_context(node):
                 node.parent.children.remove(node)
@@ -217,7 +212,7 @@ class SystemTree(HasStrictTraits):
         server_class_keys = []
 
         for server_node in server_nodes:
-            if server_node.level() != SERVER_LEVEL:
+            if server_node.level != SERVER_LEVEL:
                 continue  # Don't remove things which are not servers!
 
             # Take care of removing all children from bottom to top
@@ -307,14 +302,16 @@ class SystemTree(HasStrictTraits):
             host_node = self.root.child(host)
             if host_node is None:
                 host_node = SystemTreeNode(node_id=host, path=host,
-                                           parent=self.root)
+                                           parent=self.root,
+                                           level=HOST_LEVEL)
                 self._append_child_node(self.root, host_node)
 
             # Create node for server
             server_node = host_node.child(server_id)
             if server_node is None:
                 server_node = SystemTreeNode(node_id=server_id,
-                                             path=server_id, parent=host_node)
+                                             path=server_id, parent=host_node,
+                                             level=SERVER_LEVEL)
                 self._append_child_node(host_node, server_node)
             server_node.visibility = visibility
             server_node.attributes = attrs
@@ -349,7 +346,8 @@ class SystemTree(HasStrictTraits):
             host_node = self.root.child(host)
             if host_node is None:
                 host_node = SystemTreeNode(node_id=host, path=host,
-                                           parent=self.root)
+                                           parent=self.root,
+                                           level=HOST_LEVEL)
                 self._append_child_node(self.root, host_node)
 
             # Server node
@@ -358,7 +356,8 @@ class SystemTree(HasStrictTraits):
                 if server_id == "__none__":
                     server_node = SystemTreeNode(node_id=server_id,
                                                  path=server_id,
-                                                 parent=host_node)
+                                                 parent=host_node,
+                                                 level=SERVER_LEVEL)
                     self._append_child_node(host_node, server_node)
                 else:
                     continue
@@ -369,7 +368,8 @@ class SystemTree(HasStrictTraits):
                 if server_id == "__none__" or device_type == 'macro':
                     path = "{}.{}".format(server_id, class_id)
                     class_node = SystemTreeNode(node_id=class_id, path=path,
-                                                parent=server_node)
+                                                parent=server_node,
+                                                level=CLASS_LEVEL)
                     self._append_child_node(server_node, class_node)
                 else:
                     # XXX: a fix to see running devices - the actual bug lies
@@ -383,7 +383,7 @@ class SystemTree(HasStrictTraits):
             if device_node is None:
                 device_node = SystemTreeNode(node_id=device_id, path=device_id,
                                              parent=class_node,
-                                             device_counter=1)
+                                             level=DEVICE_LEVEL)
                 self._append_child_node(class_node, device_node)
                 device_node.monitoring = False
                 # new nodes should be returned
@@ -402,7 +402,8 @@ class SystemTree(HasStrictTraits):
             server_id = server_node.node_id
             path = '{}.{}'.format(server_id, class_id)
             class_node = SystemTreeNode(node_id=class_id,
-                                        path=path, parent=server_node)
+                                        path=path, parent=server_node,
+                                        level=CLASS_LEVEL)
             self._append_child_node(server_node, class_node)
         class_node.visibility = AccessLevel(visibility)
         return class_node

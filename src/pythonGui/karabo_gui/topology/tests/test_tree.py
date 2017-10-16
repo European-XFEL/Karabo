@@ -23,21 +23,27 @@ def test_tree_node_basics():
         children=[]
     )
 
+    # default global accesslevel is OBSERVER
+    empty2 = SystemTreeNode(
+        visibility=AccessLevel.OBSERVER
+    )
+
     assert empty.child('a_child') is None
-    assert empty.level() == -1
     assert empty.info() is None
     assert empty.row() == 0
+    assert empty.is_visible is False
+    assert empty2.is_visible is True
 
 
 def test_tree_node_levels():
     root = SystemTreeNode()
-    level_0 = SystemTreeNode(node_id='level_0', parent=root)
+    level_0 = SystemTreeNode(node_id='level_0', parent=root, level=0)
     root.children.append(level_0)
-    level_1 = SystemTreeNode(node_id='level_1', parent=level_0)
+    level_1 = SystemTreeNode(node_id='level_1', parent=level_0, level=1)
     level_0.children.append(level_1)
-    level_2 = SystemTreeNode(node_id='level_2', parent=level_1)
+    level_2 = SystemTreeNode(node_id='level_2', parent=level_1, level=2)
     level_1.children.append(level_2)
-    level_3 = SystemTreeNode(node_id='level_3', parent=level_2)
+    level_3 = SystemTreeNode(node_id='level_3', parent=level_2, level=3)
     level_2.children.append(level_3)
 
     assert root.child('level_0') is level_0
