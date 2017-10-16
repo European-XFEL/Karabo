@@ -516,10 +516,14 @@ namespace karabo {
 
             // un-subscribe from producer
             auto& connectionChannelPair = m_openConnections[signalConnectionString];
-            // Safety check - connection should always exist if signalInstanceId in m_connectedInstances
-            if (!connectionChannelPair.second) return;
-
-            connectionChannelPair.second->write(slotInstanceId + " UNSUBSCRIBE");
+            auto& channel = connectionChannelPair.second;
+            if (channel && channel->isOpen()) {
+                // Safety check - connection should always exist if signalInstanceId in m_connectedInstances
+                channel->write(slotInstanceId + " UNSUBSCRIBE");
+            } else {
+                KARABO_LOG_FRAMEWORK_WARN << "Channel to unsubscribe not open (connection string is '"
+                        << signalConnectionString << "').";
+            }
 
             // Remove handler for the slotInstanceId
             SlotInstanceIds& slotInstanceIds = itConnectStringSlotIds->second.second;
@@ -536,8 +540,12 @@ namespace karabo {
             }
             if (!found) {
                 KARABO_LOG_FRAMEWORK_INFO << "Close TCP channel/connection to: '" << signalConnectionString << "'.";
-                connectionChannelPair.second->close();
-                connectionChannelPair.first->stop();
+                if (channel) channel->close();
+                if (connectionChannelPair.first) {
+                    connectionChannelPair.first->stop();
+                } else {
+                    KARABO_LOG_FRAMEWORK_WARN << "No connection to '" << signalConnectionString << "' to close!";
+                }
                 m_openConnections.erase(signalConnectionString);
             }
 
