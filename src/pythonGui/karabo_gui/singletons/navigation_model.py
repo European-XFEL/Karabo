@@ -12,7 +12,7 @@ from weakref import WeakValueDictionary
 
 
 from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
-                          Qt, pyqtSignal, pyqtSlot)
+                          Qt, pyqtSignal)
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 from traits.api import HasStrictTraits, WeakRef
 
@@ -118,8 +118,6 @@ class NavigationTreeModel(QAbstractItemModel):
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
-        self.showDeviceOnly = False
-
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary for self due to the fact that the singleton mediator
         # object and `self` are being destroyed when the GUI exists
@@ -135,7 +133,7 @@ class NavigationTreeModel(QAbstractItemModel):
         elif sender is KaraboEventSender.ShowDevice:
             self.selectNodeById(data.get('deviceId'))
         elif sender is KaraboEventSender.AccessLevelChanged:
-            self._needs_update()
+            self._clear_tree_cache()
         return False
 
     def index_ref(self, model_index):
@@ -225,7 +223,7 @@ class NavigationTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return QModelIndex()
 
-        children = parent_node.get_children(check_counter=self.showDeviceOnly)
+        children = parent_node.get_visible_children()
         return self.createIndex(row, column, children[row])
 
     def parent(self, index):
@@ -262,7 +260,7 @@ class NavigationTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return 0
 
-        return len(parent_node.get_children(check_counter=self.showDeviceOnly))
+        return len(parent_node.get_visible_children())
 
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -277,7 +275,7 @@ class NavigationTreeModel(QAbstractItemModel):
             return
 
         column = index.column()
-        hierarchyLevel = node.level()
+        hierarchyLevel = node.level
 
         if column == 0 and role == Qt.DisplayRole:
             return node.node_id
@@ -315,7 +313,7 @@ class NavigationTreeModel(QAbstractItemModel):
             return Qt.NoItemFlags
 
         ret = Qt.ItemIsEnabled | Qt.ItemIsSelectable
-        if node.level() > 0:
+        if node.level > 0:
             ret |= Qt.ItemIsDragEnabled
         return ret
 
@@ -369,7 +367,7 @@ class NavigationTreeModel(QAbstractItemModel):
             node = self.index_ref(index)
             if node is None:
                 return
-            level = node.level()
+            level = node.level
 
         if level == 0:
             conf = None
@@ -407,7 +405,10 @@ class NavigationTreeModel(QAbstractItemModel):
         """
         self.layoutChanged.emit()
 
-    @pyqtSlot(bool)
-    def onDeviceOnly(self, checked):
-        self.showDeviceOnly = checked
+    def _clear_tree_cache(self):
+        def visitor(node):
+            node.is_visible = not (node.visibility >
+                                   krb_globals.GLOBAL_ACCESS_LEVEL)
+            node.clear_cache = True
+        self.tree.visit(visitor)
         self._needs_update()
