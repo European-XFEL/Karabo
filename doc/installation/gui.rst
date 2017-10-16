@@ -154,9 +154,9 @@ Due to `this issue <http://bugs.python.org/issue21354>`_
 the end ('python not found'), the menu entry and shortcut are not created. To
 start karaboGUI you need to navigate to::
 
- [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages\karabo_gui 
+ [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages\karabo_gui\programs 
 
-Right-click on *karabo-gui.py* and  select *Send to Desktop*. In this way, you have
+Right-click on *gui_runner.py* and  select *Send to Desktop*. In this way, you have
 a shortcut on your *Desktop* and now you can easily start karaboGui via
 mouse-double-click. To remove karaboGui, you need to use WinPython package
 manager: Select karabo and karaboGui and press Uninstall packages.
