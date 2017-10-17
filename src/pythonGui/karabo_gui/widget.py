@@ -66,6 +66,11 @@ class Widget(Registry, QObject):
         False, as multi-box support has to be programmed by the user."""
         return False
 
+    def destroy(self):
+        """Implement in derived classes if any signal/slot connections need
+        to be cleaned up at destruction time.
+        """
+
     @pyqtSlot(object, object, object)
     @pyqtSlot()
     def updateStateSlot(self, box=None, value=None, ts=None):
@@ -152,6 +157,12 @@ class EditableWidget(Widget):
     def __init__(self, box):
         Widget.__init__(self, box)
         box.configuration.boxvalue.state.signalUpdateComponent.connect(
+            self.updateStateSlot)
+
+    def destroy(self):
+        """Disconnect a box signal connection"""
+        box = self.boxes[0]
+        box.configuration.boxvalue.state.signalUpdateComponent.disconnect(
             self.updateStateSlot)
 
     @property

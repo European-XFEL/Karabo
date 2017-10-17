@@ -125,6 +125,11 @@ class Curve(QObject):
         box.signalHistoricData.connect(self.onHistoricData)
         box.visibilityChanged.connect(self.onVisibilityChanged)
 
+    def destroy(self):
+        """Clean up box signal connections"""
+        self.box.signalHistoricData.disconnect(self.onHistoricData)
+        self.box.visibilityChanged.disconnect(self.onVisibilityChanged)
+
     def addPoint(self, value, timestamp):
         # Fill the generations data, possibly propagating averaged values
         point = (timestamp, value)
@@ -408,10 +413,15 @@ class DisplayTrendline(DisplayWidget):
                                round(time.time() - 1), round(time.time() + 10))
         self.plot.setAxisLabelAlignment(QwtPlot.xBottom,
                                         Qt.AlignRight | Qt.AlignBottom)
-        self.destroyed.connect(self.destroy)
         self._curve_count = 0
         self.legend = None
         self.addBox(box)
+
+    def destroy(self):
+        """Clean up box signal connections"""
+        for box, curve in self.curves.items():
+            #box.removeVisible()
+            curve.destroy()
 
     def _initUI(self, parent):
         """ Setup all widgets correctly.
@@ -539,20 +549,7 @@ class DisplayTrendline(DisplayWidget):
             self.plot.add_item(self.legend)
         return True
 
-    @pyqtSlot(object)
-    def destroy(self):
-        for box in self.curves:
-            box.removeVisible()
-
     value = None
-
-    def removeKey(self, key):
-        # XXX: This appears to be dead code!
-        # If it's not, there will be problems keeping data models synchronized
-        # with the state of this widget (specifically, the refactored scene).
-        self.plot.remove_item(self.curves[key])
-        del self.curves[key]
-        key.removeVisible()
 
     @property
     def boxes(self):
