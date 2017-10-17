@@ -109,7 +109,7 @@ class NavigationTreeView(QTreeView):
         if node is None:
             return NavigationItemTypes.UNDEFINED
 
-        level = node.level()
+        level = node.level
         if level == 0:
             return NavigationItemTypes.HOST
         elif level == 1:
