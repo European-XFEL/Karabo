@@ -64,7 +64,7 @@ runIntegrationTests() {
         source $scriptDir/karabo/activate
     fi
 
-    local testNames="AlarmService_ DeviceServerRunner_ Device_ LockTest_ PipelinedProcessing_ PropertyTest_ RunTimeSchemaAttributes_ SceneProvider_ Timing_"
+    local testNames="AlarmService_ Device_ LockTest_ PipelinedProcessing_ PropertyTest_ RunTimeSchemaAttributes_ SceneProvider_ Timing_"
     local testDir=$scriptDir/build/netbeans/integrationTests
 
     echo
@@ -130,6 +130,9 @@ runPythonIntegrationTests() {
     safeRunCommand "python3 -m unittest discover -v"
     cd ..
     cd device_provided_scenes_test
+    safeRunCommand "python3 -m unittest discover -v"
+    cd ..
+    cd run_configuration_group
     safeRunCommand "python3 -m unittest discover -v"
     cd ..
     echo
