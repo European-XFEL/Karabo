@@ -3,15 +3,81 @@
 # Created on September 27, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from collections import OrderedDict
+
 from karabo.bound import (
-    PythonDevice, Hash, HashMergePolicy, Schema, State,
-    EXPERT, KARABO_CLASSINFO,
-    BOOL_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STRING_ELEMENT,
-    TABLE_ELEMENT
+    Hash, HashMergePolicy, PythonDevice, Schema, State, VectorHash,
+    EXPERT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
+    BOOL_ELEMENT, LIST_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
+    STRING_ELEMENT, TABLE_ELEMENT
 )
 from .run_configuration_group import RunControlDataSource
 
-KARABO_SCHEMA_ROW_SCHEMA = 'rowSchema'
+
+@KARABO_CONFIGURATION_BASE_CLASS
+@KARABO_CLASSINFO('_RunConfiguratorGroup', '2.2')
+class _RunConfiguratorGroup(object):
+    """The description of a single run configurator group
+    NOTE: This is an implementation detail for use with LIST_ELEMENT.
+    """
+    @staticmethod
+    def expectedParameters(expected):
+        sourceRow = Schema()
+        (
+            STRING_ELEMENT(expected).key('groupId')
+            .displayedName('Group Name')
+            .description('Run configuration group name.')
+            .assignmentMandatory()
+            .reconfigurable().commit(),
+
+            STRING_ELEMENT(expected).key('description')
+            .displayedName('Description')
+            .description('Run configuration group description.')
+            .assignmentOptional().defaultValue('')
+            .reconfigurable().commit(),
+
+            BOOL_ELEMENT(expected).key('use')
+            .displayedName('Use')
+            .description('Run configuration group usage flag.')
+            .assignmentOptional().defaultValue(False)
+            .reconfigurable().commit(),
+
+            # Sub-schema of the 'sources' table
+            STRING_ELEMENT(sourceRow).key('source')
+            .displayedName('Source')
+            .assignmentOptional().defaultValue('Source')
+            .reconfigurable().commit(),
+
+            STRING_ELEMENT(sourceRow).key('type')
+            .displayedName('Type')
+            .options('control,instrument')
+            .assignmentOptional().defaultValue('control')
+            .reconfigurable().commit(),
+
+            STRING_ELEMENT(sourceRow).key('behavior')
+            .displayedName('Behavior')
+            .options('init,read-only,record-all')
+            .assignmentOptional().defaultValue('record-all')
+            .reconfigurable().commit(),
+
+            BOOL_ELEMENT(sourceRow).key('monitored')
+            .displayedName('Monitor out')
+            .assignmentOptional().defaultValue(False)
+            .reconfigurable().commit(),
+
+            STRING_ELEMENT(sourceRow).key('access')
+            .displayedName('Access')
+            .options('expert,user')
+            .assignmentOptional().defaultValue('expert')
+            .reconfigurable().commit(),
+
+            TABLE_ELEMENT(expected).key('sources')
+            .displayedName('Compiled source List')
+            .description('Overall list of data sources and their attributes')
+            .setColumns(sourceRow)
+            .assignmentOptional().defaultValue([])
+            .commit(),
+        )
 
 
 @KARABO_CLASSINFO('RunConfigurator', '2.2')
@@ -25,51 +91,26 @@ class RunConfigurator(PythonDevice):
     def expectedParameters(expected):
         """Description of device parameters
         """
+        availGroupsRow = Schema()
         (
-            OVERWRITE_ELEMENT(expected).key('state')
-            .setNewOptions(State.INIT, State.NORMAL, State.ERROR)
-            .setNewDefaultValue(State.INIT)
-            .commit(),
-
-            OVERWRITE_ELEMENT(expected).key('visibility')
-            .setNewDefaultValue(EXPERT)
-            .commit(),
-
-            SLOT_ELEMENT(expected).key('buildConfigurationInUse')
-            .displayedName('Push to DAQ')
-            .description('Push current configuration structure to the DAQ Run '
-                         'controller.')
-            .allowedStates(State.NORMAL)
-            .commit(),
-        )
-
-        availRow = Schema()
-        (
-            STRING_ELEMENT(availRow).key('groupId')
+            STRING_ELEMENT(availGroupsRow).key('groupId')
             .displayedName('Group')
             .description('Run configuration group name.')
             .assignmentMandatory()
             .reconfigurable()
             .commit(),
 
-            STRING_ELEMENT(availRow).key('description')
+            STRING_ELEMENT(availGroupsRow).key('description')
             .displayedName('Description')
             .description('Run configuration group description.')
             .assignmentOptional().defaultValue('')
             .reconfigurable()
             .commit(),
 
-            BOOL_ELEMENT(availRow).key('use')
+            BOOL_ELEMENT(availGroupsRow).key('use')
             .displayedName('Use')
             .description('Run configuration group usage flag.')
             .assignmentOptional().defaultValue(False)
-            .reconfigurable()
-            .commit(),
-
-            TABLE_ELEMENT(expected).key('availableGroups')
-            .displayedName('Available group configurations')
-            .setColumns(availRow)
-            .assignmentOptional().defaultValue([])
             .reconfigurable()
             .commit(),
         )
@@ -82,6 +123,39 @@ class RunConfigurator(PythonDevice):
             .assignmentOptional().defaultValue(True)
             .reconfigurable()
             .commit(),
+        )
+
+        (
+            OVERWRITE_ELEMENT(expected).key('state')
+            .setNewOptions(State.INIT, State.NORMAL, State.ERROR)
+            .setNewDefaultValue(State.INIT).commit(),
+
+            OVERWRITE_ELEMENT(expected).key('visibility')
+            .setNewDefaultValue(EXPERT)
+            .commit(),
+
+            SLOT_ELEMENT(expected).key('buildConfigurationInUse')
+            .displayedName('Push to DAQ')
+            .description('Push current configuration structure to the DAQ Run '
+                         'controller.')
+            .allowedStates(State.NORMAL)
+            .commit(),
+
+            LIST_ELEMENT(expected).key('configurations')
+            .displayedName('Configurations')
+            .description('All configuration groups and their sources')
+            .appendNodesOfConfigurationBase(_RunConfiguratorGroup)
+            # This signals to the GUI what type of widget to use
+            .setSpecialDisplayType('RunConfigurator')
+            .assignmentOptional().defaultValue([])
+            .reconfigurable()
+            .commit(),
+
+            TABLE_ELEMENT(expected).key('availableGroups')
+            .displayedName('Available group configurations')
+            .setColumns(availGroupsRow)
+            .assignmentOptional().defaultValue([])
+            .reconfigurable().commit(),
 
             TABLE_ELEMENT(expected).key('sources')
             .displayedName('Compiled source List')
@@ -108,57 +182,44 @@ class RunConfigurator(PythonDevice):
         # system topology (and `_deviceGoneHandler` for the ones leaving)
         self.remote().enableInstanceTracking()
 
-        self._configurations = {}
+        self._runConfigGroups = OrderedDict()
         self._groupToDevice = {}
 
         # Ready to go!
         self.updateState(State.NORMAL)
 
     def preReconfigure(self, incomingReconfiguration):
-        self.log.DEBUG('============ preReconfigure  ===============')
-        key = 'availableGroups'
-        availableGroups = incomingReconfiguration.get(key, default=None)
-        if availableGroups is None:
-            return
+        """Watch for 'availableGroups' and 'configurations' in incoming
+        device configurations.
+        """
+        needs_update = False
 
-        if isinstance(availableGroups, list):
-            schema = self.getFullSchema()
-            if (schema.hasDisplayType(key) and
-                    schema.getDisplayType(key) == 'Table'):
-                rowSchema = schema.getParameterHash().getAttribute(
-                        key, KARABO_SCHEMA_ROW_SCHEMA)
-                self._reconfigureAvailableGroups(availableGroups, rowSchema)
-                self._updateCompiledSourceList()
+        groups = incomingReconfiguration.get('availableGroups', default=None)
+        if groups is not None and isinstance(groups, VectorHash):
+            self._updateAvailableGroups(groups)
+            incomingReconfiguration.erase('availableGroups')
+            needs_update = True
 
-        self.log.DEBUG('============  preReconfigure end ============\n')
+        configs = incomingReconfiguration.get('configurations', default=None)
+        if configs is not None and isinstance(configs, VectorHash):
+            self._updateConfigurations(configs)
+            incomingReconfiguration.erase('configurations')
+            needs_update = True
 
-    def postReconfigure(self):
-        self.log.DEBUG('************ postReconfigure ***************')
-        self.log.DEBUG('************ availableGroups ***************\n')
-        groups = self.get('availableGroups')
-        for h in groups:
-            self.log.DEBUG('...\n{}'.format(h))
+        if needs_update:
+            self._updateDependentProperties()
 
-        self.log.DEBUG('************ sources         ***************\n')
-
-        sources = self.get('sources')
-        for h in sources:
-            self.log.DEBUG('...\n{}'.format(h))
-
-        self._printConfig()
-
-        self.log.DEBUG('******************************************\n\n\n')
+    # ----------------------------
+    # SLOT methods
 
     def buildConfigurationInUse(self):
-        self.log.DEBUG('buildConfigurationInUse()')
-
         result = Hash()
-        for group in self._configurations.values():
+        for group in self._runConfigGroups.values():
             instance_id = group.get('id')
-            self._buildDataSourceProperties(
-                group.get('expert'), instance_id, True, False, result)
-            self._buildDataSourceProperties(
-                group.get('user'), instance_id, False, True, result)
+            self._gatherSourceProperties(group.get('expert'), instance_id,
+                                         True, False, result)
+            self._gatherSourceProperties(group.get('user'), instance_id,
+                                         False, True, result)
         configuration = Hash('configuration', result)
 
         self.log.INFO('Current Run Configuration is ...\n{}'
@@ -168,20 +229,19 @@ class RunConfigurator(PythonDevice):
                       configuration, self.getInstanceId())
 
     def updateAvailableGroups(self):
-        g = []
-        for group in self._configurations.values():
-            h = Hash()
-            h.set('groupId', group.get('id'))
-            h.set('description', group.get('description', default=''))
-            h.set('use', group.get('use', default=False))
-            g.append(h)
-
-        self.set('availableGroups', g)
+        """Do nothing. This SLOT is deprecated.
+        """
+        pass
 
     def slotGetSourcesInGroup(self, group):
-        result = Hash('group', group, 'instanceId', self.getInstanceId())
-        self._makeGroupSourceConfig(result, self._groupToDevice.get(group, ''))
+        device_id = self._groupToDevice.get(group, '')
+        result = Hash('group', group,
+                      'instanceId', self.getInstanceId(),
+                      'sources', self._getGroupSources(device_id))
         self.reply(result)
+
+    # ----------------------------
+    # Callback methods
 
     def _deviceGoneHandler(self, instanceId, instanceInfo):
         inst_type = instanceInfo.get('type', default='unknown')
@@ -195,9 +255,9 @@ class RunConfigurator(PythonDevice):
 
         self.remote().unregisterDeviceMonitor(instanceId)
 
-        if instanceId in self._configurations:
-            del self._configurations[instanceId]
-            self.updateAvailableGroups()
+        if instanceId in self._runConfigGroups:
+            del self._runConfigGroups[instanceId]
+            self._updateDependentProperties()
 
     def _newDeviceHandler(self, topologyEntry):
         inst_type = topologyEntry.getKeys()[0]  # fails if empty...
@@ -215,82 +275,27 @@ class RunConfigurator(PythonDevice):
             return
 
         # Add new configuration group into the map
-        self._configurations[instance_id] = Hash()
+        self._runConfigGroups[instance_id] = Hash()
 
         # register monitor to device
         self.remote().registerDeviceMonitor(instance_id,
-                                            self.deviceUpdatedHandler)
+                                            self._deviceUpdatedHandler)
 
-    def deviceUpdatedHandler(self, deviceId, update):
+    def _deviceUpdatedHandler(self, deviceId, update):
         group = update.get('group', default=None)
         if group is not None:
-            self._updateGroupConfiguration(deviceId, group)
-            self.updateAvailableGroups()
-            self._updateCompiledSourceList()
+            self._updateRunConfiguratorGroupInstance(deviceId, group)
+            self._updateDependentProperties()
             # now notify clients
             result = Hash('group', group['id'],
-                          'instanceId', self.getInstanceId())
-            self._makeGroupSourceConfig(result, deviceId)
+                          'instanceId', self.getInstanceId(),
+                          'sources', self._getGroupSources(deviceId))
             self._ss.emit('signalGroupSourceChanged', result, deviceId)
 
-    def _reconfigureAvailableGroups(self, groups, schema):
-        for group in groups:
-            group_id = group.get('groupId')
-            device_id = self._groupToDevice[group_id]
-            self.log.DEBUG('Updating group {} on device {}'
-                           ''.format(group_id, device_id))
-            existing = self._configurations.get(group_id)
-            if existing is not None:
-                use = group.get('use')
-                existing.set('use', use)
-                for src_type in ('expert', 'user'):
-                    sources = existing.get(src_type, default=[])
-                    for src in sources:
-                        src.set('use', use)
+    # ----------------------------
+    # Private methods
 
-    def _updateGroupConfiguration(self, deviceId, update):
-        group = self._configurations[deviceId]
-        if group.empty() or update.empty():
-            # remote().get(..) is potentially blocking and should generally be
-            # avoided.
-            # Here, however, it will only block if `deviceId` sends an update
-            # before the configuration/schema requests triggered by
-            # remote().registerDeviceMonitor(..) have not yet been answered.
-            group = self.remote().get(deviceId, 'group')
-            self._configurations[deviceId] = group
-            group.set('use', False)
-        else:
-            use = group.get('use')
-            group.merge(update)
-            group.set('use', use)
-
-        self._groupToDevice[group.get('id')] = deviceId
-        for src_type in ('expert', 'user'):
-            if not group.has(src_type):
-                group.set(src_type, [])
-            else:
-                for s in group.get(src_type):
-                    s.set('use', False)
-
-        self.log.DEBUG('Updated RunConfigurationGroup --> instanceId: {}'
-                       ''.format(deviceId))
-
-    def _updateCompiledSourceList(self):
-        sources = {}
-        for name, g in self._configurations.items():
-            use = g.get('use')
-
-            self.log.DEBUG('updateCompiledSourceList()  cursor : {}, use : {}'
-                           ''.format(name, use))
-
-            expert = g.get('expert')
-            self._createSource(expert, sources, use)
-            user = g.get('user')
-            self._createSource(user, sources, use)
-
-        self.set('sources', list(sources.values()))
-
-    def _buildDataSourceProperties(self, table, groupId, expert, user, result):
+    def _gatherSourceProperties(self, table, groupId, expert, user, result):
         for group in table:
             source_id = group.get('source')
             pipeline = (group.getAttribute('source', 'pipeline')
@@ -328,39 +333,9 @@ class RunConfigurator(PythonDevice):
             properties.setAttribute(source_id, 'monitorOut', monitorOut)
             result.merge(properties, HashMergePolicy.REPLACE_ATTRIBUTES)
 
-    def _createSource(self, data, sources, use):
-        for d in data:
-            d.set('use', use)
-            if not use:
-                continue
-
-            src = d.get('source')
-            pipeline = (d.getAttribute('source', 'pipeline')
-                        if d.hasAttribute('source', 'pipeline') else False)
-            inst_type = d.get('type')
-            behavior = d.get('behavior')
-            h = Hash('source', src,
-                     'type', inst_type,
-                     'behavior', behavior,
-                     'monitored', d.get('monitored'),
-                     'use', use)
-            h.setAttribute('source', 'pipeline', pipeline)
-
-            if src in sources:
-                existing = sources[src]
-                if existing.get('monitored'):
-                    h.set('monitored', True)
-
-                exbehavior = existing.get('behavior')
-                if (behavior == 'init' or
-                        (behavior == 'read-only' and exbehavior != 'init')):
-                    h.set('behavior', exbehavior)
-
-            sources[src] = h
-
-    def _makeGroupSourceConfig(self, result, device_id):
+    def _getGroupSources(self, device_id):
         sources = []
-        group = self._configurations.get(device_id)
+        group = self._runConfigGroups.get(device_id)
         if group is not None:
             for src_type in ('expert', 'user'):
                 src_group = group.get(src_type, default=[])
@@ -368,23 +343,139 @@ class RunConfigurator(PythonDevice):
                     src.erase('use')
                     src.set('access', src_type)
                     sources.append(src)
+        return sources
 
-        result.set('sources', sources)
+    def _updateAvailableGroups(self, groups):
+        """Update the `_runConfigGroups` dict when the `availableGroups`
+        property is modified.
+        """
+        for group in groups:
+            use = group.get('use')
+            group_id = group.get('groupId')
+            device_id = self._groupToDevice[group_id]
+            self.log.DEBUG('Updating group {} on device {}'
+                           ''.format(group_id, device_id))
 
-    def _printConfig(self):
-        self.log.DEBUG('\n\nConfigurations are ...\n')
-        for deviceId, group in self._configurations.items():
-            desc = (group.get('description') if group.has('group') else '')
-            self.log.DEBUG('deviceId: {}, groupId: {}, desc: {}, use: {}'
-                           ''.format(deviceId, group.get('id'), desc,
-                                     group.get('use')))
+            existing = self._runConfigGroups.get(device_id)
+            if existing is not None:
+                existing.set('use', use)
+                for src_type in ('expert', 'user'):
+                    sources = existing.get(src_type, default=[])
+                    for src in sources:
+                        src.set('use', use)
 
-            for src_type, src_name in (('expert', 'Expert'), ('user', 'User')):
-                self.log.DEBUG('\t' + src_name)
-                sources = group.get(src_type)
-                for src in sources:
-                    self.log.DEBUG('\tsource: {}, type: {}, behavior: {}'
-                                   ', monitored: {}, use: {}'.format(
-                                       src.get('source'), src.get('type'),
-                                       src.get('behavior'),
-                                       src.get('monitored'), src.get('use')))
+    def _updateConfigurations(self, configs):
+        """Update the `_runConfigGroups` dict when the `configurations`
+        property is modified.
+        """
+        for group in configs:
+            use = group.get('_RunConfiguratorGroup.use')
+            group_id = group.get('_RunConfiguratorGroup.groupId')
+            device_id = self._groupToDevice[group_id]
+            existing = self._runConfigGroups.get(device_id)
+            if existing is not None:
+                existing.set('use', use)
+                for src_type in ('expert', 'user'):
+                    sources = existing.get(src_type, default=[])
+                    for src in sources:
+                        src.set('use', use)
+
+    def _updateDependentProperties(self):
+        """Update the `configurations`, `availableGroups`, and `sources`
+        properties after an action modifies the `_runConfigGroups` dict.
+        """
+        h = Hash()
+        configurations, available_groups, sources = [], [], {}
+
+        source_attrs = ('source', 'type', 'behavior', 'monitored')
+        for name, group in self._runConfigGroups.items():
+            group_id = group.get('id')
+            description = group.get('description', default='')
+            use = group.get('use', default=False)
+
+            # `configurations`
+            grp_sources = []
+            for src_type in ('expert', 'user'):
+                src_group = group.get(src_type, default=[])
+                for src in src_group:
+                    src_config = Hash('access', src_type)
+                    [src_config.set(a, src.get(a)) for a in source_attrs]
+                    grp_sources.append(src_config)
+            grp_config = Hash('groupId', group_id, 'use', use,
+                              'description', description,
+                              'sources', grp_sources)
+            configurations.append(Hash('_RunConfiguratorGroup', grp_config))
+
+            # `availableGroups`
+            available_groups.append(Hash('groupId', group_id,
+                                         'description', description,
+                                         'use', use))
+
+            # `sources`
+            _creatSource(group.get('expert'), sources, use)
+            _creatSource(group.get('user'), sources, use)
+
+        h.set('configurations', configurations)
+        h.set('availableGroups', available_groups)
+        h.set('sources', list(sources.values()))
+        self.set(h)
+
+    def _updateRunConfiguratorGroupInstance(self, deviceId, update):
+        """Update the local configuration Hash stored for a
+        RunConfigurationGroup device instance.
+        """
+        group = self._runConfigGroups[deviceId]
+        if group.empty() or update.empty():
+            # remote().get(..) is potentially blocking and should generally be
+            # avoided.
+            # Here, however, it will only block if `deviceId` sends an update
+            # before the configuration/schema requests triggered by
+            # remote().registerDeviceMonitor(..) have not yet been answered.
+            group = self.remote().get(deviceId, 'group')
+            self._runConfigGroups[deviceId] = group
+            group.set('use', False)
+        else:
+            use = group.get('use')
+            group.merge(update)
+            group.set('use', use)
+
+        self._groupToDevice[group.get('id')] = deviceId
+        for src_type in ('expert', 'user'):
+            if not group.has(src_type):
+                group.set(src_type, [])
+            else:
+                for s in group.get(src_type):
+                    s.set('use', False)
+
+        self.log.DEBUG('Updated RunConfigurationGroup --> instanceId: {}'
+                       ''.format(deviceId))
+
+
+def _creatSource(sources, existing_sources, use):
+    for s in sources:
+        s.set('use', use)
+        if not use:
+            continue
+
+        src_id = s.get('source')
+        pipeline = (s.getAttribute('source', 'pipeline')
+                    if s.hasAttribute('source', 'pipeline') else False)
+        behavior = s.get('behavior')
+        h = Hash('source', src_id,
+                 'type', s.get('type'),
+                 'behavior', behavior,
+                 'monitored', s.get('monitored'),
+                 'use', use)
+        h.setAttribute('source', 'pipeline', pipeline)
+
+        if src_id in existing_sources:
+            existing = existing_sources[src_id]
+            if existing.get('monitored'):
+                h.set('monitored', True)
+
+            exbehavior = existing.get('behavior')
+            if (behavior == 'init' or
+                    (behavior == 'read-only' and exbehavior != 'init')):
+                h.set('behavior', exbehavior)
+
+        existing_sources[src_id] = h
