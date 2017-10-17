@@ -30,6 +30,12 @@ class DisplayCommand(DisplayWidget):
         self.actions = []
         self.addBox(box)
 
+    def destroy(self):
+        """Clean up box signal connections"""
+        for box in self.boxes:
+            statebox = box.configuration.boxvalue.state
+            statebox.signalUpdateComponent.disconnect(self.update)
+
     def showDialog(self):
         dialog = SelectionDialog(self.actions, None)
         self.actions = dialog.exec()
