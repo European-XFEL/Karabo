@@ -40,9 +40,17 @@ def _get_child_names(descriptor):
     return get_editable_attributes(descriptor)
 
 
-def _units_repr(box, value):
-    """Return a user-friendly value with units displayed.
+def _friendly_repr(box, value):
+    """Return a user-friendly value, convert base or with units displayed.
     """
+    converters = {'hex': hex, 'oct': oct, 'bin': bin}
+    base = box.descriptor.displayType
+    if base in converters:
+        try:
+            return converters[base](value)
+        except TypeError:
+            # value could be an empty string
+            return value
     units = box.unitLabel()
     value = str(value)
     return value + (' ' + units if units and value else '')
@@ -521,7 +529,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif role == Qt.DecorationRole:
                 return get_icon(box.descriptor)
         elif column == 1 and role == Qt.DisplayRole:
-            return _units_repr(box, get_box_value(index, box))
+            return _friendly_repr(box, get_box_value(index, box))
         elif column == 2:
             if role == Qt.BackgroundRole:
                 conf = box.configuration
@@ -535,7 +543,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif role in (Qt.DisplayRole, Qt.EditRole):
                 value = get_box_value(index, box, is_edit_col=True)
                 if role == Qt.DisplayRole:
-                    return _units_repr(box, value)
+                    return _friendly_repr(box, value)
                 elif role == Qt.EditRole:
                     return value
 
