@@ -120,6 +120,10 @@ class BaseWidgetContainer(QWidget):
         for signal, receivers in self._connected_signals.items():
             for recvr in receivers:
                 signal.disconnect(recvr)
+
+        # Tell the widget object to destroy itself
+        self.old_style_widget.destroy()
+
         self._connected_signals.clear()
         self._configuration_connections.clear()
         self._pending_edits.clear()
