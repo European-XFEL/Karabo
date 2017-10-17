@@ -1,6 +1,9 @@
 #include <sstream>
 #include <string>
 #include <unordered_set>
+#include <unordered_map>
+#include <tuple>
+#include <list>
 
 #include <boost/asio.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -121,8 +124,7 @@ namespace karabo {
             void storeTcpConnectionInfo(const std::string& signalConnectionString,
                                         const karabo::net::Connection::Pointer& connection,
                                         const karabo::net::Channel::Pointer& channel) {
-                if (m_openConnections.find(signalConnectionString) == m_openConnections.end())
-                    m_openConnections[signalConnectionString] = std::make_pair(connection, channel);
+                m_openConnections[signalConnectionString] = std::make_pair(connection, channel);
             }
 
             /** To be called under protection of 'boost::mutex::scoped_lock lock(m_connectedInstancesMutex);'.
@@ -145,6 +147,9 @@ namespace karabo {
             OpenConnections m_openConnections; // key: connection_string 
             ConnectedInstances m_connectedInstances;
             boost::mutex m_connectedInstancesMutex;
+            // key is signalConnectionString, value is list of tuple(slotInstanceId, signalInstanceId, handler)
+            typedef std::unordered_map<std::string, std::list<std::tuple<std::string, std::string, karabo::net::ConsumeHandler> > > PendingSubscriptionsMap;
+            PendingSubscriptionsMap m_pendingSubscriptions; // to be protected by m_connectedInstancesMutex
 
         };
 
@@ -396,14 +401,30 @@ namespace karabo {
                 return;
             }
             // bookkeeping ...
+            std::vector<std::string> pendingInstanceIds;
             {
                 boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
                 storeTcpConnectionInfo(signalConnectionString, connection, channel);
                 storeSignalSlotConnectionInfo(slotInstanceId, signalInstanceId, signalConnectionString, handler);
+                // Also for pending stuff:
+                auto iter = m_pendingSubscriptions.find(signalConnectionString);
+                if (iter != m_pendingSubscriptions.end()) {
+                    for (const auto& tup : iter->second) {
+                        // tup contains slotInstanceId, signalInstanceId, handler for 0, 1, 2
+                        storeSignalSlotConnectionInfo(std::get<0>(tup), std::get<1>(tup), signalConnectionString, std::get<2>(tup));
+                        pendingInstanceIds.push_back(std::get<1>(tup));
+                    }
+                    m_pendingSubscriptions.erase(iter);
+                }
             }
 
             // Subscribe to producer with our own instanceId
+            KARABO_LOG_FRAMEWORK_DEBUG << "SUBSCRIBE " << slotInstanceId << " to new connection to " << signalConnectionString;
             channel->write(slotInstanceId + " SUBSCRIBE");
+            for (const std::string& slotInstance : pendingInstanceIds) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "SUBSCRIBE pending " << slotInstance << " to " << signalConnectionString;
+                channel->write(slotInstance + " SUBSCRIBE");
+            }
             // ... and, finally, wait for publications ...
             channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1,
                                                                signalConnectionString, connection, channel, _2, _3));
@@ -420,7 +441,8 @@ namespace karabo {
             // Are we not connected yet to the "signalInstanceId" producer...
             if (m_connectedInstances.find(signalInstanceId) == m_connectedInstances.end()) {
                 // Check if the TCP connection does not exist yet ...
-                if (m_openConnections.find(signalConnectionString) == m_openConnections.end()) {
+                auto connectionsIter = m_openConnections.find(signalConnectionString);
+                if (connectionsIter == m_openConnections.end()) {
                     Hash params("type", "client");
                     {
                         vector<string> v;
@@ -431,19 +453,28 @@ namespace karabo {
                         params.set("port", fromString<unsigned int>(v[1]));
                     }
 
-                    Connection::Pointer connection = Connection::create(Hash("Tcp", params));
+                    // Store empty connection/channel pointers to mark that we are preparing them.
+                    storeTcpConnectionInfo(signalConnectionString, Connection::Pointer(), Channel::Pointer());
 
+                    Connection::Pointer connection = Connection::create(Hash("Tcp", params));
                     connection->startAsync(bind_weak(&Consumer::connectHandler, this, _1, slotInstanceId,
                                                      signalInstanceId, signalConnectionString, handler, connection, _2));
 
-                    return;
+                } else if (connectionsIter->second.first) { // connection already there
+                    // bookkeeping ...
+                    storeSignalSlotConnectionInfo(slotInstanceId, signalInstanceId, signalConnectionString, handler);
+
+                    // Subscribe to producer with slotInstanceId
+                    auto& channelPtr = connectionsIter->second.second;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "SUBSCRIBE " << slotInstanceId << " to established connection to " << signalConnectionString;
+                    channelPtr->write(slotInstanceId + " SUBSCRIBE");
+                } else { // connection is being established
+                    // store what later has to be done for subscription: storeSignalSlotConnectionInfo, write
+                    auto& allTuples = m_pendingSubscriptions[signalConnectionString];
+                    const auto& tup = std::make_tuple(slotInstanceId, signalInstanceId, handler);
+                    allTuples.push_back(tup);
                 }
 
-                // bookkeeping ...
-                storeSignalSlotConnectionInfo(slotInstanceId, signalInstanceId, signalConnectionString, handler);
-
-                // Subscribe to producer with slotInstanceId
-                m_openConnections[signalConnectionString].second->write(slotInstanceId + " SUBSCRIBE");
             }
             // Connected!
         }
@@ -455,7 +486,28 @@ namespace karabo {
 
             // An iterator pointing to a pair of a connection string and SlotInstanceIds
             ConnectedInstances::iterator itConnectStringSlotIds = m_connectedInstances.find(signalInstanceId);
-            if (itConnectStringSlotIds == m_connectedInstances.end()) return; // Done! ... nothing to disconnect
+            if (itConnectStringSlotIds == m_connectedInstances.end()) {
+                // Instance not yet connected, but check also pending stuff:
+                for (PendingSubscriptionsMap::iterator itPending = m_pendingSubscriptions.begin(),
+                     itEnd = m_pendingSubscriptions.end(); itPending != itEnd;) {
+                    // key is signalConnectionString, value is list of tuple(slotInstanceId, signalInstanceId, handler)
+                    auto& allTuples = itPending->second;
+                    for (auto itTuple = allTuples.begin(), itEnd = allTuples.end(); itTuple != itEnd;) {
+                        if (std::get<1>(*itTuple) == signalInstanceId) {
+                            KARABO_LOG_FRAMEWORK_DEBUG << "Disconnect pending " << signalInstanceId;
+                            allTuples.erase(itTuple++); // post-increment: erase old iterator
+                        } else {
+                            ++itTuple;
+                        }
+                    }
+                    if (allTuples.empty()) {
+                        m_pendingSubscriptions.erase(itPending++); // post-increment: erase old iterator
+                    } else {
+                        ++itPending;
+                    }
+                }
+                return;
+            }
 
             KARABO_LOG_FRAMEWORK_INFO << "Disconnect signalId '" << signalInstanceId
                     << "' from slotId '" << slotInstanceId << "'.";
@@ -464,7 +516,14 @@ namespace karabo {
 
             // un-subscribe from producer
             auto& connectionChannelPair = m_openConnections[signalConnectionString];
-            connectionChannelPair.second->write(slotInstanceId + " UNSUBSCRIBE");
+            auto& channel = connectionChannelPair.second;
+            if (channel && channel->isOpen()) {
+                // Safety check - connection should always exist if signalInstanceId in m_connectedInstances
+                channel->write(slotInstanceId + " UNSUBSCRIBE");
+            } else {
+                KARABO_LOG_FRAMEWORK_WARN << "Channel to unsubscribe not open (connection string is '"
+                        << signalConnectionString << "').";
+            }
 
             // Remove handler for the slotInstanceId
             SlotInstanceIds& slotInstanceIds = itConnectStringSlotIds->second.second;
@@ -481,8 +540,12 @@ namespace karabo {
             }
             if (!found) {
                 KARABO_LOG_FRAMEWORK_INFO << "Close TCP channel/connection to: '" << signalConnectionString << "'.";
-                connectionChannelPair.second->close();
-                connectionChannelPair.first->stop();
+                if (channel) channel->close();
+                if (connectionChannelPair.first) {
+                    connectionChannelPair.first->stop();
+                } else {
+                    KARABO_LOG_FRAMEWORK_WARN << "No connection to '" << signalConnectionString << "' to close!";
+                }
                 m_openConnections.erase(signalConnectionString);
             }
 
