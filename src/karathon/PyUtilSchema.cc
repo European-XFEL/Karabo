@@ -2236,6 +2236,15 @@ void exportPyUtilSchema() {
                 .def("appendAsNode"
                      , &ListElementWrap::appendAsNode, (bp::arg("python_class"), bp::arg("nodeName") = "")
                      , bp::return_internal_reference<> ())
+                .def("init"
+                     , &ListElement::init
+                     , bp::return_internal_reference<> ())
+                .def("reconfigurable"
+                     , &ListElement::reconfigurable
+                     , bp::return_internal_reference<> ())
+                .def("setSpecialDisplayType"
+                     , &ListElement::setSpecialDisplayType
+                     , bp::return_internal_reference<> ())
                 ;
     }
 
