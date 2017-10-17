@@ -34,7 +34,8 @@ class RunConfiguratorEdit(EditableWidget):
 
     @classmethod
     def isCompatible(cls, box, readonly):
-        return not readonly
+        display_type = getattr(box.descriptor, 'displayType', None)
+        return not readonly and display_type == cls.displayType
 
     @property
     def value(self):
