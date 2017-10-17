@@ -3,13 +3,12 @@
 # Created on November 30, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtGui import (QAction, QFrame, QHBoxLayout, QLabel, QLineEdit,
-                         QPushButton, QWidget, QVBoxLayout)
+from PyQt4.QtGui import (QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+                         QWidget, QVBoxLayout)
 
 from karabo_gui.events import KaraboEventSender, register_for_broadcasts
 import karabo_gui.icons as icons
 from karabo_gui.navigationtreeview import NavigationTreeView
-from karabo_gui.toolbar import ToolBar
 from .base import BasePanelWidget
 
 
@@ -29,10 +28,7 @@ class NavigationPanel(BasePanelWidget):
         if sender is KaraboEventSender.AccessLevelChanged:
             self._init_search_filter(connected_to_server=True)
         elif sender is KaraboEventSender.NetworkConnectStatus:
-            online = data.get('status', False)
-            self._init_search_filter(online)
-            self.acDeviceOnly.setEnabled(online)
-
+            self._init_search_filter(data.get('status', False))
         return False
 
     def get_content_widget(self):
@@ -90,24 +86,6 @@ class NavigationPanel(BasePanelWidget):
         main_layout.addWidget(self.twNavigation)
 
         return widget
-
-    def toolbars(self):
-        """This should create and return one or more `ToolBar` instances needed
-        by this panel.
-        """
-        toolbar = ToolBar(parent=self)
-        data_model = self.twNavigation.model()
-        text = "Only show device instances"
-        action = QAction(icons.deviceInstance, "&Device Only", self)
-        action.setToolTip(text)
-        action.setStatusTip(text)
-        action.toggled.connect(data_model.onDeviceOnly)
-        action.setCheckable(True)
-        action.setEnabled(False)
-        toolbar.addAction(action)
-        self.acDeviceOnly = action
-
-        return [toolbar]
 
     def _init_search_filter(self, connected_to_server=False):
         # A list of nodes found via the search filter
