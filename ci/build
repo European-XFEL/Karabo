@@ -3,6 +3,7 @@ SSH_KARABO_DIR=/var/www/html/karabo
 SSH_PREFIX=$SSH_USER_HOST:$SSH_KARABO_DIR
 CURL_PREFIX=http://exflserv05.desy.de/karabo
 LATEST_TAG=latest_build
+NIGHTLY_TAG=Nightly
 
 __check_existence() {
     local status=$(curl --silent --head -r 0-0 "$1" | head -n 1)
@@ -16,7 +17,7 @@ __check_existence() {
 __release_build() {
     case "$2" in
         nightly)
-            export REL_TAG=Nightly
+            export REL_TAG=$NIGHTLY_TAG
             export FRAMEWORK_DEST_DIR=karaboFramework/nightly
             export GUI_DEST_DIR=$FRAMEWORK_DEST_DIR
             ;;
@@ -39,7 +40,6 @@ __release_build() {
             cd build/python
             bash ./build.sh
             sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null KaraboGUI-*.exe $SSH_PREFIX/$REL_ARTIFACT_DEST_PATH
-            sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "ln -fs $SSH_KARABO_DIR/$REL_ARTIFACT_DEST_PATH $SSH_KARABO_DIR/$REL_ARTIFACT_LATEST_PATH "
             ;;
         ubuntu*|centos*)
             export REL_OS_NAME=$(lsb_release -is)
@@ -53,10 +53,13 @@ __release_build() {
             mv package/Release/$REL_OS_NAME/$REL_OS_VERS_LONG/x86_64/karabo-*.sh $REL_ARTIFACT_NAME
             sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $SSH_KARABO_DIR/$FRAMEWORK_DEST_DIR"
             sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$FRAMEWORK_DEST_DIR
-            sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "ln -fs $SSH_KARABO_DIR/$REL_ARTIFACT_DEST_PATH $SSH_KARABO_DIR/$REL_ARTIFACT_LATEST_PATH "
             ;;
         *) echo "unknown target OS: $1" ;;
     esac
+
+    if [ "$REL_TAG" != "$NIGHTLY_TAG" ]; then
+        sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "ln -fs $SSH_KARABO_DIR/$REL_ARTIFACT_DEST_PATH $SSH_KARABO_DIR/$REL_ARTIFACT_LATEST_PATH "
+    fi
 }
 
 __deps_build() {
