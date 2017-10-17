@@ -737,7 +737,9 @@ class GraphicsRenderer2(object):
          .displayedName("characters").description("Characters")
          .tags("LM")
          .appendNodesOfConfigurationBase(Base)
+         .setSpecialDisplayType("unitTest")
          .assignmentOptional().defaultValueFromString("P2,P3")
+         .reconfigurable()
          .commit(),
         )
 
