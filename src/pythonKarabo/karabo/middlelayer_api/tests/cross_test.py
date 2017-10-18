@@ -222,7 +222,7 @@ class Tests(DeviceTest):
         yield from self.process.wait()
         self.assertEqual(self.device.channelclose, "boundDevice:output1")
 
-    @async_tst
+    @async_tst(timeout=90)
     def test_history(self):
         before = datetime.now()
 
