@@ -92,12 +92,10 @@ class TestRunConfigurationGroup(TestCase):
         classConfig = Hash("classId", "RunConfigurationGroup",
                            "deviceId", DEVICE_ID,
                            "configuration", config)
-
-        self.dc.instantiate(SERVER_ID, classConfig)
-
-        # XXX: Bugs in the DeviceClient mean that immediately trying to read
-        # our device's configuration could fail
-        sleep(10)
+        # This device sometimes needs more time to come up than the default
+        # timeout of 5s - why?
+        ok, _ = self.dc.instantiate(SERVER_ID, classConfig, 30)
+        assert ok
 
         # wait for device to init
         state = None
