@@ -720,11 +720,11 @@ namespace karabo {
             if (m_signalSlotable.expired()) {
                 return std::make_pair(false, "SignalSlotable object is not valid (destroyed).");
             }
-            if (timeoutInSeconds == -1) timeoutInSeconds = 5;
+            const int timeoutInMillis = (timeoutInSeconds == -1 ? 5000 : timeoutInSeconds * 1000);
             bool ok = true;
             std::string reply = "";
             try {
-                m_signalSlotable.lock()->request(serverInstanceId, "slotStartDevice", configuration).timeout(timeoutInSeconds * 1000).receive(ok, reply);
+                m_signalSlotable.lock()->request(serverInstanceId, "slotStartDevice", configuration).timeout(timeoutInMillis).receive(ok, reply);
             } catch (const karabo::util::Exception& e) {
                 reply = e.userFriendlyMsg();
                 ok = false;
@@ -732,17 +732,20 @@ namespace karabo {
             }
             if (ok) {
                 // Wait until this device says hello
-                bool isThere;
-                int nTrials = 0;
-                do {
+                bool isThere = false;
+                int waitedInMillis = 0;
+                while (!isThere && waitedInMillis < timeoutInMillis) {
+                    {
+                        boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                        isThere = m_runtimeSystemDescription.has("device." + reply);
+                    }
                     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-                    nTrials++;
-                    boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                    isThere = m_runtimeSystemDescription.has("device." + reply);
-                } while (!isThere && (nTrials < 50));
+                    waitedInMillis += 100;
+                }
 
-                if (nTrials == 50) {
-                    string errorText("Device \"" + reply + "\" got started but is not accessible anymore... ZOMBIE TIME !!!!");
+                if (!isThere) {
+                    const string errorText("Device '" + reply + "' got started but is still not accessible after "
+                                           + util::toString(waitedInMillis) + " ms!");
                     return std::make_pair(false, errorText);
                 }
             }
