@@ -417,7 +417,10 @@ class DisplaySparkline(DisplayWidget):
         now = time.time()
         self.getPropertyHistory(now - self.model.time_base, now, True)
 
-        self.widget.destroyed.connect(self.destroy)
+    def destroy(self):
+        """Disconnect signal connections"""
+        self.box.signalHistoricData.disconnect(self.onHistoricData)
+        self.box.visibilityChanged.disconnect(self.onVisibilityChanged)
 
     def valueChanged(self, box, value, timestamp=None):
 
@@ -493,8 +496,3 @@ class DisplaySparkline(DisplayWidget):
 
     def _setShowFormat(self, format):
         self.model.show_format = format
-
-    @pyqtSlot(object)
-    def destroy(self):
-        self.box.signalHistoricData.disconnect(self.onHistoricData)
-        self.box.visibilityChanged.disconnect(self.onVisibilityChanged)
