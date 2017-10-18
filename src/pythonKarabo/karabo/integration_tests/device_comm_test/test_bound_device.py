@@ -47,7 +47,8 @@ class TestDeviceDeviceComm(TestCase):
                            "deviceId", "testComm1",
                            "configuration", config)
 
-        self.dc.instantiate(SERVER_ID, classConfig)
+        ok, _ = self.dc.instantiate(SERVER_ID, classConfig, 30)
+        assert ok
 
         config2 = Hash("Logger.priority", "ERROR",
                        "remote", "testComm1",
@@ -57,7 +58,8 @@ class TestDeviceDeviceComm(TestCase):
                             "deviceId", "testComm2",
                             "configuration", config2)
 
-        self.dc.instantiate(SERVER_ID, classConfig2)
+        ok, _ = self.dc.instantiate(SERVER_ID, classConfig2, 30)
+        assert ok
 
         # wait for device to init
         state1 = None
@@ -69,7 +71,7 @@ class TestDeviceDeviceComm(TestCase):
                 state2 = self.dc.get("testComm2", "state")
             # A RuntimeError will be raised up to device init
             except RuntimeError:
-                sleep(2)
+                sleep(self._waitTime)
                 if nTries > self._retries:
                     raise RuntimeError("Waiting for device to init timed out")
                 nTries += 1
