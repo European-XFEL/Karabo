@@ -176,6 +176,18 @@ class SystemTree(HasStrictTraits):
         self.visit(visitor)
         return found_nodes
 
+    def _fast_find(self, node_id):
+        """Fast version of self.find(), only find exact matches
+        """
+        found_nodes = []
+
+        def visitor(node):
+            if node.node_id == node_id:
+                found_nodes.append(node)
+
+        self.visit(visitor)
+        return found_nodes
+
     def visit(self, visitor):
         """Walk every node in the system tree and run a `visitor` function on
         each item.
@@ -193,8 +205,7 @@ class SystemTree(HasStrictTraits):
         """
         # XXX: TODO remove dependence on the AccessLevel in the model
         # Use admin level to find all nodes, leave no orphan node behind
-        nodes = self.find(instance_id, access_level=AccessLevel.ADMIN,
-                          full_match=True)
+        nodes = self._fast_find(instance_id)
         removed = False
         for node in nodes:
             if node.level != DEVICE_LEVEL:
@@ -208,7 +219,7 @@ class SystemTree(HasStrictTraits):
     def remove_server(self, instance_id):
         """Remove the entry for a server from the tree
         """
-        server_nodes = self.find(instance_id, full_match=True)
+        server_nodes = self._fast_find(instance_id)
         server_class_keys = []
 
         for server_node in server_nodes:
