@@ -311,9 +311,9 @@ class SystemTree(HasStrictTraits):
             if server_node is None:
                 server_node = SystemTreeNode(node_id=server_id,
                                              path=server_id, parent=host_node,
+                                             visibility=visibility,
                                              level=SERVER_LEVEL)
                 self._append_child_node(host_node, server_node)
-            server_node.visibility = visibility
             server_node.attributes = attrs
             for class_id, vis in zip(attrs.get('deviceClasses', []),
                                      attrs.get('visibilities', [])):
@@ -383,6 +383,7 @@ class SystemTree(HasStrictTraits):
             if device_node is None:
                 device_node = SystemTreeNode(node_id=device_id, path=device_id,
                                              parent=class_node,
+                                             visibility=visibility,
                                              level=DEVICE_LEVEL)
                 self._append_child_node(class_node, device_node)
                 device_node.monitoring = False
@@ -390,7 +391,6 @@ class SystemTree(HasStrictTraits):
                 new_dev_nodes[device_id] = device_node
 
             device_node.status = status
-            device_node.visibility = visibility
             device_node.attributes = attrs
             device_node.capabilities = capabilities
 
@@ -403,7 +403,7 @@ class SystemTree(HasStrictTraits):
             path = '{}.{}'.format(server_id, class_id)
             class_node = SystemTreeNode(node_id=class_id,
                                         path=path, parent=server_node,
+                                        visibility=AccessLevel(visibility),
                                         level=CLASS_LEVEL)
             self._append_child_node(server_node, class_node)
-        class_node.visibility = AccessLevel(visibility)
         return class_node
