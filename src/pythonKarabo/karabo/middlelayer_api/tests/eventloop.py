@@ -1,22 +1,32 @@
 from asyncio import coroutine, gather, set_event_loop, wait_for
 from contextlib import contextmanager, ExitStack
-from functools import wraps
+from functools import partial, wraps
 from unittest import TestCase
 from unittest.mock import Mock
 
 from karabo.middlelayer_api.eventloop import EventLoop
 
 
-def async_tst(f):
-    return sync_tst(coroutine(f))
+def async_tst(f=None, *, timeout=None):
+    if f is None:
+        assert timeout is not None, 'timeout must be given!'
+        return partial(async_tst, timeout=timeout)
+    return sync_tst(coroutine(f), timeout=timeout)
 
 
-def sync_tst(f):
+def sync_tst(f=None, *, timeout=None):
+    if f is None:
+        assert timeout is not None, 'timeout must be given!'
+        return partial(sync_tst, timeout=timeout)
+
+    # Default timeout is 30 seconds. Slower tests can give longer values
+    timeout = 30 if timeout is None else timeout
+
     @wraps(f)
     def wrapper(self):
         task = self.loop.create_task(
             self.loop.run_coroutine_or_thread(f, self), self.lead)
-        self.loop.run_until_complete(wait_for(task, 30))
+        self.loop.run_until_complete(wait_for(task, timeout))
     return wrapper
 
 
