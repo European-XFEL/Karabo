@@ -1,52 +1,23 @@
 import os.path as op
-from threading import Thread
 from time import sleep
-from unittest import TestCase
 
-from karabo.bound import DeviceClient, EventLoop, Hash
+from karabo.bound import Hash
 from karabo.common.api import Capabilities, State
-from karabo.integration_tests.utils import start_bound_api_server
+from karabo.integration_tests.utils import BoundDeviceTestCase
 
 SERVER_ID = "testServerSceneProviders"
 
 
-class TestDeviceProvidedScenes(TestCase):
-    _timeout = 60  # seconds
-    _waitTime = 2  # seconds
-    _retries = _timeout//_waitTime
-
+class TestDeviceProvidedScenes(BoundDeviceTestCase):
     def setUp(self):
-        self._ownDir = op.dirname(op.abspath(__file__))
+        super(TestDeviceProvidedScenes, self).setUp()
+        own_dir = op.dirname(op.abspath(__file__))
+        class_ids = ['SceneProvidingDevice', 'NonSceneProvidingDevice']
+        self.start_server(SERVER_ID, class_ids, plugin_dir=own_dir)
 
-        # Start the EventLoop so that DeviceClient works properly
-        self._eventLoopThread = Thread(target=EventLoop.work)
-        self._eventLoopThread.daemon = True
-        self._eventLoopThread.start()
-
-        server_args = [
-            "deviceClasses=SceneProvidingDevice,NonSceneProvidingDevice",
-            "visibility=1",
-            "Logger.priority=ERROR"
-        ]
-        self.serverProcess = start_bound_api_server(SERVER_ID, server_args,
-                                                    plugin_dir=self._ownDir)
-        self.dc = DeviceClient()
-
-        def classesLoaded():
-            classes = self.dc.getClasses(SERVER_ID)
-            scenecls_present = "SceneProvidingDevice" in classes
-            nonscenecls_present = "NonSceneProvidingDevice" in classes
-            return scenecls_present and nonscenecls_present
-
-        # wait for plugin to appear
-        nTries = 0
-        while not classesLoaded():
-            sleep(self._waitTime)
-            if nTries > self._retries:
-                raise RuntimeError("Waiting for plugin to appear timed out")
-            nTries += 1
-
-        # we will use two devices communicating with each other.
+    def test_in_sequence(self):
+        # Complete setup - do not do it in setup to ensure that even in case of
+        # exceptions 'tearDown' is called and stops Python processes.
         config = Hash("Logger.priority", "ERROR",
                       "deviceId", "testSceneProvider")
 
@@ -54,10 +25,9 @@ class TestDeviceProvidedScenes(TestCase):
                            "deviceId", "testSceneProvider",
                            "configuration", config)
 
-        ok, _ = self.dc.instantiate(SERVER_ID, classConfig, 30)
-        assert ok
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig, 30)
+        self.assertTrue(ok, msg)
 
-        # we will use two devices communicating with each other.
         config2 = Hash("Logger.priority", "ERROR",
                        "deviceId", "testNoSceneProvider")
 
@@ -65,8 +35,8 @@ class TestDeviceProvidedScenes(TestCase):
                             "deviceId", "testNoSceneProvider",
                             "configuration", config2)
 
-        ok, _ = self.dc.instantiate(SERVER_ID, classConfig2, 30)
-        assert ok
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig2, 30)
+        self.assertTrue(ok, msg)
 
         # wait for device to init
         state1 = None
@@ -83,18 +53,8 @@ class TestDeviceProvidedScenes(TestCase):
                     raise RuntimeError("Waiting for device to init timed out")
                 nTries += 1
 
-    def tearDown(self):
-        # Stop the server
-        self.serverProcess.terminate()
-        # Stop the event loop
-        EventLoop.stop()
-        self._eventLoopThread.join()
-
-    def test_in_sequence(self):
         # tests are run in sequence as sub tests
         # device server thus is only instantiated once
-        # we allow for sleeps in the integration tests as some messaging
-        # is async.
         with self.subTest(msg="Test 'scenesAvailable' in instance info"):
             info = self.dc.getSystemTopology()
             self.assertTrue(info.has("device.testSceneProvider"))
