@@ -10,7 +10,7 @@
 
    All relevant configuration data is stored in a member hash variable.
 """
-
+from collections import defaultdict
 from datetime import datetime
 from functools import wraps
 
@@ -193,9 +193,11 @@ class Manager(QObject):
         self._topology.update(systemTopology)
 
         # Tell the GUI about various devices that are alive
-        self._check_for_alarm_service()
-        self._broadcast_about_instances('RunConfigurator',
-                                        KaraboEventSender.AddRunConfigurator)
+        instance_ids = self._collect_devices('AlarmService', 'RunConfigurator')
+        self._announce_alarm_services(instance_ids.get('AlarmService', []))
+        if 'RunConfigurator' in instance_ids:
+            broadcast_event(KaraboEventSender.AddRunConfigurator,
+                            {'instanceIds': instance_ids['RunConfigurator']})
 
         # Tell the world about new devices/servers
         devices, servers = _extract_topology_devices(systemTopology)
@@ -233,9 +235,11 @@ class Manager(QObject):
                         {'devices': devices, 'servers': servers})
 
         # Tell the GUI about various devices or servers that are alive
-        self._check_for_alarm_service()
-        self._broadcast_about_instances('RunConfigurator',
-                                        KaraboEventSender.AddRunConfigurator)
+        for instance_id, class_id, _ in devices:
+            self._broadcast_if_of_type('RunConfigurator', instance_id,
+                                       KaraboEventSender.AddRunConfigurator)
+            if class_id == 'AlarmService':
+                self._announce_alarm_services([instance_id])
 
     def handle_instanceUpdated(self, topologyEntry):
         self._topology.instance_updated(topologyEntry)
@@ -243,24 +247,11 @@ class Manager(QObject):
     def handle_instanceGone(self, instanceId, instanceType):
         """ Remove ``instance_id`` from topology and update
         """
-        def _instance_finder(instance_ids):
-            """If `instanceId` is in the list, make it the only item.
-            Otherwise, make sure the list is empty (so nothing will be
-            broadcast).
-            """
-            if instanceId in instance_ids:
-                instance_ids.clear()
-                instance_ids.append(instanceId)
-            else:
-                instance_ids.clear()
-
         # Tell the GUI about various devices that are now gone
-        self._broadcast_about_instances(
-            'AlarmService', KaraboEventSender.RemoveAlarmServices,
-            transform=_instance_finder)
-        self._broadcast_about_instances(
-            'RunConfigurator', KaraboEventSender.RemoveRunConfigurator,
-            transform=_instance_finder)
+        self._broadcast_if_of_type('AlarmService', instanceId,
+                                   KaraboEventSender.RemoveAlarmServices)
+        self._broadcast_if_of_type('RunConfigurator', instanceId,
+                                   KaraboEventSender.RemoveRunConfigurator)
 
         # Update the system topology
         devices, servers = self._topology.instance_gone(instanceId,
@@ -424,39 +415,40 @@ class Manager(QObject):
     # ------------------------------------------------------------------
     # Private methods
 
-    def _broadcast_about_instances(self, class_id, event_type, transform=None):
-        """Search the system topology for devices of a given `class_id` and
-        then (possibly) transform that list of device IDs with a `transform`
-        function. If the transformed list has a length > 0, broadcast an event
-        containing the remaining IDs.
+    def _announce_alarm_services(self, instance_ids):
+        """Handle the arrival of one or more `AlarmService` devices.
         """
-        instance_ids = set()
+        if instance_ids:
+            broadcast_event(KaraboEventSender.ShowAlarmServices,
+                            {'instanceIds': instance_ids})
+        for inst_id in instance_ids:
+            # Request all current alarms for the given alarm service device
+            get_network().onRequestAlarms(inst_id)
+
+    def _broadcast_if_of_type(self, class_id, instance_id, event_type):
+        """If a device is of a particular type `class_id`, broadcast an event.
+        """
+        attrs = self._topology.get_attributes('device.' + instance_id)
+        if attrs is not None:
+            if class_id == attrs.get('classId', ''):
+                broadcast_event(event_type, {'instanceIds': [instance_id]})
+                return True
+        return False
+
+    def _collect_devices(self, *class_ids):
+        """Walk the system tree and collect all the instance ids of devices
+        whose type is in the list `class_ids`.
+        """
+        instance_ids = defaultdict(list)
 
         def visitor(node):
             attrs = node.attributes
             dev_class_id = attrs.get('classId', 'UNKNOWN')
-            if attrs.get('type') == 'device' and dev_class_id == class_id:
-                instance_ids.add(node.node_id)
+            if attrs.get('type') == 'device' and dev_class_id in class_ids:
+                instance_ids[dev_class_id].append(node.node_id)
 
         self._topology.visit_system_tree(visitor)
-        instance_ids = list(instance_ids)
-        if transform is not None:
-            transform(instance_ids)
-        if instance_ids:
-            # Tell the world
-            broadcast_event(event_type, {'instanceIds': instance_ids})
-
         return instance_ids
-
-    def _check_for_alarm_service(self):
-        """Fetch all available ``AlarmService`` device instance ids and trigger
-        request for those devices to network
-        """
-        instance_ids = self._broadcast_about_instances(
-            'AlarmService', KaraboEventSender.ShowAlarmServices)
-        for inst_id in instance_ids:
-            # Request all current alarms for the given alarm service device
-            get_network().onRequestAlarms(inst_id)
 
     def _device_data_received(self):
         """Notify all listeners that some (class, schema, or config) data was
