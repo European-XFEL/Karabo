@@ -110,9 +110,16 @@ class SystemTree(HasStrictTraits):
     # An event which is triggered whenever the tree needs to be updated
     needs_update = Event
 
+    # device/server node lookup dicts
+    _device_nodes = Dict
+    _server_nodes = Dict
+
     def clear_all(self):
         """Removes all data from the model.
         """
+        self._device_nodes.clear()
+        self._server_nodes.clear()
+
         with self.update_context.reset_context():
             self.root.children = []
 
@@ -176,77 +183,59 @@ class SystemTree(HasStrictTraits):
         self.visit(visitor)
         return found_nodes
 
-    def _fast_find(self, node_id):
-        """Fast version of self.find(), only find exact matches
-        """
-        found_nodes = []
-
-        def visitor(node):
-            if node.node_id == node_id:
-                found_nodes.append(node)
-
-        self.visit(visitor)
-        return found_nodes
-
-    def visit(self, visitor):
-        """Walk every node in the system tree and run a `visitor` function on
-        each item.
-        """
-        def _iter_tree_node(node):
-            yield node
-            for child in node.children:
-                yield from _iter_tree_node(child)
-
-        for t_node in _iter_tree_node(self.root):
-            visitor(t_node)
+    def get_instance_node(self, instance_id):
+        """Retrieve a tree node for a device or server instance"""
+        if instance_id in self._device_nodes:
+            return self._device_nodes[instance_id]
+        if instance_id in self._server_nodes:
+            return self._server_nodes[instance_id]
+        return None
 
     def remove_device(self, instance_id):
         """Remove the entry for a device from the tree
         """
-        # XXX: TODO remove dependence on the AccessLevel in the model
-        # Use admin level to find all nodes, leave no orphan node behind
-        nodes = self._fast_find(instance_id)
-        removed = False
-        for node in nodes:
-            if node.level != DEVICE_LEVEL:
-                continue  # Don't remove things which are not devices!
-            with self.update_context.removal_context(node):
-                node.parent.children.remove(node)
-            removed = True
+        node = self._device_nodes.get(instance_id)
+        if node is None:
+            return False
 
-        return removed
+        with self.update_context.removal_context(node):
+            node.parent.children.remove(node)
+
+        self._device_nodes.pop(instance_id)
+        return True
 
     def remove_server(self, instance_id):
         """Remove the entry for a server from the tree
         """
-        server_nodes = self._fast_find(instance_id)
+        server_node = self._server_nodes.get(instance_id)
         server_class_keys = []
 
-        for server_node in server_nodes:
-            if server_node.level != SERVER_LEVEL:
-                continue  # Don't remove things which are not servers!
+        if server_node is None:
+            return server_class_keys
 
-            # Take care of removing all children from bottom to top
-            while server_node.children:
-                class_node = server_node.children[-1]
-                while class_node.children:
-                    # Just for security take care of devices
-                    device_node = class_node.children[-1]
-                    # Remove device node
-                    with self.update_context.removal_context(device_node):
-                        class_node.children.pop()
+        # Take care of removing all children from bottom to top
+        while server_node.children:
+            class_node = server_node.children[-1]
+            while class_node.children:
+                # Just for security take care of devices
+                device_node = class_node.children[-1]
+                # Remove device node
+                with self.update_context.removal_context(device_node):
+                    class_node.children.pop()
+                self._device_nodes.pop(device_node.node_id)
 
-                # Remove class node
-                with self.update_context.removal_context(class_node):
-                    key = (server_node.node_id, class_node.node_id)
-                    server_class_keys.append(key)
-                    server_node.children.pop()
+            # Remove class node
+            with self.update_context.removal_context(class_node):
+                key = (server_node.node_id, class_node.node_id)
+                server_class_keys.append(key)
+                server_node.children.pop()
 
-            # Finally remove server node
-            host_node = server_node.parent
-            with self.update_context.removal_context(server_node):
-                host_node.children.remove(server_node)
+        # Finally remove server node
+        host_node = server_node.parent
+        with self.update_context.removal_context(server_node):
+            host_node.children.remove(server_node)
 
+        self._server_nodes.pop(instance_id)
         return server_class_keys
 
     def update(self, system_hash):
@@ -264,6 +253,18 @@ class SystemTree(HasStrictTraits):
         self.needs_update = True
 
         return nodes
+
+    def visit(self, visitor):
+        """Walk every node in the system tree and run a `visitor` function on
+        each item.
+        """
+        def _iter_tree_node(node):
+            yield node
+            for child in node.children:
+                yield from _iter_tree_node(child)
+
+        for t_node in _iter_tree_node(self.root):
+            visitor(t_node)
 
     # ------------------------------------------------------------------
 
@@ -289,6 +290,12 @@ class SystemTree(HasStrictTraits):
         # First and last indices, INCLUSIVE
         first = len(parent_node.children)
         last = first
+
+        if child_node.level == SERVER_LEVEL:
+            self._server_nodes[child_node.node_id] = child_node
+        elif child_node.level == DEVICE_LEVEL:
+            self._device_nodes[child_node.node_id] = child_node
+
         with self.update_context.insertion_context(parent_node, first, last):
             parent_node.children.append(child_node)
 
