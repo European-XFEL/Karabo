@@ -92,12 +92,9 @@ def test_tree_find():
 
     for node_id in names:
         assert len(tree.find(node_id)) == 0
-        assert len(tree._fast_find(node_id)) == 0
 
     h = system_hash_server_and_plugins()
     tree.update(h)
-    assert len(tree._fast_find('FooClass')) == 3
-    assert len(tree._fast_find('BarClas')) == 0  # only exact match
 
     assert len(tree.find('BarClass')) == 1
     assert len(tree.find('barclass', case_sensitive=False)) == 1
