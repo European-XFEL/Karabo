@@ -1,42 +1,23 @@
 import os.path as op
-from threading import Thread
 from time import sleep
-from unittest import TestCase
 
-from karabo.bound import DeviceClient, EventLoop, Hash, SignalSlotable
+from karabo.bound import Hash, SignalSlotable
 from karabo.common.states import State
-from karabo.integration_tests.utils import start_bound_api_server
+from karabo.integration_tests.utils import BoundDeviceTestCase
 
 SERVER_ID = "testServer1"
 
 
-class TestDeviceDeviceComm(TestCase):
-    _timeout = 60  # seconds
-    _waitTime = 2  # seconds
-    _retries = _timeout//_waitTime
-
+class TestDeviceDeviceComm(BoundDeviceTestCase):
     def setUp(self):
-        # Note where we are for later cleanip
-        self._ownDir = str(op.dirname(op.abspath(__file__)))
+        super(TestDeviceDeviceComm, self).setUp()
+        own_dir = op.dirname(op.abspath(__file__))
+        class_ids = ['CommTestDevice']
+        self.start_server(SERVER_ID, class_ids, plugin_dir=own_dir)
 
-        # Start the EventLoop so that DeviceClient works properly
-        self._eventLoopThread = Thread(target=EventLoop.work)
-        self._eventLoopThread.daemon = True
-        self._eventLoopThread.start()
-
-        server_args = ["deviceClasses=CommTestDevice", "visibility=1",
-                       "Logger.priority=ERROR"]
-        self.serverProcess = start_bound_api_server(SERVER_ID, server_args,
-                                                    plugin_dir=self._ownDir)
-        self.dc = DeviceClient()
-
-        # wait for plugin to appear
-        nTries = 0
-        while "CommTestDevice" not in self.dc.getClasses(SERVER_ID):
-            sleep(self._waitTime)
-            if nTries > self._retries:
-                raise RuntimeError("Waiting for plugin to appear timed out")
-            nTries += 1
+    def test_in_sequence(self):
+        # Complete setup - do not do it in setup to ensure that even in case of
+        # exceptions 'tearDown' is called and stops Python processes.
 
         # we will use two devices communicating with each other.
         config = Hash("Logger.priority", "ERROR",
@@ -47,8 +28,8 @@ class TestDeviceDeviceComm(TestCase):
                            "deviceId", "testComm1",
                            "configuration", config)
 
-        ok, _ = self.dc.instantiate(SERVER_ID, classConfig, 30)
-        assert ok
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig, 30)
+        self.assertTrue(ok, msg)
 
         config2 = Hash("Logger.priority", "ERROR",
                        "remote", "testComm1",
@@ -58,8 +39,8 @@ class TestDeviceDeviceComm(TestCase):
                             "deviceId", "testComm2",
                             "configuration", config2)
 
-        ok, _ = self.dc.instantiate(SERVER_ID, classConfig2, 30)
-        assert ok
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig2, 30)
+        self.assertTrue(ok, msg)
 
         # wait for device to init
         state1 = None
@@ -76,14 +57,6 @@ class TestDeviceDeviceComm(TestCase):
                     raise RuntimeError("Waiting for device to init timed out")
                 nTries += 1
 
-    def tearDown(self):
-        # Stop the server
-        self.serverProcess.terminate()
-        # Stop the event loop
-        EventLoop.stop()
-        self._eventLoopThread.join(5)
-
-    def test_in_sequence(self):
         # tests are run in sequence as sub tests
         # device server thus is only instantiated once
         with self.subTest(msg="Test execute slots"):
@@ -124,70 +97,69 @@ class TestDeviceDeviceComm(TestCase):
             sigSlotA = SignalSlotable("sigSlotA")
             sigSlotA.start()
 
-            timeOutInMs = 500;  # more than in C++ - here it goes via broker...
+            timeOutInMs = 500  # more than in C++ - here it goes via broker...
             periodInMicroSec = 100000  # some tests below assume 0.1 s
             periodInAttoSec = periodInMicroSec * 1000000000000
             # Before first received time tick, always return train id 0
             ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp", 1, 2
-                                  ).waitForReply(timeOutInMs)
+                                   ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], 0)
 
             # Now send a time tick...
             sigSlotA.request("testComm1", "slotTimeTick",
-                             # id,     sec,    frac (attosec), period (microsec)
+                             # id,    sec,    frac (attosec), period (microsec)
                              100, 11500000000, 2 * periodInAttoSec + 1100,
                              periodInMicroSec
-                            ).waitForReply(timeOutInMs)
+                             ).waitForReply(timeOutInMs)
             # ...and test real calculations of id
             # 1) exact match
             ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
                                    11500000000, 2 * periodInAttoSec + 1100
-                                  ).waitForReply(timeOutInMs)
+                                   ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], 100)
 
             # 2) end of id
             ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
                                    11500000000, 3 * periodInAttoSec + 1099
-                                  ).waitForReply(timeOutInMs)
+                                   ).waitForReply(timeOutInMs)
             self.assertEqual(100, ret[0])
 
             # 3) multiple of period above - but same second
             ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
                                    11500000000, 5 * periodInAttoSec + 1100
-                                  ).waitForReply(timeOutInMs)
+                                   ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], 103)
 
             # 4) multiple of period plus a bit above - next second
             ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
                                    11500000001, 5 * periodInAttoSec + 1105
-                                  ).waitForReply(timeOutInMs)
+                                   ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], 113)
 
             # 5) just before
             ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
                                    11500000000, 2 * periodInAttoSec + 1090
-                                  ).waitForReply(timeOutInMs)
+                                   ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], 99)
 
             # 6) several before - but same second
             ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
                                    11500000000, 1
-                                  ).waitForReply(timeOutInMs)
+                                   ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], 97)
 
             # 7) several before - previous second
             ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
                                    11499999999, 5 * periodInAttoSec + 1110
-                                  ).waitForReply(timeOutInMs)
+                                   ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], 93)
 
             # 8) so much in the past that a negative id would be calculated
             #    which leads to zero
             ret = sigSlotA.request("testComm1", "slotIdOfEpochstamp",
                                    11499999000, 1110
-                                  ).waitForReply(timeOutInMs)
+                                   ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], 0)
-
 
     def waitUntilEqual(self, devId, propertyName, whatItShouldBe, maxTries):
         """
