@@ -17,18 +17,6 @@ from .tree import SystemTree
 from .util import clear_configuration_instance
 
 
-class _DeviceNodeFinder(object):
-    """A system tree visitor which finds the node for a specific device id.
-    """
-    def __init__(self, device_id):
-        self.node = None
-        self._device_id = device_id
-
-    def __call__(self, node):
-        if node.node_id == self._device_id:
-            self.node = node
-
-
 class SystemTopology(HasStrictTraits):
     """The Karabo System Topology
 
@@ -119,10 +107,9 @@ class SystemTopology(HasStrictTraits):
             device.updateStatus()
 
             # Get the system topology node, if it's there
-            finder = _DeviceNodeFinder(device_id)
-            self.visit_system_tree(finder)
-            if finder.node:
-                device.topology_node = finder.node
+            node = self.system_tree.get_instance_node(device_id)
+            if node:
+                device.topology_node = node
 
         statuses = (DeviceStatus.OFFLINE, DeviceStatus.REQUESTED)
         if device.descriptor is None and device.status not in statuses:
