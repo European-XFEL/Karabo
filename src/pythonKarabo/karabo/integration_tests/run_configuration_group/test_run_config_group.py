@@ -1,11 +1,8 @@
 import os.path as op
-from threading import Thread
 from time import sleep
-from unittest import TestCase
 
-from karabo.bound import DeviceClient, EventLoop, Hash
-from karabo.common.states import State
-from karabo.integration_tests.utils import start_bound_api_server
+from karabo.bound import Hash, State
+from karabo.integration_tests.utils import BoundDeviceTestCase
 
 SERVER_ID = "testServerRCG"
 DEVICE_ID = "testRcg"
@@ -54,34 +51,17 @@ def _get_users():
     return users
 
 
-class TestRunConfigurationGroup(TestCase):
-    _timeout = 60  # seconds
-    _waitTime = 2  # seconds
-    _retries = _timeout//_waitTime
-
+class TestRunConfigurationGroup(BoundDeviceTestCase):
     def setUp(self):
-        # Note where we are for later cleanip
-        self._ownDir = str(op.dirname(op.abspath(__file__)))
+        super(TestRunConfigurationGroup, self).setUp()
 
-        # Start the EventLoop so that DeviceClient works properly
-        self._eventLoopThread = Thread(target=EventLoop.work)
-        self._eventLoopThread.daemon = True
-        self._eventLoopThread.start()
+        own_dir = str(op.dirname(op.abspath(__file__)))
+        class_ids = ['RunConfigurationGroup']
+        self.start_server(SERVER_ID, class_ids, plugin_dir=own_dir)
 
-        server_args = ["deviceClasses=RunConfigurationGroup", "visibility=1",
-                       "Logger.priority=ERROR"]
-        self.serverProcess = start_bound_api_server(SERVER_ID, server_args,
-                                                    plugin_dir=self._ownDir)
-        self.dc = DeviceClient()
-
-        # wait for plugin to appear
-        nTries = 0
-        while "RunConfigurationGroup" not in self.dc.getClasses(SERVER_ID):
-            sleep(self._waitTime)
-            if nTries > self._retries:
-                raise RuntimeError("Waiting for plugin to appear timed out")
-            nTries += 1
-
+    def test_rcg_sources(self):
+        # Complete setup - do not do it in setup to ensure that even in case of
+        # exceptions 'tearDown' is called and stops Python processes.
         config = Hash("Logger.priority", "ERROR",
                       "deviceId", DEVICE_ID,
                       "group", Hash("id", "Sample Environment",
@@ -94,8 +74,8 @@ class TestRunConfigurationGroup(TestCase):
                            "configuration", config)
         # This device sometimes needs more time to come up than the default
         # timeout of 5s - why?
-        ok, _ = self.dc.instantiate(SERVER_ID, classConfig, 30)
-        assert ok
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig, 30)
+        self.assertTrue(ok, msg)
 
         # wait for device to init
         state = None
@@ -110,14 +90,6 @@ class TestRunConfigurationGroup(TestCase):
                     raise RuntimeError("Waiting for device to init timed out")
                 nTries += 1
 
-    def tearDown(self):
-        # Stop the server
-        self.serverProcess.terminate()
-        # Stop the event loop
-        EventLoop.stop()
-        self._eventLoopThread.join(5)
-
-    def test_rcg_sources(self):
         group = self.dc.get(DEVICE_ID, "group")
 
         assert group.get("id") == "Sample Environment"
