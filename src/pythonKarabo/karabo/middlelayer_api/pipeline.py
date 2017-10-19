@@ -1,16 +1,20 @@
 from asyncio import (
-    coroutine, get_event_loop, IncompleteReadError, Lock, open_connection,
-    shield)
+    coroutine, Future, gather, get_event_loop, IncompleteReadError, Lock,
+    open_connection, Queue, QueueFull, shield, sleep, start_server)
 from contextlib import closing
 import os
 from struct import pack, unpack, calcsize
+import socket
+
+import numpy
 
 from .enums import Assignment, AccessMode
 from .hash import Bool, Hash, VectorString, Schema, String
 from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
 from .schema import Configurable, Node
 from .serializers import decodeBinary, encodeBinary
-from .synchronization import background
+from .synchronization import background, firstCompleted
+from .timestamp import Timestamp
 
 
 class PipelineMetaData(ProxyBase):
@@ -19,7 +23,9 @@ class PipelineMetaData(ProxyBase):
 
 
 class Channel(object):
-    """This class is responsible for reading and writing Hashes to TCP"""
+    """This class is responsible for reading and writing Hashes to TCP
+
+    It is the low-level implementation of the pipeline protocol."""
     sizeCode = "<I"
 
     def __init__(self, reader, writer, channelName=None):
@@ -55,6 +61,41 @@ class Channel(object):
     def close(self):
         # WHY IS THE READER NOT CLOSEABLE??
         self.writer.close()
+
+    @coroutine
+    def nextChunk(self, chunk_future):
+        """write a chunk once availabe and wait for next request
+
+        Wait until the chunk_future becomes available, and write it to the
+        output. Then wait for the next request.
+
+        This is all in one method such that we can cancel the future for the
+        next chunk if the connection is closed. If this happens, an
+        IncompleteReadError is raised which has an empty partial data if the
+        channel has been closed properly.
+        """
+        done, pending, error = yield from firstCompleted(
+            chunk=chunk_future, read=self.readHash(), cancel_pending=False)
+        if error:
+            for future in pending.values():
+                future.cancel()
+            raise error.popitem()[1]
+        chunk = done["chunk"]
+        encoded = [encodeBinary(h[0]) for h in chunk]
+        sizes = numpy.array([len(d) for d in encoded], dtype=numpy.uint32)
+        info = []
+        for _, timestamp in chunk:
+            hsh = Hash("source", self.channelName, "timestamp", True)
+            hsh["timestamp", ...] = timestamp.toDict()
+            info.append(hsh)
+        h = Hash("nData", numpy.uint32(len(chunk)), "byteSizes", sizes,
+                 "sourceInfo", info)
+        self.writeHash(h)
+        self.writeSize(sizes.sum())
+        for e in encoded:
+            self.writer.write(e)
+        message = yield from pending["read"]
+        assert message["reason"] == "update"
 
 
 class NetworkInput(Configurable):
@@ -305,3 +346,128 @@ class OutputProxy(SubProxyBase):
         """Disconnect from the output channel"""
         if self.task is not None:
             self.task.cancel()
+
+
+class NetworkOutput(Configurable):
+    noInputShared = String(
+        displayedName="No Input (Shared)",
+        description="What to do if currently no share-input channel is "
+                    "available for writing to",
+        options=["queue", "drop", "wait", "throw"],
+        assignment=Assignment.OPTIONAL, defaultValue="wait",
+        accessMode=AccessMode.INITONLY)
+
+    @String(
+        displayedName="Hostname",
+        description="The hostname which connecting clients will be routed to",
+        assignment=Assignment.OPTIONAL, defaultValue="default",
+        accessMode=AccessMode.INITONLY)
+    def hostname(self, value):
+        if value == "default":
+            self.hostname = socket.gethostname()
+        else:
+            self.hostname = value
+        self.server = yield from start_server(self.serve, host=self.hostname,
+                                              port=0)
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.copy_queues = []
+        self.wait_queues = []
+        self.copy_futures = []
+        self.shared_queue = Queue(0 if self.noInputShared == "queue" else 1)
+
+    def getInformation(self, channelName):
+        self.channelName = channelName
+        host, port = self.server.sockets[0].getsockname()
+        return Hash("connectionType", "tcp", "hostname", self.hostname,
+                    "port", numpy.uint32(port))
+
+    @coroutine
+    def serve(self, reader, writer):
+        channel = Channel(reader, writer, self.channelName)
+
+        try:
+            message = yield from channel.readHash()
+            assert message["reason"] == "hello"
+
+            assert message["dataDistribution"] in {"shared", "copy"}
+            if message["dataDistribution"] == "shared":
+                while True:
+                    yield from channel.nextChunk(self.shared_queue.get())
+            elif message["onSlowness"] == "drop":
+                while True:
+                    future = Future()
+                    self.copy_futures.append(future)
+                    yield from channel.nextChunk(future)
+            else:
+                if message["onSlowness"] == "queue":
+                    queue = Queue()
+                else:
+                    queue = Queue(1)
+                if message["onSlowness"] == "wait":
+                    queues = self.wait_queues
+                else:
+                    queues = self.copy_queues
+                queues.append(queue)
+                try:
+                    while True:
+                        if queue.full() and message["onSlowness"] == "throw":
+                            return
+                        yield from channel.nextChunk(queue.get())
+                finally:
+                    queues.remove(queue)
+        except IncompleteReadError as e:
+            if e.partial:  # if the input got properly closed, partial is empty
+                raise
+        finally:
+            channel.close()
+
+    def writeChunkNoWait(self, chunk):
+        if self.noInputShared != "wait" and not self.shared_queue.full():
+            self.shared_queue.put_nowait(chunk)
+        elif self.noInputShared == "throw":
+            raise QueueFull()
+        for future in self.copy_futures:
+            if not future.done():
+                future.set_result(chunk)
+        self.copy_futures = []
+        for queue in self.copy_queues:
+            queue.put_nowait(chunk)
+
+    @coroutine
+    def writeChunk(self, chunk):
+        tasks = [sleep(0)]
+        try:
+            self.writeChunkNoWait(chunk)
+            if self.noInputShared == "wait":
+                tasks.append(self.shared_queue.put(chunk))
+            for queue in self.wait_queues:
+                tasks.append(queue.put(chunk))
+        finally:
+            yield from gather(*tasks)
+
+    @coroutine
+    def writeData(self, timestamp=None):
+        hsh = self.schema.configurationAsHash()
+        if timestamp is None:
+            timestamp = Timestamp()
+        yield from self.writeChunk([(hsh, timestamp)])
+
+    def writeDataNoWait(self, timestamp=None):
+        hsh = self.schema.configurationAsHash()
+        if timestamp is None:
+            timestamp = Timestamp()
+        self.writeChunkNoWait([(hsh, timestamp)])
+
+
+class OutputChannel(Node):
+    def __init__(self, cls=None, **kwargs):
+        if cls is None:
+            Output = NetworkOutput
+        else:
+            assert issubclass(cls, Configurable)
+
+            class Output(NetworkOutput):
+                schema = Node(cls)
+        super(OutputChannel, self).__init__(Output, **kwargs)

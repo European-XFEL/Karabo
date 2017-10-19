@@ -13,8 +13,9 @@ from zlib import adler32
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, background, Configurable,
     DeviceClientBase, getConfigurationFromPast, getDevice, getHistory, Hash,
-    isSet, InputChannel, Int32, KaraboError, MetricPrefix, Node, Schema,
-    shutdown, sleep, Slot, State, unit, Unit, waitUntil, waitUntilNew)
+    isSet, InputChannel, Int32, KaraboError, MetricPrefix, Node,
+    OutputChannel, Schema, shutdown, sleep, Slot, State, unit, Unit, waitUntil, 
+    waitUntilNew)
 
 from .eventloop import DeviceTest, async_tst
 
@@ -52,6 +53,9 @@ class MiddlelayerDevice(DeviceClientBase):
         self.rawchannelcount += 1
         self.rawchanneldata = data
         self.rawchannelmeta = meta
+
+    output = OutputChannel(Child)
+    rawoutput = OutputChannel()
 
 
 class Tests(DeviceTest):
@@ -96,7 +100,7 @@ class Tests(DeviceTest):
             stdout=PIPE)
         schema = yield from self.process.stdout.read()
         yield from self.process.wait()
-        self.assertEqual(adler32(schema), 1890363994,
+        self.assertEqual(adler32(schema), 37959406,
             "The generated schema changed. If this is desired, change the "
             "checksum in the code.")
 
@@ -107,7 +111,15 @@ class Tests(DeviceTest):
             sys.executable, "-m", "karabo.bound_api.launcher",
             "run", "karabo.bound_device_test", "TestDevice",
             stdin=PIPE)
-        self.process.stdin.write(b"<_deviceId_>boundDevice</_deviceId_>")
+        self.process.stdin.write(b"""\
+            <root KRB_Artificial="">
+                <_deviceId_>boundDevice</_deviceId_>
+                <input>
+                    <connectedOutputChannels>
+                        middlelayerDevice:output,middlelayerDevice:rawoutput
+                    </connectedOutputChannels>
+                </input>
+            </root>""")
         self.process.stdin.close()
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
@@ -208,6 +220,19 @@ class Tests(DeviceTest):
         self.assertEqual(self.device.channeldata.s, "hallo")
         self.assertEqual(self.device.channelmeta.source, "boundDevice:output1")
         self.assertEqual(self.device.channelcount, 4)
+
+        proxy.output1.connect()
+        task = background(waitUntilNew(proxy.output1.schema.s))
+        while not task.done():
+            # unfortunately, connecting takes time and nobody knows how much
+            yield from proxy.send()
+        yield from task
+        self.assertEqual(proxy.output1.schema.s, "hallo")
+
+        with proxy:
+            self.device.output.schema.number = 23
+            yield from self.device.output.writeData()
+            yield from waitUntil(lambda: proxy.a == 23 * unit.mA)
 
         proxy.output1.connect()
         task = background(waitUntilNew(proxy.output1.schema.s))

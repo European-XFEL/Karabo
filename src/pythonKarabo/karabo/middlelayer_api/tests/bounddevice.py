@@ -5,10 +5,10 @@ API cross test
 import numpy
 
 from karabo.bound import (
-    AMPERE, AlarmCondition, Hash, DOUBLE_ELEMENT, Epochstamp, KARABO_CLASSINFO,
-    KILO, METER, MILLI, NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL,
-    PythonDevice, Schema, SLOT_ELEMENT, State, STRING_ELEMENT, TABLE_ELEMENT,
-    Timestamp, Trainstamp)
+    AMPERE, AlarmCondition, Hash, DOUBLE_ELEMENT, Epochstamp, INPUT_CHANNEL,
+    KARABO_CLASSINFO, KILO, METER, MILLI, NDARRAY_ELEMENT, NODE_ELEMENT,
+    OUTPUT_CHANNEL, PythonDevice, Schema, SLOT_ELEMENT, State, STRING_ELEMENT,
+    TABLE_ELEMENT, Timestamp, Trainstamp)
 
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
@@ -89,6 +89,10 @@ class TestDevice(PythonDevice):
             OUTPUT_CHANNEL(expected).key("output2")
             .dataSchema(tableSchema)
             .commit(),
+
+            INPUT_CHANNEL(expected).key("input")
+            .dataSchema(Schema())
+            .commit(),
         )
 
     def __init__(self, configuration):
@@ -99,6 +103,8 @@ class TestDevice(PythonDevice):
         self.registerSlot(self.injectSchema)
         self.registerSlot(self.send)
         self.registerSlot(self.end)
+        self.KARABO_ON_DATA("input", self.onData)
+        self.KARABO_ON_EOS("input", self.onEndOfStream)
         self.word_no = 1
 
     def initialize(self):
@@ -158,3 +164,9 @@ class TestDevice(PythonDevice):
     def end(self):
         self.signalEndOfStream("output1")
         self.signalEndOfStream("output2")
+
+    def onData(self, data, metaData):
+        self.set("a", data.get("number"))
+
+    def onEndOfStream(self):
+        self.set("a", 0)
