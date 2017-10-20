@@ -123,9 +123,10 @@ def get_device_server_model(server_id):
         if (isinstance(model, DeviceServerModel) and
                 model.server_id == server_id):
             server_model = model
+            return True
 
     root_project = get_project_model().traits_data_model
-    walk_traits_object(root_project, visitor)
+    walk_traits_object(root_project, visitor, fast_exit=True)
     return server_model
 
 
