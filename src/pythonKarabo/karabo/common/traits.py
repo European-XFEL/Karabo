@@ -6,7 +6,8 @@
 from traits.api import HasTraits, Instance, List
 
 
-def walk_traits_object(traits_obj, visitor_func, pass_parent=False):
+def walk_traits_object(traits_obj, visitor_func, pass_parent=False,
+                       fast_exit=False):
     """ Walk a Traits object by recursing into List(Instance(HasTraits))
     child traits.
 
@@ -15,6 +16,7 @@ def walk_traits_object(traits_obj, visitor_func, pass_parent=False):
                          object in the tree rooted at `traits_obj`
     :param pass_parent: If True, pass the parent of each node to the visitor
                         along with the node itself.
+    :param fast_exit: If True, return immediately if the visitor returns `True`
     """
     def _is_list_of_has_traits(trait):
         if not isinstance(trait.trait_type, List):
@@ -43,6 +45,9 @@ def walk_traits_object(traits_obj, visitor_func, pass_parent=False):
 
     for leaf, parent in _tree_iter(traits_obj):
         if pass_parent:
-            visitor_func(leaf, parent)
+            success = visitor_func(leaf, parent)
         else:
-            visitor_func(leaf)
+            success = visitor_func(leaf)
+
+        if success and fast_exit:
+            break
