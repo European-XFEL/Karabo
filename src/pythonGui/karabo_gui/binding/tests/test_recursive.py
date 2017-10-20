@@ -3,11 +3,13 @@ from traits.api import TraitError
 
 from karabo.middlelayer import Hash
 from ..api import (
-    BindingNamespace, BindingRoot,
-    ChoiceOfNodesBinding, FloatBinding, Int32Binding, ListOfNodesBinding,
-    NodeBinding, extract_configuration
+    BindingNamespace, BindingRoot, ChoiceOfNodesBinding, FloatBinding,
+    Int32Binding, ListOfNodesBinding, NodeBinding,
+    apply_configuration, apply_default_configuration,
+    build_binding, extract_configuration, extract_attribute_modifications
 )
 from ..recursive import duplicate_binding
+from .schema import get_recursive_schema
 
 
 def test_choice_of_nodes():
@@ -89,3 +91,89 @@ def test_list_of_nodes():
     assert first.value.LoN.value == []
     first.value.LoN.value.append('Bar')
     assert first.value.LoN.value[-1].class_id == 'Bar'
+
+
+def test_choice_of_nodes_configuration():
+    schema = get_recursive_schema()
+    binding = build_binding(schema)
+
+    # choice is a _NodeTwo
+    binding.value.con.value = '_NodeTwo'
+    config = Hash("con", Hash("one", "hello"))
+    apply_configuration(config, binding)
+    assert binding.value.con.value.one.value == "hello"
+
+    # Pass a configuration containing a _NodeOne value
+    config = Hash("con", Hash("zero", "hello"))
+    with assert_raises(AttributeError):
+        apply_configuration(config, binding)
+
+    # Choose _NodeOne, so it works this time.
+    binding.value.con.value = '_NodeOne'
+    apply_configuration(config, binding)
+    assert binding.value.con.value.zero.value == "hello"
+
+
+def test_list_of_nodes_configuration():
+    schema = get_recursive_schema()
+    binding = build_binding(schema)
+
+    config = Hash("lon", [Hash("_NodeOne", Hash("zero", "hello")),
+                          Hash("_NodeTwo", Hash("one", "world"))])
+    apply_configuration(config, binding)
+    assert binding.value.lon.value[0].value.zero.value == "hello"
+    assert binding.value.lon.value[1].value.one.value == "world"
+
+
+def test_apply_default_configuration():
+    schema = get_recursive_schema()
+    binding = build_binding(schema)
+
+    apply_default_configuration(binding)
+    # default choice is `_NodeTwo`, it should have attr 'one'
+    assert hasattr(binding.value.con.value, 'one')
+    assert binding.value.con.value.one.value == 'Second'
+
+    # default list only contain `_NodeOne`, it has attr 'zero'
+    assert len(binding.value.lon.value) == 1
+    assert hasattr(binding.value.lon.value[0].value, 'zero')
+    assert binding.value.lon.value[0].value.zero.value == 'First'
+
+
+def test_extract_configuration():
+    schema = get_recursive_schema()
+    binding = build_binding(schema)
+
+    apply_default_configuration(binding)
+    # apply_default_configuration doesn't set modified flag,
+    # we set manually so the extract_configuration will work
+    binding.value.con.modified = True
+    binding.value.con.value.one.modified = True
+    binding.value.lon.modified = True
+    binding.value.lon.value[0].value.zero.modified = True
+    ret = extract_configuration(binding)
+
+    assert 'con' in ret
+    assert 'lon' in ret
+    assert ret['con'] == Hash('one', 'Second')
+    assert ret['lon'] == [Hash('_NodeOne', Hash('zero', 'First'))]
+
+
+def test_extract_attribute_modifications():
+    schema = get_recursive_schema()
+    binding = build_binding(schema)
+
+    apply_default_configuration(binding)
+    ret = extract_attribute_modifications(schema, binding)
+    # no change
+    assert ret == Hash()
+
+    # Change defaultValue from _NodeTwo to _NodeOne
+    binding.value.con.attributes['defaultValue'] = '_NodeOne'
+    binding.value.lon.attributes['defaultValue'] = ['_NodeOne', '_NodeTwo']
+
+    ret = extract_attribute_modifications(schema, binding)
+    assert 'con' in ret
+    assert ret['con', ...] == {'defaultValue': '_NodeOne'}
+    assert 'lon' in ret
+    assert ret['lon', ...] == {'defaultValue': ['_NodeOne', '_NodeTwo']}
