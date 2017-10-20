@@ -294,13 +294,14 @@ def _find_scene_model(uuid):
             if isinstance(obj, SceneModel):
                 if obj.uuid == uuid:
                     self.found = obj
+                    return True
 
     project = get_project_model().traits_data_model
     if project is None:
         return None
 
     visitor = _Visitor()
-    walk_traits_object(project, visitor)
+    walk_traits_object(project, visitor, fast_exit=True)
 
     if visitor.found is None:
         msg = 'Linked scene with UUID "{}" not found!'.format(uuid)
