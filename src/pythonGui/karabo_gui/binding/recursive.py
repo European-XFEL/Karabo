@@ -1,7 +1,6 @@
-from traits.api import Instance, List, Property, Trait, TraitHandler
+from traits.api import Instance, List, Property, Str, Trait, TraitHandler
 
 from karabo.middlelayer import Hash
-from .config import apply_configuration, apply_default_configuration
 from .types import BaseBinding, BindingNamespace, BindingRoot, NodeBinding
 from .util import fast_deepcopy
 
@@ -14,26 +13,29 @@ class ChoiceOfNodesBinding(BaseBinding):
     """
     value = Property
     # Backing trait for `value`
-    _value = Instance(BindingRoot, allow_none=True, transient=True)
+    choice = Str(transient=True)
     # Namespace of possible values
     choices = Instance(BindingNamespace, kw={'item_type': BindingRoot},
                        transient=True)
 
+    def _choice_default(self):
+        return next(iter(self.choices))
+
     def _get_value(self, value):
-        if self._value:
-            return self._value.value
-        first = next(iter(self.choices))
-        return getattr(self.choices, first).value
+        choice = self.choice
+        return getattr(self.choices, choice).value
 
     def _set_value(self, value):
         assert isinstance(value, str) and value in self.choices
-        self._value = getattr(self.choices, value)
+        self.choice = value
 
 
 class _ListOfNodesHandler(TraitHandler):
     """Handle ListOfNodes value assignments
     """
     def validate(self, instance, name, value):
+        from .config import apply_configuration, apply_default_configuration
+
         def _get_dupe_binding(klassname):
             binding = getattr(instance.choices, klassname, None)
             if binding is None:
