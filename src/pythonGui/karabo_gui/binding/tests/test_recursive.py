@@ -6,7 +6,8 @@ from ..api import (
     BindingNamespace, BindingRoot, ChoiceOfNodesBinding, FloatBinding,
     Int32Binding, ListOfNodesBinding, NodeBinding,
     apply_configuration, apply_default_configuration,
-    build_binding, extract_configuration, extract_attribute_modifications
+    build_binding, extract_configuration, extract_attribute_modifications,
+    KARABO_SCHEMA_DEFAULT_VALUE
 )
 from ..recursive import duplicate_binding
 from .schema import get_recursive_schema
@@ -165,15 +166,20 @@ def test_extract_attribute_modifications():
 
     apply_default_configuration(binding)
     ret = extract_attribute_modifications(schema, binding)
-    # no change
-    assert ret == Hash()
+    # no changes
+    assert ret is None
 
     # Change defaultValue from _NodeTwo to _NodeOne
-    binding.value.con.attributes['defaultValue'] = '_NodeOne'
-    binding.value.lon.attributes['defaultValue'] = ['_NodeOne', '_NodeTwo']
-
+    binding.value.con.attributes[KARABO_SCHEMA_DEFAULT_VALUE] = '_NodeOne'
     ret = extract_attribute_modifications(schema, binding)
-    assert 'con' in ret
-    assert ret['con', ...] == {'defaultValue': '_NodeOne'}
-    assert 'lon' in ret
-    assert ret['lon', ...] == {'defaultValue': ['_NodeOne', '_NodeTwo']}
+    assert ret[0] == Hash('path', 'con',
+                          'attribute', KARABO_SCHEMA_DEFAULT_VALUE,
+                          'value', '_NodeOne')
+
+    binding = build_binding(schema)
+    binding.value.lon.attributes[KARABO_SCHEMA_DEFAULT_VALUE] = ['_NodeOne',
+                                                                 '_NodeTwo']
+    ret = extract_attribute_modifications(schema, binding)
+    assert ret[0] == Hash('path', 'lon',
+                          'attribute', KARABO_SCHEMA_DEFAULT_VALUE,
+                          'value', ['_NodeOne', '_NodeTwo'])

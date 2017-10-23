@@ -4,8 +4,8 @@ import os.path as op
 import numpy as np
 
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Assignment, Hash, Schema, State, Timestamp,
-    decodeBinary
+    AccessLevel, AccessMode, Assignment, Hash, MetricPrefix, Schema, State,
+    Unit, decodeBinary
 )
 from ..api import (
     BoolBinding, CharBinding, ChoiceOfNodesBinding, ComplexBinding,
@@ -21,7 +21,9 @@ from ..api import (
     VectorUint64Binding,
     apply_configuration, apply_default_configuration, build_binding,
     extract_attribute_modifications, extract_configuration,
-    KARABO_SCHEMA_DEFAULT_VALUE
+    KARABO_SCHEMA_DEFAULT_VALUE,
+    KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
+    KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL
 )
 from .schema import get_all_props_schema
 
@@ -58,7 +60,6 @@ def test_data_files():
         # Check that the configuration was applied
         for key, value in _flatten_hash(extracted):
             assert key in config
-            attrs = config[key, ...]
             if isinstance(value, np.ndarray):
                 assert all(config[key] == value)
             else:
@@ -112,12 +113,33 @@ def test_attribute_modification():
     binding = build_binding(schema)
 
     modifications = extract_attribute_modifications(schema, binding)
-    assert len(modifications) == 0
+    assert modifications is None
 
-    binding.value.b.attributes[KARABO_SCHEMA_DEFAULT_VALUE] = 'w'
+    attributes = binding.value.h.attributes
+    attributes[KARABO_SCHEMA_DEFAULT_VALUE] = 42
     modifications = extract_attribute_modifications(schema, binding)
     assert len(modifications) == 1
-    assert modifications['b', ...] == {KARABO_SCHEMA_DEFAULT_VALUE: 'w'}
+    assert modifications[0] == Hash('path', 'h',
+                                    'attribute', KARABO_SCHEMA_DEFAULT_VALUE,
+                                    'value', 42)
+
+    binding = build_binding(schema)
+    attributes = binding.value.h.attributes
+    attributes[KARABO_SCHEMA_METRIC_PREFIX_SYMBOL] = 'm'
+    modifications = extract_attribute_modifications(schema, binding)
+    assert modifications[0] == Hash(
+        'path', 'h',
+        'attribute', KARABO_SCHEMA_METRIC_PREFIX_ENUM,
+        'value', list(MetricPrefix).index(MetricPrefix.MILLI)
+    )
+
+    binding = build_binding(schema)
+    attributes = binding.value.h.attributes
+    attributes[KARABO_SCHEMA_UNIT_SYMBOL] = 'Sv'
+    modifications = extract_attribute_modifications(schema, binding)
+    assert modifications[0] == Hash('path', 'h',
+                                    'attribute', KARABO_SCHEMA_UNIT_ENUM,
+                                    'value', list(Unit).index(Unit.SIEVERT))
 
 
 def test_property_attributes():
