@@ -3,33 +3,17 @@
 # Created on February 16, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from functools import partial
-
 from PyQt4.QtCore import QObject, pyqtSlot
-from PyQt4.QtGui import QAction
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabo_gui.events import KaraboEventSender, register_for_broadcasts
-from karabo_gui import icons
 from karabo_gui.mainwindow import MainWindow, PanelAreaEnum
 from karabo_gui import messagebox
 from karabo_gui.panels.alarmpanel import AlarmPanel
 from karabo_gui.panels.macropanel import MacroPanel
-from karabo_gui.panels.runconfigpanel import RunConfigPanel
 from karabo_gui.panels.scenepanel import ScenePanel
 from karabo_gui.singletons.api import get_project_model
-
-_ICONS = {
-    RunConfigPanel: icons.runconfig,
-}
-
-# Map open instance panel event to the corresponding panel class
-# and its position in the main window
-_EVENT_PANEL_MAP = {
-    KaraboEventSender.AddRunConfigurator:
-        (RunConfigPanel, PanelAreaEnum.MiddleBottom),
-}
 
 
 class PanelWrangler(QObject):
@@ -53,9 +37,6 @@ class PanelWrangler(QObject):
 
         # Panels linked to instances {instance id: (panel, pos)}
         self._instance_panels = {}
-
-        # QActions for opening instance panels {instance id: (action, klass)}
-        self._instance_panel_actions = {}
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary due to the fact that the singleton mediator object and
@@ -120,13 +101,7 @@ class PanelWrangler(QObject):
                 self._open_instance_panel(inst_id, AlarmPanel,
                                           PanelAreaEnum.MiddleBottom)
 
-        elif sender in _EVENT_PANEL_MAP:
-            instance_ids = data.get('instanceIds')
-            for inst_id in instance_ids:
-                self._request_instance_panel(inst_id, sender)
-
-        elif sender in (KaraboEventSender.RemoveAlarmServices,
-                        KaraboEventSender.RemoveRunConfigurator):
+        elif sender is KaraboEventSender.RemoveAlarmServices:
             instance_ids = data.get('instanceIds')
             for inst_id in instance_ids:
                 self._close_instance_panel(inst_id)
@@ -134,9 +109,9 @@ class PanelWrangler(QObject):
         elif sender is KaraboEventSender.NetworkConnectStatus:
             self.connected_to_server = data.get('status', False)
             if not self.connected_to_server:
-                inst_list = set(self._instance_panels.keys()).union(
-                                    self._instance_panel_actions.keys())
-                for inst_id in inst_list:
+                # Copy; _close_instance_panel will mutate
+                panel_ids = list(self._instance_panels.keys())
+                for inst_id in panel_ids:
                     self._close_instance_panel(inst_id)
                 # Close panels not associated with projects
                 self._close_project_item_panels(
@@ -150,33 +125,6 @@ class PanelWrangler(QObject):
     # -------------------------------------------------------------------
     # private interface
 
-    def _request_instance_panel(self, instance_id, sender):
-        """called when karabo broadcast_event requires a new panel to be opened
-        Depends on the panel's class, this function opens a panel or create
-        a QAction in the view menu.
-        """
-        main_win = self.main_window
-        if main_win is None:
-            return
-        known_ids = set(self._instance_panels.keys()).union(
-                            self._instance_panel_actions.keys())
-        if instance_id in known_ids:
-            return
-        panel_info = _EVENT_PANEL_MAP.get(sender)
-        if panel_info is None:
-            return
-        klass, area_enum = panel_info
-        klass_name = klass.__name__
-
-        # only create QAction to open the panel
-        action = QAction(instance_id, main_win)
-        callback = partial(self._open_instance_panel,
-                           instance_id, klass, area_enum)
-        action.triggered.connect(callback)
-        self._instance_panel_actions[instance_id] = (action, klass_name)
-        icon = _ICONS.get(klass)
-        main_win.addViewMenuAction(action, klass_name, icon)
-
     def _open_instance_panel(self, instance_id, klass, area_enum):
         """Add a panel to main window, hide the QAction button if necessary
         """
@@ -187,11 +135,6 @@ class PanelWrangler(QObject):
         panel.signalPanelClosed.connect(self._on_tab_close)
         main_win.addPanel(panel, area_enum)
         self._instance_panels[instance_id] = (panel, area_enum)
-        action_info = self._instance_panel_actions.get(instance_id)
-        if action_info is not None:
-            action, _ = action_info
-            action.setVisible(False)
-            main_win.updateViewMenu()
 
     def _close_instance_panel(self, instance_id):
         """Remove the panel and its linked QAction from the main window
@@ -202,22 +145,12 @@ class PanelWrangler(QObject):
         if instance_id in self._instance_panels:
             panel, area_enum = self._instance_panels.pop(instance_id)
             main_win.removePanel(panel, area_enum)
-        if instance_id in self._instance_panel_actions:
-            action, name = self._instance_panel_actions.pop(instance_id)
-            main_win.removeViewMenuAction(action, name)
 
     @pyqtSlot(str)
     def _on_tab_close(self, instance_id):
         """A panel emits its instance id when user close it, this function
         enables the action to reopen it
         """
-        action_info = self._instance_panel_actions.get(instance_id)
-        if action_info is not None:
-            action, _ = action_info
-            action.setVisible(True)
-            main_win = self.main_window
-            if main_win is not None:
-                main_win.updateViewMenu()
         if instance_id in self._instance_panels:
             del self._instance_panels[instance_id]
 
