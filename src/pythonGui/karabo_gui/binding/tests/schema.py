@@ -22,6 +22,10 @@ def get_simple_schema():
     return Simple.getClassSchema()
 
 
+def get_recursive_schema():
+    return Recursive.getClassSchema()
+
+
 class Multi(Configurable):
     """`ChoiceOfNodes` and `ListOfNodes` are implemented such that they take a
     single class as their argument, then get their collection of nodes from
@@ -31,11 +35,11 @@ class Multi(Configurable):
 
 
 class _NodeOne(Multi):
-    zero = String()
+    zero = String(defaultValue='First')
 
 
 class _NodeTwo(Multi):
-    one = String()
+    one = String(defaultValue='Second')
 
 
 class OutputNodeInner(Configurable):
@@ -101,3 +105,10 @@ class AllProperties(Configurable):
     @Slot(allowedStates=[State.INTERLOCKED, State.ACTIVE])
     def k1(self):
         pass
+
+
+class Recursive(Configurable):
+    """A `Configurable` for testing recursive node types
+    """
+    con = ChoiceOfNodes(Multi, defaultValue='_NodeTwo')
+    lon = ListOfNodes(Multi, defaultValue=['_NodeOne'])
