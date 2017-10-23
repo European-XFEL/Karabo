@@ -1,5 +1,6 @@
 from karabo.middlelayer import Hash, Timestamp
 from .const import KARABO_SCHEMA_DEFAULT_VALUE
+from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import BindingNamespace, BindingRoot, NodeBinding, SlotBinding
 
 
@@ -13,12 +14,13 @@ def apply_configuration(config, binding, remember_modification=False,
     will not be applied to parts of the binding which have been modified
     previously.
     """
+    _node_types = (ChoiceOfNodesBinding, NodeBinding)
     namespace = binding.value
     assert isinstance(namespace, BindingNamespace)
 
     for key, value, attrs in config.iterall():
         node = getattr(namespace, key)
-        if isinstance(value, Hash) and isinstance(node, NodeBinding):
+        if isinstance(value, Hash) and isinstance(node, _node_types):
             apply_configuration(value, node)
         else:
             if node.modified and skip_modified:
@@ -39,7 +41,23 @@ def apply_default_configuration(binding):
     """
     assert isinstance(binding, BindingRoot)
 
-    for key, node in _iter_binding(binding):
+    def _iter_binding(node):
+        _node_types = (ChoiceOfNodesBinding, NodeBinding)
+        namespace = node.value
+        for name in namespace:
+            subnode = getattr(namespace, name)
+            if isinstance(subnode, _node_types):
+                if isinstance(subnode, ChoiceOfNodesBinding):
+                    yield subnode
+                yield from _iter_binding(subnode)
+            elif isinstance(subnode, ListOfNodesBinding):
+                yield subnode
+                for lnode in subnode.value:
+                    yield from _iter_binding(lnode)
+            elif not isinstance(subnode, SlotBinding):
+                yield subnode
+
+    for node in _iter_binding(binding):
         default_value = node.attributes.get(KARABO_SCHEMA_DEFAULT_VALUE)
         if default_value is not None:
             node.value = default_value
@@ -50,6 +68,22 @@ def extract_attribute_modifications(schema, binding):
     """Extract modified attributes from binding relative to some schema object
     """
     assert isinstance(binding, BindingRoot)
+
+    def _iter_binding(node, base=''):
+        _recursive_types = (ChoiceOfNodesBinding, ListOfNodesBinding)
+        namespace = node.value
+        base = base + '.' if base else ''
+        for name in namespace:
+            subname = base + name
+            subnode = getattr(namespace, name)
+            if isinstance(subnode, NodeBinding):
+                yield from _iter_binding(subnode, base=subname)
+            elif isinstance(subnode, _recursive_types):
+                # XXX: We need to decide what to do with the attributes of
+                # child nodes of these nodes. Currently, they are ignored.
+                yield subname, subnode
+            elif not isinstance(subnode, SlotBinding):
+                yield subname, subnode
 
     retval = Hash()
     for key, node in _iter_binding(binding):
@@ -71,26 +105,26 @@ def extract_configuration(binding):
     """
     assert isinstance(binding, BindingRoot)
 
+    def _iter_binding(node, base=''):
+        _node_types = (ChoiceOfNodesBinding, NodeBinding)
+        namespace = node.value
+        base = base + '.' if base else ''
+        for name in namespace:
+            subname = base + name
+            subnode = getattr(namespace, name)
+            if isinstance(subnode, _node_types):
+                yield from _iter_binding(subnode, base=subname)
+            elif not isinstance(subnode, SlotBinding):
+                yield subname, subnode
+
     retval = Hash()
     for key, node in _iter_binding(binding):
         if not node.modified:
             continue
-        retval[key] = node.value
-        if node.timestamp:
-            retval[key, ...] = node.timestamp.toDict()
+        if isinstance(node, ListOfNodesBinding):
+            retval[key] = [Hash(value.class_id, extract_configuration(value))
+                           for value in node.value]
+        else:
+            retval[key] = node.value
 
     return retval
-
-
-def _iter_binding(node, base=''):
-    """Recursively iterate over all the nodes in a data binding object
-    """
-    namespace = node.value
-    base = base + '.' if base else ''
-    for name in namespace:
-        subname = base + name
-        subnode = getattr(namespace, name)
-        if isinstance(subnode, NodeBinding):
-            yield from _iter_binding(subnode, base=subname)
-        elif not isinstance(subnode, SlotBinding):
-            yield subname, subnode
