@@ -36,7 +36,7 @@ def _flatten_hash(h, base=''):
         if isinstance(value, Hash):
             yield from _flatten_hash(value, base=here)
         else:
-            yield here, value, Timestamp.fromHashAttributes(attrs)
+            yield here, value
 
 
 def test_data_files():
@@ -56,10 +56,9 @@ def test_data_files():
         extracted = extract_configuration(binding)
 
         # Check that the configuration was applied
-        for key, value, timestamp in _flatten_hash(extracted):
+        for key, value in _flatten_hash(extracted):
             assert key in config
             attrs = config[key, ...]
-            assert timestamp == Timestamp.fromHashAttributes(attrs)
             if isinstance(value, np.ndarray):
                 assert all(config[key] == value)
             else:
