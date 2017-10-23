@@ -151,41 +151,6 @@ class MainWindow(QMainWindow):
             panel.activateWindow()
             panel.raise_()
 
-    def addViewMenuAction(self, action, name=VIEW_MENU_TITLE, icon=None):
-        """Add a QAction to the view menu, If name is not VIEW_MENU_TITLE,
-        put the action in a sub menu.
-
-        :param action: a QAction to a panel
-        :param name: name of the submenu or VIEW_MENU_TITLE
-        :param icon: icon of the submenu, it is not used if
-            name==VIEW_MENU_TITLE
-        """
-        viewMenus = self.viewMenus
-        if name not in viewMenus:
-            viewMenus[name] = viewMenus[VIEW_MENU_TITLE].addMenu(name)
-            submenu = viewMenus[name]
-            if icon is not None:
-                submenu.setIcon(icon)
-        else:
-            submenu = viewMenus[name]
-        submenu.addAction(action)
-        self.updateViewMenu()
-
-    def removeViewMenuAction(self, action, name=VIEW_MENU_TITLE):
-        """Remove an action from the view menu.
-        """
-        submenu = self.viewMenus.get(name)
-        if submenu is not None:
-            submenu.removeAction(action)
-            self.updateViewMenu()
-
-    def updateViewMenu(self):
-        """This method should be called every time an action in the sub menu
-        of the view menu is changed.
-        """
-        for submenu in self.viewMenus.values():
-            submenu.setEnabled(not submenu.isEmpty())
-
     # --------------------------------------
     # private methods
 
@@ -308,6 +273,23 @@ class MainWindow(QMainWindow):
         right = PanelContainer("Configuration", right_area)
         self._panel_areas[PanelAreaEnum.Right] = right
 
+    def _addViewMenuAction(self, action, name=VIEW_MENU_TITLE):
+        """Add a QAction to the view menu, If name is not VIEW_MENU_TITLE,
+        put the action in a sub menu.
+
+        :param action: a QAction to a panel
+        :param name: name of the submenu or VIEW_MENU_TITLE
+        """
+        viewMenus = self.viewMenus
+        if name not in viewMenus:
+            viewMenus[name] = viewMenus[VIEW_MENU_TITLE].addMenu(name)
+            submenu = viewMenus[name]
+        else:
+            submenu = viewMenus[name]
+        submenu.addAction(action)
+        for submenu in self.viewMenus.values():
+            submenu.setEnabled(not submenu.isEmpty())
+
     def _quit(self):
         # Check for project changes
         if self._should_save_project_before_closing():
@@ -353,7 +335,7 @@ class MainWindow(QMainWindow):
                 callback = partial(self._open_singleton_panel, name)
                 action = QAction(name, self)
                 action.triggered.connect(callback)
-                self.addViewMenuAction(action)
+                self._addViewMenuAction(action)
                 self.panelActions[name] = action
             panel.signalPanelClosed.connect(self.onPanelClose)
             self.panelActions[name].setEnabled(False)
