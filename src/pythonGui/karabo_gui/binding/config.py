@@ -1,5 +1,5 @@
-from karabo.middlelayer import Hash, Timestamp
-from .const import KARABO_SCHEMA_DEFAULT_VALUE
+from karabo.middlelayer import Hash, MetricPrefix, Timestamp, Unit
+from . import const
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import BindingNamespace, BindingRoot, NodeBinding, SlotBinding
 
@@ -58,16 +58,33 @@ def apply_default_configuration(binding):
                 yield subnode
 
     for node in _iter_binding(binding):
-        default_value = node.attributes.get(KARABO_SCHEMA_DEFAULT_VALUE)
+        default_value = node.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
         if default_value is not None:
             node.value = default_value
             node.modified = False
 
 
 def extract_attribute_modifications(schema, binding):
-    """Extract modified attributes from binding relative to some schema object
+    """Extract modified attributes from a binding relative to some schema
+    object.
+
+    Returns a list of Hashes containing the differences, or None if there are
+    none.
+
+    NOTE: `_NAME_MAP` and `_remap_value` are handling conversion of str
+    'Symbol' values to C++ enumeration values (integers). This is because the
+    C++ Schema code only knows how to assign from enumeration values, not from
+    their stringified representations.
     """
     assert isinstance(binding, BindingRoot)
+
+    _NAME_MAP = {
+        const.KARABO_SCHEMA_METRIC_PREFIX_SYMBOL:
+            const.KARABO_SCHEMA_METRIC_PREFIX_ENUM,
+        const.KARABO_SCHEMA_UNIT_SYMBOL: const.KARABO_SCHEMA_UNIT_ENUM
+    }
+    _SYMBOL_MAP = {const.KARABO_SCHEMA_METRIC_PREFIX_SYMBOL: MetricPrefix,
+                   const.KARABO_SCHEMA_UNIT_SYMBOL: Unit}
 
     def _iter_binding(node, base=''):
         _recursive_types = (ChoiceOfNodesBinding, ListOfNodesBinding)
@@ -85,19 +102,34 @@ def extract_attribute_modifications(schema, binding):
             elif not isinstance(subnode, SlotBinding):
                 yield subname, subnode
 
-    retval = Hash()
+    def _dictdiff(d0, d1):
+        return {k: v for k, v in d0.items() if d1.get(k) != v}
+
+    def _remap_value(name, value):
+        enum = _SYMBOL_MAP.get(name, None)
+        return list(enum).index(enum(value)) if enum else value
+
+    def _get_updates(path, attrs):
+        # Format is specified by Device::slotUpdateSchemaAttributes
+        return [Hash("path", path, "attribute", k, "value", v)
+                for k, v in attrs.items()]
+
+    retval = []
     for key, node in _iter_binding(binding):
         schema_attrs = schema.hash[key, ...]
         binding_attrs = node.attributes
         # What values in `binding_attrs` are different from those in
         # `schema_attrs`?
-        diff = {k: v for k, v in binding_attrs.items()
-                if schema_attrs.get(k) != v}
-        if diff:
-            retval[key] = None
-            retval[key, ...] = diff
+        diff = _dictdiff(binding_attrs, schema_attrs)
+        if not diff:
+            continue
+        diff = {_NAME_MAP.get(k, k): _remap_value(k, v)
+                for k, v in diff.items()}
+        retval.extend(_get_updates(key, diff))
 
-    return retval
+    if retval:
+        return retval
+    return None
 
 
 def extract_configuration(binding):
