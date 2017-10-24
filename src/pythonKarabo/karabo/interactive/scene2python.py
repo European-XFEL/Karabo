@@ -64,7 +64,7 @@ def main():
     # import statement
     symbols.update({'write_scene', 'SceneTargetWindow'})
     imp_stmt = ('from karabo.common.scenemodel.api import {}'
-                ''.format(', '.join(symbols)))
+                ''.format(', '.join(sorted(symbols))))
     code.insert(0, imp_stmt)
 
     # I/O
