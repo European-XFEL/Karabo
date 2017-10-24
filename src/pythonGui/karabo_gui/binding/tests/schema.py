@@ -22,6 +22,10 @@ def get_simple_schema():
     return Simple.getClassSchema()
 
 
+def get_slotted_schema():
+    return SlottedDevice.getClassSchema()
+
+
 def get_recursive_schema():
     return Recursive.getClassSchema()
 
@@ -59,6 +63,14 @@ class Simple(Configurable):
 
 class PipelineData(Configurable):
     output = Node(OutputNode, displayType='OutputChannel')
+
+
+class SlottedDevice(Configurable):
+    state = String(defaultValue=State.ACTIVE)
+
+    @Slot(allowedStates=[State.INIT, State.ACTIVE])
+    def callme(self):
+        pass
 
 
 class AllProperties(Configurable):
