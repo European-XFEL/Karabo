@@ -4,7 +4,7 @@ from traits.api import (
 
 from karabo.common.api import DeviceStatus
 from karabo_gui.singletons.api import get_network, get_topology
-from .types import BaseBinding, BindingRoot, PipelineOutputBinding
+from .types import BaseBinding, BindingRoot, PipelineOutputBinding, SlotBinding
 
 _ONLINE_STATUSES = (
     DeviceStatus.OK, DeviceStatus.ONLINE, DeviceStatus.ALIVE,
@@ -224,6 +224,17 @@ class PropertyProxy(HasStrictTraits):
 
     # -----------------------------------------------------------------------
     # Public methods
+
+    def execute(self):
+        """Call a slot on a remote device.
+        """
+        if not (isinstance(self.root_proxy, DeviceProxy) and
+                isinstance(self.binding, SlotBinding)):
+            return
+
+        state = self.root_proxy.state_binding.value
+        if self.binding.is_allowed(state):
+            get_network().onExecute(self.root_proxy.device_id, self.path)
 
     def get_history(self, time_start, time_end, max_value_count=-1):
         """Request the historical values of `binding` between `time_start` and

@@ -6,7 +6,7 @@ from ..api import (
     apply_default_configuration, build_binding
 )
 from ..testing import assert_trait_change
-from .schema import get_simple_schema, get_pipeline_schema
+from .schema import get_pipeline_schema, get_simple_schema, get_slotted_schema
 
 
 def test_device_proxy_classes():
@@ -62,6 +62,21 @@ def test_device_class_proxy_refresh(get_network):
 
     assert proxy.status == DeviceStatus.REQUESTED
     network.onGetClassSchema.assert_called_with('swerver', 'Simple')
+
+
+@patch('karabo_gui.binding.proxy.get_network')
+def test_device_proxy_slots(get_network):
+    network = Mock()
+    get_network.return_value = network
+
+    schema = get_slotted_schema()
+    binding = build_binding(schema)
+    apply_default_configuration(binding)
+
+    proxy = DeviceProxy(device_id='dev', server_id='swerver', binding=binding)
+    slot_proxy = PropertyProxy(path='callme', root_proxy=proxy)
+    slot_proxy.execute()
+    network.onExecute.assert_called_with('dev', 'callme')
 
 
 @patch('karabo_gui.binding.proxy.get_network')
