@@ -364,13 +364,10 @@ class Network(QObject):
             h.set("schemaUpdates", attrUpdates)
         self._tcpWriteHash(h)
 
-    def onExecute(self, box, *args):
+    def onExecute(self, device_id, slot_name):
         h = Hash("type", "execute")
-        h.set("deviceId", box.configuration.id)
-        h.set("command", ".".join(box.path))
-
-        for i, arg in enumerate(args):
-            h.set("a{}".format(i + 1), arg)
+        h.set("deviceId", device_id)
+        h.set("command", slot_name)
 
         self._tcpWriteHash(h)
 
