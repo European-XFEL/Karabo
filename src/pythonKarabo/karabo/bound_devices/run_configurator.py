@@ -9,7 +9,11 @@ from karabo.bound import (
     Hash, HashMergePolicy, PythonDevice, Schema, State, VectorHash,
     EXPERT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
     BOOL_ELEMENT, LIST_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
-    STRING_ELEMENT, TABLE_ELEMENT
+    STRING_ELEMENT, TABLE_ELEMENT, VECTOR_STRING_ELEMENT
+)
+from karabo.common.scenemodel.api import (
+    DisplayCommandModel, FixedLayoutModel, LabelModel, RunConfiguratorModel,
+    SceneModel, write_scene
 )
 from .run_configuration_group import RunControlDataSource
 
@@ -163,6 +167,10 @@ class RunConfigurator(PythonDevice):
             .setColumns(sourceRow)
             .assignmentOptional().defaultValue([])
             .commit(),
+
+            VECTOR_STRING_ELEMENT(expected).key('availableScenes')
+            .readOnly().initialValue(['scene'])
+            .commit(),
         )
 
     def initialization(self):
@@ -172,6 +180,7 @@ class RunConfigurator(PythonDevice):
         self.KARABO_SLOT(self.buildConfigurationInUse)
         self.KARABO_SLOT(self.updateAvailableGroups)
         self.KARABO_SLOT(self.slotGetSourcesInGroup)
+        self.KARABO_SLOT(self.requestScene)
 
         # Register instance handlers
         self.remote().registerInstanceNewMonitor(self._newDeviceHandler)
@@ -239,6 +248,26 @@ class RunConfigurator(PythonDevice):
                       'instanceId', self.getInstanceId(),
                       'sources', self._getGroupSources(device_id))
         self.reply(result)
+
+    def requestScene(self, params):
+        """Fulfill a scene request from another device.
+
+        NOTE: Required by Scene Supply Protocol, which is defined in KEP 21.
+              The format of the reply is also specified there.
+
+        :param params: A `Hash` containing the method parameters
+        """
+        payload = Hash('success', False)
+
+        name = params.get('name', default='')
+        if name == 'scene':
+            payload.set('success', True)
+            payload.set('name', name)
+            payload.set('data', _createScene(self.getInstanceId()))
+
+        self.reply(Hash('type', 'deviceScene',
+                        'origin', self.getInstanceId(),
+                        'payload', payload))
 
     # ----------------------------
     # Callback methods
@@ -449,6 +478,24 @@ class RunConfigurator(PythonDevice):
 
         self.log.DEBUG('Updated RunConfigurationGroup --> instanceId: {}'
                        ''.format(deviceId))
+
+
+def _createScene(instance_id):
+    DEFAULT_FONT = ',11,-1,5,50,0,0,0,0,0'
+    label = LabelModel(font=DEFAULT_FONT, foreground='#000000',
+                       text='Available group configurations',
+                       height=31, width=205, x=4, y=4)
+    table = RunConfiguratorModel(
+        keys=[instance_id + '.configurations'],
+        height=400, width=600, x=4, y=36,
+        parent_component='EditableApplyLaterComponent')
+    button = DisplayCommandModel(
+        keys=[instance_id + '.buildConfigurationInUse'],
+        height=29, width=101, x=495, y=440)
+
+    layout = FixedLayoutModel(height=490, width=600, x=4, y=4,
+                              children=[button, table, label])
+    return write_scene(SceneModel(children=[layout], height=500, width=610))
 
 
 def _creatSource(sources, existing_sources, use):
