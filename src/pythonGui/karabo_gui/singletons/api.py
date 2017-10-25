@@ -68,7 +68,7 @@ get_panel_wrangler = _build_getter('panel_wrangler',
                                    'PanelWrangler')
 get_project_model = _build_getter('project_model', '.singletons.project_model',
                                   'ProjectViewItemModel')
-get_selection_tracker = _build_getter('selection',
+get_selection_tracker = _build_getter('selection_tracker',
                                       '.singletons.selection_tracker',
                                       'SelectionTracker')
 get_topology = _build_getter('topology', '.topology.api', 'SystemTopology')
