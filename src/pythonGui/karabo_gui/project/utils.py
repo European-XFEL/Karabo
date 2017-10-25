@@ -3,8 +3,6 @@
 # Created on November 29, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from io import StringIO
-
 from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.common.api import set_modified_flag, walk_traits_object
@@ -13,7 +11,7 @@ from karabo.common.project.api import (
     DeviceServerModel, ProjectModel, device_config_exists,
     device_instance_exists, recursive_save_object, read_lazy_object
 )
-from karabo.common.scenemodel.api import SceneLinkModel, SceneModel, read_scene
+from karabo.common.scenemodel.api import SceneLinkModel, SceneModel
 from karabo.middlelayer import Hash, read_project_model
 from karabo_gui.enums import KaraboSettings
 from karabo_gui.events import broadcast_event, KaraboEventSender
@@ -128,36 +126,6 @@ def get_device_server_model(server_id):
     root_project = get_project_model().traits_data_model
     walk_traits_object(root_project, visitor, fast_exit=True)
     return server_model
-
-
-def handle_scene_from_server(dev_id, name, project, success, reply):
-    """Callback handler for a request to a device to load one of its scenes.
-    """
-    if not (success and reply.get('payload.success', False)):
-        msg = 'Scene "{}" from device "{}" was not retreived!'
-        messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Scene from Device Failed')
-        return
-
-    data = reply.get('payload.data', '')
-    if not data:
-        msg = 'Scene "{}" from device "{}" contains no data!'
-        messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Scene from Device Failed')
-        return
-
-    with StringIO(data) as fp:
-        scene = read_scene(fp)
-        scene.modified = True
-        scene.simple_name = '{}|{}'.format(dev_id, name)
-        scene.reset_uuid()
-
-    # Add to the project AND open it
-    event_type = KaraboEventSender.ShowUnattachedSceneView
-    if project is not None:
-        event_type = KaraboEventSender.ShowSceneView
-        project.scenes.append(scene)
-    broadcast_event(event_type, {'model': scene})
 
 
 def load_project(is_subproject=False):
