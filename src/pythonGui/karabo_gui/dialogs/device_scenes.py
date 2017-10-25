@@ -14,9 +14,10 @@ from karabo_gui.singletons.api import get_topology
 
 
 class DeviceScenesDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, device_id='', parent=None):
         """A dialog to load scenes provided by devices
 
+        :param device_id: If provided, the single device to request scenes from
         :param parent: The parent of the dialog
         """
         super(DeviceScenesDialog, self).__init__(parent)
@@ -24,13 +25,19 @@ class DeviceScenesDialog(QDialog):
                            'device_scenes.ui')
         uic.loadUi(filepath, self)
 
-        # Fill in the available devices
-        self.deviceNames.addItems(self._find_devices_with_scenes())
-        # Initialize the Ok button
-        self._enable_ok_button()
-
         # The currently selected device configuration
         self._selected_device = None
+
+        if device_id:
+            # Add a single device and select it
+            self.deviceNames.addItem(device_id)
+            self.deviceNames.setCurrentItem(self.deviceNames.item(0))
+        else:
+            # Fill in the available devices
+            self.deviceNames.addItems(self._find_devices_with_scenes())
+
+        # Initialize the Ok button
+        self._enable_ok_button()
 
     @property
     def device_id(self):
