@@ -7,12 +7,19 @@
    panel containing the items for the host, device server instance and device
    class/instance.
 """
-from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import QAbstractItemView, QAction, QCursor, QMenu, QTreeView
+from functools import partial
 
-import karabo_gui.icons as icons
+from PyQt4.QtCore import Qt, pyqtSlot
+from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog, QMenu,
+                         QTreeView)
+
+from karabo.common.api import Capabilities
+from karabo_gui import icons
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.popupwidget import PopupWidget
+from karabo_gui.project.dialog.device_scenes import DeviceScenesDialog
+from karabo_gui.project.utils import handle_scene_from_server
+from karabo_gui.request import call_device_slot
 from karabo_gui.singletons.api import (get_manager, get_selection_tracker,
                                        get_navigation_model)
 from karabo_gui.util import (
@@ -92,39 +99,24 @@ class NavigationTreeView(QTreeView):
         self.acKillDevice.triggered.connect(self.onKillInstance)
         self.mDeviceItem.addAction(self.acKillDevice)
 
+        text = "Open Device Scene..."
+        self.acOpenScene = QAction(text, self)
+        self.acOpenScene.setStatusTip(text)
+        self.acOpenScene.setToolTip(text)
+        self.acOpenScene.triggered.connect(self.onOpenDeviceScene)
+        self.mDeviceItem.addAction(self.acOpenScene)
+
         self.mDeviceItem.addSeparator()
         self.mDeviceItem.addAction(self.acAbout)
 
     def currentIndex(self):
         return self.model().currentIndex()
 
-    def currentIndexType(self):
-        """Returns the type of the current index (NODE, DEVICE_SERVER_INSTANCE,
-           DEVICE_CLASS, DEVICE_INSTANCE"""
-
-        index = self.currentIndex()
-        if not index.isValid():
-            return NavigationItemTypes.UNDEFINED
-        node = self.model().index_ref(index)
-        if node is None:
-            return NavigationItemTypes.UNDEFINED
-
-        level = node.level
-        if level == 0:
-            return NavigationItemTypes.HOST
-        elif level == 1:
-            return NavigationItemTypes.SERVER
-        elif level == 2:
-            return NavigationItemTypes.CLASS
-        elif level == 3:
-            return NavigationItemTypes.DEVICE
-
-        return NavigationItemTypes.UNDEFINED
-
     def indexInfo(self, index=None):
-        """ return the info about the index.
+        """Return the info about the index.
 
-        Defaults to the current index if index is None."""
+        Defaults to the current index if index is None.
+        """
         if index is None:
             index = self.currentIndex()
         return self.model().indexInfo(index)
@@ -146,6 +138,7 @@ class NavigationTreeView(QTreeView):
 
         self.expand(parent_index)
 
+    @pyqtSlot()
     def onAbout(self):
         index = self.currentIndex()
         node = self.model().index_ref(index)
@@ -160,33 +153,54 @@ class NavigationTreeView(QTreeView):
         popupWidget.move(pos)
         popupWidget.show()
 
+    @pyqtSlot()
     def onKillInstance(self):
-        itemInfo = self.indexInfo()
-        type = itemInfo.get('type')
+        info = self.indexInfo()
+        node_type = info.get('type')
         manager = get_manager()
 
-        if type is NavigationItemTypes.DEVICE:
-            deviceId = itemInfo.get('deviceId')
+        if node_type is NavigationItemTypes.DEVICE:
+            deviceId = info.get('deviceId')
             manager.shutdownDevice(deviceId)
-        elif type is NavigationItemTypes.SERVER:
-            serverId = itemInfo.get('serverId')
+        elif node_type is NavigationItemTypes.SERVER:
+            serverId = info.get('serverId')
             manager.shutdownServer(serverId)
 
+    @pyqtSlot()
+    def onOpenDeviceScene(self):
+        info = self.indexInfo()
+        dialog = DeviceScenesDialog(device_id=info.get('deviceId', ''))
+        if dialog.exec() == QDialog.Accepted:
+            device_id = dialog.device_id
+            scene_name = dialog.scene_name
+            handler = partial(handle_scene_from_server, device_id, scene_name,
+                              None)
+            call_device_slot(handler, device_id, 'requestScene',
+                             name=scene_name)
+
+    @pyqtSlot(object)
     def onCustomContextMenuRequested(self, pos):
-        type = self.currentIndexType()
-        # Show context menu for DEVICE_CLASS and DEVICE_INSTANCE
-        if type is NavigationItemTypes.SERVER:
+        def _test_mask(mask, bit):
+            return (mask & bit) == bit
+
+        info = self.indexInfo()
+        node_type = info.get('type', NavigationItemTypes.UNDEFINED)
+        if node_type is NavigationItemTypes.SERVER:
             self.acAbout.setVisible(True)
             self.mServerItem.exec_(QCursor.pos())
-        elif type is NavigationItemTypes.CLASS:
+        elif node_type is NavigationItemTypes.CLASS:
             self.acKillDevice.setVisible(False)
             self.acAbout.setVisible(False)
             self.mDeviceItem.exec_(QCursor.pos())
-        elif type is NavigationItemTypes.DEVICE:
+        elif node_type is NavigationItemTypes.DEVICE:
             self.acKillDevice.setVisible(True)
             self.acAbout.setVisible(True)
+            has_scenes = _test_mask(info.get('capabilities', 0),
+                                    Capabilities.PROVIDES_SCENES)
+            self.acOpenScene.setVisible(has_scenes)
             self.mDeviceItem.exec_(QCursor.pos())
 
+    @pyqtSlot(str, object)
     def onSelectionChanged(self, item_type, configuration):
         """Called by the data model when an item is selected
         """
@@ -195,10 +209,12 @@ class NavigationTreeView(QTreeView):
         # Grab control of the global selection
         get_selection_tracker().grab_selection(self.model().selectionModel)
 
+    @pyqtSlot()
     def onOpenFromFile(self):
         if self._current_configuration is not None:
             loadConfigurationFromFile(self._current_configuration)
 
+    @pyqtSlot()
     def onSaveToFile(self):
         if self._current_configuration is not None:
             saveConfigurationToFile(self._current_configuration)
