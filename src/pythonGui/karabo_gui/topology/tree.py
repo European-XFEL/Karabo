@@ -68,7 +68,8 @@ class SystemTreeNode(HasStrictTraits):
         elif level == DEVICE_LEVEL:
             return {'type': NavigationItemTypes.DEVICE,
                     'classId': self.parent.node_id,
-                    'deviceId': self.node_id}
+                    'deviceId': self.node_id,
+                    'capabilities': self.capabilities}
 
     def row(self):
         if self.parent is None:

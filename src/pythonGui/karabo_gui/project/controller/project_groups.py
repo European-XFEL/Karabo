@@ -14,13 +14,13 @@ from karabo.common.project.api import (
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabo_gui import icons
 from karabo_gui import messagebox
+from karabo_gui.dialogs.device_scenes import DeviceScenesDialog
 from karabo_gui.enums import KaraboSettings
-from karabo_gui.project.dialog.device_scenes import DeviceScenesDialog
 from karabo_gui.project.dialog.object_handle import ObjectEditDialog
 from karabo_gui.project.dialog.server_handle import ServerHandleDialog
-from karabo_gui.project.utils import handle_scene_from_server
 from karabo_gui.request import call_device_slot
-from karabo_gui.util import getOpenFileName, get_setting, set_setting
+from karabo_gui.util import (
+    getOpenFileName, get_setting, set_setting, handle_scene_from_server)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 

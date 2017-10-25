@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from datetime import datetime
 import os
 import os.path as op
+from io import StringIO
 from tempfile import mkstemp
 from types import MethodType
 from uuid import uuid4
@@ -13,11 +14,13 @@ from PyQt4.QtGui import (
     QBrush, QDialog, QFileDialog, QHeaderView, QLabel, QMovie, QPainter, QPen,
     QWidget)
 
+from karabo.common.scenemodel.api import read_scene
 from karabo.middlelayer import decodeXML, Hash, MetricPrefix, Unit, writeXML
-import karabo_gui.globals as krb_globals
-import karabo_gui.icons as icons
+from karabo_gui import globals as krb_globals
+from karabo_gui import icons
 from karabo_gui import messagebox
 from karabo_gui.enums import KaraboSettings
+from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.singletons.api import get_db_conn
 
 
@@ -267,6 +270,36 @@ def temp_file(suffix='', prefix='tmp', dir=None):
     finally:
         os.close(fd)
         os.unlink(filename)
+
+
+def handle_scene_from_server(dev_id, name, project, success, reply):
+    """Callback handler for a request to a device to load one of its scenes.
+    """
+    if not (success and reply.get('payload.success', False)):
+        msg = 'Scene "{}" from device "{}" was not retreived!'
+        messagebox.show_warning(msg.format(name, dev_id),
+                                title='Load Scene from Device Failed')
+        return
+
+    data = reply.get('payload.data', '')
+    if not data:
+        msg = 'Scene "{}" from device "{}" contains no data!'
+        messagebox.show_warning(msg.format(name, dev_id),
+                                title='Load Scene from Device Failed')
+        return
+
+    with StringIO(data) as fp:
+        scene = read_scene(fp)
+        scene.modified = True
+        scene.simple_name = '{}|{}'.format(dev_id, name)
+        scene.reset_uuid()
+
+    # Add to the project AND open it
+    event_type = KaraboEventSender.ShowUnattachedSceneView
+    if project is not None:
+        event_type = KaraboEventSender.ShowSceneView
+        project.scenes.append(scene)
+    broadcast_event(event_type, {'model': scene})
 
 
 def is_database_processing():
