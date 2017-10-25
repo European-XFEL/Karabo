@@ -15,15 +15,16 @@ from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog, QMenu,
 
 from karabo.common.api import Capabilities
 from karabo_gui import icons
+from karabo_gui.dialogs.device_scenes import DeviceScenesDialog
 from karabo_gui.enums import NavigationItemTypes
 from karabo_gui.popupwidget import PopupWidget
-from karabo_gui.project.dialog.device_scenes import DeviceScenesDialog
-from karabo_gui.project.utils import handle_scene_from_server
 from karabo_gui.request import call_device_slot
 from karabo_gui.singletons.api import (get_manager, get_selection_tracker,
                                        get_navigation_model)
 from karabo_gui.util import (
-    loadConfigurationFromFile, saveConfigurationToFile, set_treeview_header)
+    loadConfigurationFromFile, saveConfigurationToFile,
+    handle_scene_from_server, set_treeview_header
+)
 
 
 class NavigationTreeView(QTreeView):
