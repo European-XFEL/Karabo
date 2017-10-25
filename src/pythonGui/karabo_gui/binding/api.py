@@ -31,6 +31,7 @@ from .proxy import (
     BaseDeviceProxy, DeviceProxy, DeviceClassProxy, PropertyProxy
 )
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
+from .registry import get_compatible_widgets, register_binding_widget
 from .types import (
     BaseBinding, BindingNamespace, BindingRoot,
     BoolBinding, ByteArrayBinding, CharBinding,
@@ -46,3 +47,4 @@ from .types import (
     VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
     VectorUint32Binding, VectorUint64Binding
 )
+from .widget import BaseBindingWidget
