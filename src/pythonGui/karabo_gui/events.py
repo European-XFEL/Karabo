@@ -43,6 +43,7 @@ class KaraboEventSender(Enum):
     ShowMacroView = "Show macro"
     ShowNavigationItem = "Show navigation item"
     ShowSceneView = "Show scene"
+    ShowUnattachedSceneView = "Show unattached scene"
     StartMonitoringDevice = "Start listening to device updates"
     StopMonitoringDevice = "Stop listening to device updates"
     SystemTopologyUpdate = "System topology updated"
