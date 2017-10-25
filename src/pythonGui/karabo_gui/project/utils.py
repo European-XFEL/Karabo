@@ -149,7 +149,7 @@ def handle_scene_from_server(dev_id, name, project, success, reply):
     with StringIO(data) as fp:
         scene = read_scene(fp)
         scene.modified = True
-        scene.simple_name = '{}|{}'.format(device_id, name)
+        scene.simple_name = '{}|{}'.format(dev_id, name)
         scene.reset_uuid()
 
     # Add to the project AND open it
