@@ -603,7 +603,9 @@ class Slot(Object):
 
 class SlotNode(Schema):
     def execute(self, box):
-        get_network().onExecute(box)
+        device_id = box.configuration.id
+        slot_name = '.'.join(box.path)
+        get_network().onExecute(device_id, slot_name)
 
     def getClass(self):
         if self.cls is None:
