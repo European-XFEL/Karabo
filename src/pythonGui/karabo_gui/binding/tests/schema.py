@@ -6,7 +6,7 @@ from karabo.middlelayer import (
     VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
     VectorUInt64, VectorUInt8, Node, ChoiceOfNodes, ListOfNodes,
-    AccessLevel, AccessMode, Assignment, State
+    AccessLevel, AccessMode, Assignment, State, Unit
 )
 
 
@@ -81,7 +81,7 @@ class AllProperties(Configurable):
     c = ComplexDouble(requiredAccessLevel=AccessLevel.EXPERT)
     d = ComplexFloat(accessMode=AccessMode.READONLY,
                      assignment=Assignment.INTERNAL)
-    e = Double()
+    e = Double(unitSymbol=Unit.METER)
     f = Float()
     g = HashType()
     h = Int16()

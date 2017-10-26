@@ -35,6 +35,7 @@ class BaseBinding(HasStrictTraits):
     assignment = Property
     options = Property
     required_access_level = Property
+    unit_label = Property
 
     def is_allowed(self, state):
         """Return True if the given `state` is an allowed state for this
@@ -66,6 +67,12 @@ class BaseBinding(HasStrictTraits):
     def _get_required_access_level(self):
         level = self.attributes.get(const.KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)
         return AccessLevel.OBSERVER if level is None else AccessLevel(level)
+
+    def _get_unit_label(self):
+        attrs = self.attributes
+        prefix_symbol = attrs.get(const.KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, '')
+        unit_symbol = attrs.get(const.KARABO_SCHEMA_UNIT_SYMBOL, '')
+        return prefix_symbol + unit_symbol
 
 
 class BindingNamespace(object):
