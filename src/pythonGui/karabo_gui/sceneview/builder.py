@@ -6,6 +6,7 @@ from karabo.common.scenemodel.api import (
     DigitIconsModel, DirectoryModel, DisplayAlignedImageModel,
     DisplayCommandModel, DisplayIconsetModel, DisplayImageElementModel,
     DisplayImageModel, DisplayLabelModel, DisplayPlotModel,
+    DisplayProgressBarModel,
     DisplayStateColorModel, DoubleLineEditModel, EditableListElementModel,
     EditableListModel, EditableSpinBoxModel, EvaluatorModel,
     FileInModel, FileOutModel, FixedLayoutModel, FloatSpinBoxModel,
@@ -13,7 +14,7 @@ from karabo.common.scenemodel.api import (
     LabelModel, LampModel, LineEditModel, LineModel, LinePlotModel,
     MonitorModel, PathModel, PopUpModel, RectangleModel, RunConfiguratorModel,
     SceneLinkModel, ScientificImageModel, SelectionIconsModel, SingleBitModel,
-    SliderModel, SparklineModel,  StatefulIconWidgetModel, TableElementModel,
+    SliderModel, SparklineModel, StatefulIconWidgetModel, TableElementModel,
     TextIconsModel, UnknownWidgetDataModel, UnknownXMLDataModel,
     VacuumWidgetModel, WebcamImageModel, WorkflowItemModel, XYPlotModel
 )
@@ -26,10 +27,11 @@ from .widget.api import (
     DisplayEditableWidgetContainer, DisplayIconsetContainer,
     DisplayStateColorContainer, DoubleLineEditContainer, EvaluatorContainer,
     FloatSpinBoxContainer, GenericWidgetContainer, IconsContainer,
-    LabelWidget, LinePlotContainer, MonitorContainer, SceneLinkWidget,
-    SimpleImageWidgetContainer, SingleBitContainer, SparklineContainer,
-    StatefulIconContainer, TableElementContainer, UnknownSvgWidget,
-    UnknownWidget, VacuumWidgetPlaceholder, WorkflowItemWidget
+    LabelWidget, LinePlotContainer, MonitorContainer, ProgressBarContainer,
+    SceneLinkWidget, SimpleImageWidgetContainer, SingleBitContainer,
+    SparklineContainer, StatefulIconContainer, TableElementContainer,
+    UnknownSvgWidget, UnknownWidget, VacuumWidgetPlaceholder,
+    WorkflowItemWidget
 )
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
@@ -79,6 +81,7 @@ _SCENE_OBJ_FACTORIES = {
     LineEditModel: DisplayEditableWidgetContainer,
     RunConfiguratorModel: GenericWidgetContainer,
     ColorBoolModel: ColorBoolContainer,
+    DisplayProgressBarModel: ProgressBarContainer,
     DisplayStateColorModel: DisplayStateColorContainer,
     DigitIconsModel: IconsContainer,
     SelectionIconsModel: IconsContainer,
