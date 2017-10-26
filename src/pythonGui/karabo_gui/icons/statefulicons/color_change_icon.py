@@ -3,6 +3,7 @@
 # Created on November 7, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from collections import OrderedDict
 from os import listdir
 from os.path import join, isfile, splitext
 from xml.etree.ElementTree import Element, parse, tostring
@@ -99,4 +100,5 @@ def _join_style_attr(style):
 
 
 def _split_style_attr(style):
-    return {k: v for k, v in (s.split(':') for s in style.split(';'))}
+    return OrderedDict((k, v)
+                       for k, v in (s.split(':') for s in style.split(';')))
