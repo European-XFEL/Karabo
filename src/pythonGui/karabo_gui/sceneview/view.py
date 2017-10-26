@@ -49,6 +49,7 @@ class SceneView(QWidget):
 
         self.inner = QWidget(self)
         self.inner.setLayout(self.layout)
+        self.inner.setFocusPolicy(Qt.StrongFocus)
         # Also create an overlay for the workflow connections
         self.overlay = WorkflowOverlay(self, parent=self)
 
