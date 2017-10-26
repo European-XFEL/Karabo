@@ -1,5 +1,6 @@
 from karabo.middlelayer import Hash, MetricPrefix, Timestamp, Unit
 from . import const
+from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import BindingNamespace, BindingRoot, NodeBinding, SlotBinding
 
@@ -153,10 +154,37 @@ def extract_configuration(binding):
     for key, node in _iter_binding(binding):
         if not node.modified:
             continue
-        if isinstance(node, ListOfNodesBinding):
-            retval[key] = [Hash(value.class_id, extract_configuration(value))
-                           for value in node.value]
-        else:
-            retval[key] = node.value
+        retval[key] = _get_binding_value(node)
 
     return retval
+
+
+def extract_sparse_configurations(proxies, devices=None):
+    """Extract values set on the bindings of a list of `PropertyProxy`
+    instances into a dictionary of `Hash` objects (one per device).
+
+    If desired, an existing dictionary object can be provided so that a
+    configuration can be iteratively accumulated.
+    """
+    assert all(isinstance(p, PropertyProxy) for p in proxies)
+
+    devices = {} if devices is None else devices
+    for proxy in proxies:
+        key, binding = proxy.path, proxy.binding
+        if binding is None or not binding.modified:
+            continue
+
+        device_id = proxy.root_proxy.device_id
+        hsh = devices.setdefault(device_id, Hash())
+        hsh[key] = _get_binding_value(binding)
+
+    return devices
+
+
+def _get_binding_value(binding):
+    """Extract the value from a single binding instance."""
+    if isinstance(binding, ListOfNodesBinding):
+        return [Hash(value.class_id, extract_configuration(value))
+                for value in binding.value]
+    else:
+        return binding.value
