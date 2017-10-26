@@ -9,6 +9,7 @@ from .icons import DisplayIconsetContainer, IconsContainer
 from .image import ComplexImageWidgetContainer, SimpleImageWidgetContainer
 from .lineplot import LinePlotContainer
 from .monitor import MonitorContainer
+from .progressbar import ProgressBarContainer
 from .simple import (LabelWidget, SceneLinkWidget, UnknownSvgWidget,
                      UnknownWidget, WorkflowItemWidget)
 from .singlebit import SingleBitContainer

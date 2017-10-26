@@ -24,6 +24,14 @@ class DoubleLineEditModel(BaseWidgetObjectData):
     decimals = Int(-1)
 
 
+class DisplayProgressBarModel(BaseWidgetObjectData):
+    """ A model for Progress Bar
+    """
+
+    # the orientation of the progress bar
+    is_vertical = Bool(False)
+
+
 class DisplayStateColorModel(BaseWidgetObjectData):
     """ A model for DisplayStateColor
     """
@@ -104,6 +112,22 @@ def _display_color__bool_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DoubleLineEdit')
     element.set(NS_KARABO + 'decimals', str(model.decimals))
+    return element
+
+
+@register_scene_reader('DisplayProgressBar', version=2)
+def _display_progress_bar_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    value = element.get(NS_KARABO + 'is_vertical', '')
+    traits['is_vertical'] = (value.lower() == 'true')
+    return DisplayProgressBarModel(**traits)
+
+
+@register_scene_writer(DisplayProgressBarModel)
+def _display_progress_bar_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DisplayProgressBar')
+    element.set(NS_KARABO + 'is_vertical', str(model.is_vertical).lower())
     return element
 
 
