@@ -1,7 +1,6 @@
 from PyQt4.QtCore import QRect
 
 from karabo.common.scenemodel import api as models
-
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape
@@ -40,6 +39,7 @@ _SCENE_OBJ_FACTORIES = {
     models.DisplayPlotModel: widgets.GenericWidgetContainer,
     models.DisplayProgressBarModel: widgets.ProgressBarContainer,
     models.DisplayStateColorModel: widgets.DisplayStateColorContainer,
+    models.DisplayTextLogModel: widgets.GenericWidgetContainer,
     models.DoubleLineEditModel: widgets.DoubleLineEditContainer,
     models.EditableListElementModel: widgets.GenericWidgetContainer,
     models.EditableListModel: widgets.GenericWidgetContainer,

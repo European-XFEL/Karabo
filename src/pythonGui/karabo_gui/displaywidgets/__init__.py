@@ -26,6 +26,7 @@ __all__ = [
     "displaysparkline",
     "displaystatecolor",
     "displaytableelement",
+    "displaytextlog",
     "displaytrendline",
     "eval",
     "filesystem",
