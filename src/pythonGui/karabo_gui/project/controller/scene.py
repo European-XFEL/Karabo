@@ -117,12 +117,13 @@ class SceneController(BaseProjectController):
     def _save_scene_to_file(self):
         path = get_setting(KaraboSettings.SCENE_DIR)
         directory = path if path and op.isdir(path) else ""
-
         scene = self.model
+        filename = scene.simple_name
+        filename = filename.translate(str.maketrans("/|: ","----"))
         fn = getSaveFileName(caption='Save scene to file',
                              filter='SVG (*.svg)',
                              suffix='svg',
-                             selectFile=scene.simple_name,
+                             selectFile=filename,
                              directory=directory)
         if not fn:
             return
