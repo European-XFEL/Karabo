@@ -1,44 +1,38 @@
 import karabo_gui.gui_registry_loader  # noqa
-from karabo.common.scenemodel.api import (
-    AnalogModel, BitfieldModel, CheckBoxModel, ChoiceElementModel,
-    ComboBoxModel, DirectoryModel, DisplayCommandModel, DisplayLabelModel,
-    DisplayPlotModel, EditableListElementModel, EditableListModel,
-    EditableSpinBoxModel, FileInModel, FileOutModel, HexadecimalModel,
-    IntLineEditModel, KnobModel, LampModel, LineEditModel, PopUpModel,
-    RunConfiguratorModel, SliderModel, XYPlotModel
-)
+from karabo.common.scenemodel import api as models
 from karabo_gui.widget import Widget
-
 from .base import BaseWidgetContainer
 
 _GENERIC_WIDGET_FACTORIES = {
-    AnalogModel: 'DisplayAnalog',
-    BitfieldModel: 'Bitfield',
-    DisplayCommandModel: 'DisplayCommand',
-    DisplayLabelModel: 'DisplayLabel',
-    DisplayPlotModel: 'DisplayPlot',
-    EditableListModel: 'EditableList',
-    EditableListElementModel: 'EditableListElement',
-    RunConfiguratorModel: 'RunConfiguratorEdit',
-    EditableSpinBoxModel: 'EditableSpinBox',
-    HexadecimalModel: 'Hexadecimal',
-    IntLineEditModel: 'IntLineEdit',
-    KnobModel: 'Knob',
-    LampModel: 'LampWidget',
-    PopUpModel: 'PopUp',
-    SliderModel: 'Slider',
-    XYPlotModel: 'XYPlot',
+    models.AnalogModel: 'DisplayAnalog',
+    models.BitfieldModel: 'Bitfield',
+    models.DisplayCommandModel: 'DisplayCommand',
+    models.DisplayLabelModel: 'DisplayLabel',
+    models.DisplayPlotModel: 'DisplayPlot',
+    models.DisplayTextLogModel: 'DisplayTextLog',
+    models.EditableListModel: 'EditableList',
+    models.EditableListElementModel: 'EditableListElement',
+    models.RunConfiguratorModel: 'RunConfiguratorEdit',
+    models.EditableSpinBoxModel: 'EditableSpinBox',
+    models.HexadecimalModel: 'Hexadecimal',
+    models.IntLineEditModel: 'IntLineEdit',
+    models.KnobModel: 'Knob',
+    models.LampModel: 'LampWidget',
+    models.PopUpModel: 'PopUp',
+    models.SliderModel: 'Slider',
+    models.XYPlotModel: 'XYPlot',
 }
 _GENERIC_WIDGET_FACTORIES = {k: Widget.widgets[v]
                              for k, v in _GENERIC_WIDGET_FACTORIES.items()}
 _DISPLAY_EDITABLE_WIDGETS = {
-    CheckBoxModel: ('DisplayCheckBox', 'EditableCheckBox'),
-    ChoiceElementModel: ('DisplayChoiceElement', 'EditableChoiceElement'),
-    ComboBoxModel: ('DisplayComboBox', 'EditableComboBox'),
-    DirectoryModel: ('DisplayDirectory', 'EditableDirectory'),
-    FileInModel: ('DisplayFileIn', 'EditableFileIn'),
-    FileOutModel: ('DisplayFileOut', 'EditableFileOut'),
-    LineEditModel: ('DisplayLineEdit', 'EditableLineEdit'),
+    models.CheckBoxModel: ('DisplayCheckBox', 'EditableCheckBox'),
+    models.ChoiceElementModel: ('DisplayChoiceElement',
+                                'EditableChoiceElement'),
+    models.ComboBoxModel: ('DisplayComboBox', 'EditableComboBox'),
+    models.DirectoryModel: ('DisplayDirectory', 'EditableDirectory'),
+    models.FileInModel: ('DisplayFileIn', 'EditableFileIn'),
+    models.FileOutModel: ('DisplayFileOut', 'EditableFileOut'),
+    models.LineEditModel: ('DisplayLineEdit', 'EditableLineEdit'),
 }
 _DISPLAY_EDITABLE_WIDGETS = {k: {n: Widget.widgets[n] for n in v}
                              for k, v in _DISPLAY_EDITABLE_WIDGETS.items()}
