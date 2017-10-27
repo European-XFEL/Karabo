@@ -184,12 +184,16 @@ scene by doing the following:
   and add them to the ``_SCENE_OBJ_FACTORIES`` dictionary.
 * Test in the GUI.
 
+
+.. note::
+
+  A Developer's Checklist is documented in :ref:`gui-widget-checklist`
+
 .. note::
 
   If your new scene object **does NOT** need to interact with device properties
   you should take a look at ``karabo_gui.sceneview.widgets.simple``. Adding
   things to the scene view isn't *always* complicated.
-
 
 Adding a New Shape
 ------------------
