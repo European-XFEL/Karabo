@@ -1,4 +1,4 @@
-from PyQt4.QtGui import QWidget, QVBoxLayout
+from PyQt4.QtGui import QStackedLayout, QWidget
 
 from .mplbackends import FigureCanvas, PlotToolbar
 from .utils import _SHORTCUTS
@@ -14,22 +14,30 @@ class MplWidget(QWidget):
         super(MplWidget, self).__init__()
         self._canvas = FigureCanvas(parent=self)
         self._toolbar = PlotToolbar(self._canvas, parent=self)
-        self.curves = []
+        self._canvas.init_popmenu()
 
+        self.curves = []
         # use mpl's key event to dispatch key shortcuts
         self._key_event_receiver = {inst.__class__.__name__: inst for inst in
                                     (self, self._canvas, self._toolbar)}
         self._canvas.mpl_connect('key_press_event', self.on_key_press)
 
-        l = QVBoxLayout(self)
-        l.addWidget(self._canvas)
-        l.addWidget(self._toolbar)
+        # XXX: The plot flickers if the canvas doesn't occupy the whole
+        # widget.
+        layout = QStackedLayout(self)
+        layout.addWidget(self._canvas)
+        layout.addWidget(self._toolbar)
 
     def on_key_press(self, event):
         for klass in self._key_event_receiver:
             funcname, _ = _SHORTCUTS.get((event.key, klass), (None, None))
             if funcname is not None:
-                getattr(self._key_event_receiver[klass], funcname)()
+                func = getattr(self._key_event_receiver[klass], funcname)
+                if 'event' in func.__code__.co_varnames:
+                    # relay the event if func has it in its arg
+                    func(event)
+                else:
+                    func()
                 break
 
     def new_curve(self, x, y, **kwargs):
