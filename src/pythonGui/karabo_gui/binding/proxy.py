@@ -189,6 +189,8 @@ class PropertyProxy(HasStrictTraits):
     path = String
     # The binding for the property
     binding = Instance(BaseBinding, allow_none=True)
+    # The value for the property (from the binding instance)
+    value = DelegatesTo('binding')
     # Parent device or class proxy
     root_proxy = Instance(BaseDeviceProxy)
     # Potential parent path if `binding` is a child of a Pipeline Output
@@ -196,9 +198,6 @@ class PropertyProxy(HasStrictTraits):
 
     # -----------------------------------------------------------------------
     # Traits methods
-
-    def _binding_default(self):
-        return self.root_proxy.get_property_binding(self.path)
 
     def _pipeline_parent_path_default(self):
         def _gen_parents(p):
@@ -217,9 +216,9 @@ class PropertyProxy(HasStrictTraits):
 
     @on_trait_change('root_proxy.schema_update,path')
     def _binding_update(self):
-        if not self.traits_inited():
+        if self.root_proxy is None:
             return
-        self.binding = self._binding_default()
+        self.binding = self.root_proxy.get_property_binding(self.path)
         self.pipeline_parent_path = self._pipeline_parent_path_default()
 
     # -----------------------------------------------------------------------

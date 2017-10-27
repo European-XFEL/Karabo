@@ -223,10 +223,26 @@ def test_multi_device_config_extraction():
     prop_bool = PropertyProxy(root_proxy=dev_one, path='foo')
     prop_string = PropertyProxy(root_proxy=dev_two, path='bar')
 
-    prop_bool.binding.value = True
-    prop_string.binding.value = 'yo'
+    prop_bool.value = True
+    prop_string.value = 'yo'
     configs = extract_sparse_configurations([prop_bool, prop_string])
 
     assert 'one' in configs and 'two' in configs
     assert configs['one']['foo'] is True
     assert configs['two']['bar'] == 'yo'
+
+
+def test_delegation_with_schema_update():
+    schema = get_simple_schema()
+    binding = build_binding(schema)
+    device = DeviceProxy(binding=binding)
+    proxy = PropertyProxy(root_proxy=device, path='bar')
+
+    with assert_trait_change(proxy, 'binding:value'):
+        proxy.value = 'Hello'
+
+    with assert_trait_change(proxy, 'binding'):
+        build_binding(schema, existing=device.binding)
+
+    # The value on the proxy has been reset to the default for strings
+    assert proxy.value == ''
