@@ -11,7 +11,7 @@ import re
 from .exceptions import KaraboError
 from .enums import AccessLevel, Assignment, AccessMode
 from .hash import Descriptor, Hash, HashType, Int32, Slot, String
-from .pipeline import NetworkOutput
+from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
 from .schema import Configurable
 from .synchronization import firstCompleted, FutureDict
@@ -210,7 +210,7 @@ class SignalSlotable(Configurable):
 
     @slot
     def slotStopTrackingExistenceOfConnection(self, *args):
-        print('receivet stopTracking...', args)
+        print('received stopTracking...', args)
 
     @slot
     def slotGetOutputChannelInformation(self, ioChannelId, processId):
@@ -221,6 +221,20 @@ class SignalSlotable(Configurable):
             return True, ret
         else:
             return False, Hash()
+
+    @slot
+    def slotGetOutputChannelNames(self):
+        """Return a list of channel names for the DAQ
+        """
+        ret = []
+
+        for k in dir(self.__class__):
+            desc = getattr(self.__class__, k, None)
+            if isinstance(desc, Descriptor):
+                for name, output in desc.allDescriptors():
+                    if isinstance(output, OutputChannel):
+                        ret.append(name)
+        return ret
 
     def _initInfo(self):
         """return the info hash at initialization time"""
