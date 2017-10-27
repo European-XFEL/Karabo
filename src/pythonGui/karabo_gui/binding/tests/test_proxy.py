@@ -3,7 +3,7 @@ from unittest.mock import patch, Mock
 from karabo.common.api import DeviceStatus
 from ..api import (
     ImageBinding, DeviceProxy, DeviceClassProxy, PropertyProxy,
-    apply_default_configuration, build_binding
+    apply_default_configuration, build_binding, extract_sparse_configurations
 )
 from ..testing import assert_trait_change
 from .schema import get_pipeline_schema, get_simple_schema, get_slotted_schema
@@ -214,3 +214,19 @@ def test_schema_updates():
 
     with assert_trait_change(proxy, 'schema_update'):
         build_binding(schema, existing=proxy.binding)
+
+
+def test_multi_device_config_extraction():
+    schema = get_simple_schema()
+    dev_one = DeviceProxy(device_id='one', binding=build_binding(schema))
+    dev_two = DeviceProxy(device_id='two', binding=build_binding(schema))
+    prop_bool = PropertyProxy(root_proxy=dev_one, path='foo')
+    prop_string = PropertyProxy(root_proxy=dev_two, path='bar')
+
+    prop_bool.binding.value = True
+    prop_string.binding.value = 'yo'
+    configs = extract_sparse_configurations([prop_bool, prop_string])
+
+    assert 'one' in configs and 'two' in configs
+    assert configs['one']['foo'] is True
+    assert configs['two']['bar'] == 'yo'
