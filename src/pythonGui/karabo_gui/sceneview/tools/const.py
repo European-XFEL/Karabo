@@ -32,6 +32,7 @@ WIDGET_FACTORIES = {
     'DisplaySparkline': models.SparklineModel,
     'DisplayStateColor': models.DisplayStateColorModel,
     'DisplayTableElement': models.TableElementModel,
+    'DisplayTextLog': models.DisplayTextLogModel,
     'DisplayTrendline': models.LinePlotModel,
     'DoubleLineEdit': models.DoubleLineEditModel,
     'EditableCheckBox': models.CheckBoxModel,

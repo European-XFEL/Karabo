@@ -13,13 +13,11 @@ from PyQt4.QtGui import QFrame, QLabel
 from karabo.middlelayer import (Double, Float, String, Simple, Type, HashType,
                                 VectorDouble, VectorFloat, VectorHash)
 from karabo_gui.alarms.api import ALARM_COLOR, WARN_COLOR
-from karabo_gui.const import WIDGET_MIN_HEIGHT
+from karabo_gui.const import FINE_COLOR, WIDGET_MIN_HEIGHT
 from karabo_gui.util import generateObjectName
 from karabo_gui.widget import DisplayWidget
 from .unitlabel import add_unit_label
 
-# We excplicitly set a soft color as standard
-FINE_COLOR = (214, 214, 255, 64)
 # alpha layer to add to our global alarm and warn colors
 ALPHA = (64,)
 
