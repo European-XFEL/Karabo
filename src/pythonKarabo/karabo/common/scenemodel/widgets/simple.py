@@ -61,6 +61,10 @@ class DisplayPlotModel(BaseWidgetObjectData):
     """ A model for DisplayPlot"""
 
 
+class DisplayTextLogModel(BaseWidgetObjectData):
+    """ A model for DisplayTextLog"""
+
+
 class EditableListModel(BaseWidgetObjectData):
     """ A model for EditableList"""
 
@@ -268,7 +272,7 @@ def _build_empty_widget_readers_and_writers():
         return writer
 
     names = ('AnalogModel', 'BitfieldModel', 'DisplayCommandModel',
-             'DisplayLabelModel', 'DisplayPlotModel',
+             'DisplayLabelModel', 'DisplayPlotModel', 'DisplayTextLogModel',
              'EditableListModel', 'EditableListElementModel',
              'EditableSpinBoxModel', 'HexadecimalModel', 'IntLineEditModel',
              'KnobModel', 'LampModel', 'PopUpModel', 'RunConfiguratorModel',
