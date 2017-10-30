@@ -1,101 +1,77 @@
 from PyQt4.QtCore import QRect
 
-from karabo.common.scenemodel.api import (
-    AnalogModel, BaseLayoutModel, BitfieldModel, ColorBoolModel,
-    BoxLayoutModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
-    DigitIconsModel, DirectoryModel, DisplayAlignedImageModel,
-    DisplayCommandModel, DisplayIconsetModel, DisplayImageElementModel,
-    DisplayImageModel, DisplayLabelModel, DisplayPlotModel,
-    DisplayProgressBarModel,
-    DisplayStateColorModel, DoubleLineEditModel, EditableListElementModel,
-    EditableListModel, EditableSpinBoxModel, EvaluatorModel,
-    FileInModel, FileOutModel, FixedLayoutModel, FloatSpinBoxModel,
-    GridLayoutModel, HexadecimalModel, IntLineEditModel, KnobModel,
-    LabelModel, LampModel, LineEditModel, LineModel, LinePlotModel,
-    MonitorModel, PathModel, PopUpModel, RectangleModel, RunConfiguratorModel,
-    SceneLinkModel, ScientificImageModel, SelectionIconsModel, SingleBitModel,
-    SliderModel, SparklineModel, StatefulIconWidgetModel, TableElementModel,
-    TextIconsModel, UnknownWidgetDataModel, UnknownXMLDataModel,
-    VacuumWidgetModel, WebcamImageModel, WorkflowItemModel, XYPlotModel
-)
+from karabo.common.scenemodel import api as models
 
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape
-from .widget.api import (
-    BaseWidgetContainer, ColorBoolContainer, ComplexImageWidgetContainer,
-    DisplayEditableWidgetContainer, DisplayIconsetContainer,
-    DisplayStateColorContainer, DoubleLineEditContainer, EvaluatorContainer,
-    FloatSpinBoxContainer, GenericWidgetContainer, IconsContainer,
-    LabelWidget, LinePlotContainer, MonitorContainer, ProgressBarContainer,
-    SceneLinkWidget, SimpleImageWidgetContainer, SingleBitContainer,
-    SparklineContainer, StatefulIconContainer, TableElementContainer,
-    UnknownSvgWidget, UnknownWidget, VacuumWidgetPlaceholder,
-    WorkflowItemWidget
-)
+from .widget import api as widgets
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (
-    BaseWidgetContainer, LabelWidget, SceneLinkWidget, UnknownSvgWidget,
-    UnknownWidget, WorkflowItemWidget)
+    widgets.BaseWidgetContainer, widgets.LabelWidget, widgets.SceneLinkWidget,
+    widgets.UnknownSvgWidget, widgets.UnknownWidget, widgets.WorkflowItemWidget
+)
 _SCENE_OBJ_FACTORIES = {
-    FixedLayoutModel: lambda m, p: GroupLayout(m),
-    BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
-    GridLayoutModel: lambda m, p: GridLayout(m),
-    LineModel: lambda m, p: LineShape(model=m),
-    RectangleModel: lambda m, p: RectangleShape(model=m),
-    PathModel: lambda m, p: PathShape(model=m),
-    LabelModel: LabelWidget,
-    SceneLinkModel: SceneLinkWidget,
-    UnknownWidgetDataModel: UnknownWidget,
-    UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(m, parent=p),
-    BitfieldModel: GenericWidgetContainer,
-    AnalogModel: GenericWidgetContainer,
-    DisplayCommandModel: GenericWidgetContainer,
-    DisplayIconsetModel: DisplayIconsetContainer,
-    DisplayAlignedImageModel: SimpleImageWidgetContainer,
-    DisplayImageModel: SimpleImageWidgetContainer,
-    DisplayImageElementModel: SimpleImageWidgetContainer,
-    ScientificImageModel: ComplexImageWidgetContainer,
-    WebcamImageModel: ComplexImageWidgetContainer,
-    DisplayLabelModel: GenericWidgetContainer,
-    DisplayPlotModel: GenericWidgetContainer,
-    DoubleLineEditModel: DoubleLineEditContainer,
-    EditableListModel: GenericWidgetContainer,
-    EditableListElementModel: GenericWidgetContainer,
-    EditableSpinBoxModel: GenericWidgetContainer,
-    HexadecimalModel: GenericWidgetContainer,
-    IntLineEditModel: GenericWidgetContainer,
-    PopUpModel: GenericWidgetContainer,
-    KnobModel: GenericWidgetContainer,
-    LampModel: GenericWidgetContainer,
-    SliderModel: GenericWidgetContainer,
-    XYPlotModel: GenericWidgetContainer,
-    CheckBoxModel: DisplayEditableWidgetContainer,
-    ChoiceElementModel: DisplayEditableWidgetContainer,
-    ComboBoxModel: DisplayEditableWidgetContainer,
-    DirectoryModel: DisplayEditableWidgetContainer,
-    FileInModel: DisplayEditableWidgetContainer,
-    FileOutModel: DisplayEditableWidgetContainer,
-    LineEditModel: DisplayEditableWidgetContainer,
-    RunConfiguratorModel: GenericWidgetContainer,
-    ColorBoolModel: ColorBoolContainer,
-    DisplayProgressBarModel: ProgressBarContainer,
-    DisplayStateColorModel: DisplayStateColorContainer,
-    DigitIconsModel: IconsContainer,
-    SelectionIconsModel: IconsContainer,
-    TextIconsModel: IconsContainer,
-    VacuumWidgetModel: VacuumWidgetPlaceholder,
-    EvaluatorModel: EvaluatorContainer,
-    FloatSpinBoxModel: FloatSpinBoxContainer,
-    SingleBitModel: SingleBitContainer,
-    MonitorModel: MonitorContainer,
-    LinePlotModel: LinePlotContainer,
-    TableElementModel: TableElementContainer,
-    WorkflowItemModel: WorkflowItemWidget,
-    StatefulIconWidgetModel: StatefulIconContainer,
-    SparklineModel: SparklineContainer,
+    # Layouts and non-widgets
+    models.BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
+    models.FixedLayoutModel: lambda m, p: GroupLayout(m),
+    models.GridLayoutModel: lambda m, p: GridLayout(m),
+    models.LineModel: lambda m, p: LineShape(model=m),
+    models.PathModel: lambda m, p: PathShape(model=m),
+    models.RectangleModel: lambda m, p: RectangleShape(model=m),
+    models.UnknownXMLDataModel: lambda m, p: widgets.UnknownSvgWidget.create(m, parent=p),  # noqa
+    # Widgets
+    models.AnalogModel: widgets.GenericWidgetContainer,
+    models.BitfieldModel: widgets.GenericWidgetContainer,
+    models.CheckBoxModel: widgets.DisplayEditableWidgetContainer,
+    models.ChoiceElementModel: widgets.DisplayEditableWidgetContainer,
+    models.ColorBoolModel: widgets.ColorBoolContainer,
+    models.ComboBoxModel: widgets.DisplayEditableWidgetContainer,
+    models.DigitIconsModel: widgets.IconsContainer,
+    models.DirectoryModel: widgets.DisplayEditableWidgetContainer,
+    models.DisplayAlignedImageModel: widgets.SimpleImageWidgetContainer,
+    models.DisplayCommandModel: widgets.GenericWidgetContainer,
+    models.DisplayIconsetModel: widgets.DisplayIconsetContainer,
+    models.DisplayImageElementModel: widgets.SimpleImageWidgetContainer,
+    models.DisplayImageModel: widgets.SimpleImageWidgetContainer,
+    models.DisplayLabelModel: widgets.GenericWidgetContainer,
+    models.DisplayPlotModel: widgets.GenericWidgetContainer,
+    models.DisplayProgressBarModel: widgets.ProgressBarContainer,
+    models.DisplayStateColorModel: widgets.DisplayStateColorContainer,
+    models.DoubleLineEditModel: widgets.DoubleLineEditContainer,
+    models.EditableListElementModel: widgets.GenericWidgetContainer,
+    models.EditableListModel: widgets.GenericWidgetContainer,
+    models.EditableSpinBoxModel: widgets.GenericWidgetContainer,
+    models.EvaluatorModel: widgets.EvaluatorContainer,
+    models.FileInModel: widgets.DisplayEditableWidgetContainer,
+    models.FileOutModel: widgets.DisplayEditableWidgetContainer,
+    models.FloatSpinBoxModel: widgets.FloatSpinBoxContainer,
+    models.HexadecimalModel: widgets.GenericWidgetContainer,
+    models.IntLineEditModel: widgets.GenericWidgetContainer,
+    models.KnobModel: widgets.GenericWidgetContainer,
+    models.LabelModel: widgets.LabelWidget,
+    models.LampModel: widgets.GenericWidgetContainer,
+    models.LineEditModel: widgets.DisplayEditableWidgetContainer,
+    models.LinePlotModel: widgets.LinePlotContainer,
+    models.MonitorModel: widgets.MonitorContainer,
+    models.PopUpModel: widgets.GenericWidgetContainer,
+    models.RunConfiguratorModel: widgets.GenericWidgetContainer,
+    models.SceneLinkModel: widgets.SceneLinkWidget,
+    models.ScientificImageModel: widgets.ComplexImageWidgetContainer,
+    models.SelectionIconsModel: widgets.IconsContainer,
+    models.SingleBitModel: widgets.SingleBitContainer,
+    models.SliderModel: widgets.GenericWidgetContainer,
+    models.SparklineModel: widgets.SparklineContainer,
+    models.StatefulIconWidgetModel: widgets.StatefulIconContainer,
+    models.TableElementModel: widgets.TableElementContainer,
+    models.TextIconsModel: widgets.IconsContainer,
+    models.UnknownWidgetDataModel: widgets.UnknownWidget,
+    models.VacuumWidgetModel: widgets.VacuumWidgetPlaceholder,
+    models.WebcamImageModel: widgets.ComplexImageWidgetContainer,
+    models.WorkflowItemModel: widgets.WorkflowItemWidget,
+    models.XYPlotModel: widgets.GenericWidgetContainer,
 }
 
 
@@ -105,7 +81,7 @@ def find_top_level_model(scene_model, model):
         model in the end.
     """
     def recurse(parent_model, seek_model):
-        if isinstance(parent_model, BaseLayoutModel):
+        if isinstance(parent_model, models.BaseLayoutModel):
             for child in parent_model.children:
                 result = recurse(child, seek_model)
                 if result is not None:
@@ -126,7 +102,7 @@ def replace_model_in_top_level_model(layout_model, parent_model, old_model,
 
         This method returns ``True``.
     """
-    if isinstance(parent_model, BaseLayoutModel):
+    if isinstance(parent_model, models.BaseLayoutModel):
         for child in parent_model.children:
             result = replace_model_in_top_level_model(parent_model, child,
                                                       old_model, new_model)

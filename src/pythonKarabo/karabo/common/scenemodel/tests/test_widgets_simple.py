@@ -1,14 +1,6 @@
 from nose.tools import assert_raises
 
-from ..api import (BitfieldModel, CheckBoxModel, ChoiceElementModel,
-                   ComboBoxModel, DirectoryModel, DisplayCommandModel,
-                   DisplayLabelModel, DisplayPlotModel,
-                   EditableListElementModel, EditableListModel,
-                   EditableSpinBoxModel, FileInModel, FileOutModel,
-                   HexadecimalModel, IntLineEditModel, KnobModel, LabelModel,
-                   LineEditModel, PopUpModel, RunConfiguratorModel,
-                   SceneLinkModel, SceneTargetWindow, SceneWriterException,
-                   SliderModel, WorkflowItemModel, XYPlotModel)
+from .. import api
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
 
@@ -48,19 +40,23 @@ def _geometry_traits():
 
 def test_all_empty_widgets():
     model_classes = (
-        BitfieldModel, DisplayCommandModel, DisplayLabelModel,
-        DisplayPlotModel, EditableListModel,
-        EditableListElementModel, EditableSpinBoxModel, HexadecimalModel,
-        IntLineEditModel, KnobModel, SliderModel, XYPlotModel, PopUpModel,
-        RunConfiguratorModel
+        api.BitfieldModel, api.DisplayCommandModel, api.DisplayLabelModel,
+        api.DisplayPlotModel, api.EditableListModel,
+        api.EditableListElementModel, api.EditableSpinBoxModel,
+        api.HexadecimalModel, api.IntLineEditModel, api.KnobModel,
+        api.SliderModel, api.XYPlotModel, api.PopUpModel,
+        api.RunConfiguratorModel
     )
     for klass in model_classes:
         yield _check_empty_widget, klass
 
 
 def test_display_editable_widgets():
-    model_classes = (CheckBoxModel, ChoiceElementModel, ComboBoxModel,
-                     DirectoryModel, FileInModel, FileOutModel, LineEditModel)
+    model_classes = (
+        api.CheckBoxModel, api.ChoiceElementModel, api.ComboBoxModel,
+        api.DirectoryModel, api.FileInModel, api.FileOutModel,
+        api.LineEditModel
+    )
     for klass in model_classes:
         yield _check_display_editable_widget, klass
 
@@ -68,8 +64,8 @@ def test_display_editable_widgets():
 def test_missing_parent_component():
     traits = base_widget_traits()
     traits['parent_component'] = ''  # explicitly empty!
-    model = BitfieldModel(**traits)
-    assert_raises(SceneWriterException, single_model_round_trip, model)
+    model = api.BitfieldModel(**traits)
+    assert_raises(api.SceneWriterException, single_model_round_trip, model)
 
 
 def test_label_model():
@@ -79,7 +75,7 @@ def test_label_model():
     traits['foreground'] = '#000000'
     traits['background'] = '#ffffff'
     traits['frame_width'] = 0
-    model = LabelModel(**traits)
+    model = api.LabelModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.text == 'foo'
@@ -92,12 +88,12 @@ def test_label_model():
 def test_scene_link_model():
     traits = _geometry_traits()
     traits['target'] = 'other.svg'
-    traits['target_window'] = SceneTargetWindow.Dialog
-    model = SceneLinkModel(**traits)
+    traits['target_window'] = api.SceneTargetWindow.Dialog
+    model = api.SceneLinkModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.target == 'other.svg'
-    assert read_model.target_window == SceneTargetWindow.Dialog
+    assert read_model.target_window == api.SceneTargetWindow.Dialog
 
 
 def test_workflowitem_model():
@@ -106,7 +102,7 @@ def test_workflowitem_model():
         traits['device_id'] = 'bar'
         traits['font'] = UBUNTU_FONT_SPEC
         traits['klass'] = klass_name
-        model = WorkflowItemModel(**traits)
+        model = api.WorkflowItemModel(**traits)
         read_model = single_model_round_trip(model)
         _assert_geometry_traits(read_model)
         assert read_model.device_id == 'bar'

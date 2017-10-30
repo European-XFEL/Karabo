@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from karabo_gui.displaywidgets.displaystatecolor import DisplayStateColor
 from .base import BaseWidgetContainer
 
