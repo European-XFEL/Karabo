@@ -18,5 +18,6 @@ def register_shortcut(func=None, *, key=''):
         # overwrite the shortcut but print a warning
         print("WARNING: overwriting existing shortcut: "
               " {} for {}".format(key, klass))
-    _SHORTCUTS[(key, klass)] = (funcname, func.__doc__)
+    doc = func.__doc__ if func.__doc__ else funcname
+    _SHORTCUTS[(key, klass)] = (funcname, doc)
     return func
