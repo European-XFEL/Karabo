@@ -83,7 +83,7 @@ class TableElementModel(BaseDisplayEditableWidget):
 
 
 @register_scene_reader('DisplayColorBool', version=2)
-def _display_color_bool_reader(read_func, element):
+def _color_bool_reader(read_func, element):
     traits = read_base_widget_data(element)
     value = element.get(NS_KARABO + 'invert')
     traits['invert'] = (value.lower() == 'true')
@@ -91,7 +91,7 @@ def _display_color_bool_reader(read_func, element):
 
 
 @register_scene_writer(ColorBoolModel)
-def _display_color__bool_writer(write_func, model, parent):
+def _color_bool_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayColorBool')
     element.set(NS_KARABO + 'invert', str(model.invert).lower())
@@ -99,7 +99,7 @@ def _display_color__bool_writer(write_func, model, parent):
 
 
 @register_scene_reader('DoubleLineEdit', version=1)
-def _display_color_bool_reader(read_func, element):
+def _double_line_edit_reader(read_func, element):
     traits = read_base_widget_data(element)
     decimals = element.get(NS_KARABO + 'decimals', '')
     if decimals:
@@ -108,7 +108,7 @@ def _display_color_bool_reader(read_func, element):
 
 
 @register_scene_writer(DoubleLineEditModel)
-def _display_color__bool_writer(write_func, model, parent):
+def _double_line_edit_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DoubleLineEdit')
     element.set(NS_KARABO + 'decimals', str(model.decimals))
