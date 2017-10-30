@@ -22,6 +22,7 @@ __all__ = [
     "displaylineedit",
     "displaymissingbox",
     "displayplot",
+    "displayprogressbar",
     "displaysparkline",
     "displaystatecolor",
     "displaytableelement",
