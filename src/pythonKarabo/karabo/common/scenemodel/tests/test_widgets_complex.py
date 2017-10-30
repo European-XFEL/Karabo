@@ -1,8 +1,5 @@
-from ..api import (
-    ColorBoolModel, DisplayProgressBarModel, DisplayStateColorModel,
-    DoubleLineEditModel, EvaluatorModel, FloatSpinBoxModel, MonitorModel,
-    SingleBitModel, TableElementModel,
-)
+
+from .. import api
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
 
@@ -26,7 +23,7 @@ TABLE_SCHEMA = (
 def test_doubleline_edit():
     traits = base_widget_traits()
     traits['decimals'] = 5
-    model = DoubleLineEditModel(**traits)
+    model = api.DoubleLineEditModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.decimals == 5
@@ -35,7 +32,7 @@ def test_doubleline_edit():
 def test_color_bool_widget():
     traits = base_widget_traits()
     traits['invert'] = True
-    model = ColorBoolModel(**traits)
+    model = api.ColorBoolModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.invert
@@ -44,7 +41,7 @@ def test_color_bool_widget():
 def test_display_progress_bar_widget():
     traits = base_widget_traits()
     traits['is_vertical'] = True
-    model = DisplayProgressBarModel(**traits)
+    model = api.DisplayProgressBarModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.is_vertical
@@ -53,7 +50,7 @@ def test_display_progress_bar_widget():
 def test_display_state_color_widget():
     traits = base_widget_traits()
     traits['text'] = 'foo'
-    model = DisplayStateColorModel(**traits)
+    model = api.DisplayStateColorModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.text == 'foo'
@@ -62,7 +59,7 @@ def test_display_state_color_widget():
 def test_evaluator_widget():
     traits = base_widget_traits()
     traits['expression'] = 'x'
-    model = EvaluatorModel(**traits)
+    model = api.EvaluatorModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.expression == 'x'
@@ -71,7 +68,7 @@ def test_evaluator_widget():
 def test_float_spinbox_widget():
     traits = base_widget_traits()
     traits['step'] = 1.5
-    model = FloatSpinBoxModel(**traits)
+    model = api.FloatSpinBoxModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.step == 1.5
@@ -81,7 +78,7 @@ def test_monitor_widget():
     traits = base_widget_traits()
     traits['filename'] = 'foo.log'
     traits['interval'] = 1.5
-    model = MonitorModel(**traits)
+    model = api.MonitorModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.filename == 'foo.log'
@@ -92,7 +89,7 @@ def test_single_bit_widget():
     traits = base_widget_traits()
     traits['invert'] = True
     traits['bit'] = 42
-    model = SingleBitModel(**traits)
+    model = api.SingleBitModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.invert
@@ -105,7 +102,7 @@ def test_table_element_widget():
         traits['klass'] = klass_name
         # XXX: What does a schema look like?
         traits['column_schema'] = TABLE_SCHEMA
-        model = TableElementModel(**traits)
+        model = api.TableElementModel(**traits)
         read_model = single_model_round_trip(model)
         assert_base_traits(read_model)
         assert read_model.klass == klass_name

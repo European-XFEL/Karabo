@@ -1,5 +1,4 @@
-from ..api import (DisplayAlignedImageModel, DisplayImageElementModel,
-                   DisplayImageModel, ScientificImageModel, WebcamImageModel)
+from .. import api
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
 
@@ -43,15 +42,16 @@ def _base_image_traits():
 
 def test_simple_image_widgets():
     model_classes = (
-        DisplayAlignedImageModel, DisplayImageModel, DisplayImageElementModel
-        )
+        api.DisplayAlignedImageModel, api.DisplayImageModel,
+        api.DisplayImageElementModel
+    )
     for klass in model_classes:
         yield _check_simple_image_widget, klass
 
 
 def test_scientific_image_model():
-    _check_base_image_widget(ScientificImageModel)
+    _check_base_image_widget(api.ScientificImageModel)
 
 
 def test_webcam_image_model():
-    _check_base_image_widget(WebcamImageModel)
+    _check_base_image_widget(api.WebcamImageModel)
