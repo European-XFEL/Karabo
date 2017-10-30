@@ -2,15 +2,21 @@ import matplotlib
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg, NavigationToolbar2QT
 )
+from matplotlib.backend_tools import cursors
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from PyQt4.QtCore import Qt, QSize
+from PyQt4.QtGui import QSizePolicy, QCursor, QMenu
 
 from karabo_gui import icons
 from karabo_gui.messagebox import show_information
+from .tools import DataCursor
 from .utils import register_shortcut, _SHORTCUTS
 
 matplotlib.rcParams.update({'font.size': 8})  # default font size 10 is too big
+
+_MOUSE_LEFT_BUTTON = 1
+_MOUSE_RIGHT_BUTTON = 3
 
 
 class FigureCanvas(FigureCanvasQTAgg):
@@ -22,11 +28,15 @@ class FigureCanvas(FigureCanvasQTAgg):
         super(FigureCanvas, self).__init__(fig)
         self.curr_axes = fig.add_subplot(111)
 
+        self.setSizePolicy(QSizePolicy.Expanding,
+                           QSizePolicy.Expanding)
         self.setFocusPolicy(Qt.StrongFocus)
-        self.highlighted = None
         self.toolbar = None  # this will be set by the toolbar class
+        self.popmenu = QMenu(self)
+        self.highlighted = None
 
-        self.mpl_connect('button_press_event', self.on_mouse_click)
+        self.mpl_connect('button_press_event', self.on_mouse_press)
+        self.mpl_connect('button_release_event', self.on_mouse_release)
         self.mpl_connect('pick_event', self.on_pick)
 
     def draw(self, new_data=True):
@@ -35,13 +45,21 @@ class FigureCanvas(FigureCanvasQTAgg):
         self.curr_axes.autoscale_view()
         super(FigureCanvas, self).draw()
 
-    def on_mouse_click(self, event):
-        if self.toolbar:
-            if event.dblclick and not event.inaxes:
-                self.toolbar.edit_parameters()
+    def on_mouse_press(self, event):
+        if not event.inaxes and event.dblclick:
+            self.toolbar.edit_parameters()
+            return
+
+    def on_mouse_release(self, event):
+        tb = self.toolbar
+        if event.button == _MOUSE_RIGHT_BUTTON:
+            if tb.mode or tb.data_cursor_visible:
+                return
+            elif event.inaxes:
+                self.popmenu.exec(QCursor.pos())
 
     def on_pick(self, event):
-        if event.mouseevent.button == 1:  # left click
+        if event.mouseevent.button == _MOUSE_LEFT_BUTTON:
             picked = event.artist
             if isinstance(picked, Line2D):
                 if self.highlighted is picked:
@@ -93,6 +111,19 @@ class FigureCanvas(FigureCanvasQTAgg):
         self.curr_axes.grid()
         self.draw(new_data=False)
 
+    def init_popmenu(self):
+        """Copy toolbar buttons to right click menu, skip Pan and Zoom buttons
+        because they will hijack mouse click reactions once activated.
+        """
+        for action in self.toolbar.actions():
+            name = action.text()
+            if name in ('Pan', 'Zoom'):
+                continue
+            elif not name:
+                self.popmenu.addSeparator()
+                continue
+            self.popmenu.addAction(action)
+
 
 class PlotToolbar(NavigationToolbar2QT):
     toolitems = (
@@ -108,9 +139,12 @@ class PlotToolbar(NavigationToolbar2QT):
     )
 
     def __init__(self, canvas, parent=None):
-        self.canvas = canvas
-        super(PlotToolbar, self).__init__(canvas, parent)
+        super(PlotToolbar, self).__init__(canvas, parent, coordinates=False)
+        self.figure = canvas.figure
         self.setIconSize(QSize(18, 18))
+        self.data_cursor = None
+        self.data_cursor_visible = False
+        self._cid = {}  # keep track of mpl event connected functions
 
     def _icon(self, name):
         """Reimplement of the mpl function
@@ -121,6 +155,7 @@ class PlotToolbar(NavigationToolbar2QT):
         else:
             return super(PlotToolbar, self)._icon(name)
 
+    @register_shortcut(key='ctrl+h')
     def help_info(self):
         info = []
         for (key, _), (_, doc) in sorted(_SHORTCUTS.items()):
@@ -131,23 +166,33 @@ class PlotToolbar(NavigationToolbar2QT):
     def home(self, *args):
         """reset view, start auto zoom"""
         super(PlotToolbar, self).home(*args)
-        self.canvas.figure.gca().set_autoscale_on(True)
+        self.figure.gca().set_autoscale_on(True)
         self.canvas.draw(new_data=False)
-
-    @register_shortcut(key='ctrl+h')
-    def toggle_visible(self):
-        """hide/show toolbar"""
-        self.setVisible(not self.isVisible())
 
     @register_shortcut(key='p')
     def pan(self):
         """activate pan mode"""
+        if self.data_cursor_visible:
+            self.crosshair()
         super(PlotToolbar, self).pan()
+        # self.mode is defined in base class
+        if self.mode == 'pan/zoom':
+            # MPL don't change cursor until mouse move, we do it to give user
+            # a quick visual response.
+            super(PlotToolbar, self).set_cursor(cursors.MOVE)
+        else:
+            super(PlotToolbar, self).set_cursor(cursors.POINTER)
 
     @register_shortcut(key='z')
     def zoom(self):
         """activate zoom mode"""
+        if self.data_cursor_visible:
+            self.crosshair()
         super(PlotToolbar, self).zoom()
+        if self.mode == 'zoom rect':
+            super(PlotToolbar, self).set_cursor(cursors.SELECT_REGION)
+        else:
+            super(PlotToolbar, self).set_cursor(cursors.POINTER)
 
     @register_shortcut(key='ctrl+y')
     def forward(self):
@@ -163,3 +208,34 @@ class PlotToolbar(NavigationToolbar2QT):
     def save_figure(self):
         """save plot to file"""
         super(PlotToolbar, self).save_figure()
+
+    @register_shortcut(key='c')
+    def crosshair(self, event=None):
+        """toggle cross hair mode"""
+        # this mode is always triggered by key press, we relay the key press
+        # event because it (wierdly) contains mouse pos. This is needed for the
+        # first crosshair draw.
+        data_cursor = self.data_cursor
+        if self.data_cursor_visible:
+            self.data_cursor_visible = data_cursor.set_visible(False, event)
+            self.canvas.mpl_disconnect(self._cid.pop('crosshair'))
+            return
+
+        cmode = self.mode
+        if cmode == 'pan/zoom':
+            self.pan()
+        elif cmode == 'zoom rect':
+            self.zoom()
+
+        canvas = self.canvas
+        cax = canvas.curr_axes
+        if data_cursor is None:
+            data_cursor = self.data_cursor = DataCursor(cax, visible=False,
+                                                        color='r')
+        elif data_cursor.ax != cax:
+            self.figure.texts.remove(data_cursor.text)
+            data_cursor = self.data_cursor = DataCursor(cax, visible=False,
+                                                        color='r')
+        self.data_cursor_visible = data_cursor.set_visible(True, event)
+        self._cid['crosshair'] = canvas.mpl_connect('motion_notify_event',
+                                                    data_cursor.showdata)
