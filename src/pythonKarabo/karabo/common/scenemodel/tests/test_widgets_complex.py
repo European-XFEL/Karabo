@@ -1,7 +1,7 @@
 from ..api import (
-    ColorBoolModel, DisplayStateColorModel, DoubleLineEditModel,
-    EvaluatorModel, FloatSpinBoxModel, MonitorModel, SingleBitModel,
-    TableElementModel,
+    ColorBoolModel, DisplayProgressBarModel, DisplayStateColorModel,
+    DoubleLineEditModel, EvaluatorModel, FloatSpinBoxModel, MonitorModel,
+    SingleBitModel, TableElementModel,
 )
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
@@ -39,6 +39,15 @@ def test_color_bool_widget():
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.invert
+
+
+def test_display_progress_bar_widget():
+    traits = base_widget_traits()
+    traits['is_vertical'] = True
+    model = DisplayProgressBarModel(**traits)
+    read_model = single_model_round_trip(model)
+    assert_base_traits(read_model)
+    assert read_model.is_vertical
 
 
 def test_display_state_color_widget():
