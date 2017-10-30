@@ -7,10 +7,7 @@ from nose.tools import assert_raises
 
 from karabo.testing.utils import temp_cwd, temp_xml_file, xml_is_equal
 # Import via the API module so that all the readers/writers get registered
-from ..api import (
-    SceneModel, FixedLayoutModel, LabelModel, LineModel, RectangleModel,
-    UnknownWidgetDataModel, UnknownXMLDataModel, SceneWriterException,
-    read_scene, write_scene, write_single_model, NS_KARABO, SCENE_FILE_VERSION)
+from .. import api
 from ..io_utils import set_numbers
 
 DATA_DIR = op.join(op.abspath(op.dirname(__file__)), 'data')
@@ -99,19 +96,19 @@ def _iter_data_files(directory):
 
 def test_set_numbers_name_mapping():
     element = Element('rect')
-    model = RectangleModel(x=0.0, y=0, height=10, width=10)
+    model = api.RectangleModel(x=0.0, y=0, height=10, width=10)
     names = ('x', 'y', 'height', 'width')
-    xmlnames = (NS_KARABO + n for n in names[:-1])
+    xmlnames = (api.NS_KARABO + n for n in names[:-1])
 
     # Normal mapping is tested by the scene writers. Lets make sure the
     # parameter checking works...
-    assert_raises(SceneWriterException, set_numbers, names, model, element,
+    assert_raises(api.SceneWriterException, set_numbers, names, model, element,
                   xmlnames=xmlnames)
 
 
 def test_set_numbers_float_conversion():
     element = Element('rect')
-    model = RectangleModel(x=0.0, y=0.2, height=10.01, width=10.05)
+    model = api.RectangleModel(x=0.0, y=0.2, height=10.01, width=10.05)
 
     # Test rounding of floating point values
     set_numbers(('x', 'y', 'height', 'width'), model, element)
@@ -123,7 +120,7 @@ def test_set_numbers_float_conversion():
 
 def test_reading():
     with temp_xml_file(SCENE_SVG) as fn:
-        scene = read_scene(fn)
+        scene = api.read_scene(fn)
 
     assert scene.width == 1024
     assert scene.height == 768
@@ -133,32 +130,32 @@ def test_reading():
     assert len(layout.children) == 3
 
     child = layout.children[0]
-    assert isinstance(child, LabelModel)
+    assert isinstance(child, api.LabelModel)
 
     child = layout.children[1]
-    assert isinstance(child, RectangleModel)
+    assert isinstance(child, api.RectangleModel)
 
     child = layout.children[2]
-    assert isinstance(child, LineModel)
+    assert isinstance(child, api.LineModel)
 
 
 def test_writing():
-    extra_attributes = {NS_KARABO + 'random': 'golly'}
-    scene = SceneModel(extra_attributes=extra_attributes,
-                       uuid='e24a23c7-5aa9-420c-9741-248ea6672355')
-    layout = FixedLayoutModel(x=106, y=74, height=323, width=384)
-    label = LabelModel(
+    extra_attributes = {api.NS_KARABO + 'random': 'golly'}
+    scene = api.SceneModel(extra_attributes=extra_attributes,
+                           uuid='e24a23c7-5aa9-420c-9741-248ea6672355')
+    layout = api.FixedLayoutModel(x=106, y=74, height=323, width=384)
+    label = api.LabelModel(
         x=175, y=125, height=60, width=309,
         text='Some text', font='Ubuntu,48,-1,5,63,0,0,0,0,0',
         foreground='#4c4c4c', frame_width=0
     )
-    rect = RectangleModel(
+    rect = api.RectangleModel(
         x=106, y=74, height=143, width=151,
         stroke='#000000', stroke_dashoffset=0.0, stroke_linecap='square',
         stroke_linejoin='bevel', stroke_miterlimit=2.0, stroke_opacity=1.0,
         stroke_style=1, stroke_width=1.0
     )
-    line = LineModel(
+    line = api.LineModel(
         x1=397, x2=489, y1=84, y2=396,
         stroke="#000000", stroke_dashoffset=0.0, stroke_linecap='square',
         stroke_linejoin='bevel', stroke_miterlimit=2.0, stroke_opacity=1.0,
@@ -167,58 +164,58 @@ def test_writing():
     layout.children.extend([label, rect, line])
     scene.children.append(layout)
 
-    unknown_child = UnknownXMLDataModel(tag='foo', data='bar')
-    unknown = UnknownXMLDataModel(tag='metadata',
-                                  attributes={'id': 'some-extra-data'},
-                                  children=[unknown_child])
+    unknown_child = api.UnknownXMLDataModel(tag='foo', data='bar')
+    unknown = api.UnknownXMLDataModel(tag='metadata',
+                                      attributes={'id': 'some-extra-data'},
+                                      children=[unknown_child])
     scene.children.append(unknown)
 
-    xml = write_scene(scene)
+    xml = api.write_scene(scene)
     assert xml_is_equal(SCENE_SVG, xml)
 
 
 def test_scene_version():
-    scene = SceneModel()
-    xml = write_scene(scene)
-    scene = read_scene(StringIO(xml))
-    assert scene.file_format_version == SCENE_FILE_VERSION
+    scene = api.SceneModel()
+    xml = api.write_scene(scene)
+    scene = api.read_scene(StringIO(xml))
+    assert scene.file_format_version == api.SCENE_FILE_VERSION
 
 
 def test_single_model_writing():
     expected_svg = """<svg><foo>bar</foo></svg>"""
-    model = UnknownXMLDataModel(tag='foo', data='bar')
-    xml = write_single_model(model)
+    model = api.UnknownXMLDataModel(tag='foo', data='bar')
+    xml = api.write_single_model(model)
     assert xml_is_equal(expected_svg, xml)
 
 
 def test_simple_round_trip():
     with temp_xml_file(SCENE_SVG) as fn:
-        scene = read_scene(fn)
+        scene = api.read_scene(fn)
 
-    xml = write_scene(scene)
+    xml = api.write_scene(scene)
     assert xml_is_equal(SCENE_SVG, xml)
 
 
 def test_real_data_reading():
     for fn in _iter_data_files(DATA_DIR):
-        read_scene(fn)
+        api.read_scene(fn)
 
 
 def test_real_data_reading_inkscape():
     for fn in _iter_data_files(INKSCAPE_DIR):
-        read_scene(fn)
+        api.read_scene(fn)
 
 
 def test_real_data_reading_legacy():
     with temp_cwd(LEGACY_DIR):
         for fn in _iter_data_files(LEGACY_DIR):
-            read_scene(fn)
+            api.read_scene(fn)
 
 
 def test_real_data_round_trip():
     for fn in _iter_data_files(DATA_DIR):
-        scene = read_scene(fn)
-        new_xml = write_scene(scene)
+        scene = api.read_scene(fn)
+        new_xml = api.write_scene(scene)
         orig_xml = _get_file_data(fn)
 
         failmsg = "Scene {} didn't round trip!".format(op.basename(fn))
@@ -227,29 +224,29 @@ def test_real_data_round_trip():
 
 def test_uuid_replacement():
     with temp_xml_file(SCENE_SVG) as fn:
-        scene = read_scene(fn)
+        scene = api.read_scene(fn)
 
     old_uuid = scene.uuid
 
     scene.reset_uuid()
-    xml = write_scene(scene)
+    xml = api.write_scene(scene)
     with temp_xml_file(xml) as fn:
-        scene = read_scene(fn)
+        scene = api.read_scene(fn)
 
     assert old_uuid != scene.uuid
 
 
 def test_unknown_widget_reader():
     with temp_xml_file(UNKNOWN_WIDGET_SVG) as fn:
-        scene = read_scene(fn)
-    xml = write_scene(scene)
+        scene = api.read_scene(fn)
+    xml = api.write_scene(scene)
     assert xml_is_equal(UNKNOWN_WIDGET_SVG, xml)
 
 
 def test_unknown_widget_writer():
-    model = UnknownWidgetDataModel(klass='FutureStyles',
-                                   parent_component='DisplayWidget')
-    xml = write_single_model(model)
+    model = api.UnknownWidgetDataModel(klass='FutureStyles',
+                                       parent_component='DisplayWidget')
+    xml = api.write_single_model(model)
     assert xml_is_equal(UNKNOWN_WIDGET_SVG, xml)
 
 
@@ -261,11 +258,11 @@ def test_unknown_widget_extra_data():
     expected_svg = tostring(root, encoding='unicode')
 
     with temp_xml_file(expected_svg) as fn:
-        scene = read_scene(fn)
+        scene = api.read_scene(fn)
 
     widget = scene.children[0]
     assert widget.attributes['garbage'] == 'value'
     assert widget.data == 'element data'
 
-    xml = write_single_model(widget)
+    xml = api.write_single_model(widget)
     assert xml_is_equal(expected_svg, xml)

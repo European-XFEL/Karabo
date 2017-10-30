@@ -1,8 +1,6 @@
 from nose.tools import assert_raises
 
-from ..api import (
-    IconData, DigitIconsModel, DisplayIconsetModel, SceneWriterException,
-    SelectionIconsModel, TextIconsModel)
+from .. import api
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_from_data, single_model_round_trip)
 
@@ -47,8 +45,8 @@ VERSION_1_DISPLAY_ICONSET_SVG = """
 
 def _check_icon_widget(klass):
     traits = base_widget_traits()
-    icon = IconData(data=b'karabo')
-    if klass is DigitIconsModel:
+    icon = api.IconData(data=b'karabo')
+    if klass is api.DigitIconsModel:
         icon.equal = True
         icon.value = '14'
     traits['values'] = [icon]
@@ -57,7 +55,7 @@ def _check_icon_widget(klass):
     assert_base_traits(read_model)
     assert len(read_model.values) == 1
     assert read_model.values[0].data == b'karabo'
-    if klass is DigitIconsModel:
+    if klass is api.DigitIconsModel:
         assert read_model.values[0].equal is True
         assert read_model.values[0].value == '14'
 
@@ -65,14 +63,15 @@ def _check_icon_widget(klass):
 def test_display_iconset_widget():
     traits = base_widget_traits()
     traits['data'] = b'karabo'
-    model = DisplayIconsetModel(**traits)
+    model = api.DisplayIconsetModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.data == b'karabo'
 
 
 def test_icon_widgets():
-    model_classes = (DigitIconsModel, SelectionIconsModel, TextIconsModel)
+    model_classes = (api.DigitIconsModel, api.SelectionIconsModel,
+                     api.TextIconsModel)
     for klass in model_classes:
         yield _check_icon_widget, klass
 
@@ -88,15 +87,15 @@ def test_icon_widget_version_1():
     assert_base_traits(read_model)
     assert len(read_model.values) == 1
     assert read_model.values[0].image == 'blah.svg'
-    assert isinstance(read_model, DigitIconsModel)
+    assert isinstance(read_model, api.DigitIconsModel)
 
 
 def test_write_exceptions():
     traits = base_widget_traits()
-    traits['values'] = [IconData()]
-    model = TextIconsModel(**traits)
-    assert_raises(SceneWriterException, single_model_round_trip, model)
+    traits['values'] = [api.IconData()]
+    model = api.TextIconsModel(**traits)
+    assert_raises(api.SceneWriterException, single_model_round_trip, model)
 
     traits = base_widget_traits()
-    model = DisplayIconsetModel(**traits)
-    assert_raises(SceneWriterException, single_model_round_trip, model)
+    model = api.DisplayIconsetModel(**traits)
+    assert_raises(api.SceneWriterException, single_model_round_trip, model)
