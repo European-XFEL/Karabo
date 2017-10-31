@@ -2,9 +2,9 @@ from collections import deque
 import os
 
 from karabo.middlelayer import Simple
+from karabo_gui.const import MAXNUMPOINTS
 from karabo_gui.widget import DisplayWidget
 
-_MAXLENGTH = 1000  # maximum amount of data in the plot
 
 if 'USEMPL' in os.environ:
     from karabo_gui.mplwidget.mplplotwidgets import MplCurvePlot
@@ -18,8 +18,8 @@ if 'USEMPL' in os.environ:
             self.widget = MplCurvePlot(legend=True)
             self.xbox = box
             self.ybox = None
-            self.xvalues = deque(maxlen=_MAXLENGTH)
-            self.yvalues = deque(maxlen=_MAXLENGTH)
+            self.xvalues = deque(maxlen=MAXNUMPOINTS)
+            self.yvalues = deque(maxlen=MAXNUMPOINTS)
             self.active = True
 
             if box.hasValue():

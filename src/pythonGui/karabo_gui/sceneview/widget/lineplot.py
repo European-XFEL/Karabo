@@ -3,6 +3,7 @@ import pickle
 
 from karabo.common.scenemodel.api import PlotCurveModel
 from karabo_gui.displaywidgets.displaytrendline import DisplayTrendline, Curve
+from karabo_gui.displaywidgets.multicurveplot import MultiCurvePlot
 from karabo_gui.displaywidgets.xyvectors import XYVector
 from .base import BaseWidgetContainer
 from .utils import get_box
@@ -66,3 +67,11 @@ class LinePlotContainer(BaseWidgetContainer):
         for b in boxes[1:]:
             display_widget.addBox(b)
         return display_widget
+
+
+class MultiCurvePlotContainer(BaseWidgetContainer):
+    def _create_widget(self, boxes):
+        plot_widget = MultiCurvePlot(boxes[0], self)
+        for box in boxes[1:]:
+            plot_widget.addBox(box)
+        return plot_widget
