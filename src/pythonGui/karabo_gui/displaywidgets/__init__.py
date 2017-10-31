@@ -34,6 +34,7 @@ __all__ = [
     "imagewidgets",
     "lampwidget",
     "monitor",
+    "multicurveplot",
     "popup",
     "singlebit",
     "statefuliconwidget",

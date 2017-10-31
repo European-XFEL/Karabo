@@ -30,7 +30,7 @@ from .widgets.simple import (
     DisplayPlotModel, DisplayTextLogModel, EditableListElementModel,
     EditableListModel, EditableSpinBoxModel, FileInModel, FileOutModel,
     HexadecimalModel, IntLineEditModel, KnobModel, LabelModel, LampModel,
-    LineEditModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
-    SliderModel, WorkflowItemModel, XYPlotModel)
+    LineEditModel, MultiCurvePlotModel, PopUpModel, RunConfiguratorModel,
+    SceneLinkModel, SliderModel, WorkflowItemModel, XYPlotModel)
 from .widgets.vacuum import VacuumWidgetModel
 from .widgets.statefulicon import StatefulIconWidgetModel
