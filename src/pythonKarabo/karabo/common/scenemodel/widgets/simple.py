@@ -129,6 +129,11 @@ class LineEditModel(BaseDisplayEditableWidget):
     klass = Enum('DisplayLineEdit', 'EditableLineEdit')
 
 
+class MultiCurvePlotModel(BaseWidgetObjectData):
+    """ A model for multi line plot objects
+    """
+
+
 class PopUpModel(BaseWidgetObjectData):
     """ A model for a pop up window """
 
@@ -275,8 +280,8 @@ def _build_empty_widget_readers_and_writers():
              'DisplayLabelModel', 'DisplayPlotModel', 'DisplayTextLogModel',
              'EditableListModel', 'EditableListElementModel',
              'EditableSpinBoxModel', 'HexadecimalModel', 'IntLineEditModel',
-             'KnobModel', 'LampModel', 'PopUpModel', 'RunConfiguratorModel',
-             'SliderModel', 'XYPlotModel')
+             'KnobModel', 'LampModel', 'MultiCurvePlotModel', 'PopUpModel',
+             'RunConfiguratorModel', 'SliderModel', 'XYPlotModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]
