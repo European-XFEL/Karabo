@@ -56,6 +56,7 @@ _SCENE_OBJ_FACTORIES = {
     models.LineEditModel: widgets.DisplayEditableWidgetContainer,
     models.LinePlotModel: widgets.LinePlotContainer,
     models.MonitorModel: widgets.MonitorContainer,
+    models.MultiCurvePlotModel: widgets.MultiCurvePlotContainer,
     models.PopUpModel: widgets.GenericWidgetContainer,
     models.RunConfiguratorModel: widgets.GenericWidgetContainer,
     models.SceneLinkModel: widgets.SceneLinkWidget,

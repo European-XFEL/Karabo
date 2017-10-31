@@ -7,7 +7,7 @@ from .floatspinbox import FloatSpinBoxContainer
 from .generic import DisplayEditableWidgetContainer, GenericWidgetContainer
 from .icons import DisplayIconsetContainer, IconsContainer
 from .image import ComplexImageWidgetContainer, SimpleImageWidgetContainer
-from .lineplot import LinePlotContainer
+from .lineplot import LinePlotContainer, MultiCurvePlotContainer
 from .monitor import MonitorContainer
 from .progressbar import ProgressBarContainer
 from .simple import (LabelWidget, SceneLinkWidget, UnknownSvgWidget,
