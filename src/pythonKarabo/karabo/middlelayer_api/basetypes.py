@@ -9,6 +9,7 @@ import inspect
 from itertools import chain
 import numbers
 import re
+from xml.sax.saxutils import escape
 
 import numpy
 import pint
@@ -160,6 +161,12 @@ class KaraboValue(object):
             y.timestamp = self.timestamp
             yield y
 
+    def _repr_html_generator_(self):
+        yield str(self)
+
+    def _repr_html_(self):
+        return "".join(self._repr_html_generator_())
+
 
 class _Singleton(KaraboValue):
     """Base class for True, False, None"""
@@ -243,6 +250,9 @@ class EnumValue(KaraboValue):
     def __repr__(self):
         return repr(self.enum)
 
+    def _repr_html_generator_(self):
+        yield "<i>{}</i>".format(self)
+
     def __hash__(self):
         return hash(self.enum)
 
@@ -287,6 +297,9 @@ class StringValue(StringlikeValue, str):
     def value(self):
         return str(self)
 
+    def _repr_html_generator_(self):
+        yield escape(self)
+
 
 @wrap_methods
 class VectorStringValue(KaraboValue, list):
@@ -306,6 +319,9 @@ class VectorStringValue(KaraboValue, list):
 
     def __repr__(self):
         return "VectorString" + super().__repr__()
+
+    def _repr_html_generator_(self):
+        yield "<br />".join(self)
 
     @property
     def value(self):
@@ -395,6 +411,18 @@ class TableValue(MutableSequence, KaraboValue):
                     yield "{:10} ".format(val)
                 yield "\n"
         return "".join(inner())
+
+    def _repr_html_generator_(self):
+        yield "<table><tr>"
+        for name in self.value.dtype.names:
+            yield "<th>{}</th>".format(name)
+        for row in self.value:
+            yield "</tr><tr>"
+            for col in row:
+                yield "<td>"
+                yield from col._repr_html_generator_()
+                yield "</td>"
+        yield "</tr></table>"
 
 
 # Pint is based on the concept of a unit registry. For each unit registry,
@@ -490,6 +518,23 @@ class QuantityValue(KaraboValue, Quantity):
         _, objs, _ = context
         ret.timestamp = newest_timestamp(objs)
         return ret
+
+    def _repr_html_generator_(self):
+        try:
+            if self.descriptor.displayType.startswith("bin|"):
+                fields = self.descriptor.displayType[4:].split(",")
+                fields = (field.split(":") for field in fields)
+                fields = ((int(bit), name) for bit, name in fields)
+                res = "<br/>".join(name for bit, name in fields
+                                   if self.value & (1 << bit))
+                yield res
+                return
+            formats = dict(hex="0x{:x}", oct="0o{:o}", bin="0b{:b}")
+            yield formats[self.descriptor.displayType].format(self.value)
+            return
+        except AttributeError:
+            pass
+        yield "{:~}".format(self)
 
     def __str__(self):
         try:
