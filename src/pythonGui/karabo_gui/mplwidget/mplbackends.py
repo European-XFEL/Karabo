@@ -1,4 +1,3 @@
-import matplotlib
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg, NavigationToolbar2QT
 )
@@ -6,31 +5,32 @@ from matplotlib.backend_tools import cursors
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from PyQt4.QtCore import Qt, QSize
-from PyQt4.QtGui import QSizePolicy, QCursor, QMenu
+from PyQt4.QtGui import QCursor, QMenu, QSizePolicy
 
 from karabo_gui import icons
 from karabo_gui.messagebox import show_information
+from . import const
 from .tools import DataCursor
 from .utils import register_shortcut, _SHORTCUTS
-
-matplotlib.rcParams.update({'font.size': 8})  # default font size 10 is too big
-
-_MOUSE_LEFT_BUTTON = 1
-_MOUSE_RIGHT_BUTTON = 3
 
 
 class FigureCanvas(FigureCanvasQTAgg):
 
-    def __init__(self, *, parent=None, width=4, height=3, **kwargs):
+    def __init__(self, *, parent=None, **kwargs):
         # fig is a container which can hold any (number) of axes
-        fig = Figure(figsize=(width, height), facecolor=None)
+        fig = Figure(figsize=const.PLOTSIZE, facecolor=None, dpi=const.DPI)
         fig.patch.set_alpha(0)  # transparent background
         super(FigureCanvas, self).__init__(fig)
         self.curr_axes = fig.add_subplot(111)
 
+        # set minimum size on the canvas, the outer widget can be shrinked,
+        # but the plot won't become unreadable. this is useful for saving to
+        # file.
+        self.setMinimumHeight(const.MINPLOTHIGHT)
+        self.setMinimumWidth(const.MINPLOTWIDTH)
         self.setSizePolicy(QSizePolicy.Expanding,
                            QSizePolicy.Expanding)
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.ClickFocus)
         self.toolbar = None  # this will be set by the toolbar class
         self.popmenu = QMenu(self)
         self.highlighted = None
@@ -39,10 +39,10 @@ class FigureCanvas(FigureCanvasQTAgg):
         self.mpl_connect('button_release_event', self.on_mouse_release)
         self.mpl_connect('pick_event', self.on_pick)
 
-    def draw(self, new_data=True):
-        if new_data:
-            self.curr_axes.relim()  # recalculate data limit
-        self.curr_axes.autoscale_view()
+    def draw(self, rescale=True):
+        if rescale:
+            self.curr_axes.relim(visible_only=True)  # recalculate data limit
+            self.curr_axes.autoscale_view()
         super(FigureCanvas, self).draw()
 
     def on_mouse_press(self, event):
@@ -52,14 +52,14 @@ class FigureCanvas(FigureCanvasQTAgg):
 
     def on_mouse_release(self, event):
         tb = self.toolbar
-        if event.button == _MOUSE_RIGHT_BUTTON:
+        if event.button == const.MOUSE_RIGHT_BUTTON:
             if tb.mode or tb.data_cursor_visible:
                 return
             elif event.inaxes:
                 self.popmenu.exec(QCursor.pos())
 
     def on_pick(self, event):
-        if event.mouseevent.button == _MOUSE_LEFT_BUTTON:
+        if event.mouseevent.button == const.MOUSE_LEFT_BUTTON:
             picked = event.artist
             if isinstance(picked, Line2D):
                 if self.highlighted is picked:
@@ -68,12 +68,9 @@ class FigureCanvas(FigureCanvasQTAgg):
                 else:
                     if self.highlighted is not None:
                         self.highlighted.set_markeredgewidth(0)
-                    if picked.get_marker() == 'None':
-                        picked.set_marker(".")
-                    picked.set_markeredgecolor('yellow')
                     picked.set_markeredgewidth(2)
                     self.highlighted = picked
-            self.draw(new_data=False)
+            self.draw(rescale=False)
 
     def toggle_axis_scale(self, which):
         ax = self.curr_axes
@@ -93,7 +90,7 @@ class FigureCanvas(FigureCanvasQTAgg):
             print('WARNING:', e)
             set_scale(curr_scale)
         else:
-            self.draw(new_data=False)
+            self.draw(rescale=False)
 
     @register_shortcut(key='k')
     def _toggle_axis_scalex(self):
@@ -109,7 +106,7 @@ class FigureCanvas(FigureCanvasQTAgg):
     def _toggle_grid(self):
         """toggle axis grid"""
         self.curr_axes.grid()
-        self.draw(new_data=False)
+        self.draw(rescale=False)
 
     def init_popmenu(self):
         """Copy toolbar buttons to right click menu, skip Pan and Zoom buttons
@@ -123,6 +120,13 @@ class FigureCanvas(FigureCanvasQTAgg):
                 self.popmenu.addSeparator()
                 continue
             self.popmenu.addAction(action)
+
+    def adjust_layout(self):
+        rect = (0, 0, 1.0, 1.0)
+        if len(self.curr_axes.artists):
+            rect = (0, 0, 0.8, 1.0)
+        self.figure.tight_layout(rect=rect)
+        self.draw(rescale=False)
 
 
 class PlotToolbar(NavigationToolbar2QT):
@@ -165,9 +169,8 @@ class PlotToolbar(NavigationToolbar2QT):
     @register_shortcut(key='home')
     def home(self, *args):
         """reset view, start auto zoom"""
-        super(PlotToolbar, self).home(*args)
         self.figure.gca().set_autoscale_on(True)
-        self.canvas.draw(new_data=False)
+        self.canvas.draw(rescale=True)
 
     @register_shortcut(key='p')
     def pan(self):

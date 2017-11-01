@@ -1,12 +1,13 @@
-
+from collections import deque
 import os
 
 from karabo.middlelayer import Simple
 from karabo_gui.widget import DisplayWidget
 
+_MAXLENGTH = 1000  # maximum amount of data in the plot
 
 if 'USEMPL' in os.environ:
-    from karabo_gui.mplwidget.mplplotwidgets import MplWidget
+    from karabo_gui.mplwidget.mplplotwidgets import MplCurvePlot
 
     class XYPlot(DisplayWidget):
         category = Simple
@@ -14,11 +15,11 @@ if 'USEMPL' in os.environ:
 
         def __init__(self, box, parent):
             super(XYPlot, self).__init__(None)
-            self.widget = MplWidget()
+            self.widget = MplCurvePlot(legend=True)
             self.xbox = box
             self.ybox = None
-            self.xvalues = []
-            self.yvalues = []
+            self.xvalues = deque(maxlen=_MAXLENGTH)
+            self.yvalues = deque(maxlen=_MAXLENGTH)
             self.active = True
 
             if box.hasValue():
@@ -33,7 +34,7 @@ if 'USEMPL' in os.environ:
         def addBox(self, box):
             if self.ybox is None:
                 self.ybox = box
-                self.widget.new_curve([], [], label="Random values")
+                self.widget.new_curve(label='Random values')
                 return True
             else:
                 return False
@@ -46,15 +47,16 @@ if 'USEMPL' in os.environ:
                 return [self.xbox, self.ybox]
 
         def valueChanged(self, box, value, timestamp=None):
-            if not self.active:
-                return
             if box is self.xbox:
                 self.lastxvalue = value
             elif box is self.ybox:
                 if self.lastxvalue is not None:
                     self.xvalues.append(self.lastxvalue)
                     self.yvalues.append(value)
-                    self.widget.update_curve(self.xvalues, self.yvalues)
+                    if self.active:
+                        self.widget.update_curve(self.xvalues,
+                                                 self.yvalues,
+                                                 'Random values')
             else:
                 raise RuntimeError("unknown box")
 else:
