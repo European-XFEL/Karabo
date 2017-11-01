@@ -45,6 +45,14 @@ class NodeType(IntEnum):
 
 
 @unique
+class DaqDataType(IntEnum):
+    PULSE = 0
+    TRAIN = 1
+    PULSEMASTER = 10
+    TRAINMASTER = 11
+
+
+@unique
 class MetricPrefix(Enum):
     """ This are all the defined prefixes in the SI system """
     YOTTA = "Y"
