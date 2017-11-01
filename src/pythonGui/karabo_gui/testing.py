@@ -2,6 +2,7 @@ import contextlib
 import sys
 import unittest
 
+from PyQt4.QtCore import QEventLoop
 from PyQt4.QtGui import QApplication
 
 from karabo.common.api import DeviceStatus
@@ -22,6 +23,10 @@ class GuiTestCase(unittest.TestCase):
         self.app = app
 
         icons.init()
+
+    def process_qt_events(self):
+        # Give the event loop 10ms to process its events
+        self.app.processEvents(QEventLoop.AllEvents, 10)
 
 
 @contextlib.contextmanager
