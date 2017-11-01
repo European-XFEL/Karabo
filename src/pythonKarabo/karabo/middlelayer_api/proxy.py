@@ -27,6 +27,26 @@ class _ProxyBase(object):
                          and not isinstance(v, Slot) and hasattr(self, k))
         return "[{}]".format(subs)
 
+    def _repr_html_generator_(self, nest=0):
+        if nest == 0:
+            yield "<table>"
+        for attr in self._allattrs:
+            val = getattr(self, attr, None)
+            if isinstance(val, _ProxyBase):
+                yield ('<tr><td style="padding-left:{}em"><b>{}</b></td>'
+                       '<td/></tr>'.format(nest + 1, attr))
+                yield from val._repr_html_generator_(nest + 1)
+            elif isinstance(val, KaraboValue):
+                yield ('<tr><td style="padding-left:{}em">{}</td><td>'
+                       .format(nest + 1, attr))
+                yield from val._repr_html_generator_()
+                yield '</td></tr>'
+        if nest == 0:
+            yield "</table>"
+
+    def _repr_html_(self):
+        return "".join(self._repr_html_generator_())
+
     def _getValue(self, key):
         self._parent._use()
         ret = self.__dict__.get(key)
