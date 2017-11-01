@@ -3,9 +3,9 @@ from unittest import TestCase, main
 from zlib import adler32
 
 from karabo.middlelayer import (
-    AccessMode, Assignment, Configurable, decodeBinary, encodeBinary, Hash,
-    Int32, isSet, KaraboError, MetricPrefix, Node, Overwrite, State, String,
-    Unit, unit, VectorHash)
+    AccessMode, Assignment, Configurable, DaqDataType, decodeBinary,
+    encodeBinary, Hash, Int32, isSet, KaraboError, MetricPrefix, Node,
+    Overwrite, State, String, Unit, unit, VectorHash)
 from karabo.middlelayer_api.injectable import Injectable
 
 
@@ -97,6 +97,7 @@ class Tests(TestCase):
         self.assertEqual(a.node.bvalue, 33 * unit.meter)
         self.assertEqual(a.values_set, [(A.value, 22 * unit.meter),
                                         (A.node, a.node)])
+
         a.values_set = []
         self.assertEqual(a.children_set, [("value", 22 * unit.meter, A.value),
                                           ("node", a.node, A.node)])
@@ -700,6 +701,16 @@ class Tests(TestCase):
         self.assertEqual(Mandy.number.options, [8, 9, 10])
         self.assertEqual(mandy.number.descriptor.options, [6, 4])
 
+
+    def test_daqDataType(self):
+        class B(Configurable):
+            daqDataType = DaqDataType.TRAIN
+
+        class A(StoreChanges):
+            node = Node(B)
+
+        a = A()
+        self.assertEqual(a.node.daqDataType, DaqDataType.TRAIN)
 
 if __name__ == "__main__":
     main()
