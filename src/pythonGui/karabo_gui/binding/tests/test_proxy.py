@@ -189,10 +189,14 @@ def test_property_proxy_pipeline_monitoring():
         root_proxy = DeviceProxy(device_id='dev', binding=binding)
         proxy = PropertyProxy(root_proxy=root_proxy, path='output.data.image')
 
+        assert not proxy.visible
+
         proxy.start_monitoring()
+        assert proxy.visible
         network.onSubscribeToOutput.assert_called_with('dev', 'output', True)
 
         proxy.stop_monitoring()
+        assert not proxy.visible
         network.onSubscribeToOutput.assert_called_with('dev', 'output', False)
 
 

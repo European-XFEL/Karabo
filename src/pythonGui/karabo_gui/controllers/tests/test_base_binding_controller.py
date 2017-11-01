@@ -1,5 +1,5 @@
 from PyQt4.QtGui import QLabel
-from traits.api import Dict, Str, on_trait_change
+from traits.api import Dict, Int, Str, on_trait_change
 
 from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Bool, Configurable, String, AccessMode
@@ -34,9 +34,13 @@ class Connected(Configurable):
 @register_binding_controller(binding_type=StringBinding)
 class SingleBindingController(BaseBindingController):
     disp_name = Str
+    deferred = Int(0)
 
     def create_widget(self, parent):
         return QLabel(parent)
+
+    def deferred_update(self):
+        self.deferred += 1
 
     @on_trait_change('proxy.binding')
     def _binding_update(self, binding):
@@ -131,6 +135,15 @@ class TestBaseBindingController(GuiTestCase):
         assert self.multi.widget.text() == 'Bar'
         self.second.value = 'Qux'
         assert self.multi.widget.text() == 'Qux'
+
+    def test_deferred_update(self):
+        deferred_before = self.single.deferred
+
+        self.single.update_later()
+        # Force the event loop to run so that the callback gets called
+        self.process_qt_events()
+
+        assert deferred_before + 1 == self.single.deferred
 
     def test_schema_injection(self):
         self.first.value = 'Now'

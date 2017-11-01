@@ -195,6 +195,8 @@ class PropertyProxy(HasStrictTraits):
     root_proxy = Instance(BaseDeviceProxy)
     # Potential parent path if `binding` is a child of a Pipeline Output
     pipeline_parent_path = String
+    # Whether or not this property is currently visible in a scene
+    visible = Bool(False)
 
     # -----------------------------------------------------------------------
     # Traits methods
@@ -253,6 +255,8 @@ class PropertyProxy(HasStrictTraits):
     def start_monitoring(self):
         """Tell the GUI server to start monitoring the device for our property
         """
+        self.visible = True
+
         if not isinstance(self.root_proxy, DeviceProxy):
             return
 
@@ -263,6 +267,8 @@ class PropertyProxy(HasStrictTraits):
     def stop_monitoring(self):
         """Tell the GUI server to stop monitoring the device for our property
         """
+        self.visible = False
+
         if not isinstance(self.root_proxy, DeviceProxy):
             return
 
