@@ -29,6 +29,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             eggs = String()
     """
     _subclasses = {}
+    daqDataType = None
     schema = None
 
     def __init__(self, configuration={}):
@@ -225,6 +226,8 @@ class Node(Descriptor):
     def toSchemaAndAttrs(self, device, state):
         _, attrs = super(Node, self).toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Node
+        if self.cls.daqDataType is not None:
+            attrs["daqDataType"] = self.cls.daqDataType.value
         return self.cls.getClassSchema(device, state).hash, attrs
 
     def _initialize(self, instance, value):
