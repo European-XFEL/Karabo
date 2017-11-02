@@ -27,10 +27,10 @@ from .widgets.plot import LinePlotModel, PlotCurveModel, SparklineModel
 from .widgets.simple import (
     AnalogModel, BitfieldModel, CheckBoxModel, ChoiceElementModel,
     ComboBoxModel, DirectoryModel, DisplayCommandModel, DisplayLabelModel,
-    DisplayPlotModel, EditableListElementModel, EditableListModel,
-    EditableSpinBoxModel, FileInModel, FileOutModel, HexadecimalModel,
-    IntLineEditModel, KnobModel, LabelModel, LampModel, LineEditModel,
-    PopUpModel, RunConfiguratorModel, SceneLinkModel, SliderModel,
-    WorkflowItemModel, XYPlotModel)
+    DisplayPlotModel, DisplayTextLogModel, EditableListElementModel,
+    EditableListModel, EditableSpinBoxModel, FileInModel, FileOutModel,
+    HexadecimalModel, IntLineEditModel, KnobModel, LabelModel, LampModel,
+    LineEditModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
+    SliderModel, WorkflowItemModel, XYPlotModel)
 from .widgets.vacuum import VacuumWidgetModel
 from .widgets.statefulicon import StatefulIconWidgetModel
