@@ -5,9 +5,12 @@ from karabo.common.scenemodel.api import BaseWidgetObjectData
 from .proxy import PropertyProxy
 
 
-class BaseBindingWidget(HasStrictTraits):
+class BaseBindingController(HasStrictTraits):
+    """The base class of controllers which mediate the connection between a
+    data binding model (and a scene model) and a scene widget view.
+    """
     # Scene data model describing the widget (optional)
-    model = Instance(BaseWidgetObjectData, allow_none=True)
+    model = Instance(BaseWidgetObjectData)
     # The proxy of the main property being visualized
     proxy = Instance(PropertyProxy)
     # Convenience property for getting all proxies for a widget
@@ -24,27 +27,30 @@ class BaseBindingWidget(HasStrictTraits):
 
     def add_proxy(self, proxy):
         """Implemented by subclasses to catch new `PropertyProxy` instances as
-        they are added to the widget.
+        they are added to the controller.
 
-        NOTE: Most widgets will not need this and can leave it unimplemented.
+        OPTIONAL: Not all widgets are capable of visualizing mutiple properties
         """
         raise NotImplementedError
 
     def create_widget(self, parent):
         """Implemented by subclasses to create the widget needed to visualize
-        a binding
+        a binding.
         """
         raise NotImplementedError
 
     def destroy_widget(self):
-        """Optionally implemented by subclasses to clean up anything in the
-        widget which is otherwise not automatically cleaned up.
+        """Implemented by subclasses to clean up anything in the widget which
+        is otherwise not automatically cleaned up.
+
+        OPTIONAL: Not all widgets will need additional cleanup.
         """
         raise NotImplementedError
 
     def set_read_only(self, readonly):
-        """Optionally (if read_only=False is passed to binding_widget)
-        implemented by subclasses to notify a widget of its read-only status.
+        """Implemented by subclasses to notify a widget of its read-only status.
+
+        OPTIONAL: (if read_only=False passed to register_binding_controller)
         """
         raise NotImplementedError
 
@@ -52,7 +58,7 @@ class BaseBindingWidget(HasStrictTraits):
     # Public interface
 
     def create(self, parent):
-        """Create the widget for this binding
+        """Create the widget for this controller
         """
         self.widget = self.create_widget(parent)
 
@@ -66,6 +72,7 @@ class BaseBindingWidget(HasStrictTraits):
 
         if self.widget:
             self.widget.setParent(None)
+            self.widget = None
 
     def hide(self):
         """Hide the proxies. Stops monitoring the parent device of each proxy
@@ -90,27 +97,26 @@ class BaseBindingWidget(HasStrictTraits):
         self._showing = True
 
     def visualize_additional_property(self, proxy):
-        """Attempt to add an additional `PropertyProxy` to the widget. This
+        """Attempt to add an additional `PropertyProxy` to the controller. This
         should fail gracefully if the subclass has not implemented `add_proxy`.
         """
-        if not isinstance(proxy, self._binding_type):
-            return  # Disallow unsupported binding types
+        binding = proxy.binding
+        if not isinstance(binding, self._binding_type):
+            return False  # Disallow unsupported binding types
 
         if proxy in self.proxies:
-            return  # Disallow duplicates
+            return False  # Disallow duplicates
 
-        # Add it to `_additional_proxies` (without trait notifications),
-        # in case subclass logic depends on iteration over the `proxies`
-        # property...
-        self.trait_setq(_additional_proxies=self._additional_proxies + [proxy])
         try:
             self.add_proxy(proxy)
             # Only if `add_proxy` doesn't raise an exception
+            self._additional_proxies.append(proxy)
             if self._showing:
                 proxy.start_monitoring()
+            return True  # The only successful exit from this method!
         except NotImplementedError:
             # Forget about it!
-            self.trait_setq(_additional_proxies=self._additional_proxies[:-1])
+            return False
 
     # -------------------------------------------------------------------------
     # Traits
