@@ -52,6 +52,7 @@ WIDGET_FACTORIES = {
     'IntLineEdit': models.IntLineEditModel,
     'Knob': models.KnobModel,
     'LampWidget': models.LampModel,
+    'MultiCurvePlot': models.MultiCurvePlotModel,
     'Monitor': models.MonitorModel,
     'PopUp': models.PopUpModel,
     'RunConfiguratorEdit': models.RunConfiguratorModel,
