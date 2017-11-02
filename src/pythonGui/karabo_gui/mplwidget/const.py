@@ -24,6 +24,8 @@ PLOTSIZE = (5, 3)  # default plot size in inches
 
 # all values below are portion of the figure
 UPPER_RIGHT = (1.0, 1.0)
+FIGURE_FULL = (0, 0, 1, 1)
+FIGURE_WITH_ARTISTS = (0, 0, 0.8, 1.0)
 
 
 matplotlib.rcParams.update({'font.size': FONTSIZE,

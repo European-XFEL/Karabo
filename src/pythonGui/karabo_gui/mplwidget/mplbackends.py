@@ -122,9 +122,9 @@ class FigureCanvas(FigureCanvasQTAgg):
             self.popmenu.addAction(action)
 
     def adjust_layout(self):
-        rect = (0, 0, 1.0, 1.0)
+        rect = const.FIGURE_FULL
         if len(self.curr_axes.artists):
-            rect = (0, 0, 0.8, 1.0)
+            rect = const.FIGURE_WITH_ARTISTS
         self.figure.tight_layout(rect=rect)
         self.draw(rescale=False)
 
