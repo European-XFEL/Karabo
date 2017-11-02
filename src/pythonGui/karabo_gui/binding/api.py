@@ -28,11 +28,12 @@ from .const import (
     KARABO_WARN_VARIANCE_LOW, KARABO_WARN_VARIANCE_HIGH,
     KARABO_ALARM_VARIANCE_LOW, KARABO_ALARM_VARIANCE_HIGH
 )
+from .controller import BaseBindingController
 from .proxy import (
     BaseDeviceProxy, DeviceProxy, DeviceClassProxy, PropertyProxy
 )
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
-from .registry import get_compatible_widgets, register_binding_widget
+from .registry import get_compatible_controllers, register_binding_controller
 from .types import (
     BaseBinding, BindingNamespace, BindingRoot,
     BoolBinding, ByteArrayBinding, CharBinding,
@@ -48,4 +49,3 @@ from .types import (
     VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
     VectorUint32Binding, VectorUint64Binding
 )
-from .widget import BaseBindingWidget
