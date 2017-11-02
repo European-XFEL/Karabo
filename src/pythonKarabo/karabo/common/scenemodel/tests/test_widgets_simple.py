@@ -44,8 +44,8 @@ def test_all_empty_widgets():
         api.DisplayPlotModel, api.EditableListModel,
         api.EditableListElementModel, api.EditableSpinBoxModel,
         api.HexadecimalModel, api.IntLineEditModel, api.KnobModel,
-        api.SliderModel, api.XYPlotModel, api.PopUpModel,
-        api.RunConfiguratorModel
+        api.MultiCurvePlotModel, api.SliderModel, api.XYPlotModel,
+        api.PopUpModel, api.RunConfiguratorModel
     )
     for klass in model_classes:
         yield _check_empty_widget, klass
