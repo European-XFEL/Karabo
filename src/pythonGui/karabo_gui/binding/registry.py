@@ -4,15 +4,15 @@ from collections.abc import Iterable
 from traits.api import Constant
 
 from karabo.middlelayer import AccessMode
-from .widget import BaseBindingWidget
+from .controller import BaseBindingController
 
 # Module global registry
-_widget_registry = defaultdict(set)
+_controller_registry = defaultdict(set)
 
 
-def get_compatible_widgets(binding_instance):
-    """Return a list of `BaseBindingWidget` subclasses which are capable of
-    visualizing the given `BaseBinding` object instance
+def get_compatible_controllers(binding_instance):
+    """Returns a list of `BaseBindingController` subclasses which are capable
+    of creating a view for the given `BaseBinding` object instance.
     """
     def _get_class_trait(klass, name):
         trait = klass.class_traits()[name]
@@ -26,14 +26,14 @@ def get_compatible_widgets(binding_instance):
 
     key = type(binding_instance)
     # XXX: Sort based on priority?
-    klasses = sorted(_widget_registry[key], key=lambda x: x.__name__)
+    klasses = sorted(_controller_registry[key], key=lambda x: x.__name__)
     # Give the classes a chance to reject
     klasses = [klass for klass in klasses if check_compatibility(klass)]
     return klasses
 
 
-class register_binding_widget(object):
-    """A class decorator for `BaseBindingWidget` subclasses which registers
+class register_binding_controller(object):
+    """A class decorator for `BaseBindingController` subclasses which registers
     the widget for the various UI builders and adds some useful metadata.
     """
     def __init__(self, *, ui_name="", binding_type=(), read_only=False,
@@ -47,7 +47,7 @@ class register_binding_widget(object):
         self.is_compatible = is_compatible or (lambda binding: True)
 
     def __call__(self, klass):
-        assert issubclass(klass, BaseBindingWidget)
+        assert issubclass(klass, BaseBindingController)
 
         binding_type_trait = Constant(self.binding_type)
         klass.add_class_trait('_binding_type', binding_type_trait)
@@ -57,5 +57,5 @@ class register_binding_widget(object):
 
         # Register `klass` for building UIs
         for t in self.binding_type:
-            _widget_registry[t].add(klass)
+            _controller_registry[t].add(klass)
         return klass
