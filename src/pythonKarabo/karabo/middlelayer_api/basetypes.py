@@ -250,6 +250,9 @@ class EnumValue(KaraboValue):
     def __repr__(self):
         return repr(self.enum)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text("<{}>".format(self))
+
     def _repr_html_generator_(self):
         yield "<i>{}</i>".format(self)
 
@@ -322,6 +325,15 @@ class VectorStringValue(KaraboValue, list):
 
     def _repr_html_generator_(self):
         yield "<br />".join(self)
+
+    def _repr_pretty_(self, p, cycle):
+        with p.group(1, "[", "]"):
+            if self:
+                p.text(self.value[0])
+            for s in self.value[1:]:
+                p.text(",")
+                p.breakable()
+                p.text(s)
 
     @property
     def value(self):
@@ -519,6 +531,30 @@ class QuantityValue(KaraboValue, Quantity):
         ret.timestamp = newest_timestamp(objs)
         return ret
 
+    def _repr_pretty_(self, p, cycle):
+        try:
+            if self.descriptor.displayType.startswith("bin|"):
+                fields = self.descriptor.displayType[4:].split(",")
+                fields = (field.split(":") for field in fields)
+                fields = ((int(bit), name) for bit, name in fields)
+                first = True
+                p.text("{ ")
+                for bit, name in fields:
+                    if self.value & (1 << bit):
+                        if not first:
+                            p.breakable()
+                            p.text("| ")
+                        first = False
+                        p.text(name)
+                p.text(" }")
+                return
+            formats = dict(hex="0x{:x}", oct="0o{:o}", bin="0b{:b}")
+            p.text(formats[self.descriptor.displayType].format(self.value))
+            return
+        except AttributeError:
+            pass
+        p.text("{:~H}".format(self))
+
     def _repr_html_generator_(self):
         try:
             if self.descriptor.displayType.startswith("bin|"):
@@ -549,7 +585,7 @@ class QuantityValue(KaraboValue, Quantity):
             return formats[self.descriptor.displayType].format(self.value)
         except AttributeError:
             pass
-        return super().__str__()
+        return "{:~}".format(self)
 
 
 # Whenever Pint does calculations, it returns the results as an objecti
