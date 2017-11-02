@@ -50,6 +50,7 @@ Contents:
    .. gui_server
    gui_scene_development
    gui_scene_files_v1
+   gui_widget_development
    .. doocs
    .. ikarabo
 
