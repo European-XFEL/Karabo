@@ -47,6 +47,18 @@ class _ProxyBase(object):
     def _repr_html_(self):
         return "".join(self._repr_html_generator_())
 
+    def _repr_pretty_(self, p, cycle):
+        if cycle:
+            p.text(str(self))
+        else:
+            for attr in self._allattrs:
+                val = getattr(self, attr, None)
+                if isinstance(val, (_ProxyBase, KaraboValue)):
+                    p.break_()
+                    with p.group(4, "{}:".format(attr)):
+                        p.breakable()
+                        p.pretty(val)
+
     def _getValue(self, key):
         self._parent._use()
         ret = self.__dict__.get(key)
