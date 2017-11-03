@@ -275,7 +275,11 @@ namespace karabo {
                 // Transfer the connection resources discovering duty to another SignalSlotable if any
                 if (m_discoverConnectionResourcesMode) {
                     it = m_instanceMap.begin();
-                    if (it != m_instanceMap.end()) it->second->m_discoverConnectionResourcesMode = true;
+                    if (it == m_instanceMap.end()) {
+                        m_pointToPoint.reset();
+                    } else {
+                        it->second->m_discoverConnectionResourcesMode = true;
+                    }
                     m_discoverConnectionResourcesMode = false;
                 }
             }
