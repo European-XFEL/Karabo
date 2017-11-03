@@ -185,7 +185,6 @@ namespace karabo {
 
         void PointToPoint::Producer::connectHandler(const ErrorCode& e, const Channel::Pointer& channel) {
             if (e) {
-                channelErrorHandler(e, channel);
                 return;
             }
             m_connection->startAsync(bind_weak(&PointToPoint::Producer::connectHandler, this, _1, _2));
@@ -235,6 +234,7 @@ namespace karabo {
             }
             m_registeredChannels.clear();
             m_connection->stop();
+            m_port = 0;
         }
 
 
