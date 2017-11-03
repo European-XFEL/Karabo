@@ -1668,7 +1668,7 @@ namespace karabo {
              * check isCustomNode before.
              * @param path of custom node element
              */
-            std::string getCustomNodeClass(const std::string& path) const;
+            const std::string& getCustomNodeClass(const std::string& path) const;
 
         private: // functions
 
