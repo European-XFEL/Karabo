@@ -1236,7 +1236,7 @@ namespace karabo {
         }
 
 
-        std::string Schema::getCustomNodeClass(const std::string& path) const {
+        const std::string& Schema::getCustomNodeClass(const std::string& path) const {
             return m_hash.getAttribute<std::string>(path, KARABO_SCHEMA_CLASS_ID);
         }
     }
