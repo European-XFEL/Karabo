@@ -1958,6 +1958,9 @@ void exportPyUtilSchema() {
         s.def("setDaqDataType", &Schema::setDaqDataType, (bp::arg("path"), bp::arg("dataType")));
         s.def("getDaqDataType", &Schema::getDaqDataType, (bp::arg("path")));
         s.def("hasDaqDataType", &Schema::hasDaqDataType, (bp::arg("path")));
+        s.def("isCustomNode", &Schema::isCustomNode, (bp::arg("path")));
+        s.def("getCustomNodeClass", &Schema::getCustomNodeClass, (bp::arg("path")),
+              bp::return_value_policy< bp::copy_const_reference >());
     }// end Schema
 
     /////////////////////////////////////////////////////////////
