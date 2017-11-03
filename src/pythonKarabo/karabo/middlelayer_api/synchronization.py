@@ -61,6 +61,13 @@ def gather(*args, return_exceptions=False):
                                       return_exceptions=return_exceptions))
 
 
+@synchronize
+def processEvents():
+    """Process the stacked events on the event loop
+    """
+    yield from asyncio.sleep(0)
+
+
 @synchronize_notimeout
 def sleep(delay, result=None):
     """do nothing for *delay* seconds
