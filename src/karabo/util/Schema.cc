@@ -1224,5 +1224,20 @@ namespace karabo {
            return m_hash.hasAttribute(path, KARABO_SCHEMA_DAQ_DATA_TYPE);
        }
 
+
+        bool Schema::isCustomNode(const std::string& path) const {
+            if (isNode(path)) {
+                const Hash::Attributes& attrs = m_hash.getAttributes(path);
+                // As the code is understood (Nov 2017, GF):
+                // Hash classId is set for everything inheriting from Hash and schema classId contains class name
+                return (attrs.has(KARABO_HASH_CLASS_ID) && attrs.has(KARABO_SCHEMA_CLASS_ID));
+            }
+            return false;
+        }
+
+
+        const std::string& Schema::getCustomNodeClass(const std::string& path) const {
+            return m_hash.getAttribute<std::string>(path, KARABO_SCHEMA_CLASS_ID);
+        }
     }
 }

@@ -1656,6 +1656,19 @@ namespace karabo {
              */
             bool hasDaqDataType(const std::string& path) const;
 
+            /**
+             * Check if given element is a custom node like IMAGEDATA or NDARRAY_ELEMENT.
+             * @param path
+             */
+            bool isCustomNode(const std::string& path) const;
+
+            /**
+             * Get the class name for a given custom node element
+             * Result is undefined if path does not point to a custom node element (may e.g. throw or not), so better
+             * check isCustomNode before.
+             * @param path of custom node element
+             */
+            const std::string& getCustomNodeClass(const std::string& path) const;
 
         private: // functions
 
