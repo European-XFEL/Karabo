@@ -780,11 +780,16 @@ class  Schema_TestCase(unittest.TestCase):
         try:
             schema = Configurator(TestStruct1).getSchema("TestStruct1")
             self.assertEqual(schema.getDisplayType("myImageElement"), "ImageData")
+            self.assertEqual(schema.isCustomNode("myImageElement"), True)
+            self.assertEqual(schema.getCustomNodeClass("myImageElement"), "ImageData")
             self.assertEqual(schema.getAccessMode("myImageElement"), AccessType.READ)
             self.assertEqual(schema.getNodeType("myImageElement"), NodeType.NODE)
             self.assertEqual(schema.getRequiredAccessLevel("myImageElement"), AccessLevel.OPERATOR) # .operatorAccess()
             self.assertEqual(schema.getDisplayedName("myImageElement"), "myImage")
             self.assertEqual(schema.getDescription("myImageElement"), "Image Element")    
+            # Hijack this test to test correct false result of isCustomNode, but
+            # here just one type, excessive test is done for underlying C++ code
+            self.assertEqual(schema.isCustomNode("exampleKey1"), False)
         except Exception as e:
             self.fail("test_schemaImageElement group 1: " + str(e))
             
