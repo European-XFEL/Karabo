@@ -4,8 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import deque
-from itertools import islice, product
+from itertools import product
 
+import numpy as np
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import QPushButton, QHBoxLayout, QVBoxLayout, QWidget
 
@@ -14,7 +15,7 @@ from karabo_gui.mplwidget.mplplotwidgets import MplCurvePlot
 from karabo_gui.widget import DisplayWidget
 from karabo.middlelayer import Bool, Simple
 
-BUTTON_SIZE = (48, 32)
+BUTTON_SIZE = (52, 32)
 
 
 class MultiCurvePlot(DisplayWidget):
@@ -30,6 +31,7 @@ class MultiCurvePlot(DisplayWidget):
         self.xvalues = deque(maxlen=MAXNUMPOINTS)
         self.yvalues = {}  # {box.key(): deque of values}
         self.lastvalues = {}  # used to synchronize x and y values
+        self.draw_start = False  # indicate there is at least one x-y pair
 
         self.widget = QWidget(parent=parent)
         vbox = QVBoxLayout(self.widget)
@@ -77,6 +79,7 @@ class MultiCurvePlot(DisplayWidget):
             name = box.key()
             self.mplwidget.new_curve(label=name)
             self.yvalues[name] = deque(maxlen=MAXNUMPOINTS)
+            self.draw_start = True
         return True
 
     @property
@@ -92,14 +95,10 @@ class MultiCurvePlot(DisplayWidget):
         if box is self.resetbox:
             self._reset_plot(reset=value)
             return
-        self.lastvalues[box] = value
-
-        # only both x, y boxes are present we consider to draw lines
         synchronizer = self.lastvalues
-        if self.xbox and self.yboxes and (None not in synchronizer.values()):
-            # pass a copy of data and clean the synchronizer
-            self._update_curve(synchronizer)
-            self.lastvalues = synchronizer.fromkeys(synchronizer.keys(), None)
+        synchronizer[box] = value
+        if self.draw_start and None not in synchronizer.values():
+            self._update_curve()
 
     # -------------------------------------------------------------------
     # private functions
@@ -110,13 +109,18 @@ class MultiCurvePlot(DisplayWidget):
         if not reset:
             # when adding a boolean as resetbox, it may send a False value
             return
+        sync = self.lastvalues
+        self.lastvalues = sync.fromkeys(sync.keys(), None)
         self.xvalues.clear()
         for name, arr in self.yvalues.items():
             arr.clear()
             self.mplwidget.update_curve(self.xvalues, arr, label=name)
 
-    def _update_curve(self, lastvalues):
-        """when all values (x and ys) are present, """
+    def _update_curve(self):
+        """Update all curves, clear lastvalues buffer (set all values to None).
+        This is called when xbox and all y boxes produce a not None value.
+        """
+        lastvalues = self.lastvalues
         for box, value in lastvalues.items():
             if box is self.xbox:
                 self.xvalues.append(value)
@@ -127,18 +131,20 @@ class MultiCurvePlot(DisplayWidget):
         for xdata, (label, ydata) in product((self.xvalues,),
                                              self.yvalues.items()):
             # later added y may have shorter length
-            xdata = _trim_xdata(xdata, ydata)
-            self.mplwidget.update_curve(xdata, ydata, label=label)
+            npx, npy = _convert_data(xdata, ydata)
+            self.mplwidget.update_curve(npx, npy, label=label)
+        self.lastvalues = lastvalues.fromkeys(lastvalues.keys(), None)
 
 
-def _trim_xdata(xdata, ydata):
-    """Compare the size of x, y deque array and return an x array which has the
-    same size of the y array
-    This function exists because deque don't support index slicing, and
-    len(xdata) >= len(ydata)
+def _convert_data(xdata, ydata):
+    """Convert x y deque array to numpy array for plotting.
     """
-    xsize = len(xdata)
-    ysize = len(ydata)
-    if xsize == ysize:
-        return xdata
-    return deque(islice(xdata, xsize-ysize, xsize))
+    # There might be np.nan in the array
+    npx = np.array(xdata, dtype=np.float)
+    npy = np.array(ydata, dtype=np.float)
+    if npx.size != npy.size:
+        # trim npx if necessary, len(npx) >= len(npy) always True
+        npx = npx[-npy.size:]
+    # get a mask to get rid of np.nan in y
+    mask = np.isfinite(npy)
+    return npx[mask], npy[mask]
