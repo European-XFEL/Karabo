@@ -6,7 +6,7 @@ from karabo.common.scenemodel.api import read_scene, FixedLayoutChildData
 def code_for(model, children=None):
     """Generate the Python code which can build a scene model object.
     """
-    ignored_traits = ('children', 'parent_component', 'uuid')
+    ignored_traits = ('children', 'uuid')
     traits = []
     for name in sorted(model.copyable_trait_names()):
         value = getattr(model, name)
