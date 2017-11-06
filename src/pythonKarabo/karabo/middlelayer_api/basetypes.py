@@ -352,6 +352,13 @@ class TableValue(MutableSequence, KaraboValue):
     def extend(self, value):
         self[len(self.value):] = value
 
+    def pop(self, index=-1):
+        """Pops a single TableValue from the table
+        """
+        v = self[index]
+        self.value = numpy.delete(self.value, index)
+        return v
+
     def __len__(self):
         return len(self.value)
 
@@ -370,10 +377,14 @@ class TableValue(MutableSequence, KaraboValue):
             for _ in self.value.dtype.names:
                 yield "---------- "
             yield "\n"
-            for row in self.value:
-                for val in row:
+            if self.shape == ():
+                for val in self.value:
                     yield "{:10} ".format(val)
-                yield "\n"
+            else:
+                for row in self.value:
+                    for val in row:
+                        yield "{:10} ".format(val)
+                    yield "\n"
         return "".join(inner())
 
 
