@@ -610,6 +610,11 @@ void Schema_Test::testArrayElements() {
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrUInt16") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrFloat") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrDouble") == true);
+
+    // Just choose one array to test NDArray discovery:
+    CPPUNIT_ASSERT(sch.isNode("arrUInt16"));
+    CPPUNIT_ASSERT(sch.isCustomNode("arrUInt16"));
+    CPPUNIT_ASSERT_EQUAL(sch.getCustomNodeClass("arrUInt16"), std::string("NDArray"));
 }
 
 void Schema_Test::testPathElement() {
@@ -642,6 +647,37 @@ void Schema_Test::testImageElement() {
     OtherSchemaElements::expectedParameters(sch);
     CPPUNIT_ASSERT(sch.isNode("image") == true);
     CPPUNIT_ASSERT(sch.has("image.encoding") == true);
+
+    CPPUNIT_ASSERT(sch.isCustomNode("image"));
+    CPPUNIT_ASSERT_EQUAL(sch.getCustomNodeClass("image"), std::string("ImageData"));
+
+    // Hijack this test to test also !isCustomNode(path) for almost all kind of elements:
+
+    // A slot element: has KARABO_SCHEMA_CLASS_ID attribute, but not KARABO_HASH_CLASS_ID
+    CPPUNIT_ASSERT(!sch.isCustomNode("slotTest"));
+    // A TableElement
+    CPPUNIT_ASSERT(!sch.isCustomNode("testTable"));
+    // A ListElement
+    CPPUNIT_ASSERT(!sch.isCustomNode("shapeList"));
+    // A PathElement
+    CPPUNIT_ASSERT(!sch.isCustomNode("filename"));
+    // A vector element
+    CPPUNIT_ASSERT(!sch.isCustomNode("vecInt"));
+
+    Schema schemaWithChoice("test");
+    GraphicsRenderer1::expectedParameters(schemaWithChoice);
+    // A ChoiceOfNodes
+    CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("shapes"));
+    // An ordinary node
+    CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("triangle"));
+    // A StringElement
+    CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("color"));
+    // SimpleElement of POD
+    CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("bold"));
+
+    // NDArray element tested in testArrayElements()
+    // Miss testing ByteArray...
+
 }
 
 
