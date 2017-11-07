@@ -149,6 +149,7 @@ def test_property_attributes():
     assert binding.value.c.required_access_level is AccessLevel.EXPERT
     assert binding.value.d.access_mode is AccessMode.READONLY
     assert binding.value.d.assignment is Assignment.INTERNAL
+    assert binding.value.e.unit_label == 'm'
 
     assert binding.value.a.access_mode is AccessMode.RECONFIGURABLE
     assert binding.value.a.assignment is Assignment.OPTIONAL
