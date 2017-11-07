@@ -377,14 +377,10 @@ class TableValue(MutableSequence, KaraboValue):
             for _ in self.value.dtype.names:
                 yield "---------- "
             yield "\n"
-            if self.shape == ():
-                for val in self.value:
+            for row in self.value:
+                for val in row:
                     yield "{:10} ".format(val)
-            else:
-                for row in self.value:
-                    for val in row:
-                        yield "{:10} ".format(val)
-                    yield "\n"
+                yield "\n"
         return "".join(inner())
 
 
