@@ -4,6 +4,7 @@ from ..api import (
     BaseBindingController, StringBinding, build_binding,
     register_binding_controller, get_compatible_controllers
 )
+from .. import registry as registrymod
 
 
 class SomeObject(Configurable):
@@ -17,18 +18,19 @@ def options_checker(binding):
     return len(binding.options) > 0
 
 
-@register_binding_controller(binding_type=StringBinding, read_only=True,
-                             is_compatible=options_checker)
-class DisplayWidget(BaseBindingController):
-    pass
-
-
-@register_binding_controller(binding_type=StringBinding, read_only=False)
-class EditWidget(BaseBindingController):
-    pass
-
-
 def test_registry():
+    # XXX: Flush the registry and populate it with known entries
+    registrymod._controller_registry.clear()
+
+    @register_binding_controller(binding_type=StringBinding, read_only=True,
+                                 is_compatible=options_checker)
+    class DisplayWidget(BaseBindingController):
+        pass
+
+    @register_binding_controller(binding_type=StringBinding, read_only=False)
+    class EditWidget(BaseBindingController):
+        pass
+
     schema = SomeObject.getClassSchema()
     binding = build_binding(schema)
 
