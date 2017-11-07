@@ -3,15 +3,12 @@ from unittest.mock import patch
 from PyQt4.QtCore import QByteArray
 from PyQt4.QtGui import QWidget
 
-from karabo.common.api import DeviceStatus, State
+from karabo.common.api import State
 from karabo.common.scenemodel.api import ColorBoolModel
 from karabo.middlelayer import Configurable, Bool
-from karabo_gui.binding.api import (
-    DeviceClassProxy, PropertyProxy, build_binding
-)
 from karabo_gui.indicators import STATE_COLORS
-from karabo_gui.testing import GuiTestCase
-from ..displaycolorbool import DisplayColorBool
+from karabo_gui.testing import GuiTestCase, get_class_property_proxy
+from ..colorbool import DisplayColorBool
 
 
 class MockQSvgWidget(QWidget):
@@ -28,10 +25,7 @@ class TestDisplayColorBool(GuiTestCase):
         super(TestDisplayColorBool, self).setUp()
 
         schema = Object.getClassSchema()
-        binding = build_binding(schema)
-        device = DeviceClassProxy(binding=binding, server_id='Fake',
-                                  status=DeviceStatus.OFFLINE)
-        self.proxy = PropertyProxy(root_proxy=device, path='prop')
+        self.proxy = get_class_property_proxy(schema, 'prop')
         self.model = ColorBoolModel()
 
     def test_basics(self):
@@ -43,7 +37,7 @@ class TestDisplayColorBool(GuiTestCase):
         assert controller.widget is None
 
     def test_exercise_code_paths(self):
-        target = 'karabo_gui.controllers.display.displaycolorbool.QSvgWidget'
+        target = 'karabo_gui.controllers.display.colorbool.QSvgWidget'
         with patch(target, new=MockQSvgWidget):
             self.proxy.value = False
 

@@ -3,7 +3,7 @@ from unittest.mock import patch
 from karabo.middlelayer import Configurable, Float
 from karabo_gui.binding.api import build_binding
 from karabo_gui.testing import GuiTestCase, get_class_property_proxy
-from ..displayanalog import DisplayAnalog
+from ..analog import DisplayAnalog
 
 
 class ObjectWithAlarms(Configurable):
@@ -75,7 +75,7 @@ class TestDisplayAnalog(GuiTestCase):
 
         try:
             schema = ObjectWithout.getClassSchema()
-            sym = 'karabo_gui.controllers.display.displayanalog.messagebox'
+            sym = 'karabo_gui.controllers.display.analog.messagebox'
             with patch(sym) as messagebox:
                 build_binding(schema, existing=self.proxy.root_proxy.binding)
                 assert messagebox.show_warning.call_count == 1

@@ -6,8 +6,9 @@
 
 from PyQt4.QtCore import Qt, QRectF
 from PyQt4.QtGui import QColor, QLabel, QPainter, QPainterPath, QPixmap, QPen
-from traits.api import on_trait_change
+from traits.api import Instance, on_trait_change
 
+from karabo.common.scenemodel.api import AnalogModel
 from karabo_gui import messagebox
 from karabo_gui.alarms.api import ALARM_COLOR, NORM_COLOR, WARN_COLOR
 from karabo_gui.binding.api import (
@@ -27,6 +28,9 @@ WIDGET_WIDTH = 26
 @register_binding_controller(ui_name='Analog Widget', read_only=True,
                              binding_type=FloatBinding)
 class DisplayAnalog(BaseBindingController):
+    # The scene data model class for this controller
+    model = Instance(AnalogModel)
+
     def create_widget(self, parent):
         widget = QLabel(parent)
         widget.setAlignment(Qt.AlignCenter)

@@ -4,8 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtGui import QComboBox
-from traits.api import on_trait_change
+from traits.api import Instance, on_trait_change
 
+from karabo.common.scenemodel.api import ComboBoxModel
 from karabo_gui.binding.api import (
     BaseBindingController, BaseBinding, register_binding_controller)
 
@@ -21,6 +22,9 @@ def _widget_is_compatible(binding):
                              is_compatible=_widget_is_compatible,
                              read_only=True)
 class DisplayComboBox(BaseBindingController):
+    # The scene data model class for this controller
+    model = Instance(ComboBoxModel)
+
     def create_widget(self, parent):
         widget = QComboBox(parent)
         widget.setFrame(False)

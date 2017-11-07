@@ -1,10 +1,7 @@
-from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Configurable, Int8, String
-from karabo_gui.binding.api import (
-    DeviceClassProxy, PropertyProxy, build_binding,
-    apply_default_configuration)
-from karabo_gui.testing import GuiTestCase
-from ..displaycombobox import DisplayComboBox
+from karabo_gui.binding.api import build_binding, apply_default_configuration
+from karabo_gui.testing import GuiTestCase, get_class_property_proxy
+from ..combobox import DisplayComboBox
 
 
 class Object(Configurable):
@@ -20,10 +17,7 @@ class TestDisplayComboBox(GuiTestCase):
         super(TestDisplayComboBox, self).setUp()
 
         schema = Object.getClassSchema()
-        binding = build_binding(schema)
-        device = DeviceClassProxy(binding=binding, server_id='Fake',
-                                  status=DeviceStatus.OFFLINE)
-        self.proxy = PropertyProxy(root_proxy=device, path='prop')
+        self.proxy = get_class_property_proxy(schema, 'prop')
         self.controller = DisplayComboBox(proxy=self.proxy)
         self.controller.create(None)
 

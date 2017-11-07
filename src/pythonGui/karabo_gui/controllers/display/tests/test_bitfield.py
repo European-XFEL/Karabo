@@ -1,13 +1,10 @@
 from PyQt4.QtCore import QEvent, QPoint, QRect, Qt
 from PyQt4.QtGui import QMouseEvent
 
-from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Configurable, Int16, Int32
-from karabo_gui.binding.api import (
-    DeviceClassProxy, PropertyProxy, build_binding
-)
-from karabo_gui.testing import GuiTestCase
-from ..displaybitfield import Bitfield
+from karabo_gui.binding.api import build_binding
+from karabo_gui.testing import GuiTestCase, get_class_property_proxy
+from ..bitfield import Bitfield
 
 
 class Object(Configurable):
@@ -23,10 +20,7 @@ class TestDisplayCheckBox(GuiTestCase):
         super(TestDisplayCheckBox, self).setUp()
 
         schema = Object.getClassSchema()
-        binding = build_binding(schema)
-        device = DeviceClassProxy(binding=binding, server_id='Fake',
-                                  status=DeviceStatus.OFFLINE)
-        self.proxy = PropertyProxy(root_proxy=device, path='prop')
+        self.proxy = get_class_property_proxy(schema, 'prop')
 
     def test_basics(self):
         controller = Bitfield(proxy=self.proxy)
