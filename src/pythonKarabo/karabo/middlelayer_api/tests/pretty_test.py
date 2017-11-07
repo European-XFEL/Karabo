@@ -21,7 +21,7 @@ class Words(Enum):
 class Sample(Proxy):
     bin_desc = Int32(
         displayType="""bin|1:a,2:some really long description
-                    for testing if line break works properly,3:c""",
+                    for testing if line < break works properly,3:c""",
         key="bin_desc")
     bin_int = Int32(displayType="bin", key="bin_int")
     oct_int = Int32(displayType="oct", key="oct_int")
@@ -190,14 +190,14 @@ class Tests(TestCase):
                             "this", """is a list of long strings which will
                             most likely exceed one line"""],
                           "node.strings", ["another", "list", "this", "time",
-                                           "with", "many", "entries", "also",
+                                           "with", "many", "ent>ries", "also",
                                            "exceeding", "one", "line"]))
         self.assertPretty(s, """
 
             bin_desc:
                 { a
                 | some really long description
-                                for testing if line break works properly }
+                                for testing if line < break works properly }
             bin_int: 0b-111011100110101100101000000000
             oct_int: 0o-16715312000
             hex_int: 0x-59682f00
@@ -214,7 +214,7 @@ class Tests(TestCase):
                      time,
                      with,
                      many,
-                     entries,
+                     ent>ries,
                      also,
                      exceeding,
                      one,
@@ -225,8 +225,8 @@ class Tests(TestCase):
                 <tr>
                     <td style="padding-left:1em">bin_desc</td>
                     <td>a<br />some really long des
-                        cription$                    for testing if line bre
-                        ak works properly</td>
+                        cription$                    for test
+                        ing if line &lt; break works properly</td>
                 </tr><tr>
                     <td style="padding-left:1em">bin_int</td>
                     <td>0b-111011100110101100101000000000</td>
@@ -251,7 +251,7 @@ class Tests(TestCase):
                 </tr><tr>
                     <td style="padding-left:2em">strings</td>
                     <td>another<br />list<br />this<br />time<br />
-                        with<br />many<br />entries<br />also<br />
+                        with<br />many<br />ent&gt;ries<br />also<br />
                         exceeding<br />one<br />line</td>
                 </tr>
             </table>
