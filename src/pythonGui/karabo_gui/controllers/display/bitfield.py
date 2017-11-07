@@ -2,6 +2,7 @@ from PyQt4.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QWidget, QPainter
 from traits.api import Instance, on_trait_change
 
+from karabo.common.scenemodel.api import BitfieldModel
 from karabo_gui.binding.api import (
     BaseBindingController, register_binding_controller,
     Int8Binding, Int16Binding, Int32Binding, Int64Binding,
@@ -52,6 +53,9 @@ class BitfieldWidget(QWidget):
 
 @register_binding_controller(ui_name='Bit Field', binding_type=INT_BINDINGS)
 class Bitfield(BaseBindingController):
+    # The scene data model class for this controller
+    model = Instance(BitfieldModel)
+    # Internal traits
     _internal_widget = Instance(BitfieldWidget)
 
     @property

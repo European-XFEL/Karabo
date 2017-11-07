@@ -6,7 +6,7 @@ from karabo_gui.binding.api import (
 )
 from karabo_gui.const import FINE_COLOR
 from karabo_gui.testing import GuiTestCase
-from ..displaylabel import DisplayLabel, ALPHA
+from ..label import DisplayLabel, ALPHA
 
 
 class Object(Configurable):
