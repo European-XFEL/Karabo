@@ -162,7 +162,7 @@ class KaraboValue(object):
             yield y
 
     def _repr_html_generator_(self):
-        yield str(self)
+        yield escape(str(self))
 
     def _repr_html_(self):
         return "".join(self._repr_html_generator_())
@@ -300,9 +300,6 @@ class StringValue(StringlikeValue, str):
     def value(self):
         return str(self)
 
-    def _repr_html_generator_(self):
-        yield escape(self)
-
 
 @wrap_methods
 class VectorStringValue(KaraboValue, list):
@@ -324,7 +321,7 @@ class VectorStringValue(KaraboValue, list):
         return "VectorString" + super().__repr__()
 
     def _repr_html_generator_(self):
-        yield "<br />".join(self)
+        yield "<br />".join(escape(s) for s in self)
 
     def _repr_pretty_(self, p, cycle):
         with p.group(1, "[", "]"):
@@ -561,7 +558,7 @@ class QuantityValue(KaraboValue, Quantity):
                 fields = self.descriptor.displayType[4:].split(",")
                 fields = (field.split(":") for field in fields)
                 fields = ((int(bit), name) for bit, name in fields)
-                res = "<br/>".join(name for bit, name in fields
+                res = "<br/>".join(escape(name) for bit, name in fields
                                    if self.value & (1 << bit))
                 yield res
                 return
