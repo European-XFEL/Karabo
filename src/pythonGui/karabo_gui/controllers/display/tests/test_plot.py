@@ -1,6 +1,6 @@
 from karabo.middlelayer import Configurable, VectorFloat
 from karabo_gui.testing import GuiTestCase, get_class_property_proxy
-from ..displayplot import DisplayPlot
+from ..plot import DisplayPlot
 
 
 class Object(Configurable):
