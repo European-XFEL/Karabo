@@ -48,6 +48,7 @@ class ConfigurationTreeView(QTreeView):
         self.setModel(model)
         self._set_model_configuration(conf)
         model.signalHasModifications.connect(self._update_apply_buttons)
+        model.dataChanged.connect(self._update_popup_contents)
 
         # Add a delegate for rows with slot buttons
         delegate = SlotButtonDelegate(parent=self)
@@ -60,6 +61,7 @@ class ConfigurationTreeView(QTreeView):
 
         # Widget for more information of an index
         self.popup_widget = None
+        self._popup_showing_index = None
 
         # Don't forget to unregister!
         register_for_broadcasts(self)
@@ -70,38 +72,7 @@ class ConfigurationTreeView(QTreeView):
     # ------------------------------------
     # Private methods
 
-    def _set_model_configuration(self, conf):
-        self.model().configuration = conf
-        if conf is None:
-            return
-
-        # Show second column only for devices
-        if conf.type == 'device':
-            self.setColumnHidden(1, False)
-        else:
-            self.setColumnHidden(1, True)
-
-    def _show_popup_widget(self, index, event_pos):
-        # Only if the icon was clicked
-        # Get the tree widget's x position
-        tree_x = self.header().sectionViewportPosition(0)
-        # Get the x coordinate of the root index in order to calculate
-        # the identation of the index
-        root_x = self.visualRect(self.rootIndex()).x()
-        # Get the rectangle of the viewport occupied by index
-        vis_rect = self.visualRect(index)
-        # Calculate the x coordinate of the item
-        index_x = tree_x + vis_rect.x() - root_x
-        # Get the rect surrounding the icon
-        icon_rect = QRect(index_x, vis_rect.y(), vis_rect.height(),
-                          vis_rect.height())
-
-        if not icon_rect.contains(event_pos):
-            return
-
-        if self.popup_widget is None:
-            self.popup_widget = PopupWidget(self)
-
+    def _get_popup_info(self, index):
         # Get the index's stored object
         obj = self.model().index_ref(index)
         if obj is None:
@@ -155,6 +126,42 @@ class ConfigurationTreeView(QTreeView):
             attr = getattr(descriptor, attr_name, None)
             info[label] = 'n/a' if attr is None else attr
 
+        return info
+
+    def _set_model_configuration(self, conf):
+        self.model().configuration = conf
+        if conf is None:
+            return
+
+        # Show second column only for devices
+        if conf.type == 'device':
+            self.setColumnHidden(1, False)
+        else:
+            self.setColumnHidden(1, True)
+
+    def _show_popup_widget(self, index, event_pos):
+        # Only if the icon was clicked
+        # Get the tree widget's x position
+        tree_x = self.header().sectionViewportPosition(0)
+        # Get the x coordinate of the root index in order to calculate
+        # the identation of the index
+        root_x = self.visualRect(self.rootIndex()).x()
+        # Get the rectangle of the viewport occupied by index
+        vis_rect = self.visualRect(index)
+        # Calculate the x coordinate of the item
+        index_x = tree_x + vis_rect.x() - root_x
+        # Get the rect surrounding the icon
+        icon_rect = QRect(index_x, vis_rect.y(), vis_rect.height(),
+                          vis_rect.height())
+
+        if not icon_rect.contains(event_pos):
+            return
+
+        if self.popup_widget is None:
+            self.popup_widget = PopupWidget(self)
+
+        info = self._get_popup_info(index)
+        self._popup_showing_index = index
         self.popup_widget.setInfo(info)
 
         pos = QCursor.pos()
@@ -216,6 +223,18 @@ class ConfigurationTreeView(QTreeView):
         """
         configuration = self.model().configuration
         self.signalApplyChanged.emit(configuration, buttons_enabled, False)
+
+    @pyqtSlot(object, object)
+    def _update_popup_contents(self, topLeft, bottomRight):
+        """When the data in the model changes, blindly update the popup widget
+        if it happens to be showing.
+        """
+        if self.popup_widget is None or not self.popup_widget.isVisible():
+            return
+
+        if self._popup_showing_index.isValid():
+            info = self._get_popup_info(self._popup_showing_index)
+            self.popup_widget.setInfo(info)
 
     # ------------------------------------
     # Event handlers
