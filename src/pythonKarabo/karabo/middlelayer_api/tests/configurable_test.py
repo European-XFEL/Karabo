@@ -56,7 +56,7 @@ class Tests(TestCase):
         self.assertFalse(isSet(a.node.bvalue))
         self.assertEqual(a.values_set, [(A.value, None), (A.node, a.node)])
         a.values_set = []
-        self.assertEqual(a.children_set, [("node", a.node, A.node) ])
+        self.assertEqual(a.children_set, [("node", a.node, A.node)])
         a.children_set = []
         a = A(rehash(value=7, node=Hash("bvalue", 3)))
         self.assertEqual(a.value, 7 * unit.meter)
@@ -300,7 +300,7 @@ class Tests(TestCase):
     def test_init_default(self):
         class B(Configurable):
             bvalue = Int32(accessMode=AccessMode.INITONLY,
-                          unitSymbol=Unit.METER, defaultValue=33)
+                           unitSymbol=Unit.METER, defaultValue=33)
 
         class A(StoreChanges):
             value = Int32(accessMode=AccessMode.INITONLY,
@@ -339,7 +339,6 @@ class Tests(TestCase):
             run_coro(a.slotReconfigure(rehash(node=Hash("bvalue", 5))))
         with self.assertRaises(KaraboError):
             run_coro(a.slotReconfigure(rehash(value=10)))
-
 
     def test_init_mandatory(self):
         class B(Configurable):
@@ -598,6 +597,10 @@ class Tests(TestCase):
         a = A(Hash("table", [Hash("name", "bla", "number", 5)]))
         self.assertEqual(a.table.shape, (1,))
         self.assertEqual(a.table["name"][0], "bla")
+        b = a.table.pop()
+        self.assertEqual(a.table.shape, (0,))
+        self.assertEqual(b["name"], "bla")
+        self.assertEqual(b["number"], 5)
 
     def test_overwrite(self):
         class Mandy(Configurable):
@@ -678,7 +681,8 @@ class Tests(TestCase):
 
         mandy = Mandy()
         mandy.__class__.number = Overwrite(
-            minExc=3, allowedStates={State.OFF}, accessMode=AccessMode.INITONLY,
+            minExc=3, allowedStates={State.OFF},
+            accessMode=AccessMode.INITONLY,
             unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MEGA,
             tags={"naughty"}, options=[6, 4])
         run_coro(mandy.publishInjectedParameters())
@@ -701,7 +705,6 @@ class Tests(TestCase):
         self.assertEqual(Mandy.number.options, [8, 9, 10])
         self.assertEqual(mandy.number.descriptor.options, [6, 4])
 
-
     def test_daqDataType(self):
         class B(Configurable):
             daqDataType = DaqDataType.TRAIN
@@ -711,6 +714,7 @@ class Tests(TestCase):
 
         a = A()
         self.assertEqual(a.node.daqDataType, DaqDataType.TRAIN)
+
 
 if __name__ == "__main__":
     main()
