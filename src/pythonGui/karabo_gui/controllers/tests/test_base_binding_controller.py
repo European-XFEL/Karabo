@@ -1,5 +1,5 @@
 from PyQt4.QtGui import QLabel
-from traits.api import Str, on_trait_change
+from traits.api import Dict, Str, on_trait_change
 
 from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Bool, Configurable, String, AccessMode
@@ -19,6 +19,16 @@ class SampleObject(Configurable):
 
 class ChangeObject(Configurable):
     first = String(accessMode=AccessMode.READONLY, displayedName='Change:')
+
+
+# Classes for testing late binding initialization
+class Unconnected(Configurable):
+    pass
+
+
+class Connected(Configurable):
+    one = String(displayedName='One:')
+    two = String(displayedName='Two:')
 
 
 @register_binding_controller(binding_type=StringBinding)
@@ -50,9 +60,34 @@ class MultiBindingController(BaseBindingController):
         self.widget.setText(value)
 
 
-class TestSingleBindingController(GuiTestCase):
+@register_binding_controller(binding_type=StringBinding)
+class DeviceController(BaseBindingController):
+    display_names = Dict
+
+    def add_proxy(self, proxy):
+        pass  # Only need to avoid `raise NotImplementedError` here
+
+    def create_widget(self, parent):
+        return QLabel(parent)
+
+    @on_trait_change('proxies.binding')
+    def _binding_update(self, obj, name, new):
+        if name == 'proxies':
+            proxy = new[-1]
+        elif name == 'binding':
+            proxy = obj
+
+        binding = proxy.binding
+        if binding is not None:
+            name = binding.attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, '')
+        else:
+            name = ''
+        self.display_names[proxy] = name
+
+
+class TestBaseBindingController(GuiTestCase):
     def setUp(self):
-        super(TestSingleBindingController, self).setUp()
+        super(TestBaseBindingController, self).setUp()
 
         schema = SampleObject.getClassSchema()
         binding = build_binding(schema)
@@ -114,3 +149,21 @@ class TestSingleBindingController(GuiTestCase):
             # Put things back as they were!
             schema = SampleObject.getClassSchema()
             build_binding(schema, existing=self.first.root_proxy.binding)
+
+    def test_device_wakeup(self):
+        # Build a widget with two proxies that have no `binding`
+        binding = build_binding(Unconnected.getClassSchema())
+        device = DeviceClassProxy(binding=binding, server_id='Test',
+                                  status=DeviceStatus.OFFLINE)
+        one = PropertyProxy(root_proxy=device, path='one')
+        two = PropertyProxy(root_proxy=device, path='two')
+        controller = DeviceController(proxy=one)
+        controller.create_widget(None)
+
+        controller.visualize_additional_property(two)
+        assert two in controller.display_names
+
+        # Then swap the schema so that the bindings are now available
+        build_binding(Connected.getClassSchema(), existing=device.binding)
+        assert controller.display_names[one] == 'One:'
+        assert controller.display_names[two] == 'Two:'
