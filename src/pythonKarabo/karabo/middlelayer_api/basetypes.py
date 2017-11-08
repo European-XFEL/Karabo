@@ -571,6 +571,8 @@ class QuantityValue(KaraboValue, Quantity):
             pass
         p.text(self._format(self))
 
+    _fmt_pattern = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
+
     def _repr_html_generator_(self):
         try:
             if self.descriptor.displayType.startswith("bin|"):
@@ -586,7 +588,8 @@ class QuantityValue(KaraboValue, Quantity):
             return
         except AttributeError:
             pass
-        yield self._format(self, "H")
+        fmt = self._format(self, "H")
+        yield self._fmt_pattern.sub(r"\1 × 10<sup>\2\3</sup>", fmt)
 
     def __str__(self):
         try:
