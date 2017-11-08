@@ -528,6 +528,25 @@ class QuantityValue(KaraboValue, Quantity):
         ret.timestamp = newest_timestamp(objs)
         return ret
 
+    def _format(self, value, fmt=""):
+        absolute = getattr(self.descriptor, "absoluteError", None)
+        relative = getattr(self.descriptor, "relativeError", None)
+
+        if absolute is not None and self.value != 0:
+            err = abs(absolute / self.value)
+            if relative is not None:
+                err = max(err, relative)
+        elif relative is not None:
+            err = relative
+        else:
+            return "{{:~{}}}".format(fmt).format(value)
+
+        err = 1 - int(numpy.log10(err))
+        if err > 0:
+            return "{{:.{}~{}}}".format(err, fmt).format(1.0 * value)
+        else:
+            return "{{:~{}}}".format(fmt).format(0)
+
     def _repr_pretty_(self, p, cycle):
         try:
             if self.descriptor.displayType.startswith("bin|"):
@@ -550,7 +569,7 @@ class QuantityValue(KaraboValue, Quantity):
             return
         except AttributeError:
             pass
-        p.text("{:~H}".format(self))
+        p.text(self._format(self))
 
     def _repr_html_generator_(self):
         try:
@@ -567,7 +586,7 @@ class QuantityValue(KaraboValue, Quantity):
             return
         except AttributeError:
             pass
-        yield "{:~}".format(self)
+        yield self._format(self, "H")
 
     def __str__(self):
         try:
@@ -582,7 +601,7 @@ class QuantityValue(KaraboValue, Quantity):
             return formats[self.descriptor.displayType].format(self.value)
         except AttributeError:
             pass
-        return "{:~}".format(self)
+        return self._format(self)
 
 
 # Whenever Pint does calculations, it returns the results as an objecti
