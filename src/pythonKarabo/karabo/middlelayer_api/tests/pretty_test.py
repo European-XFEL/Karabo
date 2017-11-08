@@ -6,7 +6,7 @@ from xml.etree.ElementTree import fromstring, tostring
 from IPython.lib.pretty import pretty
 
 from karabo.middlelayer import (
-    Proxy, ProxyNode, Hash, Int32, SubProxy, VectorString)
+    Proxy, ProxyNode, Hash, Float, Int32, SubProxy, Unit, VectorString)
 
 class Node(SubProxy):
     strings = VectorString(key="strings")
@@ -27,11 +27,13 @@ class Sample(Proxy):
     oct_int = Int32(displayType="oct", key="oct_int")
     hex_int = Int32(displayType="hex", key="hex_int")
     enum_int = Int32(enum=Words, key="enum_int")
+    ohm_float = Float(unitSymbol=Unit.OHM, key="ohm_float")
+    err_float = Float(absoluteError=0.1, relativeError=0.0001, key="err_float")
     strings = VectorString(key="strings")
     node = ProxyNode(cls=Node, key="node")
 
     _allattrs = ["bin_desc", "bin_int", "oct_int", "hex_int", "enum_int",
-                 "strings", "node"]
+                 "ohm_float", "err_float", "strings", "node"]
 
 
 class Tests(TestCase):
@@ -54,6 +56,8 @@ class Tests(TestCase):
             oct_int: None
             hex_int: None
             enum_int: None
+            ohm_float: None
+            err_float: None
             strings: None
             node: 
                 strings: None""")
@@ -76,6 +80,12 @@ class Tests(TestCase):
                     <td style="padding-left:1em">enum_int</td>
                     <td>None</td>
                 </tr><tr>
+                    <td style="padding-left:1em">ohm_float</td>
+                    <td>None</td>
+                </tr><tr>
+                    <td style="padding-left:1em">err_float</td>
+                    <td>None</td>
+                </tr><tr>
                     <td style="padding-left:1em">strings</td>
                     <td>None</td>
                 </tr><tr>
@@ -92,6 +102,7 @@ class Tests(TestCase):
         s = Sample()
         s._onChanged(Hash("bin_desc", 0, "bin_int", 0, "oct_int", 0,
                           "hex_int", 0, "enum_int", 5, "strings", [],
+                          "ohm_float", 0, "err_float", 0,
                           "node.strings", []))
         self.assertPretty(s, """
 
@@ -100,6 +111,8 @@ class Tests(TestCase):
             oct_int: 0o0
             hex_int: 0x0
             enum_int: <Words.a>
+            ohm_float: 0 Ω
+            err_float: 0.0 
             strings: []
             node: 
                 strings: []""")
@@ -122,6 +135,12 @@ class Tests(TestCase):
                     <td style="padding-left:1em">enum_int</td>
                     <td><i>Words.a</i></td>
                 </tr><tr>
+                    <td style="padding-left:1em">ohm_float</td>
+                    <td>0 Ω</td>
+                </tr><tr>
+                    <td style="padding-left:1em">err_float</td>
+                    <td>0.0 </td>
+                </tr><tr>
                     <td style="padding-left:1em">strings</td>
                     <td />
                 </tr><tr>
@@ -138,6 +157,7 @@ class Tests(TestCase):
         s = Sample()
         s._onChanged(Hash("bin_desc", 2, "bin_int", 5, "oct_int", 10,
                           "hex_int", 20, "enum_int", 5, "strings", ["a"],
+                          "ohm_float", 2.000001, "err_float", 3.1415926,
                           "node.strings", ["b"]))
         self.assertPretty(s, """
 
@@ -146,6 +166,8 @@ class Tests(TestCase):
             oct_int: 0o12
             hex_int: 0x14
             enum_int: <Words.a>
+            ohm_float: 2.000001 Ω
+            err_float: 3.1 
             strings: [a]
             node: 
                 strings: [b]""")
@@ -168,6 +190,12 @@ class Tests(TestCase):
                     <td style="padding-left:1em">enum_int</td>
                     <td><i>Words.a</i></td>
                 </tr><tr>
+                    <td style="padding-left:1em">ohm_float</td>
+                    <td>2.000001 Ω</td>
+                </tr><tr>
+                    <td style="padding-left:1em">err_float</td>
+                    <td>3.1 </td>
+                </tr><tr>
                     <td style="padding-left:1em">strings</td>
                     <td>a</td>
                 </tr><tr>
@@ -186,6 +214,8 @@ class Tests(TestCase):
                           "oct_int", -2000000000,
                           "hex_int", -1500000000,
                           "enum_int", 5,
+                          "ohm_float", 1.000001e-7,
+                          "err_float", 12345678,
                           "strings", [
                             "this", """is a list of long strings which will
                             most likely exceed one line"""],
@@ -202,6 +232,8 @@ class Tests(TestCase):
             oct_int: 0o-16715312000
             hex_int: 0x-59682f00
             enum_int: <Words.a>
+            ohm_float: 1.000001e-07 Ω
+            err_float: 1.2346e+07 
             strings:
                 [this,
                  is a list of long strings which will
@@ -239,6 +271,12 @@ class Tests(TestCase):
                 </tr><tr>
                     <td style="padding-left:1em">enum_int</td>
                     <td><i>Words.a</i></td>
+                </tr><tr>
+                    <td style="padding-left:1em">ohm_float</td>
+                    <td>1.000001 × 10<sup>-7</sup> Ω</td>
+                </tr><tr>
+                    <td style="padding-left:1em">err_float</td>
+                    <td>1.2346 × 10<sup>7</sup> </td>
                 </tr><tr>
                     <td style="padding-left:1em">strings</td>
                     <td>this<br />
