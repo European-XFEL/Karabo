@@ -100,8 +100,10 @@ class BaseBindingController(HasStrictTraits):
         """Attempt to add an additional `PropertyProxy` to the controller. This
         should fail gracefully if the subclass has not implemented `add_proxy`.
         """
+        # Check the binding type _if possible_. It's also OK when building
+        # scenes to supply proxies which do not yet have a binding.
         binding = proxy.binding
-        if not isinstance(binding, self._binding_type):
+        if binding is not None and not isinstance(binding, self._binding_type):
             return False  # Disallow unsupported binding types
 
         if proxy in self.proxies:
