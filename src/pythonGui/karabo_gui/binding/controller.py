@@ -2,6 +2,7 @@ from PyQt4.QtGui import QWidget
 from traits.api import HasStrictTraits, Bool, Instance, List, Property
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
+from karabo_gui import background
 from .proxy import PropertyProxy
 
 
@@ -21,6 +22,7 @@ class BaseBindingController(HasStrictTraits):
     # Additional proxies added to the widget
     _additional_proxies = List(Instance(PropertyProxy))
     _showing = Bool(False)
+    _deferred = Bool(False)
 
     # -------------------------------------------------------------------------
     # Subclass interface
@@ -45,14 +47,20 @@ class BaseBindingController(HasStrictTraits):
 
         OPTIONAL: Not all widgets will need additional cleanup.
         """
-        raise NotImplementedError
+
+    def deferred_update(self):
+        """Implemented by subclasses to update controller as requested by
+        `update_later`.
+
+        OPTIONAL: Override this method to run long-running code, and call
+        `update_later` instead.
+        """
 
     def set_read_only(self, readonly):
         """Implemented by subclasses to notify a widget of its read-only status.
 
         OPTIONAL: (if read_only=False passed to register_binding_controller)
         """
-        raise NotImplementedError
 
     # -------------------------------------------------------------------------
     # Public interface
@@ -65,10 +73,7 @@ class BaseBindingController(HasStrictTraits):
     def destroy(self):
         """Destroys the widget, giving subclasses a chance to do some cleanup
         """
-        try:
-            self.destroy_widget()
-        except NotImplementedError:
-            pass  # It's OK not to implement
+        self.destroy_widget()
 
         if self.widget:
             self.widget.setParent(None)
@@ -95,6 +100,26 @@ class BaseBindingController(HasStrictTraits):
         for proxy in self.proxies:
             proxy.start_monitoring()
         self._showing = True
+
+    def update_later(self):
+        """Call longer-running code at a later time
+
+        If the controller has code that takes a while to run, it should be
+        moved to the `deferred_update` method and the widget should call
+        `update_later` to schedule this update.
+
+        This keeps the GUI responsive.
+
+        This is especially important for properties which change often, as
+        `deferred_update` will only be called after many updates have finished.
+        """
+        def updater():
+            self.deferred_update()
+            self._deferred = False
+
+        if not self._deferred:
+            background.executeLater(updater, background.Priority.BACKGROUND)
+        self._deferred = True
 
     def visualize_additional_property(self, proxy):
         """Attempt to add an additional `PropertyProxy` to the controller. This
