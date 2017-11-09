@@ -3,9 +3,9 @@ from unittest import TestCase, main
 from zlib import adler32
 
 from karabo.middlelayer import (
-    AccessMode, Assignment, Configurable, DaqDataType, decodeBinary,
-    encodeBinary, Hash, Int32, isSet, KaraboError, MetricPrefix, Node,
-    Overwrite, State, String, Unit, unit, VectorHash)
+    AccessLevel, AccessMode, Assignment, Configurable, DaqDataType,
+    decodeBinary, encodeBinary, Hash, Int32, isSet, KaraboError, MetricPrefix,
+    Node, Overwrite, Slot, State, String, Unit, unit, VectorHash)
 from karabo.middlelayer_api.injectable import Injectable
 
 
@@ -704,6 +704,30 @@ class Tests(TestCase):
         self.assertEqual(mandy.number.descriptor.units, unit.megasecond)
         self.assertEqual(Mandy.number.options, [8, 9, 10])
         self.assertEqual(mandy.number.descriptor.options, [6, 4])
+
+    def test_slot(self):
+        class A(Configurable):
+            @Slot(requiredAccessLevel=AccessLevel.EXPERT)
+            def s(self):
+                """this is a comment"""
+                return 7
+
+            @Slot()
+            @asyncio.coroutine
+            def c(self):
+                """another comment"""
+                return 8
+
+        a = A({})
+        self.assertEqual(a.s.__doc__, "this is a comment")
+        self.assertEqual(a.c.__doc__, "another comment")
+        self.assertIs(A.s.requiredAccessLevel, AccessLevel.EXPERT)
+        self.assertEqual(a.s(), 7)
+        self.assertEqual(run_coro(a.c()), 8)
+        self.assertIs(a.s.descriptor, A.s)
+        self.assertIs(a.c.descriptor, A.c)
+        self.assertFalse(asyncio.iscoroutinefunction(a.s))
+        self.assertTrue(asyncio.iscoroutinefunction(a.c))
 
     def test_daqDataType(self):
         class B(Configurable):
