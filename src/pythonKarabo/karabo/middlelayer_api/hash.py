@@ -498,8 +498,10 @@ class Slot(Descriptor):
 
         @wraps(self.method)
         def wrapper(device):
+            # device is self [configurable]
             return self.method(device)
         wrapper.slot = self.slot
+        wrapper.descriptor = self
         return wrapper.__get__(instance, owner)
 
     def slot(self, func, device, name, message, args):
