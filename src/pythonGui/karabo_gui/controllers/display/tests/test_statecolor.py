@@ -5,7 +5,7 @@ from karabo.common.scenemodel.api import DisplayStateColorModel
 from karabo.middlelayer import Configurable, String
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.testing import GuiTestCase, get_class_property_proxy
-from ..displaystatecolor import DisplayStateColor
+from ..statecolor import DisplayStateColor
 
 
 class Object(Configurable):
@@ -41,7 +41,7 @@ class TestStateColorModel(GuiTestCase):
         action = self.controller.widget.actions()[0]
         assert action.text() == 'Edit Static Text...'
 
-        sym = 'karabo_gui.controllers.display.displaystatecolor.QInputDialog'
+        sym = 'karabo_gui.controllers.display.statecolor.QInputDialog'
         with patch(sym) as QInputDialog:
             QInputDialog.getText.return_value = 'fake news', True
             action.trigger()

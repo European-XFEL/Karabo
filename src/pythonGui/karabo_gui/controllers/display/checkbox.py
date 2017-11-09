@@ -6,8 +6,9 @@
 import os.path as op
 
 from PyQt4.QtSvg import QSvgWidget
-from traits.api import on_trait_change
+from traits.api import Instance, on_trait_change
 
+from karabo.common.scenemodel.api import CheckBoxModel
 from karabo_gui import icons
 from karabo_gui.binding.api import (
     BaseBindingController, BoolBinding, register_binding_controller)
@@ -21,6 +22,9 @@ UNCHECKED = op.join(ICONS, "checkbox-unchecked.svg")
 @register_binding_controller(ui_name='Toggle Field', read_only=True,
                              binding_type=BoolBinding)
 class DisplayCheckBox(BaseBindingController):
+    # The scene data model class for this controller
+    model = Instance(CheckBoxModel)
+
     def create_widget(self, parent):
         widget = QSvgWidget(parent)
         widget.setFixedSize(20, 20)

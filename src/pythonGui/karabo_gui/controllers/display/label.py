@@ -10,6 +10,7 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QFrame, QLabel
 from traits.api import Instance, Str, Tuple, on_trait_change
 
+from karabo.common.scenemodel.api import DisplayLabelModel
 from karabo_gui.alarms.api import ALARM_COLOR, WARN_COLOR
 from karabo_gui.binding.api import (
     BaseBindingController, register_binding_controller,
@@ -35,6 +36,9 @@ BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
 @register_binding_controller(ui_name='Value Field', read_only=True,
                              binding_type=BINDING_TYPES)
 class DisplayLabel(BaseBindingController):
+    # The scene data model class for this controller
+    model = Instance(DisplayLabelModel)
+    # Internal traits
     _bg_color = Tuple(FINE_COLOR)
     _internal_widget = Instance(QLabel, allow_none=True)
     _style_sheet = Str
