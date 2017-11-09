@@ -49,3 +49,4 @@ from .types import (
     VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
     VectorUint32Binding, VectorUint64Binding
 )
+from .util import get_min_max
