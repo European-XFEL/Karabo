@@ -666,9 +666,7 @@ namespace karabo {
                                                        header->get<std::string>("signalInstanceId") :
                                                        std::string("unknown"));
 
-
-                BOOST_FOREACH(const string& instanceSlots, allSlots) {
-                    //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Processing instanceSlots: " << instanceSlots;
+                for (const string& instanceSlots : allSlots) {
                     const size_t pos = instanceSlots.find_first_of(":");
                     if (pos == std::string::npos) {
                         KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Badly shaped message header, instanceSlots '"
@@ -681,54 +679,54 @@ namespace karabo {
                     if (!globalCall && instanceId != m_instanceId) continue;
 
                     const vector<string> slotFunctions = karabo::util::fromString<string, vector>(instanceSlots.substr(pos + 1));
-
-
-                    BOOST_FOREACH(const string& slotFunction, slotFunctions) {
-                        try {
-                            // Check whether slot is callable
-                            if (m_slotCallGuardHandler) {
-                                // This function will throw an exception in case the slot is not callable
-                                m_slotCallGuardHandler(slotFunction, signalInstanceId);
-                            }
-
-                            SlotInstancePointer slot = getSlot(slotFunction);
-                            if (slot) {
-                                { // Store slot for asyncReply
-                                    boost::mutex::scoped_lock lock(m_currentSlotsMutex);
-                                    m_currentSlots[boost::this_thread::get_id()] = std::make_pair(slotFunction, globalCall);
-                                }
-                                // TODO: callRegisteredSlotFunctions copies header since it is passed by value :-(.
-                                slot->callRegisteredSlotFunctions(*header, *body);
-                                sendPotentialReply(*header, slotFunction, globalCall);
-                                { // Clean again
-                                    boost::mutex::scoped_lock lock(m_currentSlotsMutex);
-                                    m_currentSlots.erase(boost::this_thread::get_id());
-                                }
-                            } else if (!globalCall) {
-                                // Warn on non-existing slot, but only if directly addressed:
-                                KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a message from '"
-                                        << signalInstanceId << "' to non-existing slot \"" << slotFunction << "\"";
-                                // To trigger call of replyException below, i.e. give an answer and do not timeout
-                                throw KARABO_SIGNALSLOT_EXCEPTION("'" + getInstanceId() += "' has no slot '" + slotFunction + "'");
-                            } else {
-                                KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Miss globally called slot " << slotFunction;
-                            }
-                        } catch (const std::exception& e) {
-                            const std::string msg(e.what());
-                            KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '"
-                                    << slotFunction << "': " << msg;
-                            replyException(*header, msg);
-                        } catch (...) {
-                            KARABO_LOG_FRAMEWORK_ERROR << this->getInstanceId() << ": Unknown exception in slot '"
-                                    << slotFunction << " happened";
-                            replyException(*header, "unknown exception");
-                        }
+                    for (const string& slotFunction : slotFunctions) {
+                        processSingleSlot(slotFunction, globalCall, signalInstanceId, header, body);
                     }
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception while processing slot call: " << e.what();
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Unknown exception while processing slot call.";
+            }
+        }
+
+
+        void SignalSlotable::processSingleSlot(const std::string& slotFunction, bool globalCall, const std::string& signalInstanceId,
+                                               const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
+            try {
+                // Check whether slot is callable
+                if (m_slotCallGuardHandler) {
+                    // This function will throw an exception in case the slot is not callable
+                    m_slotCallGuardHandler(slotFunction, signalInstanceId);
+                }
+
+                SlotInstancePointer slot = getSlot(slotFunction);
+                if (slot) {
+                    { // Store slot for asyncReply
+                        boost::mutex::scoped_lock lock(m_currentSlotsMutex);
+                        m_currentSlots[boost::this_thread::get_id()] = std::make_pair(slotFunction, globalCall);
+                    }
+                    // TODO: callRegisteredSlotFunctions copies header since it is passed by value :-(.
+                    slot->callRegisteredSlotFunctions(*header, *body);
+                    sendPotentialReply(*header, slotFunction, globalCall);
+                    { // Clean again
+                        boost::mutex::scoped_lock lock(m_currentSlotsMutex);
+                        m_currentSlots.erase(boost::this_thread::get_id());
+                    }
+                } else if (!globalCall) {
+                    // Warn on non-existing slot, but only if directly addressed:
+                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a message from '"
+                            << signalInstanceId << "' to non-existing slot \"" << slotFunction << "\"";
+                    // To trigger call of replyException below, i.e. give an answer and do not timeout
+                    throw KARABO_SIGNALSLOT_EXCEPTION("'" + getInstanceId() += "' has no slot '" + slotFunction + "'");
+                } else {
+                    KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Miss globally called slot " << slotFunction;
+                }
+            } catch (const std::exception& e) {
+                const std::string msg(e.what());
+                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '"
+                        << slotFunction << "': " << msg;
+                replyException(*header, msg);
             }
         }
 
