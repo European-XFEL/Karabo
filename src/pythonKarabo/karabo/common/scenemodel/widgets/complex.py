@@ -43,7 +43,7 @@ class EvaluatorModel(BaseWidgetObjectData):
     """ A model for Evaluator
     """
     # The expression which is evaluated
-    expression = String
+    expression = String('x')
 
 
 class FloatSpinBoxModel(BaseWidgetObjectData):
