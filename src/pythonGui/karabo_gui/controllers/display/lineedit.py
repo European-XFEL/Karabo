@@ -5,8 +5,9 @@
 #############################################################################
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLineEdit
-from traits.api import on_trait_change
+from traits.api import Instance, on_trait_change
 
+from karabo.common.scenemodel.api import LineEditModel
 from karabo_gui.binding.api import (
     BaseBindingController, StringBinding, register_binding_controller
 )
@@ -17,6 +18,9 @@ from karabo_gui.const import WIDGET_MIN_HEIGHT
 @register_binding_controller(ui_name='Text Field', read_only=True,
                              binding_type=StringBinding)
 class DisplayLineEdit(BaseBindingController):
+    # The scene data model class for this controller
+    model = Instance(LineEditModel)
+
     def create_widget(self, parent):
         widget = QLineEdit(parent)
         widget.setMinimumHeight(WIDGET_MIN_HEIGHT)

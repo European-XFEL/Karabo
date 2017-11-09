@@ -11,6 +11,7 @@ from PyQt4.QtSvg import QSvgWidget
 from traits.api import Instance, on_trait_change
 
 from karabo.common.api import State
+from karabo.common.scenemodel.api import ColorBoolModel
 from karabo_gui import icons
 from karabo_gui.binding.api import (
     BaseBindingController, BoolBinding, register_binding_controller)
@@ -22,6 +23,9 @@ from karabo_gui.indicators import STATE_COLORS
 @register_binding_controller(ui_name='Switch Bool', read_only=True,
                              binding_type=BoolBinding)
 class DisplayColorBool(BaseBindingController):
+    # The scene data model class for this controller
+    model = Instance(ColorBoolModel)
+    # A icon which will be used in different colors
     icon = Instance(ColorChangeIcon)
 
     def _icon_default(self):
