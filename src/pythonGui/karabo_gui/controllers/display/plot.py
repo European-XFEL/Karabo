@@ -10,6 +10,7 @@ from guiqwt.builder import make
 from numpy import arange
 from traits.api import Dict, Instance, on_trait_change
 
+from karabo.common.scenemodel.api import DisplayPlotModel
 from karabo_gui.binding.api import (
     BaseBindingController, register_binding_controller,
     VectorBoolBinding, VectorCharBinding, VectorComplexDoubleBinding,
@@ -35,6 +36,9 @@ COLOR_GEN = cycle(COLORS)
 @register_binding_controller(ui_name='Plot', read_only=True,
                              binding_type=VECTOR_TYPES)
 class DisplayPlot(BaseBindingController):
+    # The scene data model class for this controller
+    model = Instance(DisplayPlotModel)
+    # Internal traits
     _plot = Instance(object)  # some Qwt bullshit
     _curves = Dict
 

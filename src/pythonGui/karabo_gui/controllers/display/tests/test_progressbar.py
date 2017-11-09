@@ -6,7 +6,7 @@ from karabo.common.scenemodel.api import DisplayProgressBarModel
 from karabo.middlelayer import Configurable, Float, Int8
 from karabo_gui.binding.api import build_binding
 from karabo_gui.testing import GuiTestCase, get_class_property_proxy
-from ..displayprogressbar import DisplayProgressBar, NULL_RANGE, PROGRESS_MAX
+from ..progressbar import DisplayProgressBar, NULL_RANGE, PROGRESS_MAX
 
 
 class Object(Configurable):
@@ -53,7 +53,7 @@ class TestDisplayProgressBar(GuiTestCase):
         assert self.controller.widget.value() == PROGRESS_MAX * 0.5
 
     def test_no_limits_messagebox(self):
-        sym = 'karabo_gui.controllers.display.displayprogressbar.messagebox'
+        sym = 'karabo_gui.controllers.display.progressbar.messagebox'
         try:
             schema = ObjectWithoutLimits.getClassSchema()
             with patch(sym) as messagebox:

@@ -1,6 +1,6 @@
 from karabo.middlelayer import Configurable, String
 from karabo_gui.testing import GuiTestCase, get_class_property_proxy
-from ..displaylineedit import DisplayLineEdit
+from ..lineedit import DisplayLineEdit
 
 
 class Object(Configurable):
