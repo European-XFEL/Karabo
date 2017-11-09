@@ -1,12 +1,8 @@
 from xml.etree.ElementTree import parse
 
-from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Configurable, Bool
-from karabo_gui.binding.api import (
-    DeviceClassProxy, PropertyProxy, build_binding
-)
-from karabo_gui.testing import GuiTestCase
-from ..displaycheckbox import DisplayCheckBox, CHECKED, UNCHECKED
+from karabo_gui.testing import GuiTestCase, get_class_property_proxy
+from ..checkbox import DisplayCheckBox, CHECKED, UNCHECKED
 
 
 class Object(Configurable):
@@ -32,10 +28,7 @@ class TestDisplayCheckBox(GuiTestCase):
         super(TestDisplayCheckBox, self).setUp()
 
         schema = Object.getClassSchema()
-        binding = build_binding(schema)
-        device = DeviceClassProxy(binding=binding, server_id='Fake',
-                                  status=DeviceStatus.OFFLINE)
-        self.proxy = PropertyProxy(root_proxy=device, path='prop')
+        self.proxy = get_class_property_proxy(schema, 'prop')
         self.controller = DisplayCheckBox(proxy=self.proxy)
         self.controller.create(None)
 

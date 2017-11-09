@@ -1,10 +1,7 @@
-from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Configurable, Bool, ChoiceOfNodes
-from karabo_gui.binding.api import (
-    DeviceClassProxy, PropertyProxy, build_binding, apply_default_configuration
-)
-from karabo_gui.testing import GuiTestCase
-from ..displaychoiceelement import DisplayChoiceElement
+from karabo_gui.binding.api import apply_default_configuration
+from karabo_gui.testing import GuiTestCase, get_class_property_proxy
+from ..choiceelement import DisplayChoiceElement
 
 
 class ChoicesBase(Configurable):
@@ -28,10 +25,7 @@ class TestDisplayChoiceElement(GuiTestCase):
         super(TestDisplayChoiceElement, self).setUp()
 
         schema = Object.getClassSchema()
-        binding = build_binding(schema)
-        device = DeviceClassProxy(binding=binding, server_id='Fake',
-                                  status=DeviceStatus.OFFLINE)
-        self.proxy = PropertyProxy(root_proxy=device, path='prop')
+        self.proxy = get_class_property_proxy(schema, 'prop')
         self.controller = DisplayChoiceElement(proxy=self.proxy)
         self.controller.create(None)
 

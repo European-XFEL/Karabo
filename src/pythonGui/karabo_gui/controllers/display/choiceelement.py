@@ -4,8 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtGui import QComboBox
-from traits.api import on_trait_change
+from traits.api import Instance, on_trait_change
 
+from karabo.common.scenemodel.api import ChoiceElementModel
 from karabo_gui.binding.api import (
     BaseBindingController, ChoiceOfNodesBinding, register_binding_controller
 )
@@ -14,6 +15,9 @@ from karabo_gui.binding.api import (
 @register_binding_controller(ui_name='Choice Element', read_only=True,
                              binding_type=ChoiceOfNodesBinding)
 class DisplayChoiceElement(BaseBindingController):
+    # The scene data model class for this controller
+    model = Instance(ChoiceElementModel)
+
     def create_widget(self, parent):
         widget = QComboBox(parent)
         widget.setFrame(False)
