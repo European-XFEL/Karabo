@@ -870,6 +870,9 @@ namespace karabo {
 
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
 
+            void processSingleSlot(const std::string& slotFunction, bool globalCall, const std::string& signalInstanceId,
+                                   const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+
             void replyException(const karabo::util::Hash& header, const std::string& message);
 
             void sendPotentialReply(const karabo::util::Hash& header, const std::string& slotFunction, bool global);
