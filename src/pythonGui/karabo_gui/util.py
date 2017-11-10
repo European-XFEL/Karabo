@@ -9,7 +9,7 @@ from uuid import uuid4
 import weakref
 
 from dateutil.tz import tzlocal, tzutc
-from PyQt4.QtCore import QPoint, QSize, Qt, QSettings
+from PyQt4.QtCore import QEvent, QObject, QPoint, QSize, Qt, QSettings
 from PyQt4.QtGui import (
     QBrush, QDialog, QFileDialog, QHeaderView, QLabel, QMovie, QPainter, QPen,
     QWidget)
@@ -22,6 +22,18 @@ from karabo_gui import messagebox
 from karabo_gui.enums import KaraboSettings
 from karabo_gui.events import broadcast_event, KaraboEventSender
 from karabo_gui.singletons.api import get_db_conn
+
+
+class MouseWheelEventBlocker(QObject):
+    """A QObject which can be used for event filtering of mouse wheel events.
+    """
+    def __init__(self, widget):
+        super(MouseWheelEventBlocker, self).__init__()
+        self.widget = widget
+
+    def eventFilter(self, obj, event):
+        # Block wheel events
+        return event.type() == QEvent.Wheel and obj is self.widget
 
 
 class PlaceholderWidget(QWidget):
