@@ -8,18 +8,14 @@ from karabo_gui.binding.api import (
     BaseBindingController, StringBinding, register_binding_controller
 )
 from karabo_gui.const import WIDGET_MIN_HEIGHT
+from karabo_gui.controllers.util import with_display_type
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.util import generateObjectName
 
 
-def _is_compatible(binding):
-    # XXX: proxy.path == 'state'???
-    return False
-
-
 @register_binding_controller(ui_name='State Color Field', read_only=True,
                              binding_type=StringBinding,
-                             is_compatible=_is_compatible)
+                             is_compatible=with_display_type('State'))
 class DisplayStateColor(BaseBindingController):
     # The specific scene model class used by this widget
     model = Instance(DisplayStateColorModel)
