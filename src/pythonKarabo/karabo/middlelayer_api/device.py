@@ -62,7 +62,7 @@ class Device(AlarmMixin, SignalSlotable):
         accessMode=AccessMode.READONLY)
 
     state = String(
-        displayedName="State", enum=State,
+        displayedName="State", enum=State, displayType='State',
         description="The current state the device is in",
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
         defaultValue=State.UNKNOWN)

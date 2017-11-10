@@ -17,14 +17,14 @@ class Alarm(String):
 class AlarmMixin(Configurable):
     alarmCondition = String(
         enum=AlarmCondition,
-        displayedName="Alarm condition",
+        displayedName="Alarm condition", displayType='AlarmCondition',
         description="The current alarm condition of the device. "
                     "Evaluates to the highest condition on any property "
                     "if not set manually.",
         accessMode=AccessMode.READONLY, defaultValue=AlarmCondition.NONE)
 
     globalAlarmCondition = Alarm(
-        displayedName="Global Alarm Condition",
+        displayedName="Global Alarm Condition", displayType='AlarmCondition',
         description="This is the alarm condition of the entire device",
         accessMode=AccessMode.READONLY, defaultValue=AlarmCondition.NONE)
 
