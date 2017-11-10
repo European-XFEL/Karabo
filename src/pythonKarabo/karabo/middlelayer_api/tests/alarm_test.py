@@ -35,7 +35,6 @@ class Tests(TestCase):
             aminwmax = Int32(alarmLow=3, warnHigh=7)
             amaxwmax = Int32(alarmHigh=7, warnHigh=9)
 
-
         a = A({})
         self.assertEqual(a.alarmCondition, AlarmCondition.NONE)
         a.aminwmax = 2
@@ -89,6 +88,10 @@ class Tests(TestCase):
         a = A({})
         self.assertEqual(a.amin, 2)
         self.assertEqual(a.alarmCondition, AlarmCondition.ALARM)
+        self.assertEqual(a.alarmCondition.descriptor.displayType,
+                         'AlarmCondition')
+        self.assertEqual(a.globalAlarmCondition.descriptor.displayType,
+                         'AlarmCondition')
 
 
 if __name__ == "__main__":
