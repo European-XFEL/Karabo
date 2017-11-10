@@ -194,6 +194,8 @@
       <itemPath>../../../src/karabo/net/EventLoop.cc</itemPath>
       <itemPath>../../../src/karabo/net/EventLoop.hh</itemPath>
       <itemPath>../../../src/karabo/net/Queues.hh</itemPath>
+      <itemPath>../../../src/karabo/net/Strand.cc</itemPath>
+      <itemPath>../../../src/karabo/net/Strand.hh</itemPath>
       <itemPath>../../../src/karabo/net.hpp</itemPath>
       <itemPath>../../../src/karabo/net/utils.cc</itemPath>
       <itemPath>../../../src/karabo/net/utils.hh</itemPath>
@@ -1236,6 +1238,10 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Strand.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/TcpChannel.cc"
             ex="false"
@@ -3176,6 +3182,10 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Strand.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/TcpChannel.cc"
             ex="false"
