@@ -10,17 +10,9 @@ from traits.api import Instance, on_trait_change
 from karabo.common.scenemodel.api import (
     DirectoryModel, FileInModel, FileOutModel)
 from karabo_gui.binding.api import (
-    BaseBindingController, StringBinding, register_binding_controller,
-    KARABO_SCHEMA_DISPLAY_TYPE
+    BaseBindingController, StringBinding, register_binding_controller
 )
-
-
-def _with_display_type(display_type):
-    def _is_compatible(binding):
-        dt = binding.attributes.get(KARABO_SCHEMA_DISPLAY_TYPE, '')
-        return dt == display_type
-
-    return _is_compatible
+from karabo_gui.controllers.util import with_display_type
 
 
 class _FilesystemDisplay(BaseBindingController):
@@ -37,20 +29,20 @@ class _FilesystemDisplay(BaseBindingController):
 
 @register_binding_controller(ui_name='Directory', read_only=True,
                              binding_type=StringBinding,
-                             is_compatible=_with_display_type('directory'))
+                             is_compatible=with_display_type('directory'))
 class DisplayDirectory(_FilesystemDisplay):
     model = Instance(DirectoryModel)
 
 
 @register_binding_controller(ui_name='File In', read_only=True,
                              binding_type=StringBinding,
-                             is_compatible=_with_display_type('fileIn'))
+                             is_compatible=with_display_type('fileIn'))
 class DisplayFileIn(_FilesystemDisplay):
     model = Instance(FileInModel)
 
 
 @register_binding_controller(ui_name='File Out', read_only=True,
                              binding_type=StringBinding,
-                             is_compatible=_with_display_type('fileOut'))
+                             is_compatible=with_display_type('fileOut'))
 class DisplayFileOut(_FilesystemDisplay):
     model = Instance(FileOutModel)
