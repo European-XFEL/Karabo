@@ -571,6 +571,8 @@ class DisplayTrendline(BaseBindingController):
             legend = make.legend("TL")
             self._plot.add_item(legend)
 
+        return True
+
     @on_trait_change('proxies.value')
     def _value_update(self, obj, name, new):
         if self.widget is None:
