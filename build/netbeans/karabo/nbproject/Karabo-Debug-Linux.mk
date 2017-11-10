@@ -104,6 +104,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/JmsConsumer.o \
 	${OBJECTDIR}/_ext/1103112890/JmsProducer.o \
 	${OBJECTDIR}/_ext/1103112890/PointToPoint.o \
+	${OBJECTDIR}/_ext/1103112890/Strand.o \
 	${OBJECTDIR}/_ext/1103112890/TcpChannel.o \
 	${OBJECTDIR}/_ext/1103112890/TcpConnection.o \
 	${OBJECTDIR}/_ext/1103112890/utils.o \
@@ -535,6 +536,11 @@ ${OBJECTDIR}/_ext/1103112890/PointToPoint.o: ../../../src/karabo/net/PointToPoin
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/PointToPoint.o ../../../src/karabo/net/PointToPoint.cc
+
+${OBJECTDIR}/_ext/1103112890/Strand.o: ../../../src/karabo/net/Strand.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/Strand.o ../../../src/karabo/net/Strand.cc
 
 ${OBJECTDIR}/_ext/1103112890/TcpChannel.o: ../../../src/karabo/net/TcpChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -2004,6 +2010,19 @@ ${OBJECTDIR}/_ext/1103112890/PointToPoint_nomain.o: ${OBJECTDIR}/_ext/1103112890
 	    $(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/PointToPoint_nomain.o ../../../src/karabo/net/PointToPoint.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/PointToPoint.o ${OBJECTDIR}/_ext/1103112890/PointToPoint_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/Strand_nomain.o: ${OBJECTDIR}/_ext/1103112890/Strand.o ../../../src/karabo/net/Strand.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/Strand.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/Strand_nomain.o ../../../src/karabo/net/Strand.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/Strand.o ${OBJECTDIR}/_ext/1103112890/Strand_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/TcpChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/TcpChannel.o ../../../src/karabo/net/TcpChannel.cc 
