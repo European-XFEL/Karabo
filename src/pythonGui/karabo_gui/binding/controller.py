@@ -29,7 +29,8 @@ class BaseBindingController(HasStrictTraits):
 
     def add_proxy(self, proxy):
         """Implemented by subclasses to catch new `PropertyProxy` instances as
-        they are added to the controller.
+        they are added to the controller. Returns `True` if the controller
+        can make use of the added proxy instance.
 
         OPTIONAL: Not all widgets are capable of visualizing mutiple properties
         """
@@ -135,7 +136,8 @@ class BaseBindingController(HasStrictTraits):
             return False  # Disallow duplicates
 
         try:
-            self.add_proxy(proxy)
+            if not self.add_proxy(proxy):
+                return False
             # Only if `add_proxy` doesn't raise an exception
             self._additional_proxies.append(proxy)
             if self._showing:
