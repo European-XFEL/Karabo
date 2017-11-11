@@ -133,7 +133,7 @@ Get and install karaboGUI
 -------------------------
 
 Download karaboGUI Windows installation binary
-`here <http://exflserv05/karabo/karaboGui/>`_ and install it as it was described
+`here <http://exflserv05.desy.de/karabo/karaboGui/>`_ and install it as it was described
 for the :ref:`additional packages <install-addons>`.
 
 Currently there is no Start Menu entry or a shortcut on the Desktop. This needs
