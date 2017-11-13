@@ -1,4 +1,17 @@
-from karabo_gui.binding.api import KARABO_SCHEMA_DISPLAY_TYPE
+from karabo_gui.binding.api import (
+    KARABO_SCHEMA_DISPLAYED_NAME, KARABO_SCHEMA_DISPLAY_TYPE)
+
+
+def axis_label(proxy):
+    """Return the axis label for a PropertyProxy instance
+    """
+    binding = proxy.binding
+    if binding is None:
+        return ''
+
+    unit = binding.unit_label
+    name = binding.attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, '')
+    return "{} [{}]".format(name, unit) if unit else name
 
 
 def with_display_type(display_type):
