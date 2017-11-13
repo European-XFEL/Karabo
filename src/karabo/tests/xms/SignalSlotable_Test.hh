@@ -19,6 +19,7 @@ class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(SignalSlotable_Test);
 
     CPPUNIT_TEST(testUniqueInstanceId);
+    CPPUNIT_TEST(testValidInstanceId);
     CPPUNIT_TEST(testReceiveAsync);
     CPPUNIT_TEST(testReceiveAsyncError);
     CPPUNIT_TEST(testReceiveAsyncNoReply);
@@ -43,6 +44,7 @@ private:
     void waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials = 10);
 
     void testUniqueInstanceId();
+    void testValidInstanceId();
     void testReceiveAsync();
     void testReceiveAsyncError();
     void testReceiveAsyncNoReply();
