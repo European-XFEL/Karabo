@@ -26,9 +26,9 @@ from karabo_gui.binding.api import (
     BaseBindingController, PropertyProxy, register_binding_controller,
     BoolBinding, FloatBinding,
     Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    KARABO_SCHEMA_DISPLAYED_NAME
+    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
 )
+from karabo_gui.controllers.util import axis_label
 from karabo_gui import globals as krb_globals
 from karabo_gui.util import SignalBlocker
 
@@ -58,18 +58,6 @@ PLOTTABLE_TYPES = (
     Int8Binding, Int16Binding, Int32Binding, Int64Binding,
     Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
 )
-
-
-def axis_label(proxy):
-    """Return the axis label for a PropertyProxy instance
-    """
-    binding = proxy.binding
-    if binding is None:
-        return ''
-
-    unit = binding.unit_label
-    name = binding.attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, '')
-    return "{} [{}]".format(name, unit) if unit else name
 
 
 def get_start_end_date_time(selected_time_span):
