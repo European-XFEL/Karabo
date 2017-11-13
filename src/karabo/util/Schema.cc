@@ -1137,7 +1137,7 @@ namespace karabo {
                         applyRuntimeUpdateTypeResolver(Type, Types::BOOL, bool, Func)\
                         applyRuntimeUpdateTypeResolver(Type, Types::CHAR, char, Func)\
                         applyRuntimeUpdateTypeResolver(Type, Types::UINT8, unsigned char, Func)\
-                        applyRuntimeUpdateTypeResolver(Type, Types::INT8, char, Func)\
+                        applyRuntimeUpdateTypeResolver(Type, Types::INT8, signed char, Func)\
                         applyRuntimeUpdateTypeResolver(Type, Types::UINT16, unsigned short, Func)\
                         applyRuntimeUpdateTypeResolver(Type, Types::INT16, short, Func)\
                         applyRuntimeUpdateTypeResolver(Type, Types::UINT32, unsigned int, Func)\
