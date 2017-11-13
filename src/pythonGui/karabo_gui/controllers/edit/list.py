@@ -13,7 +13,7 @@ from karabo_gui.binding.api import (
     VectorUint16Binding, VectorUint32Binding, VectorUint64Binding,
     register_binding_controller
 )
-from karabo_gui.listedit import ListEdit
+from karabo_gui.controllers.listedit import ListEdit
 from karabo_gui.util import SignalBlocker
 
 BINDING_TYPES = (
@@ -44,8 +44,9 @@ class EditableList(BaseBindingController):
         return composite_widget
 
     def set_read_only(self, ro):
+        focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
+        self._internal_widget.setFocusPolicy(focus_policy)
         self._internal_widget.setReadOnly(ro)
-        self._internal_widget.setFocusPolicy(Qt.NoFocus if ro else Qt.StrongFocus)
         if ro:
             return
         self._internal_widget.textChanged.connect(self._on_user_edit)
