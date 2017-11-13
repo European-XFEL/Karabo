@@ -1,3 +1,4 @@
+from matplotlib._pylab_helpers import Gcf
 from matplotlib.legend import Legend
 from PyQt4.QtGui import QStackedLayout, QWidget
 
@@ -40,6 +41,10 @@ class MplWidgetBase(QWidget):
                 else:
                     func()
                 break
+
+    def destroy(self):
+        """Clean up all figures"""
+        Gcf.destroy_all()
 
 
 class MplCurvePlot(MplWidgetBase):
