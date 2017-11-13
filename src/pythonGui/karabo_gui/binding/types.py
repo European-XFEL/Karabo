@@ -125,6 +125,8 @@ class BindingRoot(HasStrictTraits):
     value = Instance(BindingNamespace, kw={'item_type': BaseBinding})
     # An event which fires when the schema changes
     schema_update = Event
+    # An event which fires when subnodes/leaves are updated
+    config_update = Event
 
 
 # =============================================================================
@@ -177,6 +179,8 @@ class Int64Binding(BaseBinding):
 
 class NodeBinding(BaseBinding):
     value = Instance(BindingNamespace)
+    # An event which fires when subnodes/leaves are updated
+    config_update = Event
 
 
 class ImageBinding(NodeBinding):
