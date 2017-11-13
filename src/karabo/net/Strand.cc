@@ -46,6 +46,11 @@ namespace karabo {
         }
 
 
+        boost::function<void() > Strand::wrap(boost::function<void()> handler) {
+            return karabo::util::bind_weak(&Strand::postWrapped, this, std::move(handler));
+        }
+
+
         void Strand::startRunningIfNeeded() {
             // We rely on being called under protection of m_tasksMutex
             if (!m_tasksRunning) {
@@ -77,5 +82,12 @@ namespace karabo {
                 nextTask();
             }
         }
+
+
+        void Strand::postWrapped(boost::function<void() > handler) {
+            // Hm - this will probably be the second copy of the handler...
+            post(std::move(handler));
+        }
+
     }
 }
