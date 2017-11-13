@@ -25,11 +25,12 @@ namespace karabo {
         /**
          * A poor man's substitute for boost::asio::io_service::strand because that does not guarantee that
          * handlers posted on different strands can run in parallel ("strand collision").
-         * Compared to boost::asio::io_service::strand, this lacks
-         * - dispatch:               we usually do not want that in Karabo since it allows the handler to be called
-         *                           now in this scope
-         * - running_in_this_thread: probably not too important
-         * - wrap:                   would be very useful
+         * Compared to boost::asio::io_service::strand, this
+         * - lacks dispatch:               we usually do not want that in Karabo since it allows the handler to be
+         *                                 called now in this scope
+         * - lacks running_in_this_thread: probably not too important
+         * - has a more restrictive wrap:  would be useful to support more, but a proper implementation would also
+         *                                 need dispatch
          *
          * Every handler posted will be put into a FIFO queue and the FIFO will be emptied one-by-one in the background
          * by posting the handlers to the boost::asio::io_service given in the constructor.
@@ -63,6 +64,20 @@ namespace karabo {
             void post(boost::function<void()>&& handler);
 
             /**
+             * This function is used to create a new handler function object that, when invoked,
+             * will pass the wrapped handler to the Strand's post function (instead of using dispatch
+             * as boost::io_service::strand::wrap does).
+             *
+             * @param handler The handler to be wrapped. The strand will make a copy of
+             * the handler object. Compared to boost::io_service::strand::wrap, the handler signature is
+             * much more restricted, i.e. must be void().
+             *
+             * @return A function object that, when invoked, passes the wrapped handler to
+             * the Strand's post function.
+             */
+            boost::function<void() > wrap(boost::function<void()> handler);
+
+            /**
              * This function may be used to obtain the io_service object that the strand uses to post handlers.
              *
              * @return A reference to the io_service of the Strand. Ownership is not transferred to the caller.
@@ -79,6 +94,7 @@ namespace karabo {
             /// Helper actually running one tasks after another until queue is empty
             void run();
 
+            void postWrapped(boost::function<void() > handler);
 
             boost::asio::io_service& m_ioService;
 
