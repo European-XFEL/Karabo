@@ -36,6 +36,9 @@ def apply_configuration(config, binding, remember_modification=False,
             # Clear the modified flag if desired
             node.modified = remember_modification
 
+    # Notify listeners
+    binding.config_update = True
+
 
 def apply_default_configuration(binding):
     """Recursively set default values for a binding object.
