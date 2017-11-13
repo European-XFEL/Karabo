@@ -321,9 +321,6 @@ namespace karabo {
             // Threading not yet established for this instance, so no mutex lock needed
             m_instanceInfo = instanceInfo;
 
-            // Currently only removes dots
-            sanifyInstanceId(m_instanceId);
-
             if (!m_connection->isConnected()) {
                 m_connection->connect();
             }
@@ -367,6 +364,21 @@ namespace karabo {
 
 
         void SignalSlotable::ensureInstanceIdIsValid(const std::string& instanceId) {
+            // First check whether id is valid in itself.
+
+            // space ' ' causes problem in xml serialisaton
+            // dot '.' is bad if id used as key in Hash
+            // colon ':' separates instanceId and pipeline channel name
+            const char* allowedCharacters = "0123456789_/-" // not std::string to save dynamic memory allocation
+                    "abcdefghijklmnopqrstuvwxyz"
+                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            if (instanceId.empty() || instanceId.find_first_not_of(allowedCharacters) != std::string::npos) {
+                const std::string msg("Instance id '" + instanceId + "' invalid - must contain one ore more "
+                                      "letters, digits, '_', '/', and '-'.");
+                throw KARABO_SIGNALSLOT_EXCEPTION(msg);
+            }
+
+            // Now check that this id is not yet in the system.
             {
                 // It is important to check first for local conflicts, else
                 // shortcut messaging (enabled by the conflicting instance) will trick slotPing request
@@ -391,13 +403,6 @@ namespace karabo {
             if (instanceInfo.has("host")) instanceInfo.get("host", foreignHost);
             throw KARABO_SIGNALSLOT_EXCEPTION("Another instance with ID '" + instanceId +
                                               "' is already online (on host: " + foreignHost + ")");
-        }
-
-
-        void SignalSlotable::sanifyInstanceId(std::string& instanceId) const {
-            for (std::string::iterator it = instanceId.begin(); it != instanceId.end(); ++it) {
-                if ((*it) == '.') (*it) = '-';
-            }
         }
 
 
@@ -1756,11 +1761,9 @@ namespace karabo {
 
         void SignalSlotable::addTrackedInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             const boost::optional<const Hash::Node&> beatsNode = instanceInfo.find("heartbeatInterval");
-            std::string sanifiedInstanceId(instanceId);
-            sanifyInstanceId(sanifiedInstanceId);
-            if (!beatsNode || sanifiedInstanceId != instanceId) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Cannot track '" << instanceId << "' since its instanceId is invalid or "
-                        << "its instanceInfo lacks the 'heartbeatInterval': " << instanceInfo;
+            if (!beatsNode) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Cannot track '" << instanceId << "' since its instanceInfo lacks the "
+                        << "'heartbeatInterval': " << instanceInfo;
                 return;
             }
 

@@ -162,6 +162,27 @@ void SignalSlotable_Test::testUniqueInstanceId() {
 }
 
 
+void SignalSlotable_Test::testValidInstanceId() {
+
+    const auto allowedChars = "0123456789_abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJKLMNOPQRSTUVWXYZ/";
+    // all allowed characters should allow the instance to start
+    auto s = boost::make_shared<SignalSlotable>(allowedChars);
+    CPPUNIT_ASSERT_NO_THROW(s->start());
+
+    // dot '.' is bad since id often used as key in Hash, so instance must not start
+    s = boost::make_shared<SignalSlotable>("a.b");
+    CPPUNIT_ASSERT_THROW(s->start(), SignalSlotException);
+
+    // space ' ' causes problem in xml serialisation, so instance must not start
+    s = boost::make_shared<SignalSlotable>("a b");
+    CPPUNIT_ASSERT_THROW(s->start(), SignalSlotException);
+
+    // colon ':' separates instanceId and pipeline channel name, so instance must not start
+    s = boost::make_shared<SignalSlotable>("a:b");
+    CPPUNIT_ASSERT_THROW(s->start(), SignalSlotException);
+}
+
+
 void SignalSlotable_Test::testReceiveAsync() {
     auto greeter = boost::make_shared<SignalSlotable>("greeter");
     auto responder = boost::make_shared<SignalSlotable>("responder");
