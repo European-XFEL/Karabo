@@ -852,8 +852,6 @@ namespace karabo {
              */
             void storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance);
 
-            void sanifyInstanceId(std::string& instanceId) const;
-
             /**
              * If instanceId not valid (i.e. not unique in system), throws SignalSlotException.
              */
