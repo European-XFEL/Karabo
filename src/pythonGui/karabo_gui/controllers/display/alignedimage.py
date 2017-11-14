@@ -16,12 +16,7 @@ from karabo.common.scenemodel.api import DisplayAlignedImageModel
 from karabo_gui.binding.api import (
     BaseBindingController, ImageBinding, register_binding_controller)
 from karabo_gui.controllers.images import (
-    get_dimensions_and_format, get_image_data, KaraboImageDialog)
-
-
-YAXIS = 0
-XAXIS = 1
-ZAXIS = 2
+    _DIMENSIONS, get_dimensions_and_format, get_image_data, KaraboImageDialog)
 
 
 @register_binding_controller(ui_name='Aligned Image View', read_only=True,
@@ -113,11 +108,11 @@ class DisplayAlignedImage(BaseBindingController):
         self._currentCell.setValue(value)
         npy = None
         for proxy in self._npys:
-            if self._axis == XAXIS:
+            if self._axis == _DIMENSIONS['X']:
                 npy = self._npys[proxy][:, self._selectedCell, :]
-            if self._axis == YAXIS:
+            if self._axis == _DIMENSIONS['Y']:
                 npy = self._npys[proxy][self._selectedCell, :, :]
-            if self._axis == ZAXIS:
+            if self._axis == _DIMENSIONS['Z']:
                 npy = self._npys[proxy][:, :, self._selectedCell]
 
             for i in range(len(self._images[proxy])):
@@ -194,25 +189,25 @@ class DisplayAlignedImage(BaseBindingController):
             return
 
         img_node = proxy.value
+        if "stackAxis" in img_node:
+            self._axis = img_node.stackAxis.value
+        else:
+            # this might happen for RGB image
+            self._axis = _DIMENSIONS['Z']
+
         dimX, dimY, dimZ, img_format = get_dimensions_and_format(img_node)
-        if dimX is not None and dimY is not None:
+        if dimX is not None and dimY is not None and dimZ is None:
             if self._cellWidget.isVisible():
                 self._unsetSlider()
+        elif dimZ is not None:
+            if self._axis == _DIMENSIONS['Y']:
+                self._setSlider(dimZ)
+            elif self._axis == _DIMENSIONS['X']:
+                self._setSlider(dimY)
+            elif self._axis == _DIMENSIONS['Z']:
+                self._setSlider(dimX)
         else:
             return
-
-        if dimZ is not None:
-            if "stackAxis" in img_node:
-                self._axis = img_node.stackAxis.value
-            else:
-                # this might happen for RGB image
-                self._axis = ZAXIS
-            if self._axis == YAXIS:
-                self._setSlider(dimZ)
-            elif self._axis == XAXIS:
-                self._setSlider(dimY)
-            elif self._axis == ZAXIS:
-                self._setSlider(dimX)
 
         npy = get_image_data(img_node, dimX, dimY, dimZ, img_format)
         if npy is None:
@@ -220,11 +215,11 @@ class DisplayAlignedImage(BaseBindingController):
         self._npys[proxy] = npy
 
         if img_format is not QImage.Format_Indexed8:
-            if self._axis == XAXIS:
+            if self._axis == _DIMENSIONS['X']:
                 npy = self._npys[proxy][:, self._selectedCell, :]
-            elif self._axis == YAXIS:
+            elif self._axis == _DIMENSIONS['Y']:
                 npy = self._npys[proxy][self._selectedCell, :, :]
-            elif self._axis == ZAXIS:
+            elif self._axis == _DIMENSIONS['Z']:
                 npy = self._npys[proxy][:, :, self._selectedCell]
 
         # Safety
