@@ -28,6 +28,14 @@ _REFERENCE_TYPENUM_TO_DTYPE = {
 }
 
 
+# Maps image physical dimension to ndarray dimension
+_DIMENSIONS = {
+    'X': 1,
+    'Y': 0,
+    'Z': 2
+}
+
+
 def get_image_data(image_node, dimX, dimY, dimZ, format):
     """ Calculate a numpy array from the given ``image_node`` depending on the
     given dimensions and format and return it to use for image display.
@@ -72,15 +80,15 @@ def get_dimensions_and_format(image_node):
     format = None
     if len(image_node.dims.value) == 2:
         # Shape
-        dimX = image_node.dims.value[1]
-        dimY = image_node.dims.value[0]
+        dimX = image_node.dims.value[_DIMENSIONS['X']]
+        dimY = image_node.dims.value[_DIMENSIONS['Y']]
         # Format: Grayscale
         format = QImage.Format_Indexed8
     elif len(image_node.dims.value) == 3:
         # Shape
-        dimX = image_node.dims.value[1]
-        dimY = image_node.dims.value[0]
-        dimZ = image_node.dims.value[2]
+        dimX = image_node.dims.value[_DIMENSIONS['X']]
+        dimY = image_node.dims.value[_DIMENSIONS['Y']]
+        dimZ = image_node.dims.value[_DIMENSIONS['Z']]
         if dimZ == 3:
             # Format: RGB
             format = QImage.Format_RGB888
