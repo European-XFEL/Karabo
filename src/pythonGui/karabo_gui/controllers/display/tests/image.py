@@ -20,9 +20,6 @@ TYPENUM_MAP = {
 }
 
 
-ZAXIS = 2
-
-
 class Pixels(Configurable):
     type = Int8()
     data = ByteArray()
@@ -66,9 +63,12 @@ def _get_geometry_hash(update):
                 'alignment', alignment_hash)
 
 
+ZAXIS = 2
+dimX = 40
+dimY = 30
+
+
 def get_image_hash(val=0, dimz=False, *, rgb=False, update=True):
-    dimX = 40
-    dimY = 30
     npix = dimX * dimY
     dims_val = [dimY, dimX]
     if dimz:
