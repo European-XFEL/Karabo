@@ -144,7 +144,8 @@ class NetworkInput(Configurable):
 
     @coroutine
     def close_handler(self, cls):
-        pass
+        # XXX: Please keep this for the time being.
+        print("NetworkInput close handler called by {}!".format(cls))
 
     @coroutine
     def call_handler(self, data, meta):
@@ -156,6 +157,7 @@ class NetworkInput(Configurable):
     def start_channel(self, output):
         try:
             instance, name = output.split(":")
+            # success, configuration
             ok, info = yield from self.parent._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
             if not ok:
@@ -164,6 +166,7 @@ class NetworkInput(Configurable):
             if self.raw:
                 cls = None
             else:
+                # schema from output channel
                 schema = info.get("schema")
                 if schema is None:
                     schema, _ = yield from self.parent.call(
@@ -449,7 +452,24 @@ class NetworkOutput(Configurable):
 
     @coroutine
     def writeData(self, timestamp=None):
+        """Send the applied values with given output schema to the clients
+
+        Requires an output channel with a schema
+        """
         hsh = self.schema.configurationAsHash()
+        if timestamp is None:
+            timestamp = Timestamp()
+        yield from self.writeChunk([(hsh, timestamp)])
+
+    @coroutine
+    def writeRawData(self, hsh, timestamp=None):
+        """Send raw hash data via the output channel to the clients
+
+        This method can be used if the output channel is used in 'raw' mode,
+        e.g. does not have a schema.
+        """
+        assert isinstance(hsh, Hash) and self.schema is None
+
         if timestamp is None:
             timestamp = Timestamp()
         yield from self.writeChunk([(hsh, timestamp)])
@@ -460,10 +480,18 @@ class NetworkOutput(Configurable):
             timestamp = Timestamp()
         self.writeChunkNoWait([(hsh, timestamp)])
 
+    def writeRawDataNoWait(self, hsh, timestamp=None):
+        assert isinstance(hsh, Hash) and self.schema is None
+
+        if timestamp is None:
+            timestamp = Timestamp()
+        self.writeChunkNoWait([(hsh, timestamp)])
+
 
 class OutputChannel(Node):
     def __init__(self, cls=None, **kwargs):
         if cls is None:
+            # Child check for output schema
             Output = NetworkOutput
         else:
             assert issubclass(cls, Configurable)
