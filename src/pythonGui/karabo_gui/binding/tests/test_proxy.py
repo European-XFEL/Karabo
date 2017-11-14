@@ -143,12 +143,15 @@ def test_device_proxy_data_feeds():
 def test_property_proxy():
     schema = get_simple_schema()
     binding = build_binding(schema)
-    root_proxy = DeviceProxy(binding=binding)
+    root_proxy = DeviceProxy(device_id='dev', binding=binding)
     proxy = PropertyProxy(root_proxy=root_proxy, path='bar')
     other = PropertyProxy(root_proxy=root_proxy, path='foo')
 
     assert proxy.binding is binding.value.bar
     assert other.binding is binding.value.foo
+
+    assert proxy.key == 'dev.bar'
+    assert other.key == 'dev.foo'
 
     other.path = 'nope'
     assert other.binding is None
