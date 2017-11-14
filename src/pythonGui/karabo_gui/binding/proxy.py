@@ -187,6 +187,8 @@ class PropertyProxy(HasStrictTraits):
     """
     # Full path of the property
     path = String
+    # Full 'key' of the property: <device ID>.<path>
+    key = Property(String)
     # The binding for the property
     binding = Instance(BaseBinding, allow_none=True)
     # The value for the property (from the binding instance)
@@ -200,6 +202,11 @@ class PropertyProxy(HasStrictTraits):
 
     # -----------------------------------------------------------------------
     # Traits methods
+
+    def _get_key(self):
+        if not isinstance(self.root_proxy, DeviceProxy):
+            return self.path
+        return self.root_proxy.device_id + '.' + self.path
 
     def _pipeline_parent_path_default(self):
         def _gen_parents(p):
