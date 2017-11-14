@@ -207,10 +207,6 @@ class StringBinding(BaseBinding):
     value = String
 
 
-class TableBinding(NodeBinding):
-    pass  # Nothing to add. We just need a different class for Tables
-
-
 class Uint8Binding(BaseBinding):
     value = Range(low=0, high=(1 << 8), value=0, exclude_high=True)
 
@@ -293,3 +289,7 @@ class VectorUint32Binding(BaseBinding):
 
 class VectorUint64Binding(BaseBinding):
     value = Array(dtype='uint64', shape=(None,))
+
+
+class TableBinding(VectorHashBinding):
+    pass  # Nothing to add. We just need a different class for Tables
