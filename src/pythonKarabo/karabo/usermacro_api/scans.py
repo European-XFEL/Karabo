@@ -27,11 +27,11 @@ Before setting up a scan you need to define at least:
    the parameters to be fetched from logs at the end of the scan.
 
    Example of movable definition with parameters-of-interest:
-   my_movable = Movable('motorId1@(encoderPosition|targetPosition)',
+   my_movable = Movable('motorId1:(encoderPosition|targetPosition)',
                         'motorId2@.*position$', 'motorId3')
-   Observe that the parameter specification follows a '@' sign. Also note that
-   the second parameter specification *.position$ extends the first
-   specification (encoderPosition|targetPosition) in matching
+   Observe that the parameter specification follows either a '@' or a ':'sign. 
+   Also note that the second parameter specification *.position$ extends the
+   first specification (encoderPosition|targetPosition) in matching
    stepCounterPosition and saveLimitPosition as well for Beckhoff
    simple motors.
 
