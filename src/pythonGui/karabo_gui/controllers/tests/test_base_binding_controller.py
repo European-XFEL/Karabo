@@ -54,7 +54,7 @@ class SingleBindingController(BaseBindingController):
 @register_binding_controller(binding_type=StringBinding)
 class MultiBindingController(BaseBindingController):
     def add_proxy(self, proxy):
-        pass  # Only need to avoid `raise NotImplementedError` here
+        return True
 
     def create_widget(self, parent):
         return QLabel(parent)
@@ -69,7 +69,7 @@ class DeviceController(BaseBindingController):
     display_names = Dict
 
     def add_proxy(self, proxy):
-        pass  # Only need to avoid `raise NotImplementedError` here
+        return True
 
     def create_widget(self, parent):
         return QLabel(parent)

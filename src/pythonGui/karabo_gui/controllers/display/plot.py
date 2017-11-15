@@ -54,6 +54,7 @@ class DisplayPlot(BaseBindingController):
         curve = make.curve([0, 1], [0, 1], title, next(COLOR_GEN))
         self._curves[proxy] = curve
         self._plot.add_item(curve)
+        return True
 
     @on_trait_change('proxies:value')
     def _replot(self, obj, name, new):
