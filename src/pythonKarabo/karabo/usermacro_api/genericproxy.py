@@ -72,8 +72,14 @@ class GenericProxy(object):
     @classmethod
     def create_generic_proxy_container(cls, gproxies):
         """Create generalized interface from generic proxies"""
-        for subclass in GenericProxy.__subclasses__():
-            if isinstance(gproxies[0], subclass):
+        # Find containers wrapping all proxies
+        common_mro = list(set.intersection(*(set(type(gproxy).mro())
+                                             for gproxy in gproxies)))
+        # Instantiate the least generic container
+        for subclass in type(gproxies[0]).mro():
+            if (subclass in common_mro
+                    and issubclass(subclass, cls)
+                    and not hasattr(subclass, "generalizes")):
                 obj = object.__new__(subclass)
                 obj._generic_proxies = gproxies
                 return obj
@@ -84,7 +90,7 @@ class GenericProxy(object):
             if len(args) == 1:
                 if isinstance(args[0], str):
                     # Act as a generic proxy
-                    devparam = args[0].split('@')
+                    devparam = re.split("@|:", args[0])
                     deviceId = devparam[0]
                     try:
                         proxy = connectDevice(
@@ -92,7 +98,7 @@ class GenericProxy(object):
                         ret = cls.create_generic_proxy(proxy, cls)
 
                         if ret:
-                            # Get the monitor parameters if any
+                            # Get the monitored parameters if any
                             ret._param_regex = (
                                 devparam[1] if len(devparam) == 2
                                 else None)
@@ -132,6 +138,10 @@ class GenericProxy(object):
 
     def __del__(self):
         # Silencing this method
+        # This is because some exceptions thrown
+        # within some __del__ call are not caught.
+        # This causes needlessly alarming messages
+        # in ikarabo on exit.
         sys.stderr = tempfile.NamedTemporaryFile()
 
     def getBoundDevices(self):
