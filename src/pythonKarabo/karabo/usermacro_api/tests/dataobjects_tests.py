@@ -40,11 +40,11 @@ class TestAD(unittest.TestCase):
     def test_initialization(self):
         """Test AcquiredData object initialization"""
         ad = AcquiredData()
-        self.assertEqual(ad.__repr__(), "AcquiredData(None, size=10)")
+        self.assertEqual(repr(ad), "AcquiredData(None, size=10)")
         self.assertEqual(str(ad), "Unknown Experiment: []")
 
         ad = AcquiredData(107)
-        self.assertEqual(ad.__repr__(), "AcquiredData(107, size=10)")
+        self.assertEqual(repr(ad), "AcquiredData(107, size=10)")
         self.assertEqual(str(ad), "Experiment 107: []")
 
     def test_ad_fifo_behaviour(self):
@@ -72,11 +72,11 @@ class TestAcquiredOnline(unittest.TestCase):
         """Test AcquiredOnline object initialization"""
         ao = AcquiredOnline()
         expRep = "AcquiredOnline(None, size=10, source=None)"
-        self.assertEqual(ao.__repr__(), expRep)
+        self.assertEqual(repr(ao), expRep)
 
         ao = AcquiredOnline(10, 'source:channel')
         expRep = "AcquiredOnline(10, size=10, source=source:channel)"
-        self.assertEqual(ao.__repr__(), expRep)
+        self.assertEqual(repr(ao), expRep)
 
     def test_append(self):
         ao = AcquiredOnline()
