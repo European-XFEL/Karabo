@@ -87,12 +87,12 @@ class Tests(DeviceTest):
         output = GenericProxy('tm1')
 
         self.assertIsInstance(output, BeckhoffMotorAsMovable)
-        self.assertEqual(output.__repr__(), "BeckhoffMotorAsMovable('tm1')")
+        self.assertEqual(repr(output), "BeckhoffMotorAsMovable('tm1')")
         self.assertEqual(output.getBoundDevices(), 'tm1')
 
         output = GenericProxy('lsim')
         self.assertIsInstance(output, CamAsSensible)
-        self.assertEqual(output.__repr__(), "CamAsSensible('lsim')")
+        self.assertEqual(repr(output), "CamAsSensible('lsim')")
         self.assertEqual(output.getBoundDevices(), 'lsim')
 
     @sync_tst
@@ -111,22 +111,22 @@ class Tests(DeviceTest):
 
         output = Movable(Movable('tm1'))
         self.assertIsInstance(output, Movable)
-        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(repr(output), containerRep)
         self.assertEqual(output.getBoundDevices(), ['tm1'])
 
         output = GenericProxy(Movable('tm1'))
         self.assertIsInstance(output, Movable)
-        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(repr(output), containerRep)
         self.assertEqual(output.getBoundDevices(), ['tm1'])
 
         output = Movable(GenericProxy('tm1'))
         self.assertIsInstance(output, Movable)
-        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(repr(output), containerRep)
         self.assertEqual(output.getBoundDevices(), ['tm1'])
 
         output = GenericProxy(GenericProxy('tm1'))
         self.assertIsInstance(output, Movable)
-        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(repr(output), containerRep)
         self.assertEqual(output.getBoundDevices(), ['tm1'])
 
     @sync_tst
@@ -137,12 +137,12 @@ class Tests(DeviceTest):
 
         output = GenericProxy('tm1', 'tm2', 'tm3')
         self.assertIsInstance(output, Movable)
-        self.assertEqual(output.__repr__(), tripletRep)
+        self.assertEqual(repr(output), tripletRep)
         self.assertEqual(output.getBoundDevices(), ['tm1', 'tm2', 'tm3'])
 
         output = Movable('tm1', 'tm2', 'tm3')
         self.assertIsInstance(output, Movable)
-        self.assertEqual(output.__repr__(), tripletRep)
+        self.assertEqual(repr(output), tripletRep)
         self.assertEqual(output.getBoundDevices(), ['tm1', 'tm2', 'tm3'])
 
     @sync_tst
@@ -153,12 +153,12 @@ class Tests(DeviceTest):
 
         output = GenericProxy('tm1', Movable('tm2', 'tm3'))
         self.assertIsInstance(output, Movable)
-        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(repr(output), containerRep)
         self.assertEqual(output.getBoundDevices(), ['tm1', ['tm2', 'tm3']])
 
         output = GenericProxy('tm1', GenericProxy('tm2', 'tm3'))
         self.assertIsInstance(output, Movable)
-        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(repr(output), containerRep)
         self.assertEqual(output.getBoundDevices(), ['tm1', ['tm2', 'tm3']])
 
     @sync_tst
@@ -171,19 +171,19 @@ class Tests(DeviceTest):
 
         output = GenericProxy('lsim', Sensible('diode1', 'xgm1'))
         self.assertIsInstance(output, Sensible)
-        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(repr(output), containerRep)
         self.assertEqual(output.getBoundDevices(),
                          ['lsim', ['diode1', 'xgm1']])
 
         output = GenericProxy('lsim', GenericProxy('diode1', 'xgm1'))
         self.assertIsInstance(output, Sensible)
-        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(repr(output), containerRep)
         self.assertEqual(output.getBoundDevices(),
                          ['lsim', ['diode1', 'xgm1']])
 
         output = Sensible('lsim', TestXDetectorAsSensible('diode1', 'xgm1'))
         self.assertIsInstance(output, Sensible)
-        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(repr(output), containerRep)
         self.assertEqual(output.getBoundDevices(),
                          ['lsim', ['diode1', 'xgm1']])
 
@@ -201,7 +201,7 @@ class Tests(DeviceTest):
             output.value,
             {'deviceId': 'lsim', 'classId': 'LimaSimulatedCamera'})
 
-        output = Sensible('lsim@classid')
+        output = Sensible('lsim:classid')
         self.assertIsInstance(output, CamAsSensible)
         self.assertEqual(
             output.value,
@@ -220,7 +220,7 @@ class Tests(DeviceTest):
 
         containerRep = ("Sensible(CamAsSensible('lsim'), "
                         "Sensible('unknown'))")
-        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(repr(output), containerRep)
         self.assertEqual(output.getBoundDevices(), ['lsim', 'unknown'])
 
         output = Movable('lsim', 'unknown')
@@ -228,7 +228,7 @@ class Tests(DeviceTest):
 
         containerRep = ("Movable(Movable('lsim'), "
                         "Movable('unknown'))")
-        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(repr(output), containerRep)
         self.assertEqual(output.getBoundDevices(), ['lsim', 'unknown'])
 
         with self.assertRaises(KaraboError):
