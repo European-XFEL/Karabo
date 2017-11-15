@@ -104,6 +104,7 @@ class NetworkInput(Configurable):
     This represents an input channel. It is typically not used directly,
     instead you should just declare a :cls:`InputChannel`.
     """
+
     @VectorString(
         displayedName="Connected Output Channels",
         description="A list of output channels to receive data from, format: "
@@ -352,6 +353,8 @@ class OutputProxy(SubProxyBase):
 
 
 class NetworkOutput(Configurable):
+    displayType = 'OutputChannel'
+
     noInputShared = String(
         displayedName="No Input (Shared)",
         description="What to do if currently no share-input channel is "
@@ -487,6 +490,12 @@ class NetworkOutput(Configurable):
             timestamp = Timestamp()
         self.writeChunkNoWait([(hsh, timestamp)])
 
+    def setChildValue(self, key, value, descriptor):
+        """Set the child values on the Configurable
+
+        Overwrite the method of Configurable to prevent sending values.
+        """
+
 
 class OutputChannel(Node):
     def __init__(self, cls=None, **kwargs):
@@ -498,4 +507,5 @@ class OutputChannel(Node):
 
             class Output(NetworkOutput):
                 schema = Node(cls)
+
         super(OutputChannel, self).__init__(Output, **kwargs)
