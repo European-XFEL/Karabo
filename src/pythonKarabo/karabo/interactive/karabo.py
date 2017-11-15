@@ -269,10 +269,10 @@ def install(args):
             # download needs to happen after the processing of DEPENDS
             package = download(args)
             tgt = os.path.join(os.environ['KARABO'], 'plugins')
+            os.environ['KARABO_BINARY_REPOSITORY'] = args.repo
             if package:
                 print('Installing {} binaries, please wait...'
-                      ''.format(args.device),
-                      end='', flush=True)
+                      ''.format(args.device), end='', flush=True)
                 cmd = os.path.join(os.environ['KARABO'], package)
                 run_cmd('bash {} --prefix={} '.format(cmd, tgt))
                 print('done.')
