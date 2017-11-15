@@ -73,8 +73,8 @@ class GenericProxy(object):
     def create_generic_proxy_container(cls, gproxies):
         """Create generalized interface from generic proxies"""
         # Find containers wrapping all proxies
-        common_mro = list(set.intersection(*(set(type(gproxy).mro())
-                                             for gproxy in gproxies)))
+        common_mro = set.intersection(*(set(type(gproxy).mro())
+                                             for gproxy in gproxies))
         # Instantiate the least generic container
         for subclass in type(gproxies[0]).mro():
             if (subclass in common_mro
