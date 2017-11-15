@@ -65,18 +65,18 @@ namespace karabo {
                 UINT8, // unsigned char
                 VECTOR_UINT8, // std::vector<std::unsigned char>
 
-                INT16, // signed short
-                VECTOR_INT16, // std::vector<std::signed short>
+                INT16, // short
+                VECTOR_INT16, // std::vector<std::short>
                 UINT16, // unsigned short
                 VECTOR_UINT16, // std::vector<std::unsigned short>
 
-                INT32, // signed int
+                INT32, // int
                 VECTOR_INT32, // std::vector<std::int>
                 UINT32, // unsigned int
                 VECTOR_UINT32, // std::vector<std::unsigned int>
 
-                INT64, // signed long long
-                VECTOR_INT64, // std::vector<std::signed long long>
+                INT64, // long long
+                VECTOR_INT64, // std::vector<std::long long>
                 UINT64, // unsigned long long
                 VECTOR_UINT64, // std::vector<std::unsigned long long>
 
