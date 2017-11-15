@@ -143,21 +143,21 @@ class Tests(DeviceTest):
 
         ascaney = AScan(self.m1, self.pos1, self.sens, self.expo)
         self.assertEqual(type(ascaney), AScan)
-        self.assertEqual(ascaney.__repr__(), expected_rep)
+        self.assertEqual(repr(ascaney), expected_rep)
 
         expected_rep = ("AMesh('tm1', [(0, 0), (10, 10), (15, 15)], "
                         "[(15, 15), (10, 10), (0, 0)], 'lsim', 5.0, steps=True, "
                         "number_of_steps=0)")
         ameshy = AMesh(self.m1, self.pos1, self.pos2, self.sens, self.expo)
         self.assertEqual(type(ameshy), AMesh)
-        self.assertEqual(ameshy.__repr__(), expected_rep)
+        self.assertEqual(repr(ameshy), expected_rep)
 
         expected_rep = ("APathScan('tm1', [(0, 0), (10, 10), (15, 15)], "
                         "'lsim', 5.0, steps=True, number_of_steps=0)")
         # Pun intented
         apathy = APathScan(self.m1, self.pos1, self.sens, self.expo)
         self.assertEqual(type(apathy), APathScan)
-        self.assertEqual(apathy.__repr__(), expected_rep)
+        self.assertEqual(repr(apathy), expected_rep)
 
         self.m1._proxy.encoderPosition = Kwargator(magnitude=10)
 
@@ -165,7 +165,7 @@ class Tests(DeviceTest):
                         "'lsim', 5.0, steps=True, number_of_steps=0)")
         dscaney = DScan(self.m1, self.pos1, self.sens, self.expo)
         self.assertEqual(type(dscaney), DScan)
-        self.assertEqual(dscaney.__repr__(), expected_rep)
+        self.assertEqual(repr(dscaney), expected_rep)
 
 
 if __name__ == "__main__":
