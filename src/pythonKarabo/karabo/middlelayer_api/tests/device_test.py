@@ -1,12 +1,16 @@
 from contextlib import contextmanager
 from unittest import main
 
-from karabo.middlelayer import Hash
+from karabo.middlelayer import Float, Hash
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.pipeline import OutputChannel
 from karabo.middlelayer_api.schema import Configurable, Node
 
-from .eventloop import DeviceTest, async_tst, sync_tst
+from .eventloop import async_tst, DeviceTest, sync_tst
+
+
+class Data(Configurable):
+    floatProperty = Float(displayedName="Float")
 
 
 class MyNode(Configurable):
@@ -16,6 +20,8 @@ class MyNode(Configurable):
 class MyDevice(Device):
     # an output channel without schema
     output = OutputChannel()
+    dataOutput = OutputChannel(Data)
+
     deep = Node(MyNode)
 
 
@@ -30,12 +36,17 @@ class Tests(DeviceTest):
     @sync_tst
     def test_output_names(self):
         names = self.myDevice.slotGetOutputChannelNames()
-        expected = ['deep.output', 'output']
+        expected = ['dataOutput', 'deep.output', 'output']
         self.assertEqual(names, expected)
 
     @sync_tst
     def test_displayType_state(self):
         self.assertEqual(self.myDevice.state.descriptor.displayType, 'State')
+
+    @sync_tst
+    def test_displayType_output(self):
+        self.assertEqual(self.myDevice.output.displayType, 'OutputChannel')
+        self.assertEqual(self.myDevice.dataOutput.displayType, 'OutputChannel')
 
     @async_tst
     def test_send_raw(self):
