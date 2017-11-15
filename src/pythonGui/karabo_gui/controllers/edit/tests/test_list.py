@@ -5,6 +5,7 @@ from PyQt4.QtGui import QDialog
 from karabo.common.scenemodel.api import EditableListModel
 from karabo.middlelayer import Configurable, VectorInt32
 from karabo_gui.binding.api import apply_default_configuration
+from karabo_gui.controllers.listedit import ListEdit
 from karabo_gui.testing import GuiTestCase, get_class_property_proxy
 from ..list import EditableList
 
@@ -13,16 +14,10 @@ class Object(Configurable):
     prop = VectorInt32(defaultValue=[1])
 
 
-class ListEditMock(QDialog):
-    def __init__(self,proxy, flag):
-        super(ListEditMock, self).__init__()
-
+class ListEditMock(ListEdit):
     @property
     def values(self):
-        return ['-1','42','-1']
-
-    def set_texts(self, *args):
-        pass
+        return ['-1', '42', '-1']
 
     def exec_(self):
         return QDialog.Accepted
