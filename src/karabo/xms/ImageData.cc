@@ -24,7 +24,7 @@ namespace karabo {
                     .readOnly()
                     .commit();
 
-            VECTOR_UINT32_ELEMENT(s).key("dims")
+            VECTOR_UINT64_ELEMENT(s).key("dims")
                     .displayedName("Dimensions")
                     .description("The length of the array reflects total dimensionality and each element the extension in this dimension")
                     .readOnly()
@@ -49,7 +49,7 @@ namespace karabo {
                     .description("The number of bits needed for each pixel")
                     .readOnly()
                     .commit();
-            VECTOR_UINT32_ELEMENT(s).key("roiOffsets")
+            VECTOR_UINT64_ELEMENT(s).key("roiOffsets")
                     .displayedName("ROI Offsets")
                     .description("Describes the offset of the Region-of-Interest; it will contain zeros if the image has no ROI defined")
                     .readOnly()
