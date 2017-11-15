@@ -680,13 +680,29 @@ namespace karabo {
 
                     const vector<string> slotFunctions = karabo::util::fromString<string, vector>(instanceSlots.substr(pos + 1));
                     for (const string& slotFunction : slotFunctions) {
-                        processSingleSlot(slotFunction, globalCall, signalInstanceId, header, body);
+                        boost::shared_ptr<Strand> strand;
+                        {
+                            boost::mutex::scoped_lock strandLock(m_signalSlotInstancesMutex);
+                            auto strandMapIt = m_slotInstanceStrands.find(slotFunction);
+                            if (strandMapIt != m_slotInstanceStrands.end()) {
+                                strand = strandMapIt->second;
+                            }
+                        }
+                        if (strand) {
+                            strand->post(bind_weak(&SignalSlotable::processSingleSlot, this,
+                                                   slotFunction, globalCall, signalInstanceId, header, body));
+                        } else {
+                            // Currently if non-existing slot is called - but in future their might be slots that
+                            // can be run in parallel.
+                            // Could post to event loop instead to be on equal footing with non-parallel slots?
+                            processSingleSlot(slotFunction, globalCall, signalInstanceId, header, body);
+                        }
                     }
                 }
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception while processing slot call: " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception while processing event: " << e.what();
             } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Unknown exception while processing slot call.";
+                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Unknown exception while processing event.";
             }
         }
 
@@ -1479,6 +1495,10 @@ namespace karabo {
                 throw KARABO_SIGNALSLOT_EXCEPTION("The slot \"" + funcName + "\" has been registered with two different signatures");
             } else {
                 newinstance = instance;
+                // In future their might be an option not to create a Strand here,
+                // for slots that can run in parallel with themselves.
+                m_slotInstanceStrands.emplace(std::make_pair(funcName,
+                                                             boost::make_shared<karabo::net::Strand>(EventLoop::getIOService())));
             }
         }
 
@@ -1934,6 +1954,7 @@ namespace karabo {
             
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             m_slotInstances.erase(mangledSlotFunction);
+            m_slotInstanceStrands.erase(mangledSlotFunction);
             // Will clean any associated timers to this slot
             m_receiveAsyncErrorHandles.erase(mangledSlotFunction);
         }
