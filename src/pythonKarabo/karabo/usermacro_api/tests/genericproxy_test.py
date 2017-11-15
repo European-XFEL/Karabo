@@ -30,6 +30,20 @@ def getMockDevice(name, **kwargs):
     return cls(kwargs)
 
 
+class TestXDetectorAsSensible(Sensible):
+    """Test generic proxy for X-ray detectors"""
+
+
+class TestDiodeAsSensible(TestXDetectorAsSensible):
+    """Test generic proxy for diodes"""
+    generalizes = ("Diode",)
+
+
+class TestXGMAsSensible(TestXDetectorAsSensible):
+    """Test generic proxy for XGM"""
+    generalizes = ("Xgm",)
+
+
 class Tests(DeviceTest):
     """The tests in this class run on behalf of the device "local".
 
@@ -56,10 +70,16 @@ class Tests(DeviceTest):
         cls.lsim = getMockDevice("LimaSimulatedCamera",
                                  _deviceId_="lsim",
                                  cameraType="Simulator")
+        cls.diode1 = getMockDevice("Diode",
+                                   _deviceId_="diode1",
+                                   cameraTye="TestDiode")
+        cls.xgm1 = getMockDevice("Xgm",
+                                 _deviceId_="xgm1",
+                                 cameraType="TestXgm")
         cls.unknown = getMockDevice("UnknownClassId",
                                     _deviceId_="unknown")
-        with cls.deviceManager(cls.lsim, cls.tm2, cls.tm3,
-                               cls.tm1, cls.unknown, lead=cls.local):
+        with cls.deviceManager(cls.diode1, cls.lsim, cls.tm2, cls.tm3,
+                               cls.tm1, cls.unknown, cls.xgm1, lead=cls.local):
             yield
 
     @sync_tst
@@ -142,6 +162,32 @@ class Tests(DeviceTest):
         self.assertEqual(output.getBoundDevices(), ['tm1', ['tm2', 'tm3']])
 
     @sync_tst
+    def test_triplet_container_hierarchy_instantiation(self):
+        """Test the instantiation of a container of a hierarchy of sensibles"""
+        containerRep = ("Sensible(CamAsSensible('lsim'), "
+                        "TestXDetectorAsSensible("
+                        "TestDiodeAsSensible('diode1'), "
+                        "TestXGMAsSensible('xgm1')))")
+
+        output = GenericProxy('lsim', Sensible('diode1', 'xgm1'))
+        self.assertIsInstance(output, Sensible)
+        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(output.getBoundDevices(),
+                         ['lsim', ['diode1', 'xgm1']])
+
+        output = GenericProxy('lsim', GenericProxy('diode1', 'xgm1'))
+        self.assertIsInstance(output, Sensible)
+        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(output.getBoundDevices(),
+                         ['lsim', ['diode1', 'xgm1']])
+
+        output = Sensible('lsim', TestXDetectorAsSensible('diode1', 'xgm1'))
+        self.assertIsInstance(output, Sensible)
+        self.assertEqual(output.__repr__(), containerRep)
+        self.assertEqual(output.getBoundDevices(),
+                         ['lsim', ['diode1', 'xgm1']])
+
+    @sync_tst
     def test_paramregex_instantiation(self):
         """Test the support of regex parameter"""
         output = GenericProxy('tm1@.?tate$')
@@ -177,7 +223,6 @@ class Tests(DeviceTest):
         self.assertEqual(output.__repr__(), containerRep)
         self.assertEqual(output.getBoundDevices(), ['lsim', 'unknown'])
 
-
         output = Movable('lsim', 'unknown')
         self.assertIsInstance(output, Movable)
 
@@ -185,7 +230,6 @@ class Tests(DeviceTest):
                         "Movable('unknown'))")
         self.assertEqual(output.__repr__(), containerRep)
         self.assertEqual(output.getBoundDevices(), ['lsim', 'unknown'])
-
 
         with self.assertRaises(KaraboError):
             GenericProxy('unknown')
