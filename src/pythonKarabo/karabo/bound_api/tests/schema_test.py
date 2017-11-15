@@ -798,7 +798,7 @@ class  Schema_TestCase(unittest.TestCase):
             # self.assertEqual(schema.getValueType("myImageElement.pixels"), Types.VECTOR_CHAR)
             
             self.assertEqual(schema.getDisplayedName("myImageElement.dims"), "Dimensions")
-            self.assertEqual(schema.getValueType("myImageElement.dims"), Types.VECTOR_UINT32)
+            self.assertEqual(schema.getValueType("myImageElement.dims"), Types.VECTOR_UINT64)
             self.assertEqual(schema.getDisplayType("myImageElement.dims"), "Curve")
             
             self.assertEqual(schema.getDisplayedName("myImageElement.encoding"), "Encoding")
