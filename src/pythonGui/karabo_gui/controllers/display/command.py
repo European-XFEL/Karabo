@@ -43,6 +43,8 @@ class DisplayCommand(BaseBindingController):
             state_binding.on_trait_change(self._state_update, 'value')
             self._state_update(state_binding, 'value', state_binding.value)
 
+        return True
+
     def create_widget(self, parent):
         widget = QWidget(parent)
 

@@ -40,6 +40,7 @@ class DisplayAlignedImage(BaseBindingController):
 
     def add_proxy(self, proxy):
         self._images[proxy] = None
+        return True
 
     def create_widget(self, parent):
         widget = QWidget()
