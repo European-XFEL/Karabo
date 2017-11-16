@@ -20,8 +20,7 @@ def _is_compatible(binding):
 
 # XXX: priority = 20
 @register_binding_controller(ui_name='Selection Field',
-                             # XXX: Temporary until we find a better way
-                             binding_type=BaseBinding.__subclasses__(),
+                             binding_type=BaseBinding,
                              is_compatible=_is_compatible)
 class EditableComboBox(BaseBindingController):
     # The scene model class used by this controller

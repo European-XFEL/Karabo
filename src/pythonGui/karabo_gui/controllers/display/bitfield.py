@@ -5,13 +5,10 @@ from traits.api import Instance, on_trait_change
 from karabo.common.scenemodel.api import BitfieldModel
 from karabo_gui.binding.api import (
     BaseBindingController, register_binding_controller,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding,
+    IntBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
     Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
 )
 from karabo_gui.controllers.unitlabel import add_unit_label
-
-INT_BINDINGS = (Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-                Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
 
 
 class BitfieldWidget(QWidget):
@@ -51,7 +48,7 @@ class BitfieldWidget(QWidget):
                            w - 1, h - 1, color)
 
 
-@register_binding_controller(ui_name='Bit Field', binding_type=INT_BINDINGS)
+@register_binding_controller(ui_name='Bit Field', binding_type=IntBinding)
 class Bitfield(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(BitfieldModel)
