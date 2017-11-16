@@ -80,11 +80,12 @@ if __name__ == '__main__':
         'package_data': {
             "karabo_gui.binding.tests": ["data/*.config", "data/*.schema"],
             "karabo_gui.configurator.dialog": ["*.ui"],
+            "karabo_gui.controllers": ["*.ui"],
+            "karabo_gui.controllers.display": ["*.svg", "*.ui"],
             "karabo_gui.dialogs": ["*.ui"],
-            "karabo_gui.displaywidgets": ["*.ui", "*.svg"],
+            "karabo_gui.displaywidgets": ["*.svg", "*.ui"],
             "karabo_gui.icons": ["*.*", "statefulicons/iconset/*.svg"],
             "karabo_gui.project.dialog": ["*.ui"],
-
         }
     }
 
