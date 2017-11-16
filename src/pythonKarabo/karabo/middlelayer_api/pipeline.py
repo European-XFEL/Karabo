@@ -229,6 +229,12 @@ class NetworkInput(Configurable):
             pos += length
         return True
 
+    def setChildValue(self, key, value, descriptor):
+        """Set the child values on the Configurable
+
+        Overwrite the method of Configurable to prevent sending values.
+        """
+
 
 class InputChannel(Node):
     """Declare an input channel in a device
