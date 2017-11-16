@@ -56,31 +56,33 @@ namespace karabo {
             if (!m_tasksRunning) {
                 m_tasksRunning = true;
                 // Instead of bind_weak to 'this' we could boost::bind to 'shared_from_this()'.
-                // The difference would only be that in the latter 'run' would be executed even if all other
-                // shared pointers to it are reset between this post and when m_ioService actually invokes it.
+                // The difference would only be that in the latter 'run' (and thus the tasks to be executed
+                // sequentially) would be executed even if all other shared pointers to it are reset between
+                // this post and when m_ioService actually invokes it.
                 m_ioService.post(karabo::util::bind_weak(&Strand::run, this));
             }
         }
 
+
         void Strand::run() {
-            while (true) {
-                boost::function<void() > nextTask;
-                {
-                    boost::mutex::scoped_lock lock(m_tasksMutex);
-                    if (m_tasks.empty()) {
-                        m_tasksRunning = false;
-                        // Nothing else to do, so stop running
-                        break;
-                    } else {
-                        // Get oldest handler - move it to avoid a copy:
-                        nextTask = std::move(m_tasks.front());
-                        // Removes the object from queue (note that it is in undefined state after std::move):
-                        m_tasks.pop();
-                    }
+            boost::function<void() > nextTask;
+            {
+                boost::mutex::scoped_lock lock(m_tasksMutex);
+                if (m_tasks.empty()) {
+                    m_tasksRunning = false;
+                    // Nothing else to do, so stop running
+                    return;
+                } else {
+                    // Get oldest handler - move it to avoid a copy:
+                    nextTask = std::move(m_tasks.front());
+                    // Removes the object from queue (note that it is in undefined state after std::move):
+                    m_tasks.pop();
                 }
-                // Actually run the task without lock
-                nextTask();
             }
+            // Actually run the task without lock
+            nextTask();
+            // Repost to eventually run next task - see comment in startRunningIfNeeded about use of bind_weak.
+            m_ioService.post(karabo::util::bind_weak(&Strand::run, this));
         }
 
 

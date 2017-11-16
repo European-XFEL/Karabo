@@ -9,6 +9,8 @@
  *
  */
 
+#include "karabo/util/ClassInfo.hh"
+
 #include <boost/asio/io_service.hpp>
 #include <boost/function.hpp>
 #include <boost/smart_ptr/enable_shared_from_this.hpp>
@@ -34,11 +36,24 @@ namespace karabo {
          *
          * Every handler posted will be put into a FIFO queue and the FIFO will be emptied one-by-one in the background
          * by posting the handlers to the boost::asio::io_service given in the constructor.
+         *
+         * NOTE:
+         * Do not create a Strand on the stack, but do it on the heap using a shared pointer:
+         *
+         * auto stack = boost::make_shared<Strand>(karabo::net::EventLoop::getIOService());
+         *
+         * Otherwise 'enable_shared_from_this' does not work which is needed to guarantee (via usage of
+         * karab::util::bind_weak) that an internal Strand method is executed on the event loop when the Strand
+         * is already destructed.
+         *
          */
         class Strand : public boost::enable_shared_from_this<Strand> {
 
 
             public:
+
+            KARABO_CLASSINFO(Strand, "Strand", "2.1")
+
             explicit Strand(boost::asio::io_service& ioService);
 
             Strand(const Strand& orig) = delete;
@@ -49,6 +64,7 @@ namespace karabo {
              * Post a handler to the io_service given to the constructor with the guarantee that it is not executed
              * before any other handler posted before has finished.
              * Handlers posted on different Strands can always be run in parallel.
+             * Note that, when a handler posted has not yet run when the Strand is destructed, it will never run.
              *
              * @param handler function without arguments and return value - will be copied
              */
@@ -58,6 +74,7 @@ namespace karabo {
              * Post a handler to the io_service given to the constructor with the guarantee that it is not executed
              * before any other handler posted before has finished.
              * Handlers posted on different Strands can always be run in parallel.
+             * Note that, when a handler posted has not yet run when the Strand is destructed, it will never run.
              *
              * @param handler function without arguments and return value as r-value reference - will be moved to avoid a copy
              */
@@ -91,7 +108,7 @@ namespace karabo {
             /// Helper for post - to be called under protection of m_tasksMutex!
             void startRunningIfNeeded();
 
-            /// Helper actually running one tasks after another until queue is empty
+            /// Helper to run one task after another until tasks queue is empty
             void run();
 
             void postWrapped(boost::function<void() > handler);
