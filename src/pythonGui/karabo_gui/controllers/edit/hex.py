@@ -10,19 +10,13 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import HexadecimalModel
 from karabo_gui.binding.api import (
-    BaseBindingController, register_binding_controller, get_min_max,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
+    BaseBindingController, IntBinding, register_binding_controller, get_min_max
 )
 from karabo_gui.const import WIDGET_MIN_HEIGHT
 from karabo_gui.controllers.unitlabel import add_unit_label
 
-INTEGER_BINDINGS = (Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-                    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
 
-
-@register_binding_controller(ui_name='Hexadecimal',
-                             binding_type=INTEGER_BINDINGS)
+@register_binding_controller(ui_name='Hexadecimal', binding_type=IntBinding)
 class Hexadecimal(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(HexadecimalModel)

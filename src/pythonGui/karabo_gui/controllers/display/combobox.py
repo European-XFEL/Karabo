@@ -15,12 +15,9 @@ def _widget_is_compatible(binding):
     return len(binding.options) > 0
 
 
-@register_binding_controller(ui_name='Combo Box',
-                             # XXX: get_compatible_controllers needs to deal
-                             # with this special category of widgets later
-                             binding_type=BaseBinding.__subclasses__(),
-                             is_compatible=_widget_is_compatible,
-                             read_only=True)
+@register_binding_controller(ui_name='Combo Box', read_only=True,
+                             binding_type=BaseBinding,
+                             is_compatible=_widget_is_compatible)
 class DisplayComboBox(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(ComboBoxModel)

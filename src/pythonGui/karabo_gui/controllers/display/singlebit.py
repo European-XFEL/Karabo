@@ -11,21 +11,16 @@ from traits.api import Instance, Str, on_trait_change
 from karabo.common.api import State
 from karabo.common.scenemodel.api import SingleBitModel
 from karabo_gui.binding.api import (
-    BaseBindingController, register_binding_controller, get_min_max,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    KARABO_SCHEMA_DISPLAY_TYPE
+    BaseBindingController, IntBinding, register_binding_controller,
+    get_min_max, KARABO_SCHEMA_DISPLAY_TYPE
 )
 from karabo_gui.indicators import STATE_COLORS
 from karabo_gui.util import generateObjectName
 from karabo_gui.controllers.unitlabel import add_unit_label
 
-INTEGER_BINDINGS = (Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-                    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
-
 
 @register_binding_controller(ui_name='Single Bit', read_only=True,
-                             binding_type=INTEGER_BINDINGS)
+                             binding_type=IntBinding)
 class SingleBit(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(SingleBitModel)
