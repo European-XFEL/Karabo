@@ -12,29 +12,17 @@ from traits.api import Dict, Instance, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayPlotModel
 from karabo_gui.binding.api import (
-    BaseBindingController, register_binding_controller,
-    VectorBoolBinding, VectorCharBinding, VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
-    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
-    VectorInt64Binding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding,
+    BaseBindingController, VectorBinding, register_binding_controller,
     KARABO_SCHEMA_DISPLAYED_NAME
 )
 
-VECTOR_TYPES = (
-    VectorBoolBinding, VectorCharBinding, VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
-    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
-    VectorInt64Binding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding
-)
 COLORS = ("red", "green", "blue", "gray", "violet", "orange", "lightgreen",
           "black")
 COLOR_GEN = cycle(COLORS)
 
 
 @register_binding_controller(ui_name='Plot', read_only=True,
-                             binding_type=VECTOR_TYPES)
+                             binding_type=VectorBinding)
 class DisplayPlot(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(DisplayPlotModel)
