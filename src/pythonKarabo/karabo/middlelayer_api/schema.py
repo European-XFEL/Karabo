@@ -30,6 +30,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     """
     _subclasses = {}
     daqDataType = None
+    displayType = None
     schema = None
 
     def __init__(self, configuration={}):
@@ -50,7 +51,6 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         parameter if your class should be usable as a component in
         another class.
         """
-
         self._parents = WeakKeyDictionary()
         self._initializers = []
         for k in self._allattrs:
@@ -228,6 +228,8 @@ class Node(Descriptor):
         attrs["nodeType"] = NodeType.Node
         if self.cls.daqDataType is not None:
             attrs["daqDataType"] = self.cls.daqDataType.value
+        if self.cls.displayType is not None:
+            attrs["displayType"] = self.cls.displayType
         return self.cls.getClassSchema(device, state).hash, attrs
 
     def _initialize(self, instance, value):
