@@ -9,6 +9,8 @@
 #include "karabo/util/Epochstamp.hh"
 #include "karabo/util/TimeDuration.hh"
 
+#include "boost/asio/deadline_timer.hpp"
+
 #include "Strand_Test.hh"
 
 using karabo::net::EventLoop;
@@ -65,8 +67,17 @@ void Strand_Test::testSequential() {
     // Strands need to be pointed to by shared_ptr
     auto strand = boost::make_shared<karabo::net::Strand>(EventLoop::getIOService());
     Epochstamp now;
+    // A timer to concurrently run Strand::post (and to start the duration),
+    // not sure whether several handlers of the timer will really be executed at the same time or not...
+    boost::asio::deadline_timer timer(EventLoop::getIOService());
+    timer.expires_from_now(boost::posix_time::milliseconds(10));
+    timer.async_wait([&now] (const boost::system::error_code & e) {
+        now.now();
+    });
     for (unsigned int i = 0; i < numPosts; ++i) {
-        strand->post(sleepAndCount);
+        timer.async_wait([&strand, &sleepAndCount](const boost::system::error_code & e) {
+            strand->post(sleepAndCount);
+        });
     }
 
     while (--numTest > 0) {
@@ -84,41 +95,6 @@ void Strand_Test::testSequential() {
     CPPUNIT_ASSERT(numTest > 0);
     CPPUNIT_ASSERT(duration.getTotalSeconds() * 1000ull + duration.getFractions(karabo::util::MILLISEC) // total ms
                    >= numPosts * sleepTimeMs);
-
-    /////////////////////////////////////////////////////////////////////////////////
-    // The same again, but posting to EventLoop: Now we are done much more quickly.
-    // (This ensures that previous success is not 'pure luck' or due to a single
-    //  threaded EventLoop.)
-    /////////////////////////////////////////////////////////////////////////////////
-
-    // First resetting
-    {
-        boost::mutex::scoped_lock lock(aMutex);
-        counter = 0;
-    }
-    numTest = 50;
-    now.now();
-
-    for (unsigned int i = 0; i < numPosts; ++i) {
-        EventLoop::getIOService().post(sleepAndCount);
-    }
-
-    while (--numTest > 0) {
-        {
-            boost::mutex::scoped_lock lock(aMutex);
-            if (counter >= numPosts) {
-                duration = Epochstamp().elapsed(now);
-                break;
-            }
-        }
-
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepTimeMs / 10));
-    }
-
-    CPPUNIT_ASSERT(numTest > 0);
-    // Done much faster than sleeping numPosts times:
-    CPPUNIT_ASSERT(duration.getTotalSeconds() * 1000ull + duration.getFractions(karabo::util::MILLISEC) // total ms
-                   < numPosts / 2 * sleepTimeMs);
 }
 
 
