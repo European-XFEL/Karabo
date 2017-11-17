@@ -1,0 +1,24 @@
+************************
+What's New in Karabo 2.2
+************************
+
+
+C++ and Bound Python
+======================
+
+Standalone DeviceClient
++++++++++++++++++++++++++
+
+The constructors to create a standalone `DeviceClient` do not take anymore
+arguments about the broker connection. They always use the default behaviour.
+
+Instead, one can now specify the instanceId of the `DeviceClient` object
+instead of getting a default one generated: `DeviceClient(instanceId)`.
+In fact, that is the recommended
+way since otherwise a program that crashes after creating a standalone
+`DeviceClient` may leave remnants in the system, even if restarted.
+
+These remnants are useless signal subscriptions since the restarted program
+has a new instanceId. They can potentially slow down the broker and every
+recipient of the emitted signals. If restarted with the same id as before
+(as usually is done with devices and servers), these remnants are cleaned.
