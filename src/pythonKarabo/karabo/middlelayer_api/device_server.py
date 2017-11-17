@@ -216,8 +216,6 @@ class DeviceServerBase(SignalSlotable):
     def slotKillServer(self):
         yield from self.slotKillDevice()
         self.stopEventLoop()
-        self._ss.emit("call", {"*": ["slotDeviceServerInstanceGone"]},
-                      self.serverId)
 
     @slot
     def slotGetClassSchema(self, classId):
