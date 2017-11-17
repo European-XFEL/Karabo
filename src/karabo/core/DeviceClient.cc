@@ -26,7 +26,7 @@ namespace karabo {
     namespace core {
 
 
-        DeviceClient::DeviceClient(const std::string& brokerType, const karabo::util::Hash& brokerConfiguration)
+        DeviceClient::DeviceClient(const std::string& instanceId)
             : m_internalSignalSlotable()
             , m_signalSlotable()
             , m_isShared(false)
@@ -37,7 +37,7 @@ namespace karabo {
             , m_signalsChangedInterval(-1)
             , m_loggerMapCached(false) {
 
-            std::string ownInstanceId = generateOwnInstanceId();
+            const std::string ownInstanceId(instanceId.empty() ? generateOwnInstanceId() : instanceId);
             Hash instanceInfo;
             instanceInfo.set("type", "client");
             instanceInfo.set("lang", "c++");
@@ -46,8 +46,7 @@ namespace karabo {
             instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("status", "ok");
             m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId,
-                                                                                               brokerType,
-                                                                                               brokerConfiguration,
+                                                                                               "JmsConnection", Hash(),
                                                                                                60, instanceInfo));
             m_internalSignalSlotable->start();
 
