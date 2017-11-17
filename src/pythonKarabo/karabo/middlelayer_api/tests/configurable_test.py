@@ -602,6 +602,13 @@ class Tests(TestCase):
         self.assertEqual(b["name"], "bla")
         self.assertEqual(b["number"], 5)
 
+        c = A(Hash("table", [Hash("name", "bla", "number", 5)]))
+        self.assertEqual(len(c.table.value), 1)
+        c.table.extend([(str(i), i) for i in range(10)])
+        self.assertEqual(len(c.table.value), 11)
+        c.table.clear()
+        self.assertEqual(len(c.table.value), 0)
+
     def test_overwrite(self):
         class Mandy(Configurable):
             number = Int32(displayedName="whatever", minExc=7,
