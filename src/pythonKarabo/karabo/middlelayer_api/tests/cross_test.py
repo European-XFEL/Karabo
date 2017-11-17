@@ -104,7 +104,7 @@ class Tests(DeviceTest):
             "The generated schema changed. If this is desired, change the "
             "checksum in the code.")
 
-    @async_tst
+    @async_tst(timeout=90)
     def test_cross(self):
         # it takes typically 2 s for the bound device to start
         self.process = yield from create_subprocess_exec(
