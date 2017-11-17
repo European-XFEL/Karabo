@@ -20,7 +20,7 @@ namespace karabo {
     namespace net {
 
 
-        Strand::Strand(boost::asio::io_service& ioService) : m_ioService(ioService) {
+        Strand::Strand(boost::asio::io_service& ioService) : m_ioService(ioService), m_tasksRunning(false) {
         }
 
 
