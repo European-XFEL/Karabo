@@ -10,10 +10,7 @@ Contents:
    library/index
    tools/index
    documentation
-   whatsnew/1.3
-   whatsnew/1.4
-   whatsnew/1.5
-   whatsnew/2.0
+   versionchanges
    :maxdepth: 1
 
 
