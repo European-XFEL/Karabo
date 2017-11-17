@@ -27,8 +27,8 @@ namespace karathon {
 
     public:
 
-        DeviceClientWrap(const std::string& connectionType = "JmsConnection", const karabo::util::Hash& connectionParameters = karabo::util::Hash())
-            : DeviceClient(connectionType, connectionParameters)
+        DeviceClientWrap(const std::string& instanceId = std::string())
+            : DeviceClient(instanceId)
             , m_isVerbose(true) {
             boost::shared_ptr<karabo::xms::SignalSlotable> p = m_signalSlotable.lock();
             if (!p) {
