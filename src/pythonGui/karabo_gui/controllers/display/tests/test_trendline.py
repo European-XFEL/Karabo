@@ -1,5 +1,6 @@
 from karabo.middlelayer import Configurable, Bool
 from karabo_gui.testing import GuiTestCase, get_class_property_proxy
+from .data import build_historic_data_float
 from ..trendline import DisplayTrendline
 
 
@@ -23,4 +24,12 @@ class TestDisplayTrendline(GuiTestCase):
     def test_set_value(self):
         self.proxy.value = True
         # Allow the update to propogate
+        self.process_qt_events()
+
+    def test_historic_data(self):
+        data = build_historic_data_float()
+        t0 = data[0]['v', ...]['sec']
+        t1 = data[-1]['v', ...]['sec']
+        self.controller._update_x_axis_interval(t0, t1)
+        self.proxy.binding.historic_data = data
         self.process_qt_events()
