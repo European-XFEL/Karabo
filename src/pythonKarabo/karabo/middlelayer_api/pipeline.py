@@ -104,6 +104,7 @@ class NetworkInput(Configurable):
     This represents an input channel. It is typically not used directly,
     instead you should just declare a :cls:`InputChannel`.
     """
+    displayType = 'InputChannel'
 
     @VectorString(
         displayedName="Connected Output Channels",
@@ -167,12 +168,11 @@ class NetworkInput(Configurable):
             if self.raw:
                 cls = None
             else:
-                # schema from output channel
+                # schema from output channel we are talking with
                 schema = info.get("schema")
                 if schema is None:
                     schema, _ = yield from self.parent.call(
                         instance, "slotGetSchema", False)
-
                 cls = ProxyFactory.createProxy(
                     Schema(name=name, hash=schema.hash[name]["schema"]))
 
@@ -271,6 +271,12 @@ class InputChannel(Node):
         self.raw = raw
 
     def _initialize(self, instance, value):
+        """This method is called on initialization
+
+        Called via Configurable checkedInit for every descriptor.
+
+        The `value` still is the bare Hash value, as it came from the network!
+        """
         ret = super(InputChannel, self)._initialize(instance, value)
         channel = instance.__dict__[self.key]
         channel.raw = self.raw
