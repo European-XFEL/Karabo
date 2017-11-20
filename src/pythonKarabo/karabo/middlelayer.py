@@ -11,11 +11,11 @@ from .common.scenemodel.api import SceneModel, read_scene, write_scene
 from .common.states import State, StateSignifier
 
 from .middlelayer_api.device_client import (
-    connectDevice, DeviceClientBase, disconnectDevice, execute, executeNoWait,
-    filterByTags, getClasses, getConfigurationFromPast, getDevice, getDevices,
-    getDescriptors, getServers, getHistory, isAlive, instantiate,
-    instantiateNoWait, lock, waitUntilNew, waitUntil, waitWhile, setWait,
-    shutdown, shutdownNoWait, setNoWait, updateDevice, Queue
+    call, connectDevice, DeviceClientBase, disconnectDevice, execute,
+    executeNoWait, filterByTags, getClasses, getConfigurationFromPast,
+    getDevice, getDevices, getDescriptors, getServers, getHistory, isAlive,
+    instantiate, instantiateNoWait, lock, waitUntilNew, waitUntil, waitWhile,
+    setWait, shutdown, shutdownNoWait, setNoWait, updateDevice, Queue
 )
 from .middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxySlotBase as ProxySlot,
@@ -79,8 +79,8 @@ def _create_cli_submodule():
 
     # NOTE: This is the middlelayer part of the ikarabo namespace
     symbols = (
-        connectDevice, disconnectDevice, execute, executeNoWait, getClasses,
-        getDevice, getDevices, getHistory, getServers, instantiate,
+        call, connectDevice, disconnectDevice, execute, executeNoWait,
+        getClasses, getDevice, getDevices, getHistory, getServers, instantiate,
         instantiateNoWait, karabo, setWait, setNoWait, shutdown,
         shutdownNoWait, sleep, State, waitUntil, waitUntilNew
     )
