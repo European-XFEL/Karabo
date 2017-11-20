@@ -38,15 +38,15 @@ from .types import (
     BaseBinding, BindingNamespace, BindingRoot,
     BoolBinding, ByteArrayBinding, CharBinding,
     ComplexBinding, FloatBinding, HashBinding, ImageBinding,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding,
+    IntBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
     NodeBinding, NoneBinding, PipelineOutputBinding,
     SchemaBinding, SlotBinding, StringBinding, TableBinding,
     Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    VectorBoolBinding, VectorCharBinding, VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
-    VectorHashBinding, VectorInt8Binding, VectorInt16Binding,
-    VectorInt32Binding, VectorInt64Binding, VectorNoneBinding,
-    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding
+    VectorBinding,VectorBoolBinding, VectorCharBinding,
+    VectorComplexDoubleBinding, VectorComplexFloatBinding, VectorDoubleBinding,
+    VectorFloatBinding, VectorHashBinding, VectorInt8Binding,
+    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
+    VectorNoneBinding, VectorStringBinding, VectorUint8Binding,
+    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding
 )
 from .util import get_min_max
