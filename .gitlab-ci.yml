@@ -13,7 +13,7 @@ before_script:
 .release_build: &release-build
   <<: *build
   only:
-    - /^(\d+\.)(\d+\.)(\d+)((a|b|rc)\d+)?(\.post\d+)?$/
+    - /^(\d+\.)(\d+\.)(\d+)((a|b|rc|\.)\d+)?$/
   except:
     - branches
     - schedules
